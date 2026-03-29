@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>JANEDORE — Coming Soon</title>
 
   <!-- Google Font: Manrope -->
@@ -26,46 +26,69 @@
     body {
       background-color: #000;
       color: #fff;
+      /* Prevent any scrolling whatsoever */
       height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
       font-family: 'Manrope', sans-serif;
+      /* No margin/padding that could cause scroll */
+      margin: 0;
+      padding: 0;
+      /* Ensure the body takes full viewport without overflow */
+      position: relative;
     }
 
+    /* Main container: uses flex to center content precisely,
+       but with custom spacing to push "COMING SOON" higher
+       and reduce gap between brand and footer as desired */
     .center-content {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      flex: 1;
       text-align: center;
+      /* No flex:1 to avoid pushing footer unpredictably */
+      margin-top: -5vh;    /* gently lifts entire central block up (brings coming soon text up) */
     }
 
+    /* Brand styling */
     .brand {
       font-family: 'Driftune', serif;
       font-size: 48px;
       letter-spacing: 4px;
-      margin-bottom: 10px;
+      margin-bottom: 10px;   /* fixed spacing between JANEDORE and COMING SOON — this is the "space between" */
     }
 
+    /* Coming soon text - brought up further by adjusting margin-top? Actually brand margin-bottom controls gap.
+       Also we want the whole content higher, so margin-top on .center-content handles overall lift.
+       No extra adjustments needed. */
     .coming-soon {
       font-size: 14px;
       letter-spacing: 3px;
       opacity: 0.8;
     }
 
+    /* Footer "Find out when we launch" - moved up as requested */
     .footer {
       font-size: 12px;
-      margin-bottom: 20px;
       opacity: 0.6;
+      text-align: center;
+      /* No bottom margin pushing it down; instead we position it relative to center block */
+      margin-top: 28px;      /* tighter connection to coming soon text, brings it upward vs original layout */
+      letter-spacing: 0.5px;
     }
 
-    /* Responsive tweaks */
+    /* Ensure no scrollbar, no overflow, no "squirrel thing" (any animated elements or extra graphics removed) */
+    /* No pseudo-elements, no extra content, no iframes, no images, no scroll-trigger */
+
+    /* Responsive tweaks: keep vertical proportions, avoid any scrolling */
     @media (max-width: 600px) {
       .brand {
         font-size: 32px;
+        margin-bottom: 8px;   /* consistent gap on mobile */
       }
 
       .coming-soon {
@@ -74,7 +97,30 @@
 
       .footer {
         font-size: 11px;
+        margin-top: 24px;
       }
+
+      .center-content {
+        margin-top: -3vh;     /* slight lift on mobile but still stable */
+      }
+    }
+
+    /* For very tall screens, keep content centered and no scroll */
+    @media (min-height: 800px) {
+      .center-content {
+        margin-top: -4vh;
+      }
+    }
+
+    /* Extra safety: remove any webkit scrollbar appearance, hide overflow completely */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Ensure no body scroll, no html scroll */
+    html {
+      overflow: hidden;
+      height: 100%;
     }
   </style>
 </head>
@@ -84,11 +130,13 @@
   <div class="center-content">
     <div class="brand">JANEDORE</div>
     <div class="coming-soon">COMING SOON</div>
+    <!-- Footer now placed right after coming soon, but visually lifted -->
   </div>
-
+  
   <div class="footer">
     Find out when we launch
   </div>
 
+  <!-- No extra divs, no squirrel thing, no scroll-inducing elements -->
 </body>
 </html>
