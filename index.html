@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -27,8 +28,10 @@ html, body {
   height:70px;
   padding:0 20px;
   border-bottom:1px solid #eee;
-  position:sticky;
+  position:fixed;
   top:0;
+  left:0;
+  right:0;
   z-index:1000;
 }
 
@@ -71,11 +74,11 @@ html, body {
 .cart-badge{
   position:absolute;
   top:-6px;
-  right:-7px;
+  right:-8px;       /* shifted 1px more to the right */
   background:transparent;
   color:black;
   font-family:Arial, sans-serif;
-  font-size:9px;
+  font-size:10px;   /* increased by 1px */
   font-weight:700;
   min-width:16px;
   height:16px;
@@ -86,7 +89,7 @@ html, body {
   padding:0 3px;
   pointer-events:none;
   line-height:1;
-  border:1.5px solid white;
+  border:none;      /* border removed */
 }
 
 /* BELT */
@@ -120,9 +123,9 @@ html, body {
   opacity:0.7;
 }
 
-/* PAGE CONTENT */
+/* PAGE CONTENT — sits below fixed header (70px) + fixed belt (26px) */
 .page-content{
-  padding-top:3px; /* remove extra space */
+  padding-top:96px;
 }
 
 /* BANNER */
