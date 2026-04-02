@@ -7,10 +7,18 @@
 <!-- Phosphor Icons -->
 <script src="https://unpkg.com/phosphor-icons"></script>
 
+<!-- Driftune Font -->
 <style>
+@font-face {
+  font-family: 'Driftune';
+  src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/DriftuneDemo-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+}
+
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family: Arial, sans-serif;
 }
 
 /* HEADER */
@@ -31,11 +39,11 @@ body{
 .header-left{
   display:flex;
   align-items:center;
-  gap:12px; /* Space between menu icon and logo */
+  gap:12px; 
 }
 
 .header-left img{
-  height:36px; /* Adjust logo height */
+  height:36px;
   max-width:180px;
   object-fit:contain;
 }
@@ -58,6 +66,36 @@ body{
 .header i:hover{
   opacity:0.6;
 }
+
+/* BLACK BELT UNDER HEADER */
+.belt{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  background:black;
+  color:white;
+  font-family:'Driftune', sans-serif;
+  font-weight:600;
+  padding:12px 0;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.belt span{
+  cursor:pointer;
+  transition:opacity 0.2s ease;
+}
+
+.belt span:hover{
+  opacity:0.7;
+}
+
+/* IMAGE UNDER BELT */
+.banner img{
+  width:100%;
+  height:auto;
+  display:block;
+}
 </style>
 </head>
 
@@ -79,6 +117,19 @@ body{
   </div>
 
 </header>
+
+<!-- BLACK BELT -->
+<div class="belt">
+  <span>NEW TODAY</span>
+  <span>CLOTHING</span>
+  <span>BAGS</span>
+  <span>MORE</span>
+</div>
+
+<!-- IMAGE UNDER BELT -->
+<div class="banner">
+  <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5631.jpeg" alt="Banner">
+</div>
 
 </body>
 </html>
