@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Phosphor Icons -->
+
 <script src="https://unpkg.com/phosphor-icons"></script>
 
 <style>
@@ -43,7 +45,7 @@ body{
 }
 
 .header-left img{
-  height:44px; /* increased logo size */
+  height:44px;
   object-fit:contain;
 }
 
@@ -66,13 +68,42 @@ body{
   opacity:0.6;
 }
 
-/* BELT WRAPPER (keeps alignment with header padding) */
+/* CART WRAPPER — positions the badge relative to the icon */
+.cart-wrapper{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+
+/* CART BADGE */
+.cart-badge{
+  position:absolute;
+  top:-6px;
+  right:-7px;
+  background:black;
+  color:white;
+  font-family:Arial, sans-serif;
+  font-size:9px;
+  font-weight:700;
+  min-width:16px;
+  height:16px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 3px;
+  pointer-events:none;
+  line-height:1;
+  border:1.5px solid white;
+}
+
+/* BELT WRAPPER — sticky, sits just below header */
 .belt-wrapper{
   padding:0 20px;
   background:black;
-  position: sticky;
-  top: 70px; /* same height as the header */
-  z-index: 999;
+  position:sticky;
+  top:70px; /* same as header height */
+  z-index:999;
 }
 
 /* BELT */
@@ -82,9 +113,9 @@ body{
   gap:32px;
   color:white;
   font-family:'Driftune', sans-serif;
-  font-size:12px; /* reduced text size */
-  letter-spacing:1px; /* spacing between letters */
-  padding:7px 0; /* thinner belt */
+  font-size:12px;
+  letter-spacing:1px;
+  padding:7px 0;
 }
 
 .belt span{
@@ -104,6 +135,7 @@ body{
 }
 
 </style>
+
 </head>
 
 <body>
@@ -111,35 +143,68 @@ body{
 <header class="header">
 
   <!-- LEFT -->
+
   <div class="header-left">
     <i class="ph-light ph-list"></i>
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
   </div>
 
   <!-- RIGHT -->
+
   <div class="header-right">
     <i class="ph-light ph-magnifying-glass"></i>
     <i class="ph-light ph-heart-straight"></i>
-    <i class="ph-light ph-handbag-simple"></i>
+    <!-- CART with badge -->
+    <div class="cart-wrapper">
+      <i class="ph-light ph-handbag-simple" id="cart-icon"></i>
+      <span class="cart-badge" id="cart-count">0</span>
+    </div>
   </div>
 
 </header>
 
-<!-- BELT -->
+<!-- BELT — now sticky -->
+
 <div class="belt-wrapper">
   <div class="belt">
     <span>NEW TODAY</span>
     <span>CLOTHING</span>
-    <span>SUNGLASSES</span>
     <span>BAGS</span>
-    <span>MORE</span>
+    <span>SUNGLASSES</span>
   </div>
 </div>
 
 <!-- IMAGE -->
+
 <div class="banner">
   <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5631.jpeg" alt="Banner">
 </div>
+
+<script>
+  // Cart counter logic
+  // You can call addToCart() from anywhere to increment
+  let cartCount = 0;
+
+  function updateCartBadge() {
+    const badge = document.getElementById('cart-count');
+    badge.textContent = cartCount;
+    // Hide badge when 0, show when >0
+    badge.style.display = cartCount === 0 ? 'none' : 'flex';
+  }
+
+  function addToCart(qty = 1) {
+    cartCount += qty;
+    updateCartBadge();
+  }
+
+  // Initialise — badge hidden at 0
+  updateCartBadge();
+
+  // Demo: clicking the cart icon adds 1 (remove or replace with real logic)
+  document.getElementById('cart-icon').addEventListener('click', () => {
+    addToCart(1);
+  });
+</script>
 
 </body>
 </html>
