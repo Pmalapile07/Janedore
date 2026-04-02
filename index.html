@@ -35,7 +35,6 @@ html, body {
   z-index:1000;
 }
 
-/* LEFT */
 .header-left{
   display:flex;
   align-items:center;
@@ -46,7 +45,6 @@ html, body {
   object-fit:contain;
 }
 
-/* RIGHT */
 .header-right{
   display:flex;
   align-items:center;
@@ -60,9 +58,7 @@ html, body {
   transition:opacity 0.2s ease;
 }
 
-.header i:hover{
-  opacity:0.6;
-}
+.header i:hover{ opacity:0.6; }
 
 /* CART */
 .cart-wrapper{
@@ -74,11 +70,11 @@ html, body {
 .cart-badge{
   position:absolute;
   top:-6px;
-  right:-8px;       /* shifted 1px more to the right */
+  right:-8px;
   background:transparent;
   color:black;
   font-family:Arial, sans-serif;
-  font-size:10px;   /* increased by 1px */
+  font-size:10px;
   font-weight:700;
   min-width:16px;
   height:16px;
@@ -89,7 +85,7 @@ html, body {
   padding:0 3px;
   pointer-events:none;
   line-height:1;
-  border:none;      /* border removed */
+  border:none;
 }
 
 /* BELT */
@@ -119,16 +115,14 @@ html, body {
   transition:opacity 0.2s ease;
 }
 
-.belt span:hover{
-  opacity:0.7;
-}
+.belt span:hover{ opacity:0.7; }
 
-/* PAGE CONTENT — sits below fixed header (70px) + fixed belt (26px) */
+/* PAGE CONTENT */
 .page-content{
   padding-top:108px;
 }
 
-/* BANNER */
+/* MAIN BANNER */
 .banner{
   position:relative;
 }
@@ -139,7 +133,6 @@ html, body {
   display:block;
 }
 
-/* OVERLAY TEXT */
 .banner-label{
   position:absolute;
   bottom:32px;
@@ -151,6 +144,59 @@ html, body {
   line-height:1.15;
   pointer-events:none;
   text-shadow:0 2px 14px rgba(0,0,0,0.4);
+}
+
+/* DUO GRID — two cards side by side */
+.duo-grid{
+  display:flex;
+  gap:2px; /* hairline gap between the two cards */
+  background:#fff;
+}
+
+.duo-card{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* image area — same aspect ratio as the main banner (~3:4 portrait) */
+.duo-card .img-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:3/4;
+  overflow:hidden;
+  background:#e8e8e8;
+}
+
+.duo-card .img-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* placeholder icon centred inside the grey box */
+.duo-card .img-wrap .ph-placeholder{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.duo-card .img-wrap .ph-placeholder i{
+  font-size:40px;
+  color:#c0c0c0;
+}
+
+/* label centred below each card */
+.duo-label{
+  text-align:center;
+  font-family:'Driftune', sans-serif;
+  font-size:13px;
+  letter-spacing:1.5px;
+  color:#111;
+  padding:12px 4px 18px;
 }
 </style>
 
@@ -183,10 +229,46 @@ html, body {
 </div>
 
 <div class="page-content">
+
+  <!-- MAIN BANNER -->
+
   <div class="banner">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5631.jpeg" alt="Banner">
     <div class="banner-label">NEW IN<br>CLOTHING</div>
   </div>
+
+  <!-- TWO SIDE-BY-SIDE CARDS -->
+
+  <div class="duo-grid">
+
+```
+<!-- Card 1 — swap src when ready -->
+<div class="duo-card">
+  <div class="img-wrap">
+    <!-- replace this img src with your own image -->
+    <img src="" alt="Card 1" onerror="this.style.display='none'">
+    <div class="ph-placeholder">
+      <i class="ph-light ph-image"></i>
+    </div>
+  </div>
+  <div class="duo-label">NEW IN BAGS</div>
+</div>
+
+<!-- Card 2 — swap src when ready -->
+<div class="duo-card">
+  <div class="img-wrap">
+    <!-- replace this img src with your own image -->
+    <img src="" alt="Card 2" onerror="this.style.display='none'">
+    <div class="ph-placeholder">
+      <i class="ph-light ph-image"></i>
+    </div>
+  </div>
+  <div class="duo-label">NEW IN SUNGLASSES</div>
+</div>
+```
+
+  </div>
+
 </div>
 
 <script>
