@@ -8,14 +8,12 @@
 <script src="https://unpkg.com/phosphor-icons"></script>
 
 <style>
-
 body{
   margin:0;
   font-family:Arial, sans-serif;
 }
 
 /* HEADER */
-
 .header{
   display:flex;
   align-items:center;
@@ -29,29 +27,20 @@ body{
   z-index:1000;
 }
 
-/* LEFT */
-
+/* LEFT: MENU + LOGO */
 .header-left{
   display:flex;
   align-items:center;
+  gap:12px; /* Space between menu icon and logo */
 }
 
-/* CENTER LOGO */
-
-.header-center{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-}
-
-.header-center img{
-  height:36px; /* You can adjust this */
-  max-width:180px; /* Prevent overflow */
+.header-left img{
+  height:36px; /* Adjust logo height */
+  max-width:180px;
   object-fit:contain;
 }
 
-/* RIGHT */
-
+/* RIGHT: SEARCH + FAVORITES + CART */
 .header-right{
   display:flex;
   align-items:center;
@@ -59,7 +48,6 @@ body{
 }
 
 /* ICON STYLE */
-
 .header i{
   font-size:26px;
   cursor:pointer;
@@ -70,7 +58,6 @@ body{
 .header i:hover{
   opacity:0.6;
 }
-
 </style>
 </head>
 
@@ -78,18 +65,15 @@ body{
 
 <header class="header">
 
-  <!-- MENU -->
+  <!-- LEFT: MENU + LOGO -->
   <div class="header-left">
     <i class="ph-light ph-list"></i>
-  </div>
-
-  <!-- LOGO -->
-  <div class="header-center">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
   </div>
 
-  <!-- FAVORITES + CART -->
+  <!-- RIGHT: SEARCH + FAVORITES + CART -->
   <div class="header-right">
+    <i class="ph-light ph-magnifying-glass"></i>
     <i class="ph-light ph-heart-straight"></i>
     <i class="ph-light ph-handbag-simple"></i>
   </div>
