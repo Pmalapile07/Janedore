@@ -7,15 +7,15 @@
 <!-- Phosphor Icons -->
 <script src="https://unpkg.com/phosphor-icons"></script>
 
-<!-- Driftune Font -->
 <style>
+
+/* FONT */
 @font-face {
   font-family: 'Driftune';
   src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/DriftuneDemo-SemiBold.otf') format('opentype');
-  font-weight: 600;
-  font-style: normal;
 }
 
+/* BODY */
 body{
   margin:0;
   font-family: Arial, sans-serif;
@@ -35,20 +35,19 @@ body{
   z-index:1000;
 }
 
-/* LEFT: MENU + LOGO */
+/* LEFT */
 .header-left{
   display:flex;
   align-items:center;
-  gap:12px; 
+  gap:14px;
 }
 
 .header-left img{
-  height:36px;
-  max-width:180px;
+  height:44px; /* increased logo size */
   object-fit:contain;
 }
 
-/* RIGHT: SEARCH + FAVORITES + CART */
+/* RIGHT */
 .header-right{
   display:flex;
   align-items:center;
@@ -67,18 +66,22 @@ body{
   opacity:0.6;
 }
 
-/* BLACK BELT UNDER HEADER */
+/* BELT WRAPPER (keeps alignment with header padding) */
+.belt-wrapper{
+  padding:0 20px;
+  background:black;
+}
+
+/* BELT */
 .belt{
   display:flex;
   justify-content:center;
-  gap:40px;
-  background:black;
+  gap:32px;
   color:white;
   font-family:'Driftune', sans-serif;
-  font-weight:600;
-  padding:12px 0;
-  letter-spacing:1px;
-  text-transform:uppercase;
+  font-size:12px; /* reduced text size */
+  letter-spacing:1px; /* spacing between letters */
+  padding:7px 0; /* thinner belt */
 }
 
 .belt span{
@@ -96,6 +99,7 @@ body{
   height:auto;
   display:block;
 }
+
 </style>
 </head>
 
@@ -103,13 +107,13 @@ body{
 
 <header class="header">
 
-  <!-- LEFT: MENU + LOGO -->
+  <!-- LEFT -->
   <div class="header-left">
     <i class="ph-light ph-list"></i>
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
   </div>
 
-  <!-- RIGHT: SEARCH + FAVORITES + CART -->
+  <!-- RIGHT -->
   <div class="header-right">
     <i class="ph-light ph-magnifying-glass"></i>
     <i class="ph-light ph-heart-straight"></i>
@@ -118,15 +122,17 @@ body{
 
 </header>
 
-<!-- BLACK BELT -->
-<div class="belt">
-  <span>NEW TODAY</span>
-  <span>CLOTHING</span>
-  <span>BAGS</span>
-  <span>MORE</span>
+<!-- BELT -->
+<div class="belt-wrapper">
+  <div class="belt">
+    <span>NEW TODAY</span>
+    <span>CLOTHING</span>
+    <span>BAGS</span>
+    <span>MORE</span>
+  </div>
 </div>
 
-<!-- IMAGE UNDER BELT -->
+<!-- IMAGE -->
 <div class="banner">
   <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5631.jpeg" alt="Banner">
 </div>
