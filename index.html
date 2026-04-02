@@ -19,7 +19,23 @@ html, body {
   font-family: Arial, sans-serif;
 }
 
-/* HEADER */
+/* ANNOUNCEMENT BAR */
+.announcement{
+  background:black;
+  color:white;
+  font-family:'Driftune', sans-serif;
+  font-size:11px;
+  letter-spacing:2px;
+  text-align:center;
+  padding:8px 20px;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:1001;
+}
+
+/* HEADER — sits below announcement bar (~33px) */
 .header{
   display:flex;
   align-items:center;
@@ -29,7 +45,7 @@ html, body {
   padding:0 20px;
   border-bottom:1px solid #eee;
   position:fixed;
-  top:0;
+  top:33px;
   left:0;
   right:0;
   z-index:1000;
@@ -88,36 +104,7 @@ html, body {
   border:none;
 }
 
-/* BELT */
-.belt-wrapper{
-  padding:0 20px;
-  background:black;
-  position:fixed;
-  top:70px;
-  left:0;
-  right:0;
-  z-index:999;
-}
-
-.belt{
-  display:flex;
-  justify-content:center;
-  gap:32px;
-  color:white;
-  font-family:'Driftune', sans-serif;
-  font-size:12px;
-  letter-spacing:1px;
-  padding:7px 0;
-}
-
-.belt span{
-  cursor:pointer;
-  transition:opacity 0.2s ease;
-}
-
-.belt span:hover{ opacity:0.7; }
-
-/* PAGE CONTENT */
+/* PAGE CONTENT — below announcement (33px) + header (70px) */
 .page-content{
   padding-top:108px;
 }
@@ -146,20 +133,21 @@ html, body {
   text-shadow:0 2px 14px rgba(0,0,0,0.4);
 }
 
-/* DUO GRID — two cards side by side */
+/* DUO GRID */
 .duo-grid{
   display:flex;
-  gap:2px; /* hairline gap between the two cards */
+  gap:2px;
   background:#fff;
+  margin-top:2px;
 }
 
 .duo-card{
   flex:1;
-  display:flex;
-  flex-direction:column;
+  position:relative;
+  overflow:hidden;
 }
 
-/* image area — same aspect ratio as the main banner (~3:4 portrait) */
+/* image / placeholder area */
 .duo-card .img-wrap{
   position:relative;
   width:100%;
@@ -175,7 +163,7 @@ html, body {
   display:block;
 }
 
-/* placeholder icon centred inside the grey box */
+/* placeholder icon */
 .duo-card .img-wrap .ph-placeholder{
   position:absolute;
   inset:0;
@@ -189,20 +177,30 @@ html, body {
   color:#c0c0c0;
 }
 
-/* label centred below each card */
+/* label ON the image — bottom center */
 .duo-label{
+  position:absolute;
+  bottom:16px;
+  left:0;
+  right:0;
   text-align:center;
+  color:white;
   font-family:'Driftune', sans-serif;
-  font-size:13px;
-  letter-spacing:1.5px;
-  color:#111;
-  padding:12px 4px 18px;
+  font-size:14px;
+  letter-spacing:2px;
+  line-height:1.2;
+  pointer-events:none;
+  text-shadow:0 2px 10px rgba(0,0,0,0.45);
 }
 </style>
 
 </head>
 
 <body>
+
+<!-- ANNOUNCEMENT BAR -->
+
+<div class="announcement">FREE SHIPPING ON ORDERS OVER R750</div>
 
 <header class="header">
   <div class="header-left">
@@ -219,15 +217,6 @@ html, body {
   </div>
 </header>
 
-<div class="belt-wrapper">
-  <div class="belt">
-    <span>NEW TODAY</span>
-    <span>CLOTHING</span>
-    <span>BAGS</span>
-    <span>SUNGLASSES</span>
-  </div>
-</div>
-
 <div class="page-content">
 
   <!-- MAIN BANNER -->
@@ -237,36 +226,42 @@ html, body {
     <div class="banner-label">NEW IN<br>CLOTHING</div>
   </div>
 
-  <!-- TWO SIDE-BY-SIDE CARDS -->
+  <!-- ROW 1: BAGS + SUNGLASSES -->
 
   <div class="duo-grid">
-
-
-<!-- Card 1 — swap src when ready -->
-<div class="duo-card">
-  <div class="img-wrap">
-    <!-- replace this img src with your own image -->
-    <img src="" alt="Card 1" onerror="this.style.display='none'">
-    <div class="ph-placeholder">
-      <i class="ph-light ph-image"></i>
+    <div class="duo-card">
+      <div class="img-wrap">
+        <img src="" alt="Bags" onerror="this.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">BAGS</div>
+    </div>
+    <div class="duo-card">
+      <div class="img-wrap">
+        <img src="" alt="Sunglasses" onerror="this.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">SUNGLASSES</div>
     </div>
   </div>
-  <div class="duo-label">NEW IN BAGS</div>
-</div>
 
-<!-- Card 2 — swap src when ready -->
-<div class="duo-card">
-  <div class="img-wrap">
-    <!-- replace this img src with your own image -->
-    <img src="" alt="Card 2" onerror="this.style.display='none'">
-    <div class="ph-placeholder">
-      <i class="ph-light ph-image"></i>
+  <!-- ROW 2: TOPS + SETS -->
+
+  <div class="duo-grid">
+    <div class="duo-card">
+      <div class="img-wrap">
+        <img src="" alt="Tops" onerror="this.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">TOPS</div>
     </div>
-  </div>
-  <div class="duo-label">NEW IN SUNGLASSES</div>
-</div>
-
-
+    <div class="duo-card">
+      <div class="img-wrap">
+        <img src="" alt="Sets" onerror="this.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">SETS</div>
+    </div>
   </div>
 
 </div>
