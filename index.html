@@ -1,142 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>JANEDORE — Coming Soon</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Google Font: Manrope -->
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400&display=swap" rel="stylesheet">
+<!-- Phosphor Icons -->
+<script src="https://unpkg.com/phosphor-icons"></script>
 
-  <style>
-    /* Import custom font from GitHub */
-    @font-face {
-      font-family: 'Driftune';
-      src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/DriftuneDemo-SemiBold.otf') format('opentype');
-      font-weight: normal;
-      font-style: normal;
-    }
+<style>
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+body{
+margin:0;
+font-family:Arial, sans-serif;
+}
 
-    body {
-      background-color: #000;
-      color: #fff;
-      /* Prevent any scrolling whatsoever */
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Manrope', sans-serif;
-      /* No margin/padding that could cause scroll */
-      margin: 0;
-      padding: 0;
-      /* Ensure the body takes full viewport without overflow */
-      position: relative;
-    }
+/* HEADER */
 
-    /* Main container: uses flex to center content precisely,
-       but with custom spacing to push "COMING SOON" higher
-       and reduce gap between brand and footer as desired */
-    .center-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      /* No flex:1 to avoid pushing footer unpredictably */
-      margin-top: -5vh;    /* gently lifts entire central block up (brings coming soon text up) */
-    }
+.header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+background:white;
+height:70px;
+padding:0 20px;
+border-bottom:1px solid #eee;
+position:sticky;
+top:0;
+z-index:1000;
+}
 
-    /* Brand styling */
-    .brand {
-      font-family: 'Driftune', serif;
-      font-size: 48px;
-      letter-spacing: 4px;
-      margin-bottom: 10px;   /* fixed spacing between JANEDORE and COMING SOON — this is the "space between" */
-    }
+/* LEFT */
 
-    /* Coming soon text - brought up further by adjusting margin-top? Actually brand margin-bottom controls gap.
-       Also we want the whole content higher, so margin-top on .center-content handles overall lift.
-       No extra adjustments needed. */
-    .coming-soon {
-      font-size: 14px;
-      letter-spacing: 3px;
-      opacity: 0.8;
-    }
+.header-left{
+display:flex;
+align-items:center;
+}
 
-    /* Footer "Find out when we launch" - moved up as requested */
-    .footer {
-      font-size: 12px;
-      opacity: 0.6;
-      text-align: center;
-      /* No bottom margin pushing it down; instead we position it relative to center block */
-      margin-top: 28px;      /* tighter connection to coming soon text, brings it upward vs original layout */
-      letter-spacing: 0.5px;
-    }
+/* CENTER LOGO */
 
-    /* Ensure no scrollbar, no overflow, no "squirrel thing" (any animated elements or extra graphics removed) */
-    /* No pseudo-elements, no extra content, no iframes, no images, no scroll-trigger */
+.header-center{
+position:absolute;
+left:50%;
+transform:translateX(-50%);
+}
 
-    /* Responsive tweaks: keep vertical proportions, avoid any scrolling */
-    @media (max-width: 600px) {
-      .brand {
-        font-size: 32px;
-        margin-bottom: 8px;   /* consistent gap on mobile */
-      }
+.header-center img{
+height:36px;
+}
 
-      .coming-soon {
-        font-size: 12px;
-      }
+/* RIGHT */
 
-      .footer {
-        font-size: 11px;
-        margin-top: 24px;
-      }
+.header-right{
+display:flex;
+align-items:center;
+gap:18px;
+}
 
-      .center-content {
-        margin-top: -3vh;     /* slight lift on mobile but still stable */
-      }
-    }
+/* ICON STYLE */
 
-    /* For very tall screens, keep content centered and no scroll */
-    @media (min-height: 800px) {
-      .center-content {
-        margin-top: -4vh;
-      }
-    }
+.header i{
+font-size:26px;
+cursor:pointer;
+color:#111;
+transition:opacity 0.2s ease;
+}
 
-    /* Extra safety: remove any webkit scrollbar appearance, hide overflow completely */
-    ::-webkit-scrollbar {
-      display: none;
-    }
-    
-    /* Ensure no body scroll, no html scroll */
-    html {
-      overflow: hidden;
-      height: 100%;
-    }
-  </style>
+.header i:hover{
+opacity:0.6;
+}
+
+</style>
 </head>
 
 <body>
 
-  <div class="center-content">
-    <div class="brand">JANEDORE</div>
-    <div class="coming-soon">COMING SOON</div>
-    <!-- Footer now placed right after coming soon, but visually lifted -->
-  </div>
-  
-  <div class="footer">
-    Find out when we launch
-  </div>
+<header class="header">
 
-  <!-- No extra divs, no squirrel thing, no scroll-inducing elements -->
+<!-- MENU -->
+<div class="header-left">
+<i class="ph-light ph-list"></i>
+</div>
+
+<!-- LOGO -->
+<div class="header-center">
+<img src="logo.png" alt="Logo">
+</div>
+
+<!-- FAVORITES + CART -->
+<div class="header-right">
+<i class="ph-light ph-heart-straight"></i>
+<i class="ph-light ph-handbag-simple"></i>
+</div>
+
+</header>
+
 </body>
 </html>
