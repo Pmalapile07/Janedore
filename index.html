@@ -10,63 +10,65 @@
 <style>
 
 body{
-margin:0;
-font-family:Arial, sans-serif;
+  margin:0;
+  font-family:Arial, sans-serif;
 }
 
 /* HEADER */
 
 .header{
-display:flex;
-align-items:center;
-justify-content:space-between;
-background:white;
-height:70px;
-padding:0 20px;
-border-bottom:1px solid #eee;
-position:sticky;
-top:0;
-z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:white;
+  height:70px;
+  padding:0 20px;
+  border-bottom:1px solid #eee;
+  position:sticky;
+  top:0;
+  z-index:1000;
 }
 
 /* LEFT */
 
 .header-left{
-display:flex;
-align-items:center;
+  display:flex;
+  align-items:center;
 }
 
 /* CENTER LOGO */
 
 .header-center{
-position:absolute;
-left:50%;
-transform:translateX(-50%);
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
 }
 
 .header-center img{
-height:36px;
+  height:36px; /* You can adjust this */
+  max-width:180px; /* Prevent overflow */
+  object-fit:contain;
 }
 
 /* RIGHT */
 
 .header-right{
-display:flex;
-align-items:center;
-gap:18px;
+  display:flex;
+  align-items:center;
+  gap:18px;
 }
 
 /* ICON STYLE */
 
 .header i{
-font-size:26px;
-cursor:pointer;
-color:#111;
-transition:opacity 0.2s ease;
+  font-size:26px;
+  cursor:pointer;
+  color:#111;
+  transition:opacity 0.2s ease;
 }
 
 .header i:hover{
-opacity:0.6;
+  opacity:0.6;
 }
 
 </style>
@@ -76,21 +78,21 @@ opacity:0.6;
 
 <header class="header">
 
-<!-- MENU -->
-<div class="header-left">
-<i class="ph-light ph-list"></i>
-</div>
+  <!-- MENU -->
+  <div class="header-left">
+    <i class="ph-light ph-list"></i>
+  </div>
 
-<!-- LOGO -->
-<div class="header-center">
-<img src="logo.png" alt="Logo">
-</div>
+  <!-- LOGO -->
+  <div class="header-center">
+    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
+  </div>
 
-<!-- FAVORITES + CART -->
-<div class="header-right">
-<i class="ph-light ph-heart-straight"></i>
-<i class="ph-light ph-handbag-simple"></i>
-</div>
+  <!-- FAVORITES + CART -->
+  <div class="header-right">
+    <i class="ph-light ph-heart-straight"></i>
+    <i class="ph-light ph-handbag-simple"></i>
+  </div>
 
 </header>
 
