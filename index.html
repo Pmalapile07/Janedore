@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Phosphor Icons -->
-
 <script src="https://unpkg.com/phosphor-icons"></script>
 
 <style>
@@ -17,9 +15,10 @@
   src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/DriftuneDemo-SemiBold.otf') format('opentype');
 }
 
-/* BODY */
-body{
+/* BODY & HTML */
+html, body {
   margin:0;
+  padding:0;
   font-family: Arial, sans-serif;
 }
 
@@ -109,7 +108,8 @@ body{
 
 /* Push page content below both fixed bars (header 70px + belt 26px) */
 .page-content{
-  padding-top:96px;
+  padding-top:96px; /* 70px header + 26px belt */
+  margin:0;
 }
 
 /* BELT */
@@ -136,12 +136,13 @@ body{
 /* BANNER */
 .banner{
   position:relative;
+  margin:0; /* remove any extra margin */
 }
 
 .banner img{
   width:100%;
   height:auto;
-  display:block;
+  display:block; /* ensures no extra white space below */
 }
 
 /* OVERLAY TEXT — bottom left, white, Driftune */
@@ -167,13 +168,11 @@ body{
 <header class="header">
 
   <!-- LEFT — logo only -->
-
   <div class="header-left">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
   </div>
 
   <!-- RIGHT — search · wishlist · cart · menu (far right) -->
-
   <div class="header-right">
     <i class="ph-light ph-magnifying-glass"></i>
     <i class="ph-light ph-heart-straight"></i>
@@ -186,8 +185,7 @@ body{
 
 </header>
 
-<!-- BELT — sticky, no MORE -->
-
+<!-- BELT — sticky -->
 <div class="belt-wrapper">
   <div class="belt">
     <span>NEW TODAY</span>
@@ -198,12 +196,11 @@ body{
 </div>
 
 <!-- BANNER IMAGE + LABEL -->
-
 <div class="page-content">
-<div class="banner">
-  <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5631.jpeg" alt="Banner">
-  <div class="banner-label">NEW IN<br>CLOTHING</div>
-</div>
+  <div class="banner">
+    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5631.jpeg" alt="Banner">
+    <div class="banner-label">NEW IN<br>CLOTHING</div>
+  </div>
 </div>
 
 <script>
