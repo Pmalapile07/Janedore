@@ -107,9 +107,9 @@ body{
   z-index:999;
 }
 
-/* Push page content below both fixed bars (header 70px + belt ~34px) */
+/* Push page content below both fixed bars (header 70px + belt 26px) */
 .page-content{
-  padding-top:104px;
+  padding-top:96px;
 }
 
 /* BELT */
@@ -212,7 +212,7 @@ body{
   function updateCartBadge() {
     const badge = document.getElementById('cart-count');
     badge.textContent = cartCount;
-    badge.style.display = cartCount === 0 ? 'none' : 'flex';
+    badge.style.display = 'flex';
   }
 
   function addToCart(qty = 1) {
