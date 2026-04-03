@@ -141,7 +141,7 @@ html, body {
   right:28px;
   color:white;
   font-family:'Driftune', sans-serif;
-  font-size:9px;
+  font-size:13px;
   letter-spacing:2px;
   line-height:1.15;
   cursor:pointer;
@@ -175,7 +175,9 @@ html, body {
   width:100%;
   height:100%;
   object-fit:cover;
+  object-position:center;
   display:block;
+  background:white;
 }
 
 .duo-card .img-wrap .ph-placeholder{
@@ -282,12 +284,42 @@ html, body {
     <span class="banner-shop">SHOP NOW</span>
   </div>
 
-  <!-- ROW 1: SETS + TOPS -->
+  <!-- ROW 1: BAGS + SUNGLASSES -->
 
   <div class="duo-grid">
 
 
-<!-- SETS (was bags slot) -->
+<!-- BAGS -->
+<div class="duo-card">
+  <div class="img-wrap">
+    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/bag.png" alt="Bags"
+         style="width:100%;height:100%;object-fit:cover;display:block;"
+         onload="this.nextElementSibling.style.display='none'"
+         onerror="this.style.display='none'">
+    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  </div>
+  <div class="duo-label">BAGS</div>
+</div>
+
+<!-- SUNGLASSES — with UV badge -->
+<div class="duo-card">
+  <div class="uv-badge">UV-400 / BL+</div>
+  <div class="img-wrap">
+    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses" onload="this.nextElementSibling.style.display='none'">
+    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  </div>
+  <div class="duo-label">SUNGLASSES</div>
+</div>
+
+
+  </div>
+
+  <!-- ROW 2: SETS + TOPS -->
+
+  <div class="duo-grid">
+
+
+<!-- SETS -->
 <div class="duo-card">
   <div class="img-wrap">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets" onload="this.nextElementSibling.style.display='none'">
@@ -296,40 +328,13 @@ html, body {
   <div class="duo-label">SETS</div>
 </div>
 
-<!-- TOPS (was sunglasses slot) -->
+<!-- TOPS -->
 <div class="duo-card">
   <div class="img-wrap">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops" onload="this.nextElementSibling.style.display='none'">
     <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
   </div>
   <div class="duo-label">TOPS</div>
-</div>
-
-
-  </div>
-
-  <!-- ROW 2: BAGS + SUNGLASSES -->
-
-  <div class="duo-grid">
-
-
-<!-- BAGS (was tops slot) -->
-<div class="duo-card">
-  <div class="img-wrap">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/bag.png" alt="Bags" onload="this.nextElementSibling.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-  </div>
-  <div class="duo-label">BAGS</div>
-</div>
-
-<!-- SUNGLASSES (was sets slot) — with UV badge -->
-<div class="duo-card">
-  <div class="uv-badge">UV-400 / BL+</div>
-  <div class="img-wrap">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses" onload="this.nextElementSibling.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-  </div>
-  <div class="duo-label">SUNGLASSES</div>
 </div>
 
 
