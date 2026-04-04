@@ -82,6 +82,35 @@ html, body {
 .header.over-image .icon-dark{ display:none !important; }
 .header.over-image .icon-white{ display:inline !important; }
 
+/* FAV WRAPPER */
+.fav-wrapper{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.fav-badge{
+  position:absolute;
+  top:-6px;
+  right:-8px;
+  background:transparent;
+  font-family:Arial, sans-serif;
+  font-size:10px;
+  font-weight:700;
+  min-width:16px;
+  height:16px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 3px;
+  pointer-events:none;
+  line-height:1;
+  border:none;
+  color:black;
+  transition: color 0.3s ease;
+}
+.header.over-image .fav-badge{ color:white; }
+
 /* CART */
 .cart-wrapper{
   position:relative;
@@ -406,6 +435,147 @@ html, body {
   width:fit-content;
 }
 
+/* PRODUCT FAV BUTTON — glassmorphic circle top-right of image */
+.product-fav-btn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:3;
+  border:none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.product-fav-btn:hover{
+  background: rgba(255,255,255,0.45);
+  transform: scale(1.08);
+}
+.product-fav-btn i{
+  font-size:16px;
+  color:white;
+  pointer-events:none;
+}
+.product-fav-btn.active{
+  background: rgba(255,255,255,0.5);
+}
+
+/* FAVOURITES OVERLAY */
+.fav-overlay{
+  position:fixed;
+  inset:0;
+  background:white;
+  z-index:2000;
+  display:none;
+  flex-direction:column;
+  overflow-y:auto;
+}
+.fav-overlay.open{ display:flex; }
+
+.fav-overlay-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:52px 20px 0;
+  position:sticky;
+  top:0;
+  background:white;
+  z-index:10;
+  padding-bottom:16px;
+  border-bottom:1px solid #f0f0f0;
+}
+.fav-overlay-close{
+  font-size:24px;
+  cursor:pointer;
+  color:#111;
+  display:flex;
+  align-items:center;
+}
+.fav-overlay-title{
+  font-family:'Driftune', sans-serif;
+  font-size:22px;
+  letter-spacing:2px;
+  color:#111;
+  margin:0;
+}
+
+.fav-overlay-sub{
+  padding:20px 20px 8px;
+}
+.fav-overlay-sub h3{
+  font-family:'Driftune', sans-serif;
+  font-size:14px;
+  letter-spacing:1.5px;
+  color:#111;
+  margin:0 0 4px 0;
+}
+.fav-overlay-sub p{
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  color:#888;
+  margin:0;
+}
+
+/* SORT / FILTER BAR */
+.fav-filter-bar{
+  display:flex;
+  gap:6px;
+  padding:12px 20px 16px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.fav-filter-bar::-webkit-scrollbar{ display:none; }
+.filter-chip{
+  flex-shrink:0;
+  font-family:'Driftune', sans-serif;
+  font-size:9px;
+  letter-spacing:1.5px;
+  color:#111;
+  border:1px solid #111;
+  padding:5px 12px;
+  cursor:pointer;
+  background:white;
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space:nowrap;
+}
+.filter-chip.active, .filter-chip:hover{
+  background:black;
+  color:white;
+}
+
+/* FAVOURITES GRID */
+.fav-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px;
+  padding:0;
+  flex:1;
+}
+.fav-empty{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  flex:1;
+  padding:60px 20px;
+  gap:12px;
+}
+.fav-empty i{ font-size:48px; color:#ddd; }
+.fav-empty p{
+  font-family:'Manrope', sans-serif;
+  font-size:13px;
+  color:#aaa;
+  margin:0;
+  text-align:center;
+}
+
 /* COLLECTION SECTION */
 .collection-section{
   padding:36px 0 20px;
@@ -587,10 +757,11 @@ html, body {
 </span>
 
 <!-- Favourites -->
-<span class="icon-wrap">
-  <i class="ph ph-heart-straight icon-dark"></i>
-  <i class="ph ph-heart-straight icon-white"></i>
-</span>
+<div class="fav-wrapper" id="fav-wrapper" onclick="openFavOverlay()" style="cursor:pointer;">
+  <i class="ph ph-heart-straight icon-dark" style="font-size:26px;"></i>
+  <i class="ph ph-heart-straight icon-white" style="font-size:26px;"></i>
+  <span class="fav-badge" id="fav-count">0</span>
+</div>
 
 <!-- Cart -->
 <div class="cart-wrapper">
@@ -606,6 +777,7 @@ html, body {
   <i class="ph ph-list icon-dark"></i>
   <i class="ph ph-list icon-white"></i>
 </span>
+
 
   </div>
 </header>
@@ -671,7 +843,7 @@ html, body {
 
   <!-- JEWELLERY HEADER -->
 
-  <div class="section-header">
+  <div class="section-header" id="section-jewel-header">
     <span class="section-tag">NEW</span>
     <h2>STAINLESS STEEL<br>JEWELLERY</h2>
     <p>Tarnish-free. Water-resistant. Built to last — and to be seen.</p>
@@ -714,7 +886,7 @@ html, body {
 
   <!-- SHOP JEWELLERY CTA -->
 
-  <div class="bottom-cta">
+  <div class="bottom-cta" id="section-jewel-cta">
     <p>Steel that stays. Style that speaks.</p>
     <span class="cta-link">SHOP JEWELLERY</span>
   </div>
@@ -723,20 +895,23 @@ html, body {
 
   <!-- Firebase will populate products: image URL, name, price from Firestore/RTDB -->
 
-  <div class="collection-section">
+  <div class="collection-section" id="section-collection-header">
     <div class="collection-section-header">
       <h2>THE COLLECTION</h2>
       <p class="sub">Handpicked pieces, ready to wear.</p>
     </div>
 
 
+<!-- Firebase: loop products, inject imageUrl/name/price, data-id for fav tracking -->
 <div class="product-grid" id="product-grid">
 
-  <!-- Product 1 — replace src, name, price from Firebase -->
-  <div class="product-card">
+  <div class="product-card" data-id="1" data-name="ITEM NAME" data-price="R 0.00">
     <div class="product-img-wrap">
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
       <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
+        <i class="ph ph-heart-straight"></i>
+      </button>
     </div>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
@@ -744,11 +919,13 @@ html, body {
     </div>
   </div>
 
-  <!-- Product 2 -->
-  <div class="product-card">
+  <div class="product-card" data-id="2" data-name="ITEM NAME" data-price="R 0.00">
     <div class="product-img-wrap">
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
       <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
+        <i class="ph ph-heart-straight"></i>
+      </button>
     </div>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
@@ -756,11 +933,13 @@ html, body {
     </div>
   </div>
 
-  <!-- Product 3 -->
-  <div class="product-card">
+  <div class="product-card" data-id="3" data-name="ITEM NAME" data-price="R 0.00">
     <div class="product-img-wrap">
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
       <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
+        <i class="ph ph-heart-straight"></i>
+      </button>
     </div>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
@@ -768,11 +947,13 @@ html, body {
     </div>
   </div>
 
-  <!-- Product 4 -->
-  <div class="product-card">
+  <div class="product-card" data-id="4" data-name="ITEM NAME" data-price="R 0.00">
     <div class="product-img-wrap">
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
       <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
+        <i class="ph ph-heart-straight"></i>
+      </button>
     </div>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
@@ -787,13 +968,13 @@ html, body {
 
   <!-- VIEW ALL -->
 
-  <div class="view-all-wrap">
+  <div class="view-all-wrap" id="section-view-all">
     <span class="view-all-btn">VIEW ALL</span>
   </div>
 
   <!-- ABOUT US -->
 
-  <div class="about-us-section">
+  <div class="about-us-section" id="section-about-us">
     <h2>ABOUT US</h2>
     <p>Janedore was born from a simple belief — that great style shouldn't be hard to find. We curate pieces that are hard to come by, beautifully made, and priced for real life. From clothing to accessories, every item in our store is chosen with care. We're a small team with a big eye for quality, and we're just getting started.</p>
   </div>
@@ -813,35 +994,196 @@ html, body {
   document.getElementById('cart-icon').addEventListener('click', () => addToCart(1));
   document.getElementById('cart-icon-white').addEventListener('click', () => addToCart(1));
 
+  // — Favourites —
+  let favourites = []; // [{id, name, price, imgSrc}]
+  let currentFilter = 'newest';
+
+  function updateFavBadge() {
+    const badge = document.getElementById('fav-count');
+    badge.textContent = favourites.length;
+    badge.style.display = 'flex';
+    document.getElementById('fav-item-count').textContent =
+      favourites.length + (favourites.length === 1 ? ' item' : ' items');
+  }
+
+  function toggleFav(btn) {
+    const card = btn.closest('.product-card');
+    const id = card.dataset.id;
+    const name = card.querySelector('.product-name').textContent;
+    const price = card.querySelector('.product-price').textContent;
+    const imgEl = card.querySelector('.product-img');
+    const imgSrc = imgEl ? imgEl.src : '';
+
+    const existing = favourites.findIndex(f => f.id === id);
+    if (existing > -1) {
+      // Remove
+      favourites.splice(existing, 1);
+      btn.classList.remove('active');
+      btn.querySelector('i').className = 'ph ph-heart-straight';
+    } else {
+      // Add
+      favourites.push({ id, name, price, imgSrc, added: Date.now() });
+      btn.classList.add('active');
+      btn.querySelector('i').className = 'ph ph-heart-fill';
+    }
+    updateFavBadge();
+    renderFavGrid();
+  }
+
+  function renderFavGrid() {
+    const grid = document.getElementById('fav-grid');
+    const empty = document.getElementById('fav-empty');
+
+    if (favourites.length === 0) {
+      grid.innerHTML = '';
+      grid.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+
+    let sorted = [...favourites];
+    if (currentFilter === 'newest') sorted.sort((a,b) => b.added - a.added);
+    if (currentFilter === 'high') sorted.sort((a,b) => parsePrice(b.price) - parsePrice(a.price));
+    if (currentFilter === 'low')  sorted.sort((a,b) => parsePrice(a.price) - parsePrice(b.price));
+    // 'popular' — keep insertion order for now (Firebase can provide sort later)
+
+    grid.innerHTML = sorted.map(item => `
+      <div class="product-card">
+        <div class="product-img-wrap">
+          ${item.imgSrc
+            ? `<img class="product-img" src="${item.imgSrc}" alt="${item.name}">`
+            : `<div class="ph-placeholder"><i class="ph-light ph-image"></i></div>`}
+          <button class="product-fav-btn active" onclick="removeFavById('${item.id}')" aria-label="Remove">
+            <i class="ph ph-heart-fill"></i>
+          </button>
+        </div>
+        <div class="product-info">
+          <p class="product-name">${item.name}</p>
+          <p class="product-price">${item.price}</p>
+        </div>
+      </div>`).join('');
+  }
+
+  function removeFavById(id) {
+    const idx = favourites.findIndex(f => f.id === id);
+    if (idx > -1) favourites.splice(idx, 1);
+    // Sync heart on main page
+    const mainCard = document.querySelector(`.product-card[data-id="${id}"]`);
+    if (mainCard) {
+      const btn = mainCard.querySelector('.product-fav-btn');
+      if (btn) {
+        btn.classList.remove('active');
+        btn.querySelector('i').className = 'ph ph-heart-straight';
+      }
+    }
+    updateFavBadge();
+    renderFavGrid();
+  }
+
+  function parsePrice(str) {
+    return parseFloat((str || '0').replace(/[^0-9.]/g, '')) || 0;
+  }
+
+  function openFavOverlay() {
+    renderFavGrid();
+    document.getElementById('fav-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFavOverlay() {
+    document.getElementById('fav-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function setFilter(filter, chip) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderFavGrid();
+  }
+
+  updateFavBadge();
+
   // — Header colour + glass logic —
   const header = document.getElementById('main-header');
 
-  const imageSections = [
-    document.getElementById('section-banner'),
-    document.getElementById('section-row1'),
-    document.getElementById('section-row2'),
-    document.getElementById('section-jewel-row'),
-  ];
+  // Sections: type 'image' = white icons, type 'text' = black icons
+  const sections = [
+    { id: 'section-banner',           type: 'image' },
+    { id: 'section-row1',             type: 'image' },
+    { id: 'section-row2',             type: 'image' },
+    { id: 'section-text-start',       type: 'text'  },
+    { id: 'section-jewel-header',     type: 'text'  },
+    { id: 'section-jewel-row',        type: 'image' },
+    { id: 'section-jewel-cta',        type: 'text'  },
+    { id: 'section-collection-header',type: 'text'  },
+    { id: 'product-grid',             type: 'image' },
+    { id: 'section-view-all',         type: 'text'  },
+    { id: 'section-about-us',         type: 'text'  },
+  ].map(s => ({ ...s, el: document.getElementById(s.id) }))
+   .filter(s => s.el);
 
-  function isHeaderOverImage() {
+  function getCurrentSectionType() {
     const scrollY = window.scrollY;
-    const headerBottom = scrollY + 97;
-    for (const section of imageSections) {
-      if (!section) continue;
-      const top = section.offsetTop;
-      const bottom = top + section.offsetHeight;
-      if (headerBottom > top + 10 && scrollY + 60 < bottom) return true;
+    // The point we test: centre of the header bar (97px / 2 = ~48px from top of page)
+    const probe = scrollY + 48;
+
+    // Walk sections from bottom to top, return type of the section the probe is inside
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const s = sections[i];
+      const top = s.el.offsetTop;
+      const bottom = top + s.el.offsetHeight;
+      if (probe >= top && probe < bottom) return s.type;
     }
-    return false;
+    // Above all sections (very top) — treat as image (banner)
+    return 'image';
   }
 
   window.addEventListener('scroll', () => {
     header.classList.toggle('glass', window.scrollY > 10);
-    header.classList.toggle('over-image', isHeaderOverImage());
+    const type = getCurrentSectionType();
+    header.classList.toggle('over-image', type === 'image');
   });
 
   window.dispatchEvent(new Event('scroll'));
 </script>
+
+<!-- FAVOURITES OVERLAY -->
+
+<div class="fav-overlay" id="fav-overlay">
+
+  <div class="fav-overlay-header">
+    <span class="fav-overlay-close" onclick="closeFavOverlay()">
+      <i class="ph ph-x"></i>
+    </span>
+    <h2 class="fav-overlay-title">FAVOURITES</h2>
+  </div>
+
+  <div class="fav-overlay-sub">
+    <h3>MY ITEMS</h3>
+    <p id="fav-item-count">0 items</p>
+  </div>
+
+  <div class="fav-filter-bar">
+    <span class="filter-chip active" onclick="setFilter('newest', this)">NEWEST</span>
+    <span class="filter-chip" onclick="setFilter('popular', this)">MOST POPULAR</span>
+    <span class="filter-chip" onclick="setFilter('high', this)">HIGH TO LOW</span>
+    <span class="filter-chip" onclick="setFilter('low', this)">LOW TO HIGH</span>
+  </div>
+
+  <!-- Populated by JS -->
+
+  <div class="fav-grid" id="fav-grid"></div>
+
+  <div class="fav-empty" id="fav-empty" style="display:none;">
+    <i class="ph ph-heart-straight"></i>
+    <p>Nothing here yet.<br>Tap the heart on any item to save it.</p>
+  </div>
+
+</div>
 
 </body>
 </html>
