@@ -36,7 +36,7 @@ html, body {
   z-index:1001;
 }
 
-/* HEADER */
+/* HEADER — solid white at top, glassmorphic on scroll */
 .header{
   display:flex;
   align-items:center;
@@ -49,6 +49,15 @@ html, body {
   left:0;
   right:0;
   z-index:1000;
+  transition: background 0.35s ease, backdrop-filter 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Glassmorphic state — added via JS on scroll */
+.header.glass{
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 24px rgba(0,0,0,0.08);
 }
 
 .header-left{
@@ -120,7 +129,6 @@ html, body {
   display:block;
 }
 
-/* NEW IN CLOTHING — bottom left */
 .banner-label{
   position:absolute;
   bottom:32px;
@@ -134,7 +142,6 @@ html, body {
   text-shadow:0 2px 14px rgba(0,0,0,0.4);
 }
 
-/* SHOP NOW — bottom right, half size */
 .banner-shop{
   position:absolute;
   bottom:32px;
@@ -161,6 +168,7 @@ html, body {
   flex:1;
   position:relative;
   overflow:hidden;
+  cursor:pointer;
 }
 
 .duo-card .img-wrap{
@@ -178,6 +186,31 @@ html, body {
   object-position:center;
   display:block;
   background:white;
+  transition: transform 0.4s ease;
+}
+
+/* Subtle zoom on hover */
+.duo-card:hover .img-wrap img{
+  transform: scale(1.04);
+}
+
+/* Glassmorphic overlay on hover */
+.duo-card::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background: rgba(255,255,255,0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: background 0.35s ease, backdrop-filter 0.35s ease;
+  pointer-events:none;
+  z-index:1;
+}
+
+.duo-card:hover::after{
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .duo-card .img-wrap .ph-placeholder{
@@ -207,23 +240,23 @@ html, body {
   line-height:1.2;
   pointer-events:none;
   text-shadow:0 2px 10px rgba(0,0,0,0.45);
+  z-index:2;
 }
 
-/* UV BADGE — top right of sunglasses card */
+/* UV BADGE — flush to top-right corner, no gap */
 .uv-badge{
   position:absolute;
-  top:-1px;
-  right:10px;
-  border-radius:0 0 3px 3px;
+  top:0;
+  right:0;
   background:black;
   color:white;
   font-family:Arial, sans-serif;
   font-size:7px;
   font-weight:700;
   letter-spacing:0.8px;
-  padding:4px 7px;
-  border-radius:3px;
-  z-index:2;
+  padding:5px 8px;
+  border-radius:0 0 0 4px;
+  z-index:3;
   pointer-events:none;
   white-space:nowrap;
 }
@@ -260,7 +293,7 @@ html, body {
 
 <div class="announcement">FREE SHIPPING WITH ORDERS OVER R750</div>
 
-<header class="header">
+<header class="header" id="main-header">
   <div class="header-left">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
   </div>
@@ -285,7 +318,7 @@ html, body {
     <span class="banner-shop">SHOP NOW</span>
   </div>
 
-  <!-- ROW 1: BAGS + SUNGLASSES -->
+  <!-- ROW 1: SETS + SUNGLASSES -->
 
   <div class="duo-grid">
 
@@ -299,7 +332,7 @@ html, body {
   <div class="duo-label">SETS</div>
 </div>
 
-<!-- SUNGLASSES — with UV badge -->
+<!-- SUNGLASSES — UV badge flush top-right corner -->
 <div class="duo-card">
   <div class="uv-badge">UV-400 / BL+</div>
   <div class="img-wrap">
@@ -312,7 +345,7 @@ html, body {
 
   </div>
 
-  <!-- ROW 2: SETS + TOPS -->
+  <!-- ROW 2: BAGS + TOPS -->
 
   <div class="duo-grid">
 
@@ -351,23 +384,28 @@ html, body {
 </div>
 
 <script>
+  // — Cart counter —
   let cartCount = 0;
-
   function updateCartBadge() {
     const badge = document.getElementById('cart-count');
     badge.textContent = cartCount;
     badge.style.display = 'flex';
   }
-
   function addToCart(qty = 1) {
     cartCount += qty;
     updateCartBadge();
   }
-
   updateCartBadge();
+  document.getElementById('cart-icon').addEventListener('click', () => addToCart(1));
 
-  document.getElementById('cart-icon').addEventListener('click', () => {
-    addToCart(1);
+  // — Glassmorphic header on scroll —
+  const header = document.getElementById('main-header');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 10) {
+      header.classList.add('glass');
+    } else {
+      header.classList.remove('glass');
+    }
   });
 </script>
 
