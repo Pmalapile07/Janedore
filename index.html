@@ -59,47 +59,28 @@ html, body {
   box-shadow: 0 2px 32px rgba(180,210,240,0.12);
 }
 
-/* White icons + logo filter when over images */
+/* White state — swap to filled white icons via JS class */
+.header-left img{
+  transition: filter 0.3s ease;
+}
 .header.over-image .header-left img{
   filter: brightness(0) invert(1);
 }
-.header.over-image .header i{
-  color: white;
-}
-.header.over-image .cart-badge{
-  color: white;
-}
 
-/* Transition back to black smoothly */
-.header-left img,
-.header i,
-.cart-badge{
-  transition: filter 0.3s ease, color 0.3s ease;
-}
-
-.header-left{
-  display:flex;
-  align-items:center;
-}
-
-.header-left img{
-  height:44px;
-  object-fit:contain;
-}
-
-.header-right{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-
+/* Icons default */
 .header i{
   font-size:26px;
   cursor:pointer;
-  color:#111;
+  transition: opacity 0.2s ease;
 }
-
 .header i:hover{ opacity:0.6; }
+
+/* Coloured icon sets */
+.icon-dark{ color:#111; display:inline !important; }
+.icon-white{ color:white; display:none !important; }
+
+.header.over-image .icon-dark{ display:none !important; }
+.header.over-image .icon-white{ display:inline !important; }
 
 /* CART */
 .cart-wrapper{
@@ -113,7 +94,6 @@ html, body {
   top:-6px;
   right:-8px;
   background:transparent;
-  color:black;
   font-family:Arial, sans-serif;
   font-size:10px;
   font-weight:700;
@@ -127,23 +107,21 @@ html, body {
   pointer-events:none;
   line-height:1;
   border:none;
+  color:black;
+  transition: color 0.3s ease;
 }
+.header.over-image .cart-badge{ color:white; }
+
+.header-left{ display:flex; align-items:center; }
+.header-left img{ height:44px; object-fit:contain; }
+.header-right{ display:flex; align-items:center; gap:18px; }
 
 /* PAGE CONTENT */
-.page-content{
-  padding-top:97px;
-}
+.page-content{ padding-top:97px; }
 
 /* MAIN BANNER */
-.banner{
-  position:relative;
-}
-
-.banner img{
-  width:100%;
-  height:auto;
-  display:block;
-}
+.banner{ position:relative; }
+.banner img{ width:100%; height:auto; display:block; }
 
 .banner-label{
   position:absolute;
@@ -158,18 +136,20 @@ html, body {
   text-shadow:0 2px 14px rgba(0,0,0,0.4);
 }
 
+/* SHOP NOW — underlined Driftune, white */
 .banner-shop{
   position:absolute;
   bottom:32px;
   right:28px;
   color:white;
   font-family:'Driftune', sans-serif;
-  font-size:13px;
-  letter-spacing:2px;
-  line-height:1.15;
+  font-size:11px;
+  letter-spacing:2.5px;
   cursor:pointer;
   text-shadow:0 2px 14px rgba(0,0,0,0.4);
   text-decoration:none;
+  border-bottom:1px solid white;
+  padding-bottom:2px;
 }
 
 /* DUO GRID */
@@ -205,9 +185,7 @@ html, body {
   transition: transform 0.4s ease;
 }
 
-.duo-card:hover .img-wrap img{
-  transform: scale(1.04);
-}
+.duo-card:hover .img-wrap img{ transform: scale(1.04); }
 
 .duo-card::after{
   content:'';
@@ -220,7 +198,6 @@ html, body {
   pointer-events:none;
   z-index:1;
 }
-
 .duo-card:hover::after{
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(4px);
@@ -234,11 +211,7 @@ html, body {
   align-items:center;
   justify-content:center;
 }
-
-.duo-card .img-wrap .ph-placeholder i{
-  font-size:40px;
-  color:#c0c0c0;
-}
+.duo-card .img-wrap .ph-placeholder i{ font-size:40px; color:#c0c0c0; }
 
 .duo-label{
   position:absolute;
@@ -256,7 +229,7 @@ html, body {
   z-index:2;
 }
 
-/* UV BADGE — styled like the NEW tag, top-right, not touching far edge */
+/* UV BADGE */
 .uv-badge{
   position:absolute;
   top:10px;
@@ -277,7 +250,6 @@ html, body {
 .about-section{
   padding:36px 20px 40px;
 }
-
 .about-section h2{
   font-family:'Driftune', sans-serif;
   font-size:22px;
@@ -285,7 +257,6 @@ html, body {
   color:#111;
   margin:0 0 12px 0;
 }
-
 .about-section p{
   font-family:'Manrope', sans-serif;
   font-size:13px;
@@ -296,12 +267,11 @@ html, body {
   max-width:480px;
 }
 
-/* JEWELLERY SECTION HEADER — consistent with about-section */
+/* SECTION HEADER */
 .section-header{
   padding:36px 20px 20px;
   border-top:1px solid #f0f0f0;
 }
-
 .section-tag{
   display:inline-block;
   background:black;
@@ -312,7 +282,6 @@ html, body {
   padding:3px 8px;
   margin-bottom:10px;
 }
-
 .section-header h2{
   font-family:'Driftune', sans-serif;
   font-size:22px;
@@ -321,8 +290,6 @@ html, body {
   margin:0 0 12px 0;
   line-height:1.25;
 }
-
-/* Match paragraph style exactly with about-section p */
 .section-header p{
   font-family:'Manrope', sans-serif;
   font-size:13px;
@@ -333,17 +300,14 @@ html, body {
   max-width:480px;
 }
 
-/* JEWELLERY SCROLL ROW — horizontal scroll, 4 cards visible partially */
+/* JEWELLERY HORIZONTAL SCROLL */
 .jewel-scroll-wrapper{
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
   margin-top:2px;
 }
-
-.jewel-scroll-wrapper::-webkit-scrollbar{
-  display:none;
-}
+.jewel-scroll-wrapper::-webkit-scrollbar{ display:none; }
 
 .jewel-row{
   display:flex;
@@ -351,7 +315,6 @@ html, body {
   width:max-content;
 }
 
-/* Each jewel card — slightly narrower than duo cards */
 .jewel-card{
   position:relative;
   width:52vw;
@@ -359,7 +322,6 @@ html, body {
   cursor:pointer;
   flex-shrink:0;
 }
-
 .jewel-card .img-wrap{
   position:relative;
   width:100%;
@@ -367,7 +329,6 @@ html, body {
   overflow:hidden;
   background:#e8e8e8;
 }
-
 .jewel-card .img-wrap img{
   width:100%;
   height:100%;
@@ -377,11 +338,7 @@ html, body {
   background:white;
   transition: transform 0.4s ease;
 }
-
-.jewel-card:hover .img-wrap img{
-  transform: scale(1.04);
-}
-
+.jewel-card:hover .img-wrap img{ transform: scale(1.04); }
 .jewel-card::after{
   content:'';
   position:absolute;
@@ -393,13 +350,11 @@ html, body {
   pointer-events:none;
   z-index:1;
 }
-
 .jewel-card:hover::after{
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
-
 .jewel-card .img-wrap .ph-placeholder{
   position:absolute;
   inset:0;
@@ -407,12 +362,7 @@ html, body {
   align-items:center;
   justify-content:center;
 }
-
-.jewel-card .img-wrap .ph-placeholder i{
-  font-size:36px;
-  color:#c0c0c0;
-}
-
+.jewel-card .img-wrap .ph-placeholder i{ font-size:36px; color:#c0c0c0; }
 .jewel-label{
   position:absolute;
   bottom:16px;
@@ -428,14 +378,13 @@ html, body {
   z-index:2;
 }
 
-/* BOTTOM CTA */
+/* SHOP JEWELLERY CTA */
 .bottom-cta{
-  padding:28px 20px 48px;
+  padding:28px 20px 40px;
   display:flex;
   flex-direction:column;
   gap:10px;
 }
-
 .bottom-cta p{
   font-family:'Manrope', sans-serif;
   font-size:13px;
@@ -445,7 +394,6 @@ html, body {
   margin:0;
   font-style:italic;
 }
-
 .cta-link{
   display:inline-block;
   font-family:'Driftune', sans-serif;
@@ -456,6 +404,128 @@ html, body {
   padding-bottom:2px;
   cursor:pointer;
   width:fit-content;
+}
+
+/* COLLECTION SECTION */
+.collection-section{
+  padding:36px 20px 20px;
+  border-top:1px solid #f0f0f0;
+}
+.collection-section h2{
+  font-family:'Driftune', sans-serif;
+  font-size:22px;
+  letter-spacing:2px;
+  color:#111;
+  margin:0 0 4px 0;
+}
+.collection-section .sub{
+  font-family:'Manrope', sans-serif;
+  font-size:13px;
+  font-weight:400;
+  color:#555;
+  line-height:1.75;
+  margin:0 0 20px 0;
+}
+
+/* 2x2 product grid */
+.product-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px;
+}
+
+.product-card{
+  position:relative;
+  cursor:pointer;
+  background:#f4f4f4;
+}
+
+.product-card .product-img{
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  display:block;
+  background:#e8e8e8;
+  transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-img{ transform: scale(1.03); }
+
+.product-card .product-img-wrap{
+  overflow:hidden;
+  position:relative;
+}
+
+.product-card .ph-placeholder{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#e8e8e8;
+}
+.product-card .ph-placeholder i{ font-size:36px; color:#c0c0c0; }
+
+.product-info{
+  padding:10px 8px 14px;
+}
+.product-name{
+  font-family:'Driftune', sans-serif;
+  font-size:12px;
+  letter-spacing:1.5px;
+  color:#111;
+  margin:0 0 4px 0;
+}
+.product-price{
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  font-weight:500;
+  color:#555;
+  margin:0;
+}
+
+/* VIEW ALL button */
+.view-all-wrap{
+  padding:20px 20px 36px;
+  text-align:center;
+}
+.view-all-btn{
+  display:inline-block;
+  font-family:'Driftune', sans-serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color:black;
+  border:1px solid black;
+  padding:10px 28px;
+  cursor:pointer;
+  background:transparent;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.view-all-btn:hover{
+  background:black;
+  color:white;
+}
+
+/* ABOUT US SECTION */
+.about-us-section{
+  padding:36px 20px 56px;
+  border-top:1px solid #f0f0f0;
+}
+.about-us-section h2{
+  font-family:'Driftune', sans-serif;
+  font-size:22px;
+  letter-spacing:2px;
+  color:#111;
+  margin:0 0 12px 0;
+}
+.about-us-section p{
+  font-family:'Manrope', sans-serif;
+  font-size:13px;
+  font-weight:400;
+  color:#555;
+  line-height:1.75;
+  margin:0;
+  max-width:480px;
 }
 </style>
 
@@ -469,16 +539,39 @@ html, body {
 
 <header class="header" id="main-header">
   <div class="header-left">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo" id="header-logo">
+    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
   </div>
   <div class="header-right">
-    <i class="ph-light ph-magnifying-glass"></i>
-    <i class="ph-light ph-heart-straight"></i>
-    <div class="cart-wrapper">
-      <i class="ph-light ph-handbag-simple" id="cart-icon"></i>
-      <span class="cart-badge" id="cart-count">0</span>
-    </div>
-    <i class="ph-light ph-list"></i>
+
+
+<!-- Search -->
+<span class="icon-wrap">
+  <i class="ph ph-magnifying-glass icon-dark"></i>
+  <i class="ph ph-magnifying-glass icon-white"></i>
+</span>
+
+<!-- Favourites -->
+<span class="icon-wrap">
+  <i class="ph ph-heart-straight icon-dark"></i>
+  <i class="ph ph-heart-straight icon-white"></i>
+</span>
+
+<!-- Cart -->
+<div class="cart-wrapper">
+  <span class="icon-wrap">
+    <i class="ph-light ph-handbag-simple icon-dark" id="cart-icon"></i>
+    <i class="ph-light ph-handbag-simple icon-white" id="cart-icon-white"></i>
+  </span>
+  <span class="cart-badge" id="cart-count">0</span>
+</div>
+
+<!-- Menu -->
+<span class="icon-wrap">
+  <i class="ph ph-list icon-dark"></i>
+  <i class="ph ph-list icon-white"></i>
+</span>
+
+
   </div>
 </header>
 
@@ -486,7 +579,7 @@ html, body {
 
   <!-- MAIN BANNER -->
 
-  <div class="banner" data-section="image" id="section-banner">
+  <div class="banner" id="section-banner">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="Banner">
     <div class="banner-label">NEW IN<br>CLOTHING</div>
     <span class="banner-shop">SHOP NOW</span>
@@ -494,107 +587,157 @@ html, body {
 
   <!-- ROW 1: SETS + SUNGLASSES -->
 
-  <div class="duo-grid" data-section="image" id="section-row1">
-
-
-<div class="duo-card">
-  <div class="img-wrap">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets" onload="this.nextElementSibling.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-  </div>
-  <div class="duo-label">SETS</div>
-</div>
-
-<div class="duo-card">
-  <div class="uv-badge">UV-400 / BL+</div>
-  <div class="img-wrap">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses" onload="this.nextElementSibling.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-  </div>
-  <div class="duo-label">SUNGLASSES</div>
-</div>
-
-
+  <div class="duo-grid" id="section-row1">
+    <div class="duo-card">
+      <div class="img-wrap">
+        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets" onload="this.nextElementSibling.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">SETS</div>
+    </div>
+    <div class="duo-card">
+      <div class="uv-badge">UV-400 / BL+</div>
+      <div class="img-wrap">
+        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses" onload="this.nextElementSibling.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">SUNGLASSES</div>
+    </div>
   </div>
 
   <!-- ROW 2: BAGS + TOPS -->
 
-  <div class="duo-grid" data-section="image" id="section-row2">
-
-
-<div class="duo-card">
-  <div class="img-wrap">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags"
-         style="width:100%;height:100%;object-fit:cover;display:block;"
-         onload="this.nextElementSibling.style.display='none'"
-         onerror="this.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-  </div>
-  <div class="duo-label">BAGS</div>
-</div>
-
-<div class="duo-card">
-  <div class="img-wrap">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops" onload="this.nextElementSibling.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-  </div>
-  <div class="duo-label">TOPS</div>
-</div>
-
-
+  <div class="duo-grid" id="section-row2">
+    <div class="duo-card">
+      <div class="img-wrap">
+        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags"
+             style="width:100%;height:100%;object-fit:cover;display:block;"
+             onload="this.nextElementSibling.style.display='none'"
+             onerror="this.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">BAGS</div>
+    </div>
+    <div class="duo-card">
+      <div class="img-wrap">
+        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops" onload="this.nextElementSibling.style.display='none'">
+        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      </div>
+      <div class="duo-label">TOPS</div>
+    </div>
   </div>
 
-  <!-- ABOUT / TEXT SECTION -->
+  <!-- THE EDIT -->
 
-  <div class="about-section" data-section="text" id="section-about">
+  <div class="about-section" id="section-text-start">
     <h2>THE EDIT</h2>
     <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
   </div>
 
-  <!-- JEWELLERY SECTION HEADER -->
+  <!-- JEWELLERY HEADER -->
 
-  <div class="section-header" data-section="text" id="section-jewel-header">
+  <div class="section-header">
     <span class="section-tag">NEW</span>
     <h2>STAINLESS STEEL<br>JEWELLERY</h2>
     <p>Tarnish-free. Water-resistant. Built to last — and to be seen.</p>
   </div>
 
-  <!-- JEWELLERY HORIZONTAL SCROLL ROW: 4 cards -->
+  <!-- JEWELLERY HORIZONTAL SCROLL -->
 
-  <div class="jewel-scroll-wrapper" data-section="image" id="section-jewel-row">
+  <div class="jewel-scroll-wrapper" id="section-jewel-row">
     <div class="jewel-row">
-
-
-  <div class="jewel-card">
-    <div class="img-wrap">
-      <img src="" alt="Necklaces" onerror="this.style.display='none'">
-      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+      <div class="jewel-card">
+        <div class="img-wrap">
+          <img src="" alt="Necklaces" onerror="this.style.display='none'">
+          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+        </div>
+        <div class="jewel-label">NECKLACES</div>
+      </div>
+      <div class="jewel-card">
+        <div class="img-wrap">
+          <img src="" alt="Rings" onerror="this.style.display='none'">
+          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+        </div>
+        <div class="jewel-label">RINGS</div>
+      </div>
+      <div class="jewel-card">
+        <div class="img-wrap">
+          <img src="" alt="Bracelets" onerror="this.style.display='none'">
+          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+        </div>
+        <div class="jewel-label">BRACELETS</div>
+      </div>
+      <div class="jewel-card">
+        <div class="img-wrap">
+          <img src="" alt="Earrings" onerror="this.style.display='none'">
+          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+        </div>
+        <div class="jewel-label">EARRINGS</div>
+      </div>
     </div>
-    <div class="jewel-label">NECKLACES</div>
   </div>
 
-  <div class="jewel-card">
-    <div class="img-wrap">
-      <img src="" alt="Rings" onerror="this.style.display='none'">
-      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-    </div>
-    <div class="jewel-label">RINGS</div>
+  <!-- SHOP JEWELLERY CTA -->
+
+  <div class="bottom-cta">
+    <p>Steel that stays. Style that speaks.</p>
+    <span class="cta-link">SHOP JEWELLERY</span>
   </div>
 
-  <div class="jewel-card">
-    <div class="img-wrap">
-      <img src="" alt="Bracelets" onerror="this.style.display='none'">
+  <!-- COLLECTION SECTION -->
+
+  <div class="collection-section">
+    <h2>THE COLLECTION</h2>
+    <p class="sub">Handpicked pieces, ready to wear.</p>
+
+<div class="product-grid">
+
+  <!-- Product 1 -->
+  <div class="product-card">
+    <div class="product-img-wrap">
+      <img class="product-img" src="" alt="Product 1" onerror="this.style.display='none'">
       <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
     </div>
-    <div class="jewel-label">BRACELETS</div>
+    <div class="product-info">
+      <p class="product-name">ITEM NAME</p>
+      <p class="product-price">R 0.00</p>
+    </div>
   </div>
 
-  <div class="jewel-card">
-    <div class="img-wrap">
-      <img src="" alt="Earrings" onerror="this.style.display='none'">
+  <!-- Product 2 -->
+  <div class="product-card">
+    <div class="product-img-wrap">
+      <img class="product-img" src="" alt="Product 2" onerror="this.style.display='none'">
       <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
     </div>
-    <div class="jewel-label">EARRINGS</div>
+    <div class="product-info">
+      <p class="product-name">ITEM NAME</p>
+      <p class="product-price">R 0.00</p>
+    </div>
+  </div>
+
+  <!-- Product 3 -->
+  <div class="product-card">
+    <div class="product-img-wrap">
+      <img class="product-img" src="" alt="Product 3" onerror="this.style.display='none'">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="product-info">
+      <p class="product-name">ITEM NAME</p>
+      <p class="product-price">R 0.00</p>
+    </div>
+  </div>
+
+  <!-- Product 4 -->
+  <div class="product-card">
+    <div class="product-img-wrap">
+      <img class="product-img" src="" alt="Product 4" onerror="this.style.display='none'">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="product-info">
+      <p class="product-name">ITEM NAME</p>
+      <p class="product-price">R 0.00</p>
+    </div>
   </div>
 
 </div>
@@ -602,11 +745,17 @@ html, body {
 
   </div>
 
-  <!-- BOTTOM CTA -->
+  <!-- VIEW ALL -->
 
-  <div class="bottom-cta" data-section="text">
-    <p>Steel that stays. Style that speaks.</p>
-    <span class="cta-link">SHOP JEWELLERY</span>
+  <div class="view-all-wrap">
+    <span class="view-all-btn">VIEW ALL</span>
+  </div>
+
+  <!-- ABOUT US -->
+
+  <div class="about-us-section">
+    <h2>ABOUT US</h2>
+    <p>Janedore was born from a simple belief — that great style shouldn't be hard to find. We curate pieces that are hard to come by, beautifully made, and priced for real life. From clothing to accessories, every item in our store is chosen with care. We're a small team with a big eye for quality, and we're just getting started.</p>
   </div>
 
 </div>
@@ -619,18 +768,14 @@ html, body {
     badge.textContent = cartCount;
     badge.style.display = 'flex';
   }
-  function addToCart(qty = 1) {
-    cartCount += qty;
-    updateCartBadge();
-  }
+  function addToCart(qty = 1) { cartCount += qty; updateCartBadge(); }
   updateCartBadge();
   document.getElementById('cart-icon').addEventListener('click', () => addToCart(1));
+  document.getElementById('cart-icon-white').addEventListener('click', () => addToCart(1));
 
-  // — Header colour + glass logic on scroll —
+  // — Header colour + glass logic —
   const header = document.getElementById('main-header');
-  const headerHeight = 97; // announcement + header combined
 
-  // All image sections
   const imageSections = [
     document.getElementById('section-banner'),
     document.getElementById('section-row1'),
@@ -640,36 +785,21 @@ html, body {
 
   function isHeaderOverImage() {
     const scrollY = window.scrollY;
-    const headerBottom = scrollY + headerHeight;
-
+    const headerBottom = scrollY + 97;
     for (const section of imageSections) {
+      if (!section) continue;
       const top = section.offsetTop;
       const bottom = top + section.offsetHeight;
-      // Header centre point is between top and bottom of an image section
-      if (headerBottom > top + 20 && scrollY + 60 < bottom) {
-        return true;
-      }
+      if (headerBottom > top + 10 && scrollY + 60 < bottom) return true;
     }
     return false;
   }
 
   window.addEventListener('scroll', () => {
-    // Glass effect
-    if (window.scrollY > 10) {
-      header.classList.add('glass');
-    } else {
-      header.classList.remove('glass');
-    }
-
-    // White/black icon toggle
-    if (isHeaderOverImage()) {
-      header.classList.add('over-image');
-    } else {
-      header.classList.remove('over-image');
-    }
+    header.classList.toggle('glass', window.scrollY > 10);
+    header.classList.toggle('over-image', isHeaderOverImage());
   });
 
-  // Run once on load
   window.dispatchEvent(new Event('scroll'));
 </script>
 
