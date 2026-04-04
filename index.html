@@ -36,7 +36,7 @@ html, body {
   z-index:1001;
 }
 
-/* HEADER — solid white at top, glassmorphic on scroll */
+/* HEADER */
 .header{
   display:flex;
   align-items:center;
@@ -52,12 +52,29 @@ html, body {
   transition: background 0.35s ease, backdrop-filter 0.35s ease, box-shadow 0.35s ease;
 }
 
-/* Glassmorphic state — added via JS on scroll */
 .header.glass{
   background: rgba(255,255,255,0.18);
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   box-shadow: 0 2px 32px rgba(180,210,240,0.12);
+}
+
+/* White icons + logo filter when over images */
+.header.over-image .header-left img{
+  filter: brightness(0) invert(1);
+}
+.header.over-image .header i{
+  color: white;
+}
+.header.over-image .cart-badge{
+  color: white;
+}
+
+/* Transition back to black smoothly */
+.header-left img,
+.header i,
+.cart-badge{
+  transition: filter 0.3s ease, color 0.3s ease;
 }
 
 .header-left{
@@ -80,7 +97,6 @@ html, body {
   font-size:26px;
   cursor:pointer;
   color:#111;
-  transition:opacity 0.2s ease;
 }
 
 .header i:hover{ opacity:0.6; }
@@ -189,12 +205,10 @@ html, body {
   transition: transform 0.4s ease;
 }
 
-/* Subtle zoom on hover */
 .duo-card:hover .img-wrap img{
   transform: scale(1.04);
 }
 
-/* Glassmorphic overlay on hover */
 .duo-card::after{
   content:'';
   position:absolute;
@@ -226,7 +240,6 @@ html, body {
   color:#c0c0c0;
 }
 
-/* label ON the image — bottom center */
 .duo-label{
   position:absolute;
   bottom:16px;
@@ -243,18 +256,17 @@ html, body {
   z-index:2;
 }
 
-/* UV BADGE — flush to top-right corner, no gap */
+/* UV BADGE — styled like the NEW tag, top-right, not touching far edge */
 .uv-badge{
   position:absolute;
-  top:0;
-  right:0;
+  top:10px;
+  right:10px;
   background:black;
   color:white;
-  font-family:Arial, sans-serif;
+  font-family:'Driftune', sans-serif;
   font-size:7px;
-  font-weight:700;
-  letter-spacing:0.8px;
-  padding:5px 8px;
+  letter-spacing:1.5px;
+  padding:3px 8px;
   border-radius:0;
   z-index:3;
   pointer-events:none;
@@ -284,7 +296,7 @@ html, body {
   max-width:480px;
 }
 
-/* SECTION HEADER */
+/* JEWELLERY SECTION HEADER — consistent with about-section */
 .section-header{
   padding:36px 20px 20px;
   border-top:1px solid #f0f0f0;
@@ -306,28 +318,114 @@ html, body {
   font-size:22px;
   letter-spacing:2px;
   color:#111;
-  margin:0 0 8px 0;
+  margin:0 0 12px 0;
   line-height:1.25;
 }
 
+/* Match paragraph style exactly with about-section p */
 .section-header p{
   font-family:'Manrope', sans-serif;
-  font-size:12px;
-  color:#888;
+  font-size:13px;
+  font-weight:400;
+  color:#555;
+  line-height:1.75;
   margin:0;
-  letter-spacing:0.3px;
+  max-width:480px;
 }
 
-/* TRIO GRID — 3 cards */
-.trio-grid{
-  display:flex;
-  gap:2px;
-  background:#fff;
+/* JEWELLERY SCROLL ROW — horizontal scroll, 4 cards visible partially */
+.jewel-scroll-wrapper{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
   margin-top:2px;
 }
 
-.trio-grid .duo-card .img-wrap{
-  aspect-ratio:2/3;
+.jewel-scroll-wrapper::-webkit-scrollbar{
+  display:none;
+}
+
+.jewel-row{
+  display:flex;
+  gap:2px;
+  width:max-content;
+}
+
+/* Each jewel card — slightly narrower than duo cards */
+.jewel-card{
+  position:relative;
+  width:52vw;
+  overflow:hidden;
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+.jewel-card .img-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:3/4;
+  overflow:hidden;
+  background:#e8e8e8;
+}
+
+.jewel-card .img-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+  background:white;
+  transition: transform 0.4s ease;
+}
+
+.jewel-card:hover .img-wrap img{
+  transform: scale(1.04);
+}
+
+.jewel-card::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background: rgba(255,255,255,0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: background 0.35s ease, backdrop-filter 0.35s ease;
+  pointer-events:none;
+  z-index:1;
+}
+
+.jewel-card:hover::after{
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.jewel-card .img-wrap .ph-placeholder{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.jewel-card .img-wrap .ph-placeholder i{
+  font-size:36px;
+  color:#c0c0c0;
+}
+
+.jewel-label{
+  position:absolute;
+  bottom:16px;
+  left:0;
+  right:0;
+  text-align:center;
+  color:white;
+  font-family:'Driftune', sans-serif;
+  font-size:13px;
+  letter-spacing:2px;
+  pointer-events:none;
+  text-shadow:0 2px 10px rgba(0,0,0,0.45);
+  z-index:2;
 }
 
 /* BOTTOM CTA */
@@ -340,8 +438,10 @@ html, body {
 
 .bottom-cta p{
   font-family:'Manrope', sans-serif;
-  font-size:12px;
-  color:#888;
+  font-size:13px;
+  font-weight:400;
+  color:#555;
+  line-height:1.75;
   margin:0;
   font-style:italic;
 }
@@ -369,7 +469,7 @@ html, body {
 
 <header class="header" id="main-header">
   <div class="header-left">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
+    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo" id="header-logo">
   </div>
   <div class="header-right">
     <i class="ph-light ph-magnifying-glass"></i>
@@ -386,7 +486,7 @@ html, body {
 
   <!-- MAIN BANNER -->
 
-  <div class="banner">
+  <div class="banner" data-section="image" id="section-banner">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="Banner">
     <div class="banner-label">NEW IN<br>CLOTHING</div>
     <span class="banner-shop">SHOP NOW</span>
@@ -394,10 +494,9 @@ html, body {
 
   <!-- ROW 1: SETS + SUNGLASSES -->
 
-  <div class="duo-grid">
+  <div class="duo-grid" data-section="image" id="section-row1">
 
 
-<!-- SETS -->
 <div class="duo-card">
   <div class="img-wrap">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets" onload="this.nextElementSibling.style.display='none'">
@@ -406,7 +505,6 @@ html, body {
   <div class="duo-label">SETS</div>
 </div>
 
-<!-- SUNGLASSES — UV badge flush top-right corner -->
 <div class="duo-card">
   <div class="uv-badge">UV-400 / BL+</div>
   <div class="img-wrap">
@@ -421,10 +519,9 @@ html, body {
 
   <!-- ROW 2: BAGS + TOPS -->
 
-  <div class="duo-grid">
+  <div class="duo-grid" data-section="image" id="section-row2">
 
 
-<!-- BAGS -->
 <div class="duo-card">
   <div class="img-wrap">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags"
@@ -436,7 +533,6 @@ html, body {
   <div class="duo-label">BAGS</div>
 </div>
 
-<!-- TOPS -->
 <div class="duo-card">
   <div class="img-wrap">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops" onload="this.nextElementSibling.style.display='none'">
@@ -450,46 +546,57 @@ html, body {
 
   <!-- ABOUT / TEXT SECTION -->
 
-  <div class="about-section">
+  <div class="about-section" data-section="text" id="section-about">
     <h2>THE EDIT</h2>
     <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
   </div>
 
-  <!-- JEWELRY SECTION HEADER -->
+  <!-- JEWELLERY SECTION HEADER -->
 
-  <div class="section-header">
+  <div class="section-header" data-section="text" id="section-jewel-header">
     <span class="section-tag">NEW</span>
     <h2>STAINLESS STEEL<br>JEWELLERY</h2>
     <p>Tarnish-free. Water-resistant. Built to last — and to be seen.</p>
   </div>
 
-  <!-- JEWELRY ROW: 3 cards side by side -->
+  <!-- JEWELLERY HORIZONTAL SCROLL ROW: 4 cards -->
 
-  <div class="trio-grid">
+  <div class="jewel-scroll-wrapper" data-section="image" id="section-jewel-row">
+    <div class="jewel-row">
 
 
-<div class="duo-card">
-  <div class="img-wrap">
-    <img src="" alt="Necklaces" onerror="this.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  <div class="jewel-card">
+    <div class="img-wrap">
+      <img src="" alt="Necklaces" onerror="this.style.display='none'">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="jewel-label">NECKLACES</div>
   </div>
-  <div class="duo-label">NECKLACES</div>
-</div>
 
-<div class="duo-card">
-  <div class="img-wrap">
-    <img src="" alt="Rings" onerror="this.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  <div class="jewel-card">
+    <div class="img-wrap">
+      <img src="" alt="Rings" onerror="this.style.display='none'">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="jewel-label">RINGS</div>
   </div>
-  <div class="duo-label">RINGS</div>
-</div>
 
-<div class="duo-card">
-  <div class="img-wrap">
-    <img src="" alt="Bracelets" onerror="this.style.display='none'">
-    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  <div class="jewel-card">
+    <div class="img-wrap">
+      <img src="" alt="Bracelets" onerror="this.style.display='none'">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="jewel-label">BRACELETS</div>
   </div>
-  <div class="duo-label">BRACELETS</div>
+
+  <div class="jewel-card">
+    <div class="img-wrap">
+      <img src="" alt="Earrings" onerror="this.style.display='none'">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="jewel-label">EARRINGS</div>
+  </div>
+
 </div>
 
 
@@ -497,7 +604,7 @@ html, body {
 
   <!-- BOTTOM CTA -->
 
-  <div class="bottom-cta">
+  <div class="bottom-cta" data-section="text">
     <p>Steel that stays. Style that speaks.</p>
     <span class="cta-link">SHOP JEWELLERY</span>
   </div>
@@ -519,15 +626,51 @@ html, body {
   updateCartBadge();
   document.getElementById('cart-icon').addEventListener('click', () => addToCart(1));
 
-  // — Glassmorphic header on scroll —
+  // — Header colour + glass logic on scroll —
   const header = document.getElementById('main-header');
+  const headerHeight = 97; // announcement + header combined
+
+  // All image sections
+  const imageSections = [
+    document.getElementById('section-banner'),
+    document.getElementById('section-row1'),
+    document.getElementById('section-row2'),
+    document.getElementById('section-jewel-row'),
+  ];
+
+  function isHeaderOverImage() {
+    const scrollY = window.scrollY;
+    const headerBottom = scrollY + headerHeight;
+
+    for (const section of imageSections) {
+      const top = section.offsetTop;
+      const bottom = top + section.offsetHeight;
+      // Header centre point is between top and bottom of an image section
+      if (headerBottom > top + 20 && scrollY + 60 < bottom) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   window.addEventListener('scroll', () => {
+    // Glass effect
     if (window.scrollY > 10) {
       header.classList.add('glass');
     } else {
       header.classList.remove('glass');
     }
+
+    // White/black icon toggle
+    if (isHeaderOverImage()) {
+      header.classList.add('over-image');
+    } else {
+      header.classList.remove('over-image');
+    }
   });
+
+  // Run once on load
+  window.dispatchEvent(new Event('scroll'));
 </script>
 
 </body>
