@@ -54,10 +54,10 @@ html, body {
 
 /* Glassmorphic state — added via JS on scroll */
 .header.glass{
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 2px 24px rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  box-shadow: 0 2px 32px rgba(180,210,240,0.12);
 }
 
 .header-left{
@@ -255,7 +255,7 @@ html, body {
   font-weight:700;
   letter-spacing:0.8px;
   padding:5px 8px;
-  border-radius:0 0 0 4px;
+  border-radius:0;
   z-index:3;
   pointer-events:none;
   white-space:nowrap;
@@ -282,6 +282,80 @@ html, body {
   line-height:1.75;
   margin:0;
   max-width:480px;
+}
+
+/* SECTION HEADER */
+.section-header{
+  padding:36px 20px 20px;
+  border-top:1px solid #f0f0f0;
+}
+
+.section-tag{
+  display:inline-block;
+  background:black;
+  color:white;
+  font-family:'Driftune', sans-serif;
+  font-size:9px;
+  letter-spacing:2px;
+  padding:3px 8px;
+  margin-bottom:10px;
+}
+
+.section-header h2{
+  font-family:'Driftune', sans-serif;
+  font-size:22px;
+  letter-spacing:2px;
+  color:#111;
+  margin:0 0 8px 0;
+  line-height:1.25;
+}
+
+.section-header p{
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  color:#888;
+  margin:0;
+  letter-spacing:0.3px;
+}
+
+/* TRIO GRID — 3 cards */
+.trio-grid{
+  display:flex;
+  gap:2px;
+  background:#fff;
+  margin-top:2px;
+}
+
+.trio-grid .duo-card .img-wrap{
+  aspect-ratio:2/3;
+}
+
+/* BOTTOM CTA */
+.bottom-cta{
+  padding:28px 20px 48px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.bottom-cta p{
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  color:#888;
+  margin:0;
+  font-style:italic;
+}
+
+.cta-link{
+  display:inline-block;
+  font-family:'Driftune', sans-serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color:black;
+  border-bottom:1px solid black;
+  padding-bottom:2px;
+  cursor:pointer;
+  width:fit-content;
 }
 </style>
 
@@ -341,7 +415,7 @@ html, body {
   </div>
   <div class="duo-label">SUNGLASSES</div>
 </div>
-
+```
 
   </div>
 
@@ -379,6 +453,53 @@ html, body {
   <div class="about-section">
     <h2>THE EDIT</h2>
     <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
+  </div>
+
+  <!-- JEWELRY SECTION HEADER -->
+
+  <div class="section-header">
+    <span class="section-tag">NEW</span>
+    <h2>STAINLESS STEEL<br>JEWELLERY</h2>
+    <p>Tarnish-free. Water-resistant. Built to last — and to be seen.</p>
+  </div>
+
+  <!-- JEWELRY ROW: 3 cards side by side -->
+
+  <div class="trio-grid">
+
+
+<div class="duo-card">
+  <div class="img-wrap">
+    <img src="" alt="Necklaces" onerror="this.style.display='none'">
+    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  </div>
+  <div class="duo-label">NECKLACES</div>
+</div>
+
+<div class="duo-card">
+  <div class="img-wrap">
+    <img src="" alt="Rings" onerror="this.style.display='none'">
+    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  </div>
+  <div class="duo-label">RINGS</div>
+</div>
+
+<div class="duo-card">
+  <div class="img-wrap">
+    <img src="" alt="Bracelets" onerror="this.style.display='none'">
+    <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+  </div>
+  <div class="duo-label">BRACELETS</div>
+</div>
+
+
+  </div>
+
+  <!-- BOTTOM CTA -->
+
+  <div class="bottom-cta">
+    <p>Steel that stays. Style that speaks.</p>
+    <span class="cta-link">SHOP JEWELLERY</span>
   </div>
 
 </div>
