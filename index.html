@@ -470,9 +470,12 @@ html, body {
 /* FAVOURITES OVERLAY */
 .fav-overlay{
   position:fixed;
-  inset:0;
+  top:97px;          /* sits below announcement + header */
+  left:0;
+  right:0;
+  bottom:0;
   background:white;
-  z-index:2000;
+  z-index:999;       /* below header (1000) so header stays on top */
   display:none;
   flex-direction:column;
   overflow-y:auto;
@@ -483,7 +486,7 @@ html, body {
   display:flex;
   align-items:center;
   gap:10px;
-  padding:52px 20px 0;
+  padding:20px 20px 0;
   position:sticky;
   top:0;
   background:white;
@@ -1090,12 +1093,10 @@ html, body {
   function openFavOverlay() {
     renderFavGrid();
     document.getElementById('fav-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
   }
 
   function closeFavOverlay() {
     document.getElementById('fav-overlay').classList.remove('open');
-    document.body.style.overflow = '';
   }
 
   function setFilter(filter, chip) {
@@ -1149,6 +1150,15 @@ html, body {
   });
 
   window.dispatchEvent(new Event('scroll'));
+
+  // Overlay scroll also drives header glass + colour
+  document.getElementById('fav-overlay').addEventListener('scroll', function() {
+    // When overlay is open, header glass is based on overlay scrollY
+    const overlayScrollY = this.scrollTop;
+    header.classList.toggle('glass', overlayScrollY > 10);
+    // Overlay is all white/text — always black icons
+    header.classList.remove('over-image');
+  });
 </script>
 
 <!-- FAVOURITES OVERLAY -->
