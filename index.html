@@ -16,6 +16,9 @@
 
 html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 
+/* Prevent body scroll when an overlay is open */
+body.overlay-open { overflow: hidden; }
+
 /* ANNOUNCEMENT BAR */
 .announcement{
   background:black;
@@ -44,7 +47,13 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
   transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Glass — only when .over-image is active (added by JS while scrolling over image sections) */
+/*
+  Glass — ONLY when:
+    1. .over-image is active (added by JS while scrolling over image sections on main page)
+    2. AND no overlay/modal is blocking
+  The JS removes over-image whenever an overlay/modal opens, so we never need
+  to override glass in CSS; the class simply won't be present.
+*/
 .header.over-image{
   background: rgba(255,255,255,0.18);
   backdrop-filter: blur(14px) saturate(160%);
@@ -123,6 +132,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
   position:relative;
   display:flex;
   align-items:center;
+  cursor:pointer;
 }
 
 /* PAGE CONTENT */
@@ -234,30 +244,38 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 .about-us-section h2{ font-family:'Driftune', sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px 0; }
 .about-us-section p{ font-family:'Manrope', sans-serif; font-size:13px; font-weight:400; color:#555; line-height:1.75; margin:0; max-width:480px; }
 
-/* PRODUCT FAV BUTTON */
-.product-fav-btn{ position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.25); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3; border:none; transition:background 0.2s ease,transform 0.2s ease; }
-.product-fav-btn:hover{ background:rgba(255,255,255,0.45); transform:scale(1.08); }
-.product-fav-btn i{ font-size:16px; color:white; pointer-events:none; }
-.product-fav-btn.active{ background:rgba(255,255,255,0.5); }
-
-/* FAVOURITES OVERLAY */
+/* ═══════════════════════════════════════
+   FAVOURITES OVERLAY — TRUE FULL SCREEN
+   Covers everything including announcement + header
+═══════════════════════════════════════ */
 .fav-overlay{
   position:fixed;
-  top:97px; left:0; right:0; bottom:0;
+  /* Start below header so it doesn't obscure it — header sits on top via z-index */
+  top:0; left:0; right:0; bottom:0;
   background:white;
-  z-index:999;
+  z-index:998; /* below header (1000) so header always shows on top */
   display:none;
   flex-direction:column;
   overflow-y:auto;
+  overflow-x:hidden;
 }
 .fav-overlay.open{ display:flex; }
+
+/* Push content down so it clears the fixed header+bar (27px bar + 70px header = 97px) */
+.fav-overlay-inner{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  padding-top:97px; /* clears announcement+header */
+}
+
 .fav-overlay-header{
   display:flex;
   align-items:center;
   justify-content:center;
   padding:20px 20px 16px;
   position:sticky;
-  top:0;
+  top:97px;
   background:white;
   z-index:10;
   border-bottom:1px solid #f0f0f0;
@@ -271,9 +289,169 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 .filter-chip{ flex-shrink:0; font-family:'Driftune', sans-serif; font-size:9px; letter-spacing:1.5px; color:#111; border:1px solid #111; padding:5px 12px; cursor:pointer; background:white; transition:background 0.2s ease,color 0.2s ease; white-space:nowrap; }
 .filter-chip.active,.filter-chip:hover{ background:black; color:white; }
 .fav-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px; flex:1; }
-.fav-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; padding:60px 20px; gap:12px; }
+.fav-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; padding:60px 20px; gap:12px; min-height:300px; }
 .fav-empty i{ font-size:48px; color:#ddd; }
 .fav-empty p{ font-family:'Manrope', sans-serif; font-size:13px; color:#aaa; margin:0; text-align:center; }
+
+/* ═══════════════════════════════════════
+   CART OVERLAY — SAME STRUCTURE AS FAV
+═══════════════════════════════════════ */
+.cart-overlay{
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background:white;
+  z-index:998;
+  display:none;
+  flex-direction:column;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+.cart-overlay.open{ display:flex; }
+
+.cart-overlay-inner{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  padding-top:97px;
+}
+
+.cart-overlay-header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px 20px 16px;
+  position:sticky;
+  top:97px;
+  background:white;
+  z-index:10;
+  border-bottom:1px solid #f0f0f0;
+}
+.cart-overlay-title{ font-family:'Driftune', sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0; text-align:center; }
+
+.cart-overlay-sub{ padding:20px 20px 8px; display:flex; align-items:center; justify-content:space-between; }
+.cart-overlay-sub h3{ font-family:'Driftune', sans-serif; font-size:14px; letter-spacing:1.5px; color:#111; margin:0 0 4px 0; }
+.cart-overlay-sub p{ font-family:'Manrope', sans-serif; font-size:12px; color:#888; margin:0; }
+
+/* CART ITEMS LIST */
+.cart-items-list{ flex:1; padding:0 20px; }
+
+.cart-item{
+  display:flex;
+  gap:14px;
+  padding:16px 0;
+  border-bottom:1px solid #f0f0f0;
+  align-items:flex-start;
+}
+.cart-item-img{
+  width:72px;
+  height:90px;
+  object-fit:cover;
+  background:#e8e8e8;
+  flex-shrink:0;
+}
+.cart-item-img-ph{
+  width:72px;
+  height:90px;
+  background:#e8e8e8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.cart-item-img-ph i{ font-size:24px; color:#ccc; }
+.cart-item-info{ flex:1; display:flex; flex-direction:column; gap:4px; }
+.cart-item-name{ font-family:'Driftune', sans-serif; font-size:12px; letter-spacing:1.5px; color:#111; margin:0; }
+.cart-item-size{ font-family:'Manrope', sans-serif; font-size:11px; color:#888; margin:0; }
+.cart-item-price{ font-family:'Manrope', sans-serif; font-size:12px; font-weight:600; color:#111; margin:0; }
+.cart-item-qty{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:8px;
+}
+.qty-btn{
+  width:26px; height:26px;
+  border:1px solid #ddd;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-family:'Driftune', sans-serif;
+  font-size:14px;
+  color:#111;
+  transition:background 0.2s ease;
+  flex-shrink:0;
+}
+.qty-btn:hover{ background:#f5f5f5; }
+.qty-num{ font-family:'Manrope', sans-serif; font-size:13px; font-weight:600; color:#111; min-width:16px; text-align:center; }
+.cart-item-remove{
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:2px;
+}
+.cart-item-remove i{ font-size:18px; color:#bbb; }
+.cart-item-remove:hover i{ color:#111; }
+
+/* CART EMPTY */
+.cart-empty{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  flex:1;
+  padding:60px 20px;
+  gap:12px;
+  min-height:300px;
+}
+.cart-empty i{ font-size:48px; color:#ddd; }
+.cart-empty p{ font-family:'Manrope', sans-serif; font-size:13px; color:#aaa; margin:0; text-align:center; }
+
+/* CART ORDER SUMMARY */
+.cart-summary{
+  padding:20px;
+  border-top:1px solid #f0f0f0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  background:white;
+  /* stick above checkout button */
+  padding-bottom:90px;
+}
+.cart-summary-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.cart-summary-label{ font-family:'Manrope', sans-serif; font-size:12px; color:#888; }
+.cart-summary-value{ font-family:'Manrope', sans-serif; font-size:12px; font-weight:600; color:#111; }
+.cart-summary-divider{ height:1px; background:#f0f0f0; margin:4px 0; }
+.cart-summary-total-label{ font-family:'Driftune', sans-serif; font-size:14px; letter-spacing:1.5px; color:#111; }
+.cart-summary-total-value{ font-family:'Driftune', sans-serif; font-size:14px; letter-spacing:1px; color:#111; }
+.cart-free-ship-note{ font-family:'Manrope', sans-serif; font-size:11px; color:#27ae60; font-style:italic; }
+
+/* CHECKOUT BTN */
+.cart-checkout-btn{
+  position:fixed;
+  bottom:0; left:0; right:0;
+  background:black;
+  color:white;
+  font-family:'Driftune', sans-serif;
+  font-size:13px;
+  letter-spacing:3px;
+  text-align:center;
+  padding:18px 20px;
+  cursor:pointer;
+  border:none;
+  z-index:1600;
+  display:none;
+}
+.cart-checkout-btn.visible{ display:block; }
 
 /* ═══════════════════════════════════════
    PRODUCT MODAL
@@ -282,13 +460,21 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
   position:fixed;
   inset:0;
   background:white;
-  z-index:1500;
+  /* z-index 998 so header (1000) always renders on top */
+  z-index:998;
   display:none;
   flex-direction:column;
   overflow-y:auto;
-  /* sits above page but below nothing — header is z-index:1000 so we go above */
 }
 .product-modal.open{ display:flex; }
+
+/* Push modal content below the fixed header */
+.modal-content-inner{
+  padding-top:97px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
+}
 
 /* IMAGE SLIDER */
 .modal-slider-wrap{
@@ -346,7 +532,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
   transform:scale(1.3);
 }
 
-/* Close button — top right, glassmorphic circle */
+/* Close button */
 .modal-close{
   position:absolute;
   top:14px; right:14px;
@@ -364,7 +550,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 }
 .modal-close i{ font-size:18px; color:#111; }
 
-/* Fav button — bottom right of slider, black */
+/* Fav button */
 .modal-fav-btn{
   position:absolute;
   bottom:14px; right:14px;
@@ -384,7 +570,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 
 /* PRODUCT DETAILS */
 .modal-details{
-  padding:20px 20px 120px; /* bottom padding for sticky button */
+  padding:20px 20px 120px;
   flex:1;
 }
 
@@ -403,7 +589,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
   margin:0 0 20px 0;
 }
 
-/* VARIANTS — circular thumbnails */
+/* VARIANTS */
 .modal-variants-label{
   font-family:'Driftune', sans-serif;
   font-size:10px;
@@ -549,7 +735,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
       <span class="fav-badge" id="fav-count">0</span>
     </div>
     <!-- Cart -->
-    <div class="cart-wrapper">
+    <div class="cart-wrapper" id="cart-wrapper" onclick="openCartOverlay()">
       <span class="icon-wrap">
         <i class="ph-light ph-handbag-simple icon-dark" id="cart-icon"></i>
         <i class="ph-light ph-handbag-simple icon-white" id="cart-icon-white"></i>
@@ -574,7 +760,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
     <span class="banner-shop">SHOP NOW</span>
   </div>
 
-  <!-- ROW 1: SETS + SUNGLASSES -->
+  <!-- ROW 1 -->
 
   <div class="duo-grid" id="section-row1">
     <div class="duo-card">
@@ -594,7 +780,7 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
     </div>
   </div>
 
-  <!-- ROW 2: BAGS + TOPS -->
+  <!-- ROW 2 -->
 
   <div class="duo-grid" id="section-row2">
     <div class="duo-card">
@@ -760,422 +946,657 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 
 </div>
 
-<!-- FAVOURITES OVERLAY -->
+<!-- ═══════════════════════════════════════
+     FAVOURITES OVERLAY
+═══════════════════════════════════════ -->
 
 <div class="fav-overlay" id="fav-overlay">
-  <div class="fav-overlay-header">
-    <h2 class="fav-overlay-title">MY FAVOURITES</h2>
-  </div>
-  <div class="fav-overlay-sub">
-    <h3>MY ITEMS</h3>
-    <p id="fav-item-count">0 items</p>
-  </div>
-  <div class="fav-filter-bar">
-    <span class="filter-chip active" onclick="setFilter('newest',this)">NEWEST</span>
-    <span class="filter-chip" onclick="setFilter('popular',this)">MOST POPULAR</span>
-    <span class="filter-chip" onclick="setFilter('high',this)">HIGH TO LOW</span>
-    <span class="filter-chip" onclick="setFilter('low',this)">LOW TO HIGH</span>
-  </div>
-  <div class="fav-grid" id="fav-grid"></div>
-  <div class="fav-empty" id="fav-empty">
-    <i class="ph ph-heart-straight"></i>
-    <p>Nothing here yet.<br>Tap the heart on any item to save it.</p>
+  <div class="fav-overlay-inner">
+    <div class="fav-overlay-header">
+      <h2 class="fav-overlay-title">MY FAVOURITES</h2>
+    </div>
+    <div class="fav-overlay-sub">
+      <h3>MY ITEMS</h3>
+      <p id="fav-item-count">0 items</p>
+    </div>
+    <div class="fav-filter-bar">
+      <span class="filter-chip active" onclick="setFilter('newest',this)">NEWEST</span>
+      <span class="filter-chip" onclick="setFilter('popular',this)">MOST POPULAR</span>
+      <span class="filter-chip" onclick="setFilter('high',this)">HIGH TO LOW</span>
+      <span class="filter-chip" onclick="setFilter('low',this)">LOW TO HIGH</span>
+    </div>
+    <div class="fav-grid" id="fav-grid"></div>
+    <div class="fav-empty" id="fav-empty">
+      <i class="ph ph-heart-straight"></i>
+      <p>Nothing here yet.<br>Tap the heart on any item to save it.</p>
+    </div>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════
+     CART OVERLAY
+═══════════════════════════════════════ -->
+
+<div class="cart-overlay" id="cart-overlay">
+  <div class="cart-overlay-inner">
+    <div class="cart-overlay-header">
+      <h2 class="cart-overlay-title">MY BAG</h2>
+    </div>
+    <div class="cart-overlay-sub">
+      <div>
+        <h3>MY ITEMS</h3>
+        <p id="cart-item-count">0 items</p>
+      </div>
+    </div>
+
+
+<!-- Cart items rendered here -->
+<div class="cart-items-list" id="cart-items-list"></div>
+
+<!-- Empty state -->
+<div class="cart-empty" id="cart-empty">
+  <i class="ph ph-handbag-simple"></i>
+  <p>Your bag is empty.<br>Add items to get started.</p>
+</div>
+
+<!-- Order summary -->
+<div class="cart-summary" id="cart-summary" style="display:none;">
+  <div class="cart-summary-row">
+    <span class="cart-summary-label">SUBTOTAL</span>
+    <span class="cart-summary-value" id="cart-subtotal">R 0.00</span>
+  </div>
+  <div class="cart-summary-row">
+    <span class="cart-summary-label">SHIPPING</span>
+    <span class="cart-summary-value" id="cart-shipping">Calculated at checkout</span>
+  </div>
+  <div class="cart-summary-divider"></div>
+  <div class="cart-summary-row">
+    <span class="cart-summary-total-label">TOTAL</span>
+    <span class="cart-summary-total-value" id="cart-total">R 0.00</span>
+  </div>
+  <p class="cart-free-ship-note" id="cart-ship-note"></p>
+</div>
+
+
+  </div>
+</div>
+
+<!-- STICKY CHECKOUT BUTTON (for cart) -->
+
+<button class="cart-checkout-btn" id="cart-checkout-btn">PROCEED TO CHECKOUT</button>
+
+<!-- ═══════════════════════════════════════
+     PRODUCT MODAL
+═══════════════════════════════════════ -->
+
+<div class="product-modal" id="product-modal">
+  <div class="modal-content-inner">
+
+
+<!-- IMAGE SLIDER -->
+<div class="modal-slider-wrap">
+  <div class="modal-slides" id="modal-slides"></div>
+  <div class="modal-dots" id="modal-dots"></div>
+
+  <!-- Close -->
+  <button class="modal-close" onclick="closeProductModal()">
+    <i class="ph ph-x"></i>
+  </button>
+
+  <!-- Fav -->
+  <button class="modal-fav-btn" id="modal-fav-btn" onclick="toggleModalFav()">
+    <i class="ph ph-heart-straight" id="modal-fav-icon"></i>
+  </button>
+</div>
+
+<!-- DETAILS -->
+<div class="modal-details">
+  <h2 class="modal-name" id="modal-name">ITEM NAME</h2>
+  <p class="modal-price" id="modal-price">R 0.00</p>
+
+  <p class="modal-variants-label">VARIANTS</p>
+  <div class="modal-variants" id="modal-variants"></div>
+
+  <p class="modal-size-label">SELECT SIZE</p>
+  <div class="modal-sizes" id="modal-sizes">
+    <span class="modal-size" onclick="selectSize(this)">XS</span>
+    <span class="modal-size" onclick="selectSize(this)">S</span>
+    <span class="modal-size" onclick="selectSize(this)">M</span>
+    <span class="modal-size" onclick="selectSize(this)">L</span>
+    <span class="modal-size" onclick="selectSize(this)">XL</span>
+  </div>
+
+  <div class="modal-desc-toggle" id="modal-desc-toggle" onclick="toggleDesc()">
+    <span>PRODUCT DESCRIPTION</span>
+    <i class="ph ph-caret-down"></i>
+  </div>
+  <div class="modal-desc-body" id="modal-desc-body">
+    <p id="modal-desc-text">Product description will be added via Firebase.</p>
+  </div>
+</div>
+
+
+  </div>
+</div>
+
+<!-- STICKY ADD TO BAG (for product modal) -->
+
+<button class="modal-add-btn" id="modal-add-btn" onclick="addToBag()">ADD TO BAG</button>
 
 <script>
 
-  // ── CART ──
-  let cartCount = 0;
-  function updateCartBadge() {
-    document.getElementById('cart-count').textContent = cartCount;
+/* ══════════════════════════════════════════════
+   OVERLAY STATE — tracks what's currently open
+   so the header glass logic can be suppressed
+══════════════════════════════════════════════ */
+let overlayState = {
+  fav:     false,
+  cart:    false,
+  modal:   false,
+};
+
+function anyOverlayOpen() {
+  return overlayState.fav || overlayState.cart || overlayState.modal;
+}
+
+/* ══════════════════════════════════════════════
+   HEADER GLASS
+   Only applies when: main page is visible
+   (no overlay open) AND scrolled over image section
+══════════════════════════════════════════════ */
+const header = document.getElementById('main-header');
+const imageSectionIds = ['section-banner','section-row1','section-row2','section-jewel-row','product-grid'];
+
+function handleHeaderGlass() {
+  // If ANY overlay/modal is open → always solid white, never glass
+  if (anyOverlayOpen()) {
+    header.classList.remove('over-image');
+    return;
   }
-  document.getElementById('cart-icon').addEventListener('click', () => { cartCount++; updateCartBadge(); });
-  document.getElementById('cart-icon-white').addEventListener('click', () => { cartCount++; updateCartBadge(); });
+
+  // At very top of page — always solid white
+  if (window.scrollY === 0) {
+    header.classList.remove('over-image');
+    return;
+  }
+
+  const headerBottom = header.getBoundingClientRect().bottom;
+  let overImage = false;
+
+  for (const id of imageSectionIds) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.top < headerBottom && rect.bottom > headerBottom) {
+      overImage = true;
+      break;
+    }
+  }
+
+  if (overImage) {
+    header.classList.add('over-image');
+  } else {
+    header.classList.remove('over-image');
+  }
+}
+
+window.addEventListener('scroll', handleHeaderGlass, { passive: true });
+window.addEventListener('load', handleHeaderGlass);
+window.addEventListener('resize', handleHeaderGlass);
+document.querySelectorAll('img').forEach(img => img.addEventListener('load', handleHeaderGlass));
+handleHeaderGlass();
+
+
+/* ══════════════════════════════════════════════
+   CART DATA
+══════════════════════════════════════════════ */
+let cartItems = []; // { id, name, price, imgSrc, size, qty, priceNum }
+
+function parsePrice(str) {
+  return parseFloat((str || '0').replace(/[^0-9.]/g, '')) || 0;
+}
+
+function updateCartBadge() {
+  const total = cartItems.reduce((sum, item) => sum + item.qty, 0);
+  document.getElementById('cart-count').textContent = total;
+}
+
+function renderCartOverlay() {
+  const list    = document.getElementById('cart-items-list');
+  const empty   = document.getElementById('cart-empty');
+  const summary = document.getElementById('cart-summary');
+  const checkoutBtn = document.getElementById('cart-checkout-btn');
+  const countEl = document.getElementById('cart-item-count');
+
+  if (cartItems.length === 0) {
+    list.innerHTML = '';
+    list.style.display = 'none';
+    empty.style.display = 'flex';
+    summary.style.display = 'none';
+    checkoutBtn.classList.remove('visible');
+    countEl.textContent = '0 items';
+    return;
+  }
+
+  empty.style.display = 'none';
+  list.style.display = 'block';
+  summary.style.display = 'flex';
+  summary.style.flexDirection = 'column';
+  checkoutBtn.classList.add('visible');
+
+  const total = cartItems.reduce((sum, i) => sum + i.qty, 0);
+  countEl.textContent = total + (total === 1 ? ' item' : ' items');
+
+  list.innerHTML = cartItems.map(item => `
+    <div class="cart-item" data-cart-id="${item.id}">
+      ${item.imgSrc
+        ? `<img class="cart-item-img" src="${item.imgSrc}" alt="${item.name}">`
+        : `<div class="cart-item-img-ph"><i class="ph-light ph-image"></i></div>`}
+      <div class="cart-item-info">
+        <p class="cart-item-name">${item.name}</p>
+        ${item.size ? `<p class="cart-item-size">Size: ${item.size}</p>` : ''}
+        <p class="cart-item-price">R ${(item.priceNum * item.qty).toFixed(2)}</p>
+        <div class="cart-item-qty">
+          <button class="qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+        </div>
+      </div>
+      <button class="cart-item-remove" onclick="removeCartItem('${item.id}')">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+  `).join('');
+
+  // Summary
+  const subtotal = cartItems.reduce((sum, i) => sum + i.priceNum * i.qty, 0);
+  const FREE_SHIP_THRESHOLD = 750;
+  const shippingFree = subtotal >= FREE_SHIP_THRESHOLD;
+  document.getElementById('cart-subtotal').textContent = 'R ' + subtotal.toFixed(2);
+  document.getElementById('cart-shipping').textContent = shippingFree ? 'FREE' : 'Calculated at checkout';
+  document.getElementById('cart-total').textContent = 'R ' + subtotal.toFixed(2);
+
+  const shipNote = document.getElementById('cart-ship-note');
+  if (shippingFree) {
+    shipNote.textContent = '✓ You qualify for free shipping!';
+  } else {
+    const remaining = (FREE_SHIP_THRESHOLD - subtotal).toFixed(2);
+    shipNote.textContent = `Spend R${remaining} more for free shipping.`;
+    shipNote.style.color = '#888';
+  }
+}
+
+function changeQty(id, delta) {
+  const item = cartItems.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cartItems = cartItems.filter(i => i.id !== id);
+  }
   updateCartBadge();
+  renderCartOverlay();
+}
 
-  // ── FAVOURITES ──
-  let favourites = [];
-  try { const s = localStorage.getItem('jd_favourites'); if (s) favourites = JSON.parse(s); } catch(e){}
-  let currentFilter = 'newest';
+function removeCartItem(id) {
+  cartItems = cartItems.filter(i => i.id !== id);
+  updateCartBadge();
+  renderCartOverlay();
+}
 
-  function saveFavourites() {
-    try { localStorage.setItem('jd_favourites', JSON.stringify(favourites)); } catch(e){}
+/* ══════════════════════════════════════════════
+   CART OVERLAY OPEN / CLOSE
+══════════════════════════════════════════════ */
+function openCartOverlay() {
+  if (overlayState.fav) closeFavOverlay();
+  if (overlayState.modal) closeProductModal();
+
+  renderCartOverlay();
+  document.getElementById('cart-overlay').classList.add('open');
+  document.body.classList.add('overlay-open');
+  overlayState.cart = true;
+
+  // Force solid white header — remove glass
+  header.classList.remove('over-image');
+
+  // Swap cart icon state
+  document.getElementById('cart-wrapper').onclick = closeCartOverlay;
+}
+
+function closeCartOverlay() {
+  document.getElementById('cart-overlay').classList.remove('open');
+  document.getElementById('cart-checkout-btn').classList.remove('visible');
+  document.body.classList.remove('overlay-open');
+  overlayState.cart = false;
+
+  document.getElementById('cart-wrapper').onclick = openCartOverlay;
+  handleHeaderGlass();
+}
+
+
+/* ══════════════════════════════════════════════
+   FAVOURITES DATA
+══════════════════════════════════════════════ */
+let favourites = [];
+try {
+  const s = localStorage.getItem('jd_favourites');
+  if (s) favourites = JSON.parse(s);
+} catch(e) {}
+
+let currentFilter = 'newest';
+
+function saveFavourites() {
+  try { localStorage.setItem('jd_favourites', JSON.stringify(favourites)); } catch(e) {}
+}
+
+function updateFavBadge() {
+  document.getElementById('fav-count').textContent = favourites.length;
+  document.getElementById('fav-item-count').textContent = favourites.length + (favourites.length === 1 ? ' item' : ' items');
+}
+
+function toggleFav(btn) {
+  const card = btn.closest('.product-card');
+  const id = card.dataset.id;
+  const name = card.querySelector('.product-name').textContent;
+  const price = card.querySelector('.product-price').textContent;
+  const imgEl = card.querySelector('.product-img');
+  const imgSrc = imgEl ? imgEl.src : '';
+  const idx = favourites.findIndex(f => f.id === id);
+  if (idx > -1) {
+    favourites.splice(idx, 1);
+    btn.classList.remove('active');
+    btn.querySelector('i').className = 'ph ph-heart-straight';
+  } else {
+    favourites.push({ id, name, price, imgSrc, added: Date.now() });
+    btn.classList.add('active');
+    btn.querySelector('i').className = 'ph ph-heart-fill';
   }
+  saveFavourites();
+  updateFavBadge();
+  renderFavGrid();
+}
 
-  function updateFavBadge() {
-    document.getElementById('fav-count').textContent = favourites.length;
-    document.getElementById('fav-item-count').textContent = favourites.length + (favourites.length === 1 ? ' item' : ' items');
-  }
-
-  function toggleFav(btn) {
-    const card = btn.closest('.product-card');
-    const id = card.dataset.id;
-    const name = card.querySelector('.product-name').textContent;
-    const price = card.querySelector('.product-price').textContent;
-    const imgEl = card.querySelector('.product-img');
-    const imgSrc = imgEl ? imgEl.src : '';
-    const idx = favourites.findIndex(f => f.id === id);
-    if (idx > -1) {
-      favourites.splice(idx, 1);
+function removeFavById(id) {
+  const idx = favourites.findIndex(f => f.id === id);
+  if (idx > -1) favourites.splice(idx, 1);
+  saveFavourites();
+  const mainCard = document.querySelector(`.product-card[data-id="${id}"]`);
+  if (mainCard) {
+    const btn = mainCard.querySelector('.product-fav-btn');
+    if (btn) {
       btn.classList.remove('active');
       btn.querySelector('i').className = 'ph ph-heart-straight';
-    } else {
-      favourites.push({ id, name, price, imgSrc, added: Date.now() });
+    }
+  }
+  updateFavBadge();
+  renderFavGrid();
+}
+
+function renderFavGrid() {
+  const grid  = document.getElementById('fav-grid');
+  const empty = document.getElementById('fav-empty');
+  if (favourites.length === 0) {
+    grid.innerHTML = '';
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+  let sorted = [...favourites];
+  if (currentFilter === 'newest') sorted.sort((a,b) => b.added - a.added);
+  if (currentFilter === 'high')   sorted.sort((a,b) => parsePrice(b.price) - parsePrice(a.price));
+  if (currentFilter === 'low')    sorted.sort((a,b) => parsePrice(a.price) - parsePrice(b.price));
+  grid.innerHTML = sorted.map(item => `
+    <div class="product-card">
+      <div class="product-img-wrap">
+        ${item.imgSrc
+          ? `<img class="product-img" src="${item.imgSrc}" alt="${item.name}">`
+          : `<div class="ph-placeholder"><i class="ph-light ph-image"></i></div>`}
+        <button class="product-fav-btn active" onclick="removeFavById('${item.id}')">
+          <i class="ph ph-heart-fill"></i>
+        </button>
+      </div>
+      <div class="product-info">
+        <p class="product-name">${item.name}</p>
+        <p class="product-price">${item.price}</p>
+      </div>
+    </div>`).join('');
+}
+
+function setFilter(filter, chip) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  renderFavGrid();
+}
+
+/* ══════════════════════════════════════════════
+   FAVOURITES OVERLAY OPEN / CLOSE
+══════════════════════════════════════════════ */
+function openFavOverlay() {
+  if (overlayState.cart) closeCartOverlay();
+  if (overlayState.modal) closeProductModal();
+
+  renderFavGrid();
+  document.getElementById('fav-overlay').classList.add('open');
+  document.body.classList.add('overlay-open');
+  overlayState.fav = true;
+
+  // Force solid white header
+  header.classList.remove('over-image');
+
+  // Swap heart icon to filled
+  document.getElementById('fav-icon-dark').className  = 'ph-fill ph-heart-straight icon-dark';
+  document.getElementById('fav-icon-white').className = 'ph-fill ph-heart-straight icon-white';
+  document.getElementById('fav-wrapper').onclick = closeFavOverlay;
+}
+
+function closeFavOverlay() {
+  document.getElementById('fav-overlay').classList.remove('open');
+  document.body.classList.remove('overlay-open');
+  overlayState.fav = false;
+
+  document.getElementById('fav-icon-dark').className  = 'ph ph-heart-straight icon-dark';
+  document.getElementById('fav-icon-white').className = 'ph ph-heart-straight icon-white';
+  document.getElementById('fav-wrapper').onclick = openFavOverlay;
+
+  handleHeaderGlass();
+}
+
+// Restore card hearts from localStorage
+document.querySelectorAll('.product-card').forEach(card => {
+  if (favourites.find(f => f.id === card.dataset.id)) {
+    const btn = card.querySelector('.product-fav-btn');
+    if (btn) {
       btn.classList.add('active');
       btn.querySelector('i').className = 'ph ph-heart-fill';
     }
-    saveFavourites();
-    updateFavBadge();
-    renderFavGrid();
   }
+});
 
-  function removeFavById(id) {
-    const idx = favourites.findIndex(f => f.id === id);
-    if (idx > -1) favourites.splice(idx, 1);
-    saveFavourites();
-    const mainCard = document.querySelector(`.product-card[data-id="${id}"]`);
-    if (mainCard) {
-      const btn = mainCard.querySelector('.product-fav-btn');
-      if (btn) { btn.classList.remove('active'); btn.querySelector('i').className = 'ph ph-heart-straight'; }
-    }
-    updateFavBadge();
-    renderFavGrid();
-  }
-
-  function parsePrice(str) { return parseFloat((str||'0').replace(/[^0-9.]/g,''))||0; }
-
-  function renderFavGrid() {
-    const grid = document.getElementById('fav-grid');
-    const empty = document.getElementById('fav-empty');
-    if (favourites.length === 0) { grid.innerHTML=''; grid.style.display='none'; empty.style.display='flex'; return; }
-    grid.style.display='grid'; empty.style.display='none';
-    let sorted = [...favourites];
-    if (currentFilter==='newest') sorted.sort((a,b)=>b.added-a.added);
-    if (currentFilter==='high')   sorted.sort((a,b)=>parsePrice(b.price)-parsePrice(a.price));
-    if (currentFilter==='low')    sorted.sort((a,b)=>parsePrice(a.price)-parsePrice(b.price));
-    grid.innerHTML = sorted.map(item=>`
-      <div class="product-card">
-        <div class="product-img-wrap">
-          ${item.imgSrc ? `<img class="product-img" src="${item.imgSrc}" alt="${item.name}">` : `<div class="ph-placeholder"><i class="ph-light ph-image"></i></div>`}
-          <button class="product-fav-btn active" onclick="removeFavById('${item.id}')">
-            <i class="ph ph-heart-fill"></i>
-          </button>
-        </div>
-        <div class="product-info">
-          <p class="product-name">${item.name}</p>
-          <p class="product-price">${item.price}</p>
-        </div>
-      </div>`).join('');
-  }
-
-  function setFilter(filter, chip) {
-    currentFilter = filter;
-    document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
-    chip.classList.add('active');
-    renderFavGrid();
-  }
-
-  function openFavOverlay() {
-    renderFavGrid();
-    document.getElementById('fav-overlay').classList.add('open');
-    document.getElementById('fav-icon-dark').className  = 'ph-fill ph-heart-straight icon-dark';
-    document.getElementById('fav-icon-white').className = 'ph-fill ph-heart-straight icon-white';
-    document.getElementById('fav-wrapper').onclick = closeFavOverlay;
-    // Force black header while overlay open
-    header.classList.remove('over-image');
-  }
-
-  function closeFavOverlay() {
-    document.getElementById('fav-overlay').classList.remove('open');
-    document.getElementById('fav-icon-dark').className  = 'ph ph-heart-straight icon-dark';
-    document.getElementById('fav-icon-white').className = 'ph ph-heart-straight icon-white';
-    document.getElementById('fav-wrapper').onclick = openFavOverlay;
-    handleHeaderGlass();
-  }
-
-  // Restore card hearts from localStorage
-  document.querySelectorAll('.product-card').forEach(card => {
-    if (favourites.find(f => f.id === card.dataset.id)) {
-      const btn = card.querySelector('.product-fav-btn');
-      if (btn) { btn.classList.add('active'); btn.querySelector('i').className = 'ph ph-heart-fill'; }
-    }
-  });
-
-  updateFavBadge();
-
-  // ── HEADER GLASS — ChatGPT's working approach + multi-section + glass only when scrolled ──
-  const header = document.getElementById('main-header');
-
-  // Image sections — header turns glass + white when scrolled over these
-  const imageSectionIds = ['section-banner','section-row1','section-row2','section-jewel-row','product-grid'];
-
-  function handleHeaderGlass() {
-    // At top of page (not scrolled) — always solid white, never glass
-    if (window.scrollY === 0) {
-      header.classList.remove('over-image');
-      return;
-    }
-
-    const headerBottom = header.getBoundingClientRect().bottom;
-    let overImage = false;
-
-    for (const id of imageSectionIds) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      const rect = el.getBoundingClientRect();
-      // Is the bottom edge of the header sitting inside this image section?
-      if (rect.top < headerBottom && rect.bottom > headerBottom) {
-        overImage = true;
-        break;
-      }
-    }
-
-    if (overImage) {
-      header.classList.add('over-image');
-    } else {
-      header.classList.remove('over-image');
-    }
-  }
-
-  window.addEventListener('scroll', handleHeaderGlass, { passive: true });
-  window.addEventListener('load', handleHeaderGlass);
-  window.addEventListener('resize', handleHeaderGlass);
-  // Re-check when images load and shift the layout
-  document.querySelectorAll('img').forEach(img => img.addEventListener('load', handleHeaderGlass));
-
-  handleHeaderGlass();
+updateFavBadge();
+updateCartBadge();
 
 
+/* ══════════════════════════════════════════════
+   PRODUCT MODAL
+══════════════════════════════════════════════ */
+let currentModalProduct = null;
+let currentSlide = 0;
 
-  // ── PRODUCT MODAL ──
-  let currentModalProduct = null;
-  let currentSlide = 0;
-
-  // Make every product card clickable — opens modal
-  // (not the fav button)
-  document.querySelectorAll('.product-card').forEach(card => {
-    card.addEventListener('click', function(e) {
-      if (e.target.closest('.product-fav-btn')) return; // ignore fav tap
-      openProductModal({
-        id:    card.dataset.id || '0',
-        name:  card.querySelector('.product-name')?.textContent || 'ITEM NAME',
-        price: card.querySelector('.product-price')?.textContent || 'R 0.00',
-        desc:  'Product description will be added via Firebase.',
-        // images: array of src strings — Firebase will populate these
-        // For now uses the card's existing product image if any
-        images: (() => {
-          const img = card.querySelector('.product-img');
-          return img && img.src && !img.src.endsWith('/') ? [img.src] : [];
-        })()
-      });
+document.querySelectorAll('.product-card').forEach(card => {
+  card.addEventListener('click', function(e) {
+    if (e.target.closest('.product-fav-btn')) return;
+    openProductModal({
+      id:    card.dataset.id || '0',
+      name:  card.querySelector('.product-name')?.textContent || 'ITEM NAME',
+      price: card.querySelector('.product-price')?.textContent || 'R 0.00',
+      desc:  'Product description will be added via Firebase.',
+      images: (() => {
+        const img = card.querySelector('.product-img');
+        return img && img.src && !img.src.endsWith('/') ? [img.src] : [];
+      })()
     });
   });
+});
 
-  function openProductModal(product) {
-    currentModalProduct = product;
-    currentSlide = 0;
+function openProductModal(product) {
+  if (overlayState.fav) closeFavOverlay();
+  if (overlayState.cart) closeCartOverlay();
 
-    // Name + price
-    document.getElementById('modal-name').textContent  = product.name;
-    document.getElementById('modal-price').textContent = product.price;
-    document.getElementById('modal-desc-text').textContent = product.desc;
+  currentModalProduct = product;
+  currentSlide = 0;
 
-    // Reset description collapsible
-    document.getElementById('modal-desc-body').classList.remove('open');
-    document.getElementById('modal-desc-toggle').classList.remove('open');
+  document.getElementById('modal-name').textContent  = product.name;
+  document.getElementById('modal-price').textContent = product.price;
+  document.getElementById('modal-desc-text').textContent = product.desc;
 
-    // Build slides
-    const slidesEl = document.getElementById('modal-slides');
-    const dotsEl   = document.getElementById('modal-dots');
-    slidesEl.innerHTML = '';
-    dotsEl.innerHTML   = '';
+  document.getElementById('modal-desc-body').classList.remove('open');
+  document.getElementById('modal-desc-toggle').classList.remove('open');
 
-    const images = product.images && product.images.length ? product.images : [];
+  const slidesEl = document.getElementById('modal-slides');
+  const dotsEl   = document.getElementById('modal-dots');
+  slidesEl.innerHTML = '';
+  dotsEl.innerHTML   = '';
 
-    if (images.length === 0) {
-      // Placeholder slide
-      slidesEl.innerHTML = `<div class="modal-slide"><div class="ph-placeholder"><i class="ph-light ph-image"></i></div></div>`;
-      dotsEl.innerHTML   = '';
-    } else {
-      images.forEach((src, i) => {
-        slidesEl.innerHTML += `<div class="modal-slide"><img src="${src}" alt="Product image ${i+1}"></div>`;
-        dotsEl.innerHTML   += `<div class="modal-dot${i===0?' active':''}"></div>`;
-      });
-    }
+  const images = product.images && product.images.length ? product.images : [];
 
-    slidesEl.style.transform = 'translateX(0)';
-
-    // Variants (same images as circles)
-    const variantsEl = document.getElementById('modal-variants');
-    variantsEl.innerHTML = '';
-    if (images.length > 1) {
-      images.forEach((src, i) => {
-        variantsEl.innerHTML += `
-          <div class="modal-variant${i===0?' active':''}" onclick="goToSlide(${i})">
-            <img src="${src}" alt="Variant ${i+1}">
-          </div>`;
-      });
-    } else {
-      // single image or none — show one placeholder circle
-      variantsEl.innerHTML = `<div class="modal-variant active" style="background:#e8e8e8;"></div>`;
-    }
-
-    // Deselect sizes
-    document.querySelectorAll('.modal-size').forEach(s => s.classList.remove('active'));
-
-    // Fav icon state
-    const isFav = favourites.some(f => f.id === product.id);
-    document.getElementById('modal-fav-icon').className = isFav ? 'ph ph-heart-fill' : 'ph ph-heart-straight';
-
-    // Show modal + sticky button
-    document.getElementById('product-modal').classList.add('open');
-    document.getElementById('modal-add-btn').classList.add('visible');
-
-    // Swipe support
-    initSliderSwipe();
+  if (images.length === 0) {
+    slidesEl.innerHTML = `<div class="modal-slide"><div class="ph-placeholder"><i class="ph-light ph-image"></i></div></div>`;
+  } else {
+    images.forEach((src, i) => {
+      slidesEl.innerHTML += `<div class="modal-slide"><img src="${src}" alt="Product image ${i+1}"></div>`;
+      dotsEl.innerHTML   += `<div class="modal-dot${i===0?' active':''}"></div>`;
+    });
   }
 
-  function closeProductModal() {
-    document.getElementById('product-modal').classList.remove('open');
-    document.getElementById('modal-add-btn').classList.remove('visible');
-    currentModalProduct = null;
+  slidesEl.style.transform = 'translateX(0)';
+
+  const variantsEl = document.getElementById('modal-variants');
+  variantsEl.innerHTML = '';
+  if (images.length > 1) {
+    images.forEach((src, i) => {
+      variantsEl.innerHTML += `
+        <div class="modal-variant${i===0?' active':''}" onclick="goToSlide(${i})">
+          <img src="${src}" alt="Variant ${i+1}">
+        </div>`;
+    });
+  } else {
+    variantsEl.innerHTML = `<div class="modal-variant active" style="background:#e8e8e8;"></div>`;
   }
 
-  function goToSlide(index) {
-    const slidesEl = document.getElementById('modal-slides');
-    const total = slidesEl.children.length;
-    if (index < 0) index = 0;
-    if (index >= total) index = total - 1;
-    currentSlide = index;
-    slidesEl.style.transform = `translateX(-${index * 100}%)`;
-    // Update dots
-    document.querySelectorAll('.modal-dot').forEach((d,i) => d.classList.toggle('active', i===index));
-    // Update variant highlights
-    document.querySelectorAll('.modal-variant').forEach((v,i) => v.classList.toggle('active', i===index));
-  }
+  document.querySelectorAll('.modal-size').forEach(s => s.classList.remove('active'));
 
-  function initSliderSwipe() {
-    const wrap = document.getElementById('modal-slides').parentElement;
-    let startX = 0;
-    wrap.ontouchstart = e => { startX = e.touches[0].clientX; };
-    wrap.ontouchend   = e => {
-      const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 40) goToSlide(currentSlide + (diff > 0 ? 1 : -1));
-    };
-  }
+  const isFav = favourites.some(f => f.id === product.id);
+  document.getElementById('modal-fav-icon').className = isFav ? 'ph ph-heart-fill' : 'ph ph-heart-straight';
 
-  function selectSize(el) {
-    document.querySelectorAll('.modal-size').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
-  }
+  document.getElementById('product-modal').classList.add('open');
+  document.getElementById('modal-add-btn').classList.add('visible');
+  overlayState.modal = true;
 
-  function toggleDesc() {
-    document.getElementById('modal-desc-body').classList.toggle('open');
-    document.getElementById('modal-desc-toggle').classList.toggle('open');
-  }
+  // Force solid white header — never glass while modal is open
+  header.classList.remove('over-image');
 
-  function toggleModalFav() {
-    if (!currentModalProduct) return;
-    const id    = currentModalProduct.id;
-    const idx   = favourites.findIndex(f => f.id === id);
-    const icon  = document.getElementById('modal-fav-icon');
-    if (idx > -1) {
-      favourites.splice(idx, 1);
-      icon.className = 'ph ph-heart-straight';
-    } else {
-      favourites.push({
-        id,
-        name:   currentModalProduct.name,
-        price:  currentModalProduct.price,
-        imgSrc: currentModalProduct.images?.[0] || '',
-        added:  Date.now()
-      });
-      icon.className = 'ph ph-heart-fill';
-    }
-    saveFavourites();
-    updateFavBadge();
-    // Sync card heart
-    const card = document.querySelector(`.product-card[data-id="${id}"]`);
-    if (card) {
-      const btn = card.querySelector('.product-fav-btn');
-      if (btn) {
-        const isFav = favourites.some(f => f.id === id);
-        btn.classList.toggle('active', isFav);
-        btn.querySelector('i').className = isFav ? 'ph ph-heart-fill' : 'ph ph-heart-straight';
-      }
+  initSliderSwipe();
+}
+
+function closeProductModal() {
+  document.getElementById('product-modal').classList.remove('open');
+  document.getElementById('modal-add-btn').classList.remove('visible');
+  overlayState.modal = false;
+  currentModalProduct = null;
+
+  handleHeaderGlass();
+}
+
+function goToSlide(index) {
+  const slidesEl = document.getElementById('modal-slides');
+  const total = slidesEl.children.length;
+  if (index < 0) index = 0;
+  if (index >= total) index = total - 1;
+  currentSlide = index;
+  slidesEl.style.transform = `translateX(-${index * 100}%)`;
+  document.querySelectorAll('.modal-dot').forEach((d,i) => d.classList.toggle('active', i===index));
+  document.querySelectorAll('.modal-variant').forEach((v,i) => v.classList.toggle('active', i===index));
+}
+
+function initSliderSwipe() {
+  const wrap = document.getElementById('modal-slides').parentElement;
+  let startX = 0;
+  wrap.ontouchstart = e => { startX = e.touches[0].clientX; };
+  wrap.ontouchend   = e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) goToSlide(currentSlide + (diff > 0 ? 1 : -1));
+  };
+}
+
+function selectSize(el) {
+  document.querySelectorAll('.modal-size').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleDesc() {
+  document.getElementById('modal-desc-body').classList.toggle('open');
+  document.getElementById('modal-desc-toggle').classList.toggle('open');
+}
+
+function toggleModalFav() {
+  if (!currentModalProduct) return;
+  const id   = currentModalProduct.id;
+  const idx  = favourites.findIndex(f => f.id === id);
+  const icon = document.getElementById('modal-fav-icon');
+  if (idx > -1) {
+    favourites.splice(idx, 1);
+    icon.className = 'ph ph-heart-straight';
+  } else {
+    favourites.push({
+      id,
+      name:   currentModalProduct.name,
+      price:  currentModalProduct.price,
+      imgSrc: currentModalProduct.images?.[0] || '',
+      added:  Date.now()
+    });
+    icon.className = 'ph ph-heart-fill';
+  }
+  saveFavourites();
+  updateFavBadge();
+  const card = document.querySelector(`.product-card[data-id="${id}"]`);
+  if (card) {
+    const btn = card.querySelector('.product-fav-btn');
+    if (btn) {
+      const isFav = favourites.some(f => f.id === id);
+      btn.classList.toggle('active', isFav);
+      btn.querySelector('i').className = isFav ? 'ph ph-heart-fill' : 'ph ph-heart-straight';
     }
   }
+}
 
-  function addToBag() {
-    cartCount++;
-    updateCartBadge();
-    closeProductModal();
+function addToBag() {
+  if (!currentModalProduct) return;
+
+  const id   = currentModalProduct.id;
+  const name = currentModalProduct.name;
+  const price = currentModalProduct.price;
+  const imgSrc = currentModalProduct.images?.[0] || '';
+  const priceNum = parsePrice(price);
+
+  // Get selected size
+  const sizeEl = document.querySelector('.modal-size.active');
+  const size = sizeEl ? sizeEl.textContent : '';
+
+  // Check if already in cart (same id + size)
+  const existing = cartItems.find(i => i.id === id && i.size === size);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cartItems.push({ id, name, price, imgSrc, size, qty: 1, priceNum });
   }
+
+  updateCartBadge();
+  closeProductModal();
+}
 
 </script>
-
-<!-- PRODUCT MODAL -->
-
-<div class="product-modal" id="product-modal">
-
-  <!-- IMAGE SLIDER -->
-
-  <div class="modal-slider-wrap">
-    <div class="modal-slides" id="modal-slides"></div>
-    <div class="modal-dots" id="modal-dots"></div>
-
-
-<!-- Close -->
-<button class="modal-close" onclick="closeProductModal()">
-  <i class="ph ph-x"></i>
-</button>
-
-<!-- Fav -->
-<button class="modal-fav-btn" id="modal-fav-btn" onclick="toggleModalFav()">
-  <i class="ph ph-heart-straight" id="modal-fav-icon"></i>
-</button>
-
-
-  </div>
-
-  <!-- DETAILS -->
-
-  <div class="modal-details">
-    <h2 class="modal-name" id="modal-name">ITEM NAME</h2>
-    <p class="modal-price" id="modal-price">R 0.00</p>
-
-
-<!-- Variants -->
-<p class="modal-variants-label">VARIANTS</p>
-<div class="modal-variants" id="modal-variants"></div>
-
-<!-- Size -->
-<p class="modal-size-label">SELECT SIZE</p>
-<div class="modal-sizes" id="modal-sizes">
-  <span class="modal-size" onclick="selectSize(this)">XS</span>
-  <span class="modal-size" onclick="selectSize(this)">S</span>
-  <span class="modal-size" onclick="selectSize(this)">M</span>
-  <span class="modal-size" onclick="selectSize(this)">L</span>
-  <span class="modal-size" onclick="selectSize(this)">XL</span>
-</div>
-
-<!-- Description collapsible -->
-<div class="modal-desc-toggle" id="modal-desc-toggle" onclick="toggleDesc()">
-  <span>PRODUCT DESCRIPTION</span>
-  <i class="ph ph-caret-down"></i>
-</div>
-<div class="modal-desc-body" id="modal-desc-body">
-  <p id="modal-desc-text">Product description will be added via Firebase.</p>
-</div>
-
-
-  </div>
-</div>
-
-<!-- STICKY ADD TO BAG -->
-
-<button class="modal-add-btn" id="modal-add-btn" onclick="addToBag()">ADD TO BAG</button>
 
 </body>
 </html>
