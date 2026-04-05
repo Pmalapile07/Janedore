@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -14,11 +13,7 @@
   src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/DriftuneDemo-SemiBold.otf') format('opentype');
 }
 
-html, body {
-  margin:0;
-  padding:0;
-  font-family: Arial, sans-serif;
-}
+html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 
 /* ANNOUNCEMENT BAR */
 .announcement{
@@ -34,8 +29,6 @@ html, body {
   left:0;
   right:0;
   z-index:1001;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
 /* HEADER */
@@ -53,85 +46,33 @@ html, body {
   z-index:1000;
   will-change: background, backdrop-filter;
   transition: background 0.35s ease, backdrop-filter 0.35s ease, box-shadow 0.35s ease;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
-.header.glass{
-  background: rgba(255,255,255,0.18);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  box-shadow: 0 2px 32px rgba(180,210,240,0.12);
-}
-
-/* Over dark images: nearly invisible glass — just blur, no white */
-.header.glass.over-image{
-  background: rgba(0,0,0,0.08);
+/* Glass effect when over images */
+.header.over-image{
+  background: rgba(255,255,255,0.25);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
-  box-shadow: none;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
 
-/* White state — swap to filled white icons via JS class */
-.header-left img{
-  transition: filter 0.3s ease;
-}
-.header.over-image .header-left img{
-  filter: brightness(0) invert(1);
-}
+/* Logo turns white */
+.header-left img{ transition: filter 0.3s ease; }
+.header.over-image .header-left img{ filter: brightness(0) invert(1); }
 
-/* Icons default */
-.header i{
-  font-size:26px;
-  cursor:pointer;
-  transition: opacity 0.2s ease;
-}
-.header i:hover{ opacity:0.6; }
+/* Icons */
+.header i{ font-size:26px; cursor:pointer; }
+.header i:hover{ opacity:0.7; }
 
-/* Coloured icon sets */
-.icon-dark{ color:#111; display:inline !important; }
-.icon-white{ color:white; display:none !important; }
+/* icon-wrap: stacks dark + white icon */
+.icon-wrap{ position:relative; display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; }
+.icon-dark{ position:absolute; color:#111; opacity:1; transition: opacity 0.3s ease; }
+.icon-white{ position:absolute; color:#fff; opacity:0; transition: opacity 0.3s ease; }
+.header.over-image .icon-dark{ opacity:0; }
+.header.over-image .icon-white{ opacity:1; }
 
-.header.over-image .icon-dark{ display:none !important; }
-.header.over-image .icon-white{ display:inline !important; }
-
-/* FAV WRAPPER */
-.fav-wrapper{
-  position:relative;
-  display:flex;
-  align-items:center;
-}
-.fav-badge{
-  position:absolute;
-  top:-6px;
-  right:-12px;
-  background:transparent;
-  font-family:Arial, sans-serif;
-  font-size:10px;
-  font-weight:700;
-  min-width:16px;
-  height:16px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 3px;
-  pointer-events:none;
-  line-height:1;
-  border:none;
-  color:black;
-  transition: color 0.3s ease;
-}
-.header.over-image .fav-badge{ color:white; }
-
-/* CART */
-.cart-wrapper{
-  position:relative;
-  display:flex;
-  align-items:center;
-}
-
-.cart-badge{
+/* Fav / Cart badges */
+.fav-badge, .cart-badge{
   position:absolute;
   top:-6px;
   right:-8px;
@@ -152,7 +93,7 @@ html, body {
   color:black;
   transition: color 0.3s ease;
 }
-.header.over-image .cart-badge{ color:white; }
+.header.over-image .fav-badge, .header.over-image .cart-badge{ color:white; }
 
 .header-left{ display:flex; align-items:center; }
 .header-left img{ height:44px; object-fit:contain; }
@@ -164,7 +105,6 @@ html, body {
 /* MAIN BANNER */
 .banner{ position:relative; }
 .banner img{ width:100%; height:auto; display:block; }
-
 .banner-label{
   position:absolute;
   bottom:32px;
@@ -177,8 +117,6 @@ html, body {
   pointer-events:none;
   text-shadow:0 2px 14px rgba(0,0,0,0.4);
 }
-
-/* SHOP NOW — underlined Driftune, white */
 .banner-shop{
   position:absolute;
   bottom:32px;
@@ -195,44 +133,14 @@ html, body {
 }
 
 /* DUO GRID */
-.duo-grid{
-  display:flex;
-  gap:2px;
-  background:#fff;
-  margin-top:2px;
-}
-
-.duo-card{
-  flex:1;
-  position:relative;
-  overflow:hidden;
-  cursor:pointer;
-}
-
-.duo-card .img-wrap{
-  position:relative;
-  width:100%;
-  aspect-ratio:3/4;
-  overflow:hidden;
-  background:#e8e8e8;
-}
-
-.duo-card .img-wrap img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  display:block;
-  background:white;
-  transition: transform 0.4s ease;
-}
-
+.duo-grid{ display:flex; gap:2px; background:#fff; margin-top:2px; }
+.duo-card{ flex:1; position:relative; overflow:hidden; cursor:pointer; }
+.duo-card .img-wrap{ position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; background:#e8e8e8; }
+.duo-card .img-wrap img{ width:100%; height:100%; object-fit:cover; display:block; background:white; transition: transform 0.4s ease; }
 .duo-card:hover .img-wrap img{ transform: scale(1.04); }
-
 .duo-card::after{
   content:'';
-  position:absolute;
-  inset:0;
+  position:absolute; inset:0;
   background: rgba(255,255,255,0);
   backdrop-filter: blur(0px);
   -webkit-backdrop-filter: blur(0px);
@@ -245,16 +153,6 @@ html, body {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
-
-.duo-card .img-wrap .ph-placeholder{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.duo-card .img-wrap .ph-placeholder i{ font-size:40px; color:#c0c0c0; }
-
 .duo-label{
   position:absolute;
   bottom:16px;
@@ -272,484 +170,67 @@ html, body {
 }
 
 /* UV BADGE */
-.uv-badge{
-  position:absolute;
-  top:10px;
-  right:10px;
-  background:black;
-  color:white;
-  font-family:'Driftune', sans-serif;
-  font-size:7px;
-  letter-spacing:1.5px;
-  padding:3px 8px;
-  border-radius:0;
-  z-index:3;
-  pointer-events:none;
-  white-space:nowrap;
-}
+.uv-badge{ position:absolute; top:10px; right:10px; background:black; color:white; font-family:'Driftune', sans-serif; font-size:7px; letter-spacing:1.5px; padding:3px 8px; border-radius:0; z-index:3; pointer-events:none; }
 
 /* ABOUT SECTION */
-.about-section{
-  padding:36px 20px 40px;
-}
-.about-section h2{
-  font-family:'Driftune', sans-serif;
-  font-size:22px;
-  letter-spacing:2px;
-  color:#111;
-  margin:0 0 12px 0;
-}
-.about-section p{
-  font-family:'Manrope', sans-serif;
-  font-size:13px;
-  font-weight:400;
-  color:#555;
-  line-height:1.75;
-  margin:0;
-  max-width:480px;
-}
+.about-section{ padding:36px 20px 40px; }
+.about-section h2{ font-family:'Driftune', sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px 0; }
+.about-section p{ font-family:'Manrope', sans-serif; font-size:13px; font-weight:400; color:#555; line-height:1.75; margin:0; max-width:480px; }
 
 /* SECTION HEADER */
-.section-header{
-  padding:36px 20px 20px;
-  border-top:1px solid #f0f0f0;
-}
-.section-tag{
-  display:inline-block;
-  background:black;
-  color:white;
-  font-family:'Driftune', sans-serif;
-  font-size:9px;
-  letter-spacing:2px;
-  padding:3px 8px;
-  margin-bottom:10px;
-}
-.section-header h2{
-  font-family:'Driftune', sans-serif;
-  font-size:22px;
-  letter-spacing:2px;
-  color:#111;
-  margin:0 0 12px 0;
-  line-height:1.25;
-}
-.section-header p{
-  font-family:'Manrope', sans-serif;
-  font-size:13px;
-  font-weight:400;
-  color:#555;
-  line-height:1.75;
-  margin:0;
-  max-width:480px;
-}
+.section-header{ padding:36px 20px 20px; border-top:1px solid #f0f0f0; }
+.section-tag{ display:inline-block; background:black; color:white; font-family:'Driftune', sans-serif; font-size:9px; letter-spacing:2px; padding:3px 8px; margin-bottom:10px; }
+.section-header h2{ font-family:'Driftune', sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px 0; line-height:1.25; }
+.section-header p{ font-family:'Manrope', sans-serif; font-size:13px; font-weight:400; color:#555; line-height:1.75; margin:0; max-width:480px; }
 
-/* JEWELLERY HORIZONTAL SCROLL */
-.jewel-scroll-wrapper{
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  margin-top:2px;
-}
+/* JEWELLERY SCROLL */
+.jewel-scroll-wrapper{ overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-top:2px; }
 .jewel-scroll-wrapper::-webkit-scrollbar{ display:none; }
-
-.jewel-row{
-  display:flex;
-  gap:2px;
-  width:max-content;
-}
-
-.jewel-card{
-  position:relative;
-  width:52vw;
-  overflow:hidden;
-  cursor:pointer;
-  flex-shrink:0;
-}
-.jewel-card .img-wrap{
-  position:relative;
-  width:100%;
-  aspect-ratio:3/4;
-  overflow:hidden;
-  background:#e8e8e8;
-}
-.jewel-card .img-wrap img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  display:block;
-  background:white;
-  transition: transform 0.4s ease;
-}
+.jewel-row{ display:flex; gap:2px; width:max-content; }
+.jewel-card{ position:relative; width:52vw; overflow:hidden; cursor:pointer; flex-shrink:0; }
+.jewel-card .img-wrap{ position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; background:#e8e8e8; }
+.jewel-card .img-wrap img{ width:100%; height:100%; object-fit:cover; display:block; background:white; transition: transform 0.4s ease; }
 .jewel-card:hover .img-wrap img{ transform: scale(1.04); }
-.jewel-card::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  background: rgba(255,255,255,0);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  transition: background 0.35s ease, backdrop-filter 0.35s ease;
-  pointer-events:none;
-  z-index:1;
-}
-.jewel-card:hover::after{
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-.jewel-card .img-wrap .ph-placeholder{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.jewel-card .img-wrap .ph-placeholder i{ font-size:36px; color:#c0c0c0; }
-.jewel-label{
-  position:absolute;
-  bottom:16px;
-  left:0;
-  right:0;
-  text-align:center;
-  color:white;
-  font-family:'Driftune', sans-serif;
-  font-size:13px;
-  letter-spacing:2px;
-  pointer-events:none;
-  text-shadow:0 2px 10px rgba(0,0,0,0.45);
-  z-index:2;
-}
+.jewel-card::after{ content:''; position:absolute; inset:0; background: rgba(255,255,255,0); backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); transition: background 0.35s ease, backdrop-filter 0.35s ease; pointer-events:none; z-index:1; }
+.jewel-card:hover::after{ background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.jewel-label{ position:absolute; bottom:16px; left:0; right:0; text-align:center; color:white; font-family:'Driftune', sans-serif; font-size:13px; letter-spacing:2px; pointer-events:none; text-shadow:0 2px 10px rgba(0,0,0,0.45); z-index:2; }
 
 /* SHOP JEWELLERY CTA */
-.bottom-cta{
-  padding:28px 20px 40px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.bottom-cta p{
-  font-family:'Manrope', sans-serif;
-  font-size:13px;
-  font-weight:400;
-  color:#555;
-  line-height:1.75;
-  margin:0;
-  font-style:italic;
-}
-.cta-link{
-  display:inline-block;
-  font-family:'Driftune', sans-serif;
-  font-size:11px;
-  letter-spacing:2.5px;
-  color:black;
-  border-bottom:1px solid black;
-  padding-bottom:2px;
-  cursor:pointer;
-  width:fit-content;
-}
+.bottom-cta{ padding:28px 20px 40px; display:flex; flex-direction:column; gap:10px; }
+.bottom-cta p{ font-family:'Manrope', sans-serif; font-size:13px; font-weight:400; color:#555; line-height:1.75; margin:0; font-style:italic; }
+.cta-link{ display:inline-block; font-family:'Driftune', sans-serif; font-size:11px; letter-spacing:2.5px; color:black; border-bottom:1px solid black; padding-bottom:2px; cursor:pointer; width:fit-content; }
 
-/* PRODUCT FAV BUTTON — glassmorphic circle top-right of image */
-.product-fav-btn{
-  position:absolute;
-  top:10px;
-  right:10px;
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:3;
-  border:none;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-.product-fav-btn:hover{
-  background: rgba(255,255,255,0.45);
-  transform: scale(1.08);
-}
-.product-fav-btn i{
-  font-size:16px;
-  color:white;
-  pointer-events:none;
-}
-.product-fav-btn.active{
-  background: rgba(255,255,255,0.5);
-}
-
-/* FAVOURITES OVERLAY */
-.fav-overlay{
-  position:fixed;
-  top:97px;          /* sits below announcement + header */
-  left:0;
-  right:0;
-  bottom:0;
-  background:white;
-  z-index:999;       /* below header (1000) so header stays on top */
-  display:none;
-  flex-direction:column;
-  overflow-y:auto;
-}
-.fav-overlay.open{ display:flex; }
-
-.fav-overlay-header{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px 20px 16px;
-  position:sticky;
-  top:0;
-  background:white;
-  z-index:10;
-  border-bottom:1px solid #f0f0f0;
-}
-.fav-overlay-title{
-  font-family:'Driftune', sans-serif;
-  font-size:22px;
-  letter-spacing:2px;
-  color:#111;
-  margin:0;
-  text-align:center;
-}
-
-.fav-overlay-sub{
-  padding:20px 20px 8px;
-}
-.fav-overlay-sub h3{
-  font-family:'Driftune', sans-serif;
-  font-size:14px;
-  letter-spacing:1.5px;
-  color:#111;
-  margin:0 0 4px 0;
-}
-.fav-overlay-sub p{
-  font-family:'Manrope', sans-serif;
-  font-size:12px;
-  color:#888;
-  margin:0;
-}
-
-/* SORT / FILTER BAR */
-.fav-filter-bar{
-  display:flex;
-  gap:6px;
-  padding:12px 20px 16px;
-  overflow-x:auto;
-  scrollbar-width:none;
-}
-.fav-filter-bar::-webkit-scrollbar{ display:none; }
-.filter-chip{
-  flex-shrink:0;
-  font-family:'Driftune', sans-serif;
-  font-size:9px;
-  letter-spacing:1.5px;
-  color:#111;
-  border:1px solid #111;
-  padding:5px 12px;
-  cursor:pointer;
-  background:white;
-  transition: background 0.2s ease, color 0.2s ease;
-  white-space:nowrap;
-}
-.filter-chip.active, .filter-chip:hover{
-  background:black;
-  color:white;
-}
-
-/* FAVOURITES GRID */
-.fav-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:2px;
-  padding:0;
-  flex:1;
-}
-.fav-empty{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  flex:1;
-  padding:60px 20px;
-  gap:12px;
-}
-.fav-empty i{ font-size:48px; color:#ddd; }
-.fav-empty p{
-  font-family:'Manrope', sans-serif;
-  font-size:13px;
-  color:#aaa;
-  margin:0;
-  text-align:center;
-}
-
-/* COLLECTION SECTION */
-.collection-section{
-  padding:36px 0 20px;
-  border-top:1px solid #f0f0f0;
-}
-.collection-section-header{
-  padding:0 20px 20px;
-}
-.collection-section h2{
-  font-family:'Driftune', sans-serif;
-  font-size:22px;
-  letter-spacing:2px;
-  color:#111;
-  margin:0 0 4px 0;
-}
-.collection-section .sub{
-  font-family:'Manrope', sans-serif;
-  font-size:13px;
-  font-weight:400;
-  color:#555;
-  line-height:1.75;
-  margin:0;
-}
-
-/* 2x2 product grid — matches duo-grid style */
-.product-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:2px;
-  background:#fff;
-}
-
-.product-card{
-  position:relative;
-  cursor:pointer;
-  overflow:hidden;
-}
-
-/* Image wrap same as duo-card */
-.product-card .product-img-wrap{
-  position:relative;
-  width:100%;
-  aspect-ratio:3/4;
-  overflow:hidden;
-  background:#e8e8e8;
-}
-
-.product-card .product-img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  display:block;
-  background:white;
-  transition: transform 0.4s ease;
-}
+/* PRODUCT GRID */
+.product-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px; background:#fff; }
+.product-card{ position:relative; cursor:pointer; overflow:hidden; }
+.product-card .product-img-wrap{ position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; background:#e8e8e8; }
+.product-card .product-img{ width:100%; height:100%; object-fit:cover; display:block; background:white; transition: transform 0.4s ease; }
 .product-card:hover .product-img{ transform: scale(1.04); }
+.product-card::after{ content:''; position:absolute; top:0; left:0; right:0; aspect-ratio:3/4; background: rgba(255,255,255,0); backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); transition: background 0.35s ease, backdrop-filter 0.35s ease; pointer-events:none; z-index:1; }
+.product-card:hover::after{ background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.product-info{ display:flex; align-items:center; justify-content:space-between; padding:9px 10px 13px; }
+.product-name{ font-family:'Driftune', sans-serif; font-size:11px; letter-spacing:1.5px; color:#111; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
+.product-price{ font-family:'Manrope', sans-serif; font-size:11px; font-weight:600; color:#111; margin:0; white-space:nowrap; padding-left:6px; }
+.product-fav-btn{ position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%; background: rgba(255,255,255,0.25); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3; border:none; transition: background 0.2s ease, transform 0.2s ease; }
+.product-fav-btn:hover{ background: rgba(255,255,255,0.45); transform: scale(1.08); }
+.product-fav-btn i{ font-size:16px; color:white; pointer-events:none; }
+.product-fav-btn.active{ background: rgba(255,255,255,0.5); }
 
-/* Glassmorphic hover overlay same as duo-card */
-.product-card::after{
-  content:'';
-  position:absolute;
-  top:0; left:0; right:0;
-  aspect-ratio:3/4;
-  background: rgba(255,255,255,0);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  transition: background 0.35s ease, backdrop-filter 0.35s ease;
-  pointer-events:none;
-  z-index:1;
-}
-.product-card:hover::after{
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.product-card .ph-placeholder{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.product-card .ph-placeholder i{ font-size:36px; color:#c0c0c0; }
-
-/* Name + price row UNDER the image */
-.product-info{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:9px 10px 13px;
-}
-.product-name{
-  font-family:'Driftune', sans-serif;
-  font-size:11px;
-  letter-spacing:1.5px;
-  color:#111;
-  margin:0;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  flex:1;
-}
-.product-price{
-  font-family:'Manrope', sans-serif;
-  font-size:11px;
-  font-weight:600;
-  color:#111;
-  margin:0;
-  white-space:nowrap;
-  padding-left:6px;
-}
-
-/* VIEW ALL button */
-.view-all-wrap{
-  padding:20px 20px 36px;
-  text-align:center;
-}
-.view-all-btn{
-  display:inline-block;
-  font-family:'Driftune', sans-serif;
-  font-size:11px;
-  letter-spacing:2.5px;
-  color:black;
-  border:1px solid black;
-  padding:10px 28px;
-  cursor:pointer;
-  background:transparent;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-.view-all-btn:hover{
-  background:black;
-  color:white;
-}
+/* VIEW ALL */
+.view-all-wrap{ padding:20px 20px 36px; text-align:center; }
+.view-all-btn{ display:inline-block; font-family:'Driftune', sans-serif; font-size:11px; letter-spacing:2.5px; color:black; border:1px solid black; padding:10px 28px; cursor:pointer; background:transparent; transition: background 0.2s ease, color 0.2s ease; }
+.view-all-btn:hover{ background:black; color:white; }
 
 /* ABOUT US SECTION */
-.about-us-section{
-  padding:36px 20px 56px;
-  border-top:1px solid #f0f0f0;
-}
-.about-us-section h2{
-  font-family:'Driftune', sans-serif;
-  font-size:22px;
-  letter-spacing:2px;
-  color:#111;
-  margin:0 0 12px 0;
-}
-.about-us-section p{
-  font-family:'Manrope', sans-serif;
-  font-size:13px;
-  font-weight:400;
-  color:#555;
-  line-height:1.75;
-  margin:0;
-  max-width:480px;
-}
+.about-us-section{ padding:36px 20px 56px; border-top:1px solid #f0f0f0; }
+.about-us-section h2{ font-family:'Driftune', sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px 0; }
+.about-us-section p{ font-family:'Manrope', sans-serif; font-size:13px; font-weight:400; color:#555; line-height:1.75; margin:0; max-width:480px; }
 </style>
-
 </head>
 
 <body>
 
 <!-- ANNOUNCEMENT BAR -->
-
 <div class="announcement">FREE SHIPPING WITH ORDERS OVER R750</div>
 
 <header class="header" id="main-header">
@@ -757,491 +238,177 @@ html, body {
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Logo">
   </div>
   <div class="header-right">
-
-
-<!-- Search -->
-<span class="icon-wrap">
-  <i class="ph ph-magnifying-glass icon-dark"></i>
-  <i class="ph ph-magnifying-glass icon-white"></i>
-</span>
-
-<!-- Favourites -->
-<div class="fav-wrapper" id="fav-wrapper" onclick="openFavOverlay()" style="cursor:pointer;">
-  <i class="ph ph-heart-straight icon-dark" style="font-size:26px;"></i>
-  <i class="ph ph-heart-straight icon-white" style="font-size:26px;"></i>
-  <span class="fav-badge" id="fav-count">0</span>
-</div>
-
-<!-- Cart -->
-<div class="cart-wrapper">
-  <span class="icon-wrap">
-    <i class="ph-light ph-handbag-simple icon-dark" id="cart-icon"></i>
-    <i class="ph-light ph-handbag-simple icon-white" id="cart-icon-white"></i>
-  </span>
-  <span class="cart-badge" id="cart-count">0</span>
-</div>
-
-<!-- Menu -->
-<span class="icon-wrap">
-  <i class="ph ph-list icon-dark"></i>
-  <i class="ph ph-list icon-white"></i>
-</span>
-
-
+    <!-- Search -->
+    <span class="icon-wrap">
+      <i class="ph ph-magnifying-glass icon-dark"></i>
+      <i class="ph ph-magnifying-glass icon-white"></i>
+    </span>
+    <!-- Favourites -->
+    <div class="fav-wrapper" id="fav-wrapper" onclick="openFavOverlay()" style="cursor:pointer;">
+      <span class="icon-wrap">
+        <i class="ph ph-heart-straight icon-dark" id="fav-icon-dark" style="font-size:26px;"></i>
+        <i class="ph ph-heart-straight icon-white" id="fav-icon-white" style="font-size:26px;"></i>
+      </span>
+      <span class="fav-badge" id="fav-count">0</span>
+    </div>
+    <!-- Cart -->
+    <div class="cart-wrapper">
+      <span class="icon-wrap">
+        <i class="ph-light ph-handbag-simple icon-dark" id="cart-icon"></i>
+        <i class="ph-light ph-handbag-simple icon-white" id="cart-icon-white"></i>
+      </span>
+      <span class="cart-badge" id="cart-count">0</span>
+    </div>
+    <!-- Menu -->
+    <span class="icon-wrap">
+      <i class="ph ph-list icon-dark"></i>
+      <i class="ph ph-list icon-white"></i>
+    </span>
   </div>
 </header>
 
 <div class="page-content">
 
-  <!-- MAIN BANNER -->
-
-  <div class="banner" id="section-banner">
-    <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="Banner">
-    <div class="banner-label">NEW IN<br>CLOTHING</div>
-    <span class="banner-shop">SHOP NOW</span>
-  </div>
-
-  <!-- ROW 1: SETS + SUNGLASSES -->
-
-  <div class="duo-grid" id="section-row1">
-    <div class="duo-card">
-      <div class="img-wrap">
-        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets" onload="this.nextElementSibling.style.display='none'">
-        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      </div>
-      <div class="duo-label">SETS</div>
-    </div>
-    <div class="duo-card">
-      <div class="uv-badge">UV-400 / BL+</div>
-      <div class="img-wrap">
-        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses" onload="this.nextElementSibling.style.display='none'">
-        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      </div>
-      <div class="duo-label">SUNGLASSES</div>
-    </div>
-  </div>
-
-  <!-- ROW 2: BAGS + TOPS -->
-
-  <div class="duo-grid" id="section-row2">
-    <div class="duo-card">
-      <div class="img-wrap">
-        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags"
-             style="width:100%;height:100%;object-fit:cover;display:block;"
-             onload="this.nextElementSibling.style.display='none'"
-             onerror="this.style.display='none'">
-        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      </div>
-      <div class="duo-label">BAGS</div>
-    </div>
-    <div class="duo-card">
-      <div class="img-wrap">
-        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops" onload="this.nextElementSibling.style.display='none'">
-        <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      </div>
-      <div class="duo-label">TOPS</div>
-    </div>
-  </div>
-
-  <!-- THE EDIT -->
-
-  <div class="about-section" id="section-text-start">
-    <h2>THE EDIT</h2>
-    <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
-  </div>
-
-  <!-- JEWELLERY HEADER -->
-
-  <div class="section-header" id="section-jewel-header">
-    <span class="section-tag">NEW</span>
-    <h2>STAINLESS STEEL<br>JEWELLERY</h2>
-    <p>Tarnish-free. Water-resistant. Built to last — and to be seen.</p>
-  </div>
-
-  <!-- JEWELLERY HORIZONTAL SCROLL -->
-
-  <div class="jewel-scroll-wrapper" id="section-jewel-row">
-    <div class="jewel-row">
-      <div class="jewel-card">
-        <div class="img-wrap">
-          <img src="" alt="Necklaces" onerror="this.style.display='none'">
-          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-        </div>
-        <div class="jewel-label">NECKLACES</div>
-      </div>
-      <div class="jewel-card">
-        <div class="img-wrap">
-          <img src="" alt="Rings" onerror="this.style.display='none'">
-          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-        </div>
-        <div class="jewel-label">RINGS</div>
-      </div>
-      <div class="jewel-card">
-        <div class="img-wrap">
-          <img src="" alt="Bracelets" onerror="this.style.display='none'">
-          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-        </div>
-        <div class="jewel-label">BRACELETS</div>
-      </div>
-      <div class="jewel-card">
-        <div class="img-wrap">
-          <img src="" alt="Earrings" onerror="this.style.display='none'">
-          <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-        </div>
-        <div class="jewel-label">EARRINGS</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SHOP JEWELLERY CTA -->
-
-  <div class="bottom-cta" id="section-jewel-cta">
-    <p>Steel that stays. Style that speaks.</p>
-    <span class="cta-link">SHOP JEWELLERY</span>
-  </div>
-
-  <!-- COLLECTION SECTION -->
-
-  <!-- Firebase will populate products: image URL, name, price from Firestore/RTDB -->
-
-  <div class="collection-section" id="section-collection-header">
-    <div class="collection-section-header">
-      <h2>THE COLLECTION</h2>
-      <p class="sub">Handpicked pieces, ready to wear.</p>
-    </div>
-
-
-<!-- Firebase: loop products, inject imageUrl/name/price, data-id for fav tracking -->
-<div class="product-grid" id="product-grid">
-
-  <div class="product-card" data-id="1" data-name="ITEM NAME" data-price="R 0.00">
-    <div class="product-img-wrap">
-      <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
-      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
-        <i class="ph ph-heart-straight"></i>
-      </button>
-    </div>
-    <div class="product-info">
-      <p class="product-name">ITEM NAME</p>
-      <p class="product-price">R 0.00</p>
-    </div>
-  </div>
-
-  <div class="product-card" data-id="2" data-name="ITEM NAME" data-price="R 0.00">
-    <div class="product-img-wrap">
-      <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
-      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
-        <i class="ph ph-heart-straight"></i>
-      </button>
-    </div>
-    <div class="product-info">
-      <p class="product-name">ITEM NAME</p>
-      <p class="product-price">R 0.00</p>
-    </div>
-  </div>
-
-  <div class="product-card" data-id="3" data-name="ITEM NAME" data-price="R 0.00">
-    <div class="product-img-wrap">
-      <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
-      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
-        <i class="ph ph-heart-straight"></i>
-      </button>
-    </div>
-    <div class="product-info">
-      <p class="product-name">ITEM NAME</p>
-      <p class="product-price">R 0.00</p>
-    </div>
-  </div>
-
-  <div class="product-card" data-id="4" data-name="ITEM NAME" data-price="R 0.00">
-    <div class="product-img-wrap">
-      <img class="product-img" src="" alt="Product" onerror="this.style.display='none'">
-      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
-      <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Add to favourites">
-        <i class="ph ph-heart-straight"></i>
-      </button>
-    </div>
-    <div class="product-info">
-      <p class="product-name">ITEM NAME</p>
-      <p class="product-price">R 0.00</p>
-    </div>
-  </div>
-
+<!-- MAIN BANNER -->
+<div class="banner" id="section-banner">
+  <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="Banner">
+  <div class="banner-label">NEW IN<br>CLOTHING</div>
+  <span class="banner-shop">SHOP NOW</span>
 </div>
-```
 
+<!-- DUO GRID ROWS -->
+<div class="duo-grid" id="section-row1">
+  <div class="duo-card">
+    <div class="img-wrap">
+      <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="duo-label">SETS</div>
   </div>
-
-  <!-- VIEW ALL -->
-
-  <div class="view-all-wrap" id="section-view-all">
-    <span class="view-all-btn">VIEW ALL</span>
+  <div class="duo-card">
+    <div class="uv-badge">UV-400 / BL+</div>
+    <div class="img-wrap">
+      <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="duo-label">SUNGLASSES</div>
   </div>
+</div>
 
-  <!-- ABOUT US -->
-
-  <div class="about-us-section" id="section-about-us">
-    <h2>ABOUT US</h2>
-    <p>Janedore was born from a simple belief — that great style shouldn't be hard to find. We curate pieces that are hard to come by, beautifully made, and priced for real life. From clothing to accessories, every item in our store is chosen with care. We're a small team with a big eye for quality, and we're just getting started.</p>
+<div class="duo-grid" id="section-row2">
+  <div class="duo-card">
+    <div class="img-wrap">
+      <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="duo-label">BAGS</div>
   </div>
+  <div class="duo-card">
+    <div class="img-wrap">
+      <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops">
+      <div class="ph-placeholder"><i class="ph-light ph-image"></i></div>
+    </div>
+    <div class="duo-label">TOPS</div>
+  </div>
+</div>
+
+<!-- ABOUT SECTION -->
+<div class="about-section">
+  <h2>ABOUT</h2>
+  <p>Our brand brings you modern streetwear with timeless appeal. We focus on high-quality fabrics and unique designs to elevate your everyday style.</p>
+</div>
+
+<!-- JEWELLERY SCROLL -->
+<div class="jewel-scroll-wrapper">
+  <div class="jewel-row">
+    <div class="jewel-card">
+      <div class="img-wrap">
+        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/jewel1.jpeg" alt="Jewellery 1">
+      </div>
+      <div class="jewel-label">RINGS</div>
+    </div>
+    <div class="jewel-card">
+      <div class="img-wrap">
+        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/jewel2.jpeg" alt="Jewellery 2">
+      </div>
+      <div class="jewel-label">EARRINGS</div>
+    </div>
+    <div class="jewel-card">
+      <div class="img-wrap">
+        <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/jewel3.jpeg" alt="Jewellery 3">
+      </div>
+      <div class="jewel-label">NECKLACES</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-cta">
+  <p>Discover more jewellery that complements your style.</p>
+  <a class="cta-link">SHOP JEWELLERY</a>
+</div>
+
+<!-- PRODUCT GRID -->
+<div class="product-grid">
+  <div class="product-card">
+    <div class="product-img-wrap">
+      <img class="product-img" src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/product1.jpeg" alt="Product 1">
+    </div>
+    <button class="product-fav-btn"><i class="ph ph-heart-straight"></i></button>
+    <div class="product-info">
+      <p class="product-name">Minimalist T-Shirt</p>
+      <p class="product-price">R350</p>
+    </div>
+  </div>
+  <div class="product-card">
+    <div class="product-img-wrap">
+      <img class="product-img" src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/product2.jpeg" alt="Product 2">
+    </div>
+    <button class="product-fav-btn"><i class="ph ph-heart-straight"></i></button>
+    <div class="product-info">
+      <p class="product-name">Classic Hoodie</p>
+      <p class="product-price">R650</p>
+    </div>
+  </div>
+</div>
+
+<div class="view-all-wrap">
+  <button class="view-all-btn">VIEW ALL PRODUCTS</button>
+</div>
+
+<!-- ABOUT US -->
+<div class="about-us-section">
+  <h2>ABOUT US</h2>
+  <p>We are committed to delivering high-quality, stylish clothing and accessories that elevate your everyday wardrobe. Join our community of fashion enthusiasts today.</p>
+</div>
 
 </div>
 
 <script>
-  // — Cart counter —
-  let cartCount = 0;
-  function updateCartBadge() {
-    const badge = document.getElementById('cart-count');
-    badge.textContent = cartCount;
-    badge.style.display = 'flex';
-  }
-  function addToCart(qty = 1) { cartCount += qty; updateCartBadge(); }
-  updateCartBadge();
-  document.getElementById('cart-icon').addEventListener('click', () => addToCart(1));
-  document.getElementById('cart-icon-white').addEventListener('click', () => addToCart(1));
+// GLASS HEADER TOGGLE
+const header = document.getElementById('main-header');
+const banner = document.getElementById('section-banner');
 
-  // — Favourites —
-  // Load favourites from localStorage
-  let favourites = [];
-  try {
-    const stored = localStorage.getItem('jd_favourites');
-    if (stored) favourites = JSON.parse(stored);
-  } catch(e) {}
-
-  function saveFavourites() {
-    try { localStorage.setItem('jd_favourites', JSON.stringify(favourites)); } catch(e) {}
-  }
-  let currentFilter = 'newest';
-
-  function updateFavBadge() {
-    const badge = document.getElementById('fav-count');
-    badge.textContent = favourites.length;
-    badge.style.display = 'flex';
-    document.getElementById('fav-item-count').textContent =
-      favourites.length + (favourites.length === 1 ? ' item' : ' items');
-  }
-
-  function toggleFav(btn) {
-    const card = btn.closest('.product-card');
-    const id = card.dataset.id;
-    const name = card.querySelector('.product-name').textContent;
-    const price = card.querySelector('.product-price').textContent;
-    const imgEl = card.querySelector('.product-img');
-    const imgSrc = imgEl ? imgEl.src : '';
-
-    const existing = favourites.findIndex(f => f.id === id);
-    if (existing > -1) {
-      // Remove
-      favourites.splice(existing, 1);
-      btn.classList.remove('active');
-      btn.querySelector('i').className = 'ph ph-heart-straight';
-    } else {
-      // Add
-      favourites.push({ id, name, price, imgSrc, added: Date.now() });
-      btn.classList.add('active');
-      btn.querySelector('i').className = 'ph ph-heart-fill';
-    }
-    saveFavourites();
-    updateFavBadge();
-    renderFavGrid();
-  }
-
-  function renderFavGrid() {
-    const grid = document.getElementById('fav-grid');
-    const empty = document.getElementById('fav-empty');
-
-    if (favourites.length === 0) {
-      grid.innerHTML = '';
-      grid.style.display = 'none';
-      empty.style.display = 'flex';
-      return;
-    }
-
-    grid.style.display = 'grid';
-    empty.style.display = 'none';
-
-    let sorted = [...favourites];
-    if (currentFilter === 'newest') sorted.sort((a,b) => b.added - a.added);
-    if (currentFilter === 'high') sorted.sort((a,b) => parsePrice(b.price) - parsePrice(a.price));
-    if (currentFilter === 'low')  sorted.sort((a,b) => parsePrice(a.price) - parsePrice(b.price));
-    // 'popular' — keep insertion order for now (Firebase can provide sort later)
-
-    grid.innerHTML = sorted.map(item => `
-      <div class="product-card">
-        <div class="product-img-wrap">
-          ${item.imgSrc
-            ? `<img class="product-img" src="${item.imgSrc}" alt="${item.name}">`
-            : `<div class="ph-placeholder"><i class="ph-light ph-image"></i></div>`}
-          <button class="product-fav-btn active" onclick="removeFavById('${item.id}')" aria-label="Remove">
-            <i class="ph ph-heart-fill"></i>
-          </button>
-        </div>
-        <div class="product-info">
-          <p class="product-name">${item.name}</p>
-          <p class="product-price">${item.price}</p>
-        </div>
-      </div>`).join('');
-  }
-
-  function removeFavById(id) {
-    const idx = favourites.findIndex(f => f.id === id);
-    if (idx > -1) favourites.splice(idx, 1);
-    saveFavourites();
-    // Sync heart on main page
-    const mainCard = document.querySelector(`.product-card[data-id="${id}"]`);
-    if (mainCard) {
-      const btn = mainCard.querySelector('.product-fav-btn');
-      if (btn) {
-        btn.classList.remove('active');
-        btn.querySelector('i').className = 'ph ph-heart-straight';
-      }
-    }
-    updateFavBadge();
-    renderFavGrid();
-  }
-
-  function parsePrice(str) {
-    return parseFloat((str || '0').replace(/[^0-9.]/g, '')) || 0;
-  }
-
-  function openFavOverlay() {
-    renderFavGrid();
-    document.getElementById('fav-overlay').classList.add('open');
-    // Switch header fav icons to filled
-    document.querySelectorAll('.fav-wrapper .icon-dark, .fav-wrapper .icon-white').forEach(i => {
-      i.className = i.className.replace('ph-heart-straight', 'ph-fill ph-heart-straight');
-    });
-    // Clicking header heart again closes
-    document.getElementById('fav-wrapper').onclick = closeFavOverlay;
-    // Header stays text mode while overlay open
-    header.classList.remove('glass');
+function handleHeaderGlass() {
+  const bannerBottom = banner.getBoundingClientRect().bottom;
+  if (bannerBottom > header.offsetHeight) {
+    header.classList.add('over-image');
+  } else {
     header.classList.remove('over-image');
   }
+}
 
-  function closeFavOverlay() {
-    document.getElementById('fav-overlay').classList.remove('open');
-    // Restore header fav icons to outline
-    document.querySelectorAll('.fav-wrapper i').forEach(i => {
-      i.className = i.className.replace('ph-fill ph-heart-straight', 'ph-heart-straight');
-    });
-    document.getElementById('fav-wrapper').onclick = openFavOverlay;
-    // Re-apply header state
-    applyHeaderState();
-  }
+window.addEventListener('scroll', handleHeaderGlass);
+window.addEventListener('load', handleHeaderGlass);
 
-  function setFilter(filter, chip) {
-    currentFilter = filter;
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    renderFavGrid();
-  }
-
-  // Sync product card hearts with localStorage on load
-  document.querySelectorAll('.product-card').forEach(card => {
-    const id = card.dataset.id;
-    if (favourites.find(f => f.id === id)) {
-      const btn = card.querySelector('.product-fav-btn');
-      if (btn) {
-        btn.classList.add('active');
-        btn.querySelector('i').className = 'ph ph-heart-fill';
-      }
-    }
+// FAVORITE BUTTON TOGGLE
+document.querySelectorAll('.product-fav-btn').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    btn.classList.toggle('active');
+    let count = document.querySelectorAll('.product-fav-btn.active').length;
+    document.getElementById('fav-count').innerText = count;
   });
-
-  updateFavBadge();
-
-  // — Header colour + glass logic —
-  const header = document.getElementById('main-header');
-
-  // Sections: type 'image' = white icons, type 'text' = black icons
-  const sections = [
-    { id: 'section-banner',           type: 'image' },
-    { id: 'section-row1',             type: 'image' },
-    { id: 'section-row2',             type: 'image' },
-    { id: 'section-text-start',       type: 'text'  },
-    { id: 'section-jewel-header',     type: 'text'  },
-    { id: 'section-jewel-row',        type: 'image' },
-    { id: 'section-jewel-cta',        type: 'text'  },
-    { id: 'section-collection-header',type: 'text'  },
-    { id: 'product-grid',             type: 'image' },
-    { id: 'section-view-all',         type: 'text'  },
-    { id: 'section-about-us',         type: 'text'  },
-  ].map(s => ({ ...s, el: document.getElementById(s.id) }))
-   .filter(s => s.el);
-
-  function getCurrentSectionType() {
-    const headerBottom = 97; // announcement + header height in viewport px
-    for (let i = 0; i < sections.length; i++) {
-      const s = sections[i];
-      const rect = s.el.getBoundingClientRect();
-      if (rect.top <= headerBottom && rect.bottom > headerBottom) {
-        return s.type;
-      }
-    }
-    return 'text';
-  }
-
-  function applyHeaderState() {
-    const type = getCurrentSectionType();
-    if (type === 'image') {
-      header.classList.add('glass');
-      header.classList.add('over-image');
-    } else {
-      header.classList.remove('glass');
-      header.classList.remove('over-image');
-    }
-  }
-
-  window.addEventListener('scroll', applyHeaderState);
-  window.addEventListener('resize', applyHeaderState);
-
-  // Also re-check after images load (they shift layout)
-  document.querySelectorAll('img').forEach(img => {
-    img.addEventListener('load', applyHeaderState);
-  });
-
-  applyHeaderState();
-
-  // Overlay scroll — always text mode
-  document.getElementById('fav-overlay').addEventListener('scroll', function() {
-    header.classList.remove('glass');
-    header.classList.remove('over-image');
-  });
+});
 </script>
-
-<!-- FAVOURITES OVERLAY -->
-
-<div class="fav-overlay" id="fav-overlay">
-
-  <div class="fav-overlay-header">
-    <h2 class="fav-overlay-title">MY FAVOURITES</h2>
-  </div>
-
-  <div class="fav-overlay-sub">
-    <h3>MY ITEMS</h3>
-    <p id="fav-item-count">0 items</p>
-  </div>
-
-  <div class="fav-filter-bar">
-    <span class="filter-chip active" onclick="setFilter('newest', this)">NEWEST</span>
-    <span class="filter-chip" onclick="setFilter('popular', this)">MOST POPULAR</span>
-    <span class="filter-chip" onclick="setFilter('high', this)">HIGH TO LOW</span>
-    <span class="filter-chip" onclick="setFilter('low', this)">LOW TO HIGH</span>
-  </div>
-
-  <!-- Populated by JS -->
-
-  <div class="fav-grid" id="fav-grid"></div>
-
-  <div class="fav-empty" id="fav-empty" style="display:none;">
-    <i class="ph ph-heart-straight"></i>
-    <p>Nothing here yet.<br>Tap the heart on any item to save it.</p>
-  </div>
-
-</div>
 
 </body>
 </html>
