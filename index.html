@@ -706,6 +706,436 @@ body.overlay-open { overflow: hidden; }
 }
 .modal-add-btn.visible{ display:block; }
 
+/* ═══════════════════════════════════════
+   MODAL COLLAPSIBLE — shared style for
+   shipping, returns, description
+═══════════════════════════════════════ */
+.modal-collapsible-toggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 0;
+  border-top:1px solid #f0f0f0;
+  cursor:pointer;
+}
+.modal-collapsible-toggle:last-of-type{ border-bottom:1px solid #f0f0f0; }
+.modal-collapsible-toggle span{
+  font-family:'Driftune', sans-serif;
+  font-size:11px;
+  letter-spacing:2px;
+  color:#111;
+}
+.modal-collapsible-toggle i{
+  font-size:18px;
+  color:#111;
+  transition: transform 0.25s ease;
+  flex-shrink:0;
+}
+.modal-collapsible-toggle.open i{ transform: rotate(180deg); }
+.modal-collapsible-body{
+  display:none;
+  padding:0 0 14px 0;
+  border-bottom:1px solid #f0f0f0;
+}
+.modal-collapsible-body.open{ display:block; }
+.modal-collapsible-body p{
+  font-family:'Manrope', sans-serif;
+  font-size:13px;
+  color:#555;
+  line-height:1.75;
+  margin:0 0 8px 0;
+}
+.modal-collapsible-body p:last-child{ margin-bottom:0; }
+
+/* SHIPPING CALCULATOR */
+.modal-shipping-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+.modal-shipping-input{
+  flex:1;
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  border:1px solid #ddd;
+  padding:9px 12px;
+  outline:none;
+  color:#111;
+  background:white;
+}
+.modal-shipping-input:focus{ border-color:#111; }
+.modal-shipping-btn{
+  font-family:'Driftune', sans-serif;
+  font-size:10px;
+  letter-spacing:1.5px;
+  background:black;
+  color:white;
+  border:none;
+  padding:9px 16px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:opacity 0.2s;
+}
+.modal-shipping-btn:hover{ opacity:0.75; }
+.modal-shipping-result{
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  color:#27ae60;
+  margin-top:4px;
+  display:none;
+}
+
+/* RETURNS INFO */
+.returns-list{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.returns-list li{
+  font-family:'Manrope', sans-serif;
+  font-size:13px;
+  color:#555;
+  line-height:1.6;
+  padding-left:14px;
+  position:relative;
+}
+.returns-list li::before{
+  content:'—';
+  position:absolute;
+  left:0;
+  color:#bbb;
+  font-size:11px;
+  top:2px;
+}
+
+/* YOU MAY ALSO LIKE — horizontal scroll, used in both modal + cart */
+.ymal-section{
+  padding:28px 0 0;
+  border-top:1px solid #f0f0f0;
+}
+.ymal-header{
+  padding:0 20px 16px;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+}
+.ymal-title{
+  font-family:'Driftune', sans-serif;
+  font-size:14px;
+  letter-spacing:2px;
+  color:#111;
+  margin:0;
+}
+.ymal-scroll{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding:0 20px 24px;
+}
+.ymal-scroll::-webkit-scrollbar{ display:none; }
+.ymal-row{
+  display:flex;
+  gap:10px;
+  width:max-content;
+}
+.ymal-card{
+  width:130px;
+  flex-shrink:0;
+  cursor:pointer;
+  position:relative;
+}
+.ymal-card-img{
+  width:130px;
+  height:164px;
+  object-fit:cover;
+  display:block;
+  background:#e8e8e8;
+}
+.ymal-card-img-ph{
+  width:130px;
+  height:164px;
+  background:#e8e8e8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.ymal-card-img-ph i{ font-size:28px; color:#ccc; }
+.ymal-card-info{ padding:8px 0 0; }
+.ymal-card-name{
+  font-family:'Driftune', sans-serif;
+  font-size:10px;
+  letter-spacing:1.5px;
+  color:#111;
+  margin:0 0 3px 0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ymal-card-price{
+  font-family:'Manrope', sans-serif;
+  font-size:11px;
+  font-weight:600;
+  color:#111;
+  margin:0;
+}
+/* Variant dots below product name on collection cards */
+.product-variants-row{
+  display:flex;
+  gap:5px;
+  padding:0 10px 10px;
+  flex-wrap:wrap;
+}
+.product-variant-dot{
+  width:14px; height:14px;
+  border-radius:50%;
+  border:1.5px solid transparent;
+  background:#e0e0e0;
+  cursor:pointer;
+  transition:border-color 0.2s;
+  flex-shrink:0;
+  overflow:hidden;
+}
+.product-variant-dot img{
+  width:100%; height:100%;
+  object-fit:cover;
+  border-radius:50%;
+}
+.product-variant-dot.active{ border-color:#111; }
+
+/* CART — checkbox include/exclude */
+.cart-item-check{
+  display:flex;
+  align-items:flex-start;
+  padding-top:2px;
+  margin-right:2px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.cart-check-box{
+  width:20px; height:20px;
+  border:1.5px solid #ddd;
+  border-radius:4px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background 0.2s, border-color 0.2s;
+  background:white;
+}
+.cart-check-box i{ font-size:13px; color:white; opacity:0; transition:opacity 0.15s; }
+.cart-item.included .cart-check-box{ background:black; border-color:black; }
+.cart-item.included .cart-check-box i{ opacity:1; }
+.cart-item.excluded{ opacity:0.4; }
+
+/* CART — swipe-to-delete */
+.cart-item-swipe-wrap{
+  position:relative;
+  overflow:hidden;
+  border-bottom:1px solid #f0f0f0;
+}
+.cart-item-swipe-wrap .cart-item{
+  border-bottom:none;
+  position:relative;
+  transition:transform 0.25s ease;
+  background:white;
+  touch-action:pan-y;
+  user-select:none;
+}
+.cart-swipe-delete-bg{
+  position:absolute;
+  top:0; right:0; bottom:0;
+  width:80px;
+  background:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:0;
+}
+.cart-swipe-delete-bg span{
+  font-family:'Driftune', sans-serif;
+  font-size:9px;
+  letter-spacing:2px;
+  color:white;
+}
+
+/* PROMO CODE */
+.cart-promo-wrap{
+  padding:16px 20px;
+  border-top:1px solid #f0f0f0;
+}
+.cart-promo-label{
+  font-family:'Driftune', sans-serif;
+  font-size:10px;
+  letter-spacing:2px;
+  color:#888;
+  margin:0 0 10px 0;
+}
+.cart-promo-row{
+  display:flex;
+  gap:8px;
+}
+.cart-promo-input{
+  flex:1;
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  border:1px solid #ddd;
+  padding:10px 12px;
+  outline:none;
+  color:#111;
+  background:white;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+.cart-promo-input:focus{ border-color:#111; }
+.cart-promo-btn{
+  font-family:'Driftune', sans-serif;
+  font-size:10px;
+  letter-spacing:1.5px;
+  background:black;
+  color:white;
+  border:none;
+  padding:10px 16px;
+  cursor:pointer;
+  transition:opacity 0.2s;
+}
+.cart-promo-btn:hover{ opacity:0.75; }
+.cart-promo-msg{
+  font-family:'Manrope', sans-serif;
+  font-size:11px;
+  margin:8px 0 0 0;
+  display:none;
+}
+.cart-promo-msg.success{ color:#27ae60; display:block; }
+.cart-promo-msg.error{ color:#c0392b; display:block; }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+.site-footer{
+  background:#0a0a0a;
+  color:white;
+  padding:48px 20px 32px;
+}
+.footer-brand{
+  margin-bottom:32px;
+}
+.footer-logo{
+  font-family:'Driftune', sans-serif;
+  font-size:26px;
+  letter-spacing:4px;
+  color:white;
+  margin:0 0 10px 0;
+  line-height:1;
+}
+.footer-tagline{
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  color:#666;
+  margin:0;
+  line-height:1.6;
+  max-width:260px;
+}
+.footer-divider{ height:1px; background:#1e1e1e; margin:0 0 28px 0; }
+.footer-links-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:28px 16px;
+  margin-bottom:32px;
+}
+.footer-col-title{
+  font-family:'Driftune', sans-serif;
+  font-size:9px;
+  letter-spacing:3px;
+  color:#555;
+  margin:0 0 14px 0;
+}
+.footer-col ul{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.footer-col ul li a{
+  font-family:'Manrope', sans-serif;
+  font-size:13px;
+  color:#aaa;
+  text-decoration:none;
+  transition:color 0.2s;
+}
+.footer-col ul li a:hover{ color:white; }
+.footer-newsletter{
+  margin-bottom:32px;
+}
+.footer-newsletter-title{
+  font-family:'Driftune', sans-serif;
+  font-size:9px;
+  letter-spacing:3px;
+  color:#555;
+  margin:0 0 12px 0;
+}
+.footer-newsletter-row{
+  display:flex;
+  gap:0;
+}
+.footer-newsletter-input{
+  flex:1;
+  background:#1a1a1a;
+  border:1px solid #2a2a2a;
+  border-right:none;
+  padding:11px 14px;
+  font-family:'Manrope', sans-serif;
+  font-size:12px;
+  color:white;
+  outline:none;
+}
+.footer-newsletter-input::placeholder{ color:#555; }
+.footer-newsletter-input:focus{ border-color:#444; }
+.footer-newsletter-btn{
+  background:white;
+  color:black;
+  border:1px solid white;
+  padding:11px 18px;
+  font-family:'Driftune', sans-serif;
+  font-size:10px;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:background 0.2s, color 0.2s;
+  white-space:nowrap;
+}
+.footer-newsletter-btn:hover{ background:#111; color:white; border-color:#111; }
+.footer-bottom{
+  border-top:1px solid #1e1e1e;
+  padding-top:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.footer-copy{
+  font-family:'Manrope', sans-serif;
+  font-size:11px;
+  color:#444;
+  margin:0;
+}
+.footer-socials{
+  display:flex;
+  gap:14px;
+}
+.footer-socials a{
+  color:#555;
+  font-size:20px;
+  text-decoration:none;
+  transition:color 0.2s;
+  display:flex;
+  align-items:center;
+}
+.footer-socials a:hover{ color:white; }
+
 </style>
 
 </head>
@@ -882,6 +1312,11 @@ body.overlay-open { overflow: hidden; }
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
     </div>
+    <div class="product-variants-row">
+      <div class="product-variant-dot active" style="background:#111;"></div>
+      <div class="product-variant-dot" style="background:#c0a898;"></div>
+      <div class="product-variant-dot" style="background:#e8e0d0;"></div>
+    </div>
   </div>
 
   <div class="product-card" data-id="2" data-name="ITEM NAME" data-price="R 0.00">
@@ -895,6 +1330,10 @@ body.overlay-open { overflow: hidden; }
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
+    </div>
+    <div class="product-variants-row">
+      <div class="product-variant-dot active" style="background:#fff;border-color:#ddd;"></div>
+      <div class="product-variant-dot" style="background:#7a8a7a;"></div>
     </div>
   </div>
 
@@ -910,6 +1349,11 @@ body.overlay-open { overflow: hidden; }
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
     </div>
+    <div class="product-variants-row">
+      <div class="product-variant-dot active" style="background:#d4b896;"></div>
+      <div class="product-variant-dot" style="background:#3a3a3a;"></div>
+      <div class="product-variant-dot" style="background:#b0bec5;"></div>
+    </div>
   </div>
 
   <div class="product-card" data-id="4" data-name="ITEM NAME" data-price="R 0.00">
@@ -923,6 +1367,10 @@ body.overlay-open { overflow: hidden; }
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
+    </div>
+    <div class="product-variants-row">
+      <div class="product-variant-dot active" style="background:#111;"></div>
+      <div class="product-variant-dot" style="background:#f5e6d0;"></div>
     </div>
   </div>
 
@@ -945,6 +1393,70 @@ body.overlay-open { overflow: hidden; }
   </div>
 
 </div>
+
+<!-- FOOTER -->
+
+<footer class="site-footer">
+  <div class="footer-brand">
+    <p class="footer-logo">JANEDORE</p>
+    <p class="footer-tagline">Curated pieces. Exceptional quality.<br>Hard to find — until now.</p>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="footer-links-grid">
+    <div class="footer-col">
+      <p class="footer-col-title">SHOP</p>
+      <ul>
+        <li><a href="#">New In</a></li>
+        <li><a href="#">Clothing</a></li>
+        <li><a href="#">Jewellery</a></li>
+        <li><a href="#">Bags</a></li>
+        <li><a href="#">Sunglasses</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">HELP</p>
+      <ul>
+        <li><a href="#">Shipping Info</a></li>
+        <li><a href="#">Returns &amp; Refunds</a></li>
+        <li><a href="#">Size Guide</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">FAQ</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">COMPANY</p>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Stockists</a></li>
+        <li><a href="#">Press</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">LEGAL</p>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-newsletter">
+    <p class="footer-newsletter-title">STAY IN THE EDIT</p>
+    <div class="footer-newsletter-row">
+      <input class="footer-newsletter-input" type="email" placeholder="Your email address">
+      <button class="footer-newsletter-btn">SUBSCRIBE</button>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2025 Janedore. All rights reserved.</p>
+    <div class="footer-socials">
+      <a href="#" aria-label="Instagram"><i class="ph ph-instagram-logo"></i></a>
+      <a href="#" aria-label="TikTok"><i class="ph ph-tiktok-logo"></i></a>
+      <a href="#" aria-label="Pinterest"><i class="ph ph-pinterest-logo"></i></a>
+    </div>
+  </div>
+</footer>
 
 <!-- ═══════════════════════════════════════
      FAVOURITES OVERLAY
@@ -1006,6 +1518,10 @@ body.overlay-open { overflow: hidden; }
     <span class="cart-summary-value" id="cart-subtotal">R 0.00</span>
   </div>
   <div class="cart-summary-row">
+    <span class="cart-summary-label">DISCOUNT</span>
+    <span class="cart-summary-value" id="cart-discount" style="color:#27ae60;display:none;">− R 0.00</span>
+  </div>
+  <div class="cart-summary-row">
     <span class="cart-summary-label">SHIPPING</span>
     <span class="cart-summary-value" id="cart-shipping">Calculated at checkout</span>
   </div>
@@ -1015,6 +1531,26 @@ body.overlay-open { overflow: hidden; }
     <span class="cart-summary-total-value" id="cart-total">R 0.00</span>
   </div>
   <p class="cart-free-ship-note" id="cart-ship-note"></p>
+</div>
+
+<!-- PROMO CODE -->
+<div class="cart-promo-wrap" id="cart-promo-wrap" style="display:none;">
+  <p class="cart-promo-label">PROMO CODE</p>
+  <div class="cart-promo-row">
+    <input class="cart-promo-input" id="cart-promo-input" type="text" placeholder="ENTER CODE">
+    <button class="cart-promo-btn" onclick="applyPromo()">APPLY</button>
+  </div>
+  <p class="cart-promo-msg" id="cart-promo-msg"></p>
+</div>
+
+<!-- YOU MAY ALSO LIKE -->
+<div class="ymal-section" id="cart-ymal" style="display:none;">
+  <div class="ymal-header">
+    <p class="ymal-title">YOU MAY ALSO LIKE</p>
+  </div>
+  <div class="ymal-scroll">
+    <div class="ymal-row" id="cart-ymal-row"></div>
+  </div>
 </div>
 
 
@@ -1066,12 +1602,52 @@ body.overlay-open { overflow: hidden; }
     <span class="modal-size" onclick="selectSize(this)">XL</span>
   </div>
 
-  <div class="modal-desc-toggle" id="modal-desc-toggle" onclick="toggleDesc()">
+  <!-- SHIPPING CALCULATOR -->
+  <div class="modal-collapsible-toggle" onclick="toggleCollapsible('modal-shipping-body',this)">
+    <span>CALCULATE SHIPPING</span>
+    <i class="ph ph-caret-down"></i>
+  </div>
+  <div class="modal-collapsible-body" id="modal-shipping-body">
+    <p>Enter your postal code to estimate delivery cost.</p>
+    <div class="modal-shipping-row">
+      <input class="modal-shipping-input" id="modal-postal-input" type="text" placeholder="Postal code e.g. 0186" maxlength="10">
+      <button class="modal-shipping-btn" onclick="calculateShipping()">CHECK</button>
+    </div>
+    <p class="modal-shipping-result" id="modal-shipping-result"></p>
+  </div>
+
+  <!-- RETURNS & REFUNDS -->
+  <div class="modal-collapsible-toggle" onclick="toggleCollapsible('modal-returns-body',this)">
+    <span>RETURNS &amp; REFUNDS</span>
+    <i class="ph ph-caret-down"></i>
+  </div>
+  <div class="modal-collapsible-body" id="modal-returns-body">
+    <ul class="returns-list">
+      <li>Returns accepted within 7 days of delivery.</li>
+      <li>Items must be unworn, unwashed, and in original packaging with tags attached.</li>
+      <li>Sale items are final sale and cannot be returned.</li>
+      <li>To initiate a return, contact us at returns@janedore.co.za with your order number.</li>
+      <li>Refunds are processed within 5–10 business days to your original payment method.</li>
+    </ul>
+  </div>
+
+  <!-- PRODUCT DESCRIPTION -->
+  <div class="modal-collapsible-toggle" onclick="toggleCollapsible('modal-desc-body',this)" id="modal-desc-toggle">
     <span>PRODUCT DESCRIPTION</span>
     <i class="ph ph-caret-down"></i>
   </div>
-  <div class="modal-desc-body" id="modal-desc-body">
+  <div class="modal-collapsible-body" id="modal-desc-body">
     <p id="modal-desc-text">Product description will be added via Firebase.</p>
+  </div>
+</div>
+
+<!-- YOU MAY ALSO LIKE -->
+<div class="ymal-section" id="modal-ymal">
+  <div class="ymal-header">
+    <p class="ymal-title">YOU MAY ALSO LIKE</p>
+  </div>
+  <div class="ymal-scroll">
+    <div class="ymal-row" id="modal-ymal-row"></div>
   </div>
 </div>
 
@@ -1086,93 +1662,165 @@ body.overlay-open { overflow: hidden; }
 <script>
 
 /* ══════════════════════════════════════════════
-   OVERLAY STATE — tracks what's currently open
-   so the header glass logic can be suppressed
+   OVERLAY STATE
 ══════════════════════════════════════════════ */
-let overlayState = {
-  fav:     false,
-  cart:    false,
-  modal:   false,
-};
-
-function anyOverlayOpen() {
-  return overlayState.fav || overlayState.cart || overlayState.modal;
-}
+let overlayState = { fav: false, cart: false, modal: false };
+function anyOverlayOpen() { return overlayState.fav || overlayState.cart || overlayState.modal; }
 
 /* ══════════════════════════════════════════════
-   HEADER GLASS
-   Only applies when: main page is visible
-   (no overlay open) AND scrolled over image section
+   HEADER GLASS — only on main page, no overlays
 ══════════════════════════════════════════════ */
 const header = document.getElementById('main-header');
 const imageSectionIds = ['section-banner','section-row1','section-row2','section-jewel-row','product-grid'];
 
 function handleHeaderGlass() {
-  // If ANY overlay/modal is open → always solid white, never glass
-  if (anyOverlayOpen()) {
-    header.classList.remove('over-image');
-    return;
-  }
-
-  // At very top of page — always solid white
-  if (window.scrollY === 0) {
-    header.classList.remove('over-image');
-    return;
-  }
-
+  if (anyOverlayOpen()) { header.classList.remove('over-image'); return; }
+  if (window.scrollY === 0) { header.classList.remove('over-image'); return; }
   const headerBottom = header.getBoundingClientRect().bottom;
   let overImage = false;
-
   for (const id of imageSectionIds) {
     const el = document.getElementById(id);
     if (!el) continue;
     const rect = el.getBoundingClientRect();
-    if (rect.top < headerBottom && rect.bottom > headerBottom) {
-      overImage = true;
-      break;
-    }
+    if (rect.top < headerBottom && rect.bottom > headerBottom) { overImage = true; break; }
   }
-
-  if (overImage) {
-    header.classList.add('over-image');
-  } else {
-    header.classList.remove('over-image');
-  }
+  header.classList.toggle('over-image', overImage);
 }
-
 window.addEventListener('scroll', handleHeaderGlass, { passive: true });
 window.addEventListener('load', handleHeaderGlass);
 window.addEventListener('resize', handleHeaderGlass);
 document.querySelectorAll('img').forEach(img => img.addEventListener('load', handleHeaderGlass));
 handleHeaderGlass();
 
+/* ══════════════════════════════════════════════
+   SHARED PRODUCT DATA (for YMAL)
+══════════════════════════════════════════════ */
+const PRODUCT_CATALOG = [
+  { id:'1', name:'ITEM NAME', price:'R 0.00', imgSrc:'' },
+  { id:'2', name:'ITEM NAME', price:'R 0.00', imgSrc:'' },
+  { id:'3', name:'ITEM NAME', price:'R 0.00', imgSrc:'' },
+  { id:'4', name:'ITEM NAME', price:'R 0.00', imgSrc:'' },
+];
+
+function renderYMAL(containerId, excludeId) {
+  const row = document.getElementById(containerId);
+  if (!row) return;
+  const suggestions = PRODUCT_CATALOG.filter(p => p.id !== excludeId);
+  row.innerHTML = suggestions.map(p => `
+    <div class="ymal-card" onclick="openProductModal({id:'${p.id}',name:'${p.name}',price:'${p.price}',desc:'Product description.',images:${p.imgSrc ? `['${p.imgSrc}']` : '[]'}})">
+      ${p.imgSrc
+        ? `<img class="ymal-card-img" src="${p.imgSrc}" alt="${p.name}">`
+        : `<div class="ymal-card-img-ph"><i class="ph-light ph-image"></i></div>`}
+      <div class="ymal-card-info">
+        <p class="ymal-card-name">${p.name}</p>
+        <p class="ymal-card-price">${p.price}</p>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════════
+   PROMO CODES
+══════════════════════════════════════════════ */
+const PROMO_CODES = {
+  'JANEDORE10': 0.10,
+  'WELCOME15':  0.15,
+  'SALE20':     0.20,
+};
+let activePromo = null; // { code, rate }
+
+function applyPromo() {
+  const input = document.getElementById('cart-promo-input');
+  const msg   = document.getElementById('cart-promo-msg');
+  const code  = (input.value || '').trim().toUpperCase();
+  if (!code) { msg.className = 'cart-promo-msg error'; msg.textContent = 'Please enter a code.'; return; }
+  if (PROMO_CODES[code]) {
+    activePromo = { code, rate: PROMO_CODES[code] };
+    const pct = Math.round(PROMO_CODES[code] * 100);
+    msg.className = 'cart-promo-msg success';
+    msg.textContent = `✓ Code applied — ${pct}% off!`;
+    input.disabled = true;
+  } else {
+    activePromo = null;
+    msg.className = 'cart-promo-msg error';
+    msg.textContent = 'Invalid or expired code.';
+  }
+  renderCartOverlay();
+}
 
 /* ══════════════════════════════════════════════
    CART DATA
 ══════════════════════════════════════════════ */
-let cartItems = []; // { id, name, price, imgSrc, size, qty, priceNum }
+let cartItems = []; // { id, name, price, imgSrc, size, qty, priceNum, included }
 
-function parsePrice(str) {
-  return parseFloat((str || '0').replace(/[^0-9.]/g, '')) || 0;
-}
+function parsePrice(str) { return parseFloat((str || '0').replace(/[^0-9.]/g, '')) || 0; }
 
 function updateCartBadge() {
   const total = cartItems.reduce((sum, item) => sum + item.qty, 0);
   document.getElementById('cart-count').textContent = total;
 }
 
+function toggleCartItemInclude(id) {
+  const item = cartItems.find(i => i.id === id);
+  if (item) { item.included = !item.included; renderCartOverlay(); }
+}
+
+function initSwipeToDelete() {
+  document.querySelectorAll('.cart-item-swipe-wrap').forEach(wrap => {
+    const inner = wrap.querySelector('.cart-item');
+    if (!inner) return;
+    const id = wrap.dataset.cartId;
+    let startX = 0, curX = 0, swiping = false;
+    const MAX_SWIPE = 80;
+
+    inner.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      swiping = true;
+    }, { passive: true });
+
+    inner.addEventListener('touchmove', e => {
+      if (!swiping) return;
+      curX = e.touches[0].clientX - startX;
+      if (curX > 0) curX = 0;
+      if (curX < -MAX_SWIPE) curX = -MAX_SWIPE;
+      inner.style.transition = 'none';
+      inner.style.transform = `translateX(${curX}px)`;
+    }, { passive: true });
+
+    inner.addEventListener('touchend', () => {
+      swiping = false;
+      inner.style.transition = 'transform 0.25s ease';
+      if (curX < -MAX_SWIPE * 0.6) {
+        inner.style.transform = `translateX(-${MAX_SWIPE}px)`;
+        // short delay then delete
+        setTimeout(() => {
+          cartItems = cartItems.filter(i => i.id !== id);
+          updateCartBadge();
+          renderCartOverlay();
+        }, 300);
+      } else {
+        inner.style.transform = 'translateX(0)';
+      }
+      curX = 0;
+    });
+  });
+}
+
 function renderCartOverlay() {
-  const list    = document.getElementById('cart-items-list');
-  const empty   = document.getElementById('cart-empty');
-  const summary = document.getElementById('cart-summary');
+  const list        = document.getElementById('cart-items-list');
+  const empty       = document.getElementById('cart-empty');
+  const summary     = document.getElementById('cart-summary');
+  const promoWrap   = document.getElementById('cart-promo-wrap');
+  const ymalSection = document.getElementById('cart-ymal');
   const checkoutBtn = document.getElementById('cart-checkout-btn');
-  const countEl = document.getElementById('cart-item-count');
+  const countEl     = document.getElementById('cart-item-count');
 
   if (cartItems.length === 0) {
     list.innerHTML = '';
     list.style.display = 'none';
     empty.style.display = 'flex';
     summary.style.display = 'none';
+    promoWrap.style.display = 'none';
+    ymalSection.style.display = 'none';
     checkoutBtn.classList.remove('visible');
     countEl.textContent = '0 items';
     return;
@@ -1182,63 +1830,79 @@ function renderCartOverlay() {
   list.style.display = 'block';
   summary.style.display = 'flex';
   summary.style.flexDirection = 'column';
+  promoWrap.style.display = 'block';
+  ymalSection.style.display = 'block';
   checkoutBtn.classList.add('visible');
 
   const total = cartItems.reduce((sum, i) => sum + i.qty, 0);
   countEl.textContent = total + (total === 1 ? ' item' : ' items');
 
   list.innerHTML = cartItems.map(item => `
-    <div class="cart-item" data-cart-id="${item.id}">
-      ${item.imgSrc
-        ? `<img class="cart-item-img" src="${item.imgSrc}" alt="${item.name}">`
-        : `<div class="cart-item-img-ph"><i class="ph-light ph-image"></i></div>`}
-      <div class="cart-item-info">
-        <p class="cart-item-name">${item.name}</p>
-        ${item.size ? `<p class="cart-item-size">Size: ${item.size}</p>` : ''}
-        <p class="cart-item-price">R ${(item.priceNum * item.qty).toFixed(2)}</p>
-        <div class="cart-item-qty">
-          <button class="qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
-          <span class="qty-num">${item.qty}</span>
-          <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+    <div class="cart-item-swipe-wrap" data-cart-id="${item.id}">
+      <div class="cart-swipe-delete-bg"><span>REMOVE</span></div>
+      <div class="cart-item ${item.included !== false ? 'included' : 'excluded'}" data-cart-id="${item.id}">
+        <div class="cart-item-check" onclick="toggleCartItemInclude('${item.id}')">
+          <div class="cart-check-box">
+            <i class="ph ph-check"></i>
+          </div>
+        </div>
+        ${item.imgSrc
+          ? `<img class="cart-item-img" src="${item.imgSrc}" alt="${item.name}">`
+          : `<div class="cart-item-img-ph"><i class="ph-light ph-image"></i></div>`}
+        <div class="cart-item-info">
+          <p class="cart-item-name">${item.name}</p>
+          ${item.size ? `<p class="cart-item-size">Size: ${item.size}</p>` : ''}
+          <p class="cart-item-price">R ${(item.priceNum * item.qty).toFixed(2)}</p>
+          <div class="cart-item-qty">
+            <button class="qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
+            <span class="qty-num">${item.qty}</span>
+            <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+          </div>
         </div>
       </div>
-      <button class="cart-item-remove" onclick="removeCartItem('${item.id}')">
-        <i class="ph ph-x"></i>
-      </button>
     </div>
   `).join('');
 
-  // Summary
-  const subtotal = cartItems.reduce((sum, i) => sum + i.priceNum * i.qty, 0);
-  const FREE_SHIP_THRESHOLD = 750;
-  const shippingFree = subtotal >= FREE_SHIP_THRESHOLD;
+  initSwipeToDelete();
+
+  // Summary — only count included items
+  const includedItems = cartItems.filter(i => i.included !== false);
+  const subtotal = includedItems.reduce((sum, i) => sum + i.priceNum * i.qty, 0);
+  const discountEl = document.getElementById('cart-discount');
+  let discountAmt = 0;
+  if (activePromo) {
+    discountAmt = subtotal * activePromo.rate;
+    discountEl.textContent = `− R ${discountAmt.toFixed(2)}`;
+    discountEl.style.display = 'block';
+  } else {
+    discountEl.style.display = 'none';
+  }
+  const afterDiscount = subtotal - discountAmt;
+  const FREE_SHIP = 750;
+  const shippingFree = afterDiscount >= FREE_SHIP;
   document.getElementById('cart-subtotal').textContent = 'R ' + subtotal.toFixed(2);
   document.getElementById('cart-shipping').textContent = shippingFree ? 'FREE' : 'Calculated at checkout';
-  document.getElementById('cart-total').textContent = 'R ' + subtotal.toFixed(2);
+  document.getElementById('cart-total').textContent = 'R ' + afterDiscount.toFixed(2);
 
   const shipNote = document.getElementById('cart-ship-note');
   if (shippingFree) {
     shipNote.textContent = '✓ You qualify for free shipping!';
+    shipNote.style.color = '#27ae60';
   } else {
-    const remaining = (FREE_SHIP_THRESHOLD - subtotal).toFixed(2);
+    const remaining = (FREE_SHIP - afterDiscount).toFixed(2);
     shipNote.textContent = `Spend R${remaining} more for free shipping.`;
     shipNote.style.color = '#888';
   }
+
+  // YMAL
+  renderYMAL('cart-ymal-row', null);
 }
 
 function changeQty(id, delta) {
   const item = cartItems.find(i => i.id === id);
   if (!item) return;
   item.qty += delta;
-  if (item.qty <= 0) {
-    cartItems = cartItems.filter(i => i.id !== id);
-  }
-  updateCartBadge();
-  renderCartOverlay();
-}
-
-function removeCartItem(id) {
-  cartItems = cartItems.filter(i => i.id !== id);
+  if (item.qty <= 0) cartItems = cartItems.filter(i => i.id !== id);
   updateCartBadge();
   renderCartOverlay();
 }
@@ -1247,18 +1911,13 @@ function removeCartItem(id) {
    CART OVERLAY OPEN / CLOSE
 ══════════════════════════════════════════════ */
 function openCartOverlay() {
-  if (overlayState.fav) closeFavOverlay();
+  if (overlayState.fav)   closeFavOverlay();
   if (overlayState.modal) closeProductModal();
-
   renderCartOverlay();
   document.getElementById('cart-overlay').classList.add('open');
   document.body.classList.add('overlay-open');
   overlayState.cart = true;
-
-  // Force solid white header — remove glass
   header.classList.remove('over-image');
-
-  // Swap cart icon state
   document.getElementById('cart-wrapper').onclick = closeCartOverlay;
 }
 
@@ -1267,26 +1926,18 @@ function closeCartOverlay() {
   document.getElementById('cart-checkout-btn').classList.remove('visible');
   document.body.classList.remove('overlay-open');
   overlayState.cart = false;
-
   document.getElementById('cart-wrapper').onclick = openCartOverlay;
   handleHeaderGlass();
 }
-
 
 /* ══════════════════════════════════════════════
    FAVOURITES DATA
 ══════════════════════════════════════════════ */
 let favourites = [];
-try {
-  const s = localStorage.getItem('jd_favourites');
-  if (s) favourites = JSON.parse(s);
-} catch(e) {}
-
+try { const s = localStorage.getItem('jd_favourites'); if (s) favourites = JSON.parse(s); } catch(e) {}
 let currentFilter = 'newest';
 
-function saveFavourites() {
-  try { localStorage.setItem('jd_favourites', JSON.stringify(favourites)); } catch(e) {}
-}
+function saveFavourites() { try { localStorage.setItem('jd_favourites', JSON.stringify(favourites)); } catch(e) {} }
 
 function updateFavBadge() {
   document.getElementById('fav-count').textContent = favourites.length;
@@ -1310,9 +1961,7 @@ function toggleFav(btn) {
     btn.classList.add('active');
     btn.querySelector('i').className = 'ph ph-heart-fill';
   }
-  saveFavourites();
-  updateFavBadge();
-  renderFavGrid();
+  saveFavourites(); updateFavBadge(); renderFavGrid();
 }
 
 function removeFavById(id) {
@@ -1322,26 +1971,16 @@ function removeFavById(id) {
   const mainCard = document.querySelector(`.product-card[data-id="${id}"]`);
   if (mainCard) {
     const btn = mainCard.querySelector('.product-fav-btn');
-    if (btn) {
-      btn.classList.remove('active');
-      btn.querySelector('i').className = 'ph ph-heart-straight';
-    }
+    if (btn) { btn.classList.remove('active'); btn.querySelector('i').className = 'ph ph-heart-straight'; }
   }
-  updateFavBadge();
-  renderFavGrid();
+  updateFavBadge(); renderFavGrid();
 }
 
 function renderFavGrid() {
-  const grid  = document.getElementById('fav-grid');
+  const grid = document.getElementById('fav-grid');
   const empty = document.getElementById('fav-empty');
-  if (favourites.length === 0) {
-    grid.innerHTML = '';
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-  grid.style.display = 'grid';
-  empty.style.display = 'none';
+  if (favourites.length === 0) { grid.innerHTML = ''; grid.style.display = 'none'; empty.style.display = 'flex'; return; }
+  grid.style.display = 'grid'; empty.style.display = 'none';
   let sorted = [...favourites];
   if (currentFilter === 'newest') sorted.sort((a,b) => b.added - a.added);
   if (currentFilter === 'high')   sorted.sort((a,b) => parsePrice(b.price) - parsePrice(a.price));
@@ -1349,9 +1988,7 @@ function renderFavGrid() {
   grid.innerHTML = sorted.map(item => `
     <div class="product-card">
       <div class="product-img-wrap">
-        ${item.imgSrc
-          ? `<img class="product-img" src="${item.imgSrc}" alt="${item.name}">`
-          : `<div class="ph-placeholder"><i class="ph-light ph-image"></i></div>`}
+        ${item.imgSrc ? `<img class="product-img" src="${item.imgSrc}" alt="${item.name}">` : `<div class="ph-placeholder"><i class="ph-light ph-image"></i></div>`}
         <button class="product-fav-btn active" onclick="removeFavById('${item.id}')">
           <i class="ph ph-heart-fill"></i>
         </button>
@@ -1374,18 +2011,13 @@ function setFilter(filter, chip) {
    FAVOURITES OVERLAY OPEN / CLOSE
 ══════════════════════════════════════════════ */
 function openFavOverlay() {
-  if (overlayState.cart) closeCartOverlay();
+  if (overlayState.cart)  closeCartOverlay();
   if (overlayState.modal) closeProductModal();
-
   renderFavGrid();
   document.getElementById('fav-overlay').classList.add('open');
   document.body.classList.add('overlay-open');
   overlayState.fav = true;
-
-  // Force solid white header
   header.classList.remove('over-image');
-
-  // Swap heart icon to filled
   document.getElementById('fav-icon-dark').className  = 'ph-fill ph-heart-straight icon-dark';
   document.getElementById('fav-icon-white').className = 'ph-fill ph-heart-straight icon-white';
   document.getElementById('fav-wrapper').onclick = closeFavOverlay;
@@ -1395,11 +2027,9 @@ function closeFavOverlay() {
   document.getElementById('fav-overlay').classList.remove('open');
   document.body.classList.remove('overlay-open');
   overlayState.fav = false;
-
   document.getElementById('fav-icon-dark').className  = 'ph ph-heart-straight icon-dark';
   document.getElementById('fav-icon-white').className = 'ph ph-heart-straight icon-white';
   document.getElementById('fav-wrapper').onclick = openFavOverlay;
-
   handleHeaderGlass();
 }
 
@@ -1407,16 +2037,48 @@ function closeFavOverlay() {
 document.querySelectorAll('.product-card').forEach(card => {
   if (favourites.find(f => f.id === card.dataset.id)) {
     const btn = card.querySelector('.product-fav-btn');
-    if (btn) {
-      btn.classList.add('active');
-      btn.querySelector('i').className = 'ph ph-heart-fill';
-    }
+    if (btn) { btn.classList.add('active'); btn.querySelector('i').className = 'ph ph-heart-fill'; }
   }
 });
 
 updateFavBadge();
 updateCartBadge();
 
+/* ══════════════════════════════════════════════
+   MODAL COLLAPSIBLE (generic)
+══════════════════════════════════════════════ */
+function toggleCollapsible(bodyId, toggleEl) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  body.classList.toggle('open');
+  toggleEl.classList.toggle('open');
+}
+
+/* ══════════════════════════════════════════════
+   SHIPPING CALCULATOR (in modal)
+══════════════════════════════════════════════ */
+function calculateShipping() {
+  const input = document.getElementById('modal-postal-input');
+  const result = document.getElementById('modal-shipping-result');
+  const code = (input.value || '').trim();
+  if (!code || code.length < 3) {
+    result.style.display = 'block';
+    result.style.color = '#c0392b';
+    result.textContent = 'Please enter a valid postal code.';
+    return;
+  }
+  // Simulated logic — replace with real API when ready
+  result.style.display = 'block';
+  result.style.color = '#27ae60';
+  const num = parseInt(code, 10) || 0;
+  if (num < 1000) {
+    result.textContent = '✓ Standard delivery: FREE (orders over R750) or R65 flat rate.';
+  } else if (num < 5000) {
+    result.textContent = '✓ Standard delivery: R75 · Express: R130 (1–2 business days).';
+  } else {
+    result.textContent = '✓ Standard delivery: R95 · Express: R160 (2–3 business days).';
+  }
+}
 
 /* ══════════════════════════════════════════════
    PRODUCT MODAL
@@ -1426,7 +2088,7 @@ let currentSlide = 0;
 
 document.querySelectorAll('.product-card').forEach(card => {
   card.addEventListener('click', function(e) {
-    if (e.target.closest('.product-fav-btn')) return;
+    if (e.target.closest('.product-fav-btn') || e.target.closest('.product-variant-dot')) return;
     openProductModal({
       id:    card.dataset.id || '0',
       name:  card.querySelector('.product-name')?.textContent || 'ITEM NAME',
@@ -1441,7 +2103,7 @@ document.querySelectorAll('.product-card').forEach(card => {
 });
 
 function openProductModal(product) {
-  if (overlayState.fav) closeFavOverlay();
+  if (overlayState.fav)  closeFavOverlay();
   if (overlayState.cart) closeCartOverlay();
 
   currentModalProduct = product;
@@ -1451,16 +2113,24 @@ function openProductModal(product) {
   document.getElementById('modal-price').textContent = product.price;
   document.getElementById('modal-desc-text').textContent = product.desc;
 
-  document.getElementById('modal-desc-body').classList.remove('open');
-  document.getElementById('modal-desc-toggle').classList.remove('open');
+  // Reset all collapsibles
+  ['modal-shipping-body','modal-returns-body','modal-desc-body'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  });
+  document.querySelectorAll('.modal-collapsible-toggle').forEach(t => t.classList.remove('open'));
 
+  // Reset shipping
+  const postalInput = document.getElementById('modal-postal-input');
+  const shippingResult = document.getElementById('modal-shipping-result');
+  if (postalInput) postalInput.value = '';
+  if (shippingResult) { shippingResult.style.display = 'none'; shippingResult.textContent = ''; }
+
+  // Build slides
   const slidesEl = document.getElementById('modal-slides');
   const dotsEl   = document.getElementById('modal-dots');
-  slidesEl.innerHTML = '';
-  dotsEl.innerHTML   = '';
-
+  slidesEl.innerHTML = ''; dotsEl.innerHTML = '';
   const images = product.images && product.images.length ? product.images : [];
-
   if (images.length === 0) {
     slidesEl.innerHTML = `<div class="modal-slide"><div class="ph-placeholder"><i class="ph-light ph-image"></i></div></div>`;
   } else {
@@ -1469,17 +2139,14 @@ function openProductModal(product) {
       dotsEl.innerHTML   += `<div class="modal-dot${i===0?' active':''}"></div>`;
     });
   }
-
   slidesEl.style.transform = 'translateX(0)';
 
+  // Variants
   const variantsEl = document.getElementById('modal-variants');
   variantsEl.innerHTML = '';
   if (images.length > 1) {
     images.forEach((src, i) => {
-      variantsEl.innerHTML += `
-        <div class="modal-variant${i===0?' active':''}" onclick="goToSlide(${i})">
-          <img src="${src}" alt="Variant ${i+1}">
-        </div>`;
+      variantsEl.innerHTML += `<div class="modal-variant${i===0?' active':''}" onclick="goToSlide(${i})"><img src="${src}" alt="Variant ${i+1}"></div>`;
     });
   } else {
     variantsEl.innerHTML = `<div class="modal-variant active" style="background:#e8e8e8;"></div>`;
@@ -1493,9 +2160,10 @@ function openProductModal(product) {
   document.getElementById('product-modal').classList.add('open');
   document.getElementById('modal-add-btn').classList.add('visible');
   overlayState.modal = true;
-
-  // Force solid white header — never glass while modal is open
   header.classList.remove('over-image');
+
+  // Populate YMAL
+  renderYMAL('modal-ymal-row', product.id);
 
   initSliderSwipe();
 }
@@ -1505,7 +2173,6 @@ function closeProductModal() {
   document.getElementById('modal-add-btn').classList.remove('visible');
   overlayState.modal = false;
   currentModalProduct = null;
-
   handleHeaderGlass();
 }
 
@@ -1535,31 +2202,19 @@ function selectSize(el) {
   el.classList.add('active');
 }
 
-function toggleDesc() {
-  document.getElementById('modal-desc-body').classList.toggle('open');
-  document.getElementById('modal-desc-toggle').classList.toggle('open');
-}
-
 function toggleModalFav() {
   if (!currentModalProduct) return;
-  const id   = currentModalProduct.id;
-  const idx  = favourites.findIndex(f => f.id === id);
+  const id  = currentModalProduct.id;
+  const idx = favourites.findIndex(f => f.id === id);
   const icon = document.getElementById('modal-fav-icon');
   if (idx > -1) {
     favourites.splice(idx, 1);
     icon.className = 'ph ph-heart-straight';
   } else {
-    favourites.push({
-      id,
-      name:   currentModalProduct.name,
-      price:  currentModalProduct.price,
-      imgSrc: currentModalProduct.images?.[0] || '',
-      added:  Date.now()
-    });
+    favourites.push({ id, name: currentModalProduct.name, price: currentModalProduct.price, imgSrc: currentModalProduct.images?.[0] || '', added: Date.now() });
     icon.className = 'ph ph-heart-fill';
   }
-  saveFavourites();
-  updateFavBadge();
+  saveFavourites(); updateFavBadge();
   const card = document.querySelector(`.product-card[data-id="${id}"]`);
   if (card) {
     const btn = card.querySelector('.product-fav-btn');
@@ -1573,25 +2228,17 @@ function toggleModalFav() {
 
 function addToBag() {
   if (!currentModalProduct) return;
-
-  const id   = currentModalProduct.id;
-  const name = currentModalProduct.name;
-  const price = currentModalProduct.price;
-  const imgSrc = currentModalProduct.images?.[0] || '';
+  const { id, name, price, images } = currentModalProduct;
+  const imgSrc = images?.[0] || '';
   const priceNum = parsePrice(price);
-
-  // Get selected size
   const sizeEl = document.querySelector('.modal-size.active');
   const size = sizeEl ? sizeEl.textContent : '';
-
-  // Check if already in cart (same id + size)
   const existing = cartItems.find(i => i.id === id && i.size === size);
   if (existing) {
     existing.qty++;
   } else {
-    cartItems.push({ id, name, price, imgSrc, size, qty: 1, priceNum });
+    cartItems.push({ id, name, price, imgSrc, size, qty: 1, priceNum, included: true });
   }
-
   updateCartBadge();
   closeProductModal();
 }
