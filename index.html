@@ -274,6 +274,252 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 .fav-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; padding:60px 20px; gap:12px; }
 .fav-empty i{ font-size:48px; color:#ddd; }
 .fav-empty p{ font-family:'Manrope', sans-serif; font-size:13px; color:#aaa; margin:0; text-align:center; }
+
+/* ═══════════════════════════════════════
+   PRODUCT MODAL
+═══════════════════════════════════════ */
+.product-modal{
+  position:fixed;
+  inset:0;
+  background:white;
+  z-index:1500;
+  display:none;
+  flex-direction:column;
+  overflow-y:auto;
+  /* sits above page but below nothing — header is z-index:1000 so we go above */
+}
+.product-modal.open{ display:flex; }
+
+/* IMAGE SLIDER */
+.modal-slider-wrap{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  background:#f0f0f0;
+  flex-shrink:0;
+}
+.modal-slides{
+  display:flex;
+  transition: transform 0.35s ease;
+  will-change: transform;
+}
+.modal-slide{
+  min-width:100%;
+  aspect-ratio:3/4;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.modal-slide img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.modal-slide .ph-placeholder{
+  width:100%;
+  height:100%;
+  background:#e8e8e8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.modal-slide .ph-placeholder i{ font-size:48px; color:#ccc; }
+
+/* Dot indicators */
+.modal-dots{
+  position:absolute;
+  bottom:12px;
+  left:0; right:0;
+  display:flex;
+  justify-content:center;
+  gap:5px;
+  pointer-events:none;
+}
+.modal-dot{
+  width:5px; height:5px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.5);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.modal-dot.active{
+  background:white;
+  transform:scale(1.3);
+}
+
+/* Close button — top right, glassmorphic circle */
+.modal-close{
+  position:absolute;
+  top:14px; right:14px;
+  width:36px; height:36px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.28);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:10;
+  border:none;
+}
+.modal-close i{ font-size:18px; color:#111; }
+
+/* Fav button — bottom right of slider, black */
+.modal-fav-btn{
+  position:absolute;
+  bottom:14px; right:14px;
+  width:36px; height:36px;
+  border-radius:50%;
+  background:black;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:10;
+  border:none;
+  transition: transform 0.2s ease;
+}
+.modal-fav-btn i{ font-size:18px; color:white; }
+.modal-fav-btn:hover{ transform:scale(1.08); }
+
+/* PRODUCT DETAILS */
+.modal-details{
+  padding:20px 20px 120px; /* bottom padding for sticky button */
+  flex:1;
+}
+
+.modal-name{
+  font-family:'Driftune', sans-serif;
+  font-size:20px;
+  letter-spacing:2px;
+  color:#111;
+  margin:0 0 8px 0;
+}
+.modal-price{
+  font-family:'Manrope', sans-serif;
+  font-size:15px;
+  font-weight:600;
+  color:#111;
+  margin:0 0 20px 0;
+}
+
+/* VARIANTS — circular thumbnails */
+.modal-variants-label{
+  font-family:'Driftune', sans-serif;
+  font-size:10px;
+  letter-spacing:2px;
+  color:#888;
+  margin:0 0 10px 0;
+}
+.modal-variants{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.modal-variant{
+  width:48px; height:48px;
+  border-radius:50%;
+  overflow:hidden;
+  border:2px solid transparent;
+  cursor:pointer;
+  transition: border-color 0.2s ease;
+  flex-shrink:0;
+  background:#e8e8e8;
+}
+.modal-variant img{
+  width:100%; height:100%;
+  object-fit:cover;
+}
+.modal-variant.active{
+  border-color:#111;
+}
+
+/* SIZE SELECTOR */
+.modal-size-label{
+  font-family:'Driftune', sans-serif;
+  font-size:10px;
+  letter-spacing:2px;
+  color:#888;
+  margin:0 0 10px 0;
+}
+.modal-sizes{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:24px;
+}
+.modal-size{
+  font-family:'Driftune', sans-serif;
+  font-size:11px;
+  letter-spacing:1px;
+  color:#111;
+  border:1px solid #ddd;
+  padding:8px 14px;
+  cursor:pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background:white;
+}
+.modal-size.active{
+  border-color:#111;
+  background:#111;
+  color:white;
+}
+
+/* COLLAPSIBLE DESCRIPTION */
+.modal-desc-toggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 0;
+  border-top:1px solid #f0f0f0;
+  border-bottom:1px solid #f0f0f0;
+  cursor:pointer;
+}
+.modal-desc-toggle span{
+  font-family:'Driftune', sans-serif;
+  font-size:11px;
+  letter-spacing:2px;
+  color:#111;
+}
+.modal-desc-toggle i{
+  font-size:18px;
+  color:#111;
+  transition: transform 0.25s ease;
+}
+.modal-desc-toggle.open i{ transform: rotate(180deg); }
+.modal-desc-body{
+  display:none;
+  padding:14px 0;
+}
+.modal-desc-body.open{ display:block; }
+.modal-desc-body p{
+  font-family:'Manrope', sans-serif;
+  font-size:13px;
+  color:#555;
+  line-height:1.75;
+  margin:0;
+}
+
+/* STICKY ADD TO BAG */
+.modal-add-btn{
+  position:fixed;
+  bottom:0; left:0; right:0;
+  background:black;
+  color:white;
+  font-family:'Driftune', sans-serif;
+  font-size:13px;
+  letter-spacing:3px;
+  text-align:center;
+  padding:18px 20px;
+  cursor:pointer;
+  border:none;
+  border-radius:0;
+  z-index:1600;
+  display:none;
+}
+.modal-add-btn.visible{ display:block; }
+
 </style>
 
 </head>
@@ -700,7 +946,236 @@ html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
 
   handleHeaderGlass();
 
+
+
+  // ── PRODUCT MODAL ──
+  let currentModalProduct = null;
+  let currentSlide = 0;
+
+  // Make every product card clickable — opens modal
+  // (not the fav button)
+  document.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+      if (e.target.closest('.product-fav-btn')) return; // ignore fav tap
+      openProductModal({
+        id:    card.dataset.id || '0',
+        name:  card.querySelector('.product-name')?.textContent || 'ITEM NAME',
+        price: card.querySelector('.product-price')?.textContent || 'R 0.00',
+        desc:  'Product description will be added via Firebase.',
+        // images: array of src strings — Firebase will populate these
+        // For now uses the card's existing product image if any
+        images: (() => {
+          const img = card.querySelector('.product-img');
+          return img && img.src && !img.src.endsWith('/') ? [img.src] : [];
+        })()
+      });
+    });
+  });
+
+  function openProductModal(product) {
+    currentModalProduct = product;
+    currentSlide = 0;
+
+    // Name + price
+    document.getElementById('modal-name').textContent  = product.name;
+    document.getElementById('modal-price').textContent = product.price;
+    document.getElementById('modal-desc-text').textContent = product.desc;
+
+    // Reset description collapsible
+    document.getElementById('modal-desc-body').classList.remove('open');
+    document.getElementById('modal-desc-toggle').classList.remove('open');
+
+    // Build slides
+    const slidesEl = document.getElementById('modal-slides');
+    const dotsEl   = document.getElementById('modal-dots');
+    slidesEl.innerHTML = '';
+    dotsEl.innerHTML   = '';
+
+    const images = product.images && product.images.length ? product.images : [];
+
+    if (images.length === 0) {
+      // Placeholder slide
+      slidesEl.innerHTML = `<div class="modal-slide"><div class="ph-placeholder"><i class="ph-light ph-image"></i></div></div>`;
+      dotsEl.innerHTML   = '';
+    } else {
+      images.forEach((src, i) => {
+        slidesEl.innerHTML += `<div class="modal-slide"><img src="${src}" alt="Product image ${i+1}"></div>`;
+        dotsEl.innerHTML   += `<div class="modal-dot${i===0?' active':''}"></div>`;
+      });
+    }
+
+    slidesEl.style.transform = 'translateX(0)';
+
+    // Variants (same images as circles)
+    const variantsEl = document.getElementById('modal-variants');
+    variantsEl.innerHTML = '';
+    if (images.length > 1) {
+      images.forEach((src, i) => {
+        variantsEl.innerHTML += `
+          <div class="modal-variant${i===0?' active':''}" onclick="goToSlide(${i})">
+            <img src="${src}" alt="Variant ${i+1}">
+          </div>`;
+      });
+    } else {
+      // single image or none — show one placeholder circle
+      variantsEl.innerHTML = `<div class="modal-variant active" style="background:#e8e8e8;"></div>`;
+    }
+
+    // Deselect sizes
+    document.querySelectorAll('.modal-size').forEach(s => s.classList.remove('active'));
+
+    // Fav icon state
+    const isFav = favourites.some(f => f.id === product.id);
+    document.getElementById('modal-fav-icon').className = isFav ? 'ph ph-heart-fill' : 'ph ph-heart-straight';
+
+    // Show modal + sticky button
+    document.getElementById('product-modal').classList.add('open');
+    document.getElementById('modal-add-btn').classList.add('visible');
+
+    // Swipe support
+    initSliderSwipe();
+  }
+
+  function closeProductModal() {
+    document.getElementById('product-modal').classList.remove('open');
+    document.getElementById('modal-add-btn').classList.remove('visible');
+    currentModalProduct = null;
+  }
+
+  function goToSlide(index) {
+    const slidesEl = document.getElementById('modal-slides');
+    const total = slidesEl.children.length;
+    if (index < 0) index = 0;
+    if (index >= total) index = total - 1;
+    currentSlide = index;
+    slidesEl.style.transform = `translateX(-${index * 100}%)`;
+    // Update dots
+    document.querySelectorAll('.modal-dot').forEach((d,i) => d.classList.toggle('active', i===index));
+    // Update variant highlights
+    document.querySelectorAll('.modal-variant').forEach((v,i) => v.classList.toggle('active', i===index));
+  }
+
+  function initSliderSwipe() {
+    const wrap = document.getElementById('modal-slides').parentElement;
+    let startX = 0;
+    wrap.ontouchstart = e => { startX = e.touches[0].clientX; };
+    wrap.ontouchend   = e => {
+      const diff = startX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) goToSlide(currentSlide + (diff > 0 ? 1 : -1));
+    };
+  }
+
+  function selectSize(el) {
+    document.querySelectorAll('.modal-size').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function toggleDesc() {
+    document.getElementById('modal-desc-body').classList.toggle('open');
+    document.getElementById('modal-desc-toggle').classList.toggle('open');
+  }
+
+  function toggleModalFav() {
+    if (!currentModalProduct) return;
+    const id    = currentModalProduct.id;
+    const idx   = favourites.findIndex(f => f.id === id);
+    const icon  = document.getElementById('modal-fav-icon');
+    if (idx > -1) {
+      favourites.splice(idx, 1);
+      icon.className = 'ph ph-heart-straight';
+    } else {
+      favourites.push({
+        id,
+        name:   currentModalProduct.name,
+        price:  currentModalProduct.price,
+        imgSrc: currentModalProduct.images?.[0] || '',
+        added:  Date.now()
+      });
+      icon.className = 'ph ph-heart-fill';
+    }
+    saveFavourites();
+    updateFavBadge();
+    // Sync card heart
+    const card = document.querySelector(`.product-card[data-id="${id}"]`);
+    if (card) {
+      const btn = card.querySelector('.product-fav-btn');
+      if (btn) {
+        const isFav = favourites.some(f => f.id === id);
+        btn.classList.toggle('active', isFav);
+        btn.querySelector('i').className = isFav ? 'ph ph-heart-fill' : 'ph ph-heart-straight';
+      }
+    }
+  }
+
+  function addToBag() {
+    cartCount++;
+    updateCartBadge();
+    closeProductModal();
+  }
+
 </script>
+
+<!-- PRODUCT MODAL -->
+
+<div class="product-modal" id="product-modal">
+
+  <!-- IMAGE SLIDER -->
+
+  <div class="modal-slider-wrap">
+    <div class="modal-slides" id="modal-slides"></div>
+    <div class="modal-dots" id="modal-dots"></div>
+
+
+<!-- Close -->
+<button class="modal-close" onclick="closeProductModal()">
+  <i class="ph ph-x"></i>
+</button>
+
+<!-- Fav -->
+<button class="modal-fav-btn" id="modal-fav-btn" onclick="toggleModalFav()">
+  <i class="ph ph-heart-straight" id="modal-fav-icon"></i>
+</button>
+
+
+  </div>
+
+  <!-- DETAILS -->
+
+  <div class="modal-details">
+    <h2 class="modal-name" id="modal-name">ITEM NAME</h2>
+    <p class="modal-price" id="modal-price">R 0.00</p>
+
+
+<!-- Variants -->
+<p class="modal-variants-label">VARIANTS</p>
+<div class="modal-variants" id="modal-variants"></div>
+
+<!-- Size -->
+<p class="modal-size-label">SELECT SIZE</p>
+<div class="modal-sizes" id="modal-sizes">
+  <span class="modal-size" onclick="selectSize(this)">XS</span>
+  <span class="modal-size" onclick="selectSize(this)">S</span>
+  <span class="modal-size" onclick="selectSize(this)">M</span>
+  <span class="modal-size" onclick="selectSize(this)">L</span>
+  <span class="modal-size" onclick="selectSize(this)">XL</span>
+</div>
+
+<!-- Description collapsible -->
+<div class="modal-desc-toggle" id="modal-desc-toggle" onclick="toggleDesc()">
+  <span>PRODUCT DESCRIPTION</span>
+  <i class="ph ph-caret-down"></i>
+</div>
+<div class="modal-desc-body" id="modal-desc-body">
+  <p id="modal-desc-text">Product description will be added via Firebase.</p>
+</div>
+
+
+  </div>
+</div>
+
+<!-- STICKY ADD TO BAG -->
+
+<button class="modal-add-btn" id="modal-add-btn" onclick="addToBag()">ADD TO BAG</button>
 
 </body>
 </html>
