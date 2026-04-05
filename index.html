@@ -498,21 +498,13 @@ html, body {
 .fav-overlay-header{
   display:flex;
   align-items:center;
-  gap:10px;
-  padding:20px 20px 0;
+  justify-content:center;
+  padding:20px 20px 16px;
   position:sticky;
   top:0;
   background:white;
   z-index:10;
-  padding-bottom:16px;
   border-bottom:1px solid #f0f0f0;
-}
-.fav-overlay-close{
-  font-size:24px;
-  cursor:pointer;
-  color:#111;
-  display:flex;
-  align-items:center;
 }
 .fav-overlay-title{
   font-family:'Driftune', sans-serif;
@@ -520,6 +512,7 @@ html, body {
   letter-spacing:2px;
   color:#111;
   margin:0;
+  text-align:center;
 }
 
 .fav-overlay-sub{
@@ -978,7 +971,7 @@ html, body {
   </div>
 
 </div>
-
+```
 
   </div>
 
@@ -1011,7 +1004,16 @@ html, body {
   document.getElementById('cart-icon-white').addEventListener('click', () => addToCart(1));
 
   // — Favourites —
-  let favourites = []; // [{id, name, price, imgSrc}]
+  // Load favourites from localStorage
+  let favourites = [];
+  try {
+    const stored = localStorage.getItem('jd_favourites');
+    if (stored) favourites = JSON.parse(stored);
+  } catch(e) {}
+
+  function saveFavourites() {
+    try { localStorage.setItem('jd_favourites', JSON.stringify(favourites)); } catch(e) {}
+  }
   let currentFilter = 'newest';
 
   function updateFavBadge() {
@@ -1042,6 +1044,7 @@ html, body {
       btn.classList.add('active');
       btn.querySelector('i').className = 'ph ph-heart-fill';
     }
+    saveFavourites();
     updateFavBadge();
     renderFavGrid();
   }
@@ -1086,6 +1089,7 @@ html, body {
   function removeFavById(id) {
     const idx = favourites.findIndex(f => f.id === id);
     if (idx > -1) favourites.splice(idx, 1);
+    saveFavourites();
     // Sync heart on main page
     const mainCard = document.querySelector(`.product-card[data-id="${id}"]`);
     if (mainCard) {
@@ -1106,10 +1110,26 @@ html, body {
   function openFavOverlay() {
     renderFavGrid();
     document.getElementById('fav-overlay').classList.add('open');
+    // Switch header fav icons to filled
+    document.querySelectorAll('.fav-wrapper .icon-dark, .fav-wrapper .icon-white').forEach(i => {
+      i.className = i.className.replace('ph-heart-straight', 'ph-fill ph-heart-straight');
+    });
+    // Clicking header heart again closes
+    document.getElementById('fav-wrapper').onclick = closeFavOverlay;
+    // Header stays text mode while overlay open
+    header.classList.remove('glass');
+    header.classList.remove('over-image');
   }
 
   function closeFavOverlay() {
     document.getElementById('fav-overlay').classList.remove('open');
+    // Restore header fav icons to outline
+    document.querySelectorAll('.fav-wrapper i').forEach(i => {
+      i.className = i.className.replace('ph-fill ph-heart-straight', 'ph-heart-straight');
+    });
+    document.getElementById('fav-wrapper').onclick = openFavOverlay;
+    // Re-apply header state
+    applyHeaderState();
   }
 
   function setFilter(filter, chip) {
@@ -1118,6 +1138,18 @@ html, body {
     chip.classList.add('active');
     renderFavGrid();
   }
+
+  // Sync product card hearts with localStorage on load
+  document.querySelectorAll('.product-card').forEach(card => {
+    const id = card.dataset.id;
+    if (favourites.find(f => f.id === id)) {
+      const btn = card.querySelector('.product-fav-btn');
+      if (btn) {
+        btn.classList.add('active');
+        btn.querySelector('i').className = 'ph ph-heart-fill';
+      }
+    }
+  });
 
   updateFavBadge();
 
@@ -1141,36 +1173,41 @@ html, body {
    .filter(s => s.el);
 
   function getCurrentSectionType() {
-    const scrollY = window.scrollY;
-    // Fixed bars total height: announcement (~27px) + header (70px) = 97px
-    // We probe at the bottom edge of the fixed header — that's where content starts
-    // On screen: header bottom = 97px. In document coords: scrollY + 97
-    const probe = scrollY + 97;
-
-    // Walk sections from bottom to top
-    for (let i = sections.length - 1; i >= 0; i--) {
+    const headerBottom = 97; // announcement + header height in viewport px
+    for (let i = 0; i < sections.length; i++) {
       const s = sections[i];
-      const top = s.el.offsetTop;
-      const bottom = top + s.el.offsetHeight;
-      if (probe >= top && probe < bottom) return s.type;
+      const rect = s.el.getBoundingClientRect();
+      if (rect.top <= headerBottom && rect.bottom > headerBottom) {
+        return s.type;
+      }
     }
-    return 'image';
+    return 'text';
   }
 
-  window.addEventListener('scroll', () => {
-    header.classList.toggle('glass', window.scrollY > 10);
+  function applyHeaderState() {
     const type = getCurrentSectionType();
-    header.classList.toggle('over-image', type === 'image');
+    if (type === 'image') {
+      header.classList.add('glass');
+      header.classList.add('over-image');
+    } else {
+      header.classList.remove('glass');
+      header.classList.remove('over-image');
+    }
+  }
+
+  window.addEventListener('scroll', applyHeaderState);
+  window.addEventListener('resize', applyHeaderState);
+
+  // Also re-check after images load (they shift layout)
+  document.querySelectorAll('img').forEach(img => {
+    img.addEventListener('load', applyHeaderState);
   });
 
-  window.dispatchEvent(new Event('scroll'));
+  applyHeaderState();
 
-  // Overlay scroll also drives header glass + colour
+  // Overlay scroll — always text mode
   document.getElementById('fav-overlay').addEventListener('scroll', function() {
-    // When overlay is open, header glass is based on overlay scrollY
-    const overlayScrollY = this.scrollTop;
-    header.classList.toggle('glass', overlayScrollY > 10);
-    // Overlay is all white/text — always black icons
+    header.classList.remove('glass');
     header.classList.remove('over-image');
   });
 </script>
@@ -1180,10 +1217,7 @@ html, body {
 <div class="fav-overlay" id="fav-overlay">
 
   <div class="fav-overlay-header">
-    <span class="fav-overlay-close" onclick="closeFavOverlay()">
-      <i class="ph ph-x"></i>
-    </span>
-    <h2 class="fav-overlay-title">FAVOURITES</h2>
+    <h2 class="fav-overlay-title">MY FAVOURITES</h2>
   </div>
 
   <div class="fav-overlay-sub">
