@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -14,9 +15,10 @@
 }
 
 html, body { margin:0; padding:0; font-family:Arial,sans-serif; }
-body.overlay-open { overflow:hidden; }
+/* Overlay-open locks the page body scroll */
+body.overlay-open { overflow:hidden; position:fixed; width:100%; }
 
-/* ─── SKELETON SHIMMER — used everywhere ─── */
+/* ─── SKELETON SHIMMER ─── */
 @keyframes shimmer {
   0%   { background-position:200% 0; }
   100% { background-position:-200% 0; }
@@ -44,32 +46,59 @@ body.overlay-open { overflow:hidden; }
 /* ─── HEADER ─── */
 .header {
   display:flex; align-items:center; justify-content:space-between;
-  background:white; height:70px; padding:12px 20px 0;
+  background:transparent;
+  height:70px; padding:12px 20px 0;
   position:fixed; top:27px; left:0; right:0; z-index:1000;
-  transition:background 0.3s ease,backdrop-filter 0.3s ease,box-shadow 0.3s ease;
+  transition:background 0.35s ease, backdrop-filter 0.35s ease, box-shadow 0.35s ease;
 }
+
+/* When page has scrolled and header is over white content */
+.header.solid {
+  background:white;
+  box-shadow:0 2px 20px rgba(0,0,0,0.06);
+}
+
+/* When header is over an image section (glassmorphism) */
 .header.over-image {
   background:rgba(255,255,255,0.18);
   backdrop-filter:blur(14px) saturate(160%);
   -webkit-backdrop-filter:blur(14px) saturate(160%);
   box-shadow:0 2px 20px rgba(0,0,0,0.06);
 }
+
 .header-left { display:flex; align-items:center; }
 .header-left a { display:flex; align-items:center; text-decoration:none; }
-.header-left img { height:44px; object-fit:contain; transition:filter 0.3s ease; }
+.header-left img {
+  height:44px; object-fit:contain;
+  transition:filter 0.35s ease;
+  /* Default: white logo for transparent/image state */
+  filter:brightness(0) invert(1);
+}
+/* When solid (over white content): show dark logo */
+.header.solid .header-left img { filter:none; }
+/* Over image: white logo */
 .header.over-image .header-left img { filter:brightness(0) invert(1); }
-/* Icons reduced 1px: 22→21px */
+
 .header i { font-size:21px; cursor:pointer; }
 .header i:hover { opacity:0.7; }
 .header-right { display:flex; align-items:center; gap:14px; }
+
 .icon-wrap {
   position:relative; display:inline-flex; align-items:center; justify-content:center;
   width:21px; height:21px;
 }
-.icon-dark  { position:absolute; color:#111; opacity:1; transition:opacity 0.3s ease; }
-.icon-white { position:absolute; color:#fff; opacity:0; transition:opacity 0.3s ease; }
+/* Default (transparent/over-image): white icons */
+.icon-dark  { position:absolute; color:#111; opacity:0; transition:opacity 0.35s ease; }
+.icon-white { position:absolute; color:#fff; opacity:1; transition:opacity 0.35s ease; }
+
+/* Solid state: dark icons */
+.header.solid .icon-dark  { opacity:1; }
+.header.solid .icon-white { opacity:0; }
+
+/* Over-image state: white icons */
 .header.over-image .icon-dark  { opacity:0; }
 .header.over-image .icon-white { opacity:1; }
+
 .fav-wrapper  { position:relative; display:flex; align-items:center; cursor:pointer; }
 .cart-wrapper { position:relative; display:flex; align-items:center; cursor:pointer; }
 .fav-badge,.cart-badge {
@@ -78,8 +107,11 @@ body.overlay-open { overflow:hidden; }
   min-width:16px; height:16px; border-radius:999px;
   display:flex; align-items:center; justify-content:center;
   padding:0 3px; pointer-events:none; line-height:1; border:none;
-  color:black; transition:color 0.3s ease;
+  /* Default white for transparent/over-image */
+  color:white; transition:color 0.35s ease;
 }
+.header.solid .fav-badge,
+.header.solid .cart-badge { color:black; }
 .header.over-image .fav-badge,
 .header.over-image .cart-badge { color:white; }
 
@@ -125,7 +157,7 @@ body.overlay-open { overflow:hidden; }
 .section-header h2 { font-family:'Driftune',sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px; line-height:1.25; }
 .section-header p  { font-family:'Manrope',sans-serif; font-size:13px; color:#555; line-height:1.75; margin:0; max-width:480px; }
 
-/* ─── JEWELLERY SCROLL — skeleton on cards ─── */
+/* ─── JEWELLERY SCROLL ─── */
 .jewel-scroll-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-top:2px; }
 .jewel-scroll-wrapper::-webkit-scrollbar { display:none; }
 .jewel-row  { display:flex; gap:2px; width:max-content; }
@@ -137,10 +169,20 @@ body.overlay-open { overflow:hidden; }
 .jewel-card:hover::after { background:rgba(255,255,255,0.12); backdrop-filter:blur(4px); }
 .jewel-label { position:absolute; bottom:16px; left:0; right:0; text-align:center; color:white; font-family:'Driftune',sans-serif; font-size:13px; letter-spacing:2px; pointer-events:none; text-shadow:0 2px 10px rgba(0,0,0,0.45); z-index:4; }
 
-/* ─── BOTTOM CTA ─── */
+/* ─── UNIFIED CTA LINK (Shop Jewellery / View All) ─── */
 .bottom-cta { padding:28px 20px 40px; display:flex; flex-direction:column; gap:10px; }
 .bottom-cta p { font-family:'Manrope',sans-serif; font-size:13px; color:#555; line-height:1.75; margin:0; font-style:italic; }
-.cta-link { display:inline-block; font-family:'Driftune',sans-serif; font-size:11px; letter-spacing:2.5px; color:black; border-bottom:1px solid black; padding-bottom:2px; cursor:pointer; width:fit-content; }
+/* Shared CTA style — used for both Shop Jewellery and View All */
+.cta-link {
+  display:inline-block;
+  font-family:'Driftune',sans-serif; font-size:11px; letter-spacing:2.5px;
+  color:black; border-bottom:1px solid black; padding-bottom:2px;
+  cursor:pointer; width:fit-content;
+  text-decoration:none;
+}
+
+/* View All wrapper — left-aligned, same as bottom-cta */
+.view-all-wrap { padding:28px 20px 40px; }
 
 /* ─── COLLECTION SECTION ─── */
 .collection-section { padding:36px 0 20px; border-top:1px solid #f0f0f0; }
@@ -163,58 +205,38 @@ body.overlay-open { overflow:hidden; }
 .product-fav-btn:hover { background:rgba(255,255,255,0.45); transform:scale(1.08); }
 .product-fav-btn i { font-size:16px; color:white; pointer-events:none; }
 .product-fav-btn.active { background:rgba(255,255,255,0.5); }
-.product-variants-row { display:flex; gap:5px; padding:0 10px 6px; flex-wrap:wrap; }
+.product-variants-row { display:flex; gap:5px; padding:0 10px 6px; flex-wrap:wrap; align-items:center; }
 .product-variant-dot { width:14px; height:14px; border-radius:50%; border:1.5px solid transparent; background:#e0e0e0; cursor:pointer; transition:border-color 0.2s; flex-shrink:0; overflow:hidden; }
 .product-variant-dot img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
 .product-variant-dot.active { border-color:#111; }
 
-/* Image Add to Cart button — positioned bottom right ON THE IMAGE */
+/* Add to Cart button — bottom-right ON THE IMAGE, consistent across all grids */
 .product-img-add-btn {
-  position: absolute;
-  bottom: 65px;
-  right: 10px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-  border: none;
-  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-  opacity: 0;
+  position:absolute;
+  bottom:65px;
+  right:10px;
+  width:34px; height:34px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.25);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; z-index:5; border:none;
+  transition:background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  opacity:0;
 }
 .product-img-add-btn:hover {
-  background: rgba(255, 255, 255, 0.45);
-  transform: scale(1.08);
+  background:rgba(255,255,255,0.45);
+  transform:scale(1.08);
 }
-.product-img-add-btn i {
-  font-size: 16px;
-  color: white;
-  pointer-events: none;
-}
+.product-img-add-btn i { font-size:16px; color:white; pointer-events:none; }
 .product-card:hover .product-img-add-btn,
-.product-card:active .product-img-add-btn {
-  opacity: 1;
-}
-/* Always show on touch devices */
-@media (hover: none) {
-  .product-img-add-btn {
-    opacity: 1;
-  }
-}
-
-/* Hide the old quick-add button (left side) — we're using the new image button instead */
-.product-quick-add {
-  display: none;
-}
+.product-card:active .product-img-add-btn { opacity:1; }
+@media (hover:none) { .product-img-add-btn { opacity:1; } }
+.product-quick-add { display:none; }
 
 /* ═══════════════════════════════════════
-   QUICK-ADD BOTTOM SHEET
+   QUICK-ADD BOTTOM SHEET — no drag handle
 ═══════════════════════════════════════ */
 .quick-add-sheet-backdrop {
   position:fixed; inset:0; background:rgba(0,0,0,0.45);
@@ -235,19 +257,14 @@ body.overlay-open { overflow:hidden; }
 }
 .quick-add-sheet.open { transform:translateY(0); }
 
-.qs-handle {
-  width:36px; height:4px; background:#e0e0e0; border-radius:2px;
-  margin:12px auto 0;
-}
+/* drag handle removed — .qs-handle no longer rendered */
+
 .qs-header {
   display:flex; align-items:center; gap:14px;
   padding:16px 20px 14px;
   border-bottom:1px solid #f0f0f0;
 }
-.qs-img {
-  width:56px; height:70px; object-fit:cover;
-  background:#e8e8e8; flex-shrink:0;
-}
+.qs-img { width:56px; height:70px; object-fit:cover; background:#e8e8e8; flex-shrink:0; }
 .qs-img-ph {
   width:56px; height:70px; flex-shrink:0;
   background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);
@@ -295,13 +312,11 @@ body.overlay-open { overflow:hidden; }
 
 /* ═══════════════════════════════════════
    FAVOURITES OVERLAY
-   — fixed viewport, no bleed-through
 ═══════════════════════════════════════ */
 .fav-overlay {
   position:fixed; top:0; left:0; right:0; bottom:0;
   background:white; z-index:998;
   display:none; flex-direction:column;
-  /* All scrolling handled by inner element only */
   overflow:hidden;
 }
 .fav-overlay.open { display:flex; }
@@ -315,14 +330,12 @@ body.overlay-open { overflow:hidden; }
   min-height:100%;
   padding-top:97px;
 }
-
 .fav-overlay-header { display:flex; align-items:center; justify-content:center; padding:20px 20px 16px; border-bottom:1px solid #f0f0f0; }
 .fav-overlay-title { font-family:'Driftune',sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0; text-align:center; }
 .fav-overlay-sub { padding:20px 20px 8px; }
 .fav-overlay-sub h3 { font-family:'Driftune',sans-serif; font-size:14px; letter-spacing:1.5px; color:#111; margin:0 0 4px; }
 .fav-overlay-sub p  { font-family:'Manrope',sans-serif; font-size:12px; color:#888; margin:0; }
 
-/* Filter — icon + dropdown */
 .fav-filter-bar { padding:12px 20px 16px; display:flex; align-items:center; justify-content:flex-end; }
 .fav-filter-btn {
   display:flex; align-items:center; gap:7px;
@@ -333,7 +346,6 @@ body.overlay-open { overflow:hidden; }
 .fav-filter-btn:hover { border-color:#111; }
 .fav-filter-btn i { font-size:16px; }
 .fav-filter-btn span { font-size:10px; letter-spacing:1.5px; }
-
 .fav-filter-dropdown-wrap { position:relative; }
 .fav-filter-dropdown {
   position:absolute; top:calc(100% + 6px); right:0;
@@ -346,8 +358,7 @@ body.overlay-open { overflow:hidden; }
   display:block; width:100%; text-align:left;
   font-family:'Driftune',sans-serif; font-size:10px; letter-spacing:1.5px;
   color:#111; background:white; border:none;
-  padding:12px 16px; cursor:pointer;
-  transition:background 0.15s;
+  padding:12px 16px; cursor:pointer; transition:background 0.15s;
 }
 .fav-filter-option:hover { background:#f8f8f8; }
 .fav-filter-option.active { background:#111; color:white; }
@@ -359,7 +370,7 @@ body.overlay-open { overflow:hidden; }
 
 /* ═══════════════════════════════════════
    CART OVERLAY — slides in from right
-   — fixed viewport, overscroll contained
+   — viewport-locked, no bleed-through
 ═══════════════════════════════════════ */
 .cart-backdrop {
   position:fixed; inset:0; background:rgba(0,0,0,0.38);
@@ -373,11 +384,12 @@ body.overlay-open { overflow:hidden; }
   width:100%; max-width:440px;
   background:white; z-index:1100;
   display:flex; flex-direction:column;
-  /* No overflow here — only the scroll child scrolls */
   overflow:hidden;
   transform:translateX(100%);
   transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
   box-shadow:-4px 0 40px rgba(0,0,0,0.12);
+  /* Critical: isolate stacking context so inner scroll doesn't bleed */
+  isolation:isolate;
 }
 .cart-overlay.open { transform:translateX(0); }
 
@@ -391,16 +403,16 @@ body.overlay-open { overflow:hidden; }
 .cart-close-btn { width:34px; height:34px; border:none; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; }
 .cart-close-btn i { font-size:20px; color:#111; }
 
-/* This is the ONLY scrollable element inside cart */
+/* The ONLY scrollable element inside cart */
 .cart-overlay-scroll {
   flex:1;
   overflow-y:auto;
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain; /* prevents page scroll bleed */
+  overscroll-behavior:contain;
+  overscroll-behavior-y:contain;
 }
 
-/* Cart items */
 .cart-items-list { padding:0 20px; }
 .cart-item {
   display:flex; gap:16px; padding:18px 0;
@@ -443,7 +455,6 @@ body.overlay-open { overflow:hidden; }
 .cart-empty i { font-size:48px; color:#ddd; }
 .cart-empty p { font-family:'Manrope',sans-serif; font-size:14px; color:#aaa; margin:0; text-align:center; line-height:1.75; }
 
-/* Promo */
 .cart-promo-wrap { padding:16px 20px; border-top:1px solid #f0f0f0; }
 .cart-promo-label { font-family:'Driftune',sans-serif; font-size:10px; letter-spacing:2px; color:#888; margin:0 0 10px; }
 .cart-promo-row { display:flex; }
@@ -455,7 +466,6 @@ body.overlay-open { overflow:hidden; }
 .cart-promo-msg.success { color:#27ae60; display:block; }
 .cart-promo-msg.error   { color:#c0392b; display:block; }
 
-/* Order summary */
 .cart-summary { padding:20px; border-top:1px solid #f0f0f0; display:flex; flex-direction:column; gap:10px; }
 .cart-summary-section-label { font-family:'Driftune',sans-serif; font-size:10px; letter-spacing:2px; color:#888; margin:0; }
 .cart-summary-row { display:flex; align-items:center; justify-content:space-between; }
@@ -477,7 +487,7 @@ body.overlay-open { overflow:hidden; }
 .cart-secure-note { font-family:'Manrope',sans-serif; font-size:11px; color:#ccc; text-align:center; margin:8px 0 0; }
 
 /* ═══════════════════════════════════════
-   PRODUCT MODAL — fixed viewport, overscroll contained
+   PRODUCT MODAL
 ═══════════════════════════════════════ */
 .product-modal {
   position:fixed; inset:0; background:white; z-index:998;
@@ -536,15 +546,36 @@ body.overlay-open { overflow:hidden; }
 .modal-desc-always-open { padding:14px 0; border-top:1px solid #f0f0f0; }
 .modal-desc-always-open p { font-family:'Manrope',sans-serif; font-size:13px; color:#555; line-height:1.75; margin:0; }
 .modal-desc-header { font-family:'Driftune',sans-serif; font-size:11px; letter-spacing:2px; color:#111; margin:0 0 10px; display:block; }
+
+/* Shipping section — enhanced */
+.modal-shipping-info {
+  background:#f8f8f8; padding:12px 14px; margin-bottom:14px;
+  border-left:2px solid #ddd;
+}
+.modal-shipping-info p {
+  font-family:'Manrope',sans-serif; font-size:12px; color:#555; line-height:1.7;
+  margin:0 0 6px;
+}
+.modal-shipping-info p:last-child { margin-bottom:0; }
+.modal-shipping-info a {
+  font-family:'Driftune',sans-serif; font-size:10px; letter-spacing:1.5px;
+  color:#111; border-bottom:1px solid #111; padding-bottom:1px;
+  text-decoration:none; display:inline-block; margin-top:4px;
+  transition:opacity 0.2s;
+}
+.modal-shipping-info a:hover { opacity:0.6; }
+
 .modal-shipping-row { display:flex; gap:8px; margin-bottom:10px; }
 .modal-shipping-input { flex:1; font-family:'Manrope',sans-serif; font-size:12px; border:1px solid #ddd; padding:9px 12px; outline:none; color:#111; background:white; }
 .modal-shipping-input:focus { border-color:#111; }
 .modal-shipping-btn { font-family:'Driftune',sans-serif; font-size:10px; letter-spacing:1.5px; background:black; color:white; border:none; padding:9px 16px; cursor:pointer; white-space:nowrap; transition:opacity 0.2s; }
 .modal-shipping-btn:hover { opacity:0.75; }
 .modal-shipping-result { font-family:'Manrope',sans-serif; font-size:12px; color:#27ae60; margin-top:4px; display:none; }
+
 .returns-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
 .returns-list li { font-family:'Manrope',sans-serif; font-size:13px; color:#555; line-height:1.6; padding-left:14px; position:relative; }
 .returns-list li::before { content:'—'; position:absolute; left:0; color:#bbb; font-size:11px; top:2px; }
+
 .modal-add-btn {
   position:fixed; bottom:0; left:0; right:0;
   background:black; color:white;
@@ -582,7 +613,7 @@ body.overlay-open { overflow:hidden; }
 .modal-reviews-sub  { font-family:'Manrope',sans-serif; font-size:12px; color:#aaa; margin:0; line-height:1.6; }
 
 /* ═══════════════════════════════════════
-   ABOUT US SECTION — Restored styling
+   ABOUT US SECTION
 ═══════════════════════════════════════ */
 .about-us-section { padding:36px 20px 56px; border-top:1px solid #f0f0f0; }
 .about-us-section h2 { font-family:'Driftune',sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px; }
@@ -623,10 +654,88 @@ body.overlay-open { overflow:hidden; }
 .footer-legal-links a { font-family:'Manrope',sans-serif; font-size:11px; color:#aaa; text-decoration:none; transition:color 0.2s; }
 .footer-legal-links a:hover { color:#555; }
 
+/* ═══════════════════════════════════════
+   NAVIGATION MENU OVERLAY
+   — slides up from bottom, full screen
+═══════════════════════════════════════ */
+.nav-overlay-backdrop {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5);
+  z-index:1199; opacity:0; pointer-events:none;
+  transition:opacity 0.35s ease;
+}
+.nav-overlay-backdrop.open { opacity:1; pointer-events:all; }
+
+.nav-overlay {
+  position:fixed; left:0; right:0; bottom:0;
+  height:100%; /* full screen */
+  background:white; z-index:1200;
+  display:flex; flex-direction:column;
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  overflow:hidden;
+}
+.nav-overlay.open { transform:translateY(0); }
+
+.nav-overlay-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 20px 16px;
+  border-bottom:1px solid #f0f0f0;
+  flex-shrink:0;
+  /* Push down past announcement + header */
+  padding-top:calc(27px + 70px + 8px);
+}
+.nav-overlay-logo { height:36px; object-fit:contain; }
+.nav-overlay-close {
+  width:36px; height:36px; border:none; background:none;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; padding:0;
+}
+.nav-overlay-close i { font-size:22px; color:#111; }
+
+.nav-overlay-scroll {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding-bottom:40px;
+}
+
+/* Main nav categories */
+.nav-categories { padding:24px 20px 0; }
+.nav-category-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 0; border-bottom:1px solid #f0f0f0; cursor:pointer;
+}
+.nav-category-item:last-child { border-bottom:none; }
+.nav-category-label {
+  font-family:'Driftune',sans-serif; font-size:20px; letter-spacing:3px; color:#111;
+  text-decoration:none; display:block;
+}
+.nav-category-item i { font-size:18px; color:#bbb; flex-shrink:0; }
+
+/* Subcategory expand */
+.nav-sub { display:none; padding:8px 0 16px; }
+.nav-sub.open { display:flex; flex-direction:column; gap:10px; }
+.nav-sub a {
+  font-family:'Manrope',sans-serif; font-size:13px; color:#555;
+  text-decoration:none; padding:4px 0; transition:color 0.2s;
+  letter-spacing:0.5px;
+}
+.nav-sub a:hover { color:#111; }
+
+/* Bottom links inside nav */
+.nav-overlay-bottom { padding:28px 20px 0; border-top:1px solid #f0f0f0; margin-top:8px; display:flex; flex-direction:column; gap:16px; }
+.nav-overlay-bottom a {
+  font-family:'Driftune',sans-serif; font-size:11px; letter-spacing:2px; color:#888;
+  text-decoration:none; transition:color 0.2s;
+}
+.nav-overlay-bottom a:hover { color:#111; }
+.nav-overlay-socials { display:flex; gap:18px; padding:24px 20px 0; }
+.nav-overlay-socials a { font-size:22px; color:#555; text-decoration:none; transition:color 0.2s; }
+.nav-overlay-socials a:hover { color:#111; }
+
 </style>
 
 </head>
-
 <body>
 
 <!-- ANNOUNCEMENT BAR -->
@@ -638,14 +747,17 @@ body.overlay-open { overflow:hidden; }
 <header class="header" id="main-header">
   <div class="header-left">
     <a href="index.html">
-      <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Janedore">
+      <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Janedore" id="header-logo">
     </a>
   </div>
   <div class="header-right">
-    <span class="icon-wrap">
-      <i class="ph ph-user icon-dark" style="font-size:21px;"></i>
-      <i class="ph ph-user icon-white" style="font-size:21px;"></i>
-    </span>
+    <!-- Account — links to account.html -->
+    <a href="account.html" style="display:flex;align-items:center;text-decoration:none;">
+      <span class="icon-wrap">
+        <i class="ph ph-user icon-dark" style="font-size:21px;"></i>
+        <i class="ph ph-user icon-white" style="font-size:21px;"></i>
+      </span>
+    </a>
     <div class="fav-wrapper" id="fav-wrapper" onclick="openFavOverlay()">
       <span class="icon-wrap">
         <i class="ph ph-heart-straight icon-dark" id="fav-icon-dark" style="font-size:21px;"></i>
@@ -660,7 +772,8 @@ body.overlay-open { overflow:hidden; }
       </span>
       <span class="cart-badge" id="cart-count">0</span>
     </div>
-    <span class="icon-wrap">
+    <!-- Nav menu icon — opens nav overlay -->
+    <span class="icon-wrap" onclick="openNavOverlay()" style="cursor:pointer;">
       <i class="ph ph-list icon-dark" style="font-size:21px;"></i>
       <i class="ph ph-list icon-white" style="font-size:21px;"></i>
     </span>
@@ -723,8 +836,6 @@ body.overlay-open { overflow:hidden; }
     <p>Tarnish-free. Water-resistant. Built to last — and to be seen.</p>
   </div>
 
-  <!-- JEWELLERY SCROLL — skeleton loading on each card -->
-
   <div class="jewel-scroll-wrapper" id="section-jewel-row">
     <div class="jewel-row">
       <div class="jewel-card">
@@ -757,6 +868,8 @@ body.overlay-open { overflow:hidden; }
       </div>
     </div>
   </div>
+
+  <!-- Shop Jewellery CTA — the reference style -->
 
   <div class="bottom-cta" id="section-jewel-cta">
     <p>Steel that stays. Style that speaks.</p>
@@ -841,7 +954,6 @@ body.overlay-open { overflow:hidden; }
     <div class="product-variants-row">
       <div class="product-variant-dot active" style="background:#111;"></div>
       <div class="product-variant-dot" style="background:#f5e6d0;"></div>
-      <span class="view-all-btn cta-link">VIEW ALL</span>
     </div>
   </div>
 
@@ -850,7 +962,13 @@ body.overlay-open { overflow:hidden; }
 
   </div>
 
-  <!-- COLLECTION 2 — second collection below the first -->
+  <!-- View All after collection 1 — same style as Shop Jewellery -->
+
+  <div class="bottom-cta">
+    <span class="cta-link">VIEW ALL</span>
+  </div>
+
+  <!-- COLLECTION 2 -->
 
   <div class="collection-section" id="section-collection-2">
     <div class="collection-section-header">
@@ -875,7 +993,6 @@ body.overlay-open { overflow:hidden; }
     <div class="product-variants-row">
       <div class="product-variant-dot active" style="background:#111;"></div>
       <div class="product-variant-dot" style="background:#e8c9b0;"></div>
-    
     </div>
   </div>
 
@@ -936,8 +1053,10 @@ body.overlay-open { overflow:hidden; }
 
   </div>
 
-  <div class="view-all-wrap" id="section-view-all">
-    <span class="view-all-btn cta-link">VIEW ALL</span>
+  <!-- View All after collection 2 — same style as Shop Jewellery -->
+
+  <div class="bottom-cta" id="section-view-all">
+    <span class="cta-link">VIEW ALL</span>
   </div>
 
   <div class="about-us-section" id="section-about-us">
@@ -947,7 +1066,7 @@ body.overlay-open { overflow:hidden; }
 
 </div>
 
-<!-- FOOTER — main page -->
+<!-- FOOTER -->
 
 <footer class="site-footer" id="site-footer">
   <div class="footer-newsletter-block">
@@ -959,7 +1078,6 @@ body.overlay-open { overflow:hidden; }
     </div>
     <p class="footer-newsletter-legal">By submitting your email you agree to receive recurring automated marketing messages from JANEDORE.</p>
   </div>
-
   <div class="footer-nav-section">
     <div class="footer-nav-toggle" onclick="toggleFooterNav('fnav-shop',this)">
       <span>SHOP</span><i class="ph ph-caret-down"></i>
@@ -971,7 +1089,7 @@ body.overlay-open { overflow:hidden; }
       <span>HELP</span><i class="ph ph-caret-down"></i>
     </div>
     <div class="footer-nav-body" id="fnav-help">
-      <a href="#">Shipping</a><a href="#">Returns</a><a href="#">Size Guide</a><a href="#">Contact Us</a>
+      <a href="shipping.html">Shipping</a><a href="#">Returns</a><a href="#">Size Guide</a><a href="#">Contact Us</a>
       <a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Cookies</a>
     </div>
     <div class="footer-nav-toggle" onclick="toggleFooterNav('fnav-about',this)">
@@ -981,23 +1099,21 @@ body.overlay-open { overflow:hidden; }
       <a href="#">Our Story</a><a href="#">Stockists</a><a href="#">Careers</a>
     </div>
   </div>
-
   <div class="footer-socials-row">
     <a href="#" aria-label="Instagram"><i class="ph ph-instagram-logo"></i></a>
     <a href="#" aria-label="TikTok"><i class="ph ph-tiktok-logo"></i></a>
     <a href="#" aria-label="Pinterest"><i class="ph ph-pinterest-logo"></i></a>
   </div>
-
   <div class="footer-bottom">
     <p class="footer-copy">© 2025 Janedore. All rights reserved.</p>
   </div>
 </footer>
 
-<!-- QUICK ADD BOTTOM SHEET -->
+<!-- QUICK ADD BOTTOM SHEET — no drag handle -->
 
 <div class="quick-add-sheet-backdrop" id="qs-backdrop" onclick="closeQuickAdd()"></div>
 <div class="quick-add-sheet" id="quick-add-sheet">
-  <div class="qs-handle"></div>
+  <!-- drag handle removed -->
   <div class="qs-header">
     <div class="qs-img-ph" id="qs-img-wrap"></div>
     <div>
@@ -1035,7 +1151,6 @@ body.overlay-open { overflow:hidden; }
         <h3>MY ITEMS</h3>
         <p id="fav-item-count">0 items</p>
       </div>
-      <!-- Filter: icon + dropdown -->
       <div class="fav-filter-bar">
         <div class="fav-filter-dropdown-wrap" id="fav-filter-wrap">
           <button class="fav-filter-btn" onclick="toggleFilterDropdown()">
@@ -1059,10 +1174,9 @@ body.overlay-open { overflow:hidden; }
   </div>
 </div>
 
-<!-- CART OVERLAY — slides in from right -->
+<!-- CART OVERLAY -->
 
 <div class="cart-backdrop" id="cart-backdrop" onclick="closeCartOverlay()"></div>
-
 <div class="cart-overlay" id="cart-overlay">
   <div class="cart-overlay-header">
     <div>
@@ -1073,58 +1187,49 @@ body.overlay-open { overflow:hidden; }
       <i class="ph ph-x"></i>
     </button>
   </div>
-
   <div class="cart-overlay-scroll">
-
-
-<div class="cart-items-list" id="cart-items-list"></div>
-
-<div class="cart-empty" id="cart-empty">
-  <i class="ph ph-handbag-simple"></i>
-  <p>Your bag is empty.<br>Add items to get started.</p>
-</div>
-
-<div class="cart-promo-wrap" id="cart-promo-wrap" style="display:none;">
-  <p class="cart-promo-label">PROMO CODE</p>
-  <div class="cart-promo-row">
-    <input class="cart-promo-input" id="cart-promo-input" type="text" placeholder="ENTER CODE">
-    <button class="cart-promo-btn" onclick="applyPromo()">APPLY</button>
-  </div>
-  <p class="cart-promo-msg" id="cart-promo-msg"></p>
-</div>
-
-<div class="cart-summary" id="cart-summary" style="display:none;">
-  <p class="cart-summary-section-label">ORDER SUMMARY</p>
-  <div class="cart-summary-row">
-    <span class="cart-summary-label">Subtotal</span>
-    <span class="cart-summary-value" id="cart-subtotal">R 0.00</span>
-  </div>
-  <div class="cart-summary-row" id="cart-discount-row" style="display:none;">
-    <span class="cart-summary-label">Discount</span>
-    <span class="cart-summary-value" id="cart-discount" style="color:#27ae60;">− R 0.00</span>
-  </div>
-  <div class="cart-summary-row">
-    <span class="cart-summary-label">Shipping</span>
-    <span class="cart-summary-value" id="cart-shipping">Calculated at checkout</span>
-  </div>
-  <div class="cart-summary-divider"></div>
-  <div class="cart-summary-row">
-    <span class="cart-summary-total-label">Total</span>
-    <span class="cart-summary-total-value" id="cart-total">R 0.00</span>
-  </div>
-  <p class="cart-free-ship-note" id="cart-ship-note" style="display:none;"></p>
-  <button class="cart-checkout-inline">
-    <i class="ph ph-lock"></i> CHECKOUT
-  </button>
-  <p class="cart-secure-note">🔒 Secure &amp; encrypted checkout</p>
-</div>
-
-<div class="ymal-section" id="cart-ymal" style="display:none;">
-  <div class="ymal-header"><p class="ymal-title">YOU MAY ALSO LIKE</p></div>
-  <div class="ymal-scroll"><div class="ymal-row" id="cart-ymal-row"></div></div>
-</div>
-
-
+    <div class="cart-items-list" id="cart-items-list"></div>
+    <div class="cart-empty" id="cart-empty">
+      <i class="ph ph-handbag-simple"></i>
+      <p>Your bag is empty.<br>Add items to get started.</p>
+    </div>
+    <div class="cart-promo-wrap" id="cart-promo-wrap" style="display:none;">
+      <p class="cart-promo-label">PROMO CODE</p>
+      <div class="cart-promo-row">
+        <input class="cart-promo-input" id="cart-promo-input" type="text" placeholder="ENTER CODE">
+        <button class="cart-promo-btn" onclick="applyPromo()">APPLY</button>
+      </div>
+      <p class="cart-promo-msg" id="cart-promo-msg"></p>
+    </div>
+    <div class="cart-summary" id="cart-summary" style="display:none;">
+      <p class="cart-summary-section-label">ORDER SUMMARY</p>
+      <div class="cart-summary-row">
+        <span class="cart-summary-label">Subtotal</span>
+        <span class="cart-summary-value" id="cart-subtotal">R 0.00</span>
+      </div>
+      <div class="cart-summary-row" id="cart-discount-row" style="display:none;">
+        <span class="cart-summary-label">Discount</span>
+        <span class="cart-summary-value" id="cart-discount" style="color:#27ae60;">− R 0.00</span>
+      </div>
+      <div class="cart-summary-row">
+        <span class="cart-summary-label">Shipping</span>
+        <span class="cart-summary-value" id="cart-shipping">Calculated at checkout</span>
+      </div>
+      <div class="cart-summary-divider"></div>
+      <div class="cart-summary-row">
+        <span class="cart-summary-total-label">Total</span>
+        <span class="cart-summary-total-value" id="cart-total">R 0.00</span>
+      </div>
+      <p class="cart-free-ship-note" id="cart-ship-note" style="display:none;"></p>
+      <button class="cart-checkout-inline">
+        <i class="ph ph-lock"></i> CHECKOUT
+      </button>
+      <p class="cart-secure-note">🔒 Secure &amp; encrypted checkout</p>
+    </div>
+    <div class="ymal-section" id="cart-ymal" style="display:none;">
+      <div class="ymal-header"><p class="ymal-title">YOU MAY ALSO LIKE</p></div>
+      <div class="ymal-scroll"><div class="ymal-row" id="cart-ymal-row"></div></div>
+    </div>
   </div>
 </div>
 
@@ -1158,21 +1263,30 @@ body.overlay-open { overflow:hidden; }
   </div>
   <p id="size-warning">Please select a size before adding to bag.</p>
   <button class="modal-add-inline" onclick="addToBag()">ADD TO BAG</button>
+
   <div class="modal-desc-always-open">
     <span class="modal-desc-header">PRODUCT DESCRIPTION</span>
     <p id="modal-desc-text">Product description will be added via Firebase.</p>
   </div>
+
+  <!-- CALCULATE SHIPPING — enhanced -->
   <div class="modal-collapsible-toggle" onclick="toggleCollapsible('modal-shipping-body',this)">
     <span>CALCULATE SHIPPING</span><i class="ph ph-caret-down"></i>
   </div>
   <div class="modal-collapsible-body" id="modal-shipping-body">
-    <p>Enter your postal code to estimate delivery cost.</p>
+    <div class="modal-shipping-info">
+      <p>Standard delivery takes <strong>7–14 business days</strong> from dispatch. Express options may be available at checkout.</p>
+      <p>Please note: delivery timelines may be affected during public holidays, peak seasons, or unforeseen circumstances such as national lockdowns or severe weather events.</p>
+      <a href="shipping.html">VIEW FULL SHIPPING POLICY →</a>
+    </div>
+    <p style="font-family:'Manrope',sans-serif;font-size:12px;color:#555;line-height:1.7;margin:0 0 12px;">Enter your postal code to estimate delivery cost.</p>
     <div class="modal-shipping-row">
       <input class="modal-shipping-input" id="modal-postal-input" type="text" placeholder="Postal code e.g. 0186" maxlength="10">
       <button class="modal-shipping-btn" onclick="calculateShipping()">CHECK</button>
     </div>
     <p class="modal-shipping-result" id="modal-shipping-result"></p>
   </div>
+
   <div class="modal-collapsible-toggle" onclick="toggleCollapsible('modal-returns-body',this)">
     <span>RETURNS &amp; REFUNDS</span><i class="ph ph-caret-down"></i>
   </div>
@@ -1219,7 +1333,7 @@ body.overlay-open { overflow:hidden; }
     </div>
     <div class="footer-nav-toggle" onclick="toggleFooterNav('mfnav-help',this)"><span>HELP</span><i class="ph ph-caret-down"></i></div>
     <div class="footer-nav-body" id="mfnav-help">
-      <a href="#">Shipping</a><a href="#">Returns</a><a href="#">Size Guide</a><a href="#">Contact Us</a>
+      <a href="shipping.html">Shipping</a><a href="#">Returns</a><a href="#">Size Guide</a><a href="#">Contact Us</a>
       <a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Cookies</a>
     </div>
     <div class="footer-nav-toggle" onclick="toggleFooterNav('mfnav-about',this)"><span>ABOUT</span><i class="ph ph-caret-down"></i></div>
@@ -1241,38 +1355,172 @@ body.overlay-open { overflow:hidden; }
   </div>
 </div>
 
-<!-- Sticky Add to Bag — modal only, appears after YMAL -->
+<!-- Sticky Add to Bag — modal only -->
 
 <button class="modal-add-btn" id="modal-add-btn" onclick="addToBag()">ADD TO BAG</button>
 
-<script>
-/* ── Overlay state ── */
-let overlayState = { fav:false, cart:false, modal:false, qs:false };
-function anyOverlayOpen() { return overlayState.fav || overlayState.cart || overlayState.modal; }
+<!-- NAV OVERLAY — slides up from bottom, full screen -->
 
-/* ── Header glass ── */
+<div class="nav-overlay-backdrop" id="nav-backdrop" onclick="closeNavOverlay()"></div>
+<div class="nav-overlay" id="nav-overlay">
+  <div class="nav-overlay-header">
+    <img class="nav-overlay-logo" src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Janedore">
+    <button class="nav-overlay-close" onclick="closeNavOverlay()">
+      <i class="ph ph-x"></i>
+    </button>
+  </div>
+  <div class="nav-overlay-scroll">
+    <div class="nav-categories">
+
+
+  <div class="nav-category-item" onclick="toggleNavSub('nav-sub-new', this)">
+    <span class="nav-category-label">NEW IN</span>
+    <i class="ph ph-caret-down"></i>
+  </div>
+  <div class="nav-sub" id="nav-sub-new">
+    <a href="#">New Clothing</a>
+    <a href="#">New Jewellery</a>
+    <a href="#">New Accessories</a>
+  </div>
+
+  <div class="nav-category-item" onclick="toggleNavSub('nav-sub-clothing', this)">
+    <span class="nav-category-label">CLOTHING</span>
+    <i class="ph ph-caret-down"></i>
+  </div>
+  <div class="nav-sub" id="nav-sub-clothing">
+    <a href="#">Sets</a>
+    <a href="#">Tops</a>
+    <a href="#">Dresses</a>
+    <a href="#">Bottoms</a>
+    <a href="#">Outerwear</a>
+  </div>
+
+  <div class="nav-category-item" onclick="toggleNavSub('nav-sub-jewellery', this)">
+    <span class="nav-category-label">JEWELLERY</span>
+    <i class="ph ph-caret-down"></i>
+  </div>
+  <div class="nav-sub" id="nav-sub-jewellery">
+    <a href="#">Necklaces</a>
+    <a href="#">Rings</a>
+    <a href="#">Bracelets</a>
+    <a href="#">Earrings</a>
+  </div>
+
+  <div class="nav-category-item" onclick="toggleNavSub('nav-sub-accessories', this)">
+    <span class="nav-category-label">ACCESSORIES</span>
+    <i class="ph ph-caret-down"></i>
+  </div>
+  <div class="nav-sub" id="nav-sub-accessories">
+    <a href="#">Bags</a>
+    <a href="#">Sunglasses</a>
+    <a href="#">Belts</a>
+    <a href="#">Hats</a>
+  </div>
+
+  <div class="nav-category-item">
+    <a href="#" class="nav-category-label" style="text-decoration:none;color:#111;">SALE</a>
+    <i class="ph ph-arrow-right" style="color:#bbb;font-size:18px;"></i>
+  </div>
+
+</div>
+
+<div class="nav-overlay-bottom">
+  <a href="account.html">MY ACCOUNT</a>
+  <a href="#">SIZE GUIDE</a>
+  <a href="shipping.html">SHIPPING &amp; RETURNS</a>
+  <a href="#">CONTACT US</a>
+</div>
+
+<div class="nav-overlay-socials">
+  <a href="#" aria-label="Instagram"><i class="ph ph-instagram-logo"></i></a>
+  <a href="#" aria-label="TikTok"><i class="ph ph-tiktok-logo"></i></a>
+  <a href="#" aria-label="Pinterest"><i class="ph ph-pinterest-logo"></i></a>
+</div>
+
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   OVERLAY STATE
+═══════════════════════════════════════ */
+let overlayState = { fav:false, cart:false, modal:false, qs:false, nav:false };
+function anyOverlayOpen() { return overlayState.fav || overlayState.cart || overlayState.modal || overlayState.nav; }
+
+/* saved scroll position for body lock */
+let savedScrollY = 0;
+
+function lockBody() {
+  savedScrollY = window.scrollY;
+  document.body.style.top = `-${savedScrollY}px`;
+  document.body.classList.add('overlay-open');
+}
+function unlockBody() {
+  document.body.classList.remove('overlay-open');
+  document.body.style.top = '';
+  window.scrollTo(0, savedScrollY);
+}
+
+/* ═══════════════════════════════════════
+   HEADER LOGIC
+   — transparent (white icons) at top
+   — glassmorphism over images
+   — solid white over text/white sections
+═══════════════════════════════════════ */
 const header = document.getElementById('main-header');
-const imageSectionIds = ['section-banner','section-row1','section-row2','section-jewel-row','product-grid'];
+
+// Sections that count as "image" sections for glassmorphism
+const imageSectionIds = [
+  'section-banner','section-row1','section-row2','section-jewel-row','product-grid','product-grid-2'
+];
 
 function handleHeaderGlass() {
-  if (anyOverlayOpen()) { header.classList.remove('over-image'); return; }
-  if (window.scrollY === 0) { header.classList.remove('over-image'); return; }
+  if (anyOverlayOpen()) {
+    header.classList.remove('over-image');
+    header.classList.add('solid');
+    return;
+  }
+
+  const scrollY = window.scrollY;
+
+  // At the very top: transparent with white icons
+  if (scrollY === 0) {
+    header.classList.remove('over-image');
+    header.classList.remove('solid');
+    return;
+  }
+
   const headerBottom = header.getBoundingClientRect().bottom;
   let overImage = false;
+
   for (const id of imageSectionIds) {
     const el = document.getElementById(id);
     if (!el) continue;
     const rect = el.getBoundingClientRect();
-    if (rect.top < headerBottom && rect.bottom > headerBottom) { overImage = true; break; }
+    if (rect.top < headerBottom && rect.bottom > headerBottom) {
+      overImage = true;
+      break;
+    }
   }
-  header.classList.toggle('over-image', overImage);
+
+  if (overImage) {
+    header.classList.add('over-image');
+    header.classList.remove('solid');
+  } else {
+    header.classList.remove('over-image');
+    header.classList.add('solid');
+  }
 }
+
 window.addEventListener('scroll', handleHeaderGlass, { passive:true });
 window.addEventListener('load', handleHeaderGlass);
 window.addEventListener('resize', handleHeaderGlass);
 handleHeaderGlass();
 
-/* ── Footer nav collapsibles ── */
+/* ═══════════════════════════════════════
+   FOOTER NAV COLLAPSIBLES
+═══════════════════════════════════════ */
 function toggleFooterNav(bodyId, toggleEl) {
   const body = document.getElementById(bodyId);
   if (!body) return;
@@ -1280,7 +1528,9 @@ function toggleFooterNav(bodyId, toggleEl) {
   toggleEl.classList.toggle('open');
 }
 
-/* ── Modal collapsibles ── */
+/* ═══════════════════════════════════════
+   MODAL COLLAPSIBLES
+═══════════════════════════════════════ */
 function toggleCollapsible(bodyId, toggleEl) {
   const body = document.getElementById(bodyId);
   if (!body) return;
@@ -1288,13 +1538,53 @@ function toggleCollapsible(bodyId, toggleEl) {
   toggleEl.classList.toggle('open');
 }
 
-/* ── Fav filter dropdown ── */
+/* ═══════════════════════════════════════
+   NAV OVERLAY
+═══════════════════════════════════════ */
+function openNavOverlay() {
+  if (overlayState.fav)   closeFavOverlay();
+  if (overlayState.cart)  closeCartOverlay();
+  if (overlayState.modal) closeProductModal();
+  document.getElementById('nav-overlay').classList.add('open');
+  document.getElementById('nav-backdrop').classList.add('open');
+  overlayState.nav = true;
+  lockBody();
+  header.classList.remove('over-image');
+  header.classList.add('solid');
+}
+
+function closeNavOverlay() {
+  document.getElementById('nav-overlay').classList.remove('open');
+  document.getElementById('nav-backdrop').classList.remove('open');
+  overlayState.nav = false;
+  unlockBody();
+  handleHeaderGlass();
+}
+
+function toggleNavSub(subId, itemEl) {
+  const sub = document.getElementById(subId);
+  if (!sub) return;
+  const icon = itemEl.querySelector('i');
+  const isOpen = sub.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.nav-sub').forEach(s => s.classList.remove('open'));
+  document.querySelectorAll('.nav-category-item i.ph-caret-down').forEach(i => {
+    i.style.transform = '';
+  });
+  if (!isOpen) {
+    sub.classList.add('open');
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  }
+}
+
+/* ═══════════════════════════════════════
+   FAV FILTER DROPDOWN
+═══════════════════════════════════════ */
 let currentFilter = 'newest';
 
 function toggleFilterDropdown() {
   document.getElementById('fav-filter-dropdown').classList.toggle('open');
 }
-// Close dropdown if clicking outside
 document.addEventListener('click', function(e) {
   const wrap = document.getElementById('fav-filter-wrap');
   if (wrap && !wrap.contains(e.target)) {
@@ -1302,7 +1592,9 @@ document.addEventListener('click', function(e) {
   }
 });
 
-/* ── Product catalog ── */
+/* ═══════════════════════════════════════
+   PRODUCT CATALOG
+═══════════════════════════════════════ */
 const PRODUCT_CATALOG = [
   { id:'1', name:'ITEM NAME', price:'R 0.00', imgSrc:'' },
   { id:'2', name:'ITEM NAME', price:'R 0.00', imgSrc:'' },
@@ -1328,7 +1620,9 @@ function renderYMAL(containerId, excludeId) {
     </div>`).join('');
 }
 
-/* ── Promo codes ── */
+/* ═══════════════════════════════════════
+   PROMO CODES
+═══════════════════════════════════════ */
 const PROMO_CODES = { 'JANEDORE10':0.10, 'WELCOME15':0.15, 'SALE20':0.20 };
 let activePromo = null;
 
@@ -1350,7 +1644,9 @@ function applyPromo() {
   renderCartOverlay();
 }
 
-/* ── Cart ── */
+/* ═══════════════════════════════════════
+   CART
+═══════════════════════════════════════ */
 let cartItems = [];
 function parsePrice(str) { return parseFloat((str||'0').replace(/[^0-9.]/g,''))||0; }
 
@@ -1424,22 +1720,22 @@ function renderCartOverlay() {
   document.getElementById('cart-shipping').textContent=shippingFree?'FREE':'Calculated at checkout';
   document.getElementById('cart-total').textContent='R '+afterDiscount.toFixed(2);
   const shipNote=document.getElementById('cart-ship-note');
-  if (shippingFree) { shipNote.textContent='✓ You qualify for free shipping!'; shipNote.style.display='block'; }
-  else { shipNote.style.display='none'; }
+  if (shippingFree){shipNote.textContent='✓ You qualify for free shipping!';shipNote.style.display='block';}
+  else{shipNote.style.display='none';}
   renderYMAL('cart-ymal-row',null);
 }
 
 function changeQty(id,size,delta) {
   const item=cartItems.find(i=>i.id===id&&i.size===size);
-  if(!item) return;
+  if(!item)return;
   item.qty+=delta;
-  if(item.qty<=0) cartItems=cartItems.filter(i=>!(i.id===id&&i.size===size));
-  updateCartBadge(); renderCartOverlay();
+  if(item.qty<=0)cartItems=cartItems.filter(i=>!(i.id===id&&i.size===size));
+  updateCartBadge();renderCartOverlay();
 }
 
 function removeCartItem(id,size) {
   cartItems=cartItems.filter(i=>!(i.id===id&&i.size===size));
-  updateCartBadge(); renderCartOverlay();
+  updateCartBadge();renderCartOverlay();
 }
 
 function openCartOverlay() {
@@ -1449,7 +1745,9 @@ function openCartOverlay() {
   document.getElementById('cart-overlay').classList.add('open');
   document.getElementById('cart-backdrop').classList.add('open');
   overlayState.cart=true;
+  lockBody();
   header.classList.remove('over-image');
+  header.classList.add('solid');
   document.getElementById('cart-wrapper').onclick=closeCartOverlay;
 }
 
@@ -1457,22 +1755,25 @@ function closeCartOverlay() {
   document.getElementById('cart-overlay').classList.remove('open');
   document.getElementById('cart-backdrop').classList.remove('open');
   overlayState.cart=false;
+  unlockBody();
   document.getElementById('cart-wrapper').onclick=openCartOverlay;
   handleHeaderGlass();
 }
 
-/* ── Favourites ── */
+/* ═══════════════════════════════════════
+   FAVOURITES
+═══════════════════════════════════════ */
 let favourites=[];
-try { const s=localStorage.getItem('jd_favourites'); if(s) favourites=JSON.parse(s); } catch(e){}
+try{const s=localStorage.getItem('jd_favourites');if(s)favourites=JSON.parse(s);}catch(e){}
 
-function saveFavourites() { try{localStorage.setItem('jd_favourites',JSON.stringify(favourites));}catch(e){} }
+function saveFavourites(){try{localStorage.setItem('jd_favourites',JSON.stringify(favourites));}catch(e){}}
 
-function updateFavBadge() {
+function updateFavBadge(){
   document.getElementById('fav-count').textContent=favourites.length;
   document.getElementById('fav-item-count').textContent=favourites.length+(favourites.length===1?' item':' items');
 }
 
-function toggleFav(btn) {
+function toggleFav(btn){
   const card=btn.closest('.product-card');
   const id=card.dataset.id;
   const name=card.querySelector('.product-name').textContent;
@@ -1480,36 +1781,29 @@ function toggleFav(btn) {
   const imgEl=card.querySelector('.product-img');
   const imgSrc=imgEl?imgEl.src:'';
   const idx=favourites.findIndex(f=>f.id===id);
-  if(idx>-1) {
-    favourites.splice(idx,1);
-    btn.classList.remove('active');
-    btn.querySelector('i').className='ph ph-heart-straight';
-  } else {
-    favourites.push({id,name,price,imgSrc,added:Date.now()});
-    btn.classList.add('active');
-    btn.querySelector('i').className='ph ph-heart-fill';
-  }
-  saveFavourites(); updateFavBadge(); renderFavGrid();
+  if(idx>-1){favourites.splice(idx,1);btn.classList.remove('active');btn.querySelector('i').className='ph ph-heart-straight';}
+  else{favourites.push({id,name,price,imgSrc,added:Date.now()});btn.classList.add('active');btn.querySelector('i').className='ph ph-heart-fill';}
+  saveFavourites();updateFavBadge();renderFavGrid();
 }
 
-function removeFavById(id) {
+function removeFavById(id){
   const idx=favourites.findIndex(f=>f.id===id);
-  if(idx>-1) favourites.splice(idx,1);
+  if(idx>-1)favourites.splice(idx,1);
   saveFavourites();
   const mainCard=document.querySelector(`.product-card[data-id="${id}"]`);
   if(mainCard){const btn=mainCard.querySelector('.product-fav-btn');if(btn){btn.classList.remove('active');btn.querySelector('i').className='ph ph-heart-straight';}}
-  updateFavBadge(); renderFavGrid();
+  updateFavBadge();renderFavGrid();
 }
 
-function renderFavGrid() {
+function renderFavGrid(){
   const grid=document.getElementById('fav-grid');
   const empty=document.getElementById('fav-empty');
   if(favourites.length===0){grid.innerHTML='';grid.style.display='none';empty.style.display='flex';return;}
-  grid.style.display='grid'; empty.style.display='none';
+  grid.style.display='grid';empty.style.display='none';
   let sorted=[...favourites];
-  if(currentFilter==='newest') sorted.sort((a,b)=>b.added-a.added);
-  if(currentFilter==='high')   sorted.sort((a,b)=>parsePrice(b.price)-parsePrice(a.price));
-  if(currentFilter==='low')    sorted.sort((a,b)=>parsePrice(a.price)-parsePrice(b.price));
+  if(currentFilter==='newest')sorted.sort((a,b)=>b.added-a.added);
+  if(currentFilter==='high')  sorted.sort((a,b)=>parsePrice(b.price)-parsePrice(a.price));
+  if(currentFilter==='low')   sorted.sort((a,b)=>parsePrice(a.price)-parsePrice(b.price));
   grid.innerHTML=sorted.map(item=>`
     <div class="product-card">
       <div class="product-img-wrap">
@@ -1525,7 +1819,7 @@ function renderFavGrid() {
     </div>`).join('');
 }
 
-function setFilter(filter, btn, label) {
+function setFilter(filter,btn,label){
   currentFilter=filter;
   document.querySelectorAll('.fav-filter-option').forEach(o=>o.classList.remove('active'));
   btn.classList.add('active');
@@ -1534,24 +1828,25 @@ function setFilter(filter, btn, label) {
   renderFavGrid();
 }
 
-function openFavOverlay() {
+function openFavOverlay(){
   if(overlayState.cart)  closeCartOverlay();
   if(overlayState.modal) closeProductModal();
   renderFavGrid();
   document.getElementById('fav-overlay').classList.add('open');
-  document.body.classList.add('overlay-open');
   overlayState.fav=true;
+  lockBody();
   header.classList.remove('over-image');
+  header.classList.add('solid');
   document.getElementById('fav-icon-dark').className ='ph-fill ph-heart-straight icon-dark';
   document.getElementById('fav-icon-white').className='ph-fill ph-heart-straight icon-white';
   document.getElementById('fav-wrapper').onclick=closeFavOverlay;
 }
 
-function closeFavOverlay() {
+function closeFavOverlay(){
   document.getElementById('fav-overlay').classList.remove('open');
   document.getElementById('fav-filter-dropdown').classList.remove('open');
-  document.body.classList.remove('overlay-open');
   overlayState.fav=false;
+  unlockBody();
   document.getElementById('fav-icon-dark').className ='ph ph-heart-straight icon-dark';
   document.getElementById('fav-icon-white').className='ph ph-heart-straight icon-white';
   document.getElementById('fav-wrapper').onclick=openFavOverlay;
@@ -1568,59 +1863,54 @@ document.querySelectorAll('.product-card').forEach(card=>{
 updateFavBadge();
 updateCartBadge();
 
-/* ── Quick Add bottom sheet ── */
-let currentQsProduct = null;
+/* ═══════════════════════════════════════
+   QUICK ADD BOTTOM SHEET
+═══════════════════════════════════════ */
+let currentQsProduct=null;
 
-function openQuickAdd(btn) {
-  const card = btn.closest('.product-card');
-  const id    = card.dataset.id;
-  const name  = card.querySelector('.product-name')?.textContent || 'ITEM NAME';
-  const price = card.querySelector('.product-price')?.textContent || 'R 0.00';
-  const imgEl = card.querySelector('.product-img');
-  const imgSrc= imgEl && imgEl.src && !imgEl.src.endsWith('/') ? imgEl.src : null;
-
-  currentQsProduct = { id, name, price, imgSrc };
-
-  document.getElementById('qs-name').textContent  = name;
-  document.getElementById('qs-price').textContent = price;
-
-  /* Image or skeleton */
-  const imgWrap = document.getElementById('qs-img-wrap');
-  imgWrap.className = imgSrc ? '' : 'qs-img-ph';
-  imgWrap.innerHTML = imgSrc ? `<img class="qs-img" src="${imgSrc}" alt="${name}">` : '';
-
-  /* Reset sizes */
+function openQuickAdd(btn){
+  const card=btn.closest('.product-card');
+  const id   =card.dataset.id;
+  const name =card.querySelector('.product-name')?.textContent||'ITEM NAME';
+  const price=card.querySelector('.product-price')?.textContent||'R 0.00';
+  const imgEl=card.querySelector('.product-img');
+  const imgSrc=imgEl&&imgEl.src&&!imgEl.src.endsWith('/')?imgEl.src:null;
+  currentQsProduct={id,name,price,imgSrc};
+  document.getElementById('qs-name').textContent  =name;
+  document.getElementById('qs-price').textContent =price;
+  const imgWrap=document.getElementById('qs-img-wrap');
+  imgWrap.className=imgSrc?'':'qs-img-ph';
+  imgWrap.innerHTML=imgSrc?`<img class="qs-img" src="${imgSrc}" alt="${name}">`:'';
   document.querySelectorAll('.qs-size').forEach(s=>s.classList.remove('active'));
   document.getElementById('qs-size-warning').style.display='none';
-
   document.getElementById('quick-add-sheet').classList.add('open');
   document.getElementById('qs-backdrop').classList.add('open');
   overlayState.qs=true;
 }
 
-function closeQuickAdd() {
+function closeQuickAdd(){
   document.getElementById('quick-add-sheet').classList.remove('open');
   document.getElementById('qs-backdrop').classList.remove('open');
   overlayState.qs=false;
   currentQsProduct=null;
 }
 
-function qsSelectSize(el) {
+function qsSelectSize(el){
   document.querySelectorAll('.qs-size').forEach(s=>s.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('qs-size-warning').style.display='none';
 }
 
-function qsAddToBag() {
-  if(!currentQsProduct) return;
+function qsAddToBag(){
+  if(!currentQsProduct)return;
   const sizeEl=document.querySelector('.qs-size.active');
-  if(!sizeEl) {
+  if(!sizeEl){
     const w=document.getElementById('qs-size-warning');
     w.style.display='block';
     setTimeout(()=>w.style.display='none',3000);
     return;
   }
-  const {id,name,price,imgSrc}=currentQsProduct;
+  const{id,name,price,imgSrc}=currentQsProduct;
   const priceNum=parsePrice(price);
   const size=sizeEl.textContent;
   const existing=cartItems.find(i=>i.id===id&&i.size===size);
@@ -1631,120 +1921,118 @@ function qsAddToBag() {
   setTimeout(()=>openCartOverlay(),150);
 }
 
-/* ── Shipping calculator ── */
-function calculateShipping() {
+/* ═══════════════════════════════════════
+   SHIPPING CALCULATOR
+═══════════════════════════════════════ */
+function calculateShipping(){
   const input=document.getElementById('modal-postal-input');
   const result=document.getElementById('modal-shipping-result');
   const code=(input.value||'').trim();
   if(!code||code.length<3){result.style.display='block';result.style.color='#c0392b';result.textContent='Please enter a valid postal code.';return;}
   result.style.display='block';result.style.color='#27ae60';
   const num=parseInt(code,10)||0;
-  if(num<1000)      result.textContent='✓ Standard delivery: FREE (orders over R750) or R65 flat rate.';
-  else if(num<5000) result.textContent='✓ Standard delivery: R75 · Express: R130 (1–2 business days).';
-  else              result.textContent='✓ Standard delivery: R95 · Express: R160 (2–3 business days).';
+  if(num<1000)     result.textContent='✓ Standard delivery: FREE (orders over R750) or R65 flat rate.';
+  else if(num<5000)result.textContent='✓ Standard delivery: R75 · Express: R130 (1–2 business days).';
+  else             result.textContent='✓ Standard delivery: R95 · Express: R160 (2–3 business days).';
 }
 
-/* ── Product modal ── */
+/* ═══════════════════════════════════════
+   PRODUCT MODAL
+═══════════════════════════════════════ */
 let currentModalProduct=null;
 let currentSlide=0;
 let ymalObserver=null;
 
 document.querySelectorAll('.product-card').forEach(card=>{
   card.addEventListener('click',function(e){
-    if(e.target.closest('.product-fav-btn')||e.target.closest('.product-variant-dot')||e.target.closest('.product-img-add-btn')) return;
+    if(e.target.closest('.product-fav-btn')||e.target.closest('.product-variant-dot')||e.target.closest('.product-img-add-btn'))return;
     openProductModal({
-      id:    card.dataset.id||'0',
-      name:  card.querySelector('.product-name')?.textContent||'ITEM NAME',
-      price: card.querySelector('.product-price')?.textContent||'R 0.00',
-      desc:  'Product description will be added via Firebase.',
+      id:   card.dataset.id||'0',
+      name: card.querySelector('.product-name')?.textContent||'ITEM NAME',
+      price:card.querySelector('.product-price')?.textContent||'R 0.00',
+      desc: 'Product description will be added via Firebase.',
       images:(()=>{const img=card.querySelector('.product-img');return img&&img.src&&!img.src.endsWith('/')?[img.src]:[];})()
     });
   });
 });
 
-function openProductModal(product) {
+function openProductModal(product){
   if(overlayState.fav)  closeFavOverlay();
   if(overlayState.cart) closeCartOverlay();
-  currentModalProduct=product; currentSlide=0;
-
-  document.getElementById('modal-name').textContent      = product.name;
-  document.getElementById('modal-price').textContent     = product.price;
-  document.getElementById('modal-desc-text').textContent = product.desc;
-
+  currentModalProduct=product;currentSlide=0;
+  document.getElementById('modal-name').textContent     =product.name;
+  document.getElementById('modal-price').textContent    =product.price;
+  document.getElementById('modal-desc-text').textContent=product.desc;
   ['modal-shipping-body','modal-returns-body'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.classList.remove('open');
   });
   document.querySelectorAll('.modal-collapsible-toggle').forEach(t=>t.classList.remove('open'));
-
   const postalInput=document.getElementById('modal-postal-input');
   const shippingResult=document.getElementById('modal-shipping-result');
-  if(postalInput) postalInput.value='';
+  if(postalInput)postalInput.value='';
   if(shippingResult){shippingResult.style.display='none';shippingResult.textContent='';}
-
   const warning=document.getElementById('size-warning');
   const sizesWrap=document.getElementById('modal-sizes');
-  if(warning)   warning.style.display='none';
-  if(sizesWrap) sizesWrap.style.outline='none';
-
+  if(warning)warning.style.display='none';
+  if(sizesWrap)sizesWrap.style.outline='none';
   const slidesEl=document.getElementById('modal-slides');
   const dotsEl  =document.getElementById('modal-dots');
-  slidesEl.innerHTML=''; dotsEl.innerHTML='';
+  slidesEl.innerHTML='';dotsEl.innerHTML='';
   const images=product.images&&product.images.length?product.images:[];
   if(images.length===0){
     slidesEl.innerHTML=`<div class="modal-slide"><div class="ph-placeholder"><i class="ph-light ph-image"></i></div></div>`;
-  } else {
+  }else{
     images.forEach((src,i)=>{
       slidesEl.innerHTML+=`<div class="modal-slide"><img src="${src}" alt="Product image ${i+1}"></div>`;
       dotsEl.innerHTML  +=`<div class="modal-dot${i===0?' active':''}"></div>`;
     });
   }
   slidesEl.style.transform='translateX(0)';
-
   const variantsEl=document.getElementById('modal-variants');
   variantsEl.innerHTML='';
   if(images.length>1){
     images.forEach((src,i)=>{
       variantsEl.innerHTML+=`<div class="modal-variant${i===0?' active':''}" onclick="goToSlide(${i})"><img src="${src}" alt="Variant ${i+1}"></div>`;
     });
-  } else {
+  }else{
     variantsEl.innerHTML=`<div class="modal-variant active" style="background:#e8e8e8;"></div>`;
   }
-
   document.querySelectorAll('.modal-size').forEach(s=>s.classList.remove('active'));
   const isFav=favourites.some(f=>f.id===product.id);
   document.getElementById('modal-fav-icon').className=isFav?'ph ph-heart-fill':'ph ph-heart-straight';
-
-  const modal   =document.getElementById('product-modal');
+  const modal=document.getElementById('product-modal');
   const stickyBtn=document.getElementById('modal-add-btn');
   stickyBtn.classList.remove('visible');
   modal.classList.add('open');
   modal.scrollTop=0;
   overlayState.modal=true;
+  lockBody();
   header.classList.remove('over-image');
-
+  header.classList.add('solid');
   renderYMAL('modal-ymal-row',product.id);
   initSliderSwipe();
-
-  if(ymalObserver) ymalObserver.disconnect();
+  if(ymalObserver)ymalObserver.disconnect();
   const ymalSection=document.getElementById('modal-ymal');
   ymalObserver=new IntersectionObserver((entries)=>{
     entries.forEach(entry=>{
-      if(!entry.isIntersecting&&modal.scrollTop>100) stickyBtn.classList.add('visible');
+      if(!entry.isIntersecting&&modal.scrollTop>100)stickyBtn.classList.add('visible');
       else stickyBtn.classList.remove('visible');
     });
   },{root:modal,threshold:0});
   ymalObserver.observe(ymalSection);
 }
 
-function closeProductModal() {
+function closeProductModal(){
   if(ymalObserver){ymalObserver.disconnect();ymalObserver=null;}
   document.getElementById('product-modal').classList.remove('open');
   document.getElementById('modal-add-btn').classList.remove('visible');
-  overlayState.modal=false; currentModalProduct=null;
+  overlayState.modal=false;
+  currentModalProduct=null;
+  unlockBody();
   handleHeaderGlass();
 }
 
-function goToSlide(index) {
+function goToSlide(index){
   const slidesEl=document.getElementById('modal-slides');
   const total=slidesEl.children.length;
   if(index<0)index=0;if(index>=total)index=total-1;
@@ -1754,14 +2042,14 @@ function goToSlide(index) {
   document.querySelectorAll('.modal-variant').forEach((v,i)=>v.classList.toggle('active',i===index));
 }
 
-function initSliderSwipe() {
+function initSliderSwipe(){
   const wrap=document.getElementById('modal-slides').parentElement;
   let startX=0;
   wrap.ontouchstart=e=>{startX=e.touches[0].clientX;};
   wrap.ontouchend  =e=>{const diff=startX-e.changedTouches[0].clientX;if(Math.abs(diff)>40)goToSlide(currentSlide+(diff>0?1:-1));};
 }
 
-function selectSize(el) {
+function selectSize(el){
   document.querySelectorAll('.modal-size').forEach(s=>s.classList.remove('active'));
   el.classList.add('active');
   const warning=document.getElementById('size-warning');
@@ -1769,7 +2057,7 @@ function selectSize(el) {
   document.getElementById('modal-sizes').style.outline='none';
 }
 
-function toggleModalFav() {
+function toggleModalFav(){
   if(!currentModalProduct)return;
   const id=currentModalProduct.id;
   const idx=favourites.findIndex(f=>f.id===id);
@@ -1781,7 +2069,7 @@ function toggleModalFav() {
   if(card){const btn=card.querySelector('.product-fav-btn');if(btn){const isFav=favourites.some(f=>f.id===id);btn.classList.toggle('active',isFav);btn.querySelector('i').className=isFav?'ph ph-heart-fill':'ph ph-heart-straight';}}
 }
 
-function addToBag() {
+function addToBag(){
   if(!currentModalProduct)return;
   const sizeEl   =document.querySelector('.modal-size.active');
   const warning  =document.getElementById('size-warning');
@@ -1796,7 +2084,7 @@ function addToBag() {
   }
   warning.style.display='none';
   sizesWrap.style.outline='none';
-  const {id,name,price,images}=currentModalProduct;
+  const{id,name,price,images}=currentModalProduct;
   const imgSrc=images?.[0]||'';
   const priceNum=parsePrice(price);
   const size=sizeEl.textContent;
