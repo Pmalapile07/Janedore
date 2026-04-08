@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -169,32 +168,50 @@ body.overlay-open { overflow:hidden; }
 .product-variant-dot img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
 .product-variant-dot.active { border-color:#111; }
 
-/* Quick-add button on product card */
-.product-quick-add {
-  position:absolute; bottom:10px; left:10px;
-  width:34px; height:34px; border-radius:50%;
-  background:black; color:white;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; z-index:4; border:none;
-  transition:transform 0.2s ease,opacity 0.2s ease;
-  opacity:0;
+/* Image Add to Cart button — positioned bottom right ON THE IMAGE */
+.product-img-add-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  border: none;
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
 }
-.product-card:hover .product-quick-add,
-.product-card:active .product-quick-add { opacity:1; }
+.product-img-add-btn:hover {
+  background: rgba(255, 255, 255, 0.45);
+  transform: scale(1.08);
+}
+.product-img-add-btn i {
+  font-size: 16px;
+  color: white;
+  pointer-events: none;
+}
+.product-card:hover .product-img-add-btn,
+.product-card:active .product-img-add-btn {
+  opacity: 1;
+}
 /* Always show on touch devices */
-@media (hover:none) { .product-quick-add { opacity:1; } }
-.product-quick-add i { font-size:16px; pointer-events:none; }
-.product-quick-add:hover { transform:scale(1.08); }
+@media (hover: none) {
+  .product-img-add-btn {
+    opacity: 1;
+  }
+}
 
-/* ─── VIEW ALL ─── */
-.view-all-wrap { padding:20px 20px 36px; text-align:center; }
-.view-all-btn { display:inline-block; font-family:'Driftune',sans-serif; font-size:11px; letter-spacing:2.5px; color:black; border:1px solid black; padding:10px 28px; cursor:pointer; background:transparent; transition:background 0.2s ease,color 0.2s ease; }
-.view-all-btn:hover { background:black; color:white; }
-
-/* ─── ABOUT US ─── */
-.about-us-section { padding:36px 20px 56px; border-top:1px solid #f0f0f0; }
-.about-us-section h2 { font-family:'Driftune',sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px; }
-.about-us-section p  { font-family:'Manrope',sans-serif; font-size:13px; color:#555; line-height:1.75; margin:0; max-width:480px; }
+/* Hide the old quick-add button (left side) — we're using the new image button instead */
+.product-quick-add {
+  display: none;
+}
 
 /* ═══════════════════════════════════════
    QUICK-ADD BOTTOM SHEET
@@ -565,6 +582,13 @@ body.overlay-open { overflow:hidden; }
 .modal-reviews-sub  { font-family:'Manrope',sans-serif; font-size:12px; color:#aaa; margin:0; line-height:1.6; }
 
 /* ═══════════════════════════════════════
+   ABOUT US SECTION — Restored styling
+═══════════════════════════════════════ */
+.about-us-section { padding:36px 20px 56px; border-top:1px solid #f0f0f0; }
+.about-us-section h2 { font-family:'Driftune',sans-serif; font-size:22px; letter-spacing:2px; color:#111; margin:0 0 12px; }
+.about-us-section p  { font-family:'Manrope',sans-serif; font-size:13px; color:#555; line-height:1.75; margin:0; max-width:480px; }
+
+/* ═══════════════════════════════════════
    FOOTER
 ═══════════════════════════════════════ */
 .site-footer { background:#f2f2f2; color:#111; padding:40px 20px 24px; }
@@ -756,7 +780,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-1').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -774,7 +798,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-2').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -791,7 +815,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-3').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -809,7 +833,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-4').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -842,7 +866,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-5').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -859,7 +883,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-6').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -877,7 +901,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-7').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -894,7 +918,7 @@ body.overlay-open { overflow:hidden; }
       <img class="product-img" src="" alt="Product" onerror="this.style.display='none'" onload="document.getElementById('skel-8').style.display='none'">
     </div>
     <button class="product-fav-btn" onclick="toggleFav(this)" aria-label="Favourite"><i class="ph ph-heart-straight"></i></button>
-    <button class="product-quick-add" onclick="openQuickAdd(this)" aria-label="Quick add"><i class="ph ph-handbag-simple"></i></button>
+    <button class="product-img-add-btn" onclick="openQuickAdd(this)" aria-label="Add to cart"><i class="ph ph-handbag-simple"></i></button>
     <div class="product-info">
       <p class="product-name">ITEM NAME</p>
       <p class="product-price">R 0.00</p>
@@ -1625,7 +1649,7 @@ let ymalObserver=null;
 
 document.querySelectorAll('.product-card').forEach(card=>{
   card.addEventListener('click',function(e){
-    if(e.target.closest('.product-fav-btn')||e.target.closest('.product-variant-dot')||e.target.closest('.product-quick-add')) return;
+    if(e.target.closest('.product-fav-btn')||e.target.closest('.product-variant-dot')||e.target.closest('.product-img-add-btn')) return;
     openProductModal({
       id:    card.dataset.id||'0',
       name:  card.querySelector('.product-name')?.textContent||'ITEM NAME',
