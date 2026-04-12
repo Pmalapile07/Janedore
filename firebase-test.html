@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase Test — Janedore</title>
+<style>
+  body { font-family: monospace; padding: 24px; background: #0f0f0f; color: #e0e0e0; }
+  h2 { color: #fff; margin-bottom: 16px; }
+  .log { margin: 6px 0; padding: 8px 12px; border-radius: 4px; font-size: 13px; line-height: 1.5; }
+  .info  { background: #1a2a3a; color: #7dd3fc; border-left: 3px solid #3b82f6; }
+  .ok    { background: #0f2a1a; color: #6ee7b7; border-left: 3px solid #10b981; }
+  .err   { background: #2a0f0f; color: #fca5a5; border-left: 3px solid #ef4444; }
+  .warn  { background: #2a1f00; color: #fcd34d; border-left: 3px solid #f59e0b; }
+  #output { max-width: 720px; }
+  button { margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 8px; }
+  button:hover { background: #2563eb; }
+  .product-card { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 14px; margin: 8px 0; max-width: 500px; }
+  .product-card h3 { color: #fff; margin-bottom: 6px; }
+  .product-card p { color: #999; font-size: 12px; margin: 2px 0; }
+</style>
+</head>
+<body>
+<h2>🔥 Firebase Diagnostics — Janedore</h2>
+<div id="output"></div>
+<div>
+  <button onclick="runTest()">▶ Run Full Test</button>
+  <button onclick="forceSeed()">🌱 Force Re-Seed Product</button>
+  <button onclick="clearAndSeed()">🗑 Delete + Re-Seed</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+var out = document.getElementById('output');
+
+function log(msg, type) {
+  var d = document.createElement('div');
+  d.className = 'log ' + (type || 'info');
+  d.textContent = msg;
+  out.appendChild(d);
+  console.log(msg);
+}
+
+function clearLog() { out.innerHTML = ''; }
+
+// ── Init Firebase ─────────────────────────────────────────────────────────────
+var db;
+try {
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+      authDomain: "janedore-9f035.firebaseapp.com",
+      projectId: "janedore-9f035",
+      storageBucket: "janedore-9f035.firebasestorage.app",
+      messagingSenderId: "571299748651",
+      appId: "1:571299748651:web:01463a772d47b39cc4036e"
+    });
+  }
+  db = firebase.firestore();
+  log('✅ Firebase app initialized', 'ok');
+} catch(e) {
+  log('❌ Firebase init failed: ' + e.message, 'err');
+}
+
+var PRODUCT = {
+  id: "rugal-poker-dot-top",
+  name: "RUGAL POKER DOT TOP",
+  price: "R 450.00",
+  priceN: 450,
+  description: "A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.",
+  category: "clothing",
+  isNewArrival: false,
+  isFeatured: true,
+  sizes: ["XS","S","M","L","XL"],
+  variants: [
+    { label: "White", bg: "#f5f5f0", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" },
+    { label: "Cream", bg: "#e8e0d5", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" }
+  ],
+  imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
+  images: [
+    "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
+    "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg"
+  ],
+  createdAt: Date.now()
+};
+
+async function runTest() {
+  clearLog();
+  log('── STEP 1: Checking Firebase SDK ──────────────────', 'info');
+  if (typeof firebase === 'undefined') { log('❌ firebase global not found — SDK script failed to load', 'err'); return; }
+  log('✅ firebase global found, version: ' + firebase.SDK_VERSION, 'ok');
+
+  if (!db) { log('❌ Firestore db not initialised', 'err'); return; }
+  log('✅ Firestore db object ready', 'ok');
+
+  log('── STEP 2: Network reachability ───────────────────', 'info');
+  try {
+    var r = await fetch('https://firestore.googleapis.com/');
+    log('✅ firestore.googleapis.com reachable (status ' + r.status + ')', 'ok');
+  } catch(e) {
+    log('❌ Cannot reach firestore.googleapis.com — network/CORS issue: ' + e.message, 'err');
+    log('⚠️  If opening as file:// this is expected. Host this file on a web server.', 'warn');
+  }
+
+  log('── STEP 3: Read products collection ───────────────', 'info');
+  try {
+    var snap = await db.collection('products').get();
+    log('✅ Read succeeded — ' + snap.size + ' document(s) in products collection', snap.size > 0 ? 'ok' : 'warn');
+    if (snap.size === 0) {
+      log('⚠️  Collection is empty — will seed now', 'warn');
+    } else {
+      snap.forEach(function(d) {
+        var data = d.data();
+        var card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = '<h3>' + (data.name || d.id) + '</h3>'
+          + '<p>ID: ' + d.id + '</p>'
+          + '<p>Price: ' + (data.price || '—') + '</p>'
+          + '<p>Featured: ' + data.isFeatured + '</p>'
+          + '<p>Variants: ' + (data.variants ? data.variants.length : 0) + '</p>';
+        out.appendChild(card);
+      });
+    }
+  } catch(e) {
+    log('❌ Read failed: [' + e.code + '] ' + e.message, 'err');
+    if (e.code === 'permission-denied') log('⚠️  Check Firestore Rules — products allow read should be true', 'warn');
+    if (e.code === 'unavailable') log('⚠️  Firestore offline — check internet connection', 'warn');
+    return;
+  }
+
+  log('── STEP 4: Write test document ────────────────────', 'info');
+  try {
+    var testRef = db.collection('products').doc('rugal-poker-dot-top');
+    await testRef.set(PRODUCT);
+    log('✅ Write succeeded — RUGAL POKER DOT TOP saved to Firestore!', 'ok');
+  } catch(e) {
+    log('❌ Write failed: [' + e.code + '] ' + e.message, 'err');
+    if (e.code === 'permission-denied') log('⚠️  Firestore rules blocking write — check allow create/update for products', 'warn');
+    return;
+  }
+
+  log('── STEP 5: Verify write ───────────────────────────', 'info');
+  try {
+    var snap2 = await db.collection('products').get();
+    log('✅ Final count: ' + snap2.size + ' product(s) in Firestore', 'ok');
+    snap2.forEach(function(d) {
+      log('   → ' + d.id + ' : ' + (d.data().name || '(no name)'), 'ok');
+    });
+  } catch(e) {
+    log('❌ Verify read failed: ' + e.message, 'err');
+  }
+
+  log('── DONE ───────────────────────────────────────────', 'info');
+  log('✅ All tests passed. Open the main janedore.html now.', 'ok');
+}
+
+async function forceSeed() {
+  clearLog();
+  log('🌱 Force-seeding RUGAL POKER DOT TOP...', 'info');
+  try {
+    await db.collection('products').doc('rugal-poker-dot-top').set(PRODUCT);
+    log('✅ Product written successfully!', 'ok');
+    log('   Name: ' + PRODUCT.name, 'ok');
+    log('   Price: ' + PRODUCT.price, 'ok');
+    log('   Variants: ' + PRODUCT.variants.map(function(v){return v.label;}).join(', '), 'ok');
+  } catch(e) {
+    log('❌ Failed: [' + e.code + '] ' + e.message, 'err');
+  }
+}
+
+async function clearAndSeed() {
+  clearLog();
+  log('🗑 Deleting old doc then re-seeding...', 'warn');
+  try {
+    await db.collection('products').doc('rugal-poker-dot-top').delete();
+    log('✅ Old doc deleted', 'ok');
+    await db.collection('products').doc('rugal-poker-dot-top').set(PRODUCT);
+    log('✅ Fresh product seeded!', 'ok');
+  } catch(e) {
+    log('❌ Failed: [' + e.code + '] ' + e.message, 'err');
+  }
+}
+
+// Auto-run on load
+window.addEventListener('DOMContentLoaded', runTest);
+</script>
+
+</body>
+</html>
