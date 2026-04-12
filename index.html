@@ -1,75 +1,62 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/phosphor-icons"></script>
-<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-apiKey: “AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI”,
-authDomain: “janedore-9f035.firebaseapp.com”,
-projectId: “janedore-9f035”,
-storageBucket: “janedore-9f035.firebasestorage.app”,
-messagingSenderId: “571299748651”,
-appId: “1:571299748651:web:01463a772d47b39cc4036e”,
-measurementId: “G-Y9NMT0ZGKZ”
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-async function seedAndLoad() {
-try {
-const productId = “rugal-poker-dot-top”;
-const docRef = doc(db, “products”, productId);
-const existing = await getDoc(docRef);
-
-
-if (!existing.exists()) {
-  await setDoc(docRef, {
-    id: productId,
-    name: "RUGAL POKER DOT TOP",
-    price: "R 450.00",
-    priceN: 450,
-    description: "A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.",
-    category: "clothing",
-    isNewArrival: false,
-    isFeatured: true,
-    sizes: ["XS","S","M","L","XL"],
-    variants: [
-      { label: "White", bg: "#f5f5f0", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" },
-      { label: "Cream", bg: "#e8e0d5", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" }
-    ],
-    imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
-    images: [
-      "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
-      "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg"
-    ],
-    createdAt: Date.now()
-  });
-  console.log("✅ Seeded RUGAL POKER DOT TOP to Firestore");
-}
-
-const snap = await getDocs(collection(db, "products"));
-const products = [];
-snap.forEach(d => products.push({ id: d.id, ...d.data() }));
-console.log("✅ Loaded", products.length, "product(s) from Firestore");
-window.renderFirebaseProducts(products);
-```
-
-} catch (err) {
-console.error(“Firebase error:”, err);
-window.renderFirebaseProducts([]);
-}
-}
-
-window.addEventListener(“DOMContentLoaded”, seedAndLoad);
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  async function seedAndLoad() {
+    try {
+      const productId = "rugal-poker-dot-top";
+      const docRef = doc(db, "products", productId);
+      const existing = await getDoc(docRef);
+      if (!existing.exists()) {
+        await setDoc(docRef, {
+          id: productId,
+          name: "RUGAL POKER DOT TOP",
+          price: "R 450.00",
+          priceN: 450,
+          description: "A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.",
+          category: "clothing",
+          isNewArrival: false,
+          isFeatured: true,
+          sizes: ["XS","S","M","L","XL"],
+          variants: [
+            { label: "White", bg: "#f5f5f0", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" },
+            { label: "Cream", bg: "#e8e0d5", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" }
+          ],
+          imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
+          images: [
+            "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
+            "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg"
+          ],
+          createdAt: Date.now()
+        });
+      }
+      const snap = await getDocs(collection(db, "products"));
+      const products = [];
+      snap.forEach(d => products.push({ id: d.id, ...d.data() }));
+      window.renderFirebaseProducts(products);
+    } catch (err) {
+      console.error("Firebase error:", err);
+      window.renderFirebaseProducts([]);
+    }
+  }
+  window.addEventListener("DOMContentLoaded", seedAndLoad);
 </script>
 
 <style>
@@ -80,71 +67,55 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
 
-/* ── Announcement ── */
+/* Announcement */
 .ann{background:#111;color:#fff;font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2.5px;text-align:center;padding:9px 20px;position:fixed;top:0;left:0;right:0;z-index:1001;transition:transform .35s ease;}
 .ann.hide{transform:translateY(-100%);}
 
-/* ── Header — centered layout with reduced icon gap ── */
+/* Header — logo far left aligned with page content, icons far right aligned with content */
 .hdr{
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
+  display:flex;
   align-items:center;
   background:#fff;
   height:64px;
-  padding:0 18px;
+  padding:0 20px;
   position:fixed;
-  top:28px;
-  left:0;
-  right:0;
+  top:28px;left:0;right:0;
   z-index:1000;
   transition:top .35s ease,transform .35s ease;
   border-bottom:1px solid #f0f0f0;
 }
 .hdr.hide{transform:translateY(calc(-100% - 28px));}
 .hdr.no-ann{top:0;}
-.hdr-logo{
-  grid-column:2;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.hdr-logo img{height:38px;object-fit:contain;display:block;}
-.hdr-icons{
-  grid-column:3;
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:2px;
-}
+/* Logo is now left-aligned at 20px — matching page content padding */
+.hdr-logo{display:flex;align-items:center;flex-shrink:0;}
+.hdr-logo img{height:36px;object-fit:contain;display:block;}
+/* Icons pushed to the right, also sitting at 20px from edge */
+.hdr-icons{display:flex;align-items:center;gap:0px;margin-left:auto;}
 .hdr-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;background:none;border:none;padding:0;color:#111;border-radius:50%;transition:background .2s;}
 .hdr-btn:hover{background:#f5f5f5;}
 .hdr-btn i{font-size:20px;color:#111;display:block;}
 .badge{position:absolute;top:4px;right:4px;background:#111;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;pointer-events:none;}
 
-/* ── Page ── */
+/* Page */
 .page{padding-top:92px;}
 
-/* ── Banner ── */
+/* Banner */
 .banner{position:relative;width:100%;overflow:hidden;background:#e8e8e8;}
 .banner img{width:100%;height:100%;object-fit:cover;display:block;max-height:92vh;}
 .banner-label{position:absolute;bottom:32px;left:28px;color:#fff;font-family:'Driftune',sans-serif;font-size:18px;letter-spacing:2px;line-height:1.2;text-shadow:0 2px 14px rgba(0,0,0,.4);pointer-events:none;}
 .banner-shop{position:absolute;bottom:34px;right:28px;color:#fff;font-family:'Driftune',sans-serif;font-size:10px;letter-spacing:2.5px;border-bottom:1px solid #fff;padding-bottom:2px;cursor:pointer;text-shadow:0 2px 14px rgba(0,0,0,.4);}
 
-/* ── Duo Grid ── */
+/* Duo Grid */
 .duo-grid{display:flex;gap:2px;background:#fff;margin-top:2px;}
 .duo-card{flex:1;position:relative;overflow:hidden;cursor:pointer;}
 .duo-card .img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#e8e8e8;}
 .duo-card .img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease;}
-.duo-card:hover .img-wrap img{transform:scale(1.04);}
-
-/* Zoomed images for SUNGLASSES and BAGS */
-.duo-card .img-wrap img.zoom-img{object-fit:cover;object-position:center center;transform:scale(1.18);}
-.duo-card:hover .img-wrap img.zoom-img{transform:scale(1.24);}
-
+/* Zoom on hover — Sunglasses (row1 card2) and Bags (row2 card1) */
+.duo-card.zoom-card:hover .img-wrap img{transform:scale(1.08);}
 .duo-label{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.45);z-index:2;pointer-events:none;}
 .uv-tag{position:absolute;top:10px;right:10px;background:#111;color:#fff;font-family:'Driftune',sans-serif;font-size:7px;letter-spacing:1.5px;padding:3px 8px;z-index:3;pointer-events:none;}
 
-/* ── Text sections ── */
+/* Text sections */
 .about-blk{padding:36px 20px 40px;}
 .about-blk h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
 .about-blk p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;}
@@ -153,7 +124,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .sec-hdr h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:10px;line-height:1.25;}
 .sec-hdr p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;}
 
-/* ── Jewel scroll ── */
+/* Jewel scroll */
 .jewel-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-top:2px;}
 .jewel-wrap::-webkit-scrollbar{display:none;}
 .jewel-row{display:flex;gap:2px;width:max-content;}
@@ -163,18 +134,16 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .jewel-card:hover .img-wrap img{transform:scale(1.04);}
 .jewel-label{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.45);z-index:4;pointer-events:none;}
 
-/* ── CTA ── */
+/* CTA */
 .btm-cta{padding:28px 20px 40px;display:flex;flex-direction:column;gap:10px;}
 .btm-cta p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;font-style:italic;}
 .cta-link{display:inline-block;font-family:'Driftune',sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;cursor:pointer;width:fit-content;text-decoration:none;}
 
-/* ── Collection ── */
+/* Collection */
 .col-sec{padding:36px 0 20px;border-top:1px solid #f0f0f0;}
 .col-hdr{padding:0 20px 20px;}
 .col-hdr h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:4px;}
 .col-hdr p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;}
-
-/* ── Loading state ── */
 .grid-loading{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
 .grid-loading-card{aspect-ratio:3/4;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
 .firebase-status{font-family:'Manrope',sans-serif;font-size:11px;color:#27ae60;padding:8px 20px;display:flex;align-items:center;gap:6px;}
@@ -182,7 +151,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .firebase-dot{width:6px;height:6px;border-radius:50%;background:#27ae60;flex-shrink:0;}
 .firebase-dot.err{background:#c0392b;}
 
-/* ── Product Grid ── */
+/* Product Grid */
 .prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
 .prod-card{position:relative;cursor:pointer;overflow:hidden;}
 .prod-card .prod-img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#e8e8e8;}
@@ -204,12 +173,12 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .prod-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid transparent;cursor:pointer;transition:border-color .2s;flex-shrink:0;}
 .prod-dot.on{border-color:#111;}
 
-/* ── About us ── */
+/* About us */
 .about-us{padding:36px 20px 56px;border-top:1px solid #f0f0f0;}
 .about-us h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
 .about-us p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;}
 
-/* ── Footer ── */
+/* Footer */
 .footer{background:#fff;padding:40px 20px 28px;border-top:1px solid #f0f0f0;}
 .f-nl-h{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:3px;color:#111;margin-bottom:8px;}
 .f-nl-sub{font-family:'Manrope',sans-serif;font-size:13px;color:#666;margin-bottom:18px;line-height:1.65;}
@@ -233,7 +202,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .f-socials a:hover{color:#111;}
 .f-copy{font-family:'Manrope',sans-serif;font-size:11px;color:#bbb;}
 
-/* ── Quick Add Sheet ── */
+/* Quick Add Sheet */
 .qs-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;opacity:0;pointer-events:none;transition:opacity .3s;}
 .qs-bg.open{opacity:1;pointer-events:all;}
 .qs-sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:2001;border-radius:16px 16px 0 0;padding:0 0 32px;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:90vh;overflow-y:auto;}
@@ -258,7 +227,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .qs-add{display:flex;align-items:center;justify-content:center;width:calc(100% - 40px);margin:8px 20px 0;background:#111;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:3px;padding:16px;cursor:pointer;border:none;transition:opacity .2s;}
 .qs-add:hover{opacity:.85;}
 
-/* ── Favourites ── */
+/* Favourites */
 .fav-ov{position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:998;display:none;flex-direction:column;}
 .fav-ov.open{display:flex;}
 .fav-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
@@ -283,7 +252,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .fav-empty i{font-size:48px;color:#e0e0e0;}
 .fav-empty p{font-family:'Manrope',sans-serif;font-size:13px;color:#bbb;text-align:center;}
 
-/* ── Cart ── */
+/* Cart */
 .cart-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:1099;opacity:0;pointer-events:none;transition:opacity .35s;}
 .cart-bg.open{opacity:1;pointer-events:all;}
 .cart-ov{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:440px;background:#fff;z-index:1100;display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 40px rgba(0,0,0,.1);}
@@ -353,10 +322,30 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .prod-modal{position:fixed;inset:0;background:#fff;z-index:998;display:none;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 .prod-modal.open{display:flex;}
 .modal-inner{padding-top:92px;display:flex;flex-direction:column;flex:1;}
-.modal-slider{position:relative;width:100%;overflow:hidden;background:#f0f0f0;flex-shrink:0;}
+
+/* Slider: each slide shows the image at natural 3/4 ratio, no zoom, contained */
+.modal-slider{position:relative;width:100%;overflow:hidden;background:#f8f8f8;flex-shrink:0;}
 .modal-slides{display:flex;transition:transform .35s ease;will-change:transform;}
-.modal-slide{min-width:100%;aspect-ratio:3/4;overflow:hidden;flex-shrink:0;}
-.modal-slide img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
+.modal-slide{
+  min-width:100%;
+  width:100%;
+  aspect-ratio:3/4;
+  flex-shrink:0;
+  overflow:hidden;
+  background:#f8f8f8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+/* Image fills the slide without zooming in — cover keeps it looking clean */
+.modal-slide img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+  display:block;
+  /* No scale/zoom transform at all */
+}
 .modal-slide .ph-ph{width:100%;height:100%;background:#e8e8e8;display:flex;align-items:center;justify-content:center;}
 .modal-slide .ph-ph i{font-size:48px;color:#ccc;}
 .modal-dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:5px;pointer-events:none;}
@@ -385,8 +374,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .modal-atb-inline{flex-shrink:0;background:#111;color:#fff;font-family:'Driftune',sans-serif;font-size:11px;letter-spacing:2px;padding:9px 14px;cursor:pointer;border:none;transition:opacity .2s;white-space:nowrap;}
 .modal-atb-inline:hover{opacity:.85;}
 #sz-warn{font-family:'Manrope',sans-serif;font-size:12px;color:#c0392b;margin-bottom:12px;display:none;}
-
-/* ── Tabs ── */
 .modal-tabs{display:flex;border-bottom:1px solid #e8e8e8;margin-top:8px;overflow-x:auto;scrollbar-width:none;justify-content:center;}
 .modal-tabs::-webkit-scrollbar{display:none;}
 .modal-tab{font-family:'Driftune',sans-serif;font-size:10px;letter-spacing:1.5px;color:#bbb;padding:11px 18px 10px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;flex-shrink:0;}
@@ -410,7 +397,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .ship-btn:hover{opacity:.75;}
 .ship-result{font-family:'Manrope',sans-serif;font-size:12px;color:#27ae60;margin-top:4px;display:none;}
 
-/* ── Sticky ATB ── */
+/* Sticky ATB */
 .sticky-atb{position:fixed;bottom:0;left:0;right:0;background:#111;color:#fff;z-index:1600;padding:10px 20px 14px;cursor:pointer;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
 .sticky-atb.show{transform:translateY(0);}
 .sticky-atb-nm{font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.5);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -418,7 +405,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .sticky-atb-lbl{font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:3px;color:#fff;}
 .sticky-atb-pr{font-family:'Manrope',sans-serif;font-size:13px;font-weight:600;color:#fff;}
 
-/* ── Sticky ATB Quick Select ── */
+/* Sticky ATB Quick Select */
 .satb-expand{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:1601;border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);padding:0 0 32px;box-shadow:0 -4px 30px rgba(0,0,0,.12);}
 .satb-expand.show{transform:translateY(0);}
 .satb-exp-hdr{display:flex;align-items:center;gap:14px;padding:16px 20px 14px;border-bottom:1px solid #f0f0f0;}
@@ -442,7 +429,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .satb-exp-add{display:flex;align-items:center;justify-content:center;width:calc(100% - 40px);margin:8px 20px 0;background:#111;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:3px;padding:16px;cursor:pointer;border:none;transition:opacity .2s;}
 .satb-exp-add:hover{opacity:.85;}
 
-/* ── Nav ── */
+/* Nav */
 .nav-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1199;opacity:0;pointer-events:none;transition:opacity .35s;}
 .nav-bg.open{opacity:1;pointer-events:all;}
 .nav-ov{position:fixed;left:0;right:0;bottom:0;height:100%;background:#fff;z-index:1200;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1);overflow:hidden;}
@@ -469,19 +456,17 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .nav-soc a{font-size:22px;color:#666;text-decoration:none;transition:color .2s;}
 .nav-soc a:hover{color:#111;}
 </style>
-
 </head>
 <body>
 
 <!-- Announcement -->
-
 <div class="ann" id="ann">FREE SHIPPING WITH ORDERS OVER R750</div>
 
-<!-- Header -->
-
+<!-- Header: logo far left at 20px, icons far right at 20px -->
 <header class="hdr" id="hdr">
-  <div><!-- spacer --></div>
-  <div class="hdr-logo"><a href="#"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Janedore"></a></div>
+  <div class="hdr-logo">
+    <a href="#"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Janedore"></a>
+  </div>
   <div class="hdr-icons">
     <button class="hdr-btn" title="Account"><i class="ph-thin ph-user"></i></button>
     <button class="hdr-btn" id="fav-btn" onclick="openFav()" title="Favourites">
@@ -497,36 +482,32 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </header>
 
 <!-- Page Content -->
-
 <div class="page">
 
   <!-- Hero -->
-
   <div class="banner">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="New In Clothing">
     <div class="banner-label">NEW IN<br>CLOTHING</div>
     <span class="banner-shop">SHOP NOW</span>
   </div>
 
-  <!-- Category Row 1 -->
-
+  <!-- Category Row 1: Sets (no zoom) + Sunglasses (zoom) -->
   <div class="duo-grid">
     <div class="duo-card">
       <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets"></div>
       <div class="duo-label">SETS</div>
     </div>
-    <div class="duo-card">
+    <div class="duo-card zoom-card">
       <div class="uv-tag">UV-400 / BL+</div>
-      <div class="img-wrap"><img class="zoom-img" src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses"></div>
+      <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses" style="object-fit:contain;background:#f5f5f5;"></div>
       <div class="duo-label">SUNGLASSES</div>
     </div>
   </div>
 
-  <!-- Category Row 2 -->
-
+  <!-- Category Row 2: Bags (zoom) + Tops (no zoom) -->
   <div class="duo-grid">
-    <div class="duo-card">
-      <div class="img-wrap"><img class="zoom-img" src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags"></div>
+    <div class="duo-card zoom-card">
+      <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags" style="object-fit:contain;background:#f5f5f5;"></div>
       <div class="duo-label">BAGS</div>
     </div>
     <div class="duo-card">
@@ -536,14 +517,12 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   </div>
 
   <!-- The Edit -->
-
   <div class="about-blk">
     <h2>THE EDIT</h2>
     <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
   </div>
 
   <!-- Jewellery -->
-
   <div class="sec-hdr">
     <span class="sec-tag">NEW</span>
     <h2>STAINLESS STEEL<br>JEWELLERY</h2>
@@ -562,43 +541,33 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
     <span class="cta-link">SHOP JEWELLERY</span>
   </div>
 
-  <!-- Firebase status indicator -->
-
+  <!-- Firebase status -->
   <div id="firebase-status" class="firebase-status" style="display:none;">
     <div class="firebase-dot" id="fb-dot"></div>
     <span id="fb-status-text"></span>
   </div>
 
   <!-- The Collection -->
-
   <div class="col-sec">
     <div class="col-hdr"><h2>THE COLLECTION</h2><p>Handpicked pieces, ready to wear.</p></div>
     <div class="grid-loading" id="grid-1-loading">
-      <div class="grid-loading-card"></div>
-      <div class="grid-loading-card"></div>
-      <div class="grid-loading-card"></div>
-      <div class="grid-loading-card"></div>
+      <div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div>
     </div>
     <div class="prod-grid" id="grid-1" style="display:none;"></div>
   </div>
   <div class="btm-cta"><span class="cta-link">VIEW ALL</span></div>
 
   <!-- New Arrivals -->
-
   <div class="col-sec">
     <div class="col-hdr"><h2>NEW ARRIVALS</h2><p>Just landed — before they sell out.</p></div>
     <div class="grid-loading" id="grid-2-loading">
-      <div class="grid-loading-card"></div>
-      <div class="grid-loading-card"></div>
-      <div class="grid-loading-card"></div>
-      <div class="grid-loading-card"></div>
+      <div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div>
     </div>
     <div class="prod-grid" id="grid-2" style="display:none;"></div>
   </div>
   <div class="btm-cta"><span class="cta-link">VIEW ALL</span></div>
 
   <!-- About -->
-
   <div class="about-us">
     <h2>ABOUT US</h2>
     <p>Janedore was born from a simple belief — that great style shouldn't be hard to find. We curate pieces that are hard to come by, beautifully made, and priced for real life. From clothing to accessories, every item in our store is chosen with care. We're a small team with a big eye for quality, and we're just getting started.</p>
@@ -606,7 +575,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- Footer -->
-
 <footer class="footer">
   <h2 class="f-nl-h">STAY IN THE EDIT</h2>
   <p class="f-nl-sub">First access to new arrivals, exclusive drops,<br>and pieces worth knowing about.</p>
@@ -630,7 +598,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </footer>
 
 <!-- Quick Add Sheet -->
-
 <div class="qs-bg" id="qs-bg" onclick="closeQS()"></div>
 <div class="qs-sheet" id="qs-sheet">
   <div class="qs-hdr">
@@ -647,7 +614,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- Favourites -->
-
 <div class="fav-ov" id="fav-ov">
   <div class="fav-scroll">
     <div class="fav-inner">
@@ -670,7 +636,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- Cart -->
-
 <div class="cart-bg" id="cart-bg" onclick="closeCart()"></div>
 <div class="cart-ov" id="cart-ov">
   <div class="cart-hdr">
@@ -707,7 +672,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- Product Modal -->
-
 <div class="prod-modal" id="prod-modal">
   <div class="modal-inner">
     <div class="modal-slider">
@@ -766,7 +730,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- Sticky ATB -->
-
 <div class="sticky-atb" id="sticky-atb" onclick="stickyATBClick()">
   <p class="sticky-atb-nm" id="sticky-atb-nm"></p>
   <div class="sticky-atb-row">
@@ -776,7 +739,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- Sticky ATB Expand Panel -->
-
 <div class="satb-exp-bg" id="satb-bg" onclick="closeSATBExpand()"></div>
 <div class="satb-expand" id="satb-expand">
   <div class="satb-exp-hdr">
@@ -793,7 +755,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- Nav -->
-
 <div class="nav-bg" id="nav-bg" onclick="closeNav()"></div>
 <div class="nav-ov" id="nav-ov">
   <div class="nav-ov-hdr">
@@ -829,11 +790,9 @@ window.renderFirebaseProducts = function(products) {
   var dot = document.getElementById('fb-dot');
   var txt = document.getElementById('fb-status-text');
   status.style.display = 'flex';
-
   if (products.length === 0) {
     dot.classList.add('err');
     txt.textContent = 'Could not connect to store — showing preview';
-    status.querySelector('.firebase-dot').style.background = '#f39c12';
     CAT = getFallbackCatalog();
   } else {
     dot.classList.remove('err');
@@ -845,7 +804,7 @@ window.renderFirebaseProducts = function(products) {
         price: p.price || '',
         priceN: p.priceN || parseFloat((p.price || '0').replace(/[^0-9.]/g, '')) || 0,
         imgSrc: p.imgSrc || '',
-        images: p.images || (p.imgSrc ? [p.imgSrc] : []),
+        images: p.images && p.images.length ? p.images : (p.imgSrc ? [p.imgSrc] : []),
         desc: p.description || p.desc || '',
         sizes: p.sizes || ['XS','S','M','L','XL'],
         variants: (p.variants || []).map(function(v) {
@@ -856,20 +815,16 @@ window.renderFirebaseProducts = function(products) {
       };
     });
   }
-
   var featured = CAT.filter(function(p) { return p.isFeatured; });
   var newArrivals = CAT.filter(function(p) { return p.isNewArrival; });
   if (featured.length < 2) featured = CAT.slice(0, Math.min(4, CAT.length));
   if (newArrivals.length < 2) newArrivals = CAT.slice(0, Math.min(4, CAT.length));
-
   ['grid-1','grid-2'].forEach(function(id) {
     document.getElementById(id + '-loading').style.display = 'none';
     document.getElementById(id).style.display = 'grid';
   });
-
   document.getElementById('grid-1').innerHTML = featured.slice(0,4).map(buildCard).join('');
   document.getElementById('grid-2').innerHTML = newArrivals.slice(0,4).map(buildCard).join('');
-
   document.querySelectorAll('.prod-card').forEach(function(card) {
     if (favs.find(function(f) { return f.id === card.dataset.id; })) {
       var b = card.querySelector('.prod-fav');
@@ -893,7 +848,9 @@ function getFallbackCatalog() {
 
 function buildVariantCircle(v, i, cls, activeCls) {
   var on = i === 0 ? ' ' + activeCls : '';
-  if (v.imgSrc) return '<div class="' + cls + on + '" data-img="' + v.imgSrc + '" title="' + (v.label||'') + '"><img src="' + v.imgSrc + '" alt="' + (v.label||'') + '"></div>';
+  if (v.imgSrc) {
+    return '<div class="' + cls + on + '" data-img="' + v.imgSrc + '" title="' + (v.label||'') + '"><img src="' + v.imgSrc + '" alt="' + (v.label||'') + '"></div>';
+  }
   return '<div class="' + cls + on + '" style="background:' + v.bg + ';" title="' + (v.label||'') + '"></div>';
 }
 
@@ -920,12 +877,14 @@ function buildSizeButtons(sizes, cls, handler) {
   }).join('');
 }
 
+// Overlay state
 var OS = {fav:false,cart:false,modal:false,qs:false,nav:false,satb:false};
 var savedSY = 0;
 function lockBody(){savedSY=window.scrollY;document.body.style.top='-'+savedSY+'px';document.body.classList.add('overlay-open');}
 function unlockBody(){document.body.classList.remove('overlay-open');document.body.style.top='';window.scrollTo(0,savedSY);}
 function anyOpen(){return OS.fav||OS.cart||OS.modal||OS.nav;}
 
+// Header scroll
 var hdr=document.getElementById('hdr'),ann=document.getElementById('ann');
 var lastSY=0,hVis=true,tick=false;
 function onScroll(){
@@ -938,9 +897,9 @@ function onScroll(){
 }
 window.addEventListener('scroll',function(){if(!tick){requestAnimationFrame(onScroll);tick=true;}},{passive:true});
 function showHeader(){hdr.classList.remove('hide','no-ann');ann.classList.remove('hide');hVis=true;}
-
 function parseP(s){return parseFloat((s||'0').replace(/[^0-9.]/g,''))||0;}
 
+// Favourites
 var favs=[];
 try{var _f=localStorage.getItem('jd_favs');if(_f)favs=JSON.parse(_f);}catch(e){}
 function saveFavs(){try{localStorage.setItem('jd_favs',JSON.stringify(favs));}catch(e){}}
@@ -981,6 +940,7 @@ document.addEventListener('click',function(e){var w=document.getElementById('fav
 function openFav(){if(OS.cart)closeCart();if(OS.modal)closeModal();renderFavGrid();document.getElementById('fav-ov').classList.add('open');OS.fav=true;lockBody();showHeader();document.getElementById('fav-btn').onclick=closeFav;}
 function closeFav(){document.getElementById('fav-ov').classList.remove('open');OS.fav=false;unlockBody();document.getElementById('fav-btn').onclick=openFav;}
 
+// Cart
 var cartItems=[];
 var PROMOS={'JANEDORE10':0.10,'WELCOME15':0.15,'SALE20':0.20};var activePromo=null;
 function updCartBadge(){document.getElementById('cart-badge').textContent=cartItems.reduce(function(s,i){return s+i.qty;},0);}
@@ -1026,6 +986,7 @@ function addItem(p,sz,variantLabel,variantImgSrc){
   updCartBadge();
 }
 
+// YMAL
 function renderYMAL(cId,excId){
   var row=document.getElementById(cId);if(!row)return;
   row.innerHTML=CAT.filter(function(p){return p.id!==excId;}).map(function(p){
@@ -1035,6 +996,7 @@ function renderYMAL(cId,excId){
   }).join('');
 }
 
+// Quick Add Sheet
 var curQS=null,curQSVariant=null;
 function openQS(btn){
   var card=btn.closest('.prod-card'),p=CAT.find(function(x){return x.id===card.dataset.id;});if(!p)return;
@@ -1050,7 +1012,9 @@ function openQS(btn){
     el.addEventListener('click',function(){
       document.querySelectorAll('.qs-v').forEach(function(x){x.classList.remove('on');});
       el.classList.add('on');curQSVariant=p.variants[i];
-      var src=p.variants[i].imgSrc||p.imgSrc;var ci=iw.querySelector('img');if(ci&&src)ci.src=src;
+      var src=p.variants[i].imgSrc||p.imgSrc;
+      var ci=iw.querySelector('img');
+      if(ci&&src)ci.src=src;
     });
   });
   document.getElementById('qs-szs').innerHTML=buildSizeButtons(p.sizes,'qs-sz','qsSz');
@@ -1067,11 +1031,18 @@ function qsAdd(){
   closeQS();setTimeout(openCart,150);
 }
 
+// Product Modal
 var curModal=null,curSlide=0,curModalVariant=null,stickyObs=null;
+var modalImgs=[];
+
 function openModal(idOrP){
   var p=typeof idOrP==='string'?CAT.find(function(x){return x.id===idOrP;}):idOrP;if(!p)return;
   if(OS.fav)closeFav();if(OS.cart)closeCart();
-  curModal=p;curSlide=0;curModalVariant=p.variants&&p.variants.length?p.variants[0]:null;
+  curModal=p;curSlide=0;
+  curModalVariant=p.variants&&p.variants.length?p.variants[0]:null;
+  // Build image array from Firebase images field, falling back to imgSrc
+  modalImgs=p.images&&p.images.length?p.images.slice():(p.imgSrc?[p.imgSrc]:[]);
+
   document.getElementById('modal-nm').textContent=p.name||'—';
   document.getElementById('modal-pr').textContent=p.price||'—';
   document.getElementById('modal-desc').textContent=p.desc||'Product description coming soon.';
@@ -1079,24 +1050,47 @@ function openModal(idOrP){
   document.getElementById('sticky-atb-pr').textContent=p.price||'—';
   document.getElementById('satb-nm').textContent=p.name||'—';
   document.getElementById('satb-pr').textContent=p.price||'—';
+
   var si=document.getElementById('satb-img-wrap');si.innerHTML='';
-  var satbImg=curModalVariant&&curModalVariant.imgSrc?curModalVariant.imgSrc:p.imgSrc;
-  if(satbImg){var si2=document.createElement('img');si2.className='satb-exp-img';si2.src=satbImg;si2.alt=p.name;si.appendChild(si2);}
+  var satbSrc=curModalVariant&&curModalVariant.imgSrc?curModalVariant.imgSrc:p.imgSrc;
+  if(satbSrc){var si2=document.createElement('img');si2.className='satb-exp-img';si2.src=satbSrc;si2.alt=p.name;si.appendChild(si2);}
   else{var sph=document.createElement('div');sph.className='satb-exp-img-ph';si.appendChild(sph);}
-  var imgs=p.images&&p.images.length?p.images:(p.imgSrc?[p.imgSrc]:[]);
+
+  // Build slides — each slide is a separate image from modalImgs
   var sl=document.getElementById('modal-slides'),dt=document.getElementById('modal-dots');
   sl.innerHTML='';dt.innerHTML='';
-  if(!imgs.length){sl.innerHTML='<div class="modal-slide"><div class="ph-ph"><i class="ph-light ph-image"></i></div></div>';}
-  else{imgs.forEach(function(src,i){sl.innerHTML+='<div class="modal-slide"><img src="'+src+'" alt="Image '+(i+1)+'"></div>';dt.innerHTML+='<div class="modal-dot'+(i===0?' on':'')+'"></div>';});}
+  if(!modalImgs.length){
+    sl.innerHTML='<div class="modal-slide"><div class="ph-ph"><i class="ph-light ph-image"></i></div></div>';
+  } else {
+    modalImgs.forEach(function(src,i){
+      var slide=document.createElement('div');
+      slide.className='modal-slide';
+      var img=document.createElement('img');
+      img.src=src;
+      img.alt=p.name+' image '+(i+1);
+      slide.appendChild(img);
+      sl.appendChild(slide);
+      var dot=document.createElement('div');
+      dot.className='modal-dot'+(i===0?' on':'');
+      dt.appendChild(dot);
+    });
+  }
   sl.style.transform='translateX(0)';
+
+  // Variants
   document.getElementById('modal-vars').innerHTML=(p.variants||[]).map(function(v,i){return buildVariantCircle(v,i,'modal-v','on');}).join('');
   document.querySelectorAll('#modal-vars .modal-v').forEach(function(el,i){
     el.addEventListener('click',function(){
       document.querySelectorAll('#modal-vars .modal-v').forEach(function(x){x.classList.remove('on');});
       el.classList.add('on');curModalVariant=p.variants[i];
-      if(p.variants[i].imgSrc){goSlideByImg(p.variants[i].imgSrc,imgs);}
+      // Slide to the matching image if it exists in the images array
+      if(p.variants[i].imgSrc){
+        var idx=modalImgs.indexOf(p.variants[i].imgSrc);
+        if(idx>-1)goSlide(idx);
+      }
     });
   });
+
   document.getElementById('satb-vars').innerHTML=(p.variants||[]).map(function(v,i){return buildVariantCircle(v,i,'satb-exp-v','on');}).join('');
   document.querySelectorAll('#satb-vars .satb-exp-v').forEach(function(el,i){
     el.addEventListener('click',function(){
@@ -1104,6 +1098,7 @@ function openModal(idOrP){
       el.classList.add('on');curModalVariant=p.variants[i];
     });
   });
+
   document.getElementById('modal-szs').innerHTML=buildSizeButtons(p.sizes,'modal-sz','pickSz');
   document.getElementById('satb-szs').innerHTML=buildSizeButtons(p.sizes,'satb-exp-sz','satbSz');
   document.getElementById('sz-warn').style.display='none';
@@ -1113,19 +1108,60 @@ function openModal(idOrP){
   document.getElementById('tab-desc').classList.add('on');
   var pi=document.getElementById('postal-inp'),sr=document.getElementById('ship-result');if(pi)pi.value='';if(sr)sr.style.display='none';
   document.getElementById('modal-fav-icon').className=favs.some(function(f){return f.id===p.id;})?'ph-fill ph-heart-straight':'ph-thin ph-heart-straight';
+
   var modal=document.getElementById('prod-modal'),satb=document.getElementById('sticky-atb');
-  satb.classList.remove('show');modal.classList.add('open');modal.scrollTop=0;OS.modal=true;lockBody();showHeader();
-  renderYMAL('modal-ymal-row',p.id);initSwipe();
+  satb.classList.remove('show');
+  modal.classList.add('open');
+  modal.scrollTop=0;
+  OS.modal=true;
+  lockBody();
+  showHeader();
+  renderYMAL('modal-ymal-row',p.id);
+  initSwipe();
+
   if(stickyObs){stickyObs.disconnect();stickyObs=null;}
   var atbBtn=document.getElementById('modal-atb');
-  stickyObs=new IntersectionObserver(function(entries){entries.forEach(function(e){satb.classList.toggle('show',!e.isIntersecting);});},{root:modal,threshold:0});
+  stickyObs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){satb.classList.toggle('show',!e.isIntersecting);});
+  },{root:modal,threshold:0});
   stickyObs.observe(atbBtn);
 }
-function goSlideByImg(imgSrc,imgs){var idx=imgs.findIndex(function(s){return s===imgSrc;});if(idx>-1)goSlide(idx);}
+
 function handleCard(e,card){if(e.target.closest('.prod-fav')||e.target.closest('.prod-dot')||e.target.closest('.prod-add'))return;openModal(card.dataset.id);}
-function closeModal(){if(stickyObs){stickyObs.disconnect();stickyObs=null;}document.getElementById('prod-modal').classList.remove('open');document.getElementById('sticky-atb').classList.remove('show');OS.modal=false;curModal=null;unlockBody();}
-function goSlide(idx){var sl=document.getElementById('modal-slides'),tot=sl.children.length;idx=Math.max(0,Math.min(idx,tot-1));curSlide=idx;sl.style.transform='translateX(-'+idx*100+'%)';document.querySelectorAll('.modal-dot').forEach(function(d,i){d.classList.toggle('on',i===idx);});}
-function initSwipe(){var w=document.getElementById('modal-slides').parentElement,sx=0;w.ontouchstart=function(e){sx=e.touches[0].clientX;};w.ontouchend=function(e){var d=sx-e.changedTouches[0].clientX;if(Math.abs(d)>40)goSlide(curSlide+(d>0?1:-1));};}
+
+function closeModal(){
+  if(stickyObs){stickyObs.disconnect();stickyObs=null;}
+  document.getElementById('prod-modal').classList.remove('open');
+  document.getElementById('sticky-atb').classList.remove('show');
+  OS.modal=false;curModal=null;modalImgs=[];
+  unlockBody();
+}
+
+// Slide to a specific index — moves the flex container
+function goSlide(idx){
+  var sl=document.getElementById('modal-slides');
+  var tot=sl.children.length;
+  idx=Math.max(0,Math.min(idx,tot-1));
+  curSlide=idx;
+  sl.style.transform='translateX(-'+idx*100+'%)';
+  document.querySelectorAll('.modal-dot').forEach(function(d,i){d.classList.toggle('on',i===idx);});
+}
+
+// Touch swipe — moves to the next/prev actual image
+function initSwipe(){
+  var w=document.getElementById('modal-slides').parentElement;
+  var sx=0,sy=0;
+  w.ontouchstart=function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;};
+  w.ontouchend=function(e){
+    var dx=sx-e.changedTouches[0].clientX;
+    var dy=sy-e.changedTouches[0].clientY;
+    // Only treat as horizontal swipe if horizontal movement dominates
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
+      goSlide(curSlide+(dx>0?1:-1));
+    }
+  };
+}
+
 function pickSz(el){document.querySelectorAll('.modal-sz').forEach(function(s){s.classList.remove('on');});el.classList.add('on');document.getElementById('sz-warn').style.display='none';}
 function addToBag(){
   if(!curModal)return;
@@ -1145,6 +1181,7 @@ function toggleModalFav(){
   if(c){var b=c.querySelector('.prod-fav');if(b){var iF=favs.some(function(f){return f.id===id;});b.classList.toggle('on',iF);b.querySelector('i').className=iF?'ph-fill ph-heart-straight':'ph-thin ph-heart-straight';}}
 }
 
+// Sticky ATB
 function stickyATBClick(){
   if(!curModal)return;
   var s=document.querySelector('.modal-sz.on');
@@ -1171,18 +1208,22 @@ function satbAdd(){
   setTimeout(function(){closeModal();setTimeout(openCart,150);},150);
 }
 
+// Shipping
 function calcShip(){var inp=document.getElementById('postal-inp'),res=document.getElementById('ship-result'),c=(inp.value||'').trim();if(!c||c.length<3){res.style.display='block';res.style.color='#c0392b';res.textContent='Please enter a valid postal code.';return;}res.style.display='block';res.style.color='#27ae60';var n=parseInt(c)||0;if(n<1000)res.textContent='Standard: FREE (orders over R750) or R65.';else if(n<5000)res.textContent='Standard: R75 · Express: R130 (1–2 days).';else res.textContent='Standard: R95 · Express: R160 (2–3 days).';}
 
+// Tabs
 function switchTab(id,el){document.querySelectorAll('.modal-tab').forEach(function(t){t.classList.remove('on');});document.querySelectorAll('.modal-panel').forEach(function(p){p.classList.remove('on');});el.classList.add('on');document.getElementById('tab-'+id).classList.add('on');}
 
+// Nav
 function openNav(){if(OS.fav)closeFav();if(OS.cart)closeCart();if(OS.modal)closeModal();document.getElementById('nav-ov').classList.add('open');document.getElementById('nav-bg').classList.add('open');OS.nav=true;lockBody();showHeader();}
 function closeNav(){document.getElementById('nav-ov').classList.remove('open');document.getElementById('nav-bg').classList.remove('open');OS.nav=false;unlockBody();}
 function toggleNavSub(id,item){var sub=document.getElementById(id),icon=item.querySelector('i.ph-caret-down'),isOpen=sub.classList.contains('open');document.querySelectorAll('.nav-sub').forEach(function(s){s.classList.remove('open');});document.querySelectorAll('.nav-cat i.ph-caret-down').forEach(function(i){i.style.transform='';});if(!isOpen){sub.classList.add('open');if(icon)icon.style.transform='rotate(180deg)';}}
 
+// Footer Nav
 function toggleFNav(id,t){var b=document.getElementById(id);if(!b)return;b.classList.toggle('open');t.classList.toggle('open');}
 
+// Init
 (function(){updFavBadge();updCartBadge();})();
 </script>
-
 </body>
 </html>
