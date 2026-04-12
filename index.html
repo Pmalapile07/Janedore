@@ -32,7 +32,7 @@ const productId = “rugal-poker-dot-top”;
 const docRef = doc(db, “products”, productId);
 const existing = await getDoc(docRef);
 
-```
+
   if (!existing.exists()) {
     await setDoc(docRef, {
       id: productId,
