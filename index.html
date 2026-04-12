@@ -24,66 +24,51 @@ measurementId: “G-Y9NMT0ZGKZ”
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ── Seed product if not exists, then load all ──────────────────────────────
 async function seedAndLoad() {
 try {
-// Seed the RUGAL POKER DOT TOP product
 const productId = “rugal-poker-dot-top”;
 const docRef = doc(db, “products”, productId);
 const existing = await getDoc(docRef);
 
+
+if (!existing.exists()) {
+  await setDoc(docRef, {
+    id: productId,
+    name: "RUGAL POKER DOT TOP",
+    price: "R 450.00",
+    priceN: 450,
+    description: "A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.",
+    category: "clothing",
+    isNewArrival: false,
+    isFeatured: true,
+    sizes: ["XS","S","M","L","XL"],
+    variants: [
+      { label: "White", bg: "#f5f5f0", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" },
+      { label: "Cream", bg: "#e8e0d5", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" }
+    ],
+    imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
+    images: [
+      "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
+      "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg"
+    ],
+    createdAt: Date.now()
+  });
+  console.log("✅ Seeded RUGAL POKER DOT TOP to Firestore");
+}
+
+const snap = await getDocs(collection(db, "products"));
+const products = [];
+snap.forEach(d => products.push({ id: d.id, ...d.data() }));
+console.log("✅ Loaded", products.length, "product(s) from Firestore");
+window.renderFirebaseProducts(products);
 ```
-  if (!existing.exists()) {
-    await setDoc(docRef, {
-      id: productId,
-      name: "RUGAL POKER DOT TOP",
-      price: "R 450.00",
-      priceN: 450,
-      description: "A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.",
-      category: "clothing",
-      isNewArrival: false,
-      isFeatured: true,
-      sizes: ["XS","S","M","L","XL"],
-      variants: [
-        {
-          label: "White",
-          bg: "#f5f5f0",
-          imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg"
-        },
-        {
-          label: "Cream",
-          bg: "#e8e0d5",
-          imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg"
-        }
-      ],
-      imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
-      images: [
-        "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
-        "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg"
-      ],
-      createdAt: Date.now()
-    });
-    console.log("✅ Seeded RUGAL POKER DOT TOP to Firestore");
-  }
 
-  // Load all products
-  const snap = await getDocs(collection(db, "products"));
-  const products = [];
-  snap.forEach(d => products.push({ id: d.id, ...d.data() }));
-  console.log("✅ Loaded", products.length, "product(s) from Firestore");
-
-  // Hand off to global render function
-  window.renderFirebaseProducts(products);
 } catch (err) {
-  console.error("Firebase error:", err);
-  // Fallback to placeholder data on error
-  window.renderFirebaseProducts([]);
+console.error(“Firebase error:”, err);
+window.renderFirebaseProducts([]);
 }
-```
-
 }
 
-// Run after DOM ready
 window.addEventListener(“DOMContentLoaded”, seedAndLoad);
 </script>
 
@@ -99,13 +84,39 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .ann{background:#111;color:#fff;font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2.5px;text-align:center;padding:9px 20px;position:fixed;top:0;left:0;right:0;z-index:1001;transition:transform .35s ease;}
 .ann.hide{transform:translateY(-100%);}
 
-/* ── Header ── */
-.hdr{display:flex;align-items:center;justify-content:space-between;background:#fff;height:64px;padding:0 18px;position:fixed;top:28px;left:0;right:0;z-index:1000;transition:top .35s ease,transform .35s ease;border-bottom:1px solid #f0f0f0;}
+/* ── Header — centered layout with reduced icon gap ── */
+.hdr{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  background:#fff;
+  height:64px;
+  padding:0 18px;
+  position:fixed;
+  top:28px;
+  left:0;
+  right:0;
+  z-index:1000;
+  transition:top .35s ease,transform .35s ease;
+  border-bottom:1px solid #f0f0f0;
+}
 .hdr.hide{transform:translateY(calc(-100% - 28px));}
 .hdr.no-ann{top:0;}
+.hdr-logo{
+  grid-column:2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 .hdr-logo img{height:38px;object-fit:contain;display:block;}
-.hdr-icons{display:flex;align-items:center;gap:6px;}
-.hdr-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;background:none;border:none;padding:0;color:#111;border-radius:50%;transition:background .2s;}
+.hdr-icons{
+  grid-column:3;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:2px;
+}
+.hdr-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;background:none;border:none;padding:0;color:#111;border-radius:50%;transition:background .2s;}
 .hdr-btn:hover{background:#f5f5f5;}
 .hdr-btn i{font-size:20px;color:#111;display:block;}
 .badge{position:absolute;top:4px;right:4px;background:#111;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;pointer-events:none;}
@@ -125,6 +136,11 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .duo-card .img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#e8e8e8;}
 .duo-card .img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease;}
 .duo-card:hover .img-wrap img{transform:scale(1.04);}
+
+/* Zoomed images for SUNGLASSES and BAGS */
+.duo-card .img-wrap img.zoom-img{object-fit:cover;object-position:center center;transform:scale(1.18);}
+.duo-card:hover .img-wrap img.zoom-img{transform:scale(1.24);}
+
 .duo-label{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.45);z-index:2;pointer-events:none;}
 .uv-tag{position:absolute;top:10px;right:10px;background:#111;color:#fff;font-family:'Driftune',sans-serif;font-size:7px;letter-spacing:1.5px;padding:3px 8px;z-index:3;pointer-events:none;}
 
@@ -464,6 +480,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 <!-- Header -->
 
 <header class="hdr" id="hdr">
+  <div><!-- spacer --></div>
   <div class="hdr-logo"><a href="#"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Cream%20Black%20Typography%20Loop%20Brand%20Logo%20(500%20x%20180%20px).png" alt="Janedore"></a></div>
   <div class="hdr-icons">
     <button class="hdr-btn" title="Account"><i class="ph-thin ph-user"></i></button>
@@ -500,7 +517,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
     </div>
     <div class="duo-card">
       <div class="uv-tag">UV-400 / BL+</div>
-      <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses" style="object-fit:contain;background:#f5f5f5;"></div>
+      <div class="img-wrap"><img class="zoom-img" src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses"></div>
       <div class="duo-label">SUNGLASSES</div>
     </div>
   </div>
@@ -509,7 +526,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 
   <div class="duo-grid">
     <div class="duo-card">
-      <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags" style="object-fit:contain;background:#f5f5f5;"></div>
+      <div class="img-wrap"><img class="zoom-img" src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Bag.png" alt="Bags"></div>
       <div class="duo-label">BAGS</div>
     </div>
     <div class="duo-card">
@@ -556,7 +573,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 
   <div class="col-sec">
     <div class="col-hdr"><h2>THE COLLECTION</h2><p>Handpicked pieces, ready to wear.</p></div>
-    <!-- Loading skeleton -->
     <div class="grid-loading" id="grid-1-loading">
       <div class="grid-loading-card"></div>
       <div class="grid-loading-card"></div>
@@ -571,7 +587,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 
   <div class="col-sec">
     <div class="col-hdr"><h2>NEW ARRIVALS</h2><p>Just landed — before they sell out.</p></div>
-    <!-- Loading skeleton -->
     <div class="grid-loading" id="grid-2-loading">
       <div class="grid-loading-card"></div>
       <div class="grid-loading-card"></div>
@@ -807,10 +822,8 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <script>
-// ── Global Catalog (populated by Firebase) ───────────────────────────────────
 var CAT = [];
 
-// ── Firebase render callback ──────────────────────────────────────────────────
 window.renderFirebaseProducts = function(products) {
   var status = document.getElementById('firebase-status');
   var dot = document.getElementById('fb-dot');
@@ -818,7 +831,6 @@ window.renderFirebaseProducts = function(products) {
   status.style.display = 'flex';
 
   if (products.length === 0) {
-    // Firebase returned nothing — use fallback placeholder data
     dot.classList.add('err');
     txt.textContent = 'Could not connect to store — showing preview';
     status.querySelector('.firebase-dot').style.background = '#f39c12';
@@ -826,7 +838,6 @@ window.renderFirebaseProducts = function(products) {
   } else {
     dot.classList.remove('err');
     txt.textContent = 'Connected to Janedore store (' + products.length + ' product' + (products.length !== 1 ? 's' : '') + ' loaded)';
-    // Normalise products from Firestore
     CAT = products.map(function(p) {
       return {
         id: p.id,
@@ -846,13 +857,11 @@ window.renderFirebaseProducts = function(products) {
     });
   }
 
-  // Split into featured / new arrivals; if not enough tagged, fill from all
   var featured = CAT.filter(function(p) { return p.isFeatured; });
   var newArrivals = CAT.filter(function(p) { return p.isNewArrival; });
   if (featured.length < 2) featured = CAT.slice(0, Math.min(4, CAT.length));
   if (newArrivals.length < 2) newArrivals = CAT.slice(0, Math.min(4, CAT.length));
 
-  // Hide skeletons, show grids
   ['grid-1','grid-2'].forEach(function(id) {
     document.getElementById(id + '-loading').style.display = 'none';
     document.getElementById(id).style.display = 'grid';
@@ -861,7 +870,6 @@ window.renderFirebaseProducts = function(products) {
   document.getElementById('grid-1').innerHTML = featured.slice(0,4).map(buildCard).join('');
   document.getElementById('grid-2').innerHTML = newArrivals.slice(0,4).map(buildCard).join('');
 
-  // Restore fav states on freshly rendered cards
   document.querySelectorAll('.prod-card').forEach(function(card) {
     if (favs.find(function(f) { return f.id === card.dataset.id; })) {
       var b = card.querySelector('.prod-fav');
@@ -870,10 +878,9 @@ window.renderFirebaseProducts = function(products) {
   });
 };
 
-// ── Fallback catalog ──────────────────────────────────────────────────────────
 function getFallbackCatalog() {
   return [
-    {id:'1',name:'RUGAL POKER DOT TOP',price:'R 450.00',priceN:450,imgSrc:'https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg',images:['https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg','https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg'],desc:'A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.',sizes:['XS','S','M','L','XL'],variants:[{bg:'#f5f5f0',imgSrc:'https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg',label:'White'},{bg:'#e8e0d5',imgSrc:'https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg',label:'Cream'}],isFeatured:true,isNewArrival:false},
+    {id:'1',name:'RUGAL POKER DOT TOP',price:'R 450.00',priceN:450,imgSrc:'https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg',images:['https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg','https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg'],desc:'A stylish everyday top designed for effortless comfort and versatility.',sizes:['XS','S','M','L','XL'],variants:[{bg:'#f5f5f0',imgSrc:'https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg',label:'White'},{bg:'#e8e0d5',imgSrc:'https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg',label:'Cream'}],isFeatured:true,isNewArrival:false},
     {id:'2',name:'',price:'',priceN:0,imgSrc:'',images:[],desc:'',sizes:['XS','S','M','L','XL'],variants:[{bg:'#c8c4bf',imgSrc:'',label:''},{bg:'#6e6660',imgSrc:'',label:''}],isFeatured:true,isNewArrival:false},
     {id:'3',name:'',price:'',priceN:0,imgSrc:'',images:[],desc:'',sizes:['XS','S','M','L','XL'],variants:[{bg:'#b8b2aa',imgSrc:'',label:''},{bg:'#3a3530',imgSrc:'',label:''}],isFeatured:true,isNewArrival:false},
     {id:'4',name:'',price:'',priceN:0,imgSrc:'',images:[],desc:'',sizes:['XS','S','M','L','XL'],variants:[{bg:'#ddd8d2',imgSrc:'',label:''},{bg:'#f0ece7',imgSrc:'',label:''}],isFeatured:true,isNewArrival:false},
@@ -884,21 +891,15 @@ function getFallbackCatalog() {
   ];
 }
 
-// ── Build variant circle (image or colour swatch) ─────────────────────────────
 function buildVariantCircle(v, i, cls, activeCls) {
   var on = i === 0 ? ' ' + activeCls : '';
-  if (v.imgSrc) {
-    return '<div class="' + cls + on + '" data-img="' + v.imgSrc + '" title="' + (v.label||'') + '"><img src="' + v.imgSrc + '" alt="' + (v.label||'') + '"></div>';
-  }
+  if (v.imgSrc) return '<div class="' + cls + on + '" data-img="' + v.imgSrc + '" title="' + (v.label||'') + '"><img src="' + v.imgSrc + '" alt="' + (v.label||'') + '"></div>';
   return '<div class="' + cls + on + '" style="background:' + v.bg + ';" title="' + (v.label||'') + '"></div>';
 }
 
-// ── Build product card ────────────────────────────────────────────────────────
 function buildCard(p) {
   var dots = (p.variants || []).map(function(v, i) {
-    var bg = v.imgSrc
-      ? 'background-image:url(' + v.imgSrc + ');background-size:cover;background-position:center;'
-      : 'background:' + v.bg + ';';
+    var bg = v.imgSrc ? 'background-image:url(' + v.imgSrc + ');background-size:cover;background-position:center;' : 'background:' + v.bg + ';';
     return '<div class="prod-dot' + (i===0?' on':'') + '" style="' + bg + '" onclick="event.stopPropagation()"></div>';
   }).join('');
   return '<div class="prod-card" data-id="' + p.id + '" onclick="handleCard(event,this)">'
@@ -913,21 +914,18 @@ function buildCard(p) {
     + '</div>';
 }
 
-// ── Build size buttons ────────────────────────────────────────────────────────
 function buildSizeButtons(sizes, cls, handler) {
   return (sizes || ['XS','S','M','L','XL']).map(function(sz) {
     return '<span class="' + cls + '" onclick="' + handler + '(this)">' + sz + '</span>';
   }).join('');
 }
 
-// ── Overlay state ─────────────────────────────────────────────────────────────
 var OS = {fav:false,cart:false,modal:false,qs:false,nav:false,satb:false};
 var savedSY = 0;
 function lockBody(){savedSY=window.scrollY;document.body.style.top='-'+savedSY+'px';document.body.classList.add('overlay-open');}
 function unlockBody(){document.body.classList.remove('overlay-open');document.body.style.top='';window.scrollTo(0,savedSY);}
 function anyOpen(){return OS.fav||OS.cart||OS.modal||OS.nav;}
 
-// ── Header scroll ─────────────────────────────────────────────────────────────
 var hdr=document.getElementById('hdr'),ann=document.getElementById('ann');
 var lastSY=0,hVis=true,tick=false;
 function onScroll(){
@@ -941,10 +939,8 @@ function onScroll(){
 window.addEventListener('scroll',function(){if(!tick){requestAnimationFrame(onScroll);tick=true;}},{passive:true});
 function showHeader(){hdr.classList.remove('hide','no-ann');ann.classList.remove('hide');hVis=true;}
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function parseP(s){return parseFloat((s||'0').replace(/[^0-9.]/g,''))||0;}
 
-// ── Favourites ────────────────────────────────────────────────────────────────
 var favs=[];
 try{var _f=localStorage.getItem('jd_favs');if(_f)favs=JSON.parse(_f);}catch(e){}
 function saveFavs(){try{localStorage.setItem('jd_favs',JSON.stringify(favs));}catch(e){}}
@@ -985,7 +981,6 @@ document.addEventListener('click',function(e){var w=document.getElementById('fav
 function openFav(){if(OS.cart)closeCart();if(OS.modal)closeModal();renderFavGrid();document.getElementById('fav-ov').classList.add('open');OS.fav=true;lockBody();showHeader();document.getElementById('fav-btn').onclick=closeFav;}
 function closeFav(){document.getElementById('fav-ov').classList.remove('open');OS.fav=false;unlockBody();document.getElementById('fav-btn').onclick=openFav;}
 
-// ── Cart ──────────────────────────────────────────────────────────────────────
 var cartItems=[];
 var PROMOS={'JANEDORE10':0.10,'WELCOME15':0.15,'SALE20':0.20};var activePromo=null;
 function updCartBadge(){document.getElementById('cart-badge').textContent=cartItems.reduce(function(s,i){return s+i.qty;},0);}
@@ -1031,7 +1026,6 @@ function addItem(p,sz,variantLabel,variantImgSrc){
   updCartBadge();
 }
 
-// ── YMAL ──────────────────────────────────────────────────────────────────────
 function renderYMAL(cId,excId){
   var row=document.getElementById(cId);if(!row)return;
   row.innerHTML=CAT.filter(function(p){return p.id!==excId;}).map(function(p){
@@ -1041,7 +1035,6 @@ function renderYMAL(cId,excId){
   }).join('');
 }
 
-// ── Quick Add Sheet ───────────────────────────────────────────────────────────
 var curQS=null,curQSVariant=null;
 function openQS(btn){
   var card=btn.closest('.prod-card'),p=CAT.find(function(x){return x.id===card.dataset.id;});if(!p)return;
@@ -1052,22 +1045,14 @@ function openQS(btn){
   var imgSrc=curQSVariant&&curQSVariant.imgSrc?curQSVariant.imgSrc:p.imgSrc;
   if(imgSrc){var img=document.createElement('img');img.className='qs-img';img.src=imgSrc;img.alt=p.name;iw.appendChild(img);}
   else{var ph=document.createElement('div');ph.className='qs-img-ph';iw.appendChild(ph);}
-  // Variants
-  document.getElementById('qs-vars').innerHTML=(p.variants||[]).map(function(v,i){
-    return buildVariantCircle(v,i,'qs-v','on');
-  }).join('');
-  // Wire variant clicks
+  document.getElementById('qs-vars').innerHTML=(p.variants||[]).map(function(v,i){return buildVariantCircle(v,i,'qs-v','on');}).join('');
   document.querySelectorAll('.qs-v').forEach(function(el,i){
     el.addEventListener('click',function(){
       document.querySelectorAll('.qs-v').forEach(function(x){x.classList.remove('on');});
-      el.classList.add('on');
-      curQSVariant=p.variants[i];
-      var src=p.variants[i].imgSrc||p.imgSrc;
-      var ci=iw.querySelector('img');
-      if(ci&&src)ci.src=src;
+      el.classList.add('on');curQSVariant=p.variants[i];
+      var src=p.variants[i].imgSrc||p.imgSrc;var ci=iw.querySelector('img');if(ci&&src)ci.src=src;
     });
   });
-  // Sizes
   document.getElementById('qs-szs').innerHTML=buildSizeButtons(p.sizes,'qs-sz','qsSz');
   document.getElementById('qs-warn').style.display='none';
   document.getElementById('qs-sheet').classList.add('open');document.getElementById('qs-bg').classList.add('open');OS.qs=true;
@@ -1078,13 +1063,10 @@ function qsAdd(){
   if(!curQS)return;
   var s=document.querySelector('.qs-sz.on');
   if(!s){document.getElementById('qs-warn').style.display='block';return;}
-  var vLabel=curQSVariant?curQSVariant.label:'';
-  var vImg=curQSVariant?curQSVariant.imgSrc:'';
-  addItem(curQS,s.textContent,vLabel,vImg);
+  addItem(curQS,s.textContent,curQSVariant?curQSVariant.label:'',curQSVariant?curQSVariant.imgSrc:'');
   closeQS();setTimeout(openCart,150);
 }
 
-// ── Product Modal ─────────────────────────────────────────────────────────────
 var curModal=null,curSlide=0,curModalVariant=null,stickyObs=null;
 function openModal(idOrP){
   var p=typeof idOrP==='string'?CAT.find(function(x){return x.id===idOrP;}):idOrP;if(!p)return;
@@ -1097,50 +1079,39 @@ function openModal(idOrP){
   document.getElementById('sticky-atb-pr').textContent=p.price||'—';
   document.getElementById('satb-nm').textContent=p.name||'—';
   document.getElementById('satb-pr').textContent=p.price||'—';
-  // SATB image
   var si=document.getElementById('satb-img-wrap');si.innerHTML='';
   var satbImg=curModalVariant&&curModalVariant.imgSrc?curModalVariant.imgSrc:p.imgSrc;
   if(satbImg){var si2=document.createElement('img');si2.className='satb-exp-img';si2.src=satbImg;si2.alt=p.name;si.appendChild(si2);}
   else{var sph=document.createElement('div');sph.className='satb-exp-img-ph';si.appendChild(sph);}
-  // Images
   var imgs=p.images&&p.images.length?p.images:(p.imgSrc?[p.imgSrc]:[]);
   var sl=document.getElementById('modal-slides'),dt=document.getElementById('modal-dots');
   sl.innerHTML='';dt.innerHTML='';
   if(!imgs.length){sl.innerHTML='<div class="modal-slide"><div class="ph-ph"><i class="ph-light ph-image"></i></div></div>';}
   else{imgs.forEach(function(src,i){sl.innerHTML+='<div class="modal-slide"><img src="'+src+'" alt="Image '+(i+1)+'"></div>';dt.innerHTML+='<div class="modal-dot'+(i===0?' on':'')+'"></div>';});}
   sl.style.transform='translateX(0)';
-  // Variants
-  var mvHtml=(p.variants||[]).map(function(v,i){return buildVariantCircle(v,i,'modal-v','on');}).join('');
-  document.getElementById('modal-vars').innerHTML=mvHtml;
-  // Wire modal variant clicks
+  document.getElementById('modal-vars').innerHTML=(p.variants||[]).map(function(v,i){return buildVariantCircle(v,i,'modal-v','on');}).join('');
   document.querySelectorAll('#modal-vars .modal-v').forEach(function(el,i){
     el.addEventListener('click',function(){
       document.querySelectorAll('#modal-vars .modal-v').forEach(function(x){x.classList.remove('on');});
       el.classList.add('on');curModalVariant=p.variants[i];
-      // Update slides to show variant image
       if(p.variants[i].imgSrc){goSlideByImg(p.variants[i].imgSrc,imgs);}
     });
   });
-  // SATB variants
-  var svHtml=(p.variants||[]).map(function(v,i){return buildVariantCircle(v,i,'satb-exp-v','on');}).join('');
-  document.getElementById('satb-vars').innerHTML=svHtml;
+  document.getElementById('satb-vars').innerHTML=(p.variants||[]).map(function(v,i){return buildVariantCircle(v,i,'satb-exp-v','on');}).join('');
   document.querySelectorAll('#satb-vars .satb-exp-v').forEach(function(el,i){
     el.addEventListener('click',function(){
       document.querySelectorAll('#satb-vars .satb-exp-v').forEach(function(x){x.classList.remove('on');});
       el.classList.add('on');curModalVariant=p.variants[i];
     });
   });
-  // Sizes
   document.getElementById('modal-szs').innerHTML=buildSizeButtons(p.sizes,'modal-sz','pickSz');
   document.getElementById('satb-szs').innerHTML=buildSizeButtons(p.sizes,'satb-exp-sz','satbSz');
   document.getElementById('sz-warn').style.display='none';
-  // Tabs
   document.querySelectorAll('.modal-tab').forEach(function(t){t.classList.remove('on');});
   document.querySelectorAll('.modal-panel').forEach(function(pp){pp.classList.remove('on');});
   document.querySelector('.modal-tab[onclick*="desc"]').classList.add('on');
   document.getElementById('tab-desc').classList.add('on');
   var pi=document.getElementById('postal-inp'),sr=document.getElementById('ship-result');if(pi)pi.value='';if(sr)sr.style.display='none';
-  // Fav icon
   document.getElementById('modal-fav-icon').className=favs.some(function(f){return f.id===p.id;})?'ph-fill ph-heart-straight':'ph-thin ph-heart-straight';
   var modal=document.getElementById('prod-modal'),satb=document.getElementById('sticky-atb');
   satb.classList.remove('show');modal.classList.add('open');modal.scrollTop=0;OS.modal=true;lockBody();showHeader();
@@ -1150,10 +1121,7 @@ function openModal(idOrP){
   stickyObs=new IntersectionObserver(function(entries){entries.forEach(function(e){satb.classList.toggle('show',!e.isIntersecting);});},{root:modal,threshold:0});
   stickyObs.observe(atbBtn);
 }
-function goSlideByImg(imgSrc, imgs) {
-  var idx=imgs.findIndex(function(s){return s===imgSrc;});
-  if(idx>-1)goSlide(idx);
-}
+function goSlideByImg(imgSrc,imgs){var idx=imgs.findIndex(function(s){return s===imgSrc;});if(idx>-1)goSlide(idx);}
 function handleCard(e,card){if(e.target.closest('.prod-fav')||e.target.closest('.prod-dot')||e.target.closest('.prod-add'))return;openModal(card.dataset.id);}
 function closeModal(){if(stickyObs){stickyObs.disconnect();stickyObs=null;}document.getElementById('prod-modal').classList.remove('open');document.getElementById('sticky-atb').classList.remove('show');OS.modal=false;curModal=null;unlockBody();}
 function goSlide(idx){var sl=document.getElementById('modal-slides'),tot=sl.children.length;idx=Math.max(0,Math.min(idx,tot-1));curSlide=idx;sl.style.transform='translateX(-'+idx*100+'%)';document.querySelectorAll('.modal-dot').forEach(function(d,i){d.classList.toggle('on',i===idx);});}
@@ -1164,9 +1132,7 @@ function addToBag(){
   var s=document.querySelector('.modal-sz.on');
   if(!s){document.getElementById('sz-warn').style.display='block';return;}
   document.getElementById('sz-warn').style.display='none';
-  var vLabel=curModalVariant?curModalVariant.label:'';
-  var vImg=curModalVariant?curModalVariant.imgSrc:'';
-  addItem(curModal,s.textContent,vLabel,vImg);
+  addItem(curModal,s.textContent,curModalVariant?curModalVariant.label:'',curModalVariant?curModalVariant.imgSrc:'');
   closeModal();setTimeout(openCart,150);
 }
 function toggleModalFav(){
@@ -1179,7 +1145,6 @@ function toggleModalFav(){
   if(c){var b=c.querySelector('.prod-fav');if(b){var iF=favs.some(function(f){return f.id===id;});b.classList.toggle('on',iF);b.querySelector('i').className=iF?'ph-fill ph-heart-straight':'ph-thin ph-heart-straight';}}
 }
 
-// ── Sticky ATB ────────────────────────────────────────────────────────────────
 function stickyATBClick(){
   if(!curModal)return;
   var s=document.querySelector('.modal-sz.on');
@@ -1200,32 +1165,23 @@ function satbAdd(){
   var s=document.querySelector('.satb-exp-sz.on');
   if(!s){document.getElementById('satb-warn').style.display='block';return;}
   document.getElementById('satb-warn').style.display='none';
-  var vLabel=curModalVariant?curModalVariant.label:'';
-  var vImg=curModalVariant?curModalVariant.imgSrc:'';
-  addItem(curModal,s.textContent,vLabel,vImg);
+  addItem(curModal,s.textContent,curModalVariant?curModalVariant.label:'',curModalVariant?curModalVariant.imgSrc:'');
   closeSATBExpand();
   document.getElementById('sticky-atb').classList.remove('show');
   setTimeout(function(){closeModal();setTimeout(openCart,150);},150);
 }
 
-// ── Shipping ──────────────────────────────────────────────────────────────────
 function calcShip(){var inp=document.getElementById('postal-inp'),res=document.getElementById('ship-result'),c=(inp.value||'').trim();if(!c||c.length<3){res.style.display='block';res.style.color='#c0392b';res.textContent='Please enter a valid postal code.';return;}res.style.display='block';res.style.color='#27ae60';var n=parseInt(c)||0;if(n<1000)res.textContent='Standard: FREE (orders over R750) or R65.';else if(n<5000)res.textContent='Standard: R75 · Express: R130 (1–2 days).';else res.textContent='Standard: R95 · Express: R160 (2–3 days).';}
 
-// ── Modal Tabs ────────────────────────────────────────────────────────────────
 function switchTab(id,el){document.querySelectorAll('.modal-tab').forEach(function(t){t.classList.remove('on');});document.querySelectorAll('.modal-panel').forEach(function(p){p.classList.remove('on');});el.classList.add('on');document.getElementById('tab-'+id).classList.add('on');}
 
-// ── Nav ───────────────────────────────────────────────────────────────────────
 function openNav(){if(OS.fav)closeFav();if(OS.cart)closeCart();if(OS.modal)closeModal();document.getElementById('nav-ov').classList.add('open');document.getElementById('nav-bg').classList.add('open');OS.nav=true;lockBody();showHeader();}
 function closeNav(){document.getElementById('nav-ov').classList.remove('open');document.getElementById('nav-bg').classList.remove('open');OS.nav=false;unlockBody();}
 function toggleNavSub(id,item){var sub=document.getElementById(id),icon=item.querySelector('i.ph-caret-down'),isOpen=sub.classList.contains('open');document.querySelectorAll('.nav-sub').forEach(function(s){s.classList.remove('open');});document.querySelectorAll('.nav-cat i.ph-caret-down').forEach(function(i){i.style.transform='';});if(!isOpen){sub.classList.add('open');if(icon)icon.style.transform='rotate(180deg)';}}
 
-// ── Footer Nav ────────────────────────────────────────────────────────────────
 function toggleFNav(id,t){var b=document.getElementById(id);if(!b)return;b.classList.toggle('open');t.classList.toggle('open');}
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-(function(){
-  updFavBadge();updCartBadge();
-})();
+(function(){updFavBadge();updCartBadge();})();
 </script>
 
 </body>
