@@ -9,7 +9,7 @@
 <script src="https://unpkg.com/phosphor-icons"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   const firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
     authDomain: "janedore-9f035.firebaseapp.com",
@@ -21,44 +21,74 @@
   };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  async function seedAndLoad() {
-    try {
-      const productId = "rugal-poker-dot-top";
-      const docRef = doc(db, "products", productId);
-      const existing = await getDoc(docRef);
-      if (!existing.exists()) {
-        await setDoc(docRef, {
-          id: productId,
-          name: "RUGAL POKER DOT TOP",
-          price: "R 450.00",
-          priceN: 450,
-          description: "A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.",
-          category: "clothing",
-          isNewArrival: false,
-          isFeatured: true,
-          sizes: ["XS","S","M","L","XL"],
-          variants: [
-            { label: "White", bg: "#f5f5f0", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" },
-            { label: "Cream", bg: "#e8e0d5", imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" }
-          ],
-          imgSrc: "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
-          images: [
-            "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg",
-            "https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg"
-          ],
-          createdAt: Date.now()
-        });
-      }
-      const snap = await getDocs(collection(db, "products"));
-      const products = [];
-      snap.forEach(d => products.push({ id: d.id, ...d.data() }));
-      window.renderFirebaseProducts(products);
-    } catch (err) {
-      console.error("Firebase error:", err);
-      window.renderFirebaseProducts([]);
-    }
-  }
-  window.addEventListener("DOMContentLoaded", seedAndLoad);
+
+async function seedAndLoad() {
+try {
+const productId = “rugal-poker-dot-top”;
+const docRef = doc(db, “products”, productId);
+const existing = await getDoc(docRef);
+if (!existing.exists()) {
+await setDoc(docRef, {
+id: productId,
+name: “RUGAL POKER DOT TOP”,
+price: “R 450.00”,
+priceN: 450,
+description: “A stylish everyday top designed for effortless comfort and versatility. Made with soft, breathable fabric, it pairs easily with jeans, skirts, or shorts—perfect for both casual outings and relaxed days at home.”,
+category: “clothing”,
+isNewArrival: false,
+isFeatured: true,
+sizes: [“XS”,“S”,“M”,“L”,“XL”],
+variants: [
+{ label: “White”, bg: “#f5f5f0”, imgSrc: “https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg” },
+{ label: “Cream”, bg: “#e8e0d5”, imgSrc: “https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg” }
+],
+imgSrc: “https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg”,
+images: [
+“https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg”,
+“https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg”
+],
+createdAt: Date.now()
+});
+}
+const snap = await getDocs(collection(db, “products”));
+const products = [];
+snap.forEach(d => products.push({ id: d.id, …d.data() }));
+window.renderFirebaseProducts(products);
+} catch (err) {
+console.error(“Firebase error:”, err);
+window.renderFirebaseProducts([]);
+}
+}
+
+window.addEventListener(“DOMContentLoaded”, seedAndLoad);
+
+// Reviews: submit to Firebase
+window.submitReview = async function(productId, name, rating, body) {
+try {
+await addDoc(collection(db, “products”, productId, “reviews”), {
+name: name,
+rating: rating,
+body: body,
+createdAt: serverTimestamp()
+});
+return { ok: true };
+} catch (e) {
+return { ok: false, error: e.message };
+}
+};
+
+// Reviews: load from Firebase
+window.loadReviews = async function(productId) {
+try {
+const q = query(collection(db, “products”, productId, “reviews”), orderBy(“createdAt”, “desc”));
+const snap = await getDocs(q);
+const reviews = [];
+snap.forEach(d => reviews.push({ id: d.id, …d.data() }));
+return reviews;
+} catch (e) {
+return [];
+}
+};
 </script>
 
 <style>
@@ -69,7 +99,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
 
-/* Announcement — white background, white text */
+/* Announcement */
 .ann{
   background:#fff;
   color:#000;
@@ -85,7 +115,11 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 }
 .ann.hide{transform:translateY(-100%);}
 
-/* Header — transparent background, sits on top of hero */
+/* =====================
+   MAIN PAGE HEADER
+   Logo centered, MENU left, CART right
+   White text on transparent (over hero)
+   ===================== */
 .hdr{
   display:flex;
   align-items:center;
@@ -96,52 +130,74 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   z-index:1000;
   transition:top .35s ease,transform .35s ease;
   border-bottom:1px solid transparent;
+  /* Never hide/show on scroll — always visible */
 }
-.hdr.hide{transform:translateY(calc(-100% - 28px));}
 .hdr.no-ann{top:0;}
 .hdr-inner{
   width:100%;
   max-width:100%;
-  /* Bring logo and icons down a bit */
   padding:10px 20px 0;
   display:flex;
   align-items:center;
+  justify-content:space-between;
+  position:relative;
 }
-.hdr-logo{display:flex;align-items:center;flex-shrink:0;}
+/* Left: MENU text */
+.hdr-menu-text{
+  font-family:'Driftune',sans-serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color:#fff;
+  cursor:pointer;
+  background:none;
+  border:none;
+  padding:0;
+  transition:opacity .2s;
+  flex-shrink:0;
+}
+.hdr-menu-text:hover{opacity:.65;}
+
+/* Center: Logo */
+.hdr-logo{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  flex-shrink:0;
+}
 .hdr-logo img{height:36px;object-fit:contain;display:block;}
-.hdr-icons{display:flex;align-items:center;gap:0;margin-left:auto;}
-.hdr-btn{
-  width:36px;height:36px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;position:relative;
-  background:none;border:none;padding:0;
-  color:#fff;border-radius:50%;
-  transition:background .2s;
-}
-.hdr-btn:hover{background:rgba(255,255,255,0.2);}
-.hdr-btn i{font-size:20px;color:#fff;display:block;}
 
-/* Badge — no styling (removed background/color) */
-.badge{
-  position:absolute;top:4px;right:4px;
-  font-size:9px;font-weight:700;
-  min-width:15px;height:15px;
-  display:flex;align-items:center;justify-content:center;
-  padding:0 3px;line-height:1;pointer-events:none;
+/* Right: CART text + count */
+.hdr-cart-text{
+  font-family:'Driftune',sans-serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color:#fff;
+  cursor:pointer;
+  background:none;
+  border:none;
+  padding:0;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  transition:opacity .2s;
+  flex-shrink:0;
 }
-
-/* Products modal header overrides — black logo and icons */
-.prod-modal .hdr{background:rgba(255,255,255,0.95);border-bottom:1px solid #f0f0f0;}
-.prod-modal .hdr-btn{color:#111;}
-.prod-modal .hdr-btn i{color:#111;}
-.prod-modal .hdr-btn:hover{background:rgba(0,0,0,0.06);}
+.hdr-cart-text:hover{opacity:.65;}
+.hdr-cart-count{
+  font-family:'Manrope',sans-serif;
+  font-size:11px;
+  font-weight:600;
+  color:#fff;
+}
 
 /* Page — padding top removed, hero starts at 0 */
 .page{padding-top:0;}
 
-/* Banner — increased height */
+/* Banner — taller hero */
 .banner{position:relative;width:100%;overflow:hidden;background:#e8e8e8;margin-top:0;}
-.banner img{width:100%;height:100%;object-fit:cover;display:block;max-height:100vh;}
+.banner img{width:100%;height:100vh;object-fit:cover;display:block;}
 .banner-label{position:absolute;bottom:32px;left:28px;color:#fff;font-family:'Driftune',sans-serif;font-size:18px;letter-spacing:2px;line-height:1.2;text-shadow:0 2px 14px rgba(0,0,0,.4);pointer-events:none;}
 .banner-shop{position:absolute;bottom:34px;right:28px;color:#fff;font-family:'Driftune',sans-serif;font-size:10px;letter-spacing:2.5px;border-bottom:1px solid #fff;padding-bottom:2px;cursor:pointer;text-shadow:0 2px 14px rgba(0,0,0,.4);}
 
@@ -163,16 +219,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .sec-hdr h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:10px;line-height:1.25;}
 .sec-hdr p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;}
 
-/* Jewel scroll */
-.jewel-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-top:2px;}
-.jewel-wrap::-webkit-scrollbar{display:none;}
-.jewel-row{display:flex;gap:2px;width:max-content;}
-.jewel-card{position:relative;width:52vw;overflow:hidden;cursor:pointer;flex-shrink:0;}
-.jewel-card .img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#e8e8e8;}
-.jewel-card .img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease;position:relative;z-index:2;}
-.jewel-card:hover .img-wrap img{transform:scale(1.04);}
-.jewel-label{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.45);z-index:4;pointer-events:none;}
-
 /* CTA */
 .btm-cta{padding:28px 20px 40px;display:flex;flex-direction:column;gap:10px;}
 .btm-cta p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;font-style:italic;}
@@ -185,9 +231,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .col-hdr p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;}
 .grid-loading{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
 .grid-loading-card{aspect-ratio:3/4;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
-.firebase-status{font-family:'Manrope',sans-serif;font-size:11px;color:#27ae60;padding:8px 20px;display:flex;align-items:center;gap:6px;}
-.firebase-dot{width:6px;height:6px;border-radius:50%;background:#27ae60;flex-shrink:0;}
-.firebase-dot.err{background:#c0392b;}
 
 /* Product Grid */
 .prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
@@ -203,11 +246,26 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .prod-fav:hover{background:rgba(255,255,255,.42);transform:scale(1.08);}
 .prod-fav i{font-size:16px;color:#fff;pointer-events:none;}
 .prod-fav.on i{color:#fff;}
-.prod-add{position:absolute;top:10px;left:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.22);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;border:none;transition:background .2s,transform .2s,opacity .2s;opacity:0;}
+
+/* Add-to-cart button — bottom right of product image */
+.prod-add{
+  position:absolute;
+  bottom:10px;
+  right:10px;
+  width:34px;height:34px;
+  border-radius:50%;
+  background:rgba(255,255,255,.22);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:5;border:none;
+  transition:background .2s,transform .2s,opacity .2s;
+  opacity:0;
+}
 .prod-add:hover{background:rgba(255,255,255,.42);transform:scale(1.08);}
 .prod-add i{font-size:16px;color:#fff;pointer-events:none;}
 .prod-card:hover .prod-add,.prod-card:active .prod-add{opacity:1;}
 @media(hover:none){.prod-add{opacity:1;}}
+
 .prod-dots{display:flex;gap:5px;padding:0 10px 8px;flex-wrap:wrap;align-items:center;}
 .prod-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid transparent;cursor:pointer;transition:border-color .2s;flex-shrink:0;}
 .prod-dot.on{border-color:#111;}
@@ -356,10 +414,79 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .ymal-nm{font-family:'Driftune',sans-serif;font-size:11px;letter-spacing:1.5px;color:#111;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ymal-pr{font-family:'Manrope',sans-serif;font-size:11px;font-weight:600;color:#111;}
 
-/* Product Modal */
-.prod-modal{position:fixed;inset:0;background:#fff;z-index:998;display:none;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+/* =====================
+   PRODUCT MODAL HEADER
+   Same layout as main: MENU left, logo center (black), CART right (black)
+   Always fixed/stagnant — no scroll, no hide
+   ===================== */
+.prod-modal{
+  position:fixed;inset:0;background:#fff;z-index:998;
+  display:none;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+}
 .prod-modal.open{display:flex;}
-.modal-inner{padding-top:92px;display:flex;flex-direction:column;flex:1;}
+
+/* Product modal fixed header — white bg, black text, never moves */
+.modal-hdr{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:56px;
+  background:#fff;
+  border-bottom:1px solid #f0f0f0;
+  z-index:1002;
+  display:none;
+  align-items:center;
+}
+.prod-modal.open .modal-hdr{display:flex;}
+.modal-hdr-inner{
+  width:100%;
+  padding:0 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:relative;
+}
+.modal-hdr-menu{
+  font-family:'Driftune',sans-serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color:#111;
+  cursor:pointer;
+  background:none;border:none;padding:0;
+  transition:opacity .2s;
+  flex-shrink:0;
+}
+.modal-hdr-menu:hover{opacity:.55;}
+.modal-hdr-logo{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;align-items:center;
+}
+.modal-hdr-logo img{
+  height:28px;object-fit:contain;display:block;
+  /* Make logo black using CSS filter */
+  filter:brightness(0) saturate(100%);
+}
+.modal-hdr-cart{
+  font-family:'Driftune',sans-serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color:#111;
+  cursor:pointer;
+  background:none;border:none;padding:0;
+  display:flex;align-items:center;gap:4px;
+  transition:opacity .2s;
+  flex-shrink:0;
+}
+.modal-hdr-cart:hover{opacity:.55;}
+.modal-hdr-cart-count{
+  font-family:'Manrope',sans-serif;
+  font-size:11px;font-weight:600;color:#111;
+}
+
+.modal-inner{padding-top:56px;display:flex;flex-direction:column;flex:1;}
 
 /* Slider */
 .modal-slider{position:relative;width:100%;overflow:hidden;background:#f8f8f8;flex-shrink:0;}
@@ -420,6 +547,84 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .ship-btn:hover{opacity:.75;}
 .ship-result{font-family:'Manrope',sans-serif;font-size:12px;color:#27ae60;margin-top:8px;display:none;}
 
+/* =====================
+   REVIEWS SECTION
+   ===================== */
+.reviews-sec{padding:28px 20px 0;border-top:1px solid #f0f0f0;}
+.reviews-title{font-family:'Driftune',sans-serif;font-size:14px;letter-spacing:2px;color:#111;margin-bottom:4px;}
+.reviews-count{font-family:'Manrope',sans-serif;font-size:12px;color:#999;margin-bottom:20px;}
+
+/* Star rating display */
+.stars-display{display:flex;gap:3px;}
+.star-icon{font-size:13px;color:#e0e0e0;}
+.star-icon.filled{color:#111;}
+
+/* Review list */
+.reviews-list{display:flex;flex-direction:column;gap:0;}
+.review-item{padding:16px 0;border-bottom:1px solid #f0f0f0;}
+.review-item:last-child{border-bottom:none;}
+.review-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.review-name{font-family:'Driftune',sans-serif;font-size:11px;letter-spacing:1.5px;color:#111;}
+.review-date{font-family:'Manrope',sans-serif;font-size:10px;color:#bbb;}
+.review-stars{display:flex;gap:2px;margin-bottom:8px;}
+.review-star{font-size:12px;color:#e0e0e0;}
+.review-star.filled{color:#111;}
+.review-body{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.7;}
+.reviews-empty{font-family:'Manrope',sans-serif;font-size:13px;color:#bbb;padding:16px 0 20px;line-height:1.6;}
+
+/* Write a review */
+.review-form-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;
+  border-top:1px solid #f0f0f0;
+  cursor:pointer;
+  margin-top:8px;
+}
+.review-form-toggle span{font-family:'Driftune',sans-serif;font-size:10px;letter-spacing:2px;color:#111;}
+.review-form-toggle i{font-size:16px;color:#111;transition:transform .25s;}
+.review-form-toggle.open i{transform:rotate(180deg);}
+.review-form{display:none;padding:16px 0 24px;border-top:1px solid #f0f0f0;}
+.review-form.open{display:flex;flex-direction:column;gap:14px;}
+.rf-lbl{font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:6px;display:block;}
+.rf-inp{
+  width:100%;
+  font-family:'Manrope',sans-serif;font-size:13px;
+  border:1px solid #ddd;padding:10px 12px;
+  outline:none;color:#111;background:#fff;
+  transition:border-color .2s;
+}
+.rf-inp:focus{border-color:#111;}
+.rf-ta{
+  width:100%;
+  font-family:'Manrope',sans-serif;font-size:13px;
+  border:1px solid #ddd;padding:10px 12px;
+  outline:none;color:#111;background:#fff;
+  resize:none;min-height:96px;
+  transition:border-color .2s;
+}
+.rf-ta:focus{border-color:#111;}
+
+/* Interactive star picker */
+.star-picker{display:flex;gap:6px;align-items:center;}
+.star-pick{font-size:24px;color:#e0e0e0;cursor:pointer;transition:color .15s;padding:0;background:none;border:none;line-height:1;}
+.star-pick.active{color:#111;}
+.star-pick:hover{color:#555;}
+
+.rf-submit{
+  width:100%;background:#111;color:#fff;
+  font-family:'Driftune',sans-serif;font-size:12px;letter-spacing:3px;
+  padding:14px;border:none;cursor:pointer;
+  transition:opacity .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.rf-submit:hover{opacity:.82;}
+.rf-submit:disabled{opacity:.4;cursor:not-allowed;}
+.rf-msg{font-family:'Manrope',sans-serif;font-size:12px;margin-top:4px;display:none;padding:8px 12px;}
+.rf-msg.ok{color:#27ae60;display:block;background:#f0faf5;}
+.rf-msg.err{color:#c0392b;display:block;background:#fff5f5;}
+.rf-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
 /* Nav */
 .nav-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1199;opacity:0;pointer-events:none;transition:opacity .35s;}
 .nav-bg.open{opacity:1;pointer-events:all;}
@@ -451,43 +656,47 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </head>
 <body>
 
-<!-- Announcement — white background, white text -->
+<!-- Announcement -->
 
 <div class="ann" id="ann">FREE SHIPPING WITH ORDERS OVER R750</div>
 
-<!-- Transparent Header — no account icon -->
+<!-- =====================
+     MAIN HEADER
+     MENU (left) | LOGO (center) | CART(0) (right)
+     White text, transparent bg, always visible
+     ===================== -->
 
 <header class="hdr" id="hdr">
   <div class="hdr-inner">
-    <div class="hdr-logo">
-      <a href="#"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore"></a>
-    </div>
-    <div class="hdr-icons">
-      <button class="hdr-btn" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
-      <button class="hdr-btn" id="fav-btn" onclick="openFav()" title="Favourites">
-        <i class="ph-thin ph-heart-straight" id="fav-icon"></i>
-        <span class="badge" id="fav-badge">0</span>
-      </button>
-      <button class="hdr-btn" id="cart-btn" onclick="openCart()" title="Bag">
-        <i class="ph-thin ph-bag-simple"></i>
-        <span class="badge" id="cart-badge">0</span>
-      </button>
-      <button class="hdr-btn" onclick="openNav()" title="Menu"><i class="ph-thin ph-list"></i></button>
-    </div>
+    <!-- Left: MENU -->
+    <button class="hdr-menu-text" onclick="openNav()">MENU</button>
+
+```
+<!-- Center: Logo -->
+<div class="hdr-logo">
+  <a href="#"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore"></a>
+</div>
+
+<!-- Right: CART count -->
+<button class="hdr-cart-text" id="cart-btn" onclick="openCart()">
+  CART<span class="hdr-cart-count" id="cart-badge">(0)</span>
+</button>
+```
+
   </div>
 </header>
 
 <!-- Page Content -->
 
 <div class="page">
-  <!-- Hero Image — increased height via max-height:100vh in CSS -->
+  <!-- Hero — full viewport height -->
   <div class="banner">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="New In Clothing">
     <div class="banner-label">NEW IN<br>CLOTHING</div>
     <span class="banner-shop">SHOP NOW</span>
   </div>
 
-  <!-- Category Row 1: Sets + Sunglasses — zoomed in (object-fit:cover, no light bg) -->
+  <!-- Category Row 1 -->
 
   <div class="duo-grid">
     <div class="duo-card">
@@ -501,7 +710,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
     </div>
   </div>
 
-  <!-- Category Row 2: Bags + Tops — bags zoomed in (object-fit:cover, no light bg) -->
+  <!-- Category Row 2 -->
 
   <div class="duo-grid">
     <div class="duo-card">
@@ -519,33 +728,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   <div class="about-blk">
     <h2>THE EDIT</h2>
     <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
-  </div>
-
-  <!-- Jewellery -->
-
-  <div class="sec-hdr">
-    <span class="sec-tag">NEW</span>
-    <h2>STAINLESS STEEL<br>JEWELLERY</h2>
-    <p>Tarnish-free. Water-resistant. Built to last — and to be seen.</p>
-  </div>
-  <div class="jewel-wrap">
-    <div class="jewel-row">
-      <div class="jewel-card"><div class="img-wrap"><div class="skel"></div></div><div class="jewel-label">NECKLACES</div></div>
-      <div class="jewel-card"><div class="img-wrap"><div class="skel"></div></div><div class="jewel-label">RINGS</div></div>
-      <div class="jewel-card"><div class="img-wrap"><div class="skel"></div></div><div class="jewel-label">BRACELETS</div></div>
-      <div class="jewel-card"><div class="img-wrap"><div class="skel"></div></div><div class="jewel-label">EARRINGS</div></div>
-    </div>
-  </div>
-  <div class="btm-cta">
-    <p>Steel that stays. Style that speaks.</p>
-    <span class="cta-link">SHOP JEWELLERY</span>
-  </div>
-
-  <!-- Firebase status -->
-
-  <div id="firebase-status" class="firebase-status" style="display:none;">
-    <div class="firebase-dot" id="fb-dot"></div>
-    <span id="fb-status-text"></span>
   </div>
 
   <!-- The Collection -->
@@ -679,9 +861,29 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   </div>
 </div>
 
-<!-- Product Modal -->
+<!-- =====================
+     PRODUCT MODAL
+     Fixed header: MENU | logo (black) | CART(0)
+     ===================== -->
 
 <div class="prod-modal" id="prod-modal">
+
+  <!-- Product modal fixed header -->
+
+  <div class="modal-hdr" id="modal-hdr">
+    <div class="modal-hdr-inner">
+      <button class="modal-hdr-menu" onclick="closeModal();setTimeout(openNav,200)">MENU</button>
+      <div class="modal-hdr-logo">
+        <a href="#" onclick="closeModal()">
+          <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore">
+        </a>
+      </div>
+      <button class="modal-hdr-cart" onclick="closeModal();setTimeout(openCart,150)">
+        CART<span class="modal-hdr-cart-count" id="modal-cart-count">(0)</span>
+      </button>
+    </div>
+  </div>
+
   <div class="modal-inner">
     <div class="modal-slider">
       <div class="modal-slides" id="modal-slides"></div>
@@ -690,7 +892,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
       <button class="modal-fav" onclick="toggleModalFav()"><i class="ph ph-heart-straight" id="modal-fav-icon"></i></button>
     </div>
 
-
+```
 <div class="modal-det">
   <h2 class="modal-nm" id="modal-nm"></h2>
   <p class="modal-pr" id="modal-pr"></p>
@@ -750,12 +952,52 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   <div class="ymal-scroll"><div class="ymal-row" id="modal-ymal-row"></div></div>
 </div>
 
-<div style="padding:28px 20px 40px;border-top:1px solid #f0f0f0;">
-  <p style="font-family:'Driftune',sans-serif;font-size:14px;letter-spacing:2px;color:#111;margin-bottom:6px;">REVIEWS</p>
-  <p style="font-family:'Manrope',sans-serif;font-size:12px;color:#bbb;line-height:1.6;">Customer reviews will appear here once connected to your backend.</p>
+<!-- =====================
+     REVIEWS SECTION
+     ===================== -->
+<div class="reviews-sec" id="modal-reviews">
+  <p class="reviews-title">REVIEWS</p>
+  <p class="reviews-count" id="reviews-count">Loading reviews...</p>
+
+  <!-- Review list -->
+  <div class="reviews-list" id="reviews-list"></div>
+
+  <!-- Write a review toggle -->
+  <div class="review-form-toggle" id="review-form-toggle" onclick="toggleReviewForm()">
+    <span>WRITE A REVIEW</span>
+    <i class="ph ph-caret-down" id="review-form-caret"></i>
+  </div>
+  <div class="review-form" id="review-form">
+    <!-- Name -->
+    <div>
+      <label class="rf-lbl">YOUR NAME</label>
+      <input class="rf-inp" id="rf-name" type="text" placeholder="e.g. Thandiwe M.">
+    </div>
+    <!-- Star rating -->
+    <div>
+      <label class="rf-lbl">RATING</label>
+      <div class="star-picker" id="star-picker">
+        <button class="star-pick" data-val="1" onclick="setRating(1)">★</button>
+        <button class="star-pick" data-val="2" onclick="setRating(2)">★</button>
+        <button class="star-pick" data-val="3" onclick="setRating(3)">★</button>
+        <button class="star-pick" data-val="4" onclick="setRating(4)">★</button>
+        <button class="star-pick" data-val="5" onclick="setRating(5)">★</button>
+      </div>
+    </div>
+    <!-- Review body -->
+    <div>
+      <label class="rf-lbl">YOUR REVIEW</label>
+      <textarea class="rf-ta" id="rf-body" placeholder="Share your thoughts about this product..."></textarea>
+    </div>
+    <button class="rf-submit" id="rf-submit" onclick="submitReviewForm()">
+      <span id="rf-submit-text">SUBMIT REVIEW</span>
+      <div class="rf-spinner" id="rf-spinner"></div>
+    </button>
+    <p class="rf-msg" id="rf-msg"></p>
+  </div>
 </div>
 
-<footer class="footer">
+<footer class="footer" style="margin-top:32px;">
   <h2 class="f-nl-h">STAY IN THE EDIT</h2>
   <p class="f-nl-sub">First access to new arrivals, exclusive drops,<br>and pieces worth knowing about.</p>
   <div class="f-nl-row">
@@ -814,17 +1056,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 var CAT = [];
 
 window.renderFirebaseProducts = function(products) {
-  var status = document.getElementById('firebase-status');
-  var dot = document.getElementById('fb-dot');
-  var txt = document.getElementById('fb-status-text');
-  status.style.display = 'flex';
-  if (products.length === 0) {
-    dot.classList.add('err');
-    txt.textContent = 'Could not connect to store — showing preview';
-    CAT = getFallbackCatalog();
-  } else {
-    dot.classList.remove('err');
-    txt.textContent = 'Connected to Janedore store (' + products.length + ' product' + (products.length !== 1 ? 's' : '') + ' loaded)';
+  if (products.length > 0) {
     CAT = products.map(function(p) {
       return {
         id: p.id,
@@ -842,6 +1074,8 @@ window.renderFirebaseProducts = function(products) {
         isNewArrival: p.isNewArrival || false
       };
     });
+  } else {
+    CAT = getFallbackCatalog();
   }
   var featured = CAT.filter(function(p) { return p.isFeatured; });
   var newArrivals = CAT.filter(function(p) { return p.isNewArrival; });
@@ -909,26 +1143,16 @@ var OS = {fav:false,cart:false,modal:false,qs:false,nav:false};
 var savedSY = 0;
 function lockBody(){savedSY=window.scrollY;document.body.style.top='-'+savedSY+'px';document.body.classList.add('overlay-open');}
 function unlockBody(){document.body.classList.remove('overlay-open');document.body.style.top='';window.scrollTo(0,savedSY);}
-function anyOpen(){return OS.fav||OS.cart||OS.modal||OS.nav;}
 
+// Header — ann + hdr always stay visible; no hide/show on scroll
 var hdr=document.getElementById('hdr'),ann=document.getElementById('ann');
-var lastSY=0,hVis=true,tick=false;
-function onScroll(){
-  if(anyOpen())return;
-  var sy=window.scrollY,dn=sy>lastSY;
-  if(sy<=8){ann.classList.remove('hide');hdr.classList.remove('hide','no-ann');hVis=true;}
-  else if(dn&&hVis){ann.classList.add('hide');hdr.classList.add('hide');hVis=false;}
-  else if(!dn&&!hVis){hdr.classList.remove('hide');hdr.classList.add('no-ann');hVis=true;}
-  lastSY=Math.max(0,sy);tick=false;
-}
-window.addEventListener('scroll',function(){if(!tick){requestAnimationFrame(onScroll);tick=true;}},{passive:true});
-function showHeader(){hdr.classList.remove('hide','no-ann');ann.classList.remove('hide');hVis=true;}
+
 function parseP(s){return parseFloat((s||'0').replace(/[^0-9.]/g,''))||0;}
 
 var favs=[];
 try{var _f=localStorage.getItem('jd_favs');if(_f)favs=JSON.parse(_f);}catch(e){}
 function saveFavs(){try{localStorage.setItem('jd_favs',JSON.stringify(favs));}catch(e){}}
-function updFavBadge(){document.getElementById('fav-badge').textContent=favs.length;document.getElementById('fav-cnt').textContent=favs.length+(favs.length===1?' item':' items');}
+function updFavBadge(){document.getElementById('fav-cnt').textContent=favs.length+(favs.length===1?' item':' items');}
 var favFilter='newest';
 function toggleFavCard(btn){
   var card=btn.closest('.prod-card'),id=card.dataset.id,p=CAT.find(function(x){return x.id===id;});
@@ -962,12 +1186,18 @@ function renderFavGrid(){
 function setFavFilter(f,btn,lbl){favFilter=f;document.querySelectorAll('.fav-dd-opt').forEach(function(o){o.classList.remove('on');});btn.classList.add('on');document.getElementById('fav-flt-lbl').textContent=lbl;document.getElementById('fav-dd').classList.remove('open');renderFavGrid();}
 function toggleFavDD(){document.getElementById('fav-dd').classList.toggle('open');}
 document.addEventListener('click',function(e){var w=document.getElementById('fav-dd-wrap');if(w&&!w.contains(e.target))document.getElementById('fav-dd').classList.remove('open');});
-function openFav(){if(OS.cart)closeCart();if(OS.modal)closeModal();renderFavGrid();document.getElementById('fav-ov').classList.add('open');OS.fav=true;lockBody();showHeader();document.getElementById('fav-btn').onclick=closeFav;}
-function closeFav(){document.getElementById('fav-ov').classList.remove('open');OS.fav=false;unlockBody();document.getElementById('fav-btn').onclick=openFav;}
+function openFav(){if(OS.cart)closeCart();if(OS.modal)closeModal();renderFavGrid();document.getElementById('fav-ov').classList.add('open');OS.fav=true;lockBody();}
+function closeFav(){document.getElementById('fav-ov').classList.remove('open');OS.fav=false;unlockBody();}
 
 var cartItems=[];
 var PROMOS={'JANEDORE10':0.10,'WELCOME15':0.15,'SALE20':0.20};var activePromo=null;
-function updCartBadge(){document.getElementById('cart-badge').textContent=cartItems.reduce(function(s,i){return s+i.qty;},0);}
+
+function updCartBadge(){
+  var tot=cartItems.reduce(function(s,i){return s+i.qty;},0);
+  document.getElementById('cart-badge').textContent='('+tot+')';
+  document.getElementById('modal-cart-count').textContent='('+tot+')';
+}
+
 function renderCart(){
   var list=document.getElementById('cart-list'),empty=document.getElementById('cart-empty'),sum=document.getElementById('cart-sum'),promo=document.getElementById('promo-wrap'),ymal=document.getElementById('cart-ymal'),cnt=document.getElementById('cart-cnt');
   var tot=cartItems.reduce(function(s,i){return s+i.qty;},0);
@@ -1000,8 +1230,8 @@ function renderCart(){
 function chQty(id,sz,d){var it=cartItems.find(function(i){return i.id===id&&i.size===sz;});if(!it)return;it.qty+=d;if(it.qty<=0)cartItems=cartItems.filter(function(i){return !(i.id===id&&i.size===sz);});updCartBadge();renderCart();}
 function rmItem(id,sz){cartItems=cartItems.filter(function(i){return !(i.id===id&&i.size===sz);});updCartBadge();renderCart();}
 function applyPromo(){var inp=document.getElementById('promo-inp'),msg=document.getElementById('promo-msg'),c=(inp.value||'').trim().toUpperCase();if(!c){msg.className='promo-msg err';msg.textContent='Please enter a code.';return;}if(PROMOS[c]){activePromo={code:c,rate:PROMOS[c]};msg.className='promo-msg ok';msg.textContent='Code applied — '+Math.round(PROMOS[c]*100)+'% off!';inp.disabled=true;}else{activePromo=null;msg.className='promo-msg err';msg.textContent='Invalid or expired code.';}renderCart();}
-function openCart(){if(OS.fav)closeFav();if(OS.modal)closeModal();renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;lockBody();showHeader();document.getElementById('cart-btn').onclick=closeCart;}
-function closeCart(){document.getElementById('cart-ov').classList.remove('open');document.getElementById('cart-bg').classList.remove('open');OS.cart=false;unlockBody();document.getElementById('cart-btn').onclick=openCart;}
+function openCart(){if(OS.fav)closeFav();if(OS.modal)closeModal();renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;lockBody();}
+function closeCart(){document.getElementById('cart-ov').classList.remove('open');document.getElementById('cart-bg').classList.remove('open');OS.cart=false;unlockBody();}
 function addItem(p,sz,variantLabel,variantImgSrc){
   var img=variantImgSrc||p.imgSrc||'';
   var ex=cartItems.find(function(i){return i.id===p.id&&i.size===sz;});
@@ -1057,6 +1287,11 @@ function qsAdd(){
 var curModal=null,curSlide=0,curModalVariant=null;
 var modalImgs=[];
 
+// Reviews state
+var curReviewProductId=null;
+var curRating=0;
+var reviewFormOpen=false;
+
 function openModal(idOrP){
   var p=typeof idOrP==='string'?CAT.find(function(x){return x.id===idOrP;}):idOrP;if(!p)return;
   if(OS.fav)closeFav();if(OS.cart)closeCart();
@@ -1107,8 +1342,17 @@ function openModal(idOrP){
   if(pi)pi.value='';if(sr)sr.style.display='none';
   document.getElementById('modal-fav-icon').className=favs.some(function(f){return f.id===p.id;})?'ph-fill ph-heart-straight':'ph-thin ph-heart-straight';
 
+  // Reviews
+  curReviewProductId=p.id;
+  curRating=0;
+  reviewFormOpen=false;
+  resetReviewForm();
+  document.getElementById('reviews-count').textContent='Loading reviews...';
+  document.getElementById('reviews-list').innerHTML='';
+  loadAndRenderReviews(p.id);
+
   var modal=document.getElementById('prod-modal');
-  modal.classList.add('open');modal.scrollTop=0;OS.modal=true;lockBody();showHeader();
+  modal.classList.add('open');modal.scrollTop=0;OS.modal=true;lockBody();
   renderYMAL('modal-ymal-row',p.id);
   initSwipe();
 }
@@ -1181,7 +1425,132 @@ function calcShip(){
   else res.textContent='Standard: R95 · Express: R160 (2–3 days).';
 }
 
-function openNav(){if(OS.fav)closeFav();if(OS.cart)closeCart();if(OS.modal)closeModal();document.getElementById('nav-ov').classList.add('open');document.getElementById('nav-bg').classList.add('open');OS.nav=true;lockBody();showHeader();}
+// =====================
+// REVIEWS
+// =====================
+function formatReviewDate(ts) {
+  if (!ts) return '';
+  var d;
+  if (ts && ts.seconds) {
+    d = new Date(ts.seconds * 1000);
+  } else if (typeof ts === 'number') {
+    d = new Date(ts);
+  } else {
+    return '';
+  }
+  return d.toLocaleDateString('en-ZA', { year:'numeric', month:'short', day:'numeric' });
+}
+
+function renderStars(rating, cls) {
+  var s = '';
+  for (var i = 1; i <= 5; i++) {
+    s += '<span class="' + cls + (i <= rating ? ' filled' : '') + '">★</span>';
+  }
+  return s;
+}
+
+function loadAndRenderReviews(productId) {
+  if (typeof window.loadReviews !== 'function') {
+    document.getElementById('reviews-count').textContent = '0 reviews';
+    document.getElementById('reviews-list').innerHTML = '<p class="reviews-empty">No reviews yet. Be the first to share your thoughts!</p>';
+    return;
+  }
+  window.loadReviews(productId).then(function(reviews) {
+    var countEl = document.getElementById('reviews-count');
+    var listEl = document.getElementById('reviews-list');
+    if (!reviews || reviews.length === 0) {
+      countEl.textContent = '0 reviews';
+      listEl.innerHTML = '<p class="reviews-empty">No reviews yet. Be the first to share your thoughts!</p>';
+      return;
+    }
+    countEl.textContent = reviews.length + (reviews.length === 1 ? ' review' : ' reviews');
+    listEl.innerHTML = reviews.map(function(r) {
+      return '<div class="review-item">'
+        + '<div class="review-top"><span class="review-name">' + escHtml(r.name || 'Anonymous') + '</span><span class="review-date">' + formatReviewDate(r.createdAt) + '</span></div>'
+        + '<div class="review-stars">' + renderStars(r.rating || 5, 'review-star') + '</div>'
+        + '<p class="review-body">' + escHtml(r.body || '') + '</p>'
+        + '</div>';
+    }).join('');
+  });
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setRating(val) {
+  curRating = val;
+  document.querySelectorAll('.star-pick').forEach(function(btn) {
+    btn.classList.toggle('active', parseInt(btn.dataset.val) <= val);
+  });
+}
+
+function toggleReviewForm() {
+  reviewFormOpen = !reviewFormOpen;
+  var form = document.getElementById('review-form');
+  var toggle = document.getElementById('review-form-toggle');
+  var caret = document.getElementById('review-form-caret');
+  form.classList.toggle('open', reviewFormOpen);
+  toggle.classList.toggle('open', reviewFormOpen);
+}
+
+function resetReviewForm() {
+  var nameInp = document.getElementById('rf-name');
+  var bodyInp = document.getElementById('rf-body');
+  var msg = document.getElementById('rf-msg');
+  var form = document.getElementById('review-form');
+  var toggle = document.getElementById('review-form-toggle');
+  if (nameInp) nameInp.value = '';
+  if (bodyInp) bodyInp.value = '';
+  if (msg) { msg.className = 'rf-msg'; msg.textContent = ''; }
+  curRating = 0;
+  document.querySelectorAll('.star-pick').forEach(function(btn) { btn.classList.remove('active'); });
+  if (form) form.classList.remove('open');
+  if (toggle) toggle.classList.remove('open');
+  reviewFormOpen = false;
+}
+
+function submitReviewForm() {
+  var name = (document.getElementById('rf-name').value || '').trim();
+  var body = (document.getElementById('rf-body').value || '').trim();
+  var msg = document.getElementById('rf-msg');
+  var submitBtn = document.getElementById('rf-submit');
+  var submitText = document.getElementById('rf-submit-text');
+  var spinner = document.getElementById('rf-spinner');
+
+  if (!name) { msg.className = 'rf-msg err'; msg.textContent = 'Please enter your name.'; return; }
+  if (!curRating) { msg.className = 'rf-msg err'; msg.textContent = 'Please select a star rating.'; return; }
+  if (!body) { msg.className = 'rf-msg err'; msg.textContent = 'Please write a review.'; return; }
+  if (!curReviewProductId) return;
+
+  // Loading state
+  submitBtn.disabled = true;
+  submitText.style.display = 'none';
+  spinner.style.display = 'block';
+  msg.className = 'rf-msg';
+  msg.textContent = '';
+
+  window.submitReview(curReviewProductId, name, curRating, body).then(function(result) {
+    submitBtn.disabled = false;
+    submitText.style.display = 'inline';
+    spinner.style.display = 'none';
+    if (result.ok) {
+      msg.className = 'rf-msg ok';
+      msg.textContent = 'Thank you! Your review has been submitted.';
+      document.getElementById('rf-name').value = '';
+      document.getElementById('rf-body').value = '';
+      curRating = 0;
+      document.querySelectorAll('.star-pick').forEach(function(btn) { btn.classList.remove('active'); });
+      // Reload reviews
+      setTimeout(function() { loadAndRenderReviews(curReviewProductId); }, 800);
+    } else {
+      msg.className = 'rf-msg err';
+      msg.textContent = 'Could not submit review. Please try again.';
+    }
+  });
+}
+
+function openNav(){if(OS.fav)closeFav();if(OS.cart)closeCart();if(OS.modal)closeModal();document.getElementById('nav-ov').classList.add('open');document.getElementById('nav-bg').classList.add('open');OS.nav=true;lockBody();}
 function closeNav(){document.getElementById('nav-ov').classList.remove('open');document.getElementById('nav-bg').classList.remove('open');OS.nav=false;unlockBody();}
 function toggleNavSub(id,item){var sub=document.getElementById(id),icon=item.querySelector('i.ph-caret-down'),isOpen=sub.classList.contains('open');document.querySelectorAll('.nav-sub').forEach(function(s){s.classList.remove('open');});document.querySelectorAll('.nav-cat i.ph-caret-down').forEach(function(i){i.style.transform='';});if(!isOpen){sub.classList.add('open');if(icon)icon.style.transform='rotate(180deg)';}}
 
