@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,80 +10,80 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-    authDomain: "janedore-9f035.firebaseapp.com",
-    projectId: "janedore-9f035",
-    storageBucket: "janedore-9f035.firebasestorage.app",
-    messagingSenderId: "571299748651",
-    appId: "1:571299748651:web:01463a772d47b39cc4036e",
-    measurementId: "G-Y9NMT0ZGKZ"
-  };
-  
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
 
-  async function loadProducts() {
-    try {
-      console.log("Loading products from Firebase...");
-      const snap = await getDocs(collection(db, "products"));
-      const products = [];
-      snap.forEach(doc => {
-        console.log("Found product:", doc.id);
-        products.push({ id: doc.id, ...doc.data() });
-      });
-      console.log("Total products:", products.length);
-      if (window.renderProducts) {
-        window.renderProducts(products);
-      } else {
-        setTimeout(() => window.renderProducts(products), 100);
-      }
-    } catch (err) {
-      console.error("Firebase error:", err);
-      if (window.renderProducts) window.renderProducts([]);
-    }
-  }
+const firebaseConfig = {
+apiKey: “AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI”,
+authDomain: “janedore-9f035.firebaseapp.com”,
+projectId: “janedore-9f035”,
+storageBucket: “janedore-9f035.firebasestorage.app”,
+messagingSenderId: “571299748651”,
+appId: “1:571299748651:web:01463a772d47b39cc4036e”,
+measurementId: “G-Y9NMT0ZGKZ”
+};
 
-  window.addEventListener("load", loadProducts);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  window.submitReview = async function(productId, name, rating, body) {
-    try {
-      await addDoc(collection(db, "products", productId, "reviews"), {
-        name: name,
-        rating: rating,
-        body: body,
-        createdAt: serverTimestamp()
-      });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: e.message };
-    }
-  };
+async function loadProducts() {
+try {
+console.log(“Loading products from Firebase…”);
+const snap = await getDocs(collection(db, “products”));
+const products = [];
+snap.forEach(doc => {
+console.log(“Found product:”, doc.id);
+products.push({ id: doc.id, …doc.data() });
+});
+console.log(“Total products:”, products.length);
+if (window.renderProducts) {
+window.renderProducts(products);
+} else {
+setTimeout(() => window.renderProducts(products), 100);
+}
+} catch (err) {
+console.error(“Firebase error:”, err);
+if (window.renderProducts) window.renderProducts([]);
+}
+}
 
-  window.loadReviews = async function(productId) {
-    try {
-      const q = query(collection(db, "products", productId, "reviews"), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      const reviews = [];
-      snap.forEach(doc => reviews.push({ id: doc.id, ...doc.data() }));
-      return reviews;
-    } catch (e) {
-      return [];
-    }
-  };
+window.addEventListener(“load”, loadProducts);
 
-  window.subscribeEmail = async function(email) {
-    try {
-      await addDoc(collection(db, "newsletter_subscribers"), {
-        email: email,
-        subscribedAt: serverTimestamp()
-      });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: e.message };
-    }
-  };
+window.submitReview = async function(productId, name, rating, body) {
+try {
+await addDoc(collection(db, “products”, productId, “reviews”), {
+name: name,
+rating: rating,
+body: body,
+createdAt: serverTimestamp()
+});
+return { ok: true };
+} catch (e) {
+return { ok: false, error: e.message };
+}
+};
+
+window.loadReviews = async function(productId) {
+try {
+const q = query(collection(db, “products”, productId, “reviews”), orderBy(“createdAt”, “desc”));
+const snap = await getDocs(q);
+const reviews = [];
+snap.forEach(doc => reviews.push({ id: doc.id, …doc.data() }));
+return reviews;
+} catch (e) {
+return [];
+}
+};
+
+window.subscribeEmail = async function(email) {
+try {
+await addDoc(collection(db, “newsletter_subscribers”), {
+email: email,
+subscribedAt: serverTimestamp()
+});
+return { ok: true };
+} catch (e) {
+return { ok: false, error: e.message };
+}
+};
 </script>
 
 <style>
@@ -178,8 +179,9 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .page{padding-top:0;}
 
 /* Banner */
+/* Hero section reduced to 75vh */
 .banner{position:relative;width:100%;overflow:hidden;background:#e8e8e8;margin-top:0;}
-.banner img{width:100%;height:85vh;object-fit:cover;display:block;}
+.banner img{width:100%;height:75vh;object-fit:cover;display:block;}
 .banner-label{position:absolute;bottom:32px;left:28px;color:#fff;font-family:'Driftune',sans-serif;font-size:18px;letter-spacing:2px;line-height:1.2;text-shadow:0 2px 14px rgba(0,0,0,.4);pointer-events:none;}
 .banner-shop{position:absolute;bottom:34px;right:28px;color:#fff;font-family:'Driftune',sans-serif;font-size:10px;letter-spacing:2.5px;border-bottom:1px solid #fff;padding-bottom:2px;cursor:pointer;text-shadow:0 2px 14px rgba(0,0,0,.4);}
 
@@ -327,7 +329,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 }
 .prod-modal.open{display:flex;}
 
-/* Single Modal Header - moved down */
+/* Single Modal Header */
 .modal-hdr{
   display:flex;
   align-items:center;
@@ -347,11 +349,36 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 
 .modal-inner{padding-top:80px;display:flex;flex-direction:column;flex:1;}
 
-.modal-slider{position:relative;width:100%;overflow:hidden;background:#f8f8f8;flex-shrink:0;}
-.modal-slides{display:flex;transition:transform .35s ease;}
-.modal-slide{min-width:100%;width:100%;aspect-ratio:3/4;flex-shrink:0;overflow:hidden;background:#f8f8f8;display:flex;align-items:center;justify-content:center;}
-.modal-slide img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
-.modal-dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:5px;}
+/* FIX: Image slider — touch/drag scroll enabled */
+.modal-slider{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  background:#f8f8f8;
+  flex-shrink:0;
+  touch-action:pan-y;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.modal-slides{
+  display:flex;
+  transition:transform .35s ease;
+  will-change:transform;
+}
+.modal-slide{
+  min-width:100%;
+  width:100%;
+  aspect-ratio:3/4;
+  flex-shrink:0;
+  overflow:hidden;
+  background:#f8f8f8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.modal-slide img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;pointer-events:none;-webkit-user-drag:none;}
+.modal-dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:5px;pointer-events:none;}
 .modal-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5);}
 .modal-dot.on{background:#fff;transform:scale(1.3);}
 
@@ -464,6 +491,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .nav-soc{display:flex;gap:18px;padding:24px 20px 0;}
 .nav-soc a{font-size:22px;color:#666;text-decoration:none;}
 </style>
+
 </head>
 <body>
 
@@ -527,6 +555,8 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   </div>
 </div>
 
+<!-- MAIN PAGE FOOTER -->
+
 <footer class="footer">
   <h2 class="f-nl-h">STAY IN THE EDIT</h2>
   <p class="f-nl-sub">First access to new arrivals, exclusive drops,<br>and pieces worth knowing about.</p>
@@ -549,6 +579,8 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   </div>
   <p class="f-copy">&copy; 2025 Janedore. All rights reserved.</p>
 </footer>
+
+<!-- CART OVERLAY -->
 
 <div class="cart-bg" id="cart-bg" onclick="closeCart()"></div>
 <div class="cart-ov" id="cart-ov">
@@ -585,116 +617,135 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   </div>
 </div>
 
+<!-- PRODUCT MODAL -->
+
 <div class="prod-modal" id="prod-modal">
   <header class="modal-hdr">
     <div class="hdr-inner">
-      <button class="hdr-menu-text" onclick="closeModal();setTimeout(openNav,200)">MENU</button>
+      <!-- FIX: MENU — just opens nav overlay, does NOT close modal or go to homepage -->
+      <button class="hdr-menu-text" onclick="openNavFromModal()">MENU</button>
+      <!-- FIX: LOGO — just closes modal, goes back to main page (no reload) -->
       <div class="hdr-logo">
-        <a href="#" onclick="closeModal()"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore"></a>
+        <a href="javascript:void(0)" onclick="closeModal()"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore"></a>
       </div>
-      <button class="hdr-cart-text" onclick="closeModal();setTimeout(openCart,150)">
+      <!-- FIX: CART — just opens cart overlay, does NOT close modal or go to homepage -->
+      <button class="hdr-cart-text" onclick="openCartFromModal()">
         CART<span class="hdr-cart-count" id="modal-cart-count">(0)</span>
       </button>
     </div>
   </header>
 
   <div class="modal-inner">
-    <div class="modal-slider">
+    <div class="modal-slider" id="modal-slider">
       <div class="modal-slides" id="modal-slides"></div>
       <div class="modal-dots" id="modal-dots"></div>
     </div>
 
-    <div class="modal-det">
-      <h2 class="modal-nm" id="modal-nm"></h2>
-      <p class="modal-pr" id="modal-pr"></p>
-      <p class="modal-var-lbl">COLOUR / VARIANT</p>
-      <div class="modal-vars" id="modal-vars"></div>
-      <p class="modal-sz-lbl">SELECT SIZE</p>
-      <div class="modal-sz-row">
-        <div class="modal-szs" id="modal-szs"></div>
-        <button class="modal-atb-inline" onclick="addToBag()">ADD TO BAG</button>
-      </div>
-      <p id="sz-warn">Please select a size before adding to bag.</p>
+```
+<div class="modal-det">
+  <h2 class="modal-nm" id="modal-nm"></h2>
+  <p class="modal-pr" id="modal-pr"></p>
+  <p class="modal-var-lbl">COLOUR / VARIANT</p>
+  <div class="modal-vars" id="modal-vars"></div>
+  <p class="modal-sz-lbl">SELECT SIZE</p>
+  <div class="modal-sz-row">
+    <div class="modal-szs" id="modal-szs"></div>
+    <button class="modal-atb-inline" onclick="addToBag()">ADD TO BAG</button>
+  </div>
+  <p id="sz-warn">Please select a size before adding to bag.</p>
 
-      <div class="modal-acc">
-        <div class="modal-acc-row">
-          <button class="modal-acc-toggle" onclick="toggleAcc('acc-desc',this)"><span>DESCRIPTION</span><i class="ph ph-caret-down"></i></button>
-          <div class="modal-acc-body open" id="acc-desc"><p id="modal-desc"></p></div>
+  <div class="modal-acc">
+    <div class="modal-acc-row">
+      <button class="modal-acc-toggle" onclick="toggleAcc('acc-desc',this)"><span>DESCRIPTION</span><i class="ph ph-caret-down"></i></button>
+      <div class="modal-acc-body open" id="acc-desc"><p id="modal-desc"></p></div>
+    </div>
+    <div class="modal-acc-row">
+      <button class="modal-acc-toggle" onclick="toggleAcc('acc-ship',this)"><span>SHIPPING</span><i class="ph ph-caret-down"></i></button>
+      <div class="modal-acc-body" id="acc-ship">
+        <div class="ship-info-box"><p>Standard delivery <strong>7–14 business days</strong> from dispatch.</p></div>
+        <p style="font-family:'Manrope',sans-serif;font-size:12px;color:#555;margin-bottom:4px;">Enter your postal code:</p>
+        <div class="ship-row">
+          <input class="ship-inp" id="postal-inp" placeholder="Postal code e.g. 0186">
+          <button class="ship-btn" onclick="calcShip()">CHECK</button>
         </div>
-        <div class="modal-acc-row">
-          <button class="modal-acc-toggle" onclick="toggleAcc('acc-ship',this)"><span>SHIPPING</span><i class="ph ph-caret-down"></i></button>
-          <div class="modal-acc-body" id="acc-ship">
-            <div class="ship-info-box"><p>Standard delivery <strong>7–14 business days</strong> from dispatch.</p></div>
-            <p style="font-family:'Manrope',sans-serif;font-size:12px;color:#555;margin-bottom:4px;">Enter your postal code:</p>
-            <div class="ship-row">
-              <input class="ship-inp" id="postal-inp" placeholder="Postal code e.g. 0186">
-              <button class="ship-btn" onclick="calcShip()">CHECK</button>
-            </div>
-            <p class="ship-result" id="ship-result"></p>
-          </div>
+        <p class="ship-result" id="ship-result"></p>
+      </div>
+    </div>
+    <div class="modal-acc-row">
+      <button class="modal-acc-toggle" onclick="toggleAcc('acc-returns',this)"><span>RETURNS</span><i class="ph ph-caret-down"></i></button>
+      <div class="modal-acc-body" id="acc-returns">
+        <ul style="list-style:none;padding:0;">
+          <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;"><span style="position:absolute;left:0;color:#ccc;">—</span>Returns accepted within 7 days of delivery.</li>
+          <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;margin-top:8px;"><span style="position:absolute;left:0;color:#ccc;">—</span>Items must be unworn, unwashed, with tags attached.</li>
+          <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;margin-top:8px;"><span style="position:absolute;left:0;color:#ccc;">—</span>Sale items are final sale — no returns.</li>
+          <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;margin-top:8px;"><span style="position:absolute;left:0;color:#ccc;">—</span>Email returns@janedore.co.za</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-acc-row">
+      <button class="modal-acc-toggle" onclick="toggleAcc('acc-reviews',this)"><span>REVIEWS</span><i class="ph ph-caret-down"></i></button>
+      <div class="modal-acc-body" id="acc-reviews">
+        <p class="reviews-count" id="reviews-count" style="font-family:'Manrope',sans-serif;font-size:12px;color:#999;margin-bottom:16px;">Loading reviews...</p>
+        <div class="reviews-list" id="reviews-list"></div>
+        <div class="review-form-toggle" id="review-form-toggle" onclick="toggleReviewForm()">
+          <span>WRITE A REVIEW</span>
+          <i class="ph ph-caret-down" id="review-form-caret"></i>
         </div>
-        <div class="modal-acc-row">
-          <button class="modal-acc-toggle" onclick="toggleAcc('acc-returns',this)"><span>RETURNS</span><i class="ph ph-caret-down"></i></button>
-          <div class="modal-acc-body" id="acc-returns">
-            <ul style="list-style:none;padding:0;">
-              <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;"><span style="position:absolute;left:0;color:#ccc;">—</span>Returns accepted within 7 days of delivery.</li>
-              <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;margin-top:8px;"><span style="position:absolute;left:0;color:#ccc;">—</span>Items must be unworn, unwashed, with tags attached.</li>
-              <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;margin-top:8px;"><span style="position:absolute;left:0;color:#ccc;">—</span>Sale items are final sale — no returns.</li>
-              <li style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;padding-left:14px;position:relative;margin-top:8px;"><span style="position:absolute;left:0;color:#ccc;">—</span>Email returns@janedore.co.za</li>
-            </ul>
-          </div>
-        </div>
-        <div class="modal-acc-row">
-          <button class="modal-acc-toggle" onclick="toggleAcc('acc-reviews',this)"><span>REVIEWS</span><i class="ph ph-caret-down"></i></button>
-          <div class="modal-acc-body" id="acc-reviews">
-            <p class="reviews-count" id="reviews-count" style="font-family:'Manrope',sans-serif;font-size:12px;color:#999;margin-bottom:16px;">Loading reviews...</p>
-            <div class="reviews-list" id="reviews-list"></div>
-            <div class="review-form-toggle" id="review-form-toggle" onclick="toggleReviewForm()">
-              <span>WRITE A REVIEW</span>
-              <i class="ph ph-caret-down" id="review-form-caret"></i>
-            </div>
-            <div class="review-form" id="review-form">
-              <div><label class="rf-lbl">YOUR NAME</label><input class="rf-inp" id="rf-name" placeholder="e.g. Thandiwe M."></div>
-              <div><label class="rf-lbl">RATING</label>
-                <div class="star-picker">
-                  <button class="star-pick" onclick="setRating(1)">☆</button>
-                  <button class="star-pick" onclick="setRating(2)">☆</button>
-                  <button class="star-pick" onclick="setRating(3)">☆</button>
-                  <button class="star-pick" onclick="setRating(4)">☆</button>
-                  <button class="star-pick" onclick="setRating(5)">☆</button>
-                </div>
-              </div>
-              <div><label class="rf-lbl">YOUR REVIEW</label><textarea class="rf-ta" id="rf-body" placeholder="Share your thoughts..."></textarea></div>
-              <button class="rf-submit" id="rf-submit" onclick="submitReviewForm()"><span id="rf-submit-text">SUBMIT REVIEW</span><div class="rf-spinner" id="rf-spinner"></div></button>
-              <p class="rf-msg" id="rf-msg"></p>
+        <div class="review-form" id="review-form">
+          <div><label class="rf-lbl">YOUR NAME</label><input class="rf-inp" id="rf-name" placeholder="e.g. Thandiwe M."></div>
+          <div><label class="rf-lbl">RATING</label>
+            <div class="star-picker">
+              <button class="star-pick" onclick="setRating(1)">☆</button>
+              <button class="star-pick" onclick="setRating(2)">☆</button>
+              <button class="star-pick" onclick="setRating(3)">☆</button>
+              <button class="star-pick" onclick="setRating(4)">☆</button>
+              <button class="star-pick" onclick="setRating(5)">☆</button>
             </div>
           </div>
+          <div><label class="rf-lbl">YOUR REVIEW</label><textarea class="rf-ta" id="rf-body" placeholder="Share your thoughts..."></textarea></div>
+          <button class="rf-submit" id="rf-submit" onclick="submitReviewForm()"><span id="rf-submit-text">SUBMIT REVIEW</span><div class="rf-spinner" id="rf-spinner"></div></button>
+          <p class="rf-msg" id="rf-msg"></p>
         </div>
       </div>
     </div>
-
-    <div class="ymal-sec" style="margin-top:24px;">
-      <div class="ymal-hdr"><p class="ymal-title">YOU MAY ALSO LIKE</p></div>
-      <div class="ymal-scroll"><div class="ymal-row" id="modal-ymal-row"></div></div>
-    </div>
-
-    <footer class="footer" style="margin-top:32px;">
-      <h2 class="f-nl-h">STAY IN THE EDIT</h2>
-      <p class="f-nl-sub">First access to new arrivals, exclusive drops.</p>
-      <div class="f-nl-row">
-        <input class="f-nl-inp" id="modal-nl-email" placeholder="Your email">
-        <button class="f-nl-send" onclick="submitNewsletterModal()"><i class="ph-thin ph-arrow-right"></i></button>
-      </div>
-      <p class="nl-msg" id="modal-nl-msg"></p>
-      <p class="f-nl-legal">By submitting your email you agree to receive marketing messages.</p>
-      <div class="f-socials">
-        <a href="#"><i class="ph ph-instagram-logo"></i></a>
-        <a href="#"><i class="ph ph-tiktok-logo"></i></a>
-      </div>
-      <p class="f-copy">&copy; 2025 Janedore.</p>
-    </footer>
   </div>
 </div>
+
+<!-- FIX: You May Also Like in product modal — now renders properly -->
+<div class="ymal-sec" style="margin-top:24px;" id="modal-ymal-sec">
+  <div class="ymal-hdr"><p class="ymal-title">YOU MAY ALSO LIKE</p></div>
+  <div class="ymal-scroll"><div class="ymal-row" id="modal-ymal-row"></div></div>
+</div>
+
+<!-- FIX: Product page footer now matches main page footer fully -->
+<footer class="footer" style="margin-top:32px;">
+  <h2 class="f-nl-h">STAY IN THE EDIT</h2>
+  <p class="f-nl-sub">First access to new arrivals, exclusive drops,<br>and pieces worth knowing about.</p>
+  <div class="f-nl-row">
+    <input class="f-nl-inp" id="modal-nl-email" type="email" placeholder="Your email address">
+    <button class="f-nl-send" onclick="submitNewsletterModal()"><i class="ph-thin ph-arrow-right"></i></button>
+  </div>
+  <p class="nl-msg" id="modal-nl-msg"></p>
+  <p class="f-nl-legal">By submitting your email you agree to receive recurring automated marketing messages from JANEDORE.</p>
+  <div class="f-nav-toggle" onclick="toggleFNav('mfn-shop',this)"><span>SHOP</span><i class="ph ph-caret-down"></i></div>
+  <div class="f-nav-body" id="mfn-shop"><a href="#">New In</a><a href="#">Clothing</a><a href="#">Jewellery</a><a href="#">Bags</a><a href="#">Sunglasses</a></div>
+  <div class="f-nav-toggle" onclick="toggleFNav('mfn-help',this)"><span>HELP</span><i class="ph ph-caret-down"></i></div>
+  <div class="f-nav-body" id="mfn-help"><a href="#">Shipping</a><a href="#">Returns</a><a href="#">Size Guide</a><a href="#">Contact Us</a><a href="#">Privacy Policy</a></div>
+  <div class="f-nav-toggle" onclick="toggleFNav('mfn-about',this)"><span>ABOUT</span><i class="ph ph-caret-down"></i></div>
+  <div class="f-nav-body" id="mfn-about"><a href="#">Our Story</a><a href="#">Stockists</a><a href="#">Careers</a></div>
+  <div class="f-socials">
+    <a href="#"><i class="ph ph-instagram-logo"></i></a>
+    <a href="#"><i class="ph ph-tiktok-logo"></i></a>
+    <a href="#"><i class="ph ph-pinterest-logo"></i></a>
+  </div>
+  <p class="f-copy">&copy; 2025 Janedore. All rights reserved.</p>
+</footer>
+
+
+  </div>
+</div>
+
+<!-- NAV OVERLAY -->
 
 <div class="nav-bg" id="nav-bg" onclick="closeNav()"></div>
 <div class="nav-ov" id="nav-ov">
@@ -730,6 +781,13 @@ var curModal = null;
 var curModalVariant = null;
 var curReviewProductId = null;
 var curRating = 0;
+
+// Slider state
+var sliderIdx = 0;
+var sliderTotal = 0;
+var sliderStartX = 0;
+var sliderDragging = false;
+var sliderDragDelta = 0;
 
 window.renderProducts = function(products) {
   if (products.length > 0) {
@@ -823,9 +881,34 @@ var PROMOS={'JANEDORE10':0.10,'WELCOME15':0.15,'SALE20':0.20};var activePromo=nu
 function chQty(id,sz,d){var it=cartItems.find(i=>i.id===id&&i.size===sz);if(!it)return;it.qty+=d;if(it.qty<=0)cartItems=cartItems.filter(i=>!(i.id===id&&i.size===sz));updCartBadge();renderCart();}
 function rmItem(id,sz){cartItems=cartItems.filter(i=>!(i.id===id&&i.size===sz));updCartBadge();renderCart();}
 function applyPromo(){var inp=document.getElementById('promo-inp'),msg=document.getElementById('promo-msg'),c=(inp.value||'').trim().toUpperCase();if(!c){msg.className='promo-msg err';msg.textContent='Please enter a code.';return;}if(PROMOS[c]){activePromo={code:c,rate:PROMOS[c]};msg.className='promo-msg ok';msg.textContent='Code applied — '+Math.round(PROMOS[c]*100)+'% off!';inp.disabled=true;}else{activePromo=null;msg.className='promo-msg err';msg.textContent='Invalid or expired code.';}renderCart();}
-function openCart(){if(OS.modal)closeModal();renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;lockBody();}
-function closeCart(){document.getElementById('cart-ov').classList.remove('open');document.getElementById('cart-bg').classList.remove('open');OS.cart=false;unlockBody();}
+
+// FIX: openCart from main header — normal behaviour
+function openCart(){
+  renderCart();
+  document.getElementById('cart-ov').classList.add('open');
+  document.getElementById('cart-bg').classList.add('open');
+  OS.cart=true;
+  lockBody();
+}
+
+// FIX: openCart from product modal — keep modal open, layer cart on top
+function openCartFromModal(){
+  renderCart();
+  document.getElementById('cart-ov').classList.add('open');
+  document.getElementById('cart-bg').classList.add('open');
+  OS.cart=true;
+  // Don't lock body again or close modal
+}
+
+function closeCart(){
+  document.getElementById('cart-ov').classList.remove('open');
+  document.getElementById('cart-bg').classList.remove('open');
+  OS.cart=false;
+  if(!OS.modal && !OS.nav) unlockBody();
+}
+
 function proceedToCheckout(){alert('Proceeding to checkout...');}
+
 function addItem(p,sz,variantLabel,variantImgSrc){
   var img=variantImgSrc||p.imgSrc||'';
   var ex=cartItems.find(i=>i.id===p.id&&i.size===sz);
@@ -834,13 +917,86 @@ function addItem(p,sz,variantLabel,variantImgSrc){
   updCartBadge();
 }
 
-function renderYMAL(cId,excId){
-  var row=document.getElementById(cId);if(!row)return;
-  row.innerHTML=CAT.filter(p=>p.id!==excId).slice(0,6).map(p=>
-    '<div class="ymal-card" onclick="openModal(\''+p.id+'\')">'+
-    (p.imgSrc?'<img class="ymal-img" src="'+p.imgSrc+'">':'<div class="ymal-img-ph"></div>')+
+// FIX: renderYMAL — now renders properly in both cart and modal contexts
+function renderYMAL(cId, excId){
+  var row=document.getElementById(cId);
+  if(!row) return;
+  var items = CAT.filter(p => p.id !== excId).slice(0, 6);
+  if(!items.length){
+    row.innerHTML = '';
+    return;
+  }
+  row.innerHTML = items.map(p =>
+    '<div class="ymal-card" onclick="openModal(\''+p.id+'\')">' +
+    (p.imgSrc ? '<img class="ymal-img" src="'+p.imgSrc+'" alt="'+p.name+'">' : '<div class="ymal-img-ph"></div>') +
     '<div class="ymal-info"><p class="ymal-nm">'+(p.name||'')+'</p><p class="ymal-pr">'+(p.price||'')+'</p></div></div>'
   ).join('');
+}
+
+// FIX: Slider — touch/mouse drag to scroll left and right
+function initSlider(){
+  var slider = document.getElementById('modal-slider');
+  var slides = document.getElementById('modal-slides');
+  if(!slider || !slides) return;
+
+  sliderIdx = 0;
+  sliderDragging = false;
+  sliderDragDelta = 0;
+
+  // Touch events
+  slider.addEventListener('touchstart', onSliderTouchStart, {passive:true});
+  slider.addEventListener('touchmove', onSliderTouchMove, {passive:true});
+  slider.addEventListener('touchend', onSliderTouchEnd, {passive:true});
+  // Mouse events (desktop)
+  slider.addEventListener('mousedown', onSliderMouseDown);
+  slider.addEventListener('mousemove', onSliderMouseMove);
+  slider.addEventListener('mouseup', onSliderMouseUp);
+  slider.addEventListener('mouseleave', onSliderMouseUp);
+}
+
+function onSliderTouchStart(e){
+  sliderStartX = e.touches[0].clientX;
+  sliderDragging = true;
+  sliderDragDelta = 0;
+}
+function onSliderTouchMove(e){
+  if(!sliderDragging) return;
+  sliderDragDelta = e.touches[0].clientX - sliderStartX;
+}
+function onSliderTouchEnd(){
+  if(!sliderDragging) return;
+  sliderDragging = false;
+  var threshold = 40;
+  if(sliderDragDelta < -threshold) goSlide(sliderIdx + 1);
+  else if(sliderDragDelta > threshold) goSlide(sliderIdx - 1);
+  sliderDragDelta = 0;
+}
+function onSliderMouseDown(e){
+  sliderStartX = e.clientX;
+  sliderDragging = true;
+  sliderDragDelta = 0;
+}
+function onSliderMouseMove(e){
+  if(!sliderDragging) return;
+  sliderDragDelta = e.clientX - sliderStartX;
+}
+function onSliderMouseUp(){
+  if(!sliderDragging) return;
+  sliderDragging = false;
+  var threshold = 40;
+  if(sliderDragDelta < -threshold) goSlide(sliderIdx + 1);
+  else if(sliderDragDelta > threshold) goSlide(sliderIdx - 1);
+  sliderDragDelta = 0;
+}
+
+function goSlide(idx){
+  if(idx < 0) idx = 0;
+  if(idx >= sliderTotal) idx = sliderTotal - 1;
+  sliderIdx = idx;
+  var slides = document.getElementById('modal-slides');
+  if(slides) slides.style.transform = 'translateX(-' + (sliderIdx * 100) + '%)';
+  var dots = document.querySelectorAll('.modal-dot');
+  dots.forEach((d, i) => d.classList.toggle('on', i === sliderIdx));
 }
 
 function openModal(id){
@@ -849,6 +1005,8 @@ function openModal(id){
   curModal=p;
   curModalVariant=p.variants&&p.variants.length?p.variants[0]:null;
   var imgs=p.images||(p.imgSrc?[p.imgSrc]:[]);
+  sliderTotal = imgs.length;
+  sliderIdx = 0;
   
   document.getElementById('modal-nm').textContent=p.name;
   document.getElementById('modal-pr').textContent=p.price;
@@ -856,14 +1014,37 @@ function openModal(id){
   
   var sl=document.getElementById('modal-slides'),dt=document.getElementById('modal-dots');
   sl.innerHTML='';dt.innerHTML='';
+  sl.style.transform = 'translateX(0)';
+
   imgs.forEach((src,i)=>{
     var slide=document.createElement('div');slide.className='modal-slide';
-    slide.innerHTML='<img src="'+src+'" alt="">';
+    slide.innerHTML='<img src="'+src+'" alt="" draggable="false">';
     sl.appendChild(slide);
     var dot=document.createElement('div');dot.className='modal-dot'+(i===0?' on':'');
     dt.appendChild(dot);
   });
-  
+
+  // Remove old listeners and re-init slider
+  var oldSlider = document.getElementById('modal-slider');
+  var newSlider = oldSlider.cloneNode(false);
+  // Move children
+  while(oldSlider.firstChild) newSlider.appendChild(oldSlider.firstChild);
+  oldSlider.parentNode.replaceChild(newSlider, oldSlider);
+  // Now re-add slides/dots to new slider
+  newSlider.appendChild(sl);
+  newSlider.appendChild(dt);
+  // Assign ids back
+  newSlider.id = 'modal-slider';
+
+  // Re-init touch/drag on fresh element
+  newSlider.addEventListener('touchstart', onSliderTouchStart, {passive:true});
+  newSlider.addEventListener('touchmove', onSliderTouchMove, {passive:true});
+  newSlider.addEventListener('touchend', onSliderTouchEnd, {passive:true});
+  newSlider.addEventListener('mousedown', onSliderMouseDown);
+  newSlider.addEventListener('mousemove', onSliderMouseMove);
+  newSlider.addEventListener('mouseup', onSliderMouseUp);
+  newSlider.addEventListener('mouseleave', onSliderMouseUp);
+
   var varsHtml='';
   if(p.variants){p.variants.forEach((v,i)=>{
     varsHtml+='<div class="modal-v'+(i===0?' on':'')+'" onclick="selectVariant(this,'+i+')">'+
@@ -893,9 +1074,13 @@ function openModal(id){
     });
   }
   
+  // FIX: Reset modal scroll to top
+  document.getElementById('prod-modal').scrollTop = 0;
   document.getElementById('prod-modal').classList.add('open');
   OS.modal=true;lockBody();
-  renderYMAL('modal-ymal-row',p.id);
+
+  // FIX: Render YMAL in modal — using full CAT list, excluding current product
+  renderYMAL('modal-ymal-row', p.id);
 }
 
 function formatReviewDate(ts){
@@ -924,9 +1109,19 @@ function addToBag(){
   closeModal();setTimeout(openCart,150);
 }
 
+// FIX: closeModal — only closes modal, does not redirect anywhere
 function closeModal(){
   document.getElementById('prod-modal').classList.remove('open');
-  OS.modal=false;unlockBody();
+  OS.modal=false;
+  if(!OS.cart && !OS.nav) unlockBody();
+}
+
+// FIX: openNav from modal header — keeps modal open, layers nav on top
+function openNavFromModal(){
+  document.getElementById('nav-ov').classList.add('open');
+  document.getElementById('nav-bg').classList.add('open');
+  OS.nav=true;
+  // Don't close modal, don't unlock/relock body
 }
 
 function toggleAcc(bodyId,btn){
@@ -990,32 +1185,51 @@ function submitReviewForm(){
   });
 }
 
+// FIX: Newsletter success message — cute, on-brand
 function submitNewsletter(){
   var inp=document.getElementById('nl-email'),msg=document.getElementById('nl-msg'),email=inp.value.trim();
   if(!email||!email.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}
-  msg.textContent='Subscribing...';msg.className='nl-msg';msg.style.display='block';
+  msg.textContent='Adding you to the edit...';msg.className='nl-msg';msg.style.display='block';
   window.subscribeEmail(email).then(r=>{
-    if(r.ok){msg.className='nl-msg ok';msg.textContent='Subscribed!';inp.value='';}
-    else{msg.className='nl-msg err';msg.textContent='Error: '+(r.error||'Try again');}
+    if(r.ok){msg.className='nl-msg ok';msg.textContent='You\'re in — welcome to the edit ✨';inp.value='';}
+    else{msg.className='nl-msg err';msg.textContent='Something went wrong, try again.';}
   });
 }
 
+// FIX: Newsletter in modal — same cute message
 function submitNewsletterModal(){
   var inp=document.getElementById('modal-nl-email'),msg=document.getElementById('modal-nl-msg'),email=inp.value.trim();
   if(!email||!email.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}
-  msg.textContent='Subscribing...';msg.className='nl-msg';msg.style.display='block';
+  msg.textContent='Adding you to the edit...';msg.className='nl-msg';msg.style.display='block';
   window.subscribeEmail(email).then(r=>{
-    if(r.ok){msg.className='nl-msg ok';msg.textContent='Subscribed!';inp.value='';}
-    else{msg.className='nl-msg err';msg.textContent='Error: '+(r.error||'Try again');}
+    if(r.ok){msg.className='nl-msg ok';msg.textContent='You\'re in — welcome to the edit ✨';inp.value='';}
+    else{msg.className='nl-msg err';msg.textContent='Something went wrong, try again.';}
   });
 }
 
-function openNav(){if(OS.cart)closeCart();if(OS.modal)closeModal();document.getElementById('nav-ov').classList.add('open');document.getElementById('nav-bg').classList.add('open');OS.nav=true;lockBody();}
-function closeNav(){document.getElementById('nav-ov').classList.remove('open');document.getElementById('nav-bg').classList.remove('open');OS.nav=false;unlockBody();}
+// FIX: openNav from main header — closes modal if open, shows nav
+function openNav(){
+  if(OS.cart) closeCart();
+  if(OS.modal) closeModal();
+  document.getElementById('nav-ov').classList.add('open');
+  document.getElementById('nav-bg').classList.add('open');
+  OS.nav=true;
+  lockBody();
+}
+
+// FIX: closeNav — if modal was open when nav was triggered, keep body locked
+function closeNav(){
+  document.getElementById('nav-ov').classList.remove('open');
+  document.getElementById('nav-bg').classList.remove('open');
+  OS.nav=false;
+  if(!OS.modal && !OS.cart) unlockBody();
+}
+
 function toggleNavSub(id,item){var sub=document.getElementById(id),icon=item.querySelector('i');sub.classList.toggle('open');if(icon)icon.style.transform=sub.classList.contains('open')?'rotate(180deg)':'';}
 function toggleFNav(id,t){var b=document.getElementById(id);b.classList.toggle('open');t.classList.toggle('open');}
 
 updCartBadge();
 </script>
+
 </body>
 </html>
