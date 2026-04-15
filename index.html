@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -271,7 +270,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .modal-dot.on{background:#fff;transform:scale(1.3);}
 .modal-det{padding:20px 20px 0;}
 .modal-nm{font-family:'Driftune',sans-serif;font-size:17px;letter-spacing:2px;color:#111;margin-bottom:4px;}
-/* SKU */
 .modal-sku{font-family:'Manrope',sans-serif;font-size:10px;color:#bbb;letter-spacing:1px;margin-bottom:8px;}
 .modal-pr{font-family:'Manrope',sans-serif;font-size:14px;font-weight:600;color:#111;margin-bottom:16px;}
 .modal-var-lbl{font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;}
@@ -280,7 +278,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .modal-v img{width:100%;height:100%;object-fit:cover;}
 .modal-v.on{border-color:#111;}
 .modal-sz-lbl{font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;}
-/* Size chart link */
 .size-chart-link{font-family:'Manrope',sans-serif;font-size:11px;color:#999;letter-spacing:.5px;text-decoration:underline;cursor:pointer;display:inline-block;margin-bottom:6px;transition:color .2s;}
 .size-chart-link:hover{color:#111;}
 .modal-sz-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
@@ -300,7 +297,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .modal-acc-body{display:none;padding:4px 0 16px;}
 .modal-acc-body.open{display:block;}
 .modal-acc-body p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;}
-/* reviews — name now uses Manrope (body font) per request */
 .reviews-list{display:flex;flex-direction:column;gap:0;}
 .review-item{padding:16px 0;border-bottom:1px solid #f0f0f0;}
 .review-item:last-child{border-bottom:none;}
@@ -371,24 +367,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .nav-ov-x{width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .nav-ov-x i{font-size:22px;color:#111;}
 .nav-scroll{flex:1;overflow-y:auto;padding-bottom:40px;}
-.nav-cats{padding:8px 20px 0;}
-.nav-cat{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;}
-.nav-cat-lbl{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:3px;color:#111;text-decoration:none;}
-.nav-cat i{font-size:18px;color:#ccc;transition:transform .25s;}
-.nav-cat.open i{transform:rotate(180deg);}
-.nav-sub{display:none;padding:6px 0 14px;border-bottom:1px solid #f0f0f0;}
-.nav-sub.open{display:flex;flex-direction:column;gap:12px;}
-.nav-sub a{font-family:'Manrope',sans-serif;font-size:14px;color:#666;text-decoration:none;padding-left:2px;transition:color .2s;}
-.nav-sub a:hover{color:#111;}
-.nav-uv{display:inline-block;background:#1a6fff;color:#fff;font-family:'Driftune',sans-serif;font-size:7px;letter-spacing:1.5px;padding:2px 7px;margin-right:6px;vertical-align:middle;}
-/* Sale row — no arrow, just a link */
-.nav-cat-sale{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;text-decoration:none;}
-.nav-btm{padding:24px 20px 0;display:flex;flex-direction:column;gap:14px;}
-.nav-btm a{font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:.5px;color:#999;text-decoration:none;transition:color .2s;}
-.nav-btm a:hover{color:#111;}
-.nav-soc{display:flex;gap:20px;padding:24px 20px 0;}
-.nav-soc a{font-size:22px;color:#888;text-decoration:none;transition:color .2s;}
-.nav-soc a:hover{color:#111;}
+/* REMOVED ALL MENU CONTENT STYLES — KEEPING SHEET EMPTY */
 </style>
 
 </head>
@@ -403,7 +382,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   <div class="hdr-inner">
     <button class="hdr-menu-text" onclick="openNav()">MENU</button>
     <div class="hdr-logo">
-      <a href="#"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore"></a>
+      <a href="#" onclick="goHome(); return false;"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore"></a>
     </div>
     <button class="hdr-cart-text" onclick="openCart()">
       CART<span class="hdr-cart-count" id="cart-badge">(0)</span>
@@ -475,7 +454,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </footer>
 
 <!-- ── CART ── -->
-
 <div class="cart-bg" id="cart-bg" onclick="closeCart()"></div>
 <div class="cart-ov" id="cart-ov">
   <div class="cart-hdr">
@@ -512,13 +490,11 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 </div>
 
 <!-- ── PRODUCT MODAL ── -->
-
 <div class="prod-modal" id="prod-modal">
   <header class="modal-hdr">
     <div class="hdr-inner">
       <button class="hdr-menu-text" onclick="openNavFromModal()">MENU</button>
       <div class="hdr-logo">
-        <!-- Logo click: close modal, restore scroll position, stay on main page -->
         <a href="javascript:void(0)" onclick="closeModalToHome()"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore"></a>
       </div>
       <button class="hdr-cart-text" onclick="openCartFromModal()">
@@ -542,7 +518,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
         <div class="modal-szs" id="modal-szs"></div>
         <button class="modal-atb-inline" onclick="addToBag()">ADD TO BAG</button>
       </div>
-      <!-- Size chart link (only shown for clothing) -->
       <span class="size-chart-link" id="size-chart-link" onclick="openSizeChart()" style="display:none;">Size chart</span>
       <p id="sz-warn">Please select a size before adding to bag.</p>
       <div class="modal-acc">
@@ -601,7 +576,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
         </div>
       </div>
     </div>
-    <!-- YMAL in modal -->
     <div class="ymal-sec" id="modal-ymal-sec" style="margin-top:24px;">
       <div class="ymal-hdr"><p class="ymal-title">YOU MAY ALSO LIKE</p></div>
       <div class="ymal-scroll"><div class="ymal-row" id="modal-ymal-row"></div></div>
@@ -631,8 +605,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   </div>
 </div>
 
-<!-- ── SIZE CHART PANEL (clothing only) ── -->
-
+<!-- ── SIZE CHART PANEL ── -->
 <div class="sz-chart-bg" id="sz-chart-bg" onclick="closeSizeChart()"></div>
 <div class="sz-chart-panel" id="sz-chart-panel">
   <div class="sz-chart-hdr">
@@ -642,26 +615,14 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
   <div class="sz-chart-body">
     <p class="sz-chart-note"><strong>Chinese sizes</strong> — all measurements in centimetres (cm).</p>
     <table class="sz-table">
-      <thead>
-        <tr>
-          <th>SIZE</th>
-          <th>WAIST (cm)</th>
-          <th>BUST (cm)</th>
-          <th>LENGTH (cm)</th>
-        </tr>
-      </thead>
-      <tbody id="sz-chart-tbody">
-        <!-- populated by JS based on product sizes -->
-      </tbody>
+      <thead><tr><th>SIZE</th><th>WAIST (cm)</th><th>BUST (cm)</th><th>LENGTH (cm)</th></tr></thead>
+      <tbody id="sz-chart-tbody"></tbody>
     </table>
-    <p class="sz-disclaimer">
-      <strong>Please note:</strong> This data was obtained from manually measuring the product. It may be off by 2–3 centimetres. Please strictly follow the size chart to select your size. Do not select directly according to your habits, as these are Chinese sizes and may differ from your usual sizing.
-    </p>
+    <p class="sz-disclaimer"><strong>Please note:</strong> This data was obtained from manually measuring the product. It may be off by 2–3 centimetres. Please strictly follow the size chart to select your size. Do not select directly according to your habits, as these are Chinese sizes and may differ from your usual sizing.</p>
   </div>
 </div>
 
-<!-- ── NAV OVERLAY (slides up like cart) ── -->
-
+<!-- ── NAV OVERLAY (EMPTY SHEET) ── -->
 <div class="nav-bg" id="nav-bg" onclick="closeNav()"></div>
 <div class="nav-ov" id="nav-ov">
   <div class="nav-ov-hdr">
@@ -669,62 +630,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
     <button class="nav-ov-x" onclick="closeNav()"><i class="ph ph-x"></i></button>
   </div>
   <div class="nav-scroll">
-    <div class="nav-cats">
-      <div class="nav-cat" id="nc-new" onclick="toggleNavSub('ns-new','nc-new')">
-        <span class="nav-cat-lbl">NEW IN</span>
-        <i class="ph ph-caret-down"></i>
-      </div>
-      <div class="nav-sub" id="ns-new">
-        <a href="#" onclick="closeNav()">New Clothing</a>
-        <a href="#" onclick="closeNav()">New Jewellery</a>
-        <a href="#" onclick="closeNav()">New Accessories</a>
-      </div>
-      <div class="nav-cat" id="nc-clothing" onclick="toggleNavSub('ns-clothing','nc-clothing')">
-        <span class="nav-cat-lbl">CLOTHING</span>
-        <i class="ph ph-caret-down"></i>
-      </div>
-      <div class="nav-sub" id="ns-clothing">
-        <a href="#" onclick="closeNav()">Sets</a>
-        <a href="#" onclick="closeNav()">Tops</a>
-        <a href="#" onclick="closeNav()">Dresses</a>
-        <a href="#" onclick="closeNav()">Bottoms</a>
-        <a href="#" onclick="closeNav()">Outerwear</a>
-      </div>
-      <div class="nav-cat" id="nc-jewel" onclick="toggleNavSub('ns-jewel','nc-jewel')">
-        <span class="nav-cat-lbl">JEWELLERY</span>
-        <i class="ph ph-caret-down"></i>
-      </div>
-      <div class="nav-sub" id="ns-jewel">
-        <a href="#" onclick="closeNav()">Necklaces</a>
-        <a href="#" onclick="closeNav()">Rings</a>
-        <a href="#" onclick="closeNav()">Bracelets</a>
-        <a href="#" onclick="closeNav()">Earrings</a>
-      </div>
-      <div class="nav-cat" id="nc-acc" onclick="toggleNavSub('ns-acc','nc-acc')">
-        <span class="nav-cat-lbl">ACCESSORIES</span>
-        <i class="ph ph-caret-down"></i>
-      </div>
-      <div class="nav-sub" id="ns-acc">
-        <a href="#" onclick="closeNav()">Bags</a>
-        <a href="#" onclick="closeNav()"><span class="nav-uv">UV-400 / BL+</span>Sunglasses</a>
-        <a href="#" onclick="closeNav()">Hats</a>
-      </div>
-      <a class="nav-cat nav-cat-sale" href="#" onclick="closeNav()">
-        <span class="nav-cat-lbl">SALE</span>
-        <i class="ph ph-arrow-right" style="font-size:16px;color:#ccc;"></i>
-      </a>
-    </div>
-    <div class="nav-btm">
-      <a href="#" onclick="closeNav()">MY ACCOUNT</a>
-      <a href="#" onclick="closeNav()">SIZE GUIDE</a>
-      <a href="#" onclick="closeNav()">SHIPPING &amp; RETURNS</a>
-      <a href="#" onclick="closeNav()">CONTACT US</a>
-    </div>
-    <div class="nav-soc">
-      <a href="#"><i class="ph ph-instagram-logo"></i></a>
-      <a href="#"><i class="ph ph-tiktok-logo"></i></a>
-      <a href="#"><i class="ph ph-pinterest-logo"></i></a>
-    </div>
+    <!-- ALL MENU CONTENT REMOVED — SHEET IS EMPTY AS REQUESTED -->
   </div>
 </div>
 
@@ -734,73 +640,49 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 ───────────────────────────────────────── */
 var CAT=[],cartItems=[],curModal=null,curModalVariant=null,curReviewProductId=null,curRating=0;
 var sliderIdx=0,sliderTotal=0,sliderStartX=0,sliderDragging=false,sliderDragDelta=0;
-// Save main-page scroll position before opening a modal so logo click restores it
 var savedMainScroll=0;
 
 function dbg(msg,type){if(window._dbg)window._dbg(msg,type);}
 
-/* ─────────────────────────────────────────
-   CLOTHING SIZE CHART DATA
-   Sizes keyed by label. Measurements in cm.
-   waist / bust / length ranges given as strings.
-───────────────────────────────────────── */
 var CLOTHING_SIZE_DATA={
   'S': {waist:'60–64', bust:'70–74', length:'40–44'},
   'M': {waist:'64–68', bust:'74–78', length:'40–44'},
   'L': {waist:'68–72', bust:'80–84', length:'40–44'}
 };
-// Fallback row builder for any size not explicitly mapped
 function getSizeRow(sz){
   var d=CLOTHING_SIZE_DATA[sz.toUpperCase()];
   if(d) return d;
-  // Auto-generate approximate values based on index so unknown sizes still show
   var order=['XS','S','M','L','XL','XXL'];
   var idx=order.indexOf(sz.toUpperCase());if(idx<0)idx=2;
-  return{
-    waist:''+(56+idx*4)+'–'+(60+idx*4),
-    bust:''+(66+idx*4)+'–'+(70+idx*4),
-    length:'40–44'
-  };
+  return {waist:''+(56+idx*4)+'–'+(60+idx*4), bust:''+(66+idx*4)+'–'+(70+idx*4), length:'40–44'};
 }
 
 /* ─────────────────────────────────────────
-   PRODUCTS
+   PRODUCTS RENDER
 ───────────────────────────────────────── */
 window.renderProducts=function(products){
   dbg('renderProducts() called. Count: '+products.length,products.length>0?'ok':'err');
   if(products.length>0){
     CAT=products.map(function(p){
-      dbg('Mapping: '+p.id+' name='+(p.name||'MISSING'),'info');
       return{
-        id:p.id,
-        name:p.name||'',
-        price:p.price||'',
+        id:p.id, name:p.name||'', price:p.price||'',
         priceN:p.priceN||parseFloat((p.price||'0').replace(/[^0-9.]/g,''))||0,
-        imgSrc:p.imgSrc||'',
-        images:p.images||(p.imgSrc?[p.imgSrc]:[]),
-        desc:p.description||'',
-        sizes:p.sizes||['S','M','L'],
+        imgSrc:p.imgSrc||'', images:p.images||(p.imgSrc?[p.imgSrc]:[]),
+        desc:p.description||'', sizes:p.sizes||['S','M','L'],
         variants:(p.variants||[]).map(function(v){return{bg:v.bg||'#ccc',imgSrc:v.imgSrc||'',label:v.label||''};}),
-        isFeatured:p.isFeatured||false,
-        isNewArrival:p.isNewArrival||false,
-        category:p.category||'',       // e.g. "clothing", "accessories", etc.
-        sku:p.sku||''
+        isFeatured:p.isFeatured||false, isNewArrival:p.isNewArrival||false,
+        category:p.category||'', sku:p.sku||''
       };
     });
-  } else {
-    CAT=[];
-    dbg('No products — grids will be empty','err');
-  }
-  var featured=CAT.filter(function(p){return p.isFeatured;});
-  var newArrivals=CAT.filter(function(p){return p.isNewArrival;});
-  if(featured.length===0&&CAT.length>0){featured=CAT.slice(0,Math.min(4,CAT.length));}
-  if(newArrivals.length===0&&CAT.length>0){newArrivals=CAT.slice(0,Math.min(4,CAT.length));}
+  } else { CAT=[]; dbg('No products — grids will be empty','err'); }
+  var featured=CAT.filter(p=>p.isFeatured); if(!featured.length&&CAT.length) featured=CAT.slice(0,4);
+  var newArr=CAT.filter(p=>p.isNewArrival); if(!newArr.length&&CAT.length) newArr=CAT.slice(0,4);
   document.getElementById('grid-1-loading').style.display='none';
   document.getElementById('grid-1').style.display='grid';
   document.getElementById('grid-2-loading').style.display='none';
   document.getElementById('grid-2').style.display='grid';
   document.getElementById('grid-1').innerHTML=featured.slice(0,4).map(buildCard).join('');
-  document.getElementById('grid-2').innerHTML=newArrivals.slice(0,4).map(buildCard).join('');
+  document.getElementById('grid-2').innerHTML=newArr.slice(0,4).map(buildCard).join('');
   dbg('Grids rendered.','ok');
 };
 
@@ -811,25 +693,37 @@ function buildCard(p){
 }
 
 /* ─────────────────────────────────────────
+   HOME / SCROLL
+───────────────────────────────────────── */
+function goHome(){
+  // Close any overlays
+  if(OS.cart) closeCart();
+  if(OS.modal) closeModal();
+  if(OS.nav) closeNav();
+  // Scroll to top smoothly
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ─────────────────────────────────────────
    OVERLAY / BODY LOCK
 ───────────────────────────────────────── */
 var OS={cart:false,modal:false,nav:false},savedSY=0;
 function lockBody(){savedSY=window.scrollY;document.body.style.top='-'+savedSY+'px';document.body.classList.add('overlay-open');}
 function unlockBody(){document.body.classList.remove('overlay-open');document.body.style.top='';window.scrollTo(0,savedSY);}
 function parseP(s){return parseFloat((s||'0').replace(/[^0-9.]/g,''))||0;}
-function updCartBadge(){var tot=cartItems.reduce(function(s,i){return s+i.qty;},0);document.getElementById('cart-badge').textContent='('+tot+')';document.getElementById('modal-cart-count').textContent='('+tot+')';}
+function updCartBadge(){var tot=cartItems.reduce((s,i)=>s+i.qty,0);document.getElementById('cart-badge').textContent='('+tot+')';document.getElementById('modal-cart-count').textContent='('+tot+')';}
 
 /* ─────────────────────────────────────────
    CART
 ───────────────────────────────────────── */
 function renderCart(){
   var list=document.getElementById('cart-list'),empty=document.getElementById('cart-empty'),sum=document.getElementById('cart-sum'),promo=document.getElementById('promo-wrap'),ymal=document.getElementById('cart-ymal'),cnt=document.getElementById('cart-cnt');
-  var tot=cartItems.reduce(function(s,i){return s+i.qty;},0);
+  var tot=cartItems.reduce((s,i)=>s+i.qty,0);
   cnt.textContent=tot+(tot===1?' item':' items');
   if(!cartItems.length){list.style.display='none';empty.style.display='flex';sum.style.display='none';promo.style.display='none';ymal.style.display='none';return;}
   empty.style.display='none';list.style.display='block';promo.style.display='block';sum.style.display='flex';ymal.style.display='block';
-  list.innerHTML=cartItems.map(function(it){return'<div class="cart-item">'+(it.imgSrc?'<img class="ci-img" src="'+it.imgSrc+'">':'<div class="ci-img-ph"></div>')+'<div class="ci-info"><p class="ci-name">'+it.name+'</p>'+(it.size?'<p class="ci-size">Size: '+it.size+'</p>':'')+'<p class="ci-price">R '+(it.priceN*it.qty).toFixed(2)+'</p><div class="ci-qty-row"><div class="qty-pill"><button class="qty-btn" onclick="chQty(\''+it.id+'\',\''+it.size+'\',-1)">'+(it.qty===1?'<i class="ph ph-trash"></i>':'-')+'</button><span class="qty-num">'+it.qty+'</span><button class="qty-btn" onclick="chQty(\''+it.id+'\',\''+it.size+'\',1)">+</button></div><button class="ci-rm" onclick="rmItem(\''+it.id+'\',\''+it.size+'\')">Remove</button></div></div></div>';}).join('');
-  var sub=cartItems.reduce(function(s,i){return s+i.priceN*i.qty;},0);
+  list.innerHTML=cartItems.map(it=>'<div class="cart-item">'+(it.imgSrc?'<img class="ci-img" src="'+it.imgSrc+'">':'<div class="ci-img-ph"></div>')+'<div class="ci-info"><p class="ci-name">'+it.name+'</p>'+(it.size?'<p class="ci-size">Size: '+it.size+'</p>':'')+'<p class="ci-price">R '+(it.priceN*it.qty).toFixed(2)+'</p><div class="ci-qty-row"><div class="qty-pill"><button class="qty-btn" onclick="chQty(\''+it.id+'\',\''+it.size+'\',-1)">'+(it.qty===1?'<i class="ph ph-trash"></i>':'-')+'</button><span class="qty-num">'+it.qty+'</span><button class="qty-btn" onclick="chQty(\''+it.id+'\',\''+it.size+'\',1)">+</button></div><button class="ci-rm" onclick="rmItem(\''+it.id+'\',\''+it.size+'\')">Remove</button></div></div></div>').join('');
+  var sub=cartItems.reduce((s,i)=>s+i.priceN*i.qty,0);
   var dAmt=0,dRow=document.getElementById('cs-disc-row');
   if(activePromo){dAmt=sub*activePromo.rate;document.getElementById('cs-disc').textContent='− R '+dAmt.toFixed(2);dRow.style.display='flex';}else{dRow.style.display='none';}
   var after=sub-dAmt,free=after>=750;
@@ -841,35 +735,27 @@ function renderCart(){
 }
 
 var PROMOS={'JANEDORE10':0.10,'WELCOME15':0.15,'SALE20':0.20},activePromo=null;
-function chQty(id,sz,d){var it=cartItems.find(function(i){return i.id===id&&i.size===sz;});if(!it)return;it.qty+=d;if(it.qty<=0)cartItems=cartItems.filter(function(i){return!(i.id===id&&i.size===sz);});updCartBadge();renderCart();}
-function rmItem(id,sz){cartItems=cartItems.filter(function(i){return!(i.id===id&&i.size===sz);});updCartBadge();renderCart();}
+function chQty(id,sz,d){var it=cartItems.find(i=>i.id===id&&i.size===sz);if(!it)return;it.qty+=d;if(it.qty<=0)cartItems=cartItems.filter(i=>!(i.id===id&&i.size===sz));updCartBadge();renderCart();}
+function rmItem(id,sz){cartItems=cartItems.filter(i=>!(i.id===id&&i.size===sz));updCartBadge();renderCart();}
 function applyPromo(){var inp=document.getElementById('promo-inp'),msg=document.getElementById('promo-msg'),c=(inp.value||'').trim().toUpperCase();if(!c){msg.className='promo-msg err';msg.textContent='Please enter a code.';return;}if(PROMOS[c]){activePromo={code:c,rate:PROMOS[c]};msg.className='promo-msg ok';msg.textContent='Code applied — '+Math.round(PROMOS[c]*100)+'% off!';inp.disabled=true;}else{activePromo=null;msg.className='promo-msg err';msg.textContent='Invalid or expired code.';}renderCart();}
 
 function openCart(){renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;lockBody();}
-// From modal — keep modal open, layer cart on top
-function openCartFromModal(){
-  renderCart();
-  document.getElementById('cart-ov').classList.add('open');
-  document.getElementById('cart-bg').classList.add('open');
-  OS.cart=true;
-}
+function openCartFromModal(){renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;}
 function closeCart(){document.getElementById('cart-ov').classList.remove('open');document.getElementById('cart-bg').classList.remove('open');OS.cart=false;if(!OS.modal&&!OS.nav)unlockBody();}
 function proceedToCheckout(){alert('Proceeding to checkout...');}
-function addItem(p,sz,variantLabel,variantImgSrc){var img=variantImgSrc||p.imgSrc||'';var ex=cartItems.find(function(i){return i.id===p.id&&i.size===sz;});if(ex)ex.qty++;else cartItems.push({id:p.id,name:p.name,price:p.price,imgSrc:img,size:sz,variant:variantLabel||'',qty:1,priceN:p.priceN||parseP(p.price)});updCartBadge();}
+function addItem(p,sz,variantLabel,variantImgSrc){var img=variantImgSrc||p.imgSrc||'';var ex=cartItems.find(i=>i.id===p.id&&i.size===sz);if(ex)ex.qty++;else cartItems.push({id:p.id,name:p.name,price:p.price,imgSrc:img,size:sz,variant:variantLabel||'',qty:1,priceN:p.priceN||parseP(p.price)});updCartBadge();}
 
 /* ─────────────────────────────────────────
    YMAL — always populated from CAT
 ───────────────────────────────────────── */
 function renderYMAL(cId,excId){
   var row=document.getElementById(cId);if(!row)return;
-  var items=CAT.filter(function(p){return p.id!==excId;}).slice(0,6);
-  if(!items.length){
-    row.innerHTML='<div style="font-family:Manrope,sans-serif;font-size:12px;color:#bbb;padding:8px 0;">Products loading...</div>';
-    return;
-  }
-  row.innerHTML=items.map(function(p){return'<div class="ymal-card" onclick="openModal(\''+p.id+'\')">'+
+  // Use CAT to populate YMAL, excludes current product if open
+  var items=CAT.filter(p=>p.id!==excId).slice(0,6);
+  if(!items.length){ row.innerHTML='<div style="font-family:Manrope,sans-serif;font-size:12px;color:#bbb;padding:8px 0;">No products yet.</div>'; return; }
+  row.innerHTML=items.map(p=>'<div class="ymal-card" onclick="openModal(\''+p.id+'\')">'+
     (p.imgSrc?'<img class="ymal-img" src="'+p.imgSrc+'" alt="'+p.name+'">':'<div class="ymal-img-ph"></div>')+
-    '<div class="ymal-info"><p class="ymal-nm">'+(p.name||'')+'</p><p class="ymal-pr">'+(p.price||'')+'</p></div></div>';}).join('');
+    '<div class="ymal-info"><p class="ymal-nm">'+(p.name||'')+'</p><p class="ymal-pr">'+(p.price||'')+'</p></div></div>').join('');
 }
 
 /* ─────────────────────────────────────────
@@ -881,45 +767,34 @@ function onSliderTouchEnd(){if(!sliderDragging)return;sliderDragging=false;if(sl
 function onSliderMouseDown(e){sliderStartX=e.clientX;sliderDragging=true;sliderDragDelta=0;}
 function onSliderMouseMove(e){if(!sliderDragging)return;sliderDragDelta=e.clientX-sliderStartX;}
 function onSliderMouseUp(){if(!sliderDragging)return;sliderDragging=false;if(sliderDragDelta<-40)goSlide(sliderIdx+1);else if(sliderDragDelta>40)goSlide(sliderIdx-1);sliderDragDelta=0;}
-function goSlide(idx){if(idx<0)idx=0;if(idx>=sliderTotal)idx=sliderTotal-1;sliderIdx=idx;var slides=document.getElementById('modal-slides');if(slides)slides.style.transform='translateX(-'+(sliderIdx*100)+'%)';document.querySelectorAll('.modal-dot').forEach(function(d,i){d.classList.toggle('on',i===sliderIdx);});}
+function goSlide(idx){if(idx<0)idx=0;if(idx>=sliderTotal)idx=sliderTotal-1;sliderIdx=idx;var slides=document.getElementById('modal-slides');if(slides)slides.style.transform='translateX(-'+(sliderIdx*100)+'%)';document.querySelectorAll('.modal-dot').forEach((d,i)=>d.classList.toggle('on',i===sliderIdx));}
 
 /* ─────────────────────────────────────────
    PRODUCT MODAL
 ───────────────────────────────────────── */
 function isClothing(p){
-  // Treat as clothing if category says so, OR if sizes include clothing-typical values
   if(!p) return false;
   var cat=(p.category||'').toLowerCase();
   if(cat==='clothing'||cat==='tops'||cat==='sets'||cat==='dresses'||cat==='bottoms'||cat==='outerwear') return true;
-  // Fallback: if sizes include S/M/L (not numeric ring sizes etc.)
   var sizes=p.sizes||[];
-  var clothingSizes=['XS','S','M','L','XL','XXL'];
-  return sizes.some(function(sz){return clothingSizes.indexOf((sz||'').toUpperCase())>-1;});
+  return sizes.some(sz=>['XS','S','M','L','XL','XXL'].includes((sz||'').toUpperCase()));
 }
 
 function openModal(id){
-  var p=CAT.find(function(x){return x.id===id;});if(!p){dbg('openModal: not found id='+id,'err');return;}
+  var p=CAT.find(x=>x.id===id);if(!p){dbg('openModal: not found','err');return;}
   if(OS.cart)closeCart();
-
-  // Save main-page scroll before locking
   savedMainScroll=window.scrollY;
-
   curModal=p;curModalVariant=p.variants&&p.variants.length?p.variants[0]:null;
   var imgs=p.images||(p.imgSrc?[p.imgSrc]:[]);
   sliderTotal=imgs.length;sliderIdx=0;
-
-  // Product name + SKU + price
   document.getElementById('modal-nm').textContent=p.name;
   var skuEl=document.getElementById('modal-sku');
-  if(p.sku){skuEl.textContent='SKU: '+p.sku;skuEl.style.display='block';}
-  else{skuEl.style.display='none';}
+  if(p.sku){skuEl.textContent='SKU: '+p.sku;skuEl.style.display='block';}else{skuEl.style.display='none';}
   document.getElementById('modal-pr').textContent=p.price;
   document.getElementById('modal-desc').textContent=p.desc||'Product description coming soon.';
-
-  // Slider
   var sl=document.getElementById('modal-slides'),dt=document.getElementById('modal-dots');
   sl.innerHTML='';dt.innerHTML='';sl.style.transform='translateX(0)';
-  imgs.forEach(function(src,i){
+  imgs.forEach((src,i)=>{
     var slide=document.createElement('div');slide.className='modal-slide';
     slide.innerHTML='<img src="'+src+'" alt="" draggable="false">';sl.appendChild(slide);
     var dot=document.createElement('div');dot.className='modal-dot'+(i===0?' on':'');dt.appendChild(dot);
@@ -935,33 +810,22 @@ function openModal(id){
   fresh.addEventListener('mousemove',onSliderMouseMove);
   fresh.addEventListener('mouseup',onSliderMouseUp);
   fresh.addEventListener('mouseleave',onSliderMouseUp);
-
-  // Variants
   var varsHtml='';
-  if(p.variants){p.variants.forEach(function(v,i){varsHtml+='<div class="modal-v'+(i===0?' on':'')+'" onclick="selectVariant(this,'+i+')">'+
-    (v.imgSrc?'<img src="'+v.imgSrc+'">':'<div style="background:'+(v.bg||'#ccc')+';width:100%;height:100%"></div>')+'</div>';});}
+  if(p.variants){p.variants.forEach((v,i)=>{varsHtml+='<div class="modal-v'+(i===0?' on':'')+'" onclick="selectVariant(this,'+i+')">'+(v.imgSrc?'<img src="'+v.imgSrc+'">':'<div style="background:'+(v.bg||'#ccc')+';width:100%;height:100%"></div>')+'</div>';});}
   document.getElementById('modal-vars').innerHTML=varsHtml;
-
-  // Sizes
   document.getElementById('modal-szs').innerHTML=buildSizeButtons(p.sizes,'modal-sz','pickSz');
-
-  // Size chart link — only for clothing
-  var scLink=document.getElementById('size-chart-link');
-  scLink.style.display=isClothing(p)?'inline-block':'none';
-
-  // Reviews
+  document.getElementById('size-chart-link').style.display=isClothing(p)?'inline-block':'none';
   curReviewProductId=p.id;curRating=0;
-  document.querySelectorAll('.star-pick').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.star-pick').forEach(b=>b.classList.remove('active'));
   document.getElementById('review-form').classList.remove('open');
   document.getElementById('reviews-count').textContent='Loading reviews...';
   document.getElementById('reviews-list').innerHTML='';
-  if(window.loadReviews){window.loadReviews(p.id).then(function(reviews){
+  if(window.loadReviews){window.loadReviews(p.id).then(reviews=>{
     var countEl=document.getElementById('reviews-count'),listEl=document.getElementById('reviews-list');
-    if(!reviews||!reviews.length){countEl.textContent='0 reviews';listEl.innerHTML='<p class="reviews-empty">No reviews yet. Be the first!</p>';return;}
+    if(!reviews||!reviews.length){countEl.textContent='0 reviews';listEl.innerHTML='<p class="reviews-empty">No reviews yet.</p>';return;}
     countEl.textContent=reviews.length+(reviews.length===1?' review':' reviews');
-    listEl.innerHTML=reviews.map(function(r){return'<div class="review-item"><div class="review-top"><span class="review-name">'+(r.name||'Anonymous')+'</span><span class="review-date">'+formatReviewDate(r.createdAt)+'</span></div><div class="review-stars">'+Array(5).fill(0).map(function(_,i){return'<span class="review-star'+(i<r.rating?' filled':'')+'">★</span>';}).join('')+'</div><p class="review-body">'+(r.body||'')+'</p></div>';}).join('');
+    listEl.innerHTML=reviews.map(r=>'<div class="review-item"><div class="review-top"><span class="review-name">'+(r.name||'Anonymous')+'</span><span class="review-date">'+formatReviewDate(r.createdAt)+'</span></div><div class="review-stars">'+Array(5).fill(0).map((_,i)=>'<span class="review-star'+(i<r.rating?' filled':'')+'">★</span>').join('')+'</div><p class="review-body">'+(r.body||'')+'</p></div>').join('');
   });}
-
   document.getElementById('prod-modal').scrollTop=0;
   document.getElementById('prod-modal').classList.add('open');
   OS.modal=true;lockBody();
@@ -969,35 +833,18 @@ function openModal(id){
 }
 
 function buildSizeButtons(sizes,cls,handler){
-  return(sizes||['S','M','L']).map(function(sz){return'<span class="'+cls+'" onclick="'+handler+'(this)">'+sz+'</span>';}).join('');
+  return(sizes||['S','M','L']).map(sz=>'<span class="'+cls+'" onclick="'+handler+'(this)">'+sz+'</span>').join('');
 }
-
 function formatReviewDate(ts){if(!ts)return'';var d=ts&&ts.seconds?new Date(ts.seconds*1000):new Date(ts);return d.toLocaleDateString('en-ZA',{year:'numeric',month:'short',day:'numeric'});}
-function selectVariant(el,idx){document.querySelectorAll('.modal-v').forEach(function(v){v.classList.remove('on');});el.classList.add('on');curModalVariant=curModal.variants[idx];}
-function pickSz(el){document.querySelectorAll('.modal-sz').forEach(function(s){s.classList.remove('on');});el.classList.add('on');}
+function selectVariant(el,idx){document.querySelectorAll('.modal-v').forEach(v=>v.classList.remove('on'));el.classList.add('on');curModalVariant=curModal.variants[idx];}
+function pickSz(el){document.querySelectorAll('.modal-sz').forEach(s=>s.classList.remove('on'));el.classList.add('on');}
 function addToBag(){if(!curModal)return;var sz=document.querySelector('.modal-sz.on');if(!sz){document.getElementById('sz-warn').style.display='block';return;}document.getElementById('sz-warn').style.display='none';addItem(curModal,sz.textContent,curModalVariant?curModalVariant.label:null,curModalVariant?curModalVariant.imgSrc:null);closeModal();setTimeout(openCart,150);}
-
-function closeModal(){
-  document.getElementById('prod-modal').classList.remove('open');
-  OS.modal=false;
-  if(!OS.cart&&!OS.nav)unlockBody();
-}
-
-/* Logo click on product page — close modal, restore scroll exactly where user was */
-function closeModalToHome(){
-  document.getElementById('prod-modal').classList.remove('open');
-  OS.modal=false;
-  // Restore scroll position without unlockBody clobbering it
-  document.body.classList.remove('overlay-open');
-  document.body.style.top='';
-  window.scrollTo(0,savedMainScroll);
-}
-
-function toggleAcc(bodyId,btn){var body=document.getElementById(bodyId);body.classList.toggle('open');btn.classList.toggle('open');}
+function closeModal(){document.getElementById('prod-modal').classList.remove('open');OS.modal=false;if(!OS.cart&&!OS.nav)unlockBody();}
+function closeModalToHome(){document.getElementById('prod-modal').classList.remove('open');OS.modal=false;document.body.classList.remove('overlay-open');document.body.style.top='';window.scrollTo(0,savedMainScroll);}
+function toggleAcc(bodyId,btn){document.getElementById(bodyId).classList.toggle('open');btn.classList.toggle('open');}
 function calcShip(){var res=document.getElementById('ship-result');res.style.display='block';res.textContent='Standard: R75 · Express: R130';}
-function setRating(val){curRating=val;document.querySelectorAll('.star-pick').forEach(function(b,i){b.textContent=i<val?'★':'☆';b.classList.toggle('active',i<val);});}
+function setRating(val){curRating=val;document.querySelectorAll('.star-pick').forEach((b,i)=>{b.textContent=i<val?'★':'☆';b.classList.toggle('active',i<val);});}
 function toggleReviewForm(){document.getElementById('review-form').classList.toggle('open');document.getElementById('review-form-toggle').classList.toggle('open');}
-
 function submitReviewForm(){
   var name=document.getElementById('rf-name').value.trim(),body=document.getElementById('rf-body').value.trim();
   var msg=document.getElementById('rf-msg'),submitBtn=document.getElementById('rf-submit'),submitText=document.getElementById('rf-submit-text'),spinner=document.getElementById('rf-spinner');
@@ -1005,25 +852,21 @@ function submitReviewForm(){
   if(!curRating){msg.className='rf-msg err';msg.textContent='Please select a star rating.';return;}
   if(!body){msg.className='rf-msg err';msg.textContent='Please write a review.';return;}
   submitBtn.disabled=true;submitText.style.display='none';spinner.style.display='block';msg.className='rf-msg';msg.textContent='';
-  window.submitReview(curReviewProductId,name,curRating,body).then(function(r){
+  window.submitReview(curReviewProductId,name,curRating,body).then(r=>{
     submitBtn.disabled=false;submitText.style.display='inline';spinner.style.display='none';
-    if(r.ok){msg.className='rf-msg ok';msg.textContent='Thank you! Your review has been submitted.';document.getElementById('rf-name').value='';document.getElementById('rf-body').value='';curRating=0;document.querySelectorAll('.star-pick').forEach(function(b){b.textContent='☆';b.classList.remove('active');});
-      setTimeout(function(){window.loadReviews(curReviewProductId).then(function(reviews){var countEl=document.getElementById('reviews-count'),listEl=document.getElementById('reviews-list');countEl.textContent=reviews.length+(reviews.length===1?' review':' reviews');listEl.innerHTML=reviews.map(function(r){return'<div class="review-item"><div class="review-top"><span class="review-name">'+(r.name||'Anonymous')+'</span><span class="review-date">'+formatReviewDate(r.createdAt)+'</span></div><div class="review-stars">'+Array(5).fill(0).map(function(_,i){return'<span class="review-star'+(i<r.rating?' filled':'')+'">★</span>';}).join('')+'</div><p class="review-body">'+(r.body||'')+'</p></div>';}).join('');});},800);
-    }else{msg.className='rf-msg err';msg.textContent='Could not submit. Please try again.';}
+    if(r.ok){msg.className='rf-msg ok';msg.textContent='Thank you! Review submitted.';document.getElementById('rf-name').value='';document.getElementById('rf-body').value='';curRating=0;document.querySelectorAll('.star-pick').forEach(b=>{b.textContent='☆';b.classList.remove('active');});
+      setTimeout(()=>window.loadReviews(curReviewProductId).then(reviews=>{var c=document.getElementById('reviews-count'),l=document.getElementById('reviews-list');c.textContent=reviews.length+(reviews.length===1?' review':' reviews');l.innerHTML=reviews.map(r=>'<div class="review-item"><div class="review-top"><span class="review-name">'+(r.name||'Anonymous')+'</span><span class="review-date">'+formatReviewDate(r.createdAt)+'</span></div><div class="review-stars">'+Array(5).fill(0).map((_,i)=>'<span class="review-star'+(i<r.rating?' filled':'')+'">★</span>').join('')+'</div><p class="review-body">'+(r.body||'')+'</p></div>').join('');}),800);
+    }else{msg.className='rf-msg err';msg.textContent='Could not submit. Try again.';}
   });
 }
 
 /* ─────────────────────────────────────────
-   SIZE CHART PANEL
+   SIZE CHART
 ───────────────────────────────────────── */
 function openSizeChart(){
   if(!curModal) return;
   var sizes=curModal.sizes||['S','M','L'];
-  var tbody=document.getElementById('sz-chart-tbody');
-  tbody.innerHTML=sizes.map(function(sz){
-    var d=getSizeRow(sz);
-    return'<tr><td>'+sz+'</td><td>'+d.waist+'</td><td>'+d.bust+'</td><td>'+d.length+'</td></tr>';
-  }).join('');
+  document.getElementById('sz-chart-tbody').innerHTML=sizes.map(sz=>{var d=getSizeRow(sz); return'<tr><td>'+sz+'</td><td>'+d.waist+'</td><td>'+d.bust+'</td><td>'+d.length+'</td></tr>';}).join('');
   document.getElementById('sz-chart-bg').classList.add('open');
   document.getElementById('sz-chart-panel').classList.add('open');
 }
@@ -1035,73 +878,43 @@ function closeSizeChart(){
 /* ─────────────────────────────────────────
    NEWSLETTER
 ───────────────────────────────────────── */
-function submitNewsletter(){var inp=document.getElementById('nl-email'),msg=document.getElementById('nl-msg'),email=inp.value.trim();if(!email||!email.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}msg.textContent='Adding you to the edit...';msg.className='nl-msg';msg.style.display='block';window.subscribeEmail(email).then(function(r){if(r.ok){msg.className='nl-msg ok';msg.textContent="You're in — welcome to the edit ✨";inp.value='';}else{msg.className='nl-msg err';msg.textContent='Something went wrong, try again.';}});}
-function submitNewsletterModal(){var inp=document.getElementById('modal-nl-email'),msg=document.getElementById('modal-nl-msg'),email=inp.value.trim();if(!email||!email.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}msg.textContent='Adding you to the edit...';msg.className='nl-msg';msg.style.display='block';window.subscribeEmail(email).then(function(r){if(r.ok){msg.className='nl-msg ok';msg.textContent="You're in — welcome to the edit ✨";inp.value='';}else{msg.className='nl-msg err';msg.textContent='Something went wrong, try again.';}});}
+function submitNewsletter(){var inp=document.getElementById('nl-email'),msg=document.getElementById('nl-msg'),email=inp.value.trim();if(!email||!email.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}msg.textContent='Adding you...';msg.className='nl-msg';msg.style.display='block';window.subscribeEmail(email).then(r=>{if(r.ok){msg.className='nl-msg ok';msg.textContent="You're in ✨";inp.value='';}else{msg.className='nl-msg err';msg.textContent='Something went wrong.';}});}
+function submitNewsletterModal(){var inp=document.getElementById('modal-nl-email'),msg=document.getElementById('modal-nl-msg'),email=inp.value.trim();if(!email||!email.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}msg.textContent='Adding you...';msg.className='nl-msg';msg.style.display='block';window.subscribeEmail(email).then(r=>{if(r.ok){msg.className='nl-msg ok';msg.textContent="You're in ✨";inp.value='';}else{msg.className='nl-msg err';msg.textContent='Something went wrong.';}});}
 
 /* ─────────────────────────────────────────
-   NAV — now slides up from bottom like cart
+   NAV (EMPTY)
 ───────────────────────────────────────── */
 function openNav(){
   if(OS.cart)closeCart();
   document.getElementById('nav-ov').classList.add('open');
   document.getElementById('nav-bg').classList.add('open');
-  OS.nav=true;
-  lockBody();
+  OS.nav=true; lockBody();
 }
-
-/* From modal — close modal first, restore scroll, then open nav */
 function openNavFromModal(){
-  document.getElementById('prod-modal').classList.remove('open');
-  OS.modal=false;
-  document.body.classList.remove('overlay-open');
-  document.body.style.top='';
-  window.scrollTo(0,savedMainScroll);
-  // Brief delay so modal close animates before nav opens
-  setTimeout(function(){
+  closeModalToHome(); // restores scroll & closes modal
+  setTimeout(()=>{
     document.getElementById('nav-ov').classList.add('open');
     document.getElementById('nav-bg').classList.add('open');
-    OS.nav=true;
-    lockBody();
+    OS.nav=true; lockBody();
   },80);
 }
-
 function closeNav(){
   document.getElementById('nav-ov').classList.remove('open');
   document.getElementById('nav-bg').classList.remove('open');
-  OS.nav=false;
-  if(!OS.modal&&!OS.cart)unlockBody();
+  OS.nav=false; if(!OS.modal&&!OS.cart)unlockBody();
 }
-
-function toggleNavSub(subId,catId){
-  var sub=document.getElementById(subId);
-  var cat=document.getElementById(catId);
-  var isOpen=sub.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.nav-sub').forEach(function(s){s.classList.remove('open');});
-  document.querySelectorAll('.nav-cat').forEach(function(c){c.classList.remove('open');});
-  if(!isOpen){sub.classList.add('open');if(cat)cat.classList.add('open');}
-}
-
-function toggleFNav(id,t){var b=document.getElementById(id);b.classList.toggle('open');t.classList.toggle('open');}
+function toggleFNav(id,t){document.getElementById(id).classList.toggle('open');t.classList.toggle('open');}
 
 /* ─────────────────────────────────────────
    INIT
 ───────────────────────────────────────── */
 updCartBadge();
-
-/* Add SKU to existing hardcoded product if loaded from Firebase with that id.
-   Firebase data takes precedence; this just ensures the SKU is available
-   for the product with id matching what we know. */
 window._knownSKUs={'F00349139':'F00349139'};
-// After products load, backfill any missing SKUs from known list
 var _origRender=window.renderProducts;
 window.renderProducts=function(products){
-  products.forEach(function(p){
-    if(!p.sku&&window._knownSKUs[p.id])p.sku=window._knownSKUs[p.id];
-  });
+  products.forEach(p=>{if(!p.sku&&window._knownSKUs[p.id])p.sku=window._knownSKUs[p.id];});
   _origRender(products);
 };
 </script>
-
 </body>
 </html>
