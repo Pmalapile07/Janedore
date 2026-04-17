@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -7,14 +6,12 @@
 <title>Janedore · Coming Soon</title>
 
 <!-- SEO Meta Tags -->
-
 <meta name="description" content="Janedore - The rarest finds, within reach. Something extraordinary is coming. Sign up to be the first to know when we launch.">
 <meta name="keywords" content="fashion, clothing, accessories, curated fashion, South Africa, coming soon">
 <meta name="author" content="Janedore">
 <meta name="robots" content="index, follow">
 
 <!-- Open Graph / Social Media -->
-
 <meta property="og:title" content="Janedore · Coming Soon">
 <meta property="og:description" content="The rarest finds, within reach. Sign up to be the first to know when we launch.">
 <meta property="og:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
@@ -26,338 +23,331 @@
 <meta name="twitter:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
 
 <!-- Canonical URL -->
-
 <link rel="canonical" href="https://janedore.co.za">
 
 <!-- Theme Color -->
-
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
 <!-- Preconnect -->
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com">
 
-<!-- Fonts -->
-
+<!-- Fonts (Manrope kept) -->
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/phosphor-icons"></script>
 
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html, body {
-  width: 100%;
-  min-height: 100vh;
-  background: #000000;
-  font-family: 'Manrope', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 120px 20px 80px;
-  position: relative;
-}
-
-/* Store owner link */
-.store-owner-link {
-  position: fixed;
-  top: 28px;
-  right: 28px;
-  font-family: 'Manrope', sans-serif;
-  font-size: 10px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.4);
-  text-decoration: none;
-  letter-spacing: 0.3px;
-  transition: color 0.2s;
-  z-index: 10;
-  background: transparent;
-  padding: 6px 0;
-}
-
-.store-owner-link:hover {
-  color: rgba(255, 255, 255, 0.75);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.store-owner-link:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 4px;
-}
-
-.coming-soon-container {
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  animation: fadeIn 1.2s ease-out;
-}
-
-@keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* Logo */
-.logo-wrapper {
-  margin-top: 24px;
-  margin-bottom: 40px;
-}
-
-.logo {
-  width: 100%;
-  max-width: 180px;
-  height: auto;
-  display: block;
-  filter: brightness(0) invert(1);
-  margin: 0 auto;
-}
-
-/* Form */
-.signup-form {
-  width: 100%;
-  margin-bottom: 24px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-@media (min-width: 480px) {
-  .input-group {
-    flex-direction: row;
-    gap: 0;
-  }
-}
-
-.email-input {
-  flex: 1;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 14px 18px;
-  font-family: 'Manrope', sans-serif;
-  font-size: 15px;
-  font-weight: 400;
-  color: #ffffff;
-  outline: none;
-  transition: border-color 0.3s ease;
-  border-radius: 0;
-  -webkit-appearance: none;
-}
-
-.email-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-  font-weight: 300;
-}
-
-.email-input:focus {
-  border-color: #ffffff;
-}
-
-.submit-btn {
-  background: #ffffff;
-  border: 1px solid #ffffff;
-  padding: 14px 28px;
-  font-family: 'Manrope', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #000000;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  border-radius: 0;
-  -webkit-appearance: none;
-}
-
-.submit-btn:hover {
-  background: transparent;
-  color: #ffffff;
-}
-
-.submit-btn:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
-}
-
-.submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Messages */
-.form-message {
-  font-family: 'Manrope', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  min-height: 32px;
-  padding: 8px 0;
-  text-align: left;
-  display: none;
-}
-
-.form-message.show {
-  display: block;
-}
-
-.form-message.success {
-  color: #4ade80;
-}
-
-.form-message.error {
-  color: #f87171;
-}
-
-.form-message.info {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Loading spinner */
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(0, 0, 0, 0.3);
-  border-top-color: #000000;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Legal text */
-.legal-text {
-  font-family: 'Manrope', sans-serif;
-  font-size: 11px;
-  font-weight: 300;
-  color: rgba(255, 255, 255, 0.35);
-  line-height: 1.6;
-  margin-top: 12px;
-  max-width: 400px;
-  text-align: left;
-}
-
-.legal-text a {
-  color: rgba(255, 255, 255, 0.5);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.2s;
-}
-
-.legal-text a:hover {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Footer row with social icons */
-.footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin-top: 48px;
-  flex-wrap: wrap;
-}
-
-.social-link {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 16px;
-  text-decoration: none;
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  min-width: 32px;
-}
-
-.social-link:hover {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.social-link:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
-}
-
-/* Footer */
-.footer-note {
-  font-family: 'Manrope', sans-serif;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.25);
-  margin-left: 8px;
-}
-
-/* Accessibility */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: #ffffff;
-  color: #000000;
-  padding: 8px 16px;
-  z-index: 10000;
-  text-decoration: none;
-  font-family: 'Manrope', sans-serif;
-  font-size: 13px;
-}
-
-.skip-link:focus {
-  top: 0;
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
   * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
-}
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    background: #000000;
+    font-family: 'Manrope', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 20px 80px;
+    position: relative;
+  }
+
+  /* Store owner link */
+  .store-owner-link {
+    position: fixed;
+    top: 28px;
+    right: 28px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+    z-index: 10;
+    background: transparent;
+    padding: 6px 0;
+  }
+
+  .store-owner-link:hover {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .store-owner-link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 4px;
+  }
+
+  .coming-soon-container {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: fadeIn 1.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Logo */
+  .logo-wrapper {
+    margin-top: 24px;
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+    display: block;
+    filter: brightness(0) invert(1);
+    margin: 0 auto;
+  }
+
+  /* Form */
+  .signup-form {
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .input-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .email-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 16px 48px 16px 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+    outline: none;
+    transition: border-color 0.3s ease;
+    -webkit-appearance: none;
+  }
+
+  .email-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
+  }
+
+  .email-input:focus {
+    border-bottom-color: #ffffff;
+  }
+
+  .submit-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    -webkit-appearance: none;
+  }
+
+  .submit-btn:hover {
+    color: #ffffff;
+  }
+
+  .submit-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .submit-btn i {
+    font-size: 24px;
+  }
+
+  .btn-text {
+    display: none;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Messages */
+  .form-message {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    min-height: 32px;
+    padding: 8px 0;
+    text-align: left;
+    display: none;
+  }
+
+  .form-message.show {
+    display: block;
+  }
+
+  .form-message.success {
+    color: #4ade80;
+  }
+
+  .form-message.error {
+    color: #f87171;
+  }
+
+  .form-message.info {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  /* Legal text */
+  .legal-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.35);
+    line-height: 1.6;
+    margin-top: 12px;
+    max-width: 400px;
+    text-align: left;
+  }
+
+  .legal-text a {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+  }
+
+  .legal-text a:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Footer row with social icons */
+  .footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 48px;
+    flex-wrap: wrap;
+  }
+
+  .social-link {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 32px;
+  }
+
+  .social-link:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .social-link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  /* Footer */
+  .footer-note {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    margin-left: 8px;
+  }
+
+  /* Accessibility */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #ffffff;
+    color: #000000;
+    padding: 8px 16px;
+    z-index: 10000;
+    text-decoration: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 </style>
 
 </head>
 <body>
 
 <!-- Store owner login link -->
-
 <a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you the store owner? Login.</a>
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -365,7 +355,6 @@ body {
 <main id="main-content" class="coming-soon-container">
 
   <!-- Logo -->
-
   <div class="logo-wrapper">
     <img class="logo"
          src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
@@ -373,9 +362,8 @@ body {
   </div>
 
   <!-- Email Signup Form -->
-
   <form class="signup-form" id="signup-form" onsubmit="return false;">
-    <div class="input-group">
+    <div class="input-wrapper">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email"
              class="email-input"
@@ -383,8 +371,9 @@ body {
              placeholder="Enter your email"
              aria-label="Email address for launch notification"
              required>
-      <button type="submit" class="submit-btn" id="submit-btn">
-        <span id="btn-text">Notify Me</span>
+      <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
+        <span id="btn-text" class="btn-text">Notify Me</span>
+        <i class="ph ph-caret-right" id="chevron-icon" aria-hidden="true"></i>
         <span id="btn-spinner" class="spinner" style="display:none;"></span>
       </button>
     </div>
@@ -398,7 +387,6 @@ body {
   </form>
 
   <!-- Footer with social icons -->
-
   <div class="footer-row">
     <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
       <i class="ph ph-instagram-logo" aria-hidden="true"></i>
@@ -415,7 +403,6 @@ body {
 </main>
 
 <!-- Firebase Integration -->
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -438,6 +425,7 @@ body {
   const submitBtn = document.getElementById('submit-btn');
   const btnText = document.getElementById('btn-text');
   const btnSpinner = document.getElementById('btn-spinner');
+  const chevronIcon = document.getElementById('chevron-icon');
   const formMessage = document.getElementById('form-message');
 
   const RateLimiter = {
@@ -475,8 +463,13 @@ body {
 
   function setLoading(isLoading) {
     submitBtn.disabled = isLoading;
-    btnText.style.display = isLoading ? 'none' : 'inline';
-    btnSpinner.style.display = isLoading ? 'inline-block' : 'none';
+    if (isLoading) {
+      chevronIcon.style.display = 'none';
+      btnSpinner.style.display = 'inline-block';
+    } else {
+      chevronIcon.style.display = 'block';
+      btnSpinner.style.display = 'none';
+    }
   }
 
   function saveToLocalStorage(email) {
