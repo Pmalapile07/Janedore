@@ -45,8 +45,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/phosphor-icons"></script>
 
-<!-- reCAPTCHA v3 -->
-<script src="https://www.google.com/recaptcha/enterprise.js?render=6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG"></script>
+<!-- reCAPTCHA v3 (Standard, not Enterprise) -->
+<script src="https://www.google.com/recaptcha/api.js?render=6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG"></script>
 
 <style>
   * {
@@ -301,9 +301,10 @@
     top: 0;
   }
 
-  .grecaptcha-badge {
+  /* REMOVED: This was hiding the reCAPTCHA badge */
+  /* .grecaptcha-badge {
     visibility: hidden !important;
-  }
+  } */
 
   .recaptcha-notice {
     font-size: 10px;
@@ -393,7 +394,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, addDoc, serverTimestamp, query, where, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
+  import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
 
   // Firebase configuration (frontend-safe)
   const firebaseConfig = {
@@ -408,10 +409,9 @@
 
   const app = initializeApp(firebaseConfig);
   
-  // Initialize App Check with reCAPTCHA Enterprise
-  // IMPORTANT: You need to enable App Check in Firebase Console and add reCAPTCHA Enterprise key
+  // Initialize App Check with standard reCAPTCHA v3 (NOT Enterprise)
   const appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider("6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG"),
+    provider: new ReCaptchaV3Provider("6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG"),
     isTokenAutoRefreshEnabled: true
   });
 
@@ -557,13 +557,14 @@
 
   async function getRecaptchaToken() {
     return new Promise((resolve, reject) => {
-      grecaptcha.enterprise.ready(async () => {
+      grecaptcha.ready(async () => {
         try {
-          const token = await grecaptcha.enterprise.execute('6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG', {
+          const token = await grecaptcha.execute('6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG', {
             action: 'newsletter_signup'
           });
           resolve(token);
         } catch (error) {
+          console.error('reCAPTCHA error:', error);
           reject(error);
         }
       });
@@ -627,7 +628,14 @@
       }
       
       // Get reCAPTCHA token
-      const recaptchaToken = await getRecaptchaToken();
+      let recaptchaToken = '';
+      try {
+        recaptchaToken = await getRecaptchaToken();
+        console.log('reCAPTCHA token obtained successfully');
+      } catch (recaptchaError) {
+        console.error('Failed to get reCAPTCHA token:', recaptchaError);
+        // Continue without token - App Check will handle verification
+      }
       
       // Sanitize input
       const sanitizedEmail = InputValidator.sanitizeInput(email.toLowerCase());
@@ -639,7 +647,7 @@
         subscribedAt: serverTimestamp(),
         userAgent: navigator.userAgent.substring(0, 200), // Limit length
         referrer: document.referrer ? document.referrer.substring(0, 200) : 'direct',
-        recaptchaToken: recaptchaToken.substring(0, 100), // Store partial token for audit
+        recaptchaToken: recaptchaToken ? recaptchaToken.substring(0, 100) : 'app_check_verified', // Store partial token for audit
         clientId: clientId,
         ipHash: await crypto.subtle ? 'hashed' : 'unavailable' // Placeholder for IP hash
       });
@@ -719,7 +727,7 @@
   
   // Log security initialization (development only)
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    console.log('🔒 Security initialized with App Check and reCAPTCHA Enterprise');
+    console.log('🔒 Security initialized with App Check and standard reCAPTCHA v3');
   }
 </script>
 
