@@ -71,7 +71,7 @@ body {
   position: relative;
 }
 
-/* Store owner link — reduced to 10px, full stop added */
+/* Store owner link */
 .store-owner-link {
   position: fixed;
   top: 28px;
@@ -119,7 +119,7 @@ body {
 /* Logo */
 .logo-wrapper {
   margin-top: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 14px;
 }
 
 .logo {
@@ -131,7 +131,7 @@ body {
   margin: 0 auto;
 }
 
-/* Tagline — COMING SOON removed so tagline now has breathing room below it */
+/* Tagline */
 .tagline {
   font-family: 'Manrope', sans-serif;
   font-size: 13px;
@@ -314,35 +314,6 @@ body {
   outline-offset: 2px;
 }
 
-/* Countdown */
-.countdown {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin: 0 0 40px;
-}
-
-.countdown-item {
-  text-align: center;
-}
-
-.countdown-number {
-  font-family: 'Manrope', sans-serif;
-  font-size: 36px;
-  font-weight: 300;
-  color: #ffffff;
-  line-height: 1.2;
-}
-
-.countdown-label {
-  font-family: 'Manrope', sans-serif;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-}
-
 /* Footer */
 .footer-note {
   font-family: 'Manrope', sans-serif;
@@ -394,7 +365,7 @@ body {
 </head>
 <body>
 
-<!-- Store owner login link — smaller, with full stop -->
+<!-- Store owner login link -->
 
 <a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you the store owner? Login.</a>
 
@@ -410,30 +381,9 @@ body {
          alt="Janedore">
   </div>
 
-  <!-- Tagline — COMING SOON removed, tagline now has its own breathing room -->
+  <!-- Tagline -->
 
   <p class="tagline">The rarest finds, within reach</p>
-
-  <!-- Countdown -->
-
-  <div class="countdown" id="countdown">
-    <div class="countdown-item">
-      <span class="countdown-number" id="days">00</span>
-      <span class="countdown-label">Days</span>
-    </div>
-    <div class="countdown-item">
-      <span class="countdown-number" id="hours">00</span>
-      <span class="countdown-label">Hours</span>
-    </div>
-    <div class="countdown-item">
-      <span class="countdown-number" id="minutes">00</span>
-      <span class="countdown-label">Mins</span>
-    </div>
-    <div class="countdown-item">
-      <span class="countdown-number" id="seconds">00</span>
-      <span class="countdown-label">Secs</span>
-    </div>
-  </div>
 
   <!-- Email Signup Form -->
 
@@ -459,13 +409,13 @@ body {
   <p class="legal-text">
     Be the first to know when we launch. By signing up, you agree to receive
     emails from Janedore. We respect your privacy —
-    <a href="#" aria-label="Unsubscribe information">unsubscribe anytime</a>.
+    <a href="unsubscribe.html" aria-label="Unsubscribe from Janedore emails">unsubscribe anytime</a>.
   </p>
 
   <!-- Social Links -->
 
   <div class="social-links">
-    <a href="#" class="social-link" aria-label="Instagram">
+    <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
       <i class="ph ph-instagram-logo" aria-hidden="true"></i>
     </a>
     <a href="#" class="social-link" aria-label="TikTok">
@@ -626,30 +576,6 @@ body {
   emailInput.addEventListener('input', () => {
     if (formMessage.classList.contains('error')) clearMessage();
   });
-
-  function updateCountdown() {
-    const launchDate = new Date('2025-12-31T23:59:59+02:00').getTime();
-    function update() {
-      const now = new Date().getTime();
-      const distance = launchDate - now;
-      if (distance < 0) {
-        document.getElementById('countdown').style.display = 'none';
-        return;
-      }
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      document.getElementById('days').textContent = String(days).padStart(2, '0');
-      document.getElementById('hours').textContent = String(hours).padStart(2, '0');
-      document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
-      document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
-    }
-    update();
-    setInterval(update, 1000);
-  }
-
-  updateCountdown();
 
   document.querySelector('.footer-note').innerHTML =
     `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
