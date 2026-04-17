@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Janedore · Coming Soon</title>
+
+<!-- SEO Meta Tags -->
+
+<meta name="description" content="Janedore - The rarest finds, within reach. Something extraordinary is coming. Sign up to be the first to know when we launch.">
+<meta name="keywords" content="fashion, clothing, accessories, curated fashion, South Africa, coming soon">
+<meta name="author" content="Janedore">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Social Media -->
+
+<meta property="og:title" content="Janedore · Coming Soon">
+<meta property="og:description" content="The rarest finds, within reach. Sign up to be the first to know when we launch.">
+<meta property="og:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
+<meta property="og:url" content="https://janedore.co.za">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Janedore · Coming Soon">
+<meta name="twitter:description" content="The rarest finds, within reach.">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
+
+<!-- Canonical URL -->
+
+<link rel="canonical" href="https://janedore.co.za">
+
+<!-- Theme Color -->
+
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<!-- Preconnect -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com">
+
+<!-- Fonts -->
+
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/phosphor-icons"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  /* CHANGE 2: tall background — at least 100vh but grows with content */
+  min-height: 100vh;
+  background: #000000;
+  font-family: 'Manrope', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  /* CHANGE 2: push content to true vertical center within the tall page */
+  align-items: center;
+  justify-content: center;
+  /* CHANGE 2: generous top/bottom padding makes the page feel tall */
+  padding: 120px 20px 80px;
+  position: relative;
+}
+
+/* CHANGE 1: space between "Are you a store owner?" and the logo */
+/* Store owner link - top right */
+.store-owner-link {
+  position: fixed; /* fixed so it stays top-right as page scrolls */
+  top: 28px;
+  right: 28px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+  z-index: 10;
+  background: transparent;
+  padding: 6px 0;
+}
+
+.store-owner-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.store-owner-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+}
+
+/* CHANGE 3: logo + signup centred within the page */
+.coming-soon-container {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  animation: fadeIn 1.2s ease-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo */
+.logo-wrapper {
+  /* CHANGE 1: extra top margin so logo sits well below the store-owner link */
+  margin-top: 24px;
+  margin-bottom: 32px;
+}
+
+.logo {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+  margin: 0 auto;
+}
+
+/* Tagline */
+.tagline {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+}
+
+/* COMING SOON text */
+.coming-soon-sub {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin-bottom: 32px;
+  word-spacing: 2px;
+}
+
+/* Form */
+.signup-form {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 480px) {
+  .input-group {
+    flex-direction: row;
+    gap: 0;
+  }
+}
+
+.email-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 14px 18px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.3s ease;
+  border-radius: 0;
+  -webkit-appearance: none;
+}
+
+.email-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 300;
+}
+
+.email-input:focus {
+  border-color: #ffffff;
+}
+
+.submit-btn {
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  padding: 14px 28px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #000000;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  border-radius: 0;
+  -webkit-appearance: none;
+}
+
+.submit-btn:hover {
+  background: transparent;
+  color: #ffffff;
+}
+
+.submit-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Messages */
+.form-message {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  min-height: 32px;
+  padding: 8px 0;
+  text-align: left;
+  display: none;
+}
+
+.form-message.show {
+  display: block;
+}
+
+.form-message.success {
+  color: #4ade80;
+}
+
+.form-message.error {
+  color: #f87171;
+}
+
+.form-message.info {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  border-top-color: #000000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Legal text */
+.legal-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.6;
+  margin-top: 32px;
+  max-width: 400px;
+}
+
+.legal-text a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+
+.legal-text a:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Social links */
+.social-links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.social-link {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 22px;
+  text-decoration: none;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.social-link:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.social-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Countdown */
+.countdown {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin: 20px 0 32px;
+}
+
+.countdown-item {
+  text-align: center;
+}
+
+.countdown-number {
+  font-family: 'Manrope', sans-serif;
+  font-size: 36px;
+  font-weight: 300;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.countdown-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Footer */
+.footer-note {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  margin-top: 48px;
+}
+
+/* Accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #ffffff;
+  color: #000000;
+  padding: 8px 16px;
+  z-index: 10000;
+  text-decoration: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+</style>
+
+</head>
+<body>
+
+<!-- Store owner login link (top right, fixed) -->
+
+<a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you a store owner? Login</a>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<main id="main-content" class="coming-soon-container">
+
+  <!-- Logo -->
+
+  <div class="logo-wrapper">
+    <img class="logo" 
+         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" 
+         alt="Janedore">
+  </div>
+
+  <!-- Tagline -->
+
+  <p class="tagline">The rarest finds, within reach</p>
+
+  <!-- COMING SOON text -->
+
+  <p class="coming-soon-sub">COMING SOON</p>
+
+  <!-- Countdown -->
+
+  <div class="countdown" id="countdown">
+    <div class="countdown-item">
+      <span class="countdown-number" id="days">00</span>
+      <span class="countdown-label">Days</span>
+    </div>
+    <div class="countdown-item">
+      <span class="countdown-number" id="hours">00</span>
+      <span class="countdown-label">Hours</span>
+    </div>
+    <div class="countdown-item">
+      <span class="countdown-number" id="minutes">00</span>
+      <span class="countdown-label">Mins</span>
+    </div>
+    <div class="countdown-item">
+      <span class="countdown-number" id="seconds">00</span>
+      <span class="countdown-label">Secs</span>
+    </div>
+  </div>
+
+  <!-- Email Signup Form -->
+
+  <form class="signup-form" id="signup-form" onsubmit="return false;">
+    <div class="input-group">
+      <label for="email-input" class="sr-only">Email address</label>
+      <input type="email" 
+             class="email-input" 
+             id="email-input" 
+             placeholder="Enter your email" 
+             aria-label="Email address for launch notification"
+             required>
+      <button type="submit" class="submit-btn" id="submit-btn">
+        <span id="btn-text">Notify Me</span>
+        <span id="btn-spinner" class="spinner" style="display:none;"></span>
+      </button>
+    </div>
+    <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
+  </form>
+
+  <!-- Legal -->
+
+  <p class="legal-text">
+    Be the first to know when we launch. By signing up, you agree to receive 
+    emails from Janedore. We respect your privacy — 
+    <a href="#" aria-label="View privacy policy">unsubscribe anytime</a>.
+  </p>
+
+  <!-- Social Links -->
+
+  <div class="social-links">
+    <a href="#" class="social-link" aria-label="Instagram">
+      <i class="ph ph-instagram-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="TikTok">
+      <i class="ph ph-tiktok-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="Pinterest">
+      <i class="ph ph-pinterest-logo" aria-hidden="true"></i>
+    </a>
+  </div>
+
+  <!-- Footer -->
+
+  <p class="footer-note">&copy; 2025 Janedore. All rights reserved.</p>
+
+</main>
+
+<!-- Firebase Integration -->
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const form = document.getElementById('signup-form');
+  const emailInput = document.getElementById('email-input');
+  const submitBtn = document.getElementById('submit-btn');
+  const btnText = document.getElementById('btn-text');
+  const btnSpinner = document.getElementById('btn-spinner');
+  const formMessage = document.getElementById('form-message');
+
+  const RateLimiter = {
+    attempts: {},
+    check(key, limit = 3, windowMs = 60000) {
+      const now = Date.now();
+      this.attempts[key] = this.attempts[key] || [];
+      this.attempts[key] = this.attempts[key].filter(t => now - t < windowMs);
+      if (this.attempts[key].length >= limit) return false;
+      this.attempts[key].push(now);
+      return true;
+    }
+  };
+
+  function sanitizeInput(input) {
+    if (!input) return '';
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function showMessage(text, type) {
+    formMessage.textContent = text;
+    formMessage.className = `form-message show ${type}`;
+  }
+
+  function clearMessage() {
+    formMessage.className = 'form-message';
+    formMessage.textContent = '';
+  }
+
+  function setLoading(isLoading) {
+    submitBtn.disabled = isLoading;
+    btnText.style.display = isLoading ? 'none' : 'inline';
+    btnSpinner.style.display = isLoading ? 'inline-block' : 'none';
+  }
+
+  function saveToLocalStorage(email) {
+    try {
+      const existing = localStorage.getItem('janedore_newsletter_signups');
+      const signups = existing ? JSON.parse(existing) : [];
+      if (!signups.includes(email)) {
+        signups.push(email);
+        localStorage.setItem('janedore_newsletter_signups', JSON.stringify(signups));
+      }
+    } catch (e) {
+      console.error('LocalStorage error:', e);
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+
+    if (!email) {
+      showMessage('Please enter your email address.', 'error');
+      emailInput.focus();
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showMessage('Please enter a valid email address.', 'error');
+      emailInput.focus();
+      return;
+    }
+
+    const clientId = localStorage.getItem('janedore_client_id') || 
+      'client_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('janedore_client_id', clientId);
+
+    if (!RateLimiter.check(clientId + '_signup', 5, 300000)) {
+      showMessage('Too many attempts. Please wait a few minutes.', 'error');
+      return;
+    }
+
+    clearMessage();
+    setLoading(true);
+
+    try {
+      const sanitizedEmail = sanitizeInput(email);
+      await addDoc(collection(db, "newsletter_subscribers"), {
+        email: sanitizedEmail,
+        source: 'coming_soon_page',
+        subscribedAt: serverTimestamp(),
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || 'direct'
+      });
+
+      saveToLocalStorage(sanitizedEmail);
+      showMessage('✓ You\'re on the list! We\'ll notify you when we launch.', 'success');
+      emailInput.value = '';
+
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'coming_soon_signup', {
+          'event_category': 'engagement',
+          'event_label': 'Coming Soon Page'
+        });
+      }
+    } catch (error) {
+      console.error('Firebase error:', error);
+      try {
+        saveToLocalStorage(email);
+        showMessage('✓ You\'re on the list! We\'ll notify you when we launch.', 'success');
+        emailInput.value = '';
+      } catch (e) {
+        showMessage('Something went wrong. Please try again.', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  form.addEventListener('submit', handleSubmit);
+  emailInput.addEventListener('input', () => {
+    if (formMessage.classList.contains('error')) clearMessage();
+  });
+
+  function updateCountdown() {
+    const launchDate = new Date('2025-12-31T23:59:59+02:00').getTime();
+    function update() {
+      const now = new Date().getTime();
+      const distance = launchDate - now;
+      if (distance < 0) {
+        document.getElementById('countdown').style.display = 'none';
+        return;
+      }
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      document.getElementById('days').textContent = String(days).padStart(2, '0');
+      document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+      document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+    }
+    update();
+    setInterval(update, 1000);
+  }
+
+  updateCountdown();
+
+  document.querySelector('.footer-note').innerHTML =
+    `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
+</script>
+
+</body>
+</html>
