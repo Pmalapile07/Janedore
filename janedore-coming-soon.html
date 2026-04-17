@@ -46,9 +46,12 @@
     padding: 0;
   }
 
+  /* Prevent scrolling */
   html, body {
     width: 100%;
-    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
     background: #000000;
     font-family: 'Manrope', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -60,8 +63,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 120px 20px 80px;
+    padding: 0 20px;
     position: relative;
+    overflow-y: auto;  /* allow internal scroll if content overflows (but page won't move) — actually better to keep it centered */
+    overscroll-behavior: none;
+  }
+
+  /* override body fixed to allow flex centering without scroll */
+  body {
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
   }
 
   /* Store owner link */
@@ -102,6 +114,15 @@
     justify-content: center;
     text-align: center;
     animation: fadeIn 1.2s ease-out;
+    height: auto;
+    max-height: 100vh;
+    overflow-y: auto;  /* in case content grows, but no page scroll */
+    padding: 40px 0;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE/Edge */
+  }
+  .coming-soon-container::-webkit-scrollbar {
+    display: none;  /* Chrome/Safari */
   }
 
   @keyframes fadeIn {
@@ -265,44 +286,8 @@
     color: rgba(255, 255, 255, 0.8);
   }
 
-  /* Footer row with social icons */
-  .footer-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    margin-top: 48px;
-    flex-wrap: wrap;
-  }
-
-  .social-link {
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 16px;
-    text-decoration: none;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 32px;
-    min-width: 32px;
-  }
-
-  .social-link:hover {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .social-link:focus-visible {
-    outline: 2px solid #ffffff;
-    outline-offset: 2px;
-  }
-
-  /* Footer */
-  .footer-note {
-    font-family: 'Manrope', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.25);
-    margin-left: 8px;
-  }
+  /* REMOVED: footer-row with social icons and copyright text — completely gone */
+  /* just keep empty space minimal, no footer */
 
   /* Accessibility */
   .skip-link {
@@ -373,7 +358,8 @@
              required>
       <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
         <span id="btn-text" class="btn-text">Notify Me</span>
-        <i class="ph ph-caret-right" id="chevron-icon" aria-hidden="true"></i>
+        <!-- CHANGED: icon from ph-caret-right to ph-arrow-right -->
+        <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
         <span id="btn-spinner" class="spinner" style="display:none;"></span>
       </button>
     </div>
@@ -386,19 +372,8 @@
     </p>
   </form>
 
-  <!-- Footer with social icons -->
-  <div class="footer-row">
-    <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
-      <i class="ph ph-instagram-logo" aria-hidden="true"></i>
-    </a>
-    <a href="#" class="social-link" aria-label="TikTok">
-      <i class="ph ph-tiktok-logo" aria-hidden="true"></i>
-    </a>
-    <a href="#" class="social-link" aria-label="Pinterest">
-      <i class="ph ph-pinterest-logo" aria-hidden="true"></i>
-    </a>
-    <p class="footer-note">&copy; 2025 Janedore. All rights reserved.</p>
-  </div>
+  <!-- FOOTER ROW REMOVED (social icons + copyright) -->
+  <!-- only the container ends, no extra elements -->
 
 </main>
 
@@ -425,7 +400,7 @@
   const submitBtn = document.getElementById('submit-btn');
   const btnText = document.getElementById('btn-text');
   const btnSpinner = document.getElementById('btn-spinner');
-  const chevronIcon = document.getElementById('chevron-icon');
+  const arrowIcon = document.getElementById('arrow-icon');   // updated reference
   const formMessage = document.getElementById('form-message');
 
   const RateLimiter = {
@@ -464,10 +439,10 @@
   function setLoading(isLoading) {
     submitBtn.disabled = isLoading;
     if (isLoading) {
-      chevronIcon.style.display = 'none';
+      arrowIcon.style.display = 'none';
       btnSpinner.style.display = 'inline-block';
     } else {
-      chevronIcon.style.display = 'block';
+      arrowIcon.style.display = 'block';
       btnSpinner.style.display = 'none';
     }
   }
@@ -552,8 +527,30 @@
     if (formMessage.classList.contains('error')) clearMessage();
   });
 
-  document.querySelector('.footer-note').innerHTML =
-    `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
+  // PREVENT PAGE SCROLL (extra insurance)
+  window.addEventListener('scroll', (e) => {
+    window.scrollTo(0, 0);
+  }, { passive: false });
+
+  window.addEventListener('touchmove', (e) => {
+    // allow scrolling only inside the container if needed, but prevent body scroll
+    if (!e.target.closest('.coming-soon-container')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Also prevent wheel on body
+  document.body.addEventListener('wheel', (e) => {
+    const container = document.querySelector('.coming-soon-container');
+    if (container && !container.contains(e.target)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Remove the old copyright line from js (no footer-note anymore)
+  // No need to set .footer-note innerHTML
+
+  // Set initial icon to ph-arrow-right (already in HTML)
 </script>
 
 </body>
