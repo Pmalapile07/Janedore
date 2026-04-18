@@ -71,14 +71,10 @@
     justify-content: center;
     padding: 0 20px;
     position: relative;
-    overflow-y: auto;
-    overscroll-behavior: none;
-  }
-
-  body {
     overflow: hidden;
     height: 100vh;
     margin: 0;
+    overscroll-behavior: none;
   }
 
   .store-owner-link {
@@ -125,13 +121,14 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
+
   .coming-soon-container::-webkit-scrollbar {
     display: none;
   }
 
   @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(20px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0%  { opacity: 0; transform: translateY(20px); }
+    100%{ opacity: 1; transform: translateY(0); }
   }
 
   .logo-wrapper {
@@ -193,7 +190,7 @@
     padding: 8px;
     color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -201,9 +198,7 @@
     -webkit-appearance: none;
   }
 
-  .submit-btn:hover {
-    color: #ffffff;
-  }
+  .submit-btn:hover { color: #ffffff; }
 
   .submit-btn:focus-visible {
     outline: 2px solid #ffffff;
@@ -215,13 +210,7 @@
     cursor: not-allowed;
   }
 
-  .submit-btn i {
-    font-size: 24px;
-  }
-
-  .btn-text {
-    display: none;
-  }
+  .submit-btn i { font-size: 24px; }
 
   .spinner {
     display: inline-block;
@@ -233,9 +222,7 @@
     animation: spin 0.8s linear infinite;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .form-message {
     font-family: 'Manrope', sans-serif;
@@ -247,21 +234,10 @@
     display: none;
   }
 
-  .form-message.show {
-    display: block;
-  }
-
-  .form-message.success {
-    color: #4ade80;
-  }
-
-  .form-message.error {
-    color: #f87171;
-  }
-
-  .form-message.info {
-    color: rgba(255, 255, 255, 0.6);
-  }
+  .form-message.show    { display: block; }
+  .form-message.success { color: #4ade80; }
+  .form-message.error   { color: #f87171; }
+  .form-message.info    { color: rgba(255, 255, 255, 0.6); }
 
   .legal-text {
     font-family: 'Manrope', sans-serif;
@@ -281,8 +257,41 @@
     transition: color 0.2s;
   }
 
-  .legal-text a:hover {
-    color: rgba(255, 255, 255, 0.8);
+  .legal-text a:hover { color: rgba(255, 255, 255, 0.8); }
+
+  .footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 48px;
+    flex-wrap: wrap;
+  }
+
+  .social-link {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 32px;
+  }
+
+  .social-link:hover { color: rgba(255, 255, 255, 0.8); }
+
+  .social-link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  .footer-note {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    margin-left: 8px;
   }
 
   .skip-link {
@@ -298,9 +307,7 @@
     font-size: 13px;
   }
 
-  .skip-link:focus {
-    top: 0;
-  }
+  .skip-link:focus { top: 0; }
 
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -347,7 +354,6 @@
              aria-label="Email address for launch notification"
              required>
       <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
-        <span id="btn-text" class="btn-text">Notify Me</span>
         <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
         <span id="btn-spinner" class="spinner" style="display:none;"></span>
       </button>
@@ -360,19 +366,25 @@
     </p>
   </form>
 
+  <div class="footer-row">
+    <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
+      <i class="ph ph-instagram-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="TikTok">
+      <i class="ph ph-tiktok-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="Pinterest">
+      <i class="ph ph-pinterest-logo" aria-hidden="true"></i>
+    </a>
+    <p class="footer-note" id="footer-note"></p>
+  </div>
+
 </main>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    query,
-    where,
-    getDocs,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
@@ -385,30 +397,37 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db  = getFirestore(app);
 
-  const form = document.getElementById('signup-form');
-  const emailInput = document.getElementById('email-input');
-  const submitBtn = document.getElementById('submit-btn');
-  const btnSpinner = document.getElementById('btn-spinner');
-  const arrowIcon = document.getElementById('arrow-icon');
+  const form        = document.getElementById('signup-form');
+  const emailInput  = document.getElementById('email-input');
+  const submitBtn   = document.getElementById('submit-btn');
+  const btnSpinner  = document.getElementById('btn-spinner');
+  const arrowIcon   = document.getElementById('arrow-icon');
   const formMessage = document.getElementById('form-message');
 
+  // Dynamic copyright year
+  document.getElementById('footer-note').innerHTML =
+    `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
+
+  // ── Rate limiter ──────────────────────────────────────────────────────────
   const RateLimiter = {
     attempts: {},
-    check(key, limit = 3, windowMs = 60000) {
+    check(key, limit = 5, windowMs = 300000) {
       const now = Date.now();
-      this.attempts[key] = this.attempts[key] || [];
-      this.attempts[key] = this.attempts[key].filter(t => now - t < windowMs);
+      this.attempts[key] = (this.attempts[key] || []).filter(t => now - t < windowMs);
       if (this.attempts[key].length >= limit) return false;
       this.attempts[key].push(now);
       return true;
     }
   };
 
-  function sanitizeEmail(email) {
-    // Only sanitize for HTML injection — don't mangle the email value itself
-    return email.trim().toLowerCase();
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function sanitizeInput(input) {
+    if (!input) return '';
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
   }
 
   function isValidEmail(email) {
@@ -427,26 +446,22 @@
 
   function setLoading(isLoading) {
     submitBtn.disabled = isLoading;
-    if (isLoading) {
-      arrowIcon.style.display = 'none';
-      btnSpinner.style.display = 'inline-block';
-    } else {
-      arrowIcon.style.display = 'block';
-      btnSpinner.style.display = 'none';
-    }
+    arrowIcon.style.display  = isLoading ? 'none'         : 'block';
+    btnSpinner.style.display = isLoading ? 'inline-block' : 'none';
   }
 
+  // ── Submit handler ────────────────────────────────────────────────────────
   async function handleSubmit(e) {
     e.preventDefault();
-    const rawEmail = emailInput.value.trim();
+    const email = emailInput.value.trim();
 
-    if (!rawEmail) {
+    if (!email) {
       showMessage('Please enter your email address.', 'error');
       emailInput.focus();
       return;
     }
 
-    if (!isValidEmail(rawEmail)) {
+    if (!isValidEmail(email)) {
       showMessage('Please enter a valid email address.', 'error');
       emailInput.focus();
       return;
@@ -456,7 +471,7 @@
       'client_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('janedore_client_id', clientId);
 
-    if (!RateLimiter.check(clientId + '_signup', 5, 300000)) {
+    if (!RateLimiter.check(clientId + '_signup')) {
       showMessage('Too many attempts. Please wait a few minutes.', 'error');
       return;
     }
@@ -464,49 +479,35 @@
     clearMessage();
     setLoading(true);
 
-    const email = sanitizeEmail(rawEmail);
-
     try {
-      // ── Step 1: Check for duplicate ──────────────────────────────────────
-      const existingQuery = query(
-        collection(db, "newsletter_subscribers"),
-        where("email", "==", email)
-      );
-      const existingSnap = await getDocs(existingQuery);
+      const sanitizedEmail = sanitizeInput(email);
 
-      if (!existingSnap.empty) {
-        showMessage('This email is already on the list.', 'info');
-        setLoading(false);
-        return;
-      }
-
-      // ── Step 2: Write to Firestore ───────────────────────────────────────
       await addDoc(collection(db, "newsletter_subscribers"), {
-        email: email,
+        email: sanitizedEmail,
         source: 'coming_soon_page',
         subscribedAt: serverTimestamp(),
         userAgent: navigator.userAgent,
         referrer: document.referrer || 'direct'
       });
 
-      // Only reach here if the write actually succeeded
+      // Only reached if Firestore write actually succeeded
       showMessage("✓ You're on the list! We'll notify you when we launch.", 'success');
       emailInput.value = '';
 
       if (typeof gtag !== 'undefined') {
         gtag('event', 'coming_soon_signup', {
-          'event_category': 'engagement',
-          'event_label': 'Coming Soon Page'
+          event_category: 'engagement',
+          event_label: 'Coming Soon Page'
         });
       }
 
     } catch (error) {
-      // Log the real error so you can diagnose Firestore rules issues
-      console.error('[Janedore] Firebase subscription error:', error.code, error.message);
+      // Real error — log it so you can see the code in DevTools
+      console.error('[Janedore] Subscription error:', error.code, error.message);
 
       if (error.code === 'permission-denied') {
         showMessage('Unable to subscribe right now — please try again later.', 'error');
-      } else if (error.code === 'unavailable' || error.message?.includes('network')) {
+      } else if (error.code === 'unavailable' || (error.message && error.message.includes('network'))) {
         showMessage('No connection. Please check your internet and try again.', 'error');
       } else {
         showMessage('Something went wrong. Please try again.', 'error');
@@ -521,22 +522,16 @@
     if (formMessage.classList.contains('error')) clearMessage();
   });
 
-  // Prevent page scroll
-  window.addEventListener('scroll', () => {
-    window.scrollTo(0, 0);
-  }, { passive: false });
+  // ── Prevent page scroll ───────────────────────────────────────────────────
+  window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
 
   window.addEventListener('touchmove', (e) => {
-    if (!e.target.closest('.coming-soon-container')) {
-      e.preventDefault();
-    }
+    if (!e.target.closest('.coming-soon-container')) e.preventDefault();
   }, { passive: false });
 
   document.body.addEventListener('wheel', (e) => {
     const container = document.querySelector('.coming-soon-container');
-    if (container && !container.contains(e.target)) {
-      e.preventDefault();
-    }
+    if (container && !container.contains(e.target)) e.preventDefault();
   }, { passive: false });
 </script>
 
