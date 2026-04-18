@@ -1,212 +1,543 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Janedore · Coming Soon</title>
 
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.google.com https://recaptcha.google.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://*.firebaseapp.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseappcheck.googleapis.com https://www.google.com; frame-src 'self' https://www.google.com https://recaptcha.google.com;">
+<!-- SEO Meta Tags -->
+
+<meta name="description" content="Janedore - The rarest finds, within reach. Something extraordinary is coming. Sign up to be the first to know when we launch.">
+<meta name="keywords" content="fashion, clothing, accessories, curated fashion, South Africa, coming soon">
+<meta name="author" content="Janedore">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Social Media -->
+
+<meta property="og:title" content="Janedore · Coming Soon">
+<meta property="og:description" content="The rarest finds, within reach. Sign up to be the first to know when we launch.">
+<meta property="og:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
+<meta property="og:url" content="https://janedore.co.za">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Janedore · Coming Soon">
+<meta name="twitter:description" content="The rarest finds, within reach.">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
+
+<!-- Canonical URL -->
+
+<link rel="canonical" href="https://janedore.co.za">
+
+<!-- Theme Color -->
+
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<!-- Preconnect -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com">
+
+<!-- Fonts -->
 
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://www.google.com/recaptcha/api.js?render=6LflSL0sAAAAALW3QE_97nluvPjgNv0TIsYPhGwx"></script>
+<script src="https://unpkg.com/phosphor-icons"></script>
 
 <style>
-/* (UNCHANGED — your full styling preserved) */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    background: #000000;
+    font-family: 'Manrope', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #000;
-  font-family: 'Manrope', sans-serif;
-}
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    position: relative;
+    overflow-y: auto;
+    overscroll-behavior: none;
+  }
 
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 20px;
-}
+  body {
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
+  }
 
-.coming-soon-container {
-  width: 100%;
-  max-width: 520px;
-  text-align: center;
-}
+  .store-owner-link {
+    position: fixed;
+    top: 28px;
+    right: 28px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+    z-index: 10;
+    background: transparent;
+    padding: 6px 0;
+  }
 
-.logo { width: 180px; filter: brightness(0) invert(1); }
+  .store-owner-link:hover {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 
-.signup-form { width: 100%; }
+  .store-owner-link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 4px;
+  }
 
-.input-wrapper { position: relative; width: 100%; }
+  .coming-soon-container {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: fadeIn 1.2s ease-out;
+    height: auto;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 40px 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .coming-soon-container::-webkit-scrollbar {
+    display: none;
+  }
 
-.email-input {
-  width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-  padding: 16px 48px 16px 0;
-  color: #fff;
-  outline: none;
-}
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
 
-.submit-btn {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #aaa;
-  cursor: pointer;
-}
+  .logo-wrapper {
+    margin-top: 24px;
+    margin-bottom: 40px;
+  }
 
-.form-message {
-  font-size: 12px;
-  min-height: 20px;
-  color: #fff;
-  margin-top: 10px;
-}
+  .logo {
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+    display: block;
+    filter: brightness(0) invert(1);
+    margin: 0 auto;
+  }
 
-.success { color: #4ade80; }
-.error { color: #f87171; }
+  .signup-form {
+    width: 100%;
+    margin-bottom: 24px;
+  }
 
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  display: none;
-}
+  .input-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 8px;
+  }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+  .email-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 16px 48px 16px 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+    outline: none;
+    transition: border-color 0.3s ease;
+    -webkit-appearance: none;
+  }
 
+  .email-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
+  }
+
+  .email-input:focus {
+    border-bottom-color: #ffffff;
+  }
+
+  .submit-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    -webkit-appearance: none;
+  }
+
+  .submit-btn:hover {
+    color: #ffffff;
+  }
+
+  .submit-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .submit-btn i {
+    font-size: 24px;
+  }
+
+  .btn-text {
+    display: none;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .form-message {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    min-height: 32px;
+    padding: 8px 0;
+    text-align: left;
+    display: none;
+  }
+
+  .form-message.show {
+    display: block;
+  }
+
+  .form-message.success {
+    color: #4ade80;
+  }
+
+  .form-message.error {
+    color: #f87171;
+  }
+
+  .form-message.info {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .legal-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.35);
+    line-height: 1.6;
+    margin-top: 12px;
+    max-width: 400px;
+    text-align: left;
+  }
+
+  .legal-text a {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+  }
+
+  .legal-text a:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #ffffff;
+    color: #000000;
+    padding: 8px 16px;
+    z-index: 10000;
+    text-decoration: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 </style>
-</head>
 
+</head>
 <body>
 
-<main class="coming-soon-container">
+<a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you the store owner? Login.</a>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <img class="logo" src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202">
+<main id="main-content" class="coming-soon-container">
 
-  <form id="signup-form">
+  <div class="logo-wrapper">
+    <img class="logo"
+         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
+         alt="Janedore">
+  </div>
 
+  <form class="signup-form" id="signup-form" onsubmit="return false;">
     <div class="input-wrapper">
-      <input id="email-input" type="email" placeholder="Enter your email" class="email-input" required>
-      <button class="submit-btn" type="submit">→</button>
+      <label for="email-input" class="sr-only">Email address</label>
+      <input type="email"
+             class="email-input"
+             id="email-input"
+             placeholder="Enter your email"
+             aria-label="Email address for launch notification"
+             required>
+      <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
+        <span id="btn-text" class="btn-text">Notify Me</span>
+        <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
+        <span id="btn-spinner" class="spinner" style="display:none;"></span>
+      </button>
     </div>
-
-    <div id="form-message" class="form-message"></div>
-
+    <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
+    <p class="legal-text">
+      Be the first to know when we launch. By signing up, you agree to receive
+      emails from Janedore. We respect your privacy —
+      <a href="unsubscribe.html" aria-label="Unsubscribe from Janedore emails">unsubscribe anytime</a>.
+    </p>
   </form>
 
 </main>
 
 <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    where,
+    getDocs,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { initializeAppCheck, ReCaptchaV3Provider } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ"
+  };
 
-const SITE_KEY = "6LflSL0sAAAAALW3QE_97nluvPjgNv0TIsYPhGwx";
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-/* FIREBASE */
-const app = initializeApp({
-  apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-  authDomain: "janedore-9f035.firebaseapp.com",
-  projectId: "janedore-9f035",
-});
+  const form = document.getElementById('signup-form');
+  const emailInput = document.getElementById('email-input');
+  const submitBtn = document.getElementById('submit-btn');
+  const btnSpinner = document.getElementById('btn-spinner');
+  const arrowIcon = document.getElementById('arrow-icon');
+  const formMessage = document.getElementById('form-message');
 
-initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider(SITE_KEY),
-  isTokenAutoRefreshEnabled: true
-});
+  const RateLimiter = {
+    attempts: {},
+    check(key, limit = 3, windowMs = 60000) {
+      const now = Date.now();
+      this.attempts[key] = this.attempts[key] || [];
+      this.attempts[key] = this.attempts[key].filter(t => now - t < windowMs);
+      if (this.attempts[key].length >= limit) return false;
+      this.attempts[key].push(now);
+      return true;
+    }
+  };
 
-const db = getFirestore(app);
+  function sanitizeEmail(email) {
+    // Only sanitize for HTML injection — don't mangle the email value itself
+    return email.trim().toLowerCase();
+  }
 
-/* UI */
-const form = document.getElementById("signup-form");
-const email = document.getElementById("email-input");
-const msg = document.getElementById("form-message");
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
 
-function show(text, type="") {
-  msg.textContent = text;
-  msg.className = "form-message " + type;
-}
+  function showMessage(text, type) {
+    formMessage.textContent = text;
+    formMessage.className = `form-message show ${type}`;
+  }
 
-/* VALIDATION */
-function validEmail(v){
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
+  function clearMessage() {
+    formMessage.className = 'form-message';
+    formMessage.textContent = '';
+  }
 
-/* FIXED RECAPTCHA (NO SILENT FAILS) */
-async function getToken() {
-  return new Promise((resolve, reject) => {
-    if (typeof grecaptcha === "undefined") {
-      return reject("reCAPTCHA not loaded");
+  function setLoading(isLoading) {
+    submitBtn.disabled = isLoading;
+    if (isLoading) {
+      arrowIcon.style.display = 'none';
+      btnSpinner.style.display = 'inline-block';
+    } else {
+      arrowIcon.style.display = 'block';
+      btnSpinner.style.display = 'none';
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const rawEmail = emailInput.value.trim();
+
+    if (!rawEmail) {
+      showMessage('Please enter your email address.', 'error');
+      emailInput.focus();
+      return;
     }
 
-    grecaptcha.ready(async () => {
-      try {
-        const token = await grecaptcha.execute(SITE_KEY, {
-          action: "newsletter_signup"
-        });
+    if (!isValidEmail(rawEmail)) {
+      showMessage('Please enter a valid email address.', 'error');
+      emailInput.focus();
+      return;
+    }
 
-        if (!token) return reject("Empty token");
+    const clientId = localStorage.getItem('janedore_client_id') ||
+      'client_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('janedore_client_id', clientId);
 
-        resolve(token);
+    if (!RateLimiter.check(clientId + '_signup', 5, 300000)) {
+      showMessage('Too many attempts. Please wait a few minutes.', 'error');
+      return;
+    }
 
-      } catch (e) {
-        reject(e.message);
-      }
-    });
-  });
-}
+    clearMessage();
+    setLoading(true);
 
-/* SUBMIT */
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const value = email.value.trim();
-
-  if (!value) return show("Enter email", "error");
-  if (!validEmail(value)) return show("Invalid email", "error");
-
-  show("Submitting...");
-
-  try {
-
-    let token;
+    const email = sanitizeEmail(rawEmail);
 
     try {
-      token = await getToken();
-    } catch (err) {
-      show("Security check failed. Refresh page.", "error");
-      return; // IMPORTANT: stop submission
+      // ── Step 1: Check for duplicate ──────────────────────────────────────
+      const existingQuery = query(
+        collection(db, "newsletter_subscribers"),
+        where("email", "==", email)
+      );
+      const existingSnap = await getDocs(existingQuery);
+
+      if (!existingSnap.empty) {
+        showMessage('This email is already on the list.', 'info');
+        setLoading(false);
+        return;
+      }
+
+      // ── Step 2: Write to Firestore ───────────────────────────────────────
+      await addDoc(collection(db, "newsletter_subscribers"), {
+        email: email,
+        source: 'coming_soon_page',
+        subscribedAt: serverTimestamp(),
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || 'direct'
+      });
+
+      // Only reach here if the write actually succeeded
+      showMessage("✓ You're on the list! We'll notify you when we launch.", 'success');
+      emailInput.value = '';
+
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'coming_soon_signup', {
+          'event_category': 'engagement',
+          'event_label': 'Coming Soon Page'
+        });
+      }
+
+    } catch (error) {
+      // Log the real error so you can diagnose Firestore rules issues
+      console.error('[Janedore] Firebase subscription error:', error.code, error.message);
+
+      if (error.code === 'permission-denied') {
+        showMessage('Unable to subscribe right now — please try again later.', 'error');
+      } else if (error.code === 'unavailable' || error.message?.includes('network')) {
+        showMessage('No connection. Please check your internet and try again.', 'error');
+      } else {
+        showMessage('Something went wrong. Please try again.', 'error');
+      }
+    } finally {
+      setLoading(false);
     }
-
-    await addDoc(collection(db, "newsletter_subscribers"), {
-      email: value,
-      recaptcha: token,
-      created: serverTimestamp()
-    });
-
-    show("You're on the list 💎", "success");
-    email.value = "";
-
-  } catch (err) {
-    show("Error saving email", "error");
-    console.log(err);
   }
-});
 
+  form.addEventListener('submit', handleSubmit);
+  emailInput.addEventListener('input', () => {
+    if (formMessage.classList.contains('error')) clearMessage();
+  });
+
+  // Prevent page scroll
+  window.addEventListener('scroll', () => {
+    window.scrollTo(0, 0);
+  }, { passive: false });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!e.target.closest('.coming-soon-container')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.body.addEventListener('wheel', (e) => {
+    const container = document.querySelector('.coming-soon-container');
+    if (container && !container.contains(e.target)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
 </script>
 
 </body>
