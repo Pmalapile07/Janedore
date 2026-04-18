@@ -383,8 +383,13 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
@@ -406,7 +411,6 @@
   const arrowIcon   = document.getElementById('arrow-icon');
   const formMessage = document.getElementById('form-message');
 
-  // Dynamic copyright year
   document.getElementById('footer-note').innerHTML =
     `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
 
@@ -423,13 +427,6 @@
   };
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  function sanitizeInput(input) {
-    if (!input) return '';
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-  }
-
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
@@ -445,7 +442,7 @@
   }
 
   function setLoading(isLoading) {
-    submitBtn.disabled = isLoading;
+    submitBtn.disabled       = isLoading;
     arrowIcon.style.display  = isLoading ? 'none'         : 'block';
     btnSpinner.style.display = isLoading ? 'inline-block' : 'none';
   }
@@ -453,7 +450,7 @@
   // ── Submit handler ────────────────────────────────────────────────────────
   async function handleSubmit(e) {
     e.preventDefault();
-    const email = emailInput.value.trim();
+    const email = emailInput.value.trim().toLowerCase();
 
     if (!email) {
       showMessage('Please enter your email address.', 'error');
@@ -480,17 +477,30 @@
     setLoading(true);
 
     try {
-      const sanitizedEmail = sanitizeInput(email);
+      // Use the email itself as the document ID so we can do a direct lookup.
+      // This avoids needing a collection query (which would require list permission).
+      // We encode it to make it a safe Firestore doc ID (no dots allowed at top level).
+      const docId  = email.replace(/\./g, '_');
+      const docRef = doc(db, "newsletter_subscribers", docId);
 
-      await addDoc(collection(db, "newsletter_subscribers"), {
-        email: sanitizedEmail,
+      // ── Step 1: Check if already subscribed ──────────────────────────────
+      const existing = await getDoc(docRef);
+
+      if (existing.exists()) {
+        showMessage("You're already on the list — we'll be in touch!", 'info');
+        setLoading(false);
+        return;
+      }
+
+      // ── Step 2: Save new subscriber ───────────────────────────────────────
+      await setDoc(docRef, {
+        email: email,
         source: 'coming_soon_page',
         subscribedAt: serverTimestamp(),
         userAgent: navigator.userAgent,
         referrer: document.referrer || 'direct'
       });
 
-      // Only reached if Firestore write actually succeeded
       showMessage("✓ You're on the list! We'll notify you when we launch.", 'success');
       emailInput.value = '';
 
@@ -502,7 +512,6 @@
       }
 
     } catch (error) {
-      // Real error — log it so you can see the code in DevTools
       console.error('[Janedore] Subscription error:', error.code, error.message);
 
       if (error.code === 'permission-denied') {
