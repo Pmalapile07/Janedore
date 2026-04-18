@@ -55,6 +55,7 @@
     font-family: 'Manrope', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    zoom: 80%;
   }
 
   body {
@@ -68,33 +69,6 @@
     height: 100vh;
     margin: 0;
     overscroll-behavior: none;
-  }
-
-  .store-owner-link {
-    position: fixed;
-    top: 20px;
-    right: 28px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.4);
-    text-decoration: none;
-    letter-spacing: 0.3px;
-    transition: color 0.2s;
-    z-index: 30;
-    background: transparent;
-    padding: 6px 0;
-  }
-
-  .store-owner-link:hover {
-    color: rgba(255, 255, 255, 0.75);
-    text-decoration: underline;
-    text-underline-offset: 4px;
-  }
-
-  .store-owner-link:focus-visible {
-    outline: 2px solid #ffffff;
-    outline-offset: 4px;
   }
 
   .coming-soon-container {
@@ -127,12 +101,12 @@
 
   .logo-wrapper {
     margin-top: 24px;
-    margin-bottom: 8px;  /* reduced to move "Coming soon" up */
+    margin-bottom: 8px;
   }
 
   .logo {
     width: 100%;
-    max-width: 182px;  /* increased by 2px from 180px */
+    max-width: 182px;
     height: auto;
     display: block;
     filter: brightness(0) invert(1);
@@ -168,40 +142,6 @@
     margin-bottom: 24px;
   }
 
-  /* Back arrow row - above social icons, visible when form is shown */
-  .back-row {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    margin-top: 20px;
-    margin-bottom: 8px;
-  }
-
-  .back-row.visible {
-    display: flex;
-  }
-
-  .back-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    padding: 8px;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-appearance: none;
-  }
-
-  .back-btn:hover {
-    color: #ffffff;
-  }
-
-  .back-btn i {
-    font-size: 24px;
-  }
-
   .input-wrapper {
     position: relative;
     width: 100%;
@@ -221,6 +161,16 @@
     outline: none;
     transition: border-color 0.3s ease;
     -webkit-appearance: none;
+  }
+
+  /* Remove yellow autofill background */
+  .email-input:-webkit-autofill,
+  .email-input:-webkit-autofill:hover,
+  .email-input:-webkit-autofill:focus,
+  .email-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #000000 inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 
   .email-input::placeholder {
@@ -311,16 +261,88 @@
 
   .legal-text-newsletter a:hover { color: rgba(255, 255, 255, 0.8); }
 
-  /* Social footer - hidden initially, shown when form is revealed */
-  .social-footer {
+  /* Bottom CTA - fixed at very bottom */
+  .bottom-cta {
+    position: fixed;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .launch-trigger {
+    display: inline-block;
+    background: transparent;
+    border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+    pointer-events: auto;
+    -webkit-appearance: none;
+    background: transparent;
+  }
+
+  .launch-trigger:hover {
+    color: #ffffff;
+  }
+
+  .launch-trigger:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 4px;
+  }
+
+  /* Fixed bottom footer - appears when form is revealed, sits at very bottom like the CTA */
+  .fixed-bottom-footer {
+    position: fixed;
+    bottom: 16px;
+    left: 0;
+    right: 0;
     display: none;
     flex-direction: column;
     align-items: center;
-    margin-top: 32px;
+    justify-content: center;
+    z-index: 25;
+    pointer-events: auto;
   }
 
-  .social-footer.visible {
+  .fixed-bottom-footer.visible {
     display: flex;
+  }
+
+  .back-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .back-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 8px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-appearance: none;
+  }
+
+  .back-btn:hover {
+    color: #ffffff;
+  }
+
+  .back-btn i {
+    font-size: 20px;
   }
 
   .social-icons-row {
@@ -328,6 +350,7 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+    margin-bottom: 6px;
   }
 
   .social-link {
@@ -353,45 +376,6 @@
     font-family: 'Manrope', sans-serif;
     font-size: 11px;
     color: rgba(255, 255, 255, 0.25);
-    margin-top: 8px;
-  }
-
-  /* Bottom CTA - fixed at very bottom */
-  .bottom-cta {
-    position: fixed;
-    bottom: 16px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    z-index: 20;
-    pointer-events: none;
-  }
-
-  .launch-trigger {
-    display: inline-block;
-    background: transparent;
-    border: none;
-    font-family: 'Manrope', sans-serif;
-    font-size: 12px;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.6);
-    text-decoration: none;
-    cursor: pointer;
-    padding: 8px 16px;
-    letter-spacing: 0.3px;
-    transition: color 0.2s;
-    pointer-events: auto;
-    -webkit-appearance: none;
-    background: transparent;
-  }
-
-  .launch-trigger:hover {
-    color: #ffffff;
-  }
-
-  .launch-trigger:focus-visible {
-    outline: 2px solid #ffffff;
-    outline-offset: 4px;
   }
 
   .skip-link {
@@ -436,7 +420,6 @@
 </head>
 <body>
 
-<a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you the store owner?<br>Login.</a>
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
 <main id="main-content" class="coming-soon-container">
@@ -458,6 +441,7 @@
              id="email-input"
              placeholder="Enter your email"
              aria-label="Email address for launch notification"
+             autocomplete="off"
              required>
       <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
         <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
@@ -471,34 +455,32 @@
     </p>
   </form>
 
-  <!-- Back button row (left arrow) - appears above social icons -->
-  <div class="back-row" id="back-row">
+</main>
+
+<!-- Fixed bottom CTA (initial state) -->
+<div class="bottom-cta" id="bottom-cta">
+  <button class="launch-trigger" id="reveal-newsletter-btn" aria-label="Let me know when you launch">Let me know when you launch</button>
+</div>
+
+<!-- Fixed bottom footer (appears when form is revealed) -->
+<div class="fixed-bottom-footer" id="fixed-bottom-footer">
+  <div class="back-row">
     <button class="back-btn" id="back-btn" aria-label="Go back">
       <i class="ph ph-arrow-left" aria-hidden="true"></i>
     </button>
   </div>
-
-  <!-- Social footer - appears when form is revealed -->
-  <div class="social-footer" id="social-footer">
-    <div class="social-icons-row">
-      <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
-        <i class="ph ph-instagram-logo" aria-hidden="true"></i>
-      </a>
-      <a href="#" class="social-link" aria-label="TikTok">
-        <i class="ph ph-tiktok-logo" aria-hidden="true"></i>
-      </a>
-      <a href="#" class="social-link" aria-label="Pinterest">
-        <i class="ph ph-pinterest-logo" aria-hidden="true"></i>
-      </a>
-    </div>
-    <p class="copyright-text" id="copyright-text"></p>
+  <div class="social-icons-row">
+    <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
+      <i class="ph ph-instagram-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="TikTok">
+      <i class="ph ph-tiktok-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="Pinterest">
+      <i class="ph ph-pinterest-logo" aria-hidden="true"></i>
+    </a>
   </div>
-
-</main>
-
-<!-- Fixed bottom CTA -->
-<div class="bottom-cta" id="bottom-cta">
-  <button class="launch-trigger" id="reveal-newsletter-btn" aria-label="Let me know when you launch">Let me know when you launch</button>
+  <p class="copyright-text" id="copyright-text"></p>
 </div>
 
 <script type="module">
@@ -524,40 +506,37 @@
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  const form         = document.getElementById('signup-form');
-  const emailInput   = document.getElementById('email-input');
-  const submitBtn    = document.getElementById('submit-btn');
-  const btnSpinner   = document.getElementById('btn-spinner');
-  const arrowIcon    = document.getElementById('arrow-icon');
-  const formMessage  = document.getElementById('form-message');
-  const revealBtn    = document.getElementById('reveal-newsletter-btn');
-  const backBtn      = document.getElementById('back-btn');
-  const backRow      = document.getElementById('back-row');
-  const socialFooter = document.getElementById('social-footer');
-  const bottomCta    = document.getElementById('bottom-cta');
+  const form          = document.getElementById('signup-form');
+  const emailInput    = document.getElementById('email-input');
+  const submitBtn     = document.getElementById('submit-btn');
+  const btnSpinner    = document.getElementById('btn-spinner');
+  const arrowIcon     = document.getElementById('arrow-icon');
+  const formMessage   = document.getElementById('form-message');
+  const revealBtn     = document.getElementById('reveal-newsletter-btn');
+  const backBtn       = document.getElementById('back-btn');
+  const bottomCta     = document.getElementById('bottom-cta');
+  const fixedFooter   = document.getElementById('fixed-bottom-footer');
   const copyrightText = document.getElementById('copyright-text');
 
   // Set copyright year
   copyrightText.innerHTML = `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
 
-  // Show newsletter form, hide bottom CTA text, show back button and social footer
+  // Show newsletter form, hide bottom CTA, show fixed footer with back button and social
   revealBtn.addEventListener('click', function() {
     form.classList.add('visible');
-    bottomCta.style.display = 'none';  // Hide "Let me know when you launch"
-    backRow.classList.add('visible');
-    socialFooter.classList.add('visible');
+    bottomCta.style.display = 'none';
+    fixedFooter.classList.add('visible');
     
     setTimeout(() => {
       emailInput.focus();
     }, 100);
   });
 
-  // Back button: hide form, show bottom CTA, hide back row and social footer
+  // Back button: hide form, show bottom CTA, hide fixed footer
   backBtn.addEventListener('click', function() {
     form.classList.remove('visible');
     bottomCta.style.display = 'block';
-    backRow.classList.remove('visible');
-    socialFooter.classList.remove('visible');
+    fixedFooter.classList.remove('visible');
     
     // Clear any messages
     formMessage.className = 'form-message';
@@ -673,17 +652,29 @@
     if (formMessage.classList.contains('error')) clearMessage();
   });
 
-  window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
+  window.addEventListener('scroll', () => window.scrollrollTo(To(0,0, 0 0), {), { passive passive:: false });
 
-  window.addEventListener('touchmove', (e) => {
-    if (!e.target.closest('.coming-soon-container')) e.preventDefault();
-  }, { passive: false });
+  window false });
 
-  document.body.addEventListener('wheel', (e) => {
-    const container = document.querySelector('.coming-soon-container');
-    if (container && !container.contains(e.target)) e.preventDefault();
-  }, { passive: false });
-</script>
+  window.addEventListener('.addEventListener('touchmovetouchmove', (', (e)e) => {
+ => {
+    if    if (!e (!e.target.cl.target.closest('.osest('.coming-socoming-soon-containeron-container'))')) e.preventDefault();
+ e.preventDefault();
+  },  }, { passive { passive: false: false });
+
+  });
+
+  document.body document.body.addEventListener('.addEventListener('wheel',wheel', (e (e) =>) => {
+    {
+    const container const container = document = document.querySelector('..querySelector('.comingcoming-so-soon-containeron-container');
+   ');
+    if (container && if (container && !container !container.contains(e.contains(e.target)).target)) e.preventDefault e.preventDefault();
+ ();
+  }, { }, { passive: passive: false });
+ false });
+</script</script>
+
+</>
 
 </body>
 </html>
