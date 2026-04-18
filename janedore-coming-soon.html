@@ -299,7 +299,7 @@
     outline-offset: 4px;
   }
 
-  /* Fixed bottom footer - appears when form is revealed, sits at very bottom like the CTA */
+  /* Fixed bottom footer - appears when form is revealed */
   .fixed-bottom-footer {
     position: fixed;
     bottom: 16px;
@@ -521,7 +521,7 @@
   // Set copyright year
   copyrightText.innerHTML = `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
 
-  // Show newsletter form, hide bottom CTA, show fixed footer with back button and social
+  // Show newsletter form, hide bottom CTA, show fixed footer
   revealBtn.addEventListener('click', function() {
     form.classList.add('visible');
     bottomCta.style.display = 'none';
@@ -652,29 +652,17 @@
     if (formMessage.classList.contains('error')) clearMessage();
   });
 
-  window.addEventListener('scroll', () => window.scrollrollTo(To(0,0, 0 0), {), { passive passive:: false });
+  window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
 
-  window false });
+  window.addEventListener('touchmove', (e) => {
+    if (!e.target.closest('.coming-soon-container')) e.preventDefault();
+  }, { passive: false });
 
-  window.addEventListener('.addEventListener('touchmovetouchmove', (', (e)e) => {
- => {
-    if    if (!e (!e.target.cl.target.closest('.osest('.coming-socoming-soon-containeron-container'))')) e.preventDefault();
- e.preventDefault();
-  },  }, { passive { passive: false: false });
-
-  });
-
-  document.body document.body.addEventListener('.addEventListener('wheel',wheel', (e (e) =>) => {
-    {
-    const container const container = document = document.querySelector('..querySelector('.comingcoming-so-soon-containeron-container');
-   ');
-    if (container && if (container && !container !container.contains(e.contains(e.target)).target)) e.preventDefault e.preventDefault();
- ();
-  }, { }, { passive: passive: false });
- false });
-</script</script>
-
-</>
+  document.body.addEventListener('wheel', (e) => {
+    const container = document.querySelector('.coming-soon-container');
+    if (container && !container.contains(e.target)) e.preventDefault();
+  }, { passive: false });
+</script>
 
 </body>
 </html>
