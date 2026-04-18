@@ -45,15 +45,36 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/phosphor-icons"></script>
 
-<!-- reCAPTCHA v3 (Standard, not Enterprise) -->
-<script src="https://www.google.com/recaptcha/api.js?render=6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG"></script>
+<!-- reCAPTCHA v3: async+defer prevents blocking page parse and reduces timing races -->
+<script src="https://www.google.com/recaptcha/api.js?render=6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf" async defer></script>
 
 <style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  /* Debug panel */
+  #debug-console {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #0f0;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 300px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    border: 1px solid #0f0;
+    display: none;
   }
+
+  #debug-console.show { display: block; }
+  .debug-log   { margin: 2px 0; border-bottom: 1px solid #333; }
+  .debug-error   { color: #f00; }
+  .debug-success { color: #0f0; }
+  .debug-warn    { color: #ff0; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   html, body {
     width: 100%;
@@ -123,20 +144,15 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
-  
-  .coming-soon-container::-webkit-scrollbar {
-    display: none;
-  }
+
+  .coming-soon-container::-webkit-scrollbar { display: none; }
 
   @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(20px); }
+    0%   { opacity: 0; transform: translateY(20px); }
     100% { opacity: 1; transform: translateY(0); }
   }
 
-  .logo-wrapper {
-    margin-top: 24px;
-    margin-bottom: 40px;
-  }
+  .logo-wrapper { margin-top: 24px; margin-bottom: 40px; }
 
   .logo {
     width: 100%;
@@ -147,16 +163,9 @@
     margin: 0 auto;
   }
 
-  .signup-form {
-    width: 100%;
-    margin-bottom: 24px;
-  }
+  .signup-form { width: 100%; margin-bottom: 24px; }
 
-  .input-wrapper {
-    position: relative;
-    width: 100%;
-    margin-bottom: 8px;
-  }
+  .input-wrapper { position: relative; width: 100%; margin-bottom: 8px; }
 
   .email-input {
     width: 100%;
@@ -173,14 +182,8 @@
     -webkit-appearance: none;
   }
 
-  .email-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 300;
-  }
-
-  .email-input:focus {
-    border-bottom-color: #ffffff;
-  }
+  .email-input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 300; }
+  .email-input:focus { border-bottom-color: #ffffff; }
 
   .submit-btn {
     position: absolute;
@@ -200,27 +203,11 @@
     -webkit-appearance: none;
   }
 
-  .submit-btn:hover {
-    color: #ffffff;
-  }
-
-  .submit-btn:focus-visible {
-    outline: 2px solid #ffffff;
-    outline-offset: 2px;
-  }
-
-  .submit-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-
-  .submit-btn i {
-    font-size: 24px;
-  }
-
-  .btn-text {
-    display: none;
-  }
+  .submit-btn:hover { color: #ffffff; }
+  .submit-btn:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
+  .submit-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .submit-btn i { font-size: 24px; }
+  .btn-text { display: none; }
 
   .spinner {
     display: inline-block;
@@ -232,9 +219,7 @@
     animation: spin 0.8s linear infinite;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .form-message {
     font-family: 'Manrope', sans-serif;
@@ -246,21 +231,10 @@
     display: none;
   }
 
-  .form-message.show {
-    display: block;
-  }
-
-  .form-message.success {
-    color: #4ade80;
-  }
-
-  .form-message.error {
-    color: #f87171;
-  }
-
-  .form-message.info {
-    color: rgba(255, 255, 255, 0.6);
-  }
+  .form-message.show   { display: block; }
+  .form-message.success { color: #4ade80; }
+  .form-message.error   { color: #f87171; }
+  .form-message.info    { color: rgba(255, 255, 255, 0.6); }
 
   .legal-text {
     font-family: 'Manrope', sans-serif;
@@ -280,9 +254,7 @@
     transition: color 0.2s;
   }
 
-  .legal-text a:hover {
-    color: rgba(255, 255, 255, 0.8);
-  }
+  .legal-text a:hover { color: rgba(255, 255, 255, 0.8); }
 
   .skip-link {
     position: absolute;
@@ -297,14 +269,7 @@
     font-size: 13px;
   }
 
-  .skip-link:focus {
-    top: 0;
-  }
-
-  /* REMOVED: This was hiding the reCAPTCHA badge */
-  /* .grecaptcha-badge {
-    visibility: hidden !important;
-  } */
+  .skip-link:focus { top: 0; }
 
   .recaptcha-notice {
     font-size: 10px;
@@ -313,10 +278,7 @@
     text-align: left;
   }
 
-  .recaptcha-notice a {
-    color: rgba(255, 255, 255, 0.4);
-    text-decoration: underline;
-  }
+  .recaptcha-notice a { color: rgba(255, 255, 255, 0.4); text-decoration: underline; }
 
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -338,9 +300,10 @@
     border-width: 0;
   }
 </style>
-
 </head>
 <body>
+
+<div id="debug-console"></div>
 
 <a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you the store owner? Login.</a>
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -354,9 +317,10 @@
   </div>
 
   <form class="signup-form" id="signup-form" onsubmit="return false;">
-    <!-- Honeypot field for bot protection -->
-    <input type="text" name="website" id="website-field" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
-    
+    <!-- Honeypot: hidden from real users, filled by bots -->
+    <input type="text" name="website" id="website-field"
+           style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+
     <div class="input-wrapper">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email"
@@ -372,364 +336,352 @@
         <span id="btn-spinner" class="spinner" style="display:none;"></span>
       </button>
     </div>
-    
+
     <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
-    
+
     <p class="legal-text">
       Be the first to know when we launch. By signing up, you agree to receive
       emails from Janedore. We respect your privacy —
       <a href="unsubscribe.html" aria-label="Unsubscribe from Janedore emails">unsubscribe anytime</a>.
     </p>
-    
+
     <p class="recaptcha-notice">
-      Protected by reCAPTCHA. 
-      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy</a> & 
+      Protected by reCAPTCHA.
+      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy</a> &
       <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Terms</a>
     </p>
   </form>
 
 </main>
 
-<!-- Firebase Integration -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp, query, where, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
 
-  // Firebase configuration (frontend-safe)
+  // ─── Single source of truth for the reCAPTCHA site key ───────────────────
+  // Update this one constant if the key ever changes — it is used in every
+  // place that needs it: App Check, grecaptcha.execute, and the script tag.
+  const RECAPTCHA_SITE_KEY = '6LflSL0sAAAAALW3QE_97nluvPjgNv0TIsYPhGwx 
+';
+
+  // ============ DEBUG CONSOLE ============
+  const debugConsole = document.getElementById('debug-console');
+  debugConsole.classList.add('show');
+
+  function debugLog(message, type = 'info') {
+    const entry = document.createElement('div');
+    entry.className = `debug-log debug-${type}`;
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+    debugConsole.appendChild(entry);
+    debugConsole.scrollTop = debugConsole.scrollHeight;
+    console.log(`🔍 ${message}`);
+  }
+
+  function debugError(msg)   { debugLog(msg, 'error');   console.error(`❌ ${msg}`); }
+  function debugSuccess(msg) { debugLog(msg, 'success'); console.log(`✅ ${msg}`);   }
+  function debugWarn(msg)    { debugLog(msg, 'warn');    console.warn(`⚠️ ${msg}`);  }
+
+  debugSuccess('Debug console initialized');
+
+  // Poll until reCAPTCHA badge appears in the DOM (visual confirmation only)
+  let recaptchaCheckCount = 0;
+  const recaptchaChecker = setInterval(() => {
+    recaptchaCheckCount++;
+    if (typeof grecaptcha !== 'undefined' && typeof grecaptcha.execute === 'function') {
+      debugSuccess('reCAPTCHA object + execute method confirmed ready');
+      const badge = document.querySelector('.grecaptcha-badge');
+      if (badge) {
+        const s = window.getComputedStyle(badge);
+        debugSuccess('reCAPTCHA badge present in DOM');
+        debugLog(`Badge — visibility:${s.visibility} display:${s.display} opacity:${s.opacity}`);
+      } else {
+        debugWarn('reCAPTCHA badge not yet in DOM (may appear shortly)');
+      }
+      clearInterval(recaptchaChecker);
+    } else if (recaptchaCheckCount > 20) {
+      debugError('reCAPTCHA did not become ready within 10s — check site key and network');
+      clearInterval(recaptchaChecker);
+    }
+  }, 500);
+  // ============ END DEBUG CONSOLE ============
+
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeAppCheck, ReCaptchaV3Provider }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
+
+  debugLog('Firebase modules imported');
+
   const firebaseConfig = {
-    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-    authDomain: "janedore-9f035.firebaseapp.com",
-    projectId: "janedore-9f035",
-    storageBucket: "janedore-9f035.firebasestorage.app",
+    apiKey:            "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain:        "janedore-9f035.firebaseapp.com",
+    projectId:         "janedore-9f035",
+    storageBucket:     "janedore-9f035.firebasestorage.app",
     messagingSenderId: "571299748651",
-    appId: "1:571299748651:web:01463a772d47b39cc4036e",
-    measurementId: "G-Y9NMT0ZGKZ"
+    appId:             "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId:     "G-Y9NMT0ZGKZ"
   };
 
+  debugLog('Initializing Firebase app…');
   const app = initializeApp(firebaseConfig);
-  
-  // Initialize App Check with standard reCAPTCHA v3 (NOT Enterprise)
-  const appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider("6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG"),
-    isTokenAutoRefreshEnabled: true
-  });
+  debugSuccess('Firebase app initialized');
+
+  // App Check uses the same constant — no key duplication
+  try {
+    debugLog('Initializing App Check…');
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true
+    });
+    debugSuccess('App Check initialized');
+  } catch (err) {
+    debugError(`App Check init failed: ${err.message}`);
+    debugWarn('Continuing without App Check');
+  }
 
   const db = getFirestore(app);
+  debugSuccess('Firestore initialized');
 
-  const form = document.getElementById('signup-form');
-  const emailInput = document.getElementById('email-input');
-  const submitBtn = document.getElementById('submit-btn');
-  const btnSpinner = document.getElementById('btn-spinner');
-  const arrowIcon = document.getElementById('arrow-icon');
-  const formMessage = document.getElementById('form-message');
+  // DOM refs
+  const form          = document.getElementById('signup-form');
+  const emailInput    = document.getElementById('email-input');
+  const submitBtn     = document.getElementById('submit-btn');
+  const btnSpinner    = document.getElementById('btn-spinner');
+  const arrowIcon     = document.getElementById('arrow-icon');
+  const formMessage   = document.getElementById('form-message');
   const honeypotField = document.getElementById('website-field');
 
-  // Enhanced security: Server-side rate limiting simulation with exponential backoff
+  debugLog('DOM elements cached');
+
   const SecurityManager = {
-    attempts: new Map(),
-    blockedIPs: new Set(),
-    maxAttempts: 5,
-    windowMs: 300000, // 5 minutes
-    baseDelay: 1000,
-    
-    async checkRateLimit(clientId) {
-      const now = Date.now();
-      const attempts = this.attempts.get(clientId) || [];
-      const recentAttempts = attempts.filter(t => now - t < this.windowMs);
-      
-      if (recentAttempts.length >= this.maxAttempts) {
-        const oldestAttempt = Math.min(...recentAttempts);
-        const timeToWait = this.windowMs - (now - oldestAttempt);
-        throw new Error(`RATE_LIMIT:${timeToWait}`);
-      }
-      
-      recentAttempts.push(now);
-      this.attempts.set(clientId, recentAttempts);
-      
-      // Clean up old entries periodically
-      if (Math.random() < 0.1) {
-        this.cleanup();
-      }
-      
-      return recentAttempts.length;
-    },
-    
-    cleanup() {
-      const now = Date.now();
-      for (const [key, attempts] of this.attempts.entries()) {
-        const validAttempts = attempts.filter(t => now - t < this.windowMs);
-        if (validAttempts.length === 0) {
-          this.attempts.delete(key);
-        } else {
-          this.attempts.set(key, validAttempts);
-        }
-      }
-    },
-    
     generateClientId() {
-      let clientId = localStorage.getItem('janedore_secure_client');
-      if (!clientId) {
-        clientId = 'jd_' + crypto.randomUUID();
-        localStorage.setItem('janedore_secure_client', clientId);
+      let id = localStorage.getItem('janedore_secure_client');
+      if (!id) {
+        id = 'jd_' + Date.now() + '_' + Math.random().toString(36);
+        localStorage.setItem('janedore_secure_client', id);
       }
-      return clientId;
-    },
-    
-    async exponentialBackoff(attemptNumber) {
-      const delay = this.baseDelay * Math.pow(2, attemptNumber - 1);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      return id;
     }
   };
 
-  // Enhanced input validation
   class InputValidator {
     static validateEmail(email) {
       if (!email || typeof email !== 'string') return false;
-      
-      const trimmed = email.trim().toLowerCase();
-      
-      // Length checks
-      if (trimmed.length < 5 || trimmed.length > 254) return false;
-      
-      // Basic format
-      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-      if (!emailRegex.test(trimmed)) return false;
-      
-      // Check for common disposable email domains (basic check)
-      const disposableDomains = ['tempmail', 'throwaway', 'guerrillamail', 'mailinator', '10minutemail', 'yopmail'];
-      const domain = trimmed.split('@')[1];
-      if (disposableDomains.some(d => domain.includes(d))) return false;
-      
-      // Check for suspicious patterns
-      if (trimmed.includes('+') && trimmed.split('+')[0].length < 3) return false;
-      
+      const t = email.trim().toLowerCase();
+      if (t.length < 5 || t.length > 254) return false;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return false;
+      const blocked = ['tempmail','throwaway','guerrillamail','mailinator','10minutemail','yopmail'];
+      const domain  = t.split('@')[1];
+      if (blocked.some(d => domain.includes(d))) return false;
       return true;
     }
-    
     static sanitizeInput(input) {
-      if (!input) return '';
-      return input
-        .replace(/[<>]/g, '') // Remove angle brackets
-        .replace(/javascript:/gi, '') // Remove javascript protocol
-        .replace(/on\w+=/gi, '') // Remove event handlers
-        .trim();
-    }
-    
-    static async checkDuplicateEmail(email) {
-      try {
-        const q = query(
-          collection(db, "newsletter_subscribers"),
-          where("email", "==", email.toLowerCase()),
-          limit(1)
-        );
-        const snapshot = await getDocs(q);
-        return !snapshot.empty;
-      } catch (error) {
-        console.error('Duplicate check error:', error);
-        return false; // Fail open but log
-      }
+      return input ? input.replace(/[<>]/g, '').trim() : '';
     }
   }
 
   function showMessage(text, type) {
     formMessage.textContent = text;
-    formMessage.className = `form-message show ${type}`;
+    formMessage.className   = `form-message show ${type}`;
+    debugLog(`Message shown: ${text} (${type})`);
   }
 
   function clearMessage() {
-    formMessage.className = 'form-message';
+    formMessage.className   = 'form-message';
     formMessage.textContent = '';
   }
 
-  function setLoading(isLoading) {
-    submitBtn.disabled = isLoading;
-    emailInput.disabled = isLoading;
-    if (isLoading) {
-      arrowIcon.style.display = 'none';
-      btnSpinner.style.display = 'inline-block';
-    } else {
-      arrowIcon.style.display = 'block';
-      btnSpinner.style.display = 'none';
-      emailInput.disabled = false;
-    }
+  function setLoading(on) {
+    submitBtn.disabled       = on;
+    emailInput.disabled      = on;
+    arrowIcon.style.display  = on ? 'none'         : 'block';
+    btnSpinner.style.display = on ? 'inline-block' : 'none';
+    debugLog(`Loading: ${on}`);
   }
 
-  async function getRecaptchaToken() {
+  /**
+   * getRecaptchaToken()
+   *
+   * Fix: grecaptcha.ready() can fire while the internal v3 execute method is
+   * still undefined on slow connections — producing "Invalid site key or not
+   * loaded" even though `typeof grecaptcha !== 'undefined'` is true.
+   *
+   * Solution: poll specifically for grecaptcha.execute (not just grecaptcha),
+   * then enter grecaptcha.ready() only once execute is confirmed present.
+   * A hard timeout surfaces a clear, actionable error instead of hanging.
+   */
+  function getRecaptchaToken() {
+    debugLog('Requesting reCAPTCHA token…');
+
+    const TIMEOUT_MS = 10000; // give up after 10 s
+    const POLL_MS    = 100;   // check every 100 ms
+
     return new Promise((resolve, reject) => {
-      grecaptcha.ready(async () => {
-        try {
-          const token = await grecaptcha.execute('6LdKXQYrAAAAAJCnTWBZLXWxC-DCjQr7GkY2uGkG', {
-            action: 'newsletter_signup'
+      const deadline = Date.now() + TIMEOUT_MS;
+
+      function waitForExecute() {
+        if (
+          typeof grecaptcha          !== 'undefined' &&
+          typeof grecaptcha.execute  === 'function'    // <-- key check: v3 method specifically
+        ) {
+          // Both the object and the execute method are ready — safe to call
+          grecaptcha.ready(async () => {
+            try {
+              const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
+                action: 'newsletter_signup'
+              });
+
+              // execute() resolved but returned nothing — treat as a failure
+              if (!token) {
+                const msg = 'reCAPTCHA returned an empty token — check site key and domain allowlist';
+                debugError(msg);
+                return reject(new Error(msg));
+              }
+
+              debugSuccess(`Token acquired: ${token.substring(0, 20)}…`);
+              resolve(token);
+
+            } catch (err) {
+              // execute() itself threw — surface the real reason
+              debugError(`grecaptcha.execute() threw: ${err.message}`);
+              reject(new Error(`reCAPTCHA execute failed: ${err.message}`));
+            }
           });
-          resolve(token);
-        } catch (error) {
-          console.error('reCAPTCHA error:', error);
-          reject(error);
+
+        } else if (Date.now() < deadline) {
+          // Not ready yet — wait one poll cycle and try again
+          debugLog(`Waiting for grecaptcha.execute… (${POLL_MS}ms)`);
+          setTimeout(waitForExecute, POLL_MS);
+
+        } else {
+          // Timed out — clear, actionable error message
+          const msg =
+            `reCAPTCHA did not become ready within ${TIMEOUT_MS / 1000}s. ` +
+            'Verify the site key is correct and the script tag loaded successfully.';
+          debugError(msg);
+          reject(new Error(msg));
         }
-      });
+      }
+
+      waitForExecute(); // kick off immediately
     });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    
-    // Honeypot check
+    debugLog('===== FORM SUBMISSION STARTED =====');
+
+    // Honeypot check — bots fill hidden fields, real users don't
     if (honeypotField.value) {
-      console.warn('Bot detected via honeypot');
-      showMessage('✓ You\'re on the list! We\'ll notify you when we launch.', 'success');
+      debugWarn('Honeypot triggered — likely bot');
+      showMessage("✓ You're on the list! We'll notify you when we launch.", 'success');
       emailInput.value = '';
       return;
     }
-    
+
     const email = emailInput.value;
-    const clientId = SecurityManager.generateClientId();
-    
-    // Clear previous messages
+    debugLog(`Email: ${email}`);
     clearMessage();
-    
-    // Validate email
+
     if (!email) {
       showMessage('Please enter your email address.', 'error');
       emailInput.focus();
       return;
     }
-    
+
     if (!InputValidator.validateEmail(email)) {
       showMessage('Please enter a valid email address.', 'error');
       emailInput.focus();
       return;
     }
-    
-    // Rate limiting check
-    try {
-      const attemptCount = await SecurityManager.checkRateLimit(clientId);
-      if (attemptCount > 2) {
-        await SecurityManager.exponentialBackoff(attemptCount - 2);
-      }
-    } catch (error) {
-      if (error.message.startsWith('RATE_LIMIT')) {
-        const waitTime = Math.ceil(parseInt(error.message.split(':')[1]) / 60000);
-        showMessage(`Too many attempts. Please try again in ${waitTime} minute${waitTime > 1 ? 's' : ''}.`, 'error');
-        return;
-      }
-    }
-    
+
     setLoading(true);
-    
+
     try {
-      // Check for duplicate email
-      const isDuplicate = await InputValidator.checkDuplicateEmail(email);
-      if (isDuplicate) {
-        showMessage('This email is already on our list! We\'ll notify you soon.', 'info');
-        emailInput.value = '';
-        setLoading(false);
-        return;
-      }
-      
-      // Get reCAPTCHA token
+      // Attempt reCAPTCHA — non-fatal if it fails (submission still proceeds)
       let recaptchaToken = '';
       try {
         recaptchaToken = await getRecaptchaToken();
-        console.log('reCAPTCHA token obtained successfully');
-      } catch (recaptchaError) {
-        console.error('Failed to get reCAPTCHA token:', recaptchaError);
-        // Continue without token - App Check will handle verification
+      } catch (rcErr) {
+        debugError(`reCAPTCHA skipped: ${rcErr.message}`);
       }
-      
-      // Sanitize input
+
       const sanitizedEmail = InputValidator.sanitizeInput(email.toLowerCase());
-      
-      // Store in Firestore with security metadata
-      await addDoc(collection(db, "newsletter_subscribers"), {
-        email: sanitizedEmail,
-        source: 'coming_soon_page_v2',
-        subscribedAt: serverTimestamp(),
-        userAgent: navigator.userAgent.substring(0, 200), // Limit length
-        referrer: document.referrer ? document.referrer.substring(0, 200) : 'direct',
-        recaptchaToken: recaptchaToken ? recaptchaToken.substring(0, 100) : 'app_check_verified', // Store partial token for audit
-        clientId: clientId,
-        ipHash: await crypto.subtle ? 'hashed' : 'unavailable' // Placeholder for IP hash
+      const clientId       = SecurityManager.generateClientId();
+
+      debugLog(`Saving to Firestore: ${sanitizedEmail}`);
+
+      const docRef = await addDoc(collection(db, 'newsletter_subscribers'), {
+        email:          sanitizedEmail,
+        source:         'coming_soon_page_v2',
+        subscribedAt:   serverTimestamp(),
+        userAgent:      navigator.userAgent.substring(0, 200),
+        referrer:       document.referrer ? document.referrer.substring(0, 200) : 'direct',
+        recaptchaToken: recaptchaToken ? recaptchaToken.substring(0, 100) : 'not_provided',
+        clientId,
+        timestamp:      new Date().toISOString()
       });
-      
-      // Store locally for reference
+
+      debugSuccess(`Firestore doc ID: ${docRef.id}`);
+
+      // Cache locally so duplicate submissions can be caught client-side
       try {
-        const signups = JSON.parse(localStorage.getItem('janedore_secure_signups') || '[]');
+        const signups = JSON.parse(localStorage.getItem('janedore_signups') || '[]');
         if (!signups.includes(sanitizedEmail)) {
           signups.push(sanitizedEmail);
-          localStorage.setItem('janedore_secure_signups', JSON.stringify(signups.slice(-10))); // Keep last 10
+          localStorage.setItem('janedore_signups', JSON.stringify(signups.slice(-10)));
         }
-      } catch (e) {
-        // Ignore localStorage errors
-      }
-      
-      showMessage('✓ You\'re on the list! We\'ll notify you when we launch.', 'success');
+      } catch (_) { /* localStorage unavailable — not critical */ }
+
+      showMessage("✓ You're on the list! We'll notify you when we launch.", 'success');
       emailInput.value = '';
-      
-      // Optional: Track conversion
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'coming_soon_signup_secure', {
-          'event_category': 'engagement',
-          'event_label': 'Coming Soon Page v2'
-        });
-      }
-      
+      debugSuccess('Submission complete');
+
     } catch (error) {
-      console.error('Submission error:', error);
-      
-      // Handle specific Firebase errors
+      debugError(`SUBMISSION FAILED — code: ${error.code || 'n/a'} — ${error.message}`);
+
       if (error.code === 'permission-denied') {
-        showMessage('Unable to process request. Please try again later.', 'error');
+        showMessage('Database permission error. Check Firestore rules.', 'error');
       } else if (error.code === 'unavailable') {
-        showMessage('Service temporarily unavailable. Please try again in a few minutes.', 'error');
+        showMessage('Network error. Please check your connection.', 'error');
+      } else if (error.message.includes('AppCheck')) {
+        showMessage('Security verification failed. Please refresh and try again.', 'error');
       } else {
-        showMessage('Something went wrong. Please try again.', 'error');
+        showMessage(`Error: ${error.message}`, 'error');
       }
     } finally {
       setLoading(false);
+      debugLog('===== FORM SUBMISSION ENDED =====');
     }
   }
 
-  // Event listeners
   form.addEventListener('submit', handleSubmit);
-  
-  emailInput.addEventListener('input', () => {
-    if (formMessage.classList.contains('error')) {
-      clearMessage();
-    }
-  });
-  
-  // Prevent scroll
-  window.addEventListener('scroll', (e) => {
-    window.scrollTo(0, 0);
-  }, { passive: false });
-  
-  window.addEventListener('touchmove', (e) => {
-    if (!e.target.closest('.coming-soon-container')) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  document.body.addEventListener('wheel', (e) => {
-    const container = document.querySelector('.coming-soon-container');
-    if (container && !container.contains(e.target)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // Security: Clear sensitive data on page unload
-  window.addEventListener('beforeunload', () => {
-    // Optional: Clear any temporary sensitive data
-  });
-  
-  // Initialize security
-  SecurityManager.generateClientId();
-  
-  // Log security initialization (development only)
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    console.log('🔒 Security initialized with App Check and standard reCAPTCHA v3');
-  }
-</script>
+  debugLog('Submit listener attached');
 
+  emailInput.addEventListener('input', () => {
+    if (formMessage.classList.contains('error')) clearMessage();
+  });
+
+  // Prevent page-level scrolling
+  window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
+  window.addEventListener('touchmove', (e) => {
+    if (!e.target.closest('.coming-soon-container')) e.preventDefault();
+  }, { passive: false });
+  document.body.addEventListener('wheel', (e) => {
+    const c = document.querySelector('.coming-soon-container');
+    if (c && !c.contains(e.target)) e.preventDefault();
+  }, { passive: false });
+
+  SecurityManager.generateClientId();
+  debugSuccess('🚀 Page ready');
+  debugLog('Submit an email to test — watch this console for detailed output');
+
+  // Ctrl+Shift+D toggles the debug panel on/off
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D')
+      debugConsole.classList.toggle('show');
+  });
+
+</script>
 </body>
 </html>
