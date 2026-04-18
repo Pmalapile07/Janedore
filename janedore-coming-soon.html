@@ -77,24 +77,27 @@
     overscroll-behavior: none;
   }
 
+  /* ── Store owner link ── moved up slightly from bottom */
   .store-owner-link {
     position: fixed;
-    top: 28px;
-    right: 28px;
+    bottom: 44px;
+    left: 50%;
+    transform: translateX(-50%);
     font-family: 'Manrope', sans-serif;
     font-size: 10px;
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.25);
     text-decoration: none;
     letter-spacing: 0.3px;
     transition: color 0.2s;
     z-index: 10;
     background: transparent;
     padding: 6px 0;
+    white-space: nowrap;
   }
 
   .store-owner-link:hover {
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.6);
     text-decoration: underline;
     text-underline-offset: 4px;
   }
@@ -104,50 +107,107 @@
     outline-offset: 4px;
   }
 
-  .coming-soon-container {
+  /* ── "Let me know when you launch" trigger at very bottom ── */
+  .notify-trigger {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    z-index: 10;
+    white-space: nowrap;
+    background: transparent;
+    border: none;
+    padding: 6px 0;
+    transition: color 0.2s;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .notify-trigger:hover {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .notify-trigger:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 4px;
+  }
+
+  /* ── Newsletter overlay ── */
+  .newsletter-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .newsletter-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .newsletter-sheet {
     width: 100%;
     max-width: 520px;
-    margin: 0 auto;
+    background: #0a0a0a;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 36px 28px 40px;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    position: relative;
+  }
+
+  .newsletter-overlay.open .newsletter-sheet {
+    transform: translateY(0);
+  }
+
+  .newsletter-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    padding: 6px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    animation: fadeIn 1.2s ease-out;
-    height: auto;
-    max-height: 100vh;
-    overflow-y: auto;
-    padding: 40px 0;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    transition: color 0.2s;
   }
 
-  .coming-soon-container::-webkit-scrollbar {
-    display: none;
+  .newsletter-close:hover { color: #ffffff; }
+
+  .newsletter-close:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
   }
 
-  @keyframes fadeIn {
-    0%  { opacity: 0; transform: translateY(20px); }
-    100%{ opacity: 1; transform: translateY(0); }
-  }
+  .newsletter-close i { font-size: 20px; }
 
-  .logo-wrapper {
-    margin-top: 24px;
-    margin-bottom: 40px;
-  }
-
-  .logo {
-    width: 100%;
-    max-width: 180px;
-    height: auto;
-    display: block;
-    filter: brightness(0) invert(1);
-    margin: 0 auto;
-  }
-
-  .signup-form {
-    width: 100%;
+  .newsletter-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.5px;
     margin-bottom: 24px;
+    text-transform: uppercase;
   }
 
   .input-wrapper {
@@ -245,9 +305,7 @@
     font-weight: 300;
     color: rgba(255, 255, 255, 0.35);
     line-height: 1.6;
-    margin-top: 12px;
-    max-width: 400px;
-    text-align: left;
+    margin-top: 14px;
   }
 
   .legal-text a {
@@ -259,12 +317,65 @@
 
   .legal-text a:hover { color: rgba(255, 255, 255, 0.8); }
 
+  /* ── Main container ── */
+  .coming-soon-container {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: fadeIn 1.2s ease-out;
+    height: auto;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 40px 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .coming-soon-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  @keyframes fadeIn {
+    0%  { opacity: 0; transform: translateY(20px); }
+    100%{ opacity: 1; transform: translateY(0); }
+  }
+
+  .logo-wrapper {
+    margin-top: 24px;
+    margin-bottom: 16px;
+  }
+
+  .logo {
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+    display: block;
+    filter: brightness(0) invert(1);
+    margin: 0 auto;
+  }
+
+  /* ── "Coming soon." text beneath logo ── */
+  .coming-soon-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
   .footer-row {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    margin-top: 48px;
+    margin-top: 8px;
     flex-wrap: wrap;
   }
 
@@ -333,7 +444,6 @@
 </head>
 <body>
 
-<a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you the store owner? Login.</a>
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
 <main id="main-content" class="coming-soon-container">
@@ -344,27 +454,7 @@
          alt="Janedore">
   </div>
 
-  <form class="signup-form" id="signup-form" onsubmit="return false;">
-    <div class="input-wrapper">
-      <label for="email-input" class="sr-only">Email address</label>
-      <input type="email"
-             class="email-input"
-             id="email-input"
-             placeholder="Enter your email"
-             aria-label="Email address for launch notification"
-             required>
-      <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
-        <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
-        <span id="btn-spinner" class="spinner" style="display:none;"></span>
-      </button>
-    </div>
-    <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
-    <p class="legal-text">
-      Be the first to know when we launch. By signing up, you agree to receive
-      emails from Janedore. We respect your privacy —
-      <a href="unsubscribe.html" aria-label="Unsubscribe from Janedore emails">unsubscribe anytime</a>.
-    </p>
-  </form>
+  <p class="coming-soon-text">Coming soon.</p>
 
   <div class="footer-row">
     <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
@@ -380,6 +470,47 @@
   </div>
 
 </main>
+
+<!-- Store owner link — fixed, above the notify trigger -->
+
+<a href="admin.html" class="store-owner-link" aria-label="Store owner login">Are you the store owner? Login.</a>
+
+<!-- "Let me know when you launch" — pinned to very bottom -->
+
+<button class="notify-trigger" id="notify-trigger" aria-label="Let me know when you launch">
+  Let me know when you launch.
+</button>
+
+<!-- Newsletter bottom sheet overlay -->
+
+<div class="newsletter-overlay" id="newsletter-overlay" role="dialog" aria-modal="true" aria-label="Newsletter signup">
+  <div class="newsletter-sheet">
+    <button class="newsletter-close" id="newsletter-close" aria-label="Close">
+      <i class="ph ph-x" aria-hidden="true"></i>
+    </button>
+    <p class="newsletter-title">Stay in the loop</p>
+    <form id="signup-form" onsubmit="return false;">
+      <div class="input-wrapper">
+        <label for="email-input" class="sr-only">Email address</label>
+        <input type="email"
+               class="email-input"
+               id="email-input"
+               placeholder="Enter your email"
+               aria-label="Email address for launch notification"
+               required>
+        <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
+          <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
+          <span id="btn-spinner" class="spinner" style="display:none;"></span>
+        </button>
+      </div>
+      <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
+      <p class="legal-text">
+        By signing up, you agree to receive emails from Janedore. We respect your privacy —
+        <a href="unsubscribe.html" aria-label="Unsubscribe from Janedore emails">unsubscribe anytime</a>.
+      </p>
+    </form>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -404,15 +535,40 @@
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  const form        = document.getElementById('signup-form');
-  const emailInput  = document.getElementById('email-input');
-  const submitBtn   = document.getElementById('submit-btn');
-  const btnSpinner  = document.getElementById('btn-spinner');
-  const arrowIcon   = document.getElementById('arrow-icon');
-  const formMessage = document.getElementById('form-message');
+  const form           = document.getElementById('signup-form');
+  const emailInput     = document.getElementById('email-input');
+  const submitBtn      = document.getElementById('submit-btn');
+  const btnSpinner     = document.getElementById('btn-spinner');
+  const arrowIcon      = document.getElementById('arrow-icon');
+  const formMessage    = document.getElementById('form-message');
+  const overlay        = document.getElementById('newsletter-overlay');
+  const notifyTrigger  = document.getElementById('notify-trigger');
+  const closeBtn       = document.getElementById('newsletter-close');
 
+  // ── Footer year ──────────────────────────────────────────────────────────
   document.getElementById('footer-note').innerHTML =
     `&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;
+
+  // ── Overlay open / close ──────────────────────────────────────────────────
+  function openOverlay() {
+    overlay.classList.add('open');
+    emailInput.focus();
+  }
+
+  function closeOverlay() {
+    overlay.classList.remove('open');
+  }
+
+  notifyTrigger.addEventListener('click', openOverlay);
+  closeBtn.addEventListener('click', closeOverlay);
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeOverlay();
+  });
 
   // ── Rate limiter ──────────────────────────────────────────────────────────
   const RateLimiter = {
@@ -477,13 +633,9 @@
     setLoading(true);
 
     try {
-      // Use the email itself as the document ID so we can do a direct lookup.
-      // This avoids needing a collection query (which would require list permission).
-      // We encode it to make it a safe Firestore doc ID (no dots allowed at top level).
       const docId  = email.replace(/\./g, '_');
       const docRef = doc(db, "newsletter_subscribers", docId);
 
-      // ── Step 1: Check if already subscribed ──────────────────────────────
       const existing = await getDoc(docRef);
 
       if (existing.exists()) {
@@ -492,7 +644,6 @@
         return;
       }
 
-      // ── Step 2: Save new subscriber ───────────────────────────────────────
       await setDoc(docRef, {
         email: email,
         source: 'coming_soon_page',
