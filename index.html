@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -50,93 +51,126 @@
 html,body{font-family:'Manrope',sans-serif;background:#fff;}
 body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 
-.skip-link{position:absolute;top:-40px;left:0;background:#111;color:#fff;padding:8px 16px;z-index:10000;text-decoration:none;font-family:'Manrope',sans-serif;font-size:13px;}
+.skip-link{position:absolute;top:-40px;left:0;background:#111;color:#fff;padding:8px 16px;z-index:10000;text-decoration:none;font-family:‘Manrope’,sans-serif;font-size:13px;}
 .skip-link:focus{top:0;}
 
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes slideUp{from{transform:translate(-50%,100%);opacity:0}to{transform:translate(-50%,0);opacity:1}}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes spin{to{transform:rotate(360deg);}}
+@keyframes menuSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 
 .skel{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 24px;border-radius:4px;z-index:10000;font-family:'Manrope',sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideUp 0.3s ease;max-width:90%;text-align:center;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 24px;border-radius:4px;z-index:10000;font-family:‘Manrope’,sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideUp 0.3s ease;max-width:90%;text-align:center;}
 .toast-error{background:#c0392b;}
 .toast-success{background:#27ae60;}
 .toast-info{background:#111;}
-.cart-notification{position:fixed;top:80px;right:20px;background:#111;color:#fff;padding:12px 20px;border-radius:2px;z-index:10000;font-family:'Manrope',sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideIn 0.3s ease;}
-.error-state{padding:40px 20px;text-align:center;font-family:'Manrope',sans-serif;color:#999;}
+.cart-notification{position:fixed;top:80px;right:20px;background:#111;color:#fff;padding:12px 20px;border-radius:2px;z-index:10000;font-family:‘Manrope’,sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideIn 0.3s ease;}
+.error-state{padding:40px 20px;text-align:center;font-family:‘Manrope’,sans-serif;color:#999;}
 .error-state i{font-size:48px;color:#ddd;margin-bottom:16px;}
-.retry-btn{background:#111;color:#fff;border:none;padding:10px 24px;font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;margin-top:16px;}
+.retry-btn{background:#111;color:#fff;border:none;padding:10px 24px;font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;margin-top:16px;}
 .loading-spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
 
 /* ── ANNOUNCEMENT BAR ── */
-.ann{background:#fff;color:#000;font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2.5px;text-align:center;padding:9px 20px;position:fixed;top:0;left:0;right:0;z-index:1001;height:36px;display:flex;align-items:center;justify-content:center;}
+.ann{background:#fff;color:#000;font-family:‘Driftune’,sans-serif;font-size:9px;letter-spacing:2.5px;text-align:center;padding:9px 20px;position:fixed;top:0;left:0;right:0;z-index:1001;height:36px;display:flex;align-items:center;justify-content:center;}
 
 /* ── HEADER ── */
 .hdr{display:flex;align-items:center;background:transparent;height:64px;position:fixed;top:36px;left:0;right:0;z-index:1000;}
 .hdr-inner{width:100%;max-width:100%;padding:10px 20px 0;display:flex;align-items:center;justify-content:space-between;position:relative;}
 .modal-hdr{display:flex;align-items:center;background:transparent;height:64px;position:fixed;top:36px;left:0;right:0;z-index:1002;padding-top:0;}
 .modal-hdr .hdr-inner{padding:10px 20px 0;}
-.hdr-menu-text{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;cursor:pointer;background:none;border:none;padding:0;transition:opacity .2s;flex-shrink:0;min-height:44px;min-width:44px;font-weight:400;}
+.hdr-menu-text{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;cursor:pointer;background:none;border:none;padding:0;transition:opacity .2s;flex-shrink:0;min-height:44px;min-width:44px;font-weight:400;}
 .hdr-menu-text:hover{opacity:.65;}
+.hdr-menu-text.active-menu{opacity:1;}
 .hdr-logo{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;}
 .hdr-logo img{height:36px;object-fit:contain;display:block;filter:brightness(0) invert(1);}
-.hdr-cart-text{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;cursor:pointer;background:none;border:none;padding:0;display:flex;align-items:center;gap:4px;transition:opacity .2s;flex-shrink:0;min-height:44px;min-width:44px;font-weight:400;}
+.hdr-cart-text{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;cursor:pointer;background:none;border:none;padding:0;display:flex;align-items:center;gap:4px;transition:opacity .2s;flex-shrink:0;min-height:44px;min-width:44px;font-weight:400;}
 .hdr-cart-text:hover{opacity:.65;}
-.hdr-cart-count{font-family:'Manrope',sans-serif;font-size:11px;font-weight:400;color:#fff;}
+.hdr-cart-count{font-family:‘Manrope’,sans-serif;font-size:11px;font-weight:400;color:#fff;}
 .hdr.dark-hdr .hdr-menu-text,
 .hdr.dark-hdr .hdr-cart-text,
 .hdr.dark-hdr .hdr-cart-count{color:#000 !important;}
 .hdr.dark-hdr .hdr-logo img{filter:brightness(0) invert(0) !important;}
 
+/* ── MENU OVERLAY ── */
+.menu-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1099;opacity:0;pointer-events:none;transition:opacity .3s;}
+.menu-bg.open{opacity:1;pointer-events:all;}
+.menu-panel{position:fixed;top:0;left:0;bottom:0;width:50%;background:#fff;z-index:1100;transform:translateX(-100%);transition:transform .38s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.menu-panel.open{transform:translateX(0);}
+.menu-panel-inner{padding:100px 28px 40px;display:flex;flex-direction:column;flex:1;}
+.menu-search-row{display:flex;align-items:center;border-bottom:1px solid #ddd;margin-bottom:28px;padding-bottom:10px;}
+.menu-search-inp{flex:1;font-family:‘Manrope’,sans-serif;font-size:12px;border:none;outline:none;color:#111;background:transparent;letter-spacing:1px;text-transform:uppercase;}
+.menu-search-inp::placeholder{color:#bbb;font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+.menu-search-icon{font-size:18px;color:#bbb;flex-shrink:0;}
+.menu-section{margin-bottom:4px;}
+.menu-sec-toggle{display:flex;align-items:center;justify-content:space-between;padding:11px 0;cursor:pointer;border:none;background:none;width:100%;min-height:44px;}
+.menu-sec-toggle span{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;font-weight:400;text-transform:uppercase;}
+.menu-sec-toggle i{font-size:15px;color:#bbb;transition:transform .22s;}
+.menu-sec-toggle.open i{transform:rotate(180deg);}
+.menu-sec-body{display:none;padding:2px 0 10px 12px;}
+.menu-sec-body.open{display:flex;flex-direction:column;gap:2px;}
+.menu-sec-link{font-family:‘Manrope’,sans-serif;font-size:12px;color:#555;letter-spacing:1.5px;text-transform:uppercase;padding:8px 0;cursor:pointer;background:none;border:none;text-align:left;transition:color .18s;display:block;width:100%;}
+.menu-sec-link:hover{color:#111;}
+.menu-top-link{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;text-transform:uppercase;padding:11px 0;cursor:pointer;background:none;border:none;text-align:left;display:block;width:100%;transition:opacity .18s;min-height:44px;}
+.menu-top-link:hover{opacity:.6;}
+.menu-top-link.sale-link{color:#c0392b;}
+.menu-divider{height:1px;background:#f0f0f0;margin:10px 0;}
+.menu-util-link{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2px;color:#999;text-transform:uppercase;padding:9px 0;cursor:pointer;background:none;border:none;text-align:left;display:block;width:100%;transition:color .18s;min-height:44px;}
+.menu-util-link:hover{color:#111;}
+
 /* ── MAIN PAGE ── */
 .page{padding-top:0;margin-top:0;}
 
-/* ── HERO BANNER — redesigned overlay ── */
+/* ── HERO BANNER ── */
 .banner{position:relative;width:100%;overflow:hidden;background:#e8e8e8;margin-top:0;}
 .banner img{width:100%;height:75vh;object-fit:cover;display:block;}
-/* Gradient scrim at bottom for text legibility */
 .banner-scrim{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.18) 50%, transparent 100%);pointer-events:none;}
-/* Bottom-left: heading + sub-paragraph */
-.banner-content-left{position:absolute;bottom:32px;left:28px;max-width:calc(100% - 140px);}
-.banner-heading{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;line-height:1.15;text-shadow:0 2px 14px rgba(0,0,0,.3);margin-bottom:7px;}
-.banner-sub{font-family:'Manrope',sans-serif;font-size:11px;color:rgba(255,255,255,0.82);line-height:1.65;letter-spacing:0.3px;font-weight:400;text-shadow:0 1px 6px rgba(0,0,0,.35);}
-/* Bottom-right: SHOP NOW button — same aesthetic as BACK TO HOME */
+/* CHANGED: heading + sub centered at bottom-center */
+.banner-content-center{position:absolute;bottom:32px;left:0;right:0;text-align:center;padding:0 80px;}
+.banner-heading{font-family:‘Driftune’,sans-serif;font-size:22px;letter-spacing:2px;color:#fff;line-height:1.15;text-shadow:0 2px 14px rgba(0,0,0,.3);margin-bottom:7px;}
+.banner-sub{font-family:‘Manrope’,sans-serif;font-size:11px;color:rgba(255,255,255,0.82);line-height:1.65;letter-spacing:0.3px;font-weight:400;text-shadow:0 1px 6px rgba(0,0,0,.35);text-align:center;}
+/* SHOP NOW stays bottom-right */
 .banner-shop-btn{position:absolute;bottom:34px;right:28px;display:flex;align-items:center;gap:6px;cursor:pointer;background:none;border:none;padding:0;min-height:44px;}
-.banner-shop-btn span{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;border-bottom:1px solid #fff;padding-bottom:2px;font-weight:400;text-shadow:0 1px 6px rgba(0,0,0,.4);}
+.banner-shop-btn span{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;border-bottom:1px solid #fff;padding-bottom:2px;font-weight:400;text-shadow:0 1px 6px rgba(0,0,0,.4);}
 .banner-shop-btn i{font-size:15px;color:#fff;}
 .banner-shop-btn:hover span,.banner-shop-btn:hover i{opacity:.7;}
 
-/* ── DUO GRIDS ── */
-.duo-grid{display:flex;gap:2px;background:#fff;margin-top:2px;}
-.duo-card{flex:1;position:relative;overflow:hidden;cursor:pointer;}
-.duo-card .img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#e8e8e8;}
-.duo-card .img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;}
-.duo-card:hover .img-wrap img{transform:scale(1.15);}
-.duo-label{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.45);z-index:2;pointer-events:none;}
-.uv-tag{position:absolute;top:10px;right:10px;background:#111;color:#fff;font-family:'Manrope',sans-serif;font-size:7px;letter-spacing:1.5px;padding:3px 8px;z-index:3;pointer-events:none;font-weight:400;}
+/* ── DUO GRIDS — now slider ── */
+.cat-slider-wrap{position:relative;overflow:hidden;background:#fff;margin-top:2px;}
+.cat-slider-track{display:flex;transition:transform .4s cubic-bezier(.4,0,.2,1);will-change:transform;}
+.cat-slide{min-width:calc(50% - 1px);width:calc(50% - 1px);flex-shrink:0;position:relative;overflow:hidden;cursor:pointer;margin-right:2px;}
+.cat-slide:last-child{margin-right:0;}
+.cat-slide .img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#e8e8e8;}
+.cat-slide .img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;}
+.cat-slide:hover .img-wrap img{transform:scale(1.15);}
+.duo-label{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:‘Driftune’,sans-serif;font-size:13px;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.45);z-index:2;pointer-events:none;}
+.uv-tag{position:absolute;top:10px;right:10px;background:#111;color:#fff;font-family:‘Manrope’,sans-serif;font-size:7px;letter-spacing:1.5px;padding:3px 8px;z-index:3;pointer-events:none;font-weight:400;}
+/* Progress bar */
+.cat-progress-wrap{padding:16px 20px 4px;display:flex;align-items:center;}
+.cat-progress-track{flex:1;height:1px;background:#e8e8e8;position:relative;overflow:hidden;}
+.cat-progress-fill{height:100%;background:#111;width:0%;transition:width .4s cubic-bezier(.4,0,.2,1);}
 
 /* ── ABOUT BLOCK ── */
 .about-blk{padding:36px 20px 40px;}
-.about-blk h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
-.about-blk p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;font-weight:400;}
-/* VIEW ALL button under THE EDIT — same as BACK TO HOME */
+.about-blk h2{font-family:‘Driftune’,sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
+.about-blk p{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;font-weight:400;}
 .edit-view-all{display:inline-flex;align-items:center;gap:6px;margin-top:20px;cursor:pointer;background:none;border:none;padding:0;min-height:44px;}
-.edit-view-all span{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;font-weight:400;}
+.edit-view-all span{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;font-weight:400;}
 .edit-view-all i{font-size:15px;color:#111;}
 .edit-view-all:hover span,.edit-view-all:hover i{opacity:.6;}
 
-/* ── MID HERO ── */
+/* ── MID HERO — CURATED DRESSES centered ── */
 .mid-hero{position:relative;width:100%;overflow:hidden;background:#e8e8e8;margin:2px 0;}
 .mid-hero img{width:100%;height:70vh;object-fit:cover;display:block;}
 .mid-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.45) 0%,transparent 60%);pointer-events:none;}
-.mid-hero-label{position:absolute;bottom:28px;left:0;right:0;text-align:center;cursor:pointer;}
-.mid-hero-label h3{font-family:'Driftune',sans-serif;font-size:20px;letter-spacing:3px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.4);display:inline-block;border-bottom:1px solid rgba(255,255,255,0.5);padding-bottom:3px;transition:opacity .2s;}
+/* CHANGED: centered both horizontally and vertically */
+.mid-hero-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;cursor:pointer;}
+.mid-hero-label h3{font-family:‘Driftune’,sans-serif;font-size:20px;letter-spacing:3px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.4);display:inline-block;border-bottom:1px solid rgba(255,255,255,0.5);padding-bottom:3px;transition:opacity .2s;}
 .mid-hero-label:hover h3{opacity:.75;}
 
-/* ── CTA LINKS (VIEW ALL rows) — same aesthetic as BACK TO HOME ── */
+/* ── CTA LINKS ── */
 .btm-cta{padding:28px 20px 40px;display:flex;flex-direction:column;gap:10px;}
-.cta-link{display:inline-flex;align-items:center;gap:6px;font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;cursor:pointer;width:fit-content;text-decoration:none;font-weight:400;background:none;border:none;padding:0;min-height:44px;}
+.cta-link{display:inline-flex;align-items:center;gap:6px;font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;cursor:pointer;width:fit-content;text-decoration:none;font-weight:400;background:none;border:none;padding:0;min-height:44px;}
 .cta-link span{border-bottom:1px solid #111;padding-bottom:2px;}
 .cta-link i{font-size:15px;}
 .cta-link:hover span,.cta-link:hover i{opacity:.6;}
@@ -144,13 +178,12 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 /* ── COLLECTION SECTION ── */
 .col-sec{padding:36px 0 20px;}
 .col-hdr{padding:0 20px 12px;}
-.col-hdr h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:6px;}
+.col-hdr h2{font-family:‘Driftune’,sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:6px;}
 
-/* See more / collapse for subheadings */
 .col-sub-wrap{position:relative;}
-.col-sub{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;font-weight:400;max-width:480px;}
+.col-sub{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;line-height:1.75;font-weight:400;max-width:480px;}
 .col-sub.clamped{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.col-sub-toggle{display:inline-block;font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:1.5px;color:#999;cursor:pointer;margin-top:6px;background:none;border:none;padding:0;transition:color .2s;text-decoration:underline;text-underline-offset:2px;}
+.col-sub-toggle{display:inline-block;font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:1.5px;color:#999;cursor:pointer;margin-top:6px;background:none;border:none;padding:0;transition:color .2s;text-decoration:underline;text-underline-offset:2px;}
 .col-sub-toggle:hover{color:#111;}
 
 .grid-loading{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
@@ -163,50 +196,52 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .prod-card .prod-img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;transition:transform .4s ease;}
 .prod-card:hover .prod-img{transform:scale(1.04);}
 .prod-info{display:flex;flex-direction:column;align-items:flex-start;padding:9px 10px 4px;}
-.prod-name{font-family:'Manrope',sans-serif;font-size:13px;color:#111;margin:0 0 4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;font-weight:400;text-transform:uppercase;}
-.prod-price{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#777;white-space:nowrap;margin-top:0;}
-.prod-price-sale{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#c0392b;white-space:nowrap;margin-top:0;}
-.prod-price-orig{font-family:'Manrope',sans-serif;font-size:12px;font-weight:400;color:#bbb;text-decoration:line-through;margin-left:6px;}
+/* CHANGED: product name bold everywhere */
+.prod-name{font-family:‘Manrope’,sans-serif;font-size:13px;color:#111;margin:0 0 4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;font-weight:700;text-transform:uppercase;}
+.prod-price{font-family:‘Manrope’,sans-serif;font-size:13px;font-weight:400;color:#777;white-space:nowrap;margin-top:0;}
+.prod-price-sale{font-family:‘Manrope’,sans-serif;font-size:13px;font-weight:400;color:#c0392b;white-space:nowrap;margin-top:0;}
+.prod-price-orig{font-family:‘Manrope’,sans-serif;font-size:12px;font-weight:400;color:#bbb;text-decoration:line-through;margin-left:6px;}
 
 /* ── PRODUCT BADGES ── */
-.prod-badge{position:absolute;top:10px;left:10px;z-index:3;font-family:'Manrope',sans-serif;font-size:8px;letter-spacing:1.5px;padding:3px 8px;pointer-events:none;font-weight:500;text-transform:uppercase;}
+.prod-badge{position:absolute;top:10px;left:10px;z-index:3;font-family:‘Manrope’,sans-serif;font-size:8px;letter-spacing:1.5px;padding:3px 8px;pointer-events:none;font-weight:500;text-transform:uppercase;}
 .badge-sale{background:#c0392b;color:#fff;}
 .badge-new{background:#111;color:#fff;}
 .badge-soldout{background:#111;color:#fff;}
 .badge-hot{background:#e67e22;color:#fff;}
 .badge-limited{background:#6c3483;color:#fff;}
 .soldout-overlay{position:absolute;inset:0;background:rgba(255,255,255,0.5);z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.soldout-overlay span{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:3px;color:#111;font-weight:500;}
+.soldout-overlay span{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:3px;color:#111;font-weight:500;}
 
 /* ── ABOUT US ── */
 .about-us{padding:36px 20px 56px;}
-.about-us h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
-.about-us p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;font-weight:400;}
+.about-us h2{font-family:‘Driftune’,sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
+.about-us p{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;font-weight:400;}
 
 /* ── FOOTER ── */
 .footer{background:#fff;padding:40px 20px 28px;}
-.f-nl-h{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:3px;color:#111;margin-bottom:8px;}
-.f-nl-sub{font-family:'Manrope',sans-serif;font-size:13px;color:#666;margin-bottom:18px;line-height:1.65;font-weight:400;}
+.f-nl-h{font-family:‘Driftune’,sans-serif;font-size:22px;letter-spacing:3px;color:#111;margin-bottom:8px;}
+.f-nl-sub{font-family:‘Manrope’,sans-serif;font-size:13px;color:#666;margin-bottom:18px;line-height:1.65;font-weight:400;}
 .f-nl-row{display:flex;align-items:center;border-bottom:1px solid #111;margin-bottom:10px;}
-.f-nl-inp{flex:1;background:transparent;border:none;padding:10px 0;font-family:'Manrope',sans-serif;font-size:16px;color:#111;outline:none;}
-.f-nl-inp::placeholder{color:#bbb;}
+/* CHANGED: consistent with promo code style */
+.f-nl-inp{flex:1;background:transparent;border:none;padding:10px 0;font-family:‘Manrope’,sans-serif;font-size:12px;color:#111;outline:none;text-transform:uppercase;letter-spacing:1px;}
+.f-nl-inp::placeholder{color:#bbb;font-size:11px;letter-spacing:1px;text-transform:uppercase;}
 .f-nl-send{background:none;border:none;padding:8px 0 8px 12px;cursor:pointer;color:#111;display:flex;align-items:center;transition:opacity .2s;min-height:44px;min-width:44px;}
 .f-nl-send:hover{opacity:.5;}
 .f-nl-send i{font-size:18px;}
-.f-nl-legal{font-family:'Manrope',sans-serif;font-size:11px;color:#bbb;line-height:1.6;margin-bottom:32px;font-weight:400;}
+.f-nl-legal{font-family:‘Manrope’,sans-serif;font-size:11px;color:#bbb;line-height:1.6;margin-bottom:32px;font-weight:400;}
 .f-nav-toggle{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;min-height:44px;}
-.f-nav-toggle span{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:2px;color:#111;font-weight:400;}
+.f-nav-toggle span{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2px;color:#111;font-weight:400;}
 .f-nav-toggle i{font-size:16px;color:#111;transition:transform .25s;}
 .f-nav-toggle.open i{transform:rotate(180deg);}
 .f-nav-body{display:none;padding:12px 0 16px;}
 .f-nav-body.open{display:flex;flex-direction:column;gap:10px;}
-.f-nav-body a{font-family:'Manrope',sans-serif;font-size:13px;color:#555;text-decoration:none;transition:color .2s;padding:8px 0;font-weight:400;}
+.f-nav-body a{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;text-decoration:none;transition:color .2s;padding:8px 0;font-weight:400;}
 .f-nav-body a:hover{color:#111;}
 .f-socials{display:flex;gap:18px;align-items:center;margin:28px 0;}
 .f-socials a{color:#666;font-size:22px;text-decoration:none;transition:color .2s;display:flex;align-items:center;min-height:44px;min-width:44px;}
 .f-socials a:hover{color:#111;}
-.f-copy{font-family:'Manrope',sans-serif;font-size:11px;color:#bbb;font-weight:400;}
-.nl-msg{font-family:'Manrope',sans-serif;font-size:11px;margin-top:8px;display:none;}
+.f-copy{font-family:‘Manrope’,sans-serif;font-size:11px;color:#bbb;font-weight:400;}
+.nl-msg{font-family:‘Manrope’,sans-serif;font-size:11px;margin-top:8px;display:none;}
 .nl-msg.ok{color:#27ae60;display:block;}
 .nl-msg.err{color:#c0392b;display:block;}
 
@@ -216,8 +251,8 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .cart-ov{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:440px;background:#fff;z-index:1100;display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 40px rgba(0,0,0,.1);pointer-events:none;visibility:hidden;}
 .cart-ov.open{visibility:visible;pointer-events:all;}
 .cart-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;flex-shrink:0;}
-.cart-title{font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:1.5px;color:#111;margin-bottom:2px;font-weight:400;}
-.cart-cnt{font-family:'Manrope',sans-serif;font-size:12px;color:#999;font-weight:400;}
+.cart-title{font-family:‘Manrope’,sans-serif;font-size:13px;letter-spacing:1.5px;color:#111;margin-bottom:2px;font-weight:400;}
+.cart-cnt{font-family:‘Manrope’,sans-serif;font-size:12px;color:#999;font-weight:400;}
 .cart-x{width:44px;height:44px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
 .cart-x i{font-size:20px;color:#111;}
 .cart-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
@@ -227,48 +262,50 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .ci-img-ph{width:86px;height:108px;flex-shrink:0;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;align-self:flex-start;}
 .ci-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0;min-height:108px;}
 .ci-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
-.ci-name{font-family:'Manrope',sans-serif;font-size:13px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;cursor:pointer;text-transform:uppercase;margin-bottom:4px;}
-.ci-price{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#777;white-space:nowrap;}
+/* CHANGED: cart item name bold */
+.ci-name{font-family:‘Manrope’,sans-serif;font-size:13px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;cursor:pointer;text-transform:uppercase;margin-bottom:4px;}
+.ci-price{font-family:‘Manrope’,sans-serif;font-size:13px;font-weight:400;color:#777;white-space:nowrap;}
 .ci-bottom-section{display:flex;flex-direction:column;gap:4px;}
-.ci-size{font-family:'Manrope',sans-serif;font-size:11px;color:#999;font-weight:400;}
+.ci-size{font-family:‘Manrope’,sans-serif;font-size:11px;color:#999;font-weight:400;}
 .ci-bottom-row{display:flex;align-items:center;justify-content:space-between;}
 .qty-pill{display:inline-flex;align-items:center;background:transparent;overflow:hidden;height:34px;}
 .qty-btn{width:40px;height:34px;border:none;background:#f9f9f9;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#111;transition:background .15s;flex-shrink:0;padding:0;font-size:18px;font-weight:400;}
 .qty-btn:hover{background:#eaeaea;}
-.qty-num{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#111;width:32px;text-align:center;background:#fff;height:100%;display:flex;align-items:center;justify-content:center;}
+.qty-num{font-family:‘Manrope’,sans-serif;font-size:13px;font-weight:400;color:#111;width:32px;text-align:center;background:#fff;height:100%;display:flex;align-items:center;justify-content:center;}
 .ci-rm{background:none;border:none;cursor:pointer;color:#ccc;padding:0;display:flex;align-items:center;margin-left:8px;}
 .ci-rm i{font-size:18px;}
 .ci-rm:hover{color:#111;}
 .cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:14px;min-height:300px;}
 .cart-empty i{font-size:48px;color:#e0e0e0;}
-.cart-empty p{font-family:'Manrope',sans-serif;font-size:14px;color:#bbb;text-align:center;line-height:1.75;font-weight:400;}
+.cart-empty p{font-family:‘Manrope’,sans-serif;font-size:14px;color:#bbb;text-align:center;line-height:1.75;font-weight:400;}
 .promo-wrap{padding:16px 20px;}
-.promo-lbl{font-family:'Manrope',sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;font-weight:400;}
+.promo-lbl{font-family:‘Manrope’,sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;font-weight:400;}
 .promo-row{display:flex;}
-.promo-inp{flex:1;font-family:'Manrope',sans-serif;font-size:12px;border:1px solid #ddd;border-right:none;padding:10px 12px;outline:none;color:#111;text-transform:uppercase;letter-spacing:1px;}
-.promo-inp::placeholder{font-size:11px;}
+/* Promo input — the reference style */
+.promo-inp{flex:1;font-family:‘Manrope’,sans-serif;font-size:12px;border:1px solid #ddd;border-right:none;padding:10px 12px;outline:none;color:#111;text-transform:uppercase;letter-spacing:1px;}
+.promo-inp::placeholder{font-size:11px;color:#bbb;text-transform:uppercase;letter-spacing:1px;}
 .promo-inp:focus{border-color:#111;}
-.promo-btn{font-family:'Manrope',sans-serif;font-size:9px;letter-spacing:1.5px;background:#111;color:#fff;border:1px solid #111;padding:10px 16px;cursor:pointer;transition:opacity .2s;white-space:nowrap;min-height:44px;font-weight:400;}
+.promo-btn{font-family:‘Manrope’,sans-serif;font-size:9px;letter-spacing:1.5px;background:#111;color:#fff;border:1px solid #111;padding:10px 16px;cursor:pointer;transition:opacity .2s;white-space:nowrap;min-height:44px;font-weight:400;}
 .promo-btn:hover{opacity:.75;}
-.promo-msg{font-family:'Manrope',sans-serif;font-size:11px;margin-top:8px;display:none;}
+.promo-msg{font-family:‘Manrope’,sans-serif;font-size:11px;margin-top:8px;display:none;}
 .promo-msg.ok{color:#27ae60;display:block;}
 .promo-msg.err{color:#c0392b;display:block;}
 .cart-sum{padding:20px;display:flex;flex-direction:column;gap:10px;}
-.cs-lbl{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:2px;color:#999;font-weight:400;}
+.cs-lbl{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2px;color:#999;font-weight:400;}
 .cs-row{display:flex;align-items:center;justify-content:space-between;}
-.cs-k{font-family:'Manrope',sans-serif;font-size:12px;color:#999;font-weight:400;}
-.cs-v{font-family:'Manrope',sans-serif;font-size:12px;font-weight:400;color:#111;}
+.cs-k{font-family:‘Manrope’,sans-serif;font-size:12px;color:#999;font-weight:400;}
+.cs-v{font-family:‘Manrope’,sans-serif;font-size:12px;font-weight:400;color:#111;}
 .cs-div{height:1px;background:#f0f0f0;margin:4px 0;}
-.cs-tk{font-family:'Manrope',sans-serif;font-size:14px;letter-spacing:1px;color:#111;font-weight:400;}
-.cs-tv{font-family:'Manrope',sans-serif;font-size:14px;letter-spacing:1px;color:#111;font-weight:400;}
-.cs-ship-note{font-family:'Manrope',sans-serif;font-size:11px;color:#27ae60;font-style:italic;font-weight:400;}
-.checkout-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#111;color:#fff;font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:3px;padding:14px;cursor:pointer;border:none;margin-top:6px;transition:opacity .2s;min-height:52px;font-weight:400;}
+.cs-tk{font-family:‘Manrope’,sans-serif;font-size:14px;letter-spacing:1px;color:#111;font-weight:400;}
+.cs-tv{font-family:‘Manrope’,sans-serif;font-size:14px;letter-spacing:1px;color:#111;font-weight:400;}
+.cs-ship-note{font-family:‘Manrope’,sans-serif;font-size:11px;color:#27ae60;font-style:italic;font-weight:400;}
+.checkout-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#111;color:#fff;font-family:‘Manrope’,sans-serif;font-size:13px;letter-spacing:3px;padding:14px;cursor:pointer;border:none;margin-top:6px;transition:opacity .2s;min-height:52px;font-weight:400;}
 .checkout-btn:hover{opacity:.85;}
 .checkout-btn i{font-size:15px;}
-.secure-note{font-family:'Manrope',sans-serif;font-size:11px;color:#ccc;text-align:center;margin-top:8px;font-weight:400;}
+.secure-note{font-family:‘Manrope’,sans-serif;font-size:11px;color:#ccc;text-align:center;margin-top:8px;font-weight:400;}
 .ymal-sec{padding:28px 0 0;}
 .ymal-hdr{padding:0 20px 16px;}
-.ymal-title{font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:1.5px;color:#111;font-weight:400;}
+.ymal-title{font-family:‘Manrope’,sans-serif;font-size:13px;letter-spacing:1.5px;color:#111;font-weight:400;}
 .ymal-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 20px 24px;}
 .ymal-scroll::-webkit-scrollbar{display:none;}
 .ymal-row{display:flex;gap:10px;width:max-content;}
@@ -276,8 +313,9 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .ymal-img{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;background:#e8e8e8;}
 .ymal-img-ph{width:100%;aspect-ratio:3/4;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
 .ymal-info{padding:8px 0 0;}
-.ymal-nm{font-family:'Manrope',sans-serif;font-size:13px;color:#111;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400;text-transform:uppercase;}
-.ymal-pr{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#777;}
+/* CHANGED: ymal name bold */
+.ymal-nm{font-family:‘Manrope’,sans-serif;font-size:13px;color:#111;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;text-transform:uppercase;}
+.ymal-pr{font-family:‘Manrope’,sans-serif;font-size:13px;font-weight:400;color:#777;}
 
 /* ── PRODUCT MODAL ── */
 .prod-modal{position:fixed;inset:0;background:#fff;z-index:998;display:none;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
@@ -297,101 +335,113 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .modal-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .modal-det{padding:8px 20px 0;}
 .modal-name-price-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;}
-.modal-nm{font-family:'Manrope',sans-serif;font-size:15px;color:#111;font-weight:400;text-transform:uppercase;flex:1;}
-.modal-price-right{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#777;white-space:nowrap;flex-shrink:0;}
-.modal-price-right-sale{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#c0392b;white-space:nowrap;flex-shrink:0;}
-.modal-sku{font-family:'Manrope',sans-serif;font-size:10px;color:#bbb;letter-spacing:1px;margin-bottom:8px;font-weight:400;}
-.modal-pr{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#777;margin-bottom:4px;}
-.modal-pr-sale{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#c0392b;margin-bottom:2px;}
-.modal-pr-orig{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#bbb;text-decoration:line-through;margin-bottom:16px;}
-.modal-sale-save{font-family:'Manrope',sans-serif;font-size:11px;color:#c0392b;margin-bottom:16px;font-weight:400;}
-.modal-var-lbl{font-family:'Manrope',sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;font-weight:400;}
+/* CHANGED: modal product name bold */
+.modal-nm{font-family:‘Manrope’,sans-serif;font-size:15px;color:#111;font-weight:700;text-transform:uppercase;flex:1;}
+.modal-price-right{font-family:‘Manrope’,sans-serif;font-size:15px;font-weight:400;color:#777;white-space:nowrap;flex-shrink:0;}
+.modal-price-right-sale{font-family:‘Manrope’,sans-serif;font-size:15px;font-weight:400;color:#c0392b;white-space:nowrap;flex-shrink:0;}
+.modal-sku{font-family:‘Manrope’,sans-serif;font-size:10px;color:#bbb;letter-spacing:1px;margin-bottom:8px;font-weight:400;}
+.modal-pr{font-family:‘Manrope’,sans-serif;font-size:13px;font-weight:400;color:#777;margin-bottom:4px;}
+.modal-pr-sale{font-family:‘Manrope’,sans-serif;font-size:15px;font-weight:400;color:#c0392b;margin-bottom:2px;}
+.modal-pr-orig{font-family:‘Manrope’,sans-serif;font-size:13px;font-weight:400;color:#bbb;text-decoration:line-through;margin-bottom:16px;}
+.modal-sale-save{font-family:‘Manrope’,sans-serif;font-size:11px;color:#c0392b;margin-bottom:16px;font-weight:400;}
+.modal-var-lbl{font-family:‘Manrope’,sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;font-weight:400;}
 .modal-vars{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
 .modal-v{width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid transparent;cursor:pointer;background:#e8e8e8;}
 .modal-v img{width:100%;height:100%;object-fit:cover;}
 .modal-v.on{border-color:#111;}
-.modal-sz-lbl{font-family:'Manrope',sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;font-weight:400;}
+.modal-sz-lbl{font-family:‘Manrope’,sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:10px;font-weight:400;}
 .size-buttons-container{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
-.size-btn{min-width:56px;height:40px;padding:0 12px;border:1px solid #ddd;background:#fff;font-family:'Manrope',sans-serif;font-size:13px;color:#111;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;font-weight:400;}
+.size-btn{min-width:56px;height:40px;padding:0 12px;border:1px solid #ddd;background:#fff;font-family:‘Manrope’,sans-serif;font-size:13px;color:#111;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;font-weight:400;}
 .size-btn:hover{background:#f5f5f5;}
 .size-btn.selected{background:#111;color:#fff;border-color:#111;}
 .size-btn.sold-out-size{opacity:0.35;cursor:not-allowed;text-decoration:line-through;}
-.size-chart-link{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:2.5px;color:#111;padding-bottom:2px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:-2px;margin-bottom:20px;transition:opacity .2s;text-transform:uppercase;text-decoration:none;font-weight:400;}
+.size-chart-link{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2.5px;color:#111;padding-bottom:2px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:-2px;margin-bottom:20px;transition:opacity .2s;text-transform:uppercase;text-decoration:none;font-weight:400;}
 .size-chart-link i{font-size:14px;color:#111;}
 .size-chart-link:hover{opacity:.65;}
-.add-to-cart-btn-large{width:100%;background:#111;color:#fff;font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:3px;padding:14px;border:none;cursor:pointer;min-height:52px;transition:opacity .2s;font-weight:400;}
+.add-to-cart-btn-large{width:100%;background:#111;color:#fff;font-family:‘Manrope’,sans-serif;font-size:13px;letter-spacing:3px;padding:14px;border:none;cursor:pointer;min-height:52px;transition:opacity .2s;font-weight:400;}
 .add-to-cart-btn-large:hover{opacity:.85;}
 .add-to-cart-btn-large.sold-out-btn{background:#ccc;cursor:not-allowed;opacity:1;}
-#sz-warn{font-family:'Manrope',sans-serif;font-size:12px;color:#c0392b;margin-bottom:12px;display:none;font-weight:400;}
+#sz-warn{font-family:‘Manrope’,sans-serif;font-size:12px;color:#c0392b;margin-bottom:12px;display:none;font-weight:400;}
 .modal-acc{margin-top:12px;}
 .modal-acc-row{border-top:1px solid #f0f0f0;}
 .modal-acc-row:last-child{border-bottom:1px solid #f0f0f0;}
 .modal-acc-toggle{display:flex;align-items:center;justify-content:space-between;padding:14px 0;cursor:pointer;background:none;border:none;width:100%;min-height:44px;}
-.modal-acc-toggle span{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:2px;color:#111;font-weight:400;}
+.modal-acc-toggle span{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2px;color:#111;font-weight:400;}
 .modal-acc-toggle i{font-size:16px;color:#111;transition:transform .25s;}
 .modal-acc-toggle.open i{transform:rotate(180deg);}
 .modal-acc-body{display:none;padding:4px 0 16px;}
 .modal-acc-body.open{display:block;}
-.modal-acc-body p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;white-space:pre-line;font-weight:400;}
-.ship-info-text{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;margin-bottom:16px;font-weight:400;}
+.modal-acc-body p{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;line-height:1.75;white-space:pre-line;font-weight:400;}
+.ship-info-text{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;line-height:1.75;margin-bottom:16px;font-weight:400;}
 .ship-info-text b{font-weight:500;color:#111;}
 .reviews-list{display:flex;flex-direction:column;gap:0;}
 .review-item{padding:16px 0;border-bottom:1px solid #f0f0f0;}
 .review-item:last-child{border-bottom:none;}
 .review-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-.review-name{font-family:'Manrope',sans-serif;font-size:12px;font-weight:500;color:#111;}
-.review-date{font-family:'Manrope',sans-serif;font-size:10px;color:#bbb;font-weight:400;}
+.review-name{font-family:‘Manrope’,sans-serif;font-size:12px;font-weight:500;color:#111;}
+.review-date{font-family:‘Manrope’,sans-serif;font-size:10px;color:#bbb;font-weight:400;}
 .review-stars{display:flex;gap:4px;margin-bottom:8px;}
 .review-star{font-size:14px;color:#e0e0e0;}
 .review-star.filled{color:#111;}
-.review-body{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.7;font-weight:400;}
-.reviews-empty{font-family:'Manrope',sans-serif;font-size:13px;color:#bbb;padding:8px 0;font-weight:400;}
+.review-body{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;line-height:1.7;font-weight:400;}
+.reviews-empty{font-family:‘Manrope’,sans-serif;font-size:13px;color:#bbb;padding:8px 0;font-weight:400;}
 .review-form-toggle{display:flex;align-items:center;justify-content:space-between;padding:14px 0;cursor:pointer;margin-top:8px;min-height:44px;}
-.review-form-toggle span{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:2px;color:#111;font-weight:400;}
+.review-form-toggle span{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2px;color:#111;font-weight:400;}
 .review-form-toggle i{font-size:16px;color:#111;transition:transform .25s;}
 .review-form-toggle.open i{transform:rotate(180deg);}
 .review-form{display:none;padding:8px 0 16px;}
 .review-form.open{display:flex;flex-direction:column;gap:14px;}
-.rf-lbl{font-family:'Manrope',sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:6px;display:block;font-weight:400;}
-.rf-inp{width:100%;font-family:'Manrope',sans-serif;font-size:14px;border:1px solid #ddd;padding:10px 12px;outline:none;color:#111;}
+.rf-lbl{font-family:‘Manrope’,sans-serif;font-size:9px;letter-spacing:2px;color:#999;margin-bottom:6px;display:block;font-weight:400;}
+/* CHANGED: review inputs consistent with promo style */
+.rf-inp{width:100%;font-family:‘Manrope’,sans-serif;font-size:12px;border:1px solid #ddd;padding:10px 12px;outline:none;color:#111;text-transform:uppercase;letter-spacing:1px;}
+.rf-inp::placeholder{color:#bbb;font-size:11px;letter-spacing:1px;text-transform:uppercase;}
 .rf-inp:focus{border-color:#111;}
-.rf-ta{width:100%;font-family:'Manrope',sans-serif;font-size:14px;border:1px solid #ddd;padding:10px 12px;outline:none;color:#111;resize:none;min-height:96px;}
+.rf-ta{width:100%;font-family:‘Manrope’,sans-serif;font-size:12px;border:1px solid #ddd;padding:10px 12px;outline:none;color:#111;resize:none;min-height:96px;text-transform:uppercase;letter-spacing:1px;}
+.rf-ta::placeholder{color:#bbb;font-size:11px;letter-spacing:1px;text-transform:uppercase;}
 .rf-ta:focus{border-color:#111;}
 .star-picker{display:flex;gap:8px;align-items:center;}
 .star-pick{font-size:24px;color:#e0e0e0;cursor:pointer;padding:0;background:none;border:none;min-height:44px;min-width:44px;}
 .star-pick.active{color:#111;}
 .star-pick:hover{color:#555;}
-.rf-submit{width:100%;background:#111;color:#fff;font-family:'Manrope',sans-serif;font-size:12px;letter-spacing:3px;padding:14px;border:none;cursor:pointer;min-height:44px;font-weight:400;}
+.rf-submit{width:100%;background:#111;color:#fff;font-family:‘Manrope’,sans-serif;font-size:12px;letter-spacing:3px;padding:14px;border:none;cursor:pointer;min-height:44px;font-weight:400;}
 .rf-submit:hover{opacity:.82;}
 .rf-submit:disabled{opacity:.4;}
-.rf-msg{font-family:'Manrope',sans-serif;font-size:12px;margin-top:4px;display:none;padding:8px 12px;}
+.rf-msg{font-family:‘Manrope’,sans-serif;font-size:12px;margin-top:4px;display:none;padding:8px 12px;}
 .rf-msg.ok{color:#27ae60;display:block;background:#f0faf5;}
 .rf-msg.err{color:#c0392b;display:block;background:#fff5f5;}
 .rf-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+/* CHANGED: ship input consistent */
 .ship-row{display:flex;gap:8px;margin-top:10px;}
-.ship-inp{flex:1;font-family:'Manrope',sans-serif;font-size:12px;border:1px solid #ddd;padding:9px 12px;outline:none;}
-.ship-btn{font-family:'Manrope',sans-serif;font-size:10px;background:#111;color:#fff;border:none;padding:9px 16px;cursor:pointer;min-height:44px;font-weight:400;}
-.ship-result{font-family:'Manrope',sans-serif;font-size:12px;color:#27ae60;margin-top:8px;display:none;font-weight:400;}
+.ship-inp{flex:1;font-family:‘Manrope’,sans-serif;font-size:12px;border:1px solid #ddd;padding:10px 12px;outline:none;color:#111;text-transform:uppercase;letter-spacing:1px;}
+.ship-inp::placeholder{color:#bbb;font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+.ship-inp:focus{border-color:#111;}
+.ship-btn{font-family:‘Manrope’,sans-serif;font-size:10px;background:#111;color:#fff;border:none;padding:9px 16px;cursor:pointer;min-height:44px;font-weight:400;letter-spacing:1.5px;}
+.ship-result{font-family:‘Manrope’,sans-serif;font-size:12px;color:#27ae60;margin-top:8px;display:none;font-weight:400;}
 
 /* ── COLLECTION PAGE ── */
 .collection-page{display:none;padding-top:100px;min-height:100vh;background:#fff;}
 .collection-page.open{display:block;}
-.collection-header{padding:30px 20px 20px;text-align:center;}
-.collection-header h1{font-family:'Driftune',sans-serif;font-size:24px;letter-spacing:3px;color:#111;text-transform:uppercase;}
-.collection-desc{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.6;max-width:600px;margin:8px auto 0;font-weight:400;}
+.collection-header{padding:30px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.collection-header-text h1{font-family:‘Driftune’,sans-serif;font-size:24px;letter-spacing:3px;color:#111;text-transform:uppercase;}
+.collection-desc{font-family:‘Manrope’,sans-serif;font-size:13px;color:#555;line-height:1.6;max-width:600px;margin:8px 0 0;font-weight:400;}
+/* CHANGED: view all top right */
+.collection-view-all-top{display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:none;border:none;padding:0;min-height:44px;flex-shrink:0;margin-top:4px;}
+.collection-view-all-top span{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;font-weight:400;}
+.collection-view-all-top i{font-size:14px;color:#111;}
+.collection-view-all-top:hover span,.collection-view-all-top:hover i{opacity:.6;}
 .filter-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;}
-.product-count{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2px;color:#999;font-weight:400;}
+.product-count{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2px;color:#999;font-weight:400;}
 .filter-sort{display:flex;gap:24px;align-items:center;}
-.filter-btn,.sort-btn{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:2px;color:#111;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:400;}
+.filter-btn,.sort-btn{font-family:‘Manrope’,sans-serif;font-size:10px;letter-spacing:2px;color:#111;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:400;}
 .filter-btn i,.sort-btn i{font-size:14px;}
-.sort-active-label{font-family:'Manrope',sans-serif;font-size:9px;background:#111;color:#fff;padding:2px 8px;margin-left:4px;letter-spacing:1px;font-weight:400;}
+.sort-active-label{font-family:‘Manrope’,sans-serif;font-size:9px;background:#111;color:#fff;padding:2px 8px;margin-left:4px;letter-spacing:1px;font-weight:400;}
 .filter-options{display:flex;gap:12px;padding:12px 20px;flex-wrap:wrap;}
-.filter-chip{font-family:'Manrope',sans-serif;font-size:11px;background:#f5f5f5;padding:6px 14px;cursor:pointer;transition:all 0.2s;color:#555;font-weight:400;}
+.filter-chip{font-family:‘Manrope’,sans-serif;font-size:11px;background:#f5f5f5;padding:6px 14px;cursor:pointer;transition:all 0.2s;color:#555;font-weight:400;}
 .filter-chip.active{background:#111;color:#fff;}
 .filter-chip:hover{background:#e0e0e0;}
 .collection-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;}
 .collection-back{display:flex;align-items:center;justify-content:center;padding:40px 20px;gap:8px;cursor:pointer;}
-.collection-back span{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;font-weight:400;}
+.collection-back span{font-family:‘Manrope’,sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;font-weight:400;}
 .collection-back i{font-size:16px;color:#111;}
 
 /* ── SIZE CHART ── */
@@ -400,20 +450,20 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .sz-chart-panel{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:2101;transform:translateY(100%);transition:transform .38s cubic-bezier(.4,0,.2,1);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .sz-chart-panel.open{transform:translateY(0);}
 .sz-chart-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid #f0f0f0;position:sticky;top:0;background:#fff;z-index:1;}
-.sz-chart-hdr span{font-family:'Driftune',sans-serif;font-size:14px;letter-spacing:2.5px;color:#111;}
+.sz-chart-hdr span{font-family:‘Driftune’,sans-serif;font-size:14px;letter-spacing:2.5px;color:#111;}
 .sz-chart-x{background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;min-height:44px;min-width:44px;}
 .sz-chart-x i{font-size:20px;color:#111;}
 .sz-chart-body{padding:20px 20px 36px;}
-.sz-chart-note{font-family:'Manrope',sans-serif;font-size:12px;color:#888;line-height:1.65;margin-bottom:18px;font-weight:400;}
+.sz-chart-note{font-family:‘Manrope’,sans-serif;font-size:12px;color:#888;line-height:1.65;margin-bottom:18px;font-weight:400;}
 .sz-chart-note strong{color:#111;font-weight:500;}
 .sz-table{width:100%;border-collapse:collapse;margin-bottom:18px;}
-.sz-table th{font-family:'Manrope',sans-serif;font-size:9px;letter-spacing:2px;color:#999;text-align:left;padding:8px 10px;border-bottom:2px solid #f0f0f0;background:#fafafa;font-weight:400;}
-.sz-table td{font-family:'Manrope',sans-serif;font-size:12px;color:#333;padding:10px 10px;border-bottom:1px solid #f0f0f0;font-weight:400;}
+.sz-table th{font-family:‘Manrope’,sans-serif;font-size:9px;letter-spacing:2px;color:#999;text-align:left;padding:8px 10px;border-bottom:2px solid #f0f0f0;background:#fafafa;font-weight:400;}
+.sz-table td{font-family:‘Manrope’,sans-serif;font-size:12px;color:#333;padding:10px 10px;border-bottom:1px solid #f0f0f0;font-weight:400;}
 .sz-table tr:last-child td{border-bottom:none;}
 .sz-table td:first-child{font-weight:500;}
-.sz-disclaimer{font-family:'Manrope',sans-serif;font-size:11px;color:#aaa;line-height:1.7;border-top:1px solid #f0f0f0;padding-top:14px;font-weight:400;}
+.sz-disclaimer{font-family:‘Manrope’,sans-serif;font-size:11px;color:#aaa;line-height:1.7;border-top:1px solid #f0f0f0;padding-top:14px;font-weight:400;}
 .sz-disclaimer strong{color:#888;font-weight:500;}
-.sz-image-note{font-family:'Manrope',sans-serif;font-size:11px;color:#aaa;line-height:1.7;margin-top:8px;font-style:italic;font-weight:400;}
+.sz-image-note{font-family:‘Manrope’,sans-serif;font-size:11px;color:#aaa;line-height:1.7;margin-top:8px;font-style:italic;font-weight:400;}
 
 @media (max-width: 768px) {
 button,[onclick]{min-height:44px;min-width:44px;}
@@ -425,6 +475,7 @@ input,select,textarea{font-size:16px !important;}
 </style>
 
 <!-- Firebase -->
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -518,18 +569,22 @@ input,select,textarea{font-size:16px !important;}
     document.querySelectorAll('.f-copy').forEach(el=>{el.innerHTML=`&copy; ${new Date().getFullYear()} Janedore. All rights reserved.`;});
   });
 </script>
+
 </head>
 <body>
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
 <!-- Announcement Bar -->
+
 <div class="ann" role="complementary">FREE SHIPPING WITH ORDERS OVER R750</div>
 
 <!-- Header -->
+
 <header class="hdr" role="banner" id="main-header">
   <div class="hdr-inner">
-    <button class="hdr-menu-text" disabled style="opacity:0;pointer-events:none;" aria-hidden="true">MENU</button>
+    <!-- CHANGED: MENU button now functional -->
+    <button class="hdr-menu-text" id="menu-btn" onclick="openMenu()" aria-label="Open navigation menu">MENU</button>
     <div class="hdr-logo">
       <a href="#" onclick="goHome(); return false;" aria-label="Janedore Home">
         <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore">
@@ -541,68 +596,128 @@ input,select,textarea{font-size:16px !important;}
   </div>
 </header>
 
+<!-- Menu Overlay -->
+
+<div class="menu-bg" id="menu-bg" onclick="closeMenu()"></div>
+<nav class="menu-panel" id="menu-panel" role="dialog" aria-label="Navigation menu" aria-modal="true">
+  <div class="menu-panel-inner">
+    <!-- Search -->
+    <div class="menu-search-row">
+      <input class="menu-search-inp" type="text" placeholder="SEARCH">
+      <i class="ph ph-magnifying-glass menu-search-icon"></i>
+    </div>
+
+```
+<!-- New In -->
+<button class="menu-top-link" onclick="viewCollection('new');closeMenu();">NEW IN</button>
+
+<!-- Best Sellers -->
+<button class="menu-top-link" onclick="viewCollection('all');closeMenu();">BEST SELLERS</button>
+
+<!-- Tops -->
+<button class="menu-top-link" onclick="viewCollection('tops');closeMenu();">TOPS</button>
+
+<!-- Bottoms -->
+<button class="menu-top-link" onclick="viewCollection('bottoms');closeMenu();">BOTTOMS</button>
+
+<!-- Dresses -->
+<button class="menu-top-link" onclick="viewCollection('dresses');closeMenu();">DRESSES</button>
+
+<!-- Sets -->
+<button class="menu-top-link" onclick="viewCollection('sets');closeMenu();">SETS</button>
+
+<!-- Accessories (collapsible) -->
+<div class="menu-section">
+  <button class="menu-sec-toggle" onclick="toggleMenuSec('msec-accessories',this)" aria-expanded="false">
+    <span>ACCESSORIES</span><i class="ph ph-caret-down"></i>
+  </button>
+  <div class="menu-sec-body" id="msec-accessories">
+    <button class="menu-sec-link" onclick="viewCollection('sunglasses');closeMenu();">SUNGLASSES</button>
+  </div>
+</div>
+
+<!-- Sale -->
+<button class="menu-top-link sale-link" onclick="viewCollection('all');closeMenu();">SALE</button>
+
+<div class="menu-divider"></div>
+
+<!-- Utility links -->
+<button class="menu-util-link" onclick="closeMenu();">ACCOUNT</button>
+<button class="menu-util-link" onclick="closeMenu();">CONTACT US</button>
+<button class="menu-util-link" onclick="closeMenu();">SHIPPING POLICY</button>
+<button class="menu-util-link" onclick="closeMenu();">TRACK YOUR ORDER</button>
+```
+
+  </div>
+</nav>
+
 <!-- Main Content -->
+
 <main id="main-content" class="page" role="main">
 
-  <!-- Hero Banner — redesigned -->
+  <!-- Hero Banner — CHANGED: heading + sub centered at bottom center, Shop Now points to all products -->
+
   <div class="banner">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="New In Clothing Collection">
     <div class="banner-scrim"></div>
-    <!-- Bottom-left: heading + paragraph -->
-    <div class="banner-content-left">
+    <!-- CHANGED: centered bottom -->
+    <div class="banner-content-center">
       <div class="banner-heading">NEW : CLOTHING</div>
       <p class="banner-sub">Janedore is now dressing you — fully.<br>Clothing that moves with you, made to last.</p>
     </div>
-    <!-- Bottom-right: SHOP NOW — same aesthetic as BACK TO HOME -->
-    <button class="banner-shop-btn" onclick="viewCollection('new')" aria-label="Shop new clothing">
+    <!-- CHANGED: Shop Now points to all products -->
+    <button class="banner-shop-btn" onclick="viewCollection('all')" aria-label="Shop all products">
       <span>SHOP NOW</span>
       <i class="ph ph-arrow-right"></i>
     </button>
   </div>
 
-  <!-- THE EDIT — above category cards -->
+  <!-- THE EDIT -->
+
   <section class="about-blk">
     <h2>THE EDIT</h2>
     <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
-    <!-- VIEW ALL button — same aesthetic as BACK TO HOME -->
     <button class="edit-view-all" onclick="viewCollection('all')" aria-label="View all products">
       <i class="ph ph-arrow-right"></i>
       <span>VIEW ALL</span>
     </button>
   </section>
 
-  <!-- Category Cards -->
-  <div class="duo-grid">
-    <div class="duo-card" role="button" tabindex="0" onclick="viewCollection('sets')">
-      <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets"></div>
-      <div class="duo-label">SETS</div>
+  <!-- CHANGED: Category Cards as horizontal slider -->
+
+  <div class="cat-slider-wrap" id="cat-slider-wrap">
+    <div class="cat-slider-track" id="cat-slider-track">
+      <div class="cat-slide" onclick="viewCollection('sets')">
+        <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5638.jpeg" alt="Sets"></div>
+        <div class="duo-label">SETS</div>
+      </div>
+      <div class="cat-slide" onclick="viewCollection('sunglasses')">
+        <div class="uv-tag">UV-400 / BL+</div>
+        <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses"></div>
+        <div class="duo-label">SUNGLASSES</div>
+      </div>
+      <div class="cat-slide" onclick="viewCollection('dresses')">
+        <div class="img-wrap"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG_5935.jpg?v=1776618149" alt="Dresses"></div>
+        <div class="duo-label">DRESSES</div>
+      </div>
+      <div class="cat-slide" onclick="viewCollection('tops')">
+        <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops"></div>
+        <div class="duo-label">TOPS</div>
+      </div>
     </div>
-    <div class="duo-card" role="button" tabindex="0" onclick="viewCollection('sunglasses')">
-      <div class="uv-tag">UV-400 / BL+</div>
-      <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Blue%20and%20Black%20Minimalist%20Brand%20Logo.png" alt="Sunglasses"></div>
-      <div class="duo-label">SUNGLASSES</div>
+    <!-- Progress bar -->
+    <div class="cat-progress-wrap">
+      <div class="cat-progress-track">
+        <div class="cat-progress-fill" id="cat-progress-fill"></div>
+      </div>
     </div>
   </div>
 
-  <div class="duo-grid">
-    <div class="duo-card" role="button" tabindex="0" onclick="viewCollection('dresses')">
-      <div class="img-wrap"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG_5935.jpg?v=1776618149" alt="Dresses"></div>
-      <div class="duo-label">DRESSES</div>
-    </div>
-    <div class="duo-card" role="button" tabindex="0" onclick="viewCollection('tops')">
-      <div class="img-wrap"><img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5639.jpeg" alt="Tops"></div>
-      <div class="duo-label">TOPS</div>
-    </div>
-  </div>
+  <!-- The Collection — CHANGED: paragraph removed from home, only in collection page -->
 
-  <!-- The Collection -->
   <section class="col-sec">
     <div class="col-hdr">
       <h2>THE COLLECTION</h2>
-      <div class="col-sub-wrap">
-        <p class="col-sub clamped" id="col-sub-1">Every piece in The Collection is chosen because it earns its place. No filler, no fast fashion — just clothing and accessories that are genuinely difficult to find elsewhere. From fluid dresses that photograph beautifully in daylight to structured sets that hold their shape all evening, the standard is simple: if it wouldn't make us stop scrolling, it doesn't make the cut.</p>
-        <button class="col-sub-toggle" id="col-sub-toggle-1" onclick="toggleColSub('col-sub-1','col-sub-toggle-1')">SEE MORE</button>
-      </div>
     </div>
     <div class="grid-loading" id="grid-1-loading"><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div></div>
     <div class="prod-grid" id="grid-1" style="display:none;" role="list"></div>
@@ -614,7 +729,8 @@ input,select,textarea{font-size:16px !important;}
     </button>
   </div>
 
-  <!-- Mid-page Hero Image -->
+  <!-- Mid-page Hero — CHANGED: CURATED DRESSES centered -->
+
   <div class="mid-hero">
     <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG_5956.jpg?v=1776805553" alt="Curated Dresses — Janedore">
     <div class="mid-hero-overlay"></div>
@@ -623,14 +739,11 @@ input,select,textarea{font-size:16px !important;}
     </div>
   </div>
 
-  <!-- New Arrivals -->
+  <!-- New Arrivals — also no paragraph on home -->
+
   <section class="col-sec">
     <div class="col-hdr">
       <h2>NEW ARRIVALS</h2>
-      <div class="col-sub-wrap">
-        <p class="col-sub clamped" id="col-sub-2">These just landed — and if history is anything to go by, they won't be here long. New Arrivals at Janedore move fast because they're sourced from places most people aren't looking: small ateliers, limited production runs, and seasonal drops that rarely get restocked. We add new pieces as we find them, which means the edit shifts constantly. Check back often, or better yet, join the list and hear about new drops before anyone else.</p>
-        <button class="col-sub-toggle" id="col-sub-toggle-2" onclick="toggleColSub('col-sub-2','col-sub-toggle-2')">SEE MORE</button>
-      </div>
     </div>
     <div class="grid-loading" id="grid-2-loading"><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div></div>
     <div class="prod-grid" id="grid-2" style="display:none;" role="list"></div>
@@ -649,11 +762,12 @@ input,select,textarea{font-size:16px !important;}
 </main>
 
 <!-- Footer (home) -->
+
 <footer class="footer" id="main-footer" role="contentinfo">
   <h2 class="f-nl-h">STAY IN THE EDIT</h2>
   <p class="f-nl-sub">Join the list and get 15% off your first order.<br>Early access to new arrivals, exclusive drops, and curated pieces.</p>
   <div class="f-nl-row">
-    <input class="f-nl-inp" id="nl-email" type="email" placeholder="Your email address" aria-label="Email for newsletter">
+    <input class="f-nl-inp" id="nl-email" type="email" placeholder="YOUR EMAIL ADDRESS" aria-label="Email for newsletter">
     <button class="f-nl-send" onclick="submitNewsletter()" aria-label="Subscribe"><i class="ph-thin ph-arrow-right"></i></button>
   </div>
   <p class="nl-msg" id="nl-msg" role="status"></p>
@@ -682,11 +796,23 @@ input,select,textarea{font-size:16px !important;}
   <p class="f-copy"></p>
 </footer>
 
-<!-- COLLECTION PAGE -->
+<!-- COLLECTION PAGE — CHANGED: header has view all top-right, paragraph from home shown here -->
+
 <div class="collection-page" id="collection-page">
   <div class="collection-header">
-    <h1 id="collection-title">ALL PRODUCTS</h1>
-    <p class="collection-desc" id="collection-desc">Curated pieces, handpicked for you.</p>
+    <div class="collection-header-text">
+      <h1 id="collection-title">ALL PRODUCTS</h1>
+      <p class="collection-desc" id="collection-desc">Curated pieces, handpicked for you.</p>
+    </div>
+    <!-- CHANGED: View All top-right -->
+    <button class="collection-view-all-top" onclick="viewCollection('all')" id="collection-view-all-btn">
+      <span>VIEW ALL</span>
+      <i class="ph ph-arrow-right"></i>
+    </button>
+  </div>
+  <!-- CHANGED: "every piece" paragraph shown in collection page -->
+  <div style="padding:0 20px 0;margin-top:12px;" id="collection-paragraph-wrap">
+    <p style="font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;font-weight:400;max-width:480px;" id="collection-long-desc"></p>
   </div>
   <div class="filter-bar">
     <span class="product-count" id="collection-count">0 PRODUCTS</span>
@@ -712,7 +838,7 @@ input,select,textarea{font-size:16px !important;}
     <h2 class="f-nl-h">STAY IN THE EDIT</h2>
     <p class="f-nl-sub">Join the list and get 15% off your first order.</p>
     <div class="f-nl-row">
-      <input class="f-nl-inp" id="coll-nl-email" type="email" placeholder="Your email address">
+      <input class="f-nl-inp" id="coll-nl-email" type="email" placeholder="YOUR EMAIL ADDRESS">
       <button class="f-nl-send" onclick="submitNewsletterColl()"><i class="ph-thin ph-arrow-right"></i></button>
     </div>
     <p class="nl-msg" id="coll-nl-msg"></p>
@@ -738,6 +864,7 @@ input,select,textarea{font-size:16px !important;}
 </div>
 
 <!-- Cart Overlay -->
+
 <div class="cart-bg" id="cart-bg" onclick="closeCart()"></div>
 <div class="cart-ov" id="cart-ov" role="dialog" aria-label="Shopping cart" aria-modal="true">
   <div class="cart-hdr">
@@ -780,10 +907,11 @@ input,select,textarea{font-size:16px !important;}
 </div>
 
 <!-- Product Modal -->
+
 <div class="prod-modal" id="prod-modal" role="dialog" aria-label="Product details" aria-modal="true">
   <header class="modal-hdr">
     <div class="hdr-inner">
-      <button class="hdr-menu-text" disabled style="opacity:0;pointer-events:none;" aria-hidden="true">MENU</button>
+      <button class="hdr-menu-text" onclick="openMenu()" aria-label="Open navigation menu">MENU</button>
       <div class="hdr-logo">
         <a href="javascript:void(0)" onclick="closeModalToHome()" aria-label="Janedore Home">
           <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202" alt="Janedore">
@@ -823,9 +951,9 @@ input,select,textarea{font-size:16px !important;}
           <button class="modal-acc-toggle" onclick="toggleAcc('acc-ship',this)" aria-expanded="false"><span>SHIPPING</span><i class="ph ph-caret-down"></i></button>
           <div class="modal-acc-body" id="acc-ship">
             <p class="ship-info-text"><b>Free shipping</b> on orders over R750. Standard delivery 7–14 business days from dispatch.</p>
-            <p style="font-family:'Manrope',sans-serif;font-size:12px;color:#555;margin-bottom:4px;font-weight:400;">Enter your postal code:</p>
+            <p style="font-family:'Manrope',sans-serif;font-size:11px;color:#999;margin-bottom:4px;font-weight:400;letter-spacing:1px;text-transform:uppercase;">ENTER POSTAL CODE</p>
             <div class="ship-row">
-              <input class="ship-inp" id="postal-inp" placeholder="e.g. 0186">
+              <input class="ship-inp" id="postal-inp" placeholder="E.G. 0186">
               <button class="ship-btn" onclick="calcShip()">CHECK</button>
             </div>
             <p class="ship-result" id="ship-result"></p>
@@ -851,7 +979,7 @@ input,select,textarea{font-size:16px !important;}
               <span>WRITE A REVIEW</span><i class="ph ph-caret-down"></i>
             </div>
             <div class="review-form" id="review-form">
-              <div><label class="rf-lbl" for="rf-name">YOUR NAME</label><input class="rf-inp" id="rf-name" placeholder="e.g. Thandiwe M."></div>
+              <div><label class="rf-lbl" for="rf-name">YOUR NAME</label><input class="rf-inp" id="rf-name" placeholder="E.G. THANDIWE M."></div>
               <div>
                 <label class="rf-lbl">RATING</label>
                 <div class="star-picker">
@@ -862,7 +990,7 @@ input,select,textarea{font-size:16px !important;}
                   <button class="star-pick" onclick="setRating(5)">☆</button>
                 </div>
               </div>
-              <div><label class="rf-lbl" for="rf-body">YOUR REVIEW</label><textarea class="rf-ta" id="rf-body" placeholder="Share your thoughts..."></textarea></div>
+              <div><label class="rf-lbl" for="rf-body">YOUR REVIEW</label><textarea class="rf-ta" id="rf-body" placeholder="SHARE YOUR THOUGHTS..."></textarea></div>
               <button class="rf-submit" id="rf-submit" onclick="submitReviewForm()">
                 <span id="rf-submit-text">SUBMIT REVIEW</span>
                 <div class="rf-spinner" id="rf-spinner"></div>
@@ -881,7 +1009,7 @@ input,select,textarea{font-size:16px !important;}
       <h2 class="f-nl-h">STAY IN THE EDIT</h2>
       <p class="f-nl-sub">Join the list and get 15% off your first order.<br>Early access to new arrivals, exclusive drops, and curated pieces.</p>
       <div class="f-nl-row">
-        <input class="f-nl-inp" id="modal-nl-email" type="email" placeholder="Your email address">
+        <input class="f-nl-inp" id="modal-nl-email" type="email" placeholder="YOUR EMAIL ADDRESS">
         <button class="f-nl-send" onclick="submitNewsletterModal()"><i class="ph-thin ph-arrow-right"></i></button>
       </div>
       <p class="nl-msg" id="modal-nl-msg"></p>
@@ -908,6 +1036,7 @@ input,select,textarea{font-size:16px !important;}
 </div>
 
 <!-- Size Chart Panel -->
+
 <div class="sz-chart-bg" id="sz-chart-bg" onclick="closeSizeChart()"></div>
 <div class="sz-chart-panel" id="sz-chart-panel" role="dialog" aria-label="Size chart" aria-modal="true">
   <div class="sz-chart-hdr">
@@ -932,22 +1061,90 @@ var sliderIdx=0, sliderTotal=0, sliderStartX=0, sliderDragging=false, sliderDrag
 var savedMainScroll=0, selectedSize='';
 var sortMode='default', activeFilterCategory='all', currentCollectionType='all';
 var PROMOS={'JANEDORE10':0.10,'WELCOME15':0.15,'SALE20':0.20}, activePromo=null, dynamicPromos={};
-var OS={cart:false,modal:false}, savedSY=0;
+var OS={cart:false,modal:false,menu:false}, savedSY=0;
 
-/* ── SECTION SUBHEADING TOGGLE ── */
-function toggleColSub(subId, toggleId) {
-  var sub = document.getElementById(subId);
-  var btn = document.getElementById(toggleId);
-  if (!sub || !btn) return;
-  var isOpen = !sub.classList.contains('clamped');
-  if (isOpen) {
-    sub.classList.add('clamped');
-    btn.textContent = 'SEE MORE';
-  } else {
-    sub.classList.remove('clamped');
-    btn.textContent = 'SEE LESS';
-  }
+/* ── COLLECTION LONG DESCRIPTIONS (moved here from home) ── */
+var COLLECTION_LONG_DESCS = {
+  'all': 'Every piece in The Collection is chosen because it earns its place. No filler, no fast fashion — just clothing and accessories that are genuinely difficult to find elsewhere. From fluid dresses that photograph beautifully in daylight to structured sets that hold their shape all evening, the standard is simple: if it wouldn\'t make us stop scrolling, it doesn\'t make the cut.',
+  'new': 'These just landed — and if history is anything to go by, they won\'t be here long. New Arrivals at Janedore move fast because they\'re sourced from places most people aren\'t looking: small ateliers, limited production runs, and seasonal drops that rarely get restocked. We add new pieces as we find them, which means the edit shifts constantly. Check back often, or better yet, join the list and hear about new drops before anyone else.',
+  'sets': 'Coordinated sets, effortlessly styled. Each set is chosen because the pieces work harder together than apart.',
+  'sunglasses': 'UV-400 protection meets considered design. Sourced from hard-to-find labels with serious craftsmanship.',
+  'dresses': 'From fluid day dresses to evening-ready silhouettes. Each dress is chosen because it photographs beautifully and wears even better.',
+  'tops': 'The foundation of every great outfit. Our tops are chosen for their quality, fit, and the way they layer.',
+  'bottoms': 'Tailored, relaxed, and everything between. Bottoms that anchor an outfit without trying too hard.',
+  'clothing': 'Wearable curation — clothing chosen because it earns its place in your wardrobe.',
+  'jewellery': 'Finishing touches that do the most. Jewellery sourced from small makers who care about craft.'
+};
+
+/* ── MENU ── */
+function openMenu(){
+  document.getElementById('menu-bg').classList.add('open');
+  document.getElementById('menu-panel').classList.add('open');
+  OS.menu=true;
+  lockBody();
 }
+function closeMenu(){
+  document.getElementById('menu-bg').classList.remove('open');
+  document.getElementById('menu-panel').classList.remove('open');
+  OS.menu=false;
+  if(!OS.cart&&!OS.modal)unlockBody();
+}
+function toggleMenuSec(id,btn){
+  var body=document.getElementById(id);
+  var isOpen=body.classList.contains('open');
+  body.classList.toggle('open');
+  btn.classList.toggle('open');
+  btn.setAttribute('aria-expanded',!isOpen);
+}
+
+/* ── CAT SLIDER ── */
+(function(){
+  var wrap, track, fill;
+  var catIdx=0, catTotal=4, catStartX=0, catDragging=false, catDragDelta=0;
+  var VISIBLE=2; // 2 cards visible at a time
+
+  function updateCatSlider(){
+    var maxIdx = catTotal - VISIBLE;
+    if(catIdx < 0) catIdx = 0;
+    if(catIdx > maxIdx) catIdx = maxIdx;
+    // each card is 50% - 1px, gap 2px
+    var cardW = (wrap.offsetWidth - 2) / VISIBLE;
+    track.style.transform = 'translateX(-' + (catIdx * (cardW + 2)) + 'px)';
+    // progress
+    var pct = maxIdx > 0 ? (catIdx / maxIdx) * 100 : 0;
+    fill.style.width = pct + '%';
+  }
+
+  function onStart(x){ catStartX=x; catDragging=true; catDragDelta=0; }
+  function onMove(x){ if(!catDragging)return; catDragDelta=x-catStartX; }
+  function onEnd(){
+    if(!catDragging)return;
+    catDragging=false;
+    if(catDragDelta < -40) catIdx++;
+    else if(catDragDelta > 40) catIdx--;
+    updateCatSlider();
+    catDragDelta=0;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    wrap = document.getElementById('cat-slider-wrap');
+    track = document.getElementById('cat-slider-track');
+    fill = document.getElementById('cat-progress-fill');
+    if(!wrap||!track||!fill) return;
+
+    // Touch
+    wrap.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, {passive:true});
+    wrap.addEventListener('touchmove', function(e){ onMove(e.touches[0].clientX); }, {passive:true});
+    wrap.addEventListener('touchend', onEnd);
+    // Mouse
+    wrap.addEventListener('mousedown', function(e){ e.preventDefault(); onStart(e.clientX); });
+    wrap.addEventListener('mousemove', function(e){ onMove(e.clientX); });
+    wrap.addEventListener('mouseup', onEnd);
+    wrap.addEventListener('mouseleave', onEnd);
+
+    updateCatSlider();
+  });
+})();
 
 /* ── CART PERSISTENCE ── */
 function loadCartFromStorage(){try{const s=localStorage.getItem('janedore_cart');if(s){cartItems=JSON.parse(s);updCartBadge();}}catch(e){}}
@@ -995,11 +1192,11 @@ function buildSoldOutOverlay(p){
 
 function buildPriceHtml(p, context) {
   if (p.isOnSale && p.salePrice) {
-    var saving = p.priceN - p.salePrice;
-    var pct = Math.round((saving / p.priceN) * 100);
     if (context === 'card' || context === 'ymal') {
       return '<p class="prod-price-sale">R ' + p.salePrice.toFixed(2) + '<span class="prod-price-orig">R ' + p.priceN.toFixed(2) + '</span></p>';
     }
+    var saving = p.priceN - p.salePrice;
+    var pct = Math.round((saving / p.priceN) * 100);
     return 'SALE:R' + p.salePrice.toFixed(2) + ':R' + p.priceN.toFixed(2) + ':' + saving.toFixed(2) + ':' + pct;
   }
   if (context === 'card' || context === 'ymal') {
@@ -1022,6 +1219,7 @@ window.renderProducts = function(products) {
         isOnSale:p.isOnSale||false,
         salePrice:p.salePrice||null,
         badge:p.badge||'',
+        /* CHANGED: category field uses 'tops' instead of 'clothing' */
         category:p.category||'', sku:p.sku||'',
         slug:p.slug||(p.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
       };
@@ -1058,6 +1256,7 @@ function buildCard(p) {
 function viewCollection(type) {
   if(OS.cart)closeCart();
   if(OS.modal)closeModal();
+  if(OS.menu)closeMenu();
   document.querySelector('.page').style.display='none';
   document.getElementById('main-footer').style.display='none';
   document.getElementById('collection-page').classList.add('open');
@@ -1066,19 +1265,39 @@ function viewCollection(type) {
   currentCollectionType=type; activeFilterCategory='all';
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
   var firstChip=document.querySelector('.filter-chip');if(firstChip)firstChip.classList.add('active');
+
+  /* CHANGED: set collection long desc */
+  var longDesc = COLLECTION_LONG_DESCS[type] || COLLECTION_LONG_DESCS['all'];
+  var longDescEl = document.getElementById('collection-long-desc');
+  if(longDescEl) longDescEl.textContent = longDesc;
+
   var filtered=[], title='ALL PRODUCTS', desc='Curated pieces, handpicked for you.';
+  /* CHANGED: 'tops' now matches category === 'tops' */
   if(type==='new'){filtered=CAT.filter(p=>p.isNewArrival);title='NEW ARRIVALS';desc='Just landed — before they sell out.';}
   else if(type==='all'){filtered=CAT.slice();}
   else if(type==='sets'){filtered=CAT.filter(p=>(p.category||'').toLowerCase().includes('set'));title='SETS';desc='Coordinated pieces, effortlessly cool.';}
   else if(type==='sunglasses'){filtered=CAT.filter(p=>(p.category||'').toLowerCase().includes('sunglass')||(p.name||'').toLowerCase().includes('sunglass'));title='SUNGLASSES';desc='UV protection meets style.';}
   else if(type==='dresses'){filtered=CAT.filter(p=>(p.category||'').toLowerCase().includes('dress'));title='DRESSES';desc='From day to night.';}
-  else if(type==='tops'){filtered=CAT.filter(p=>(p.category||'').toLowerCase().includes('top')||(p.category||'').toLowerCase().includes('shirt'));title='TOPS';desc='Essential layers.';}
+  else if(type==='tops'){
+    /* CHANGED: matches 'tops' category (no longer 'clothing') */
+    filtered=CAT.filter(p=>(p.category||'').toLowerCase()==='tops'||(p.category||'').toLowerCase().includes('top')||(p.category||'').toLowerCase().includes('shirt'));
+    title='TOPS';desc='Essential layers.';
+  }
   else if(type==='bottoms'){filtered=CAT.filter(p=>(p.category||'').toLowerCase().includes('bottom')||(p.category||'').toLowerCase().includes('pant')||(p.category||'').toLowerCase().includes('skirt'));title='BOTTOMS';desc='Foundation pieces.';}
-  else if(type==='clothing'){filtered=CAT.filter(p=>isClothing(p));title='CLOTHING';desc='Wearable curation.';}
+  else if(type==='clothing'){
+    /* CHANGED: 'clothing' now means any wearable category (tops, dresses, sets, bottoms) */
+    filtered=CAT.filter(p=>isClothing(p));title='CLOTHING';desc='Wearable curation.';
+  }
   else if(type==='jewellery'){filtered=CAT.filter(p=>(p.category||'').toLowerCase().includes('jewellery')||(p.category||'').toLowerCase().includes('accessory'));title='JEWELLERY';desc='Finishing touches.';}
   else{filtered=CAT.slice();}
+
   document.getElementById('collection-title').textContent=title;
   document.getElementById('collection-desc').textContent=desc;
+
+  /* Hide view all btn on 'all' since it would be redundant */
+  var vaBtn=document.getElementById('collection-view-all-btn');
+  if(vaBtn) vaBtn.style.display = type==='all' ? 'none' : 'inline-flex';
+
   applySortAndRender(filtered);
 }
 
@@ -1091,7 +1310,8 @@ function filterByCategory(cat, chipEl) {
   if(cat!=='all'){
     filtered=baseItems.filter(p=>{
       var cl=(p.category||'').toLowerCase();
-      if(cat==='tops')return cl.includes('top')||cl.includes('shirt');
+      /* CHANGED: tops matches 'tops' category */
+      if(cat==='tops')return cl==='tops'||cl.includes('top')||cl.includes('shirt');
       if(cat==='dresses')return cl.includes('dress');
       if(cat==='sets')return cl.includes('set');
       if(cat==='bottoms')return cl.includes('bottom')||cl.includes('pant')||cl.includes('skirt');
@@ -1108,7 +1328,8 @@ function getBaseItems(){
   if(currentCollectionType==='sets')return CAT.filter(p=>(p.category||'').toLowerCase().includes('set'));
   if(currentCollectionType==='sunglasses')return CAT.filter(p=>(p.category||'').toLowerCase().includes('sunglass'));
   if(currentCollectionType==='dresses')return CAT.filter(p=>(p.category||'').toLowerCase().includes('dress'));
-  if(currentCollectionType==='tops')return CAT.filter(p=>(p.category||'').toLowerCase().includes('top'));
+  /* CHANGED: tops uses exact 'tops' match first */
+  if(currentCollectionType==='tops')return CAT.filter(p=>(p.category||'').toLowerCase()==='tops'||(p.category||'').toLowerCase().includes('top'));
   if(currentCollectionType==='bottoms')return CAT.filter(p=>(p.category||'').toLowerCase().includes('bottom')||(p.category||'').toLowerCase().includes('pant'));
   if(currentCollectionType==='clothing')return CAT.filter(p=>isClothing(p));
   return CAT.slice();
@@ -1156,6 +1377,7 @@ function hideCollectionPage(){
 function goHome(){
   if(OS.cart)closeCart();
   if(OS.modal)closeModal();
+  if(OS.menu)closeMenu();
   hideCollectionPage();
   window.location.hash='#/';
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1229,7 +1451,7 @@ function applyPromo(){
 
 function openCart(){renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;lockBody();}
 function openCartFromModal(){renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;}
-function closeCart(){document.getElementById('cart-ov').classList.remove('open');document.getElementById('cart-bg').classList.remove('open');OS.cart=false;if(!OS.modal)unlockBody();}
+function closeCart(){document.getElementById('cart-ov').classList.remove('open');document.getElementById('cart-bg').classList.remove('open');OS.cart=false;if(!OS.modal&&!OS.menu)unlockBody();}
 function proceedToCheckout(){showToast('Proceeding to checkout...','info');}
 
 function addItem(p,sz,qty,variantLabel,variantImgSrc){
@@ -1274,6 +1496,7 @@ function goSlide(idx){
 function isClothing(p){
   if(!p)return false;
   var cat=(p.category||'').toLowerCase();
+  /* CHANGED: 'clothing' now also catches 'tops' (was 'clothing') */
   if(cat==='clothing'||cat==='tops'||cat==='sets'||cat==='dresses'||cat==='bottoms'||cat==='outerwear')return true;
   return(p.sizes||[]).some(sz=>['XS','S','M','L','XL','XXL'].includes((sz||'').toUpperCase()));
 }
@@ -1283,6 +1506,7 @@ function openModal(id){
   if(!p){showToast('Product not found','error');return;}
   updateProductURL(p);
   if(OS.cart)closeCart();
+  if(OS.menu)closeMenu();
   savedMainScroll=window.scrollY;
   curModal=p; curModalVariant=p.variants&&p.variants.length?p.variants[0]:null; selectedSize='';
   var imgs=p.images||(p.imgSrc?[p.imgSrc]:[]);
@@ -1353,7 +1577,7 @@ function addToBag(){
   addItem(curModal,selectedSize,1,curModalVariant?curModalVariant.label:null,curModalVariant?curModalVariant.imgSrc:null);
   closeModal();setTimeout(openCart,150);
 }
-function closeModal(){document.getElementById('prod-modal').classList.remove('open');OS.modal=false;if(!OS.cart)unlockBody();window.location.hash='#/';}
+function closeModal(){document.getElementById('prod-modal').classList.remove('open');OS.modal=false;if(!OS.cart&&!OS.menu)unlockBody();window.location.hash='#/';}
 function closeModalToHome(){document.getElementById('prod-modal').classList.remove('open');OS.modal=false;document.body.classList.remove('overlay-open');document.body.style.top='';window.location.hash='#/';window.scrollTo(0,savedMainScroll);}
 function toggleAcc(bodyId,btn){var body=document.getElementById(bodyId);var isOpen=body.classList.contains('open');body.classList.toggle('open');btn.classList.toggle('open');btn.setAttribute('aria-expanded',!isOpen);}
 function calcShip(){var res=document.getElementById('ship-result');res.style.display='block';res.textContent='Standard: R75 · Express: R130';}
@@ -1400,7 +1624,8 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 window.addEventListener('hashchange',handleHashChange);
 window.addEventListener('pagehide',function(){saveCartToStorage();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(OS.cart)closeCart();if(OS.modal)closeModal();}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(OS.cart)closeCart();if(OS.modal)closeModal();if(OS.menu)closeMenu();}});
 </script>
+
 </body>
 </html>
