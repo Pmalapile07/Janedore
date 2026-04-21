@@ -70,14 +70,13 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .loading-spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
 
 /* ── ANNOUNCEMENT BAR ── */
-.ann{background:#000;color:#fff;font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2.5px;text-align:center;padding:9px 20px;position:fixed;top:0;left:0;right:0;z-index:1001;height:36px;display:flex;align-items:center;justify-content:center;}
+.ann{background:#fff;color:#000;font-family:'Driftune',sans-serif;font-size:9px;letter-spacing:2.5px;text-align:center;padding:9px 20px;position:fixed;top:0;left:0;right:0;z-index:1001;height:36px;display:flex;align-items:center;justify-content:center;}
 
 /* ── HEADER ── */
 .hdr{display:flex;align-items:center;background:transparent;height:64px;position:fixed;top:36px;left:0;right:0;z-index:1000;}
 .hdr-inner{width:100%;max-width:100%;padding:10px 20px 0;display:flex;align-items:center;justify-content:space-between;position:relative;}
 .modal-hdr{display:flex;align-items:center;background:transparent;height:64px;position:fixed;top:36px;left:0;right:0;z-index:1002;padding-top:0;}
 .modal-hdr .hdr-inner{padding:10px 20px 0;}
-
 .hdr-menu-text{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;cursor:pointer;background:none;border:none;padding:0;transition:opacity .2s;flex-shrink:0;min-height:44px;min-width:44px;font-weight:400;}
 .hdr-menu-text:hover{opacity:.65;}
 .hdr-logo{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;}
@@ -85,7 +84,6 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .hdr-cart-text{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;cursor:pointer;background:none;border:none;padding:0;display:flex;align-items:center;gap:4px;transition:opacity .2s;flex-shrink:0;min-height:44px;min-width:44px;font-weight:400;}
 .hdr-cart-text:hover{opacity:.65;}
 .hdr-cart-count{font-family:'Manrope',sans-serif;font-size:11px;font-weight:400;color:#fff;}
-
 .hdr.dark-hdr .hdr-menu-text,
 .hdr.dark-hdr .hdr-cart-text,
 .hdr.dark-hdr .hdr-cart-count{color:#000 !important;}
@@ -93,12 +91,23 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 
 /* ── MAIN PAGE ── */
 .page{padding-top:0;margin-top:0;}
+
+/* ── HERO BANNER — redesigned overlay ── */
 .banner{position:relative;width:100%;overflow:hidden;background:#e8e8e8;margin-top:0;}
 .banner img{width:100%;height:75vh;object-fit:cover;display:block;}
-.banner-label{position:absolute;bottom:32px;left:28px;color:#fff;font-family:'Driftune',sans-serif;font-size:18px;letter-spacing:2px;line-height:1.2;text-shadow:0 2px 14px rgba(0,0,0,.4);pointer-events:none;}
-/* SHOP NOW — same baseline as banner-label, no underline */
-.banner-shop{position:absolute;bottom:34px;right:28px;color:#fff;font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:2.5px;cursor:pointer;text-shadow:0 2px 14px rgba(0,0,0,.4);text-transform:uppercase;font-weight:400;border-bottom:none;padding-bottom:0;}
+/* Gradient scrim at bottom for text legibility */
+.banner-scrim{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.18) 50%, transparent 100%);pointer-events:none;}
+/* Bottom-left: heading + sub-paragraph */
+.banner-content-left{position:absolute;bottom:32px;left:28px;max-width:calc(100% - 140px);}
+.banner-heading{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;line-height:1.15;text-shadow:0 2px 14px rgba(0,0,0,.3);margin-bottom:7px;}
+.banner-sub{font-family:'Manrope',sans-serif;font-size:11px;color:rgba(255,255,255,0.82);line-height:1.65;letter-spacing:0.3px;font-weight:400;text-shadow:0 1px 6px rgba(0,0,0,.35);}
+/* Bottom-right: SHOP NOW button — same aesthetic as BACK TO HOME */
+.banner-shop-btn{position:absolute;bottom:34px;right:28px;display:flex;align-items:center;gap:6px;cursor:pointer;background:none;border:none;padding:0;min-height:44px;}
+.banner-shop-btn span{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#fff;border-bottom:1px solid #fff;padding-bottom:2px;font-weight:400;text-shadow:0 1px 6px rgba(0,0,0,.4);}
+.banner-shop-btn i{font-size:15px;color:#fff;}
+.banner-shop-btn:hover span,.banner-shop-btn:hover i{opacity:.7;}
 
+/* ── DUO GRIDS ── */
 .duo-grid{display:flex;gap:2px;background:#fff;margin-top:2px;}
 .duo-card{flex:1;position:relative;overflow:hidden;cursor:pointer;}
 .duo-card .img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#e8e8e8;}
@@ -106,21 +115,44 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .duo-card:hover .img-wrap img{transform:scale(1.15);}
 .duo-label{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.45);z-index:2;pointer-events:none;}
 .uv-tag{position:absolute;top:10px;right:10px;background:#111;color:#fff;font-family:'Manrope',sans-serif;font-size:7px;letter-spacing:1.5px;padding:3px 8px;z-index:3;pointer-events:none;font-weight:400;}
+
+/* ── ABOUT BLOCK ── */
 .about-blk{padding:36px 20px 40px;}
 .about-blk h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
 .about-blk p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;font-weight:400;}
+/* VIEW ALL button under THE EDIT — same as BACK TO HOME */
+.edit-view-all{display:inline-flex;align-items:center;gap:6px;margin-top:20px;cursor:pointer;background:none;border:none;padding:0;min-height:44px;}
+.edit-view-all span{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;font-weight:400;}
+.edit-view-all i{font-size:15px;color:#111;}
+.edit-view-all:hover span,.edit-view-all:hover i{opacity:.6;}
 
-/* ── HERO IMAGE BETWEEN COLLECTION AND NEW ARRIVALS ── */
-.mid-hero{width:100%;overflow:hidden;background:#e8e8e8;margin:2px 0;}
+/* ── MID HERO ── */
+.mid-hero{position:relative;width:100%;overflow:hidden;background:#e8e8e8;margin:2px 0;}
 .mid-hero img{width:100%;height:70vh;object-fit:cover;display:block;}
+.mid-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.45) 0%,transparent 60%);pointer-events:none;}
+.mid-hero-label{position:absolute;bottom:28px;left:0;right:0;text-align:center;cursor:pointer;}
+.mid-hero-label h3{font-family:'Driftune',sans-serif;font-size:20px;letter-spacing:3px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.4);display:inline-block;border-bottom:1px solid rgba(255,255,255,0.5);padding-bottom:3px;transition:opacity .2s;}
+.mid-hero-label:hover h3{opacity:.75;}
 
+/* ── CTA LINKS (VIEW ALL rows) — same aesthetic as BACK TO HOME ── */
 .btm-cta{padding:28px 20px 40px;display:flex;flex-direction:column;gap:10px;}
-/* VIEW ALL — no underline */
-.cta-link{display:inline-block;font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;padding-bottom:0;border-bottom:none;cursor:pointer;width:fit-content;text-decoration:none;font-weight:400;}
+.cta-link{display:inline-flex;align-items:center;gap:6px;font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:2.5px;color:#111;cursor:pointer;width:fit-content;text-decoration:none;font-weight:400;background:none;border:none;padding:0;min-height:44px;}
+.cta-link span{border-bottom:1px solid #111;padding-bottom:2px;}
+.cta-link i{font-size:15px;}
+.cta-link:hover span,.cta-link:hover i{opacity:.6;}
+
+/* ── COLLECTION SECTION ── */
 .col-sec{padding:36px 0 20px;}
-.col-hdr{padding:0 20px 20px;}
-.col-hdr h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:4px;}
-.col-hdr p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;font-weight:400;}
+.col-hdr{padding:0 20px 12px;}
+.col-hdr h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:6px;}
+
+/* See more / collapse for subheadings */
+.col-sub-wrap{position:relative;}
+.col-sub{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;font-weight:400;max-width:480px;}
+.col-sub.clamped{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.col-sub-toggle{display:inline-block;font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:1.5px;color:#999;cursor:pointer;margin-top:6px;background:none;border:none;padding:0;transition:color .2s;text-decoration:underline;text-underline-offset:2px;}
+.col-sub-toggle:hover{color:#111;}
+
 .grid-loading{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
 .grid-loading-card{aspect-ratio:3/4;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
 
@@ -146,10 +178,12 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .soldout-overlay{position:absolute;inset:0;background:rgba(255,255,255,0.5);z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;}
 .soldout-overlay span{font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:3px;color:#111;font-weight:500;}
 
-/* ── ABOUT / FOOTER ── */
+/* ── ABOUT US ── */
 .about-us{padding:36px 20px 56px;}
 .about-us h2{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:2px;color:#111;margin-bottom:12px;}
 .about-us p{font-family:'Manrope',sans-serif;font-size:13px;color:#555;line-height:1.75;max-width:480px;font-weight:400;}
+
+/* ── FOOTER ── */
 .footer{background:#fff;padding:40px 20px 28px;}
 .f-nl-h{font-family:'Driftune',sans-serif;font-size:22px;letter-spacing:3px;color:#111;margin-bottom:8px;}
 .f-nl-sub{font-family:'Manrope',sans-serif;font-size:13px;color:#666;margin-bottom:18px;line-height:1.65;font-weight:400;}
@@ -179,7 +213,7 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 /* ── CART ── */
 .cart-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:1099;opacity:0;pointer-events:none;transition:opacity .2s;}
 .cart-bg.open{opacity:1;pointer-events:all;}
-.cart-ov{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:440px;background:#fff;z-index:1100;display:flex;flex-direction:column;overflow:hidden;transition:none;box-shadow:-4px 0 40px rgba(0,0,0,.1);pointer-events:none;visibility:hidden;}
+.cart-ov{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:440px;background:#fff;z-index:1100;display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 40px rgba(0,0,0,.1);pointer-events:none;visibility:hidden;}
 .cart-ov.open{visibility:visible;pointer-events:all;}
 .cart-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;flex-shrink:0;}
 .cart-title{font-family:'Manrope',sans-serif;font-size:13px;letter-spacing:1.5px;color:#111;margin-bottom:2px;font-weight:400;}
@@ -188,20 +222,13 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .cart-x i{font-size:20px;color:#111;}
 .cart-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 .cart-list{padding:0 20px;}
-
-/* Cart item — image + info side by side, info col fills height */
 .cart-item{display:flex;gap:16px;padding:18px 0;align-items:stretch;}
 .ci-img{width:86px;height:108px;object-fit:cover;object-position:center top;background:#e8e8e8;flex-shrink:0;display:block;cursor:pointer;align-self:flex-start;}
 .ci-img-ph{width:86px;height:108px;flex-shrink:0;background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;align-self:flex-start;}
-
-/* ci-info: flex column with space-between so size+qty sit at bottom (image end) */
 .ci-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0;min-height:108px;}
 .ci-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
-/* Cart name — UPPERCASE, bold */
 .ci-name{font-family:'Manrope',sans-serif;font-size:13px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;cursor:pointer;text-transform:uppercase;margin-bottom:4px;}
 .ci-price{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#777;white-space:nowrap;}
-
-/* Size + qty pinned to bottom of info column */
 .ci-bottom-section{display:flex;flex-direction:column;gap:4px;}
 .ci-size{font-family:'Manrope',sans-serif;font-size:11px;color:#999;font-weight:400;}
 .ci-bottom-row{display:flex;align-items:center;justify-content:space-between;}
@@ -269,13 +296,10 @@ body.overlay-open{overflow:hidden;position:fixed;width:100%;}
 .modal-thumb.active{opacity:1;border-color:#111;}
 .modal-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .modal-det{padding:8px 20px 0;}
-
-/* Product name + price on same row, price far right */
 .modal-name-price-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;}
 .modal-nm{font-family:'Manrope',sans-serif;font-size:15px;color:#111;font-weight:400;text-transform:uppercase;flex:1;}
 .modal-price-right{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#777;white-space:nowrap;flex-shrink:0;}
 .modal-price-right-sale{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#c0392b;white-space:nowrap;flex-shrink:0;}
-
 .modal-sku{font-family:'Manrope',sans-serif;font-size:10px;color:#bbb;letter-spacing:1px;margin-bottom:8px;font-weight:400;}
 .modal-pr{font-family:'Manrope',sans-serif;font-size:13px;font-weight:400;color:#777;margin-bottom:4px;}
 .modal-pr-sale{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#c0392b;margin-bottom:2px;}
@@ -482,9 +506,7 @@ input,select,textarea{font-size:16px !important;}
       if(!emailRegex.test(email))return{ok:false,error:'Invalid email address'};
       const q = query(collection(db, "newsletter_subscribers"), where("email", "==", email));
       const snap = await getDocs(q);
-      if (!snap.empty) {
-        return {ok: false, error: 'This email is already subscribed.'};
-      }
+      if (!snap.empty){return {ok:false,error:'This email is already subscribed.'};}
       const uniqueCode='WELCOME15-'+Math.random().toString(36).substring(2,7).toUpperCase();
       await addDoc(collection(db,"newsletter_subscribers"),{email:sanitizeInput(email),discountCode:uniqueCode,subscribedAt:serverTimestamp()});
       return{ok:true,code:uniqueCode};
@@ -522,17 +544,31 @@ input,select,textarea{font-size:16px !important;}
 <!-- Main Content -->
 <main id="main-content" class="page" role="main">
 
-  <!-- Hero Banner -->
+  <!-- Hero Banner — redesigned -->
   <div class="banner">
     <img src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg" alt="New In Clothing Collection">
-    <div class="banner-label">NEW IN<br>CLOTHING</div>
-    <span class="banner-shop" role="button" tabindex="0" onclick="viewCollection('new')">SHOP NOW</span>
+    <div class="banner-scrim"></div>
+    <!-- Bottom-left: heading + paragraph -->
+    <div class="banner-content-left">
+      <div class="banner-heading">NEW : CLOTHING</div>
+      <p class="banner-sub">Janedore is now dressing you — fully.<br>Clothing that moves with you, made to last.</p>
+    </div>
+    <!-- Bottom-right: SHOP NOW — same aesthetic as BACK TO HOME -->
+    <button class="banner-shop-btn" onclick="viewCollection('new')" aria-label="Shop new clothing">
+      <span>SHOP NOW</span>
+      <i class="ph ph-arrow-right"></i>
+    </button>
   </div>
 
-  <!-- THE EDIT — moved above category cards -->
+  <!-- THE EDIT — above category cards -->
   <section class="about-blk">
     <h2>THE EDIT</h2>
     <p>The rarest finds, within reach. We source hard-to-get pieces in exceptional quality — the kind that sell out before most people know they exist. Every item is chosen because it deserves to be found.</p>
+    <!-- VIEW ALL button — same aesthetic as BACK TO HOME -->
+    <button class="edit-view-all" onclick="viewCollection('all')" aria-label="View all products">
+      <i class="ph ph-arrow-right"></i>
+      <span>VIEW ALL</span>
+    </button>
   </section>
 
   <!-- Category Cards -->
@@ -563,23 +599,27 @@ input,select,textarea{font-size:16px !important;}
   <section class="col-sec">
     <div class="col-hdr">
       <h2>THE COLLECTION</h2>
-      <p>Handpicked pieces, ready to wear.</p>
+      <div class="col-sub-wrap">
+        <p class="col-sub clamped" id="col-sub-1">Every piece in The Collection is chosen because it earns its place. No filler, no fast fashion — just clothing and accessories that are genuinely difficult to find elsewhere. From fluid dresses that photograph beautifully in daylight to structured sets that hold their shape all evening, the standard is simple: if it wouldn't make us stop scrolling, it doesn't make the cut.</p>
+        <button class="col-sub-toggle" id="col-sub-toggle-1" onclick="toggleColSub('col-sub-1','col-sub-toggle-1')">SEE MORE</button>
+      </div>
     </div>
     <div class="grid-loading" id="grid-1-loading"><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div></div>
     <div class="prod-grid" id="grid-1" style="display:none;" role="list"></div>
   </section>
 
   <div class="btm-cta">
-    <span class="cta-link" role="button" tabindex="0" onclick="viewCollection('all')">VIEW ALL</span>
+    <button class="cta-link" onclick="viewCollection('all')">
+      <i class="ph ph-arrow-right"></i><span>VIEW ALL</span>
+    </button>
   </div>
 
-  <!-- Mid-page Hero Image (between Collection and New Arrivals) -->
-  <div class="mid-hero" id="mid-hero">
-    <!-- Replace the src below with your provided image URL -->
-    <img src="" alt="Janedore Editorial" id="mid-hero-img" style="display:none;">
-    <!-- Placeholder shown until image is set -->
-    <div id="mid-hero-placeholder" style="width:100%;height:70vh;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
-      <span style="font-family:'Driftune',sans-serif;font-size:13px;letter-spacing:3px;color:#bbb;">YOUR HERO IMAGE HERE</span>
+  <!-- Mid-page Hero Image -->
+  <div class="mid-hero">
+    <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG_5956.jpg?v=1776805553" alt="Curated Dresses — Janedore">
+    <div class="mid-hero-overlay"></div>
+    <div class="mid-hero-label" onclick="viewCollection('dresses')" role="button" tabindex="0" aria-label="Shop Curated Dresses">
+      <h3>CURATED DRESSES</h3>
     </div>
   </div>
 
@@ -587,14 +627,19 @@ input,select,textarea{font-size:16px !important;}
   <section class="col-sec">
     <div class="col-hdr">
       <h2>NEW ARRIVALS</h2>
-      <p>Just landed — before they sell out.</p>
+      <div class="col-sub-wrap">
+        <p class="col-sub clamped" id="col-sub-2">These just landed — and if history is anything to go by, they won't be here long. New Arrivals at Janedore move fast because they're sourced from places most people aren't looking: small ateliers, limited production runs, and seasonal drops that rarely get restocked. We add new pieces as we find them, which means the edit shifts constantly. Check back often, or better yet, join the list and hear about new drops before anyone else.</p>
+        <button class="col-sub-toggle" id="col-sub-toggle-2" onclick="toggleColSub('col-sub-2','col-sub-toggle-2')">SEE MORE</button>
+      </div>
     </div>
     <div class="grid-loading" id="grid-2-loading"><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div><div class="grid-loading-card"></div></div>
     <div class="prod-grid" id="grid-2" style="display:none;" role="list"></div>
   </section>
 
   <div class="btm-cta">
-    <span class="cta-link" role="button" tabindex="0" onclick="viewCollection('new')">VIEW ALL</span>
+    <button class="cta-link" onclick="viewCollection('new')">
+      <i class="ph ph-arrow-right"></i><span>VIEW ALL</span>
+    </button>
   </div>
 
   <section class="about-us">
@@ -680,13 +725,9 @@ input,select,textarea{font-size:16px !important;}
       <a href="#" onclick="viewCollection('sunglasses');return false;">Sunglasses</a>
     </div>
     <div class="f-nav-toggle" onclick="toggleFNav('cfn-help',this)"><span>HELP</span><i class="ph ph-caret-down"></i></div>
-    <div class="f-nav-body" id="cfn-help">
-      <a href="#">Shipping</a><a href="#">Returns</a><a href="#">Contact Us</a>
-    </div>
+    <div class="f-nav-body" id="cfn-help"><a href="#">Shipping</a><a href="#">Returns</a><a href="#">Contact Us</a></div>
     <div class="f-nav-toggle" onclick="toggleFNav('cfn-about',this)"><span>ABOUT</span><i class="ph ph-caret-down"></i></div>
-    <div class="f-nav-body" id="cfn-about">
-      <a href="#">Our Story</a><a href="#">Stockists</a>
-    </div>
+    <div class="f-nav-body" id="cfn-about"><a href="#">Our Story</a><a href="#">Stockists</a></div>
     <div class="f-socials">
       <a href="#" aria-label="Instagram"><i class="ph ph-instagram-logo"></i></a>
       <a href="#" aria-label="TikTok"><i class="ph ph-tiktok-logo"></i></a>
@@ -753,7 +794,6 @@ input,select,textarea{font-size:16px !important;}
       </button>
     </div>
   </header>
-
   <div class="modal-inner">
     <div class="modal-slider" id="modal-slider">
       <div class="modal-slides" id="modal-slides"></div>
@@ -761,13 +801,11 @@ input,select,textarea{font-size:16px !important;}
     </div>
     <div class="modal-thumb-strip" id="modal-thumb-strip"></div>
     <div class="modal-det">
-      <!-- Product name + price on same row -->
       <div class="modal-name-price-row">
         <h2 class="modal-nm" id="modal-nm"></h2>
         <div id="modal-price-right"></div>
       </div>
       <p class="modal-sku" id="modal-sku"></p>
-      <!-- Sale savings line (only shows for sale items) -->
       <div id="modal-sale-info"></div>
       <p class="modal-var-lbl">COLOUR / VARIANT</p>
       <div class="modal-vars" id="modal-vars"></div>
@@ -776,7 +814,6 @@ input,select,textarea{font-size:16px !important;}
       <span class="size-chart-link" id="size-chart-link" onclick="openSizeChart()" role="button" tabindex="0"><i class="ph ph-coat-hanger"></i> SIZE CHART</span>
       <button class="add-to-cart-btn-large" id="add-to-bag-btn" onclick="addToBag()">ADD TO BAG</button>
       <p id="sz-warn">Please select a size before adding to bag.</p>
-
       <div class="modal-acc">
         <div class="modal-acc-row">
           <button class="modal-acc-toggle" onclick="toggleAcc('acc-desc',this)" aria-expanded="true"><span>DESCRIPTION</span><i class="ph ph-caret-down"></i></button>
@@ -836,12 +873,10 @@ input,select,textarea{font-size:16px !important;}
         </div>
       </div>
     </div>
-
     <div class="ymal-sec" id="modal-ymal-sec" style="margin-top:24px;">
       <div class="ymal-hdr"><p class="ymal-title">YOU MAY ALSO LIKE</p></div>
       <div class="ymal-scroll"><div class="ymal-row" id="modal-ymal-row"></div></div>
     </div>
-
     <footer class="footer" style="margin-top:32px;">
       <h2 class="f-nl-h">STAY IN THE EDIT</h2>
       <p class="f-nl-sub">Join the list and get 15% off your first order.<br>Early access to new arrivals, exclusive drops, and curated pieces.</p>
@@ -899,6 +934,21 @@ var sortMode='default', activeFilterCategory='all', currentCollectionType='all';
 var PROMOS={'JANEDORE10':0.10,'WELCOME15':0.15,'SALE20':0.20}, activePromo=null, dynamicPromos={};
 var OS={cart:false,modal:false}, savedSY=0;
 
+/* ── SECTION SUBHEADING TOGGLE ── */
+function toggleColSub(subId, toggleId) {
+  var sub = document.getElementById(subId);
+  var btn = document.getElementById(toggleId);
+  if (!sub || !btn) return;
+  var isOpen = !sub.classList.contains('clamped');
+  if (isOpen) {
+    sub.classList.add('clamped');
+    btn.textContent = 'SEE MORE';
+  } else {
+    sub.classList.remove('clamped');
+    btn.textContent = 'SEE LESS';
+  }
+}
+
 /* ── CART PERSISTENCE ── */
 function loadCartFromStorage(){try{const s=localStorage.getItem('janedore_cart');if(s){cartItems=JSON.parse(s);updCartBadge();}}catch(e){}}
 function saveCartToStorage(){try{localStorage.setItem('janedore_cart',JSON.stringify(cartItems));}catch(e){}}
@@ -949,15 +999,12 @@ function buildPriceHtml(p, context) {
     var pct = Math.round((saving / p.priceN) * 100);
     if (context === 'card' || context === 'ymal') {
       return '<p class="prod-price-sale">R ' + p.salePrice.toFixed(2) + '<span class="prod-price-orig">R ' + p.priceN.toFixed(2) + '</span></p>';
-    } else {
-      // modal context — handled inline in openModal for name/price row
-      return 'SALE:R' + p.salePrice.toFixed(2) + ':R' + p.priceN.toFixed(2) + ':' + saving.toFixed(2) + ':' + pct;
     }
+    return 'SALE:R' + p.salePrice.toFixed(2) + ':R' + p.priceN.toFixed(2) + ':' + saving.toFixed(2) + ':' + pct;
   }
   if (context === 'card' || context === 'ymal') {
     return '<p class="prod-price">' + (p.price || '') + '</p>';
   }
-  // modal — plain price
   return p.price || '';
 }
 
@@ -1174,11 +1221,10 @@ function applyPromo(){
   var inp=document.getElementById('promo-inp'),msg=document.getElementById('promo-msg'),c=(inp.value||'').trim().toUpperCase();
   if(!c){msg.className='promo-msg err';msg.textContent='Please enter a code.';return;}
   var allPromos=Object.assign({},PROMOS,dynamicPromos);
-  if(allPromos[c]){activePromo={code:c,rate:allPromos[c]};msg.className='promo-msg ok';msg.textContent='Code applied — '+Math.round(allPromos[c]*100)+'% off!';inp.disabled=false; inp.value=''; showToast('Promo code applied!','success');}
+  if(allPromos[c]){activePromo={code:c,rate:allPromos[c]};msg.className='promo-msg ok';msg.textContent='Code applied — '+Math.round(allPromos[c]*100)+'% off!';showToast('Promo code applied!','success');}
   else{activePromo=null;msg.className='promo-msg err';msg.textContent='Invalid or expired code.';showToast('Invalid promo code','error');}
   renderCart();
-  inp.disabled = false;
-  inp.value = '';
+  inp.disabled=false;inp.value='';
 }
 
 function openCart(){renderCart();document.getElementById('cart-ov').classList.add('open');document.getElementById('cart-bg').classList.add('open');OS.cart=true;lockBody();}
@@ -1188,7 +1234,7 @@ function proceedToCheckout(){showToast('Proceeding to checkout...','info');}
 
 function addItem(p,sz,qty,variantLabel,variantImgSrc){
   qty=qty||1;
-  var actualPriceN = (p.isOnSale && p.salePrice) ? p.salePrice : (p.priceN||parseP(p.price));
+  var actualPriceN=(p.isOnSale&&p.salePrice)?p.salePrice:(p.priceN||parseP(p.price));
   var img=variantImgSrc||p.imgSrc||'';
   var ex=cartItems.find(i=>i.id===p.id&&i.size===sz);
   if(ex){ex.qty+=qty;}
@@ -1244,8 +1290,6 @@ function openModal(id){
   document.getElementById('modal-nm').textContent=p.name||'';
   var skuEl=document.getElementById('modal-sku');
   if(p.sku){skuEl.textContent='SKU: '+p.sku;skuEl.style.display='block';}else{skuEl.style.display='none';}
-
-  // Price: right-aligned opposite name
   var priceRightEl=document.getElementById('modal-price-right');
   var saleInfoEl=document.getElementById('modal-sale-info');
   if(p.isOnSale&&p.salePrice){
@@ -1257,7 +1301,6 @@ function openModal(id){
     priceRightEl.innerHTML='<span class="modal-price-right">'+(p.price||'')+'</span>';
     saleInfoEl.innerHTML='';
   }
-
   document.getElementById('modal-desc').textContent=p.desc||'Product description coming soon.';
   var sl=document.getElementById('modal-slides'),dt=document.getElementById('modal-dots');
   sl.innerHTML='';dt.innerHTML='';sl.style.transform='translateX(0)';
@@ -1343,7 +1386,7 @@ function _handleNewsletterResult(inpId,msgId,r){
   if(!inp||!msg)return;
   var code=generateUniqueCode();dynamicPromos[code]=0.15;
   if(r.ok){msg.className='nl-msg ok';msg.innerHTML='You\'re in! Use <strong>'+code+'</strong> for 15% off.';inp.value='';}
-  else{msg.className='nl-msg err';msg.textContent=r.error || 'Something went wrong.';}
+  else{msg.className='nl-msg err';msg.textContent=r.error||'Something went wrong.';}
 }
 function submitNewsletter(){var inp=document.getElementById('nl-email'),msg=document.getElementById('nl-msg');if(!inp.value.trim()||!inp.value.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}window.subscribeEmail(inp.value.trim()).then(r=>_handleNewsletterResult('nl-email','nl-msg',r));}
 function submitNewsletterModal(){var inp=document.getElementById('modal-nl-email'),msg=document.getElementById('modal-nl-msg');if(!inp.value.trim()||!inp.value.includes('@')){msg.className='nl-msg err';msg.textContent='Please enter a valid email.';return;}window.subscribeEmail(inp.value.trim()).then(r=>_handleNewsletterResult('modal-nl-email','modal-nl-msg',r));}
