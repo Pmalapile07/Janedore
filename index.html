@@ -93,15 +93,12 @@
       position: relative; height: calc(100vh - 110px); min-height: 560px;
       overflow: hidden; background: #1a1a1a;
     }
-    /* FIX: The hero background element now lives as a full-cover positioned div.
-       All background properties are declared in CSS so JS shorthand assignment
-       cannot accidentally reset background-size / background-position. */
     .hero-bg-placeholder {
       position: absolute; inset: 0;
-      background-size: cover !important;
-      background-position: center !important;
-      background-repeat: no-repeat !important;
-      transition: background-image 0.8s ease, background 0.8s ease;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: opacity 0.8s ease;
     }
     .hero-overlay {
       position: absolute; inset: 0;
@@ -870,12 +867,6 @@
 
   <!-- HERO -->
   <section id="hero">
-    <!--
-      FIX: Removed the inline background-image style from the placeholder div.
-      The JS renderHeroSlide function now owns ALL background state on this element,
-      and always re-applies background-size/position/repeat after setting any
-      background value — preventing the CSS shorthand reset bug.
-    -->
     <div class="hero-bg-placeholder" id="hero-bg"></div>
     <div class="hero-overlay"></div>
     <div class="hero-text" id="hero-text"></div>
@@ -971,10 +962,11 @@
     { name:'Shoes', filter:'shoes', bg:'linear-gradient(160deg,#c0b8ac,#a8a098)' },
   ];
 
+  // ALL HERO SLIDES NOW USE IMAGE URLs ONLY
   const HERO_SLIDES = [
-    { eyebrow:'New Collection', title:'Summer\nin Italy', sub:'An ode to effortless elegance. Discover our latest collection.', cta:'Shop New In', bg:'https://images.unsplash.com/photo-1518621736915-f3b1c21e2f20?q=80&w=2000&auto=format&fit=crop' },
-    { eyebrow:'Exclusively Curated', title:'The\nNIRIUS\nEdit', sub:'Architect-grade tailoring meets sensual drape.', cta:'Explore Brand', bg:'linear-gradient(120deg,#0d0d0d 0%,#1a1a1a 50%,#222 100%)' },
-    { eyebrow:'Fine Jewellery', title:'Pieces\nto Keep', sub:'Hand-finished pieces by jewelrybykay. Made to last forever.', cta:'Shop Jewellery', bg:'linear-gradient(120deg,#1a1510 0%,#2a2015 50%,#1c1c1c 100%)' },
+    { eyebrow:'New Collection', title:'Summer\nin Italy', sub:'An ode to effortless elegance. Discover our latest collection.', cta:'Shop New In', bg:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/5D71A1C8-404B-4BA3-9821-96D34BF3B3B4.png?v=1778097403' },
+    { eyebrow:'Exclusively Curated', title:'The\nNIRIUS\nEdit', sub:'Architect-grade tailoring meets sensual drape.', cta:'Explore Brand', bg:'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2000&auto=format&fit=crop' },
+    { eyebrow:'Fine Jewellery', title:'Pieces\nto Keep', sub:'Hand-finished pieces by jewelrybykay. Made to last forever.', cta:'Shop Jewellery', bg:'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2000&auto=format&fit=crop' },
   ];
 
   const BANNER_ITEMS = ['Complimentary Shipping on Orders Over R3000','Free Returns Within 30 Days','New Collection — Summer In Italy Now Live','Sign Up for Exclusive Early Access'];
@@ -1016,56 +1008,19 @@
     heroTimer = setInterval(()=>goHero((S.heroIdx+1)%HERO_SLIDES.length), 6000);
   }
 
-  /*
-   * FIX: renderHeroSlide now targets the dedicated #hero-bg element (id added in HTML).
-   *
-   * Root cause of the bug:
-   *   Setting `bgEl.style.background = s.bg` (the CSS shorthand) resets ALL
-   *   background sub-properties — including background-size, background-position,
-   *   and background-repeat — to their initial values ("auto", "0% 0%", "repeat").
-   *   This made image slides render un-cropped/tiled instead of cover-fitted.
-   *
-   * Fix applied:
-   *   After every background assignment (both image URL and gradient branches)
-   *   we explicitly re-declare the three required sub-properties so they can
-   *   never be lost regardless of which slide type was last rendered.
-   */
   function renderHeroSlide(i) {
     S.heroIdx = i;
     const s = HERO_SLIDES[i];
     const textEl = document.getElementById('hero-text');
-    const bgEl   = document.getElementById('hero-bg');
+    const bgEl = document.getElementById('hero-bg');
 
     // Fade out text
     textEl.style.opacity = '0';
 
     setTimeout(() => {
-      // ── Apply background ──────────────────────────────────────────────────
-    if (s.bg.startsWith('http')) {
-
-  // Remove any previous gradient
-  bgEl.style.background = 'none';
-
-  // Apply image
-  bgEl.style.backgroundImage = `url(${s.bg})`;
-
-} else {
-
-  // Remove previous image
-  bgEl.style.backgroundImage = 'none';
-
-  // Apply gradient
-  bgEl.style.background = s.bg;
-}
-
-      // Always guarantee cover behaviour regardless of slide type.
-      // The CSS rule also declares these with !important as a safety net,
-      // but setting them inline here ensures JS never fights CSS.
-      bgEl.style.backgroundSize     = 'cover';
-      bgEl.style.backgroundPosition = 'center';
-      bgEl.style.backgroundRepeat   = 'no-repeat';
-      // ─────────────────────────────────────────────────────────────────────
-
+      // SIMPLE FIX: Just set backgroundImage since all slides now use image URLs
+      bgEl.style.backgroundImage = `url(${s.bg})`;
+      
       // Update text content
       textEl.innerHTML =
         `<div class="hero-eyebrow">${s.eyebrow}</div>` +
