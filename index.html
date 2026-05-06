@@ -1041,17 +1041,22 @@
 
     setTimeout(() => {
       // ── Apply background ──────────────────────────────────────────────────
-      if (s.bg.startsWith('http')) {
-        // Photo slide: use backgroundImage so the shorthand sub-properties
-        // (size, position, repeat) are NOT implicitly reset.
-        bgEl.style.backgroundImage = 'url("' + s.bg + '")';
-        bgEl.style.background      = '';          // clear any previous gradient
-      } else {
-        // Gradient slide: the shorthand is necessary for gradients, but it
-        // resets size/position/repeat — so we restore them immediately after.
-        bgEl.style.background      = s.bg;
-        bgEl.style.backgroundImage = '';          // prevent shorthand+image clash
-      }
+    if (s.bg.startsWith('http')) {
+
+  // Remove any previous gradient
+  bgEl.style.background = 'none';
+
+  // Apply image
+  bgEl.style.backgroundImage = `url(${s.bg})`;
+
+} else {
+
+  // Remove previous image
+  bgEl.style.backgroundImage = 'none';
+
+  // Apply gradient
+  bgEl.style.background = s.bg;
+}
 
       // Always guarantee cover behaviour regardless of slide type.
       // The CSS rule also declares these with !important as a safety net,
