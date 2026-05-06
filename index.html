@@ -93,14 +93,15 @@
       position: relative; height: calc(100vh - 110px); min-height: 560px;
       overflow: hidden; background: #1a1a1a;
     }
-    .hero-bg {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; opacity: 0; transition: opacity 1.2s ease;
-    }
-    .hero-bg.active { opacity: 1; }
+    /* FIX: The hero background element now lives as a full-cover positioned div.
+       All background properties are declared in CSS so JS shorthand assignment
+       cannot accidentally reset background-size / background-position. */
     .hero-bg-placeholder {
       position: absolute; inset: 0;
-      background-size: cover; background-position: center; background-repeat: no-repeat;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      transition: background-image 0.8s ease, background 0.8s ease;
     }
     .hero-overlay {
       position: absolute; inset: 0;
@@ -108,6 +109,7 @@
     }
     .hero-text {
       position: absolute; bottom: 80px; left: 72px; z-index: 10; max-width: 560px;
+      transition: opacity 0.8s ease;
     }
     .hero-eyebrow {
       font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
@@ -868,7 +870,13 @@
 
   <!-- HERO -->
   <section id="hero">
-    <div class="hero-bg-placeholder" style="background-image: url('https://images.unsplash.com/photo-1518621736915-f3b1c21e2f20?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center;"></div>
+    <!--
+      FIX: Removed the inline background-image style from the placeholder div.
+      The JS renderHeroSlide function now owns ALL background state on this element,
+      and always re-applies background-size/position/repeat after setting any
+      background value — preventing the CSS shorthand reset bug.
+    -->
+    <div class="hero-bg-placeholder" id="hero-bg"></div>
     <div class="hero-overlay"></div>
     <div class="hero-text" id="hero-text"></div>
     <div class="hero-dots" id="hero-dots"></div>
@@ -1000,32 +1008,79 @@
 
   // ── HERO ──
   let heroTimer;
+
   function buildHero() {
     renderHeroSlide(0);
     const dotsEl = document.getElementById('hero-dots');
     dotsEl.innerHTML = HERO_SLIDES.map((_,i)=>`<button class="hero-dot ${i===0?'active':''}" onclick="goHero(${i})"></button>`).join('');
     heroTimer = setInterval(()=>goHero((S.heroIdx+1)%HERO_SLIDES.length), 6000);
   }
+
+  /*
+   * FIX: renderHeroSlide now targets the dedicated #hero-bg element (id added in HTML).
+   *
+   * Root cause of the bug:
+   *   Setting `bgEl.style.background = s.bg` (the CSS shorthand) resets ALL
+   *   background sub-properties — including background-size, background-position,
+   *   and background-repeat — to their initial values ("auto", "0% 0%", "repeat").
+   *   This made image slides render un-cropped/tiled instead of cover-fitted.
+   *
+   * Fix applied:
+   *   After every background assignment (both image URL and gradient branches)
+   *   we explicitly re-declare the three required sub-properties so they can
+   *   never be lost regardless of which slide type was last rendered.
+   */
   function renderHeroSlide(i) {
     S.heroIdx = i;
     const s = HERO_SLIDES[i];
-    const el = document.getElementById('hero-text');
-    const bgEl = document.getElementById('hero').querySelector('.hero-bg-placeholder');
-    el.style.opacity = 0;
-    setTimeout(()=>{
-      el.innerHTML = `<div class="hero-eyebrow">${s.eyebrow}</div><h1 class="hero-title">${s.title.replace(/\n/g,'<br>')}</h1><p class="hero-sub">${s.sub}</p><button class="hero-btn" onclick="filterProducts('all')">${s.cta}</button>`;
-      if(s.bg.startsWith('http')) {
-        bgEl.style.backgroundImage = `url('${s.bg}')`;
-        bgEl.style.background = '';
+    const textEl = document.getElementById('hero-text');
+    const bgEl   = document.getElementById('hero-bg');
+
+    // Fade out text
+    textEl.style.opacity = '0';
+
+    setTimeout(() => {
+      // ── Apply background ──────────────────────────────────────────────────
+      if (s.bg.startsWith('http')) {
+        // Photo slide: use backgroundImage so the shorthand sub-properties
+        // (size, position, repeat) are NOT implicitly reset.
+        bgEl.style.backgroundImage = 'url("' + s.bg + '")';
+        bgEl.style.background      = '';          // clear any previous gradient
       } else {
-        bgEl.style.background = s.bg;
-        bgEl.style.backgroundImage = '';
+        // Gradient slide: the shorthand is necessary for gradients, but it
+        // resets size/position/repeat — so we restore them immediately after.
+        bgEl.style.background      = s.bg;
+        bgEl.style.backgroundImage = '';          // prevent shorthand+image clash
       }
-      el.style.opacity = 1; el.style.transition = 'opacity 0.8s ease';
+
+      // Always guarantee cover behaviour regardless of slide type.
+      // The CSS rule also declares these with !important as a safety net,
+      // but setting them inline here ensures JS never fights CSS.
+      bgEl.style.backgroundSize     = 'cover';
+      bgEl.style.backgroundPosition = 'center';
+      bgEl.style.backgroundRepeat   = 'no-repeat';
+      // ─────────────────────────────────────────────────────────────────────
+
+      // Update text content
+      textEl.innerHTML =
+        `<div class="hero-eyebrow">${s.eyebrow}</div>` +
+        `<h1 class="hero-title">${s.title.replace(/\n/g,'<br>')}</h1>` +
+        `<p class="hero-sub">${s.sub}</p>` +
+        `<button class="hero-btn" onclick="filterProducts('all')">${s.cta}</button>`;
+
+      // Fade in text
+      textEl.style.opacity = '1';
     }, 300);
-    document.querySelectorAll('.hero-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
+
+    // Update dot indicators
+    document.querySelectorAll('.hero-dot').forEach((d,j) => d.classList.toggle('active', j===i));
   }
-  function goHero(i) { clearInterval(heroTimer); renderHeroSlide(i); heroTimer = setInterval(()=>goHero((S.heroIdx+1)%HERO_SLIDES.length),6000); }
+
+  function goHero(i) {
+    clearInterval(heroTimer);
+    renderHeroSlide(i);
+    heroTimer = setInterval(()=>goHero((S.heroIdx+1)%HERO_SLIDES.length), 6000);
+  }
 
   // ── CATEGORIES ──
   function buildCategories() {
