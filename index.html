@@ -21,10 +21,14 @@
     #banner {
       height: 38px; background: #111; display: flex;
       align-items: center; justify-content: center; overflow: hidden;
+      position: relative;
     }
-    .marquee-wrap { display: flex; gap: 80px; white-space: nowrap; animation: marquee 30s linear infinite; }
-    .marquee-item { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #fff; flex-shrink: 0; }
-    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .announcement-text {
+      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #fff;
+      position: absolute; width: 100%; text-align: center;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    .announcement-text.active { opacity: 1; }
 
     /* ── MAIN NAV ── */
     #main-nav {
@@ -32,13 +36,14 @@
       border-bottom: 1px solid #e5e5e5;
       display: flex; align-items: center;
       padding: 0 28px; position: sticky; top: 0; z-index: 800;
-      gap: 0;
+      justify-content: space-between;
     }
     .nav-left {
       display: flex; align-items: center; gap: 0; flex: 1;
     }
     .nav-logo {
-      cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: flex-start;
+      cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center;
+      position: absolute; left: 50%; transform: translateX(-50%);
     }
     .nav-logo img {
       height: 30px; width: auto; filter: brightness(0) saturate(100%);
@@ -58,31 +63,55 @@
       font-size: 8px; font-weight: 500; color: #fff;
       display: flex; align-items: center; justify-content: center;
     }
-    .nav-currency, .nav-lang {
-      font-size: 11px; letter-spacing: 0.08em; color: #111; display: flex; align-items: center; gap: 3px;
-    }
-    .nav-currency svg, .nav-lang svg { width: 10px; height: 10px; stroke: #111; fill: none; stroke-width: 1.5; }
 
-    /* ── SECONDARY NAV ── */
-    #secondary-nav {
-      height: 46px; background: #fff;
-      border-bottom: 1px solid #e5e5e5;
-      display: flex; align-items: center; justify-content: flex-start;
-      gap: 0; position: sticky; top: 64px; z-index: 799;
-      overflow-x: auto; scrollbar-width: none; padding: 0 16px;
+    /* ── MENU DRAWER ── */
+    #menu-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.25);
+      z-index: 950; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
-    #secondary-nav::-webkit-scrollbar { display: none; }
-    .sec-link {
-      font-size: 10px; font-weight: 400; letter-spacing: 0.18em;
-      text-transform: uppercase; color: #555; padding: 0 18px;
-      height: 46px; display: flex; align-items: center;
-      border-bottom: 2px solid transparent; white-space: nowrap;
-      transition: all 0.2s; background: none; border-left: none; border-right: none; border-top: none;
-      flex-shrink: 0;
+    #menu-backdrop.open { opacity: 1; pointer-events: all; }
+    #menu-drawer {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 320px;
+      background: #fff; z-index: 951;
+      transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+      display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.08);
     }
-    .sec-link:hover { color: #111; border-bottom-color: #111; }
-    .sec-link.sale { color: #c00; }
-    .sec-link.sale:hover { border-bottom-color: #c00; }
+    #menu-drawer.open { transform: translateX(0); }
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px; border-bottom: 1px solid #e5e5e5;
+    }
+    .drawer-title { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; }
+    .drawer-close {
+      background: none; border: none; padding: 4px; display: flex; align-items: center;
+    }
+    .drawer-close svg { width: 18px; height: 18px; stroke: #111; fill: none; stroke-width: 1.5; }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+    .drawer-link {
+      font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: #111;
+      padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .drawer-link.sale { color: #c00; }
+    .brands-collapse-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+      font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: #111;
+    }
+    .brands-collapse-header svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 1.5; transition: transform 0.3s; }
+    .brands-collapse.open .brands-collapse-header svg { transform: rotate(45deg); }
+    .brands-collapse-body {
+      max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    }
+    .brands-collapse.open .brands-collapse-body {
+      max-height: 200px; padding: 12px 0;
+    }
+    .brand-logo-placeholder {
+      width: 60px; height: 30px; background: #f0f0f0; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px; letter-spacing: 0.1em; color: #888; text-transform: uppercase;
+    }
 
     /* ── PAGES ── */
     .page { display: none; }
@@ -345,13 +374,24 @@
     }
     .footer-currency-lang {
       display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap;
+      position: relative;
     }
     .footer-currency, .footer-lang {
       font-size: 12px; letter-spacing: 0.08em; color: #888; display: flex; align-items: center; gap: 6px;
-      cursor: pointer; transition: color 0.2s;
+      cursor: pointer; transition: color 0.2s; position: relative;
     }
     .footer-currency:hover, .footer-lang:hover { color: #fff; }
     .footer-currency svg, .footer-lang svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+    .currency-dropdown, .lang-dropdown {
+      position: absolute; bottom: 100%; left: 0; background: #222; border: 1px solid #444;
+      padding: 8px 0; min-width: 100px; display: none; z-index: 10;
+    }
+    .currency-dropdown.open, .lang-dropdown.open { display: block; }
+    .dropdown-option {
+      padding: 8px 16px; font-size: 11px; letter-spacing: 0.08em; color: #ccc; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .dropdown-option:hover { background: #333; color: #fff; }
     .footer-bottom {
       border-top: 1px solid #2a2a2a; padding-top: 24px;
       display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 16px;
@@ -442,50 +482,6 @@
       font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 300; color: #aaa;
     }
 
-    /* ── SEARCH PANEL ── */
-    #search-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.25);
-      z-index: 910; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    }
-    #search-backdrop.open { opacity: 1; pointer-events: all; }
-    #search-panel {
-      position: fixed; top: 0; right: 0; bottom: 0; width: 380px;
-      background: #fff; z-index: 911;
-      transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
-      display: flex; flex-direction: column;
-      box-shadow: -4px 0 24px rgba(0,0,0,0.08);
-    }
-    #search-panel.open { transform: translateX(0); }
-    .search-panel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 24px; border-bottom: 1px solid #e5e5e5;
-    }
-    .search-panel-title { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; }
-    .search-input-wrap { padding: 20px 24px; border-bottom: 1px solid #e5e5e5; display: flex; align-items: center; gap: 10px; }
-    .search-input-wrap svg { width: 16px; height: 16px; stroke: #aaa; fill: none; stroke-width: 1.5; flex-shrink: 0; }
-    .search-main-input {
-      flex: 1; border: none; outline: none; font-size: 13px; font-weight: 300;
-      font-family: inherit; color: #111; letter-spacing: 0.04em;
-    }
-    .search-main-input::placeholder { color: #bbb; }
-    .search-body { padding: 24px; flex: 1; overflow-y: auto; }
-    .search-section-label { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin-bottom: 14px; }
-    .search-tags-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
-    .search-tag-pill {
-      font-size: 10px; letter-spacing: 0.1em; color: #555;
-      border: 1px solid #ddd; padding: 6px 14px; background: #fff;
-      transition: all 0.2s;
-    }
-    .search-tag-pill:hover { border-color: #111; color: #111; }
-    .recent-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;
-    }
-    .recent-item:hover .recent-text { color: #111; }
-    .recent-text { font-size: 12px; font-weight: 300; color: #555; transition: color 0.2s; }
-    .recent-clear { background: none; border: none; font-size: 14px; color: #bbb; line-height: 1; }
-    .recent-clear:hover { color: #111; }
-
     /* ── WISHLIST PANEL ── */
     #wish-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.25);
@@ -514,85 +510,6 @@
       transition: background 0.2s;
     }
     .wish-add-btn:hover { background: #333; }
-
-    /* ── DASHBOARD WIDGET ── */
-    #dash-widget {
-      position: fixed; bottom: 24px; left: 24px; z-index: 850;
-      background: #fff; border: 1px solid #e5e5e5;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      width: 200px; overflow: hidden;
-    }
-    .dash-widget-header {
-      background: #111; color: #fff; padding: 10px 14px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .dash-widget-title { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; }
-    .dash-widget-toggle {
-      background: none; border: none; color: #fff; font-size: 14px; line-height: 1; padding: 0;
-    }
-    .dash-widget-user {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px; border-bottom: 1px solid #f0f0f0;
-    }
-    .dash-avatar {
-      width: 32px; height: 32px; background: #111; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 500; color: #fff; letter-spacing: 0.05em;
-    }
-    .dash-user-name { font-size: 11px; font-weight: 400; letter-spacing: 0.06em; }
-    .dash-user-role { font-size: 9px; letter-spacing: 0.1em; color: #888; text-transform: uppercase; }
-    .dash-nav-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 14px; font-size: 11px; font-weight: 300; color: #444;
-      cursor: pointer; transition: background 0.15s; border: none; background: none;
-      width: 100%; text-align: left; letter-spacing: 0.04em;
-    }
-    .dash-nav-item:hover { background: #f8f8f8; color: #111; }
-    .dash-nav-item svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
-    .dash-nav-badge { margin-left: auto; background: #111; color: #fff; font-size: 8px; padding: 2px 6px; border-radius: 10px; }
-    .dash-widget-body { display: block; }
-    .dash-widget-collapsed .dash-widget-body { display: none; }
-    .dash-bottom { border-top: 1px solid #f0f0f0; }
-    .dash-store-link {
-      display: flex; align-items: center; gap: 8px;
-      padding: 9px 14px; font-size: 10px; letter-spacing: 0.1em; color: #555;
-      cursor: pointer; text-transform: uppercase;
-      border: none; background: none; width: 100%; text-align: left;
-      transition: color 0.2s;
-    }
-    .dash-store-link:hover { color: #111; }
-    .dash-store-link svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-
-    /* ── PURCHASE NOTIFICATION (hidden) ── */
-    #purchase-notif {
-      position: fixed; bottom: 24px; left: 220px; z-index: 840;
-      background: #fff; border: 1px solid #e5e5e5;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      display: flex; gap: 12px; padding: 12px 16px; align-items: center;
-      max-width: 280px; opacity: 0; transform: translateY(12px);
-      transition: all 0.4s ease; pointer-events: none;
-    }
-    #purchase-notif.show { opacity: 1; transform: translateY(0); }
-    .notif-img { width: 44px; height: 54px; background: #f0ede8; flex-shrink: 0; }
-    .notif-who { font-size: 10px; font-weight: 400; color: #111; margin-bottom: 1px; }
-    .notif-item { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: #555; margin-bottom: 1px; }
-    .notif-time { font-size: 9px; letter-spacing: 0.1em; color: #aaa; text-transform: uppercase; }
-    #notif-close-btn {
-      position: absolute; top: 6px; right: 8px;
-      background: none; border: none; font-size: 14px; color: #bbb; line-height: 1; cursor: pointer;
-    }
-    #notif-close-btn:hover { color: #111; }
-
-    /* ── HELP BUTTON ── */
-    #help-btn {
-      position: fixed; bottom: 24px; right: 24px; z-index: 840;
-      background: #111; color: #fff; border: none;
-      display: flex; align-items: center; gap: 8px;
-      padding: 12px 20px; font-size: 12px; font-weight: 300; letter-spacing: 0.06em;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15); transition: background 0.2s;
-    }
-    #help-btn:hover { background: #333; }
-    #help-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 1.5; }
 
     /* ── TOAST ── */
     #toast-wrap {
@@ -665,24 +582,19 @@
       .footer-top { gap: 0; }
       #editorial-strip { grid-template-columns: 1fr; height: auto; }
       .ed-panel { height: 300px; }
-      #dash-widget { display: none; }
-      #purchase-notif { left: 16px; }
       .modal-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
       #main-nav { padding: 0 16px; height: 56px; }
       .nav-logo img { height: 22px; }
       .nav-right { gap: 8px; }
-      .nav-currency, .nav-lang { display: none; }
       .nav-icon-btn { padding: 8px; font-size: 22px; }
-      #secondary-nav { top: 56px; height: 42px; padding: 0 12px; }
-      .sec-link { padding: 0 14px; height: 42px; font-size: 9px; }
       #hero { height: calc(100vh - 98px); min-height: 500px; }
       .hero-text { left: 24px; bottom: 60px; max-width: 280px; }
       .hero-title { font-size: clamp(42px, 8vw, 64px); }
       .hero-sub { font-size: 11px; }
       .hero-btn { padding: 14px 28px; }
-      #cart-panel, #search-panel, #wish-panel { width: 100%; }
+      #cart-panel, #wish-panel { width: 100%; }
       .nl-form { flex-direction: column; }
       .nl-input { border-right: 1px solid #ccc; border-bottom: none; }
       #categories { padding: 40px 16px; }
@@ -697,8 +609,6 @@
       .nav-logo img { height: 20px; }
       .nav-right { flex: 0 1 auto; gap: 4px; }
       .nav-icon-btn { padding: 10px 6px; font-size: 24px; }
-      #secondary-nav { top: 52px; height: 40px; }
-      .sec-link { padding: 0 14px; height: 40px; font-size: 9px; }
       #hero { height: calc(100vh - 92px); min-height: 480px; }
       .hero-text { left: 20px; bottom: 50px; max-width: 240px; }
       .hero-eyebrow { font-size: 9px; }
@@ -717,28 +627,24 @@
 
 <!-- ANNOUNCEMENT BANNER -->
 <div id="banner">
-  <div class="marquee-wrap" id="marquee-wrap"></div>
+  <div class="announcement-text active" id="announce-text-0"></div>
+  <div class="announcement-text" id="announce-text-1"></div>
 </div>
 
 <!-- MAIN NAV -->
 <nav id="main-nav">
   <div class="nav-left">
-    <div class="nav-logo" onclick="navigateTo('home')">
-      <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="filter: brightness(0) saturate(100%); height: 28px; width: auto;">
-    </div>
+    <button class="nav-icon-btn" onclick="openMenu()" style="font-size: 22px;">
+      <i class="ph-light ph-list"></i>
+    </button>
+  </div>
+  <div class="nav-logo" onclick="navigateTo('home')">
+    <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="filter: brightness(0) saturate(100%); height: 28px; width: auto;">
   </div>
   <div class="nav-right">
-    <span class="nav-currency">ZAR R <svg width="10" height="10" viewBox="0 0 10 10" style="stroke:#111;fill:none;stroke-width:1.5"><polyline points="2,3 5,7 8,3"/></svg></span>
-    <span class="nav-lang">EN <svg width="10" height="10" viewBox="0 0 10 10" style="stroke:#111;fill:none;stroke-width:1.5"><polyline points="2,3 5,7 8,3"/></svg></span>
-    <button class="nav-icon-btn" onclick="openSearch()">
-      <i class="ph-light ph-magnifying-glass"></i>
-    </button>
     <button class="nav-icon-btn" onclick="openWishlist()">
       <i class="ph-light ph-heart"></i>
       <span class="badge" id="wish-badge" style="display:none">0</span>
-    </button>
-    <button class="nav-icon-btn">
-      <i class="ph-light ph-user"></i>
     </button>
     <button class="nav-icon-btn" onclick="openCart()">
       <i class="ph-light ph-shopping-bag"></i>
@@ -747,24 +653,42 @@
   </div>
 </nav>
 
-<!-- SECONDARY NAV -->
-<div id="secondary-nav">
-  <button class="sec-link" onclick="filterProducts('all')">New In</button>
-  <button class="sec-link" onclick="filterProducts('clothing')">Clothing</button>
-  <button class="sec-link" onclick="filterProducts('dresses')">Dresses</button>
-  <button class="sec-link" onclick="filterProducts('tops')">Tops</button>
-  <button class="sec-link" onclick="filterProducts('bottoms')">Bottoms</button>
-  <button class="sec-link" onclick="filterProducts('jackets')">Jackets</button>
-  <button class="sec-link" onclick="filterProducts('accessories')">Accessories</button>
-  <button class="sec-link" onclick="filterProducts('shoes')">Shoes</button>
-  <button class="sec-link" onclick="filterProducts('brands')">Brands</button>
-  <button class="sec-link sale" onclick="filterProducts('sale')">Sale</button>
-  <button class="sec-link" onclick="navigateTo('editorial')">Editorial</button>
+<!-- MENU DRAWER -->
+<div id="menu-backdrop" onclick="closeMenu()"></div>
+<div id="menu-drawer">
+  <div class="drawer-header">
+    <div class="drawer-title">Menu</div>
+    <button class="drawer-close" onclick="closeMenu()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <a class="drawer-link" onclick="navigateTo('home'); closeMenu();">New In</a>
+    <a class="drawer-link" onclick="closeMenu();">Clothing</a>
+    <a class="drawer-link" onclick="closeMenu();">Dresses</a>
+    <a class="drawer-link" onclick="closeMenu();">Tops</a>
+    <a class="drawer-link" onclick="closeMenu();">Bottoms</a>
+    <a class="drawer-link" onclick="closeMenu();">Jackets</a>
+    <a class="drawer-link" onclick="closeMenu();">Accessories</a>
+    <a class="drawer-link" onclick="closeMenu();">Shoes</a>
+    <div class="brands-collapse" id="brands-collapse">
+      <div class="brands-collapse-header" onclick="toggleBrandsCollapse()">
+        Brands
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="brands-collapse-body">
+        <div class="brand-logo-placeholder">JANEDORE</div>
+        <div class="brand-logo-placeholder">NIRIUS</div>
+        <div class="brand-logo-placeholder">JEWELRYBK</div>
+      </div>
+    </div>
+    <a class="drawer-link sale" onclick="closeMenu();">Sale</a>
+    <a class="drawer-link" onclick="navigateTo('editorial'); closeMenu();">Editorial</a>
+  </div>
 </div>
 
 <!-- BACKDROPS -->
 <div id="cart-backdrop" onclick="closeCart()"></div>
-<div id="search-backdrop" onclick="closeSearch()"></div>
 <div id="wish-backdrop" onclick="closeWishlist()"></div>
 <div id="modal-backdrop" onclick="closeModal()"></div>
 
@@ -782,21 +706,6 @@
   <div class="cart-foot" id="cart-foot"></div>
 </div>
 
-<!-- SEARCH PANEL -->
-<div id="search-panel">
-  <div class="search-panel-header">
-    <div class="search-panel-title">Search</div>
-    <button class="panel-close" onclick="closeSearch()">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  </div>
-  <div class="search-input-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input class="search-main-input" placeholder="Search for products..." id="search-input" oninput="doSearch(this.value)">
-  </div>
-  <div class="search-body" id="search-body"></div>
-</div>
-
 <!-- WISHLIST PANEL -->
 <div id="wish-panel">
   <div class="panel-header">
@@ -812,55 +721,6 @@
 <div id="product-modal">
   <div id="modal-inner"></div>
 </div>
-
-<!-- DASHBOARD WIDGET -->
-<div id="dash-widget">
-  <div class="dash-widget-header">
-    <span class="dash-widget-title">Dashboard</span>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="dash-widget-toggle" id="dash-toggle-btn" onclick="toggleDashWidget()">−</button>
-      <button class="dash-widget-toggle" onclick="document.getElementById('dash-widget').style.display='none'">×</button>
-    </div>
-  </div>
-  <div class="dash-widget-body" id="dash-widget-body">
-    <div class="dash-widget-user">
-      <div class="dash-avatar">JD</div>
-      <div>
-        <div class="dash-user-name">JANEDORE</div>
-        <div class="dash-user-role">Administrator</div>
-      </div>
-    </div>
-    <div id="dash-nav-items"></div>
-    <div class="dash-bottom">
-      <button class="dash-store-link">
-        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        View Store
-        <svg viewBox="0 0 24 24" style="margin-left:auto"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </button>
-      <button class="dash-store-link" style="color:#aaa;font-size:10px">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Log Out
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- PURCHASE NOTIFICATION (structure kept, but never shown) -->
-<div id="purchase-notif" style="display:none;">
-  <button id="notif-close-btn" onclick="document.getElementById('purchase-notif').classList.remove('show')">×</button>
-  <div class="notif-img"></div>
-  <div>
-    <div class="notif-who" id="notif-who"></div>
-    <div class="notif-item" id="notif-item"></div>
-    <div class="notif-time">2 minutes ago</div>
-  </div>
-</div>
-
-<!-- HELP BUTTON -->
-<button id="help-btn">
-  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  Help
-</button>
 
 <!-- ── HOME PAGE ── -->
 <div class="page active" id="page-home">
@@ -883,7 +743,7 @@
   <section id="new-arrivals">
     <div class="arrivals-header">
       <div class="arrivals-title">New Arrivals</div>
-      <button class="arrivals-view-all">View All</button>
+      <button class="arrivals-view-all" onclick="navigateTo('collections')">View All</button>
     </div>
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
@@ -924,6 +784,18 @@
   <footer id="main-footer"></footer>
 </div>
 
+<!-- ── COLLECTIONS PAGE ── -->
+<div class="page" id="page-collections">
+  <section style="padding:60px 28px">
+    <div style="text-align:center;margin-bottom:40px">
+      <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300">All Collections</div>
+    </div>
+    <div class="product-grid" id="collections-grid"></div>
+  </section>
+  <footer id="collections-footer"></footer>
+</div>
+
 <!-- ── EDITORIAL PAGE ── -->
 <div class="page" id="page-editorial">
   <section style="padding:60px 28px">
@@ -962,7 +834,6 @@
     { name:'Shoes', filter:'shoes', bg:'linear-gradient(160deg,#c0b8ac,#a8a098)' },
   ];
 
-  // ALL HERO SLIDES NOW USE IMAGE URLs ONLY
   const HERO_SLIDES = [
     { eyebrow:'New Collection', title:'Summer\nin Italy', sub:'An ode to effortless elegance. Discover our latest collection.', cta:'Shop New In', bg:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A967F2A2-C187-4E84-9C32-1ABA65459BF0.png?v=1778100447' },
     { eyebrow:'Exclusively Curated', title:'The\nNIRIUS\nEdit', sub:'Architect-grade tailoring meets sensual drape.', cta:'Explore Brand', bg:'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2000&auto=format&fit=crop' },
@@ -971,71 +842,78 @@
 
   const BANNER_ITEMS = ['Complimentary Shipping on Orders Over R3000','Free Returns Within 30 Days','New Collection — Summer In Italy Now Live','Sign Up for Exclusive Early Access'];
 
-  const SEARCH_POPULAR = ['Dresses','Linen','Maxi Dress','Black Dress','Swimwear'];
-  const SEARCH_RECENT = ['Linen Dress','Maxi Dress','Black Top','Gold Earrings'];
-
-  const DASH_NAV = [
-    { icon:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', label:'Overview', key:'overview' },
-    { icon:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>', label:'Orders', badge:'24' },
-    { icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', label:'Products' },
-    { icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>', label:'Customers' },
-    { icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', label:'Analytics' },
-    { icon:'<circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>', label:'Marketing' },
-    { icon:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>', label:'Discounts' },
-    { icon:'<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>', label:'Settings' },
-  ];
-
   // ── STATE ──
   const S = {
     cart: [], wishlist: [], heroIdx: 0,
     filter: 'all', currentPage: 'home', selSize: null,
-    dashCollapsed: false,
+    announceIdx: 0, announceTimer: null,
   };
 
-  // ── BANNER ──
+  // ── ANNOUNCEMENT BANNER (STATIC CYCLING) ──
   function buildBanner() {
-    const items = [...BANNER_ITEMS,...BANNER_ITEMS];
-    document.getElementById('marquee-wrap').innerHTML = items.map(i=>`<span class="marquee-item">${i}</span>`).join('<span class="marquee-item" style="opacity:0.3">·</span>');
+    const el0 = document.getElementById('announce-text-0');
+    const el1 = document.getElementById('announce-text-1');
+    if (!el0 || !el1) return;
+    
+    el0.textContent = BANNER_ITEMS[0];
+    el0.classList.add('active');
+    el1.classList.remove('active');
+    
+    S.announceIdx = 0;
+    if (S.announceTimer) clearInterval(S.announceTimer);
+    
+    S.announceTimer = setInterval(() => {
+      const current = S.announceIdx;
+      const next = (current + 1) % BANNER_ITEMS.length;
+      const activeEl = document.getElementById(`announce-text-${current % 2}`);
+      const nextEl = document.getElementById(`announce-text-${next % 2}`);
+      
+      nextEl.textContent = BANNER_ITEMS[next];
+      activeEl.classList.remove('active');
+      nextEl.classList.add('active');
+      
+      S.announceIdx = next;
+    }, 2000);
+  }
+
+  // ── MENU DRAWER ──
+  function openMenu() {
+    document.getElementById('menu-backdrop').classList.add('open');
+    document.getElementById('menu-drawer').classList.add('open');
+  }
+  function closeMenu() {
+    document.getElementById('menu-backdrop').classList.remove('open');
+    document.getElementById('menu-drawer').classList.remove('open');
+  }
+  function toggleBrandsCollapse() {
+    document.getElementById('brands-collapse').classList.toggle('open');
   }
 
   // ── HERO ──
   let heroTimer;
-
   function buildHero() {
     renderHeroSlide(0);
     const dotsEl = document.getElementById('hero-dots');
     dotsEl.innerHTML = HERO_SLIDES.map((_,i)=>`<button class="hero-dot ${i===0?'active':''}" onclick="goHero(${i})"></button>`).join('');
     heroTimer = setInterval(()=>goHero((S.heroIdx+1)%HERO_SLIDES.length), 6000);
   }
-
   function renderHeroSlide(i) {
     S.heroIdx = i;
     const s = HERO_SLIDES[i];
     const textEl = document.getElementById('hero-text');
     const bgEl = document.getElementById('hero-bg');
-
-    // Fade out text
     textEl.style.opacity = '0';
-
     setTimeout(() => {
-      // SIMPLE FIX: Just set backgroundImage since all slides now use image URLs
       bgEl.style.backgroundImage = `url(${s.bg})`;
-      
-      // Update text content
       textEl.innerHTML =
         `<div class="hero-eyebrow">${s.eyebrow}</div>` +
         `<h1 class="hero-title">${s.title.replace(/\n/g,'<br>')}</h1>` +
         `<p class="hero-sub">${s.sub}</p>` +
         `<button class="hero-btn" onclick="filterProducts('all')">${s.cta}</button>`;
-
-      // Fade in text
       textEl.style.opacity = '1';
     }, 300);
-
-    // Update dot indicators
     document.querySelectorAll('.hero-dot').forEach((d,j) => d.classList.toggle('active', j===i));
   }
-
   function goHero(i) {
     clearInterval(heroTimer);
     renderHeroSlide(i);
@@ -1062,7 +940,6 @@
     jackets:'linear-gradient(160deg,#2a2a2a,#1c1c1c)', bottoms:'linear-gradient(160deg,#b8b0a4,#c8c0b4)',
     accessories:'linear-gradient(160deg,#d4c5a9,#c8b898)', shoes:'linear-gradient(160deg,#c0b8ac,#a8a098)',
   };
-
   function productCard(p) {
     const inWish = S.wishlist.some(w=>w.id===p.id);
     const price = p.salePrice
@@ -1089,39 +966,31 @@
       <div class="product-colors-strip">${dots}</div>
     </div>`;
   }
-
   function filterProducts(f) {
     S.filter = f;
-    const filtered = f==='all' ? PRODUCTS : f==='sale' ? PRODUCTS.filter(p=>p.badge==='sale') : f==='brands' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===f||p.badge===f);
+    const filtered = f==='all' ? PRODUCTS : f==='sale' ? PRODUCTS.filter(p=>p.badge==='sale') : PRODUCTS.filter(p=>p.cat===f||p.badge===f);
     document.getElementById('arrivals-grid').innerHTML = filtered.map(productCard).join('');
   }
-
   function buildArrivals() {
     document.getElementById('arrivals-grid').innerHTML = PRODUCTS.slice(0,10).map(productCard).join('');
   }
+  function buildCollectionsPage() {
+    const grid = document.getElementById('collections-grid');
+    if(grid) grid.innerHTML = PRODUCTS.map(productCard).join('');
+  }
 
   // ── CART ──
-  function openCart() {
-    document.getElementById('cart-backdrop').classList.add('open');
-    document.getElementById('cart-panel').classList.add('open');
-    renderCart();
-  }
-  function closeCart() {
-    document.getElementById('cart-backdrop').classList.remove('open');
-    document.getElementById('cart-panel').classList.remove('open');
-  }
+  function openCart() { document.getElementById('cart-backdrop').classList.add('open'); document.getElementById('cart-panel').classList.add('open'); renderCart(); }
+  function closeCart() { document.getElementById('cart-backdrop').classList.remove('open'); document.getElementById('cart-panel').classList.remove('open'); }
   function addToCart(id, size) {
-    const p = PRODUCTS.find(x=>x.id===id);
-    if(!p) return;
+    const p = PRODUCTS.find(x=>x.id===id); if(!p) return;
     const sz = size || p.sizes[0];
     const ex = S.cart.find(i=>i.id===id&&i.size===sz);
     if(ex) ex.qty++; else S.cart.push({...p,qty:1,size:sz});
-    updateBadges(); renderCart();
-    toast(`${p.name} added to cart`);
+    updateBadges(); renderCart(); toast(`${p.name} added to cart`);
   }
   function removeFromCart(id,sz) { S.cart=S.cart.filter(i=>!(i.id===id&&i.size===sz)); updateBadges(); renderCart(); }
   function changeQty(id,sz,d) { const i=S.cart.find(x=>x.id===id&&x.size===sz); if(i) i.qty=Math.max(1,i.qty+d); renderCart(); }
-
   function renderCart() {
     const body = document.getElementById('cart-body');
     const foot = document.getElementById('cart-foot');
@@ -1220,37 +1089,6 @@
   function selSize(btn,s) { document.querySelectorAll('.modal-size-btn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); S.selSize=s; }
   function closeModal() { document.getElementById('modal-backdrop').classList.remove('open'); document.getElementById('product-modal').classList.remove('open'); }
 
-  // ── SEARCH ──
-  function openSearch() { document.getElementById('search-backdrop').classList.add('open'); document.getElementById('search-panel').classList.add('open'); buildSearchBody(); setTimeout(()=>document.getElementById('search-input').focus(),300); }
-  function closeSearch() { document.getElementById('search-backdrop').classList.remove('open'); document.getElementById('search-panel').classList.remove('open'); }
-  function buildSearchBody() {
-    document.getElementById('search-body').innerHTML = `
-      <div class="search-section-label" style="margin-bottom:12px">Popular Searches</div>
-      <div class="search-tags-wrap">${SEARCH_POPULAR.map(t=>`<button class="search-tag-pill" onclick="document.getElementById('search-input').value='${t}';doSearch('${t}')">${t}</button>`).join('')}</div>
-      <div class="search-section-label">Recent Searches</div>
-      <div id="recent-list">${SEARCH_RECENT.map(r=>`<div class="recent-item"><span class="recent-text">${r}</span><button class="recent-clear">×</button></div>`).join('')}</div>
-    `;
-  }
-  function doSearch(v) { /* live search could render results here */ }
-
-  // ── DASHBOARD WIDGET ──
-  function buildDashWidget() {
-    document.getElementById('dash-nav-items').innerHTML = DASH_NAV.map(n=>`
-      <button class="dash-nav-item">
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5">${n.icon}</svg>
-        ${n.label}
-        ${n.badge?`<span class="dash-nav-badge">${n.badge}</span>`:''}
-      </button>
-    `).join('');
-  }
-  function toggleDashWidget() {
-    S.dashCollapsed = !S.dashCollapsed;
-    const body = document.getElementById('dash-widget-body');
-    const btn = document.getElementById('dash-toggle-btn');
-    body.style.display = S.dashCollapsed ? 'none' : 'block';
-    btn.textContent = S.dashCollapsed ? '+' : '−';
-  }
-
   // ── EDITORIAL PAGE ──
   function buildEditorial() {
     const grads = ['linear-gradient(160deg,#1c1c1c,#2a2a2a)','linear-gradient(160deg,#2a2520,#1c1c1c)','linear-gradient(160deg,#c8bfb0,#a89888)','linear-gradient(160deg,#e0dbd4,#c8bfb0)','linear-gradient(160deg,#d4c5a9,#c8b898)','linear-gradient(160deg,#2a2a2a,#1a1a1a)'];
@@ -1264,68 +1102,45 @@
     el.innerHTML = `
       <div class="footer-top">
         <div class="footer-collapse" id="footer-collapse-shop">
-          <div class="footer-collapse-header" onclick="toggleFooterCollapse('shop')">
-            Shop
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
-          <div class="footer-collapse-body">
-            <ul class="footer-links">
-              <li><a>New In</a></li><li><a>Dresses</a></li><li><a>Tops</a></li><li><a>Jackets</a></li><li><a>Accessories</a></li><li><a>Sale</a></li>
-            </ul>
-          </div>
+          <div class="footer-collapse-header" onclick="toggleFooterCollapse('shop')">Shop <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="footer-collapse-body"><ul class="footer-links"><li><a>New In</a></li><li><a>Dresses</a></li><li><a>Tops</a></li><li><a>Jackets</a></li><li><a>Accessories</a></li><li><a>Sale</a></li></ul></div>
         </div>
         <div class="footer-collapse" id="footer-collapse-brands">
-          <div class="footer-collapse-header" onclick="toggleFooterCollapse('brands')">
-            Brands
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
-          <div class="footer-collapse-body">
-            <ul class="footer-links">
-              <li><a>JANEDORE</a></li><li><a>NIRIUS</a></li><li><a>jewelrybykay</a></li><li><a>Brand Stories</a></li>
-            </ul>
-          </div>
+          <div class="footer-collapse-header" onclick="toggleFooterCollapse('brands')">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="footer-collapse-body"><ul class="footer-links"><li><a>JANEDORE</a></li><li><a>NIRIUS</a></li><li><a>jewelrybykay</a></li></ul></div>
         </div>
         <div class="footer-collapse" id="footer-collapse-help">
-          <div class="footer-collapse-header" onclick="toggleFooterCollapse('help')">
-            Help
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
-          <div class="footer-collapse-body">
-            <ul class="footer-links">
-              <li><a>Size Guide</a></li><li><a>Shipping</a></li><li><a>Returns</a></li><li><a>Contact</a></li><li><a>FAQs</a></li>
-            </ul>
-          </div>
-        </div>
-        <div class="footer-collapse" id="footer-collapse-policies">
-          <div class="footer-collapse-header" onclick="toggleFooterCollapse('policies')">
-            Policies
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
-          <div class="footer-collapse-body">
-            <ul class="footer-links">
-              <li><a>Privacy</a></li><li><a>Terms</a></li><li><a>Cookies</a></li>
-            </ul>
-          </div>
+          <div class="footer-collapse-header" onclick="toggleFooterCollapse('help')">Help <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="footer-collapse-body"><ul class="footer-links"><li><a>Size Guide</a></li><li><a>Shipping</a></li><li><a>Returns</a></li><li><a>Contact</a></li></ul></div>
         </div>
       </div>
-      <p class="footer-about">A curated multi-brand fashion destination for South Africa. Featuring JANEDORE, NIRIUS, and jewelrybykay.</p>
+      <p class="footer-about">A curated multi-brand fashion destination for South Africa.</p>
       <div class="footer-currency-lang">
-        <span class="footer-currency">ZAR R <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
-        <span class="footer-currency">BWP P <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
-        <span class="footer-currency">LSL M <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
-        <span class="footer-currency">NAD N$ <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
-        <span class="footer-currency">USD $ <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
-        <span class="footer-lang">EN <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+        <div class="footer-currency" onclick="toggleFooterDropdown('currency')">
+          ZAR R <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="currency-dropdown" id="currency-dropdown">
+            <div class="dropdown-option">BWP P</div>
+            <div class="dropdown-option">LSL M</div>
+            <div class="dropdown-option">NAD N$</div>
+            <div class="dropdown-option">USD $</div>
+          </div>
+        </div>
+        <div class="footer-lang" onclick="toggleFooterDropdown('lang')">
+          EN <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="lang-dropdown" id="lang-dropdown">
+            <div class="dropdown-option">EN</div>
+          </div>
+        </div>
       </div>
-      <div class="footer-bottom">
-        <div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div>
-      </div>
+      <div class="footer-bottom"><div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div></div>
     `;
   }
-
   function toggleFooterCollapse(section) {
-    const el = document.getElementById('footer-collapse-' + section);
-    if(el) el.classList.toggle('open');
+    document.getElementById('footer-collapse-' + section)?.classList.toggle('open');
+  }
+  function toggleFooterDropdown(type) {
+    const dropdown = document.getElementById(type === 'currency' ? 'currency-dropdown' : 'lang-dropdown');
+    if(dropdown) dropdown.classList.toggle('open');
   }
 
   // ── NEWSLETTER ──
@@ -1353,21 +1168,22 @@
   // ── NAVIGATION ──
   function navigateTo(page) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-'+page).classList.add('active');
+    const target = document.getElementById('page-'+page);
+    if(target) target.classList.add('active');
     S.currentPage=page; window.scrollTo({top:0,behavior:'smooth'});
     if(page==='editorial') buildEditorial();
+    if(page==='collections') buildCollectionsPage();
   }
 
   // ── KEYBOARD ──
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){closeCart();closeSearch();closeWishlist();closeModal();}
+    if(e.key==='Escape'){closeCart();closeWishlist();closeModal();closeMenu();}
   });
 
   // ── INIT ──
   function init() {
     buildBanner(); buildHero(); buildCategories(); buildArrivals();
-    buildDashWidget(); buildFooter('main-footer');
-    // Purchase notifications are completely disabled.
+    buildFooter('main-footer'); buildFooter('collections-footer'); buildFooter('editorial-footer');
   }
   init();
 </script>
