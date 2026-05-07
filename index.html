@@ -119,7 +119,7 @@
 
     /* ── HERO ── */
     #hero {
-      position: relative; height: calc(60px - 90px); min-height: 460px;
+      position: relative; height: 65vh; min-height: 480px;
       overflow: hidden; background: #1a1a1a;
     }
     .hero-bg-placeholder {
@@ -135,7 +135,8 @@
     }
     .hero-text {
       position: absolute; top: 50%; left: 72px; z-index: 10; max-width: 560px;
-      transition: opacity 0.8s ease; 
+      transform: translateY(-50%);
+      transition: opacity 0.8s ease;
     }
     .hero-eyebrow {
       font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
@@ -589,8 +590,8 @@
       .nav-logo img { height: 22px; }
       .nav-right { gap: 8px; }
       .nav-icon-btn { padding: 8px; font-size: 22px; }
-      #hero { height: calc(100vh - 98px); min-height: 500px; }
-      .hero-text { left: 24px; bottom: 60px; max-width: 280px; }
+      #hero { height: 60vh; min-height: 420px; }
+      .hero-text { left: 24px; max-width: 280px; }
       .hero-title { font-size: clamp(42px, 8vw, 64px); }
       .hero-sub { font-size: 11px; }
       .hero-btn { padding: 14px 28px; }
@@ -609,8 +610,8 @@
       .nav-logo img { height: 20px; }
       .nav-right { flex: 0 1 auto; gap: 4px; }
       .nav-icon-btn { padding: 10px 6px; font-size: 24px; }
-      #hero { height: calc(100vh - 92px); min-height: 480px; }
-      .hero-text { left: 20px; bottom: 50px; max-width: 240px; }
+      #hero { height: 55vh; min-height: 380px; }
+      .hero-text { left: 20px; max-width: 240px; }
       .hero-eyebrow { font-size: 9px; }
       .hero-title { font-size: clamp(36px, 9vw, 48px); }
       .hero-sub { font-size: 10px; max-width: 220px; }
@@ -743,7 +744,7 @@
   <section id="new-arrivals">
     <div class="arrivals-header">
       <div class="arrivals-title">New Arrivals</div>
-      <button class="arrivals-view-all" onclick="navigateTo('collections')">View All</button>
+      <button class="arrivals-view-all" onclick="navigateTo('products')">View All</button>
     </div>
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
@@ -784,16 +785,16 @@
   <footer id="main-footer"></footer>
 </div>
 
-<!-- ── COLLECTIONS PAGE ── -->
-<div class="page" id="page-collections">
+<!-- ── ALL PRODUCTS PAGE ── -->
+<div class="page" id="page-products">
   <section style="padding:60px 28px">
     <div style="text-align:center;margin-bottom:40px">
       <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300">All Collections</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300">All Products</div>
     </div>
-    <div class="product-grid" id="collections-grid"></div>
+    <div class="product-grid" id="all-products-grid"></div>
   </section>
-  <footer id="collections-footer"></footer>
+  <footer id="products-footer"></footer>
 </div>
 
 <!-- ── EDITORIAL PAGE ── -->
@@ -974,8 +975,8 @@
   function buildArrivals() {
     document.getElementById('arrivals-grid').innerHTML = PRODUCTS.slice(0,10).map(productCard).join('');
   }
-  function buildCollectionsPage() {
-    const grid = document.getElementById('collections-grid');
+  function buildAllProductsPage() {
+    const grid = document.getElementById('all-products-grid');
     if(grid) grid.innerHTML = PRODUCTS.map(productCard).join('');
   }
 
@@ -1172,7 +1173,7 @@
     if(target) target.classList.add('active');
     S.currentPage=page; window.scrollTo({top:0,behavior:'smooth'});
     if(page==='editorial') buildEditorial();
-    if(page==='collections') buildCollectionsPage();
+    if(page==='products') buildAllProductsPage();
   }
 
   // ── KEYBOARD ──
@@ -1183,7 +1184,7 @@
   // ── INIT ──
   function init() {
     buildBanner(); buildHero(); buildCategories(); buildArrivals();
-    buildFooter('main-footer'); buildFooter('collections-footer'); buildFooter('editorial-footer');
+    buildFooter('main-footer'); buildFooter('products-footer'); buildFooter('editorial-footer');
   }
   init();
 </script>
