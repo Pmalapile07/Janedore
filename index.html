@@ -104,7 +104,6 @@
 .page { display: none; }
 .page.active { display: block; }
 
-/* HERO — increased by 2vh */
 #hero {
   position: relative; height: 82vh; min-height: 480px;
   overflow: hidden; background: #1a1a1a;
@@ -117,7 +116,6 @@
   position: absolute; inset: 0;
   background: linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 70%);
 }
-/* Shop Now button — bottom center of hero */
 .hero-cta-wrap {
   position: absolute; bottom: 36px; left: 0; right: 0;
   display: flex; justify-content: center; z-index: 10;
@@ -143,7 +141,6 @@
   font-size: 13px; font-weight: 300; line-height: 1.8; color: #666;
   max-width: 580px; margin: 0 auto 24px; letter-spacing: 0.04em;
 }
-/* Explore Campaign — no pointer, just sits */
 .dawning-cta {
   font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
   color: #111; border-bottom: 1px solid #111; padding-bottom: 2px;
@@ -238,16 +235,33 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .footer-links li a { font-size: 12px; font-weight: 300; color: #888; transition: color 0.2s; cursor: pointer; }
 .footer-links li a:hover { color: #fff; }
-/* Expanded footer about paragraph */
+
+/* SHORTENED footer about paragraph */
 .footer-about { font-size: 12px; font-weight: 300; line-height: 1.8; color: #888; margin-bottom: 24px; padding-top: 8px; text-align: center; }
-.footer-currency-lang { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; position: relative; }
-.footer-currency, .footer-lang { font-size: 12px; letter-spacing: 0.08em; color: #888; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: color 0.2s; position: relative; }
+
+/* RESPONSIVE currency/lang — matches main page style */
+.footer-currency-lang {
+  display: flex; align-items: center; justify-content: center;
+  gap: 24px; margin-bottom: 28px; flex-wrap: wrap; position: relative;
+}
+.footer-currency, .footer-lang {
+  font-size: 12px; letter-spacing: 0.08em; color: #888;
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  transition: color 0.2s; position: relative;
+}
 .footer-currency:hover, .footer-lang:hover { color: #fff; }
 .footer-currency svg, .footer-lang svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-.currency-dropdown, .lang-dropdown { position: absolute; bottom: 100%; left: 0; background: #222; border: 1px solid #444; padding: 8px 0; min-width: 100px; display: none; z-index: 10; }
+.currency-dropdown, .lang-dropdown {
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: #222; border: 1px solid #444; padding: 8px 0;
+  min-width: 120px; display: none; z-index: 10;
+  box-shadow: 0 -8px 20px rgba(0,0,0,0.3);
+}
 .currency-dropdown.open, .lang-dropdown.open { display: block; }
-.dropdown-option { padding: 8px 16px; font-size: 11px; letter-spacing: 0.08em; color: #ccc; cursor: pointer; transition: background 0.2s; }
+.dropdown-option { padding: 8px 16px; font-size: 11px; letter-spacing: 0.08em; color: #ccc; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
 .dropdown-option:hover { background: #333; color: #fff; }
+
 .footer-bottom { border-top: 1px solid #2a2a2a; padding-top: 24px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 16px; }
 .footer-copy { font-size: 10px; letter-spacing: 0.1em; color: #555; text-transform: uppercase; text-align: center; }
 
@@ -284,12 +298,10 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 .btn-checkout-main { width: 100%; background: #111; color: #fff; border: none; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; padding: 15px; transition: background 0.2s; }
 .btn-checkout-main:hover { background: #333; }
 
-/* EMPTY CART */
 .cart-empty-state { display: flex; flex-direction: column; align-items: center; padding: 40px 20px 20px; }
 .cart-empty-msg { text-align: center; font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 700; color: #111; letter-spacing: 0.06em; margin-bottom: 6px; }
 .cart-empty-sub { font-size: 11px; font-weight: 300; color: #888; text-align: center; letter-spacing: 0.04em; margin-bottom: 0; }
 .cart-free-ship { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #111; font-weight: 500; display: flex; align-items: center; gap: 6px; margin-top: 12px; }
-/* Empty cart YMAL slider */
 .cart-ymal-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; margin-bottom: 14px; padding-top: 24px; border-top: 1px solid #f0f0f0; }
 .cart-ymal-slider { position: relative; overflow: hidden; }
 .cart-ymal-track { display: flex; transition: transform 0.4s ease; }
@@ -312,7 +324,6 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 .wish-price { font-size: 11px; font-weight: 300; color: #888; margin-bottom: 8px; }
 .wish-add-btn { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; background: #111; color: #fff; border: none; padding: 7px 14px; transition: background 0.2s; }
 .wish-add-btn:hover { background: #333; }
-/* Empty wishlist */
 .wish-empty-state { display: flex; flex-direction: column; align-items: center; padding: 40px 24px; text-align: center; gap: 0; }
 .wish-empty-login { font-size: 11px; font-weight: 300; color: #888; letter-spacing: 0.04em; line-height: 1.7; margin-bottom: 24px; }
 .wish-empty-login a { color: #111; font-weight: 500; border-bottom: 1px solid #111; padding-bottom: 1px; cursor: pointer; }
@@ -325,7 +336,7 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 .toast-dot { width: 5px; height: 5px; border-radius: 50%; background: #fff; flex-shrink: 0; }
 @keyframes toastSlide { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
 
-/* COLLECTION TOOLBAR — category pills: bold, black, no border */
+/* COLLECTION TOOLBAR */
 .collection-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 0 0 24px; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; flex-wrap: wrap; gap: 12px; }
 .toolbar-left { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .toolbar-right { display: flex; align-items: center; gap: 18px; }
@@ -349,7 +360,7 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 .curated-option { padding: 8px 16px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #555; cursor: pointer; transition: background 0.2s; }
 .curated-option:hover { background: #f5f5f5; color: #111; }
 
-/* Category nav pills — bold, black, NO border */
+/* Category nav pills */
 .category-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 32px; scrollbar-width: none; }
 .category-nav::-webkit-scrollbar { display: none; }
 .cat-nav-item {
@@ -385,7 +396,9 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 .modal-wish-btn { width: 100%; background: #fff; color: #111; border: 1px solid #ddd; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; padding: 13px; transition: all 0.2s; }
 .modal-wish-btn:hover { border-color: #111; }
 
+/* info-collapse — first one has NO top border (removes the gray line above Shipping & Returns) */
 .info-collapse { border-top: 1px solid #e5e5e5; }
+.info-collapse:first-of-type { border-top: none; }
 .info-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; cursor: pointer; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; }
 .info-collapse-header svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 1.5; transition: transform 0.3s; }
 .info-collapse.open .info-collapse-header svg { transform: rotate(45deg); }
@@ -401,8 +414,10 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 .write-review-btn { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #555; border-bottom: 1px solid #555; background: none; padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; }
 .write-review-btn:hover { color: #111; border-color: #111; }
 
+/* RECENTLY VIEWED — same size as other product cards */
 .recently-viewed-section { padding: 32px 0; border-top: 1px solid #e5e5e5; }
 .recently-viewed-title { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #111; margin-bottom: 16px; }
+.recently-viewed-grid .product-card .product-img-wrap { aspect-ratio: 2/3; }
 
 .dress-toggle-icon { width: 20px; height: 20px; object-fit: contain; display: block; }
 .grid-toggle-svg { width: 22px; height: 18px; display: flex; align-items: flex-end; gap: 2px; transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
@@ -454,7 +469,6 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 }
 .search-close-btn:hover { color: #111; }
 .search-body { flex: 1; overflow-y: auto; padding: 32px 28px; }
-/* Suggestions */
 .search-suggestions { margin-bottom: 32px; }
 .search-suggestions-title { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin-bottom: 14px; }
 .search-suggestion-pills { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -464,7 +478,6 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   border: none; cursor: pointer; transition: all 0.2s;
 }
 .search-pill:hover { background: #111; color: #fff; }
-/* Search results grid 2x2 */
 .search-results-title { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin-bottom: 16px; }
 .search-results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .search-no-results { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 300; color: #bbb; padding: 40px 0; text-align: center; }
@@ -488,13 +501,17 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   .campaign-heading { font-size: 48px; margin-bottom: 40px; }
   .search-results-grid { grid-template-columns: repeat(2, 1fr); }
   #search-input { font-size: 18px; }
+  /* Responsive currency/lang on mobile */
+  .footer-currency-lang { gap: 16px; }
+  .currency-dropdown, .lang-dropdown { left: 50%; transform: translateX(-50%); min-width: 110px; }
 }
 @media (max-width: 480px) {
   #main-nav { padding: 0 12px; height: 52px; }
   #hero { height: 82vh; min-height: 380px; }
   .category-grid { grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .footer-currency-lang { flex-direction: row; justify-content: center; gap: 20px; }
 }
-```
+
 
   </style>
 </head>
@@ -510,14 +527,13 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="filter: brightness(0) saturate(100%); height: 28px; width: auto;">
   </div>
   <div class="nav-right">
-    <!-- Search icon -->
+    <!-- Updated search icon -->
     <button class="nav-icon-btn" onclick="openSearch()" title="Search">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="7"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15Z"/>
+        <path d="M22 22l-4.35-4.35"/>
       </svg>
     </button>
-    <!-- Wishlist closer to cart -->
     <button class="nav-icon-btn" onclick="openWishlist()"><i class="ph-light ph-heart"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn" onclick="openCart()"><i class="ph-light ph-shopping-bag"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
   </div>
@@ -528,14 +544,15 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
 <div id="search-overlay">
   <div class="search-overlay-header">
     <div class="search-input-wrap">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15Z"/>
+        <path d="M22 22l-4.35-4.35"/>
+      </svg>
       <input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)">
     </div>
     <button class="search-close-btn" onclick="closeSearch()">Close</button>
   </div>
-  <div class="search-body" id="search-body">
-    <!-- Populated by JS -->
-  </div>
+  <div class="search-body" id="search-body"></div>
 </div>
 
 <div id="menu-backdrop" onclick="closeMenu()"></div>
@@ -548,7 +565,10 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     <a class="drawer-link" onclick="navigateToCategory('tops');closeMenu();">Tops</a>
     <a class="drawer-link" onclick="navigateToCategory('bottoms');closeMenu();">Bottoms</a>
     <a class="drawer-link" onclick="navigateToCategory('jackets');closeMenu();">Jackets</a>
-    <a class="drawer-link" onclick="navigateToCategory('accessories');closeMenu();">Accessories</a>
+    <a class="drawer-link" onclick="navigateToCategory('sets');closeMenu();">Sets</a>
+    <a class="drawer-link" onclick="navigateToCategory('bags');closeMenu();">Bags</a>
+    <a class="drawer-link" onclick="navigateToCategory('jewelry');closeMenu();">Jewelry</a>
+    <a class="drawer-link" onclick="navigateToCategory('sunglasses');closeMenu();">Sunglasses</a>
     <a class="drawer-link" onclick="navigateToCategory('shoes');closeMenu();">Shoes</a>
     <div class="brands-collapse" id="brands-collapse"><div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="brands-collapse-body"><div class="brand-logo-placeholder">JANEDORE</div><div class="brand-logo-placeholder">NIRIUS CO</div><div class="brand-logo-placeholder">JEWELRYBK</div></div></div>
     <a class="drawer-link sale" onclick="closeMenu();">Sale</a>
@@ -579,7 +599,6 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   <section id="hero">
     <div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737')"></div>
     <div class="hero-overlay"></div>
-    <!-- Shop Now CTA — bottom center -->
     <div class="hero-cta-wrap">
       <button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button>
     </div>
@@ -588,7 +607,6 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   <section id="discover-dawning">
     <div class="dawning-title">Discover 'understated'</div>
     <p class="dawning-desc">An exploration of refined minimalism — soft tailoring, muted palettes, and timeless silhouettes designed for effortless everyday luxury. Understated celebrates quiet confidence through elevated essentials that feel both modern and enduring.</p>
-    <!-- Explore Campaign — stagnant, not clickable -->
     <span class="dawning-cta">Explore Campaign</span>
   </section>
 
@@ -636,7 +654,17 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
         <div class="filter-dropdown">
           <button class="filter-trigger" onclick="toggleFilterDropdown()">FILTER ▾</button>
           <div class="filter-options" id="filter-options">
-            <div class="filter-group"><div class="filter-group-title">Category</div><div class="filter-option" onclick="applyFilter('cat','all')"><input type="radio" name="filterCat" checked> All</div><div class="filter-option" onclick="applyFilter('cat','dresses')"><input type="radio" name="filterCat"> Dresses</div><div class="filter-option" onclick="applyFilter('cat','tops')"><input type="radio" name="filterCat"> Tops</div><div class="filter-option" onclick="applyFilter('cat','bottoms')"><input type="radio" name="filterCat"> Bottoms</div><div class="filter-option" onclick="applyFilter('cat','jackets')"><input type="radio" name="filterCat"> Jackets</div><div class="filter-option" onclick="applyFilter('cat','accessories')"><input type="radio" name="filterCat"> Accessories</div></div>
+            <div class="filter-group"><div class="filter-group-title">Category</div>
+              <div class="filter-option" onclick="applyFilter('cat','all')"><input type="radio" name="filterCat" checked> All</div>
+              <div class="filter-option" onclick="applyFilter('cat','dresses')"><input type="radio" name="filterCat"> Dresses</div>
+              <div class="filter-option" onclick="applyFilter('cat','tops')"><input type="radio" name="filterCat"> Tops</div>
+              <div class="filter-option" onclick="applyFilter('cat','bottoms')"><input type="radio" name="filterCat"> Bottoms</div>
+              <div class="filter-option" onclick="applyFilter('cat','jackets')"><input type="radio" name="filterCat"> Jackets</div>
+              <div class="filter-option" onclick="applyFilter('cat','sets')"><input type="radio" name="filterCat"> Sets</div>
+              <div class="filter-option" onclick="applyFilter('cat','bags')"><input type="radio" name="filterCat"> Bags</div>
+              <div class="filter-option" onclick="applyFilter('cat','jewelry')"><input type="radio" name="filterCat"> Jewelry</div>
+              <div class="filter-option" onclick="applyFilter('cat','sunglasses')"><input type="radio" name="filterCat"> Sunglasses</div>
+            </div>
             <div class="filter-group"><div class="filter-group-title">Size</div><div class="filter-option" onclick="applyFilter('size','all')"><input type="radio" name="filterSize" checked> All</div><div class="filter-option" onclick="applyFilter('size','XS')"><input type="radio" name="filterSize"> XS</div><div class="filter-option" onclick="applyFilter('size','S')"><input type="radio" name="filterSize"> S</div><div class="filter-option" onclick="applyFilter('size','M')"><input type="radio" name="filterSize"> M</div><div class="filter-option" onclick="applyFilter('size','L')"><input type="radio" name="filterSize"> L</div></div>
             <div class="filter-group"><div class="filter-group-title">Price</div><div class="filter-option" onclick="applyFilter('price','all')"><input type="radio" name="filterPrice" checked> All</div><div class="filter-option" onclick="applyFilter('price','under2k')"><input type="radio" name="filterPrice"> Under R2000</div><div class="filter-option" onclick="applyFilter('price','2kto5k')"><input type="radio" name="filterPrice"> R2000 - R5000</div><div class="filter-option" onclick="applyFilter('price','over5k')"><input type="radio" name="filterPrice"> Over R5000</div></div>
           </div>
@@ -693,13 +721,13 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     { id:3, name:'Celeste Silk Blouse', brand:'NIRIUS CO', cat:'tops', price:2250, color:'Ivory', colors:['#f5f2ed','#e8e0d0'], badge:'new', sizes:['XS','S','M','L'], desc:'Hand-finished silk charmeuse in relaxed oversized drape. Italian fabrication.' },
     { id:4, name:'Onyx Tailored Blazer', brand:'JANEDORE', cat:'jackets', price:5990, color:'Black', colors:['#1c1c1c','#2a2a2a'], badge:'new', sizes:['XS','S','M','L'], desc:'Sharp single-breasted construction in Italian wool. Silk-lined.' },
     { id:5, name:'Rio Wide-Leg Trousers', brand:'NIRIUS CO', cat:'bottoms', price:2990, color:'Sand', colors:['#d4c5a9','#f5f2ed','#1c1c1c'], badge:'', sizes:['XS','S','M','L','XL'], desc:'Flowing wide-leg in linen-silk blend. Effortlessly tailored.' },
-    { id:6, name:'Gold Link Necklace', brand:'JEWELRYBK', cat:'accessories', price:1390, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Handcrafted 18k gold-plated brass links.' },
+    { id:6, name:'Gold Link Necklace', brand:'JEWELRYBK', cat:'jewelry', price:1390, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Handcrafted 18k gold-plated brass links.' },
     { id:7, name:'Noir Wrap Midi', brand:'JANEDORE', cat:'dresses', price:2690, salePrice:1890, color:'Black', colors:['#1c1c1c'], badge:'sale', sizes:['XS','S','M','L'], desc:'Fluid wrap construction in matte jersey.' },
-    { id:8, name:'Luna Stud Earrings', brand:'JEWELRYBK', cat:'accessories', price:990, color:'Gold', colors:['#c9a96e','#d4d4d4'], badge:'new', sizes:['One Size'], desc:'Minimalist dome studs in recycled sterling silver.' },
-    { id:9, name:'Cassis Leather Belt', brand:'NIRIUS CO', cat:'accessories', price:1790, color:'Cognac', colors:['#8b5e3c','#1c1c1c'], badge:'', sizes:['XS/S','M/L'], desc:'Full-grain Italian leather with antique brass hardware.' },
+    { id:8, name:'Luna Stud Earrings', brand:'JEWELRYBK', cat:'jewelry', price:990, color:'Gold', colors:['#c9a96e','#d4d4d4'], badge:'new', sizes:['One Size'], desc:'Minimalist dome studs in recycled sterling silver.' },
+    { id:9, name:'Cassis Leather Belt', brand:'NIRIUS CO', cat:'bags', price:1790, color:'Cognac', colors:['#8b5e3c','#1c1c1c'], badge:'', sizes:['XS/S','M/L'], desc:'Full-grain Italian leather with antique brass hardware.' },
     { id:10, name:'Soleil Crop Top', brand:'JANEDORE', cat:'tops', price:1490, color:'Cream', colors:['#f5f2ed','#1c1c1c'], badge:'new', sizes:['XS','S','M','L'], desc:'Structured bra-style crop in cotton-silk twill.' },
     { id:11, name:'Midnight Column Gown', brand:'NIRIUS CO', cat:'dresses', price:7690, color:'Black', colors:['#1c1c1c'], badge:'', sizes:['XS','S','M','L'], desc:'Floor-sweeping column in duchess satin. Made-to-order.' },
-    { id:12, name:'Chain Layered Bracelet', brand:'JEWELRYBK', cat:'accessories', price:1190, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Multi-strand bracelet with organic link shapes.' },
+    { id:12, name:'Chain Layered Bracelet', brand:'JEWELRYBK', cat:'jewelry', price:1190, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Multi-strand bracelet with organic link shapes.' },
   ];
   const CATEGORIES = [
     { name:'Clothing', filter:'clothing', img:'' },
@@ -713,6 +741,8 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     dresses:'linear-gradient(160deg,#c8bfb0,#a89888)', tops:'linear-gradient(160deg,#e0dbd4,#c8bfb0)',
     jackets:'linear-gradient(160deg,#2a2a2a,#1c1c1c)', bottoms:'linear-gradient(160deg,#b8b0a4,#c8c0b4)',
     accessories:'linear-gradient(160deg,#d4c5a9,#c8b898)', shoes:'linear-gradient(160deg,#c0b8ac,#a8a098)',
+    bags:'linear-gradient(160deg,#c0a882,#a8906a)', jewelry:'linear-gradient(160deg,#e8d8b0,#d4c090)',
+    sunglasses:'linear-gradient(160deg,#2a2520,#1c1c1c)', sets:'linear-gradient(160deg,#ddd8d0,#c8c0b8)',
   };
 
   const S = {
@@ -817,13 +847,23 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     return `<div class="product-card" onclick="goToProduct(${p.id})"><div class="product-img-wrap"><div class="product-img-placeholder" style="${img}"><span style="font-size:10px;letter-spacing:0.1em;color:rgba(0,0,0,0.2);text-transform:uppercase;font-family:'Cormorant Garamond',serif">${p.name}</span></div>${b}<div class="product-hover-actions"><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button><button class="btn-wish ${inW?'wished':''}" onclick="event.stopPropagation();toggleWish(${p.id})"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button></div></div>${details}</div>`;
   }
   function buildArrivals(){document.getElementById('arrivals-grid').innerHTML=PRODUCTS.slice(0,10).map(p=>productCard(p,false)).join('');}
-  function buildCategoryNav(){document.getElementById('category-nav').innerHTML=['ALL','NEW IN','DRESSES','TOPS','BOTTOMS','JACKETS','ACCESSORIES'].map(c=>`<button class="cat-nav-item ${S.activeCollectionCat===c?'active':''}" onclick="setCollectionCat('${c}')">${c}</button>`).join('');}
+
+  /* Category nav — updated with new categories, removed Accessories */
+  function buildCategoryNav(){
+    document.getElementById('category-nav').innerHTML=[
+      'ALL','NEW IN','DRESSES','TOPS','BOTTOMS','JACKETS','SETS','BAGS','JEWELRY','SUNGLASSES'
+    ].map(c=>`<button class="cat-nav-item ${S.activeCollectionCat===c?'active':''}" onclick="setCollectionCat('${c}')">${c}</button>`).join('');
+  }
   function setCollectionCat(c){S.activeCollectionCat=c;buildCategoryNav();renderAllProducts();}
+
   function renderAllProducts(){
     let g=document.getElementById('all-products-grid');if(!g)return;
     let f=PRODUCTS;
     if(S.activeCollectionCat!=='ALL'){
-      let map={'NEW IN':'new','DRESSES':'dresses','TOPS':'tops','BOTTOMS':'bottoms','JACKETS':'jackets','ACCESSORIES':'accessories'};
+      let map={
+        'NEW IN':'new','DRESSES':'dresses','TOPS':'tops','BOTTOMS':'bottoms',
+        'JACKETS':'jackets','SETS':'sets','BAGS':'bags','JEWELRY':'jewelry','SUNGLASSES':'sunglasses'
+      };
       let k=map[S.activeCollectionCat]||S.activeCollectionCat.toLowerCase();
       f=PRODUCTS.filter(p=>p.cat===k||(S.activeCollectionCat==='NEW IN'&&p.badge==='new'));
     }
@@ -874,10 +914,11 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     let title=cat.charAt(0).toUpperCase()+cat.slice(1);
     document.getElementById('category-title').textContent=title;
     let catProducts = [];
-    if(cat==='clothing') catProducts = PRODUCTS.filter(p=>p.brand==='JANEDORE' && ['dresses','tops','bottoms','jackets'].includes(p.cat));
-    else if(cat==='bags') catProducts = PRODUCTS.filter(p=>p.brand==='JANEDORE' && p.cat==='bags');
-    else if(cat==='sunglasses') catProducts = PRODUCTS.filter(p=>p.brand==='JANEDORE' && p.cat==='sunglasses');
-    else if(cat==='jewelry') catProducts = PRODUCTS.filter(p=>['JEWELRYBK','NIRIUS CO'].includes(p.brand) && p.cat==='accessories');
+    if(cat==='clothing') catProducts = PRODUCTS.filter(p=>['dresses','tops','bottoms','jackets','sets'].includes(p.cat));
+    else if(cat==='bags') catProducts = PRODUCTS.filter(p=>p.cat==='bags');
+    else if(cat==='sunglasses') catProducts = PRODUCTS.filter(p=>p.cat==='sunglasses');
+    else if(cat==='jewelry') catProducts = PRODUCTS.filter(p=>p.cat==='jewelry');
+    else if(cat==='sets') catProducts = PRODUCTS.filter(p=>p.cat==='sets');
     else catProducts = PRODUCTS.filter(p=>p.cat===cat);
     document.getElementById('category-products-grid').innerHTML=catProducts.map(p=>productCard(p,false)).join('');
     window.scrollTo({top:0,behavior:'smooth'});
@@ -892,13 +933,13 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   }
 
   function goToProduct(id){
-    // Close search if open
     closeSearch();
     let p=PRODUCTS.find(x=>x.id===id);if(!p)return;
     addToRecentlyViewed(id);
     window.history.pushState({page:'product',id:id},'',`#product-${id}`);
     renderProductPage(p);
   }
+
   function renderProductPage(p){
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
     let page=document.getElementById('page-product-detail'); page.classList.add('active'); S.currentPage='product-detail';
@@ -906,16 +947,23 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     page.innerHTML=`
       <div class="product-slider"><div class="product-slides" id="product-slides"><div class="product-slide" style="background:${BG[p.cat]||'#f0ede8'}"><span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:rgba(0,0,0,0.15)">${p.name.toUpperCase()}</span></div><div class="product-slide" style="background:#e8e4dc"><span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:rgba(0,0,0,0.15)">DETAIL</span></div></div><div class="slider-dots" id="slider-dots"><button class="slider-dot active" onclick="goToSlide(0)"></button><button class="slider-dot" onclick="goToSlide(1)"></button></div></div>
       <div class="product-info">
-        <div class="modal-brand">${p.brand}</div><div class="modal-title">${p.name}</div><div class="modal-price">${price}</div><p class="modal-desc">${p.desc}</p>
-        <div class="modal-size-label">Size</div><div class="modal-sizes">${p.sizes.map(s=>`<button class="modal-size-btn" onclick="selSize(this,'${s}')">${s}</button>`).join('')}</div>
-        <div class="product-actions"><button class="modal-add-btn" onclick="addToCart(${p.id},S.selSize)">Add to Cart</button><button class="modal-wish-btn" onclick="toggleWish(${p.id})">Save to Wishlist</button></div>
-        <div class="info-collapse" id="collapse-shipping"><div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping & Returns <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">Complimentary shipping over R3000. Free returns within 30 days. Orders processed within 1-3 business days.</div></div>
+        <div class="modal-brand">${p.brand}</div>
+        <div class="modal-title">${p.name}</div>
+        <div class="modal-price">${price}</div>
+        <p class="modal-desc">${p.desc}</p>
+        <div class="modal-size-label">Size</div>
+        <div class="modal-sizes">${p.sizes.map(s=>`<button class="modal-size-btn" onclick="selSize(this,'${s}')">${s}</button>`).join('')}</div>
+        <div class="product-actions">
+          <button class="modal-add-btn" onclick="addToCart(${p.id},S.selSize)">Add to Cart</button>
+          <button class="modal-wish-btn" onclick="toggleWish(${p.id})">Save to Wishlist</button>
+        </div>
+        <div class="info-collapse" id="collapse-shipping"><div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping &amp; Returns <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">Complimentary shipping over R3000. Free returns within 30 days. Orders processed within 1-3 business days.</div></div>
         <div class="info-collapse" id="collapse-features"><div class="info-collapse-header" onclick="toggleInfoCollapse('features')">Product Features <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">Premium fabrication. Ethically sourced materials. Designed for timeless wear.</div></div>
-        <div class="info-collapse" id="collapse-care"><div class="info-collapse-header" onclick="toggleInfoCollapse('care')">Composition & Care <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">100% natural fibers. Dry clean recommended. Cool iron if needed.</div></div>
-        <div class="info-collapse" id="collapse-fit"><div class="info-collapse-header" onclick="toggleInfoCollapse('fit')">Size & Fit <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body"><p class="disclaimer-text">The images displayed are AI-generated editorial representations. Garments are measured based on a standard size Small. Model imagery may vary slightly due to AI generation. Please refer to the size guide for precise measurements.</p></div></div>
+        <div class="info-collapse" id="collapse-care"><div class="info-collapse-header" onclick="toggleInfoCollapse('care')">Composition &amp; Care <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">100% natural fibers. Dry clean recommended. Cool iron if needed.</div></div>
+        <div class="info-collapse" id="collapse-fit"><div class="info-collapse-header" onclick="toggleInfoCollapse('fit')">Size &amp; Fit <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body"><p class="disclaimer-text">The images displayed are AI-generated editorial representations. Garments are measured based on a standard size Small. Model imagery may vary slightly due to AI generation. Please refer to the size guide for precise measurements.</p></div></div>
         <div class="complete-look"><div class="complete-look-title">Complete the Look</div><div class="product-grid" style="grid-template-columns:repeat(2,1fr);gap:16px;" id="complete-look-grid"></div></div>
         <div class="reviews-section"><div class="reviews-title">Reviews</div><p class="no-reviews">No reviews yet.</p><button class="write-review-btn">Write a Review</button></div>
-        <div class="recently-viewed-section" id="recently-viewed-section"><div class="recently-viewed-title">Recently Viewed</div><div class="product-grid" style="grid-template-columns:repeat(4,1fr);gap:16px;" id="recently-viewed-grid"></div></div>
+        <div class="recently-viewed-section" id="recently-viewed-section"><div class="recently-viewed-title">Recently Viewed</div><div class="product-grid recently-viewed-grid" style="grid-template-columns:repeat(4,1fr);gap:16px;" id="recently-viewed-grid"></div></div>
       </div>
       <footer id="product-footer"></footer>
     `;
@@ -953,7 +1001,7 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   function changeQty(id,sz,d){let i=S.cart.find(x=>x.id===id&&x.size===sz);if(i)i.qty=Math.max(1,i.qty+d);renderCart();}
 
   function moveCartYmal(dir) {
-    const totalSlides = Math.ceil(PRODUCTS.length / 1);
+    const totalSlides = PRODUCTS.length;
     S.cartYmalIndex = (S.cartYmalIndex + dir + totalSlides) % totalSlides;
     const track = document.getElementById('cart-ymal-track');
     if (track) track.style.transform = `translateX(-${S.cartYmalIndex * 100}%)`;
@@ -962,9 +1010,7 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   function renderCart(){
     let body=document.getElementById('cart-body'),foot=document.getElementById('cart-foot');
     document.getElementById('cart-item-count').textContent=S.cart.reduce((a,i)=>a+i.qty,0);
-
     if(!S.cart.length){
-      // Empty state
       body.innerHTML = `
         <div class="cart-empty-state">
           <div class="cart-empty-msg">Your bag is currently empty.</div>
@@ -987,18 +1033,13 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
           </div>
         </div>
       `;
-      // Empty state footer — total 0 + checkout button
       foot.innerHTML = `
-        <div class="cart-subtotal">
-          <span class="cart-subtotal-label">Total</span>
-          <span class="cart-subtotal-val">R0</span>
-        </div>
+        <div class="cart-subtotal"><span class="cart-subtotal-label">Total</span><span class="cart-subtotal-val">R0</span></div>
         <div class="cart-ship-note">Free shipping on orders over R3000</div>
         <button class="btn-checkout-main" onclick="checkout()">Checkout</button>
       `;
       return;
     }
-
     body.innerHTML=S.cart.map(i=>{let p=i.salePrice||i.price;return `<div class="cart-item-row"><div class="cart-item-img-placeholder" style="background:${BG[i.cat]||'#f0ede8'}">${i.brand}</div><div style="flex:1"><div class="ci-brand">${i.brand}</div><div class="ci-name">${i.name}</div><div class="ci-meta">${i.color} · ${i.size}</div><div class="ci-qty"><button class="ci-qty-btn" onclick="changeQty(${i.id},'${i.size}',-1)">−</button><span class="ci-qty-num">${i.qty}</span><button class="ci-qty-btn" onclick="changeQty(${i.id},'${i.size}',1)">+</button></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button class="ci-remove" onclick="removeFromCart(${i.id},'${i.size}')">×</button><span class="ci-price">R${(p*i.qty).toLocaleString()}</span></div></div>`;}).join('');
     let sub=S.cart.reduce((a,i)=>a+(i.salePrice||i.price)*i.qty,0);
     foot.innerHTML=`<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">R${sub.toLocaleString()}</span></div><div class="cart-ship-note">${sub>=3000?'Free shipping applied':'R250 shipping · Free over R3000'}</div><button class="btn-view-cart" onclick="closeCart()">View Bag</button><button class="btn-checkout-main" onclick="checkout()">Checkout</button>`;
@@ -1031,7 +1072,7 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
     el.innerHTML=S.wishlist.map(p=>`<div class="wish-item"><div class="wish-img" style="background:${BG[p.cat]||'#f0ede8'}"></div><div style="flex:1"><div class="wish-name">${p.name}</div><div class="wish-price">R${(p.salePrice||p.price).toLocaleString()}</div><button class="wish-add-btn" onclick="addToCart(${p.id});toggleWish(${p.id})">Add to Cart</button></div><button style="background:none;border:none;font-size:16px;color:#bbb;align-self:flex-start;cursor:pointer" onclick="toggleWish(${p.id})">×</button></div>`).join('');
   }
 
-  function buildEditorial(){let g=['linear-gradient(160deg,#1c1c1c,#2a2a2a)','linear-gradient(160deg,#2a2520,#1c1c1c)','linear-gradient(160deg,#c8bfb0,#a89888)','linear-gradient(160deg,#e0dbd4,#c8bfb0)','linear-gradient(160deg,#d4c5a9,#c8b898)','linear-gradient(160deg,#2a2a2a,#1a1a1a)'];let el=document.getElementById('editorial-grid');if(el)el.innerHTML=g.map((g,i)=>`<div style="aspect-ratio:2/3;background:${g};cursor:pointer"><div style="position:absolute;bottom:20px;left:20px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:rgba(255,255,255,0.8)">Story ${(i+1).toString().padStart(2,'0')}</div></div>`).join('');}
+  function buildEditorial(){let g=['linear-gradient(160deg,#1c1c1c,#2a2a2a)','linear-gradient(160deg,#2a2520,#1c1c1c)','linear-gradient(160deg,#c8bfb0,#a89888)','linear-gradient(160deg,#e0dbd4,#c8bfb0)','linear-gradient(160deg,#d4c5a9,#c8b898)','linear-gradient(160deg,#2a2a2a,#1a1a1a)'];let el=document.getElementById('editorial-grid');if(el)el.innerHTML=g.map((g,i)=>`<div style="aspect-ratio:2/3;background:${g};cursor:pointer;position:relative;"><div style="position:absolute;bottom:20px;left:20px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:rgba(255,255,255,0.8)">Story ${(i+1).toString().padStart(2,'0')}</div></div>`).join('');}
 
   function buildCampaignSlider(){
     const slidesContainer=document.getElementById('campaign-slides');
@@ -1061,23 +1102,29 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   function buildFooter(id){
     let el=document.getElementById(id);if(!el)return;
     el.innerHTML=`<div class="footer-top">
-      <div class="footer-collapse" id="footer-collapse-shop-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('shop-${id}')">Shop <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>New In</a></li><li><a>Dresses</a></li><li><a>Tops</a></li><li><a>Jackets</a></li><li><a>Accessories</a></li><li><a>Sale</a></li></ul></div></div>
+      <div class="footer-collapse" id="footer-collapse-shop-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('shop-${id}')">Shop <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>New In</a></li><li><a>Dresses</a></li><li><a>Tops</a></li><li><a>Bottoms</a></li><li><a>Jackets</a></li><li><a>Sets</a></li><li><a>Bags</a></li><li><a>Jewelry</a></li><li><a>Sale</a></li></ul></div></div>
       <div class="footer-collapse" id="footer-collapse-brands-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('brands-${id}')">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>JANEDORE</a></li><li><a>NIRIUS CO</a></li><li><a>JEWELRYBK</a></li></ul></div></div>
-      <div class="footer-collapse" id="footer-collapse-policies-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('policies-${id}')">Policies <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>About</a></li><li><a>Shipping Policy</a></li><li><a>Return Policy</a></li><li><a>Privacy Policy</a></li><li><a>Terms & Conditions</a></li></ul></div></div>
+      <div class="footer-collapse" id="footer-collapse-policies-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('policies-${id}')">Policies <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>About</a></li><li><a>Shipping Policy</a></li><li><a>Return Policy</a></li><li><a>Privacy Policy</a></li><li><a>Terms &amp; Conditions</a></li></ul></div></div>
       <div class="footer-collapse" id="footer-collapse-help-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('help-${id}')">Help <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>FAQ</a></li><li><a>Size Guide</a></li><li><a>Shipping</a></li><li><a>Returns</a></li><li><a>Contact</a></li></ul></div></div>
     </div>
-    <p class="footer-about">Janedore is a curated multi-brand fashion destination rooted in South Africa — a space where considered style meets cultural richness. We champion brands and designers who create with intention: pieces that endure beyond trends, feel authentic to the wearer, and honour the craft behind them. From capsule wardrobe essentials to statement investment pieces, everything at Janedore is chosen to elevate how you dress and how you feel.</p>
+    <p class="footer-about">Janedore is a curated multi-brand fashion destination rooted in South Africa — championing designers who create with intention, for a wardrobe that endures.</p>
     <div class="footer-currency-lang">
-      <div class="footer-currency" onclick="toggleFooterDropdown('currency')">ZAR R <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="currency-dropdown" id="currency-dropdown"><div class="dropdown-option">BWP P</div><div class="dropdown-option">LSL M</div><div class="dropdown-option">NAD N$</div><div class="dropdown-option">USD $</div></div></div>
-      <div class="footer-lang" onclick="toggleFooterDropdown('lang')">EN <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="lang-dropdown" id="lang-dropdown"><div class="dropdown-option">EN</div></div></div>
+      <div class="footer-currency" onclick="toggleFooterDropdown('currency-${id}')">ZAR R <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="currency-dropdown" id="currency-dropdown-${id}"><div class="dropdown-option" onclick="event.stopPropagation()">BWP P</div><div class="dropdown-option" onclick="event.stopPropagation()">LSL M</div><div class="dropdown-option" onclick="event.stopPropagation()">NAD N$</div><div class="dropdown-option" onclick="event.stopPropagation()">USD $</div></div></div>
+      <div class="footer-lang" onclick="toggleFooterDropdown('lang-${id}')">EN <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="lang-dropdown" id="lang-dropdown-${id}"><div class="dropdown-option" onclick="event.stopPropagation()">EN</div></div></div>
     </div>
     <div class="footer-bottom"><div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div></div>`;
   }
   function toggleFooterCollapse(s){document.getElementById('footer-collapse-'+s)?.classList.toggle('open');}
   function toggleFooterDropdown(t){
-    let dd=document.getElementById(t==='currency'?'currency-dropdown':'lang-dropdown');
-    if(dd) dd.classList.toggle('open');
-    setTimeout(()=>{if(dd)dd.classList.remove('open');},3000);
+    let dd=document.getElementById(t.startsWith('currency')?'currency-dropdown-'+t.split('currency-')[1]:'lang-dropdown-'+t.split('lang-')[1]);
+    // Simpler: just find by id directly
+    dd = document.getElementById(t.includes('currency') ? 'currency-dropdown-'+t.replace('currency-','') : 'lang-dropdown-'+t.replace('lang-',''));
+    if(!dd) return;
+    let wasOpen = dd.classList.contains('open');
+    // Close all dropdowns first
+    document.querySelectorAll('.currency-dropdown, .lang-dropdown').forEach(d=>d.classList.remove('open'));
+    if(!wasOpen) dd.classList.add('open');
+    if(!wasOpen) setTimeout(()=>{dd.classList.remove('open');},3000);
   }
   function subscribeNewsletter(){let v=document.getElementById('nl-email').value;if(!v||!v.includes('@')){toast('Please enter a valid email');return;}toast(`Welcome! You're subscribed.`);document.getElementById('nl-email').value='';}
   function toast(msg){let w=document.getElementById('toast-wrap'),t=document.createElement('div');t.className='toast-item';t.innerHTML=`<div class="toast-dot"></div>${msg}`;w.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='all 0.3s';setTimeout(()=>t.remove(),300);},2800);}
@@ -1106,6 +1153,18 @@ footer { background: #111; color: #fff; padding: 60px 28px 32px; }
   });
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'){closeCart();closeWishlist();closeMenu();closeSearch();}
+  });
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('.footer-currency') && !e.target.closest('.footer-lang')){
+      document.querySelectorAll('.currency-dropdown, .lang-dropdown').forEach(d=>d.classList.remove('open'));
+    }
+    if(!e.target.closest('.filter-dropdown')){
+      document.getElementById('filter-options')?.classList.remove('open');
+    }
+    if(!e.target.closest('.curated-dropdown')){
+      document.getElementById('curated-options')?.classList.remove('open');
+    }
   });
   function init(){
     buildBanner(); buildCategories(); buildArrivals();
