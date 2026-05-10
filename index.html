@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>JANEDORE | Curated Fashion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,8 +52,11 @@
 
     #hero { position: relative; height: 82vh; min-height: 480px; overflow: hidden; background: #1a1a1a; }
     .hero-bg-placeholder { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
-    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 70%); }
-    .hero-cta-wrap { position: absolute; bottom: 36px; left: 0; right: 0; display: flex; justify-content: center; z-index: 10; }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.1) 70%); }
+    .hero-content-wrap { position: absolute; bottom: 80px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; z-index: 10; }
+    .hero-heading { font-family: 'Manrope', sans-serif; font-size: clamp(32px, 6vw, 56px); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; margin-bottom: 12px; text-align: center; }
+    .hero-subtext { font-size: 13px; font-weight: 300; letter-spacing: 0.08em; color: rgba(255,255,255,0.8); max-width: 480px; text-align: center; line-height: 1.6; margin-bottom: 24px; }
+    .hero-cta-wrap { display: flex; justify-content: center; }
     .hero-shop-btn { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #fff; border-bottom: 1px solid #fff; padding-bottom: 2px; background: none; border-top: none; border-left: none; border-right: none; display: inline-block; transition: all 0.2s; cursor: pointer; }
     .hero-shop-btn:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.7); }
 
@@ -91,19 +94,23 @@
     .btn-wish { width: 38px; background: rgba(255,255,255,0.9); border: none; display: flex; align-items: center; justify-content: center; }
     .btn-wish svg { width: 14px; height: 14px; stroke: #111; fill: none; stroke-width: 1.5; }
     .btn-wish.wished svg { fill: #111; }
-    .product-brand-tag { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+    .product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+    .product-brand-tag { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #888; }
+    .product-variant-dots { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+    .variant-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); display: inline-block; }
+    .variant-plus { font-size: 7px; color: #aaa; margin-left: 1px; line-height: 1; }
     .product-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; color: #111; margin-bottom: 4px; }
     .product-price { font-size: 12px; font-weight: 300; color: #111; letter-spacing: 0.04em; }
     .product-price-sale { color: #111; }
     .product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; }
-    .product-colors-strip { display: flex; gap: 4px; margin-top: 6px; }
 
     .collection-grid .product-card .product-img-wrap { margin-bottom: 10px; }
     .collection-grid.compact .product-card .product-img-wrap { margin-bottom: 0; }
     .collection-grid.compact .product-card .product-brand-tag,
     .collection-grid.compact .product-card .product-name,
     .collection-grid.compact .product-card .product-price,
-    .collection-grid.compact .product-card .product-colors-strip { display: none; }
+    .collection-grid.compact .product-card .product-color-strip,
+    .collection-grid.compact .product-card .product-variant-dots { display: none; }
     .collection-grid.compact .product-card .product-brand-tag { display: block; margin-top: 6px; text-align: center; }
 
     #editorial-strip { display: grid; grid-template-columns: 1fr 1fr; height: 560px; }
@@ -255,7 +262,11 @@
     .slider-dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
     .slider-dot.active { background: #111; }
     .product-info { padding: 24px 28px; max-width: 720px; margin: 0 auto; }
-    .product-info .modal-brand { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+    .product-info .modal-brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .product-info .modal-brand { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; }
+    .product-info .modal-variant-dots { display: flex; align-items: center; gap: 4px; }
+    .product-info .modal-variant-dots .variant-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2); display: inline-block; }
+    .product-info .modal-variant-dots .variant-plus { font-size: 8px; color: #aaa; margin-left: 2px; }
     .product-info .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: #111; margin-bottom: 12px; line-height: 1.1; }
     .product-info .modal-price { font-size: 16px; font-weight: 300; color: #111; margin-bottom: 20px; letter-spacing: 0.04em; }
     .product-info .modal-desc { font-size: 12px; font-weight: 300; line-height: 1.8; color: #666; margin-bottom: 24px; }
@@ -336,6 +347,41 @@
     .product-detail-dress-toggle { position: absolute; top: 16px; left: 16px; z-index: 20; background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .product-detail-dress-toggle img { width: 20px; height: 20px; object-fit: contain; display: block; transition: filter 0.3s ease; }
 
+    /* Cart Page Styles */
+    .cart-page { padding: 60px 28px; max-width: 1000px; margin: 0 auto; }
+    .cart-page-title { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.06em; margin-bottom: 40px; }
+    .cart-page-item { display: flex; gap: 20px; padding: 24px 0; border-bottom: 1px solid #eee; align-items: flex-start; }
+    .cart-page-img { width: 120px; height: 150px; background-size: cover; background-position: center; flex-shrink: 0; background-color: #f0ede8; }
+    .cart-page-details { flex: 1; }
+    .cart-page-brand { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+    .cart-page-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400; color: #111; margin-bottom: 4px; }
+    .cart-page-meta { font-size: 11px; color: #888; margin-bottom: 12px; }
+    .cart-page-qty-wrap { display: flex; align-items: center; gap: 12px; }
+    .cart-page-qty-btn { width: 32px; height: 32px; border: 1px solid #ddd; background: #fff; font-size: 16px; color: #111; cursor: pointer; }
+    .cart-page-qty-btn:hover { border-color: #111; }
+    .cart-page-qty-num { font-size: 13px; min-width: 20px; text-align: center; }
+    .cart-page-price { font-size: 14px; font-weight: 300; margin-left: auto; }
+    .cart-page-remove { background: none; border: none; font-size: 18px; color: #bbb; cursor: pointer; padding: 4px 8px; transition: color 0.2s; }
+    .cart-page-remove:hover { color: #111; }
+    .cart-page-summary { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+    .cart-page-subtotal { font-size: 14px; font-weight: 300; color: #111; }
+    .cart-page-subtotal strong { font-weight: 500; }
+    .cart-page-ship-note { font-size: 11px; color: #888; }
+    .cart-page-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .cart-page-btn { padding: 14px 32px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .cart-page-btn.primary { background: #111; color: #fff; border: none; }
+    .cart-page-btn.primary:hover { background: #333; }
+    .cart-page-btn.secondary { background: #fff; color: #111; border: 1px solid #111; }
+    .cart-page-btn.secondary:hover { background: #f5f5f5; }
+    .cart-page-empty { text-align: center; padding: 60px 0; }
+    .cart-page-empty-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 300; color: #111; margin-bottom: 12px; }
+    .cart-page-empty-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .cart-page-promo { display: flex; gap: 8px; margin-top: 20px; }
+    .cart-page-promo-input { flex: 1; border: 1px solid #ddd; padding: 14px; font-size: 10px; font-family: 'Manrope', sans-serif; font-weight: 400; letter-spacing: 0.04em; outline: none; }
+    .cart-page-promo-input:focus { border-color: #111; }
+    .cart-page-promo-btn { background: #fff; color: #111; border: 1px solid #111; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; padding: 14px 18px; cursor: pointer; white-space: nowrap; font-family: 'Manrope', sans-serif; font-weight: 500; }
+    .cart-page-promo-btn:hover { background: #f5f5f5; }
+
     @media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(4,1fr); } }
     @media (max-width: 900px) {
       .category-grid { grid-template-columns: repeat(2,1fr); }
@@ -345,6 +391,7 @@
       .campaign-slide { grid-template-columns: repeat(2,1fr); }
       .campaign-section { padding: 60px 16px; }
       .campaign-cropped { max-width: 100%; }
+      .cart-page { padding: 40px 16px; }
     }
     @media (max-width: 768px) {
       #main-nav { padding: 0 16px; height: 56px; }
@@ -357,6 +404,11 @@
       #search-input { font-size: 14px; }
       .footer-currency-lang { gap: 16px; }
       .currency-dropdown, .lang-dropdown { left: 50%; transform: translateX(-50%); min-width: 110px; }
+      .cart-page-item { flex-wrap: wrap; }
+      .cart-page-actions { flex-direction: column; width: 100%; }
+      .cart-page-btn { width: 100%; text-align: center; }
+      .hero-heading { font-size: 28px; }
+      .hero-subtext { font-size: 11px; }
     }
     @media (max-width: 480px) {
       #main-nav { padding: 0 12px; height: 52px; }
@@ -399,10 +451,10 @@
     <a class="drawer-link" onclick="navigateToCategory('bottoms');closeMenu();">Bottoms</a>
     <a class="drawer-link" onclick="navigateToCategory('jackets');closeMenu();">Jackets</a>
     <a class="drawer-link" onclick="navigateToCategory('sets');closeMenu();">Sets</a>
+    <a class="drawer-link" onclick="navigateToCategory('accessories');closeMenu();">Accessories</a>
     <a class="drawer-link" onclick="navigateToCategory('bags');closeMenu();">Bags</a>
     <a class="drawer-link" onclick="navigateToCategory('jewelry');closeMenu();">Jewelry</a>
     <a class="drawer-link" onclick="navigateToCategory('sunglasses');closeMenu();">Sunglasses</a>
-    <a class="drawer-link" onclick="navigateToCategory('shoes');closeMenu();">Shoes</a>
     <div class="brands-collapse" id="brands-collapse"><div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="brands-collapse-body"><div class="brand-logo-placeholder">JANEDORE</div><div class="brand-logo-placeholder">NIRIUS CO</div><div class="brand-logo-placeholder">JEWELRYBK</div></div></div>
     <a class="drawer-link sale" onclick="closeMenu();">Sale</a>
     <a class="drawer-link" onclick="navigateTo('editorial');closeMenu();">Editorial</a>
@@ -423,7 +475,15 @@
 </div>
 
 <div class="page active" id="page-home">
-  <section id="hero"><div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737')"></div><div class="hero-overlay"></div><div class="hero-cta-wrap"><button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button></div></section>
+  <section id="hero">
+    <div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737')"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content-wrap">
+      <div class="hero-heading">THE UNDERSTATED</div>
+      <p class="hero-subtext">Where quiet confidence meets enduring design. A curation of refined silhouettes for the modern wardrobe, celebrating the bold understatement of fashion.</p>
+      <div class="hero-cta-wrap"><button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button></div>
+    </div>
+  </section>
   <section id="discover-dawning"><div class="dawning-title">Discover 'understated'</div><p class="dawning-desc">An exploration of refined minimalism — soft tailoring, muted palettes, and timeless silhouettes designed for effortless everyday luxury. Understated celebrates quiet confidence through elevated essentials that feel both modern and enduring.</p><span class="dawning-cta">Explore Campaign</span></section>
   <section id="categories"><div class="category-header">Shop by Category</div><div class="category-grid" id="category-grid"></div></section>
   <section id="new-arrivals"><div class="arrivals-header"><div class="arrivals-title">New Arrivals</div><button class="arrivals-view-all" onclick="navigateTo('products')">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section>
@@ -456,7 +516,7 @@
   <section style="padding:40px 20px 60px;" class="collection-page-padding">
     <div style="text-align:center;margin-bottom:28px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:8px">Janedore</div><div style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300">All Products</div></div>
     <div class="category-nav" id="category-nav"></div>
-    <div class="collection-toolbar">
+    <div class="collection-toolbar" id="collection-toolbar">
       <div class="toolbar-left">
         <div class="filter-dropdown"><button class="filter-trigger" onclick="toggleFilterDropdown()">FILTER ▾</button>
           <div class="filter-options" id="filter-options">
@@ -510,6 +570,51 @@
   <section style="padding:0 0 60px;" class="collection-page-padding">
     <div class="category-campaign" id="category-campaign-img" style="margin:0; width:100%; aspect-ratio: 16/7; background: #e5e5e5;"></div>
     <div style="text-align:center;margin-bottom:28px; padding:0 20px;"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:8px">Janedore</div><div style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300" id="category-title"></div></div>
+    <div class="collection-toolbar" id="category-toolbar">
+      <div class="toolbar-left">
+        <div class="filter-dropdown"><button class="filter-trigger" onclick="toggleFilterDropdownCat()">FILTER ▾</button>
+          <div class="filter-options" id="filter-options-cat">
+            <div class="filter-group"><div class="filter-group-title">Category</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','all')"><input type="radio" name="filterCatCat" value="all" checked> All</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','dresses')"><input type="radio" name="filterCatCat" value="dresses"> Dresses</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','tops')"><input type="radio" name="filterCatCat" value="tops"> Tops</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','bottoms')"><input type="radio" name="filterCatCat" value="bottoms"> Bottoms</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','jackets')"><input type="radio" name="filterCatCat" value="jackets"> Jackets</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','sets')"><input type="radio" name="filterCatCat" value="sets"> Sets</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','bags')"><input type="radio" name="filterCatCat" value="bags"> Bags</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','jewelry')"><input type="radio" name="filterCatCat" value="jewelry"> Jewelry</div>
+              <div class="filter-option" onclick="applyCategoryFilter('cat','sunglasses')"><input type="radio" name="filterCatCat" value="sunglasses"> Sunglasses</div>
+            </div>
+            <div class="filter-group"><div class="filter-group-title">Size</div>
+              <div class="filter-option" onclick="applyCategoryFilter('size','all')"><input type="radio" name="filterSizeCat" value="all" checked> All</div>
+              <div class="filter-option" onclick="applyCategoryFilter('size','XS')"><input type="radio" name="filterSizeCat" value="XS"> XS</div>
+              <div class="filter-option" onclick="applyCategoryFilter('size','S')"><input type="radio" name="filterSizeCat" value="S"> S</div>
+              <div class="filter-option" onclick="applyCategoryFilter('size','M')"><input type="radio" name="filterSizeCat" value="M"> M</div>
+              <div class="filter-option" onclick="applyCategoryFilter('size','L')"><input type="radio" name="filterSizeCat" value="L"> L</div>
+            </div>
+            <div class="filter-group"><div class="filter-group-title">Price</div>
+              <div class="filter-option" onclick="applyCategoryFilter('price','all')"><input type="radio" name="filterPriceCat" value="all" checked> All</div>
+              <div class="filter-option" onclick="applyCategoryFilter('price','under2k')"><input type="radio" name="filterPriceCat" value="under2k"> Under R2000</div>
+              <div class="filter-option" onclick="applyCategoryFilter('price','2kto5k')"><input type="radio" name="filterPriceCat" value="2kto5k"> R2000 - R5000</div>
+              <div class="filter-option" onclick="applyCategoryFilter('price','over5k')"><input type="radio" name="filterPriceCat" value="over5k"> Over R5000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="toolbar-icon-btn" onclick="toggleGridCat()" id="grid-toggle-btn-cat"><div class="grid-toggle-svg" id="grid-toggle-svg-cat"><div class="grid-block active"></div><div class="grid-block active"></div><div class="grid-block"></div></div></button>
+        <button class="toolbar-icon-btn" onclick="toggleImageMode()"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/dress.png?v=1778246333" class="dress-toggle-icon" alt="Dress View"></button>
+        <div class="curated-dropdown"><button class="curated-trigger" onclick="toggleCuratedDropdownCat()">CURATED ▾</button>
+          <div class="curated-options" id="curated-options-cat">
+            <div class="curated-option" onclick="applyCategoryCurated('best-selling')">Best Selling</div>
+            <div class="curated-option" onclick="applyCategoryCurated('price-low-high')">Price: Low to High</div>
+            <div class="curated-option" onclick="applyCategoryCurated('price-high-low')">Price: High to Low</div>
+            <div class="curated-option" onclick="applyCategoryCurated('oldest-newest')">Oldest to Newest</div>
+            <div class="curated-option" onclick="applyCategoryCurated('newest-oldest')">Newest to Oldest</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="product-grid" id="category-products-grid" style="gap:16px; padding:0 20px;"></div>
   </section>
   <footer id="category-footer"></footer>
@@ -520,65 +625,51 @@
   <footer id="editorial-footer"></footer>
 </div>
 
+<div class="page" id="page-cart">
+  <div class="cart-page" id="cart-page-content"></div>
+  <footer id="cart-footer"></footer>
+</div>
+
 <div class="page" id="page-product-detail"></div>
 
 <script>
+  const PRODUCT_IMAGES = {
+    1: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'] },
+    2: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'] },
+    3: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'] },
+    4: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'] },
+    5: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'] },
+    6: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'] },
+    7: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'] },
+    8: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'] },
+    9: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'] },
+    10: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'] },
+    11: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'] },
+    12: { model: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'], ghost: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'] }
+  };
+
   const PRODUCTS = [
-    { id:1, name:'Sabina Linen Dress', brand:'JANEDORE', cat:'dresses', price:2890, color:'Cream', colors:['#f5f2ed','#1c1c1c'], badge:'new', sizes:['XS','S','M','L'], desc:'Crafted from premium Belgian linen. Effortless summer elegance.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371']
-    },
-    { id:2, name:'Ventura Maxi Dress', brand:'JANEDORE', cat:'dresses', price:3590, salePrice:2490, color:'Black', colors:['#1c1c1c','#888'], badge:'sale', sizes:['XS','S','M','L','XL'], desc:'Fluid column silhouette in stretch crepe. The ultimate evening piece.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371']
-    },
-    { id:3, name:'Celeste Silk Blouse', brand:'NIRIUS CO', cat:'tops', price:2250, color:'Ivory', colors:['#f5f2ed','#e8e0d0'], badge:'new', sizes:['XS','S','M','L'], desc:'Hand-finished silk charmeuse in relaxed oversized drape. Italian fabrication.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:4, name:'Onyx Tailored Blazer', brand:'JANEDORE', cat:'jackets', price:5990, color:'Black', colors:['#1c1c1c','#2a2a2a'], badge:'new', sizes:['XS','S','M','L'], desc:'Sharp single-breasted construction in Italian wool. Silk-lined.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:5, name:'Rio Wide-Leg Trousers', brand:'NIRIUS CO', cat:'bottoms', price:2990, color:'Sand', colors:['#d4c5a9','#f5f2ed','#1c1c1c'], badge:'', sizes:['XS','S','M','L','XL'], desc:'Flowing wide-leg in linen-silk blend. Effortlessly tailored.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:6, name:'Gold Link Necklace', brand:'JEWELRYBK', cat:'jewelry', price:1390, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Handcrafted 18k gold-plated brass links.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:7, name:'Noir Wrap Midi', brand:'JANEDORE', cat:'dresses', price:2690, salePrice:1890, color:'Black', colors:['#1c1c1c'], badge:'sale', sizes:['XS','S','M','L'], desc:'Fluid wrap construction in matte jersey.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:8, name:'Luna Stud Earrings', brand:'JEWELRYBK', cat:'jewelry', price:990, color:'Gold', colors:['#c9a96e','#d4d4d4'], badge:'new', sizes:['One Size'], desc:'Minimalist dome studs in recycled sterling silver.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:9, name:'Cassis Leather Belt', brand:'NIRIUS CO', cat:'bags', price:1790, color:'Cognac', colors:['#8b5e3c','#1c1c1c'], badge:'', sizes:['XS/S','M/L'], desc:'Full-grain Italian leather with antique brass hardware.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:10, name:'Soleil Crop Top', brand:'JANEDORE', cat:'tops', price:1490, color:'Cream', colors:['#f5f2ed','#1c1c1c'], badge:'new', sizes:['XS','S','M','L'], desc:'Structured bra-style crop in cotton-silk twill.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:11, name:'Midnight Column Gown', brand:'NIRIUS CO', cat:'dresses', price:7690, color:'Black', colors:['#1c1c1c'], badge:'', sizes:['XS','S','M','L'], desc:'Floor-sweeping column in duchess satin. Made-to-order.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
-    { id:12, name:'Chain Layered Bracelet', brand:'JEWELRYBK', cat:'jewelry', price:1190, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Multi-strand bracelet with organic link shapes.',
-      modelImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-      ghostImages: ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-    },
+    { id:1, name:'Sabina Linen Dress', brand:'JANEDORE', cat:'dresses', price:2890, color:'Cream', colors:['#f5f2ed','#1c1c1c'], badge:'new', sizes:['XS','S','M','L'], desc:'Crafted from premium Belgian linen. Effortless summer elegance.' },
+    { id:2, name:'Ventura Maxi Dress', brand:'JANEDORE', cat:'dresses', price:3590, salePrice:2490, color:'Black', colors:['#1c1c1c','#888'], badge:'sale', sizes:['XS','S','M','L','XL'], desc:'Fluid column silhouette in stretch crepe. The ultimate evening piece.' },
+    { id:3, name:'Celeste Silk Blouse', brand:'JANEDORE', cat:'tops', price:2250, color:'Ivory', colors:['#f5f2ed','#e8e0d0'], badge:'new', sizes:['XS','S','M','L'], desc:'Hand-finished silk charmeuse in relaxed oversized drape. Italian fabrication.' },
+    { id:4, name:'Onyx Tailored Blazer', brand:'JANEDORE', cat:'jackets', price:5990, color:'Black', colors:['#1c1c1c','#2a2a2a'], badge:'new', sizes:['XS','S','M','L'], desc:'Sharp single-breasted construction in Italian wool. Silk-lined.' },
+    { id:5, name:'Rio Wide-Leg Trousers', brand:'JANEDORE', cat:'bottoms', price:2990, color:'Sand', colors:['#d4c5a9','#f5f2ed','#1c1c1c'], badge:'', sizes:['XS','S','M','L','XL'], desc:'Flowing wide-leg in linen-silk blend. Effortlessly tailored.' },
+    { id:6, name:'Gold Link Necklace', brand:'NIRIUS CO', cat:'jewelry', price:1390, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Handcrafted 18k gold-plated brass links. Fine jewelry.' },
+    { id:7, name:'Noir Wrap Midi', brand:'JANEDORE', cat:'dresses', price:2690, salePrice:1890, color:'Black', colors:['#1c1c1c'], badge:'sale', sizes:['XS','S','M','L'], desc:'Fluid wrap construction in matte jersey.' },
+    { id:8, name:'Luna Stud Earrings', brand:'JEWELRYBK', cat:'jewelry', price:990, color:'Gold', colors:['#c9a96e','#d4d4d4'], badge:'new', sizes:['One Size'], desc:'Minimalist dome studs in recycled sterling silver.' },
+    { id:9, name:'Cassis Leather Belt', brand:'JANEDORE', cat:'accessories', price:1790, color:'Cognac', colors:['#8b5e3c','#1c1c1c'], badge:'', sizes:['XS/S','M/L'], desc:'Full-grain Italian leather with antique brass hardware.' },
+    { id:10, name:'Soleil Crop Top', brand:'JANEDORE', cat:'tops', price:1490, color:'Cream', colors:['#f5f2ed','#1c1c1c'], badge:'new', sizes:['XS','S','M','L'], desc:'Structured bra-style crop in cotton-silk twill.' },
+    { id:11, name:'Midnight Column Gown', brand:'JANEDORE', cat:'dresses', price:7690, color:'Black', colors:['#1c1c1c'], badge:'', sizes:['XS','S','M','L'], desc:'Floor-sweeping column in duchess satin. Made-to-order.' },
+    { id:12, name:'Chain Layered Bracelet', brand:'NIRIUS CO', cat:'jewelry', price:1190, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Multi-strand bracelet with organic link shapes.' },
   ];
+
   const CATEGORIES = [
     { name:'Clothing', filter:'clothing', img:'' },
     { name:'Bags', filter:'bags', img:'' },
     { name:'Sunglasses', filter:'sunglasses', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371' },
     { name:'Jewelry', filter:'jewelry', img:'' },
   ];
+
   const BANNER_ITEMS = ['Complimentary Shipping on Orders Over R3000','Free Returns Within 30 Days','New Collection — Discover \'Dawning\' Now Live','Sign Up for Exclusive Early Access'];
   const SEARCH_SUGGESTIONS = ['Dresses','Linen Pieces','Blazers','Jewellery','New Arrivals','Sale Items','NIRIUS CO','JANEDORE'];
   const BG = {
@@ -591,24 +682,29 @@
 
   const S = {
     cart: [], wishlist: [], currentPage: 'home', selSize: null,
-    announceIdx: 0, announceTimer: null, gridCols: 2, imageMode: 'model', activeCollectionCat: 'ALL',
-    filter: {cat:'all',size:'all',price:'all'}, curated: 'best-selling',
-    campaignSlideIndex: 0, recentlyViewed: [], cartYmalIndex: 0, currentSlide: 0,
+    announceIdx: 0, announceTimer: null, gridCols: 2, gridColsCat: 2, imageMode: 'model', activeCollectionCat: 'ALL',
+    filter: {cat:'all',size:'all',price:'all'}, catFilter: {cat:'all',size:'all',price:'all'}, curated: 'best-selling', catCurated: 'best-selling',
+    campaignSlideIndex: 0, recentlyViewed: [], cartYmalIndex: 0, currentSlide: 0, currentCategoryPage: null,
   };
 
   function getProductImages(p) {
-    if (!p.modelImages || !p.ghostImages) return [BG[p.cat] || '#f0ede8'];
-    return S.imageMode === 'ghost' ? p.ghostImages : p.modelImages;
+    const images = PRODUCT_IMAGES[p.id];
+    if (!images) return [BG[p.cat] || '#f0ede8'];
+    return S.imageMode === 'ghost' ? images.ghost : images.model;
+  }
+
+  function variantDotsHtml(p) {
+    const maxDots = 2;
+    const c = p.colors || [];
+    let dots = c.slice(0, maxDots).map(col => `<span class="variant-dot" style="background:${col};"></span>`).join('');
+    if (c.length > maxDots) dots += `<span class="variant-plus">+${c.length - maxDots}</span>`;
+    return dots;
   }
 
   function updateDressIcon() {
     const icons = document.querySelectorAll('.dress-toggle-icon, .product-detail-dress-toggle img');
     icons.forEach(icon => {
-      if (S.imageMode === 'ghost') {
-        icon.style.filter = 'grayscale(1) opacity(.55)';
-      } else {
-        icon.style.filter = 'none';
-      }
+      icon.style.filter = S.imageMode === 'ghost' ? 'grayscale(1) opacity(.55)' : 'none';
     });
   }
 
@@ -622,7 +718,6 @@
     document.getElementById('search-overlay').classList.remove('open');
     document.body.style.overflow = '';
     document.getElementById('search-input').value = '';
-    renderSearchDefault();
   }
   function renderSearchDefault() {
     const body = document.getElementById('search-body');
@@ -642,6 +737,13 @@
     const blocks = container.querySelectorAll('.grid-block');
     if (S.gridCols === 1) { blocks[0]?.classList.add('active'); blocks[1]?.classList.remove('active'); blocks[2]?.classList.remove('active'); }
     else if (S.gridCols === 2) { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.remove('active'); }
+    else { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.add('active'); }
+  }
+  function updateGridToggleIconCat() {
+    const container = document.getElementById('grid-toggle-svg-cat'); if (!container) return;
+    const blocks = container.querySelectorAll('.grid-block');
+    if (S.gridColsCat === 1) { blocks[0]?.classList.add('active'); blocks[1]?.classList.remove('active'); blocks[2]?.classList.remove('active'); }
+    else if (S.gridColsCat === 2) { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.remove('active'); }
     else { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.add('active'); }
   }
 
@@ -665,38 +767,52 @@
   function productCard(p, compactMode=false){
     let inW=S.wishlist.some(w=>w.id===p.id), pr=p.salePrice?`<span class="product-price-sale">R${p.salePrice.toLocaleString()}</span><span class="product-price-original">R${p.price.toLocaleString()}</span>`:`R${p.price.toLocaleString()}`;
     let b=p.badge?`<div class="product-badge-wrap"><span class="badge-${p.badge}">${p.badge==='new'?'New':'Sale'}</span></div>`:'';
-    let d=p.colors.map(c=>`<div class="pcolor" style="background:${c}"></div>`).join('');
+    let vdots = variantDotsHtml(p);
     let imgs = getProductImages(p);
     let imgStyle = `background-image:url('${imgs[0]}'); background-size:cover; background-position:center;`;
-    let details = `<div class="product-brand-tag">${p.brand}</div><div class="product-name">${p.name}</div><div class="product-price">${pr}</div><div class="product-colors-strip">${d}</div>`;
+    let brandRow = `<div class="product-meta-row"><div class="product-brand-tag">${p.brand}</div><div class="product-variant-dots">${vdots}</div></div>`;
+    let details = `${brandRow}<div class="product-name">${p.name}</div><div class="product-price">${pr}</div>`;
     if (compactMode) details = `<div class="product-brand-tag">${p.brand}</div>`;
     return `<div class="product-card" onclick="goToProduct(${p.id})"><div class="product-img-wrap"><div class="product-img-placeholder" style="${imgStyle}"></div>${b}<div class="product-hover-actions"><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button><button class="btn-wish ${inW?'wished':''}" onclick="event.stopPropagation();toggleWish(${p.id})"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button></div></div>${details}</div>`;
   }
   function buildArrivals(){document.getElementById('arrivals-grid').innerHTML=PRODUCTS.slice(0,10).map(p=>productCard(p,false)).join('');}
 
   function buildCategoryNav(){
-    document.getElementById('category-nav').innerHTML=['ALL','NEW IN','DRESSES','TOPS','BOTTOMS','JACKETS','SETS','BAGS','JEWELRY','SUNGLASSES'].map(c=>`<button class="cat-nav-item ${S.activeCollectionCat===c?'active':''}" onclick="setCollectionCat('${c}')">${c}</button>`).join('');
+    document.getElementById('category-nav').innerHTML=['ALL','NEW IN','DRESSES','TOPS','BOTTOMS','JACKETS','SETS','ACCESSORIES','BAGS','JEWELRY','SUNGLASSES'].map(c=>`<button class="cat-nav-item ${S.activeCollectionCat===c?'active':''}" onclick="setCollectionCat('${c}')">${c}</button>`).join('');
   }
   function setCollectionCat(c){S.activeCollectionCat=c;buildCategoryNav();renderAllProducts();}
+
+  function applyProductFilters(prods, filterObj){
+    let f = [...prods];
+    if(filterObj.cat!=='all') f=f.filter(p=>p.cat===filterObj.cat);
+    if(filterObj.size!=='all') f=f.filter(p=>p.sizes?.includes(filterObj.size));
+    if(filterObj.price!=='all'){
+      f=f.filter(p=>{let pr=p.salePrice||p.price;if(filterObj.price==='under2k') return pr<2000;if(filterObj.price==='2kto5k') return pr>=2000 && pr<=5000;if(filterObj.price==='over5k') return pr>5000;return true;});
+    }
+    return f;
+  }
+  function applyCuratedSort(prods, curatedVal){
+    let f = [...prods];
+    if(curatedVal==='best-selling') f.sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
+    else if(curatedVal==='price-low-high') f.sort((a,b)=>(a.salePrice||a.price)-(b.salePrice||b.price));
+    else if(curatedVal==='price-high-low') f.sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
+    else if(curatedVal==='oldest-newest') f.sort((a,b)=>a.id-b.id);
+    else if(curatedVal==='newest-oldest') f.sort((a,b)=>b.id-a.id);
+    return f;
+  }
 
   function renderAllProducts(){
     let g=document.getElementById('all-products-grid');if(!g)return;
     let f=PRODUCTS;
     if(S.activeCollectionCat!=='ALL'){
-      let map={'NEW IN':'new','DRESSES':'dresses','TOPS':'tops','BOTTOMS':'bottoms','JACKETS':'jackets','SETS':'sets','BAGS':'bags','JEWELRY':'jewelry','SUNGLASSES':'sunglasses'};
+      let map={'NEW IN':'new','DRESSES':'dresses','TOPS':'tops','BOTTOMS':'bottoms','JACKETS':'jackets','SETS':'sets','ACCESSORIES':'accessories','BAGS':'bags','JEWELRY':'jewelry','SUNGLASSES':'sunglasses'};
       let k=map[S.activeCollectionCat]||S.activeCollectionCat.toLowerCase();
-      f=PRODUCTS.filter(p=>p.cat===k||(S.activeCollectionCat==='NEW IN'&&p.badge==='new'));
+      if(k==='accessories') f=PRODUCTS.filter(p=>['bags','jewelry','sunglasses','accessories'].includes(p.cat));
+      else if(S.activeCollectionCat==='NEW IN') f=PRODUCTS.filter(p=>p.badge==='new');
+      else f=PRODUCTS.filter(p=>p.cat===k);
     }
-    if(S.filter.cat!=='all') f=f.filter(p=>p.cat===S.filter.cat);
-    if(S.filter.size!=='all') f=f.filter(p=>p.sizes.includes(S.filter.size));
-    if(S.filter.price!=='all'){
-      f=f.filter(p=>{let pr=p.salePrice||p.price;if(S.filter.price==='under2k') return pr<2000;if(S.filter.price==='2kto5k') return pr>=2000 && pr<=5000;if(S.filter.price==='over5k') return pr>5000;return true;});
-    }
-    if(S.curated==='best-selling') f.sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
-    else if(S.curated==='price-low-high') f.sort((a,b)=>(a.salePrice||a.price)-(b.salePrice||b.price));
-    else if(S.curated==='price-high-low') f.sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
-    else if(S.curated==='oldest-newest') f.sort((a,b)=>a.id-b.id);
-    else if(S.curated==='newest-oldest') f.sort((a,b)=>b.id-a.id);
+    f = applyProductFilters(f, S.filter);
+    f = applyCuratedSort(f, S.curated);
     let cols = S.gridCols === 3 ? 3 : (S.gridCols === 1 ? 1 : 2);
     g.style.gridTemplateColumns = cols === 1 ? '1fr' : `repeat(${cols}, 1fr)`;
     g.style.gap = cols === 3 ? '0px' : '16px';
@@ -705,16 +821,21 @@
     g.innerHTML=f.map(p=>productCard(p, compact)).join('');
   }
   function toggleGrid(){if(S.gridCols === 1) S.gridCols = 2;else if(S.gridCols === 2) S.gridCols = 3;else S.gridCols = 1;updateGridToggleIcon(); renderAllProducts();}
+  function toggleGridCat(){if(S.gridColsCat === 1) S.gridColsCat = 2;else if(S.gridColsCat === 2) S.gridColsCat = 3;else S.gridColsCat = 1;updateGridToggleIconCat(); renderCategoryProducts();}
   function toggleImageMode(){
     S.imageMode = S.imageMode === 'model' ? 'ghost' : 'model';
     updateDressIcon();
     renderAllProducts();
     if(S.currentPage==='home') buildArrivals();
     if(S.currentPage==='product-detail') { let p = PRODUCTS.find(x=>x.id === parseInt(window.location.hash.split('-')[1])); if(p) renderProductPage(p); }
+    if(S.currentPage==='category') renderCategoryProducts();
+    if(S.currentPage==='cart') renderCartPage();
     if(document.getElementById('campaign-slides')) buildCampaignSlider();
   }
   function toggleFilterDropdown(){document.getElementById('filter-options').classList.toggle('open');}
   function toggleCuratedDropdown(){document.getElementById('curated-options').classList.toggle('open');}
+  function toggleFilterDropdownCat(){document.getElementById('filter-options-cat').classList.toggle('open');}
+  function toggleCuratedDropdownCat(){document.getElementById('curated-options-cat').classList.toggle('open');}
   function applyFilter(type,val){
     S.filter[type]=val;
     const radioName = type==='cat' ? 'filterCat' : (type==='size' ? 'filterSize' : 'filterPrice');
@@ -724,19 +845,45 @@
     renderAllProducts();
   }
   function applyCurated(val){S.curated=val;renderAllProducts();}
+  function applyCategoryFilter(type,val){
+    S.catFilter[type]=val;
+    const radioName = type==='cat' ? 'filterCatCat' : (type==='size' ? 'filterSizeCat' : 'filterPriceCat');
+    document.querySelectorAll(`input[name=${radioName}]`).forEach(r=>r.checked = false);
+    const targetRadio = document.querySelector(`input[name=${radioName}][value="${val}"]`);
+    if(targetRadio) targetRadio.checked = true;
+    renderCategoryProducts();
+  }
+  function applyCategoryCurated(val){S.catCurated=val;renderCategoryProducts();}
+
+  function renderCategoryProducts(){
+    if(!S.currentCategoryPage) return;
+    let catProducts = getCategoryProducts(S.currentCategoryPage);
+    catProducts = applyProductFilters(catProducts, S.catFilter);
+    catProducts = applyCuratedSort(catProducts, S.catCurated);
+    let g = document.getElementById('category-products-grid');
+    if(!g) return;
+    let cols = S.gridColsCat === 3 ? 3 : (S.gridColsCat === 1 ? 1 : 2);
+    g.style.gridTemplateColumns = cols === 1 ? '1fr' : `repeat(${cols}, 1fr)`;
+    g.style.gap = cols === 3 ? '0px' : '16px';
+    let compact = cols === 3;
+    g.className = `product-grid ${compact ? 'collection-grid compact' : ''}`;
+    g.innerHTML=catProducts.map(p=>productCard(p, compact)).join('');
+  }
+
+  function getCategoryProducts(cat){
+    if(cat==='clothing') return PRODUCTS.filter(p=>['dresses','tops','bottoms','jackets','sets'].includes(p.cat));
+    else if(cat==='accessories') return PRODUCTS.filter(p=>['bags','jewelry','sunglasses','accessories'].includes(p.cat));
+    else return PRODUCTS.filter(p=>p.cat===cat);
+  }
 
   function navigateToCategory(cat){
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-category').classList.add('active'); S.currentPage='category';
+    document.getElementById('page-category').classList.add('active'); S.currentPage='category'; S.currentCategoryPage=cat;
     let title=cat.charAt(0).toUpperCase()+cat.slice(1); document.getElementById('category-title').textContent=title;
-    let catProducts = [];
-    if(cat==='clothing') catProducts = PRODUCTS.filter(p=>['dresses','tops','bottoms','jackets','sets'].includes(p.cat));
-    else if(cat==='bags') catProducts = PRODUCTS.filter(p=>p.cat==='bags');
-    else if(cat==='sunglasses') catProducts = PRODUCTS.filter(p=>p.cat==='sunglasses');
-    else if(cat==='jewelry') catProducts = PRODUCTS.filter(p=>p.cat==='jewelry');
-    else if(cat==='sets') catProducts = PRODUCTS.filter(p=>p.cat==='sets');
-    else catProducts = PRODUCTS.filter(p=>p.cat===cat);
-    document.getElementById('category-products-grid').innerHTML=catProducts.map(p=>productCard(p,false)).join('');
+    S.catFilter={cat:'all',size:'all',price:'all'}; S.catCurated='best-selling'; S.gridColsCat=2;
+    updateGridToggleIconCat();
+    document.querySelectorAll('#filter-options-cat input[type=radio]').forEach(r=>{if(r.value==='all') r.checked=true;});
+    renderCategoryProducts();
     window.scrollTo({top:0,behavior:'smooth'}); window.history.pushState({page:'category',cat:cat},'',`#category-${cat}`);
   }
 
@@ -745,7 +892,6 @@
   function goToProduct(id){closeSearch();let p=PRODUCTS.find(x=>x.id===id);if(!p)return;addToRecentlyViewed(id);window.history.pushState({page:'product',id:id},'',`#product-${id}`);renderProductPage(p);}
 
   let touchStartX = 0; let touchEndX = 0;
-
   function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
   function handleTouchEnd(e) { touchEndX = e.changedTouches[0].screenX; handleSwipe(); }
   function handleSwipe() {
@@ -762,8 +908,10 @@
     let page=document.getElementById('page-product-detail'); page.classList.add('active'); S.currentPage='product-detail';
     let price=p.salePrice?`<span style="color:#111">R${p.salePrice.toLocaleString()}</span> <span style="color:#aaa;text-decoration:line-through;font-size:14px">R${p.price.toLocaleString()}</span>`:`R${p.price.toLocaleString()}`;
     let imgs = getProductImages(p);
-    let slidesHtml = imgs.map((img, i) => `<div class="product-slide" style="background-image:url('${img}');"></div>`).join('');
+    let slidesHtml = imgs.map((img) => `<div class="product-slide" style="background-image:url('${img}');"></div>`).join('');
     let dotsHtml = imgs.map((_, i) => `<button class="slider-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></button>`).join('');
+    let vdots = (p.colors||[]).slice(0,2).map(c=>`<span class="variant-dot" style="background:${c};"></span>`).join('');
+    if((p.colors||[]).length > 2) vdots += `<span class="variant-plus">+${p.colors.length - 2}</span>`;
     page.innerHTML=`
       <div class="product-slider" id="product-slider">
         <button class="product-detail-dress-toggle" onclick="toggleImageMode()"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/dress.png?v=1778246333" class="dress-toggle-icon" alt="Dress View"></button>
@@ -771,7 +919,8 @@
         <div class="slider-dots" id="slider-dots">${dotsHtml}</div>
       </div>
       <div class="product-info">
-        <div class="modal-brand">${p.brand}</div><div class="modal-title">${p.name}</div><div class="modal-price">${price}</div><p class="modal-desc">${p.desc}</p>
+        <div class="modal-brand-row"><div class="modal-brand">${p.brand}</div><div class="modal-variant-dots">${vdots}</div></div>
+        <div class="modal-title">${p.name}</div><div class="modal-price">${price}</div><p class="modal-desc">${p.desc}</p>
         <div class="modal-size-label">Size</div><div class="modal-sizes">${p.sizes.map(s=>`<button class="modal-size-btn" onclick="selSize(this,'${s}')">${s}</button>`).join('')}</div>
         <div class="product-actions"><button class="modal-add-btn" onclick="addToCart(${p.id},S.selSize)">Add to Cart</button><button class="modal-wish-btn" onclick="toggleWish(${p.id})">Save to Wishlist</button></div>
         <div class="info-collapse" id="collapse-shipping"><div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping &amp; Returns <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">Complimentary shipping over R3000. Free returns within 30 days. Orders processed within 1-3 business days.</div></div>
@@ -822,7 +971,48 @@
     }
     body.innerHTML=S.cart.map(i=>{let p=i.salePrice||i.price; let imgs = getProductImages(i); return `<div class="cart-item-row"><div class="cart-item-img-placeholder" style="background-image:url('${imgs[0]}'); background-size:cover; background-position:center;">${i.brand}</div><div style="flex:1"><div class="ci-brand">${i.brand}</div><div class="ci-name">${i.name}</div><div class="ci-meta">${i.color} · ${i.size}</div><div class="ci-qty"><button class="ci-qty-btn" onclick="changeQty(${i.id},'${i.size}',-1)">−</button><span class="ci-qty-num">${i.qty}</span><button class="ci-qty-btn" onclick="changeQty(${i.id},'${i.size}',1)">+</button></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button class="ci-remove" onclick="removeFromCart(${i.id},'${i.size}')">×</button><span class="ci-price">R${(p*i.qty).toLocaleString()}</span></div></div>`;}).join('');
     let sub=S.cart.reduce((a,i)=>a+(i.salePrice||i.price)*i.qty,0);
-    foot.innerHTML=`<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">R${sub.toLocaleString()}</span></div><div class="cart-ship-note">${sub>=3000?'Free shipping applied':'R250 shipping · Free over R3000'}</div><button class="btn-view-cart" onclick="closeCart()">View Bag</button><button class="btn-checkout-main" onclick="checkout()">Checkout</button>`;
+    foot.innerHTML=`<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">R${sub.toLocaleString()}</span></div><div class="cart-ship-note">${sub>=3000?'Free shipping applied':'R250 shipping · Free over R3000'}</div><button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="checkout()">Checkout</button>`;
+  }
+
+  function renderCartPage(){
+    let el=document.getElementById('cart-page-content'); if(!el) return;
+    if(!S.cart.length){
+      el.innerHTML = `<div class="cart-page-empty"><div class="cart-page-empty-title">Your bag is empty</div><div class="cart-page-empty-sub">Discover pieces you'll love from our curated collections.</div><button class="cart-page-btn primary" onclick="navigateTo('products')">Continue Shopping</button></div>`;
+      return;
+    }
+    let itemsHtml = S.cart.map(i=>{
+      let p=i.salePrice||i.price; let imgs = getProductImages(i);
+      return `<div class="cart-page-item">
+        <div class="cart-page-img" style="background-image:url('${imgs[0]}');"></div>
+        <div class="cart-page-details">
+          <div class="cart-page-brand">${i.brand}</div>
+          <div class="cart-page-name">${i.name}</div>
+          <div class="cart-page-meta">${i.color} · Size ${i.size}</div>
+          <div class="cart-page-qty-wrap">
+            <button class="cart-page-qty-btn" onclick="changeQty(${i.id},'${i.size}',-1);renderCartPage();">−</button>
+            <span class="cart-page-qty-num">${i.qty}</span>
+            <button class="cart-page-qty-btn" onclick="changeQty(${i.id},'${i.size}',1);renderCartPage();">+</button>
+          </div>
+        </div>
+        <div class="cart-page-price">R${(p*i.qty).toLocaleString()}</div>
+        <button class="cart-page-remove" onclick="removeFromCart(${i.id},'${i.size}');renderCartPage();">×</button>
+      </div>`;
+    }).join('');
+    let sub=S.cart.reduce((a,i)=>a+(i.salePrice||i.price)*i.qty,0);
+    el.innerHTML = `<h1 class="cart-page-title">Your Bag (${S.cart.reduce((a,i)=>a+i.qty,0)} items)</h1>
+      ${itemsHtml}
+      <div class="cart-page-promo">
+        <input class="cart-page-promo-input" type="text" placeholder="Promo code">
+        <button class="cart-page-promo-btn" onclick="toast('Promo code applied!')">Apply</button>
+      </div>
+      <div class="cart-page-summary">
+        <div class="cart-page-subtotal">Subtotal <strong>R${sub.toLocaleString()}</strong></div>
+        <div class="cart-page-ship-note">${sub>=3000?'Free shipping applied':'R250 shipping · Free over R3000'}</div>
+        <div class="cart-page-actions">
+          <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
+          <button class="cart-page-btn primary" onclick="checkout()">Proceed to Checkout</button>
+        </div>
+      </div>`;
   }
   function checkout(){toast('Checkout coming soon!');}
 
@@ -859,23 +1049,25 @@
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById('page-'+page)?.classList.add('active'); S.currentPage=page; window.scrollTo({top:0,behavior:'smooth'});
     if(page==='editorial')buildEditorial();
-    if(page==='products'){buildCategoryNav();renderAllProducts();updateGridToggleIcon();}
+    if(page==='products'){S.currentCategoryPage=null;buildCategoryNav();renderAllProducts();updateGridToggleIcon();}
     if(page==='campaign'){buildCampaignSlider();}
+    if(page==='cart'){renderCartPage();}
     window.history.pushState({page:page},'',page==='home'?'/':'#'+page);
   }
   window.addEventListener('popstate',(e)=>{if(e.state){if(e.state.page==='product'){let p=PRODUCTS.find(x=>x.id===e.state.id);if(p)renderProductPage(p);}else if(e.state.page==='category'){navigateToCategory(e.state.cat);}else navigateTo(e.state.page);}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCart();closeWishlist();closeMenu();closeSearch();}});
   document.addEventListener('click', e=>{
     if(!e.target.closest('.footer-currency') && !e.target.closest('.footer-lang')){ document.querySelectorAll('.currency-dropdown, .lang-dropdown').forEach(d=>d.classList.remove('open')); }
-    if(!e.target.closest('.filter-dropdown')){ document.getElementById('filter-options')?.classList.remove('open'); }
-    if(!e.target.closest('.curated-dropdown')){ document.getElementById('curated-options')?.classList.remove('open'); }
+    if(!e.target.closest('.filter-dropdown')){ document.getElementById('filter-options')?.classList.remove('open'); document.getElementById('filter-options-cat')?.classList.remove('open'); }
+    if(!e.target.closest('.curated-dropdown')){ document.getElementById('curated-options')?.classList.remove('open'); document.getElementById('curated-options-cat')?.classList.remove('open'); }
   });
   function init(){
     buildBanner(); buildCategories(); buildArrivals();
-    buildFooter('main-footer'); buildFooter('products-footer'); buildFooter('editorial-footer'); buildFooter('category-footer'); buildFooter('campaign-footer');
-    updateGridToggleIcon(); updateDressIcon();
+    buildFooter('main-footer'); buildFooter('products-footer'); buildFooter('editorial-footer'); buildFooter('category-footer'); buildFooter('campaign-footer'); buildFooter('cart-footer');
+    updateGridToggleIcon(); updateGridToggleIconCat(); updateDressIcon();
     if(window.location.hash.startsWith('#product-')){let id=parseInt(window.location.hash.split('-')[1]);let p=PRODUCTS.find(x=>x.id===id); if(p) renderProductPage(p);}
     else if(window.location.hash.startsWith('#category-')){let cat=window.location.hash.split('-')[1];navigateToCategory(cat);}
+    else if(window.location.hash==='#cart'){navigateTo('cart');}
   }
   init();
 </script>
