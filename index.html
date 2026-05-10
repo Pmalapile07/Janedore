@@ -442,20 +442,11 @@
       .hero-content-wrap { width: 88%; max-width: 320px; bottom: 60px; }
       .hero-subtext { font-size: 11px; }
     }
-    @media (hover: none) and (pointer: coarse) {
-  .product-hover-actions {
-    transform: translateY(0);
-    background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
-    padding-top: 40px;
-  }
-  .btn-add-cart {
-    font-size: 8px;
-    padding: 8px 6px;
-  }
-  .btn-wish {
-    width: 32px;
-  }
+  
+    .product-hover-actions.tapped {
+  transform: translateY(0);
 }
+    
   </style>
 </head>
 <body>
@@ -1160,6 +1151,17 @@
     else if(window.location.hash==='#cart'){navigateTo('cart');}
   }
   init();
+  document.addEventListener('click', function(e) {
+  const card = e.target.closest('.product-card');
+  if (!card) {
+    document.querySelectorAll('.product-hover-actions.tapped').forEach(el => el.classList.remove('tapped'));
+    return;
+  }
+  if (e.target.closest('.btn-add-cart') || e.target.closest('.btn-wish')) return;
+  e.preventDefault();
+  document.querySelectorAll('.product-hover-actions.tapped').forEach(el => el.classList.remove('tapped'));
+  card.querySelector('.product-hover-actions').classList.add('tapped');
+});
 </script>
 </body>
 </html>
