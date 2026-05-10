@@ -1157,10 +1157,15 @@
     document.querySelectorAll('.product-hover-actions.tapped').forEach(el => el.classList.remove('tapped'));
     return;
   }
-  if (e.target.closest('.btn-add-cart') || e.target.closest('.btn-wish')) return;
-  e.preventDefault();
-  document.querySelectorAll('.product-hover-actions.tapped').forEach(el => el.classList.remove('tapped'));
-  card.querySelector('.product-hover-actions').classList.add('tapped');
+  if (e.target.closest('.btn-add-cart') || e.target.closest('.btn-wish') || e.target.closest('.variant-dot')) return;
+  
+  const actions = card.querySelector('.product-hover-actions');
+  if (!actions.classList.contains('tapped')) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.product-hover-actions.tapped').forEach(el => el.classList.remove('tapped'));
+    actions.classList.add('tapped');
+  }
 });
 </script>
 </body>
