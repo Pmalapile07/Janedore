@@ -17,7 +17,6 @@
     ::-webkit-scrollbar-track { background: #f5f5f5; }
     ::-webkit-scrollbar-thumb { background: #ccc; }
 
-    /* ─── Global Spacing System ─── */
     .collection-page-padding { padding-left: 12px; padding-right: 12px; }
     @media (min-width: 768px) { .collection-page-padding { padding-left: 16px; padding-right: 16px; } }
 
@@ -82,16 +81,22 @@
     .dawning-desc { font-size: 13px; font-weight: 300; line-height: 1.8; color: #666; max-width: 580px; margin: 0 auto 24px; letter-spacing: 0.04em; }
     .dawning-cta { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #111; border-bottom: 1px solid #111; padding-bottom: 2px; background: none; display: inline-block; transition: all 0.2s; cursor: default; pointer-events: none; }
 
-    #categories { padding: 60px 12px; }
+    #categories { padding: 60px 12px; position: relative; }
     @media (min-width: 768px) { #categories { padding: 60px 16px; } }
     .category-header { text-align: center; margin-bottom: 28px; font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: #111; font-family: 'Manrope', sans-serif; }
-    .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .cat-card { position: relative; aspect-ratio: 3/4; overflow: hidden; cursor: pointer; background: #f0ede8; }
+    .category-scroll-wrap { position: relative; }
+    .category-scroll { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 16px; }
+    .category-scroll::-webkit-scrollbar { display: none; }
+    .cat-card { flex: 0 0 calc(50% - 6px); min-width: 160px; position: relative; aspect-ratio: 3/4; overflow: hidden; cursor: pointer; background: #f0ede8; scroll-snap-align: start; }
+    @media (min-width: 600px) { .cat-card { flex: 0 0 calc(33.333% - 8px); } }
+    @media (min-width: 900px) { .cat-card { flex: 0 0 calc(25% - 9px); } }
     .cat-placeholder { width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
     .cat-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 55%); }
     .cat-label-wrap { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 14px 16px; z-index: 2; text-align: center; }
     .cat-name { font-size: 10px; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; color: #fff; display: block; margin-bottom: 2px; }
     .cat-shop { font-size: 9px; letter-spacing: 0.12em; color: rgba(255,255,255,0.7); }
+    .category-progress { height: 2px; background: #f0f0f0; width: 100%; margin-top: 4px; position: relative; border-radius: 1px; }
+    .category-progress-bar { height: 100%; background: #111; width: 0%; border-radius: 1px; transition: width 0.1s ease; }
 
     #new-arrivals { padding: 60px 12px; }
     @media (min-width: 768px) { #new-arrivals { padding: 60px 16px; } }
@@ -107,7 +112,6 @@
     .product-badge-wrap { position: absolute; top: 10px; left: 10px; }
     .badge-new { font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; background: #fff; color: #111; padding: 4px 8px; display: inline-block; }
     .badge-sale { font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; background: #111; color: #fff; padding: 4px 8px; display: inline-block; }
-    /* Hover actions — pure CSS hover on the image wrap, now appears on slight hover */
     .product-hover-actions { position: absolute; bottom: 0; left: 0; right: 0; padding: 40px 12px 12px; display: flex; gap: 6px; transform: translateY(100%); transition: transform 0.35s ease; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%); pointer-events: none; }
     .product-img-wrap:hover .product-hover-actions { transform: translateY(0); pointer-events: all; }
     .btn-add-cart { flex: 1; background: #fff; color: #111; border: none; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 11px 8px; transition: background 0.2s; }
@@ -217,7 +221,7 @@
     .cart-ymal-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; margin-bottom: 14px; padding-top: 24px; }
     .cart-ymal-slider { position: relative; overflow: hidden; }
     .cart-ymal-track { display: flex; transition: transform 0.4s ease; }
-    .cart-ymal-slide { min-width: 100%; }
+    .cart-ymal-slide { min-width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .cart-ymal-slide .product-card .product-img-wrap { margin-bottom: 8px; }
 
     #wish-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 905; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
@@ -308,20 +312,25 @@
     .modal-wish-btn:hover { border-color: #111; }
     .modal-wish-btn svg { width: 16px; height: 16px; stroke: #111; fill: none; stroke-width: 1.5; }
     .modal-wish-btn.wished svg { fill: #111; }
-    .ai-disclaimer-notice { background: #fff; border: 1px solid #e8e8e8; padding: 14px 16px; margin-bottom: 32px; display: flex; gap: 10px; align-items: flex-start; }
+    .ai-disclaimer-notice { background: #fdfaf5; padding: 14px 16px; margin-bottom: 32px; display: flex; gap: 10px; align-items: flex-start; border: none; }
     .ai-disclaimer-notice svg { flex-shrink: 0; margin-top: 1px; }
     .ai-disclaimer-notice p { font-size: 10px; font-weight: 300; color: #888; line-height: 1.7; letter-spacing: 0.03em; }
 
     .info-collapse { border-top: none; }
-    .info-collapse:first-of-type { border-top: none; }
     .info-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; cursor: pointer; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #111; }
     .info-collapse-header svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 1.5; transition: transform 0.3s; }
     .info-collapse.open .info-collapse-header svg { transform: rotate(45deg); }
     .info-collapse-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; font-size: 12px; font-weight: 300; line-height: 1.8; color: #666; }
-    .info-collapse.open .info-collapse-body { max-height: 300px; padding-bottom: 16px; }
+    .info-collapse.open .info-collapse-body { max-height: 500px; padding-bottom: 16px; }
     .disclaimer-text { font-size: 11px; color: #888; font-style: italic; line-height: 1.6; }
     .size-guide-link { color: #111; font-weight: 500; border-bottom: 1px solid #111; padding-bottom: 1px; cursor: pointer; text-decoration: none; font-style: normal; transition: color 0.2s; }
     .size-guide-link:hover { color: #555; border-color: #555; }
+    .shipping-calc { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+    .shipping-calc input { flex: 1; min-width: 120px; border: 1px solid #ddd; padding: 10px 12px; font-size: 11px; font-family: 'Manrope', sans-serif; outline: none; }
+    .shipping-calc input:focus { border-color: #111; }
+    .shipping-calc button { background: #111; color: #fff; border: none; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 16px; white-space: nowrap; cursor: pointer; transition: background 0.2s; }
+    .shipping-calc button:hover { background: #333; }
+    .shipping-result { font-size: 12px; font-weight: 300; color: #111; margin-top: 6px; }
 
     .complete-look { padding: 32px 0; }
     .complete-look-title { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #111; margin-bottom: 16px; }
@@ -527,6 +536,7 @@
   <div class="wish-body" id="wish-body"></div>
 </div>
 
+<!-- PAGES -->
 <div class="page active" id="page-home">
   <section id="hero">
     <div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/25033E45-B542-48C1-A84B-5F259F62C6AE.jpg?v=1778515133')"></div>
@@ -538,7 +548,7 @@
     </div>
   </section>
   <section id="discover-dawning"><div class="dawning-title">Discover 'understated'</div><p class="dawning-desc">An exploration of refined minimalism — soft tailoring, muted palettes, and timeless silhouettes designed for effortless everyday luxury. Understated celebrates quiet confidence through elevated essentials that feel both modern and enduring.</p><span class="dawning-cta">Explore Campaign</span></section>
-  <section id="categories"><div class="category-header">Shop by Category</div><div class="category-grid" id="category-grid"></div></section>
+  <section id="categories"><div class="category-header">Shop by Category</div><div class="category-scroll-wrap"><div class="category-scroll" id="category-scroll"></div><div class="category-progress"><div class="category-progress-bar" id="category-progress-bar"></div></div></div></section>
   <section id="new-arrivals"><div class="arrivals-header"><div class="arrivals-title">New Arrivals</div><button class="arrivals-view-all" onclick="navigateTo('products')">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section>
   <div id="editorial-strip">
     <div class="ed-panel"><div class="ed-panel-bg" style="background:linear-gradient(135deg,#1c1c1c,#2a2a2a,#1c1c1c)"></div><div class="ed-panel-overlay"></div><div class="ed-panel-content"><div class="ed-tag">Editorial · SS25</div><div class="ed-title">The Architecture<br>of Softness</div><span class="ed-cta">Read Story →</span></div></div>
@@ -686,651 +696,1687 @@
 <div class="page" id="page-product-detail"></div>
 
 <script>
-  // ─── Per-product per-variant image map ───
-  const PRODUCT_VARIANT_IMAGES = {
-    1: {
-      model: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159']
-      ],
-      ghost: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-      ]
-    },
-    2: {
-      model: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737']
-      ],
-      ghost: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371']
-      ]
-    },
-    3: {
-      model: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159']
-      ],
-      ghost: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-      ]
-    },
-    4: {
-      model: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371']
-      ],
-      ghost: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737']
-      ]
-    },
-    5: {
-      model: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157']
-      ],
-      ghost: [
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'],
-        ['https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371','https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159']
-      ]
-    }
-  };
-  function buildVariantImagesForProduct(id) {
-    const allImgs = [
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159',
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737',
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371',
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157'
-    ];
-    const ghostImgs = [
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157',
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371',
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159',
-      'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'
-    ];
-    const offset = (id - 1) % 4;
-    return {
-      model: [[allImgs[offset % 4], allImgs[(offset+1)%4]], [allImgs[(offset+2)%4], allImgs[(offset+3)%4]]],
-      ghost: [[ghostImgs[offset%4], ghostImgs[(offset+1)%4]], [ghostImgs[(offset+2)%4], ghostImgs[(offset+3)%4]]]
-    };
-  }
+// ============================================================
+// JANEDORE PRODUCT CATALOGUE
+// ============================================================
+// ARCHITECTURE OVERVIEW:
+//
+// Each product is a self-contained document — identical to how
+// it will be stored in Firestore (one document per product).
+//
+// Structure:
+//   product.id          → unique slug (Firestore document ID)
+//   product.name        → display name
+//   product.brand       → brand label
+//   product.category    → for filtering (dresses, tops, etc.)
+//   product.price       → base price in ZAR cents (or whole rands here)
+//   product.salePrice   → optional sale price
+//   product.badge       → "new" | "sale" | "" | null
+//   product.sizes       → available sizes array
+//   product.description → product description
+//   product.variants[]  → color variants, each containing:
+//       variant.color   → display name ("Cream", "Black")
+//       variant.swatch  → hex color for the dot swatch
+//       variant.images  → { model: [...urls], ghost: [...urls] }
+//
+// ADDING A NEW PRODUCT:
+//   Copy an existing entry, change the id/name/brand/etc,
+//   point the image URLs at your Cloudinary or CDN assets,
+//   and push. That's it — no other files to update.
+//
+// FIREBASE INTEGRATION:
+//   Replace the PRODUCTS array with a Firestore query:
+//   const snapshot = await getDocs(collection(db, "products"));
+//   const PRODUCTS = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+// ============================================================
 
-  function getVariantImages(p, colorIndex) {
-    const mode = S.imageMode;
-    const data = PRODUCT_VARIANT_IMAGES[p.id] || buildVariantImagesForProduct(p.id);
-    const variantSets = data[mode];
-    const idx = Math.min(colorIndex, variantSets.length - 1);
-    return variantSets[idx];
-  }
-
-  function getProductImages(p, colorIndex) {
-    const ci = (colorIndex !== undefined) ? colorIndex : (S.productVariantSelections[p.id] !== undefined ? S.productVariantSelections[p.id] : 0);
-    return getVariantImages(p, ci);
-  }
-
-  const PRODUCTS = [
-    { id:1, name:'Sabina Linen Dress', brand:'JANEDORE', cat:'dresses', price:2890, color:'Cream', colors:['#f5f2ed','#1c1c1c'], badge:'new', sizes:['XS','S','M','L'], desc:'Crafted from premium Belgian linen. Effortless summer elegance.' },
-    { id:2, name:'Ventura Maxi Dress', brand:'JANEDORE', cat:'dresses', price:3590, salePrice:2490, color:'Black', colors:['#1c1c1c','#888'], badge:'sale', sizes:['XS','S','M','L','XL'], desc:'Fluid column silhouette in stretch crepe. The ultimate evening piece.' },
-    { id:3, name:'Celeste Silk Blouse', brand:'JANEDORE', cat:'tops', price:2250, color:'Ivory', colors:['#f5f2ed','#e8e0d0'], badge:'new', sizes:['XS','S','M','L'], desc:'Hand-finished silk charmeuse in relaxed oversized drape. Italian fabrication.' },
-    { id:4, name:'Onyx Tailored Blazer', brand:'JANEDORE', cat:'jackets', price:5990, color:'Black', colors:['#1c1c1c','#2a2a2a'], badge:'new', sizes:['XS','S','M','L'], desc:'Sharp single-breasted construction in Italian wool. Silk-lined.' },
-    { id:5, name:'Rio Wide-Leg Trousers', brand:'JANEDORE', cat:'bottoms', price:2990, color:'Sand', colors:['#d4c5a9','#f5f2ed','#1c1c1c'], badge:'', sizes:['XS','S','M','L','XL'], desc:'Flowing wide-leg in linen-silk blend. Effortlessly tailored.' },
-    { id:6, name:'Gold Link Necklace', brand:'NIRIUS CO', cat:'jewelry', price:1390, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Handcrafted 18k gold-plated brass links. Fine jewelry.' },
-    { id:7, name:'Noir Wrap Midi', brand:'JANEDORE', cat:'dresses', price:2690, salePrice:1890, color:'Black', colors:['#1c1c1c'], badge:'sale', sizes:['XS','S','M','L'], desc:'Fluid wrap construction in matte jersey.' },
-    { id:8, name:'Luna Stud Earrings', brand:'JEWELRYBK', cat:'jewelry', price:990, color:'Gold', colors:['#c9a96e','#d4d4d4'], badge:'new', sizes:['One Size'], desc:'Minimalist dome studs in recycled sterling silver.' },
-    { id:9, name:'Cassis Leather Belt', brand:'JANEDORE', cat:'accessories', price:1790, color:'Cognac', colors:['#8b5e3c','#1c1c1c'], badge:'', sizes:['XS/S','M/L'], desc:'Full-grain Italian leather with antique brass hardware.' },
-    { id:10, name:'Soleil Crop Top', brand:'JANEDORE', cat:'tops', price:1490, color:'Cream', colors:['#f5f2ed','#1c1c1c'], badge:'new', sizes:['XS','S','M','L'], desc:'Structured bra-style crop in cotton-silk twill.' },
-    { id:11, name:'Midnight Column Gown', brand:'JANEDORE', cat:'dresses', price:7690, color:'Black', colors:['#1c1c1c'], badge:'', sizes:['XS','S','M','L'], desc:'Floor-sweeping column in duchess satin. Made-to-order.' },
-    { id:12, name:'Chain Layered Bracelet', brand:'NIRIUS CO', cat:'jewelry', price:1190, color:'Gold', colors:['#c9a96e'], badge:'new', sizes:['One Size'], desc:'Multi-strand bracelet with organic link shapes.' },
-  ];
-
-  const CATEGORIES = [
-    { name:'Clothing', filter:'clothing', img:'' },
-    { name:'Bags', filter:'bags', img:'' },
-    { name:'Sunglasses', filter:'sunglasses', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371' },
-    { name:'Jewelry', filter:'jewelry', img:'' },
-  ];
-
-  const BANNER_ITEMS = ['Complimentary Shipping on Orders Over R3000','Free Returns Within 30 Days','New Collection — Discover \'Dawning\' Now Live','Sign Up for Exclusive Early Access'];
-  const SEARCH_SUGGESTIONS = ['Dresses','Linen Pieces','Blazers','Jewellery','New Arrivals','Sale Items','NIRIUS CO','JANEDORE'];
-  const BG = {
-    dresses:'linear-gradient(160deg,#c8bfb0,#a89888)', tops:'linear-gradient(160deg,#e0dbd4,#c8bfb0)',
-    jackets:'linear-gradient(160deg,#2a2a2a,#1c1c1c)', bottoms:'linear-gradient(160deg,#b8b0a4,#c8c0b4)',
-    accessories:'linear-gradient(160deg,#d4c5a9,#c8b898)', shoes:'linear-gradient(160deg,#c0b8ac,#a8a098)',
-    bags:'linear-gradient(160deg,#c0a882,#a8906a)', jewelry:'linear-gradient(160deg,#e8d8b0,#d4c090)',
-    sunglasses:'linear-gradient(160deg,#2a2520,#1c1c1c)', sets:'linear-gradient(160deg,#ddd8d0,#c8c0b8)',
-  };
-
-  const CURRENCIES = {
-    ZAR: { label: 'ZAR R', symbol: 'R' },
-    BWP: { label: 'BWP P', symbol: 'P' },
-    LSL: { label: 'LSL M', symbol: 'M' },
-    NAD: { label: 'NAD N$', symbol: 'N$' },
-    USD: { label: 'USD $', symbol: '$' },
-  };
-
-  const S = {
-    cart: [], wishlist: [], currentPage: 'home', selSize: null, selColorIndex: 0,
-    announceIdx: 0, announceTimer: null, gridCols: 2, gridColsCat: 2, imageMode: 'model', activeCollectionCat: 'ALL',
-    filter: {cat:'all',size:'all',price:'all'}, catFilter: {cat:'all',size:'all',price:'all'}, curated: 'best-selling', catCurated: 'best-selling',
-    campaignSlideIndex: 0, recentlyViewed: [], cartYmalIndex: 0, currentSlide: 0, currentCategoryPage: null,
-    cartYmalTouchStart: 0, cartYmalTouchEnd: 0,
-    productVariantSelections: {},
-    currency: 'ZAR',
-  };
-
-  function getCurrencySymbol() {
-    return CURRENCIES[S.currency]?.symbol || 'R';
-  }
-
-  function formatPrice(amount) {
-    return `${getCurrencySymbol()}${amount.toLocaleString()}`;
-  }
-
-  function updateDressIcon() {
-    const icons = document.querySelectorAll('.dress-toggle-icon, .product-detail-dress-toggle img');
-    icons.forEach(icon => {
-      icon.style.filter = S.imageMode === 'ghost' ? 'grayscale(1) opacity(.55)' : 'none';
-    });
-  }
-
-  function variantDotsHtml(p, selectedIndex) {
-    const maxDots = 2;
-    const c = p.colors || [];
-    const si = (selectedIndex !== undefined) ? selectedIndex : (S.productVariantSelections[p.id] || 0);
-    let dots = c.slice(0, maxDots).map((col, i) => {
-      let selClass = (i === si) ? ' selected' : '';
-      return `<span class="variant-dot${selClass}" style="background:${col};" onclick="event.stopPropagation(); selectVariant(${p.id}, ${i}, event)"></span>`;
-    }).join('');
-    if (c.length > maxDots) dots += `<span class="variant-plus">+${c.length - maxDots}</span>`;
-    return dots;
-  }
-
-  function selectVariant(productId, colorIndex, evt) {
-    if (evt) { evt.stopPropagation(); evt.preventDefault(); }
-    S.productVariantSelections[productId] = colorIndex;
-
-    const allCards = document.querySelectorAll(`.product-card[data-product-id="${productId}"]`);
-    allCards.forEach(card => {
-      const imgEl = card.querySelector('.product-img-placeholder');
-      const dotsWrap = card.querySelector('.product-variant-dots');
-      if (imgEl) {
-        const p = PRODUCTS.find(x => x.id === productId);
-        if (p) {
-          const imgs = getVariantImages(p, colorIndex);
-          imgEl.style.backgroundImage = `url('${imgs[0]}')`;
+const PRODUCTS = [
+  {
+    id: "sabina-linen-dress",
+    name: "Sabina Linen Dress",
+    brand: "JANEDORE",
+    category: "dresses",
+    price: 2890,
+    salePrice: null,
+    badge: "new",
+    sizes: ["XS", "S", "M", "L"],
+    description: "Crafted from premium Belgian linen. Effortless summer elegance.",
+    variants: [
+      {
+        color: "Cream",
+        swatch: "#f5f2ed",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ]
+        }
+      },
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
         }
       }
-      if (dotsWrap) {
-        const p = PRODUCTS.find(x => x.id === productId);
-        if (p) dotsWrap.innerHTML = variantDotsHtml(p, colorIndex);
+    ]
+  },
+  {
+    id: "ventura-maxi-dress",
+    name: "Ventura Maxi Dress",
+    brand: "JANEDORE",
+    category: "dresses",
+    price: 3590,
+    salePrice: 2490,
+    badge: "sale",
+    sizes: ["XS", "S", "M", "L", "XL"],
+    description: "Fluid column silhouette in stretch crepe. The ultimate evening piece.",
+    variants: [
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      },
+      {
+        color: "Smoke",
+        swatch: "#888888",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ]
+        }
       }
-    });
+    ]
+  },
+  {
+    id: "celeste-silk-blouse",
+    name: "Celeste Silk Blouse",
+    brand: "JANEDORE",
+    category: "tops",
+    price: 2250,
+    salePrice: null,
+    badge: "new",
+    sizes: ["XS", "S", "M", "L"],
+    description: "Hand-finished silk charmeuse in relaxed oversized drape. Italian fabrication.",
+    variants: [
+      {
+        color: "Ivory",
+        swatch: "#f5f2ed",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ]
+        }
+      },
+      {
+        color: "Sand",
+        swatch: "#e8e0d0",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "onyx-tailored-blazer",
+    name: "Onyx Tailored Blazer",
+    brand: "JANEDORE",
+    category: "jackets",
+    price: 5990,
+    salePrice: null,
+    badge: "new",
+    sizes: ["XS", "S", "M", "L"],
+    description: "Sharp single-breasted construction in Italian wool. Silk-lined.",
+    variants: [
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ]
+        }
+      },
+      {
+        color: "Charcoal",
+        swatch: "#2a2a2a",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "rio-wide-leg-trousers",
+    name: "Rio Wide-Leg Trousers",
+    brand: "JANEDORE",
+    category: "bottoms",
+    price: 2990,
+    salePrice: null,
+    badge: "",
+    sizes: ["XS", "S", "M", "L", "XL"],
+    description: "Flowing wide-leg in linen-silk blend. Effortlessly tailored.",
+    variants: [
+      {
+        color: "Sand",
+        swatch: "#d4c5a9",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ]
+        }
+      },
+      {
+        color: "Ivory",
+        swatch: "#f5f2ed",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      },
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "gold-link-necklace",
+    name: "Gold Link Necklace",
+    brand: "NIRIUS CO",
+    category: "jewelry",
+    price: 1390,
+    salePrice: null,
+    badge: "new",
+    sizes: ["One Size"],
+    description: "Handcrafted 18k gold-plated brass links. Fine jewelry.",
+    variants: [
+      {
+        color: "Gold",
+        swatch: "#c9a96e",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "noir-wrap-midi",
+    name: "Noir Wrap Midi",
+    brand: "JANEDORE",
+    category: "dresses",
+    price: 2690,
+    salePrice: 1890,
+    badge: "sale",
+    sizes: ["XS", "S", "M", "L"],
+    description: "Fluid wrap construction in matte jersey.",
+    variants: [
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "luna-stud-earrings",
+    name: "Luna Stud Earrings",
+    brand: "JEWELRYBK",
+    category: "jewelry",
+    price: 990,
+    salePrice: null,
+    badge: "new",
+    sizes: ["One Size"],
+    description: "Minimalist dome studs in recycled sterling silver.",
+    variants: [
+      {
+        color: "Gold",
+        swatch: "#c9a96e",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ]
+        }
+      },
+      {
+        color: "Silver",
+        swatch: "#d4d4d4",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "cassis-leather-belt",
+    name: "Cassis Leather Belt",
+    brand: "JANEDORE",
+    category: "accessories",
+    price: 1790,
+    salePrice: null,
+    badge: "",
+    sizes: ["XS/S", "M/L"],
+    description: "Full-grain Italian leather with antique brass hardware.",
+    variants: [
+      {
+        color: "Cognac",
+        swatch: "#8b5e3c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ]
+        }
+      },
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "soleil-crop-top",
+    name: "Soleil Crop Top",
+    brand: "JANEDORE",
+    category: "tops",
+    price: 1490,
+    salePrice: null,
+    badge: "new",
+    sizes: ["XS", "S", "M", "L"],
+    description: "Structured bra-style crop in cotton-silk twill.",
+    variants: [
+      {
+        color: "Cream",
+        swatch: "#f5f2ed",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ]
+        }
+      },
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "midnight-column-gown",
+    name: "Midnight Column Gown",
+    brand: "JANEDORE",
+    category: "dresses",
+    price: 7690,
+    salePrice: null,
+    badge: "",
+    sizes: ["XS", "S", "M", "L"],
+    description: "Floor-sweeping column in duchess satin. Made-to-order.",
+    variants: [
+      {
+        color: "Black",
+        swatch: "#1c1c1c",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: "chain-layered-bracelet",
+    name: "Chain Layered Bracelet",
+    brand: "NIRIUS CO",
+    category: "jewelry",
+    price: 1190,
+    salePrice: null,
+    badge: "new",
+    sizes: ["One Size"],
+    description: "Multi-strand bracelet with organic link shapes.",
+    variants: [
+      {
+        color: "Gold",
+        swatch: "#c9a96e",
+        images: {
+          model: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
+          ],
+          ghost: [
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
+            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
+          ]
+        }
+      }
+    ]
+  }
+];
 
-    if (S.currentPage === 'product-detail') {
-      const slides = document.querySelectorAll('#product-slides .product-slide');
-      const p = PRODUCTS.find(x => x.id === productId);
-      if (p && slides.length) {
-        const imgs = getVariantImages(p, colorIndex);
-        slides.forEach((slide, i) => {
-          if (imgs[i]) slide.style.backgroundImage = `url('${imgs[i]}')`;
-        });
-      }
-      document.querySelectorAll('.product-info .modal-variant-dots .variant-dot').forEach((dot, i) => {
-        dot.classList.toggle('selected', i === colorIndex);
+// ============================================================
+// CATEGORY DEFINITIONS
+// ============================================================
+const CATEGORIES = [
+  { name: "Clothing",    filter: "clothing",    image: "" },
+  { name: "Bags",        filter: "bags",        image: "" },
+  { name: "Sunglasses",  filter: "sunglasses",  image: "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371" },
+  { name: "Jewelry",     filter: "jewelry",     image: "" },
+];
+
+// ============================================================
+// STATIC CONFIG
+// ============================================================
+const BANNER_ITEMS = [
+  "Complimentary Shipping on Orders Over R3000",
+  "Free Returns Within 30 Days",
+  "New Collection — Discover 'Dawning' Now Live",
+  "Sign Up for Exclusive Early Access"
+];
+
+const SEARCH_SUGGESTIONS = ["Dresses", "Linen Pieces", "Blazers", "Jewellery", "New Arrivals", "Sale Items", "NIRIUS CO", "JANEDORE"];
+
+const CURRENCIES = {
+  ZAR: { label: "ZAR R", symbol: "R" },
+  BWP: { label: "BWP P", symbol: "P" },
+  LSL: { label: "LSL M", symbol: "M" },
+  NAD: { label: "NAD N$", symbol: "N$" },
+  USD: { label: "USD $",  symbol: "$" }
+};
+
+// ============================================================
+// APPLICATION STATE
+// ============================================================
+const S = {
+  cart: [],
+  wishlist: [],
+  currentPage: "home",
+  currentCategoryPage: null,
+  selectedSize: null,
+  // productVariantSelections: { [productId]: variantIndex }
+  // Tracks which color variant is selected per product across the UI
+  productVariantSelections: {},
+  imageMode: "model",       // "model" | "ghost"
+  gridCols: 2,              // products page grid columns
+  gridColsCat: 2,           // category page grid columns
+  activeCollectionCat: "ALL",
+  filter: { cat: "all", size: "all", price: "all" },
+  catFilter: { cat: "all", size: "all", price: "all" },
+  curated: "best-selling",
+  catCurated: "best-selling",
+  campaignSlideIndex: 0,
+  recentlyViewed: [],
+  cartYmalIndex: 0,
+  cartYmalTouchStart: 0,
+  cartYmalTouchEnd: 0,
+  currentSlide: 0,
+  announceIdx: 0,
+  announceTimer: null,
+  currency: "ZAR",
+};
+
+// ============================================================
+// IMAGE HELPERS — now dead simple
+// ============================================================
+
+/**
+ * Get the active variant object for a product.
+ * Falls back to variant[0] if the selected index doesn't exist.
+ */
+function getActiveVariant(product) {
+  const idx = S.productVariantSelections[product.id] ?? 0;
+  return product.variants[idx] ?? product.variants[0];
+}
+
+/**
+ * Get the image array for a product's active variant in the current image mode.
+ * Returns array of URLs. Guaranteed to return at least one URL.
+ */
+function getProductImages(product, variantIndex) {
+  const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
+  const variant = product.variants[idx] ?? product.variants[0];
+  const images = variant.images[S.imageMode];
+  // Fallback: if ghost images aren't set, use model images
+  if (!images || images.length === 0) return variant.images.model;
+  return images;
+}
+
+/**
+ * Get first (thumbnail) image for a product variant.
+ */
+function getProductThumbnail(product, variantIndex) {
+  return getProductImages(product, variantIndex)[0];
+}
+
+// ============================================================
+// CURRENCY & PRICING
+// ============================================================
+function getCurrencySymbol() { return CURRENCIES[S.currency]?.symbol ?? "R"; }
+function formatPrice(amount) { return `${getCurrencySymbol()}${amount.toLocaleString()}`; }
+
+// ============================================================
+// VARIANT DOTS HTML
+// ============================================================
+function variantDotsHtml(product, selectedIndex) {
+  const maxDots = 2;
+  const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0);
+  let html = product.variants.slice(0, maxDots).map((variant, i) => {
+    const isSelected = i === si;
+    return `<span class="variant-dot${isSelected ? " selected" : ""}" style="background:${variant.swatch};" onclick="event.stopPropagation(); selectVariant('${product.id}', ${i}, event)"></span>`;
+  }).join("");
+  if (product.variants.length > maxDots) {
+    html += `<span class="variant-plus">+${product.variants.length - maxDots}</span>`;
+  }
+  return html;
+}
+
+// ============================================================
+// VARIANT SELECTION — updates all matching cards on page
+// ============================================================
+function selectVariant(productId, variantIndex, evt) {
+  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+  S.productVariantSelections[productId] = variantIndex;
+
+  // Update all product cards showing this product
+  document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card => {
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (!product) return;
+    const imgEl = card.querySelector(".product-img-placeholder");
+    const dotsWrap = card.querySelector(".product-variant-dots");
+    if (imgEl) {
+      imgEl.style.backgroundImage = `url('${getProductThumbnail(product, variantIndex)}')`;
+    }
+    if (dotsWrap) {
+      dotsWrap.innerHTML = variantDotsHtml(product, variantIndex);
+    }
+  });
+
+  // Update product detail page if open
+  if (S.currentPage === "product-detail") {
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (product) {
+      const images = getProductImages(product, variantIndex);
+      document.querySelectorAll("#product-slides .product-slide").forEach((slide, i) => {
+        if (images[i]) slide.style.backgroundImage = `url('${images[i]}')`;
+      });
+      document.querySelectorAll(".product-info .modal-variant-dots .variant-dot").forEach((dot, i) => {
+        dot.classList.toggle("selected", i === variantIndex);
       });
     }
   }
+}
 
-  function openSearch() {
-    document.getElementById('search-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => document.getElementById('search-input').focus(), 100);
-    renderSearchDefault();
-  }
-  function closeSearch() {
-    document.getElementById('search-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-    document.getElementById('search-input').value = '';
-  }
-  function renderSearchDefault() {
-    const body = document.getElementById('search-body');
-    body.innerHTML = `<div class="search-suggestions"><div class="search-suggestions-title">Popular Searches</div><div class="search-suggestion-pills">${SEARCH_SUGGESTIONS.map(s => `<button class="search-pill" onclick="searchFor('${s}')">${s}</button>`).join('')}</div></div><div class="search-results-title">Featured Pieces</div><div class="search-results-grid">${PRODUCTS.slice(0,4).map(p => productCard(p, false)).join('')}</div>`;
-  }
-  function handleSearch(val) {
-    const v = val.trim().toLowerCase();
-    if (!v) { renderSearchDefault(); return; }
-    const results = PRODUCTS.filter(p => p.name.toLowerCase().includes(v) || p.brand.toLowerCase().includes(v) || p.cat.toLowerCase().includes(v) || p.color.toLowerCase().includes(v));
-    const body = document.getElementById('search-body');
-    body.innerHTML = `<div class="search-suggestions" style="margin-bottom:20px;"><div class="search-suggestions-title">Suggested</div><div class="search-suggestion-pills">${SEARCH_SUGGESTIONS.filter(s=>s.toLowerCase().includes(v)).slice(0,4).map(s=>`<button class="search-pill" onclick="searchFor('${s}')">${s}</button>`).join('') || '<span style="font-size:11px;color:#bbb;letter-spacing:0.08em;">No suggestions</span>'}</div></div><div class="search-results-title">${results.length} Result${results.length!==1?'s':''} for "${val}"</div>${results.length ? `<div class="search-results-grid">${results.map(p=>productCard(p,false)).join('')}</div>` : `<div class="search-no-results">No pieces found.</div>`}`;
-  }
-  function searchFor(term) { document.getElementById('search-input').value = term; handleSearch(term); }
+// ============================================================
+// PRODUCT CARD HTML
+// ============================================================
+function productCard(product, compactMode = false) {
+  const variantIndex = S.productVariantSelections[product.id] ?? 0;
+  const thumbnail = getProductThumbnail(product, variantIndex);
+  const isWished = S.wishlist.some(w => w.id === product.id);
+  const activeVariant = product.variants[variantIndex] ?? product.variants[0];
 
-  function updateGridToggleIcon() {
-    const container = document.getElementById('grid-toggle-svg'); if (!container) return;
-    const blocks = container.querySelectorAll('.grid-block');
-    if (S.gridCols === 1) { blocks[0]?.classList.add('active'); blocks[1]?.classList.remove('active'); blocks[2]?.classList.remove('active'); }
-    else if (S.gridCols === 2) { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.remove('active'); }
-    else { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.add('active'); }
-  }
-  function updateGridToggleIconCat() {
-    const container = document.getElementById('grid-toggle-svg-cat'); if (!container) return;
-    const blocks = container.querySelectorAll('.grid-block');
-    if (S.gridColsCat === 1) { blocks[0]?.classList.add('active'); blocks[1]?.classList.remove('active'); blocks[2]?.classList.remove('active'); }
-    else if (S.gridColsCat === 2) { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.remove('active'); }
-    else { blocks[0]?.classList.add('active'); blocks[1]?.classList.add('active'); blocks[2]?.classList.add('active'); }
-  }
+  const priceHtml = product.salePrice
+    ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>`
+    : formatPrice(product.price);
 
-  function buildBanner() {
-    const e0=document.getElementById('announce-text-0'), e1=document.getElementById('announce-text-1');
-    if(!e0||!e1)return; e0.textContent=BANNER_ITEMS[0]; e0.classList.add('active'); e1.classList.remove('active'); S.announceIdx=0;
-    if(S.announceTimer)clearInterval(S.announceTimer);
-    S.announceTimer=setInterval(()=>{let c=S.announceIdx,n=(c+1)%BANNER_ITEMS.length;document.getElementById(`announce-text-${c%2}`).classList.remove('active');document.getElementById(`announce-text-${n%2}`).textContent=BANNER_ITEMS[n];document.getElementById(`announce-text-${n%2}`).classList.add('active');S.announceIdx=n;},2000);
-  }
-  function openMenu(){document.getElementById('menu-backdrop').classList.add('open');document.getElementById('menu-drawer').classList.add('open');}
-  function closeMenu(){document.getElementById('menu-backdrop').classList.remove('open');document.getElementById('menu-drawer').classList.remove('open');}
-  function toggleBrandsCollapse(){document.getElementById('brands-collapse').classList.toggle('open');}
-  function toggleSubmenuCollapse(id){document.getElementById(id+'-collapse').classList.toggle('open');}
+  const badgeHtml = product.badge
+    ? `<div class="product-badge-wrap"><span class="badge-${product.badge}">${product.badge === "new" ? "New" : "Sale"}</span></div>`
+    : "";
 
-  function buildCategories(){
-    document.getElementById('category-grid').innerHTML=CATEGORIES.map(c=>{
-      let bgStyle = c.img ? `background-image:url('${c.img}'); background-size:cover; background-position:center;` : `background:#f0ede8;`;
-      return `<div class="cat-card" onclick="navigateToCategory('${c.filter}')"><div class="cat-placeholder" style="${bgStyle}"></div><div class="cat-overlay"></div><div class="cat-label-wrap"><span class="cat-name">${c.name}</span><span class="cat-shop">Shop now</span></div></div>`;
-    }).join('');
-  }
+  const dotsHtml = variantDotsHtml(product, variantIndex);
 
-  function productCard(p, compactMode=false){
-    let inW=S.wishlist.some(w=>w.id===p.id);
-    const ci = S.productVariantSelections[p.id] !== undefined ? S.productVariantSelections[p.id] : 0;
-    let pr = p.salePrice ? `<span class="product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span>` : formatPrice(p.price);
-    let b=p.badge?`<div class="product-badge-wrap"><span class="badge-${p.badge}">${p.badge==='new'?'New':'Sale'}</span></div>`:'';
-    let vdots = variantDotsHtml(p, ci);
-    let imgs = getProductImages(p, ci);
-    let imgStyle = `background-image:url('${imgs[0]}'); background-size:cover; background-position:center;`;
-    let brandRow = `<div class="product-meta-row"><div class="product-brand-tag">${p.brand}</div><div class="product-variant-dots">${vdots}</div></div>`;
-    let details = `${brandRow}<div class="product-name">${p.name}</div><div class="product-price">${pr}</div>`;
-    if (compactMode) details = `<div class="product-brand-tag">${p.brand}</div>`;
-    return `<div class="product-card" data-product-id="${p.id}" onclick="goToProduct(${p.id})"><div class="product-img-wrap"><div class="product-img-placeholder" style="${imgStyle}"></div>${b}<div class="product-hover-actions"><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Bag</button><button class="btn-wish ${inW?'wished':''}" onclick="event.stopPropagation();toggleWish(${p.id})"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button></div></div>${details}</div>`;
-  }
-  function buildArrivals(){document.getElementById('arrivals-grid').innerHTML=PRODUCTS.slice(0,10).map(p=>productCard(p,false)).join('');}
-
-  function buildCategoryNav(){
-    document.getElementById('category-nav').innerHTML=['ALL','NEW IN','CLOTHING','DRESSES','TOPS','BOTTOMS','JACKETS','SETS','ACCESSORIES','BAGS','JEWELRY','SUNGLASSES'].map(c=>`<button class="cat-nav-item ${S.activeCollectionCat===c?'active':''}" onclick="setCollectionCat('${c}')">${c}</button>`).join('');
-  }
-  function setCollectionCat(c){S.activeCollectionCat=c;buildCategoryNav();renderAllProducts();}
-
-  function applyProductFilters(prods, filterObj){
-    let f = [...prods];
-    if(filterObj.cat!=='all') f=f.filter(p=>p.cat===filterObj.cat);
-    if(filterObj.size!=='all') f=f.filter(p=>p.sizes?.includes(filterObj.size));
-    if(filterObj.price!=='all'){
-      f=f.filter(p=>{let pr=p.salePrice||p.price;if(filterObj.price==='under2k') return pr<2000;if(filterObj.price==='2kto5k') return pr>=2000 && pr<=5000;if(filterObj.price==='over5k') return pr>5000;return true;});
-    }
-    return f;
-  }
-  function applyCuratedSort(prods, curatedVal){
-    let f = [...prods];
-    if(curatedVal==='best-selling') f.sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
-    else if(curatedVal==='price-low-high') f.sort((a,b)=>(a.salePrice||a.price)-(b.salePrice||b.price));
-    else if(curatedVal==='price-high-low') f.sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
-    else if(curatedVal==='oldest-newest') f.sort((a,b)=>a.id-b.id);
-    else if(curatedVal==='newest-oldest') f.sort((a,b)=>b.id-a.id);
-    return f;
-  }
-
-  function renderAllProducts(){
-    let g=document.getElementById('all-products-grid');if(!g)return;
-    let f=PRODUCTS;
-    if(S.activeCollectionCat!=='ALL'){
-      let map={'NEW IN':'new','CLOTHING':'clothing','DRESSES':'dresses','TOPS':'tops','BOTTOMS':'bottoms','JACKETS':'jackets','SETS':'sets','ACCESSORIES':'accessories','BAGS':'bags','JEWELRY':'jewelry','SUNGLASSES':'sunglasses'};
-      let k=map[S.activeCollectionCat]||S.activeCollectionCat.toLowerCase();
-      if(k==='clothing') f=PRODUCTS.filter(p=>['dresses','tops','bottoms','jackets','sets'].includes(p.cat));
-      else if(k==='accessories') f=PRODUCTS.filter(p=>['bags','jewelry','sunglasses','accessories'].includes(p.cat));
-      else if(S.activeCollectionCat==='NEW IN') f=PRODUCTS.filter(p=>p.badge==='new');
-      else f=PRODUCTS.filter(p=>p.cat===k);
-    }
-    f = applyProductFilters(f, S.filter);
-    f = applyCuratedSort(f, S.curated);
-    let cols = S.gridCols === 3 ? 3 : (S.gridCols === 1 ? 1 : 2);
-    g.style.gridTemplateColumns = cols === 1 ? '1fr' : `repeat(${cols}, 1fr)`;
-    g.style.gap = cols === 3 ? '0px' : '12px';
-    let compact = cols === 3;
-    g.className = `product-grid collection-grid ${compact ? 'compact' : ''}`;
-    g.innerHTML=f.map(p=>productCard(p, compact)).join('');
-  }
-  function toggleGrid(){if(S.gridCols === 1) S.gridCols = 2;else if(S.gridCols === 2) S.gridCols = 3;else S.gridCols = 1;updateGridToggleIcon(); renderAllProducts();}
-  function toggleGridCat(){if(S.gridColsCat === 1) S.gridColsCat = 2;else if(S.gridColsCat === 2) S.gridColsCat = 3;else S.gridColsCat = 1;updateGridToggleIconCat(); renderCategoryProducts();}
-  function toggleImageMode(){
-    S.imageMode = S.imageMode === 'model' ? 'ghost' : 'model';
-    updateDressIcon();
-    renderAllProducts();
-    if(S.currentPage==='home') buildArrivals();
-    if(S.currentPage==='product-detail') { let p = PRODUCTS.find(x=>x.id === parseInt(window.location.hash.split('-')[1])); if(p) renderProductPage(p); }
-    if(S.currentPage==='category') renderCategoryProducts();
-    if(S.currentPage==='cart') renderCartPage();
-    if(document.getElementById('campaign-slides')) buildCampaignSlider();
-  }
-  function toggleFilterDropdown(){document.getElementById('filter-options').classList.toggle('open');}
-  function toggleCuratedDropdown(){document.getElementById('curated-options').classList.toggle('open');}
-  function toggleFilterDropdownCat(){document.getElementById('filter-options-cat').classList.toggle('open');}
-  function toggleCuratedDropdownCat(){document.getElementById('curated-options-cat').classList.toggle('open');}
-  function applyFilter(type,val){
-    S.filter[type]=val;
-    const radioName = type==='cat' ? 'filterCat' : (type==='size' ? 'filterSize' : 'filterPrice');
-    document.querySelectorAll(`input[name=${radioName}]`).forEach(r=>r.checked = false);
-    const targetRadio = document.querySelector(`input[name=${radioName}][value="${val}"]`);
-    if(targetRadio) targetRadio.checked = true;
-    renderAllProducts();
-  }
-  function applyCurated(val){S.curated=val;renderAllProducts();}
-  function applyCategoryFilter(type,val){
-    S.catFilter[type]=val;
-    const radioName = type==='cat' ? 'filterCatCat' : (type==='size' ? 'filterSizeCat' : 'filterPriceCat');
-    document.querySelectorAll(`input[name=${radioName}]`).forEach(r=>r.checked = false);
-    const targetRadio = document.querySelector(`input[name=${radioName}][value="${val}"]`);
-    if(targetRadio) targetRadio.checked = true;
-    renderCategoryProducts();
-  }
-  function applyCategoryCurated(val){S.catCurated=val;renderCategoryProducts();}
-
-  function renderCategoryProducts(){
-    if(!S.currentCategoryPage) return;
-    let catProducts = getCategoryProducts(S.currentCategoryPage);
-    catProducts = applyProductFilters(catProducts, S.catFilter);
-    catProducts = applyCuratedSort(catProducts, S.catCurated);
-    let g = document.getElementById('category-products-grid');
-    if(!g) return;
-    let cols = S.gridColsCat === 3 ? 3 : (S.gridColsCat === 1 ? 1 : 2);
-    g.style.gridTemplateColumns = cols === 1 ? '1fr' : `repeat(${cols}, 1fr)`;
-    g.style.gap = '12px';
-    let compact = cols === 3;
-    g.className = `product-grid ${compact ? 'collection-grid compact' : ''}`;
-    g.innerHTML=catProducts.map(p=>productCard(p, compact)).join('');
-  }
-
-  function getCategoryProducts(cat){
-    if(cat==='clothing') return PRODUCTS.filter(p=>['dresses','tops','bottoms','jackets','sets'].includes(p.cat));
-    else if(cat==='accessories') return PRODUCTS.filter(p=>['bags','jewelry','sunglasses','accessories'].includes(p.cat));
-    else return PRODUCTS.filter(p=>p.cat===cat);
-  }
-
-  function navigateToCategory(cat){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-category').classList.add('active'); S.currentPage='category'; S.currentCategoryPage=cat;
-    let title=cat.charAt(0).toUpperCase()+cat.slice(1); document.getElementById('category-title').textContent=title;
-    S.catFilter={cat:'all',size:'all',price:'all'}; S.catCurated='best-selling'; S.gridColsCat=2;
-    updateGridToggleIconCat();
-    document.querySelectorAll('#filter-options-cat input[type=radio]').forEach(r=>{if(r.value==='all') r.checked=true;});
-    renderCategoryProducts();
-    window.scrollTo({top:0,behavior:'smooth'}); window.history.pushState({page:'category',cat:cat},'',`#category-${cat}`);
-  }
-
-  function addToRecentlyViewed(id){let p = PRODUCTS.find(x=>x.id===id); if(!p) return; S.recentlyViewed = S.recentlyViewed.filter(x=>x.id!==id); S.recentlyViewed.unshift(p); if(S.recentlyViewed.length > 6) S.recentlyViewed.pop();}
-
-  function goToProduct(id){closeSearch();let p=PRODUCTS.find(x=>x.id===id);if(!p)return;addToRecentlyViewed(id);window.history.pushState({page:'product',id:id},'',`#product-${id}`);renderProductPage(p);}
-
-  let touchStartX = 0; let touchEndX = 0;
-  function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
-  function handleTouchEnd(e) { touchEndX = e.changedTouches[0].screenX; handleSwipe(); }
-  function handleSwipe() {
-    const diff = touchStartX - touchEndX;
-    const totalSlides = document.querySelectorAll('#product-slides .product-slide').length;
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) { goToSlide(Math.min(S.currentSlide + 1, totalSlides - 1)); }
-      else { goToSlide(Math.max(S.currentSlide - 1, 0)); }
-    }
-  }
-
-  function renderProductPage(p){
-    document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
-    let page=document.getElementById('page-product-detail'); page.classList.add('active'); S.currentPage='product-detail';
-    const ci = S.productVariantSelections[p.id] !== undefined ? S.productVariantSelections[p.id] : 0;
-    let priceAmt = p.salePrice || p.price;
-    let price = p.salePrice ? `<span style="color:#111">${formatPrice(p.salePrice)}</span> <span style="color:#aaa;text-decoration:line-through;font-size:14px">${formatPrice(p.price)}</span>` : formatPrice(p.price);
-    let imgs = getVariantImages(p, ci);
-    let slidesHtml = imgs.map((img) => `<div class="product-slide" style="background-image:url('${img}');"></div>`).join('');
-    let dotsHtml = imgs.map((_, i) => `<button class="slider-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></button>`).join('');
-    let vdots = (p.colors||[]).map((c, i) => {
-      let selClass = (i === ci) ? ' selected' : '';
-      return `<span class="variant-dot${selClass}" style="background:${c};" onclick="selectVariant(${p.id}, ${i}, event)"></span>`;
-    }).join('');
-    let inWishlist = S.wishlist.some(w=>w.id===p.id);
-    page.innerHTML=`
-      <div class="product-slider" id="product-slider">
-        <button class="product-detail-dress-toggle" onclick="toggleImageMode()"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/dress.png?v=1778246333" class="dress-toggle-icon" alt="Dress View"></button>
-        <div class="product-slides" id="product-slides">${slidesHtml}</div>
-        <div class="slider-dots" id="slider-dots">${dotsHtml}</div>
+  let metaHtml;
+  if (compactMode) {
+    metaHtml = `<div class="product-brand-tag">${product.brand}</div>`;
+  } else {
+    metaHtml = `
+      <div class="product-meta-row">
+        <div class="product-brand-tag">${product.brand}</div>
+        <div class="product-variant-dots">${dotsHtml}</div>
       </div>
-      <div class="product-info">
-        <div class="modal-brand-row"><div class="modal-brand">${p.brand}</div><div class="modal-variant-dots">${vdots}</div></div>
-        <div class="modal-title">${p.name}</div>
-        <div class="modal-price">${price}</div><p class="modal-desc">${p.desc}</p>
-        <div class="modal-size-label">Size</div><div class="modal-sizes">${p.sizes.map(s=>`<button class="modal-size-btn" onclick="selSize(this,'${s}')">${s}</button>`).join('')}</div>
-        <div class="product-actions">
-          <div class="product-actions-top">
-            <button class="modal-add-btn" id="modal-add-btn" onclick="addToCartFromDetail(${p.id})">Add to Cart</button>
-            <button class="modal-wish-btn ${inWishlist?'wished':''}" onclick="toggleWish(${p.id})"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-          </div>
-          <button class="modal-buy-btn" onclick="buyNowFromDetail(${p.id})">Buy Now</button>
-        </div>
-        <div class="ai-disclaimer-notice">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          <p>Select editorial imagery may include AI-assisted creative production. Product accuracy remains a priority.</p>
-        </div>
-        <div class="info-collapse" id="collapse-shipping"><div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping &amp; Returns <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">Complimentary shipping over ${formatPrice(3000)}. Free returns within 30 days. Orders processed within 1-3 business days.</div></div>
-        <div class="info-collapse" id="collapse-features"><div class="info-collapse-header" onclick="toggleInfoCollapse('features')">Product Features <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">Premium fabrication. Ethically sourced materials. Designed for timeless wear.</div></div>
-        <div class="info-collapse" id="collapse-care"><div class="info-collapse-header" onclick="toggleInfoCollapse('care')">Composition &amp; Care <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">100% natural fibers. Dry clean recommended. Cool iron if needed.</div></div>
-        <div class="info-collapse" id="collapse-fit"><div class="info-collapse-header" onclick="toggleInfoCollapse('fit')">Size &amp; Fit <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body"><p class="disclaimer-text">The images displayed are AI-generated editorial representations. Garments are measured based on a standard size Small. Model imagery may vary slightly due to AI generation. Please refer to the <a href="size-guide.html" class="size-guide-link" target="_blank">size guide</a> for precise measurements.</p></div></div>
-        <div class="complete-look"><div class="complete-look-title">Complete the Look</div><div class="product-grid" style="grid-template-columns:repeat(2,1fr);" id="complete-look-grid"></div></div>
-        <div class="reviews-section"><div class="reviews-title">Reviews</div><p class="no-reviews">No reviews yet.</p><button class="write-review-btn">Write a Review</button></div>
-        <div class="recently-viewed-section" id="recently-viewed-section"><div class="recently-viewed-title">Recently Viewed</div><div class="product-grid recently-viewed-grid" id="recently-viewed-grid" style="grid-template-columns:repeat(2,1fr);"></div></div>
-      </div>
-      <footer id="product-footer"></footer>
+      <div class="product-name">${product.name}</div>
+      <div class="product-price">${priceHtml}</div>
     `;
-    buildFooter('product-footer'); renderCompleteLook(p); renderRecentlyViewed();
-    S.currentSlide = 0;
-    const slider = document.getElementById('product-slider'); if (slider) { slider.addEventListener('touchstart', handleTouchStart, {passive: true}); slider.addEventListener('touchend', handleTouchEnd, {passive: true}); }
-    updateDressIcon();
-    window.scrollTo({top:0,behavior:'smooth'});
   }
-  function addToCartFromDetail(id){
-    if(!S.selSize){ toast('Please select a size'); return; }
-    addToCart(id, S.selSize);
-  }
-  function buyNowFromDetail(id){
-    if(!S.selSize){ toast('Please select a size'); return; }
-    addToCart(id, S.selSize);
-    toast('Checkout coming soon!');
-  }
-  function renderCompleteLook(p){let related=PRODUCTS.filter(x=>x.id!==p.id).slice(0,4);document.getElementById('complete-look-grid').innerHTML=related.map(pr=>productCard(pr,false)).join('');}
-  function renderRecentlyViewed(){
-    let grid = document.getElementById('recently-viewed-grid'); if(!grid) return;
-    if(S.recentlyViewed.length === 0){ document.getElementById('recently-viewed-section').style.display = 'none'; return; }
-    document.getElementById('recently-viewed-section').style.display = 'block';
-    grid.innerHTML = S.recentlyViewed.slice(0,4).map(p=>productCard(p,false)).join('');
-  }
-  function goToSlide(i){
-    S.currentSlide = i;
-    document.getElementById('product-slides').style.transform=`translateX(-${i*100}%)`;
-    document.querySelectorAll('#slider-dots .slider-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
-  }
-  function toggleInfoCollapse(s){document.getElementById('collapse-'+s).classList.toggle('open');}
-  function selSize(btn,s){document.querySelectorAll('.modal-size-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');S.selSize=s;}
 
-  function openCart(){document.getElementById('cart-backdrop').classList.add('open');document.getElementById('cart-panel').classList.add('open');renderCart();}
-  function closeCart(){document.getElementById('cart-backdrop').classList.remove('open');document.getElementById('cart-panel').classList.remove('open');}
-  function addToCart(id,size){
-    let p=PRODUCTS.find(x=>x.id===id);if(!p)return;
-    let sz=size||p.sizes[0];
-    const variantIdx = S.productVariantSelections[id] !== undefined ? S.productVariantSelections[id] : 0;
-    const variantColor = (p.colors && p.colors[variantIdx]) ? p.colors[variantIdx] : p.color;
-    let ex=S.cart.find(i=>i.id===id && i.size===sz && i.variantIdx===variantIdx);
-    if(ex) ex.qty++;
-    else S.cart.push({...p, qty:1, size:sz, variantIdx, color: variantColor});
-    updateBadges();renderCart();toast(`${p.name} added to bag`);
-  }
-  function removeFromCart(id,sz,vi){S.cart=S.cart.filter(i=>!(i.id===id&&i.size===sz&&i.variantIdx==vi));updateBadges();renderCart();}
-  function changeQty(id,sz,d,vi){let i=S.cart.find(x=>x.id===id&&x.size===sz&&x.variantIdx==vi);if(i)i.qty=Math.max(1,i.qty+d);renderCart();}
-  function moveCartYmal(dir) { const totalSlides = PRODUCTS.length; S.cartYmalIndex = (S.cartYmalIndex + dir + totalSlides) % totalSlides; const track = document.getElementById('cart-ymal-track'); if (track) track.style.transform = `translateX(-${S.cartYmalIndex * 100}%)`; }
+  return `
+    <div class="product-card" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
+      <div class="product-img-wrap">
+        <div class="product-img-placeholder" style="background-image:url('${thumbnail}'); background-size:cover; background-position:center;"></div>
+        ${badgeHtml}
+        <div class="product-hover-actions">
+          <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${product.id}')">Add to Bag</button>
+          <button class="btn-wish ${isWished ? "wished" : ""}" onclick="event.stopPropagation(); toggleWish('${product.id}')">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+        </div>
+      </div>
+      ${metaHtml}
+    </div>
+  `;
+}
 
-  function handleCartYmalTouchStart(e) { S.cartYmalTouchStart = e.changedTouches[0].screenX; }
-  function handleCartYmalTouchEnd(e) {
-    S.cartYmalTouchEnd = e.changedTouches[0].screenX;
-    const diff = S.cartYmalTouchStart - S.cartYmalTouchEnd;
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) moveCartYmal(1);
-      else moveCartYmal(-1);
+// ============================================================
+// IMAGE MODE TOGGLE (model ↔ ghost)
+// ============================================================
+function updateDressIcon() {
+  document.querySelectorAll(".dress-toggle-icon, .product-detail-dress-toggle img").forEach(icon => {
+    icon.style.filter = S.imageMode === "ghost" ? "grayscale(1) opacity(.55)" : "none";
+  });
+}
+
+function toggleImageMode() {
+  S.imageMode = S.imageMode === "model" ? "ghost" : "model";
+  updateDressIcon();
+  if (S.currentPage === "home") buildArrivals();
+  if (S.currentPage === "products") renderAllProducts();
+  if (S.currentPage === "category") renderCategoryProducts();
+  if (S.currentPage === "cart") renderCartPage();
+  if (S.currentPage === "product-detail") {
+    const productId = window.location.hash.replace("#product-", "");
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (product) renderProductPage(product);
+  }
+  if (document.getElementById("campaign-slides")) buildCampaignSlider();
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function openSearch() {
+  document.getElementById("search-overlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => document.getElementById("search-input").focus(), 100);
+  renderSearchDefault();
+}
+function closeSearch() {
+  document.getElementById("search-overlay").classList.remove("open");
+  document.body.style.overflow = "";
+  document.getElementById("search-input").value = "";
+}
+function renderSearchDefault() {
+  const body = document.getElementById("search-body");
+  body.innerHTML = `
+    <div class="search-suggestions">
+      <div class="search-suggestions-title">Popular Searches</div>
+      <div class="search-suggestion-pills">${SEARCH_SUGGESTIONS.map(s => `<button class="search-pill" onclick="searchFor('${s}')">${s}</button>`).join("")}</div>
+    </div>
+    <div class="search-results-title">Featured Pieces</div>
+    <div class="search-results-grid">${PRODUCTS.slice(0, 4).map(p => productCard(p, false)).join("")}</div>
+  `;
+}
+function handleSearch(val) {
+  const v = val.trim().toLowerCase();
+  if (!v) { renderSearchDefault(); return; }
+  const results = PRODUCTS.filter(p =>
+    p.name.toLowerCase().includes(v) ||
+    p.brand.toLowerCase().includes(v) ||
+    p.category.toLowerCase().includes(v) ||
+    p.variants.some(variant => variant.color.toLowerCase().includes(v))
+  );
+  const body = document.getElementById("search-body");
+  const suggestPills = SEARCH_SUGGESTIONS.filter(s => s.toLowerCase().includes(v)).slice(0, 4);
+  body.innerHTML = `
+    <div class="search-suggestions" style="margin-bottom:20px;">
+      <div class="search-suggestions-title">Suggested</div>
+      <div class="search-suggestion-pills">${suggestPills.map(s => `<button class="search-pill" onclick="searchFor('${s}')">${s}</button>`).join("") || '<span style="font-size:11px;color:#bbb;letter-spacing:0.08em;">No suggestions</span>'}</div>
+    </div>
+    <div class="search-results-title">${results.length} Result${results.length !== 1 ? "s" : ""} for "${val}"</div>
+    ${results.length ? `<div class="search-results-grid">${results.map(p => productCard(p, false)).join("")}</div>` : `<div class="search-no-results">No pieces found.</div>`}
+  `;
+}
+function searchFor(term) {
+  document.getElementById("search-input").value = term;
+  handleSearch(term);
+}
+
+// ============================================================
+// GRID TOGGLE
+// ============================================================
+function updateGridToggleIcon(svgId, cols) {
+  const container = document.getElementById(svgId);
+  if (!container) return;
+  const blocks = container.querySelectorAll(".grid-block");
+  blocks[0]?.classList.toggle("active", cols >= 1);
+  blocks[1]?.classList.toggle("active", cols >= 2);
+  blocks[2]?.classList.toggle("active", cols >= 3);
+}
+function toggleGrid() {
+  S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1;
+  updateGridToggleIcon("grid-toggle-svg", S.gridCols);
+  renderAllProducts();
+}
+function toggleGridCat() {
+  S.gridColsCat = S.gridColsCat === 1 ? 2 : S.gridColsCat === 2 ? 3 : 1;
+  updateGridToggleIcon("grid-toggle-svg-cat", S.gridColsCat);
+  renderCategoryProducts();
+}
+
+// ============================================================
+// BANNER
+// ============================================================
+function buildBanner() {
+  const e0 = document.getElementById("announce-text-0");
+  const e1 = document.getElementById("announce-text-1");
+  if (!e0 || !e1) return;
+  e0.textContent = BANNER_ITEMS[0];
+  e0.classList.add("active");
+  e1.classList.remove("active");
+  S.announceIdx = 0;
+  if (S.announceTimer) clearInterval(S.announceTimer);
+  S.announceTimer = setInterval(() => {
+    const curr = S.announceIdx;
+    const next = (curr + 1) % BANNER_ITEMS.length;
+    document.getElementById(`announce-text-${curr % 2}`)?.classList.remove("active");
+    const nextEl = document.getElementById(`announce-text-${next % 2}`);
+    if (nextEl) { nextEl.textContent = BANNER_ITEMS[next]; nextEl.classList.add("active"); }
+    S.announceIdx = next;
+  }, 2000);
+}
+
+// ============================================================
+// MENU
+// ============================================================
+function openMenu() { document.getElementById("menu-backdrop").classList.add("open"); document.getElementById("menu-drawer").classList.add("open"); }
+function closeMenu() { document.getElementById("menu-backdrop").classList.remove("open"); document.getElementById("menu-drawer").classList.remove("open"); }
+function toggleBrandsCollapse() { document.getElementById("brands-collapse").classList.toggle("open"); }
+function toggleSubmenuCollapse(id) { document.getElementById(`${id}-collapse`)?.classList.toggle("open"); }
+
+// ============================================================
+// CATEGORY SCROLL (homepage)
+// ============================================================
+function buildCategories() {
+  const container = document.getElementById("category-scroll");
+  if (!container) return;
+  container.innerHTML = CATEGORIES.map(cat => {
+    const bgStyle = cat.image
+      ? `background-image:url('${cat.image}'); background-size:cover; background-position:center;`
+      : "background:#f0ede8;";
+    return `
+      <div class="cat-card" onclick="navigateToCategory('${cat.filter}')">
+        <div class="cat-placeholder" style="${bgStyle}"></div>
+        <div class="cat-overlay"></div>
+        <div class="cat-label-wrap">
+          <span class="cat-name">${cat.name}</span>
+          <span class="cat-shop">Shop now</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+  setTimeout(updateCategoryProgress, 50);
+}
+
+function updateCategoryProgress() {
+  const scroll = document.getElementById("category-scroll");
+  const bar = document.getElementById("category-progress-bar");
+  if (!scroll || !bar) return;
+  const maxScroll = scroll.scrollWidth - scroll.clientWidth;
+  if (maxScroll <= 0) { bar.style.width = "0%"; return; }
+  bar.style.width = Math.min(100, Math.max(0, (scroll.scrollLeft / maxScroll) * 100)) + "%";
+}
+
+// ============================================================
+// HOME — NEW ARRIVALS
+// ============================================================
+function buildArrivals() {
+  const grid = document.getElementById("arrivals-grid");
+  if (grid) grid.innerHTML = PRODUCTS.slice(0, 10).map(p => productCard(p, false)).join("");
+}
+
+// ============================================================
+// PRODUCT FILTERING & SORTING (shared logic)
+// ============================================================
+function applyProductFilters(products, filterObj) {
+  let filtered = [...products];
+  if (filterObj.cat !== "all") filtered = filtered.filter(p => p.category === filterObj.cat);
+  if (filterObj.size !== "all") filtered = filtered.filter(p => p.sizes?.includes(filterObj.size));
+  if (filterObj.price !== "all") {
+    filtered = filtered.filter(p => {
+      const price = p.salePrice ?? p.price;
+      if (filterObj.price === "under2k") return price < 2000;
+      if (filterObj.price === "2kto5k") return price >= 2000 && price <= 5000;
+      if (filterObj.price === "over5k") return price > 5000;
+      return true;
+    });
+  }
+  return filtered;
+}
+
+function applyCuratedSort(products, sortKey) {
+  const sorted = [...products];
+  if (sortKey === "best-selling") sorted.sort((a, b) => (b.salePrice ?? b.price) - (a.salePrice ?? a.price));
+  else if (sortKey === "price-low-high") sorted.sort((a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price));
+  else if (sortKey === "price-high-low") sorted.sort((a, b) => (b.salePrice ?? b.price) - (a.salePrice ?? a.price));
+  else if (sortKey === "oldest-newest") sorted.sort((a, b) => PRODUCTS.indexOf(a) - PRODUCTS.indexOf(b));
+  else if (sortKey === "newest-oldest") sorted.sort((a, b) => PRODUCTS.indexOf(b) - PRODUCTS.indexOf(a));
+  return sorted;
+}
+
+function getCategoryProducts(cat) {
+  if (cat === "clothing") return PRODUCTS.filter(p => ["dresses", "tops", "bottoms", "jackets", "sets"].includes(p.category));
+  if (cat === "accessories") return PRODUCTS.filter(p => ["bags", "jewelry", "sunglasses", "accessories"].includes(p.category));
+  return PRODUCTS.filter(p => p.category === cat);
+}
+
+// ============================================================
+// COLLECTION PAGE (All Products)
+// ============================================================
+function buildCategoryNav() {
+  const tabs = ["ALL","NEW IN","CLOTHING","DRESSES","TOPS","BOTTOMS","JACKETS","SETS","ACCESSORIES","BAGS","JEWELRY","SUNGLASSES"];
+  document.getElementById("category-nav").innerHTML = tabs.map(tab =>
+    `<button class="cat-nav-item ${S.activeCollectionCat === tab ? "active" : ""}" onclick="setCollectionCat('${tab}')">${tab}</button>`
+  ).join("");
+}
+
+function setCollectionCat(tab) {
+  S.activeCollectionCat = tab;
+  buildCategoryNav();
+  renderAllProducts();
+}
+
+function renderAllProducts() {
+  const grid = document.getElementById("all-products-grid");
+  if (!grid) return;
+
+  let products = [...PRODUCTS];
+
+  // Category nav filter
+  if (S.activeCollectionCat !== "ALL") {
+    const catMap = {
+      "NEW IN": null, "CLOTHING": "clothing", "DRESSES": "dresses",
+      "TOPS": "tops", "BOTTOMS": "bottoms", "JACKETS": "jackets",
+      "SETS": "sets", "ACCESSORIES": "accessories", "BAGS": "bags",
+      "JEWELRY": "jewelry", "SUNGLASSES": "sunglasses"
+    };
+    const key = catMap[S.activeCollectionCat];
+    if (S.activeCollectionCat === "NEW IN") {
+      products = products.filter(p => p.badge === "new");
+    } else if (key === "clothing") {
+      products = products.filter(p => ["dresses","tops","bottoms","jackets","sets"].includes(p.category));
+    } else if (key === "accessories") {
+      products = products.filter(p => ["bags","jewelry","sunglasses","accessories"].includes(p.category));
+    } else if (key) {
+      products = products.filter(p => p.category === key);
     }
   }
 
-  function renderCart(){
-    let body=document.getElementById('cart-body'),foot=document.getElementById('cart-foot');
-    document.getElementById('cart-item-count').textContent=S.cart.reduce((a,i)=>a+i.qty,0);
-    if(!S.cart.length){
-      body.innerHTML = `<div class="cart-empty-state"><div class="cart-empty-msg">Your bag is currently empty.</div><div class="cart-empty-sub">Add some pieces you love to get started.</div><div class="cart-free-ship"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Free shipping on orders over ${formatPrice(3000)}</div><div style="width:100%;margin-top:24px;"><div class="cart-ymal-title">You May Also Like</div><div class="cart-ymal-slider" id="cart-ymal-slider"><div class="cart-ymal-track" id="cart-ymal-track" style="display:flex;transition:transform 0.4s ease;">${PRODUCTS.map(p=>`<div style="min-width:100%;"><div class="product-grid" style="grid-template-columns:1fr;">${productCard(p,false)}</div></div>`).join('')}</div></div><div class="swipe-hint">← Swipe →</div></div></div>`;
-      foot.innerHTML = `<div class="cart-subtotal"><span class="cart-subtotal-label">Total</span><span class="cart-subtotal-val">${formatPrice(0)}</span></div><div class="cart-ship-note">Free shipping on orders over ${formatPrice(3000)}</div><button class="btn-checkout-main" onclick="closeCart();navigateTo('products');">Continue Shopping</button>`;
-      setTimeout(()=>{
-        const slider = document.getElementById('cart-ymal-slider');
-        if(slider){ slider.addEventListener('touchstart', handleCartYmalTouchStart, {passive: true}); slider.addEventListener('touchend', handleCartYmalTouchEnd, {passive: true}); }
-      },100);
-      return;
-    }
-    body.innerHTML=S.cart.map(i=>{let p=i.salePrice||i.price; let imgs = getVariantImages(i, i.variantIdx||0); const vi = i.variantIdx !== undefined ? i.variantIdx : 0; return `<div class="cart-item-row" onclick="goToProduct(${i.id})"><div class="cart-item-img-placeholder" style="background-image:url('${imgs[0]}');"></div><div style="flex:1"><div class="ci-brand">${i.brand}</div><div class="ci-name">${i.name}</div><div class="ci-meta">${i.color} · ${i.size}</div><div class="ci-qty"><button class="ci-qty-btn" onclick="event.stopPropagation(); changeQty(${i.id},'${i.size}',-1,${vi})">−</button><span class="ci-qty-num">${i.qty}</span><button class="ci-qty-btn" onclick="event.stopPropagation(); changeQty(${i.id},'${i.size}',1,${vi})">+</button></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button class="ci-remove" onclick="event.stopPropagation(); removeFromCart(${i.id},'${i.size}',${vi})">×</button><span class="ci-price">${formatPrice(p*i.qty)}</span></div></div>`;}).join('');
-    let sub=S.cart.reduce((a,i)=>a+(i.salePrice||i.price)*i.qty,0);
-    foot.innerHTML=`<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">${formatPrice(sub)}</span></div><div class="cart-ship-note">${sub>=3000?'Free shipping applied':'R250 shipping · Free over '+formatPrice(3000)}</div><button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="checkout()">Checkout</button>`;
+  products = applyProductFilters(products, S.filter);
+  products = applyCuratedSort(products, S.curated);
+
+  const cols = S.gridCols;
+  const compact = cols === 3;
+  grid.style.gridTemplateColumns = cols === 1 ? "1fr" : `repeat(${cols}, 1fr)`;
+  grid.style.gap = compact ? "0px" : "12px";
+  grid.className = `product-grid collection-grid${compact ? " compact" : ""}`;
+  grid.innerHTML = products.map(p => productCard(p, compact)).join("");
+}
+
+function toggleFilterDropdown() { document.getElementById("filter-options").classList.toggle("open"); }
+function toggleCuratedDropdown() { document.getElementById("curated-options").classList.toggle("open"); }
+function applyFilter(type, val) {
+  S.filter[type] = val;
+  const nameMap = { cat: "filterCat", size: "filterSize", price: "filterPrice" };
+  document.querySelectorAll(`input[name=${nameMap[type]}]`).forEach(r => r.checked = r.value === val);
+  renderAllProducts();
+}
+function applyCurated(val) { S.curated = val; renderAllProducts(); }
+
+// ============================================================
+// CATEGORY PAGE
+// ============================================================
+function navigateToCategory(cat) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page-category").classList.add("active");
+  S.currentPage = "category";
+  S.currentCategoryPage = cat;
+  document.getElementById("category-title").textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+  S.catFilter = { cat: "all", size: "all", price: "all" };
+  S.catCurated = "best-selling";
+  S.gridColsCat = 2;
+  updateGridToggleIcon("grid-toggle-svg-cat", S.gridColsCat);
+  document.querySelectorAll("#filter-options-cat input[type=radio]").forEach(r => { if (r.value === "all") r.checked = true; });
+  renderCategoryProducts();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.history.pushState({ page: "category", cat }, "", `#category-${cat}`);
+}
+
+function renderCategoryProducts() {
+  if (!S.currentCategoryPage) return;
+  let products = getCategoryProducts(S.currentCategoryPage);
+  products = applyProductFilters(products, S.catFilter);
+  products = applyCuratedSort(products, S.catCurated);
+  const grid = document.getElementById("category-products-grid");
+  if (!grid) return;
+  const cols = S.gridColsCat;
+  const compact = cols === 3;
+  grid.style.gridTemplateColumns = cols === 1 ? "1fr" : `repeat(${cols}, 1fr)`;
+  grid.style.gap = "12px";
+  grid.className = `product-grid${compact ? " collection-grid compact" : ""}`;
+  grid.innerHTML = products.map(p => productCard(p, compact)).join("");
+}
+
+function toggleFilterDropdownCat() { document.getElementById("filter-options-cat").classList.toggle("open"); }
+function toggleCuratedDropdownCat() { document.getElementById("curated-options-cat").classList.toggle("open"); }
+function applyCategoryFilter(type, val) {
+  S.catFilter[type] = val;
+  const nameMap = { cat: "filterCatCat", size: "filterSizeCat", price: "filterPriceCat" };
+  document.querySelectorAll(`input[name=${nameMap[type]}]`).forEach(r => r.checked = r.value === val);
+  renderCategoryProducts();
+}
+function applyCategoryCurated(val) { S.catCurated = val; renderCategoryProducts(); }
+
+// ============================================================
+// PRODUCT DETAIL PAGE
+// ============================================================
+function addToRecentlyViewed(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+  S.recentlyViewed = S.recentlyViewed.filter(p => p.id !== productId);
+  S.recentlyViewed.unshift(product);
+  if (S.recentlyViewed.length > 6) S.recentlyViewed.pop();
+}
+
+let touchStartX = 0, touchEndX = 0;
+function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
+function handleTouchEnd(e) {
+  touchEndX = e.changedTouches[0].screenX;
+  const diff = touchStartX - touchEndX;
+  if (Math.abs(diff) > 40) {
+    const totalSlides = document.querySelectorAll("#product-slides .product-slide").length;
+    goToSlide(diff > 0 ? Math.min(S.currentSlide + 1, totalSlides - 1) : Math.max(S.currentSlide - 1, 0));
+  }
+}
+
+function goToProduct(productId) {
+  closeSearch();
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+  addToRecentlyViewed(productId);
+  window.history.pushState({ page: "product", id: productId }, "", `#product-${productId}`);
+  renderProductPage(product);
+}
+
+function renderProductPage(product) {
+  document.querySelectorAll(".page").forEach(pg => pg.classList.remove("active"));
+  const page = document.getElementById("page-product-detail");
+  page.classList.add("active");
+  S.currentPage = "product-detail";
+  S.selectedSize = null;
+
+  const variantIndex = S.productVariantSelections[product.id] ?? 0;
+  const images = getProductImages(product, variantIndex);
+  const isWished = S.wishlist.some(w => w.id === product.id);
+
+  const priceHtml = product.salePrice
+    ? `<span style="color:#111">${formatPrice(product.salePrice)}</span> <span style="color:#aaa;text-decoration:line-through;font-size:14px">${formatPrice(product.price)}</span>`
+    : formatPrice(product.price);
+
+  const slidesHtml = images.map(url => `<div class="product-slide" style="background-image:url('${url}');"></div>`).join("");
+  const dotsHtml = images.map((_, i) => `<button class="slider-dot${i === 0 ? " active" : ""}" onclick="goToSlide(${i})"></button>`).join("");
+  const variantDotsDetailHtml = product.variants.map((v, i) =>
+    `<span class="variant-dot${i === variantIndex ? " selected" : ""}" style="background:${v.swatch};" onclick="selectVariant('${product.id}', ${i}, event)"></span>`
+  ).join("");
+
+  page.innerHTML = `
+    <div class="product-slider" id="product-slider">
+      <button class="product-detail-dress-toggle" onclick="toggleImageMode()">
+        <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/dress.png?v=1778246333" class="dress-toggle-icon" alt="Toggle view">
+      </button>
+      <div class="product-slides" id="product-slides">${slidesHtml}</div>
+      <div class="slider-dots" id="slider-dots">${dotsHtml}</div>
+    </div>
+    <div class="product-info">
+      <div class="modal-brand-row">
+        <div class="modal-brand">${product.brand}</div>
+        <div class="modal-variant-dots">${variantDotsDetailHtml}</div>
+      </div>
+      <div class="modal-title">${product.name}</div>
+      <div class="modal-price">${priceHtml}</div>
+      <p class="modal-desc">${product.description}</p>
+      <div class="modal-size-label">Size</div>
+      <div class="modal-sizes">${product.sizes.map(s => `<button class="modal-size-btn" onclick="selectSize(this, '${s}')">${s}</button>`).join("")}</div>
+      <div class="product-actions">
+        <div class="product-actions-top">
+          <button class="modal-add-btn" onclick="addToCartFromDetail('${product.id}')">Add to Cart</button>
+          <button class="modal-wish-btn${isWished ? " wished" : ""}" onclick="toggleWish('${product.id}')">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+        </div>
+        <button class="modal-buy-btn" onclick="buyNowFromDetail('${product.id}')">Buy Now</button>
+      </div>
+      <div class="ai-disclaimer-notice">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <p>Select editorial imagery may include AI-assisted creative production. Product accuracy remains a priority.</p>
+      </div>
+      <div class="info-collapse" id="collapse-shipping">
+        <div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping &amp; Returns <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="info-collapse-body">Complimentary shipping over ${formatPrice(3000)}. Free returns within 30 days. Orders processed within 1-3 business days.<div class="shipping-calc"><input type="text" id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
+      </div>
+      <div class="info-collapse" id="collapse-features">
+        <div class="info-collapse-header" onclick="toggleInfoCollapse('features')">Product Features <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="info-collapse-body">Premium fabrication. Ethically sourced materials. Designed for timeless wear.</div>
+      </div>
+      <div class="info-collapse" id="collapse-care">
+        <div class="info-collapse-header" onclick="toggleInfoCollapse('care')">Composition &amp; Care <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="info-collapse-body">100% natural fibers. Dry clean recommended. Cool iron if needed.</div>
+      </div>
+      <div class="info-collapse" id="collapse-fit">
+        <div class="info-collapse-header" onclick="toggleInfoCollapse('fit')">Size &amp; Fit <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="info-collapse-body"><p class="disclaimer-text">The images displayed are AI-generated editorial representations. Garments are measured based on a standard size Small. Model imagery may vary slightly due to AI generation. Please refer to the <a href="size-guide.html" class="size-guide-link" target="_blank">size guide</a> for precise measurements.</p></div>
+      </div>
+      <div class="complete-look">
+        <div class="complete-look-title">Complete the Look</div>
+        <div class="product-grid" style="grid-template-columns:repeat(2,1fr);" id="complete-look-grid"></div>
+      </div>
+      <div class="reviews-section">
+        <div class="reviews-title">Reviews</div>
+        <p class="no-reviews">No reviews yet.</p>
+        <button class="write-review-btn">Write a Review</button>
+      </div>
+      <div class="recently-viewed-section" id="recently-viewed-section">
+        <div class="recently-viewed-title">Recently Viewed</div>
+        <div class="product-grid recently-viewed-grid" id="recently-viewed-grid" style="grid-template-columns:repeat(2,1fr);"></div>
+      </div>
+    </div>
+    <footer id="product-footer"></footer>
+  `;
+
+  buildFooter("product-footer");
+
+  // Related products
+  const related = PRODUCTS.filter(p => p.id !== product.id).slice(0, 4);
+  document.getElementById("complete-look-grid").innerHTML = related.map(p => productCard(p, false)).join("");
+
+  // Recently viewed
+  const rvSection = document.getElementById("recently-viewed-section");
+  const rvGrid = document.getElementById("recently-viewed-grid");
+  if (S.recentlyViewed.length === 0) {
+    rvSection.style.display = "none";
+  } else {
+    rvSection.style.display = "block";
+    rvGrid.innerHTML = S.recentlyViewed.slice(0, 4).map(p => productCard(p, false)).join("");
   }
 
-  function renderCartPage(){
-    let el=document.getElementById('cart-page-content'); if(!el) return;
-    if(!S.cart.length){
-      el.innerHTML = `<div class="cart-page-empty"><div class="cart-page-empty-title">Your bag is empty</div><div class="cart-page-empty-sub">Discover pieces you'll love from our curated collections.</div><button class="cart-page-btn primary" onclick="navigateTo('products')">Continue Shopping</button></div>`;
-      return;
-    }
-    let itemsHtml = S.cart.map(i=>{
-      let p=i.salePrice||i.price; const vi = i.variantIdx !== undefined ? i.variantIdx : 0; let imgs = getVariantImages(i, vi);
-      return `<div class="cart-page-item" onclick="goToProduct(${i.id})">
-        <div class="cart-page-img" style="background-image:url('${imgs[0]}');"></div>
-        <div class="cart-page-details">
-          <div class="cart-page-brand">${i.brand}</div>
-          <div class="cart-page-name">${i.name}</div>
-          <div class="cart-page-meta">${i.color} · Size ${i.size}</div>
-          <div class="cart-page-qty-wrap">
-            <button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty(${i.id},'${i.size}',-1,${vi});renderCartPage();">−</button>
-            <span class="cart-page-qty-num">${i.qty}</span>
-            <button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty(${i.id},'${i.size}',1,${vi});renderCartPage();">+</button>
+  // Touch slider
+  S.currentSlide = 0;
+  const slider = document.getElementById("product-slider");
+  if (slider) {
+    slider.addEventListener("touchstart", handleTouchStart, { passive: true });
+    slider.addEventListener("touchend", handleTouchEnd, { passive: true });
+  }
+
+  updateDressIcon();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function goToSlide(i) {
+  S.currentSlide = i;
+  const slides = document.getElementById("product-slides");
+  if (slides) slides.style.transform = `translateX(-${i * 100}%)`;
+  document.querySelectorAll("#slider-dots .slider-dot").forEach((d, j) => d.classList.toggle("active", j === i));
+}
+
+function toggleInfoCollapse(id) { document.getElementById(`collapse-${id}`)?.classList.toggle("open"); }
+function selectSize(btn, size) {
+  document.querySelectorAll(".modal-size-btn").forEach(b => b.classList.remove("sel"));
+  btn.classList.add("sel");
+  S.selectedSize = size;
+}
+
+function addToCartFromDetail(productId) {
+  if (!S.selectedSize) { toast("Please select a size"); return; }
+  addToCart(productId, S.selectedSize);
+}
+function buyNowFromDetail(productId) {
+  if (!S.selectedSize) { toast("Please select a size"); return; }
+  addToCart(productId, S.selectedSize);
+  toast("Checkout coming soon!");
+}
+
+function calculateShipping() {
+  const postal = document.getElementById("postal-code-input")?.value.trim();
+  const resultEl = document.getElementById("shipping-result");
+  if (!resultEl) return;
+  if (!postal || postal.length < 3) { resultEl.textContent = "Please enter a valid postal code."; return; }
+  const estimate = Math.floor(Math.random() * 150) + 50;
+  resultEl.textContent = `Estimated shipping to ${postal}: ${formatPrice(estimate)} (3-5 business days)`;
+}
+
+// ============================================================
+// CART
+// ============================================================
+function openCart() {
+  document.getElementById("cart-backdrop").classList.add("open");
+  document.getElementById("cart-panel").classList.add("open");
+  renderCart();
+}
+function closeCart() {
+  document.getElementById("cart-backdrop").classList.remove("open");
+  document.getElementById("cart-panel").classList.remove("open");
+}
+
+function addToCart(productId, size) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+  const variantIndex = S.productVariantSelections[productId] ?? 0;
+  const variant = product.variants[variantIndex] ?? product.variants[0];
+  const selectedSize = size ?? product.sizes[0];
+
+  const existing = S.cart.find(i => i.productId === productId && i.size === selectedSize && i.variantIndex === variantIndex);
+  if (existing) {
+    existing.qty++;
+  } else {
+    S.cart.push({
+      productId,
+      variantIndex,
+      size: selectedSize,
+      qty: 1,
+      // Snapshot display data (avoids repeated lookups; mirrors Firestore cart item structure)
+      name: product.name,
+      brand: product.brand,
+      price: product.price,
+      salePrice: product.salePrice,
+      color: variant.color,
+      thumbnail: getProductThumbnail(product, variantIndex),
+    });
+  }
+
+  updateBadges();
+  renderCart();
+  toast(`${product.name} added to bag`);
+}
+
+function removeFromCart(productId, size, variantIndex) {
+  S.cart = S.cart.filter(i => !(i.productId === productId && i.size === size && i.variantIndex === variantIndex));
+  updateBadges();
+  renderCart();
+}
+
+function changeQty(productId, size, delta, variantIndex) {
+  const item = S.cart.find(i => i.productId === productId && i.size === size && i.variantIndex === variantIndex);
+  if (item) item.qty = Math.max(1, item.qty + delta);
+  renderCart();
+}
+
+// Cart YMAL swipe
+function handleCartYmalTouchStart(e) { S.cartYmalTouchStart = e.changedTouches[0].screenX; }
+function handleCartYmalTouchEnd(e) {
+  S.cartYmalTouchEnd = e.changedTouches[0].screenX;
+  const diff = S.cartYmalTouchStart - S.cartYmalTouchEnd;
+  if (Math.abs(diff) > 40) moveCartYmal(diff > 0 ? 1 : -1);
+}
+function moveCartYmal(dir) {
+  const totalSlides = Math.ceil(PRODUCTS.length / 2);
+  S.cartYmalIndex = (S.cartYmalIndex + dir + totalSlides) % totalSlides;
+  const track = document.getElementById("cart-ymal-track");
+  if (track) track.style.transform = `translateX(-${S.cartYmalIndex * 100}%)`;
+}
+
+function renderCart() {
+  const body = document.getElementById("cart-body");
+  const foot = document.getElementById("cart-foot");
+  document.getElementById("cart-item-count").textContent = S.cart.reduce((a, i) => a + i.qty, 0);
+
+  if (!S.cart.length) {
+    // YMAL pairs
+    const pairedProducts = [];
+    for (let i = 0; i < PRODUCTS.length; i += 2) pairedProducts.push(PRODUCTS.slice(i, i + 2));
+
+    body.innerHTML = `
+      <div class="cart-empty-state">
+        <div class="cart-empty-msg">Your bag is currently empty.</div>
+        <div class="cart-empty-sub">Add some pieces you love to get started.</div>
+        <div class="cart-free-ship">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Free shipping on orders over ${formatPrice(3000)}
+        </div>
+        <div style="width:100%;margin-top:24px;">
+          <div class="cart-ymal-title">You May Also Like</div>
+          <div class="cart-ymal-slider" id="cart-ymal-slider">
+            <div class="cart-ymal-track" id="cart-ymal-track" style="display:flex;transition:transform 0.4s ease;">
+              ${pairedProducts.map(pair => `<div class="cart-ymal-slide">${pair.map(p => productCard(p, false)).join("")}</div>`).join("")}
+            </div>
+          </div>
+          <div class="swipe-hint">← Swipe →</div>
+        </div>
+      </div>
+    `;
+    foot.innerHTML = `
+      <div class="cart-subtotal"><span class="cart-subtotal-label">Total</span><span class="cart-subtotal-val">${formatPrice(0)}</span></div>
+      <div class="cart-ship-note">Free shipping on orders over ${formatPrice(3000)}</div>
+      <button class="btn-checkout-main" onclick="closeCart();navigateTo('products');">Continue Shopping</button>
+    `;
+    setTimeout(() => {
+      const slider = document.getElementById("cart-ymal-slider");
+      if (slider) {
+        slider.addEventListener("touchstart", handleCartYmalTouchStart, { passive: true });
+        slider.addEventListener("touchend", handleCartYmalTouchEnd, { passive: true });
+      }
+    }, 100);
+    return;
+  }
+
+  body.innerHTML = S.cart.map(item => {
+    const effectivePrice = item.salePrice ?? item.price;
+    return `
+      <div class="cart-item-row" onclick="goToProduct('${item.productId}')">
+        <div class="cart-item-img-placeholder" style="background-image:url('${item.thumbnail}');"></div>
+        <div style="flex:1">
+          <div class="ci-brand">${item.brand}</div>
+          <div class="ci-name">${item.name}</div>
+          <div class="ci-meta">${item.color} · ${item.size}</div>
+          <div class="ci-qty">
+            <button class="ci-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',-1,${item.variantIndex})">−</button>
+            <span class="ci-qty-num">${item.qty}</span>
+            <button class="ci-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',1,${item.variantIndex})">+</button>
           </div>
         </div>
-        <div class="cart-page-price">${formatPrice(p*i.qty)}</div>
-        <button class="cart-page-remove" onclick="event.stopPropagation(); removeFromCart(${i.id},'${i.size}',${vi});renderCartPage();">×</button>
-      </div>`;
-    }).join('');
-    let sub=S.cart.reduce((a,i)=>a+(i.salePrice||i.price)*i.qty,0);
-    el.innerHTML = `<h1 class="cart-page-title">Your Bag (${S.cart.reduce((a,i)=>a+i.qty,0)} items)</h1>
-      ${itemsHtml}
-      <div class="cart-page-promo">
-        <input class="cart-page-promo-input" type="text" placeholder="PROMO CODE">
-        <button class="cart-page-promo-btn" onclick="toast('Promo code applied!')">Apply</button>
-      </div>
-      <div class="cart-page-summary">
-        <div class="cart-page-subtotal">Subtotal <strong>${formatPrice(sub)}</strong></div>
-        <div class="cart-page-ship-note">${sub>=3000?'Free shipping applied':'R250 shipping · Free over '+formatPrice(3000)}</div>
-        <div class="cart-page-actions">
-          <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
-          <button class="cart-page-btn primary" onclick="checkout()">Proceed to Checkout</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <button class="ci-remove" onclick="event.stopPropagation(); removeFromCart('${item.productId}','${item.size}',${item.variantIndex})">×</button>
+          <span class="ci-price">${formatPrice(effectivePrice * item.qty)}</span>
         </div>
-      </div>`;
-  }
-  function checkout(){toast('Checkout coming soon!');}
+      </div>
+    `;
+  }).join("");
 
-  function openWishlist(){document.getElementById('wish-backdrop').classList.add('open');document.getElementById('wish-panel').classList.add('open');renderWishlist();}
-  function closeWishlist(){document.getElementById('wish-backdrop').classList.remove('open');document.getElementById('wish-panel').classList.remove('open');}
-  function toggleWish(id){let p=PRODUCTS.find(x=>x.id===id);let idx=S.wishlist.findIndex(w=>w.id===id);if(idx>=0){S.wishlist.splice(idx,1);toast('Removed from wishlist');}else{S.wishlist.push(p);toast(`${p.name} saved to wishlist`);}updateBadges();buildArrivals();renderWishlist();renderAllProducts();}
-  function renderWishlist(){
-    let el=document.getElementById('wish-body'); document.getElementById('wish-count').textContent=S.wishlist.length;
-    if(!S.wishlist.length){ el.innerHTML=`<div class="wish-empty-state"><p class="wish-empty-login"><a>Login</a> or <a>create an account</a> to save your wishlist to your account and access it anywhere.</p><div class="wish-empty-msg">Your wishlist is empty.</div><button class="wish-continue-btn" onclick="closeWishlist();navigateTo('products');">Continue Shopping</button></div>`; return; }
-    el.innerHTML=S.wishlist.map(p=>{let imgs = getProductImages(p); return `<div class="wish-item"><div class="wish-img" style="background-image:url('${imgs[0]}'); background-size:cover; background-position:center;"></div><div style="flex:1"><div class="wish-name">${p.name}</div><div class="wish-price">${formatPrice(p.salePrice||p.price)}</div><button class="wish-add-btn" onclick="addToCart(${p.id});toggleWish(${p.id})">Add to Cart</button></div><button style="background:none;border:none;font-size:16px;color:#bbb;align-self:flex-start;cursor:pointer" onclick="toggleWish(${p.id})">×</button></div>`;}).join('');
-  }
+  const subtotal = S.cart.reduce((a, i) => a + (i.salePrice ?? i.price) * i.qty, 0);
+  foot.innerHTML = `
+    <div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">${formatPrice(subtotal)}</span></div>
+    <div class="cart-ship-note">${subtotal >= 3000 ? "Free shipping applied" : `R250 shipping · Free over ${formatPrice(3000)}`}</div>
+    <button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button>
+    <button class="btn-checkout-main" onclick="checkout()">Checkout</button>
+  `;
+}
 
-  function buildEditorial(){let g=['linear-gradient(160deg,#1c1c1c,#2a2a2a)','linear-gradient(160deg,#2a2520,#1c1c1c)','linear-gradient(160deg,#c8bfb0,#a89888)','linear-gradient(160deg,#e0dbd4,#c8bfb0)','linear-gradient(160deg,#d4c5a9,#c8b898)','linear-gradient(160deg,#2a2a2a,#1a1a1a)'];let el=document.getElementById('editorial-grid');if(el)el.innerHTML=g.map((g,i)=>`<div style="aspect-ratio:2/3;background:${g};cursor:pointer;position:relative;"><div style="position:absolute;bottom:20px;left:20px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:rgba(255,255,255,0.8)">Story ${(i+1).toString().padStart(2,'0')}</div></div>`).join('');}
+function renderCartPage() {
+  const el = document.getElementById("cart-page-content");
+  if (!el) return;
+  if (!S.cart.length) {
+    el.innerHTML = `
+      <div class="cart-page-empty">
+        <div class="cart-page-empty-title">Your bag is empty</div>
+        <div class="cart-page-empty-sub">Discover pieces you'll love from our curated collections.</div>
+        <button class="cart-page-btn primary" onclick="navigateTo('products')">Continue Shopping</button>
+      </div>
+    `;
+    return;
+  }
+  const itemsHtml = S.cart.map(item => {
+    const effectivePrice = item.salePrice ?? item.price;
+    return `
+      <div class="cart-page-item" onclick="goToProduct('${item.productId}')">
+        <div class="cart-page-img" style="background-image:url('${item.thumbnail}');"></div>
+        <div class="cart-page-details">
+          <div class="cart-page-brand">${item.brand}</div>
+          <div class="cart-page-name">${item.name}</div>
+          <div class="cart-page-meta">${item.color} · Size ${item.size}</div>
+          <div class="cart-page-qty-wrap">
+            <button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',-1,${item.variantIndex});renderCartPage();">−</button>
+            <span class="cart-page-qty-num">${item.qty}</span>
+            <button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',1,${item.variantIndex});renderCartPage();">+</button>
+          </div>
+        </div>
+        <div class="cart-page-price">${formatPrice(effectivePrice * item.qty)}</div>
+        <button class="cart-page-remove" onclick="event.stopPropagation(); removeFromCart('${item.productId}','${item.size}',${item.variantIndex});renderCartPage();">×</button>
+      </div>
+    `;
+  }).join("");
 
-  function buildCampaignSlider(){
-    const slidesContainer=document.getElementById('campaign-slides'); if(!slidesContainer)return;
-    const productsPerSlide=4; const totalSlides=Math.ceil(PRODUCTS.length/productsPerSlide); let html='';
-    for(let i=0;i<totalSlides;i++){ const start=i*productsPerSlide,end=start+productsPerSlide; const slideProducts=PRODUCTS.slice(start,end); html+=`<div class="campaign-slide">${slideProducts.map(p=>productCard(p,false)).join('')}</div>`; }
-    slidesContainer.innerHTML=html; S.campaignSlideIndex=0; updateCampaignSliderPosition();
-  }
-  function moveCampaignSlider(dir){ const totalSlides=Math.ceil(PRODUCTS.length/4); S.campaignSlideIndex=(S.campaignSlideIndex+dir+totalSlides)%totalSlides; updateCampaignSliderPosition(); }
-  function updateCampaignSliderPosition(){ const slides=document.getElementById('campaign-slides'); if(slides) slides.style.transform=`translateX(-${S.campaignSlideIndex*100}%)`; }
+  const subtotal = S.cart.reduce((a, i) => a + (i.salePrice ?? i.price) * i.qty, 0);
+  const totalItems = S.cart.reduce((a, i) => a + i.qty, 0);
 
-  function selectCurrency(code) {
-    S.currency = code;
-    document.querySelectorAll('.footer-currency-label').forEach(el => {
-      el.textContent = CURRENCIES[code]?.label || code;
-    });
-    document.querySelectorAll('.currency-dropdown, .lang-dropdown').forEach(d=>d.classList.remove('open'));
-    if(S.currentPage === 'home') buildArrivals();
-    if(S.currentPage === 'products') renderAllProducts();
-    if(S.currentPage === 'category') renderCategoryProducts();
-    if(S.currentPage === 'cart') renderCartPage();
-    if(S.currentPage === 'product-detail') {
-      const id = parseInt(window.location.hash.split('-')[1]);
-      const p = PRODUCTS.find(x => x.id === id);
-      if(p) renderProductPage(p);
-    }
-    renderCart();
-    toast(`Currency set to ${CURRENCIES[code]?.label || code}`);
-  }
+  el.innerHTML = `
+    <h1 class="cart-page-title">Your Bag (${totalItems} item${totalItems !== 1 ? "s" : ""})</h1>
+    ${itemsHtml}
+    <div class="cart-page-promo">
+      <input class="cart-page-promo-input" type="text" placeholder="PROMO CODE">
+      <button class="cart-page-promo-btn" onclick="toast('Promo code applied!')">Apply</button>
+    </div>
+    <div class="cart-page-summary">
+      <div class="cart-page-subtotal">Subtotal <strong>${formatPrice(subtotal)}</strong></div>
+      <div class="cart-page-ship-note">${subtotal >= 3000 ? "Free shipping applied" : `R250 shipping · Free over ${formatPrice(3000)}`}</div>
+      <div class="cart-page-actions">
+        <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
+        <button class="cart-page-btn primary" onclick="checkout()">Proceed to Checkout</button>
+      </div>
+    </div>
+  `;
+}
 
-  function buildFooter(id){
-    let el=document.getElementById(id);if(!el)return;
-    const currLabel = CURRENCIES[S.currency]?.label || 'ZAR R';
-    el.innerHTML=`<div class="footer-top"><div class="footer-collapse" id="footer-collapse-shop-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('shop-${id}')">Shop <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>New In</a></li><li><a>Dresses</a></li><li><a>Tops</a></li><li><a>Bottoms</a></li><li><a>Jackets</a></li><li><a>Sets</a></li><li><a>Bags</a></li><li><a>Jewelry</a></li><li><a>Sale</a></li></ul></div></div><div class="footer-collapse" id="footer-collapse-brands-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('brands-${id}')">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>JANEDORE</a></li><li><a>NIRIUS CO</a></li><li><a>JEWELRYBK</a></li></ul></div></div><div class="footer-collapse" id="footer-collapse-policies-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('policies-${id}')">Policies <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>About</a></li><li><a>Shipping Policy</a></li><li><a>Return Policy</a></li><li><a>Privacy Policy</a></li><li><a>Terms &amp; Conditions</a></li></ul></div></div><div class="footer-collapse" id="footer-collapse-help-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('help-${id}')">Help <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links"><li><a>FAQ</a></li><li><a>Size Guide</a></li><li><a>Shipping</a></li><li><a>Returns</a></li><li><a>Contact</a></li></ul></div></div></div><p class="footer-about">Janedore is a curated multi-brand fashion destination rooted in South Africa — championing designers who create with intention, for a wardrobe that endures.</p><div class="footer-currency-lang"><div class="footer-currency" onclick="toggleFooterDropdown('currency-${id}','${id}')"><span class="footer-currency-label">${currLabel}</span> <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="currency-dropdown" id="currency-dropdown-${id}"><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('ZAR')">ZAR R</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('BWP')">BWP P</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('LSL')">LSL M</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('NAD')">NAD N$</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('USD')">USD $</div></div></div><div class="footer-lang" onclick="toggleFooterDropdown('lang-${id}','${id}')">EN <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="lang-dropdown" id="lang-dropdown-${id}"><div class="dropdown-option" onclick="event.stopPropagation()">EN</div></div></div></div><div class="footer-bottom"><div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div></div>`;
+function checkout() { toast("Checkout coming soon!"); }
+
+// ============================================================
+// WISHLIST
+// ============================================================
+function openWishlist() {
+  document.getElementById("wish-backdrop").classList.add("open");
+  document.getElementById("wish-panel").classList.add("open");
+  renderWishlist();
+}
+function closeWishlist() {
+  document.getElementById("wish-backdrop").classList.remove("open");
+  document.getElementById("wish-panel").classList.remove("open");
+}
+
+function toggleWish(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  const idx = S.wishlist.findIndex(w => w.id === productId);
+  if (idx >= 0) {
+    S.wishlist.splice(idx, 1);
+    toast("Removed from wishlist");
+  } else {
+    S.wishlist.push(product);
+    toast(`${product.name} saved to wishlist`);
   }
-  function toggleFooterCollapse(s){document.getElementById('footer-collapse-'+s)?.classList.toggle('open');}
-  function toggleFooterDropdown(t, footerId){
-    const isCurrency = t.includes('currency');
-    const ddId = isCurrency ? `currency-dropdown-${footerId}` : `lang-dropdown-${footerId}`;
-    const dd = document.getElementById(ddId);
-    if(!dd) return;
-    const wasOpen = dd.classList.contains('open');
-    document.querySelectorAll('.currency-dropdown, .lang-dropdown').forEach(d=>d.classList.remove('open'));
-    if(!wasOpen) dd.classList.add('open');
-    if(!wasOpen) setTimeout(()=>{dd.classList.remove('open');},4000);
+  updateBadges();
+  buildArrivals();
+  renderWishlist();
+  renderAllProducts();
+}
+
+function renderWishlist() {
+  const el = document.getElementById("wish-body");
+  document.getElementById("wish-count").textContent = S.wishlist.length;
+  if (!S.wishlist.length) {
+    el.innerHTML = `
+      <div class="wish-empty-state">
+        <p class="wish-empty-login"><a>Login</a> or <a>create an account</a> to save your wishlist and access it anywhere.</p>
+        <div class="wish-empty-msg">Your wishlist is empty.</div>
+        <button class="wish-continue-btn" onclick="closeWishlist();navigateTo('products');">Continue Shopping</button>
+      </div>
+    `;
+    return;
   }
-  function subscribeNewsletter(){let v=document.getElementById('nl-email').value;if(!v||!v.includes('@')){toast('Please enter a valid email');return;}toast(`Welcome! You're subscribed.`);document.getElementById('nl-email').value='';}
-  function toast(msg){let w=document.getElementById('toast-wrap'),t=document.createElement('div');t.className='toast-item';t.innerHTML=`<div class="toast-dot"></div>${msg}`;w.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='all 0.3s';setTimeout(()=>t.remove(),300);},2800);}
-  function updateBadges(){let c=S.cart.reduce((a,i)=>a+i.qty,0);document.getElementById('cart-badge').textContent=c;document.getElementById('cart-badge').style.display=c>0?'flex':'none';document.getElementById('wish-badge').textContent=S.wishlist.length;document.getElementById('wish-badge').style.display=S.wishlist.length>0?'flex':'none';}
-  function navigateTo(page){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-'+page)?.classList.add('active'); S.currentPage=page; window.scrollTo({top:0,behavior:'smooth'});
-    if(page==='editorial')buildEditorial();
-    if(page==='products'){S.currentCategoryPage=null;buildCategoryNav();renderAllProducts();updateGridToggleIcon();}
-    if(page==='campaign'){buildCampaignSlider();}
-    if(page==='cart'){renderCartPage();}
-    window.history.pushState({page:page},'',page==='home'?'/':'#'+page);
+  el.innerHTML = S.wishlist.map(p => {
+    const thumbnail = getProductThumbnail(p);
+    return `
+      <div class="wish-item">
+        <div class="wish-img" style="background-image:url('${thumbnail}'); background-size:cover; background-position:center;"></div>
+        <div style="flex:1">
+          <div class="wish-name">${p.name}</div>
+          <div class="wish-price">${formatPrice(p.salePrice ?? p.price)}</div>
+          <button class="wish-add-btn" onclick="addToCart('${p.id}'); toggleWish('${p.id}')">Add to Cart</button>
+        </div>
+        <button style="background:none;border:none;font-size:16px;color:#bbb;align-self:flex-start;cursor:pointer" onclick="toggleWish('${p.id}')">×</button>
+      </div>
+    `;
+  }).join("");
+}
+
+// ============================================================
+// CAMPAIGN PAGE
+// ============================================================
+function buildCampaignSlider() {
+  const slidesContainer = document.getElementById("campaign-slides");
+  if (!slidesContainer) return;
+  const productsPerSlide = 4;
+  const totalSlides = Math.ceil(PRODUCTS.length / productsPerSlide);
+  let html = "";
+  for (let i = 0; i < totalSlides; i++) {
+    const slice = PRODUCTS.slice(i * productsPerSlide, (i + 1) * productsPerSlide);
+    html += `<div class="campaign-slide">${slice.map(p => productCard(p, false)).join("")}</div>`;
   }
-  window.addEventListener('popstate',(e)=>{if(e.state){if(e.state.page==='product'){let p=PRODUCTS.find(x=>x.id===e.state.id);if(p)renderProductPage(p);}else if(e.state.page==='category'){navigateToCategory(e.state.cat);}else navigateTo(e.state.page);}});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCart();closeWishlist();closeMenu();closeSearch();}});
-  document.addEventListener('click', e=>{
-    if(!e.target.closest('.footer-currency') && !e.target.closest('.footer-lang')){ document.querySelectorAll('.currency-dropdown, .lang-dropdown').forEach(d=>d.classList.remove('open')); }
-    if(!e.target.closest('.filter-dropdown')){ document.getElementById('filter-options')?.classList.remove('open'); document.getElementById('filter-options-cat')?.classList.remove('open'); }
-    if(!e.target.closest('.curated-dropdown')){ document.getElementById('curated-options')?.classList.remove('open'); document.getElementById('curated-options-cat')?.classList.remove('open'); }
+  slidesContainer.innerHTML = html;
+  S.campaignSlideIndex = 0;
+  updateCampaignSliderPosition();
+}
+function moveCampaignSlider(dir) {
+  const totalSlides = Math.ceil(PRODUCTS.length / 4);
+  S.campaignSlideIndex = (S.campaignSlideIndex + dir + totalSlides) % totalSlides;
+  updateCampaignSliderPosition();
+}
+function updateCampaignSliderPosition() {
+  const slides = document.getElementById("campaign-slides");
+  if (slides) slides.style.transform = `translateX(-${S.campaignSlideIndex * 100}%)`;
+}
+
+// ============================================================
+// EDITORIAL PAGE
+// ============================================================
+function buildEditorial() {
+  const gradients = [
+    "linear-gradient(160deg,#1c1c1c,#2a2a2a)",
+    "linear-gradient(160deg,#2a2520,#1c1c1c)",
+    "linear-gradient(160deg,#c8bfb0,#a89888)",
+    "linear-gradient(160deg,#e0dbd4,#c8bfb0)",
+    "linear-gradient(160deg,#d4c5a9,#c8b898)",
+    "linear-gradient(160deg,#2a2a2a,#1a1a1a)"
+  ];
+  const el = document.getElementById("editorial-grid");
+  if (el) el.innerHTML = gradients.map((g, i) => `
+    <div style="aspect-ratio:2/3;background:${g};cursor:pointer;position:relative;">
+      <div style="position:absolute;bottom:20px;left:20px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:rgba(255,255,255,0.8)">Story ${String(i + 1).padStart(2, "0")}</div>
+    </div>
+  `).join("");
+}
+
+// ============================================================
+// CURRENCY
+// ============================================================
+function selectCurrency(code) {
+  S.currency = code;
+  document.querySelectorAll(".footer-currency-label").forEach(el => {
+    el.textContent = CURRENCIES[code]?.label ?? code;
   });
-  function init(){
-    buildBanner(); buildCategories(); buildArrivals();
-    buildFooter('main-footer'); buildFooter('products-footer'); buildFooter('editorial-footer'); buildFooter('category-footer'); buildFooter('campaign-footer'); buildFooter('cart-footer');
-    updateGridToggleIcon(); updateGridToggleIconCat(); updateDressIcon();
-    if(window.location.hash.startsWith('#product-')){let id=parseInt(window.location.hash.split('-')[1]);let p=PRODUCTS.find(x=>x.id===id); if(p) renderProductPage(p);}
-    else if(window.location.hash.startsWith('#category-')){let cat=window.location.hash.split('-')[1];navigateToCategory(cat);}
-    else if(window.location.hash==='#cart'){navigateTo('cart');}
+  document.querySelectorAll(".currency-dropdown, .lang-dropdown").forEach(d => d.classList.remove("open"));
+  // Re-render active page prices
+  if (S.currentPage === "home") buildArrivals();
+  if (S.currentPage === "products") renderAllProducts();
+  if (S.currentPage === "category") renderCategoryProducts();
+  if (S.currentPage === "cart") renderCartPage();
+  if (S.currentPage === "product-detail") {
+    const productId = window.location.hash.replace("#product-", "");
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (product) renderProductPage(product);
   }
-  init();
-</script>
+  renderCart();
+  toast(`Currency set to ${CURRENCIES[code]?.label ?? code}`);
+}
 
+// ============================================================
+// FOOTER
+// ============================================================
+function buildFooter(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const currLabel = CURRENCIES[S.currency]?.label ?? "ZAR R";
+  el.innerHTML = `
+    <div class="footer-top">
+      <div class="footer-collapse" id="footer-collapse-shop-${id}">
+        <div class="footer-collapse-header" onclick="toggleFooterCollapse('shop-${id}')">Shop <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="footer-collapse-body"><ul class="footer-links"><li><a>New In</a></li><li><a>Dresses</a></li><li><a>Tops</a></li><li><a>Bottoms</a></li><li><a>Jackets</a></li><li><a>Sets</a></li><li><a>Bags</a></li><li><a>Jewelry</a></li><li><a>Sale</a></li></ul></div>
+      </div>
+      <div class="footer-collapse" id="footer-collapse-brands-${id}">
+        <div class="footer-collapse-header" onclick="toggleFooterCollapse('brands-${id}')">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="footer-collapse-body"><ul class="footer-links"><li><a>JANEDORE</a></li><li><a>NIRIUS CO</a></li><li><a>JEWELRYBK</a></li></ul></div>
+      </div>
+      <div class="footer-collapse" id="footer-collapse-policies-${id}">
+        <div class="footer-collapse-header" onclick="toggleFooterCollapse('policies-${id}')">Policies <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="footer-collapse-body"><ul class="footer-links"><li><a>About</a></li><li><a>Shipping Policy</a></li><li><a>Return Policy</a></li><li><a>Privacy Policy</a></li><li><a>Terms &amp; Conditions</a></li></ul></div>
+      </div>
+      <div class="footer-collapse" id="footer-collapse-help-${id}">
+        <div class="footer-collapse-header" onclick="toggleFooterCollapse('help-${id}')">Help <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="footer-collapse-body"><ul class="footer-links"><li><a>FAQ</a></li><li><a>Size Guide</a></li><li><a>Shipping</a></li><li><a>Returns</a></li><li><a>Contact</a></li></ul></div>
+      </div>
+    </div>
+    <p class="footer-about">Janedore is a curated multi-brand fashion destination rooted in South Africa — championing designers who create with intention, for a wardrobe that endures.</p>
+    <div class="footer-currency-lang">
+      <div class="footer-currency" onclick="toggleFooterDropdown('currency-${id}','${id}')">
+        <span class="footer-currency-label">${currLabel}</span>
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="currency-dropdown" id="currency-dropdown-${id}">
+          <div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('ZAR')">ZAR R</div>
+          <div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('BWP')">BWP P</div>
+          <div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('LSL')">LSL M</div>
+          <div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('NAD')">NAD N$</div>
+          <div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('USD')">USD $</div>
+        </div>
+      </div>
+      <div class="footer-lang" onclick="toggleFooterDropdown('lang-${id}','${id}')">
+        EN <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="lang-dropdown" id="lang-dropdown-${id}"><div class="dropdown-option" onclick="event.stopPropagation()">EN</div></div>
+      </div>
+    </div>
+    <div class="footer-bottom"><div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div></div>
+  `;
+}
+
+function toggleFooterCollapse(id) { document.getElementById(`footer-collapse-${id}`)?.classList.toggle("open"); }
+function toggleFooterDropdown(type, footerId) {
+  const isCurrency = type.includes("currency");
+  const ddId = isCurrency ? `currency-dropdown-${footerId}` : `lang-dropdown-${footerId}`;
+  const dd = document.getElementById(ddId);
+  if (!dd) return;
+  const wasOpen = dd.classList.contains("open");
+  document.querySelectorAll(".currency-dropdown, .lang-dropdown").forEach(d => d.classList.remove("open"));
+  if (!wasOpen) { dd.classList.add("open"); setTimeout(() => dd.classList.remove("open"), 4000); }
+}
+
+// ============================================================
+// NEWSLETTER
+// ============================================================
+function subscribeNewsletter() {
+  const val = document.getElementById("nl-email").value;
+  if (!val || !val.includes("@")) { toast("Please enter a valid email"); return; }
+  toast("Welcome! You're subscribed.");
+  document.getElementById("nl-email").value = "";
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg) {
+  const wrap = document.getElementById("toast-wrap");
+  const t = document.createElement("div");
+  t.className = "toast-item";
+  t.innerHTML = `<div class="toast-dot"></div>${msg}`;
+  wrap.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = "0";
+    t.style.transform = "translateX(20px)";
+    t.style.transition = "all 0.3s";
+    setTimeout(() => t.remove(), 300);
+  }, 2800);
+}
+
+// ============================================================
+// BADGES
+// ============================================================
+function updateBadges() {
+  const cartCount = S.cart.reduce((a, i) => a + i.qty, 0);
+  const cartBadge = document.getElementById("cart-badge");
+  cartBadge.textContent = cartCount;
+  cartBadge.style.display = cartCount > 0 ? "flex" : "none";
+  const wishBadge = document.getElementById("wish-badge");
+  wishBadge.textContent = S.wishlist.length;
+  wishBadge.style.display = S.wishlist.length > 0 ? "flex" : "none";
+}
+
+// ============================================================
+// PAGE NAVIGATION
+// ============================================================
+function navigateTo(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(`page-${page}`)?.classList.add("active");
+  S.currentPage = page;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (page === "editorial") buildEditorial();
+  if (page === "products") { S.currentCategoryPage = null; buildCategoryNav(); renderAllProducts(); updateGridToggleIcon("grid-toggle-svg", S.gridCols); }
+  if (page === "campaign") buildCampaignSlider();
+  if (page === "cart") renderCartPage();
+  window.history.pushState({ page }, "", page === "home" ? "/" : `#${page}`);
+}
+
+window.addEventListener("popstate", e => {
+  if (!e.state) return;
+  if (e.state.page === "product") {
+    const product = PRODUCTS.find(p => p.id === e.state.id);
+    if (product) renderProductPage(product);
+  } else if (e.state.page === "category") {
+    navigateToCategory(e.state.cat);
+  } else {
+    navigateTo(e.state.page);
+  }
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeCart(); closeWishlist(); closeMenu(); closeSearch(); }
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".footer-currency") && !e.target.closest(".footer-lang")) {
+    document.querySelectorAll(".currency-dropdown, .lang-dropdown").forEach(d => d.classList.remove("open"));
+  }
+  if (!e.target.closest(".filter-dropdown")) {
+    document.getElementById("filter-options")?.classList.remove("open");
+    document.getElementById("filter-options-cat")?.classList.remove("open");
+  }
+  if (!e.target.closest(".curated-dropdown")) {
+    document.getElementById("curated-options")?.classList.remove("open");
+    document.getElementById("curated-options-cat")?.classList.remove("open");
+  }
+});
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  buildBanner();
+  buildCategories();
+  buildArrivals();
+  ["main-footer","products-footer","editorial-footer","category-footer","campaign-footer","cart-footer"].forEach(buildFooter);
+  updateGridToggleIcon("grid-toggle-svg", S.gridCols);
+  updateGridToggleIcon("grid-toggle-svg-cat", S.gridColsCat);
+  updateDressIcon();
+
+  const catScroll = document.getElementById("category-scroll");
+  if (catScroll) catScroll.addEventListener("scroll", updateCategoryProgress);
+
+  // Handle direct URL navigation
+  const hash = window.location.hash;
+  if (hash.startsWith("#product-")) {
+    const productId = hash.replace("#product-", "");
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (product) renderProductPage(product);
+  } else if (hash.startsWith("#category-")) {
+    navigateToCategory(hash.replace("#category-", ""));
+  } else if (hash === "#cart") {
+    navigateTo("cart");
+  }
+}
+
+init();
+</script>
 </body>
 </html>
