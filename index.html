@@ -33,6 +33,28 @@
     .nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; color: #111; font-size: 20px; }
     .nav-icon-btn .badge { position: absolute; top: 1px; right: 1px; width: 15px; height: 15px; background: #111; border-radius: 50%; font-size: 8px; font-weight: 500; color: #fff; display: flex; align-items: center; justify-content: center; }
 
+    /* Desktop Header Links */
+    .desktop-nav-links { display: none; align-items: center; gap: 24px; }
+    .desktop-nav-link { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #111; cursor: pointer; transition: opacity 0.2s; }
+    .desktop-nav-link:hover { opacity: 0.7; }
+    .desktop-nav-link.sale { color: #c00; }
+
+    .desktop-utility-links { display: none; align-items: center; gap: 4px; }
+    .utility-text-link { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #111; cursor: pointer; background: none; border: none; padding: 6px 4px; transition: opacity 0.2s; }
+    .utility-text-link:hover { opacity: 0.7; }
+
+    @media (min-width: 1024px) {
+      .nav-left .nav-icon-btn { display: none; }
+      .desktop-nav-links { display: flex; }
+      .desktop-utility-links { display: flex; }
+      .nav-logo { position: static; transform: none; margin: 0 24px; }
+      #main-nav { justify-content: center; }
+      .nav-left { flex: 0; }
+      .nav-right { flex: 0; }
+      .nav-right .nav-icon-btn { display: none; }
+      .nav-right .nav-icon-btn[title="Search"] { display: flex; }
+    }
+
     #menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 950; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     #menu-backdrop.open { opacity: 1; pointer-events: all; }
     #menu-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 85vw); background: #fff; z-index: 951; transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.08); }
@@ -149,15 +171,26 @@
     .ed-cta { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #fff; display: inline-flex; align-items: center; gap: 8px; transition: gap 0.3s; }
     .ed-cta:hover { gap: 14px; }
 
-    #newsletter-section { padding: 80px 12px; text-align: center; }
+    /* Guarantees Section */
+    .guarantees-section { background: #fdfaf5; padding: 60px 12px; text-align: center; }
+    @media (min-width: 768px) { .guarantees-section { padding: 60px 16px; } }
+    .guarantees-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 900px; margin: 0 auto; }
+    @media (min-width: 640px) { .guarantees-grid { grid-template-columns: repeat(4, 1fr); } }
+    .guarantee-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .guarantee-icon { font-size: 24px; margin-bottom: 4px; }
+    .guarantee-title { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #111; }
+    .guarantee-sub { font-size: 11px; font-weight: 300; color: #666; letter-spacing: 0.04em; }
+
+    #newsletter-section { background: #fdfaf5; padding: 80px 12px; text-align: center; }
     @media (min-width: 768px) { #newsletter-section { padding: 80px 16px; } }
     .nl-title { font-family: 'Manrope', sans-serif; text-transform: uppercase; font-size: 23px; font-weight: 600; letter-spacing: 0.02em; color: #111; margin-bottom: 10px; }
     .nl-sub { font-size: 12px; font-weight: 300; color: #666; letter-spacing: 0.06em; margin-bottom: 32px; }
-    .nl-form { display: flex; max-width: 420px; margin: 0 auto; }
-    .nl-input { flex: 1; border: 1px solid #ccc; border-right: none; padding: 14px 18px; font-size: 12px; font-weight: 300; letter-spacing: 0.04em; outline: none; font-family: inherit; }
-    .nl-input:focus { border-color: #111; }
-    .nl-btn { background: #111; color: #fff; border: none; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; padding: 14px 22px; white-space: nowrap; transition: background 0.2s; }
-    .nl-btn:hover { background: #333; }
+    .nl-form { display: flex; max-width: 420px; margin: 0 auto; border-bottom: 1px solid #111; align-items: center; }
+    .nl-input { flex: 1; border: none; padding: 14px 0; font-size: 12px; font-weight: 300; letter-spacing: 0.04em; outline: none; font-family: inherit; background: transparent; }
+    .nl-input:focus { outline: none; }
+    .nl-btn { background: none; border: none; padding: 14px 0 14px 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #111; transition: opacity 0.2s; }
+    .nl-btn:hover { opacity: 0.7; }
+    .nl-btn svg { width: 16px; height: 16px; stroke: #111; fill: none; stroke-width: 1.5; }
 
     footer { background: #111; color: #fff; padding: 60px 12px 32px; }
     @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
@@ -473,12 +506,33 @@
 <div id="banner"><div class="announcement-text active" id="announce-text-0"></div><div class="announcement-text" id="announce-text-1"></div></div>
 
 <nav id="main-nav">
-  <div class="nav-left"><button class="nav-icon-btn" onclick="openMenu()"><i class="ph-light ph-list"></i></button></div>
+  <div class="nav-left">
+    <button class="nav-icon-btn" onclick="openMenu()"><i class="ph-light ph-list"></i></button>
+    <div class="desktop-nav-links">
+      <a class="desktop-nav-link" onclick="navigateTo('home')">New</a>
+      <div class="submenu-collapse" id="clothing-collapse-desktop" style="position:relative;">
+        <div class="desktop-nav-link" onclick="toggleSubmenuCollapse('clothing-desktop')" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></div>
+        <div class="submenu-collapse-body" style="position:absolute;top:100%;left:0;background:#fff;padding:12px;min-width:140px;box-shadow:0 4px 12px rgba(0,0,0,0.05);z-index:10;">
+          <a class="submenu-link" onclick="navigateToCategory('dresses');closeMenu();">Dresses</a>
+          <a class="submenu-link" onclick="navigateToCategory('tops');closeMenu();">Tops</a>
+          <a class="submenu-link" onclick="navigateToCategory('bottoms');closeMenu();">Bottoms</a>
+          <a class="submenu-link" onclick="navigateToCategory('jackets');closeMenu();">Jackets</a>
+          <a class="submenu-link" onclick="navigateToCategory('sets');closeMenu();">Sets</a>
+        </div>
+      </div>
+      <a class="desktop-nav-link" onclick="navigateToCategory('accessories')">Accessories</a>
+      <a class="desktop-nav-link" onclick="navigateToCategory('brands')">Brands</a>
+      <a class="desktop-nav-link sale" onclick="navigateTo('products')">Sale</a>
+    </div>
+  </div>
   <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="filter: brightness(0) saturate(100%); height: 28px; width: auto;"></div>
   <div class="nav-right">
     <button class="nav-icon-btn" onclick="openSearch()" title="Search"><i class="ph-light ph-magnifying-glass"></i></button>
-    <button class="nav-icon-btn" onclick="openWishlist()"><i class="ph-light ph-heart"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
-    <button class="nav-icon-btn" onclick="openCart()"><i class="ph-light ph-shopping-bag"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
+    <div class="desktop-utility-links">
+      <button class="utility-text-link" onclick="navigateTo('login')">Login</button>
+      <button class="utility-text-link" onclick="openWishlist()">Wishlist</button>
+      <button class="utility-text-link" onclick="openCart()">Cart</button>
+    </div>
   </div>
 </nav>
 
@@ -554,7 +608,34 @@
     <div class="ed-panel"><div class="ed-panel-bg" style="background:linear-gradient(135deg,#1c1c1c,#2a2a2a,#1c1c1c)"></div><div class="ed-panel-overlay"></div><div class="ed-panel-content"><div class="ed-tag">Editorial · SS25</div><div class="ed-title">The Architecture<br>of Softness</div><span class="ed-cta">Read Story →</span></div></div>
     <div class="ed-panel"><div class="ed-panel-bg" style="background:linear-gradient(135deg,#2a2520,#1c1c1c,#2a2520)"></div><div class="ed-panel-overlay"></div><div class="ed-panel-content"><div class="ed-tag">Brand Story</div><div class="ed-title">NIRIUS CO<br>Summer Campaign</div><span class="ed-cta">View Campaign →</span></div></div>
   </div>
-  <section id="newsletter-section"><div class="nl-title">Stay in the edit</div><p class="nl-sub">Exclusive access to new arrivals, private sales & editorial content.</p><div class="nl-form"><input class="nl-input" type="email" placeholder="your@email.com" id="nl-email"><button class="nl-btn" onclick="subscribeNewsletter()">Subscribe</button></div></section>
+  
+  <!-- Guarantees Section -->
+  <section class="guarantees-section">
+    <div class="guarantees-grid">
+      <div class="guarantee-item">
+        <div class="guarantee-icon">↩️</div>
+        <div class="guarantee-title">30-Day Return</div>
+        <div class="guarantee-sub">You have 30 days to return</div>
+      </div>
+      <div class="guarantee-item">
+        <div class="guarantee-icon">📦</div>
+        <div class="guarantee-title">7-14 Day Delivery</div>
+        <div class="guarantee-sub">Fast, reliable shipping</div>
+      </div>
+      <div class="guarantee-item">
+        <div class="guarantee-icon">⭐</div>
+        <div class="guarantee-title">5-Star Care</div>
+        <div class="guarantee-sub">Dedicated customer support</div>
+      </div>
+      <div class="guarantee-item">
+        <div class="guarantee-icon">✨</div>
+        <div class="guarantee-title">Curated Guarantee</div>
+        <div class="guarantee-sub">Expertly selected pieces</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="newsletter-section"><div class="nl-title">Stay in the edit</div><p class="nl-sub">Exclusive access to new arrivals, private sales & editorial content.</p><div class="nl-form"><input class="nl-input" type="email" placeholder="your@email.com" id="nl-email"><button class="nl-btn" onclick="subscribeNewsletter()"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div></section>
   <footer id="main-footer"></footer>
 </div>
 
@@ -732,453 +813,253 @@
 
 const PRODUCTS = [
   {
-    id: "sabina-linen-dress",
-    name: "Sabina Linen Dress",
-    brand: "JANEDORE",
-    category: "dresses",
-    price: 2890,
-    salePrice: null,
-    badge: "new",
-    sizes: ["XS", "S", "M", "L"],
-    description: "Crafted from premium Belgian linen. Effortless summer elegance.",
-    variants: [
-      {
-        color: "Cream",
-        swatch: "#f5f2ed",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ]
-        }
-      },
-      {
-        color: "Black",
-        swatch: "#1c1c1c",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "ventura-maxi-dress",
-    name: "Ventura Maxi Dress",
-    brand: "JANEDORE",
-    category: "dresses",
-    price: 3590,
-    salePrice: 2490,
-    badge: "sale",
-    sizes: ["XS", "S", "M", "L", "XL"],
-    description: "Fluid column silhouette in stretch crepe. The ultimate evening piece.",
-    variants: [
-      {
-        color: "Black",
-        swatch: "#1c1c1c",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      },
-      {
-        color: "Smoke",
-        swatch: "#888888",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "celeste-silk-blouse",
-    name: "Celeste Silk Blouse",
-    brand: "JANEDORE",
-    category: "tops",
-    price: 2250,
-    salePrice: null,
-    badge: "new",
-    sizes: ["XS", "S", "M", "L"],
-    description: "Hand-finished silk charmeuse in relaxed oversized drape. Italian fabrication.",
-    variants: [
-      {
-        color: "Ivory",
-        swatch: "#f5f2ed",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ]
-        }
-      },
-      {
-        color: "Sand",
-        swatch: "#e8e0d0",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "onyx-tailored-blazer",
-    name: "Onyx Tailored Blazer",
-    brand: "JANEDORE",
-    category: "jackets",
-    price: 5990,
-    salePrice: null,
-    badge: "new",
-    sizes: ["XS", "S", "M", "L"],
-    description: "Sharp single-breasted construction in Italian wool. Silk-lined.",
-    variants: [
-      {
-        color: "Black",
-        swatch: "#1c1c1c",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ]
-        }
-      },
-      {
-        color: "Charcoal",
-        swatch: "#2a2a2a",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "rio-wide-leg-trousers",
-    name: "Rio Wide-Leg Trousers",
-    brand: "JANEDORE",
-    category: "bottoms",
-    price: 2990,
-    salePrice: null,
-    badge: "",
-    sizes: ["XS", "S", "M", "L", "XL"],
-    description: "Flowing wide-leg in linen-silk blend. Effortlessly tailored.",
-    variants: [
-      {
-        color: "Sand",
-        swatch: "#d4c5a9",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ]
-        }
-      },
-      {
-        color: "Ivory",
-        swatch: "#f5f2ed",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      },
-      {
-        color: "Black",
-        swatch: "#1c1c1c",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "gold-link-necklace",
-    name: "Gold Link Necklace",
+    id: "sesame-tunnel-earrings",
+    name: "Sesame Tunel Earrings",
     brand: "NIRIUS CO",
     category: "jewelry",
-    price: 1390,
+    price: 350,
     salePrice: null,
-    badge: "new",
-    sizes: ["One Size"],
-    description: "Handcrafted 18k gold-plated brass links. Fine jewelry.",
+    badge: "NEW",
+    sizes: ["ONE SIZE"],
+    description: "Turn heads with this beautifully designed earrings.",
     variants: [
       {
-        color: "Gold",
-        swatch: "#c9a96e",
+        color: "gold",
+        swatch: "#d4af37",
         images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ]
+          model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/F724E3A3-61A2-44C0-A5FB-580EA63B46E8.png?v=1778582370"],
+          ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/ED9C0F44-2648-4687-BB86-6835647674ED.png?v=1778582369"]
         }
       }
     ]
   },
   {
-    id: "noir-wrap-midi",
-    name: "Noir Wrap Midi",
-    brand: "JANEDORE",
-    category: "dresses",
-    price: 2690,
-    salePrice: 1890,
-    badge: "sale",
-    sizes: ["XS", "S", "M", "L"],
-    description: "Fluid wrap construction in matte jersey.",
-    variants: [
-      {
-        color: "Black",
-        swatch: "#1c1c1c",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "luna-stud-earrings",
-    name: "Luna Stud Earrings",
-    brand: "JEWELRYBK",
-    category: "jewelry",
-    price: 990,
-    salePrice: null,
-    badge: "new",
-    sizes: ["One Size"],
-    description: "Minimalist dome studs in recycled sterling silver.",
-    variants: [
-      {
-        color: "Gold",
-        swatch: "#c9a96e",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ]
-        }
-      },
-      {
-        color: "Silver",
-        swatch: "#d4d4d4",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "cassis-leather-belt",
-    name: "Cassis Leather Belt",
-    brand: "JANEDORE",
-    category: "accessories",
-    price: 1790,
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
     salePrice: null,
     badge: "",
-    sizes: ["XS/S", "M/L"],
-    description: "Full-grain Italian leather with antique brass hardware.",
+    sizes: ["#"],
+    description: "#",
     variants: [
       {
-        color: "Cognac",
-        swatch: "#8b5e3c",
+        color: "#",
+        swatch: "#cccccc",
         images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ]
-        }
-      },
-      {
-        color: "Black",
-        swatch: "#1c1c1c",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
+          model: ["#"],
+          ghost: ["#"]
         }
       }
     ]
   },
   {
-    id: "soleil-crop-top",
-    name: "Soleil Crop Top",
-    brand: "JANEDORE",
-    category: "tops",
-    price: 1490,
-    salePrice: null,
-    badge: "new",
-    sizes: ["XS", "S", "M", "L"],
-    description: "Structured bra-style crop in cotton-silk twill.",
-    variants: [
-      {
-        color: "Cream",
-        swatch: "#f5f2ed",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ]
-        }
-      },
-      {
-        color: "Black",
-        swatch: "#1c1c1c",
-        images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "midnight-column-gown",
-    name: "Midnight Column Gown",
-    brand: "JANEDORE",
-    category: "dresses",
-    price: 7690,
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
     salePrice: null,
     badge: "",
-    sizes: ["XS", "S", "M", "L"],
-    description: "Floor-sweeping column in duchess satin. Made-to-order.",
+    sizes: ["#"],
+    description: "#",
     variants: [
       {
-        color: "Black",
-        swatch: "#1c1c1c",
+        color: "#",
+        swatch: "#cccccc",
         images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157"
-          ]
+          model: ["#"],
+          ghost: ["#"]
         }
       }
     ]
   },
   {
-    id: "chain-layered-bracelet",
-    name: "Chain Layered Bracelet",
-    brand: "NIRIUS CO",
-    category: "jewelry",
-    price: 1190,
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
     salePrice: null,
-    badge: "new",
-    sizes: ["One Size"],
-    description: "Multi-strand bracelet with organic link shapes.",
+    badge: "",
+    sizes: ["#"],
+    description: "#",
     variants: [
       {
-        color: "Gold",
-        swatch: "#c9a96e",
+        color: "#",
+        swatch: "#cccccc",
         images: {
-          model: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D6E8221B-9649-47E5-94C9-CBB484FFFAA4.png?v=1778348159",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371"
-          ],
-          ghost: [
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/D66EC673-63D4-4716-B161-11B18CDCFE1F.png?v=1778348157",
-            "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737"
-          ]
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
+        }
+      }
+    ]
+  },
+  {
+    id: "#",
+    name: "#",
+    brand: "#",
+    category: "#",
+    price: 0,
+    salePrice: null,
+    badge: "",
+    sizes: ["#"],
+    description: "#",
+    variants: [
+      {
+        color: "#",
+        swatch: "#cccccc",
+        images: {
+          model: ["#"],
+          ghost: ["#"]
         }
       }
     ]
@@ -1191,7 +1072,7 @@ const PRODUCTS = [
 const CATEGORIES = [
   { name: "Clothing",    filter: "clothing",    image: "" },
   { name: "Bags",        filter: "bags",        image: "" },
-  { name: "Sunglasses",  filter: "sunglasses",  image: "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B7-9AB2-0840B112BDFF.png?v=1778196371" },
+  { name: "Sunglasses",  filter: "sunglasses",  image: "" },
   { name: "Jewelry",     filter: "jewelry",     image: "" },
 ];
 
@@ -1511,7 +1392,13 @@ function buildBanner() {
 function openMenu() { document.getElementById("menu-backdrop").classList.add("open"); document.getElementById("menu-drawer").classList.add("open"); }
 function closeMenu() { document.getElementById("menu-backdrop").classList.remove("open"); document.getElementById("menu-drawer").classList.remove("open"); }
 function toggleBrandsCollapse() { document.getElementById("brands-collapse").classList.toggle("open"); }
-function toggleSubmenuCollapse(id) { document.getElementById(`${id}-collapse`)?.classList.toggle("open"); }
+function toggleSubmenuCollapse(id) { 
+  const el = document.getElementById(`${id}-collapse`);
+  if (el) el.classList.toggle("open");
+  // Also handle desktop variant
+  const desktopEl = document.getElementById(`${id}-collapse-desktop`);
+  if (desktopEl) desktopEl.classList.toggle("open");
+}
 
 // ============================================================
 // CATEGORY SCROLL (homepage)
@@ -1777,7 +1664,7 @@ function renderProductPage(product) {
       </div>
       <div class="ai-disclaimer-notice">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <p>Select editorial imagery may include AI-assisted creative production. Product accuracy remains a priority.</p>
+        <p>Select editorial imagery may include <strong>AI-assisted creative production</strong>. <strong>Product accuracy</strong> remains a priority.</p>
       </div>
       <div class="info-collapse" id="collapse-shipping">
         <div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping &amp; Returns <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
@@ -2296,11 +2183,15 @@ function toast(msg) {
 function updateBadges() {
   const cartCount = S.cart.reduce((a, i) => a + i.qty, 0);
   const cartBadge = document.getElementById("cart-badge");
-  cartBadge.textContent = cartCount;
-  cartBadge.style.display = cartCount > 0 ? "flex" : "none";
+  if(cartBadge) {
+    cartBadge.textContent = cartCount;
+    cartBadge.style.display = cartCount > 0 ? "flex" : "none";
+  }
   const wishBadge = document.getElementById("wish-badge");
-  wishBadge.textContent = S.wishlist.length;
-  wishBadge.style.display = S.wishlist.length > 0 ? "flex" : "none";
+  if(wishBadge) {
+    wishBadge.textContent = S.wishlist.length;
+    wishBadge.style.display = S.wishlist.length > 0 ? "flex" : "none";
+  }
 }
 
 // ============================================================
@@ -2345,6 +2236,10 @@ document.addEventListener("click", e => {
   if (!e.target.closest(".curated-dropdown")) {
     document.getElementById("curated-options")?.classList.remove("open");
     document.getElementById("curated-options-cat")?.classList.remove("open");
+  }
+  // Close desktop submenus
+  if (!e.target.closest(".submenu-collapse")) {
+    document.querySelectorAll(".submenu-collapse.open").forEach(el => el.classList.remove("open"));
   }
 });
 
