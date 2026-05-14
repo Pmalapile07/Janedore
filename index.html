@@ -284,16 +284,16 @@
     .collection-description p { font-size: 13px; font-weight: 300; letter-spacing: 0.05em; color: #666; line-height: 1.9; }
     .collection-description em { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; color: #444; }
 
+    /* ── COLLECTION PAGE URL TAG ── */
+    .collection-url-tag { text-align: center; padding: 20px 12px 40px; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #bbb; font-weight: 300; }
+
     .product-slider { position: relative; width: 100%; overflow: hidden; touch-action: pan-y pinch-zoom; }
     .product-slides { display: flex; transition: transform 0.4s ease; }
     .product-slide { min-width: 100%; aspect-ratio: 4/5; background: #f0ede8; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
     .slider-bars { display: flex; justify-content: center; gap: 6px; padding: 12px 0; }
     .slider-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
     .slider-bar.active { background: #111; }
-    .product-info { width: 100%;
-  max-width: 100%;
-  padding: 24px 12px;
-  margin: 0 auto; }
+    .product-info { padding: 24px 12px; max-width: 720px; margin: 0 auto; }
     @media (min-width: 768px) { .product-info { padding: 24px 16px; } }
     .product-info .modal-brand { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin-bottom: 4px; }
     .product-info .modal-brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
@@ -333,7 +333,7 @@
     .modal-add-btn { flex: 1; background: #fff; color: #111; border: 1px solid #111; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; padding: 15px; transition: background 0.2s; white-space: nowrap; width: 100%; }
     .modal-add-btn:hover { background: #f5f5f5; }
     .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
-    .modal-wish-btn { display: none; background: transparent; color: #111; border: none; font-size: 10px; padding: 13px; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .modal-wish-btn { background: transparent; color: #111; border: none; font-size: 10px; padding: 13px; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .modal-wish-btn:hover { opacity: 0.7; }
     .modal-wish-btn i { font-size: 20px; color: #111; }
     .modal-wish-btn.wished i { color: #111; font-weight: 700; }
@@ -526,6 +526,7 @@
           <a class="desktop-dropdown-item" onclick="navigateToCategory('sunglasses')">Sunglasses</a>
         </div>
       </div>
+      <a class="desktop-nav-link" onclick="navigateToCategory('perfume')">Perfume</a>
       <a class="desktop-nav-link" onclick="return false;">Brands</a>
       <a class="desktop-nav-link sale" onclick="navigateTo('products')">Sale</a>
     </div>
@@ -575,6 +576,7 @@
         <a class="submenu-link" onclick="navigateToCategory('sunglasses');closeMenu();">Sunglasses</a>
       </div>
     </div>
+    <a class="drawer-link" onclick="navigateToCategory('perfume');closeMenu();">Perfume</a>
     <div class="brands-collapse" id="brands-collapse"><div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="brands-collapse-body"><div class="brand-logo-placeholder">JANEDORE</div><div class="brand-logo-placeholder">NIRIUS CO</div><div class="brand-logo-placeholder">JEWELRYBK</div></div></div>
     <a class="drawer-link sale drawer-link-bottom" onclick="closeMenu();">Sale</a>
     <div class="drawer-spacer"></div>
@@ -676,6 +678,7 @@
               <label class="filter-option"><input type="radio" name="filter-cat-products" value="sunglasses" onchange="applyFilter('cat', 'sunglasses')"> Sunglasses</label>
               <label class="filter-option"><input type="radio" name="filter-cat-products" value="jewelry" onchange="applyFilter('cat', 'jewelry')"> Jewelry</label>
               <label class="filter-option"><input type="radio" name="filter-cat-products" value="bags" onchange="applyFilter('cat', 'bags')"> Bags</label>
+              <label class="filter-option"><input type="radio" name="filter-cat-products" value="perfume" onchange="applyFilter('cat', 'perfume')"> Perfume</label>
             </div>
             <div class="filter-group"><div class="filter-group-title">Size</div>
               <label class="filter-option"><input type="radio" name="filter-size-products" value="all" checked onchange="applyFilter('size', 'all')"> All</label>
@@ -697,6 +700,7 @@
       </div>
     </div>
     <div class="product-grid" id="all-products-grid"></div>
+    <div class="collection-url-tag">janedore.com/collections/all-products</div>
   </section>
   <footer id="products-footer"></footer>
 </div>
@@ -730,6 +734,7 @@
       </div>
     </div>
     <div class="product-grid" id="category-products-grid"></div>
+    <div class="collection-url-tag" id="category-url-tag"></div>
   </section>
   <footer id="category-footer"></footer>
 </div>
@@ -767,6 +772,7 @@ const DOM = {
   categoryProductsGrid: document.getElementById("category-products-grid"),
   categoryNameTag: document.getElementById("category-name-tag"),
   categoryDescription: document.getElementById("category-description"),
+  categoryUrlTag: document.getElementById("category-url-tag"),
   productDetail: document.getElementById("page-product-detail"),
   cartBody: document.getElementById("cart-body"),
   cartFoot: document.getElementById("cart-foot"),
@@ -792,7 +798,8 @@ async function fetchProducts() {
     { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 25, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-06-10T08:00:00Z", updatedAt: "2025-06-12T09:00:00Z", variants: [{ color: "#AF3E06", swatch: "#AF3E06", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/375A1989-FF72-4FFB-8CFA-A1F3D1087A16.png?v=1778661217"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/DCEB48F7-418B-4B08-AB3C-DEBDA811BB8A.png?v=1778661216", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/304DEB42-EF19-48CD-BFFE-99DD12047BCF.png?v=1778661216"] } }] },
     { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: "2025-06-01T09:00:00Z", updatedAt: "2025-06-05T11:00:00Z", variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/380342AD-F212-4446-B884-B529331D58AF.png?v=1778661139"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/305153C3-8A08-4E0D-A9A0-62FD641949AA.png?v=1778661139"] } }] },
     { id: "janedore-leather-pouch", sku: "ACC-JLP-007", name: "Janedore Debossed Leather Pouch", brand: "JANEDORE", category: "bags", price: 50, salePrice: null, badge: null, sizes: ["OS"], stock: 50, status: "active", featured: false, description: "Supple debossed leather pouch.", productFeatures: "Genuine leather.", compositionCare: "100% Leather.", shippingReturns: "Free with sunglass purchase.", createdAt: "2025-06-01T08:00:00Z", updatedAt: "2025-06-10T10:00:00Z", variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6471.png?v=1778661344"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6471.png?v=1778661344"] } }] },
-    { id: "janedore-aqua-neck-top", sku: "TOP-ANT-001", name: "Janedore Watergarden Bottle Neck Top", brand: "JANEDORE", category: "tops", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "A refined top with a sculptural neckline.", productFeatures: "Soft-touch cotton blend.", compositionCare: "95% Cotton, 5% Elastane.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-01T08:00:00Z", updatedAt: "2025-07-02T10:00:00Z", variants: [{ color: "Aqua", swatch: "#C0CEE7", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6508.png?v=1778677090"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6510.png?v=1778677090"] } }] }
+    { id: "janedore-aqua-neck-top", sku: "TOP-ANT-001", name: "Janedore Watergarden Bottle Neck Top", brand: "JANEDORE", category: "tops", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "A refined top with a sculptural neckline.", productFeatures: "Soft-touch cotton blend.", compositionCare: "95% Cotton, 5% Elastane.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-01T08:00:00Z", updatedAt: "2025-07-02T10:00:00Z", variants: [{ color: "Aqua", swatch: "#C0CEE7", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6508.png?v=1778677090"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6510.png?v=1778677090"] } }] },
+    { id: "thato-rumination-tea-perfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Perfum", brand: "THATO", category: "perfume", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance inspired by quiet moments — tea-infused warmth with soft floral undertones.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum (fragrance), aqua.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-15T08:00:00Z", updatedAt: "2025-07-16T10:00:00Z", variants: [{ color: "Pink Rain", swatch: "#F9E6E1", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/E324C537-6E82-4CE5-B875-23DB1F8D4BB8.png?v=1778774821"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/EC72D88B-3FEB-4E6C-BCBB-9602AD1BB825.png?v=1778774760"] } }, { color: "Quiet Dusk", swatch: "#DAD4CD", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/E324C537-6E82-4CE5-B875-23DB1F8D4BB8.png?v=1778774821"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/F31F7B89-0F64-4E33-9720-E562FAF410B7.png?v=1778775526"] } }] }
   ];
 }
 
@@ -805,7 +812,8 @@ const CATEGORY_META = {
   'jewelry': { label: 'Jewelry', description: '<p>Sculptural finishing pieces that punctuate — <em>the quiet accent that completes everything.</em></p>', group: 'accessories' },
   'sunglasses': { label: 'Sunglasses', description: '<p>Bold minimalism and quiet confidence — <em>frames built to be seen and remembered.</em></p>', group: 'accessories' },
   'bags': { label: 'Bags', description: '<p>Functional luxury and timeless carry — <em>pieces that work as hard as they are beautiful.</em></p>', group: 'accessories' },
-  'all-clothing': { label: 'All Clothing', description: '<p>The full Janedore clothing edit — <em>where refined tailoring meets enduring elegance</em> across every silhouette.</p>', group: 'clothing' }
+  'all-clothing': { label: 'All Clothing', description: '<p>The full Janedore clothing edit — <em>where refined tailoring meets enduring elegance</em> across every silhouette.</p>', group: 'clothing' },
+  'perfume': { label: 'Perfume', description: '<p>Olfactory expressions of the understated — <em>fragrances that linger like a quiet thought.</em></p>', group: 'perfume' }
 };
 
 const BANNER_ITEMS = ["Complimentary Shipping on Orders Over R1500", "Free Returns Within 30 Days", "New Collection — Discover 'Dawning' Now Live"];
@@ -904,12 +912,14 @@ function merchandiseProducts(products) {
   const accessoryCats = ['sunglasses','jewelry','bags'];
   const clothing = products.filter(p => clothingCats.includes(p.category));
   const accessories = products.filter(p => accessoryCats.includes(p.category));
-  const other = products.filter(p => !clothingCats.includes(p.category) && !accessoryCats.includes(p.category));
+  const perfume = products.filter(p => p.category === 'perfume');
+  const other = products.filter(p => !clothingCats.includes(p.category) && !accessoryCats.includes(p.category) && p.category !== 'perfume');
   const result = [];
-  let ci = 0, ai = 0, oi = 0;
+  let ci = 0, ai = 0, pi = 0, oi = 0;
   const pattern = ['clothing', 'accessory', 'accessory', 'clothing', 'accessory'];
   let patIdx = 0;
-  while(ci < clothing.length || ai < accessories.length || oi < other.length) {
+  const allRemaining = [...perfume, ...other];
+  while(ci < clothing.length || ai < accessories.length || oi < allRemaining.length) {
     const slot = pattern[patIdx % pattern.length];
     patIdx++;
     if(slot === 'clothing' && ci < clothing.length) { result.push(clothing[ci++]); }
@@ -917,10 +927,11 @@ function merchandiseProducts(products) {
     else {
       if(ci < clothing.length) result.push(clothing[ci++]);
       else if(ai < accessories.length) result.push(accessories[ai++]);
-      else if(oi < other.length) result.push(other[oi++]);
+      else if(oi < allRemaining.length) result.push(allRemaining[oi++]);
       else break;
     }
   }
+  while(oi < allRemaining.length) result.push(allRemaining[oi++]);
   return result;
 }
 
@@ -1012,6 +1023,9 @@ function navigateToCategory(cat) {
       ? `<div class="collection-description">${meta.description}</div>`
       : `<div class="collection-description"><p>Explore our curated selection of ${catName.toLowerCase()}.</p></div>`;
   }
+  if(DOM.categoryUrlTag) {
+    DOM.categoryUrlTag.textContent = `janedore.com/collections/${cat}`;
+  }
   renderCategoryProducts();
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -1042,7 +1056,7 @@ function renderProductPage(product) {
   const vi=S.productVariantSelections[product.id]??0;
   const images=getAllProductImages(product, vi);
   const isWished=S.wishlist.some(w=>w.id===product.id);
-  const sizeLabel = product.category === 'jewelry' ? 'Material' : 'Size';
+  const sizeLabel = product.category === 'jewelry' ? 'Material' : product.category === 'perfume' ? 'Size' : 'Size';
   const slideImages = images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("");
   const slideBars = images.map((_,i)=>`<button class="slider-bar${i===0?" active":""}" onclick="goToSlide(${i})"></button>`).join("");
   const variantsDots = (product.variants||[]).map((v,i)=>`<span class="variant-swatch${i===vi?" selected":""}" style="background:${v.swatch||'#ccc'};" onclick="selectVariant('${product.id}',${i},event)"></span>`).join("");
@@ -1152,7 +1166,7 @@ function selectSize(btn, size) {
 }
 
 function addToCartFromDetail(id) {
-  if(!S.selectedSize) { toast("Please select a size / material"); return; }
+  if(!S.selectedSize) { toast("Please select a size"); return; }
   addToCart(id, S.selectedSize);
 }
 
@@ -1271,7 +1285,7 @@ function buildFooter(id) {
   const collapseSections = ["shop", "brands", "policies", "help"];
   const collapseHTML = collapseSections.map(section => {
     const links = {
-      shop: ["New In","Dresses","Tops","Bottoms","Jackets","Sets","Bags","Jewelry","Sale"],
+      shop: ["New In","Dresses","Tops","Bottoms","Jackets","Sets","Bags","Jewelry","Perfume","Sale"],
       brands: ["JANEDORE","NIRIUS CO","JEWELRYBK"],
       policies: ["About","Shipping Policy","Return Policy","Privacy Policy","Terms & Conditions"],
       help: ["FAQ","Size Guide","Shipping","Returns","Contact"]
@@ -1353,7 +1367,7 @@ function renderSearchDefault() {
     <div class="search-suggestions">
       <div class="search-suggestions-title">Popular Searches</div>
       <div class="search-suggestion-pills">
-        ${["Sunglasses","Jewelry","Pouch","Earrings"].map(s=>`<button class="search-pill" onclick="searchFor('${s}')">${s}</button>`).join("")}
+        ${["Sunglasses","Jewelry","Pouch","Earrings","Perfume"].map(s=>`<button class="search-pill" onclick="searchFor('${s}')">${s}</button>`).join("")}
       </div>
     </div>`;
 }
