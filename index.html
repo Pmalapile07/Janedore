@@ -148,14 +148,8 @@
     .badge-sale { background: #111; color: #fff; }
 
     /* ── CARD BOTTOM ROW (shared alignment) ── */
-    .product-price-row { 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-  margin-top: 6px; 
-  width: 100%; 
-}
-    .price-bookmark { background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; color: #111; cursor: pointer; flex-shrink: 0; }
+    .product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; width: 100%; }
+    .price-bookmark { background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: flex-end; color: #111; cursor: pointer; flex-shrink: 0; margin-left: auto; }
     .price-bookmark i { font-size: 18px; }
     .product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
     .product-brand-tag { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #888; }
@@ -296,7 +290,10 @@
     .slider-bars { display: flex; justify-content: center; gap: 6px; padding: 12px 0; }
     .slider-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
     .slider-bar.active { background: #111; }
-    .product-info { padding: 24px 12px; max-width: 720px; margin: 0 auto; }
+    .product-info { width: 100%;
+  max-width: 100%;
+  padding: 24px 12px;
+  margin: 0 auto; }
     @media (min-width: 768px) { .product-info { padding: 24px 16px; } }
     .product-info .modal-brand { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin-bottom: 4px; }
     .product-info .modal-brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
@@ -307,6 +304,26 @@
     .product-info .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: #111; margin-bottom: 12px; line-height: 1.1; }
     .product-info .modal-price { font-size: 16px; font-weight: 300; color: #111; margin-bottom: 20px; letter-spacing: 0.04em; }
     .product-info .modal-desc { font-size: 12px; font-weight: 300; line-height: 1.8; color: #666; margin-bottom: 24px; }
+    
+    /* ── PRODUCT DETAIL PRICE + WISHLIST ROW ── */
+    .modal-price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .modal-price-row .modal-price {
+      margin-bottom: 0;
+    }
+    .modal-price-row .modal-wish-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 12px;
+    }
+    
     .modal-size-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; margin-bottom: 10px; }
     .modal-sizes { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px; }
     .modal-size-btn { width: 40px; height: 40px; border: 1px solid #ddd; background: #fff; font-size: 10px; color: #555; transition: all 0.2s; }
@@ -316,7 +333,7 @@
     .modal-add-btn { flex: 1; background: #fff; color: #111; border: 1px solid #111; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; padding: 15px; transition: background 0.2s; white-space: nowrap; width: 100%; }
     .modal-add-btn:hover { background: #f5f5f5; }
     .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
-    .modal-wish-btn { width: 48px; flex-shrink: 0; background: transparent; color: #111; border: none; font-size: 10px; padding: 13px; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; }
+    .modal-wish-btn { background: transparent; color: #111; border: none; font-size: 10px; padding: 13px; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .modal-wish-btn:hover { opacity: 0.7; }
     .modal-wish-btn i { font-size: 20px; color: #111; }
     .modal-wish-btn.wished i { color: #111; font-weight: 700; }
@@ -1041,9 +1058,11 @@ function renderProductPage(product) {
         <div class="modal-variant-dots" style="align-self: center;">${variantsDots}</div>
       </div>
       <div class="modal-title">${product.name||''}</div>
-      <div style="display:flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-        <div class="modal-price" style="margin-bottom:0;">${product.salePrice?`<span>${formatPrice(product.salePrice)}</span> <span style="text-decoration:line-through;color:#aaa;">${formatPrice(product.price)}</span>`:formatPrice(product.price)}</div>
-        <button class="modal-wish-btn${isWished?" wished":""}" onclick="toggleWish('${product.id}')" style="padding:0; width:auto; flex-shrink:0; display: flex; align-items: center;"><i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i></button>
+      <div class="modal-price-row">
+        <div class="modal-price">${product.salePrice?`<span>${formatPrice(product.salePrice)}</span> <span style="text-decoration:line-through;color:#aaa;">${formatPrice(product.price)}</span>`:formatPrice(product.price)}</div>
+        <button class="modal-wish-btn${isWished?" wished":""}" onclick="toggleWish('${product.id}')">
+          <i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i>
+        </button>
       </div>
       <p class="modal-desc">${product.description||''}</p>
       <div class="modal-size-label">${sizeLabel}</div>
