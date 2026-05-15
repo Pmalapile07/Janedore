@@ -229,7 +229,7 @@
     /* ── HERO ── */
     #hero {
       position: relative;
-      height: calc(85vh + 2px);
+      height: calc(97vh + 2px);
       min-height: 362px;
       max-height: 682px;
       overflow: hidden;
@@ -304,6 +304,8 @@
       transition: color 0.2s, border-color 0.2s;
       cursor: pointer;
       margin-top: 4px;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.5);
     }
     .hero-cta:hover { color: #fff; border-color: #fff; }
 
@@ -326,6 +328,8 @@
       background: none;
       padding-bottom: 1px;
       transition: color 0.2s, border-color 0.2s;
+      border: none;
+      border-bottom: 1px solid #555;
     }
     .arrivals-view-all:hover { color: #111; border-color: #111; }
 
@@ -1111,7 +1115,7 @@
 
 <div class="page active" id="page-home">
   <section id="hero">
-    <div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/25033E45-B542-48C1-A84B-5F259F62C6AE.jpg?v=1778515133')"></div>
+    <div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content-wrap">
       <div class="hero-sub">UNDERSTATED BOLDNESS</div>
@@ -1264,10 +1268,10 @@ let PRODUCTS = [];
 async function fetchProducts() {
   await new Promise(r => setTimeout(r, 600));
   return [
-    { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 0, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-06-10T08:00:00Z", updatedAt: "2025-06-12T09:00:00Z", variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/375A1989-FF72-4FFB-8CFA-A1F3D1087A16.png?v=1778661217"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1A42FCE1-2AD9-466A-91D1-85F14F4C7E9E.png?v=1778779685", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/304DEB42-EF19-48CD-BFFE-99DD12047BCF.png?v=1778661216"] } }] },
+    { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 0, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-06-10T08:00:00Z", updatedAt: "2025-06-12T09:00:00Z", variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"] } }] },
     { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: "2025-06-01T09:00:00Z", updatedAt: "2025-06-05T11:00:00Z", variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"] } }] },
     { id: "janedore-leather-pouch", sku: "ACC-JLP-007", name: "Janedore Debossed Leather Pouch", brand: "JANEDORE", category: "bags", price: 50, salePrice: null, badge: null, sizes: ["OS"], stock: 50, status: "active", featured: false, description: "Supple debossed leather pouch.", productFeatures: "Genuine leather.", compositionCare: "100% Leather.", shippingReturns: "Free with sunglass purchase.", createdAt: "2025-06-01T08:00:00Z", updatedAt: "2025-06-10T10:00:00Z", variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"] } }] },
-    { id: "janedore-aqua-neck-top", sku: "TOP-ANT-001", name: "Janedore Watergarden Bottle Neck Top", brand: "JANEDORE", category: "tops", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "A refined top with a sculptural neckline.", productFeatures: "Soft-touch cotton blend.", compositionCare: "95% Cotton, 5% Elastane.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-01T08:00:00Z", updatedAt: "2025-07-02T10:00:00Z", variants: [{ color: "Aqua", swatch: "#C0CEE7", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6508.png?v=1778677090"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/ECC17162-3CC7-4C27-9463-59862A2C01AB_c7bab26a-ce1c-47fc-9477-a1eebc04fb62.png?v=1778779685"] } }] },
+    { id: "janedore-raffle-brandy-black-dress", sku: "DRS-RBB-001", name: "Janedore Raffle Brandy Black Dress", brand: "JANEDORE", category: "dresses", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "The Raffle Brandy black dress — a study in fluid silhouette and quiet tension. Cut from a weighted crepe that holds its shape while moving with you.", productFeatures: "Weighted crepe fabric. Concealed back zip. Fully lined.", compositionCare: "100% Polyester. Dry clean only.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-01T08:00:00Z", updatedAt: "2025-07-02T10:00:00Z", variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"] } }] },
     { id: "thato-rumination-tea-parfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance inspired by quiet moments — tea-infused warmth with soft floral undertones.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum (fragrance), aqua.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-15T08:00:00Z", updatedAt: "2025-07-16T10:00:00Z", variants: [{ color: "Pink Rain", swatch: "#F9E6E1", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"] } }] }
   ];
 }
