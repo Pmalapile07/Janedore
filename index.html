@@ -29,7 +29,7 @@
 
     /* ── ANNOUNCEMENT BAR ── */
     #banner {
-      height: 38px;
+      height: 52px;
       background: #fff;
       display: flex;
       align-items: center;
@@ -229,7 +229,7 @@
     /* ── HERO ── */
     #hero {
       position: relative;
-      height: calc(110vh + 5px);
+      height: calc(130vh + 3px);
       min-height: 362px;
       max-height: 682px;
       overflow: hidden;
@@ -348,6 +348,8 @@
     .badge-new { background: #fff; color: #111; }
     .badge-sale { background: #111; color: #fff; }
     .badge-sold { background: #fff; color: #888; border: none; }
+    .product-info modal-desc { font-size: 12px; font-weight: 300; line-height: 1.8; color: #666; margin-bottom: 24px;
+｝
 
     .product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; width: 100%; }
     .price-bookmark { background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: flex-end; color: #111; cursor: pointer; flex-shrink: 0; margin-left: auto; }
@@ -363,13 +365,17 @@
     .product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
     .variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
-    .variant-swatch.sold-out { overflow: hidden; }
+    .variant-swatch.sold-out { overflow: hidden; background: #aaa; }
     .variant-swatch.sold-out::before { content: ''; position: absolute; top: 50%; left: -2px; right: -2px; height: 0.8px; background: #fff; transform: rotate(-45deg); }
+    .variant-swatch.dual-color { overflow: hidden; }
+    .variant-swatch.dual-color::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom right, var(--swatch-color1, #ccc) 50%, var(--swatch-color2, #999) 50%); }
     .variant-plus { font-size: 9px; color: #aaa; margin-left: 2px; line-height: 1; }
     .product-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; color: #111; margin-bottom: 4px; }
     .product-price { font-size: 12px; font-weight: 300; color: #111; letter-spacing: 0.04em; margin-bottom: 2px; }
     .product-price-sale { color: #111; }
     .product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; }
+
+    .wish-variant-name { font-size: 10px; font-weight: 300; color: #888; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
 
     footer { background: #fff; color: #111; padding: 60px 12px 32px; }
     @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
@@ -512,7 +518,7 @@
     .wish-page-item { cursor: pointer; }
     .wish-page-img { aspect-ratio: 3/4; background-size: cover; background-position: center; background-color: #f0ede8; margin-bottom: 8px; }
     .wish-page-name { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: #111; margin-bottom: 3px; }
-    .wish-page-price { font-size: 11px; font-weight: 300; color: #888; margin-bottom: 8px; }
+    .wish-page-price { font-size: 11px; font-weight: 300; color: #888; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .wish-page-add-btn {
       font-size: var(--ui-font-size);
       letter-spacing: var(--ui-letter-spacing);
@@ -608,12 +614,13 @@
     .product-info .modal-variant-dots { display: flex; align-items: center; gap: 6px; }
     .product-info .modal-variant-dots .variant-swatch { width: 17px; height: 17px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
     .product-info .modal-variant-dots .variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
-    .product-info .modal-variant-dots .variant-swatch.sold-out { overflow: hidden; }
+    .product-info .modal-variant-dots .variant-swatch.sold-out { overflow: hidden; background: #aaa; }
     .product-info .modal-variant-dots .variant-swatch.sold-out::before { content: ''; position: absolute; top: 50%; left: -3px; right: -3px; height: 0.8px; background: #fff; transform: rotate(-45deg); }
+    .product-info .modal-variant-dots .variant-swatch.dual-color { overflow: hidden; }
+    .product-info .modal-variant-dots .variant-swatch.dual-color::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom right, var(--swatch-color1, #ccc) 50%, var(--swatch-color2, #999) 50%); }
     .product-info .modal-variant-dots .variant-plus { font-size: 10px; color: #aaa; margin-left: 3px; }
     .product-info .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: #111; margin-bottom: 12px; line-height: 1.1; }
     .product-info .modal-price { font-size: 16px; font-weight: 300; color: #111; margin-bottom: 20px; letter-spacing: 0.04em; }
-    .product-info .modal-desc { font-size: 12px; font-weight: 300; line-height: 1.8; color: #666; margin-bottom: 24px; }
 
     .modal-price-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; width: 100%; }
     .modal-price-row .modal-price { margin-bottom: 0; }
@@ -956,6 +963,7 @@
     #page-category .product-grid {
       gap: 8px;
     }
+    
 
     @media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(4,1fr); } }
     @media (max-width: 900px) {
@@ -1272,7 +1280,8 @@ async function fetchProducts() {
     { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: "2025-06-01T09:00:00Z", updatedAt: "2025-06-05T11:00:00Z", variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"] } }] },
     { id: "janedore-leather-pouch", sku: "ACC-JLP-007", name: "Janedore Debossed Leather Pouch", brand: "JANEDORE", category: "bags", price: 50, salePrice: null, badge: null, sizes: ["OS"], stock: 50, status: "active", featured: false, description: "Supple debossed leather pouch.", productFeatures: "Genuine leather.", compositionCare: "100% Leather.", shippingReturns: "Free with sunglass purchase.", createdAt: "2025-06-01T08:00:00Z", updatedAt: "2025-06-10T10:00:00Z", variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"] } }] },
     { id: "janedore-raffle-brandy-black-dress", sku: "DRS-RBB-001", name: "Janedore Raffle Brandy Black Dress", brand: "JANEDORE", category: "dresses", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "The Raffle Brandy black dress — a study in fluid silhouette and quiet tension. Cut from a weighted crepe that holds its shape while moving with you.", productFeatures: "Weighted crepe fabric. Concealed back zip. Fully lined.", compositionCare: "100% Polyester. Dry clean only.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-01T08:00:00Z", updatedAt: "2025-07-02T10:00:00Z", variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"] } }] },
-    { id: "thato-rumination-tea-parfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance inspired by quiet moments — tea-infused warmth with soft floral undertones.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum (fragrance), aqua.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-15T08:00:00Z", updatedAt: "2025-07-16T10:00:00Z", variants: [{ color: "Pink Rain", swatch: "#F9E6E1", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"] } }] }
+    { id: "thato-rumination-tea-parfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance inspired by quiet moments — tea-infused warmth with soft floral undertones.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum (fragrance), aqua.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-15T08:00:00Z", updatedAt: "2025-07-16T10:00:00Z", variants: [{ color: "Pink Rain", swatch: "#F9E6E1", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"] } }] },
+    { id: "vivian-dual-bag", sku: "BAG-VVN-001", name: "Janedore Vivian Dual Bag", brand: "JANEDORE", category: "bags", price: 580, salePrice: null, badge: "new", sizes: ["OS"], stock: 20, status: "active", featured: true, description: "The Vivian bag in a striking dual-tone finish. Compact yet spacious.", productFeatures: "Italian leather. Magnetic closure.", compositionCare: "100% Leather.", shippingReturns: "Free shipping over R1500.", createdAt: "2025-08-01T10:00:00Z", updatedAt: "2025-08-02T12:00:00Z", variants: [{ color: "Vivian Red/Black", swatch: "#cc0000", swatchColor2: "#111", dualColor: true, images: { ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/3EF03FC2-30FD-48E6-B03C-F007972B0FC2.png?v=1778870432"], model: [] } }] }
   ];
 }
 
@@ -1340,7 +1349,17 @@ function variantSwatchesHtml(product, selectedIndex) {
   const variants = product?.variants || [];
   const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0);
   const soldOut = isProductSoldOut(product);
-  return variants.slice(0,2).map((v,i)=>`<span class="variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}" style="background:${v.swatch||'#ccc'};" onclick="event.stopPropagation(); selectVariant('${product.id}',${i},event)"></span>`).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:'');
+  return variants.slice(0,2).map((v,i)=>{
+    let classes = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`;
+    let style = '';
+    if(v.dualColor) {
+      classes += ' dual-color';
+      style = `--swatch-color1:${v.swatch||'#ccc'}; --swatch-color2:${v.swatchColor2||'#999'};`;
+    } else {
+      style = `background:${v.swatch||'#ccc'};`;
+    }
+    return `<span class="${classes}" style="${style}" onclick="event.stopPropagation(); selectVariant('${product.id}',${i},event)"></span>`;
+  }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:'');
 }
 
 function selectVariant(productId, variantIndex, evt) {
@@ -1402,6 +1421,56 @@ function cardTouchEnd(e, productId) {
   if(slidesEl) slidesEl.style.transform = `translateX(-${newIdx*100}%)`;
   const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
   if(card) { card.querySelectorAll(".card-slider-bar").forEach((d,i)=>d.classList.toggle("active",i===newIdx)); }
+}
+
+function getCompleteLookProducts(currentProduct) {
+  if (!currentProduct) return [];
+  const activeProducts = PRODUCTS.filter(p => p.status === 'active' && p.id !== currentProduct.id);
+  const pouch = activeProducts.find(p => p.id === 'janedore-leather-pouch');
+  const clothing = activeProducts.filter(p => ['dresses','tops','bottoms','jackets','sets'].includes(p.category));
+  const tops = clothing.filter(p => p.category === 'tops');
+  const bottoms = clothing.filter(p => p.category === 'bottoms');
+  const dresses = clothing.filter(p => p.category === 'dresses');
+  const jewelry = activeProducts.filter(p => p.category === 'jewelry');
+  const bags = activeProducts.filter(p => p.category === 'bags' && p.id !== 'janedore-leather-pouch');
+  const sunglasses = activeProducts.filter(p => p.category === 'sunglasses');
+  const parfum = activeProducts.filter(p => p.category === 'parfum');
+  
+  let suggestions = [];
+  const cat = currentProduct.category;
+
+  if (cat === 'sunglasses') {
+    if (pouch) suggestions.push(pouch);
+    suggestions = suggestions.concat(tops.slice(0, 2));
+    if (suggestions.length < 3) suggestions = suggestions.concat(bottoms.slice(0, 1));
+  } else if (['tops', 'bottoms', 'dresses', 'jackets', 'sets'].includes(cat)) {
+    if (cat === 'tops') {
+      suggestions = suggestions.concat(bottoms.slice(0, 1));
+      suggestions = suggestions.concat(jewelry.slice(0, 1));
+      if (pouch) suggestions.push(pouch);
+    } else if (cat === 'bottoms') {
+      suggestions = suggestions.concat(tops.slice(0, 2));
+      suggestions = suggestions.concat(jewelry.slice(0, 1));
+    } else if (cat === 'dresses') {
+      suggestions = suggestions.concat(jewelry.slice(0, 2));
+    } else {
+      suggestions = suggestions.concat(tops.slice(0, 1));
+      suggestions = suggestions.concat(bottoms.slice(0, 1));
+    }
+    if (suggestions.length < 4) suggestions = suggestions.concat(bags.filter(b => b.id !== 'janedore-leather-pouch').slice(0, 1));
+  } else if (cat === 'parfum') {
+    suggestions = suggestions.concat(clothing.slice(0, 2));
+    suggestions = suggestions.concat(sunglasses.slice(0, 1));
+  } else if (cat === 'bags') {
+    suggestions = suggestions.concat(jewelry.slice(0, 2));
+    suggestions = suggestions.concat(sunglasses.slice(0, 1));
+    if (pouch && currentProduct.id !== 'janedore-leather-pouch') suggestions.push(pouch);
+  } else if (cat === 'jewelry') {
+    if (pouch) suggestions.push(pouch);
+    suggestions = suggestions.concat(tops.slice(0, 2));
+  }
+
+  return [...new Set(suggestions)].slice(0, 6);
 }
 
 function buildSwipeSection(title, products, containerId) {
@@ -1584,7 +1653,7 @@ function renderProductPage(product) {
   const related = merchandiseProducts(PRODUCTS.filter(p => p.id !== product.id && p.category === product.category && p.status === 'active')).slice(0, 6);
   const relatedSection = related.length ? buildSwipeSection('You May Also Like', related, `related-${product.id}`) : '';
 
-  const ctlProducts = merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.status==='active')).slice(0,6);
+  const ctlProducts = getCompleteLookProducts(product);
   const ctlSection = ctlProducts.length ? buildSwipeSection('Complete the Look', ctlProducts, `ctl-${product.id}`) : '';
 
   const rvProducts = S.recentlyViewed.filter(p => p.id !== product.id).slice(0, 6);
@@ -1593,7 +1662,7 @@ function renderProductPage(product) {
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider"><div class="product-slides" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div><div class="slider-bars" id="slider-bars">${images.map((_,i)=>`<button class="slider-bar${i===0?" active":""}" onclick="goToSlide(${i})"></button>`).join("")}</div></div>
     <div class="product-info">
-      <div class="modal-brand-row"><div class="modal-brand">${product.brand||''}</div><div class="modal-variant-dots" style="align-self: center;">${(product.variants||[]).map((v,i)=>`<span class="variant-swatch${i===vi?" selected":""}${soldOut?" sold-out":""}" style="background:${v.swatch||'#ccc'};" onclick="selectVariant('${product.id}',${i},event)"></span>`).join("")}</div></div>
+      <div class="modal-brand-row"><div class="modal-brand">${product.brand||''}</div><div class="modal-variant-dots" style="align-self: center;">${variantSwatchesHtml(product, vi)}</div></div>
       <div class="modal-title">${product.name||''}</div>
       <div class="modal-price-row"><div class="modal-price">${product.salePrice?`<span>${formatPrice(product.salePrice)}</span> <span style="text-decoration:line-through;color:#aaa;">${formatPrice(product.price)}</span>`:formatPrice(product.price)}</div><button class="modal-wish-btn${isWished?" wished":""}" onclick="toggleWish('${product.id}')"><i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i></button></div>
       <p class="modal-desc">${product.description||''}</p>
@@ -1655,7 +1724,12 @@ function toggleWish(productId) {
 function renderWishlistPage() {
   if(!DOM.wishPageContent) return;
   if(!S.wishlist.length) { DOM.wishPageContent.innerHTML = `<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo('products')">Continue Shopping</button></div>`; return; }
-  DOM.wishPageContent.innerHTML = `<h1 class="wish-page-title">Wishlist (${S.wishlist.length})</h1><div class="wish-page-grid">${S.wishlist.map(p=>`<div class="wish-page-item" onclick="goToProduct('${p.id}')"><div class="wish-page-img" style="background-image:url('${getProductThumbnail(p)}');"></div><div class="wish-page-name">${p.name||''}</div><div class="wish-page-price">${formatPrice(p.salePrice??p.price??0)}</div><button class="wish-page-add-btn" onclick="event.stopPropagation(); addToCart('${p.id}'); toggleWish('${p.id}'); openCart();"${isProductSoldOut(p)?' disabled':''}>${isProductSoldOut(p)?'Sold Out':'Add to Cart'}</button></div>`).join("")}</div>`;
+  DOM.wishPageContent.innerHTML = `<h1 class="wish-page-title">Wishlist (${S.wishlist.length})</h1><div class="wish-page-grid">${S.wishlist.map(p=>{
+    const vi = S.productVariantSelections[p.id] ?? 0;
+    const variant = (p.variants||[])[vi] || {};
+    const variantName = variant.color || '';
+    return `<div class="wish-page-item" onclick="goToProduct('${p.id}')"><div class="wish-page-img" style="background-image:url('${getProductThumbnail(p)}');"></div><div class="wish-page-name">${p.name||''}</div><div class="wish-page-price"><span>${formatPrice(p.salePrice??p.price??0)}</span>${variantName ? `<span class="wish-variant-name">${variantName}</span>` : ''}</div><button class="wish-page-add-btn" onclick="event.stopPropagation(); addToCart('${p.id}'); toggleWish('${p.id}'); openCart();"${isProductSoldOut(p)?' disabled':''}>${isProductSoldOut(p)?'Sold Out':'Add to Cart'}</button></div>`;
+  }).join("")}</div>`;
 }
 
 function buildFooter(id) {
