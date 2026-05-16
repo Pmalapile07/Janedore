@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -86,7 +85,8 @@
     .nav-logo img { height: 30px; width: auto; }
     .nav-right { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
     .nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; }
-    .nav-icon-btn .badge { position: absolute; top: 1px; right: 1px; width: 16px; height: 16px; border-radius: 0; font-size: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+    /* Reduced badge size */
+    .nav-icon-btn .badge { position: absolute; top: 1px; right: 1px; width: 14px; height: 14px; border-radius: 0; font-size: 7px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 
     .desktop-nav-links { display: none; align-items: center; gap: 24px; }
     .desktop-nav-link {
@@ -265,7 +265,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
     }
     .hero-eyebrow {
       font-family: 'Manrope', sans-serif;
@@ -291,6 +291,7 @@
       font-weight: var(--ui-font-weight);
       text-transform: uppercase;
       color: rgba(255,255,255,0.65);
+      margin-bottom: 4px;
     }
     .hero-cta {
       font-size: var(--ui-font-size);
@@ -303,7 +304,7 @@
       padding-bottom: 2px;
       transition: color 0.2s, border-color 0.2s;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 0;
       border: none;
       border-bottom: 1px solid rgba(255,255,255,0.5);
     }
@@ -333,11 +334,13 @@
     }
     .arrivals-view-all:hover { color: #111; border-color: #111; }
 
-    .product-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     @media (min-width: 768px) { .product-grid { gap: 8px; } }
 
     .product-card { cursor: pointer; }
     .product-img-wrap { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #f0ede8; margin-bottom: 8px; touch-action: pan-y pinch-zoom; }
+    /* Sold out faded effect */
+    .product-card.sold-out .product-img-wrap { opacity: 0.6; filter: grayscale(0.3); }
     .product-card-slides { display: flex; transition: transform 0.4s ease; height: 100%; }
     .product-card-slide { min-width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
     .card-slider-bars { display: flex; justify-content: center; gap: 4px; position: absolute; bottom: 8px; left: 0; right: 0; z-index: 2; pointer-events: none; }
@@ -375,6 +378,7 @@
 
     .wish-variant-name { font-size: 10px; font-weight: 300; color: #888; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
 
+    /* Footer text consistent with description */
     footer { background: #fff; color: #111; padding: 60px 12px 32px; }
     @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
     .footer-top { display: flex; flex-direction: column; gap: 0; margin-bottom: 40px; }
@@ -417,6 +421,91 @@
       color: #888;
       text-align: center;
     }
+
+    /* First Drop Section */
+    .first-drop-section {
+      padding: 0 12px;
+      margin-top: 32px;
+    }
+    @media (min-width: 768px) {
+      .first-drop-section { padding: 0 16px; }
+    }
+    .first-drop-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background-size: cover;
+      background-position: center;
+      background-color: #e8e4dc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .first-drop-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.2);
+    }
+    .first-drop-content {
+      position: relative;
+      z-index: 2;
+      color: #fff;
+    }
+    .first-drop-sub {
+      font-family: 'Manrope', sans-serif;
+      font-size: var(--ui-font-size);
+      letter-spacing: var(--ui-letter-spacing);
+      font-weight: var(--ui-font-weight);
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 4px;
+    }
+    .first-drop-btn {
+      font-size: var(--ui-font-size);
+      letter-spacing: var(--ui-letter-spacing);
+      font-weight: var(--ui-font-weight);
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+      background: none;
+      padding-bottom: 2px;
+      transition: color 0.2s, border-color 0.2s;
+      cursor: pointer;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+    }
+    .first-drop-btn:hover { color: #fff; border-color: #fff; }
+    .first-drop-description {
+      font-size: 12px;
+      font-weight: 300;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      color: #777;
+      max-width: 480px;
+      margin: 0 auto 40px;
+      text-align: center;
+    }
+
+    /* Wishlist remove button */
+    .wish-page-remove-btn {
+      background: none;
+      border: none;
+      color: #bbb;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.2s;
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 2;
+    }
+    .wish-page-remove-btn:hover { color: #111; }
+    .wish-page-item { position: relative; }
 
     #cart-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 900; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     #cart-backdrop.open { opacity: 1; pointer-events: all; }
@@ -1127,35 +1216,6 @@
   </div>
 </div>
 
-<div class="page active" id="page-home">
-  <section id="hero">
-    <div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"></div>
-    <div class="hero-overlay"></div>
-    <div class="hero-content-wrap">
-      <div class="hero-sub">UNDERSTATED BOLDNESS</div>
-      <button class="hero-cta" onclick="navigateTo('products')">SHOP NOW</button>
-    </div>
-  </section>
-  <section id="new-arrivals"><div class="arrivals-header"><div class="arrivals-title">The Understated</div><button class="arrivals-view-all" onclick="navigateTo('products')">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section>
-  <footer id="main-footer"></footer>
-</div>
-
-<div class="page" id="page-campaign">
-  <section class="campaign-section">
-    <h1 class="campaign-heading">UNDERSTATED</h1>
-    <div class="campaign-cropped" style="background-image: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737'); background-size: cover; background-position: center 30%;"></div>
-    <h2 class="campaign-subheading">The Bold Understated</h2>
-    <div class="campaign-fullwidth-image" style="background-image: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div>
-    <div class="campaign-fullwidth-image" style="background: linear-gradient(160deg, #c8bfb0, #a89888);"></div>
-    <p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p>
-    <div class="campaign-fullwidth-image" style="background: linear-gradient(160deg, #e0dbd4, #c8bfb0);"></div>
-    <div class="campaign-fullwidth-image" style="background: linear-gradient(160deg, #2a2a2a, #1c1c1c);"></div>
-    <p class="campaign-tagline">Where silence makes the strongest statement.</p>
-    <div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>
-    <div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div>
-  </section>
-  <footer id="campaign-footer"></footer>
-</div>
 
 <div class="page" id="page-products">
   <section class="site-collection-layout">
@@ -1274,6 +1334,7 @@ const DOM = {
   announceText0: document.getElementById("announce-text-0"),
   announceText1: document.getElementById("announce-text-1"),
   mainNav: document.getElementById("main-nav"),
+  firstDropSection: document.getElementById("first-drop-section"),
   hero: null,
 };
 
@@ -1401,7 +1462,8 @@ function productCard(product, compactMode=false) {
   const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>` : "";
   const slidesHtml = allImages.map((u,i)=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
   const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
-  return `<div class="product-card" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
+  const soldOutClass = isProductSoldOut(product) ? ' sold-out' : '';
+  return `<div class="product-card${soldOutClass}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
     <div class="product-img-wrap" data-card-slider="${product.id}" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
       <div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>
       ${barsHtml}
@@ -1514,8 +1576,9 @@ function buildSwipeCardInner(product) {
   const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>` : "";
   const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
   const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+  const soldOutClass = isProductSoldOut(product) ? ' sold-out' : '';
   return `
-    <div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
+    <div class="product-img-wrap${soldOutClass}" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
       <div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>
       ${barsHtml}${badgeHtml}
     </div>
@@ -1614,7 +1677,32 @@ function merchandiseProducts(products) {
   return result;
 }
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0, 10).map(p=>productCard(p)).join(""); } }
+function buildArrivals() {
+  if(DOM.arrivalsGrid) {
+    const active = PRODUCTS.filter(p=>p.status==='active');
+    DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0, 4).map(p=>productCard(p)).join("");
+  }
+  buildFirstDrop();
+}
+
+function buildFirstDrop() {
+  if(!DOM.firstDropSection) return;
+  const thatoProducts = PRODUCTS.filter(p => p.brand === 'THATO' && p.status === 'active');
+  const description = "A study in stillness. THATO pieces are crafted for the considered wardrobe — where texture, tone, and form converge with quiet confidence.";
+  
+  DOM.firstDropSection.innerHTML = `
+    <div class="first-drop-image" style="background-image: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279');">
+      <div class="first-drop-overlay"></div>
+      <div class="first-drop-content">
+        <div class="first-drop-sub">THE FIRST DROP</div>
+        <button class="first-drop-btn" onclick="navigateToCategory('parfum')">VIEW PRODUCTS</button>
+      </div>
+    </div>
+    <div class="product-grid" style="margin-bottom: 24px;">${thatoProducts.map(p => productCard(p)).join("")}</div>
+    <p class="first-drop-description">${description}</p>
+  `;
+}
+
 function applyFilter(type, value) { S.filter[type] = value; renderAllProducts(); }
 function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
 
@@ -1727,6 +1815,14 @@ function toggleWish(productId) {
   const modalWishBtn = document.querySelector(".modal-wish-btn"); if(modalWishBtn && S.currentPage==="product-detail"){ modalWishBtn.classList.toggle("wished", isWished); const icon = modalWishBtn.querySelector("i"); if(icon) icon.className = iconClass; }
 }
 
+function removeFromWishlist(productId, event) {
+  event.stopPropagation();
+  S.wishlist = S.wishlist.filter(w => w.id !== productId);
+  updateBadges();
+  renderWishlistPage();
+  toast("Removed from wishlist");
+}
+
 function renderWishlistPage() {
   if(!DOM.wishPageContent) return;
   if(!S.wishlist.length) { DOM.wishPageContent.innerHTML = `<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo('products')">Continue Shopping</button></div>`; return; }
@@ -1734,7 +1830,13 @@ function renderWishlistPage() {
     const vi = S.productVariantSelections[p.id] ?? 0;
     const variant = (p.variants||[])[vi] || {};
     const variantName = variant.color || '';
-    return `<div class="wish-page-item" onclick="goToProduct('${p.id}')"><div class="wish-page-img" style="background-image:url('${getProductThumbnail(p)}');"></div><div class="wish-page-name">${p.name||''}</div><div class="wish-page-price"><span>${formatPrice(p.salePrice??p.price??0)}</span>${variantName ? `<span class="wish-variant-name">${variantName}</span>` : ''}</div><button class="wish-page-add-btn" onclick="event.stopPropagation(); addToCart('${p.id}'); toggleWish('${p.id}'); openCart();"${isProductSoldOut(p)?' disabled':''}>${isProductSoldOut(p)?'Sold Out':'Add to Cart'}</button></div>`;
+    return `<div class="wish-page-item" onclick="goToProduct('${p.id}')">
+      <button class="wish-page-remove-btn" onclick="removeFromWishlist('${p.id}', event)">×</button>
+      <div class="wish-page-img" style="background-image:url('${getProductThumbnail(p)}');"></div>
+      <div class="wish-page-name">${p.name||''}</div>
+      <div class="wish-page-price"><span>${formatPrice(p.salePrice??p.price??0)}</span>${variantName ? `<span class="wish-variant-name">${variantName}</span>` : ''}</div>
+      <button class="wish-page-add-btn" onclick="event.stopPropagation(); addToCart('${p.id}'); toggleWish('${p.id}'); openCart();"${isProductSoldOut(p)?' disabled':''}>${isProductSoldOut(p)?'Sold Out':'Add to Cart'}</button>
+    </div>`;
   }).join("")}</div>`;
 }
 
