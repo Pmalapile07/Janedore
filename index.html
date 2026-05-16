@@ -14,9 +14,12 @@
       --ui-font-weight: 400;
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; scroll-behavior: smooth; }
+    @media (min-width: 769px) {
+      html { font-size: 12.8px; }
+    }
     body { font-family: 'Manrope', sans-serif; background: #fff; color: #111; overflow-x: hidden; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     button { cursor: pointer; font-family: inherit; }
     a { text-decoration: none; color: inherit; cursor: pointer; }
     ::-webkit-scrollbar { width: 4px; }
@@ -239,6 +242,12 @@
       padding-bottom: 64px;
       margin-top: -64px;
     }
+    @media (min-width: 769px) {
+      #hero {
+        height: calc(80vh + 2px);
+        min-height: 400px;
+      }
+    }
     .hero-bg-placeholder {
       position: absolute;
       inset: 0;
@@ -267,23 +276,6 @@
       justify-content: space-between;
       gap: 8px;
     }
-    .hero-eyebrow {
-      font-family: 'Manrope', sans-serif;
-      font-size: var(--ui-font-size);
-      font-weight: 500;
-      letter-spacing: 0.38em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.72);
-    }
-    .hero-heading {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(28px, 5.5vw, 52px);
-      font-weight: 300;
-      font-style: italic;
-      color: #fff;
-      line-height: 1.15;
-      letter-spacing: 0.02em;
-    }
     .hero-sub {
       font-family: 'Manrope', sans-serif;
       font-size: var(--ui-font-size);
@@ -294,27 +286,12 @@
       margin-bottom: 0;
       flex: 1;
       text-align: left;
-    }
-    .hero-cta {
-      font-size: var(--ui-font-size);
-      letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight);
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.85);
-      border-bottom: 1px solid rgba(255,255,255,0.5);
-      background: none;
-      padding-bottom: 2px;
-      transition: color 0.2s, border-color 0.2s;
       cursor: pointer;
-      margin-top: 0;
-      border: none;
-      border-bottom: 1px solid rgba(255,255,255,0.5);
-      flex-shrink: 0;
     }
-    .hero-cta:hover { color: #fff; border-color: #fff; }
+    .hero-sub:hover { color: rgba(255,255,255,0.9); }
 
-    #new-arrivals { padding: 60px 12px; }
-    @media (min-width: 768px) { #new-arrivals { padding: 60px 16px; } }
+    #new-arrivals { padding: 40px 12px 60px; }
+    @media (min-width: 768px) { #new-arrivals { padding: 40px 16px 60px; } }
     .arrivals-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
     .arrivals-title {
       font-size: var(--ui-font-size);
@@ -373,7 +350,20 @@
     .variant-swatch.dual-color { overflow: hidden; }
     .variant-swatch.dual-color::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom right, var(--swatch-color1, #ccc) 50%, var(--swatch-color2, #999) 50%); }
     .variant-plus { font-size: 9px; color: #aaa; margin-left: 2px; line-height: 1; }
-    .product-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; color: #111; margin-bottom: 4px; }
+    .product-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      font-weight: 400;
+      color: #111;
+      margin-bottom: 4px;
+      line-height: 1.2;
+    }
+    .product-name.collection-name {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
     .product-price { font-size: 12px; font-weight: 300; color: #111; letter-spacing: 0.04em; margin-bottom: 2px; }
     .product-price-sale { color: #111; }
     .product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; }
@@ -445,6 +435,7 @@
       padding: 24px;
       text-align: center;
       margin-bottom: 32px;
+      cursor: pointer;
     }
     .first-drop-overlay {
       position: absolute;
@@ -473,31 +464,21 @@
       flex: 1;
       text-align: left;
     }
-    .first-drop-btn {
-      font-size: var(--ui-font-size);
-      letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight);
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.85);
-      border-bottom: 1px solid rgba(255,255,255,0.5);
-      background: none;
-      padding-bottom: 2px;
-      transition: color 0.2s, border-color 0.2s;
-      cursor: pointer;
-      border: none;
-      border-bottom: 1px solid rgba(255,255,255,0.5);
-      flex-shrink: 0;
-    }
-    .first-drop-btn:hover { color: #fff; border-color: #fff; }
-    .first-drop-description {
+
+    /* Collection description */
+    .collection-description {
       font-size: 12px;
       font-weight: 300;
       line-height: 1.6;
       letter-spacing: 0.04em;
       color: #777;
       max-width: 480px;
-      margin: 0 auto 40px;
+      margin: 0 auto 32px;
       text-align: center;
+      padding: 0 12px;
+    }
+    @media (min-width: 768px) {
+      .collection-description { padding: 0 16px; }
     }
 
     /* Back button */
@@ -1248,14 +1229,13 @@
 
 <div class="page active" id="page-home">
   <section id="hero">
-    <div class="hero-bg-placeholder" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"></div>
+    <div class="hero-bg-placeholder" id="hero-bg"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content-wrap">
-      <div class="hero-sub">UNDERSTATED BOLDNESS</div>
-      <button class="hero-cta" onclick="navigateTo('products')">SHOP NOW</button>
+      <div class="hero-sub" onclick="navigateTo('products')">UNDERSTATED BOLDNESS</div>
     </div>
   </section>
-  <section id="new-arrivals"><div class="arrivals-header"><div class="arrivals-title">The Understated</div><button class="arrivals-view-all" onclick="navigateTo('products')">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section>
+  <section id="new-arrivals"><div class="product-grid" id="arrivals-grid"></div><div class="arrivals-header" style="margin-top: 28px;"><div class="arrivals-title">The Understated</div><button class="arrivals-view-all" onclick="navigateTo('products')">View All</button></div></section>
   <section class="first-drop-section" id="first-drop-section"></section>
   <footer id="main-footer"></footer>
 </div>
@@ -1311,7 +1291,7 @@
     </div>
     <div class="product-grid" id="all-products-grid"></div>
   </section>
-  <div class="back-btn-wrap"><button class="back-btn" onclick="navigateTo('home')">Back</button></div>
+  <div class="back-btn-wrap"><button class="back-btn" onclick="goBackFromProduct()">Back</button></div>
   <footer id="products-footer"></footer>
 </div>
 
@@ -1340,9 +1320,10 @@
         <button class="toolbar-icon-btn" onclick="toggleGridCat()"><div class="grid-toggle-svg" id="cat-grid-toggle-svg"><div class="grid-block active"></div><div class="grid-block active"></div><div class="grid-block"></div></div></button>
       </div>
     </div>
+    <div id="category-description-wrap"></div>
     <div class="product-grid" id="category-products-grid"></div>
   </section>
-  <div class="back-btn-wrap"><button class="back-btn" onclick="navigateTo('home')">Back</button></div>
+  <div class="back-btn-wrap"><button class="back-btn" onclick="goBackFromProduct()">Back</button></div>
   <footer id="category-footer"></footer>
 </div>
 
@@ -1380,6 +1361,7 @@ const DOM = {
   allProductsGrid: document.getElementById("all-products-grid"),
   categoryProductsGrid: document.getElementById("category-products-grid"),
   categoryNameTag: document.getElementById("category-name-tag"),
+  categoryDescriptionWrap: document.getElementById("category-description-wrap"),
   productDetail: document.getElementById("page-product-detail"),
   cartBody: document.getElementById("cart-body"),
   cartFoot: document.getElementById("cart-foot"),
@@ -1397,6 +1379,7 @@ const DOM = {
   announceText1: document.getElementById("announce-text-1"),
   mainNav: document.getElementById("main-nav"),
   firstDropSection: document.getElementById("first-drop-section"),
+  heroBg: document.getElementById("hero-bg"),
   hero: null,
 };
 
@@ -1429,7 +1412,8 @@ const S = {
   announceIdx: 0, announceTimer: null, currency: "ZAR",
   reviewRating: 0, reviewImage: null, touchStartX: 0, touchEndX: 0,
   cardTouchStartX: {}, cardSlideIndex: {},
-  swipeState: {}
+  swipeState: {},
+  previousCollectionPage: null
 };
 
 function initNavScroll() {
@@ -1457,6 +1441,19 @@ function checkNavForHome() {
   if (heroBottom <= 0) DOM.mainNav.classList.add("scrolled");
   else DOM.mainNav.classList.remove("scrolled");
 }
+
+function isDesktop() { return window.innerWidth >= 769; }
+
+function setHeroImage() {
+  if (!DOM.heroBg) return;
+  if (isDesktop()) {
+    DOM.heroBg.style.backgroundImage = "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')";
+  } else {
+    DOM.heroBg.style.backgroundImage = "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')";
+  }
+}
+
+window.addEventListener('resize', setHeroImage);
 
 function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
 function getProductImages(product, variantIndex) {
@@ -1515,7 +1512,7 @@ function selectVariant(productId, variantIndex, evt) {
   }
 }
 
-function productCard(product, compactMode=false) {
+function productCard(product, compactMode=false, isCollectionPage=false) {
   if(!product) return '';
   const vi = S.productVariantSelections[product.id] ?? 0;
   const allImages = getAllProductImages(product, vi);
@@ -1526,13 +1523,14 @@ function productCard(product, compactMode=false) {
   const slidesHtml = allImages.map((u,i)=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
   const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
   const soldOutClass = isProductSoldOut(product) ? ' sold-out' : '';
+  const nameClass = isCollectionPage ? ' collection-name' : '';
   return `<div class="product-card${soldOutClass}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
     <div class="product-img-wrap" data-card-slider="${product.id}" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
       <div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>
       ${barsHtml}
       ${badgeHtml}
     </div>
-    ${compactMode ? '' : `<div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-variant-dots">${variantSwatchesHtml(product, vi)}</div></div><div class="product-name">${product.name||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div><button class="price-bookmark${isWished?' wished':''}" onclick="event.stopPropagation(); toggleWish('${product.id}')"><i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i></button></div>`}
+    ${compactMode ? '' : `<div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-variant-dots">${variantSwatchesHtml(product, vi)}</div></div><div class="product-name${nameClass}">${product.name||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div><button class="price-bookmark${isWished?' wished':''}" onclick="event.stopPropagation(); toggleWish('${product.id}')"><i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i></button></div>`}
   </div>`;
 }
 
@@ -1751,18 +1749,15 @@ function buildArrivals() {
 function buildFirstDrop() {
   if(!DOM.firstDropSection) return;
   const thatoProducts = PRODUCTS.filter(p => p.brand === 'THATO' && p.status === 'active');
-  const description = "A study in scent. THATO parfums are crafted for the considered wearer — where note, tone, and form converge with quiet confidence.";
   
   DOM.firstDropSection.innerHTML = `
-    <div class="first-drop-image" style="background-image: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/513D36EE-CCA6-4AE5-BE74-E3EE1BDDC2E6.png?v=1778921335');">
+    <div class="first-drop-image" style="background-image: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/513D36EE-CCA6-4AE5-BE74-E3EE1BDDC2E6.png?v=1778921335');" onclick="navigateToCategory('parfum')">
       <div class="first-drop-overlay"></div>
       <div class="first-drop-content">
         <div class="first-drop-sub">THE FIRST DROP</div>
-        <button class="first-drop-btn" onclick="navigateToCategory('parfum')">SHOP NOW</button>
       </div>
     </div>
     <div class="product-grid" style="margin-bottom: 24px;">${thatoProducts.map(p => productCard(p)).join("")}</div>
-    <p class="first-drop-description">${description}</p>
   `;
 }
 
@@ -1782,11 +1777,12 @@ function getCatFilteredProducts() {
   return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(isAllClothing) { if(!clothingCats.includes(p.category)) return false; } else if(S.currentCategoryPage) { if(p.category !== S.currentCategoryPage) return false; } if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= 500) return false; if(S.catFilter.price==='high' && price < 500) return false; return true; });
 }
 
-function renderAllProducts() { if(!DOM.allProductsGrid) return; let prods = merchandiseProducts(getFilteredProducts()); DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols === 1 ? "1fr" : S.gridCols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = prods.map(p=>productCard(p, S.gridCols===3)).join(""); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
+function renderAllProducts() { if(!DOM.allProductsGrid) return; let prods = merchandiseProducts(getFilteredProducts()); DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols === 1 ? "1fr" : S.gridCols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = prods.map(p=>productCard(p, S.gridCols===3, true)).join(""); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
 
 function navigateToCategory(cat) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage = "category"; S.currentCategoryPage = cat;
+  S.previousCollectionPage = cat;
   const catName = (cat.charAt(0).toUpperCase()+cat.slice(1)).replace(/-/g,' ');
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = catName.toUpperCase();
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"});
@@ -1794,12 +1790,29 @@ function navigateToCategory(cat) {
   setTimeout(refreshSwipeTracks, 50);
 }
 
-function renderCategoryProducts() { if(!S.currentCategoryPage || !DOM.categoryProductsGrid) return; let prods = merchandiseProducts(getCatFilteredProducts()); DOM.categoryProductsGrid.style.gridTemplateColumns = S.gridColsCat === 1 ? "1fr" : S.gridColsCat === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)"; DOM.categoryProductsGrid.innerHTML = prods.map(p => productCard(p, S.gridColsCat===3)).join(""); updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat); }
+function renderCategoryProducts() { if(!S.currentCategoryPage || !DOM.categoryProductsGrid) return; let prods = merchandiseProducts(getCatFilteredProducts()); DOM.categoryProductsGrid.style.gridTemplateColumns = S.gridColsCat === 1 ? "1fr" : S.gridColsCat === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)"; DOM.categoryProductsGrid.innerHTML = prods.map(p => productCard(p, S.gridColsCat===3, true)).join(""); updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat);
+  if (DOM.categoryDescriptionWrap && S.currentCategoryPage === 'parfum') {
+    DOM.categoryDescriptionWrap.innerHTML = `<p class="collection-description">A study in scent. THATO parfums are crafted for the considered wearer — where note, tone, and form converge with quiet confidence.</p>`;
+  } else if (DOM.categoryDescriptionWrap) {
+    DOM.categoryDescriptionWrap.innerHTML = '';
+  }
+}
 
 function goToProduct(productId) {
   closeCart(); const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
+  if (S.currentPage === 'category' || S.currentPage === 'products') {
+    S.previousCollectionPage = S.currentCategoryPage || 'products';
+  }
   renderProductPage(product);
+}
+
+function goBackFromProduct() {
+  if (S.previousCollectionPage && S.previousCollectionPage !== 'products') {
+    navigateToCategory(S.previousCollectionPage);
+  } else {
+    navigateTo('products');
+  }
 }
 
 function renderProductPage(product) {
@@ -1835,6 +1848,7 @@ function renderProductPage(product) {
       <div class="reviews-section"><div class="reviews-title">Reviews</div><p class="no-reviews">No reviews yet.</p><button class="write-review-btn" onclick="openReviewModal()">Write a Review</button></div>
       ${rvSection}
     </div>
+    <div class="back-btn-wrap"><button class="back-btn" onclick="goBackFromProduct()">Back</button></div>
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer");
   S.currentSlide=0; setupProductSliderTouch(); window.scrollTo({top:0,behavior:"smooth"});
@@ -1942,7 +1956,7 @@ function navigateTo(page) {
   if(targetPage) targetPage.classList.add("active");
   S.currentPage=page;
   window.scrollTo({top:0,behavior:"smooth"});
-  if(page==="products") { renderAllProducts(); ensureNavScrolled(); }
+  if(page==="products") { renderAllProducts(); ensureNavScrolled(); S.previousCollectionPage = 'products'; }
   if(page==="cart") { renderCartPage(); ensureNavScrolled(); }
   if(page==="wishlist") { renderWishlistPage(); ensureNavScrolled(); }
   if(page==="home") { setTimeout(checkNavForHome, 50); }
@@ -1969,6 +1983,7 @@ async function init() {
   buildBanner();
   initNavScroll();
   PRODUCTS=await fetchProducts();
+  setHeroImage();
   buildArrivals();
   ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer"].forEach(buildFooter);
   buildCampaignSlider();
