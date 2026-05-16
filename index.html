@@ -85,7 +85,6 @@
     .nav-logo img { height: 30px; width: auto; }
     .nav-right { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
     .nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; }
-    /* Reduced badge size */
     .nav-icon-btn .badge { position: absolute; top: 1px; right: 1px; width: 14px; height: 14px; border-radius: 0; font-size: 7px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 
     .desktop-nav-links { display: none; align-items: center; gap: 24px; }
@@ -260,11 +259,12 @@
     .hero-content-wrap {
       position: relative;
       z-index: 10;
-      text-align: center;
+      width: 100%;
       padding: 0 20px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
       gap: 8px;
     }
     .hero-eyebrow {
@@ -291,7 +291,9 @@
       font-weight: var(--ui-font-weight);
       text-transform: uppercase;
       color: rgba(255,255,255,0.65);
-      margin-bottom: 4px;
+      margin-bottom: 0;
+      flex: 1;
+      text-align: left;
     }
     .hero-cta {
       font-size: var(--ui-font-size);
@@ -307,6 +309,7 @@
       margin-top: 0;
       border: none;
       border-bottom: 1px solid rgba(255,255,255,0.5);
+      flex-shrink: 0;
     }
     .hero-cta:hover { color: #fff; border-color: #fff; }
 
@@ -339,7 +342,6 @@
 
     .product-card { cursor: pointer; }
     .product-img-wrap { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #f0ede8; margin-bottom: 8px; touch-action: pan-y pinch-zoom; }
-    /* Sold out faded effect */
     .product-card.sold-out .product-img-wrap { opacity: 0.6; filter: grayscale(0.3); }
     .product-card-slides { display: flex; transition: transform 0.4s ease; height: 100%; }
     .product-card-slide { min-width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
@@ -378,7 +380,6 @@
 
     .wish-variant-name { font-size: 10px; font-weight: 300; color: #888; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    /* Footer text consistent with description */
     footer { background: #fff; color: #111; padding: 60px 12px 32px; }
     @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
     .footer-top { display: flex; flex-direction: column; gap: 0; margin-bottom: 40px; }
@@ -439,7 +440,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
       position: relative;
       padding: 24px;
       text-align: center;
@@ -454,6 +455,12 @@
       position: relative;
       z-index: 2;
       color: #fff;
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding-bottom: 0;
     }
     .first-drop-sub {
       font-family: 'Manrope', sans-serif;
@@ -461,22 +468,25 @@
       letter-spacing: var(--ui-letter-spacing);
       font-weight: var(--ui-font-weight);
       text-transform: uppercase;
-      color: rgba(255,255,255,0.85);
-      margin-bottom: 4px;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 0;
+      flex: 1;
+      text-align: left;
     }
     .first-drop-btn {
       font-size: var(--ui-font-size);
       letter-spacing: var(--ui-letter-spacing);
       font-weight: var(--ui-font-weight);
       text-transform: uppercase;
-      color: rgba(255,255,255,0.9);
-      border-bottom: 1px solid rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.85);
+      border-bottom: 1px solid rgba(255,255,255,0.5);
       background: none;
       padding-bottom: 2px;
       transition: color 0.2s, border-color 0.2s;
       cursor: pointer;
       border: none;
-      border-bottom: 1px solid rgba(255,255,255,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.5);
+      flex-shrink: 0;
     }
     .first-drop-btn:hover { color: #fff; border-color: #fff; }
     .first-drop-description {
@@ -490,7 +500,29 @@
       text-align: center;
     }
 
-    /* Wishlist remove button */
+    /* Back button */
+    .back-btn-wrap {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+    }
+    .back-btn {
+      font-size: var(--ui-font-size);
+      letter-spacing: var(--ui-letter-spacing);
+      font-weight: var(--ui-font-weight);
+      text-transform: uppercase;
+      color: #111;
+      border-bottom: 1px solid #111;
+      background: none;
+      padding-bottom: 2px;
+      transition: color 0.2s, border-color 0.2s;
+      cursor: pointer;
+      border: none;
+      border-bottom: 1px solid #111;
+    }
+    .back-btn:hover { color: #555; border-color: #555; }
+
     .wish-page-remove-btn {
       background: none;
       border: none;
@@ -630,7 +662,6 @@
     .toast-dot { width: 5px; height: 5px; border-radius: 50%; background: #fff; flex-shrink: 0; }
     @keyframes toastSlide { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
 
-    /* ── COLLECTION TOOLBAR ── */
     .collection-toolbar {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -680,7 +711,6 @@
     .toolbar-icon-btn { background: none; border: none; padding: 4px; display: flex; align-items: center; color: #111; transition: opacity 0.2s; }
     .toolbar-icon-btn:hover { opacity: 0.7; }
 
-    /* ── PRODUCT DETAIL SLIDER ── */
     .product-slider { position: relative; width: 100%; overflow: hidden; touch-action: pan-y pinch-zoom; }
     .product-slides { display: flex; transition: transform 0.4s ease; }
     .product-slide { min-width: 100%; aspect-ratio: 4/5; background: #f0ede8; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
@@ -796,7 +826,6 @@
     .shipping-calc button:hover { background: #333; }
     .shipping-result { font-size: 12px; font-weight: 300; color: #111; margin-top: 6px; }
 
-    /* ── HORIZONTAL SWIPE SECTIONS ── */
     .swipe-section { position: relative; padding: 32px 0; }
     .swipe-section-title {
       font-size: var(--ui-font-size);
@@ -1083,6 +1112,7 @@
       .product-actions { flex-wrap: wrap; }
       .modal-add-btn { flex: 1 1 40%; }
       .modal-wish-btn { flex: 0 0 48px; }
+      .back-btn-wrap { bottom: 16px; right: 16px; }
     }
     @media (max-width: 480px) {
       #main-nav { height: 52px; }
@@ -1281,6 +1311,7 @@
     </div>
     <div class="product-grid" id="all-products-grid"></div>
   </section>
+  <div class="back-btn-wrap"><button class="back-btn" onclick="navigateTo('home')">Back</button></div>
   <footer id="products-footer"></footer>
 </div>
 
@@ -1311,6 +1342,7 @@
     </div>
     <div class="product-grid" id="category-products-grid"></div>
   </section>
+  <div class="back-btn-wrap"><button class="back-btn" onclick="navigateTo('home')">Back</button></div>
   <footer id="category-footer"></footer>
 </div>
 
@@ -1377,7 +1409,8 @@ async function fetchProducts() {
     { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: "2025-06-01T09:00:00Z", updatedAt: "2025-06-05T11:00:00Z", variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"] } }] },
     { id: "janedore-leather-pouch", sku: "ACC-JLP-007", name: "Janedore Debossed Leather Pouch", brand: "JANEDORE", category: "bags", price: 50, salePrice: null, badge: null, sizes: ["OS"], stock: 50, status: "active", featured: false, description: "Supple debossed leather pouch.", productFeatures: "Genuine leather.", compositionCare: "100% Leather.", shippingReturns: "Free with sunglass purchase.", createdAt: "2025-06-01T08:00:00Z", updatedAt: "2025-06-10T10:00:00Z", variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"] } }] },
     { id: "janedore-raffle-brandy-black-dress", sku: "DRS-RBB-001", name: "Janedore Raffle Brandy Black Dress", brand: "JANEDORE", category: "dresses", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "The Raffle Brandy black dress — a study in fluid silhouette and quiet tension. Cut from a weighted crepe that holds its shape while moving with you.", productFeatures: "Weighted crepe fabric. Concealed back zip. Fully lined.", compositionCare: "100% Polyester. Dry clean only.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-01T08:00:00Z", updatedAt: "2025-07-02T10:00:00Z", variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"] } }] },
-    { id: "thato-rumination-tea-parfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance inspired by quiet moments — tea-infused warmth with soft floral undertones.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum (fragrance), aqua.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-15T08:00:00Z", updatedAt: "2025-07-16T10:00:00Z", variants: [{ color: "Pink Rain", swatch: "#F9E6E1", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"] } }] },
+    { id: "thato-rumination-tea-parfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance inspired by quiet moments — tea-infused warmth with soft floral undertones.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum (fragrance), aqua.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-15T08:00:00Z", updatedAt: "2025-07-16T10:00:00Z", variants: [{ color: "Pale Linen", swatch: "#EBEDE0", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"] } }] },
+    { id: "thato-pink-rain-parfum", sku: "PRF-TPR-002", name: "Thato Pink Rain Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 25, status: "active", featured: true, description: "A delicate, romantic fragrance evoking the scent of petals after a soft spring shower.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum (fragrance), aqua.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-07-20T08:00:00Z", updatedAt: "2025-07-21T10:00:00Z", variants: [{ color: "Pink Rain", swatch: "#F3DBD7", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"] } }] },
     { id: "vivian-dual-bag", sku: "BAG-VVN-001", name: "Janedore Vivian Dual Bag", brand: "JANEDORE", category: "bags", price: 580, salePrice: null, badge: "new", sizes: ["OS"], stock: 20, status: "active", featured: true, description: "The Vivian bag in a striking dual-tone finish. Compact yet spacious.", productFeatures: "Italian leather. Magnetic closure.", compositionCare: "100% Leather.", shippingReturns: "Free shipping over R1500.", createdAt: "2025-08-01T10:00:00Z", updatedAt: "2025-08-02T12:00:00Z", variants: [{ color: "Vivian Red/Black", swatch: "#cc0000", swatchColor2: "#111", dualColor: true, images: { ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/3EF03FC2-30FD-48E6-B03C-F007972B0FC2.png?v=1778870432"], model: [] } }] }
   ];
 }
@@ -1437,7 +1470,7 @@ function getAllProductImages(product, variantIndex) {
   const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
   return [...(variant.images?.ghost || []), ...(variant.images?.model || [])].map(safeImage) || [PLACEHOLDER_IMAGE];
 }
-function truncateName(name) { if(!name) return ''; return name.length > 28 ? name.substring(0, 28) + '...' : name; }
+function truncateName(name) { if(!name) return ''; const words = name.split(' '); if(words.length <= 2) return name; return words.slice(0, 2).join(' ') + '...'; }
 function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol ?? "R"}${(amount ?? 0).toLocaleString()}`; }
 function isProductSoldOut(product) { return (product?.stock ?? 0) <= 0; }
 function cartHasMultipleTypes() { const types = new Set(S.cart.map(i => PRODUCTS.find(p => p.id === i.productId)?.category).filter(Boolean)); return types.size > 1; }
@@ -1718,14 +1751,14 @@ function buildArrivals() {
 function buildFirstDrop() {
   if(!DOM.firstDropSection) return;
   const thatoProducts = PRODUCTS.filter(p => p.brand === 'THATO' && p.status === 'active');
-  const description = "A study in stillness. THATO pieces are crafted for the considered wardrobe — where texture, tone, and form converge with quiet confidence.";
+  const description = "A study in scent. THATO parfums are crafted for the considered wearer — where note, tone, and form converge with quiet confidence.";
   
   DOM.firstDropSection.innerHTML = `
-    <div class="first-drop-image" style="background-image: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279');">
+    <div class="first-drop-image" style="background-image: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/513D36EE-CCA6-4AE5-BE74-E3EE1BDDC2E6.png?v=1778921335');">
       <div class="first-drop-overlay"></div>
       <div class="first-drop-content">
         <div class="first-drop-sub">THE FIRST DROP</div>
-        <button class="first-drop-btn" onclick="navigateToCategory('parfum')">VIEW PRODUCTS</button>
+        <button class="first-drop-btn" onclick="navigateToCategory('parfum')">SHOP NOW</button>
       </div>
     </div>
     <div class="product-grid" style="margin-bottom: 24px;">${thatoProducts.map(p => productCard(p)).join("")}</div>
@@ -1921,7 +1954,7 @@ function renderCartPage() {
   if(!DOM.cartPageContent) return;
   if(!S.cart.length){ DOM.cartPageContent.innerHTML=`<div class="cart-page-empty"><div class="cart-page-empty-title">Your bag is empty</div><button class="btn-continue-shopping" onclick="navigateTo('products')">Continue Shopping</button></div>`; return; }
   const totalItems = S.cart.reduce((a,i)=>a+i.qty,0);
-  DOM.cartPageContent.innerHTML=`<h1 class="cart-page-title">Your Bag (${totalItems} item${totalItems!==1?"s":""})</h1>${S.cart.map(item=>`<div class="cart-page-item" onclick="goToProduct('${item.productId}')"><div class="cart-page-img" style="background-image:url('${item.thumbnail||PLACEHOLDER_IMAGE}');"></div><div class="cart-page-details"><div class="cart-page-brand">${item.brand||''}</div><div class="cart-page-name">${truncateName(item.name)}</div><div class="cart-page-meta">${item.color||''} · Size ${item.size||''}</div><div class="cart-page-qty-wrap"><button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',-1,${item.variantIndex});renderCartPage();">−</button><span class="cart-page-qty-num">${item.qty}</span><button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',1,${item.variantIndex});renderCartPage();">+</button></div></div><span class="cart-page-price">${formatPrice((item.salePrice??item.price??0)*item.qty)}</span><button class="cart-page-remove" onclick="event.stopPropagation(); removeFromCart('${item.productId}','${item.size}',${item.variantIndex});renderCartPage();">×</button></div>`).join("")}<div class="cart-page-promo"><input class="cart-page-promo-input" type="text" placeholder="PROMO CODE" id="promo-code-input"><button class="cart-page-promo-btn" onclick="applyPromoCode()">Apply</button></div><div class="cart-page-summary"><div class="cart-page-subtotal">Subtotal <strong>${formatPrice(S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0))}</strong></div>${cartHasMultipleTypes()?'<div class="cart-page-multi-package-note">Contents may arrive in multiple packages</div>':''}<div class="cart-page-actions"><button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button><button class="cart-page-btn primary" onclick="checkout()">Proceed to Checkout</button></div></div>`;
+  DOM.cartPageContent.innerHTML=`<h1 class="cart-page-title">Your Bag (${totalItems} item${totalItems!==1?"s":""})</h1>${S.cart.map(item=>`<div class="cart-page-item" onclick="goToProduct('${item.productId}')"><div class="cart-page-img" style="background-image:url('${item.thumbnail||PLACEHOLDER_IMAGE}');"></div><div class="cart-page-details"><div class="cart-page-brand">${item.brand||''}</div><div class="cart-page-name">${item.name}</div><div class="cart-page-meta">${item.color||''} · Size ${item.size||''}</div><div class="cart-page-qty-wrap"><button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',-1,${item.variantIndex});renderCartPage();">−</button><span class="cart-page-qty-num">${item.qty}</span><button class="cart-page-qty-btn" onclick="event.stopPropagation(); changeQty('${item.productId}','${item.size}',1,${item.variantIndex});renderCartPage();">+</button></div></div><span class="cart-page-price">${formatPrice((item.salePrice??item.price??0)*item.qty)}</span><button class="cart-page-remove" onclick="event.stopPropagation(); removeFromCart('${item.productId}','${item.size}',${item.variantIndex});renderCartPage();">×</button></div>`).join("")}<div class="cart-page-promo"><input class="cart-page-promo-input" type="text" placeholder="PROMO CODE" id="promo-code-input"><button class="cart-page-promo-btn" onclick="applyPromoCode()">Apply</button></div><div class="cart-page-summary"><div class="cart-page-subtotal">Subtotal <strong>${formatPrice(S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0))}</strong></div>${cartHasMultipleTypes()?'<div class="cart-page-multi-package-note">Contents may arrive in multiple packages</div>':''}<div class="cart-page-actions"><button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button><button class="cart-page-btn primary" onclick="checkout()">Proceed to Checkout</button></div></div>`;
 }
 
 function applyPromoCode() { const code=document.getElementById("promo-code-input")?.value.trim(); if(code) toast(`Promo code "${code}" applied!`); else toast("Please enter a promo code."); }
