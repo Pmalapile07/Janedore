@@ -1,451 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Janedore · Admin</title>
-
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/phosphor-icons"></script>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-getFirestore, 
-collection, 
-getDocs, 
-doc, 
-setDoc, 
-deleteDoc, 
-serverTimestamp 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-
-const firebaseConfig = {
-apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-authDomain: "janedore-9f035.firebaseapp.com",
-projectId: "janedore-9f035",
-storageBucket: "janedore-9f035.firebasestorage.app",
-messagingSenderId: "571299748651",
-appId: "1:571299748651:web:01463a772d47b39cc4036e",
-measurementId: "G-Y9NMT0ZGKZ"
-};
-
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-
-
-window.debugLog = function(msg,type){
-
-console.log(msg)
-
-const panel = document.getElementById('debugPanel')
-const content = document.getElementById('debugContent')
-
-if(panel && content){
-
-const line = document.createElement('div')
-
-line.style.color =
-type === 'error'
-? '#c0392b'
-: type === 'success'
-? '#27ae60'
-: '#111'
-
-line.style.fontSize = '11px'
-line.style.fontFamily = 'monospace'
-line.style.padding = '2px 0'
-
-line.textContent =
-new Date().toLocaleTimeString() + ' - ' + msg
-
-content.appendChild(line)
-content.scrollTop = content.scrollHeight
-
-}
-
-}
-
-
-
-window.firebaseLoadProducts = async function(){
-
-try{
-
-window.debugLog('Loading products...','info')
-
-const snap = await getDocs(collection(db,"products"))
-
-const products = []
-
-snap.forEach(docSnap => {
-
-const data = docSnap.data()
-
-products.push({
-
-id: docSnap.id,
-name: data.name || '',
-price: data.price || '',
-priceN: data.priceN || 0,
-description: data.description || '',
-category: data.category || 'clothing',
-imgSrc: data.imgSrc || '',
-images: data.images || [],
-sizes: data.sizes || ['XS','S','M','L','XL'],
-colors: data.colors || [],
-variants: data.variants || [],
-isFeatured: data.isFeatured || false,
-isNewArrival: data.isNewArrival || false
-
-})
-
-})
-
-window.debugLog('Loaded ' + products.length + ' products','success')
-
-return products
-
-}catch(e){
-
-window.debugLog('Error: ' + e.message,'error')
-return []
-
-}
-
-}
-
-
-
-window.firebaseSaveProduct = async function(productId,productData){
-
-try{
-
-window.debugLog('Saving: ' + productId,'info')
-
-await setDoc(
-doc(db,"products",productId),
-{
-...productData,
-updatedAt: serverTimestamp()
-}
-)
-
-window.debugLog('Saved successfully!','success')
-
-return {ok:true}
-
-}catch(e){
-
-window.debugLog('Save error: ' + e.message,'error')
-
-return {
-ok:false,
-error:e.message
-}
-
-}
-
-}
-
-
-
-window.firebaseDeleteProduct = async function(productId){
-
-try{
-
-window.debugLog('Deleting: ' + productId,'info')
-
-await deleteDoc(doc(db,"products",productId))
-
-window.debugLog('Deleted!','success')
-
-return {ok:true}
-
-}catch(e){
-
-window.debugLog('Delete error: ' + e.message,'error')
-
-return {
-ok:false,
-error:e.message
-}
-
-}
-
-}
-
-
-
-window.addEventListener('DOMContentLoaded',()=>{
-window.debugLog('Admin ready','success')
-if(typeof window.loadList === 'function') window.loadList()
-})
-
-</script>
-
-
-<style>
-
-*{box-sizing:border-box;margin:0;padding:0}
-
-body{
-font-family:'DM Sans',sans-serif;
-background:#f5f5f5;
-padding:20px;
-}
-
-.container{
-max-width:1200px;
-margin:0 auto;
-background:#fff;
-border-radius:8px;
-padding:24px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1)
-}
-
-h1{
-font-size:24px;
-font-weight:500;
-margin-bottom:20px;
-display:flex;
-justify-content:space-between;
-align-items:center
-}
-
-.btn{
-padding:10px 20px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-size:14px;
-font-weight:500
-}
-
-.btn-primary{
-background:#1a1a1a;
-color:#fff
-}
-
-.btn-danger{
-background:#c0392b;
-color:#fff
-}
-
-.btn-ghost{
-background:none;
-color:#666
-}
-
-.btn-sm{
-padding:6px 12px;
-font-size:12px
-}
-
-.product-item{
-display:flex;
-align-items:center;
-padding:16px;
-border-bottom:1px solid #eee;
-gap:16px
-}
-
-.product-img{
-width:60px;
-height:80px;
-object-fit:cover;
-border-radius:4px;
-background:#eee
-}
-
-.product-img-placeholder{
-width:60px;
-height:80px;
-display:flex;
-align-items:center;
-justify-content:center;
-background:#eee;
-border-radius:4px;
-color:#999
-}
-
-.product-info{flex:1}
-
-.product-name{
-font-weight:500;
-margin-bottom:4px
-}
-
-.product-meta{
-font-size:13px;
-color:#666;
-display:flex;
-gap:16px;
-flex-wrap:wrap
-}
-
-.badge{
-background:#e0e0e0;
-padding:2px 8px;
-border-radius:20px;
-font-size:11px
-}
-
-.badge.featured{
-background:#1a1a1a;
-color:#fff
-}
-
-.badge.new{
-background:#27ae60;
-color:#fff
-}
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JANEDORE Admin</title>
+  <style>
+    :root { --bg: #fafaf9; --card: #fff; --border: #e5e5e5; --text: #111; --muted: #888; --accent: #111; --danger: #c00; --success: #0a0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Manrope', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    .admin-header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .admin-header h1 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 600; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .status-dot.online { background: var(--success); }
+    .status-dot.offline { background: var(--danger); }
+    .admin-grid { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 57px); }
+    .sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 20px; }
+    .sidebar-btn { display: block; width: 100%; padding: 10px 14px; margin-bottom: 4px; border: none; background: transparent; text-align: left; cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); transition: all 0.2s; font-family: inherit; }
+    .sidebar-btn:hover, .sidebar-btn.active { background: #f5f5f5; color: var(--text); }
+    .main-content { padding: 24px; }
+    .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); margin-bottom: 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); padding: 20px; margin-bottom: 16px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
+    .product-list { display: flex; flex-direction: column; gap: 8px; }
+    .product-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+    .product-row:hover { border-color: var(--text); }
+    .product-row .pi-name { font-weight: 500; font-size: 13px; }
+    .product-row .pi-meta { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .badge { font-size: 9px; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .badge-active { background: #e8f5e9; color: var(--success); }
+    .badge-draft { background: #fff3e0; color: #e65100; }
+    .btn { padding: 10px 20px; border: 1px solid var(--border); background: var(--card); cursor: pointer; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; font-family: inherit; transition: all 0.2s; }
+    .btn:hover { border-color: var(--text); }
+    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-primary:hover { background: #333; border-color: #333; }
+    .btn-danger { color: var(--danger); border-color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 6px 12px; font-size: 9px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; outline: none; transition: border 0.2s; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--text); }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .variant-block { background: var(--bg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+    .variant-block h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px; }
+    .image-url-inputs { display: flex; flex-direction: column; gap: 8px; }
+    .image-url-row { display: flex; gap: 8px; align-items: center; }
+    .image-url-row input { flex: 1; }
+    .image-preview { width: 60px; height: 60px; object-fit: cover; border: 1px solid var(--border); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+    .modal { background: var(--card); width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 32px; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; }
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 0; color: #fff; font-size: 11px; z-index: 300; text-transform: uppercase; letter-spacing: 0.1em; }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); padding: 16px; text-align: center; }
+    .stat-number { font-size: 28px; font-weight: 300; }
+    .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); margin-top: 4px; }
+  </style>
 </head>
-
-
 <body>
-
-<div class="container">
-
-<h1>
-
-Products
-
-<button class="btn btn-primary" onclick="openModal()">
-<i class="ph ph-plus"></i> New Product
-</button>
-
-</h1>
-
-<div id="productList">
-<div style="text-align:center;padding:40px">Loading...</div>
+<div class="admin-header">
+  <h1><span class="status-dot online" id="status-dot"></span>JANEDORE Admin</h1>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span style="font-size:10px;color:var(--muted);" id="product-count">0 products</span>
+    <button class="btn btn-primary" onclick="openNewProductModal()">+ New Product</button>
+    <button class="btn" onclick="seedDefaultProducts()">Seed Default</button>
+  </div>
 </div>
 
+<div class="admin-grid">
+  <div class="sidebar">
+    <button class="sidebar-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="sidebar-btn" onclick="switchTab('products')">Products</button>
+    <button class="sidebar-btn" onclick="switchTab('reviews')">Reviews</button>
+    <button class="sidebar-btn" onclick="switchTab('newsletter')">Newsletter</button>
+    <button class="sidebar-btn" onclick="switchTab('orders')">Orders</button>
+    <hr style="border:0.5px solid var(--border);margin:12px 0;">
+    <button class="sidebar-btn" onclick="window.open('debug.html','_blank')">🔍 Debug Page</button>
+    <button class="sidebar-btn" onclick="window.open('index.html','_blank')">🏪 View Store</button>
+  </div>
+
+  <div class="main-content" id="main-content"></div>
 </div>
 
+<div id="modal-container"></div>
+<div id="toast-container"></div>
 
-
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ"
+  };
 
-var currentProducts=[]
-var editingId=null
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const productsRef = db.collection('products');
+  const reviewsRef = db.collection('reviews');
+  const newsletterRef = db.collection('newsletter');
+  const ordersRef = db.collection('orders');
 
+  let currentTab = 'dashboard';
+  let allProducts = [];
 
+  const DEFAULT_PRODUCTS = [
+    { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 10, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail: [] } }] },
+    { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail: [] } }] },
+    { id: "janedore-leather-pouch", sku: "ACC-JLP-007", name: "Janedore Debossed Leather Pouch", brand: "JANEDORE", category: "bags", price: 50, salePrice: null, badge: null, sizes: ["OS"], stock: 50, status: "active", featured: false, description: "Supple debossed leather pouch.", productFeatures: "Genuine leather.", compositionCare: "100% Leather.", shippingReturns: "Free with sunglass purchase.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail: [] } }] },
+    { id: "janedore-raffle-brandy-black-dress", sku: "DRS-RBB-001", name: "Janedore Raffle Brandy Black Dress", brand: "JANEDORE", category: "dresses", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "The Raffle Brandy black dress — a study in fluid silhouette and quiet tension.", productFeatures: "Weighted crepe fabric.", compositionCare: "100% Polyester.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail: [] } }] },
+    { id: "thato-rumination-tea-parfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance inspired by quiet moments.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Pale Linen", swatch: "#EBEDE0", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail: [] } }] },
+    { id: "thato-pink-rain-parfum", sku: "PRF-TPR-002", name: "Thato Pink Rain Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 25, status: "active", featured: true, description: "A delicate, romantic fragrance.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Pink Rain", swatch: "#F3DBD7", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail: [] } }] },
+    { id: "janedore-studded-halter-dress", sku: "DRS-SHN-001", name: "Janedore Studded Halter Neck Dress", brand: "JANEDORE", category: "dresses", price: 680, salePrice: null, badge: "new", sizes: ["XS","S","M","L"], stock: 20, status: "active", featured: true, description: "Refined edge meets feminine structure.", productFeatures: "Structured halter neckline.", compositionCare: "95% Polyester, 5% Elastane.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
+  ];
 
-function loadList(){
+  function showToast(msg, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
 
-window.firebaseLoadProducts().then(products=>{
+  async function loadProducts() {
+    try {
+      const snapshot = await productsRef.get();
+      allProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('product-count').textContent = `${allProducts.length} products`;
+      document.getElementById('status-dot').className = 'status-dot online';
+    } catch (e) {
+      document.getElementById('status-dot').className = 'status-dot offline';
+      showToast('Firebase connection failed: ' + e.message, 'error');
+    }
+    renderCurrentTab();
+  }
 
-currentProducts=products
+  async function saveProduct(productData) {
+    try {
+      if (productData.id) {
+        await productsRef.doc(productData.id).set(productData, { merge: true });
+      } else {
+        productData.id = productData.sku || ('prod-' + Date.now());
+        await productsRef.doc(productData.id).set(productData);
+      }
+      showToast('Product saved! ✅');
+      loadProducts();
+      closeModal();
+    } catch (e) {
+      showToast('Error saving: ' + e.message, 'error');
+    }
+  }
 
-const container=document.getElementById('productList')
+  async function deleteProduct(productId) {
+    if (!confirm('Delete this product?')) return;
+    try {
+      await productsRef.doc(productId).delete();
+      showToast('Product deleted');
+      loadProducts();
+    } catch (e) {
+      showToast('Error deleting: ' + e.message, 'error');
+    }
+  }
 
-if(products.length===0){
+  async function seedDefaultProducts() {
+    if (!confirm('Seed all 7 default products to Firebase?')) return;
+    try {
+      const batch = db.batch();
+      DEFAULT_PRODUCTS.forEach(p => {
+        const ref = productsRef.doc(p.id);
+        batch.set(ref, p);
+      });
+      await batch.commit();
+      showToast('7 products seeded! 🌱');
+      loadProducts();
+    } catch (e) {
+      showToast('Error seeding: ' + e.message, 'error');
+    }
+  }
 
-container.innerHTML='<div style="text-align:center;padding:40px;color:#999;">No products yet</div>'
+  function openNewProductModal() { openProductModal(null); }
+  
+  function openProductModal(product) {
+    const p = product || { id: '', sku: '', name: '', brand: 'JANEDORE', category: 'dresses', price: 0, salePrice: null, badge: '', sizes: [], stock: 0, status: 'active', featured: false, description: '', productFeatures: '', compositionCare: '', shippingReturns: '', variants: [{ color: '', swatch: '#111', images: { model: [''], ghost: [''], detail: [] } }] };
+    const html = `
+      <div class="modal-overlay" id="product-modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()" style="position:relative;">
+          <button class="modal-close" onclick="closeModal()" style="position:absolute;top:16px;right:16px;">✕</button>
+          <h2 style="font-size:11px;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:24px;">${product ? 'Edit' : 'New'} Product</h2>
+          <form id="product-form" onsubmit="handleProductSubmit(event, '${p.id}')">
+            <div class="form-row">
+              <div class="form-group"><label>Name</label><input name="name" value="${escapeHtml(p.name)}" required></div>
+              <div class="form-group"><label>SKU</label><input name="sku" value="${escapeHtml(p.sku)}"></div>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group"><label>Brand</label><select name="brand"><option value="JANEDORE" ${p.brand==='JANEDORE'?'selected':''}>JANEDORE</option><option value="NIRIUS CO" ${p.brand==='NIRIUS CO'?'selected':''}>NIRIUS CO</option><option value="THATO" ${p.brand==='THATO'?'selected':''}>THATO</option></select></div>
+              <div class="form-group"><label>Category</label><select name="category"><option value="dresses" ${p.category==='dresses'?'selected':''}>Dresses</option><option value="tops" ${p.category==='tops'?'selected':''}>Tops</option><option value="bottoms" ${p.category==='bottoms'?'selected':''}>Bottoms</option><option value="jackets" ${p.category==='jackets'?'selected':''}>Jackets</option><option value="sets" ${p.category==='sets'?'selected':''}>Sets</option><option value="sunglasses" ${p.category==='sunglasses'?'selected':''}>Sunglasses</option><option value="jewelry" ${p.category==='jewelry'?'selected':''}>Jewelry</option><option value="bags" ${p.category==='bags'?'selected':''}>Bags</option><option value="parfum" ${p.category==='parfum'?'selected':''}>Parfum</option></select></div>
+              <div class="form-group"><label>Status</label><select name="status"><option value="active" ${p.status==='active'?'selected':''}>Active</option><option value="draft" ${p.status==='draft'?'selected':''}>Draft</option></select></div>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group"><label>Price (R)</label><input name="price" type="number" value="${p.price}" required></div>
+              <div class="form-group"><label>Sale Price</label><input name="salePrice" type="number" value="${p.salePrice||''}"></div>
+              <div class="form-group"><label>Stock</label><input name="stock" type="number" value="${p.stock}"></div>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group"><label>Badge</label><select name="badge"><option value="">None</option><option value="new" ${p.badge==='new'?'selected':''}>New</option><option value="sale" ${p.badge==='sale'?'selected':''}>Sale</option><option value="sold" ${p.badge==='sold'?'selected':''}>Sold Out</option></select></div>
+              <div class="form-group"><label>Sizes (comma separated)</label><input name="sizes" value="${(p.sizes||[]).join(',')}"></div>
+              <div class="form-group"><label>Featured</label><select name="featured"><option value="false" ${!p.featured?'selected':''}>No</option><option value="true" ${p.featured?'selected':''}>Yes</option></select></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea name="description">${escapeHtml(p.description||'')}</textarea></div>
+            <div class="form-row">
+              <div class="form-group"><label>Product Features</label><textarea name="productFeatures">${escapeHtml(p.productFeatures||'')}</textarea></div>
+              <div class="form-group"><label>Composition & Care</label><textarea name="compositionCare">${escapeHtml(p.compositionCare||'')}</textarea></div>
+            </div>
+            <div class="form-group"><label>Shipping & Returns</label><input name="shippingReturns" value="${escapeHtml(p.shippingReturns||'')}"></div>
+            <h3 style="font-size:10px;text-transform:uppercase;letter-spacing:0.2em;margin:20px 0 12px;">Variants</h3>
+            <div id="variants-container">${(p.variants||[]).map((v, i) => buildVariantBlock(v, i)).join('')}</div>
+            <button type="button" class="btn btn-sm" onclick="addVariant()">+ Add Variant</button>
+            <div style="margin-top:24px;display:flex;gap:12px;">
+              <button type="submit" class="btn btn-primary">Save Product</button>
+              ${p.id ? `<button type="button" class="btn btn-danger" onclick="deleteProduct('${p.id}')">Delete</button>` : ''}
+            </div>
+          </form>
+        </div>
+      </div>`;
+    document.getElementById('modal-container').innerHTML = html;
+  }
 
-return
-}
+  function buildVariantBlock(v = {}, index) {
+    return `<div class="variant-block">
+      <h4>Variant ${index + 1}</h4>
+      <div class="form-row">
+        <div class="form-group"><label>Color Name</label><input name="variant-color-${index}" value="${escapeHtml(v.color||'')}"></div>
+        <div class="form-group"><label>Swatch Color</label><input name="variant-swatch-${index}" type="color" value="${v.swatch||'#111111'}" style="height:40px;padding:4px;"></div>
+      </div>
+      <label style="font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);">Model Images (URLs)</label>
+      <div class="image-url-inputs" id="variant-model-${index}">${(v.images?.model||['']).map(url => buildImageUrlRow('model', index, url)).join('')}</div>
+      <button type="button" class="btn btn-sm" onclick="addImageUrl('model',${index})" style="margin-top:4px;">+ Model URL</button>
+      <label style="font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-top:12px;">Ghost Images (URLs)</label>
+      <div class="image-url-inputs" id="variant-ghost-${index}">${(v.images?.ghost||['']).map(url => buildImageUrlRow('ghost', index, url)).join('')}</div>
+      <button type="button" class="btn btn-sm" onclick="addImageUrl('ghost',${index})" style="margin-top:4px;">+ Ghost URL</button>
+      <label style="font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-top:12px;">Detail Images (URLs)</label>
+      <div class="image-url-inputs" id="variant-detail-${index}">${(v.images?.detail||['']).map(url => buildImageUrlRow('detail', index, url)).join('')}</div>
+      <button type="button" class="btn btn-sm" onclick="addImageUrl('detail',${index})" style="margin-top:4px;">+ Detail URL</button>
+    </div>`;
+  }
 
-let html=''
+  function buildImageUrlRow(type, variantIndex, url) {
+    return `<div class="image-url-row">
+      <input name="variant-${type}-${variantIndex}[]" value="${escapeHtml(url||'')}" placeholder="https://...">
+      <img class="image-preview" src="${url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect fill=%22%23f0ede8%22 width=%2260%22 height=%2260%22/></svg>'}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect fill=%22%23f0ede8%22 width=%2260%22 height=%2260%22/></svg>'">
+    </div>`;
+  }
 
-products.forEach(p=>{
+  function addVariant() {
+    const container = document.getElementById('variants-container');
+    const index = container.children.length;
+    container.insertAdjacentHTML('beforeend', buildVariantBlock({}, index));
+  }
 
-let badges=''
+  function addImageUrl(type, variantIndex) {
+    const container = document.getElementById(`variant-${type}-${variantIndex}`);
+    container.insertAdjacentHTML('beforeend', buildImageUrlRow(type, variantIndex, ''));
+  }
 
-if(p.isFeatured) badges+='<span class="badge featured">Featured</span>'
-if(p.isNewArrival) badges+='<span class="badge new">New</span>'
+  function handleProductSubmit(e, existingId) {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+      id: existingId || form.sku.value || ('prod-' + Date.now()),
+      sku: form.sku.value,
+      name: form.name.value,
+      brand: form.brand.value,
+      category: form.category.value,
+      price: parseFloat(form.price.value),
+      salePrice: form.salePrice.value ? parseFloat(form.salePrice.value) : null,
+      badge: form.badge.value || null,
+      sizes: form.sizes.value.split(',').map(s => s.trim()).filter(Boolean),
+      stock: parseInt(form.stock.value),
+      status: form.status.value,
+      featured: form.featured.value === 'true',
+      description: form.description.value,
+      productFeatures: form.productFeatures.value,
+      compositionCare: form.compositionCare.value,
+      shippingReturns: form.shippingReturns.value,
+      createdAt: existingId ? (allProducts.find(p => p.id === existingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      variants: []
+    };
+    
+    let vi = 0;
+    while (form[`variant-color-${vi}`]) {
+      const modelInputs = form.querySelectorAll(`[name="variant-model-${vi}[]"]`);
+      const ghostInputs = form.querySelectorAll(`[name="variant-ghost-${vi}[]"]`);
+      const detailInputs = form.querySelectorAll(`[name="variant-detail-${vi}[]"]`);
+      data.variants.push({
+        color: form[`variant-color-${vi}`].value,
+        swatch: form[`variant-swatch-${vi}`].value,
+        images: {
+          model: Array.from(modelInputs).map(i => i.value).filter(Boolean),
+          ghost: Array.from(ghostInputs).map(i => i.value).filter(Boolean),
+          detail: Array.from(detailInputs).map(i => i.value).filter(Boolean)
+        }
+      });
+      vi++;
+    }
+    saveProduct(data);
+  }
 
-badges+='<span class="badge">'+(p.category||'clothing')+'</span>'
+  function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
 
+  function escapeHtml(str) { return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-html+=`
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[onclick="switchTab('${tab}')"]`)?.classList.add('active');
+    renderCurrentTab();
+  }
 
-<div class="product-item">
+  async function renderCurrentTab() {
+    const mc = document.getElementById('main-content');
+    switch (currentTab) {
+      case 'dashboard':
+        const productsSnap = await productsRef.get();
+        const reviewsSnap = await reviewsRef.get();
+        const newsletterSnap = await newsletterRef.get();
+        const ordersSnap = await ordersRef.get();
+        mc.innerHTML = `
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-number">${productsSnap.size}</div><div class="stat-label">Products</div></div>
+            <div class="stat-card"><div class="stat-number">${reviewsSnap.size}</div><div class="stat-label">Reviews</div></div>
+            <div class="stat-card"><div class="stat-number">${newsletterSnap.size}</div><div class="stat-label">Subscribers</div></div>
+            <div class="stat-card"><div class="stat-number">${ordersSnap.size}</div><div class="stat-label">Orders</div></div>
+          </div>
+          <div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);">✅ Connected to janedore-9f035</p></div>`;
+        break;
+      case 'products':
+        mc.innerHTML = `<div class="section-title">All Products (${allProducts.length})</div>
+          <div class="product-list">${allProducts.map(p => `
+            <div class="product-row" onclick="openProductModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+              <div><div class="pi-name">${escapeHtml(p.name)}</div><div class="pi-meta">${p.brand} · ${p.category} · R${p.price} · ${(p.variants||[]).length} variants</div></div>
+              <span class="badge badge-${p.status==='active'?'active':'draft'}">${p.status}</span>
+            </div>`).join('')}</div>`;
+        break;
+      case 'reviews':
+        const revs = await reviewsRef.orderBy('createdAt','desc').limit(50).get();
+        mc.innerHTML = `<div class="section-title">Recent Reviews</div>
+          ${revs.docs.map(d => `<div class="card"><div class="card-header"><span>${'★'.repeat(d.data().rating||0)}</span><span style="font-size:10px;color:var(--muted);">${d.data().name||'Anonymous'} · ${d.data().country||'Unknown'}</span></div><p style="font-size:13px;">${d.data().text||''}</p></div>`).join('')}`;
+        break;
+      case 'newsletter':
+        const subs = await newsletterRef.orderBy('subscribedAt','desc').limit(50).get();
+        mc.innerHTML = `<div class="section-title">Newsletter Subscribers (${subs.size})</div>
+          ${subs.docs.map(d => `<div class="card"><span>${d.data().email}</span><span style="font-size:10px;color:var(--muted);margin-left:12px;">${d.data().subscribedAt?.toDate?.()?.toLocaleDateString()||'Unknown'}</span></div>`).join('')}`;
+        break;
+      case 'orders':
+        const ords = await ordersRef.orderBy('createdAt','desc').limit(50).get();
+        mc.innerHTML = `<div class="section-title">Orders (${ords.size})</div>
+          ${ords.docs.map(d => `<div class="card"><div class="card-header"><span>Order</span><span class="badge badge-active">${d.data().status||'pending'}</span></div><p style="font-size:13px;">${d.data().itemCount||0} items · R${d.data().subtotal||0}</p></div>`).join('')}`;
+        break;
+    }
+  }
 
-${p.imgSrc
-? `<img class="product-img" src="${p.imgSrc}">`
-: `<div class="product-img-placeholder"><i class="ph ph-image"></i></div>`
-}
-
-<div class="product-info">
-
-<div class="product-name">${p.name||'Untitled'}</div>
-
-<div class="product-meta">
-
-<span>${p.price||'R 0.00'}</span>
-<span>${p.sizes?.length||0} sizes</span>
-<span>${p.variants?.length||0} variants</span>
-
-${badges}
-
-</div>
-
-</div>
-
-<button class="btn btn-ghost btn-sm" onclick="editProduct('${p.id}')">
-<i class="ph ph-pencil"></i>
-</button>
-
-</div>
-`
-
-})
-
-container.innerHTML=html
-
-})
-
-}
-
-
-
-async function saveProduct(){
-
-const name=document.getElementById('productName').value.trim()
-
-if(!name){
-alert("Product name required")
-return
-}
-
-const price=parseFloat(document.getElementById('productPrice').value)||0
-
-const id=editingId || 'product-'+Date.now()
-
-const productData={
-name:name,
-price:'R '+price.toFixed(2),
-priceN:price,
-category:document.getElementById('productCategory').value
-}
-
-await window.firebaseSaveProduct(id,productData)
-
-loadList()
-
-}
-
-
-
-async function deleteProduct(){
-
-if(!editingId) return
-
-await window.firebaseDeleteProduct(editingId)
-
-loadList()
-
-}
-
+  loadProducts();
 </script>
-
 </body>
 </html>
