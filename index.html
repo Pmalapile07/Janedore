@@ -7,6 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
     :root {
       --ui-font-size: 9px;
@@ -579,6 +582,7 @@
       <button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph-thin ph-star"></i></button>
       <button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph-thin ph-star"></i></button>
     </div>
+    <input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height: auto; margin-bottom: 12px;">
     <textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea>
     <div class="review-image-upload">
       <label class="review-image-label" for="review-image-input"><i class="ph-thin ph-image"></i> Add Image</label>
@@ -709,7 +713,40 @@
 
 <div class="page" id="page-product-detail"></div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  
+  // Collection references
+  const productsRef = db.collection('products');
+  const reviewsRef = db.collection('reviews');
+  const newsletterRef = db.collection('newsletter');
+  const ordersRef = db.collection('orders');
+</script>
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Firebase references
+const productsRef = db.collection('products');
+const reviewsRef = db.collection('reviews');
+const newsletterRef = db.collection('newsletter');
+const ordersRef = db.collection('orders');
+
 const DOM = {
   cartBadge: document.getElementById("cart-badge"),
   wishBadge: document.getElementById("wish-badge"),
@@ -734,6 +771,7 @@ const DOM = {
   campaignSlides: document.getElementById("campaign-slides"),
   reviewStars: document.getElementById("review-stars"),
   reviewText: document.getElementById("review-text"),
+  reviewName: document.getElementById("review-name"),
   reviewImageInput: document.getElementById("review-image-input"),
   reviewImagePreview: document.getElementById("review-image-preview"),
   reviewModalBackdrop: document.getElementById("review-modal-backdrop"),
@@ -750,7 +788,23 @@ const DOM = {
 
 let PRODUCTS = [];
 
+// Fetch products from Firebase
 async function fetchProducts() {
+  try {
+    const snapshot = await productsRef.where('status', '==', 'active').get();
+    if (!snapshot.empty) {
+      const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log(`✅ Loaded ${products.length} products from Firebase`);
+      return products;
+    }
+  } catch (e) {
+    console.warn("⚠️ Firebase fetch failed, using fallback:", e.message);
+  }
+  // Fallback hardcoded products
+  await new Promise(r => setTimeout(r, 600));
+  return [ /* your hardcoded products array */ ];
+}
+  // Fallback data
   await new Promise(r => setTimeout(r, 600));
   return [
     { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 10, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-06-10T08:00:00Z", updatedAt: "2025-06-12T09:00:00Z", variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail: [] } }] },
@@ -782,10 +836,88 @@ const S = {
   currentReviewProductId: null
 };
 
+// Load reviews from Firebase
+async function getProductReviews(productId) {
+  try {
+    const snapshot = await reviewsRef.where('productId', '==', productId).orderBy('createdAt', 'desc').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    console.warn("Firebase reviews fetch failed:", e);
+    return [];
+  }
+}
+
+// Add review to Firebase
+async function addProductReview(productId, review) {
+  try {
+    const country = await getVisitorCountry();
+    await reviewsRef.add({
+      productId,
+      rating: review.rating,
+      text: review.text,
+      name: review.name || 'Anonymous',
+      country: country,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log("Review saved to Firebase");
+  } catch (e) {
+    console.warn("Firebase review save failed:", e);
+    // Fallback to localStorage
+    const all = JSON.parse(localStorage.getItem('janedore_reviews') || '{}');
+    if (!all[productId]) all[productId] = [];
+    all[productId].push(review);
+    localStorage.setItem('janedore_reviews', JSON.stringify(all));
+  }
+}
+
+// Subscribe newsletter to Firebase
+async function subscribeNewsletter(email) {
+  if (!email || !email.includes('@')) return;
+  try {
+    await newsletterRef.add({
+      email,
+      subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      source: 'website'
+    });
+    console.log("Newsletter subscription saved to Firebase");
+    const input = document.getElementById('newsletter-email');
+    if (input) {
+      input.value = '';
+      input.placeholder = 'Subscribed!';
+      setTimeout(() => { input.placeholder = 'Enter your email'; }, 2000);
+    }
+  } catch (e) {
+    console.warn("Firebase newsletter save failed:", e);
+  }
+}
+
+// Save order to Firebase
+async function saveOrder(orderData) {
+  try {
+    await ordersRef.add({
+      ...orderData,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: 'pending'
+    });
+    console.log("Order saved to Firebase");
+  } catch (e) {
+    console.warn("Firebase order save failed:", e);
+  }
+}
+
+// Get visitor country
+async function getVisitorCountry() {
+  try {
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    return data.country_name || 'Unknown';
+  } catch (e) {
+    return 'Unknown';
+  }
+}
+
 function loadReviewsFromStorage() { try { return JSON.parse(localStorage.getItem('janedore_reviews') || '{}'); } catch(e) { return {}; } }
 function saveReviewsToStorage(reviews) { localStorage.setItem('janedore_reviews', JSON.stringify(reviews)); }
-function getProductReviews(productId) { const all = loadReviewsFromStorage(); return all[productId] || []; }
-function addProductReview(productId, review) { const all = loadReviewsFromStorage(); if (!all[productId]) all[productId] = []; all[productId].push(review); saveReviewsToStorage(all); }
 
 function initNavScroll() {
   DOM.hero = document.getElementById("hero");
@@ -1109,12 +1241,11 @@ function buildNewsletterSection() {
       <div class="newsletter-title">Subscribe to our newsletter</div>
       <div class="newsletter-form">
         <input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email">
-        <button class="newsletter-btn" onclick="subscribeNewsletter()"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        <button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
       </div>
     </div>
   `;
 }
-function subscribeNewsletter() { /* silent */ }
 
 function applyFilter(type, value) { S.filter[type] = value; renderAllProducts(); }
 function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
@@ -1176,7 +1307,7 @@ function goBackFromProduct() {
 }
 function goBackHome() { navigateTo('home'); }
 
-function renderProductPage(product) {
+async function renderProductPage(product) {
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null;
   const vi=S.productVariantSelections[product.id]??0; const images=getAllProductImages(product, vi); const isWished=S.wishlist.some(w=>w.id===product.id); const soldOut = isProductSoldOut(product);
   const sizeLabel = product.category === 'jewelry' ? 'Material' : 'Size';
@@ -1186,8 +1317,8 @@ function renderProductPage(product) {
   const ctlSection = ctlProducts.length ? buildSwipeSection('Complete the Look', ctlProducts, `ctl-${product.id}`) : '';
   const rvProducts = S.recentlyViewed.filter(p => p.id !== product.id).slice(0, 6);
   const rvSection = rvProducts.length ? buildSwipeSection('Recently Viewed', rvProducts, `rv-${product.id}`) : '';
-  const reviews = getProductReviews(product.id);
-  const reviewsHtml = reviews.length ? reviews.map((r,i) => `<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;line-height:1.6;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text || 'No comment'}</div>`).join('') : '<p class="no-reviews">No reviews yet.</p>';
+  const reviews = await getProductReviews(product.id);
+  const reviewsHtml = reviews.length ? reviews.map((r,i) => `<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;line-height:1.6;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text || 'No comment'}<br><small style="color:#aaa;">${r.name || 'Anonymous'} · ${r.country || 'Unknown'} · ${r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : 'Recently'}</small></div>`).join('') : '<p class="no-reviews">No reviews yet.</p>';
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider"><div class="product-slides" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div><div class="slider-bars" id="slider-bars">${images.map((_,i)=>`<button class="slider-bar${i===0?" active":""}" onclick="goToSlide(${i})"></button>`).join("")}</div></div>
     <div class="product-info">
@@ -1322,13 +1453,35 @@ function toggleBrandsCollapse() { document.getElementById("brands-collapse").cla
 function toggleSubmenuCollapse(id) { document.getElementById(`${id}-collapse`)?.classList.toggle("open"); }
 function openCart() { DOM.cartBackdrop.classList.add("open"); DOM.cartPanel.classList.add("open"); renderCart(); }
 function closeCart() { DOM.cartBackdrop.classList.remove("open"); DOM.cartPanel.classList.remove("open"); }
-function openReviewModal() { DOM.reviewModalBackdrop.classList.add("open"); S.reviewRating=0; S.reviewImage=null; updateReviewStars(); DOM.reviewText.value=""; DOM.reviewImagePreview.style.display="none"; DOM.reviewImageInput.value=""; }
+function openReviewModal() { DOM.reviewModalBackdrop.classList.add("open"); S.reviewRating=0; S.reviewImage=null; updateReviewStars(); DOM.reviewText.value=""; DOM.reviewName.value=""; DOM.reviewImagePreview.style.display="none"; DOM.reviewImageInput.value=""; }
 function closeReviewModal() { DOM.reviewModalBackdrop.classList.remove("open"); }
 function setReviewRating(r) { S.reviewRating=r; updateReviewStars(); }
 function updateReviewStars() { document.querySelectorAll("#review-stars .review-star-btn").forEach((b,i)=>{ b.innerHTML = i < S.reviewRating ? '<i class="ph-fill ph-star"></i>' : '<i class="ph-thin ph-star"></i>'; b.classList.toggle("filled", i < S.reviewRating); }); }
 function handleReviewImage(event) { const file=event.target.files[0]; if(file){ S.reviewImage=file; const reader=new FileReader(); reader.onload=e=>{ DOM.reviewImagePreview.src=e.target.result; DOM.reviewImagePreview.style.display="block"; }; reader.readAsDataURL(file); } }
-function submitReview() { if(S.reviewRating===0) return; const text = DOM.reviewText.value.trim(); if (!S.currentReviewProductId) { closeReviewModal(); return; } addProductReview(S.currentReviewProductId, { rating: S.reviewRating, text: text, date: new Date().toISOString() }); closeReviewModal(); if (S.currentPage === 'product-detail') { const product = PRODUCTS.find(p => p.id === S.currentReviewProductId); if (product) renderProductPage(product); } }
-function checkout() { /* silent */ }
+async function submitReview() { if(S.reviewRating===0) return; const text = DOM.reviewText.value.trim(); const name = DOM.reviewName.value.trim(); if (!S.currentReviewProductId) { closeReviewModal(); return; } await addProductReview(S.currentReviewProductId, { rating: S.reviewRating, text: text, name: name || 'Anonymous' }); closeReviewModal(); if (S.currentPage === 'product-detail') { const product = PRODUCTS.find(p => p.id === S.currentReviewProductId); if (product) renderProductPage(product); } }
+async function checkout() {
+  if (S.cart.length === 0) return;
+  const orderData = {
+    items: S.cart.map(item => ({
+      productId: item.productId,
+      name: item.name,
+      brand: item.brand,
+      size: item.size,
+      color: item.color,
+      qty: item.qty,
+      price: item.salePrice || item.price,
+      variantIndex: item.variantIndex
+    })),
+    subtotal: S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0),
+    currency: S.currency,
+    itemCount: S.cart.reduce((a,i)=>a+i.qty,0)
+  };
+  await saveOrder(orderData);
+  S.cart = [];
+  updateBadges();
+  renderCart();
+  alert('Order placed successfully! (Demo mode)');
+}
 function calculateShipping() { const postal=document.getElementById("postal-code-input")?.value.trim(); const resultEl=document.getElementById("shipping-result"); if(!resultEl) return; if(!postal||postal.length<3){resultEl.textContent="Please enter a valid postal code.";return;} resultEl.textContent=`Estimated shipping: ${formatPrice(Math.floor(Math.random()*150)+50)} (3-5 business days)`; }
 function updateBadges() { const cc=S.cart.reduce((a,i)=>a+i.qty,0); DOM.cartBadge.style.display=cc>0?"flex":"none"; DOM.cartBadge.textContent=cc; DOM.wishBadge.style.display=S.wishlist.length>0?"flex":"none"; DOM.wishBadge.textContent=S.wishlist.length; }
 
