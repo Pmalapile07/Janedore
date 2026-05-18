@@ -494,10 +494,13 @@
 </head>
 <body>
 
-<!-- ALL HTML BODY CONTENT REMAINS EXACTLY THE SAME AS YOUR ORIGINAL -->
-<!-- (banner, nav, drawers, panels, modals, pages, etc.) -->
-<div id="banner"><div class="announcement-text active" id="announce-text-0"></div><div class="announcement-text" id="announce-text-1"></div></div>
+<!-- Banner -->
+<div id="banner">
+  <div class="announcement-text active" id="announce-text-0"></div>
+  <div class="announcement-text" id="announce-text-1"></div>
+</div>
 
+<!-- Main Navigation -->
 <nav id="main-nav">
   <div class="nav-left">
     <button class="nav-icon-btn" onclick="openMenu()"><i class="ph-thin ph-list"></i></button>
@@ -527,7 +530,9 @@
       <a class="desktop-nav-link sale" onclick="navigateTo('products')">Sale</a>
     </div>
   </div>
-  <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
+  <div class="nav-logo" onclick="navigateTo('home')">
+    <img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;">
+  </div>
   <div class="nav-right">
     <button class="nav-icon-btn" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
@@ -540,17 +545,31 @@
   </div>
 </nav>
 
+<!-- Search Overlay -->
 <div id="search-overlay">
   <div class="search-overlay-header">
-    <div class="search-input-wrap"><i class="ph-thin ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i><input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)"></div>
-    <button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="search-input-wrap">
+      <i class="ph-thin ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i>
+      <input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)">
+    </div>
+    <button class="search-close-btn" onclick="closeSearch()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
   </div>
   <div class="search-body" id="search-body"></div>
 </div>
 
+<!-- Menu Backdrop & Drawer -->
 <div id="menu-backdrop" onclick="closeMenu()"></div>
 <div id="menu-drawer">
-  <div class="drawer-header"><div class="drawer-title">Menu</div><button class="drawer-close" onclick="closeMenu()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="drawer-header">
+    <div class="drawer-title">Menu</div>
+    <button class="drawer-close" onclick="closeMenu()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
   <div class="drawer-body">
     <a class="drawer-link" onclick="navigateTo('home');closeMenu();">The Understated</a>
     <div class="submenu-collapse" id="clothing-collapse">
@@ -573,7 +592,14 @@
       </div>
     </div>
     <a class="drawer-link" onclick="navigateToCategory('parfum');closeMenu();">Parfum</a>
-    <div class="brands-collapse" id="brands-collapse"><div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="brands-collapse-body"><div class="brand-logo-placeholder">JANEDORE</div><div class="brand-logo-placeholder">NIRIUS CO</div><div class="brand-logo-placeholder">THATO</div></div></div>
+    <div class="brands-collapse" id="brands-collapse">
+      <div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      <div class="brands-collapse-body">
+        <div class="brand-logo-placeholder">JANEDORE</div>
+        <div class="brand-logo-placeholder">NIRIUS CO</div>
+        <div class="brand-logo-placeholder">THATO</div>
+      </div>
+    </div>
     <a class="drawer-link sale" onclick="closeMenu();">Sale</a>
     <div class="drawer-spacer"></div>
     <div class="drawer-section-title">Account</div>
@@ -584,13 +610,20 @@
   </div>
 </div>
 
+<!-- Cart Backdrop & Panel -->
 <div id="cart-backdrop" onclick="closeCart()"></div>
 <div id="cart-panel">
-  <div class="panel-header"><div><div class="panel-title">Your Bag (<span id="cart-item-count">0</span>)</div></div><button class="panel-close" onclick="closeCart()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="panel-header">
+    <div><div class="panel-title">Your Bag (<span id="cart-item-count">0</span>)</div></div>
+    <button class="panel-close" onclick="closeCart()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
   <div class="cart-body" id="cart-body"></div>
   <div class="cart-foot" id="cart-foot"></div>
 </div>
 
+<!-- Review Modal -->
 <div id="review-modal-backdrop" onclick="closeReviewModal()">
   <div id="review-modal" onclick="event.stopPropagation()">
     <button class="review-modal-close" onclick="closeReviewModal()">✕</button>
@@ -613,6 +646,9 @@
   </div>
 </div>
 
+<!-- ==================== PAGES ==================== -->
+
+<!-- Home Page -->
 <div class="page active" id="page-home">
   <section id="hero">
     <div class="hero-bg-placeholder" id="hero-bg"></div>
@@ -629,6 +665,7 @@
   <footer id="main-footer"></footer>
 </div>
 
+<!-- Campaign Page -->
 <div class="page" id="page-campaign">
   <section class="campaign-section">
     <h1 class="campaign-heading">UNDERSTATED</h1>
@@ -640,12 +677,19 @@
     <div class="campaign-fullwidth-image" style="background: linear-gradient(160deg, #e0dbd4, #c8bfb0);"></div>
     <div class="campaign-fullwidth-image" style="background: linear-gradient(160deg, #2a2a2a, #1c1c1c);"></div>
     <p class="campaign-tagline">Where silence makes the strongest statement.</p>
-    <div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>
+    <div class="campaign-product-slider" id="campaign-product-slider">
+      <div class="campaign-slides" id="campaign-slides"></div>
+      <div class="campaign-slider-controls">
+        <button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+    </div>
     <div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div>
   </section>
   <footer id="campaign-footer"></footer>
 </div>
 
+<!-- Products Page -->
 <div class="page" id="page-products">
   <section class="site-collection-layout">
     <div class="collection-toolbar">
@@ -675,7 +719,11 @@
       </div>
       <div class="toolbar-center">ALL PRODUCTS</div>
       <div class="toolbar-right">
-        <button class="toolbar-icon-btn" onclick="toggleGrid()" id="grid-toggle-btn"><div class="grid-toggle-svg" id="grid-toggle-svg"><div class="grid-block active"></div><div class="grid-block active"></div><div class="grid-block"></div></div></button>
+        <button class="toolbar-icon-btn" onclick="toggleGrid()" id="grid-toggle-btn">
+          <div class="grid-toggle-svg" id="grid-toggle-svg">
+            <div class="grid-block active"></div><div class="grid-block active"></div><div class="grid-block"></div>
+          </div>
+        </button>
       </div>
     </div>
     <div class="product-grid" id="all-products-grid"></div>
@@ -684,6 +732,7 @@
   <footer id="products-footer"></footer>
 </div>
 
+<!-- Category Page -->
 <div class="page" id="page-category">
   <section class="site-collection-layout">
     <div class="collection-toolbar">
@@ -706,7 +755,11 @@
       </div>
       <div class="toolbar-center" id="category-name-tag"></div>
       <div class="toolbar-right">
-        <button class="toolbar-icon-btn" onclick="toggleGridCat()"><div class="grid-toggle-svg" id="cat-grid-toggle-svg"><div class="grid-block active"></div><div class="grid-block active"></div><div class="grid-block"></div></div></button>
+        <button class="toolbar-icon-btn" onclick="toggleGridCat()">
+          <div class="grid-toggle-svg" id="cat-grid-toggle-svg">
+            <div class="grid-block active"></div><div class="grid-block active"></div><div class="grid-block"></div>
+          </div>
+        </button>
       </div>
     </div>
     <div id="category-description-wrap"></div>
@@ -716,96 +769,55 @@
   <footer id="category-footer"></footer>
 </div>
 
+<!-- Editorial Page -->
 <div class="page" id="page-editorial">
-  <section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300">Editorial</div></div></section>
+  <section style="padding:60px 12px">
+    <div style="text-align:center;margin-bottom:40px">
+      <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300">Editorial</div>
+    </div>
+  </section>
   <footer id="editorial-footer"></footer>
 </div>
 
+<!-- Cart Page -->
 <div class="page" id="page-cart">
   <div class="cart-page" id="cart-page-content"></div>
   <footer id="cart-footer"></footer>
 </div>
 
+<!-- Wishlist Page -->
 <div class="page" id="page-wishlist">
   <div class="wish-page" id="wish-page-content"></div>
   <footer id="wishlist-footer"></footer>
 </div>
 
+<!-- Product Detail Page -->
 <div class="page" id="page-product-detail"></div>
 
+<!-- Live Chat -->
+<button id="live-chat-bubble" onclick="toggleChat()">
+  <i class="ph-thin ph-chat-circle-dots"></i>
+  <span class="chat-unread-dot" id="chat-unread-dot"></span>
+</button>
+<div id="chat-window">
+  <div class="chat-header">
+    <span class="chat-header-title">Chat with JANEDORE</span>
+    <button class="chat-header-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>
+  </div>
+  <div class="chat-input-wrap">
+    <input class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+    <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="firebase-backend.js"></script>
+<script src="chat.js"></script>
 <script>
-  // ==================== FIREBASE INITIALIZATION ====================
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-    authDomain: "janedore-9f035.firebaseapp.com",
-    projectId: "janedore-9f035",
-    storageBucket: "janedore-9f035.firebasestorage.app",
-    messagingSenderId: "571299748651",
-    appId: "1:571299748651:web:01463a772d47b39cc4036e",
-    measurementId: "G-Y9NMT0ZGKZ"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const productsRef = db.collection('products');
-  const reviewsRef = db.collection('reviews');
-  const newsletterRef = db.collection('newsletter');
-  const ordersRef = db.collection('orders');
-  const chatRef = db.collection('live_chat');
-let chatSessionId = localStorage.getItem('janedore_chat') || ('chat-' + Date.now());
-localStorage.setItem('janedore_chat', chatSessionId);
-let chatOpen = false, chatUnsub = null;
-
-function toggleChat() {
-  chatOpen = !chatOpen;
-  document.getElementById('chat-window').classList.toggle('open', chatOpen);
-  if (chatOpen) {
-    document.getElementById('chat-unread-dot').style.display = 'none';
-    listenChat();
-    document.getElementById('chat-input').focus();
-  } else { if (chatUnsub) { chatUnsub(); chatUnsub = null; } }
-}
-
-function listenChat() {
-  if (chatUnsub) chatUnsub();
-  chatUnsub = chatRef.where('sessionId', '==', chatSessionId).orderBy('createdAt', 'asc')
-    .onSnapshot(snap => {
-      const el = document.getElementById('chat-messages');
-      const welcome = el.querySelector('.chat-welcome');
-      const scroll = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-      snap.docChanges().forEach(c => {
-        if (c.type === 'added') {
-          const m = c.doc.data();
-          const t = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-          const div = document.createElement('div');
-          div.className = 'chat-msg ' + m.sender;
-          div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
-          if (welcome) welcome.remove();
-          el.appendChild(div);
-          if (!chatOpen && m.sender === 'admin') document.getElementById('chat-unread-dot').style.display = 'block';
-        }
-      });
-      if (scroll) el.scrollTop = el.scrollHeight;
-    });
-}
-
-async function sendChatMessage() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-  if (!text) return;
-  try {
-    await chatRef.add({
-      sessionId: chatSessionId,
-      text: text,
-      sender: 'customer',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false
-    });
-    input.value = '';
-  } catch (e) { console.warn('Chat error:', e); }
-}
-  // ==================== END FIREBASE INIT ====================
-
   const DOM = {
     cartBadge: document.getElementById("cart-badge"),
     wishBadge: document.getElementById("wish-badge"),
@@ -847,10 +859,9 @@ async function sendChatMessage() {
 
   let PRODUCTS = [];
 
-  // ==================== FETCH PRODUCTS FROM FIREBASE ====================
   async function fetchProducts() {
     try {
-      const snapshot = await productsRef.where('status', '==', 'active').get();
+      const snapshot = await db.collection('products').where('status', '==', 'active').get();
       if (!snapshot.empty) {
         const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log("✅ Loaded " + products.length + " products from Firebase");
@@ -859,7 +870,6 @@ async function sendChatMessage() {
     } catch (e) {
       console.warn("⚠️ Firebase fetch failed, using fallback:", e.message);
     }
-    // Fallback hardcoded products
     await new Promise(r => setTimeout(r, 600));
     return [
       { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 10, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: "2025-06-10T08:00:00Z", updatedAt: "2025-06-12T09:00:00Z", variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287", "https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail: [] } }] },
@@ -890,88 +900,6 @@ async function sendChatMessage() {
     previousCollectionPage: null,
     currentReviewProductId: null
   };
-
-  // Firebase: Get reviews
-  async function getProductReviews(productId) {
-    try {
-      const snapshot = await reviewsRef.where('productId', '==', productId).orderBy('createdAt', 'desc').get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (e) {
-      console.warn("Firebase reviews fetch failed:", e);
-      return [];
-    }
-  }
-
-  // Firebase: Add review
-  async function addProductReview(productId, review) {
-    try {
-      const country = await getVisitorCountry();
-      await reviewsRef.add({
-        productId,
-        rating: review.rating,
-        text: review.text,
-        name: review.name || 'Anonymous',
-        country: country,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      console.log("Review saved to Firebase");
-    } catch (e) {
-      console.warn("Firebase review save failed:", e);
-      const all = JSON.parse(localStorage.getItem('janedore_reviews') || '{}');
-      if (!all[productId]) all[productId] = [];
-      all[productId].push(review);
-      localStorage.setItem('janedore_reviews', JSON.stringify(all));
-    }
-  }
-
-  // Firebase: Newsletter
-  async function subscribeNewsletter(email) {
-    if (!email || !email.includes('@')) return;
-    try {
-      await newsletterRef.add({
-        email,
-        subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        source: 'website'
-      });
-      console.log("Newsletter subscription saved to Firebase");
-      const input = document.getElementById('newsletter-email');
-      if (input) {
-        input.value = '';
-        input.placeholder = 'Subscribed!';
-        setTimeout(() => { input.placeholder = 'Enter your email'; }, 2000);
-      }
-    } catch (e) {
-      console.warn("Firebase newsletter save failed:", e);
-    }
-  }
-
-  // Firebase: Order
-  async function saveOrder(orderData) {
-    try {
-      await ordersRef.add({
-        ...orderData,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        status: 'pending'
-      });
-      console.log("Order saved to Firebase");
-    } catch (e) {
-      console.warn("Firebase order save failed:", e);
-    }
-  }
-
-  // Get visitor country
-  async function getVisitorCountry() {
-    try {
-      const response = await fetch('https://ipapi.co/json/');
-      const data = await response.json();
-      return data.country_name || 'Unknown';
-    } catch (e) {
-      return 'Unknown';
-    }
-  }
-
-  function loadReviewsFromStorage() { try { return JSON.parse(localStorage.getItem('janedore_reviews') || '{}'); } catch(e) { return {}; } }
-  function saveReviewsToStorage(reviews) { localStorage.setItem('janedore_reviews', JSON.stringify(reviews)); }
 
   function initNavScroll() {
     DOM.hero = document.getElementById("hero");
@@ -1592,11 +1520,6 @@ async function sendChatMessage() {
   }
   init();
 </script>
-  <button id="live-chat-bubble" onclick="toggleChat()"><i class="ph-thin ph-chat-circle-dots"></i><span class="chat-unread-dot" id="chat-unread-dot"></span></button>
-<div id="chat-window">
-<div class="chat-header"><span class="chat-header-title">Chat with JANEDORE</span><button class="chat-header-close" onclick="toggleChat()">✕</button></div>
-<div class="chat-messages" id="chat-messages"><div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div></div>
-<div class="chat-input-wrap"><input class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendChatMessage()"><button class="chat-send-btn" onclick="sendChatMessage()">Send</button></div>
-</div>
+
 </body>
 </html>
