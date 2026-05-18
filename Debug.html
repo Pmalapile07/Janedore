@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JANEDORE Debug Console</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Courier New', monospace; background: #0a0a0a; color: #0f0; padding: 20px; min-height: 100vh; }
+    .debug-header { border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .debug-header h1 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.2em; }
+    .status-indicator { padding: 6px 14px; font-size: 11px; text-transform: uppercase; }
+    .status-ok { background: #0a0; color: #fff; }
+    .status-err { background: #c00; color: #fff; }
+    .log-entry { padding: 8px 0; border-bottom: 1px solid #1a1a1a; font-size: 12px; }
+    .log-entry .timestamp { color: #666; margin-right: 12px; }
+    .log-entry.info .msg { color: #0f0; }
+    .log-entry.warn .msg { color: #ff0; }
+    .log-entry.error .msg { color: #f00; }
+    .log-entry.success .msg { color: #0af; }
+    .section { margin-bottom: 24px; }
+    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #555; margin-bottom: 8px; }
+    .btn { padding: 8px 16px; margin-right: 8px; border: 1px solid #333; background: #111; color: #0f0; cursor: pointer; font-family: inherit; font-size: 11px; text-transform: uppercase; }
+    .btn:hover { border-color: #0f0; }
+    .result-box { background: #111; border: 1px solid #333; padding: 16px; margin-top: 8px; max-height: 300px; overflow-y: auto; font-size: 11px; white-space: pre-wrap; }
+    input { background: #111; border: 1px solid #333; color: #0f0; padding: 8px 12px; font-family: inherit; width: 100%; max-width: 400px; }
+  </style>
+</head>
+<body>
+<div class="debug-header">
+  <h1>🔍 JANEDORE Debug Console</h1>
+  <div id="connection-status" class="status-indicator">CHECKING...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Firebase Connection</div>
+  <button class="btn" onclick="testConnection()">Test Connection</button>
+  <button class="btn" onclick="listAllCollections()">List Collections</button>
+  <button class="btn" onclick="checkFirestoreRules()">Check Permissions</button>
+  <div class="result-box" id="connection-result">Awaiting test...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Products Debug</div>
+  <button class="btn" onclick="fetchAllProducts()">Fetch All Products</button>
+  <button class="btn" onclick="countProducts()">Count Products</button>
+  <button class="btn" onclick="checkProductStructure()">Validate Structure</button>
+  <div class="result-box" id="products-result">Awaiting test...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Reviews Debug</div>
+  <button class="btn" onclick="fetchAllReviews()">Fetch All Reviews</button>
+  <button class="btn" onclick="testAddReview()">Test Add Review</button>
+  <div class="result-box" id="reviews-result">Awaiting test...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Newsletter Debug</div>
+  <button class="btn" onclick="fetchNewsletter()">Fetch Subscribers</button>
+  <button class="btn" onclick="testAddSubscriber()">Test Add Subscriber</button>
+  <div class="result-box" id="newsletter-result">Awaiting test...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Orders Debug</div>
+  <button class="btn" onclick="fetchAllOrders()">Fetch Orders</button>
+  <button class="btn" onclick="testAddOrder()">Test Add Order</button>
+  <div class="result-box" id="orders-result">Awaiting test...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Custom Query</div>
+  <input type="text" id="custom-query" placeholder="Enter collection name (products, reviews, newsletter, orders)">
+  <button class="btn" onclick="runCustomQuery()" style="margin-top:8px;">Run Query</button>
+  <div class="result-box" id="custom-result">Awaiting query...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Log</div>
+  <div id="log-container"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const logs = [];
+  function addLog(msg, type = 'info') {
+    const entry = { msg, type, time: new Date() };
+    logs.push(entry);
+    const container = document.getElementById('log-container');
+    container.innerHTML += `<div class="log-entry ${type}"><span class="timestamp">${entry.time.toLocaleTimeString()}</span><span class="msg">${msg}</span></div>`;
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function testConnection() {
+    const resultEl = document.getElementById('connection-result');
+    const statusEl = document.getElementById('connection-status');
+    try {
+      const start = Date.now();
+      await db.collection('products').limit(1).get();
+      const latency = Date.now() - start;
+      resultEl.textContent = `✅ Connected successfully! Latency: ${latency}ms\nProject: janedore-9f035`;
+      statusEl.textContent = '🟢 CONNECTED';
+      statusEl.className = 'status-indicator status-ok';
+      addLog(`Connection OK (${latency}ms)`, 'success');
+    } catch (e) {
+      resultEl.textContent = `❌ Connection FAILED\nError: ${e.message}\nCode: ${e.code}\n\nTroubleshooting:\n1. Check internet connection\n2. Verify Firebase project is active\n3. Check if Firestore is enabled in Firebase Console\n4. Verify API key is correct`;
+      statusEl.textContent = '🔴 DISCONNECTED';
+      statusEl.className = 'status-indicator status-err';
+      addLog(`Connection FAILED: ${e.message}`, 'error');
+    }
+  }
+
+  async function listAllCollections() {
+    const resultEl = document.getElementById('connection-result');
+    try {
+      const collections = ['products','reviews','newsletter','orders'];
+      const results = await Promise.all(collections.map(async c => {
+        const snap = await db.collection(c).limit(1).get();
+        return `${c}: ${snap.empty ? 'empty' : 'has data'} (readable)` ;
+      }));
+      resultEl.textContent = `Collections:\n${results.join('\n')}`;
+      addLog('Collections listed', 'info');
+    } catch (e) {
+      resultEl.textContent = `Error listing collections: ${e.message}`;
+      addLog(`List collections error: ${e.message}`, 'error');
+    }
+  }
+
+  async function checkFirestoreRules() {
+    const resultEl = document.getElementById('connection-result');
+    try {
+      // Try reading
+      await db.collection('products').limit(1).get();
+      const readOK = true;
+      // Try writing to a test doc
+      try {
+        await db.collection('_test_').doc('test').set({ test: true, timestamp: new Date() });
+        await db.collection('_test_').doc('test').delete();
+        resultEl.textContent = '✅ Read: ALLOWED\n✅ Write: ALLOWED\n\nFirestore rules are open or properly configured.';
+        addLog('Read/Write both allowed', 'success');
+      } catch (writeErr) {
+        resultEl.textContent = `✅ Read: ALLOWED\n❌ Write: DENIED\n\n${writeErr.message}\n\nUpdate Firestore rules in Firebase Console to allow writes.`;
+        addLog('Write denied - check rules', 'warn');
+      }
+    } catch (e) {
+      resultEl.textContent = `❌ Read: DENIED\n\n${e.message}\n\nFirestore rules are blocking all access. Update in Firebase Console.`;
+      addLog('Read denied - check rules', 'error');
+    }
+  }
+
+  async function fetchAllProducts() {
+    const resultEl = document.getElementById('products-result');
+    try {
+      const snap = await db.collection('products').get();
+      const products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      resultEl.textContent = `Found ${products.length} products:\n\n${JSON.stringify(products, null, 2)}`;
+      addLog(`Fetched ${products.length} products`, 'success');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Fetch products error: ${e.message}`, 'error');
+    }
+  }
+
+  async function countProducts() {
+    const resultEl = document.getElementById('products-result');
+    try {
+      const snap = await db.collection('products').get();
+      const active = snap.docs.filter(d => d.data().status === 'active').length;
+      const drafts = snap.docs.filter(d => d.data().status === 'draft').length;
+      resultEl.textContent = `Total: ${snap.size}\nActive: ${active}\nDrafts: ${drafts}`;
+      addLog(`Product count: ${snap.size}`, 'info');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Count error: ${e.message}`, 'error');
+    }
+  }
+
+  async function checkProductStructure() {
+    const resultEl = document.getElementById('products-result');
+    try {
+      const snap = await db.collection('products').limit(1).get();
+      if (snap.empty) {
+        resultEl.textContent = 'No products found. Seed from admin panel first.';
+        addLog('No products to validate', 'warn');
+        return;
+      }
+      const p = snap.docs[0].data();
+      const required = ['id','name','brand','category','price','status','variants'];
+      const missing = required.filter(f => !(f in p));
+      const variantFields = p.variants?.[0] ? ['color','swatch','images'] : [];
+      const missingVariant = variantFields.filter(f => !(f in (p.variants?.[0]||{})));
+      resultEl.textContent = `Sample product structure:\n${JSON.stringify(p, null, 2)}\n\n` +
+        `Required fields missing: ${missing.length ? missing.join(', ') : '✅ All present'}\n` +
+        `Variant fields missing: ${missingVariant.length ? missingVariant.join(', ') : '✅ All present'}`;
+      addLog('Structure validation complete', missing.length ? 'warn' : 'success');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Validation error: ${e.message}`, 'error');
+    }
+  }
+
+  async function fetchAllReviews() {
+    const resultEl = document.getElementById('reviews-result');
+    try {
+      const snap = await db.collection('reviews').orderBy('createdAt','desc').get();
+      resultEl.textContent = `Found ${snap.size} reviews:\n\n${JSON.stringify(snap.docs.map(d => ({ id: d.id, ...d.data() })), null, 2)}`;
+      addLog(`Fetched ${snap.size} reviews`, 'success');
+    } catch (e) {
+      resultEl.textContent = `Error (may need composite index): ${e.message}`;
+      addLog(`Reviews error: ${e.message}`, 'error');
+    }
+  }
+
+  async function testAddReview() {
+    const resultEl = document.getElementById('reviews-result');
+    try {
+      const ref = await db.collection('reviews').add({
+        productId: 'test-product',
+        rating: 5,
+        text: 'Debug test review',
+        name: 'Debugger',
+        country: 'South Africa',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      resultEl.textContent = `✅ Test review added! ID: ${ref.id}\n\nDeleting it now...`;
+      await db.collection('reviews').doc(ref.id).delete();
+      resultEl.textContent += `\nDeleted test review.`;
+      addLog('Test review add/delete OK', 'success');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Add review error: ${e.message}`, 'error');
+    }
+  }
+
+  async function fetchNewsletter() {
+    const resultEl = document.getElementById('newsletter-result');
+    try {
+      const snap = await db.collection('newsletter').get();
+      resultEl.textContent = `Found ${snap.size} subscribers:\n${snap.docs.map(d => d.data().email).join('\n')}`;
+      addLog(`Fetched ${snap.size} subscribers`, 'success');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Newsletter error: ${e.message}`, 'error');
+    }
+  }
+
+  async function testAddSubscriber() {
+    const resultEl = document.getElementById('newsletter-result');
+    try {
+      const ref = await db.collection('newsletter').add({
+        email: 'debug@test.com',
+        subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        source: 'debug-page'
+      });
+      resultEl.textContent = `✅ Test subscriber added! ID: ${ref.id}\nDeleting...`;
+      await db.collection('newsletter').doc(ref.id).delete();
+      resultEl.textContent += `\nDeleted.`;
+      addLog('Test subscriber add/delete OK', 'success');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Subscriber error: ${e.message}`, 'error');
+    }
+  }
+
+  async function fetchAllOrders() {
+    const resultEl = document.getElementById('orders-result');
+    try {
+      const snap = await db.collection('orders').orderBy('createdAt','desc').get();
+      resultEl.textContent = `Found ${snap.size} orders:\n\n${JSON.stringify(snap.docs.map(d => ({ id: d.id, ...d.data() })), null, 2)}`;
+      addLog(`Fetched ${snap.size} orders`, 'success');
+    } catch (e) {
+      resultEl.textContent = `Error (may need composite index): ${e.message}`;
+      addLog(`Orders error: ${e.message}`, 'error');
+    }
+  }
+
+  async function testAddOrder() {
+    const resultEl = document.getElementById('orders-result');
+    try {
+      const ref = await db.collection('orders').add({
+        items: [{ productId: 'test', name: 'Test Item', qty: 1, price: 100 }],
+        subtotal: 100,
+        currency: 'ZAR',
+        itemCount: 1,
+        status: 'test',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      resultEl.textContent = `✅ Test order added! ID: ${ref.id}\nDeleting...`;
+      await db.collection('orders').doc(ref.id).delete();
+      resultEl.textContent += `\nDeleted.`;
+      addLog('Test order add/delete OK', 'success');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Order error: ${e.message}`, 'error');
+    }
+  }
+
+  async function runCustomQuery() {
+    const collection = document.getElementById('custom-query').value.trim();
+    const resultEl = document.getElementById('custom-result');
+    if (!collection) { resultEl.textContent = 'Enter a collection name'; return; }
+    try {
+      const snap = await db.collection(collection).limit(20).get();
+      resultEl.textContent = `Collection "${collection}": ${snap.size} docs\n\n${JSON.stringify(snap.docs.map(d => ({ id: d.id, ...d.data() })), null, 2)}`;
+      addLog(`Custom query "${collection}": ${snap.size} results`, 'success');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e.message}`;
+      addLog(`Custom query error: ${e.message}`, 'error');
+    }
+  }
+
+  // Auto-test on load
+  setTimeout(testConnection, 500);
+  addLog('Debug page initialized', 'info');
+</script>
+</body>
+</html>
