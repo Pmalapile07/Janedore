@@ -544,7 +544,12 @@
   const db = firebase.firestore();
 
   async function getProductReviews(productId) {
-    try { const s = await db.collection('reviews').where('productId','==',productId).orderBy('createdAt','desc').get(); return s.docs.map(d=>({id:d.id,...d.data()})); } catch(e) { return []; }
+    try { 
+      const s = await db.collection('reviews').where('productId','==',productId).get(); 
+      const reviews = s.docs.map(d=>({id:d.id,...d.data()}));
+      reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      return reviews;
+    } catch(e) { return []; }
   }
   async function addProductReview(productId, review) {
     try {
@@ -624,6 +629,7 @@
     if (hash === 'campaign') return { page: 'campaign' };
     if (hash === 'cart') return { page: 'cart' };
     if (hash === 'wishlist') return { page: 'wishlist' };
+    if (hash === 'checkout') return { page: 'checkout' };
     if (hash === 'editorial') return { page: 'editorial' };
     if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') };
     if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') };
@@ -645,6 +651,7 @@
     if(page==="products"){renderAllProducts();ensureNavScrolled();S.previousCollectionPage='products';}
     if(page==="cart"){renderCartPage();ensureNavScrolled();}
     if(page==="wishlist"){renderWishlistPage();ensureNavScrolled();}
+    if(page==="checkout"){navigateToCheckout();}
     if(page==="home") setTimeout(checkNavForHome,50);
     if(page==="editorial") ensureNavScrolled();
     setTimeout(refreshSwipeTracks,50);
@@ -1035,7 +1042,7 @@
     }
     DOM.cartBody.innerHTML = html;
     const sub = S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0);
-    DOM.cartFoot.innerHTML = `<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">${formatPrice(sub)}</span></div><div class="cart-ship-note">${sub>=1500?"Free shipping applied":`R250 shipping · Free over ${formatPrice(1500)}`}</div>${cartHasMultipleTypes()?'<div class="cart-multi-package-note">contents may arrive in multiple packages</div>':''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="checkout()">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
+    DOM.cartFoot.innerHTML = `<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">${formatPrice(sub)}</span></div><div class="cart-ship-note">${sub>=1500?"Free shipping applied":`R150 shipping · Free over ${formatPrice(1500)}`}</div>${cartHasMultipleTypes()?'<div class="cart-multi-package-note">contents may arrive in multiple packages</div>':''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="navigateToCheckout()">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
   }
 
   function toggleWish(productId) {
@@ -1105,6 +1112,7 @@
   function handleReviewImage(event) { const file=event.target.files[0]; if(file){ S.reviewImage=file; const reader=new FileReader(); reader.onload=e=>{ DOM.reviewImagePreview.src=e.target.result; DOM.reviewImagePreview.style.display="block"; }; reader.readAsDataURL(file); } }
   async function submitReview() { if(S.reviewRating===0) return; const text=DOM.reviewText.value.trim(); const name=DOM.reviewName.value.trim(); if(!S.currentReviewProductId){closeReviewModal();return;} await addProductReview(S.currentReviewProductId,{rating:S.reviewRating,text:text,name:name||'Anonymous'}); closeReviewModal(); if(S.currentPage==='product-detail'){const product=PRODUCTS.find(p=>p.id===S.currentReviewProductId); if(product) renderProductPage(product);} }
   async function checkout() { if(!S.cart.length) return; await saveOrder({ items: S.cart.map(i=>({ productId:i.productId,name:i.name,brand:i.brand,size:i.size,color:i.color,qty:i.qty,price:i.salePrice||i.price,variantIndex:i.variantIndex })), subtotal: S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0), currency:S.currency, itemCount:S.cart.reduce((a,i)=>a+i.qty,0) }); S.cart=[]; updateBadges(); renderCart(); alert('Order placed successfully! (Demo mode)'); }
+  function navigateToCheckout() { closeCart(); navigateTo('checkout'); }
   function calculateShipping() { const postal=document.getElementById("postal-code-input")?.value.trim(); const res=document.getElementById("shipping-result"); if(!res) return; if(!postal||postal.length<3){res.textContent="Please enter a valid postal code.";return;} res.textContent=`Estimated shipping: ${formatPrice(Math.floor(Math.random()*150)+50)} (3-5 business days)`; }
   function updateBadges() { const cc=S.cart.reduce((a,i)=>a+i.qty,0); DOM.cartBadge.style.display=cc>0?"flex":"none"; DOM.cartBadge.textContent=cc; DOM.wishBadge.style.display=S.wishlist.length>0?"flex":"none"; DOM.wishBadge.textContent=S.wishlist.length; }
   function renderCartPage() {
@@ -1113,7 +1121,7 @@
     const total=S.cart.reduce((a,i)=>a+i.qty,0);
     let html=S.cart.map(item=>`<div class="cart-page-item" onclick="goToProduct('${item.productId}')"><div class="cart-page-img" style="background-image:url('${item.thumbnail||PLACEHOLDER_IMAGE}');"></div><div class="cart-page-details"><div class="cart-page-brand">${item.brand||''}</div><div class="cart-page-name">${item.name}</div><div class="cart-page-meta">${item.color||''} · Size ${item.size||''}</div><div class="cart-page-qty-wrap"><button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${item.productId}','${item.size}',-1,${item.variantIndex});renderCartPage();">−</button><span class="cart-page-qty-num">${item.qty}</span><button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${item.productId}','${item.size}',1,${item.variantIndex});renderCartPage();">+</button></div></div><span class="cart-page-price">${formatPrice((item.salePrice??item.price??0)*item.qty)}</span><button class="cart-page-remove" onclick="event.stopPropagation();removeFromCart('${item.productId}','${item.size}',${item.variantIndex});renderCartPage();">×</button></div>`).join("");
     if(hasSunglassesInCart() && !pouchAlreadyInCart()){const pouch=PRODUCTS.find(p=>p.id==='janedore-leather-pouch');if(pouch)html+=`<div class="cart-addon-section"><div class="cart-addon-title">ADD-ON</div><div class="cart-addon-item"><div class="cart-addon-img" style="background-image:url('${getProductThumbnail(pouch)}');"></div><div class="cart-addon-info"><div class="cart-addon-name">${pouch.name}</div><div class="cart-addon-price">${formatPrice(pouch.price)}</div></div><button class="cart-addon-btn" onclick="event.stopPropagation();addPouchToCart();renderCartPage();">Add</button></div></div>`;}
-    DOM.cartPageContent.innerHTML=`<div class="cart-page-title">Your Bag (${total} item${total!==1?"s":""})</div>${html}<div class="cart-page-promo"><input class="cart-page-promo-input" type="text" placeholder="PROMO CODE"><button class="cart-page-promo-btn" onclick="applyPromoCode()">Apply</button></div><div class="cart-page-summary"><div class="cart-page-subtotal">Subtotal <strong>${formatPrice(S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0))}</strong></div>${cartHasMultipleTypes()?'<div class="cart-page-multi-package-note">contents may arrive in multiple packages</div>':''}<div class="cart-page-actions"><button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button><button class="cart-page-btn primary" onclick="checkout()">Proceed to Checkout</button></div><div class="cart-page-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div></div>`;
+    DOM.cartPageContent.innerHTML=`<div class="cart-page-title">Your Bag (${total} item${total!==1?"s":""})</div>${html}<div class="cart-page-promo"><input class="cart-page-promo-input" type="text" placeholder="PROMO CODE"><button class="cart-page-promo-btn" onclick="applyPromoCode()">Apply</button></div><div class="cart-page-summary"><div class="cart-page-subtotal">Subtotal <strong>${formatPrice(S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0))}</strong></div>${cartHasMultipleTypes()?'<div class="cart-page-multi-package-note">contents may arrive in multiple packages</div>':''}<div class="cart-page-actions"><button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button><button class="cart-page-btn primary" onclick="navigateToCheckout()">Proceed to Checkout</button></div><div class="cart-page-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div></div>`;
   }
   function applyPromoCode(){}
   function buildBanner(){if(!DOM.announceText0||!DOM.announceText1)return;DOM.announceText0.textContent=BANNER_ITEMS[0];DOM.announceText0.classList.add("active");DOM.announceText1.classList.remove("active");S.announceIdx=0;if(S.announceTimer)clearInterval(S.announceTimer);S.announceTimer=setInterval(()=>{const n=(S.announceIdx+1)%BANNER_ITEMS.length;document.getElementById(`announce-text-${S.announceIdx%2}`)?.classList.remove("active");const ne=document.getElementById(`announce-text-${n%2}`);if(ne){ne.textContent=BANNER_ITEMS[n];ne.classList.add("active");}S.announceIdx=n;},2000);}
@@ -1128,7 +1136,7 @@
     showLoading(DOM.arrivalsGrid); showLoading(DOM.allProductsGrid);
     PRODUCTS = await fetchProducts();
     setHeroImage(); buildArrivals();
-    ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer"].forEach(buildFooter);
+    ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer"].forEach(buildFooter);
     buildCampaignSlider();
     const route = getRouteFromHash();
     if (route.page === 'product-detail') goToProduct(route.productId);
@@ -1146,6 +1154,16 @@
 <script>
   fetch('chat-widget.html').then(r=>r.text()).then(html=>{
     document.getElementById('chat-container').innerHTML = html;
+  });
+</script>
+  <div class="page" id="page-checkout">
+  <div id="checkout-loaded"></div>
+  <footer id="checkout-footer"></footer>
+</div>
+  <script src="checkout.js"></script>
+<script>
+  fetch('checkout.html').then(r => r.text()).then(html => {
+    document.getElementById('checkout-loaded').innerHTML = html;
   });
 </script>
 </body>
