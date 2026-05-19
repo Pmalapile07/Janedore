@@ -11,67 +11,49 @@
     padding: 40px 32px;
     width: 100%;
     max-width: 400px;
-    border: 0.5px solid #e5e5e5;
   }
-  .login-logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
-    font-weight: 300;
-    text-align: center;
-    margin-bottom: 4px;
-  }
-  .login-subtitle {
+  .login-title {
     font-family: 'Manrope', sans-serif;
     font-size: var(--ui-font-size, 9px);
-    text-transform: uppercase;
     letter-spacing: var(--ui-letter-spacing, 0.2em);
     font-weight: var(--ui-font-weight, 400);
-    color: #888;
-    text-align: center;
+    text-transform: uppercase;
+    color: #111;
     margin-bottom: 32px;
+    text-align: center;
   }
   .login-form-group {
-    margin-bottom: 18px;
-  }
-  .login-form-group label {
-    display: block;
-    font-family: 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 400;
-    color: #111;
-    margin-bottom: 8px;
-    letter-spacing: 0.02em;
+    margin-bottom: 24px;
   }
   .login-form-group input {
     width: 100%;
-    padding: 14px 16px;
-    border: 0.5px solid #ccc;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 0.5px solid #ccc;
     font-family: 'Manrope', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 300;
     outline: none;
-    transition: border 0.2s;
-    background: #fff;
+    background: transparent;
     color: #111;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.04em;
   }
   .login-form-group input:focus {
-    border-color: #111;
+    border-bottom-color: #111;
   }
   .login-form-group input::placeholder {
-    color: #bbb;
-    font-size: 14px;
+    color: #aaa;
   }
   .login-btn {
     width: 100%;
     background: #111;
     color: #fff;
     border: none;
-    padding: 16px;
+    padding: 15px;
     font-family: 'Manrope', sans-serif;
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    font-weight: 400;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s;
@@ -87,40 +69,11 @@
     display: none;
     font-family: 'Manrope', sans-serif;
   }
-  .login-link {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    font-family: 'Manrope', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    color: #888;
-    border-bottom: 0.8px solid #888;
-    background: none;
-    padding-bottom: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: auto;
-    display: inline-block;
-  }
-  .login-link:hover { color: #111; border-color: #111; }
   .login-link-wrap {
     text-align: center;
     margin-top: 20px;
   }
-  .login-divider {
-    text-align: center;
-    margin: 24px 0;
-    font-family: 'Manrope', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    color: #ccc;
-    text-transform: uppercase;
-  }
-  .login-back-btn {
-    display: inline-block;
+  .login-link {
     font-family: 'Manrope', sans-serif;
     font-size: var(--ui-font-size, 9px);
     letter-spacing: var(--ui-letter-spacing, 0.2em);
@@ -132,7 +85,27 @@
     padding-bottom: 2px;
     cursor: pointer;
     transition: all 0.2s;
-    margin-bottom: 24px;
+    display: inline-block;
+    border: none;
+    border-bottom: 0.8px solid #888;
+  }
+  .login-link:hover { color: #111; border-color: #111; }
+  .login-back-btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #888;
+    border-bottom: 0.8px solid #888;
+    background: none;
+    padding-bottom: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 32px;
+    display: inline-block;
+    border: none;
+    border-bottom: 0.8px solid #888;
   }
   .login-back-btn:hover { color: #111; border-color: #111; }
 
@@ -175,7 +148,6 @@
     color: #aaa;
   }
   .account-logout-btn {
-    display: inline-block;
     font-family: 'Manrope', sans-serif;
     font-size: var(--ui-font-size, 9px);
     letter-spacing: var(--ui-letter-spacing, 0.2em);
@@ -187,7 +159,9 @@
     padding-bottom: 2px;
     cursor: pointer;
     transition: all 0.2s;
-    margin-top: 16px;
+    display: inline-block;
+    border: none;
+    border-bottom: 0.8px solid #c00;
   }
   .account-logout-btn:hover { opacity: 0.7; }
   .account-order-card {
@@ -218,22 +192,18 @@
   <div class="login-page-container">
     <div class="login-box">
       <button class="login-back-btn" onclick="navigateTo('home')">← Back</button>
-      <div class="login-logo">JANEDORE</div>
-      <div class="login-subtitle" id="login-mode-title">Sign In</div>
+      <div class="login-title" id="login-mode-title">Sign In</div>
       <div class="login-error" id="login-error"></div>
       
       <form id="login-form" onsubmit="handleLoginSubmit(event)">
         <div class="login-form-group" id="name-group" style="display:none;">
-          <label>Full Name</label>
-          <input type="text" id="login-name" placeholder="First and last name">
+          <input type="text" id="login-name" placeholder="Full name">
         </div>
         <div class="login-form-group">
-          <label>Email</label>
-          <input type="email" id="login-email" required placeholder="your@email.com">
+          <input type="email" id="login-email" required placeholder="Email">
         </div>
         <div class="login-form-group">
-          <label>Password</label>
-          <input type="password" id="login-password" required placeholder="••••••••" minlength="6">
+          <input type="password" id="login-password" required placeholder="Password" minlength="6">
         </div>
         <button type="submit" class="login-btn" id="login-submit-btn">Sign In</button>
       </form>
