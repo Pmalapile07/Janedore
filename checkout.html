@@ -1,0 +1,308 @@
+<style>
+  .checkout-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 60px 12px;
+  }
+  .checkout-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+  .checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 40px;
+    align-items: start;
+  }
+  .checkout-section-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 0.5px solid #e5e5e5;
+    margin-top: 32px;
+  }
+  .checkout-section-title:first-child { margin-top: 0; }
+  .checkout-form-group { margin-bottom: 14px; }
+  .checkout-form-group label {
+    display: block;
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .checkout-form-group input, .checkout-form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.5px solid #e5e5e5;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    outline: none;
+    transition: border 0.2s;
+    background: #fafaf9;
+    color: #111;
+  }
+  .checkout-form-group input:focus, .checkout-form-group select:focus {
+    border-color: #111;
+    background: #fff;
+  }
+  .checkout-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .checkout-form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .checkout-summary {
+    background: #fafaf9;
+    padding: 20px;
+    border: 0.5px solid #e5e5e5;
+    position: sticky;
+    top: 80px;
+  }
+  .checkout-summary-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 0.5px solid #e5e5e5;
+  }
+  .checkout-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid #e5e5e5;
+    font-size: 11px;
+  }
+  .checkout-item-img {
+    width: 48px;
+    height: 60px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f0ede8;
+    flex-shrink: 0;
+  }
+  .checkout-item-info { flex: 1; font-size: 10px; }
+  .checkout-item-brand {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    color: #888;
+    text-transform: uppercase;
+  }
+  .checkout-item-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+  .checkout-package-note {
+    margin-top: 12px;
+    padding: 10px;
+    background: #fff;
+    font-size: var(--ui-font-size, 9px);
+    color: #888;
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    text-transform: uppercase;
+    text-align: center;
+    border: 0.5px solid #e5e5e5;
+  }
+  .checkout-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 11px;
+  }
+  .checkout-total-row strong {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+  }
+  .checkout-place-order-btn {
+    width: 100%;
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 15px;
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 16px;
+  }
+  .checkout-place-order-btn:hover { background: #333; }
+  .checkout-back-btn {
+    display: inline-block;
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #888;
+    border-bottom: 0.8px solid #888;
+    background: none;
+    padding-bottom: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 24px;
+  }
+  .checkout-back-btn:hover { color: #111; border-color: #111; }
+  .checkout-confirmation {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .checkout-confirmation-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  .checkout-confirmation-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+  .checkout-confirmation-order {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 24px;
+  }
+  .checkout-confirmation-btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #111;
+    border-bottom: 0.8px solid #111;
+    background: none;
+    padding-bottom: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .checkout-confirmation-btn:hover { color: #555; border-color: #555; }
+  @media (max-width: 768px) {
+    .checkout-grid {
+      grid-template-columns: 1fr;
+    }
+    .checkout-form-row, .checkout-form-row-3 {
+      grid-template-columns: 1fr;
+    }
+    .checkout-summary {
+      position: static;
+      order: -1;
+    }
+    .checkout-container {
+      padding: 40px 12px;
+    }
+  }
+</style>
+
+<div id="checkout-page-content">
+  <!-- Form View -->
+  <div id="checkout-form-view" class="checkout-container">
+    <button class="checkout-back-btn" onclick="navigateTo('cart')">← Back to Cart</button>
+    <div class="checkout-title">Checkout</div>
+    <div class="checkout-grid">
+      <div>
+        <form id="checkout-form" onsubmit="placeOrder(event)">
+          <div class="checkout-section-title">Contact</div>
+          <div class="checkout-form-row">
+            <div class="checkout-form-group">
+              <label>Email *</label>
+              <input type="email" id="checkout-email" required>
+            </div>
+            <div class="checkout-form-group">
+              <label>Phone</label>
+              <input type="tel" id="checkout-phone">
+            </div>
+          </div>
+          
+          <div class="checkout-section-title">Shipping Address</div>
+          <div class="checkout-form-group">
+            <label>Full Name *</label>
+            <input type="text" id="checkout-name" required>
+          </div>
+          <div class="checkout-form-group">
+            <label>Address *</label>
+            <input type="text" id="checkout-address" required placeholder="Street address">
+          </div>
+          <div class="checkout-form-row-3">
+            <div class="checkout-form-group">
+              <label>City *</label>
+              <input type="text" id="checkout-city" required>
+            </div>
+            <div class="checkout-form-group">
+              <label>Postal Code</label>
+              <input type="text" id="checkout-postal">
+            </div>
+            <div class="checkout-form-group">
+              <label>Country *</label>
+              <select id="checkout-country" required>
+                <option value="">Select</option>
+                <option value="South Africa">South Africa</option>
+                <option value="Botswana">Botswana</option>
+                <option value="Namibia">Namibia</option>
+                <option value="Lesotho">Lesotho</option>
+                <option value="Eswatini">Eswatini</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="checkout-section-title">Payment</div>
+          <p style="font-size:11px;color:#888;font-weight:300;">Demo mode — no payment will be processed.</p>
+          
+          <button type="submit" class="checkout-place-order-btn">Place Order</button>
+        </form>
+      </div>
+      
+      <!-- Order Summary -->
+      <div class="checkout-summary">
+        <div class="checkout-summary-title">Order Summary</div>
+        <div id="checkout-items"></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #e5e5e5;">
+          <div class="checkout-total-row"><span>Subtotal</span><span id="checkout-subtotal">R0</span></div>
+          <div class="checkout-total-row"><span>Shipping</span><span id="checkout-shipping">—</span></div>
+          <div class="checkout-total-row" style="font-weight:500;padding-top:8px;border-top:0.5px solid #e5e5e5;margin-top:4px;">
+            <strong>Total</strong>
+            <strong id="checkout-total" style="font-size:13px;">R0</strong>
+          </div>
+        </div>
+        <div id="checkout-packages"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Confirmation View -->
+  <div id="checkout-confirmation-view" class="checkout-confirmation" style="display:none;">
+    <div class="checkout-confirmation-icon">✓</div>
+    <div class="checkout-confirmation-title">Order Confirmed</div>
+    <div class="checkout-confirmation-order" id="confirmation-order-number"></div>
+    <p style="font-size:12px;color:#888;margin-bottom:8px;">Thank you for your order!</p>
+    <p style="font-size:11px;color:#aaa;margin-bottom:24px;">A confirmation will be sent to your email.</p>
+    <button class="checkout-confirmation-btn" onclick="navigateTo('home')">Continue Shopping</button>
+  </div>
+</div>
