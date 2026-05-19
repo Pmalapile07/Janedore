@@ -121,23 +121,17 @@ async function showOrderLookup() {
     orders.forEach(o => {
       const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
       html += `<div style="margin-top:8px;padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.5;">
-        <strong>Order #${(o.id || '').substring(0, 12)}...</strong><br>
+        <strong>Order #${o.orderNumber || (o.id || '').substring(0, 12)}...</strong><br>
         Status: ${o.status || 'pending'}<br>
-        Items: ${o.itemCount || 0} · Total: R${o.subtotal || 0}<br>
+        Items: ${o.itemCount || 0} · Total: R${o.subtotal || o.total || 0}<br>
         ${date}
       </div>`;
     });
     resultEl.innerHTML = html;
     
   } catch (e) {
-    if (e.message && e.message.includes('index')) {
-      resultEl.textContent = 'Setting up search... please try again in a moment.';
-    } else if (e.message && (e.message.includes('permission') || e.message.includes('denied'))) {
-      resultEl.textContent = 'Unable to access orders. Please try again later.';
-    } else {
-      resultEl.textContent = 'No orders found for this email.';
-    }
     console.warn('Order lookup:', e.message);
+    resultEl.innerHTML = '<p style="color:#888;">No orders found for<br><strong>' + customerEmail + '</strong></p><p style="font-size:10px;color:#aaa;margin-top:8px;">Orders placed through this website will appear here.</p>';
   }
 }
 
