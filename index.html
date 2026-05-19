@@ -1168,5 +1168,33 @@
 </script>
   <!-- Login/Account System -->
 <script src="login.js"></script>
+  <!-- Login Page Container -->
+<div class="page" id="page-login">
+  <div id="login-loaded"></div>
+  <footer id="login-footer"></footer>
+</div>
+
+<!-- Account Page Container -->
+<div class="page" id="page-account">
+  <div id="account-loaded"></div>
+  <footer id="account-footer"></footer>
+</div>
+
+<!-- Load Login HTML -->
+<script>
+  fetch('login.html').then(r => r.text()).then(html => {
+    document.getElementById('login-loaded').innerHTML = html;
+  });
+</script>
+
+<!-- Load Account HTML (same as login since it's dynamic) -->
+<script>
+  fetch('login.html').then(r => r.text()).then(html => {
+    document.getElementById('account-loaded').innerHTML = html;
+  });
+</script>
+
+<!-- Login System -->
+<script src="login.js"></script>
 </body>
 </html>
