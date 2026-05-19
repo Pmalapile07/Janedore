@@ -164,7 +164,6 @@
     .product-price { font-size: 12px; font-weight: 300; color: #111; letter-spacing: 0.04em; margin-bottom: 2px; }
     .product-price-sale { color: #111; }
     .product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; }
-    .wish-variant-name { font-size: 10px; font-weight: 300; color: #888; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
     footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400px; margin: 0 auto; }
     @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
     .footer-top { display: flex; flex-direction: column; gap: 0; margin-bottom: 40px; }
@@ -212,9 +211,6 @@
     .back-btn-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 100; }
     .back-btn { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; border-bottom: 1px solid #111; background: none; padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; cursor: pointer; border: none; border-bottom: 1px solid #111; }
     .back-btn:hover { color: #555; border-color: #555; }
-    .wish-page-remove-btn { background: none; border: none; color: #bbb; font-size: 18px; cursor: pointer; padding: 4px 8px; transition: color 0.2s; position: absolute; top: 8px; right: 8px; z-index: 2; }
-    .wish-page-remove-btn:hover { color: #111; }
-    .wish-page-item { position: relative; }
     #cart-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 900; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     #cart-backdrop.open { opacity: 1; pointer-events: all; }
     #cart-panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 90vw); background: #fff; transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.08); z-index: 901; }
@@ -268,7 +264,7 @@
     .wish-page-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     @media (min-width: 640px) { .wish-page-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (min-width: 900px) { .wish-page-grid { grid-template-columns: repeat(4, 1fr); } }
-    .wish-page-item { cursor: pointer; position: relative; }
+    .wish-page-item { cursor: pointer; }
     .wish-page-img { aspect-ratio: 3/4; background-size: cover; background-position: center; background-color: #f0ede8; margin-bottom: 8px; position: relative; }
     .wish-page-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; color: #111; margin-bottom: 4px; line-height: 1.2; }
     .wish-page-price { font-size: 12px; font-weight: 300; color: #111; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; letter-spacing: 0.04em; }
@@ -493,41 +489,6 @@
       .footer-currency-lang { flex-direction: row; justify-content: center; gap: 20px; }
     }
     #page-home { padding-top: 0; }
-    #live-chat-bubble { position: fixed; bottom: 24px; left: 24px; z-index: 999; width: 52px; height: 52px; border-radius: 50%; background: #111; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); transition: transform 0.3s, box-shadow 0.3s; }
-    #live-chat-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(0,0,0,0.35); }
-    .chat-unread-dot { position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; border-radius: 50%; background: #c00; display: none; }
-    #chat-window { position: fixed; bottom: 90px; left: 24px; width: 360px; max-width: calc(100vw - 48px); height: 480px; max-height: calc(100vh - 130px); background: #fff; border: 1px solid #e5e5e5; box-shadow: 0 8px 40px rgba(0,0,0,0.15); z-index: 998; display: none; flex-direction: column; }
-    #chat-window.open { display: flex; }
-    .chat-header { background: #111; color: #fff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .chat-header-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 500; }
-    .chat-header-close { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; padding: 0; line-height: 1; opacity: 0.7; }
-    .chat-header-close:hover { opacity: 1; }
-    .chat-options { display: flex; gap: 10px; padding: 16px; background: #fafaf9; flex-shrink: 0; }
-    .chat-option-btn { flex: 1; background: #fff; color: #111; border: 1px solid #e5e5e5; padding: 12px; font-family: 'Manrope', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; text-align: center; }
-    .chat-option-btn:hover { background: #111; color: #fff; border-color: #111; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #fafaf9; }
-    .chat-msg { max-width: 80%; padding: 10px 14px; font-size: 12px; line-height: 1.5; animation: chatFadeIn 0.3s ease; }
-    @keyframes chatFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .chat-msg.customer { align-self: flex-end; background: #111; color: #fff; }
-    .chat-msg.admin { align-self: flex-start; background: #fff; color: #111; border: 1px solid #e5e5e5; }
-    .chat-msg-time { font-size: 8px; opacity: 0.5; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
-    .chat-input-wrap { display: flex; border-top: 1px solid #e5e5e5; padding: 10px; gap: 8px; flex-shrink: 0; }
-    .chat-input { flex: 1; border: 1px solid #e5e5e5; padding: 10px 14px; font-family: 'Manrope', sans-serif; font-size: 12px; outline: none; }
-    .chat-input:focus { border-color: #111; }
-    .chat-send-btn { background: #111; color: #fff; border: none; padding: 10px 16px; cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Manrope', sans-serif; transition: background 0.2s; }
-    .chat-send-btn:hover { background: #333; }
-    .chat-welcome { text-align: center; padding: 20px; color: #888; font-size: 11px; }
-    .chat-welcome strong { display: block; color: #111; font-size: 13px; margin-bottom: 6px; }
-    .order-lookup { padding: 16px; background: #fafaf9; flex: 1; overflow-y: auto; }
-    .order-lookup-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #111; margin-bottom: 16px; text-align: center; font-weight: 500; }
-    .order-lookup-input { width: 100%; border: 1px solid #e5e5e5; padding: 10px 14px; font-family: 'Manrope', sans-serif; font-size: 12px; outline: none; margin-bottom: 12px; }
-    .order-lookup-input:focus { border-color: #111; }
-    .order-lookup-btn { width: 100%; background: #111; color: #fff; border: none; padding: 12px; font-family: 'Manrope', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: background 0.2s; }
-    .order-lookup-btn:hover { background: #333; }
-    .order-result { margin-top: 16px; font-size: 12px; color: #555; text-align: center; }
-    .back-to-chat-btn { background: none; border: 1px solid #e5e5e5; color: #111; padding: 10px; font-family: 'Manrope', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; width: 100%; margin-top: 12px; transition: all 0.2s; }
-    .back-to-chat-btn:hover { background: #f5f5f5; }
-    @media (max-width: 480px) { #chat-window { width: calc(100vw - 32px); left: 16px; right: 16px; } #live-chat-bubble { left: 16px; bottom: 16px; } }
     .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 60px 20px; }
     .spinner { width: 24px; height: 24px; border: 2px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -577,87 +538,10 @@
 <div class="page" id="page-wishlist"><div class="wish-page" id="wish-page-content"></div><footer id="wishlist-footer"></footer></div>
 <div class="page" id="page-product-detail"></div>
 
-<button id="live-chat-bubble" onclick="toggleChat()"><i class="ph-thin ph-chat-circle-dots"></i><span class="chat-unread-dot" id="chat-unread-dot"></span></button>
-<div id="chat-window"><div class="chat-header"><span class="chat-header-title">JANEDORE Support</span><button class="chat-header-close" onclick="toggleChat()">✕</button></div><div class="chat-options" id="chat-options"><button class="chat-option-btn" onclick="startChat()">💬 Chat</button><button class="chat-option-btn" onclick="showOrderLookup()">📦 Track Order</button></div><div class="chat-messages" id="chat-messages" style="display:none;"><div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div></div><div class="order-lookup" id="order-lookup" style="display:none;"><div class="order-lookup-title">Track Your Order</div><input class="order-lookup-input" id="order-lookup-input" placeholder="Enter order number"><button class="order-lookup-btn" onclick="lookupOrder()">Track</button><div class="order-result" id="order-result"></div><button class="back-to-chat-btn" onclick="backToChatOptions()">← Back</button></div><div class="chat-input-wrap" id="chat-input-wrap" style="display:none;"><input class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendChatMessage()"><button class="chat-send-btn" onclick="sendChatMessage()">Send</button></div></div>
-
 <script>
   const firebaseConfig = { apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI", authDomain: "janedore-9f035.firebaseapp.com", projectId: "janedore-9f035", storageBucket: "janedore-9f035.firebasestorage.app", messagingSenderId: "571299748651", appId: "1:571299748651:web:01463a772d47b39cc4036e", measurementId: "G-Y9NMT0ZGKZ" };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-
-  let chatSessionId = localStorage.getItem('janedore_chat') || ('chat-' + Date.now());
-  localStorage.setItem('janedore_chat', chatSessionId);
-  let chatOpen = false, chatUnsub = null, chatMode = null;
-
-  function toggleChat() {
-    chatOpen = !chatOpen;
-    document.getElementById('chat-window').classList.toggle('open', chatOpen);
-    if (chatOpen) { document.getElementById('chat-unread-dot').style.display = 'none'; resetChatToOptions(); }
-    else { if (chatUnsub) { chatUnsub(); chatUnsub = null; } }
-  }
-  function resetChatToOptions() {
-    document.getElementById('chat-options').style.display = 'flex';
-    document.getElementById('chat-messages').style.display = 'none';
-    document.getElementById('chat-input-wrap').style.display = 'none';
-    document.getElementById('order-lookup').style.display = 'none';
-    chatMode = null;
-  }
-  function startChat() {
-    document.getElementById('chat-options').style.display = 'none';
-    document.getElementById('chat-messages').style.display = 'flex';
-    document.getElementById('chat-input-wrap').style.display = 'flex';
-    document.getElementById('order-lookup').style.display = 'none';
-    chatMode = 'chat'; listenChat(); document.getElementById('chat-input').focus();
-  }
-  function showOrderLookup() {
-    document.getElementById('chat-options').style.display = 'none';
-    document.getElementById('chat-messages').style.display = 'none';
-    document.getElementById('chat-input-wrap').style.display = 'none';
-    document.getElementById('order-lookup').style.display = 'block';
-    chatMode = 'order';
-  }
-  function backToChatOptions() { resetChatToOptions(); }
-  async function lookupOrder() {
-    const orderId = document.getElementById('order-lookup-input').value.trim();
-    const resultEl = document.getElementById('order-result');
-    if (!orderId) { resultEl.textContent = 'Please enter an order number.'; return; }
-    resultEl.textContent = 'Searching...';
-    try {
-      const snapshot = await db.collection('orders').where('orderNumber', '==', orderId).get();
-      if (snapshot.empty) resultEl.textContent = 'Order not found.';
-      else {
-        const order = snapshot.docs[0].data();
-        resultEl.innerHTML = `Order <strong>${orderId}</strong><br>Status: <strong>${order.status || 'Processing'}</strong><br>Items: ${order.itemCount || 'N/A'}<br>Total: ${order.currency} ${order.subtotal}`;
-      }
-    } catch (e) { resultEl.textContent = 'Unable to look up order.'; }
-  }
-  function listenChat() {
-    if (chatUnsub) chatUnsub();
-    chatUnsub = db.collection('live_chat').where('sessionId', '==', chatSessionId).orderBy('createdAt', 'asc').onSnapshot(snap => {
-      const el = document.getElementById('chat-messages');
-      const welcome = el.querySelector('.chat-welcome');
-      const scroll = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-      snap.docChanges().forEach(c => {
-        if (c.type === 'added') {
-          const m = c.doc.data();
-          const t = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-          const div = document.createElement('div'); div.className = 'chat-msg ' + m.sender;
-          div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
-          if (welcome) welcome.remove();
-          el.appendChild(div);
-          if (!chatOpen && m.sender === 'admin') document.getElementById('chat-unread-dot').style.display = 'block';
-        }
-      });
-      if (scroll) el.scrollTop = el.scrollHeight;
-    });
-  }
-  async function sendChatMessage() {
-    const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text) return;
-    try {
-      await db.collection('live_chat').add({ sessionId: chatSessionId, text, sender: 'customer', createdAt: firebase.firestore.FieldValue.serverTimestamp(), read: false });
-      input.value = '';
-    } catch (e) { console.warn('Chat error:', e); }
-  }
 
   async function getProductReviews(productId) {
     try { const s = await db.collection('reviews').where('productId','==',productId).orderBy('createdAt','desc').get(); return s.docs.map(d=>({id:d.id,...d.data()})); } catch(e) { return []; }
@@ -1086,6 +970,7 @@
 
   async function renderProductPage(product) {
     document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null;
+    showLoading(DOM.productDetail);
     const vi=S.productVariantSelections[product.id]??0; const images=getAllProductImages(product, vi); const isWished=S.wishlist.some(w=>w.id===product.id); const soldOut=isProductSoldOut(product);
     const sizeLabel = product.category === 'jewelry' ? 'Material' : 'Size';
     const related = merchandiseProducts(PRODUCTS.filter(p => p.id !== product.id && p.category === product.category && p.status === 'active')).slice(0,6);
@@ -1161,16 +1046,26 @@
     document.querySelectorAll(`.price-bookmark[onclick*="toggleWish('${productId}')"]`).forEach(btn=>{ btn.classList.toggle("wished", isWished); const icon=btn.querySelector("i"); if(icon) icon.className = iconClass; });
     const modalBtn = document.querySelector(".modal-wish-btn"); if(modalBtn && S.currentPage==="product-detail"){ modalBtn.classList.toggle("wished", isWished); const icon = modalBtn.querySelector("i"); if(icon) icon.className = iconClass; }
   }
-  function removeFromWishlist(productId, event) { event.stopPropagation(); S.wishlist = S.wishlist.filter(w => w.id !== productId); updateBadges(); renderWishlistPage(); }
   function renderWishlistPage() {
     if(!DOM.wishPageContent) return;
     if(!S.wishlist.length) { DOM.wishPageContent.innerHTML = '<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div>'; return; }
     DOM.wishPageContent.innerHTML = `<div class="wish-page-title">Wishlist (${S.wishlist.length})</div><div class="wish-page-grid">${S.wishlist.map(p=>{
-      const vi=S.productVariantSelections[p.id]??0; const variant=(p.variants||[])[vi]||{}; const variantName=variant.color||'';
+      const vi=S.productVariantSelections[p.id]??0;
+      const isWished = S.wishlist.some(w=>w.id===p.id);
+      const priceHtml=p.salePrice?`<span class="product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span>`:formatPrice(p.price);
       const badgeLabel=p.badge==="sold"?"Sold Out":p.badge==="new"?"New":p.badge==="sale"?"Sale":"";
-      const badgeHtml=badgeLabel?`<div class="wish-page-badge-wrap"><span class="badge-${p.badge==='sold'?'sold':p.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>`:"";
-      const priceHtml=p.salePrice?`<span class="wish-page-price-sale">${formatPrice(p.salePrice)}</span><span class="wish-page-price-original">${formatPrice(p.price)}</span>`:formatPrice(p.price);
-      return `<div class="wish-page-item${isProductSoldOut(p)?' sold-out':''}" onclick="goToProduct('${p.id}')"><button class="wish-page-remove-btn" onclick="removeFromWishlist('${p.id}',event)">×</button><div class="wish-page-img" style="background-image:url('${getProductThumbnail(p)}');">${badgeHtml}</div><div class="product-meta-row"><div class="product-brand-tag">${p.brand||''}</div><div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div></div><div class="wish-page-name">${p.name||''}</div><div class="wish-page-price">${priceHtml}${variantName?`<span class="wish-variant-name">${variantName}</span>`:''}</div><button class="wish-page-add-btn" onclick="event.stopPropagation();addToCart('${p.id}');toggleWish('${p.id}');openCart();"${isProductSoldOut(p)?' disabled':''}>${isProductSoldOut(p)?'Sold Out':'Add to Cart'}</button></div>`;
+      const badgeHtml=badgeLabel?`<div class="product-badge-wrap"><span class="badge-${p.badge==='sold'?'sold':p.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>`:"";
+      const allImages = getAllProductImages(p, vi);
+      const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
+      const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+      return `<div class="product-card${isProductSoldOut(p)?' sold-out':''}" data-product-id="${p.id}" onclick="goToProduct('${p.id}')">
+        <div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${p.id}')" ontouchend="cardTouchEnd(event,'${p.id}')">
+          <div class="product-card-slides" id="card-slides-wish-${p.id}">${slidesHtml}</div>${barsHtml}${badgeHtml}
+        </div>
+        <div class="product-meta-row"><div class="product-brand-tag">${p.brand||''}</div><div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div></div>
+        <div class="product-name collection-name">${truncateName(p.name)}</div>
+        <div class="product-price-row"><div class="product-price">${priceHtml}</div><button class="price-bookmark${isWished?' wished':''}" onclick="event.stopPropagation();toggleWish('${p.id}')"><i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i></button></div>
+      </div>`;
     }).join("")}</div>`;
   }
 
@@ -1242,5 +1137,9 @@
   }
   init();
 </script>
+  <button id="live-chat-bubble" onclick="toggleChat()">
+  <i class="ph-thin ph-chat"></i>
+  <span class="chat-unread-dot" id="chat-unread-dot"></span>
+</button>
 </body>
 </html>
