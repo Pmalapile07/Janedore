@@ -1,67 +1,135 @@
 // ==================== CHAT LOGIC ====================
-let chatSessionId = localStorage.getItem('janedore_chat') || ('chat-' + Date.now());
-localStorage.setItem('janedore_chat', chatSessionId);
+let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
+localStorage.setItem('janedore_chat_session', chatSessionId);
+let customerEmail = localStorage.getItem('janedore_chat_email') || '';
 let chatOpen = false, chatUnsub = null, chatMode = null;
 
 function toggleChat() {
   chatOpen = !chatOpen;
-  document.getElementById('chat-window').classList.toggle('open', chatOpen);
+  const win = document.getElementById('chat-window');
+  win.classList.toggle('open', chatOpen);
   if (chatOpen) {
     document.getElementById('chat-unread-dot').style.display = 'none';
-    resetChatToOptions();
+    if (customerEmail) {
+      showOptionsScreen();
+    } else {
+      showEmailScreen();
+    }
   } else {
     if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   }
 }
 
-function resetChatToOptions() {
+function showEmailScreen() {
+  document.getElementById('chat-email-screen').style.display = 'flex';
+  document.getElementById('chat-options').style.display = 'none';
+  document.getElementById('chat-messages').style.display = 'none';
+  document.getElementById('chat-input-wrap').style.display = 'none';
+  document.getElementById('chat-customer-info').style.display = 'none';
+  document.getElementById('order-lookup').style.display = 'none';
+}
+
+function showOptionsScreen() {
+  document.getElementById('chat-email-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'flex';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
+  document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'none';
-  chatMode = null;
+}
+
+async function submitEmail() {
+  const email = document.getElementById('chat-email-input').value.trim();
+  const errorEl = document.getElementById('chat-email-error');
+  
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  errorEl.style.display = 'none';
+  customerEmail = email;
+  localStorage.setItem('janedore_chat_email', email);
+  chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
+  localStorage.setItem('janedore_chat_session', chatSessionId);
+  
+  showOptionsScreen();
 }
 
 function startChat() {
+  document.getElementById('chat-email-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'flex';
   document.getElementById('chat-input-wrap').style.display = 'flex';
+  document.getElementById('chat-customer-info').style.display = 'flex';
   document.getElementById('order-lookup').style.display = 'none';
+  
+  document.getElementById('chat-customer-email').textContent = customerEmail;
+  loadCustomerStats();
+  
   chatMode = 'chat';
-  loadAllMessages();  // Load ALL messages for this session
-  listenChat();        // Then listen for new ones
+  loadAllMessages();
+  listenChat();
   document.getElementById('chat-input').focus();
 }
 
-function showOrderLookup() {
+async function loadCustomerStats() {
+  try {
+    const [ordersSnap, reviewsSnap, newsletterSnap] = await Promise.all([
+      db.collection('orders').where('customerEmail', '==', customerEmail).get(),
+      db.collection('reviews').where('email', '==', customerEmail).get(),
+      db.collection('newsletter').where('email', '==', customerEmail).get()
+    ]);
+    
+    const parts = [];
+    if (ordersSnap.size > 0) parts.push(`${ordersSnap.size} orders`);
+    if (reviewsSnap.size > 0) parts.push(`${reviewsSnap.size} reviews`);
+    if (newsletterSnap.size > 0) parts.push('subscribed');
+    
+    document.getElementById('chat-customer-stats').textContent = parts.length > 0 ? parts.join(' · ') : 'New customer';
+  } catch (e) {
+    document.getElementById('chat-customer-stats').textContent = '';
+  }
+}
+
+async function showOrderLookup() {
+  document.getElementById('chat-email-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
-  document.getElementById('order-lookup').style.display = 'block';
-  chatMode = 'order';
-}
-
-function backToChatOptions() { resetChatToOptions(); }
-
-async function lookupOrder() {
-  const orderId = document.getElementById('order-lookup-input').value.trim();
+  document.getElementById('chat-customer-info').style.display = 'none';
+  document.getElementById('order-lookup').style.display = 'flex';
+  
   const resultEl = document.getElementById('order-result');
-  if (!orderId) { resultEl.textContent = 'Please enter an order number.'; return; }
   resultEl.textContent = 'Searching...';
+  
   try {
-    const snapshot = await db.collection('orders').where('orderNumber', '==', orderId).get();
-    if (snapshot.empty) resultEl.textContent = 'Order not found.';
-    else {
-      const order = snapshot.docs[0].data();
-      resultEl.innerHTML = `Order <strong>${orderId}</strong><br>Status: <strong>${order.status || 'Processing'}</strong><br>Items: ${order.itemCount || 'N/A'}<br>Total: ${order.currency} ${order.subtotal}`;
+    const snapshot = await db.collection('orders').where('customerEmail', '==', customerEmail).orderBy('createdAt', 'desc').get();
+    
+    if (snapshot.empty) {
+      resultEl.innerHTML = '<p>No orders found for<br><strong>' + customerEmail + '</strong></p>';
+    } else {
+      let html = '<p>Orders for <strong>' + customerEmail + '</strong></p>';
+      snapshot.docs.forEach(d => {
+        const o = d.data();
+        html += `<div style="margin-top:10px;padding:10px;background:#fafaf9;text-align:left;font-size:10px;">
+          <strong>${d.id.substring(0, 12)}...</strong><br>
+          Status: ${o.status || 'pending'}<br>
+          Items: ${o.itemCount || 0} · Total: R${o.subtotal || 0}<br>
+          ${o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : ''}
+        </div>`;
+      });
+      resultEl.innerHTML = html;
     }
-  } catch (e) { resultEl.textContent = 'Unable to look up order.'; }
+  } catch (e) {
+    resultEl.textContent = 'Unable to look up orders.';
+  }
 }
 
-// NEW: Load all existing messages for this session
+function backToChatOptions() { showOptionsScreen(); }
+
 async function loadAllMessages() {
   const el = document.getElementById('chat-messages');
-  // Clear existing messages
   el.innerHTML = '';
   
   try {
@@ -71,7 +139,6 @@ async function loadAllMessages() {
     
     const messages = [];
     snapshot.docs.forEach(d => messages.push(d.data()));
-    // Sort by time
     messages.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
     
     if (messages.length === 0) {
@@ -93,18 +160,8 @@ async function loadAllMessages() {
   }
 }
 
-// Listen for NEW messages only (after initial load)
 function listenChat() {
   if (chatUnsub) chatUnsub();
-  
-  // Get the timestamp of the latest message we already have
-  const existingMessages = document.getElementById('chat-messages').querySelectorAll('.chat-msg');
-  let latestTimestamp = null;
-  if (existingMessages.length > 0) {
-    const lastMsg = existingMessages[existingMessages.length - 1];
-    const timeEl = lastMsg.querySelector('.chat-msg-time');
-    // We'll just listen for all new messages added after we started listening
-  }
   
   chatUnsub = db.collection('live_chat')
     .where('sessionId', '==', chatSessionId)
@@ -116,12 +173,9 @@ function listenChat() {
       snap.docChanges().forEach(c => {
         if (c.type === 'added') {
           const m = c.doc.data();
-          // Check if this message is already displayed (avoid duplicates)
           const existingTexts = Array.from(el.querySelectorAll('.chat-msg')).map(div => div.textContent);
-          const msgText = m.text + (m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '');
-          
-          // Simple duplicate check
           const isDuplicate = existingTexts.some(t => t.includes(m.text));
+          
           if (!isDuplicate) {
             const t = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
             const div = document.createElement('div');
@@ -147,6 +201,7 @@ async function sendChatMessage() {
   try {
     await db.collection('live_chat').add({
       sessionId: chatSessionId,
+      customerEmail: customerEmail,
       text: text,
       sender: 'customer',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
