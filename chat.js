@@ -104,22 +104,20 @@ async function showOrderLookup() {
   resultEl.textContent = 'Searching...';
   
   try {
-    // Removed orderBy to avoid composite index - sort in JavaScript instead
     const snapshot = await db.collection('orders')
       .where('customerEmail', '==', customerEmail)
       .get();
     
     if (snapshot.empty) {
-      resultEl.innerHTML = '<p>No orders found for<br><strong>' + customerEmail + '</strong></p>';
+      resultEl.innerHTML = '<p style="color:#888;">No orders found for<br><strong>' + customerEmail + '</strong></p><p style="font-size:10px;color:#aaa;margin-top:8px;">Orders placed through this website will appear here.</p>';
       return;
     }
     
-    // Sort in JavaScript instead of using orderBy
     const orders = [];
     snapshot.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
     orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     
-    let html = '<p style="margin-bottom:12px;">Orders for <strong>' + customerEmail + '</strong></p>';
+    let html = '<p style="margin-bottom:12px;font-size:10px;">Orders for <strong>' + customerEmail + '</strong></p>';
     orders.forEach(o => {
       const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
       html += `<div style="margin-top:8px;padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.5;">
@@ -130,9 +128,16 @@ async function showOrderLookup() {
       </div>`;
     });
     resultEl.innerHTML = html;
+    
   } catch (e) {
-    resultEl.textContent = 'Unable to look up orders. Check your connection.';
-    console.warn('Order lookup error:', e);
+    if (e.message && e.message.includes('index')) {
+      resultEl.textContent = 'Setting up search... please try again in a moment.';
+    } else if (e.message && (e.message.includes('permission') || e.message.includes('denied'))) {
+      resultEl.textContent = 'Unable to access orders. Please try again later.';
+    } else {
+      resultEl.textContent = 'No orders found for this email.';
+    }
+    console.warn('Order lookup:', e.message);
   }
 }
 
