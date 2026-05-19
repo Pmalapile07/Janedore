@@ -101,24 +101,55 @@ async function showOrderLookup() {
   document.getElementById('order-lookup').style.display = 'flex';
   
   const resultEl = document.getElementById('order-result');
+  const inputEl = document.getElementById('order-lookup-input');
+  const searchValue = inputEl?.value?.trim() || '';
+  
   resultEl.textContent = 'Searching...';
   
   try {
-    const snapshot = await db.collection('orders')
-      .where('customerEmail', '==', customerEmail)
-      .get();
+    let orders = [];
     
-    if (snapshot.empty) {
-      resultEl.innerHTML = '<p style="color:#888;">No orders found for<br><strong>' + customerEmail + '</strong></p><p style="font-size:10px;color:#aaa;margin-top:8px;">Orders placed through this website will appear here.</p>';
+    // First try by order number if something is typed
+    if (searchValue) {
+      const orderSnap = await db.collection('orders')
+        .where('orderNumber', '==', searchValue)
+        .get();
+      
+      if (!orderSnap.empty) {
+        orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      }
+    }
+    
+    // If no results by order number, fall back to email lookup
+    if (orders.length === 0) {
+      const emailSnap = await db.collection('orders')
+        .where('customerEmail', '==', customerEmail)
+        .get();
+      
+      if (!emailSnap.empty) {
+        emailSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      }
+    }
+    
+    if (orders.length === 0) {
+      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use the Track Order option.</p>';
       return;
     }
     
-    const orders = [];
-    snapshot.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
-    orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    
-    let html = '<p style="margin-bottom:12px;font-size:10px;">Orders for <strong>' + customerEmail + '</strong></p>';
+    // Remove duplicates (if an order was found by both order number and email)
+    const uniqueOrders = [];
+    const seenIds = new Set();
     orders.forEach(o => {
+      if (!seenIds.has(o.id)) {
+        seenIds.add(o.id);
+        uniqueOrders.push(o);
+      }
+    });
+    
+    uniqueOrders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    
+    let html = '<p style="margin-bottom:12px;font-size:10px;">' + (uniqueOrders.length === 1 ? '1 order found' : uniqueOrders.length + ' orders found') + '</p>';
+    uniqueOrders.forEach(o => {
       const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
       html += `<div style="margin-top:8px;padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.5;">
         <strong>Order #${o.orderNumber || (o.id || '').substring(0, 12)}...</strong><br>
@@ -131,7 +162,7 @@ async function showOrderLookup() {
     
   } catch (e) {
     console.warn('Order lookup:', e.message);
-    resultEl.innerHTML = '<p style="color:#888;">No orders found for<br><strong>' + customerEmail + '</strong></p><p style="font-size:10px;color:#aaa;margin-top:8px;">Orders placed through this website will appear here.</p>';
+    resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use the Track Order option.</p>';
   }
 }
 
