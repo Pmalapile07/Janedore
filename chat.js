@@ -28,7 +28,8 @@ function startChat() {
   document.getElementById('chat-input-wrap').style.display = 'flex';
   document.getElementById('order-lookup').style.display = 'none';
   chatMode = 'chat';
-  listenChat();
+  loadAllMessages();  // Load ALL messages for this session
+  listenChat();        // Then listen for new ones
   document.getElementById('chat-input').focus();
 }
 
@@ -57,26 +58,86 @@ async function lookupOrder() {
   } catch (e) { resultEl.textContent = 'Unable to look up order.'; }
 }
 
+// NEW: Load all existing messages for this session
+async function loadAllMessages() {
+  const el = document.getElementById('chat-messages');
+  // Clear existing messages
+  el.innerHTML = '';
+  
+  try {
+    const snapshot = await db.collection('live_chat')
+      .where('sessionId', '==', chatSessionId)
+      .get();
+    
+    const messages = [];
+    snapshot.docs.forEach(d => messages.push(d.data()));
+    // Sort by time
+    messages.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+    
+    if (messages.length === 0) {
+      el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
+      return;
+    }
+    
+    messages.forEach(m => {
+      const t = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + m.sender;
+      div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
+      el.appendChild(div);
+    });
+    
+    el.scrollTop = el.scrollHeight;
+  } catch (e) {
+    console.warn('Error loading messages:', e);
+  }
+}
+
+// Listen for NEW messages only (after initial load)
 function listenChat() {
   if (chatUnsub) chatUnsub();
-  chatUnsub = db.collection('live_chat').where('sessionId', '==', chatSessionId).orderBy('createdAt', 'asc').onSnapshot(snap => {
-    const el = document.getElementById('chat-messages');
-    const welcome = el.querySelector('.chat-welcome');
-    const scroll = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-    snap.docChanges().forEach(c => {
-      if (c.type === 'added') {
-        const m = c.doc.data();
-        const t = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-        const div = document.createElement('div');
-        div.className = 'chat-msg ' + m.sender;
-        div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
-        if (welcome) welcome.remove();
-        el.appendChild(div);
-        if (!chatOpen && m.sender === 'admin') document.getElementById('chat-unread-dot').style.display = 'block';
-      }
+  
+  // Get the timestamp of the latest message we already have
+  const existingMessages = document.getElementById('chat-messages').querySelectorAll('.chat-msg');
+  let latestTimestamp = null;
+  if (existingMessages.length > 0) {
+    const lastMsg = existingMessages[existingMessages.length - 1];
+    const timeEl = lastMsg.querySelector('.chat-msg-time');
+    // We'll just listen for all new messages added after we started listening
+  }
+  
+  chatUnsub = db.collection('live_chat')
+    .where('sessionId', '==', chatSessionId)
+    .orderBy('createdAt', 'asc')
+    .onSnapshot(snap => {
+      const el = document.getElementById('chat-messages');
+      const scroll = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+      
+      snap.docChanges().forEach(c => {
+        if (c.type === 'added') {
+          const m = c.doc.data();
+          // Check if this message is already displayed (avoid duplicates)
+          const existingTexts = Array.from(el.querySelectorAll('.chat-msg')).map(div => div.textContent);
+          const msgText = m.text + (m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '');
+          
+          // Simple duplicate check
+          const isDuplicate = existingTexts.some(t => t.includes(m.text));
+          if (!isDuplicate) {
+            const t = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+            const div = document.createElement('div');
+            div.className = 'chat-msg ' + m.sender;
+            div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
+            el.appendChild(div);
+            
+            if (!chatOpen && m.sender === 'admin') {
+              document.getElementById('chat-unread-dot').style.display = 'block';
+            }
+          }
+        }
+      });
+      
+      if (scroll) el.scrollTop = el.scrollHeight;
     });
-    if (scroll) el.scrollTop = el.scrollHeight;
-  });
 }
 
 async function sendChatMessage() {
