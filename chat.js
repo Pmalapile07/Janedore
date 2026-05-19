@@ -73,21 +73,42 @@ function startChat() {
   document.getElementById('chat-input').focus();
 }
 
+function normalizeOrderNumber(orderNum) {
+  if (!orderNum) return '';
+  // Remove all dashes and spaces, convert to uppercase
+  return orderNum.replace(/[-\s]/g, '').toUpperCase();
+}
+
 async function loadCustomerStats() {
   try {
+    const customerEmailLower = customerEmail ? customerEmail.toLowerCase() : '';
+    
     const [ordersSnap, reviewsSnap, newsletterSnap] = await Promise.all([
-      db.collection('orders').where('customerEmail', '==', customerEmail).get(),
+      db.collection('orders').get(),
       db.collection('reviews').where('email', '==', customerEmail).get(),
       db.collection('newsletter').where('email', '==', customerEmail).get()
     ]);
     
+    // Filter orders manually since customerEmail field may be missing
+    let orderCount = 0;
+    if (!ordersSnap.empty) {
+      ordersSnap.docs.forEach(doc => {
+        const data = doc.data();
+        const docEmail = data.customerEmail || '';
+        if (docEmail.toLowerCase() === customerEmailLower) {
+          orderCount++;
+        }
+      });
+    }
+    
     const parts = [];
-    if (ordersSnap.size > 0) parts.push(`${ordersSnap.size} orders`);
+    if (orderCount > 0) parts.push(`${orderCount} orders`);
     if (reviewsSnap.size > 0) parts.push(`${reviewsSnap.size} reviews`);
     if (newsletterSnap.size > 0) parts.push('subscribed');
     
     document.getElementById('chat-customer-stats').textContent = parts.length > 0 ? parts.join(' · ') : 'New customer';
   } catch (e) {
+    console.warn('Stats error:', e.message);
     document.getElementById('chat-customer-stats').textContent = '';
   }
 }
@@ -112,39 +133,108 @@ async function lookupOrder() {
   try {
     let orders = [];
     
-    // Try by order number first
+    // Try by normalized order number first (with and without dash)
     if (searchValue) {
-      const orderSnap = await db.collection('orders')
+      const normalizedSearch = normalizeOrderNumber(searchValue);
+      
+      // Try exact match with original format
+      let orderSnap = await db.collection('orders')
         .where('orderNumber', '==', searchValue)
         .get();
       
       if (!orderSnap.empty) {
         orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
       }
-    }
-    
-    // Fall back to email lookup
-    if (orders.length === 0 && customerEmail) {
-      const emailSnap = await db.collection('orders')
-        .where('customerEmail', '==', customerEmail)
-        .get();
       
-      if (!emailSnap.empty) {
-        emailSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      // If no results, try normalized version
+      if (orders.length === 0 && normalizedSearch !== searchValue) {
+        orderSnap = await db.collection('orders')
+          .where('orderNumber', '==', normalizedSearch)
+          .get();
+        
+        if (!orderSnap.empty) {
+          orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+        }
+      }
+      
+      // Try with dash format if not found
+      if (orders.length === 0 && !searchValue.includes('-') && searchValue.startsWith('ORD')) {
+        const dashedVersion = searchValue.replace(/^(ORD)/, '$1-');
+        orderSnap = await db.collection('orders')
+          .where('orderNumber', '==', dashedVersion)
+          .get();
+        
+        if (!orderSnap.empty) {
+          orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+        }
       }
     }
     
-    // Last resort: get all orders and filter manually
+    // Fall back to email lookup (defensive)
+    if (orders.length === 0 && customerEmail) {
+      const customerEmailLower = customerEmail.toLowerCase();
+      const allOrdersSnap = await db.collection('orders').get();
+      
+      if (!allOrdersSnap.empty) {
+        allOrdersSnap.docs.forEach(d => {
+          const data = d.data();
+          const docEmail = data.customerEmail || '';
+          if (docEmail.toLowerCase() === customerEmailLower) {
+            orders.push({ id: d.id, ...data });
+          }
+        });
+      }
+    }
+    
+    // Phone number lookup as additional fallback
+    if (orders.length === 0 && customerEmail) {
+      const allOrdersSnap2 = await db.collection('orders').get();
+      
+      if (!allOrdersSnap2.empty) {
+        allOrdersSnap2.docs.forEach(d => {
+          const data = d.data();
+          const docPhone = data.customerPhone || '';
+          const docEmail = data.customerEmail || '';
+          // If the order has no email but has a phone, include it as possible match
+          if (!docEmail && docPhone && orders.filter(o => o.id === d.id).length === 0) {
+            // Only include if no email field exists (orphaned orders)
+          }
+        });
+      }
+    }
+    
+    // Last resort: manual filter through all orders
     if (orders.length === 0) {
       const allSnap = await db.collection('orders').get();
+      const normalizedSearch = normalizeOrderNumber(searchValue);
+      const customerEmailLower = customerEmail ? customerEmail.toLowerCase() : '';
       
       allSnap.docs.forEach(d => {
         const data = d.data();
-        if (
-          (searchValue && data.orderNumber === searchValue) ||
-          (customerEmail && data.customerEmail && data.customerEmail.toLowerCase() === customerEmail.toLowerCase())
-        ) {
-          orders.push({ id: d.id, ...data });
+        const docOrderNumber = data.orderNumber || '';
+        const normalizedDocOrder = normalizeOrderNumber(docOrderNumber);
+        const docEmail = data.customerEmail || '';
+        const docPhone = data.customerPhone || '';
+        
+        // Match by order number (normalized comparison)
+        const orderMatch = searchValue && (
+          docOrderNumber === searchValue ||
+          normalizedDocOrder === normalizedSearch ||
+          normalizedDocOrder === normalizedSearch.replace('-', '') ||
+          normalizedDocOrder === normalizedSearch.replace(/(ORD)(\d)/, '$1-$2')
+        );
+        
+        // Match by email
+        const emailMatch = customerEmail && docEmail.toLowerCase() === customerEmailLower;
+        
+        // Match by phone
+        const phoneMatch = customerEmail && !docEmail && docPhone;
+        
+        if (orderMatch || emailMatch || phoneMatch) {
+          // Avoid duplicates
+          if (!orders.find(o => o.id === d.id)) {
+            orders.push({ id: d.id, ...data });
+          }
         }
       });
     }
@@ -169,11 +259,12 @@ async function lookupOrder() {
     let html = '<p style="margin-bottom:12px;font-size:10px;">' + (uniqueOrders.length === 1 ? '1 order found' : uniqueOrders.length + ' orders found') + '</p>';
     uniqueOrders.forEach(o => {
       const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+      const itemCount = o.items ? o.items.length : (o.itemCount || 0);
       html += `<div style="margin-top:8px;padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.5;">
-        <strong>Order #${o.orderNumber || (o.id || '').substring(0, 12)}...</strong><br>
+        <strong>Order #${o.orderNumber || (o.id || '').substring(0, 12)}</strong><br>
         Status: ${o.status || 'pending'}<br>
-        Items: ${o.itemCount || 0} · Total: R${o.subtotal || o.total || 0}<br>
-        ${o.customerEmail ? 'Email: ' + o.customerEmail + '<br>' : ''}${date}
+        Items: ${itemCount} · Total: R${o.subtotal || o.total || 0}<br>
+        ${o.customerEmail ? 'Email: ' + o.customerEmail + '<br>' : ''}${o.customerPhone ? 'Phone: ' + o.customerPhone + '<br>' : ''}${date}
       </div>`;
     });
     resultEl.innerHTML = html;
@@ -259,7 +350,7 @@ async function sendChatMessage() {
   try {
     await db.collection('live_chat').add({
       sessionId: chatSessionId,
-      customerEmail: customerEmail,
+      customerEmail: customerEmail || '',
       text: text,
       sender: 'customer',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
