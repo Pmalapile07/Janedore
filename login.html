@@ -1,0 +1,399 @@
+<style>
+  .auth-section {
+    max-width: 480px;
+    margin: 80px auto 60px;
+    padding: 0 24px;
+  }
+  .auth-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .auth-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: #111;
+    margin-bottom: 12px;
+  }
+  .auth-subtitle {
+    font-size: 12px;
+    font-weight: 300;
+    color: #888;
+    line-height: 1.6;
+    letter-spacing: 0.03em;
+  }
+  .auth-form {
+    margin-bottom: 32px;
+  }
+  .auth-input-group {
+    margin-bottom: 20px;
+  }
+  .auth-label {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #888;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .auth-input {
+    width: 100%;
+    border: none;
+    border-bottom: 0.8px solid #ddd;
+    padding: 14px 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: #111;
+    outline: none;
+    background: transparent;
+    transition: border-color 0.3s;
+    letter-spacing: 0.02em;
+  }
+  .auth-input:focus {
+    border-color: #111;
+  }
+  .auth-input::placeholder {
+    color: #aaa;
+  }
+  .auth-btn {
+    width: 100%;
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 16px;
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 12px;
+  }
+  .auth-btn:hover {
+    background: #333;
+  }
+  .auth-btn.secondary {
+    background: #fff;
+    color: #111;
+    border: 0.8px solid #111;
+    margin-top: 8px;
+  }
+  .auth-btn.secondary:hover {
+    background: #f5f5f5;
+  }
+  .auth-message {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    letter-spacing: 0.03em;
+    display: none;
+  }
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    margin: 32px 0;
+    color: #ccc;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .auth-divider::before,
+  .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: #e5e5e5;
+  }
+  .auth-divider span {
+    padding: 0 16px;
+    color: #aaa;
+  }
+  .auth-benefits {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 0.5px solid #e5e5e5;
+  }
+  .auth-benefits-title {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #111;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .auth-benefit-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .auth-benefit-item {
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: 0.03em;
+  }
+  .auth-benefit-item svg {
+    width: 16px;
+    height: 16px;
+    stroke: #888;
+    flex-shrink: 0;
+  }
+  .account-section {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 0 24px;
+  }
+  .account-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .account-welcome {
+    flex: 1;
+  }
+  .account-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: #111;
+    margin-bottom: 8px;
+  }
+  .account-email {
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    letter-spacing: 0.03em;
+  }
+  .account-signout {
+    background: none;
+    border: 0.8px solid #ddd;
+    padding: 10px 20px;
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .account-signout:hover {
+    border-color: #111;
+    color: #111;
+  }
+  .account-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .account-stat-card {
+    padding: 24px;
+    background: #fafaf9;
+    text-align: center;
+  }
+  .account-stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: #111;
+    margin-bottom: 4px;
+  }
+  .account-stat-label {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #888;
+  }
+  .account-section-title {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #111;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 0.5px solid #e5e5e5;
+  }
+  .account-order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+  .account-order-item {
+    padding: 20px;
+    background: #fff;
+    border: 0.8px solid #e5e5e5;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .account-order-item:hover {
+    border-color: #111;
+  }
+  .account-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .account-order-number {
+    font-size: 11px;
+    font-weight: 500;
+    color: #111;
+    letter-spacing: 0.04em;
+  }
+  .account-order-date {
+    font-size: 10px;
+    color: #888;
+    letter-spacing: 0.03em;
+  }
+  .account-order-status {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    padding: 4px 12px;
+    display: inline-block;
+  }
+  .account-order-status.pending {
+    background: #f5f5f5;
+    color: #888;
+  }
+  .account-order-status.processing {
+    background: #f0f0f0;
+    color: #111;
+  }
+  .account-order-status.shipped {
+    background: #e8f4e8;
+    color: #2d6a2d;
+  }
+  .account-order-status.delivered {
+    background: #e0f0e0;
+    color: #1a4a1a;
+  }
+  .account-order-details {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .account-order-items {
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    letter-spacing: 0.03em;
+  }
+  .account-order-total {
+    font-size: 12px;
+    font-weight: 500;
+    color: #111;
+    letter-spacing: 0.04em;
+    margin-left: auto;
+  }
+  .account-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+  }
+  .account-empty-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #111;
+    margin-bottom: 12px;
+  }
+  .account-empty-text {
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    margin-bottom: 24px;
+  }
+  .account-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+  .account-quick-action {
+    padding: 20px;
+    background: #fff;
+    border: 0.8px solid #e5e5e5;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .account-quick-action:hover {
+    border-color: #111;
+  }
+  .account-quick-action-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+    color: #111;
+  }
+  .account-quick-action-label {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #111;
+  }
+  .order-detail-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .order-detail-content {
+    background: #fff;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 40px;
+    position: relative;
+  }
+  .order-detail-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #888;
+  }
+  @media (max-width: 768px) {
+    .auth-section {
+      margin: 40px auto 40px;
+    }
+    .account-section {
+      margin: 40px auto;
+    }
+    .account-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+
+<div id="login-page-content">
+  <!-- Content rendered by login.js -->
+</div>
