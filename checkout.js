@@ -7,7 +7,6 @@ function navigateToCheckout() {
   
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   
-  // Show checkout page
   const checkoutPage = document.getElementById("page-checkout");
   if (checkoutPage) {
     checkoutPage.classList.add("active");
@@ -16,11 +15,9 @@ function navigateToCheckout() {
     window.scrollTo({ top: 0, behavior: "smooth" });
     ensureNavScrolled();
     
-    // Show form view, hide confirmation
     document.getElementById('checkout-form-view').style.display = 'block';
     document.getElementById('checkout-confirmation-view').style.display = 'none';
     
-    // Pre-fill email if saved
     if (checkoutEmail) {
       document.getElementById('checkout-email').value = checkoutEmail;
     }
@@ -37,7 +34,6 @@ function renderCheckoutSummary() {
   const shipping = subtotal >= 1500 ? 0 : 150;
   const total = subtotal + shipping;
   
-  // Group items by brand
   const brandGroups = {};
   S.cart.forEach(item => {
     const product = PRODUCTS.find(p => p.id === item.productId);
@@ -87,7 +83,6 @@ async function placeOrder(e) {
     return;
   }
   
-  // Save email for future
   checkoutEmail = email;
   localStorage.setItem('janedore_checkout_email', email);
   
@@ -95,7 +90,6 @@ async function placeOrder(e) {
   const shipping = subtotal >= 1500 ? 0 : 150;
   const total = subtotal + shipping;
   
-  // Group by brand for multi-package
   const brandGroups = {};
   S.cart.forEach(item => {
     const product = PRODUCTS.find(p => p.id === item.productId);
@@ -131,19 +125,24 @@ async function placeOrder(e) {
   };
   
   try {
+    // Save order to Firestore
     await db.collection('orders').add({
       ...orderData,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     
-    // Reduce stock
-    for (const item of S.cart) {
-      const productRef = db.collection('products').doc(item.productId);
-      const productDoc = await productRef.get();
-      if (productDoc.exists) {
-        const currentStock = productDoc.data().stock || 0;
-        await productRef.update({ stock: Math.max(0, currentStock - item.qty) });
+    // Reduce stock (don't let errors block confirmation)
+    try {
+      for (const item of S.cart) {
+        const productRef = db.collection('products').doc(item.productId);
+        const productDoc = await productRef.get();
+        if (productDoc.exists) {
+          const currentStock = productDoc.data().stock || 0;
+          await productRef.update({ stock: Math.max(0, currentStock - item.qty) });
+        }
       }
+    } catch (stockError) {
+      console.warn('Stock update failed but order saved:', stockError);
     }
     
     // Show confirmation
@@ -158,6 +157,6 @@ async function placeOrder(e) {
     
   } catch (e) {
     console.warn('Order error:', e);
-    alert('Error placing order. Please try again.');
+    alert('Error placing order: ' + e.message);
   }
 }
