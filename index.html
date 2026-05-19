@@ -73,7 +73,7 @@
   <div id="checkout-loaded"></div>
   <footer id="checkout-footer"></footer>
 </div>
-<script src="checkout.js"></script>
+
 <script>
   fetch('checkout.html').then(r => r.text()).then(html => {
     document.getElementById('checkout-loaded').innerHTML = html;
@@ -105,5 +105,6 @@
 </script>
 
 <script src="app.js"></script>
+  <script src="checkout.js"></script>
 </body>
 </html>
