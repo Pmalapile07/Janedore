@@ -92,14 +92,18 @@ async function loadCustomerStats() {
   }
 }
 
-async function showOrderLookup() {
+function showOrderLookup() {
   document.getElementById('chat-email-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'flex';
-  
+  // Auto-search by email when opening
+  lookupOrder();
+}
+
+async function lookupOrder() {
   const resultEl = document.getElementById('order-result');
   const inputEl = document.getElementById('order-lookup-input');
   const searchValue = inputEl?.value?.trim() || '';
@@ -132,11 +136,11 @@ async function showOrderLookup() {
     }
     
     if (orders.length === 0) {
-      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use the Track Order option.</p>';
+      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use your email to search.</p>';
       return;
     }
     
-    // Remove duplicates (if an order was found by both order number and email)
+    // Remove duplicates
     const uniqueOrders = [];
     const seenIds = new Set();
     orders.forEach(o => {
@@ -162,7 +166,7 @@ async function showOrderLookup() {
     
   } catch (e) {
     console.warn('Order lookup:', e.message);
-    resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use the Track Order option.</p>';
+    resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use your email to search.</p>';
   }
 }
 
