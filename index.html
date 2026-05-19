@@ -1141,5 +1141,12 @@
   <i class="ph-thin ph-chat"></i>
   <span class="chat-unread-dot" id="chat-unread-dot"></span>
 </button>
+  <script src="chat.js"></script>
+<div id="chat-container"></div>
+<script>
+  fetch('chat-widget.html').then(r=>r.text()).then(html=>{
+    document.getElementById('chat-container').innerHTML = html;
+  });
+</script>
 </body>
 </html>
