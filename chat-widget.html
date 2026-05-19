@@ -1,4 +1,3 @@
-<!-- CHAT WIDGET HTML/CSS - Add this to any page -->
 <style>
   #live-chat-bubble {
     position: fixed;
@@ -105,7 +104,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 10px;
     background: #fafaf9;
@@ -140,7 +139,7 @@
     letter-spacing: 0.1em;
   }
   .chat-input-wrap {
-    display: none;
+    display: flex;
     border-top: 1px solid #e5e5e5;
     padding: 10px;
     gap: 8px;
@@ -181,7 +180,6 @@
     margin-bottom: 6px;
   }
   .order-lookup {
-    display: none;
     padding: 16px;
     background: #fafaf9;
     flex: 1;
@@ -271,14 +269,14 @@
   <div class="chat-messages" id="chat-messages">
     <div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>
   </div>
-  <div class="order-lookup" id="order-lookup">
+  <div class="order-lookup" id="order-lookup" style="display:none;">
     <div class="order-lookup-title">Track Your Order</div>
     <input class="order-lookup-input" id="order-lookup-input" placeholder="Enter order number">
     <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
     <div class="order-result" id="order-result"></div>
     <button class="back-to-chat-btn" onclick="backToChatOptions()">← Back</button>
   </div>
-  <div class="chat-input-wrap" id="chat-input-wrap">
+  <div class="chat-input-wrap" id="chat-input-wrap" style="display:none;">
     <input class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendChatMessage()">
     <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
   </div>
