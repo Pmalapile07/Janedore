@@ -104,25 +104,35 @@ async function showOrderLookup() {
   resultEl.textContent = 'Searching...';
   
   try {
-    const snapshot = await db.collection('orders').where('customerEmail', '==', customerEmail).orderBy('createdAt', 'desc').get();
+    // Removed orderBy to avoid composite index - sort in JavaScript instead
+    const snapshot = await db.collection('orders')
+      .where('customerEmail', '==', customerEmail)
+      .get();
     
     if (snapshot.empty) {
       resultEl.innerHTML = '<p>No orders found for<br><strong>' + customerEmail + '</strong></p>';
-    } else {
-      let html = '<p>Orders for <strong>' + customerEmail + '</strong></p>';
-      snapshot.docs.forEach(d => {
-        const o = d.data();
-        html += `<div style="margin-top:10px;padding:10px;background:#fafaf9;text-align:left;font-size:10px;">
-          <strong>${d.id.substring(0, 12)}...</strong><br>
-          Status: ${o.status || 'pending'}<br>
-          Items: ${o.itemCount || 0} · Total: R${o.subtotal || 0}<br>
-          ${o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : ''}
-        </div>`;
-      });
-      resultEl.innerHTML = html;
+      return;
     }
+    
+    // Sort in JavaScript instead of using orderBy
+    const orders = [];
+    snapshot.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+    orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    
+    let html = '<p style="margin-bottom:12px;">Orders for <strong>' + customerEmail + '</strong></p>';
+    orders.forEach(o => {
+      const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+      html += `<div style="margin-top:8px;padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.5;">
+        <strong>Order #${(o.id || '').substring(0, 12)}...</strong><br>
+        Status: ${o.status || 'pending'}<br>
+        Items: ${o.itemCount || 0} · Total: R${o.subtotal || 0}<br>
+        ${date}
+      </div>`;
+    });
+    resultEl.innerHTML = html;
   } catch (e) {
-    resultEl.textContent = 'Unable to look up orders.';
+    resultEl.textContent = 'Unable to look up orders. Check your connection.';
+    console.warn('Order lookup error:', e);
   }
 }
 
