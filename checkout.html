@@ -28,45 +28,46 @@
     margin-bottom: 20px;
     padding-bottom: 8px;
     border-bottom: 0.5px solid #e5e5e5;
-    margin-top: 32px;
+    margin-top: 36px;
   }
   .checkout-section-title:first-child { margin-top: 0; }
-  .checkout-form-group { margin-bottom: 14px; }
+  .checkout-form-group { margin-bottom: 18px; }
   .checkout-form-group label {
     display: block;
     font-family: 'Manrope', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    text-transform: uppercase;
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    color: #888;
-    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    color: #111;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
   }
   .checkout-form-group input, .checkout-form-group select {
     width: 100%;
-    padding: 10px 12px;
-    border: 0.5px solid #e5e5e5;
+    padding: 14px 16px;
+    border: 0.5px solid #ccc;
     font-family: 'Manrope', sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 300;
     outline: none;
     transition: border 0.2s;
-    background: #fafaf9;
+    background: #fff;
     color: #111;
+    letter-spacing: 0.01em;
   }
   .checkout-form-group input:focus, .checkout-form-group select:focus {
     border-color: #111;
     background: #fff;
   }
+  .checkout-form-group input::placeholder { color: #bbb; font-size: 14px; }
   .checkout-form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    gap: 18px;
   }
   .checkout-form-row-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 14px;
+    gap: 18px;
   }
   .checkout-summary {
     background: #fafaf9;
@@ -140,11 +141,11 @@
     background: #111;
     color: #fff;
     border: none;
-    padding: 15px;
+    padding: 16px;
     font-family: 'Manrope', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    font-weight: 400;
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s;
@@ -203,63 +204,55 @@
     transition: all 0.2s;
   }
   .checkout-confirmation-btn:hover { color: #555; border-color: #555; }
+  .checkout-required { color: #888; font-weight: 300; font-size: 10px; }
   @media (max-width: 768px) {
-    .checkout-grid {
-      grid-template-columns: 1fr;
-    }
-    .checkout-form-row, .checkout-form-row-3 {
-      grid-template-columns: 1fr;
-    }
-    .checkout-summary {
-      position: static;
-      order: -1;
-    }
-    .checkout-container {
-      padding: 40px 12px;
-    }
+    .checkout-grid { grid-template-columns: 1fr; }
+    .checkout-form-row, .checkout-form-row-3 { grid-template-columns: 1fr; }
+    .checkout-summary { position: static; order: -1; }
+    .checkout-container { padding: 40px 12px; }
   }
 </style>
 
 <div id="checkout-page-content">
-  <!-- Form View -->
   <div id="checkout-form-view" class="checkout-container">
     <button class="checkout-back-btn" onclick="navigateTo('cart')">← Back to Cart</button>
     <div class="checkout-title">Checkout</div>
     <div class="checkout-grid">
       <div>
         <form id="checkout-form" onsubmit="placeOrder(event)">
-          <div class="checkout-section-title">Contact</div>
+          
+          <div class="checkout-section-title">Contact Information</div>
           <div class="checkout-form-row">
             <div class="checkout-form-group">
-              <label>Email *</label>
-              <input type="email" id="checkout-email" required>
+              <label>Email <span class="checkout-required">required</span></label>
+              <input type="email" id="checkout-email" required placeholder="your@email.com">
             </div>
             <div class="checkout-form-group">
-              <label>Phone</label>
-              <input type="tel" id="checkout-phone">
+              <label>Phone Number <span class="checkout-required">required</span></label>
+              <input type="tel" id="checkout-phone" required placeholder="+27 81 234 5678">
             </div>
           </div>
           
           <div class="checkout-section-title">Shipping Address</div>
           <div class="checkout-form-group">
-            <label>Full Name *</label>
-            <input type="text" id="checkout-name" required>
+            <label>Full Name <span class="checkout-required">required</span></label>
+            <input type="text" id="checkout-name" required placeholder="First and last name">
           </div>
           <div class="checkout-form-group">
-            <label>Address *</label>
-            <input type="text" id="checkout-address" required placeholder="Street address">
+            <label>Street Address <span class="checkout-required">required</span></label>
+            <input type="text" id="checkout-address" required placeholder="House number and street name">
           </div>
           <div class="checkout-form-row-3">
             <div class="checkout-form-group">
-              <label>City *</label>
-              <input type="text" id="checkout-city" required>
+              <label>City <span class="checkout-required">required</span></label>
+              <input type="text" id="checkout-city" required placeholder="Johannesburg">
             </div>
             <div class="checkout-form-group">
               <label>Postal Code</label>
-              <input type="text" id="checkout-postal">
+              <input type="text" id="checkout-postal" placeholder="2000">
             </div>
             <div class="checkout-form-group">
-              <label>Country *</label>
+              <label>Country <span class="checkout-required">required</span></label>
               <select id="checkout-country" required>
                 <option value="">Select</option>
                 <option value="South Africa">South Africa</option>
@@ -267,19 +260,19 @@
                 <option value="Namibia">Namibia</option>
                 <option value="Lesotho">Lesotho</option>
                 <option value="Eswatini">Eswatini</option>
+                <option value="Zimbabwe">Zimbabwe</option>
                 <option value="Other">Other</option>
               </select>
             </div>
           </div>
           
           <div class="checkout-section-title">Payment</div>
-          <p style="font-size:11px;color:#888;font-weight:300;">Demo mode — no payment will be processed.</p>
+          <p style="font-size:12px;color:#888;font-weight:300;line-height:1.6;">Demo mode — no payment will be processed.<br>You will receive an order confirmation.</p>
           
           <button type="submit" class="checkout-place-order-btn">Place Order</button>
         </form>
       </div>
       
-      <!-- Order Summary -->
       <div class="checkout-summary">
         <div class="checkout-summary-title">Order Summary</div>
         <div id="checkout-items"></div>
@@ -296,7 +289,6 @@
     </div>
   </div>
   
-  <!-- Confirmation View -->
   <div id="checkout-confirmation-view" class="checkout-confirmation" style="display:none;">
     <div class="checkout-confirmation-icon">✓</div>
     <div class="checkout-confirmation-title">Order Confirmed</div>
