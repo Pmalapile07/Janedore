@@ -99,7 +99,6 @@ function showOrderLookup() {
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'flex';
-  // Auto-search by email when opening
   lookupOrder();
 }
 
@@ -113,7 +112,7 @@ async function lookupOrder() {
   try {
     let orders = [];
     
-    // First try by order number if something is typed
+    // Try by order number first
     if (searchValue) {
       const orderSnap = await db.collection('orders')
         .where('orderNumber', '==', searchValue)
@@ -124,8 +123,8 @@ async function lookupOrder() {
       }
     }
     
-    // If no results by order number, fall back to email lookup
-    if (orders.length === 0) {
+    // Fall back to email lookup
+    if (orders.length === 0 && customerEmail) {
       const emailSnap = await db.collection('orders')
         .where('customerEmail', '==', customerEmail)
         .get();
@@ -135,8 +134,23 @@ async function lookupOrder() {
       }
     }
     
+    // Last resort: get all orders and filter manually
     if (orders.length === 0) {
-      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use your email to search.</p>';
+      const allSnap = await db.collection('orders').get();
+      
+      allSnap.docs.forEach(d => {
+        const data = d.data();
+        if (
+          (searchValue && data.orderNumber === searchValue) ||
+          (customerEmail && data.customerEmail && data.customerEmail.toLowerCase() === customerEmail.toLowerCase())
+        ) {
+          orders.push({ id: d.id, ...data });
+        }
+      });
+    }
+    
+    if (orders.length === 0) {
+      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Try entering your order number (ORD-...)</p>';
       return;
     }
     
@@ -159,14 +173,14 @@ async function lookupOrder() {
         <strong>Order #${o.orderNumber || (o.id || '').substring(0, 12)}...</strong><br>
         Status: ${o.status || 'pending'}<br>
         Items: ${o.itemCount || 0} · Total: R${o.subtotal || o.total || 0}<br>
-        ${date}
+        ${o.customerEmail ? 'Email: ' + o.customerEmail + '<br>' : ''}${date}
       </div>`;
     });
     resultEl.innerHTML = html;
     
   } catch (e) {
     console.warn('Order lookup:', e.message);
-    resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Enter an order number or use your email to search.</p>';
+    resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Try entering your order number (ORD-...)</p>';
   }
 }
 
