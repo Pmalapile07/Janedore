@@ -503,22 +503,11 @@
   }
 
   function buildVariantBlock(v = {}, index) {
-    return `<div class="variant-block">
-      <h4>Variant ${index + 1}</h4>
-      <div class="form-row">
-        <div class="form-group"><label>Color Name</label><input name="variant-color-${index}" value="${escapeHtml(v.color||'')}"></div>
-        <div class="form-group"><label>Swatch Color</label><input name="variant-swatch-${index}" type="color" value="${v.swatch||'#111111'}" style="height:40px;padding:4px;"></div>
-      </div>
-      <label style="font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);color:var(--muted);">Model Images</label>
-      <div class="image-url-inputs" id="variant-model-${index}">${(v.images?.model||['']).map(url => buildImageUrlRow('model', index, url)).join('')}</div>
-      <button type="button" class="btn-underline" onclick="addImageUrl('model',${index})" style="margin-top:4px;">+ Model URL</button>
-      <label style="font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);color:var(--muted);margin-top:12px;">Ghost Images</label>
-      <div class="image-url-inputs" id="variant-ghost-${index}">${(v.images?.ghost||['']).map(url => buildImageUrlRow('ghost', index, url)).join('')}</div>
-      <button type="button" class="btn-underline" onclick="addImageUrl('ghost',${index})" style="margin-top:4px;">+ Ghost URL</button>
-      <label style="font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);color:var(--muted);margin-top:12px;">Detail Images</label>
-      <div class="image-url-inputs" id="variant-detail-${index}">${(v.images?.detail||['']).map(url => buildImageUrlRow('detail', index, url)).join('')}</div>
-      <button type="button" class="btn-underline" onclick="addImageUrl('detail',${index})" style="margin-top:4px;">+ Detail URL</button>
-    </div>`;
+    return `<div class="chat-session-card" onclick="loadChatMessages('${sid}')">
+  <div class="session-id">Session: ${sid.substring(0, 20)}... · ${customerMsgs.length} messages</div>
+  <div class="session-preview">${preview}${preview.length >= 80 ? '…' : ''}</div>
+  <div style="font-size:8px;color:var(--muted);margin-top:4px;">${time}</div>
+</div>`;
   }
 
   function buildImageUrlRow(type, variantIndex, url) {
