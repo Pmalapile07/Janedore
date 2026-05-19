@@ -3,6 +3,78 @@ let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + 
 localStorage.setItem('janedore_chat_session', chatSessionId);
 let customerEmail = localStorage.getItem('janedore_chat_email') || '';
 let chatOpen = false, chatUnsub = null, chatMode = null;
+let currentUser = null;
+
+// ==================== FIREBASE AUTH ====================
+// Initialize auth state listener
+firebase.auth().onAuthStateChanged((user) => {
+  currentUser = user;
+  if (user) {
+    // User is signed in
+    customerEmail = user.email || customerEmail;
+    localStorage.setItem('janedore_chat_email', customerEmail);
+    chatSessionId = 'chat-' + customerEmail.replace(/[^a-zA-Z0-9]/g, '-');
+    localStorage.setItem('janedore_chat_session', chatSessionId);
+    
+    if (chatOpen) {
+      showOptionsScreen();
+    }
+  } else {
+    // User is signed out
+    currentUser = null;
+  }
+});
+
+async function signInAnonymously() {
+  try {
+    const result = await firebase.auth().signInAnonymously();
+    currentUser = result.user;
+    return result.user;
+  } catch (error) {
+    console.warn('Anonymous auth failed:', error.message);
+    return null;
+  }
+}
+
+async function signInWithEmail(email) {
+  try {
+    // Try to sign in with email link (passwordless)
+    const actionCodeSettings = {
+      url: window.location.href,
+      handleCodeInApp: true
+    };
+    
+    await firebase.auth().sendSignInLinkToEmail(email, actionCodeSettings);
+    
+    // Store email for later use
+    localStorage.setItem('janedore_chat_email_pending', email);
+    return { success: true, method: 'emailLink' };
+  } catch (error) {
+    console.warn('Email link auth failed:', error.message);
+    
+    // Fall back to anonymous auth with email stored
+    try {
+      const user = await signInAnonymously();
+      if (user) {
+        // Store email in user profile via chat document
+        await db.collection('live_chat').add({
+          sessionId: chatSessionId,
+          customerEmail: email,
+          text: 'Customer authenticated',
+          sender: 'system',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          read: true,
+          type: 'auth'
+        });
+        return { success: true, method: 'anonymous' };
+      }
+    } catch (fallbackError) {
+      console.warn('Anonymous fallback failed:', fallbackError.message);
+    }
+    
+    return { success: false, error: error.message };
+  }
+}
 
 function toggleChat() {
   chatOpen = !chatOpen;
@@ -53,7 +125,21 @@ async function submitEmail() {
   chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
   localStorage.setItem('janedore_chat_session', chatSessionId);
   
-  showOptionsScreen();
+  // Try to authenticate with email
+  const authResult = await signInWithEmail(email);
+  
+  if (authResult.success && authResult.method === 'emailLink') {
+    // Show email sent confirmation
+    const emailScreen = document.getElementById('chat-email-screen');
+    emailScreen.innerHTML = `
+      <div class="chat-email-title">Check Your Email</div>
+      <div class="chat-email-subtitle">We sent a sign-in link to ${email}. Click the link to continue, or use the chat below.</div>
+      <button class="chat-email-btn" onclick="showOptionsScreen()">Continue to Chat</button>
+    `;
+  } else {
+    // Continue with anonymous auth or direct access
+    showOptionsScreen();
+  }
 }
 
 function startChat() {
@@ -83,33 +169,51 @@ async function loadCustomerStats() {
   try {
     const customerEmailLower = customerEmail ? customerEmail.toLowerCase() : '';
     
-    const [ordersSnap, reviewsSnap, newsletterSnap] = await Promise.all([
-      db.collection('orders').get(),
-      db.collection('reviews').where('email', '==', customerEmail).get(),
-      db.collection('newsletter').where('email', '==', customerEmail).get()
-    ]);
-    
-    // Filter orders manually since customerEmail field may be missing
     let orderCount = 0;
-    if (!ordersSnap.empty) {
-      ordersSnap.docs.forEach(doc => {
-        const data = doc.data();
-        const docEmail = data.customerEmail || '';
-        if (docEmail.toLowerCase() === customerEmailLower) {
-          orderCount++;
-        }
-      });
+    let reviewsCount = 0;
+    let newsletterCount = 0;
+    
+    // Query orders (now works with auth)
+    try {
+      const ordersSnap = await db.collection('orders').get();
+      if (!ordersSnap.empty) {
+        ordersSnap.docs.forEach(doc => {
+          const data = doc.data();
+          const docEmail = data.customerEmail || '';
+          if (docEmail.toLowerCase() === customerEmailLower) {
+            orderCount++;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Orders query failed:', e.message);
+    }
+    
+    // Query reviews (public access)
+    try {
+      const reviewsSnap = await db.collection('reviews').where('email', '==', customerEmail).get();
+      reviewsCount = reviewsSnap.size || 0;
+    } catch (e) {
+      console.warn('Reviews query failed:', e.message);
+    }
+    
+    // Query newsletter (requires auth)
+    try {
+      const newsletterSnap = await db.collection('newsletter').where('email', '==', customerEmail).get();
+      newsletterCount = newsletterSnap.size || 0;
+    } catch (e) {
+      console.warn('Newsletter query failed:', e.message);
     }
     
     const parts = [];
     if (orderCount > 0) parts.push(`${orderCount} orders`);
-    if (reviewsSnap.size > 0) parts.push(`${reviewsSnap.size} reviews`);
-    if (newsletterSnap.size > 0) parts.push('subscribed');
+    if (reviewsCount > 0) parts.push(`${reviewsCount} reviews`);
+    if (newsletterCount > 0) parts.push('subscribed');
     
-    document.getElementById('chat-customer-stats').textContent = parts.length > 0 ? parts.join(' · ') : 'New customer';
+    document.getElementById('chat-customer-stats').textContent = parts.length > 0 ? parts.join(' · ') : 'Customer';
   } catch (e) {
     console.warn('Stats error:', e.message);
-    document.getElementById('chat-customer-stats').textContent = '';
+    document.getElementById('chat-customer-stats').textContent = 'Customer';
   }
 }
 
@@ -132,6 +236,11 @@ async function lookupOrder() {
   
   try {
     let orders = [];
+    
+    // Ensure we have authentication
+    if (!currentUser) {
+      await signInAnonymously();
+    }
     
     // Try by normalized order number first (with and without dash)
     if (searchValue) {
@@ -170,7 +279,7 @@ async function lookupOrder() {
       }
     }
     
-    // Fall back to email lookup (defensive)
+    // Fall back to email lookup (now works with auth)
     if (orders.length === 0 && customerEmail) {
       const customerEmailLower = customerEmail.toLowerCase();
       const allOrdersSnap = await db.collection('orders').get();
@@ -179,25 +288,18 @@ async function lookupOrder() {
         allOrdersSnap.docs.forEach(d => {
           const data = d.data();
           const docEmail = data.customerEmail || '';
+          const docPhone = data.customerPhone || '';
+          
+          // Match by email
           if (docEmail.toLowerCase() === customerEmailLower) {
             orders.push({ id: d.id, ...data });
           }
-        });
-      }
-    }
-    
-    // Phone number lookup as additional fallback
-    if (orders.length === 0 && customerEmail) {
-      const allOrdersSnap2 = await db.collection('orders').get();
-      
-      if (!allOrdersSnap2.empty) {
-        allOrdersSnap2.docs.forEach(d => {
-          const data = d.data();
-          const docPhone = data.customerPhone || '';
-          const docEmail = data.customerEmail || '';
-          // If the order has no email but has a phone, include it as possible match
-          if (!docEmail && docPhone && orders.filter(o => o.id === d.id).length === 0) {
-            // Only include if no email field exists (orphaned orders)
+          
+          // Match by phone if order has no email field (orphaned orders)
+          if (!docEmail && docPhone && customerEmail) {
+            if (!orders.find(o => o.id === d.id)) {
+              orders.push({ id: d.id, ...data });
+            }
           }
         });
       }
@@ -271,7 +373,11 @@ async function lookupOrder() {
     
   } catch (e) {
     console.warn('Order lookup:', e.message);
-    resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Try entering your order number (ORD-...)</p>';
+    if (e.message && e.message.includes('permission')) {
+      resultEl.innerHTML = '<p style="color:#888;">Order lookup requires authentication.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Please ensure you are signed in or contact support through chat.</p>';
+    } else {
+      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Try entering your order number (ORD-...)</p>';
+    }
   }
 }
 
@@ -296,6 +402,7 @@ async function loadAllMessages() {
     }
     
     messages.forEach(m => {
+      if (m.type === 'auth') return; // Skip auth system messages
       const t = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
       const div = document.createElement('div');
       div.className = 'chat-msg ' + m.sender;
@@ -322,6 +429,8 @@ function listenChat() {
       snap.docChanges().forEach(c => {
         if (c.type === 'added') {
           const m = c.doc.data();
+          if (m.type === 'auth') return; // Skip auth system messages
+          
           const existingTexts = Array.from(el.querySelectorAll('.chat-msg')).map(div => div.textContent);
           const isDuplicate = existingTexts.some(t => t.includes(m.text));
           
@@ -347,15 +456,57 @@ async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
+  
   try {
+    // Ensure we have authentication
+    if (!currentUser) {
+      await signInAnonymously();
+    }
+    
     await db.collection('live_chat').add({
       sessionId: chatSessionId,
       customerEmail: customerEmail || '',
       text: text,
       sender: 'customer',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false
+      read: false,
+      userId: currentUser ? currentUser.uid : 'anonymous'
     });
     input.value = '';
-  } catch (e) { console.warn('Chat error:', e); }
+  } catch (e) { 
+    console.warn('Chat error:', e); 
+  }
 }
+
+// Handle email link sign-in when page loads
+async function handleEmailLinkSignIn() {
+  if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
+    let email = localStorage.getItem('janedore_chat_email_pending');
+    
+    if (!email) {
+      // Ask user for email
+      email = window.prompt('Please enter your email for confirmation');
+    }
+    
+    if (email) {
+      try {
+        const result = await firebase.auth().signInWithEmailLink(email, window.location.href);
+        localStorage.removeItem('janedore_chat_email_pending');
+        customerEmail = email;
+        localStorage.setItem('janedore_chat_email', email);
+        chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
+        localStorage.setItem('janedore_chat_session', chatSessionId);
+        
+        // Clear the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (error) {
+        console.warn('Email link sign-in failed:', error.message);
+      }
+    }
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  handleEmailLinkSignIn();
+});
