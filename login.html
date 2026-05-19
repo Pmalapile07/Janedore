@@ -244,3 +244,250 @@
     <button class="account-logout-btn" onclick="handleLogout()">Sign Out</button>
   </div>
 </div>
+
+<script>
+// ==================== LOGIN SYSTEM ====================
+
+let loginMode = 'signin';
+
+function navigateToLogin() {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const loginPage = document.getElementById("page-login");
+  if (loginPage) {
+    loginPage.classList.add("active");
+    S.currentPage = "login";
+    updateHash('login');
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    ensureNavScrolled();
+    
+    const user = firebase.auth().currentUser;
+    if (user) {
+      showAccountView();
+    } else {
+      showLoginView();
+    }
+  }
+}
+
+function navigateToAccount() {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const accountPage = document.getElementById("page-account");
+  if (accountPage) {
+    accountPage.classList.add("active");
+    S.currentPage = "account";
+    updateHash('account');
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    ensureNavScrolled();
+    
+    const user = firebase.auth().currentUser;
+    if (user) {
+      showAccountView();
+      loadAccountData();
+    } else {
+      navigateToLogin();
+    }
+  }
+}
+
+function showLoginView() {
+  const loginView = document.getElementById('login-view');
+  const accountView = document.getElementById('account-view');
+  if (loginView) loginView.style.display = 'block';
+  if (accountView) accountView.style.display = 'none';
+  loginMode = 'signin';
+  updateLoginModeUI();
+}
+
+function showAccountView() {
+  const loginView = document.getElementById('login-view');
+  const accountView = document.getElementById('account-view');
+  if (loginView) loginView.style.display = 'none';
+  if (accountView) accountView.style.display = 'block';
+  loadAccountData();
+}
+
+function toggleLoginMode() {
+  loginMode = loginMode === 'signin' ? 'signup' : 'signin';
+  updateLoginModeUI();
+}
+
+function updateLoginModeUI() {
+  const title = document.getElementById('login-mode-title');
+  const submitBtn = document.getElementById('login-submit-btn');
+  const toggleBtn = document.getElementById('toggle-mode-btn');
+  const nameGroup = document.getElementById('name-group');
+  const errorEl = document.getElementById('login-error');
+  
+  if (errorEl) errorEl.style.display = 'none';
+  
+  if (loginMode === 'signin') {
+    if (title) title.textContent = 'Sign In';
+    if (submitBtn) submitBtn.textContent = 'Sign In';
+    if (toggleBtn) toggleBtn.textContent = 'Create an account';
+    if (nameGroup) nameGroup.style.display = 'none';
+  } else {
+    if (title) title.textContent = 'Create Account';
+    if (submitBtn) submitBtn.textContent = 'Create Account';
+    if (toggleBtn) toggleBtn.textContent = 'Already have an account? Sign in';
+    if (nameGroup) nameGroup.style.display = 'block';
+  }
+}
+
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const name = document.getElementById('login-name').value.trim();
+  const errorEl = document.getElementById('login-error');
+  const submitBtn = document.getElementById('login-submit-btn');
+  
+  if (errorEl) errorEl.style.display = 'none';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Please wait...';
+  }
+  
+  try {
+    if (loginMode === 'signup') {
+      if (!name) {
+        throw new Error('Please enter your full name.');
+      }
+      const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+      await userCredential.user.updateProfile({ displayName: name });
+      await db.collection('customers').doc(userCredential.user.uid).set({
+        name: name,
+        email: email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } else {
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+    }
+    
+    showAccountView();
+    updateHash('account');
+    
+  } catch (error) {
+    if (errorEl) {
+      errorEl.textContent = error.message;
+      errorEl.style.display = 'block';
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = loginMode === 'signin' ? 'Sign In' : 'Create Account';
+    }
+  }
+}
+
+async function handleLogout() {
+  try {
+    await firebase.auth().signOut();
+    showLoginView();
+    updateHash('login');
+  } catch (e) {
+    console.warn('Logout error:', e);
+  }
+}
+
+async function loadAccountData() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  
+  const nameEl = document.getElementById('account-name');
+  const emailEl = document.getElementById('account-email');
+  if (nameEl) nameEl.textContent = user.displayName || 'Customer';
+  if (emailEl) emailEl.textContent = user.email;
+  
+  // Load orders (no composite index required)
+  try {
+    const ordersSnap = await db.collection('orders')
+      .where('customerEmail', '==', user.email)
+      .limit(50)
+      .get();
+    
+    const ordersContainer = document.getElementById('account-orders');
+    if (!ordersContainer) return;
+    
+    if (ordersSnap.empty) {
+      ordersContainer.innerHTML = '<p class="account-muted">No orders yet.</p>';
+    } else {
+      // Sort manually instead of using orderBy
+      const orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      
+      let ordersHTML = '';
+      orders.forEach(o => {
+        const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+        ordersHTML += `<div class="account-order-card">
+          <div class="account-order-number">Order #${o.orderNumber || o.id.substring(0, 12)}</div>
+          <div style="margin-top:4px;">${o.itemCount || 0} items · ${formatPrice(o.total || o.subtotal || 0)}</div>
+          <div style="margin-top:2px;display:flex;justify-content:space-between;">
+            <span class="account-order-status" style="color:${o.status === 'pending' ? '#e65100' : '#0a0'};">${o.status || 'pending'}</span>
+            <span style="font-size:10px;color:#aaa;">${date}</span>
+          </div>
+        </div>`;
+      });
+      ordersContainer.innerHTML = ordersHTML;
+    }
+  } catch (e) {
+    console.warn('Orders load error:', e);
+    const ordersContainer = document.getElementById('account-orders');
+    if (ordersContainer) ordersContainer.innerHTML = '<p class="account-muted">Unable to load orders.</p>';
+  }
+  
+  // Load reviews (no composite index required)
+  try {
+    const reviewsSnap = await db.collection('reviews')
+      .where('name', '==', user.displayName || '')
+      .limit(20)
+      .get();
+    
+    const reviewsContainer = document.getElementById('account-reviews');
+    if (!reviewsContainer) return;
+    
+    if (reviewsSnap.empty) {
+      reviewsContainer.innerHTML = '<p class="account-muted">No reviews yet.</p>';
+    } else {
+      const reviews = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      
+      let reviewsHTML = '';
+      reviews.forEach(r => {
+        const date = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+        reviewsHTML += `<div class="account-order-card">
+          <div>${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</div>
+          <div style="margin-top:2px;font-size:12px;">${r.text || 'No comment'}</div>
+          <div style="margin-top:2px;font-size:10px;color:#aaa;">${date}</div>
+        </div>`;
+      });
+      reviewsContainer.innerHTML = reviewsHTML;
+    }
+  } catch (e) {
+    console.warn('Reviews load error:', e);
+    const reviewsContainer = document.getElementById('account-reviews');
+    if (reviewsContainer) reviewsContainer.innerHTML = '<p class="account-muted">Unable to load reviews.</p>';
+  }
+}
+
+// Auth state listener
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    if (S.currentPage === 'login') {
+      showAccountView();
+      updateHash('account');
+    }
+    if (S.currentPage === 'account') {
+      showAccountView();
+      loadAccountData();
+    }
+  } else {
+    if (S.currentPage === 'login') {
+      showLoginView();
+    }
+    if (S.currentPage === 'account') {
+      navigateToLogin();
+    }
+  }
+});
+</script>
