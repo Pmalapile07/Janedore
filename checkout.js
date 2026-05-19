@@ -3,7 +3,13 @@
 let checkoutEmail = localStorage.getItem('janedore_checkout_email') || '';
 
 function navigateToCheckout() {
-  if (!S.cart.length) { alert('Your cart is empty'); return; }
+  // Try to get cart from logged-in user's Firestore first
+  const user = firebase.auth().currentUser;
+  
+  if (!S.cart.length && !user) {
+    alert('Your cart is empty');
+    return;
+  }
   
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   
@@ -18,7 +24,13 @@ function navigateToCheckout() {
     document.getElementById('checkout-form-view').style.display = 'block';
     document.getElementById('checkout-confirmation-view').style.display = 'none';
     
-    if (checkoutEmail) {
+    // Pre-fill email from logged-in user or localStorage
+    if (user && user.email) {
+      document.getElementById('checkout-email').value = user.email;
+      if (user.displayName) {
+        document.getElementById('checkout-name').value = user.displayName;
+      }
+    } else if (checkoutEmail) {
       document.getElementById('checkout-email').value = checkoutEmail;
     }
     
@@ -28,19 +40,14 @@ function navigateToCheckout() {
 
 function renderCheckoutSummary() {
   const itemsContainer = document.getElementById('checkout-items');
-  if (!itemsContainer) return;
+  if (!itemsContainer || !S.cart.length) {
+    if (itemsContainer) itemsContainer.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Your cart is empty.</p>';
+    return;
+  }
   
   const subtotal = S.cart.reduce((a, i) => a + (i.salePrice ?? i.price ?? 0) * i.qty, 0);
   const shipping = subtotal >= 1500 ? 0 : 150;
   const total = subtotal + shipping;
-  
-  const brandGroups = {};
-  S.cart.forEach(item => {
-    const product = PRODUCTS.find(p => p.id === item.productId);
-    const brand = product?.brand || 'Unknown';
-    if (!brandGroups[brand]) brandGroups[brand] = [];
-    brandGroups[brand].push(item);
-  });
   
   let itemsHTML = S.cart.map(item => {
     return `<div class="checkout-item">
@@ -54,6 +61,14 @@ function renderCheckoutSummary() {
     </div>`;
   }).join('');
   
+  const brandGroups = {};
+  S.cart.forEach(item => {
+    const product = PRODUCTS.find(p => p.id === item.productId);
+    const brand = product?.brand || 'Unknown';
+    if (!brandGroups[brand]) brandGroups[brand] = [];
+    brandGroups[brand].push(item);
+  });
+  
   const brandNames = Object.keys(brandGroups);
   let packagesHTML = '';
   if (brandNames.length > 1) {
@@ -61,14 +76,27 @@ function renderCheckoutSummary() {
   }
   
   itemsContainer.innerHTML = itemsHTML;
-  document.getElementById('checkout-packages').innerHTML = packagesHTML;
-  document.getElementById('checkout-subtotal').textContent = formatPrice(subtotal);
-  document.getElementById('checkout-shipping').textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
-  document.getElementById('checkout-total').textContent = formatPrice(total);
+  
+  const packagesEl = document.getElementById('checkout-packages');
+  if (packagesEl) packagesEl.innerHTML = packagesHTML;
+  
+  const subtotalEl = document.getElementById('checkout-subtotal');
+  if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+  
+  const shippingEl = document.getElementById('checkout-shipping');
+  if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
+  
+  const totalEl = document.getElementById('checkout-total');
+  if (totalEl) totalEl.textContent = formatPrice(total);
 }
 
 async function placeOrder(e) {
   e.preventDefault();
+  
+  if (!S.cart.length) {
+    alert('Your cart is empty.');
+    return;
+  }
   
   const email = document.getElementById('checkout-email').value.trim();
   const name = document.getElementById('checkout-name').value.trim();
@@ -98,11 +126,14 @@ async function placeOrder(e) {
     brandGroups[brand].push(item);
   });
   
+  const user = firebase.auth().currentUser;
+  
   const orderData = {
     orderNumber: 'ORD-' + Date.now(),
     customerEmail: email,
     customerName: name,
     customerPhone: phone,
+    customerId: user ? user.uid : null,
     shippingAddress: { address, city, postal, country },
     items: S.cart.map(item => ({
       productId: item.productId,
@@ -131,7 +162,7 @@ async function placeOrder(e) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     
-    // Reduce stock (don't let errors block confirmation)
+    // Reduce stock
     try {
       for (const item of S.cart) {
         const productRef = db.collection('products').doc(item.productId);
