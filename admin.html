@@ -350,7 +350,7 @@
 
   async function deleteProduct(productId) {
     if (!confirm('Delete this product?')) return;
-    try { await productsRef.doc(productId).delete(); showToast('Product deleted'); loadProducts(); }
+    try { await productsRef.doc(productId).delete(); showToast('Product deleted'); loadProducts(); closeModal(); }
     catch (e) { showToast('Error deleting: ' + e.message, 'error'); }
   }
 
@@ -375,7 +375,7 @@
     } catch (e) { showToast('Error seeding: ' + e.message, 'error'); }
   }
 
-  // ==================== CHAT (FIXED - no index needed) ====================
+  // ==================== CHAT (no index needed) ====================
 
   async function sendAdminReply(sessionId) {
     const input = document.getElementById(`reply-input-${sessionId}`);
@@ -396,9 +396,8 @@
       const snapshot = await chatRef.where('sessionId', '==', sessionId).get();
       const messages = [];
       snapshot.docs.forEach(d => messages.push(d.data()));
-      // Sort in JavaScript instead of orderBy (avoids composite index)
       messages.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
-      
+
       const mc = document.getElementById('main-content');
       const msgHTML = messages.map(m => {
         const time = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
@@ -407,7 +406,7 @@
           <div class="msg-meta">${m.sender} · ${time}</div>
         </div>`;
       }).join('');
-      
+
       mc.innerHTML = `
         <button class="btn-underline" onclick="switchTab('messages')" style="margin-bottom:12px;">← Back to Sessions</button>
         <div class="section-title">Chat Session: ${sessionId}</div>
@@ -455,9 +454,15 @@
 
   // ==================== PRODUCT MODAL ====================
   function openNewProductModal() { openProductModal(null); }
-  
+
   function openProductModal(product) {
-    const p = product || { id: '', sku: '', name: '', brand: 'JANEDORE', category: 'dresses', price: 0, salePrice: null, badge: '', sizes: [], stock: 0, status: 'active', featured: false, description: '', productFeatures: '', compositionCare: '', shippingReturns: '', variants: [{ color: '', swatch: '#111', images: { model: [''], ghost: [''], detail: [] } }] };
+    const p = product || {
+      id: '', sku: '', name: '', brand: 'JANEDORE', category: 'dresses',
+      price: 0, salePrice: null, badge: '', sizes: [], stock: 0, status: 'active',
+      featured: false, description: '', productFeatures: '', compositionCare: '',
+      shippingReturns: '',
+      variants: [{ color: '', swatch: '#111', images: { model: [''], ghost: [''], detail: [] } }]
+    };
     const html = `
       <div class="modal-overlay" id="product-modal-overlay" onclick="closeModal()">
         <div class="modal" onclick="event.stopPropagation()">
@@ -469,9 +474,26 @@
               <div class="form-group"><label>SKU</label><input name="sku" value="${escapeHtml(p.sku)}"></div>
             </div>
             <div class="form-row-3">
-              <div class="form-group"><label>Brand</label><select name="brand"><option value="JANEDORE" ${p.brand=='JANEDORE'?'selected':''}>JANEDORE</option><option value="NIRIUS CO" ${p.brand=='NIRIUS CO'?'selected':''}>NIRIUS CO</option><option value="THATO" ${p.brand=='THATO'?'selected':''}>THATO</option></select></div>
-              <div class="form-group"><label>Category</label><select name="category"><option value="dresses" ${p.category=='dresses'?'selected':''}>Dresses</option><option value="tops" ${p.category=='tops'?'selected':''}>Tops</option><option value="bottoms" ${p.category=='bottoms'?'selected':''}>Bottoms</option><option value="jackets" ${p.category=='jackets'?'selected':''}>Jackets</option><option value="sets" ${p.category=='sets'?'selected':''}>Sets</option><option value="sunglasses" ${p.category=='sunglasses'?'selected':''}>Sunglasses</option><option value="jewelry" ${p.category=='jewelry'?'selected':''}>Jewelry</option><option value="bags" ${p.category=='bags'?'selected':''}>Bags</option><option value="parfum" ${p.category=='parfum'?'selected':''}>Parfum</option></select></div>
-              <div class="form-group"><label>Status</label><select name="status"><option value="active" ${p.status=='active'?'selected':''}>Active</option><option value="draft" ${p.status=='draft'?'selected':''}>Draft</option></select></div>
+              <div class="form-group"><label>Brand</label><select name="brand">
+                <option value="JANEDORE" ${p.brand=='JANEDORE'?'selected':''}>JANEDORE</option>
+                <option value="NIRIUS CO" ${p.brand=='NIRIUS CO'?'selected':''}>NIRIUS CO</option>
+                <option value="THATO" ${p.brand=='THATO'?'selected':''}>THATO</option>
+              </select></div>
+              <div class="form-group"><label>Category</label><select name="category">
+                <option value="dresses" ${p.category=='dresses'?'selected':''}>Dresses</option>
+                <option value="tops" ${p.category=='tops'?'selected':''}>Tops</option>
+                <option value="bottoms" ${p.category=='bottoms'?'selected':''}>Bottoms</option>
+                <option value="jackets" ${p.category=='jackets'?'selected':''}>Jackets</option>
+                <option value="sets" ${p.category=='sets'?'selected':''}>Sets</option>
+                <option value="sunglasses" ${p.category=='sunglasses'?'selected':''}>Sunglasses</option>
+                <option value="jewelry" ${p.category=='jewelry'?'selected':''}>Jewelry</option>
+                <option value="bags" ${p.category=='bags'?'selected':''}>Bags</option>
+                <option value="parfum" ${p.category=='parfum'?'selected':''}>Parfum</option>
+              </select></div>
+              <div class="form-group"><label>Status</label><select name="status">
+                <option value="active" ${p.status=='active'?'selected':''}>Active</option>
+                <option value="draft" ${p.status=='draft'?'selected':''}>Draft</option>
+              </select></div>
             </div>
             <div class="form-row-3">
               <div class="form-group"><label>Price (R)</label><input name="price" type="number" value="${p.price}" required></div>
@@ -479,9 +501,17 @@
               <div class="form-group"><label>Stock</label><input name="stock" type="number" value="${p.stock}"></div>
             </div>
             <div class="form-row-3">
-              <div class="form-group"><label>Badge</label><select name="badge"><option value="">None</option><option value="new" ${p.badge=='new'?'selected':''}>New</option><option value="sale" ${p.badge=='sale'?'selected':''}>Sale</option><option value="sold" ${p.badge=='sold'?'selected':''}>Sold Out</option></select></div>
+              <div class="form-group"><label>Badge</label><select name="badge">
+                <option value="">None</option>
+                <option value="new" ${p.badge=='new'?'selected':''}>New</option>
+                <option value="sale" ${p.badge=='sale'?'selected':''}>Sale</option>
+                <option value="sold" ${p.badge=='sold'?'selected':''}>Sold Out</option>
+              </select></div>
               <div class="form-group"><label>Sizes (comma separated)</label><input name="sizes" value="${(p.sizes||[]).join(',')}"></div>
-              <div class="form-group"><label>Featured</label><select name="featured"><option value="false" ${!p.featured?'selected':''}>No</option><option value="true" ${p.featured?'selected':''}>Yes</option></select></div>
+              <div class="form-group"><label>Featured</label><select name="featured">
+                <option value="false" ${!p.featured?'selected':''}>No</option>
+                <option value="true" ${p.featured?'selected':''}>Yes</option>
+              </select></div>
             </div>
             <div class="form-group"><label>Description</label><textarea name="description">${escapeHtml(p.description||'')}</textarea></div>
             <div class="form-row">
@@ -502,23 +532,69 @@
     document.getElementById('modal-container').innerHTML = html;
   }
 
-  function buildVariantBlock(v = {}, index) {
-    return `<div class="chat-session-card" onclick="loadChatMessages('${sid}')">
-  <div class="session-id">Session: ${sid.substring(0, 20)}... · ${customerMsgs.length} messages</div>
-  <div class="session-preview">${preview}${preview.length >= 80 ? '…' : ''}</div>
-  <div style="font-size:8px;color:var(--muted);margin-top:4px;">${time}</div>
-</div>`;
+  // ==================== FIXED: buildVariantBlock ====================
+  function buildVariantBlock(v, index) {
+    v = v || {};
+    const images = v.images || { model: [], ghost: [], detail: [] };
+    const modelUrls = (images.model && images.model.length) ? images.model : [''];
+    const ghostUrls = (images.ghost && images.ghost.length) ? images.ghost : [''];
+    const detailUrls = (images.detail && images.detail.length) ? images.detail : [];
+
+    const modelRows = modelUrls.map(url => buildImageUrlRow('model', index, url)).join('');
+    const ghostRows = ghostUrls.map(url => buildImageUrlRow('ghost', index, url)).join('');
+    const detailRows = detailUrls.map(url => buildImageUrlRow('detail', index, url)).join('');
+
+    return `<div class="variant-block">
+      <h4>Variant ${index + 1}</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Color Name</label>
+          <input name="variant-color-${index}" value="${escapeHtml(v.color || '')}" placeholder="e.g. Black">
+        </div>
+        <div class="form-group">
+          <label>Swatch (hex)</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input name="variant-swatch-${index}" value="${escapeHtml(v.swatch || '#111')}" placeholder="#111" style="flex:1;">
+            <input type="color" value="${escapeHtml(v.swatch || '#111')}" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector('[name=variant-swatch-${index}]').value=this.value">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Model Images</label>
+        <div class="image-url-inputs" id="variant-model-${index}">${modelRows}</div>
+        <button type="button" class="btn-underline" onclick="addImageUrl('model', ${index})" style="margin-top:6px;font-size:8px;">+ Add Model Image</button>
+      </div>
+      <div class="form-group">
+        <label>Ghost / Flat Lay Images</label>
+        <div class="image-url-inputs" id="variant-ghost-${index}">${ghostRows}</div>
+        <button type="button" class="btn-underline" onclick="addImageUrl('ghost', ${index})" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button>
+      </div>
+      <div class="form-group">
+        <label>Detail Images</label>
+        <div class="image-url-inputs" id="variant-detail-${index}">${detailRows}</div>
+        <button type="button" class="btn-underline" onclick="addImageUrl('detail', ${index})" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button>
+      </div>
+    </div>`;
   }
+  // ==================== END FIX ====================
 
   function buildImageUrlRow(type, variantIndex, url) {
+    const placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
     return `<div class="image-url-row">
-      <input name="variant-${type}-${variantIndex}[]" value="${escapeHtml(url||'')}" placeholder="https://...">
-      <img class="image-preview" src="${url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>'}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>'">
+      <input name="variant-${type}-${variantIndex}[]" value="${escapeHtml(url||'')}" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||'${placeholder}'">
+      <img class="image-preview" src="${escapeHtml(url) || placeholder}" onerror="this.src='${placeholder}'">
     </div>`;
   }
 
-  function addVariant() { const c = document.getElementById('variants-container'); c.insertAdjacentHTML('beforeend', buildVariantBlock({}, c.children.length)); }
-  function addImageUrl(type, vi) { document.getElementById(`variant-${type}-${vi}`).insertAdjacentHTML('beforeend', buildImageUrlRow(type, vi, '')); }
+  function addVariant() {
+    const c = document.getElementById('variants-container');
+    c.insertAdjacentHTML('beforeend', buildVariantBlock({}, c.children.length));
+  }
+
+  function addImageUrl(type, vi) {
+    const container = document.getElementById(`variant-${type}-${vi}`);
+    if (container) container.insertAdjacentHTML('beforeend', buildImageUrlRow(type, vi, ''));
+  }
 
   function handleProductSubmit(e, existingId) {
     e.preventDefault();
@@ -545,7 +621,11 @@
       data.variants.push({
         color: form[`variant-color-${vi}`].value,
         swatch: form[`variant-swatch-${vi}`].value,
-        images: { model: Array.from(mI).map(i => i.value).filter(Boolean), ghost: Array.from(gI).map(i => i.value).filter(Boolean), detail: Array.from(dI).map(i => i.value).filter(Boolean) }
+        images: {
+          model: Array.from(mI).map(i => i.value).filter(Boolean),
+          ghost: Array.from(gI).map(i => i.value).filter(Boolean),
+          detail: Array.from(dI).map(i => i.value).filter(Boolean)
+        }
       });
       vi++;
     }
@@ -584,16 +664,22 @@
         break;
       case 'messages': await renderMessagesTab(); break;
       case 'reviews':
-        const revs = await reviewsRef.orderBy('createdAt','desc').limit(50).get();
-        mc.innerHTML = `<div class="section-title">Recent Reviews</div>${revs.docs.map(d => `<div class="card"><div class="card-header"><span>${'★'.repeat(d.data().rating||0)}</span><span style="font-size:var(--ui-font-size);color:var(--muted);">${d.data().name||'Anonymous'}</span></div><p style="font-size:12px;">${d.data().text||''}</p></div>`).join('')}`;
+        try {
+          const revs = await reviewsRef.orderBy('createdAt','desc').limit(50).get();
+          mc.innerHTML = `<div class="section-title">Recent Reviews</div>${revs.docs.map(d => `<div class="card"><div class="card-header"><span>${'★'.repeat(d.data().rating||0)}</span><span style="font-size:var(--ui-font-size);color:var(--muted);">${d.data().name||'Anonymous'}</span></div><p style="font-size:12px;">${d.data().text||''}</p></div>`).join('')}`;
+        } catch(e) { mc.innerHTML = `<div class="section-title">Recent Reviews</div><p style="font-size:12px;color:var(--muted);">No reviews yet.</p>`; }
         break;
       case 'newsletter':
-        const subs = await newsletterRef.orderBy('subscribedAt','desc').limit(50).get();
-        mc.innerHTML = `<div class="section-title">Newsletter (${subs.size})</div>${subs.docs.map(d => `<div class="card"><span style="font-size:12px;">${d.data().email}</span></div>`).join('')}`;
+        try {
+          const subs = await newsletterRef.orderBy('subscribedAt','desc').limit(50).get();
+          mc.innerHTML = `<div class="section-title">Newsletter (${subs.size})</div>${subs.docs.map(d => `<div class="card"><span style="font-size:12px;">${d.data().email}</span></div>`).join('')}`;
+        } catch(e) { mc.innerHTML = `<div class="section-title">Newsletter</div><p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>`; }
         break;
       case 'orders':
-        const ords = await ordersRef.orderBy('createdAt','desc').limit(50).get();
-        mc.innerHTML = `<div class="section-title">Orders (${ords.size})</div>${ords.docs.map(d => `<div class="card"><div class="card-header"><span style="font-size:var(--ui-font-size);">Order</span><span class="badge badge-active">${d.data().status||'pending'}</span></div><p style="font-size:12px;">${d.data().itemCount||0} items · R${d.data().subtotal||0}</p></div>`).join('')}`;
+        try {
+          const ords = await ordersRef.orderBy('createdAt','desc').limit(50).get();
+          mc.innerHTML = `<div class="section-title">Orders (${ords.size})</div>${ords.docs.map(d => `<div class="card"><div class="card-header"><span style="font-size:var(--ui-font-size);">Order</span><span class="badge badge-active">${d.data().status||'pending'}</span></div><p style="font-size:12px;">${d.data().itemCount||0} items · R${d.data().subtotal||0}</p></div>`).join('')}`;
+        } catch(e) { mc.innerHTML = `<div class="section-title">Orders</div><p style="font-size:12px;color:var(--muted);">No orders yet.</p>`; }
         break;
     }
   }
