@@ -122,37 +122,57 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
 .product-card { cursor: pointer; }
-/* ─── FIX: unified, single-source-of-truth for .product-img-wrap ─────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRODUCT IMAGE WRAPPER — single source of truth for 4:5 aspect ratio
+   The key insight: overflow:hidden here is what clips the sliding track.
+   width:100% is explicit so every flex/grid child inherits correctly.
+   ═══════════════════════════════════════════════════════════════════════════ */
 .product-img-wrap {
   position: relative;
-  aspect-ratio: 4 / 5;       /* canonical ratio — the 4/5 !important override at the bottom is removed */
-  overflow: hidden;
+  width: 100%;                    /* explicit: prevents grid/flex blowout */
+  aspect-ratio: 4 / 5;           /* 4:5 locked — do not override */
+  overflow: hidden;               /* clips the sliding track during translateX */
   background: #f0ede8;
   margin-bottom: 8px;
   touch-action: pan-y pinch-zoom;
-  width: 100%;                /* explicit width so flex children compute 100% correctly */
 }
-/* ─────────────────────────────────────────────────────────────────────────── */
+
 .product-card.sold-out .product-img-wrap { opacity: 0.6; filter: grayscale(0.3); }
-/* ─── FIX: .product-card-slides must be fully constrained inside the card ── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD SLIDES TRACK
+   Must match the wrapper exactly: width:100%, height:100%, no overflow.
+   `will-change: transform` promotes to GPU layer for smooth animation.
+   ═══════════════════════════════════════════════════════════════════════════ */
 .product-card-slides {
   display: flex;
+  width: 100%;                    /* matches wrapper — critical for translateX math */
+  height: 100%;
+  overflow: hidden;               /* secondary clip guard */
   transition: transform 0.4s ease;
-  height: 100%;
-  width: 100%;      /* prevents intrinsic-width blowout from slide children */
-  overflow: hidden; /* clips any slide overflow so card width stays locked */
+  will-change: transform;         /* GPU compositing for smooth swipe */
 }
-/* ─── FIX: .product-card-slide must not drive its own width ──────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INDIVIDUAL SLIDE
+   Each slide must be exactly the wrapper's width. We enforce this three ways:
+   1. flex: 0 0 100%  — no grow, no shrink, basis = full width
+   2. width: 100%     — hard cap matching flex-basis
+   3. min-width: 100% — prevents intrinsic-content collapse
+   height:100% fills the wrapper vertically via the flex parent.
+   ═══════════════════════════════════════════════════════════════════════════ */
 .product-card-slide {
-  min-width: 100%;
-  width: 100%;        /* matches min-width intent explicitly */
+  flex: 0 0 100%;                 /* authoritative: do not grow, shrink, or deviate */
+  width: 100%;                    /* redundant hard cap — keeps slide locked */
+  min-width: 100%;                /* prevents intrinsic-width collapse */
   height: 100%;
-  flex-shrink: 0;     /* prevents slide collapsing inside the flex wrapper */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-color: #f0ede8;      /* placeholder while image loads */
 }
-/* ─────────────────────────────────────────────────────────────────────────── */
+
 .card-slider-bars { display: flex; justify-content: center; gap: 4px; position: absolute; bottom: 8px; left: 0; right: 0; z-index: 2; pointer-events: none; }
 .card-slider-bar { width: 18px; height: 1px; background: rgba(255,255,255,0.5); border: none; transition: background 0.2s; }
 .card-slider-bar.active { background: #fff; }
@@ -280,7 +300,23 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 @media (min-width: 640px) { .wish-page-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 900px) { .wish-page-grid { grid-template-columns: repeat(4, 1fr); } }
 .wish-page-item { cursor: pointer; }
-.wish-page-img { aspect-ratio: 4/5; background-size: cover; background-position: center; background-color: #f0ede8; margin-bottom: 8px; position: relative; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WISHLIST IMAGE — inherits the same 4:5 system as .product-img-wrap
+   Use .product-img-wrap + .product-card-slides + .product-card-slide
+   inside wishlist cards so all slider logic is shared.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.wish-page-img {
+  width: 100%;
+  aspect-ratio: 4 / 5;           /* matches product cards exactly */
+  background-size: cover;
+  background-position: center;
+  background-color: #f0ede8;
+  margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
 .wish-page-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; color: #111; margin-bottom: 4px; line-height: 1.2; }
 .wish-page-price { font-size: 12px; font-weight: 300; color: #111; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; letter-spacing: 0.04em; }
 .wish-page-add-btn { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; background: #fff; color: #111; border: 0.8px solid #111; padding: 7px 14px; cursor: pointer; transition: all 0.2s; width: 100%; }
@@ -306,15 +342,60 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .filter-option input { margin: 0; accent-color: #111; }
 .toolbar-icon-btn { background: none; border: none; padding: 4px; display: flex; align-items: center; color: #111; transition: opacity 0.2s; }
 .toolbar-icon-btn:hover { opacity: 0.7; }
-.product-slider { position: relative; width: 100%; overflow: hidden; touch-action: pan-y pinch-zoom; max-width: 1000px; margin: 0 auto; }
-.product-slides { display: flex; transition: transform 0.4s ease; }
-.product-slide { min-width: 100%; aspect-ratio: 4/5; background: #f0ede8; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
-@media (min-width: 769px) {
-  .product-slides { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
-  .product-slide { aspect-ratio: 3/4; min-width: auto; }
-  .product-slides.single-image { display: flex; }
-  .product-slides.single-image .product-slide { aspect-ratio: 4/5; min-width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRODUCT DETAIL SLIDER (modal / product page)
+   Mobile: single-image swipe. Desktop: 2-up grid.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.product-slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  max-width: 1000px;
+  margin: 0 auto;
 }
+.product-slides {
+  display: flex;
+  width: 100%;
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+.product-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  aspect-ratio: 4 / 5;           /* 4:5 on mobile */
+  background: #f0ede8;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+@media (min-width: 769px) {
+  .product-slides {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    /* reset flex behaviour when switching to grid */
+    transform: none !important;
+  }
+  .product-slide {
+    aspect-ratio: 4 / 5;         /* keep 4:5 on desktop too */
+    flex: unset;
+    width: auto;
+    min-width: unset;
+  }
+  .product-slides.single-image {
+    display: flex;
+  }
+  .product-slides.single-image .product-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    aspect-ratio: 4 / 5;
+  }
+}
+
 .slider-bars { display: flex; justify-content: center; gap: 6px; padding: 12px 0; }
 .slider-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
 .slider-bar.active { background: #111; }
@@ -366,19 +447,35 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .shipping-calc button { background: #111; color: #fff; border: none; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 16px; white-space: nowrap; cursor: pointer; transition: background 0.2s; }
 .shipping-calc button:hover { background: #333; }
 .shipping-result { font-size: 12px; font-weight: 300; color: #111; margin-top: 6px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SWIPE SECTION (Complete the Look / Recently Viewed / You May Also Like)
+   The outer track wraps flex children. Each card is a fixed fraction of
+   the track. The .product-img-wrap inside each card must be width:100%
+   so the slide children compute correctly.
+   ═══════════════════════════════════════════════════════════════════════════ */
 .swipe-section { position: relative; padding: 32px 0; max-width: 1400px; margin: 0 auto; }
 .swipe-section-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 12px; }
-.swipe-track-wrap { overflow: hidden; touch-action: pan-y pinch-zoom; cursor: grab; }
+.swipe-track-wrap {
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  cursor: grab;
+  width: 100%;              /* explicit: prevents track from expanding beyond viewport */
+}
 .swipe-track-wrap:active { cursor: grabbing; }
-.swipe-track { display: flex; gap: 8px; transition: transform 0.4s ease; will-change: transform; }
-/* ─── FIX: swipe track cards must not grow beyond their flex-basis ─────────
-   Without min-width: 0, a flex child's default min-width is auto, which lets
-   the card stretch to fit its inner .product-card-slides content width.
-   Adding min-width: 0 forces the card to respect its flex-basis exactly.    */
+.swipe-track {
+  display: flex;
+  gap: 8px;
+  transition: transform 0.4s ease;
+  will-change: transform;
+  /* No width override here — it grows naturally from card flex-basis totals */
+}
+
+/* ── Swipe track cards: locked flex-basis, no blowout ────────────────────── */
 .swipe-track .product-card {
   flex: 0 0 calc(50% - 4px);
-  min-width: 0; /* ← prevents flex blowout; cards stay locked to flex-basis */
-  width: calc(50% - 4px); /* explicit width mirrors flex-basis as a hard cap */
+  width: calc(50% - 4px);    /* hard cap = flex-basis */
+  min-width: 0;              /* prevents flex item from stretching past basis */
 }
 @media (min-width: 640px) {
   .swipe-track .product-card {
@@ -392,7 +489,16 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
     width: calc(25% - 6px);
   }
 }
-/* ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Inside swipe cards: wrapper must fill the card exactly ──────────────── */
+.swipe-track .product-card .product-img-wrap {
+  width: 100%;               /* fills the card's locked width */
+  aspect-ratio: 4 / 5;      /* 4:5 preserved */
+}
+
+/* ── Slides inside swipe cards inherit correctly via .product-card-slides ── */
+/* (no extra overrides needed — the shared rules above handle them)          */
+
 .swipe-bars { display: flex; justify-content: flex-start; gap: 6px; margin-top: 14px; }
 .swipe-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
 .swipe-bar.active { background: #111; }
@@ -412,10 +518,44 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 @media (min-width: 768px) { .campaign-paragraph { padding: 64px 16px; } }
 .campaign-tagline { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 300; font-style: italic; text-align: center; padding: 0 12px 48px; margin-top: 48px; color: #111; }
 @media (min-width: 768px) { .campaign-tagline { padding: 0 16px 48px; } }
-.campaign-product-slider { position: relative; overflow: hidden; margin-top: 48px; max-width: 1400px; margin-left: auto; margin-right: auto; }
-.campaign-slides { display: flex; transition: transform 0.4s ease; }
-.campaign-slide { min-width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-@media (min-width: 768px) { .campaign-slide { grid-template-columns: repeat(4, 1fr); } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CAMPAIGN PRODUCT SLIDER
+   Same pattern as the main product slider: flex track, locked slides.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.campaign-product-slider {
+  position: relative;
+  overflow: hidden;
+  margin-top: 48px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.campaign-slides {
+  display: flex;
+  width: 100%;
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+.campaign-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .campaign-slide { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Cards inside campaign slides share the same 4:5 wrapper behaviour */
+.campaign-slide .product-card { min-width: 0; }
+.campaign-slide .product-img-wrap {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+}
+
 .campaign-slider-controls { display: flex; justify-content: center; gap: 12px; margin-top: 24px; }
 .campaign-slider-btn { background: none; border: 0.8px solid #ccc; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: #111; }
 .campaign-slider-btn:hover { border-color: #111; background: #f5f5f5; }
@@ -498,30 +638,68 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .review-image-preview { width: 60px; height: 60px; object-fit: cover; display: none; border: 0.8px solid #ddd; }
 .review-submit-btn { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; cursor: pointer; transition: background 0.2s; }
 .review-submit-btn:hover { background: #333; }
-#page-products .product-card, #page-category .product-card { cursor: pointer; }
-#page-products .product-img-wrap, #page-category .product-img-wrap { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: #f0ede8; margin-bottom: 8px; touch-action: pan-y pinch-zoom; }
-#page-products .product-card, #page-category .product-card { max-width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COLLECTION / CATEGORY PAGES — product cards in grid context
+   The grid cells constrain card width. .product-img-wrap inherits width:100%
+   from the shared rule above. No overrides needed except confirming ratio.
+   ═══════════════════════════════════════════════════════════════════════════ */
+#page-products .product-card,
+#page-category .product-card { cursor: pointer; }
+
+#page-products .product-img-wrap,
+#page-category .product-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;       /* 4:5 locked */
+  overflow: hidden;
+  background: #f0ede8;
+  margin-bottom: 8px;
+  touch-action: pan-y pinch-zoom;
+}
+
+#page-products .product-card,
+#page-category .product-card { max-width: 100%; }
+
+/* Responsive grid breakpoints */
 @media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 900px) { .product-grid, .campaign-slide { grid-template-columns: repeat(2, 1fr); } }
+
 @media (max-width: 768px) {
-  #main-nav { height: 56px; } .nav-logo img { height: 22px; }
+  #main-nav { height: 56px; }
+  .nav-logo img { height: 22px; }
   #hero { height: calc(52vh + 2px); min-height: 322px; padding-bottom: 48px; margin-top: -56px; }
   .campaign-heading { font-size: 48px; margin-bottom: 40px; }
   .search-results-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-currency-lang { gap: 16px; }
   .currency-dropdown, .lang-dropdown { left: 50%; transform: translateX(-50%); min-width: 110px; }
-  .cart-page-item { flex-wrap: wrap; } .cart-page-actions { flex-direction: column; width: 100%; }
+  .cart-page-item { flex-wrap: wrap; }
+  .cart-page-actions { flex-direction: column; width: 100%; }
   .cart-page-btn { width: 100%; text-align: center; }
-  .product-actions { flex-wrap: wrap; } .modal-add-btn { flex: 1 1 40%; } .modal-wish-btn { flex: 0 0 48px; }
+  .product-actions { flex-wrap: wrap; }
+  .modal-add-btn { flex: 1 1 40%; }
+  .modal-wish-btn { flex: 0 0 48px; }
   .back-btn-wrap { bottom: 16px; right: 16px; }
-  .product-slides { display: flex; grid-template-columns: none; }
-  .product-slide { aspect-ratio: 4/5; min-width: 100%; }
+  /* Mobile: product detail slider reverts to single-image swipe */
+  .product-slides {
+    display: flex;
+    grid-template-columns: none;
+    transform: translateX(calc(-100% * var(--slide-index, 0)));
+  }
+  .product-slide {
+    aspect-ratio: 4 / 5;
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+  }
 }
+
 @media (max-width: 480px) {
   #main-nav { height: 52px; }
   #hero { height: calc(50vh + 2px); min-height: 302px; padding-bottom: 40px; margin-top: -52px; }
   .footer-currency-lang { flex-direction: row; justify-content: center; gap: 20px; }
 }
+
 #page-home { padding-top: 0; }
 .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 60px 20px; }
 .spinner { width: 24px; height: 24px; border: 2px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; }
