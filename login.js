@@ -1,4 +1,8 @@
 // ==================== LOGIN SYSTEM ====================
+// This module handles real Firebase email/password authentication.
+// It deliberately ignores anonymous Firebase users (used by the support chat)
+// via user.isAnonymous checks throughout — so chat auth never triggers
+// account redirects or page state changes.
 
 let loginMode = 'signin'; // 'signin' or 'signup'
 
@@ -11,10 +15,10 @@ function navigateToLogin() {
     updateHash('login');
     window.scrollTo({ top: 0, behavior: "smooth" });
     ensureNavScrolled();
-    
-    // Check if already logged in
+
+    // Only treat as signed in if this is a real (non-anonymous) user
     const user = firebase.auth().currentUser;
-    if (user) {
+    if (user && !user.isAnonymous) {
       showAccountView();
     } else {
       showLoginView();
@@ -31,27 +35,32 @@ function navigateToAccount() {
     updateHash('account');
     window.scrollTo({ top: 0, behavior: "smooth" });
     ensureNavScrolled();
-    
+
     const user = firebase.auth().currentUser;
-    if (user) {
+    if (user && !user.isAnonymous) {
       showAccountView();
       loadAccountData();
     } else {
+      // Anonymous or signed-out — redirect to login
       navigateToLogin();
     }
   }
 }
 
 function showLoginView() {
-  document.getElementById('login-view').style.display = 'block';
-  document.getElementById('account-view').style.display = 'none';
+  const loginView = document.getElementById('login-view');
+  const accountView = document.getElementById('account-view');
+  if (loginView) loginView.style.display = 'block';
+  if (accountView) accountView.style.display = 'none';
   loginMode = 'signin';
   updateLoginModeUI();
 }
 
 function showAccountView() {
-  document.getElementById('login-view').style.display = 'none';
-  document.getElementById('account-view').style.display = 'block';
+  const loginView = document.getElementById('login-view');
+  const accountView = document.getElementById('account-view');
+  if (loginView) loginView.style.display = 'none';
+  if (accountView) accountView.style.display = 'block';
   loadAccountData();
 }
 
@@ -66,43 +75,45 @@ function updateLoginModeUI() {
   const toggleBtn = document.getElementById('toggle-mode-btn');
   const nameGroup = document.getElementById('name-group');
   const errorEl = document.getElementById('login-error');
-  
-  errorEl.style.display = 'none';
-  
+
+  if (errorEl) errorEl.style.display = 'none';
+
   if (loginMode === 'signin') {
-    title.textContent = 'Sign In';
-    submitBtn.textContent = 'Sign In';
-    toggleBtn.textContent = 'Create an account';
-    nameGroup.style.display = 'none';
+    if (title) title.textContent = 'Sign In';
+    if (submitBtn) submitBtn.textContent = 'Sign In';
+    if (toggleBtn) toggleBtn.textContent = 'Create an account';
+    if (nameGroup) nameGroup.style.display = 'none';
   } else {
-    title.textContent = 'Create Account';
-    submitBtn.textContent = 'Create Account';
-    toggleBtn.textContent = 'Already have an account? Sign in';
-    nameGroup.style.display = 'block';
+    if (title) title.textContent = 'Create Account';
+    if (submitBtn) submitBtn.textContent = 'Create Account';
+    if (toggleBtn) toggleBtn.textContent = 'Already have an account? Sign in';
+    if (nameGroup) nameGroup.style.display = 'block';
   }
 }
 
 async function handleLoginSubmit(e) {
   e.preventDefault();
-  
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const name = document.getElementById('login-name').value.trim();
+
+  const emailInput = document.getElementById('login-email');
+  const passwordInput = document.getElementById('login-password');
+  const nameInput = document.getElementById('login-name');
   const errorEl = document.getElementById('login-error');
   const submitBtn = document.getElementById('login-submit-btn');
-  
-  errorEl.style.display = 'none';
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Please wait...';
-  
+
+  if (!emailInput || !passwordInput) return;
+
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value;
+  const name = nameInput ? nameInput.value.trim() : '';
+
+  if (errorEl) errorEl.style.display = 'none';
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Please wait…'; }
+
   try {
     if (loginMode === 'signup') {
-      if (!name) {
-        throw new Error('Please enter your full name.');
-      }
+      if (!name) throw new Error('Please enter your full name.');
       const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
       await userCredential.user.updateProfile({ displayName: name });
-      // Save to Firestore
       await db.collection('customers').doc(userCredential.user.uid).set({
         name: name,
         email: email,
@@ -111,22 +122,24 @@ async function handleLoginSubmit(e) {
     } else {
       await firebase.auth().signInWithEmailAndPassword(email, password);
     }
-    
-    // Success - show account view
+
     showAccountView();
     updateHash('account');
-    
+
   } catch (error) {
-    errorEl.textContent = error.message;
-    errorEl.style.display = 'block';
+    if (errorEl) { errorEl.textContent = error.message; errorEl.style.display = 'block'; }
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = loginMode === 'signin' ? 'Sign In' : 'Create Account';
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = loginMode === 'signin' ? 'Sign In' : 'Create Account';
+    }
   }
 }
 
 async function handleLogout() {
   try {
+    // Sign out the real account user.
+    // The chat module will re-establish anonymous auth on its next Firestore access.
     await firebase.auth().signOut();
     showLoginView();
     updateHash('login');
@@ -137,81 +150,90 @@ async function handleLogout() {
 
 async function loadAccountData() {
   const user = firebase.auth().currentUser;
-  if (!user) return;
-  
-  // Display user info
-  document.getElementById('account-name').textContent = user.displayName || 'Customer';
-  document.getElementById('account-email').textContent = user.email;
-  
-  // Load orders
-  try {
-    const ordersSnap = await db.collection('orders')
-      .where('customerEmail', '==', user.email)
-      .orderBy('createdAt', 'desc')
-      .limit(20)
-      .get();
-    
-    const ordersContainer = document.getElementById('account-orders');
-    
-    if (ordersSnap.empty) {
-      ordersContainer.innerHTML = '<p class="account-muted">No orders yet.</p>';
-    } else {
-      let ordersHTML = '';
-      ordersSnap.docs.forEach(d => {
-        const o = d.data();
-        const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-        ordersHTML += `<div class="account-order-card">
-          <div class="account-order-number">Order #${o.orderNumber || d.id.substring(0, 12)}</div>
-          <div style="margin-top:4px;">${o.itemCount || 0} items · R${o.total || o.subtotal || 0}</div>
-          <div style="margin-top:2px;display:flex;justify-content:space-between;">
-            <span class="account-order-status" style="color:${o.status === 'pending' ? '#e65100' : '#0a0'};">${o.status || 'pending'}</span>
-            <span style="font-size:10px;color:#aaa;">${date}</span>
-          </div>
-        </div>`;
-      });
-      ordersContainer.innerHTML = ordersHTML;
+  // Guard: never load account data for anonymous (chat) users
+  if (!user || user.isAnonymous) return;
+
+  const nameEl = document.getElementById('account-name');
+  const emailEl = document.getElementById('account-email');
+  if (nameEl) nameEl.textContent = user.displayName || 'Customer';
+  if (emailEl) emailEl.textContent = user.email;
+
+  const userEmail = user.email.trim().toLowerCase();
+
+  // Load orders — secure exact-match query, no full collection scan
+  const ordersContainer = document.getElementById('account-orders');
+  if (ordersContainer) {
+    try {
+      const ordersSnap = await db.collection('orders')
+        .where('customerEmail', '==', userEmail)
+        .orderBy('createdAt', 'desc')
+        .limit(20)
+        .get();
+
+      if (ordersSnap.empty) {
+        ordersContainer.innerHTML = '<p class="account-muted">No orders yet.</p>';
+      } else {
+        let ordersHTML = '';
+        ordersSnap.docs.forEach(d => {
+          const o = d.data();
+          const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+          ordersHTML += `<div class="account-order-card">
+            <div class="account-order-number">Order #${o.orderNumber || d.id.substring(0, 12)}</div>
+            <div style="margin-top:4px;">${o.itemCount || 0} items · R${o.total || o.subtotal || 0}</div>
+            <div style="margin-top:2px;display:flex;justify-content:space-between;">
+              <span class="account-order-status" style="color:${o.status === 'pending' ? '#e65100' : '#0a0'};">${o.status || 'pending'}</span>
+              <span style="font-size:10px;color:#aaa;">${date}</span>
+            </div>
+          </div>`;
+        });
+        ordersContainer.innerHTML = ordersHTML;
+      }
+    } catch (e) {
+      ordersContainer.innerHTML = '<p class="account-muted">Unable to load orders.</p>';
     }
-  } catch (e) {
-    document.getElementById('account-orders').innerHTML = '<p class="account-muted">Unable to load orders.</p>';
   }
-  
-  // Load reviews
-  try {
-    const reviewsSnap = await db.collection('reviews')
-      .where('email', '==', user.email)
-      .orderBy('createdAt', 'desc')
-      .limit(10)
-      .get();
-    
-    const reviewsContainer = document.getElementById('account-reviews');
-    
-    if (reviewsSnap.empty) {
-      reviewsContainer.innerHTML = '<p class="account-muted">No reviews yet.</p>';
-    } else {
-      let reviewsHTML = '';
-      reviewsSnap.docs.forEach(d => {
-        const r = d.data();
-        const date = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-        reviewsHTML += `<div class="account-order-card">
-          <div>${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</div>
-          <div style="margin-top:2px;font-size:12px;">${r.text || 'No comment'}</div>
-          <div style="margin-top:2px;font-size:10px;color:#aaa;">${date}</div>
-        </div>`;
-      });
-      reviewsContainer.innerHTML = reviewsHTML;
+
+  // Load reviews — exact-match query
+  const reviewsContainer = document.getElementById('account-reviews');
+  if (reviewsContainer) {
+    try {
+      const reviewsSnap = await db.collection('reviews')
+        .where('email', '==', userEmail)
+        .orderBy('createdAt', 'desc')
+        .limit(10)
+        .get();
+
+      if (reviewsSnap.empty) {
+        reviewsContainer.innerHTML = '<p class="account-muted">No reviews yet.</p>';
+      } else {
+        let reviewsHTML = '';
+        reviewsSnap.docs.forEach(d => {
+          const r = d.data();
+          const date = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+          reviewsHTML += `<div class="account-order-card">
+            <div>${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</div>
+            <div style="margin-top:2px;font-size:12px;">${r.text || 'No comment'}</div>
+            <div style="margin-top:2px;font-size:10px;color:#aaa;">${date}</div>
+          </div>`;
+        });
+        reviewsContainer.innerHTML = reviewsHTML;
+      }
+    } catch (e) {
+      reviewsContainer.innerHTML = '<p class="account-muted">Unable to load reviews.</p>';
     }
-  } catch (e) {
-    document.getElementById('account-reviews').innerHTML = '<p class="account-muted">Unable to load reviews.</p>';
   }
 }
 
-// Auth state listener
+// ==================== AUTH STATE LISTENER ====================
+// Single listener for the account system.
+// Anonymous users (support chat) are explicitly ignored so chat auth
+// never triggers account page changes.
 firebase.auth().onAuthStateChanged(user => {
-  const loginPage = document.getElementById('page-login');
-  const accountPage = document.getElementById('page-account');
-  
+  // Ignore anonymous auth entirely — that belongs to the chat module
+  if (user && user.isAnonymous) return;
+
   if (user) {
-    // User is signed in
+    // Real signed-in user
     if (S.currentPage === 'login') {
       showAccountView();
       updateHash('account');
@@ -221,7 +243,7 @@ firebase.auth().onAuthStateChanged(user => {
       loadAccountData();
     }
   } else {
-    // User is signed out
+    // Signed out (real user)
     if (S.currentPage === 'login') {
       showLoginView();
     }
