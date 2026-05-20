@@ -68,6 +68,10 @@ function loadWishlistFromStorage() {
 function saveWishlistToStorage() {
   try { const ids = S.wishlist.map(p => p.id); localStorage.setItem('janedore_wishlist', JSON.stringify(ids)); } catch(e) {}
 }
+function cleanCartOrphans() {
+  S.cart = S.cart.filter(item => PRODUCTS.some(p => p.id === item.productId));
+  saveCartToStorage();
+}
 
 const S = {
   cart:[], wishlist:[], currentPage:"home", currentCategoryPage:null, selectedSize:null,
@@ -617,6 +621,7 @@ async function init() {
   showLoading(DOM.arrivalsGrid); showLoading(DOM.allProductsGrid);
   loadCartFromStorage(); updateBadges();
   PRODUCTS = await fetchProducts();
+  cleanCartOrphans();
   loadWishlistFromStorage(); updateBadges();
   setHeroImage(); buildArrivals();
   ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"].forEach(buildFooter);
