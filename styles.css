@@ -122,10 +122,37 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
 .product-card { cursor: pointer; }
-.product-img-wrap { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #f0ede8; margin-bottom: 8px; touch-action: pan-y pinch-zoom; }
+/* ─── FIX: unified, single-source-of-truth for .product-img-wrap ─────────── */
+.product-img-wrap {
+  position: relative;
+  aspect-ratio: 4 / 5;       /* canonical ratio — the 4/5 !important override at the bottom is removed */
+  overflow: hidden;
+  background: #f0ede8;
+  margin-bottom: 8px;
+  touch-action: pan-y pinch-zoom;
+  width: 100%;                /* explicit width so flex children compute 100% correctly */
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
 .product-card.sold-out .product-img-wrap { opacity: 0.6; filter: grayscale(0.3); }
-.product-card-slides { display: flex; transition: transform 0.4s ease; height: 100%; }
-.product-card-slide { min-width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
+/* ─── FIX: .product-card-slides must be fully constrained inside the card ── */
+.product-card-slides {
+  display: flex;
+  transition: transform 0.4s ease;
+  height: 100%;
+  width: 100%;      /* prevents intrinsic-width blowout from slide children */
+  overflow: hidden; /* clips any slide overflow so card width stays locked */
+}
+/* ─── FIX: .product-card-slide must not drive its own width ──────────────── */
+.product-card-slide {
+  min-width: 100%;
+  width: 100%;        /* matches min-width intent explicitly */
+  height: 100%;
+  flex-shrink: 0;     /* prevents slide collapsing inside the flex wrapper */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
 .card-slider-bars { display: flex; justify-content: center; gap: 4px; position: absolute; bottom: 8px; left: 0; right: 0; z-index: 2; pointer-events: none; }
 .card-slider-bar { width: 18px; height: 1px; background: rgba(255,255,255,0.5); border: none; transition: background 0.2s; }
 .card-slider-bar.active { background: #fff; }
@@ -253,7 +280,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 @media (min-width: 640px) { .wish-page-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 900px) { .wish-page-grid { grid-template-columns: repeat(4, 1fr); } }
 .wish-page-item { cursor: pointer; }
-.wish-page-img { aspect-ratio: 3/4; background-size: cover; background-position: center; background-color: #f0ede8; margin-bottom: 8px; position: relative; }
+.wish-page-img { aspect-ratio: 4/5; background-size: cover; background-position: center; background-color: #f0ede8; margin-bottom: 8px; position: relative; }
 .wish-page-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; color: #111; margin-bottom: 4px; line-height: 1.2; }
 .wish-page-price { font-size: 12px; font-weight: 300; color: #111; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; letter-spacing: 0.04em; }
 .wish-page-add-btn { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; background: #fff; color: #111; border: 0.8px solid #111; padding: 7px 14px; cursor: pointer; transition: all 0.2s; width: 100%; }
@@ -344,9 +371,28 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .swipe-track-wrap { overflow: hidden; touch-action: pan-y pinch-zoom; cursor: grab; }
 .swipe-track-wrap:active { cursor: grabbing; }
 .swipe-track { display: flex; gap: 8px; transition: transform 0.4s ease; will-change: transform; }
-.swipe-track .product-card { flex: 0 0 calc(50% - 4px); }
-@media (min-width: 640px) { .swipe-track .product-card { flex: 0 0 calc(33.333% - 6px); } }
-@media (min-width: 1024px) { .swipe-track .product-card { flex: 0 0 calc(25% - 6px); } }
+/* ─── FIX: swipe track cards must not grow beyond their flex-basis ─────────
+   Without min-width: 0, a flex child's default min-width is auto, which lets
+   the card stretch to fit its inner .product-card-slides content width.
+   Adding min-width: 0 forces the card to respect its flex-basis exactly.    */
+.swipe-track .product-card {
+  flex: 0 0 calc(50% - 4px);
+  min-width: 0; /* ← prevents flex blowout; cards stay locked to flex-basis */
+  width: calc(50% - 4px); /* explicit width mirrors flex-basis as a hard cap */
+}
+@media (min-width: 640px) {
+  .swipe-track .product-card {
+    flex: 0 0 calc(33.333% - 6px);
+    width: calc(33.333% - 6px);
+  }
+}
+@media (min-width: 1024px) {
+  .swipe-track .product-card {
+    flex: 0 0 calc(25% - 6px);
+    width: calc(25% - 6px);
+  }
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
 .swipe-bars { display: flex; justify-content: flex-start; gap: 6px; margin-top: 14px; }
 .swipe-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
 .swipe-bar.active { background: #111; }
@@ -453,7 +499,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .review-submit-btn { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; cursor: pointer; transition: background 0.2s; }
 .review-submit-btn:hover { background: #333; }
 #page-products .product-card, #page-category .product-card { cursor: pointer; }
-#page-products .product-img-wrap, #page-category .product-img-wrap { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #f0ede8; margin-bottom: 8px; touch-action: pan-y pinch-zoom; }
+#page-products .product-img-wrap, #page-category .product-img-wrap { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: #f0ede8; margin-bottom: 8px; touch-action: pan-y pinch-zoom; }
 #page-products .product-card, #page-category .product-card { max-width: 100%; }
 @media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 900px) { .product-grid, .campaign-slide { grid-template-columns: repeat(2, 1fr); } }
@@ -480,18 +526,3 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 60px 20px; }
 .spinner { width: 24px; height: 24px; border: 2px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.product-img-wrap {
-  position: relative;
-  aspect-ratio: 4 / 5 !important;
-  overflow: hidden;
-  background: #f0ede8;
-  margin-bottom: 8px;
-  touch-action: pan-y pinch-zoom;
-}
-.product-card-slide {
-  min-width: 100%;
-  height: 100%;
-  background-size: cover !important;
-  background-position: center;
-  background-repeat: no-repeat;
-}
