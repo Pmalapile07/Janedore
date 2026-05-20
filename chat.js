@@ -5,8 +5,7 @@ let chatOpen = false, chatUnsub = null, chatMode = null;
 let chatCurrentUser = null;
 let anonAuthInProgress = false;
 let isSendingMessage = false;
-const renderedMessageIds = new Set();
-const pendingOptimisticIds = new Map();
+let typingTimeout = null;
 
 function safeEl(id) {
   return document.getElementById(id) || null;
@@ -96,8 +95,8 @@ function clearChatSession() {
   customerEmail = '';
   chatSessionId = 'chat-' + Date.now();
   chatMode = null;
-  renderedMessageIds.clear();
-  pendingOptimisticIds.clear();
+  clearTimeout(typingTimeout);
+  updateTypingState(false);
   const el = safeEl('chat-messages');
   if (el) el.innerHTML = '';
   showEmailScreen();
@@ -298,104 +297,135 @@ async function lookupOrder() {
 
 function backToChatOptions() { showOptionsScreen(); }
 
+// ── Typing indicator ────────────────────────────────────────────────────────
+
+function updateTypingState(isTyping) {
+  if (!chatSessionId) return;
+  db.collection('live_chat_typing').doc(chatSessionId).set({
+    customerTyping: isTyping,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).catch(() => {});
+}
+
+function listenTypingIndicator() {
+  db.collection('live_chat_typing').doc(chatSessionId)
+    .onSnapshot(snap => {
+      const el = safeEl('chat-typing-indicator');
+      if (!el) return;
+      const data = snap.data();
+      if (data && data.adminTyping) {
+        el.textContent = 'JANEDORE is typing…';
+        el.style.display = 'block';
+      } else {
+        el.textContent = '';
+        el.style.display = 'none';
+      }
+    }, () => {});
+}
+
+function handleCustomerTyping() {
+  updateTypingState(true);
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => updateTypingState(false), 3000);
+}
+
+// ── Chat rendering ──────────────────────────────────────────────────────────
+
+function renderMessages(docs) {
+  const el = safeEl('chat-messages');
+  if (!el) return;
+  const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+
+  // Remove only confirmed bubbles, preserve any optimistic one still pending
+  Array.from(el.querySelectorAll('.chat-msg:not([data-optimistic])')).forEach(n => n.remove());
+  const welcomeEl = el.querySelector('.chat-welcome');
+
+  if (docs.length === 0 && !welcomeEl) {
+    el.insertAdjacentHTML('afterbegin', '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>');
+    return;
+  }
+
+  if (welcomeEl && docs.length > 0) welcomeEl.remove();
+
+  const firstOptimistic = el.querySelector('[data-optimistic]');
+  docs.forEach(doc => {
+    const m = doc.data();
+    if (m.type === 'auth') return;
+    const t = m.createdAt
+      ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : '';
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + m.sender;
+    div.dataset.docId = doc.id;
+    div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
+    if (firstOptimistic) {
+      el.insertBefore(div, firstOptimistic);
+    } else {
+      el.appendChild(div);
+    }
+    if (!chatOpen && m.sender === 'admin') {
+      const unreadDot = safeEl('chat-unread-dot');
+      if (unreadDot) unreadDot.style.display = 'block';
+    }
+  });
+
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
 function listenChat() {
   if (chatUnsub) chatUnsub();
+
   const el = safeEl('chat-messages');
   if (el && el.children.length === 0) {
     el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
   }
+
+  listenTypingIndicator();
+
   chatUnsub = db.collection('live_chat')
     .where('sessionId', '==', chatSessionId)
     .orderBy('createdAt', 'asc')
     .onSnapshot(snap => {
-      const el = safeEl('chat-messages');
-      if (!el) return;
-      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-      snap.docChanges().forEach(c => {
-        if (c.type !== 'added') return;
-        const m = c.doc.data();
-        const docId = c.doc.id;
-        if (m.type === 'auth') return;
-
-        const welcome = el.querySelector('.chat-welcome');
-        if (welcome) welcome.remove();
-
-        // 1. Upgrade check FIRST — before any dedup guard
-        let upgradedBubble = null;
-        for (const [tempId, resolvedDocId] of pendingOptimisticIds.entries()) {
-          if (resolvedDocId === docId) {
-            const bubble = el.querySelector(`[data-temp-id="${tempId}"]`);
-            if (bubble) {
-              bubble.dataset.docId = docId;
-              bubble.removeAttribute('data-optimistic');
-              bubble.removeAttribute('data-temp-id');
-              pendingOptimisticIds.delete(tempId);
-              upgradedBubble = bubble;
-            }
-            break;
-          }
-        }
-
-        // 2. Register as rendered after upgrade check
-        renderedMessageIds.add(docId);
-
-        // 3. If we upgraded an optimistic bubble, no new node needed
-        if (upgradedBubble) return;
-
-        // 4. DOM-based dedup for replays and reconnects
-        if (el.querySelector(`[data-doc-id="${docId}"]`)) return;
-
-        // 5. Render fresh bubble — admin replies and unmatched customer messages
-        const t = m.createdAt
-          ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          : '';
-        const div = document.createElement('div');
-        div.className = 'chat-msg ' + m.sender;
-        div.dataset.docId = docId;
-        div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
-        el.appendChild(div);
-
-        if (!chatOpen && m.sender === 'admin') {
-          const unreadDot = safeEl('chat-unread-dot');
-          if (unreadDot) unreadDot.style.display = 'block';
-        }
-      });
-      if (atBottom) el.scrollTop = el.scrollHeight;
+      renderMessages(snap.docs);
     }, err => {
       console.warn('Chat listener error:', err.code, err.message);
     });
 }
 
+// ── Send message ────────────────────────────────────────────────────────────
+
 async function sendChatMessage() {
   const input = safeEl('chat-input');
   if (!input) return;
   const text = input.value.trim();
-  if (!text) return;
-  if (isSendingMessage) return;
+  if (!text || isSendingMessage) return;
+
   isSendingMessage = true;
   input.disabled = true;
-  const originalPlaceholder = input.placeholder;
   input.placeholder = 'Sending…';
-  const el = safeEl('chat-messages');
-  const tempId = 'opt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
 
-  // Render optimistic bubble immediately — listenChat() will upgrade it later
+  clearTimeout(typingTimeout);
+  updateTypingState(false);
+
+  const el = safeEl('chat-messages');
+  let optimisticDiv = null;
   if (el) {
     const welcome = el.querySelector('.chat-welcome');
     if (welcome) welcome.remove();
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const optimisticDiv = document.createElement('div');
+    optimisticDiv = document.createElement('div');
     optimisticDiv.className = 'chat-msg customer';
     optimisticDiv.dataset.optimistic = 'true';
-    optimisticDiv.dataset.tempId = tempId;
     optimisticDiv.innerHTML = text + '<div class="chat-msg-time">' + now + '</div>';
     el.appendChild(optimisticDiv);
     el.scrollTop = el.scrollHeight;
   }
 
+  input.value = '';
+
   try {
     await ensureAnonymousAuth();
-    const docRef = await db.collection('live_chat').add({
+    await db.collection('live_chat').add({
       sessionId: chatSessionId,
       customerEmail: customerEmail || '',
       text: text,
@@ -404,28 +434,20 @@ async function sendChatMessage() {
       read: false,
       userId: chatCurrentUser ? chatCurrentUser.uid : 'anonymous'
     });
-
-    // Map tempId → docId so listenChat() can upgrade the optimistic bubble.
-    // Do NOT add docRef.id to renderedMessageIds here — listenChat() owns that.
-    pendingOptimisticIds.set(tempId, docRef.id);
-
-    input.value = '';
+    // Snapshot fires → renderMessages() replaces the optimistic bubble
   } catch (e) {
     console.warn('Chat send error:', e);
-    // Remove the orphaned optimistic bubble so the user can retry
-    if (el) {
-      const orph = el.querySelector(`[data-temp-id="${tempId}"]`);
-      if (orph) orph.remove();
-    }
-    pendingOptimisticIds.delete(tempId);
+    if (optimisticDiv) optimisticDiv.remove();
     input.value = text;
   } finally {
     input.disabled = false;
-    input.placeholder = originalPlaceholder;
+    input.placeholder = 'Type a message…';
     input.focus();
     isSendingMessage = false;
   }
 }
+
+// ── Email link sign-in ──────────────────────────────────────────────────────
 
 async function handleEmailLinkSignIn() {
   if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
