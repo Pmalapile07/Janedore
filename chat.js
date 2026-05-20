@@ -1,3 +1,4 @@
+<script>
 // ==================== CHAT LOGIC ====================
 let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
 localStorage.setItem('janedore_chat_session', chatSessionId);
@@ -94,49 +95,32 @@ function toggleChat() {
 
 function showLoginRequiredScreen() {
   document.getElementById('chat-email-screen').style.display = 'none';
+  document.getElementById('chat-login-screen').style.display = 'flex';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'none';
-  
-  // Create login required screen if it doesn't exist
-  let loginScreen = document.getElementById('chat-login-screen');
-  if (!loginScreen) {
-    loginScreen = document.createElement('div');
-    loginScreen.id = 'chat-login-screen';
-    loginScreen.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:16px;text-align:center;height:100%;';
-    loginScreen.innerHTML = `
-      <div style="font-size:12px;font-weight:500;color:#333;letter-spacing:0.5px;">ACCOUNT REQUIRED</div>
-      <div style="font-size:11px;color:#888;line-height:1.5;">Please log in to access order tracking and chat support.</div>
-      <button onclick="window.location.href='login.html'" style="background:#111;color:#fff;border:none;padding:10px 24px;font-size:11px;letter-spacing:0.5px;cursor:pointer;width:100%;max-width:200px;">LOG IN</button>
-      <div style="font-size:10px;color:#aaa;margin-top:8px;">Don't have an account? <a href="login.html" style="color:#333;text-decoration:underline;">Create one here</a></div>
-    `;
-    document.getElementById('chat-window').querySelector('.chat-body')?.appendChild(loginScreen);
-  }
-  loginScreen.style.display = 'flex';
 }
 
 function showEmailScreen() {
   document.getElementById('chat-email-screen').style.display = 'flex';
+  document.getElementById('chat-login-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'none';
-  const loginScreen = document.getElementById('chat-login-screen');
-  if (loginScreen) loginScreen.style.display = 'none';
 }
 
 function showOptionsScreen() {
   document.getElementById('chat-email-screen').style.display = 'none';
+  document.getElementById('chat-login-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'flex';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'none';
-  const loginScreen = document.getElementById('chat-login-screen');
-  if (loginScreen) loginScreen.style.display = 'none';
 }
 
 async function submitEmail() {
@@ -178,13 +162,12 @@ function startChat() {
   }
   
   document.getElementById('chat-email-screen').style.display = 'none';
+  document.getElementById('chat-login-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'flex';
   document.getElementById('chat-input-wrap').style.display = 'flex';
   document.getElementById('chat-customer-info').style.display = 'flex';
   document.getElementById('order-lookup').style.display = 'none';
-  const loginScreen = document.getElementById('chat-login-screen');
-  if (loginScreen) loginScreen.style.display = 'none';
   
   document.getElementById('chat-customer-email').textContent = customerEmail;
   loadCustomerStats();
@@ -260,13 +243,12 @@ function showOrderLookup() {
   }
   
   document.getElementById('chat-email-screen').style.display = 'none';
+  document.getElementById('chat-login-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'flex';
-  const loginScreen = document.getElementById('chat-login-screen');
-  if (loginScreen) loginScreen.style.display = 'none';
   
   // Clear previous results and show input prompt
   const resultEl = document.getElementById('order-result');
@@ -540,3 +522,4 @@ async function handleEmailLinkSignIn() {
 document.addEventListener('DOMContentLoaded', () => {
   handleEmailLinkSignIn();
 });
+</script>
