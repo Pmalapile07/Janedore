@@ -317,19 +317,15 @@ function listenChat() {
         const docId = c.doc.id;
         if (m.type === 'auth') return;
 
-        // Check if this docId was already fully rendered (non-optimistic)
-        if (renderedMessageIds.has(docId)) return;
-
         const welcome = el.querySelector('.chat-welcome');
         if (welcome) welcome.remove();
 
-        // Check if an optimistic bubble is waiting to be upgraded for this docId
+        // 1. Upgrade check FIRST — before any dedup guard
         let upgradedBubble = null;
         for (const [tempId, resolvedDocId] of pendingOptimisticIds.entries()) {
           if (resolvedDocId === docId) {
             const bubble = el.querySelector(`[data-temp-id="${tempId}"]`);
             if (bubble) {
-              // Upgrade the optimistic bubble in place — stamp it with the real docId
               bubble.dataset.docId = docId;
               bubble.removeAttribute('data-optimistic');
               bubble.removeAttribute('data-temp-id');
@@ -340,16 +336,16 @@ function listenChat() {
           }
         }
 
-        // Register this docId as rendered regardless of whether it was an upgrade or new
+        // 2. Register as rendered after upgrade check
         renderedMessageIds.add(docId);
 
-        // If we upgraded an existing bubble, no new DOM node needed
+        // 3. If we upgraded an optimistic bubble, no new node needed
         if (upgradedBubble) return;
 
-        // Safety check: don't insert a duplicate node by data-doc-id
+        // 4. DOM-based dedup for replays and reconnects
         if (el.querySelector(`[data-doc-id="${docId}"]`)) return;
 
-        // Render a fresh bubble (admin replies, or customer messages with no optimistic match)
+        // 5. Render fresh bubble — admin replies and unmatched customer messages
         const t = m.createdAt
           ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           : '';
@@ -409,9 +405,8 @@ async function sendChatMessage() {
       userId: chatCurrentUser ? chatCurrentUser.uid : 'anonymous'
     });
 
-    // Register the tempId → docId mapping so listenChat() can upgrade the bubble.
-    // NOTE: do NOT add docRef.id to renderedMessageIds here.
-    // listenChat() is the sole owner of renderedMessageIds.
+    // Map tempId → docId so listenChat() can upgrade the optimistic bubble.
+    // Do NOT add docRef.id to renderedMessageIds here — listenChat() owns that.
     pendingOptimisticIds.set(tempId, docRef.id);
 
     input.value = '';
