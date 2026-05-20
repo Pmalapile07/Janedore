@@ -171,6 +171,23 @@
     margin-bottom: 20px;
   }
   .chat-option-btn:hover { color: #555; border-color: #555; }
+  /* Switch account — inherits the back-btn styling */
+  .chat-switch-btn {
+    background: none;
+    border: none;
+    border-bottom: 0.5px solid #bbb;
+    color: #bbb;
+    padding: 5px 2px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    font-weight: 400;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+  .chat-switch-btn:hover { color: #888; border-color: #888; }
   .chat-messages {
     flex: 1;
     overflow-y: auto;
@@ -349,11 +366,43 @@
     color: #888;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     flex-shrink: 0;
   }
+  .chat-customer-info-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  /* Switch session link inside customer info bar */
+  .chat-switch-inline {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-family: 'Manrope', sans-serif;
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+  .chat-switch-inline:hover { color: #888; }
   @media (max-width: 480px) {
-    #chat-window { width: calc(100vw - 32px); right: 16px; left: 16px; }
+    #chat-window {
+      width: calc(100vw - 32px);
+      right: 16px;
+      left: 16px;
+      height: 420px;
+    }
     #live-chat-bubble { right: 16px; bottom: 16px; }
+    .chat-email-screen { padding: 24px 16px; }
+    .chat-options { padding: 18px 16px; }
+    .chat-option-btn { margin-bottom: 16px; }
+    .order-lookup { padding: 18px 16px; }
   }
 </style>
 
@@ -367,39 +416,56 @@
     <span class="chat-header-title">JANEDORE Support</span>
     <button class="chat-header-close" onclick="toggleChat()">✕</button>
   </div>
-  
+
+  <!-- Email entry screen -->
   <div class="chat-email-screen" id="chat-email-screen">
     <div class="chat-email-title">Welcome</div>
     <div class="chat-email-subtitle">Enter your email so we can assist you better</div>
-    <input class="chat-email-input" id="chat-email-input" type="email" placeholder="your@email.com" onkeypress="if(event.key==='Enter')submitEmail()">
+    <input class="chat-email-input" id="chat-email-input" type="email" placeholder="your@email.com"
+           onkeypress="if(event.key==='Enter')submitEmail()">
     <button class="chat-email-btn" onclick="submitEmail()">Continue</button>
     <div class="chat-email-error" id="chat-email-error">Please enter a valid email</div>
   </div>
 
+  <!-- Options screen -->
   <div class="chat-options" id="chat-options" style="display:none;">
-    <button class="chat-option-btn" onclick="startChat()">Chat</button>
+    <button class="chat-option-btn" onclick="startChat()">Chat with Us</button>
     <button class="chat-option-btn" onclick="showOrderLookup()">Track Order</button>
+    <button class="chat-switch-btn" onclick="clearChatSession()">Switch Account</button>
   </div>
 
+  <!-- Customer info bar (shown during active chat) -->
   <div class="chat-customer-info" id="chat-customer-info" style="display:none;">
-    <span id="chat-customer-email"></span>
-    <span id="chat-customer-stats"></span>
-  </div>
-  <div class="chat-messages" id="chat-messages" style="display:none;">
-    <div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>
+    <div class="chat-customer-info-left">
+      <span id="chat-customer-email"></span>
+      <span id="chat-customer-stats"></span>
+    </div>
+    <button class="chat-switch-inline" onclick="clearChatSession()" title="Switch account">Switch</button>
   </div>
 
+  <!-- Messages -->
+  <div class="chat-messages" id="chat-messages" style="display:none;">
+    <div class="chat-welcome">
+      <strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.
+    </div>
+  </div>
+
+  <!-- Order lookup screen -->
   <div class="order-lookup" id="order-lookup" style="display:none;">
     <div class="order-lookup-title">Track Your Order</div>
-    <div class="order-lookup-subtitle">Enter an order number or search by your email</div>
-    <input class="order-lookup-input" id="order-lookup-input" placeholder="Order number (optional)" onkeypress="if(event.key==='Enter')lookupOrder()">
+    <div class="order-lookup-subtitle">Enter your order number to check its status</div>
+    <input class="order-lookup-input" id="order-lookup-input"
+           placeholder="Order number (e.g. ORD-12345)"
+           onkeypress="if(event.key==='Enter')lookupOrder()">
     <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
     <div class="order-result" id="order-result"></div>
     <button class="back-to-chat-btn" onclick="backToChatOptions()">← Back</button>
   </div>
 
+  <!-- Message input -->
   <div class="chat-input-wrap" id="chat-input-wrap" style="display:none;">
-    <input class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+    <input class="chat-input" id="chat-input" placeholder="Type your message…"
+           onkeypress="if(event.key==='Enter')sendChatMessage()">
     <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
   </div>
 </div>
