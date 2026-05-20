@@ -82,14 +82,39 @@ function toggleChat() {
   win.classList.toggle('open', chatOpen);
   if (chatOpen) {
     document.getElementById('chat-unread-dot').style.display = 'none';
-    if (customerEmail) {
+    if (currentUser && customerEmail) {
       showOptionsScreen();
     } else {
-      showEmailScreen();
+      showLoginRequiredScreen();
     }
   } else {
     if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   }
+}
+
+function showLoginRequiredScreen() {
+  document.getElementById('chat-email-screen').style.display = 'none';
+  document.getElementById('chat-options').style.display = 'none';
+  document.getElementById('chat-messages').style.display = 'none';
+  document.getElementById('chat-input-wrap').style.display = 'none';
+  document.getElementById('chat-customer-info').style.display = 'none';
+  document.getElementById('order-lookup').style.display = 'none';
+  
+  // Create login required screen if it doesn't exist
+  let loginScreen = document.getElementById('chat-login-screen');
+  if (!loginScreen) {
+    loginScreen = document.createElement('div');
+    loginScreen.id = 'chat-login-screen';
+    loginScreen.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:16px;text-align:center;height:100%;';
+    loginScreen.innerHTML = `
+      <div style="font-size:12px;font-weight:500;color:#333;letter-spacing:0.5px;">ACCOUNT REQUIRED</div>
+      <div style="font-size:11px;color:#888;line-height:1.5;">Please log in to access order tracking and chat support.</div>
+      <button onclick="window.location.href='login.html'" style="background:#111;color:#fff;border:none;padding:10px 24px;font-size:11px;letter-spacing:0.5px;cursor:pointer;width:100%;max-width:200px;">LOG IN</button>
+      <div style="font-size:10px;color:#aaa;margin-top:8px;">Don't have an account? <a href="login.html" style="color:#333;text-decoration:underline;">Create one here</a></div>
+    `;
+    document.getElementById('chat-window').querySelector('.chat-body')?.appendChild(loginScreen);
+  }
+  loginScreen.style.display = 'flex';
 }
 
 function showEmailScreen() {
@@ -99,6 +124,8 @@ function showEmailScreen() {
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'none';
+  const loginScreen = document.getElementById('chat-login-screen');
+  if (loginScreen) loginScreen.style.display = 'none';
 }
 
 function showOptionsScreen() {
@@ -108,6 +135,8 @@ function showOptionsScreen() {
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'none';
+  const loginScreen = document.getElementById('chat-login-screen');
+  if (loginScreen) loginScreen.style.display = 'none';
 }
 
 async function submitEmail() {
@@ -143,12 +172,19 @@ async function submitEmail() {
 }
 
 function startChat() {
+  if (!currentUser) {
+    showLoginRequiredScreen();
+    return;
+  }
+  
   document.getElementById('chat-email-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'flex';
   document.getElementById('chat-input-wrap').style.display = 'flex';
   document.getElementById('chat-customer-info').style.display = 'flex';
   document.getElementById('order-lookup').style.display = 'none';
+  const loginScreen = document.getElementById('chat-login-screen');
+  if (loginScreen) loginScreen.style.display = 'none';
   
   document.getElementById('chat-customer-email').textContent = customerEmail;
   loadCustomerStats();
@@ -218,122 +254,107 @@ async function loadCustomerStats() {
 }
 
 function showOrderLookup() {
+  if (!currentUser) {
+    showLoginRequiredScreen();
+    return;
+  }
+  
   document.getElementById('chat-email-screen').style.display = 'none';
   document.getElementById('chat-options').style.display = 'none';
   document.getElementById('chat-messages').style.display = 'none';
   document.getElementById('chat-input-wrap').style.display = 'none';
   document.getElementById('chat-customer-info').style.display = 'none';
   document.getElementById('order-lookup').style.display = 'flex';
-  lookupOrder();
+  const loginScreen = document.getElementById('chat-login-screen');
+  if (loginScreen) loginScreen.style.display = 'none';
+  
+  // Clear previous results and show input prompt
+  const resultEl = document.getElementById('order-result');
+  const inputEl = document.getElementById('order-lookup-input');
+  if (resultEl) resultEl.innerHTML = '<p style="color:#888;font-size:10px;">Enter your order number above to track your order.</p>';
+  if (inputEl) inputEl.value = '';
+  if (inputEl) inputEl.focus();
 }
 
 async function lookupOrder() {
+  // Check if user is logged in
+  if (!currentUser) {
+    showLoginRequiredScreen();
+    return;
+  }
+  
   const resultEl = document.getElementById('order-result');
   const inputEl = document.getElementById('order-lookup-input');
   const searchValue = inputEl?.value?.trim() || '';
+  
+  if (!searchValue) {
+    resultEl.innerHTML = '<p style="color:#888;font-size:10px;">Please enter an order number to search.</p>';
+    return;
+  }
   
   resultEl.textContent = 'Searching...';
   
   try {
     let orders = [];
     
-    // Ensure we have authentication
-    if (!currentUser) {
-      await signInAnonymously();
+    // Try by normalized order number first (with and without dash)
+    const normalizedSearch = normalizeOrderNumber(searchValue);
+    
+    // Try exact match with original format
+    let orderSnap = await db.collection('orders')
+      .where('orderNumber', '==', searchValue)
+      .get();
+    
+    if (!orderSnap.empty) {
+      orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
     }
     
-    // Try by normalized order number first (with and without dash)
-    if (searchValue) {
-      const normalizedSearch = normalizeOrderNumber(searchValue);
-      
-      // Try exact match with original format
-      let orderSnap = await db.collection('orders')
-        .where('orderNumber', '==', searchValue)
+    // If no results, try normalized version
+    if (orders.length === 0 && normalizedSearch !== searchValue) {
+      orderSnap = await db.collection('orders')
+        .where('orderNumber', '==', normalizedSearch)
         .get();
       
       if (!orderSnap.empty) {
         orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
       }
+    }
+    
+    // Try with dash format if not found
+    if (orders.length === 0 && !searchValue.includes('-') && searchValue.startsWith('ORD')) {
+      const dashedVersion = searchValue.replace(/^(ORD)/, '$1-');
+      orderSnap = await db.collection('orders')
+        .where('orderNumber', '==', dashedVersion)
+        .get();
       
-      // If no results, try normalized version
-      if (orders.length === 0 && normalizedSearch !== searchValue) {
-        orderSnap = await db.collection('orders')
-          .where('orderNumber', '==', normalizedSearch)
-          .get();
-        
-        if (!orderSnap.empty) {
-          orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
-        }
-      }
-      
-      // Try with dash format if not found
-      if (orders.length === 0 && !searchValue.includes('-') && searchValue.startsWith('ORD')) {
-        const dashedVersion = searchValue.replace(/^(ORD)/, '$1-');
-        orderSnap = await db.collection('orders')
-          .where('orderNumber', '==', dashedVersion)
-          .get();
-        
-        if (!orderSnap.empty) {
-          orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
-        }
+      if (!orderSnap.empty) {
+        orderSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
       }
     }
     
-    // Fall back to email lookup (now works with auth)
-    if (orders.length === 0 && customerEmail) {
-      const customerEmailLower = customerEmail.toLowerCase();
-      const allOrdersSnap = await db.collection('orders').get();
-      
-      if (!allOrdersSnap.empty) {
-        allOrdersSnap.docs.forEach(d => {
-          const data = d.data();
-          const docEmail = data.customerEmail || '';
-          const docPhone = data.customerPhone || '';
-          
-          // Match by email
-          if (docEmail.toLowerCase() === customerEmailLower) {
-            orders.push({ id: d.id, ...data });
-          }
-          
-          // Match by phone if order has no email field (orphaned orders)
-          if (!docEmail && docPhone && customerEmail) {
-            if (!orders.find(o => o.id === d.id)) {
-              orders.push({ id: d.id, ...data });
-            }
-          }
-        });
-      }
-    }
-    
-    // Last resort: manual filter through all orders
+    // If still no results, search all orders manually
     if (orders.length === 0) {
       const allSnap = await db.collection('orders').get();
-      const normalizedSearch = normalizeOrderNumber(searchValue);
       const customerEmailLower = customerEmail ? customerEmail.toLowerCase() : '';
       
       allSnap.docs.forEach(d => {
         const data = d.data();
         const docOrderNumber = data.orderNumber || '';
         const normalizedDocOrder = normalizeOrderNumber(docOrderNumber);
-        const docEmail = data.customerEmail || '';
-        const docPhone = data.customerPhone || '';
+        const docEmail = (data.customerEmail || '').toLowerCase();
         
         // Match by order number (normalized comparison)
-        const orderMatch = searchValue && (
+        const orderMatch = (
           docOrderNumber === searchValue ||
           normalizedDocOrder === normalizedSearch ||
           normalizedDocOrder === normalizedSearch.replace('-', '') ||
           normalizedDocOrder === normalizedSearch.replace(/(ORD)(\d)/, '$1-$2')
         );
         
-        // Match by email
-        const emailMatch = customerEmail && docEmail.toLowerCase() === customerEmailLower;
+        // Match by email (only if customer is logged in with matching email)
+        const emailMatch = customerEmailLower && docEmail === customerEmailLower;
         
-        // Match by phone
-        const phoneMatch = customerEmail && !docEmail && docPhone;
-        
-        if (orderMatch || emailMatch || phoneMatch) {
-          // Avoid duplicates
+        if (orderMatch || emailMatch) {
           if (!orders.find(o => o.id === d.id)) {
             orders.push({ id: d.id, ...data });
           }
@@ -342,7 +363,7 @@ async function lookupOrder() {
     }
     
     if (orders.length === 0) {
-      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Try entering your order number (ORD-...)</p>';
+      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Please check your order number and try again.</p>';
       return;
     }
     
@@ -374,16 +395,24 @@ async function lookupOrder() {
   } catch (e) {
     console.warn('Order lookup:', e.message);
     if (e.message && e.message.includes('permission')) {
-      resultEl.innerHTML = '<p style="color:#888;">Order lookup requires authentication.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Please ensure you are signed in or contact support through chat.</p>';
+      resultEl.innerHTML = '<p style="color:#888;">Order lookup requires authentication.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Please log in to track your orders.</p>';
     } else {
-      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Try entering your order number (ORD-...)</p>';
+      resultEl.innerHTML = '<p style="color:#888;">No orders found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Please check your order number and try again.</p>';
     }
   }
 }
 
-function backToChatOptions() { showOptionsScreen(); }
+function backToChatOptions() { 
+  if (!currentUser) {
+    showLoginRequiredScreen();
+    return;
+  }
+  showOptionsScreen(); 
+}
 
 async function loadAllMessages() {
+  if (!currentUser) return;
+  
   const el = document.getElementById('chat-messages');
   el.innerHTML = '';
   
@@ -417,6 +446,7 @@ async function loadAllMessages() {
 }
 
 function listenChat() {
+  if (!currentUser) return;
   if (chatUnsub) chatUnsub();
   
   chatUnsub = db.collection('live_chat')
@@ -453,16 +483,16 @@ function listenChat() {
 }
 
 async function sendChatMessage() {
+  if (!currentUser) {
+    showLoginRequiredScreen();
+    return;
+  }
+  
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
   
   try {
-    // Ensure we have authentication
-    if (!currentUser) {
-      await signInAnonymously();
-    }
-    
     await db.collection('live_chat').add({
       sessionId: chatSessionId,
       customerEmail: customerEmail || '',
