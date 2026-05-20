@@ -5,6 +5,8 @@ let chatOpen = false, chatUnsub = null, chatMode = null;
 let chatCurrentUser = null;
 let anonAuthInProgress = false;
 let isSendingMessage = false;
+const renderedMessageIds = new Set();
+const pendingOptimisticIds = new Map();
 
 function safeEl(id) {
   return document.getElementById(id) || null;
@@ -81,8 +83,6 @@ async function signInWithEmail(email) {
   }
 }
 
-const renderedMessageIds = new Set();
-
 function clearChatSession() {
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   const current = firebase.auth().currentUser;
@@ -97,6 +97,7 @@ function clearChatSession() {
   chatSessionId = 'chat-' + Date.now();
   chatMode = null;
   renderedMessageIds.clear();
+  pendingOptimisticIds.clear();
   const el = safeEl('chat-messages');
   if (el) el.innerHTML = '';
   showEmailScreen();
@@ -319,6 +320,23 @@ function listenChat() {
         renderedMessageIds.add(docId);
         const welcome = el.querySelector('.chat-welcome');
         if (welcome) welcome.remove();
+        const existingById = el.querySelector(`[data-doc-id="${docId}"]`);
+        if (existingById) return;
+        let upgradedBubble = null;
+        for (const [tempId, resolvedDocId] of pendingOptimisticIds.entries()) {
+          if (resolvedDocId === docId) {
+            const bubble = el.querySelector(`[data-temp-id="${tempId}"]`);
+            if (bubble) {
+              bubble.dataset.docId = docId;
+              bubble.removeAttribute('data-optimistic');
+              bubble.removeAttribute('data-temp-id');
+              pendingOptimisticIds.delete(tempId);
+              upgradedBubble = bubble;
+            }
+            break;
+          }
+        }
+        if (upgradedBubble) return;
         const t = m.createdAt
           ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           : '';
@@ -346,8 +364,10 @@ async function sendChatMessage() {
   if (isSendingMessage) return;
   isSendingMessage = true;
   input.disabled = true;
+  const originalPlaceholder = input.placeholder;
+  input.placeholder = 'Sending…';
   const el = safeEl('chat-messages');
-  const tempId = 'optimistic-' + Date.now();
+  const tempId = 'opt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
   if (el) {
     const welcome = el.querySelector('.chat-welcome');
     if (welcome) welcome.remove();
@@ -372,24 +392,25 @@ async function sendChatMessage() {
       userId: chatCurrentUser ? chatCurrentUser.uid : 'anonymous'
     });
     renderedMessageIds.add(docRef.id);
+    pendingOptimisticIds.set(tempId, docRef.id);
     if (el) {
       const optimisticDiv = el.querySelector(`[data-temp-id="${tempId}"]`);
       if (optimisticDiv) {
         optimisticDiv.dataset.docId = docRef.id;
-        delete optimisticDiv.dataset.optimistic;
-        delete optimisticDiv.dataset.tempId;
+        optimisticDiv.removeAttribute('data-optimistic');
+        optimisticDiv.removeAttribute('data-temp-id');
+        pendingOptimisticIds.delete(tempId);
       }
     }
     input.value = '';
   } catch (e) {
     console.warn('Chat send error:', e);
-    if (el) {
-      const optimisticDiv = el.querySelector(`[data-temp-id="${tempId}"]`);
-      if (optimisticDiv) optimisticDiv.remove();
-    }
+    
+    pendingOptimisticIds.delete(tempId);
     input.value = text;
   } finally {
     input.disabled = false;
+    input.placeholder = originalPlaceholder;
     input.focus();
     isSendingMessage = false;
   }
