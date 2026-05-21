@@ -44,7 +44,7 @@ const DOM = {
   reviewModalBackdrop: document.getElementById("review-modal-backdrop"), gridToggleSvg: document.getElementById("grid-toggle-svg"),
   catGridToggleSvg: document.getElementById("cat-grid-toggle-svg"), announceText0: document.getElementById("announce-text-0"),
   announceText1: document.getElementById("announce-text-1"), mainNav: document.getElementById("main-nav"),
-  firstDropSection: document.getElementById("first-drop-section"), homepageNewsletterSection: document.getElementById("homepage-newsletter-section"),
+  homepageNewsletterSection: document.getElementById("homepage-newsletter-section"),
   heroBg: document.getElementById("hero-bg"), hero: null
 };
 
@@ -396,7 +396,7 @@ function buildArrivals() {
     const active = PRODUCTS.filter(p=>p.status==='active');
     DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,4).map(p=>productCardHome(p)).join("");
   }
-  buildFirstDrop(); buildNewsletterSection();
+  buildNewsletterSection();
 }
 function navigateToJanedoreOnly() {
   S.filter = { cat:"all", size:"all", price:"all" };
@@ -410,11 +410,6 @@ function navigateToJanedoreOnly() {
   }
   updateGridToggleSVG("grid-toggle-svg", S.gridCols); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled();
   updateHash('products');
-}
-function buildFirstDrop() {
-  if(!DOM.firstDropSection) return;
-  const thato = PRODUCTS.filter(p => p.brand === 'THATO' && p.status === 'active');
-  DOM.firstDropSection.innerHTML = `<div class="first-drop-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/37EF1496-7E31-4DCC-BD67-8F452F64FDBB.png?v=1779001142');" onclick="navigateToCategory('parfum')"><div class="first-drop-overlay"></div><div class="first-drop-content"><div class="first-drop-sub">THE FIRST DROP</div></div></div><div class="product-grid" style="margin-bottom:24px;padding:0 12px;">${thato.map(p=>productCardHome(p)).join("")}</div><div class="view-all-row"><button class="arrivals-view-all" onclick="navigateToCategory('parfum')">View All</button></div>`;
 }
 function buildNewsletterSection() {
   if(!DOM.homepageNewsletterSection) return;
@@ -526,7 +521,7 @@ function renderCart() {
   }
   DOM.cartBody.innerHTML = html;
   const sub = S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0);
-  DOM.cartFoot.innerHTML = `<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">${formatPrice(sub)}</span></div><div class="cart-ship-note">${sub>=1500?"Free shipping applied":`R150 shipping · Free over ${formatPrice(1500)}`}</div>${cartHasMultipleTypes()?'<div class="cart-multi-package-note">contents may arrive in multiple packages</div>':''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="navigateToCheckout()">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
+  DOM.cartFoot.innerHTML = `<div class="cart-subtotal"><span class="cart-subtotal-label">Subtotal</span><span class="cart-subtotal-val">${formatPrice(sub)}</span></div><div class="cart-ship-note">${sub>=1500?"Free shipping applied":`R150 shipping · Free over ${formatPrice(1500)}`}</div>${cartHasMultipleTypes()?'<div class="cart-multi-package-note">contents may arrive in multiple packages</div>':''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="closeCart();navigateTo('checkout');">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
 }
 
 function toggleWish(productId) {
@@ -605,7 +600,7 @@ function renderCartPage() {
   const total=S.cart.reduce((a,i)=>a+i.qty,0);
   let html=S.cart.map(item=>`<div class="cart-page-item" onclick="goToProduct('${item.productId}')"><div class="cart-page-img" style="background-image:url('${item.thumbnail||PLACEHOLDER_IMAGE}');"></div><div class="cart-page-details"><div class="cart-page-brand">${item.brand||''}</div><div class="cart-page-name">${item.name}</div><div class="cart-page-meta">${item.color||''} · Size ${item.size||''}</div><div class="cart-page-qty-wrap"><button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${item.productId}','${item.size}',-1,${item.variantIndex});renderCartPage();">−</button><span class="cart-page-qty-num">${item.qty}</span><button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${item.productId}','${item.size}',1,${item.variantIndex});renderCartPage();">+</button></div></div><span class="cart-page-price">${formatPrice((item.salePrice??item.price??0)*item.qty)}</span><button class="cart-page-remove" onclick="event.stopPropagation();removeFromCart('${item.productId}','${item.size}',${item.variantIndex});renderCartPage();">×</button></div>`).join("");
   if(hasSunglassesInCart() && !pouchAlreadyInCart()){const pouch=PRODUCTS.find(p=>p.id==='janedore-leather-pouch');if(pouch)html+=`<div class="cart-addon-section"><div class="cart-addon-title">ADD-ON</div><div class="cart-addon-item"><div class="cart-addon-img" style="background-image:url('${getProductThumbnail(pouch)}');"></div><div class="cart-addon-info"><div class="cart-addon-name">${pouch.name}</div><div class="cart-addon-price">${formatPrice(pouch.price)}</div></div><button class="cart-addon-btn" onclick="event.stopPropagation();addPouchToCart();renderCartPage();">Add</button></div></div>`;}
-  DOM.cartPageContent.innerHTML=`<div class="cart-page-title">Your Bag (${total} item${total!==1?"s":""})</div>${html}<div class="cart-page-promo"><input class="cart-page-promo-input" type="text" placeholder="PROMO CODE"><button class="cart-page-promo-btn" onclick="applyPromoCode()">Apply</button></div><div class="cart-page-summary"><div class="cart-page-subtotal">Subtotal <strong>${formatPrice(S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0))}</strong></div>${cartHasMultipleTypes()?'<div class="cart-page-multi-package-note">contents may arrive in multiple packages</div>':''}<div class="cart-page-actions"><button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button><button class="cart-page-btn primary" onclick="navigateToCheckout()">Proceed to Checkout</button></div><div class="cart-page-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div></div>`;
+  DOM.cartPageContent.innerHTML=`<div class="cart-page-title">Your Bag (${total} item${total!==1?"s":""})</div>${html}<div class="cart-page-promo"><input class="cart-page-promo-input" type="text" placeholder="PROMO CODE"><button class="cart-page-promo-btn" onclick="applyPromoCode()">Apply</button></div><div class="cart-page-summary"><div class="cart-page-subtotal">Subtotal <strong>${formatPrice(S.cart.reduce((a,i)=>a+(i.salePrice??i.price??0)*i.qty,0))}</strong></div>${cartHasMultipleTypes()?'<div class="cart-page-multi-package-note">contents may arrive in multiple packages</div>':''}<div class="cart-page-actions"><button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button><button class="cart-page-btn primary" onclick="closeCart();navigateTo('checkout');">Proceed to Checkout</button></div><div class="cart-page-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div></div>`;
 }
 function applyPromoCode(){}
 function buildBanner(){if(!DOM.announceText0||!DOM.announceText1)return;DOM.announceText0.textContent=BANNER_ITEMS[0];DOM.announceText0.classList.add("active");DOM.announceText1.classList.remove("active");S.announceIdx=0;if(S.announceTimer)clearInterval(S.announceTimer);S.announceTimer=setInterval(()=>{const n=(S.announceIdx+1)%BANNER_ITEMS.length;document.getElementById(`announce-text-${S.announceIdx%2}`)?.classList.remove("active");const ne=document.getElementById(`announce-text-${n%2}`);if(ne){ne.textContent=BANNER_ITEMS[n];ne.classList.add("active");}S.announceIdx=n;},2000);}
