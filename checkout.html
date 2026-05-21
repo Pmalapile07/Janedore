@@ -15,7 +15,7 @@
   .checkout-grid {
     display: grid;
     grid-template-columns: 1fr 380px;
-    gap: 40px;
+    gap: 48px;
     align-items: start;
   }
   .checkout-section-title {
@@ -24,29 +24,29 @@
     letter-spacing: var(--ui-letter-spacing, 0.2em);
     font-weight: var(--ui-font-weight, 400);
     text-transform: uppercase;
-    color: #888;
-    margin-bottom: 20px;
+    color: #111;
+    margin-bottom: 16px;
     padding-bottom: 8px;
     border-bottom: 0.5px solid #e5e5e5;
     margin-top: 36px;
   }
   .checkout-section-title:first-child { margin-top: 0; }
-  .checkout-form-group { margin-bottom: 18px; }
+  .checkout-form-group { margin-bottom: 16px; }
   .checkout-form-group label {
     display: block;
     font-family: 'Manrope', sans-serif;
     font-size: 11px;
     font-weight: 400;
     color: #111;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     letter-spacing: 0.02em;
   }
   .checkout-form-group input, .checkout-form-group select {
     width: 100%;
-    padding: 14px 16px;
-    border: 0.5px solid #ccc;
+    padding: 13px 14px;
+    border: 0.5px solid #d5d5d5;
     font-family: 'Manrope', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 300;
     outline: none;
     transition: border 0.2s;
@@ -58,20 +58,20 @@
     border-color: #111;
     background: #fff;
   }
-  .checkout-form-group input::placeholder { color: #bbb; font-size: 14px; }
+  .checkout-form-group input::placeholder { color: #bbb; font-size: 13px; }
   .checkout-form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 18px;
+    gap: 16px;
   }
   .checkout-form-row-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 18px;
+    gap: 16px;
   }
   .checkout-summary {
     background: #fafaf9;
-    padding: 20px;
+    padding: 24px;
     border: 0.5px solid #e5e5e5;
     position: sticky;
     top: 80px;
@@ -93,6 +93,7 @@
     border-bottom: 0.5px solid #e5e5e5;
     font-size: 11px;
   }
+  .checkout-item:last-child { border-bottom: none; }
   .checkout-item-img {
     width: 48px;
     height: 60px;
@@ -112,10 +113,23 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: 13px;
     margin-bottom: 2px;
+    line-height: 1.2;
+  }
+  .checkout-item-meta {
+    font-size: 9px;
+    color: #aaa;
+    letter-spacing: 0.04em;
+  }
+  .checkout-item-price {
+    font-size: 11px;
+    font-weight: 400;
+    color: #111;
+    flex-shrink: 0;
+    align-self: flex-start;
   }
   .checkout-package-note {
     margin-top: 12px;
-    padding: 10px;
+    padding: 10px 12px;
     background: #fff;
     font-size: var(--ui-font-size, 9px);
     color: #888;
@@ -123,28 +137,51 @@
     text-transform: uppercase;
     text-align: center;
     border: 0.5px solid #e5e5e5;
+    line-height: 1.4;
   }
   .checkout-total-row {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 6px 0;
     font-size: 11px;
+    color: #555;
+  }
+  .checkout-total-row.discount {
+    color: #c00;
+  }
+  .checkout-total-divider {
+    border-top: 0.5px solid #e5e5e5;
+    margin: 8px 0;
   }
   .checkout-total-row strong {
     font-family: 'Manrope', sans-serif;
-    font-size: var(--ui-font-size, 9px);
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    letter-spacing: 0.06em;
+    color: #111;
+  }
+  .checkout-total-final {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0 6px;
+    font-size: 13px;
+  }
+  .checkout-total-final strong {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #111;
   }
   .checkout-place-order-btn {
     width: 100%;
     background: #111;
     color: #fff;
     border: none;
-    padding: 16px;
+    padding: 15px;
     font-family: 'Manrope', sans-serif;
-    font-size: 12px;
-    letter-spacing: 0.1em;
+    font-size: 11px;
+    letter-spacing: 0.12em;
     font-weight: 400;
     text-transform: uppercase;
     cursor: pointer;
@@ -175,6 +212,8 @@
   .checkout-confirmation-icon {
     font-size: 48px;
     margin-bottom: 16px;
+    color: #111;
+    font-weight: 100;
   }
   .checkout-confirmation-title {
     font-family: 'Cormorant Garamond', serif;
@@ -204,18 +243,64 @@
     transition: all 0.2s;
   }
   .checkout-confirmation-btn:hover { color: #555; border-color: #555; }
-  .checkout-required { color: #888; font-weight: 300; font-size: 10px; }
+  .checkout-required { color: #aaa; font-weight: 300; font-size: 10px; }
+  .checkout-trust-badges {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 0.5px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .checkout-trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #888;
+  }
+  .checkout-trust-badge svg {
+    width: 12px;
+    height: 12px;
+    stroke: #888;
+    fill: none;
+    stroke-width: 1.5;
+    flex-shrink: 0;
+  }
+  .checkout-help-text {
+    margin-top: 16px;
+    font-size: 9px;
+    color: #aaa;
+    letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .checkout-help-text a {
+    color: #888;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .checkout-help-text a:hover { color: #111; }
+  .checkout-payment-note {
+    font-size: 11px;
+    color: #888;
+    font-weight: 300;
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
   @media (max-width: 768px) {
     .checkout-grid { grid-template-columns: 1fr; }
     .checkout-form-row, .checkout-form-row-3 { grid-template-columns: 1fr; }
-    .checkout-summary { position: static; order: -1; }
+    .checkout-summary { position: static; order: -1; margin-bottom: 24px; }
     .checkout-container { padding: 40px 12px; }
   }
 </style>
 
 <div id="checkout-page-content">
   <div id="checkout-form-view" class="checkout-container">
-    <button class="checkout-back-btn" onclick="navigateTo('cart')">← Back to Cart</button>
+    <button class="checkout-back-btn" onclick="navigateTo('cart')">Back to Cart</button>
     <div class="checkout-title">Checkout</div>
     <div class="checkout-grid">
       <div>
@@ -267,7 +352,7 @@
           </div>
           
           <div class="checkout-section-title">Payment</div>
-          <p style="font-size:12px;color:#888;font-weight:300;line-height:1.6;">Demo mode — no payment will be processed.<br>You will receive an order confirmation.</p>
+          <p class="checkout-payment-note">Demo mode — no payment will be processed.<br>You will receive an order confirmation.</p>
           
           <button type="submit" class="checkout-place-order-btn">Place Order</button>
         </form>
@@ -276,24 +361,41 @@
       <div class="checkout-summary">
         <div class="checkout-summary-title">Order Summary</div>
         <div id="checkout-items"></div>
-        <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #e5e5e5;">
-          <div class="checkout-total-row"><span>Subtotal</span><span id="checkout-subtotal">R0</span></div>
-          <div class="checkout-total-row"><span>Shipping</span><span id="checkout-shipping">—</span></div>
-          <div class="checkout-total-row" style="font-weight:500;padding-top:8px;border-top:0.5px solid #e5e5e5;margin-top:4px;">
-            <strong>Total</strong>
-            <strong id="checkout-total" style="font-size:13px;">R0</strong>
-          </div>
+        <div class="checkout-total-divider"></div>
+        <div class="checkout-total-row"><span>Subtotal</span><span id="checkout-subtotal">R0</span></div>
+        <div class="checkout-total-row"><span>Shipping</span><span id="checkout-shipping">—</span></div>
+        <div class="checkout-total-divider"></div>
+        <div class="checkout-total-final">
+          <strong>Total</strong>
+          <strong id="checkout-total">R0</strong>
         </div>
         <div id="checkout-packages"></div>
+        <div class="checkout-trust-badges">
+          <div class="checkout-trust-badge">
+            <svg viewBox="0 0 24 24"><rect x="1" y="3" width="22" height="18" rx="2" ry="2"/><line x1="1" y1="9" x2="23" y2="9"/></svg>
+            Free Shipping Over R1,500
+          </div>
+          <div class="checkout-trust-badge">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Secure & Encrypted Payment
+          </div>
+          <div class="checkout-trust-badge">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.5 21a9 9 0 1 0 2.1-16.4L1 10"/></svg>
+            Easy Returns Within 14 Days
+          </div>
+        </div>
+        <div class="checkout-help-text">
+          Need help? <a href="mailto:support@janedore.com">support@janedore.com</a>
+        </div>
       </div>
     </div>
   </div>
   
   <div id="checkout-confirmation-view" class="checkout-confirmation" style="display:none;">
-    <div class="checkout-confirmation-icon">✓</div>
+    <div class="checkout-confirmation-icon">&#10003;</div>
     <div class="checkout-confirmation-title">Order Confirmed</div>
     <div class="checkout-confirmation-order" id="confirmation-order-number"></div>
-    <p style="font-size:12px;color:#888;margin-bottom:8px;">Thank you for your order!</p>
+    <p style="font-size:12px;color:#888;margin-bottom:8px;">Thank you for your order.</p>
     <p style="font-size:11px;color:#aaa;margin-bottom:24px;">A confirmation will be sent to your email.</p>
     <button class="checkout-confirmation-btn" onclick="navigateTo('home')">Continue Shopping</button>
   </div>
