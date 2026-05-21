@@ -495,7 +495,18 @@ function addToCart(productId, size) {
   updateBadges(); renderCart(); saveCartToStorage();
 }
 function removeFromCart(productId, size, vi) { S.cart=S.cart.filter(i=>!(i.productId===productId&&i.size===size&&i.variantIndex===vi)); updateBadges(); renderCart(); saveCartToStorage(); }
-function changeQty(productId, size, delta, vi) { const item=S.cart.find(i=>i.productId===productId&&i.size===size&&i.variantIndex===vi); if(item) item.qty=Math.max(1,item.qty+delta); renderCart(); saveCartToStorage(); }
+function changeQty(productId, size, delta, vi) {
+  const item=S.cart.find(i=>i.productId===productId&&i.size===size&&i.variantIndex===vi);
+  if(!item) return;
+  const newQty = item.qty + delta;
+  if(newQty <= 0) {
+    removeFromCart(productId, size, vi);
+  } else {
+    item.qty = newQty;
+    renderCart();
+    saveCartToStorage();
+  }
+}
 function addPouchToCart() { const pouch = PRODUCTS.find(p => p.id === 'janedore-leather-pouch'); if (pouch) { addToCart('janedore-leather-pouch', 'OS'); renderCart(); } }
 function hasSunglassesInCart() { return S.cart.some(item => PRODUCTS.find(p => p.id === item.productId)?.category === 'sunglasses'); }
 function pouchAlreadyInCart() { return S.cart.some(item => item.productId === 'janedore-leather-pouch'); }
