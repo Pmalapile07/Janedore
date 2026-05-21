@@ -399,17 +399,7 @@ function buildArrivals() {
   buildNewsletterSection();
 }
 function navigateToJanedoreOnly() {
-  S.filter = { cat:"all", size:"all", price:"all" };
-  const prods = PRODUCTS.filter(p => p.brand === 'JANEDORE' && p.status === 'active');
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById("page-products").classList.add("active");
-  S.currentPage = "products"; S.previousCollectionPage = 'products';
-  if(DOM.allProductsGrid) {
-    DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols === 1 ? "1fr" : S.gridCols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)";
-    DOM.allProductsGrid.innerHTML = prods.map(p=>productCard(p, S.gridCols===3, true)).join("");
-  }
-  updateGridToggleSVG("grid-toggle-svg", S.gridCols); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled();
-  updateHash('products');
+  navigateTo('products');
 }
 function buildNewsletterSection() {
   if(!DOM.homepageNewsletterSection) return;
