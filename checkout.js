@@ -3,7 +3,6 @@
 let checkoutEmail = localStorage.getItem('janedore_checkout_email') || '';
 
 function navigateToCheckout() {
-  // Try to get cart from logged-in user's Firestore first
   const user = firebase.auth().currentUser;
   
   if (!S.cart.length && !user) {
@@ -24,7 +23,6 @@ function navigateToCheckout() {
     document.getElementById('checkout-form-view').style.display = 'block';
     document.getElementById('checkout-confirmation-view').style.display = 'none';
     
-    // Pre-fill email from logged-in user or localStorage
     if (user && user.email) {
       document.getElementById('checkout-email').value = user.email;
       if (user.displayName) {
@@ -41,7 +39,7 @@ function navigateToCheckout() {
 function renderCheckoutSummary() {
   const itemsContainer = document.getElementById('checkout-items');
   if (!itemsContainer || !S.cart.length) {
-    if (itemsContainer) itemsContainer.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Your cart is empty.</p>';
+    if (itemsContainer) itemsContainer.innerHTML = '<p style="text-align:center;padding:20px;color:#888;font-size:11px;">Your cart is empty.</p>';
     return;
   }
   
@@ -55,9 +53,9 @@ function renderCheckoutSummary() {
       <div class="checkout-item-info">
         <div class="checkout-item-brand">${item.brand || ''}</div>
         <div class="checkout-item-name">${item.name}</div>
-        <div style="color:#888;">${item.color || ''} · ${item.size || ''} · Qty: ${item.qty}</div>
+        <div class="checkout-item-meta">${item.color || ''}${item.color && item.size ? ' · ' : ''}${item.size || ''} · Qty: ${item.qty}</div>
       </div>
-      <div style="font-size:11px;">${formatPrice((item.salePrice ?? item.price ?? 0) * item.qty)}</div>
+      <div class="checkout-item-price">${formatPrice((item.salePrice ?? item.price ?? 0) * item.qty)}</div>
     </div>`;
   }).join('');
   
@@ -70,9 +68,11 @@ function renderCheckoutSummary() {
   });
   
   const brandNames = Object.keys(brandGroups);
+  const totalItems = S.cart.reduce((a, i) => a + i.qty, 0);
+  
   let packagesHTML = '';
   if (brandNames.length > 1) {
-    packagesHTML = `<div class="checkout-package-note">📦 ${brandNames.length} packages from ${brandNames.join(', ')}</div>`;
+    packagesHTML = `<div class="checkout-package-note">${brandNames.length} packages · Ships from ${brandNames.join(', ')}</div>`;
   }
   
   itemsContainer.innerHTML = itemsHTML;
@@ -145,7 +145,7 @@ async function placeOrder(e) {
       price: item.salePrice || item.price,
       variantIndex: item.variantIndex
     })),
-    packages: Object.keys(brandGroups).length,
+    packageCount: Object.keys(brandGroups).length,
     brands: Object.keys(brandGroups),
     subtotal,
     shipping,
@@ -156,13 +156,11 @@ async function placeOrder(e) {
   };
   
   try {
-    // Save order to Firestore
     await db.collection('orders').add({
       ...orderData,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     
-    // Reduce stock
     try {
       for (const item of S.cart) {
         const productRef = db.collection('products').doc(item.productId);
@@ -176,15 +174,14 @@ async function placeOrder(e) {
       console.warn('Stock update failed but order saved:', stockError);
     }
     
-    // Show confirmation
     document.getElementById('checkout-form-view').style.display = 'none';
     document.getElementById('checkout-confirmation-view').style.display = 'block';
     document.getElementById('confirmation-order-number').textContent = 'Order #' + orderData.orderNumber;
     
-    // Clear cart
     S.cart = [];
     updateBadges();
     renderCart();
+    saveCartToStorage();
     
   } catch (e) {
     console.warn('Order error:', e);
