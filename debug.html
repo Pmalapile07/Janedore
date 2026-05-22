@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>JANEDORE Debug Console</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Courier New', monospace; background: #0a0a0a; color: #0f0; padding: 20px; min-height: 100vh; }
-    .debug-header { border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .debug-header { border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .debug-header h1 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.2em; }
     .status-indicator { padding: 6px 14px; font-size: 11px; text-transform: uppercase; }
     .status-ok { background: #0a0; color: #fff; }
@@ -20,10 +20,12 @@
     .log-entry.success .msg { color: #0af; }
     .section { margin-bottom: 24px; }
     .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #555; margin-bottom: 8px; }
-    .btn { padding: 8px 16px; margin-right: 8px; border: 1px solid #333; background: #111; color: #0f0; cursor: pointer; font-family: inherit; font-size: 11px; text-transform: uppercase; }
+    .btn { padding: 8px 16px; margin-right: 8px; margin-bottom: 6px; border: 1px solid #333; background: #111; color: #0f0; cursor: pointer; font-family: inherit; font-size: 11px; text-transform: uppercase; }
     .btn:hover { border-color: #0f0; }
-    .result-box { background: #111; border: 1px solid #333; padding: 16px; margin-top: 8px; max-height: 300px; overflow-y: auto; font-size: 11px; white-space: pre-wrap; }
-    input { background: #111; border: 1px solid #333; color: #0f0; padding: 8px 12px; font-family: inherit; width: 100%; max-width: 400px; }
+    .result-box { background: #111; border: 1px solid #333; padding: 16px; margin-top: 8px; max-height: 300px; overflow-y: auto; font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+    input { background: #111; border: 1px solid #333; color: #0f0; padding: 8px 12px; font-family: inherit; width: 100%; max-width: 400px; margin-top: 4px; }
+    hr { border-color: #333; margin: 16px 0 12px 0; }
+    .inline-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   </style>
 </head>
 <body>
@@ -32,6 +34,7 @@
   <div id="connection-status" class="status-indicator">CHECKING...</div>
 </div>
 
+<!-- Existing sections remain untouched -->
 <div class="section">
   <div class="section-title">Firebase Connection</div>
   <button class="btn" onclick="testConnection()">Test Connection</button>
@@ -69,8 +72,29 @@
   <div class="result-box" id="orders-result">Awaiting test...</div>
 </div>
 
+<!-- NEW: Chat Debug Section (Realtime Database) -->
 <div class="section">
-  <div class="section-title">Custom Query</div>
+  <div class="section-title">💬 Chat Debug (Realtime Database)</div>
+  
+  <div style="margin-bottom: 12px;">
+    <button class="btn" onclick="fetchChatSessions()">📋 FETCH CHAT SESSIONS</button>
+  </div>
+
+  <div class="inline-group" style="margin-bottom: 8px;">
+    <input type="text" id="chat-session-id" placeholder="Session ID (e.g. test-session)" style="max-width: 280px;">
+    <button class="btn" onclick="fetchChatMessages()">📩 FETCH CHAT MESSAGES</button>
+  </div>
+
+  <div style="margin-bottom: 8px;">
+    <button class="btn" onclick="testChatWrite()">✍️ TEST CHAT WRITE</button>
+    <button class="btn" onclick="testAuthStatus()">🔐 TEST AUTH STATUS</button>
+  </div>
+
+  <div class="result-box" id="chat-result">Awaiting chat debug actions...</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Custom Query (Firestore)</div>
   <input type="text" id="custom-query" placeholder="Enter collection name (products, reviews, newsletter, orders)">
   <button class="btn" onclick="runCustomQuery()" style="margin-top:8px;">Run Query</button>
   <div class="result-box" id="custom-result">Awaiting query...</div>
@@ -81,9 +105,14 @@
   <div id="log-container"></div>
 </div>
 
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
 <script>
+  // ---- YOUR EXISTING FIREBASE CONFIG (unchanged) ----
   const firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
     authDomain: "janedore-9f035.firebaseapp.com",
@@ -94,9 +123,17 @@
     measurementId: "G-Y9NMT0ZGKZ"
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  // Prevent duplicate initialization if script loads multiple times
+  if (!window.firebaseApp) {
+    firebase.initializeApp(firebaseConfig);
+    window.firebaseApp = firebase.app();
+  }
 
+  const db = firebase.firestore();
+  const rtdb = firebase.database();
+  const auth = firebase.auth();
+
+  // ---- LOGGING SYSTEM (unchanged) ----
   const logs = [];
   function addLog(msg, type = 'info') {
     const entry = { msg, type, time: new Date() };
@@ -106,6 +143,7 @@
     container.scrollTop = container.scrollHeight;
   }
 
+  // ---- EXISTING FUNCTIONS (KEPT EXACTLY AS BEFORE) ----
   async function testConnection() {
     const resultEl = document.getElementById('connection-result');
     const statusEl = document.getElementById('connection-status');
@@ -144,10 +182,7 @@
   async function checkFirestoreRules() {
     const resultEl = document.getElementById('connection-result');
     try {
-      // Try reading
       await db.collection('products').limit(1).get();
-      const readOK = true;
-      // Try writing to a test doc
       try {
         await db.collection('_test_').doc('test').set({ test: true, timestamp: new Date() });
         await db.collection('_test_').doc('test').delete();
@@ -324,9 +359,182 @@
     }
   }
 
+  // ---- NEW: CHAT DEBUG FUNCTIONS (Realtime Database) ----
+  
+  function updateChatResult(text) {
+    const el = document.getElementById('chat-result');
+    if (el) el.textContent = text;
+  }
+
+  // 1. FETCH CHAT SESSIONS
+  async function fetchChatSessions() {
+    updateChatResult('Fetching chat sessions...');
+    addLog('[Chat] Fetching live_chat sessions', 'info');
+    try {
+      const sessionsRef = rtdb.ref('live_chat');
+      const snapshot = await sessionsRef.once('value');
+      const sessions = snapshot.val();
+      
+      if (!sessions) {
+        updateChatResult('✅ No chat sessions found (live_chat is empty).');
+        addLog('[Chat] No sessions exist in RTDB', 'info');
+        return;
+      }
+
+      const sessionIds = Object.keys(sessions);
+      const details = sessionIds.map(id => {
+        const session = sessions[id];
+        const email = session?.customerEmail || 'N/A';
+        const lastMsg = session?.lastMessage || 'N/A';
+        const lastTime = session?.lastMessageAt ? new Date(session.lastMessageAt).toLocaleString() : 'N/A';
+        return `📌 ${id}\n   email: ${email}\n   lastMessage: ${lastMsg}\n   lastMessageAt: ${lastTime}`;
+      });
+
+      updateChatResult(`📋 Chat Sessions (${sessionIds.length}):\n\n${details.join('\n\n')}`);
+      addLog(`[Chat] Fetched ${sessionIds.length} sessions`, 'success');
+    } catch (e) {
+      updateChatResult(`❌ Error fetching sessions: ${e.message}`);
+      addLog(`[Chat] Sessions error: ${e.message}`, 'error');
+      console.error('RTDB sessions error', e);
+    }
+  }
+
+  // 2. FETCH CHAT MESSAGES for specific session
+  async function fetchChatMessages() {
+    const sessionId = document.getElementById('chat-session-id')?.value.trim();
+    if (!sessionId) {
+      updateChatResult('⚠️ Please enter a session ID in the input field.');
+      return;
+    }
+    updateChatResult(`Fetching messages for session: ${sessionId}...`);
+    addLog(`[Chat] Fetching messages for ${sessionId}`, 'info');
+    try {
+      const messagesRef = rtdb.ref(`live_chat/${sessionId}/messages`);
+      const snapshot = await messagesRef.once('value');
+      const messages = snapshot.val();
+      
+      if (!messages) {
+        updateChatResult(`✅ No messages found in session "${sessionId}".`);
+        addLog(`[Chat] No messages in ${sessionId}`, 'info');
+        return;
+      }
+
+      const messageKeys = Object.keys(messages);
+      const formatted = messageKeys.map(key => {
+        const msg = messages[key];
+        const sender = msg.sender || 'unknown';
+        const text = msg.text || '(empty)';
+        const createdAt = msg.createdAt ? new Date(msg.createdAt).toLocaleString() : 'no timestamp';
+        const userId = msg.userId || 'N/A';
+        return `💬 ${key}\n   sender: ${sender}\n   text: ${text}\n   createdAt: ${createdAt}\n   userId: ${userId}`;
+      });
+
+      updateChatResult(`📩 Messages in "${sessionId}" (${messageKeys.length}):\n\n${formatted.join('\n\n')}`);
+      addLog(`[Chat] Fetched ${messageKeys.length} messages from ${sessionId}`, 'success');
+    } catch (e) {
+      updateChatResult(`❌ Error fetching messages: ${e.message}`);
+      addLog(`[Chat] Messages error: ${e.message}`, 'error');
+      console.error('RTDB messages error', e);
+    }
+  }
+
+  // 3. TEST CHAT WRITE
+  async function testChatWrite() {
+    updateChatResult('Writing test message to live_chat/test-session/messages...');
+    addLog('[Chat] Attempting test write to RTDB', 'info');
+    try {
+      const testRef = rtdb.ref('live_chat/test-session/messages');
+      const newMsgRef = testRef.push();
+      const testPayload = {
+        text: "debug test",
+        sender: "customer",
+        createdAt: Date.now(),
+        sessionId: "test-session"
+      };
+      
+      await newMsgRef.set(testPayload);
+      updateChatResult(`✅ Test message written!\nPath: live_chat/test-session/messages/${newMsgRef.key}\nData: ${JSON.stringify(testPayload, null, 2)}\n\nCleaning up test message...`);
+      addLog(`[Chat] Test write OK (key: ${newMsgRef.key})`, 'success');
+      
+      // Clean up test data
+      await newMsgRef.remove();
+      updateChatResult(document.getElementById('chat-result').textContent + '\n🗑️ Test message removed.');
+      addLog('[Chat] Test message cleaned up', 'success');
+    } catch (e) {
+      updateChatResult(`❌ Chat write failed: ${e.message}\n\nPossible causes:\n- RTDB rules deny write\n- Auth required but not signed in`);
+      addLog(`[Chat] Write error: ${e.message}`, 'error');
+      console.error('RTDB write error', e);
+    }
+  }
+
+  // 4. TEST AUTH STATUS
+  function testAuthStatus() {
+    addLog('[Auth] Checking current auth status', 'info');
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        updateChatResult('🔐 No user signed in.\n\nAuth state: anonymous / not logged in.\nFirebase auth object available but currentUser is null.');
+        addLog('[Auth] No current user', 'warn');
+        return;
+      }
+      
+      const status = {
+        uid: user.uid,
+        email: user.email || 'N/A',
+        isAnonymous: user.isAnonymous,
+        displayName: user.displayName || 'N/A',
+        providerData: user.providerData,
+        emailVerified: user.emailVerified
+      };
+      
+      updateChatResult(`🔐 Authenticated User:\n${JSON.stringify(status, null, 2)}`);
+      addLog(`[Auth] User signed in: ${user.uid} (anonymous: ${user.isAnonymous})`, 'success');
+    } catch (e) {
+      updateChatResult(`❌ Auth check error: ${e.message}`);
+      addLog(`[Auth] Error: ${e.message}`, 'error');
+    }
+  }
+
+  // ---- ADDITIONAL CONSOLE & AUTH LISTENERS (enhanced logging) ----
+  
+  // Monitor RTDB connection state
+  rtdb.ref('.info/connected').on('value', (snap) => {
+    const connected = snap.val() === true;
+    if (connected) {
+      addLog('[RTDB] Realtime Database connected', 'success');
+      console.log('RTDB connected');
+    } else {
+      addLog('[RTDB] Realtime Database disconnected', 'warn');
+      console.warn('RTDB disconnected');
+    }
+  });
+
+  // Auth state listener
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      addLog(`[Auth] State changed: signed in as ${user.uid} (anonymous: ${user.isAnonymous})`, 'info');
+      console.log('Auth user:', user.toJSON());
+    } else {
+      addLog('[Auth] State changed: signed out', 'info');
+      console.log('Auth signed out');
+    }
+  }, (error) => {
+    addLog(`[Auth] Auth state error: ${error.message}`, 'error');
+    console.error('Auth error', error);
+  });
+
+  // Global error capture for unhandled permission issues (Firebase often throws them)
+  window.addEventListener('error', (event) => {
+    if (event.error && event.error.code && event.error.code.includes('PERMISSION_DENIED')) {
+      addLog(`[Global] Permission denied caught: ${event.error.message}`, 'error');
+      console.error('Permission denied:', event.error);
+    }
+  });
+
   // Auto-test on load
   setTimeout(testConnection, 500);
-  addLog('Debug page initialized', 'info');
+  addLog('Debug page initialized (with Chat tools)', 'info');
+  console.log('JANEDORE debug console ready - Firestore + RTDB chat tools active');
 </script>
 </body>
 </html>
