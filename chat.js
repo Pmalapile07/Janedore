@@ -13,6 +13,8 @@ let typingTimeout = null;
 
 // RTDB reference
 const rtdb = firebase.database();
+// Firestore reference (WAS MISSING - caused ReferenceError: db is not defined)
+const db = firebase.firestore();
 
 // ==================== HELPERS ====================
 function safeEl(id) { return document.getElementById(id) || null; }
