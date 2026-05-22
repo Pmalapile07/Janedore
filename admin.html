@@ -60,8 +60,13 @@
       font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
       text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
       font-weight: var(--ui-font-weight); color: var(--muted); transition: all 0.2s;
+      position: relative;
     }
     .sidebar-btn:hover, .sidebar-btn.active { background: #f5f5f5; color: var(--text); }
+    .sidebar-btn .unread-badge {
+      position: absolute; top: 6px; right: 8px; background: var(--danger); color: #fff;
+      font-size: 7px; padding: 2px 5px; border-radius: 0; display: none;
+    }
     .sidebar-divider { border: 0; border-top: 0.5px solid var(--border); margin: 10px 0; }
     .main-content { padding: 20px 16px; overflow-y: auto; }
     .section-title {
@@ -90,6 +95,7 @@
     .badge { font-size: 8px; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.14em; display: inline-block; }
     .badge-active { background: #e8f5e9; color: var(--success); }
     .badge-draft { background: #fff3e0; color: #e65100; }
+    .badge-unread { background: #ffebee; color: var(--danger); }
     .btn {
       padding: 8px 14px; border: 0.8px solid var(--border); background: var(--card);
       cursor: pointer; font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
@@ -163,20 +169,33 @@
     .chat-sessions-list { display: flex; flex-direction: column; gap: 6px; }
     .chat-session-card {
       background: #fafaf9; border: 0.5px solid var(--border); padding: 12px 14px;
-      cursor: pointer; transition: all 0.2s;
+      cursor: pointer; transition: all 0.2s; position: relative;
     }
     .chat-session-card:hover { border-color: var(--text); }
+    .chat-session-card.unread { border-left: 2px solid var(--danger); }
     .chat-session-card .session-id {
       font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
       letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
       text-transform: uppercase; color: var(--muted);
     }
+    .chat-session-card .session-email {
+      font-size: 10px; color: var(--muted); margin-top: 2px;
+    }
     .chat-session-card .session-preview { font-size: 12px; font-weight: 300; color: var(--text); margin-top: 4px; }
-    .chat-messages-panel { max-height: 400px; overflow-y: auto; margin-top: 12px; }
-    .chat-msg-admin { padding: 10px 14px; margin-bottom: 8px; font-size: 12px; font-weight: 300; line-height: 1.5; }
-    .chat-msg-admin.customer-msg { background: #111; color: #fff; }
+    .chat-session-card .unread-count {
+      position: absolute; top: 8px; right: 8px; background: var(--danger); color: #fff;
+      font-size: 7px; padding: 2px 5px; border-radius: 0; display: none;
+    }
+    .chat-messages-panel { max-height: 350px; overflow-y: auto; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .chat-msg-admin { padding: 10px 14px; font-size: 12px; font-weight: 300; line-height: 1.5; max-width: 80%; }
+    .chat-msg-admin.customer-msg { background: #111; color: #fff; align-self: flex-start; }
+    .chat-msg-admin.admin-msg { background: #f5f5f5; border: 0.5px solid var(--border); align-self: flex-end; }
     .chat-msg-admin .msg-meta {
       font-size: 8px; opacity: 0.5; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .typing-indicator {
+      font-size: 9px; color: var(--muted); font-style: italic; padding: 4px 14px;
+      text-transform: uppercase; letter-spacing: 0.1em; display: none;
     }
     .reply-box { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border); }
     .reply-box input {
@@ -213,6 +232,7 @@
       .modal { padding: 16px; max-width: 100%; }
       .product-row { flex-direction: column; align-items: flex-start; gap: 6px; }
       .login-box { margin: 16px; }
+      .chat-msg-admin { max-width: 90%; }
     }
   </style>
 </head>
@@ -246,12 +266,12 @@
     <div class="sidebar">
       <button class="sidebar-btn active" onclick="switchTab('dashboard')">Dashboard</button>
       <button class="sidebar-btn" onclick="switchTab('products')">Products</button>
-      <button class="sidebar-btn" onclick="switchTab('messages')">Messages</button>
+      <button class="sidebar-btn" id="messages-tab-btn" onclick="switchTab('messages')">Messages <span class="unread-badge" id="messages-unread-badge">0</span></button>
       <button class="sidebar-btn" onclick="switchTab('reviews')">Reviews</button>
       <button class="sidebar-btn" onclick="switchTab('newsletter')">Newsletter</button>
       <button class="sidebar-btn" onclick="switchTab('orders')">Orders</button>
       <hr class="sidebar-divider">
-      <button class="sidebar-btn" onclick="window.open('index.html','_blank')">🏪 View Store</button>
+      <button class="sidebar-btn" onclick="window.open('index.html','_blank')">View Store</button>
     </div>
     <div class="main-content" id="main-content"></div>
   </div>
@@ -281,19 +301,27 @@
   const newsletterRef = db.collection('newsletter');
   const ordersRef = db.collection('orders');
   const chatRef = db.collection('live_chat');
+  const typingRef = db.collection('live_chat_typing');
 
   let currentTab = 'dashboard';
   let allProducts = [];
+  let activeChatSession = null;
+  let chatUnsubscribe = null;
+  let typingUnsubscribe = null;
+  let totalUnreadMessages = 0;
 
+  // ── AUTH ──────────────────────────────────────────────────────────
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'block';
       document.getElementById('admin-email').textContent = user.email;
       await loadProducts();
+      startChatMonitoring();
     } else {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('admin-panel').style.display = 'none';
+      stopChatMonitoring();
     }
   });
 
@@ -321,6 +349,7 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
+  // ── PRODUCTS ──────────────────────────────────────────────────────
   async function loadProducts() {
     try {
       const snapshot = await productsRef.get();
@@ -342,7 +371,7 @@
         productData.id = productData.sku || ('prod-' + Date.now());
         await productsRef.doc(productData.id).set(productData);
       }
-      showToast('Product saved! ✅');
+      showToast('Product saved!');
       loadProducts();
       closeModal();
     } catch (e) { showToast('Error saving: ' + e.message, 'error'); }
@@ -354,6 +383,239 @@
     catch (e) { showToast('Error deleting: ' + e.message, 'error'); }
   }
 
+  // ── REAL-TIME CHAT MONITORING ────────────────────────────────────
+  let globalChatUnsubscribe = null;
+
+  function startChatMonitoring() {
+    if (globalChatUnsubscribe) return;
+    globalChatUnsubscribe = chatRef
+      .where('sender', '==', 'customer')
+      .where('read', '==', false)
+      .onSnapshot(snap => {
+        totalUnreadMessages = snap.size;
+        updateUnreadBadge();
+      }, err => console.warn('Chat monitor error:', err));
+  }
+
+  function stopChatMonitoring() {
+    if (globalChatUnsubscribe) { globalChatUnsubscribe(); globalChatUnsubscribe = null; }
+    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+    if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
+  }
+
+  function updateUnreadBadge() {
+    const badge = document.getElementById('messages-unread-badge');
+    if (badge) {
+      badge.textContent = totalUnreadMessages;
+      badge.style.display = totalUnreadMessages > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  // ── SEND ADMIN REPLY ─────────────────────────────────────────────
+  async function sendAdminReply(sessionId) {
+    const input = document.getElementById(`reply-input-${sessionId}`);
+    const text = input?.value?.trim();
+    if (!text || !sessionId) return;
+    try {
+      // Update typing indicator
+      await typingRef.doc(sessionId).set({
+        adminTyping: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await chatRef.add({
+        sessionId: sessionId,
+        text: text,
+        sender: 'admin',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        read: true
+      });
+      input.value = '';
+      // Re-render happens automatically via the real-time listener
+    } catch (e) { showToast('Error sending reply: ' + e.message, 'error'); }
+  }
+
+  // ── MARK MESSAGES AS READ ────────────────────────────────────────
+  async function markSessionAsRead(sessionId) {
+    try {
+      const snapshot = await chatRef
+        .where('sessionId', '==', sessionId)
+        .where('sender', '==', 'customer')
+        .where('read', '==', false)
+        .get();
+      
+      const batch = db.batch();
+      snapshot.docs.forEach(doc => {
+        batch.update(doc.ref, { read: true });
+      });
+      await batch.commit();
+    } catch (e) { console.warn('Mark read error:', e); }
+  }
+
+  // ── ADMIN TYPING INDICATOR ───────────────────────────────────────
+  function handleAdminTyping(sessionId) {
+    typingRef.doc(sessionId).set({
+      adminTyping: true,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+    
+    // Clear after 3 seconds of inactivity
+    clearTimeout(window._adminTypingTimeout);
+    window._adminTypingTimeout = setTimeout(() => {
+      typingRef.doc(sessionId).set({
+        adminTyping: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }, 3000);
+  }
+
+  // ── LOAD CHAT SESSION WITH REAL-TIME LISTENER ────────────────────
+  async function openChatSession(sessionId) {
+    activeChatSession = sessionId;
+    
+    // Unsubscribe from previous listeners
+    if (chatUnsubscribe) chatUnsubscribe();
+    if (typingUnsubscribe) typingUnsubscribe();
+
+    // Mark customer messages as read
+    await markSessionAsRead(sessionId);
+
+    // Get session email
+    let sessionEmail = '';
+    try {
+      const msgSnap = await chatRef
+        .where('sessionId', '==', sessionId)
+        .where('sender', '==', 'customer')
+        .limit(1)
+        .get();
+      if (!msgSnap.empty) {
+        sessionEmail = msgSnap.docs[0].data().customerEmail || '';
+      }
+    } catch (e) {}
+
+    const mc = document.getElementById('main-content');
+    mc.innerHTML = `
+      <button class="btn-underline" onclick="switchTab('messages')" style="margin-bottom:12px;">Back to Sessions</button>
+      <div class="section-title">Chat: ${sessionId.substring(0, 30)}...</div>
+      ${sessionEmail ? `<div style="font-size:10px;color:var(--muted);margin-bottom:12px;">${sessionEmail}</div>` : ''}
+      <div class="chat-messages-panel" id="chat-messages-panel">
+        <div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading messages...</div>
+      </div>
+      <div class="typing-indicator" id="typing-indicator">Customer is typing...</div>
+      <div class="reply-box">
+        <input id="reply-input-${sessionId}" placeholder="Type your reply..." 
+          onkeypress="if(event.key==='Enter')sendAdminReply('${sessionId}')"
+          oninput="handleAdminTyping('${sessionId}')">
+        <button class="btn-underline" onclick="sendAdminReply('${sessionId}')">Send</button>
+      </div>`;
+
+    // Real-time listener for messages
+    chatUnsubscribe = chatRef
+      .where('sessionId', '==', sessionId)
+      .orderBy('createdAt', 'asc')
+      .onSnapshot(snap => {
+        renderChatMessages(snap.docs, sessionId);
+      }, err => {
+        console.warn('Chat listener error:', err);
+      });
+
+    // Real-time listener for typing indicator
+    typingUnsubscribe = typingRef.doc(sessionId)
+      .onSnapshot(snap => {
+        const data = snap.data();
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+          indicator.style.display = (data && data.customerTyping) ? 'block' : 'none';
+        }
+      });
+  }
+
+  function renderChatMessages(docs, sessionId) {
+    const panel = document.getElementById('chat-messages-panel');
+    if (!panel) return;
+
+    const wasAtBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 40;
+
+    panel.innerHTML = '';
+    
+    if (docs.length === 0) {
+      panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">No messages yet.</div>';
+      return;
+    }
+
+    docs.forEach(doc => {
+      const m = doc.data();
+      const time = m.createdAt 
+        ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+        : '';
+      const div = document.createElement('div');
+      div.className = `chat-msg-admin ${m.sender === 'customer' ? 'customer-msg' : 'admin-msg'}`;
+      div.innerHTML = `<div>${escapeHtml(m.text)}</div><div class="msg-meta">${m.sender} · ${time}</div>`;
+      panel.appendChild(div);
+    });
+
+    if (wasAtBottom) panel.scrollTop = panel.scrollHeight;
+  }
+
+  // ── RENDER MESSAGES TAB ──────────────────────────────────────────
+  async function renderMessagesTab() {
+    const mc = document.getElementById('main-content');
+    activeChatSession = null;
+    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+    if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
+
+    try {
+      const snapshot = await chatRef.orderBy('createdAt', 'desc').get();
+      const sessions = {};
+      
+      snapshot.docs.forEach(d => {
+        const data = d.data();
+        if (!sessions[data.sessionId]) {
+          sessions[data.sessionId] = { 
+            messages: [], 
+            lastTime: null, 
+            email: data.customerEmail || '',
+            unreadCount: 0 
+          };
+        }
+        sessions[data.sessionId].messages.push(data);
+        if (data.createdAt && (!sessions[data.sessionId].lastTime || data.createdAt.seconds > sessions[data.sessionId].lastTime.seconds)) {
+          sessions[data.sessionId].lastTime = data.createdAt;
+        }
+        if (data.sender === 'customer' && data.read === false) {
+          sessions[data.sessionId].unreadCount++;
+        }
+      });
+
+      const sessionIds = Object.keys(sessions).sort((a, b) => 
+        (sessions[b].lastTime?.seconds || 0) - (sessions[a].lastTime?.seconds || 0)
+      );
+
+      mc.innerHTML = `<div class="section-title">Customer Messages (${sessionIds.length} sessions)</div>
+        <div class="chat-sessions-list">
+          ${sessionIds.length === 0 ? '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>' : ''}
+          ${sessionIds.map(sid => {
+            const s = sessions[sid];
+            const msgs = s.messages;
+            const lastMsg = msgs[msgs.length - 1];
+            const preview = (lastMsg?.text || '').substring(0, 80);
+            const time = lastMsg?.createdAt ? new Date(lastMsg.createdAt.seconds * 1000).toLocaleDateString() : '';
+            const customerMsgs = msgs.filter(m => m.sender === 'customer');
+            return `<div class="chat-session-card ${s.unreadCount > 0 ? 'unread' : ''}" onclick="openChatSession('${sid}')">
+              <div class="session-id">${sid.substring(0, 25)}...</div>
+              ${s.email ? `<div class="session-email">${s.email}</div>` : ''}
+              <div class="session-preview">${escapeHtml(preview)}${preview.length >= 80 ? '...' : ''}</div>
+              <div style="font-size:8px;color:var(--muted);margin-top:4px;">${customerMsgs.length} messages · ${time}</div>
+              ${s.unreadCount > 0 ? `<div class="unread-count" style="display:inline-block;">${s.unreadCount} new</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>`;
+    } catch (e) { 
+      mc.innerHTML = `<p style="color:var(--danger);">Error loading messages: ${e.message}</p>`; 
+    }
+  }
+
+  // ── REST OF EXISTING CODE (unchanged) ────────────────────────────
   const DEFAULT_PRODUCTS = [
     { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 10, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail: [] } }] },
     { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail: [] } }] },
@@ -375,84 +637,6 @@
     } catch (e) { showToast('Error seeding: ' + e.message, 'error'); }
   }
 
-  // ==================== CHAT (no index needed) ====================
-
-  async function sendAdminReply(sessionId) {
-    const input = document.getElementById(`reply-input-${sessionId}`);
-    const text = input?.value?.trim();
-    if (!text) return;
-    try {
-      await chatRef.add({
-        sessionId: sessionId, text: text, sender: 'admin',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(), read: false
-      });
-      input.value = '';
-      loadChatMessages(sessionId);
-    } catch (e) { showToast('Error sending reply: ' + e.message, 'error'); }
-  }
-
-  async function loadChatMessages(sessionId) {
-    try {
-      const snapshot = await chatRef.where('sessionId', '==', sessionId).get();
-      const messages = [];
-      snapshot.docs.forEach(d => messages.push(d.data()));
-      messages.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
-
-      const mc = document.getElementById('main-content');
-      const msgHTML = messages.map(m => {
-        const time = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-        return `<div class="chat-msg-admin ${m.sender === 'customer' ? 'customer-msg' : ''}" style="${m.sender === 'customer' ? '' : 'border:0.5px solid var(--border);'}">
-          <div>${m.text}</div>
-          <div class="msg-meta">${m.sender} · ${time}</div>
-        </div>`;
-      }).join('');
-
-      mc.innerHTML = `
-        <button class="btn-underline" onclick="switchTab('messages')" style="margin-bottom:12px;">← Back to Sessions</button>
-        <div class="section-title">Chat Session: ${sessionId}</div>
-        <div class="chat-messages-panel">${msgHTML || '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>'}</div>
-        <div class="reply-box">
-          <input id="reply-input-${sessionId}" placeholder="Type your reply..." onkeypress="if(event.key==='Enter')sendAdminReply('${sessionId}')">
-          <button class="btn-underline" onclick="sendAdminReply('${sessionId}')">Send</button>
-        </div>`;
-    } catch (e) { showToast('Error loading messages: ' + e.message, 'error'); }
-  }
-
-  async function renderMessagesTab() {
-    const mc = document.getElementById('main-content');
-    try {
-      const snapshot = await chatRef.get();
-      const sessions = {};
-      snapshot.docs.forEach(d => {
-        const data = d.data();
-        if (!sessions[data.sessionId]) sessions[data.sessionId] = { messages: [], lastTime: null };
-        sessions[data.sessionId].messages.push(data);
-        if (data.createdAt && (!sessions[data.sessionId].lastTime || data.createdAt.seconds > sessions[data.sessionId].lastTime.seconds)) {
-          sessions[data.sessionId].lastTime = data.createdAt;
-        }
-      });
-      const sessionIds = Object.keys(sessions).sort((a, b) => (sessions[b].lastTime?.seconds || 0) - (sessions[a].lastTime?.seconds || 0));
-
-      mc.innerHTML = `<div class="section-title">Customer Messages (${sessionIds.length} sessions)</div>
-        <div class="chat-sessions-list">
-          ${sessionIds.length === 0 ? '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>' : ''}
-          ${sessionIds.map(sid => {
-            const msgs = sessions[sid].messages;
-            const lastMsg = msgs[msgs.length - 1];
-            const preview = (lastMsg?.text || '').substring(0, 80);
-            const time = lastMsg?.createdAt ? new Date(lastMsg.createdAt.seconds * 1000).toLocaleDateString() : '';
-            const customerMsgs = msgs.filter(m => m.sender === 'customer');
-            return `<div class="chat-session-card" onclick="loadChatMessages('${sid}')">
-              <div class="session-id">Session: ${sid.substring(0, 20)}... · ${customerMsgs.length} messages</div>
-              <div class="session-preview">${preview}${preview.length >= 80 ? '…' : ''}</div>
-              <div style="font-size:8px;color:var(--muted);margin-top:4px;">${time}</div>
-            </div>`;
-          }).join('')}
-        </div>`;
-    } catch (e) { mc.innerHTML = `<p style="color:var(--danger);">Error loading messages: ${e.message}</p>`; }
-  }
-
-  // ==================== PRODUCT MODAL ====================
   function openNewProductModal() { openProductModal(null); }
 
   function openProductModal(product) {
@@ -532,58 +716,30 @@
     document.getElementById('modal-container').innerHTML = html;
   }
 
-  // ==================== FIXED: buildVariantBlock ====================
   function buildVariantBlock(v, index) {
     v = v || {};
     const images = v.images || { model: [], ghost: [], detail: [] };
     const modelUrls = (images.model && images.model.length) ? images.model : [''];
     const ghostUrls = (images.ghost && images.ghost.length) ? images.ghost : [''];
     const detailUrls = (images.detail && images.detail.length) ? images.detail : [];
-
     const modelRows = modelUrls.map(url => buildImageUrlRow('model', index, url)).join('');
     const ghostRows = ghostUrls.map(url => buildImageUrlRow('ghost', index, url)).join('');
     const detailRows = detailUrls.map(url => buildImageUrlRow('detail', index, url)).join('');
-
     return `<div class="variant-block">
       <h4>Variant ${index + 1}</h4>
       <div class="form-row">
-        <div class="form-group">
-          <label>Color Name</label>
-          <input name="variant-color-${index}" value="${escapeHtml(v.color || '')}" placeholder="e.g. Black">
-        </div>
-        <div class="form-group">
-          <label>Swatch (hex)</label>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input name="variant-swatch-${index}" value="${escapeHtml(v.swatch || '#111')}" placeholder="#111" style="flex:1;">
-            <input type="color" value="${escapeHtml(v.swatch || '#111')}" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector('[name=variant-swatch-${index}]').value=this.value">
-          </div>
-        </div>
+        <div class="form-group"><label>Color Name</label><input name="variant-color-${index}" value="${escapeHtml(v.color || '')}" placeholder="e.g. Black"></div>
+        <div class="form-group"><label>Swatch (hex)</label><div style="display:flex;gap:8px;align-items:center;"><input name="variant-swatch-${index}" value="${escapeHtml(v.swatch || '#111')}" placeholder="#111" style="flex:1;"><input type="color" value="${escapeHtml(v.swatch || '#111')}" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector('[name=variant-swatch-${index}]').value=this.value"></div></div>
       </div>
-      <div class="form-group">
-        <label>Model Images</label>
-        <div class="image-url-inputs" id="variant-model-${index}">${modelRows}</div>
-        <button type="button" class="btn-underline" onclick="addImageUrl('model', ${index})" style="margin-top:6px;font-size:8px;">+ Add Model Image</button>
-      </div>
-      <div class="form-group">
-        <label>Ghost / Flat Lay Images</label>
-        <div class="image-url-inputs" id="variant-ghost-${index}">${ghostRows}</div>
-        <button type="button" class="btn-underline" onclick="addImageUrl('ghost', ${index})" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button>
-      </div>
-      <div class="form-group">
-        <label>Detail Images</label>
-        <div class="image-url-inputs" id="variant-detail-${index}">${detailRows}</div>
-        <button type="button" class="btn-underline" onclick="addImageUrl('detail', ${index})" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button>
-      </div>
+      <div class="form-group"><label>Model Images</label><div class="image-url-inputs" id="variant-model-${index}">${modelRows}</div><button type="button" class="btn-underline" onclick="addImageUrl('model', ${index})" style="margin-top:6px;font-size:8px;">+ Add Model Image</button></div>
+      <div class="form-group"><label>Ghost / Flat Lay Images</label><div class="image-url-inputs" id="variant-ghost-${index}">${ghostRows}</div><button type="button" class="btn-underline" onclick="addImageUrl('ghost', ${index})" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button></div>
+      <div class="form-group"><label>Detail Images</label><div class="image-url-inputs" id="variant-detail-${index}">${detailRows}</div><button type="button" class="btn-underline" onclick="addImageUrl('detail', ${index})" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button></div>
     </div>`;
   }
-  // ==================== END FIX ====================
 
   function buildImageUrlRow(type, variantIndex, url) {
     const placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
-    return `<div class="image-url-row">
-      <input name="variant-${type}-${variantIndex}[]" value="${escapeHtml(url||'')}" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||'${placeholder}'">
-      <img class="image-preview" src="${escapeHtml(url) || placeholder}" onerror="this.src='${placeholder}'">
-    </div>`;
+    return `<div class="image-url-row"><input name="variant-${type}-${variantIndex}[]" value="${escapeHtml(url||'')}" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||'${placeholder}'"><img class="image-preview" src="${escapeHtml(url) || placeholder}" onerror="this.src='${placeholder}'"></div>`;
   }
 
   function addVariant() {
@@ -637,8 +793,14 @@
 
   function switchTab(tab) {
     currentTab = tab;
+    if (tab !== 'messages') {
+      activeChatSession = null;
+      if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+      if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
+    }
     document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`[onclick="switchTab('${tab}')"]`)?.classList.add('active');
+    const activeBtn = document.querySelector(`[onclick="switchTab('${tab}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
     renderCurrentTab();
   }
 
@@ -653,7 +815,7 @@
           <div class="stat-card"><div class="stat-number">${nS.size}</div><div class="stat-label">Subscribers</div></div>
           <div class="stat-card"><div class="stat-number">${oS.size}</div><div class="stat-label">Orders</div></div>
         </div>
-        <div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);font-size:12px;">✅ Connected</p></div>`;
+        <div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);font-size:12px;">Connected</p></div>`;
         break;
       case 'products':
         mc.innerHTML = `<div class="section-title">All Products (${allProducts.length})</div>
