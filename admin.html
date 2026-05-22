@@ -235,6 +235,7 @@
 </head>
 <body>
 
+<!-- ── Login Screen ─────────────────────────────────────────────── -->
 <div id="login-screen" class="login-container" style="display:none;">
   <div class="login-box">
     <div class="login-title">JANEDORE</div>
@@ -248,6 +249,7 @@
   </div>
 </div>
 
+<!-- ── Admin Panel ──────────────────────────────────────────────── -->
 <div id="admin-panel" style="display:none;">
   <div class="admin-header">
     <h1><span class="status-dot online" id="status-dot"></span>JANEDORE Admin</h1>
@@ -263,7 +265,9 @@
     <div class="sidebar">
       <button class="sidebar-btn active" onclick="switchTab('dashboard')">Dashboard</button>
       <button class="sidebar-btn" onclick="switchTab('products')">Products</button>
-      <button class="sidebar-btn" id="messages-tab-btn" onclick="switchTab('messages')">Messages <span class="unread-badge" id="messages-unread-badge">0</span></button>
+      <button class="sidebar-btn" id="messages-tab-btn" onclick="switchTab('messages')">
+        Messages <span class="unread-badge" id="messages-unread-badge">0</span>
+      </button>
       <button class="sidebar-btn" onclick="switchTab('reviews')">Reviews</button>
       <button class="sidebar-btn" onclick="switchTab('newsletter')">Newsletter</button>
       <button class="sidebar-btn" onclick="switchTab('orders')">Orders</button>
@@ -277,110 +281,137 @@
 <div id="modal-container"></div>
 <div id="toast-container"></div>
 
+<!-- ── Firebase SDKs (compat) — load in exact dependency order ──── -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-    authDomain: "janedore-9f035.firebaseapp.com",
-    projectId: "janedore-9f035",
-    storageBucket: "janedore-9f035.firebasestorage.app",
+(function () {
+  'use strict';
+
+  // ── Firebase init (ONCE) ────────────────────────────────────────
+  var firebaseConfig = {
+    apiKey:            "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain:        "janedore-9f035.firebaseapp.com",
+    projectId:         "janedore-9f035",
+    storageBucket:     "janedore-9f035.firebasestorage.app",
     messagingSenderId: "571299748651",
-    appId: "1:571299748651:web:01463a772d47b39cc4036e",
-    measurementId: "G-Y9NMT0ZGKZ",
-    databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
+    appId:             "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId:     "G-Y9NMT0ZGKZ",
+    databaseURL:       "https://janedore-9f035-default-rtdb.firebaseio.com"
   };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const rtdb = firebase.database();
-  const auth = firebase.auth();
-  const productsRef = db.collection('products');
-  const reviewsRef = db.collection('reviews');
-  const newsletterRef = db.collection('newsletter');
-  const ordersRef = db.collection('orders');
 
-  let currentTab = 'dashboard';
-  let allProducts = [];
-  let activeChatSession = null;
-  let chatUnsubscribe = null;
-  let totalUnreadMessages = 0;
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
 
-  // ── AUTH ──────────────────────────────────────────────────────────
-  auth.onAuthStateChanged(async (user) => {
+  var db           = firebase.firestore();
+  var rtdb         = firebase.database();
+  var auth         = firebase.auth();
+  var productsRef  = db.collection('products');
+  var reviewsRef   = db.collection('reviews');
+  var newsletterRef= db.collection('newsletter');
+  var ordersRef    = db.collection('orders');
+
+  // ── App state ───────────────────────────────────────────────────
+  var currentTab          = 'dashboard';
+  var allProducts         = [];
+  var activeChatSession   = null;
+  var chatMsgRef          = null;   // RTDB ref for active session messages
+  var chatMsgCallback     = null;   // stored callback for .off()
+  var chatTypingRef       = null;   // RTDB ref for active session typing
+  var chatTypingCallback  = null;
+  var chatsMonitorRef     = null;   // top-level chats ref for badge monitoring
+  var chatsMonitorCallback= null;
+  var totalUnreadMessages = 0;
+
+  // ── Helpers ─────────────────────────────────────────────────────
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function showToast(msg, type) {
+    type = type || 'success';
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.textContent = msg;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+  }
+
+  function safeEl(id) { return document.getElementById(id) || null; }
+
+  // ── Auth ────────────────────────────────────────────────────────
+  auth.onAuthStateChanged(function (user) {
     if (user) {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin-panel').style.display = 'block';
-      document.getElementById('admin-email').textContent = user.email;
-      await loadProducts();
+      safeEl('login-screen').style.display  = 'none';
+      safeEl('admin-panel').style.display   = 'block';
+      safeEl('admin-email').textContent     = user.email;
+      loadProducts();
       startChatMonitoring();
     } else {
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('admin-panel').style.display = 'none';
+      safeEl('login-screen').style.display  = 'flex';
+      safeEl('admin-panel').style.display   = 'none';
       stopChatMonitoring();
     }
   });
 
-  async function handleLogin(e) {
+  window.handleLogin = function (e) {
     e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const errorEl = document.getElementById('login-error');
-    try {
-      errorEl.style.display = 'none';
-      await auth.signInWithEmailAndPassword(email, password);
-    } catch (error) {
-      errorEl.textContent = error.message;
+    var email    = safeEl('login-email').value;
+    var password = safeEl('login-password').value;
+    var errorEl  = safeEl('login-error');
+    errorEl.style.display = 'none';
+    auth.signInWithEmailAndPassword(email, password).catch(function (err) {
+      errorEl.textContent   = err.message;
       errorEl.style.display = 'block';
-    }
-  }
+    });
+  };
 
-  async function handleLogout() { await auth.signOut(); }
+  window.handleLogout = function () { auth.signOut(); };
 
-  function showToast(msg, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = msg;
-    document.getElementById('toast-container').appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-  }
-
-  // ── PRODUCTS ──────────────────────────────────────────────────────
-  async function loadProducts() {
-    try {
-      const snapshot = await productsRef.get();
-      allProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      document.getElementById('product-count').textContent = `${allProducts.length} products`;
-      document.getElementById('status-dot').className = 'status-dot online';
-    } catch (e) {
-      document.getElementById('status-dot').className = 'status-dot offline';
+  // ── Products ────────────────────────────────────────────────────
+  function loadProducts() {
+    productsRef.get().then(function (snapshot) {
+      allProducts = snapshot.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      safeEl('product-count').textContent = allProducts.length + ' products';
+      safeEl('status-dot').className = 'status-dot online';
+      renderCurrentTab();
+    }).catch(function (e) {
+      safeEl('status-dot').className = 'status-dot offline';
       showToast('Firebase connection failed: ' + e.message, 'error');
-    }
-    renderCurrentTab();
+    });
   }
 
-  async function saveProduct(productData) {
-    try {
-      if (productData.id) {
-        await productsRef.doc(productData.id).set(productData, { merge: true });
-      } else {
-        productData.id = productData.sku || ('prod-' + Date.now());
-        await productsRef.doc(productData.id).set(productData);
-      }
+  function saveProduct(productData) {
+    var ref = productData.id ? productsRef.doc(productData.id) : productsRef.doc(productData.sku || ('prod-' + Date.now()));
+    productData.id = ref.id;
+    ref.set(productData, { merge: true }).then(function () {
       showToast('Product saved!');
       loadProducts();
       closeModal();
-    } catch (e) { showToast('Error saving: ' + e.message, 'error'); }
+    }).catch(function (e) { showToast('Error saving: ' + e.message, 'error'); });
   }
 
-  async function deleteProduct(productId) {
+  window.deleteProduct = function (productId) {
     if (!confirm('Delete this product?')) return;
-    try { await productsRef.doc(productId).delete(); showToast('Product deleted'); loadProducts(); closeModal(); }
-    catch (e) { showToast('Error deleting: ' + e.message, 'error'); }
-  }
+    productsRef.doc(productId).delete().then(function () {
+      showToast('Product deleted');
+      loadProducts();
+      closeModal();
+    }).catch(function (e) { showToast('Error deleting: ' + e.message, 'error'); });
+  };
 
-  const DEFAULT_PRODUCTS = [
+  // ── Default seed data ────────────────────────────────────────────
+  var DEFAULT_PRODUCTS = [
     { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 10, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail: [] } }] },
     { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail: [] } }] },
     { id: "janedore-leather-pouch", sku: "ACC-JLP-007", name: "Janedore Debossed Leather Pouch", brand: "JANEDORE", category: "bags", price: 50, salePrice: null, badge: null, sizes: ["OS"], stock: 50, status: "active", featured: false, description: "Supple debossed leather pouch.", productFeatures: "Genuine leather.", compositionCare: "100% Leather.", shippingReturns: "Free with sunglass purchase.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail: [] } }] },
@@ -390,169 +421,214 @@
     { id: "janedore-studded-halter-dress", sku: "DRS-SHN-001", name: "Janedore Studded Halter Neck Dress", brand: "JANEDORE", category: "dresses", price: 680, salePrice: null, badge: "new", sizes: ["XS","S","M","L"], stock: 20, status: "active", featured: true, description: "Refined edge meets feminine structure.", productFeatures: "Structured halter neckline.", compositionCare: "95% Polyester, 5% Elastane.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
   ];
 
-  async function seedDefaultProducts() {
+  window.seedDefaultProducts = function () {
     if (!confirm('Seed all 7 default products to Firebase?')) return;
-    try {
-      const batch = db.batch();
-      DEFAULT_PRODUCTS.forEach(p => { const ref = productsRef.doc(p.id); batch.set(ref, p); });
-      await batch.commit();
+    var batch = db.batch();
+    DEFAULT_PRODUCTS.forEach(function (p) {
+      batch.set(productsRef.doc(p.id), p);
+    });
+    batch.commit().then(function () {
       showToast('7 products seeded!');
       loadProducts();
-    } catch (e) { showToast('Error seeding: ' + e.message, 'error'); }
-  }
+    }).catch(function (e) { showToast('Error seeding: ' + e.message, 'error'); });
+  };
 
-  // ── REALTIME DB CHAT ──────────────────────────────────────────────
+  // ── Chat monitoring (unread badge) ───────────────────────────────
   function startChatMonitoring() {
-    rtdb.ref('chats').on('value', (snapshot) => {
-      let unread = 0;
-      snapshot.forEach((sessionSnap) => {
-        const messages = sessionSnap.child('messages');
+    stopChatMonitoring(); // ensure clean state
+    chatsMonitorRef = rtdb.ref('chats');
+    chatsMonitorCallback = function (snapshot) {
+      var unread = 0;
+      snapshot.forEach(function (sessionSnap) {
+        var messages = sessionSnap.child('messages');
         if (messages.exists()) {
-          messages.forEach((msgSnap) => {
-            const msg = msgSnap.val();
-            if (msg.sender === 'customer' && msg.read === false) unread++;
+          messages.forEach(function (msgSnap) {
+            var msg = msgSnap.val();
+            if (msg && msg.sender === 'customer' && msg.read === false) {
+              unread++;
+            }
           });
         }
       });
       totalUnreadMessages = unread;
       updateUnreadBadge();
+    };
+    chatsMonitorRef.on('value', chatsMonitorCallback, function (err) {
+      console.warn('[ADMIN CHAT] monitor error:', err.message);
     });
   }
 
   function stopChatMonitoring() {
-    rtdb.ref('chats').off();
-    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+    if (chatsMonitorRef && chatsMonitorCallback) {
+      chatsMonitorRef.off('value', chatsMonitorCallback);
+      chatsMonitorRef     = null;
+      chatsMonitorCallback= null;
+    }
+    detachActiveChatListeners();
   }
 
   function updateUnreadBadge() {
-    const badge = document.getElementById('messages-unread-badge');
+    var badge = safeEl('messages-unread-badge');
     if (badge) {
-      badge.textContent = totalUnreadMessages;
-      badge.style.display = totalUnreadMessages > 0 ? 'inline-block' : 'none';
+      badge.textContent    = totalUnreadMessages;
+      badge.style.display  = totalUnreadMessages > 0 ? 'inline-block' : 'none';
     }
   }
 
-  async function sendAdminReply(sessionId) {
-    const input = document.getElementById(`reply-input-${sessionId}`);
-    const text = input?.value?.trim();
+  // ── Active chat session listeners ────────────────────────────────
+  function detachActiveChatListeners() {
+    if (chatMsgRef && chatMsgCallback) {
+      chatMsgRef.off('value', chatMsgCallback);
+      chatMsgRef = null; chatMsgCallback = null;
+    }
+    if (chatTypingRef && chatTypingCallback) {
+      chatTypingRef.off('value', chatTypingCallback);
+      chatTypingRef = null; chatTypingCallback = null;
+    }
+  }
+
+  // ── Send admin reply ─────────────────────────────────────────────
+  window.sendAdminReply = function (sessionId) {
+    var input = safeEl('reply-input-' + sessionId);
+    var text  = input && input.value && input.value.trim();
     if (!text || !sessionId) return;
-    try {
-      rtdb.ref(`chats/${sessionId}/typing`).set({ admin: false });
-      await rtdb.ref(`chats/${sessionId}/messages`).push({
-        text: text,
-        sender: 'admin',
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
-        read: true
-      });
-      input.value = '';
-    } catch (e) {
-      showToast('Error sending reply: ' + e.message, 'error');
-    }
-  }
 
-  async function markSessionAsRead(sessionId) {
-    try {
-      const snap = await rtdb.ref(`chats/${sessionId}/messages`).once('value');
-      const updates = {};
-      snap.forEach((child) => {
-        const msg = child.val();
-        if (msg.sender === 'customer' && msg.read === false) {
-          updates[`${child.key}/read`] = true;
+    // Clear typing first
+    rtdb.ref('chats/' + sessionId + '/typing').set({ admin: false }).catch(function () {});
+
+    rtdb.ref('chats/' + sessionId + '/messages').push({
+      text:      text,
+      sender:    'admin',
+      timestamp: firebase.database.ServerValue.TIMESTAMP,
+      read:      true
+    }).then(function () {
+      if (input) input.value = '';
+    }).catch(function (e) {
+      showToast('Error sending reply: ' + e.message, 'error');
+    });
+  };
+
+  function markSessionAsRead(sessionId) {
+    rtdb.ref('chats/' + sessionId + '/messages').once('value').then(function (snap) {
+      var updates = {};
+      snap.forEach(function (child) {
+        var msg = child.val();
+        if (msg && msg.sender === 'customer' && msg.read === false) {
+          updates[child.key + '/read'] = true;
         }
       });
       if (Object.keys(updates).length > 0) {
-        await rtdb.ref(`chats/${sessionId}/messages`).update(updates);
+        rtdb.ref('chats/' + sessionId + '/messages').update(updates).catch(function (e) {
+          console.warn('[ADMIN] mark-read error:', e.message);
+        });
       }
-    } catch (e) { console.warn('Mark read error:', e); }
+    }).catch(function (e) { console.warn('[ADMIN] mark-read fetch error:', e.message); });
   }
 
-  function handleAdminTyping(sessionId) {
-    rtdb.ref(`chats/${sessionId}/typing`).set({ admin: true });
+  window.handleAdminTyping = function (sessionId) {
+    rtdb.ref('chats/' + sessionId + '/typing').set({ admin: true }).catch(function () {});
     clearTimeout(window._adminTypingTimeout);
-    window._adminTypingTimeout = setTimeout(() => {
-      rtdb.ref(`chats/${sessionId}/typing`).set({ admin: false });
+    window._adminTypingTimeout = setTimeout(function () {
+      rtdb.ref('chats/' + sessionId + '/typing').set({ admin: false }).catch(function () {});
     }, 3000);
-  }
+  };
 
-  async function openChatSession(sessionId) {
+  // ── Open individual chat session ─────────────────────────────────
+  window.openChatSession = function (sessionId) {
     activeChatSession = sessionId;
-    if (chatUnsubscribe) chatUnsubscribe();
+    detachActiveChatListeners();
+    markSessionAsRead(sessionId);
 
-    await markSessionAsRead(sessionId);
+    var mc = safeEl('main-content');
+    mc.innerHTML =
+      '<button class="btn-underline" onclick="switchTab(\'messages\')" style="margin-bottom:12px;">Back to Sessions</button>' +
+      '<div class="section-title">Chat: ' + escapeHtml(sessionId.substring(0, 30)) + '...</div>' +
+      '<div class="chat-messages-panel" id="chat-messages-panel">' +
+        '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading messages...</div>' +
+      '</div>' +
+      '<div class="typing-indicator" id="typing-indicator">Customer is typing...</div>' +
+      '<div class="reply-box">' +
+        '<input id="reply-input-' + escapeHtml(sessionId) + '" placeholder="Type your reply..." ' +
+          'onkeypress="if(event.key===\'Enter\')sendAdminReply(\'' + escapeHtml(sessionId) + '\')" ' +
+          'oninput="handleAdminTyping(\'' + escapeHtml(sessionId) + '\')">' +
+        '<button class="btn-underline" onclick="sendAdminReply(\'' + escapeHtml(sessionId) + '\')">Send</button>' +
+      '</div>';
 
-    const mc = document.getElementById('main-content');
-    mc.innerHTML = `
-      <button class="btn-underline" onclick="switchTab('messages')" style="margin-bottom:12px;">Back to Sessions</button>
-      <div class="section-title">Chat: ${sessionId.substring(0, 30)}...</div>
-      <div class="chat-messages-panel" id="chat-messages-panel">
-        <div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading messages...</div>
-      </div>
-      <div class="typing-indicator" id="typing-indicator">Customer is typing...</div>
-      <div class="reply-box">
-        <input id="reply-input-${sessionId}" placeholder="Type your reply..." 
-          onkeypress="if(event.key==='Enter')sendAdminReply('${sessionId}')"
-          oninput="handleAdminTyping('${sessionId}')">
-        <button class="btn-underline" onclick="sendAdminReply('${sessionId}')">Send</button>
-      </div>`;
-
-    chatUnsubscribe = rtdb.ref(`chats/${sessionId}/messages`).on('value', (snapshot) => {
-      const messages = [];
-      snapshot.forEach((child) => {
-        messages.push({ id: child.key, ...child.val() });
+    // Attach messages listener
+    chatMsgRef = rtdb.ref('chats/' + sessionId + '/messages');
+    chatMsgCallback = function (snapshot) {
+      var messages = [];
+      snapshot.forEach(function (child) {
+        messages.push(Object.assign({ _key: child.key }, child.val()));
       });
-      messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      messages.sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
       renderChatMessages(messages);
+    };
+    chatMsgRef.on('value', chatMsgCallback, function (err) {
+      console.warn('[ADMIN CHAT] message listener error:', err.message);
     });
 
-    rtdb.ref(`chats/${sessionId}/typing`).on('value', (snapshot) => {
-      const data = snapshot.val();
-      const indicator = document.getElementById('typing-indicator');
+    // Attach typing listener
+    chatTypingRef = rtdb.ref('chats/' + sessionId + '/typing');
+    chatTypingCallback = function (snapshot) {
+      var data = snapshot.val();
+      var indicator = safeEl('typing-indicator');
       if (indicator) {
         indicator.style.display = (data && data.customer) ? 'block' : 'none';
       }
+    };
+    chatTypingRef.on('value', chatTypingCallback, function (err) {
+      console.warn('[ADMIN CHAT] typing listener error:', err.message);
     });
-  }
+  };
 
   function renderChatMessages(messages) {
-    const panel = document.getElementById('chat-messages-panel');
+    var panel = safeEl('chat-messages-panel');
     if (!panel) return;
-    const wasAtBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 40;
+    var wasAtBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 40;
     panel.innerHTML = '';
-    
-    if (messages.length === 0) {
+
+    if (!messages || messages.length === 0) {
       panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">No messages yet.</div>';
       return;
     }
 
-    messages.forEach((m) => {
-      const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-      const div = document.createElement('div');
-      div.className = `chat-msg-admin ${m.sender === 'customer' ? 'customer-msg' : 'admin-msg'}`;
-      div.innerHTML = `<div>${escapeHtml(m.text)}</div><div class="msg-meta">${m.sender} · ${time}</div>`;
+    messages.forEach(function (m) {
+      var time = m.timestamp
+        ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
+      var div = document.createElement('div');
+      div.className = 'chat-msg-admin ' + (m.sender === 'customer' ? 'customer-msg' : 'admin-msg');
+      div.innerHTML =
+        '<div>' + escapeHtml(m.text) + '</div>' +
+        '<div class="msg-meta">' + escapeHtml(m.sender || '') + ' · ' + time + '</div>';
       panel.appendChild(div);
     });
 
     if (wasAtBottom) panel.scrollTop = panel.scrollHeight;
   }
 
-  async function renderMessagesTab() {
-    const mc = document.getElementById('main-content');
+  // ── Messages tab ─────────────────────────────────────────────────
+  function renderMessagesTab() {
+    var mc = safeEl('main-content');
     activeChatSession = null;
-    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+    detachActiveChatListeners();
 
-    try {
-      const snap = await rtdb.ref('chats').once('value');
-      const sessions = {};
+    mc.innerHTML = '<div class="section-title">Loading sessions...</div>';
 
-      snap.forEach((sessionSnap) => {
-        const sessionId = sessionSnap.key;
-        const messagesSnap = sessionSnap.child('messages');
+    rtdb.ref('chats').once('value').then(function (snap) {
+      var sessions = {};
+
+      snap.forEach(function (sessionSnap) {
+        var sessionId    = sessionSnap.key;
+        var messagesSnap = sessionSnap.child('messages');
         if (!messagesSnap.exists()) return;
-        
+
         sessions[sessionId] = { messages: [], lastTime: 0, unreadCount: 0 };
-        
-        messagesSnap.forEach((msgSnap) => {
-          const msg = msgSnap.val();
+
+        messagesSnap.forEach(function (msgSnap) {
+          var msg = msgSnap.val();
+          if (!msg) return;
           sessions[sessionId].messages.push(msg);
           if (msg.timestamp > sessions[sessionId].lastTime) {
             sessions[sessionId].lastTime = msg.timestamp;
@@ -563,240 +639,300 @@
         });
       });
 
-      const sessionIds = Object.keys(sessions).sort((a, b) => 
-        (sessions[b].lastTime || 0) - (sessions[a].lastTime || 0)
-      );
+      var sessionIds = Object.keys(sessions).sort(function (a, b) {
+        return (sessions[b].lastTime || 0) - (sessions[a].lastTime || 0);
+      });
 
-      mc.innerHTML = `<div class="section-title">Customer Messages (${sessionIds.length} sessions)</div>
-        <div class="chat-sessions-list">
-          ${sessionIds.length === 0 ? '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>' : ''}
-          ${sessionIds.map(sid => {
-            const s = sessions[sid];
-            const msgs = s.messages;
-            const lastMsg = msgs[msgs.length - 1];
-            const preview = (lastMsg?.text || '').substring(0, 80);
-            const time = s.lastTime ? new Date(s.lastTime).toLocaleDateString() : '';
-            return `<div class="chat-session-card ${s.unreadCount > 0 ? 'unread' : ''}" onclick="openChatSession('${sid}')">
-              <div class="session-id">${sid.substring(0, 25)}...</div>
-              <div class="session-preview">${escapeHtml(preview)}${preview.length >= 80 ? '...' : ''}</div>
-              <div style="font-size:8px;color:var(--muted);margin-top:4px;">${msgs.length} messages · ${time}</div>
-              ${s.unreadCount > 0 ? `<div class="unread-count" style="display:inline-block;">${s.unreadCount} new</div>` : ''}
-            </div>`;
-          }).join('')}
-        </div>`;
-    } catch (e) { 
-      mc.innerHTML = `<p style="color:var(--danger);">Error loading messages: ${e.message}</p>`; 
-    }
+      var cardsHtml = sessionIds.map(function (sid) {
+        var s       = sessions[sid];
+        var msgs    = s.messages;
+        var lastMsg = msgs[msgs.length - 1];
+        var preview = ((lastMsg && lastMsg.text) || '').substring(0, 80);
+        var time    = s.lastTime ? new Date(s.lastTime).toLocaleDateString() : '';
+        return '<div class="chat-session-card ' + (s.unreadCount > 0 ? 'unread' : '') + '" onclick="openChatSession(\'' + escapeHtml(sid) + '\')">' +
+          '<div class="session-id">' + escapeHtml(sid.substring(0, 25)) + '...</div>' +
+          '<div class="session-preview">' + escapeHtml(preview) + (preview.length >= 80 ? '...' : '') + '</div>' +
+          '<div style="font-size:8px;color:var(--muted);margin-top:4px;">' + msgs.length + ' messages · ' + time + '</div>' +
+          (s.unreadCount > 0 ? '<div class="unread-count" style="display:inline-block;">' + s.unreadCount + ' new</div>' : '') +
+          '</div>';
+      }).join('');
+
+      mc.innerHTML =
+        '<div class="section-title">Customer Messages (' + sessionIds.length + ' sessions)</div>' +
+        '<div class="chat-sessions-list">' +
+          (sessionIds.length === 0
+            ? '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>'
+            : cardsHtml) +
+        '</div>';
+    }).catch(function (e) {
+      mc.innerHTML = '<p style="color:var(--danger);">Error loading messages: ' + escapeHtml(e.message) + '</p>';
+    });
   }
 
-  // ── PRODUCT MODAL ─────────────────────────────────────────────────
-  function openNewProductModal() { openProductModal(null); }
+  // ── Product modal ─────────────────────────────────────────────────
+  window.openNewProductModal = function () { openProductModal(null); };
 
-  function openProductModal(product) {
-    const p = product || {
+  window.openProductModal = function (product) {
+    var p = product || {
       id: '', sku: '', name: '', brand: 'JANEDORE', category: 'dresses',
       price: 0, salePrice: null, badge: '', sizes: [], stock: 0, status: 'active',
       featured: false, description: '', productFeatures: '', compositionCare: '',
       shippingReturns: '',
       variants: [{ color: '', swatch: '#111', images: { model: [''], ghost: [''], detail: [] } }]
     };
-    const html = `
-      <div class="modal-overlay" id="product-modal-overlay" onclick="closeModal()">
-        <div class="modal" onclick="event.stopPropagation()">
-          <button class="modal-close" onclick="closeModal()">✕</button>
-          <h2 style="font-family:'Manrope',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin-bottom:24px;">${product ? 'Edit' : 'New'} Product</h2>
-          <form id="product-form" onsubmit="handleProductSubmit(event, '${p.id}')">
-            <div class="form-row">
-              <div class="form-group"><label>Name</label><input name="name" value="${escapeHtml(p.name)}" required></div>
-              <div class="form-group"><label>SKU</label><input name="sku" value="${escapeHtml(p.sku)}"></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label>Brand</label><select name="brand">
-                <option value="JANEDORE" ${p.brand=='JANEDORE'?'selected':''}>JANEDORE</option>
-                <option value="NIRIUS CO" ${p.brand=='NIRIUS CO'?'selected':''}>NIRIUS CO</option>
-                <option value="THATO" ${p.brand=='THATO'?'selected':''}>THATO</option>
-              </select></div>
-              <div class="form-group"><label>Category</label><select name="category">
-                <option value="dresses" ${p.category=='dresses'?'selected':''}>Dresses</option>
-                <option value="tops" ${p.category=='tops'?'selected':''}>Tops</option>
-                <option value="bottoms" ${p.category=='bottoms'?'selected':''}>Bottoms</option>
-                <option value="jackets" ${p.category=='jackets'?'selected':''}>Jackets</option>
-                <option value="sets" ${p.category=='sets'?'selected':''}>Sets</option>
-                <option value="sunglasses" ${p.category=='sunglasses'?'selected':''}>Sunglasses</option>
-                <option value="jewelry" ${p.category=='jewelry'?'selected':''}>Jewelry</option>
-                <option value="bags" ${p.category=='bags'?'selected':''}>Bags</option>
-                <option value="parfum" ${p.category=='parfum'?'selected':''}>Parfum</option>
-              </select></div>
-              <div class="form-group"><label>Status</label><select name="status">
-                <option value="active" ${p.status=='active'?'selected':''}>Active</option>
-                <option value="draft" ${p.status=='draft'?'selected':''}>Draft</option>
-              </select></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label>Price (R)</label><input name="price" type="number" value="${p.price}" required></div>
-              <div class="form-group"><label>Sale Price</label><input name="salePrice" type="number" value="${p.salePrice||''}"></div>
-              <div class="form-group"><label>Stock</label><input name="stock" type="number" value="${p.stock}"></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label>Badge</label><select name="badge">
-                <option value="">None</option>
-                <option value="new" ${p.badge=='new'?'selected':''}>New</option>
-                <option value="sale" ${p.badge=='sale'?'selected':''}>Sale</option>
-                <option value="sold" ${p.badge=='sold'?'selected':''}>Sold Out</option>
-              </select></div>
-              <div class="form-group"><label>Sizes (comma separated)</label><input name="sizes" value="${(p.sizes||[]).join(',')}"></div>
-              <div class="form-group"><label>Featured</label><select name="featured">
-                <option value="false" ${!p.featured?'selected':''}>No</option>
-                <option value="true" ${p.featured?'selected':''}>Yes</option>
-              </select></div>
-            </div>
-            <div class="form-group"><label>Description</label><textarea name="description">${escapeHtml(p.description||'')}</textarea></div>
-            <div class="form-row">
-              <div class="form-group"><label>Product Features</label><textarea name="productFeatures">${escapeHtml(p.productFeatures||'')}</textarea></div>
-              <div class="form-group"><label>Composition & Care</label><textarea name="compositionCare">${escapeHtml(p.compositionCare||'')}</textarea></div>
-            </div>
-            <div class="form-group"><label>Shipping & Returns</label><input name="shippingReturns" value="${escapeHtml(p.shippingReturns||'')}"></div>
-            <h3 style="font-family:'Manrope',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin:20px 0 12px;">Variants</h3>
-            <div id="variants-container">${(p.variants||[]).map((v, i) => buildVariantBlock(v, i)).join('')}</div>
-            <button type="button" class="btn-underline" onclick="addVariant()" style="margin-top:8px;">+ Add Variant</button>
-            <div style="margin-top:24px;display:flex;gap:12px;">
-              <button type="submit" class="btn-underline">Save Product</button>
-              ${p.id ? `<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Delete</button>` : ''}
-            </div>
-          </form>
-        </div>
-      </div>`;
-    document.getElementById('modal-container').innerHTML = html;
-  }
+    var html =
+      '<div class="modal-overlay" id="product-modal-overlay" onclick="closeModal()">' +
+        '<div class="modal" onclick="event.stopPropagation()">' +
+          '<button class="modal-close" onclick="closeModal()">✕</button>' +
+          '<h2 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin-bottom:24px;">' + (product ? 'Edit' : 'New') + ' Product</h2>' +
+          '<form id="product-form" onsubmit="handleProductSubmit(event,\'' + escapeHtml(p.id) + '\')">' +
+            '<div class="form-row">' +
+              '<div class="form-group"><label>Name</label><input name="name" value="' + escapeHtml(p.name) + '" required></div>' +
+              '<div class="form-group"><label>SKU</label><input name="sku" value="' + escapeHtml(p.sku) + '"></div>' +
+            '</div>' +
+            '<div class="form-row-3">' +
+              '<div class="form-group"><label>Brand</label><select name="brand">' +
+                '<option value="JANEDORE"' + (p.brand === 'JANEDORE' ? ' selected' : '') + '>JANEDORE</option>' +
+                '<option value="NIRIUS CO"' + (p.brand === 'NIRIUS CO' ? ' selected' : '') + '>NIRIUS CO</option>' +
+                '<option value="THATO"' + (p.brand === 'THATO' ? ' selected' : '') + '>THATO</option>' +
+              '</select></div>' +
+              '<div class="form-group"><label>Category</label><select name="category">' +
+                ['dresses','tops','bottoms','jackets','sets','sunglasses','jewelry','bags','parfum'].map(function (c) {
+                  return '<option value="' + c + '"' + (p.category === c ? ' selected' : '') + '>' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>';
+                }).join('') +
+              '</select></div>' +
+              '<div class="form-group"><label>Status</label><select name="status">' +
+                '<option value="active"' + (p.status === 'active' ? ' selected' : '') + '>Active</option>' +
+                '<option value="draft"' + (p.status === 'draft' ? ' selected' : '') + '>Draft</option>' +
+              '</select></div>' +
+            '</div>' +
+            '<div class="form-row-3">' +
+              '<div class="form-group"><label>Price (R)</label><input name="price" type="number" value="' + escapeHtml(String(p.price)) + '" required></div>' +
+              '<div class="form-group"><label>Sale Price</label><input name="salePrice" type="number" value="' + escapeHtml(String(p.salePrice || '')) + '"></div>' +
+              '<div class="form-group"><label>Stock</label><input name="stock" type="number" value="' + escapeHtml(String(p.stock)) + '"></div>' +
+            '</div>' +
+            '<div class="form-row-3">' +
+              '<div class="form-group"><label>Badge</label><select name="badge">' +
+                '<option value="">None</option>' +
+                '<option value="new"' + (p.badge === 'new' ? ' selected' : '') + '>New</option>' +
+                '<option value="sale"' + (p.badge === 'sale' ? ' selected' : '') + '>Sale</option>' +
+                '<option value="sold"' + (p.badge === 'sold' ? ' selected' : '') + '>Sold Out</option>' +
+              '</select></div>' +
+              '<div class="form-group"><label>Sizes (comma separated)</label><input name="sizes" value="' + escapeHtml((p.sizes || []).join(',')) + '"></div>' +
+              '<div class="form-group"><label>Featured</label><select name="featured">' +
+                '<option value="false"' + (!p.featured ? ' selected' : '') + '>No</option>' +
+                '<option value="true"' + (p.featured ? ' selected' : '') + '>Yes</option>' +
+              '</select></div>' +
+            '</div>' +
+            '<div class="form-group"><label>Description</label><textarea name="description">' + escapeHtml(p.description || '') + '</textarea></div>' +
+            '<div class="form-row">' +
+              '<div class="form-group"><label>Product Features</label><textarea name="productFeatures">' + escapeHtml(p.productFeatures || '') + '</textarea></div>' +
+              '<div class="form-group"><label>Composition &amp; Care</label><textarea name="compositionCare">' + escapeHtml(p.compositionCare || '') + '</textarea></div>' +
+            '</div>' +
+            '<div class="form-group"><label>Shipping &amp; Returns</label><input name="shippingReturns" value="' + escapeHtml(p.shippingReturns || '') + '"></div>' +
+            '<h3 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin:20px 0 12px;">Variants</h3>' +
+            '<div id="variants-container">' + (p.variants || []).map(function (v, i) { return buildVariantBlock(v, i); }).join('') + '</div>' +
+            '<button type="button" class="btn-underline" onclick="addVariant()" style="margin-top:8px;">+ Add Variant</button>' +
+            '<div style="margin-top:24px;display:flex;gap:12px;">' +
+              '<button type="submit" class="btn-underline">Save Product</button>' +
+              (p.id ? '<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + escapeHtml(p.id) + '\')">Delete</button>' : '') +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+      '</div>';
+    safeEl('modal-container').innerHTML = html;
+  };
 
   function buildVariantBlock(v, index) {
     v = v || {};
-    const images = v.images || { model: [], ghost: [], detail: [] };
-    const modelUrls = (images.model && images.model.length) ? images.model : [''];
-    const ghostUrls = (images.ghost && images.ghost.length) ? images.ghost : [''];
-    const detailUrls = (images.detail && images.detail.length) ? images.detail : [];
-    const modelRows = modelUrls.map(url => buildImageUrlRow('model', index, url)).join('');
-    const ghostRows = ghostUrls.map(url => buildImageUrlRow('ghost', index, url)).join('');
-    const detailRows = detailUrls.map(url => buildImageUrlRow('detail', index, url)).join('');
-    return `<div class="variant-block">
-      <h4>Variant ${index + 1}</h4>
-      <div class="form-row">
-        <div class="form-group"><label>Color Name</label><input name="variant-color-${index}" value="${escapeHtml(v.color || '')}" placeholder="e.g. Black"></div>
-        <div class="form-group"><label>Swatch (hex)</label><div style="display:flex;gap:8px;align-items:center;"><input name="variant-swatch-${index}" value="${escapeHtml(v.swatch || '#111')}" placeholder="#111" style="flex:1;"><input type="color" value="${escapeHtml(v.swatch || '#111')}" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector('[name=variant-swatch-${index}]').value=this.value"></div></div>
-      </div>
-      <div class="form-group"><label>Model Images</label><div class="image-url-inputs" id="variant-model-${index}">${modelRows}</div><button type="button" class="btn-underline" onclick="addImageUrl('model', ${index})" style="margin-top:6px;font-size:8px;">+ Add Model Image</button></div>
-      <div class="form-group"><label>Ghost / Flat Lay Images</label><div class="image-url-inputs" id="variant-ghost-${index}">${ghostRows}</div><button type="button" class="btn-underline" onclick="addImageUrl('ghost', ${index})" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button></div>
-      <div class="form-group"><label>Detail Images</label><div class="image-url-inputs" id="variant-detail-${index}">${detailRows}</div><button type="button" class="btn-underline" onclick="addImageUrl('detail', ${index})" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button></div>
-    </div>`;
+    var images    = v.images || { model: [], ghost: [], detail: [] };
+    var modelUrls = (images.model && images.model.length) ? images.model : [''];
+    var ghostUrls = (images.ghost && images.ghost.length) ? images.ghost : [''];
+    var detailUrls= (images.detail && images.detail.length) ? images.detail : [];
+    var modelRows = modelUrls.map(function (url) { return buildImageUrlRow('model', index, url); }).join('');
+    var ghostRows = ghostUrls.map(function (url) { return buildImageUrlRow('ghost', index, url); }).join('');
+    var detailRows= detailUrls.map(function (url) { return buildImageUrlRow('detail', index, url); }).join('');
+    return '<div class="variant-block">' +
+      '<h4>Variant ' + (index + 1) + '</h4>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Color Name</label><input name="variant-color-' + index + '" value="' + escapeHtml(v.color || '') + '" placeholder="e.g. Black"></div>' +
+        '<div class="form-group"><label>Swatch (hex)</label><div style="display:flex;gap:8px;align-items:center;">' +
+          '<input name="variant-swatch-' + index + '" value="' + escapeHtml(v.swatch || '#111') + '" placeholder="#111" style="flex:1;">' +
+          '<input type="color" value="' + escapeHtml(v.swatch || '#111') + '" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector(\'[name=variant-swatch-' + index + ']\').value=this.value">' +
+        '</div></div>' +
+      '</div>' +
+      '<div class="form-group"><label>Model Images</label><div class="image-url-inputs" id="variant-model-' + index + '">' + modelRows + '</div><button type="button" class="btn-underline" onclick="addImageUrl(\'model\',' + index + ')" style="margin-top:6px;font-size:8px;">+ Add Model Image</button></div>' +
+      '<div class="form-group"><label>Ghost / Flat Lay Images</label><div class="image-url-inputs" id="variant-ghost-' + index + '">' + ghostRows + '</div><button type="button" class="btn-underline" onclick="addImageUrl(\'ghost\',' + index + ')" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button></div>' +
+      '<div class="form-group"><label>Detail Images</label><div class="image-url-inputs" id="variant-detail-' + index + '">' + detailRows + '</div><button type="button" class="btn-underline" onclick="addImageUrl(\'detail\',' + index + ')" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button></div>' +
+    '</div>';
   }
 
   function buildImageUrlRow(type, variantIndex, url) {
-    const placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
-    return `<div class="image-url-row"><input name="variant-${type}-${variantIndex}[]" value="${escapeHtml(url||'')}" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||'${placeholder}'"><img class="image-preview" src="${escapeHtml(url) || placeholder}" onerror="this.src='${placeholder}'"></div>`;
+    var placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
+    return '<div class="image-url-row">' +
+      '<input name="variant-' + type + '-' + variantIndex + '[]" value="' + escapeHtml(url || '') + '" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||\''+placeholder+'\'">' +
+      '<img class="image-preview" src="' + (escapeHtml(url) || placeholder) + '" onerror="this.src=\'' + placeholder + '\'">' +
+    '</div>';
   }
 
-  function addVariant() {
-    const c = document.getElementById('variants-container');
-    c.insertAdjacentHTML('beforeend', buildVariantBlock({}, c.children.length));
-  }
+  window.addVariant = function () {
+    var c = safeEl('variants-container');
+    if (c) c.insertAdjacentHTML('beforeend', buildVariantBlock({}, c.children.length));
+  };
 
-  function addImageUrl(type, vi) {
-    const container = document.getElementById(`variant-${type}-${vi}`);
+  window.addImageUrl = function (type, vi) {
+    var container = safeEl('variant-' + type + '-' + vi);
     if (container) container.insertAdjacentHTML('beforeend', buildImageUrlRow(type, vi, ''));
-  }
+  };
 
-  function handleProductSubmit(e, existingId) {
+  window.handleProductSubmit = function (e, existingId) {
     e.preventDefault();
-    const form = e.target;
-    const data = {
-      id: existingId || form.sku.value || ('prod-' + Date.now()),
-      sku: form.sku.value, name: form.name.value, brand: form.brand.value,
-      category: form.category.value, price: parseFloat(form.price.value),
-      salePrice: form.salePrice.value ? parseFloat(form.salePrice.value) : null,
-      badge: form.badge.value || null,
-      sizes: form.sizes.value.split(',').map(s => s.trim()).filter(Boolean),
-      stock: parseInt(form.stock.value), status: form.status.value,
-      featured: form.featured.value === 'true', description: form.description.value,
-      productFeatures: form.productFeatures.value, compositionCare: form.compositionCare.value,
-      shippingReturns: form.shippingReturns.value,
-      createdAt: existingId ? (allProducts.find(p => p.id === existingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
-      updatedAt: new Date().toISOString(), variants: []
+    var form = e.target;
+    var data = {
+      id:               existingId || form.sku.value || ('prod-' + Date.now()),
+      sku:              form.sku.value,
+      name:             form.name.value,
+      brand:            form.brand.value,
+      category:         form.category.value,
+      price:            parseFloat(form.price.value),
+      salePrice:        form.salePrice.value ? parseFloat(form.salePrice.value) : null,
+      badge:            form.badge.value || null,
+      sizes:            form.sizes.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean),
+      stock:            parseInt(form.stock.value, 10),
+      status:           form.status.value,
+      featured:         form.featured.value === 'true',
+      description:      form.description.value,
+      productFeatures:  form.productFeatures.value,
+      compositionCare:  form.compositionCare.value,
+      shippingReturns:  form.shippingReturns.value,
+      createdAt:        existingId
+        ? ((allProducts.find(function (p) { return p.id === existingId; }) || {}).createdAt || new Date().toISOString())
+        : new Date().toISOString(),
+      updatedAt:        new Date().toISOString(),
+      variants:         []
     };
-    let vi = 0;
-    while (form[`variant-color-${vi}`]) {
-      const mI = form.querySelectorAll(`[name="variant-model-${vi}[]"]`);
-      const gI = form.querySelectorAll(`[name="variant-ghost-${vi}[]"]`);
-      const dI = form.querySelectorAll(`[name="variant-detail-${vi}[]"]`);
+    var vi = 0;
+    while (form['variant-color-' + vi]) {
+      var mI = form.querySelectorAll('[name="variant-model-' + vi + '[]"]');
+      var gI = form.querySelectorAll('[name="variant-ghost-' + vi + '[]"]');
+      var dI = form.querySelectorAll('[name="variant-detail-' + vi + '[]"]');
       data.variants.push({
-        color: form[`variant-color-${vi}`].value,
-        swatch: form[`variant-swatch-${vi}`].value,
+        color: form['variant-color-' + vi].value,
+        swatch: form['variant-swatch-' + vi].value,
         images: {
-          model: Array.from(mI).map(i => i.value).filter(Boolean),
-          ghost: Array.from(gI).map(i => i.value).filter(Boolean),
-          detail: Array.from(dI).map(i => i.value).filter(Boolean)
+          model:  Array.from(mI).map(function (i) { return i.value; }).filter(Boolean),
+          ghost:  Array.from(gI).map(function (i) { return i.value; }).filter(Boolean),
+          detail: Array.from(dI).map(function (i) { return i.value; }).filter(Boolean)
         }
       });
       vi++;
     }
     saveProduct(data);
-  }
+  };
 
-  function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
-  function escapeHtml(str) { return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  window.closeModal = function () {
+    var mc = safeEl('modal-container');
+    if (mc) mc.innerHTML = '';
+  };
 
-  function switchTab(tab) {
+  // ── Tab switching ────────────────────────────────────────────────
+  window.switchTab = function (tab) {
     currentTab = tab;
     if (tab !== 'messages') {
       activeChatSession = null;
-      if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+      detachActiveChatListeners();
     }
-    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-    const activeBtn = document.querySelector(`[onclick="switchTab('${tab}')"]`);
+    document.querySelectorAll('.sidebar-btn').forEach(function (b) { b.classList.remove('active'); });
+    var activeBtn = document.querySelector('[onclick="switchTab(\'' + tab + '\')"]');
     if (activeBtn) activeBtn.classList.add('active');
     renderCurrentTab();
-  }
+  };
 
-  async function renderCurrentTab() {
-    const mc = document.getElementById('main-content');
+  function renderCurrentTab() {
+    var mc = safeEl('main-content');
+    if (!mc) return;
+
     switch (currentTab) {
       case 'dashboard':
-        const [pS, rS, nS, oS] = await Promise.all([productsRef.get(), reviewsRef.get(), newsletterRef.get(), ordersRef.get()]);
-        mc.innerHTML = `<div class="stats-grid">
-          <div class="stat-card"><div class="stat-number">${pS.size}</div><div class="stat-label">Products</div></div>
-          <div class="stat-card"><div class="stat-number">${rS.size}</div><div class="stat-label">Reviews</div></div>
-          <div class="stat-card"><div class="stat-number">${nS.size}</div><div class="stat-label">Subscribers</div></div>
-          <div class="stat-card"><div class="stat-number">${oS.size}</div><div class="stat-label">Orders</div></div>
-        </div>
-        <div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);font-size:12px;">Connected</p></div>`;
+        Promise.all([productsRef.get(), reviewsRef.get(), newsletterRef.get(), ordersRef.get()])
+          .then(function (results) {
+            mc.innerHTML =
+              '<div class="stats-grid">' +
+                '<div class="stat-card"><div class="stat-number">' + results[0].size + '</div><div class="stat-label">Products</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + results[1].size + '</div><div class="stat-label">Reviews</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + results[2].size + '</div><div class="stat-label">Subscribers</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + results[3].size + '</div><div class="stat-label">Orders</div></div>' +
+              '</div>' +
+              '<div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);font-size:12px;">Connected — Firestore + Realtime DB</p></div>';
+          }).catch(function (e) {
+            mc.innerHTML = '<div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--danger);font-size:12px;">Error: ' + escapeHtml(e.message) + '</p></div>';
+          });
         break;
+
       case 'products':
-        mc.innerHTML = `<div class="section-title">All Products (${allProducts.length})</div>
-          <div class="product-list">${allProducts.map(p => `<div class="product-row" onclick="openProductModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-            <div><div class="pi-name">${escapeHtml(p.name)}</div><div class="pi-meta">${p.brand} · ${p.category} · R${p.price}</div></div>
-            <span class="badge badge-${p.status==='active'?'active':'draft'}">${p.status}</span>
-          </div>`).join('')}</div>`;
+        mc.innerHTML =
+          '<div class="section-title">All Products (' + allProducts.length + ')</div>' +
+          '<div class="product-list">' +
+          allProducts.map(function (p) {
+            return '<div class="product-row" onclick="openProductModal(' + escapeHtml(JSON.stringify(p)) + ')">' +
+              '<div><div class="pi-name">' + escapeHtml(p.name) + '</div><div class="pi-meta">' + escapeHtml(p.brand) + ' · ' + escapeHtml(p.category) + ' · R' + escapeHtml(String(p.price)) + '</div></div>' +
+              '<span class="badge badge-' + (p.status === 'active' ? 'active' : 'draft') + '">' + escapeHtml(p.status) + '</span>' +
+            '</div>';
+          }).join('') +
+          '</div>';
         break;
-      case 'messages': await renderMessagesTab(); break;
+
+      case 'messages':
+        renderMessagesTab();
+        break;
+
       case 'reviews':
-        try {
-          const revs = await reviewsRef.orderBy('createdAt','desc').limit(50).get();
-          mc.innerHTML = `<div class="section-title">Recent Reviews</div>${revs.docs.map(d => `<div class="card"><div class="card-header"><span>${'★'.repeat(d.data().rating||0)}</span><span style="font-size:var(--ui-font-size);color:var(--muted);">${d.data().name||'Anonymous'}</span></div><p style="font-size:12px;">${d.data().text||''}</p></div>`).join('')}`;
-        } catch(e) { mc.innerHTML = `<div class="section-title">Recent Reviews</div><p style="font-size:12px;color:var(--muted);">No reviews yet.</p>`; }
+        reviewsRef.orderBy('createdAt', 'desc').limit(50).get().then(function (revs) {
+          mc.innerHTML =
+            '<div class="section-title">Recent Reviews</div>' +
+            (revs.empty
+              ? '<p style="font-size:12px;color:var(--muted);">No reviews yet.</p>'
+              : revs.docs.map(function (d) {
+                  var data = d.data();
+                  return '<div class="card"><div class="card-header"><span>' + '★'.repeat(data.rating || 0) + '</span><span style="font-size:var(--ui-font-size);color:var(--muted);">' + escapeHtml(data.name || 'Anonymous') + '</span></div><p style="font-size:12px;">' + escapeHtml(data.text || '') + '</p></div>';
+                }).join(''));
+        }).catch(function () {
+          mc.innerHTML = '<div class="section-title">Recent Reviews</div><p style="font-size:12px;color:var(--muted);">No reviews yet.</p>';
+        });
         break;
+
       case 'newsletter':
-        try {
-          const subs = await newsletterRef.orderBy('subscribedAt','desc').limit(50).get();
-          mc.innerHTML = `<div class="section-title">Newsletter (${subs.size})</div>${subs.docs.map(d => `<div class="card"><span style="font-size:12px;">${d.data().email}</span></div>`).join('')}`;
-        } catch(e) { mc.innerHTML = `<div class="section-title">Newsletter</div><p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>`; }
+        newsletterRef.orderBy('subscribedAt', 'desc').limit(50).get().then(function (subs) {
+          mc.innerHTML =
+            '<div class="section-title">Newsletter (' + subs.size + ')</div>' +
+            (subs.empty
+              ? '<p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>'
+              : subs.docs.map(function (d) {
+                  return '<div class="card"><span style="font-size:12px;">' + escapeHtml(d.data().email) + '</span></div>';
+                }).join(''));
+        }).catch(function () {
+          mc.innerHTML = '<div class="section-title">Newsletter</div><p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>';
+        });
         break;
+
       case 'orders':
-        try {
-          const ords = await ordersRef.orderBy('createdAt','desc').limit(50).get();
-          mc.innerHTML = `<div class="section-title">Orders (${ords.size})</div>${ords.docs.map(d => `<div class="card"><div class="card-header"><span style="font-size:var(--ui-font-size);">Order</span><span class="badge badge-active">${d.data().status||'pending'}</span></div><p style="font-size:12px;">${d.data().itemCount||0} items · R${d.data().subtotal||0}</p></div>`).join('')}`;
-        } catch(e) { mc.innerHTML = `<div class="section-title">Orders</div><p style="font-size:12px;color:var(--muted);">No orders yet.</p>`; }
+        ordersRef.orderBy('createdAt', 'desc').limit(50).get().then(function (ords) {
+          mc.innerHTML =
+            '<div class="section-title">Orders (' + ords.size + ')</div>' +
+            (ords.empty
+              ? '<p style="font-size:12px;color:var(--muted);">No orders yet.</p>'
+              : ords.docs.map(function (d) {
+                  var data = d.data();
+                  return '<div class="card"><div class="card-header"><span style="font-size:var(--ui-font-size);">Order</span><span class="badge badge-active">' + escapeHtml(data.status || 'pending') + '</span></div><p style="font-size:12px;">' + escapeHtml(String(data.itemCount || 0)) + ' items · R' + escapeHtml(String(data.subtotal || 0)) + '</p></div>';
+                }).join(''));
+        }).catch(function () {
+          mc.innerHTML = '<div class="section-title">Orders</div><p style="font-size:12px;color:var(--muted);">No orders yet.</p>';
+        });
         break;
     }
   }
+
+})(); // end IIFE
 </script>
 </body>
 </html>
