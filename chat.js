@@ -45,76 +45,14 @@ async function ensureAuth() {
   }
 }
 
-// ==================== CHAT WIDGET CREATION ====================
-function createChatWidget() {
-  const existing = document.getElementById('chat-widget-container');
-  if (existing) existing.remove();
-
-  const widget = document.createElement('div');
-  widget.id = 'chat-widget-container';
-  widget.innerHTML = `
-    <div id="chat-window" style="display:none;position:fixed;bottom:80px;right:20px;width:360px;max-width:90vw;height:520px;max-height:70vh;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:9998;flex-direction:column;overflow:hidden;font-family:system-ui,sans-serif;">
-      
-      <div style="background:#111;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-size:13px;font-weight:600;">JANEDORE</div>
-          <div style="font-size:10px;color:#aaa;">We reply within minutes</div>
-        </div>
-        <button onclick="toggleChat()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:20px;">✕</button>
-      </div>
-
-      <div id="chat-email-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;flex:1;gap:12px;">
-        <div style="font-size:28px;">💬</div>
-        <div style="font-size:15px;font-weight:600;text-align:center;">Start a conversation</div>
-        <div style="font-size:12px;color:#888;text-align:center;">Enter your details to begin chatting with us</div>
-        <input id="chat-name-input" type="text" placeholder="Your name" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
-        <input id="chat-email-input" type="email" placeholder="Your email" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
-        <div id="chat-email-error" style="display:none;color:red;font-size:11px;">Please enter a valid email address</div>
-        <button onclick="submitEmail()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;">Continue</button>
-      </div>
-
-      <div id="chat-options" style="display:none;flex-direction:column;flex:1;padding:24px;gap:12px;">
-        <div style="font-size:15px;font-weight:600;">How can we help?</div>
-        <button onclick="startChat()" style="width:100%;padding:14px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;">💬 Start a conversation</button>
-        <button onclick="showOrderLookup()" style="width:100%;padding:14px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;">📦 Track my order</button>
-        <button onclick="clearChatSession()" style="width:100%;padding:10px;background:none;border:none;color:#888;cursor:pointer;font-size:11px;margin-top:auto;">↩ Start over</button>
-      </div>
-
-      <div id="chat-messages" style="display:none;flex:1;overflow-y:auto;padding:16px;flex-direction:column;gap:8px;background:#fafafa;"></div>
-      
-      <div id="chat-customer-info" style="display:none;padding:8px 16px;background:#f0f0f0;font-size:10px;color:#666;border-top:1px solid #e0e0e0;">
-        <span id="chat-customer-name"></span> · <span id="chat-customer-email"></span> · <span id="chat-customer-stats"></span>
-      </div>
-
-      <div id="chat-typing-indicator" style="display:none;padding:4px 16px;font-size:10px;color:#888;background:#fafafa;">Admin is typing...</div>
-
-      <div id="order-lookup" style="display:none;flex-direction:column;padding:24px;flex:1;gap:12px;">
-        <div style="font-size:15px;font-weight:600;">Track Your Order</div>
-        <div style="font-size:12px;color:#888;">Enter your order number (e.g., ORD-12345)</div>
-        <input id="order-lookup-input" type="text" placeholder="Order number" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
-        <button onclick="lookupOrder()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;">Look Up Order</button>
-        <div id="order-result" style="font-size:12px;"></div>
-        <button onclick="backToChatOptions()" style="width:100%;padding:10px;background:none;border:none;color:#888;cursor:pointer;font-size:11px;margin-top:auto;">↩ Back</button>
-      </div>
-
-      <div id="chat-input-wrap" style="display:none;padding:12px;border-top:1px solid #e0e0e0;background:#fff;">
-        <div style="display:flex;gap:8px;">
-          <input id="chat-input" type="text" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)" oninput="handleCustomerTyping()" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:20px;font-size:13px;outline:none;">
-          <button id="chat-send-btn" onclick="sendChatMessage()" style="width:40px;height:40px;border-radius:50%;background:#111;color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">➤</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(widget);
-}
-
 // ==================== SCREEN CONTROL ====================
 function toggleChat() {
   chatOpen = !chatOpen;
   const win = safeEl('chat-window');
   if (!win) return;
-  win.style.display = chatOpen ? 'flex' : 'none';
+  
   if (chatOpen) {
+    win.classList.add('open');
     const dot = safeEl('chat-unread-dot');
     if (dot) dot.style.display = 'none';
     if (customerEmail) {
@@ -124,6 +62,7 @@ function toggleChat() {
     }
     ensureAuth();
   } else {
+    win.classList.remove('open');
     if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   }
 }
@@ -134,7 +73,7 @@ function showScreen(id) {
     if (el) el.style.display = 'none';
   });
   const el = safeEl(id);
-  if (el) el.style.display = 'flex';
+  if (el) el.style.display = (id === 'chat-messages' || id === 'order-lookup' || id === 'chat-email-screen' || id === 'chat-options') ? 'flex' : 'block';
 }
 
 function showEmailScreen() { showScreen('chat-email-screen'); }
@@ -169,26 +108,29 @@ function startChat() {
   const inputWrap = safeEl('chat-input-wrap');
   const infoBar = safeEl('chat-customer-info');
   if (inputWrap) inputWrap.style.display = 'flex';
-  if (infoBar) infoBar.style.display = 'block';
+  if (infoBar) infoBar.style.display = 'flex';
   
   const nameEl = safeEl('chat-customer-name');
   const emailEl = safeEl('chat-customer-email');
-  if (nameEl) nameEl.textContent = customerName || '';
+  if (nameEl) nameEl.textContent = customerName || 'Guest';
   if (emailEl) emailEl.textContent = customerEmail || '';
   
   chatMode = 'chat';
   loadedMessageKeys.clear();
   loadMessages();
   listenChat();
+  listenTyping();
   
   const input = safeEl('chat-input');
-  if (input) input.focus();
+  if (input) setTimeout(() => input.focus(), 100);
 }
 
 function showOrderLookup() {
   showScreen('order-lookup');
   const resultEl = safeEl('order-result');
   if (resultEl) resultEl.innerHTML = '';
+  const input = safeEl('order-lookup-input');
+  if (input) setTimeout(() => input.focus(), 100);
 }
 
 function backToChatOptions() { showOptionsScreen(); }
@@ -213,14 +155,14 @@ async function loadMessages() {
   const el = safeEl('chat-messages');
   if (!rtdb || !el) return;
   
-  el.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Loading messages...</div>';
+  el.innerHTML = '<div class="chat-welcome"><strong>Loading…</strong></div>';
   
   try {
     const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages').orderByChild('createdAt').once('value');
     el.innerHTML = '';
     
     if (!snap.exists()) {
-      el.innerHTML = '<div style="text-align:center;color:#888;padding:40px 20px;"><strong>Welcome to JANEDORE</strong><br><span style="font-size:12px;">Ask us anything — sizing, styling, shipping.</span></div>';
+      el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
       return;
     }
     
@@ -235,33 +177,27 @@ async function loadMessages() {
     
     messages.forEach(m => {
       if (m.type === 'auth') return;
-      appendMessage(el, m);
+      appendMessage(m);
     });
     
     el.scrollTop = el.scrollHeight;
   } catch(e) {
     console.error('[Chat] Load messages error:', e.message);
-    el.innerHTML = '<div style="text-align:center;color:#888;padding:40px 20px;"><strong>Welcome to JANEDORE</strong><br><span style="font-size:12px;">Ask us anything.</span></div>';
+    el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything.</div>';
   }
 }
 
-function appendMessage(container, m) {
+function appendMessage(m) {
+  const el = safeEl('chat-messages');
+  if (!el) return;
+  
   const time = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
   const isCustomer = m.sender === 'customer';
+  
   const div = document.createElement('div');
-  div.style.cssText = `
-    max-width:80%;
-    padding:10px 14px;
-    border-radius:18px;
-    font-size:13px;
-    line-height:1.4;
-    align-self:${isCustomer ? 'flex-end' : 'flex-start'};
-    background:${isCustomer ? '#111' : '#e8e8e8'};
-    color:${isCustomer ? '#fff' : '#333'};
-    margin-bottom:4px;
-  `;
-  div.innerHTML = m.text + `<div style="font-size:9px;opacity:0.6;margin-top:4px;">${time}</div>`;
-  container.appendChild(div);
+  div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin');
+  div.innerHTML = m.text + '<div class="chat-msg-time">' + time + '</div>';
+  el.appendChild(div);
 }
 
 function listenChat() {
@@ -280,11 +216,10 @@ function listenChat() {
     
     if (!m || m.type === 'auth') return;
     
-    const el = safeEl('chat-messages');
-    if (!el) return;
+    appendMessage(m);
     
-    appendMessage(el, m);
-    el.scrollTop = el.scrollHeight;
+    const el = safeEl('chat-messages');
+    if (el) el.scrollTop = el.scrollHeight;
     
     if (!chatOpen && m.sender === 'admin') {
       const dot = safeEl('chat-unread-dot');
@@ -303,7 +238,7 @@ async function sendChatMessage() {
   if (!text) return;
   
   const btn = safeEl('chat-send-btn');
-  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
   
   try {
     await ensureAuth();
@@ -351,16 +286,7 @@ function listenTyping() {
   });
 }
 
-function handleChatKeyPress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendChatMessage();
-  }
-}
-
 // ==================== ORDER LOOKUP (READ-ONLY) ====================
-// This function ONLY reads from the 'orders' collection.
-// It does NOT create, write, or log anything.
 async function lookupOrder() {
   const db = getFirestore();
   const input = safeEl('order-lookup-input');
@@ -369,45 +295,63 @@ async function lookupOrder() {
   
   const orderNum = input.value.trim().toUpperCase();
   if (!orderNum) { 
-    resultEl.textContent = 'Please enter an order number.'; 
+    resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Please enter an order number</div>'; 
     return; 
   }
   
-  resultEl.textContent = 'Searching...';
+  resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Searching…</div>';
   
   try {
-    // ONLY reads from 'orders' collection - no writes, no logs, no lookups collection
     const snap = await db.collection('orders')
       .where('orderNumber', '==', orderNum)
       .limit(1)
       .get();
     
     if (snap.empty) {
-      resultEl.innerHTML = '<p style="color:#888;">No order found.</p><p style="font-size:10px;">Check your order number and try again.</p>';
+      resultEl.innerHTML = `
+        <div style="margin-top:16px;color:#888;line-height:1.8;">
+          <div style="font-family:'Manrope',sans-serif;font-size:11px;font-weight:300;letter-spacing:0.03em;">No order found</div>
+          <div style="font-family:'Manrope',sans-serif;font-size:9px;font-weight:300;letter-spacing:0.03em;margin-top:4px;opacity:0.7;">Check your order number and try again</div>
+        </div>`;
       return;
     }
     
     const o = snap.docs[0].data();
-    const date = o.createdAt ? new Date(o.createdAt.seconds*1000).toLocaleDateString() : 'N/A';
+    const date = o.createdAt ? new Date(o.createdAt.seconds*1000).toLocaleDateString('en-ZA',{day:'numeric',month:'long',year:'numeric'}) : '—';
+    const status = (o.status || 'pending').charAt(0).toUpperCase() + (o.status || 'pending').slice(1);
+    
     resultEl.innerHTML = `
-      <p style="color:green;">✅ Order found</p>
-      <div style="background:#f5f5f5;padding:12px;border-radius:8px;font-size:12px;">
-        <strong>#${o.orderNumber || snap.docs[0].id}</strong><br>
-        Status: ${o.status || 'pending'}<br>
-        Items: ${o.items?.length || o.itemCount || 0}<br>
-        Total: R${o.subtotal || o.total || 0}<br>
-        Date: ${date}
+      <div style="margin-top:20px;width:100%;text-align:left;font-family:'Manrope',sans-serif;line-height:1.8;">
+        <div style="font-size:8px;text-transform:uppercase;letter-spacing:0.15em;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;">Order Details</div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+          <span style="color:#888;">Order</span>
+          <span style="color:#111;">#${o.orderNumber || snap.docs[0].id}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+          <span style="color:#888;">Status</span>
+          <span style="color:#111;">${status}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+          <span style="color:#888;">Items</span>
+          <span style="color:#111;">${o.items?.length || o.itemCount || 0}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+          <span style="color:#888;">Total</span>
+          <span style="color:#111;">R${(o.subtotal || o.total || 0).toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;">
+          <span style="color:#888;">Date</span>
+          <span style="color:#111;">${date}</span>
+        </div>
       </div>`;
   } catch(e) {
     console.error('[Chat] Order lookup error:', e.message);
-    resultEl.innerHTML = '<p style="color:red;">Unable to look up order. Please try again or contact us via chat.</p>';
+    resultEl.innerHTML = '<div style="color:#c00;font-size:10px;font-weight:300;margin-top:16px;">Unable to look up order. Please try again.</div>';
   }
 }
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  createChatWidget();
-  
   const nameInput = safeEl('chat-name-input');
   const emailInput = safeEl('chat-email-input');
   if (nameInput && customerName) nameInput.value = customerName;
