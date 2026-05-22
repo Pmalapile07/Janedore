@@ -1,10 +1,16 @@
 // ==================== CHAT LOGIC ====================
+// Chats & live messages → Firebase Realtime Database (RTDB)
+// Order lookups → Firestore
+
 let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
 localStorage.setItem('janedore_chat_session', chatSessionId);
 let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
 let chatOpen = false, chatUnsub = null, chatMode = null;
 let currentUser = null;
 let anonAuthInProgress = false;
+
+// RTDB reference — update the URL if needed
+const rtdb = firebase.database();
 
 // ==================== HELPERS ====================
 function safeEl(id) {
@@ -31,7 +37,6 @@ firebase.auth().onAuthStateChanged((user) => {
 async function ensureAnonymousAuth() {
   if (currentUser) return currentUser;
   if (anonAuthInProgress) {
-    // Wait briefly for ongoing auth to complete
     await new Promise(r => setTimeout(r, 600));
     return currentUser;
   }
@@ -72,24 +77,23 @@ async function signInWithEmail(email) {
 
 // ==================== SESSION MANAGEMENT ====================
 function clearChatSession() {
-  // Sign out of Firebase auth silently
   firebase.auth().signOut().catch(() => {});
   currentUser = null;
 
-  // Clear all chat-specific localStorage keys
   localStorage.removeItem('janedore_chat_email');
   localStorage.removeItem('janedore_chat_session');
   localStorage.removeItem('janedore_chat_email_pending');
 
-  // Reset in-memory state
   customerEmail = '';
   chatSessionId = 'chat-' + Date.now();
   chatMode = null;
 
-  // Stop any active listener
-  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  // Detach RTDB listener
+  if (chatUnsub) {
+    chatUnsub();
+    chatUnsub = null;
+  }
 
-  // Return user to email entry
   showEmailScreen();
 }
 
@@ -185,7 +189,7 @@ function startChat() {
   if (inputEl) inputEl.focus();
 }
 
-// ==================== CUSTOMER STATS ====================
+// ==================== CUSTOMER STATS (Firestore) ====================
 async function loadCustomerStats() {
   const statsEl = safeEl('chat-customer-stats');
   if (!statsEl) return;
@@ -194,7 +198,6 @@ async function loadCustomerStats() {
   try {
     const parts = [];
 
-    // Orders: exact email match, no full collection scan
     try {
       const ordersSnap = await db.collection('orders')
         .where('customerEmail', '==', customerEmail)
@@ -205,7 +208,6 @@ async function loadCustomerStats() {
       console.warn('Orders stats failed:', e.message);
     }
 
-    // Reviews: exact email match
     try {
       const reviewsSnap = await db.collection('reviews')
         .where('email', '==', customerEmail)
@@ -216,7 +218,6 @@ async function loadCustomerStats() {
       console.warn('Reviews stats failed:', e.message);
     }
 
-    // Newsletter: exact email match
     try {
       const newsletterSnap = await db.collection('newsletter')
         .where('email', '==', customerEmail)
@@ -234,7 +235,7 @@ async function loadCustomerStats() {
   }
 }
 
-// ==================== ORDER LOOKUP ====================
+// ==================== ORDER LOOKUP (Firestore only) ====================
 function showOrderLookup() {
   setDisplay('chat-email-screen', 'none');
   setDisplay('chat-options', 'none');
@@ -243,7 +244,6 @@ function showOrderLookup() {
   setDisplay('chat-customer-info', 'none');
   setDisplay('order-lookup', 'flex');
 
-  // Clear any previous result
   const resultEl = safeEl('order-result');
   if (resultEl) resultEl.innerHTML = '';
 }
@@ -255,7 +255,6 @@ async function lookupOrder() {
 
   const rawOrderNumber = (inputEl?.value || '').trim().toUpperCase();
 
-  // Both fields required — no fishing
   if (!rawOrderNumber) {
     resultEl.innerHTML = '<p style="color:#888;">Please enter your order number.</p>';
     return;
@@ -272,7 +271,7 @@ async function lookupOrder() {
 
     const orders = [];
 
-    // Primary: exact match on both order number AND customer email
+    // Primary: exact match on order number + email (Firestore)
     const exactSnap = await db.collection('orders')
       .where('orderNumber', '==', rawOrderNumber)
       .where('customerEmail', '==', customerEmail)
@@ -283,7 +282,7 @@ async function lookupOrder() {
       exactSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
     }
 
-    // Secondary: try normalized variant (strip dashes) if nothing found
+    // Secondary: normalized variant (strip dashes)
     if (orders.length === 0) {
       const normalized = rawOrderNumber.replace(/-/g, '');
       if (normalized !== rawOrderNumber) {
@@ -298,7 +297,7 @@ async function lookupOrder() {
       }
     }
 
-    // Tertiary: try dashed variant (ORD12345 → ORD-12345)
+    // Tertiary: dashed variant (ORD12345 → ORD-12345)
     if (orders.length === 0 && !rawOrderNumber.includes('-') && rawOrderNumber.startsWith('ORD')) {
       const dashed = rawOrderNumber.replace(/^(ORD)(\d)/, '$1-$2');
       const dashedSnap = await db.collection('orders')
@@ -341,30 +340,35 @@ async function lookupOrder() {
 
 function backToChatOptions() { showOptionsScreen(); }
 
-// ==================== MESSAGES ====================
+// ==================== MESSAGES (RTDB) ====================
 async function loadAllMessages() {
   const el = safeEl('chat-messages');
   if (!el) return;
   el.innerHTML = '';
 
   try {
-    const snapshot = await db.collection('live_chat')
-      .where('sessionId', '==', chatSessionId)
-      .get();
+    const snapshot = await rtdb
+      .ref('live_chat/' + chatSessionId + '/messages')
+      .orderByChild('createdAt')
+      .once('value');
 
-    const messages = [];
-    snapshot.docs.forEach(d => messages.push(d.data()));
-    messages.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
-
-    if (messages.length === 0) {
+    if (!snapshot.exists()) {
       el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
       return;
     }
 
+    const messages = [];
+    snapshot.forEach(child => {
+      messages.push({ _key: child.key, ...child.val() });
+    });
+
+    // orderByChild already sorts ascending, but sort locally as safety net
+    messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
     messages.forEach(m => {
       if (m.type === 'auth') return;
       const t = m.createdAt
-        ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '';
       const div = document.createElement('div');
       div.className = 'chat-msg ' + m.sender;
@@ -378,46 +382,58 @@ async function loadAllMessages() {
   }
 }
 
-// Track rendered message IDs to prevent duplicates
+// Track rendered RTDB keys to prevent duplicates
 const renderedMessageIds = new Set();
 
 function listenChat() {
-  if (chatUnsub) chatUnsub();
+  // Detach any existing listener
+  if (chatUnsub) {
+    chatUnsub();
+    chatUnsub = null;
+  }
   renderedMessageIds.clear();
 
-  chatUnsub = db.collection('live_chat')
-    .where('sessionId', '==', chatSessionId)
-    .orderBy('createdAt', 'asc')
-    .onSnapshot(snap => {
+  const messagesRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
+
+  // Listen only for newly added children going forward
+  // Use startAt with current server time to avoid re-rendering history
+  const startTime = Date.now();
+
+  const handler = messagesRef
+    .orderByChild('createdAt')
+    .startAt(startTime)
+    .on('child_added', (snap) => {
+      const m = snap.val();
+      const docId = snap.key;
+      if (!m || m.type === 'auth') return;
+      if (renderedMessageIds.has(docId)) return;
+      renderedMessageIds.add(docId);
+
       const el = safeEl('chat-messages');
       if (!el) return;
+
       const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
 
-      snap.docChanges().forEach(c => {
-        if (c.type === 'added') {
-          const m = c.doc.data();
-          const docId = c.doc.id;
-          if (m.type === 'auth') return;
-          if (renderedMessageIds.has(docId)) return;
-          renderedMessageIds.add(docId);
+      const t = m.createdAt
+        ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + m.sender;
+      div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
+      el.appendChild(div);
 
-          const t = m.createdAt
-            ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            : '';
-          const div = document.createElement('div');
-          div.className = 'chat-msg ' + m.sender;
-          div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
-          el.appendChild(div);
-
-          const unreadDot = safeEl('chat-unread-dot');
-          if (!chatOpen && m.sender === 'admin' && unreadDot) {
-            unreadDot.style.display = 'block';
-          }
-        }
-      });
+      const unreadDot = safeEl('chat-unread-dot');
+      if (!chatOpen && m.sender === 'admin' && unreadDot) {
+        unreadDot.style.display = 'block';
+      }
 
       if (atBottom) el.scrollTop = el.scrollHeight;
     });
+
+  // Return a cleanup function that mirrors the Firestore .onSnapshot unsubscribe pattern
+  chatUnsub = () => {
+    messagesRef.off('child_added', handler);
+  };
 }
 
 async function sendChatMessage() {
@@ -429,15 +445,25 @@ async function sendChatMessage() {
   try {
     await ensureAnonymousAuth();
 
-    await db.collection('live_chat').add({
+    const messagesRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
+    await messagesRef.push({
       sessionId: chatSessionId,
       customerEmail: customerEmail || '',
       text: text,
       sender: 'customer',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: Date.now(),      // RTDB uses ms timestamp, not Firestore serverTimestamp
       read: false,
       userId: currentUser ? currentUser.uid : 'anonymous'
     });
+
+    // Also update session metadata so admin panel can list active sessions
+    await rtdb.ref('live_chat/' + chatSessionId + '/meta').set({
+      customerEmail: customerEmail || '',
+      lastMessage: text,
+      lastMessageAt: Date.now(),
+      userId: currentUser ? currentUser.uid : 'anonymous'
+    });
+
     input.value = '';
   } catch (e) {
     console.warn('Chat send error:', e);
