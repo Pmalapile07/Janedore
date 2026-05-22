@@ -1,6 +1,6 @@
 // ==================== JANEDORE CHAT — REALTIME DATABASE ====================
 // Production-ready. Firebase only initializes once (in main HTML).
-// This file assumes firebase, db (Firestore), rtdb (Realtime DB) are
+// This file assumes firebase and rtdb (Realtime DB) are
 // already initialized globally before this script is loaded.
 
 (function () {
@@ -12,12 +12,12 @@
   var customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase().trim();
   var customerName  = localStorage.getItem('janedore_chat_name') || '';
   var chatOpen      = false;
-  var chatMsgUnsub  = null; // .off() handle for RTDB messages listener
-  var chatTypingUnsub = null; // .off() handle for RTDB typing listener
+  var messagesRef   = null; // cached RTDB ref for current session messages
+  var typingRef     = null; // cached RTDB ref for current session typing
   var isSending     = false;
   var typingTimeout = null;
-  var messagesRef   = null; // cached RTDB ref for current session
-  var typingRef     = null; // cached RTDB ref for current session typing
+  var chatMsgUnsub  = null; // listener unsubscribe function
+  var chatTypingUnsub = null;
 
   // ── Safe DOM helpers ─────────────────────────────────────────────
   function safeEl(id) { return document.getElementById(id) || null; }
@@ -36,7 +36,6 @@
   }
 
   // ── Wait for Firebase to be ready ───────────────────────────────
-  // Polls until window.rtdb and window.db are available (set by main HTML).
   function waitForFirebase(cb) {
     if (window.rtdb && window.db) { cb(); return; }
     var attempts = 0;
@@ -76,8 +75,11 @@
     win.classList.toggle('open', chatOpen);
     if (chatOpen) {
       setDisplay('chat-unread-dot', 'none');
-      if (customerEmail) showOptionsScreen();
-      else showEmailScreen();
+      if (customerEmail) {
+        showOptionsScreen();
+      } else {
+        showEmailScreen();
+      }
     } else {
       detachChatListeners();
     }
@@ -85,11 +87,11 @@
 
   // ── Listener cleanup ────────────────────────────────────────────
   function detachChatListeners() {
-    if (messagesRef && chatMsgUnsub !== null) {
+    if (messagesRef && chatMsgUnsub) {
       messagesRef.off('value', chatMsgUnsub);
       chatMsgUnsub = null;
     }
-    if (typingRef && chatTypingUnsub !== null) {
+    if (typingRef && chatTypingUnsub) {
       typingRef.off('value', chatTypingUnsub);
       chatTypingUnsub = null;
     }
@@ -104,6 +106,14 @@
     setDisplay('chat-input-wrap',   'none');
     setDisplay('chat-customer-info','none');
     setDisplay('order-lookup',      'none');
+    
+    // Clear inputs
+    var nameInput = safeEl('chat-name-input');
+    var emailInput = safeEl('chat-email-input');
+    var errorEl = safeEl('chat-email-error');
+    if (nameInput) nameInput.value = customerName || '';
+    if (emailInput) emailInput.value = customerEmail || '';
+    if (errorEl) errorEl.style.display = 'none';
   }
 
   function showOptionsScreen() {
@@ -113,20 +123,29 @@
     setDisplay('chat-input-wrap',   'none');
     setDisplay('chat-customer-info','none');
     setDisplay('order-lookup',      'none');
+    detachChatListeners();
   }
 
   window.submitEmail = function () {
+    var nameInput = safeEl('chat-name-input');
     var inputEl = safeEl('chat-email-input');
     var errorEl = safeEl('chat-email-error');
     if (!inputEl) return;
+    
     var email = inputEl.value.trim().toLowerCase();
+    var name = nameInput ? nameInput.value.trim() : '';
+    
     if (!email || !email.includes('@') || !email.includes('.')) {
       if (errorEl) errorEl.style.display = 'block';
       return;
     }
+    
     if (errorEl) errorEl.style.display = 'none';
+    
     customerEmail = email;
+    customerName = name;
     localStorage.setItem('janedore_chat_email', email);
+    if (name) localStorage.setItem('janedore_chat_name', name);
     chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
     localStorage.setItem('janedore_chat_session', chatSessionId);
     showOptionsScreen();
@@ -139,8 +158,13 @@
     setDisplay('chat-input-wrap',   'flex');
     setDisplay('chat-customer-info','flex');
     setDisplay('order-lookup',      'none');
+    
+    // Update customer info
+    var nameEl = safeEl('chat-customer-name');
     var emailEl = safeEl('chat-customer-email');
-    if (emailEl) emailEl.textContent = escapeHtml(customerEmail);
+    if (nameEl) nameEl.textContent = customerName || 'Customer';
+    if (emailEl) emailEl.textContent = customerEmail;
+    
     listenChat();
     var inputEl = safeEl('chat-input');
     if (inputEl) setTimeout(function () { inputEl.focus(); }, 50);
@@ -164,30 +188,27 @@
     messagesRef = window.rtdb.ref('chats/' + chatSessionId + '/messages');
     typingRef   = window.rtdb.ref('chats/' + chatSessionId + '/typing');
 
-    // Messages listener — store the callback ref for cleanup
-    chatMsgUnsub = function (snapshot) {
+    // Messages listener
+    chatMsgUnsub = messagesRef.on('value', function (snapshot) {
       var messages = [];
       snapshot.forEach(function (child) {
         messages.push(Object.assign({ _key: child.key }, child.val()));
       });
       messages.sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
       renderMessages(messages);
-    };
-    messagesRef.on('value', chatMsgUnsub, function (err) {
+    }, function (err) {
       console.warn('[JANEDORE CHAT] messages listener error:', err.message);
     });
 
     // Typing listener
-    chatTypingUnsub = function (snapshot) {
+    chatTypingUnsub = typingRef.on('value', function (snapshot) {
       var data = snapshot.val();
       var indicator = safeEl('chat-typing-indicator');
       if (indicator) {
         var show = !!(data && data.admin);
         indicator.style.display = show ? 'block' : 'none';
-        if (show) indicator.textContent = 'JANEDORE is typing...';
       }
-    };
-    typingRef.on('value', chatTypingUnsub, function (err) {
+    }, function (err) {
       console.warn('[JANEDORE CHAT] typing listener error:', err.message);
     });
   }
@@ -198,7 +219,7 @@
     if (!el) return;
     var atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
 
-    // Remove optimistic messages and real message divs
+    // Remove existing messages
     el.querySelectorAll('.chat-msg').forEach(function (n) { n.remove(); });
     var welcome = el.querySelector('.chat-welcome');
 
@@ -241,8 +262,9 @@
     if (!text) return;
 
     isSending = true;
+    var sendBtn = safeEl('chat-send-btn');
+    if (sendBtn) sendBtn.disabled = true;
     input.disabled = true;
-    input.placeholder = 'Sending...';
 
     // Clear typing state
     clearTimeout(typingTimeout);
@@ -257,7 +279,7 @@
       text: text,
       sender: 'customer',
       customerEmail: customerEmail,
-      customerName: customerName,
+      customerName: customerName || 'Customer',
       timestamp: firebase.database.ServerValue.TIMESTAMP,
       read: false
     }).then(function () {
@@ -268,14 +290,17 @@
       var el = safeEl('chat-messages');
       if (el) {
         var errDiv = document.createElement('div');
-        errDiv.className = 'chat-msg system';
+        errDiv.className = 'chat-msg customer';
+        errDiv.style.background = '#c00';
         errDiv.textContent = 'Message failed. Please try again.';
         el.appendChild(errDiv);
       }
     }).finally(function () {
       input.disabled = false;
-      input.placeholder = 'Type a message...';
-      setTimeout(function () { if (input) input.focus(); }, 50);
+      if (sendBtn) sendBtn.disabled = false;
+      setTimeout(function () { 
+        if (input) input.focus(); 
+      }, 50);
       isSending = false;
     });
   };
@@ -298,6 +323,7 @@
     setDisplay('chat-input-wrap',   'none');
     setDisplay('chat-customer-info','none');
     setDisplay('order-lookup',      'flex');
+    detachChatListeners();
     var resultEl = safeEl('order-result');
     if (resultEl) resultEl.innerHTML = '';
   };
@@ -327,7 +353,7 @@
       .get()
       .then(function (snap) {
         var orders = [];
-        snap.docs.forEach(function (d) {
+        snap.forEach(function (d) {
           var data = d.data();
           var orderNum = (data.orderNumber || '').toUpperCase();
           var cleanInput = rawOrderNumber.replace('ORD-', '');
@@ -352,11 +378,14 @@
       })
       .catch(function (e) {
         console.warn('[JANEDORE CHAT] order lookup error:', e.message);
-        resultEl.innerHTML = '<p style="color:#888;">No order found.</p>';
+        resultEl.innerHTML = '<p style="color:#888;">Unable to look up order. Please try again.</p>';
       });
   };
 
-  window.backToChatOptions = function () { showOptionsScreen(); };
+  window.backToChatOptions = function () { 
+    detachChatListeners();
+    showOptionsScreen(); 
+  };
 
   window.clearChatSession = function () {
     detachChatListeners();
