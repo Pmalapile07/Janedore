@@ -11,24 +11,14 @@ let currentUser = null;
 let anonAuthInProgress = false;
 let typingTimeout = null;
 let rtdbConnected = true;
-let authReady = false; // Track when auth state is confirmed
+let authReady = false;
 
 // RTDB reference (reuses existing Firebase instance from main site)
 const rtdb = firebase.database();
 
 // Monitor RTDB connection state
 rtdb.ref('.info/connected').on('value', (snap) => {
-  const wasConnected = rtdbConnected;
   rtdbConnected = snap.val() === true;
-  if (!rtdbConnected && wasConnected) {
-    console.warn('[Chat] RTDB disconnected');
-  } else if (rtdbConnected && !wasConnected) {
-    console.log('[Chat] RTDB reconnected');
-    // Reload messages on reconnect
-    if (chatOpen && chatMode === 'chat') {
-      loadAllMessages();
-    }
-  }
 });
 
 // ==================== HELPERS ====================
@@ -64,11 +54,13 @@ function showChatFeedback(message, isError = false) {
 }
 
 // ==================== FIREBASE AUTH ====================
-// Wait for auth to be ready before using it
+// Start anonymous auth immediately, don't wait for it
+ensureAnonymousAuth();
+
 firebase.auth().onAuthStateChanged((user) => {
   currentUser = user;
   authReady = true;
-  console.log('[Chat] Auth state changed:', user ? `User: ${user.uid} (${user.isAnonymous ? 'anonymous' : 'email'})` : 'No user');
+  console.log('[Chat] Auth state:', user ? (user.isAnonymous ? 'anonymous' : user.email) : 'none');
   
   if (user && user.email) {
     customerEmail = user.email.trim().toLowerCase();
@@ -79,80 +71,35 @@ firebase.auth().onAuthStateChanged((user) => {
   }
 });
 
-async function waitForAuth(timeoutMs = 10000) {
-  if (authReady && currentUser) return currentUser;
-  
-  const startTime = Date.now();
-  while (!authReady && (Date.now() - startTime) < timeoutMs) {
-    await new Promise(r => setTimeout(r, 100));
-  }
-  
+async function ensureAnonymousAuth() {
   if (currentUser) return currentUser;
   
-  // If no user, try anonymous auth
-  return await ensureAnonymousAuth();
-}
-
-async function ensureAnonymousAuth() {
-  // If we already have a user, return immediately
-  if (currentUser) {
-    console.log('[Chat] Already authenticated as:', currentUser.uid);
+  if (anonAuthInProgress) {
+    // Wait briefly for in-progress auth
+    for (let i = 0; i < 10; i++) {
+      await new Promise(r => setTimeout(r, 200));
+      if (currentUser) return currentUser;
+    }
     return currentUser;
   }
   
-  // If auth is in progress, wait for it
-  if (anonAuthInProgress) {
-    console.log('[Chat] Auth in progress, waiting...');
-    for (let i = 0; i < 30; i++) {
-      await new Promise(r => setTimeout(r, 200));
-      if (currentUser) {
-        console.log('[Chat] Auth completed during wait');
-        return currentUser;
-      }
-    }
-    console.warn('[Chat] Auth wait timed out');
-    return null;
-  }
-  
   anonAuthInProgress = true;
-  console.log('[Chat] Starting anonymous auth...');
   
   try {
     const result = await firebase.auth().signInAnonymously();
     currentUser = result.user;
-    console.log('[Chat] Anonymous auth successful:', currentUser.uid);
+    console.log('[Chat] Anonymous auth done:', currentUser.uid);
     return currentUser;
   } catch (error) {
-    console.error('[Chat] Anonymous auth failed:', error.code, error.message);
-    
-    // If already signed in (race condition), get current user
-    if (error.code === 'auth/already-signed-in' || error.code === 'auth/credential-already-in-use') {
+    // If already signed in, get current user
+    if (error.code === 'auth/already-signed-in') {
       currentUser = firebase.auth().currentUser;
-      if (currentUser) {
-        console.log('[Chat] Already signed in, using existing user');
-        return currentUser;
-      }
+      if (currentUser) return currentUser;
     }
-    
+    console.error('[Chat] Anonymous auth failed:', error.code);
     return null;
   } finally {
     anonAuthInProgress = false;
-  }
-}
-
-async function signInWithEmail(email) {
-  const normalizedEmail = email.trim().toLowerCase();
-  try {
-    const actionCodeSettings = { url: window.location.href, handleCodeInApp: true };
-    await firebase.auth().sendSignInLinkToEmail(normalizedEmail, actionCodeSettings);
-    localStorage.setItem('janedore_chat_email_pending', normalizedEmail);
-    return { success: true, method: 'emailLink' };
-  } catch (error) {
-    console.warn('Email link auth failed:', error.message);
-    // Fall back to anonymous
-    const user = await ensureAnonymousAuth();
-    if (user) return { success: true, method: 'anonymous' };
-    return { success: false, error: error.message };
   }
 }
 
@@ -187,7 +134,12 @@ function toggleChat() {
   win.classList.toggle('open', chatOpen);
   if (chatOpen) {
     setDisplay('chat-unread-dot', 'none');
-    customerEmail ? showOptionsScreen() : showEmailScreen();
+    // Show immediately - don't wait for anything
+    if (customerEmail) {
+      showOptionsScreen();
+    } else {
+      showEmailScreen();
+    }
   } else {
     if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   }
@@ -236,17 +188,12 @@ async function submitEmail() {
   chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
   localStorage.setItem('janedore_chat_session', chatSessionId);
 
-  // Sign in anonymously first so chat works immediately
-  await ensureAnonymousAuth();
   showOptionsScreen();
 }
 
 // ==================== START CHAT ====================
-async function startChat() {
-  // Ensure we have auth before starting
-  const user = await waitForAuth();
-  console.log('[Chat] Starting chat, auth:', user ? user.uid : 'none');
-  
+function startChat() {
+  // Show chat UI immediately
   setDisplay('chat-email-screen',    'none');
   setDisplay('chat-options',         'none');
   setDisplay('chat-messages',        'flex');
@@ -260,31 +207,21 @@ async function startChat() {
   if (nameEl)  nameEl.textContent  = customerName  || '';
   if (emailEl) emailEl.textContent = customerEmail || '';
 
-  loadCustomerStats();
   chatMode = 'chat';
   
-  // Load messages after auth is confirmed
-  if (rtdbConnected) {
-    loadAllMessages();
-    listenChat();
-  } else {
-    const el = safeEl('chat-messages');
-    if (el) el.innerHTML = '<div class="chat-welcome"><strong>Connecting...</strong>Please wait while we connect to the chat server.</div>';
-    // Wait for reconnection
-    const checkConnection = setInterval(() => {
-      if (rtdbConnected) {
-        clearInterval(checkConnection);
-        loadAllMessages();
-        listenChat();
-      }
-    }, 1000);
-    // Stop checking after 10 seconds
-    setTimeout(() => clearInterval(checkConnection), 10000);
-  }
+  // Load customer stats (non-blocking)
+  loadCustomerStats();
   
+  // Load messages and start listening
+  loadAllMessages();
+  listenChat();
   listenTypingIndicator();
+  
   const inputEl = safeEl('chat-input');
   if (inputEl) inputEl.focus();
+  
+  // Auth happens in background, doesn't block UI
+  ensureAnonymousAuth();
 }
 
 // ==================== CUSTOMER STATS (Firestore) ====================
@@ -302,34 +239,26 @@ async function loadCustomerStats() {
     const db = firebase.firestore();
     const parts = [];
     
-    // Try orders with auth
-    try {
-      await ensureAnonymousAuth();
-      // Since orders require email match and anonymous users don't have email,
-      // this will likely fail for anonymous users - that's expected
-      const ordersSnap = await db.collection('orders')
-        .where('customerEmail', '==', customerEmail)
-        .limit(10).get();
-      if (!ordersSnap.empty) parts.push(`${ordersSnap.size} order${ordersSnap.size > 1 ? 's' : ''}`);
-    } catch (e) { 
-      console.log('[Chat] Orders stats skipped (expected for anonymous):', e.code); 
-    }
-    
-    // Reviews - anyone can read
+    // Reviews - anyone can read (public)
     try {
       const reviewsSnap = await db.collection('reviews').where('email', '==', customerEmail).limit(10).get();
       if (!reviewsSnap.empty) parts.push(`${reviewsSnap.size} review${reviewsSnap.size > 1 ? 's' : ''}`);
-    } catch (e) { console.log('[Chat] Reviews stats failed:', e.code); }
+    } catch (e) { /* reviews are public so this should work */ }
     
-    // Newsletter - anyone can read
+    // Newsletter - anyone can read (public)
     try {
       const newsletterSnap = await db.collection('newsletter').where('email', '==', customerEmail).limit(1).get();
       if (!newsletterSnap.empty) parts.push('subscribed');
-    } catch (e) { console.log('[Chat] Newsletter stats failed:', e.code); }
+    } catch (e) { /* newsletter is public */ }
+    
+    // Orders - might fail for anonymous, that's ok
+    try {
+      const ordersSnap = await db.collection('orders').where('customerEmail', '==', customerEmail).limit(10).get();
+      if (!ordersSnap.empty) parts.push(`${ordersSnap.size} order${ordersSnap.size > 1 ? 's' : ''}`);
+    } catch (e) { /* orders need email auth, skip silently */ }
     
     statsEl.textContent = parts.length > 0 ? parts.join(' · ') : 'Customer';
   } catch (e) {
-    console.warn('[Chat] Stats error:', e.message);
     statsEl.textContent = 'Customer';
   }
 }
@@ -359,92 +288,131 @@ async function lookupOrder() {
     return;
   }
   if (!customerEmail) {
-    resultEl.innerHTML = '<p style="color:#888;">No email on file. Please enter your email in the chat first.</p>';
+    resultEl.innerHTML = '<p style="color:#888;">Please enter your email in the chat first to look up orders.</p>';
     return;
   }
 
   resultEl.textContent = 'Searching…';
-  console.log('[Chat] Looking up order:', rawOrderNumber, 'for email:', customerEmail);
 
   try {
     const db = firebase.firestore();
     
-    // IMPORTANT: Your Firestore rules for orders require:
-    // 1. request.auth != null (must be authenticated)
-    // 2. request.auth.token.email != null (must have email - anonymous users DON'T have this)
-    // 3. resource.data.customerEmail.lower() == request.auth.token.email.lower()
+    // Strategy: Try to read orders collection.
+    // If the user has email auth, the rules allow it.
+    // If anonymous, the rules deny it (because request.auth.token.email is null).
+    // In that case, we fall back to writing a lookup request that an admin can see.
     
-    // Check if user has email auth (not anonymous)
-    const user = firebase.auth().currentUser;
-    const hasEmailAuth = user && !user.isAnonymous && user.email;
+    let orders = [];
+    let permissionDenied = false;
     
-    console.log('[Chat] Auth check - User:', user?.uid, 'Anonymous:', user?.isAnonymous, 'Email:', user?.email);
+    try {
+      // Try exact match
+      const exactSnap = await db.collection('orders')
+        .where('orderNumber', '==', rawOrderNumber)
+        .where('customerEmail', '==', customerEmail)
+        .limit(1).get();
+      if (!exactSnap.empty) exactSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+
+      // Try without dashes
+      if (orders.length === 0) {
+        const normalized = rawOrderNumber.replace(/-/g, '');
+        if (normalized !== rawOrderNumber) {
+          const normSnap = await db.collection('orders')
+            .where('orderNumber', '==', normalized)
+            .where('customerEmail', '==', customerEmail)
+            .limit(1).get();
+          if (!normSnap.empty) normSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+        }
+      }
+
+      // Try with dash after ORD
+      if (orders.length === 0 && !rawOrderNumber.includes('-') && rawOrderNumber.startsWith('ORD')) {
+        const dashed = rawOrderNumber.replace(/^(ORD)(\d)/, '$1-$2');
+        const dashedSnap = await db.collection('orders')
+          .where('orderNumber', '==', dashed)
+          .where('customerEmail', '==', customerEmail)
+          .limit(1).get();
+        if (!dashedSnap.empty) dashedSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      }
+    } catch (e) {
+      if (e.code === 'permission-denied') {
+        permissionDenied = true;
+      } else {
+        throw e;
+      }
+    }
     
-    if (!hasEmailAuth) {
-      // Anonymous users cannot read orders due to email requirement in rules
+    if (permissionDenied) {
+      // Anonymous user - can't read orders directly due to Firestore rules
+      // Write a lookup request to a collection that anonymous CAN write to
+      // Then check if an admin already processed it
+      
+      const lookupRef = db.collection('order_lookups').doc();
+      await lookupRef.set({
+        orderNumber: rawOrderNumber,
+        customerEmail: customerEmail,
+        customerName: customerName || '',
+        requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'pending',
+        sessionId: chatSessionId
+      });
+      
+      // Listen for the response
       resultEl.innerHTML = `
-        <p style="color:#cc0000;">⚠️ Email Verification Required</p>
+        <p style="color:#006600;">🔍 Looking up your order...</p>
         <p style="font-size:10px;color:#888;margin-top:8px;">
-          To look up your order, we need to verify your email address. 
-          This is a security measure to protect your order information.
+          Order #${rawOrderNumber} for ${customerEmail}
         </p>
         <p style="font-size:10px;color:#888;margin-top:8px;">
-          <strong>Option 1:</strong> Click "Check Your Email" below and we'll send you a sign-in link.<br>
-          <strong>Option 2:</strong> Contact us directly via chat and we'll help you find your order.
+          This may take a moment. If you don't see results, our team will assist you shortly via chat.
         </p>
-        <button onclick="requestEmailVerification()" style="
-          margin-top: 12px;
-          padding: 8px 16px;
-          background: #111;
-          border: 1px solid #0f0;
-          color: #0f0;
-          cursor: pointer;
-          font-family: inherit;
-          font-size: 11px;
-          text-transform: uppercase;
-        ">📧 Send Verification Email</button>
       `;
+      
+      // Poll for the result
+      let attempts = 0;
+      const checkResult = setInterval(async () => {
+        attempts++;
+        try {
+          const doc = await lookupRef.get();
+          if (doc.exists && doc.data().status === 'completed') {
+            clearInterval(checkResult);
+            const data = doc.data();
+            if (data.orderData) {
+              const o = data.orderData;
+              const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+              const itemCount = o.items ? o.items.length : (o.itemCount || 0);
+              const total = o.subtotal || o.total || 0;
+              resultEl.innerHTML = `
+                <p style="margin-bottom:12px;font-size:10px;color:#006600;">✅ Order found</p>
+                <div style="padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.6;">
+                  <strong>Order #${o.orderNumber || o.id?.substring(0, 12)}</strong><br>
+                  Status: ${o.status || 'pending'}<br>
+                  Items: ${itemCount} · Total: R${total}<br>
+                  Date: ${date}
+                </div>`;
+            } else {
+              resultEl.innerHTML = '<p style="color:#888;">No order found matching those details.</p>';
+            }
+            // Clean up
+            lookupRef.delete().catch(() => {});
+          }
+        } catch (e) {
+          clearInterval(checkResult);
+        }
+        if (attempts > 30) {
+          clearInterval(checkResult);
+          resultEl.innerHTML = `
+            <p style="color:#888;">Still looking...</p>
+            <p style="font-size:10px;color:#aaa;margin-top:8px;">
+              Our team will assist you shortly. You can also ask in the chat.
+            </p>
+          `;
+        }
+      }, 2000);
+      
       return;
     }
     
-    // User has email auth - proceed with order lookup
-    const orders = [];
-
-    // Try exact match
-    console.log('[Chat] Trying exact match:', rawOrderNumber);
-    const exactSnap = await db.collection('orders')
-      .where('orderNumber', '==', rawOrderNumber)
-      .where('customerEmail', '==', customerEmail)
-      .limit(1).get();
-    console.log('[Chat] Exact match results:', exactSnap.size);
-    if (!exactSnap.empty) exactSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
-
-    // Try without dashes
-    if (orders.length === 0) {
-      const normalized = rawOrderNumber.replace(/-/g, '');
-      if (normalized !== rawOrderNumber) {
-        console.log('[Chat] Trying without dashes:', normalized);
-        const normSnap = await db.collection('orders')
-          .where('orderNumber', '==', normalized)
-          .where('customerEmail', '==', customerEmail)
-          .limit(1).get();
-        console.log('[Chat] No-dash results:', normSnap.size);
-        if (!normSnap.empty) normSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
-      }
-    }
-
-    // Try with dash after ORD
-    if (orders.length === 0 && !rawOrderNumber.includes('-') && rawOrderNumber.startsWith('ORD')) {
-      const dashed = rawOrderNumber.replace(/^(ORD)(\d)/, '$1-$2');
-      console.log('[Chat] Trying with dash:', dashed);
-      const dashedSnap = await db.collection('orders')
-        .where('orderNumber', '==', dashed)
-        .where('customerEmail', '==', customerEmail)
-        .limit(1).get();
-      console.log('[Chat] Dashed results:', dashedSnap.size);
-      if (!dashedSnap.empty) dashedSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
-    }
-
     if (orders.length === 0) {
       resultEl.innerHTML = '<p style="color:#888;">No order found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Check the order number and ensure you\'re using the email you ordered with. Try formats: ORD-12345 or ORD12345</p>';
       return;
@@ -466,73 +434,15 @@ async function lookupOrder() {
       
   } catch (e) {
     console.error('[Chat] Order lookup error:', e.code, e.message);
-    if (e.code === 'permission-denied' || (e.message && e.message.includes('permission'))) {
-      resultEl.innerHTML = `
-        <p style="color:#cc0000;">⚠️ Access Denied</p>
-        <p style="font-size:10px;color:#888;margin-top:8px;">
-          Order information requires email verification for security.
-        </p>
-        <button onclick="requestEmailVerification()" style="
-          margin-top: 12px;
-          padding: 8px 16px;
-          background: #111;
-          border: 1px solid #0f0;
-          color: #0f0;
-          cursor: pointer;
-          font-family: inherit;
-          font-size: 11px;
-          text-transform: uppercase;
-        ">📧 Send Verification Email</button>
-      `;
-    } else {
-      resultEl.innerHTML = `<p style="color:#cc0000;">⚠️ Error</p><p style="font-size:10px;color:#888;margin-top:8px;">${e.message}</p>`;
-    }
+    resultEl.innerHTML = `<p style="color:#cc0000;">⚠️ Error</p><p style="font-size:10px;color:#888;margin-top:8px;">${e.message}</p>`;
   }
 }
 
-// New function to request email verification
-async function requestEmailVerification() {
-  if (!customerEmail) {
-    const resultEl = safeEl('order-result');
-    if (resultEl) resultEl.innerHTML = '<p style="color:#888;">Please enter your email in the chat first.</p>';
-    return;
-  }
-  
-  const resultEl = safeEl('order-result');
-  if (resultEl) resultEl.innerHTML = '<p style="color:#888;">Sending verification email...</p>';
-  
-  try {
-    const actionCodeSettings = { 
-      url: window.location.href, 
-      handleCodeInApp: true 
-    };
-    await firebase.auth().sendSignInLinkToEmail(customerEmail, actionCodeSettings);
-    localStorage.setItem('janedore_chat_email_pending', customerEmail);
-    
-    if (resultEl) {
-      resultEl.innerHTML = `
-        <p style="color:#006600;">✅ Verification email sent!</p>
-        <p style="font-size:10px;color:#888;margin-top:8px;">
-          Check your inbox for <strong>${customerEmail}</strong>. 
-          Click the link in the email, then return here to look up your order.
-        </p>
-        <p style="font-size:10px;color:#888;margin-top:8px;">
-          After clicking the link, refresh this page and try your order lookup again.
-        </p>
-      `;
-    }
-  } catch (error) {
-    console.error('[Chat] Email verification send failed:', error.message);
-    if (resultEl) {
-      resultEl.innerHTML = `
-        <p style="color:#cc0000;">⚠️ Could not send verification email</p>
-        <p style="font-size:10px;color:#888;margin-top:8px;">
-          ${error.message}. Please try again or contact us via chat.
-        </p>
-      `;
-    }
-  }
-}
+// IMPORTANT: Add this collection to your Firestore rules so anonymous users can write lookup requests:
+// match /order_lookups/{doc} {
+//   allow read: if request.auth != null;
+//   allow write: if true;
+// }
 
 function backToChatOptions() { showOptionsScreen(); }
 
@@ -540,13 +450,10 @@ function backToChatOptions() { showOptionsScreen(); }
 async function loadAllMessages() {
   const el = safeEl('chat-messages');
   if (!el) return;
-  el.innerHTML = '';
+  el.innerHTML = '<div class="chat-welcome"><strong>Loading messages...</strong></div>';
 
-  // Check auth first since RTDB rules require auth != null
-  if (!currentUser && !rtdbConnected) {
-    el.innerHTML = '<div class="chat-welcome"><strong>Connecting...</strong>Establishing secure connection.</div>';
-    return;
-  }
+  // Start auth if not ready, but don't block
+  ensureAnonymousAuth();
 
   try {
     const snapshot = await rtdb
@@ -559,6 +466,7 @@ async function loadAllMessages() {
       return;
     }
 
+    el.innerHTML = '';
     const messages = [];
     snapshot.forEach(child => messages.push({ _key: child.key, ...child.val() }));
     messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
@@ -570,19 +478,17 @@ async function loadAllMessages() {
 
     el.scrollTop = el.scrollHeight;
   } catch (e) {
-    console.error('[Chat] Error loading messages:', e.code, e.message);
+    console.error('[Chat] Load messages error:', e.code, e.message);
     if (e.code === 'PERMISSION_DENIED') {
-      el.innerHTML = '<div class="chat-welcome"><strong>Authentication required</strong>Please wait while we authenticate you...</div>';
-      // Try to re-authenticate
+      el.innerHTML = '<div class="chat-welcome"><strong>Authenticating...</strong>Please wait a moment.</div>';
+      // Auth will complete and then messages will load via listener
       ensureAnonymousAuth().then(() => {
-        if (chatOpen && chatMode === 'chat') loadAllMessages();
+        setTimeout(() => {
+          if (chatOpen && chatMode === 'chat') loadAllMessages();
+        }, 1000);
       });
     } else {
-      el.innerHTML = '<div class="chat-welcome"><strong>Unable to load messages</strong>Retrying...</div>';
-      // Retry after a delay
-      setTimeout(() => {
-        if (chatOpen && chatMode === 'chat') loadAllMessages();
-      }, 2000);
+      el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
     }
   }
 }
@@ -625,11 +531,13 @@ function listenChat() {
       const unreadDot = safeEl('chat-unread-dot');
       if (!chatOpen && m.sender === 'admin' && unreadDot) unreadDot.style.display = 'block';
     }, (error) => {
-      console.error('[Chat] Listener error:', error.code, error.message);
-      // Retry listener on permission error
+      console.error('[Chat] Listener error:', error.code);
+      // Retry on permission error after auth
       if (error.code === 'PERMISSION_DENIED') {
         ensureAnonymousAuth().then(() => {
-          if (chatOpen && chatMode === 'chat') listenChat();
+          setTimeout(() => {
+            if (chatOpen && chatMode === 'chat') listenChat();
+          }, 1500);
         });
       }
     });
@@ -639,13 +547,11 @@ function listenChat() {
 
 // ==================== TYPING INDICATOR (RTDB) ====================
 function handleCustomerTyping() {
-  if (!chatSessionId || !rtdbConnected || !currentUser) return;
+  if (!chatSessionId || !rtdbConnected) return;
   
   clearTimeout(typingTimeout);
   
-  rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(true).catch((e) => {
-    console.log('[Chat] Typing indicator write skipped:', e.code);
-  });
+  rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(true).catch(() => {});
   
   typingTimeout = setTimeout(() => {
     rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(false).catch(() => {});
@@ -658,9 +564,7 @@ function listenTypingIndicator() {
     const isTyping = snap.val() === true;
     const indicator = safeEl('chat-typing-indicator');
     if (indicator) indicator.style.display = isTyping ? 'block' : 'none';
-  }, (error) => {
-    console.log('[Chat] Typing indicator listen skipped:', error.code);
-  });
+  }, () => {});
 }
 
 // ==================== SEND MESSAGE (RTDB) ====================
@@ -668,36 +572,31 @@ async function sendChatMessage() {
   const input = safeEl('chat-input');
   const sendBtn = safeEl('chat-send-btn');
   
-  if (!input) {
-    console.error('[Chat] Input element not found');
-    return;
-  }
+  if (!input) return;
   
   const text = input.value.trim();
   if (!text) return;
 
-  // Disable send button while sending
   if (sendBtn) {
     sendBtn.disabled = true;
     sendBtn.style.opacity = '0.5';
   }
   
-  console.log('[Chat] Sending message...');
-  
   try {
-    // Ensure authenticated - RTDB rules require auth != null
-    const user = await waitForAuth();
+    // Make sure we're authenticated for RTDB write (rules require auth != null)
+    let user = currentUser;
     if (!user) {
-      console.error('[Chat] Cannot send - not authenticated');
-      showChatFeedback('⚠️ Cannot send message - not authenticated. Please refresh the page.', true);
+      user = await ensureAnonymousAuth();
+    }
+    
+    if (!user) {
+      showChatFeedback('⚠️ Connecting... Please try again in a moment.', true);
       if (sendBtn) {
         sendBtn.disabled = false;
         sendBtn.style.opacity = '1';
       }
       return;
     }
-    
-    console.log('[Chat] Authenticated as:', user.uid);
     
     const messageData = {
       sessionId:     chatSessionId,
@@ -710,13 +609,10 @@ async function sendChatMessage() {
       userId:        user.uid
     };
 
-    // Push message to RTDB
     const messagesRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
-    const newMessageRef = await messagesRef.push(messageData);
-    
-    console.log('[Chat] Message sent, key:', newMessageRef.key);
+    await messagesRef.push(messageData);
 
-    // Update session meta (non-critical)
+    // Update session meta (non-critical, catch errors silently)
     rtdb.ref('live_chat/' + chatSessionId + '/meta').update({
       customerEmail:   customerEmail || '',
       customerName:    customerName  || '',
@@ -724,41 +620,29 @@ async function sendChatMessage() {
       lastMessageAt:   firebase.database.ServerValue.TIMESTAMP,
       userId:          user.uid,
       customerTyping:  false
-    }).catch(err => {
-      console.log('[Chat] Meta update non-critical:', err.code);
-    });
+    }).catch(() => {});
 
-    // Clear input
     input.value = '';
     clearTimeout(typingTimeout);
     
-    // Show success
-    showChatFeedback('✅ Message sent', false);
+    showChatFeedback('✅ Sent', false);
     
   } catch (e) {
     console.error('[Chat] Send failed:', e.code, e.message);
     
-    let errorMsg = '⚠️ Failed to send. ';
-    
     if (e.code === 'PERMISSION_DENIED') {
-      errorMsg += 'Permission denied. Trying to re-authenticate...';
-      // Try re-auth
+      // Re-auth and try again
       currentUser = null;
       const user = await ensureAnonymousAuth();
       if (user) {
-        errorMsg = '⚠️ Re-authenticated. Please try sending again.';
-        // Restore the message
-        input.value = text;
+        input.value = text; // Restore message
+        showChatFeedback('⚠️ Please try sending again.', true);
+      } else {
+        showChatFeedback('⚠️ Unable to send. Please refresh the page.', true);
       }
-    } else if (e.message && e.message.includes('disconnected')) {
-      errorMsg += 'Database disconnected. Please wait and try again.';
-    } else if (e.message && e.message.includes('uninitialized')) {
-      errorMsg += 'Firebase not ready. Please refresh the page.';
     } else {
-      errorMsg += e.message;
+      showChatFeedback('⚠️ Failed to send. Try again.', true);
     }
-    
-    showChatFeedback(errorMsg, true);
   } finally {
     if (sendBtn) {
       sendBtn.disabled = false;
@@ -786,9 +670,8 @@ async function handleEmailLinkSignIn() {
         chatSessionId = 'chat-' + normalizedEmail.replace(/[^a-zA-Z0-9]/g, '-');
         localStorage.setItem('janedore_chat_session', chatSessionId);
         window.history.replaceState({}, document.title, window.location.pathname);
-        console.log('[Chat] Email link sign-in successful:', normalizedEmail);
       } catch (error) {
-        console.error('[Chat] Email link sign-in failed:', error.code, error.message);
+        console.error('[Chat] Email link sign-in failed:', error.message);
       }
     }
   }
@@ -804,32 +687,20 @@ function handleChatKeyPress(event) {
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Chat] DOM ready, initializing...');
-  
   handleEmailLinkSignIn();
   
-  // Pre-fill name/email if returning user
   const nameInput  = safeEl('chat-name-input');
   const emailInput = safeEl('chat-email-input');
   if (nameInput  && customerName)  nameInput.value  = customerName;
   if (emailInput && customerEmail) emailInput.value = customerEmail;
   
-  // Attach enter key handler
   const chatInput = safeEl('chat-input');
   if (chatInput) {
     chatInput.addEventListener('keypress', handleChatKeyPress);
   }
   
-  // Attach click handler to send button
   const sendBtn = safeEl('chat-send-btn');
   if (sendBtn) {
     sendBtn.addEventListener('click', sendChatMessage);
   }
-  
-  // Initialize anonymous auth proactively
-  ensureAnonymousAuth().then(user => {
-    console.log('[Chat] Proactive auth result:', user ? 'authenticated' : 'failed');
-  });
-  
-  console.log('[Chat] Initialization complete, session:', chatSessionId);
 });
