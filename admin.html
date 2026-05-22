@@ -178,9 +178,6 @@
       letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
       text-transform: uppercase; color: var(--muted);
     }
-    .chat-session-card .session-email {
-      font-size: 10px; color: var(--muted); margin-top: 2px;
-    }
     .chat-session-card .session-preview { font-size: 12px; font-weight: 300; color: var(--text); margin-top: 4px; }
     .chat-session-card .unread-count {
       position: absolute; top: 8px; right: 8px; background: var(--danger); color: #fff;
@@ -283,6 +280,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
@@ -291,23 +289,22 @@
     storageBucket: "janedore-9f035.firebasestorage.app",
     messagingSenderId: "571299748651",
     appId: "1:571299748651:web:01463a772d47b39cc4036e",
-    measurementId: "G-Y9NMT0ZGKZ"
+    measurementId: "G-Y9NMT0ZGKZ",
+    databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const rtdb = firebase.database();
   const auth = firebase.auth();
   const productsRef = db.collection('products');
   const reviewsRef = db.collection('reviews');
   const newsletterRef = db.collection('newsletter');
   const ordersRef = db.collection('orders');
-  const chatRef = db.collection('live_chat');
-  const typingRef = db.collection('live_chat_typing');
 
   let currentTab = 'dashboard';
   let allProducts = [];
   let activeChatSession = null;
   let chatUnsubscribe = null;
-  let typingUnsubscribe = null;
   let totalUnreadMessages = 0;
 
   // ── AUTH ──────────────────────────────────────────────────────────
@@ -383,239 +380,6 @@
     catch (e) { showToast('Error deleting: ' + e.message, 'error'); }
   }
 
-  // ── REAL-TIME CHAT MONITORING ────────────────────────────────────
-  let globalChatUnsubscribe = null;
-
-  function startChatMonitoring() {
-    if (globalChatUnsubscribe) return;
-    globalChatUnsubscribe = chatRef
-      .where('sender', '==', 'customer')
-      .where('read', '==', false)
-      .onSnapshot(snap => {
-        totalUnreadMessages = snap.size;
-        updateUnreadBadge();
-      }, err => console.warn('Chat monitor error:', err));
-  }
-
-  function stopChatMonitoring() {
-    if (globalChatUnsubscribe) { globalChatUnsubscribe(); globalChatUnsubscribe = null; }
-    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
-    if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
-  }
-
-  function updateUnreadBadge() {
-    const badge = document.getElementById('messages-unread-badge');
-    if (badge) {
-      badge.textContent = totalUnreadMessages;
-      badge.style.display = totalUnreadMessages > 0 ? 'inline-block' : 'none';
-    }
-  }
-
-  // ── SEND ADMIN REPLY ─────────────────────────────────────────────
-  async function sendAdminReply(sessionId) {
-    const input = document.getElementById(`reply-input-${sessionId}`);
-    const text = input?.value?.trim();
-    if (!text || !sessionId) return;
-    try {
-      // Update typing indicator
-      await typingRef.doc(sessionId).set({
-        adminTyping: false,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-
-      await chatRef.add({
-        sessionId: sessionId,
-        text: text,
-        sender: 'admin',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        read: true
-      });
-      input.value = '';
-      // Re-render happens automatically via the real-time listener
-    } catch (e) { showToast('Error sending reply: ' + e.message, 'error'); }
-  }
-
-  // ── MARK MESSAGES AS READ ────────────────────────────────────────
-  async function markSessionAsRead(sessionId) {
-    try {
-      const snapshot = await chatRef
-        .where('sessionId', '==', sessionId)
-        .where('sender', '==', 'customer')
-        .where('read', '==', false)
-        .get();
-      
-      const batch = db.batch();
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { read: true });
-      });
-      await batch.commit();
-    } catch (e) { console.warn('Mark read error:', e); }
-  }
-
-  // ── ADMIN TYPING INDICATOR ───────────────────────────────────────
-  function handleAdminTyping(sessionId) {
-    typingRef.doc(sessionId).set({
-      adminTyping: true,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).catch(() => {});
-    
-    // Clear after 3 seconds of inactivity
-    clearTimeout(window._adminTypingTimeout);
-    window._adminTypingTimeout = setTimeout(() => {
-      typingRef.doc(sessionId).set({
-        adminTyping: false,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(() => {});
-    }, 3000);
-  }
-
-  // ── LOAD CHAT SESSION WITH REAL-TIME LISTENER ────────────────────
-  async function openChatSession(sessionId) {
-    activeChatSession = sessionId;
-    
-    // Unsubscribe from previous listeners
-    if (chatUnsubscribe) chatUnsubscribe();
-    if (typingUnsubscribe) typingUnsubscribe();
-
-    // Mark customer messages as read
-    await markSessionAsRead(sessionId);
-
-    // Get session email
-    let sessionEmail = '';
-    try {
-      const msgSnap = await chatRef
-        .where('sessionId', '==', sessionId)
-        .where('sender', '==', 'customer')
-        .limit(1)
-        .get();
-      if (!msgSnap.empty) {
-        sessionEmail = msgSnap.docs[0].data().customerEmail || '';
-      }
-    } catch (e) {}
-
-    const mc = document.getElementById('main-content');
-    mc.innerHTML = `
-      <button class="btn-underline" onclick="switchTab('messages')" style="margin-bottom:12px;">Back to Sessions</button>
-      <div class="section-title">Chat: ${sessionId.substring(0, 30)}...</div>
-      ${sessionEmail ? `<div style="font-size:10px;color:var(--muted);margin-bottom:12px;">${sessionEmail}</div>` : ''}
-      <div class="chat-messages-panel" id="chat-messages-panel">
-        <div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading messages...</div>
-      </div>
-      <div class="typing-indicator" id="typing-indicator">Customer is typing...</div>
-      <div class="reply-box">
-        <input id="reply-input-${sessionId}" placeholder="Type your reply..." 
-          onkeypress="if(event.key==='Enter')sendAdminReply('${sessionId}')"
-          oninput="handleAdminTyping('${sessionId}')">
-        <button class="btn-underline" onclick="sendAdminReply('${sessionId}')">Send</button>
-      </div>`;
-
-    // Real-time listener for messages
-    chatUnsubscribe = chatRef
-      .where('sessionId', '==', sessionId)
-      .orderBy('createdAt', 'asc')
-      .onSnapshot(snap => {
-        renderChatMessages(snap.docs, sessionId);
-      }, err => {
-        console.warn('Chat listener error:', err);
-      });
-
-    // Real-time listener for typing indicator
-    typingUnsubscribe = typingRef.doc(sessionId)
-      .onSnapshot(snap => {
-        const data = snap.data();
-        const indicator = document.getElementById('typing-indicator');
-        if (indicator) {
-          indicator.style.display = (data && data.customerTyping) ? 'block' : 'none';
-        }
-      });
-  }
-
-  function renderChatMessages(docs, sessionId) {
-    const panel = document.getElementById('chat-messages-panel');
-    if (!panel) return;
-
-    const wasAtBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 40;
-
-    panel.innerHTML = '';
-    
-    if (docs.length === 0) {
-      panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">No messages yet.</div>';
-      return;
-    }
-
-    docs.forEach(doc => {
-      const m = doc.data();
-      const time = m.createdAt 
-        ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
-        : '';
-      const div = document.createElement('div');
-      div.className = `chat-msg-admin ${m.sender === 'customer' ? 'customer-msg' : 'admin-msg'}`;
-      div.innerHTML = `<div>${escapeHtml(m.text)}</div><div class="msg-meta">${m.sender} · ${time}</div>`;
-      panel.appendChild(div);
-    });
-
-    if (wasAtBottom) panel.scrollTop = panel.scrollHeight;
-  }
-
-  // ── RENDER MESSAGES TAB ──────────────────────────────────────────
-  async function renderMessagesTab() {
-    const mc = document.getElementById('main-content');
-    activeChatSession = null;
-    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
-    if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
-
-    try {
-      const snapshot = await chatRef.orderBy('createdAt', 'desc').get();
-      const sessions = {};
-      
-      snapshot.docs.forEach(d => {
-        const data = d.data();
-        if (!sessions[data.sessionId]) {
-          sessions[data.sessionId] = { 
-            messages: [], 
-            lastTime: null, 
-            email: data.customerEmail || '',
-            unreadCount: 0 
-          };
-        }
-        sessions[data.sessionId].messages.push(data);
-        if (data.createdAt && (!sessions[data.sessionId].lastTime || data.createdAt.seconds > sessions[data.sessionId].lastTime.seconds)) {
-          sessions[data.sessionId].lastTime = data.createdAt;
-        }
-        if (data.sender === 'customer' && data.read === false) {
-          sessions[data.sessionId].unreadCount++;
-        }
-      });
-
-      const sessionIds = Object.keys(sessions).sort((a, b) => 
-        (sessions[b].lastTime?.seconds || 0) - (sessions[a].lastTime?.seconds || 0)
-      );
-
-      mc.innerHTML = `<div class="section-title">Customer Messages (${sessionIds.length} sessions)</div>
-        <div class="chat-sessions-list">
-          ${sessionIds.length === 0 ? '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>' : ''}
-          ${sessionIds.map(sid => {
-            const s = sessions[sid];
-            const msgs = s.messages;
-            const lastMsg = msgs[msgs.length - 1];
-            const preview = (lastMsg?.text || '').substring(0, 80);
-            const time = lastMsg?.createdAt ? new Date(lastMsg.createdAt.seconds * 1000).toLocaleDateString() : '';
-            const customerMsgs = msgs.filter(m => m.sender === 'customer');
-            return `<div class="chat-session-card ${s.unreadCount > 0 ? 'unread' : ''}" onclick="openChatSession('${sid}')">
-              <div class="session-id">${sid.substring(0, 25)}...</div>
-              ${s.email ? `<div class="session-email">${s.email}</div>` : ''}
-              <div class="session-preview">${escapeHtml(preview)}${preview.length >= 80 ? '...' : ''}</div>
-              <div style="font-size:8px;color:var(--muted);margin-top:4px;">${customerMsgs.length} messages · ${time}</div>
-              ${s.unreadCount > 0 ? `<div class="unread-count" style="display:inline-block;">${s.unreadCount} new</div>` : ''}
-            </div>`;
-          }).join('')}
-        </div>`;
-    } catch (e) { 
-      mc.innerHTML = `<p style="color:var(--danger);">Error loading messages: ${e.message}</p>`; 
-    }
-  }
-
-  // ── REST OF EXISTING CODE (unchanged) ────────────────────────────
   const DEFAULT_PRODUCTS = [
     { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 10, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail: [] } }] },
     { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail: [] } }] },
@@ -637,6 +401,195 @@
     } catch (e) { showToast('Error seeding: ' + e.message, 'error'); }
   }
 
+  // ── REALTIME DB CHAT ──────────────────────────────────────────────
+  function startChatMonitoring() {
+    rtdb.ref('chats').on('value', (snapshot) => {
+      let unread = 0;
+      snapshot.forEach((sessionSnap) => {
+        const messages = sessionSnap.child('messages');
+        if (messages.exists()) {
+          messages.forEach((msgSnap) => {
+            const msg = msgSnap.val();
+            if (msg.sender === 'customer' && msg.read === false) unread++;
+          });
+        }
+      });
+      totalUnreadMessages = unread;
+      updateUnreadBadge();
+    });
+  }
+
+  function stopChatMonitoring() {
+    rtdb.ref('chats').off();
+    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+  }
+
+  function updateUnreadBadge() {
+    const badge = document.getElementById('messages-unread-badge');
+    if (badge) {
+      badge.textContent = totalUnreadMessages;
+      badge.style.display = totalUnreadMessages > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  async function sendAdminReply(sessionId) {
+    const input = document.getElementById(`reply-input-${sessionId}`);
+    const text = input?.value?.trim();
+    if (!text || !sessionId) return;
+    try {
+      rtdb.ref(`chats/${sessionId}/typing`).set({ admin: false });
+      await rtdb.ref(`chats/${sessionId}/messages`).push({
+        text: text,
+        sender: 'admin',
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        read: true
+      });
+      input.value = '';
+    } catch (e) {
+      showToast('Error sending reply: ' + e.message, 'error');
+    }
+  }
+
+  async function markSessionAsRead(sessionId) {
+    try {
+      const snap = await rtdb.ref(`chats/${sessionId}/messages`).once('value');
+      const updates = {};
+      snap.forEach((child) => {
+        const msg = child.val();
+        if (msg.sender === 'customer' && msg.read === false) {
+          updates[`${child.key}/read`] = true;
+        }
+      });
+      if (Object.keys(updates).length > 0) {
+        await rtdb.ref(`chats/${sessionId}/messages`).update(updates);
+      }
+    } catch (e) { console.warn('Mark read error:', e); }
+  }
+
+  function handleAdminTyping(sessionId) {
+    rtdb.ref(`chats/${sessionId}/typing`).set({ admin: true });
+    clearTimeout(window._adminTypingTimeout);
+    window._adminTypingTimeout = setTimeout(() => {
+      rtdb.ref(`chats/${sessionId}/typing`).set({ admin: false });
+    }, 3000);
+  }
+
+  async function openChatSession(sessionId) {
+    activeChatSession = sessionId;
+    if (chatUnsubscribe) chatUnsubscribe();
+
+    await markSessionAsRead(sessionId);
+
+    const mc = document.getElementById('main-content');
+    mc.innerHTML = `
+      <button class="btn-underline" onclick="switchTab('messages')" style="margin-bottom:12px;">Back to Sessions</button>
+      <div class="section-title">Chat: ${sessionId.substring(0, 30)}...</div>
+      <div class="chat-messages-panel" id="chat-messages-panel">
+        <div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading messages...</div>
+      </div>
+      <div class="typing-indicator" id="typing-indicator">Customer is typing...</div>
+      <div class="reply-box">
+        <input id="reply-input-${sessionId}" placeholder="Type your reply..." 
+          onkeypress="if(event.key==='Enter')sendAdminReply('${sessionId}')"
+          oninput="handleAdminTyping('${sessionId}')">
+        <button class="btn-underline" onclick="sendAdminReply('${sessionId}')">Send</button>
+      </div>`;
+
+    chatUnsubscribe = rtdb.ref(`chats/${sessionId}/messages`).on('value', (snapshot) => {
+      const messages = [];
+      snapshot.forEach((child) => {
+        messages.push({ id: child.key, ...child.val() });
+      });
+      messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      renderChatMessages(messages);
+    });
+
+    rtdb.ref(`chats/${sessionId}/typing`).on('value', (snapshot) => {
+      const data = snapshot.val();
+      const indicator = document.getElementById('typing-indicator');
+      if (indicator) {
+        indicator.style.display = (data && data.customer) ? 'block' : 'none';
+      }
+    });
+  }
+
+  function renderChatMessages(messages) {
+    const panel = document.getElementById('chat-messages-panel');
+    if (!panel) return;
+    const wasAtBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 40;
+    panel.innerHTML = '';
+    
+    if (messages.length === 0) {
+      panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">No messages yet.</div>';
+      return;
+    }
+
+    messages.forEach((m) => {
+      const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+      const div = document.createElement('div');
+      div.className = `chat-msg-admin ${m.sender === 'customer' ? 'customer-msg' : 'admin-msg'}`;
+      div.innerHTML = `<div>${escapeHtml(m.text)}</div><div class="msg-meta">${m.sender} · ${time}</div>`;
+      panel.appendChild(div);
+    });
+
+    if (wasAtBottom) panel.scrollTop = panel.scrollHeight;
+  }
+
+  async function renderMessagesTab() {
+    const mc = document.getElementById('main-content');
+    activeChatSession = null;
+    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+
+    try {
+      const snap = await rtdb.ref('chats').once('value');
+      const sessions = {};
+
+      snap.forEach((sessionSnap) => {
+        const sessionId = sessionSnap.key;
+        const messagesSnap = sessionSnap.child('messages');
+        if (!messagesSnap.exists()) return;
+        
+        sessions[sessionId] = { messages: [], lastTime: 0, unreadCount: 0 };
+        
+        messagesSnap.forEach((msgSnap) => {
+          const msg = msgSnap.val();
+          sessions[sessionId].messages.push(msg);
+          if (msg.timestamp > sessions[sessionId].lastTime) {
+            sessions[sessionId].lastTime = msg.timestamp;
+          }
+          if (msg.sender === 'customer' && msg.read === false) {
+            sessions[sessionId].unreadCount++;
+          }
+        });
+      });
+
+      const sessionIds = Object.keys(sessions).sort((a, b) => 
+        (sessions[b].lastTime || 0) - (sessions[a].lastTime || 0)
+      );
+
+      mc.innerHTML = `<div class="section-title">Customer Messages (${sessionIds.length} sessions)</div>
+        <div class="chat-sessions-list">
+          ${sessionIds.length === 0 ? '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>' : ''}
+          ${sessionIds.map(sid => {
+            const s = sessions[sid];
+            const msgs = s.messages;
+            const lastMsg = msgs[msgs.length - 1];
+            const preview = (lastMsg?.text || '').substring(0, 80);
+            const time = s.lastTime ? new Date(s.lastTime).toLocaleDateString() : '';
+            return `<div class="chat-session-card ${s.unreadCount > 0 ? 'unread' : ''}" onclick="openChatSession('${sid}')">
+              <div class="session-id">${sid.substring(0, 25)}...</div>
+              <div class="session-preview">${escapeHtml(preview)}${preview.length >= 80 ? '...' : ''}</div>
+              <div style="font-size:8px;color:var(--muted);margin-top:4px;">${msgs.length} messages · ${time}</div>
+              ${s.unreadCount > 0 ? `<div class="unread-count" style="display:inline-block;">${s.unreadCount} new</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>`;
+    } catch (e) { 
+      mc.innerHTML = `<p style="color:var(--danger);">Error loading messages: ${e.message}</p>`; 
+    }
+  }
+
+  // ── PRODUCT MODAL ─────────────────────────────────────────────────
   function openNewProductModal() { openProductModal(null); }
 
   function openProductModal(product) {
@@ -796,7 +749,6 @@
     if (tab !== 'messages') {
       activeChatSession = null;
       if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
-      if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
     }
     document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
     const activeBtn = document.querySelector(`[onclick="switchTab('${tab}')"]`);
