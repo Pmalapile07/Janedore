@@ -374,25 +374,24 @@ async function lookupOrder() {
   
   const orderNum = input.value.trim().toUpperCase();
   if (!orderNum) { resultEl.textContent = 'Please enter an order number.'; return; }
-  if (!customerEmail) { resultEl.textContent = 'Please enter your email in chat first.'; return; }
   
   resultEl.textContent = 'Searching...';
   
   try {
     const snap = await db.collection('orders')
       .where('orderNumber', '==', orderNum)
-      .where('customerEmail', '==', customerEmail)
-      .limit(1).get();
+      .limit(1)
+      .get();
     
     if (snap.empty) {
-      resultEl.innerHTML = '<p style="color:#888;">No order found.</p><p style="font-size:10px;">Check your order number and email.</p>';
+      resultEl.innerHTML = '<p style="color:#888;">No order found.</p><p style="font-size:10px;">Check your order number and try again.</p>';
       return;
     }
     
     const o = snap.docs[0].data();
     const date = o.createdAt ? new Date(o.createdAt.seconds*1000).toLocaleDateString() : 'N/A';
     resultEl.innerHTML = `
-      <p style="color:green;">✅ Order found</p>
+      <p style="color:green;"> Order found</p>
       <div style="background:#f5f5f5;padding:12px;border-radius:8px;font-size:12px;">
         <strong>#${o.orderNumber || snap.docs[0].id}</strong><br>
         Status: ${o.status || 'pending'}<br>
