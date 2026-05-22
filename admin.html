@@ -235,7 +235,6 @@
 </head>
 <body>
 
-<!-- ── Login Screen ─────────────────────────────────────────────── -->
 <div id="login-screen" class="login-container" style="display:none;">
   <div class="login-box">
     <div class="login-title">JANEDORE</div>
@@ -249,7 +248,6 @@
   </div>
 </div>
 
-<!-- ── Admin Panel ──────────────────────────────────────────────── -->
 <div id="admin-panel" style="display:none;">
   <div class="admin-header">
     <h1><span class="status-dot online" id="status-dot"></span>JANEDORE Admin</h1>
@@ -281,7 +279,6 @@
 <div id="modal-container"></div>
 <div id="toast-container"></div>
 
-<!-- ── Firebase SDKs (compat) — load in exact dependency order ──── -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -291,7 +288,6 @@
 (function () {
   'use strict';
 
-  // ── Firebase init (ONCE) ────────────────────────────────────────
   var firebaseConfig = {
     apiKey:            "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
     authDomain:        "janedore-9f035.firebaseapp.com",
@@ -315,27 +311,23 @@
   var newsletterRef= db.collection('newsletter');
   var ordersRef    = db.collection('orders');
 
-  // ── App state ───────────────────────────────────────────────────
+  // ⭐ CHAT ROOT PATH - matches your chat widget
+  var CHAT_ROOT = 'live_chat';
+
   var currentTab          = 'dashboard';
   var allProducts         = [];
   var activeChatSession   = null;
-  var chatMsgRef          = null;   // RTDB ref for active session messages
-  var chatMsgCallback     = null;   // stored callback for .off()
-  var chatTypingRef       = null;   // RTDB ref for active session typing
+  var chatMsgRef          = null;
+  var chatMsgCallback     = null;
+  var chatTypingRef       = null;
   var chatTypingCallback  = null;
-  var chatsMonitorRef     = null;   // top-level chats ref for badge monitoring
+  var chatsMonitorRef     = null;
   var chatsMonitorCallback= null;
   var totalUnreadMessages = 0;
 
-  // ── Helpers ─────────────────────────────────────────────────────
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
   function showToast(msg, type) {
@@ -344,48 +336,48 @@
     toast.className = 'toast toast-' + type;
     toast.textContent = msg;
     document.getElementById('toast-container').appendChild(toast);
-    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+    setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
   }
 
   function safeEl(id) { return document.getElementById(id) || null; }
 
-  // ── Auth ────────────────────────────────────────────────────────
-  auth.onAuthStateChanged(function (user) {
+  // ── AUTH ──────────────────────────────────────────────────────
+  auth.onAuthStateChanged(function(user) {
     if (user) {
-      safeEl('login-screen').style.display  = 'none';
-      safeEl('admin-panel').style.display   = 'block';
-      safeEl('admin-email').textContent     = user.email;
+      safeEl('login-screen').style.display = 'none';
+      safeEl('admin-panel').style.display  = 'block';
+      safeEl('admin-email').textContent    = user.email;
       loadProducts();
       startChatMonitoring();
     } else {
-      safeEl('login-screen').style.display  = 'flex';
-      safeEl('admin-panel').style.display   = 'none';
+      safeEl('login-screen').style.display = 'flex';
+      safeEl('admin-panel').style.display  = 'none';
       stopChatMonitoring();
     }
   });
 
-  window.handleLogin = function (e) {
+  window.handleLogin = function(e) {
     e.preventDefault();
-    var email    = safeEl('login-email').value;
+    var email = safeEl('login-email').value;
     var password = safeEl('login-password').value;
-    var errorEl  = safeEl('login-error');
+    var errorEl = safeEl('login-error');
     errorEl.style.display = 'none';
-    auth.signInWithEmailAndPassword(email, password).catch(function (err) {
-      errorEl.textContent   = err.message;
+    auth.signInWithEmailAndPassword(email, password).catch(function(err) {
+      errorEl.textContent = err.message;
       errorEl.style.display = 'block';
     });
   };
 
-  window.handleLogout = function () { auth.signOut(); };
+  window.handleLogout = function() { auth.signOut(); };
 
-  // ── Products ────────────────────────────────────────────────────
+  // ── PRODUCTS ──────────────────────────────────────────────────
   function loadProducts() {
-    productsRef.get().then(function (snapshot) {
-      allProducts = snapshot.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+    productsRef.get().then(function(snapshot) {
+      allProducts = snapshot.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
       safeEl('product-count').textContent = allProducts.length + ' products';
       safeEl('status-dot').className = 'status-dot online';
       renderCurrentTab();
-    }).catch(function (e) {
+    }).catch(function(e) {
       safeEl('status-dot').className = 'status-dot offline';
       showToast('Firebase connection failed: ' + e.message, 'error');
     });
@@ -394,147 +386,137 @@
   function saveProduct(productData) {
     var ref = productData.id ? productsRef.doc(productData.id) : productsRef.doc(productData.sku || ('prod-' + Date.now()));
     productData.id = ref.id;
-    ref.set(productData, { merge: true }).then(function () {
+    ref.set(productData, {merge:true}).then(function() {
       showToast('Product saved!');
       loadProducts();
       closeModal();
-    }).catch(function (e) { showToast('Error saving: ' + e.message, 'error'); });
+    }).catch(function(e){ showToast('Error saving: '+e.message,'error'); });
   }
 
-  window.deleteProduct = function (productId) {
-    if (!confirm('Delete this product?')) return;
-    productsRef.doc(productId).delete().then(function () {
+  window.deleteProduct = function(productId) {
+    if(!confirm('Delete this product?')) return;
+    productsRef.doc(productId).delete().then(function() {
       showToast('Product deleted');
       loadProducts();
       closeModal();
-    }).catch(function (e) { showToast('Error deleting: ' + e.message, 'error'); });
+    }).catch(function(e){ showToast('Error deleting: '+e.message,'error'); });
   };
 
-  // ── Default seed data ────────────────────────────────────────────
   var DEFAULT_PRODUCTS = [
-    { id: "nova-sunglasses", sku: "ACC-NSG-006", name: "Janedore Logo Nova Sunglasses", brand: "JANEDORE", category: "sunglasses", price: 350, salePrice: null, badge: "sold", sizes: ["OS"], stock: 10, status: "active", featured: true, description: "Bold yet refined sunglasses with UV protection.", productFeatures: "UV400 lenses.", compositionCare: "Acetate frame.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Warm Brown", swatch: "#AF3E06", images: { model: [], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail: [] } }] },
-    { id: "tenese-gold-earrings", sku: "JWL-TGE-005", name: "Stainless Steel Tenesè Gold Earrings", brand: "NIRIUS CO", category: "jewelry", price: 380, salePrice: null, badge: "new", sizes: ["Stainless Steel"], stock: 10, status: "active", featured: true, description: "Sculptural gold earrings with a modern twist.", productFeatures: "18k gold-plated.", compositionCare: "Gold-plated stainless steel.", shippingReturns: "Free shipping over R1500.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Gold", swatch: "#d4af37", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail: [] } }] },
-    { id: "janedore-leather-pouch", sku: "ACC-JLP-007", name: "Janedore Debossed Leather Pouch", brand: "JANEDORE", category: "bags", price: 50, salePrice: null, badge: null, sizes: ["OS"], stock: 50, status: "active", featured: false, description: "Supple debossed leather pouch.", productFeatures: "Genuine leather.", compositionCare: "100% Leather.", shippingReturns: "Free with sunglass purchase.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail: [] } }] },
-    { id: "janedore-raffle-brandy-black-dress", sku: "DRS-RBB-001", name: "Janedore Raffle Brandy Black Dress", brand: "JANEDORE", category: "dresses", price: 450, salePrice: null, badge: "new", sizes: ["S","M","L"], stock: 40, status: "active", featured: true, description: "The Raffle Brandy black dress.", productFeatures: "Weighted crepe fabric.", compositionCare: "100% Polyester.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail: [] } }] },
-    { id: "thato-rumination-tea-parfum", sku: "PRF-TRT-001", name: "Thato Rumination Tea Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 30, status: "active", featured: true, description: "A contemplative fragrance.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Pale Linen", swatch: "#EBEDE0", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail: [] } }] },
-    { id: "thato-pink-rain-parfum", sku: "PRF-TPR-002", name: "Thato Pink Rain Parfum", brand: "THATO", category: "parfum", price: 350, salePrice: null, badge: "new", sizes: ["OS"], stock: 25, status: "active", featured: true, description: "A delicate, romantic fragrance.", productFeatures: "Long-lasting eau de parfum. 50ml.", compositionCare: "Alcohol denat., parfum.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Pink Rain", swatch: "#F3DBD7", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail: [] } }] },
-    { id: "janedore-studded-halter-dress", sku: "DRS-SHN-001", name: "Janedore Studded Halter Neck Dress", brand: "JANEDORE", category: "dresses", price: 680, salePrice: null, badge: "new", sizes: ["XS","S","M","L"], stock: 20, status: "active", featured: true, description: "Refined edge meets feminine structure.", productFeatures: "Structured halter neckline.", compositionCare: "95% Polyester, 5% Elastane.", shippingReturns: "Free shipping over R1000.", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), variants: [{ color: "Black", swatch: "#111", images: { model: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail: ["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
+    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:null, badge:"sold", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses with UV protection.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
+    { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings with a modern twist.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
+    { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail:[] } }] },
+    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:null, badge:"new", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"The Raffle Brandy black dress.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
+    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
+    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Pink Rain", swatch:"#F3DBD7", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail:[] } }] },
+    { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
   ];
 
-  window.seedDefaultProducts = function () {
-    if (!confirm('Seed all 7 default products to Firebase?')) return;
+  window.seedDefaultProducts = function() {
+    if(!confirm('Seed all 7 default products to Firebase?')) return;
     var batch = db.batch();
-    DEFAULT_PRODUCTS.forEach(function (p) {
-      batch.set(productsRef.doc(p.id), p);
-    });
-    batch.commit().then(function () {
-      showToast('7 products seeded!');
-      loadProducts();
-    }).catch(function (e) { showToast('Error seeding: ' + e.message, 'error'); });
+    DEFAULT_PRODUCTS.forEach(function(p){ batch.set(productsRef.doc(p.id), p); });
+    batch.commit().then(function(){ showToast('7 products seeded!'); loadProducts(); }).catch(function(e){ showToast('Error seeding: '+e.message,'error'); });
   };
 
-  // ── Chat monitoring (unread badge) ───────────────────────────────
+  // ── CHAT MONITORING (⭐ uses live_chat path) ───────────────────
   function startChatMonitoring() {
-    stopChatMonitoring(); // ensure clean state
-    chatsMonitorRef = rtdb.ref('chats');
-    chatsMonitorCallback = function (snapshot) {
+    stopChatMonitoring();
+    console.log('[ADMIN] Starting chat monitor on:', CHAT_ROOT);
+    chatsMonitorRef = rtdb.ref(CHAT_ROOT);
+    chatsMonitorCallback = function(snapshot) {
       var unread = 0;
-      snapshot.forEach(function (sessionSnap) {
+      snapshot.forEach(function(sessionSnap) {
         var messages = sessionSnap.child('messages');
-        if (messages.exists()) {
-          messages.forEach(function (msgSnap) {
+        if(messages.exists()) {
+          messages.forEach(function(msgSnap) {
             var msg = msgSnap.val();
-            if (msg && msg.sender === 'customer' && msg.read === false) {
-              unread++;
-            }
+            if(msg && msg.sender === 'customer' && msg.read === false) unread++;
           });
         }
       });
       totalUnreadMessages = unread;
       updateUnreadBadge();
     };
-    chatsMonitorRef.on('value', chatsMonitorCallback, function (err) {
+    chatsMonitorRef.on('value', chatsMonitorCallback, function(err) {
       console.warn('[ADMIN CHAT] monitor error:', err.message);
     });
   }
 
   function stopChatMonitoring() {
-    if (chatsMonitorRef && chatsMonitorCallback) {
+    if(chatsMonitorRef && chatsMonitorCallback) {
       chatsMonitorRef.off('value', chatsMonitorCallback);
-      chatsMonitorRef     = null;
-      chatsMonitorCallback= null;
+      chatsMonitorRef = null;
+      chatsMonitorCallback = null;
     }
     detachActiveChatListeners();
   }
 
   function updateUnreadBadge() {
     var badge = safeEl('messages-unread-badge');
-    if (badge) {
-      badge.textContent    = totalUnreadMessages;
-      badge.style.display  = totalUnreadMessages > 0 ? 'inline-block' : 'none';
+    if(badge) {
+      badge.textContent = totalUnreadMessages;
+      badge.style.display = totalUnreadMessages > 0 ? 'inline-block' : 'none';
     }
   }
 
-  // ── Active chat session listeners ────────────────────────────────
   function detachActiveChatListeners() {
-    if (chatMsgRef && chatMsgCallback) {
-      chatMsgRef.off('value', chatMsgCallback);
-      chatMsgRef = null; chatMsgCallback = null;
-    }
-    if (chatTypingRef && chatTypingCallback) {
-      chatTypingRef.off('value', chatTypingCallback);
-      chatTypingRef = null; chatTypingCallback = null;
-    }
+    if(chatMsgRef && chatMsgCallback) { chatMsgRef.off('value', chatMsgCallback); chatMsgRef = null; chatMsgCallback = null; }
+    if(chatTypingRef && chatTypingCallback) { chatTypingRef.off('value', chatTypingCallback); chatTypingRef = null; chatTypingCallback = null; }
   }
 
-  // ── Send admin reply ─────────────────────────────────────────────
-  window.sendAdminReply = function (sessionId) {
+  // ── SEND ADMIN REPLY (⭐ uses live_chat path + createdAt) ──────
+  window.sendAdminReply = function(sessionId) {
     var input = safeEl('reply-input-' + sessionId);
-    var text  = input && input.value && input.value.trim();
-    if (!text || !sessionId) return;
+    var text = input && input.value && input.value.trim();
+    if(!text || !sessionId) return;
 
-    // Clear typing first
-    rtdb.ref('chats/' + sessionId + '/typing').set({ admin: false }).catch(function () {});
+    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/adminTyping').set(false).catch(function(){});
 
-    rtdb.ref('chats/' + sessionId + '/messages').push({
+    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push({
       text:      text,
       sender:    'admin',
-      timestamp: firebase.database.ServerValue.TIMESTAMP,
-      read:      true
-    }).then(function () {
-      if (input) input.value = '';
-    }).catch(function (e) {
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      read:      true,
+      sessionId: sessionId
+    }).then(function() {
+      if(input) input.value = '';
+      rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta').update({
+        lastMessage:   text,
+        lastMessageAt: firebase.database.ServerValue.TIMESTAMP
+      }).catch(function(){});
+    }).catch(function(e) {
       showToast('Error sending reply: ' + e.message, 'error');
     });
   };
 
   function markSessionAsRead(sessionId) {
-    rtdb.ref('chats/' + sessionId + '/messages').once('value').then(function (snap) {
+    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').once('value').then(function(snap) {
       var updates = {};
-      snap.forEach(function (child) {
+      snap.forEach(function(child) {
         var msg = child.val();
-        if (msg && msg.sender === 'customer' && msg.read === false) {
+        if(msg && msg.sender === 'customer' && msg.read === false) {
           updates[child.key + '/read'] = true;
         }
       });
-      if (Object.keys(updates).length > 0) {
-        rtdb.ref('chats/' + sessionId + '/messages').update(updates).catch(function (e) {
+      if(Object.keys(updates).length > 0) {
+        rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').update(updates).catch(function(e) {
           console.warn('[ADMIN] mark-read error:', e.message);
         });
       }
-    }).catch(function (e) { console.warn('[ADMIN] mark-read fetch error:', e.message); });
+    }).catch(function(e){ console.warn('[ADMIN] mark-read fetch error:', e.message); });
   }
 
-  window.handleAdminTyping = function (sessionId) {
-    rtdb.ref('chats/' + sessionId + '/typing').set({ admin: true }).catch(function () {});
+  window.handleAdminTyping = function(sessionId) {
+    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/adminTyping').set(true).catch(function(){});
     clearTimeout(window._adminTypingTimeout);
-    window._adminTypingTimeout = setTimeout(function () {
-      rtdb.ref('chats/' + sessionId + '/typing').set({ admin: false }).catch(function () {});
+    window._adminTypingTimeout = setTimeout(function() {
+      rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/adminTyping').set(false).catch(function(){});
     }, 3000);
   };
 
-  // ── Open individual chat session ─────────────────────────────────
-  window.openChatSession = function (sessionId) {
+  // ── OPEN CHAT SESSION (⭐ uses live_chat path + createdAt) ─────
+  window.openChatSession = function(sessionId) {
     activeChatSession = sessionId;
     detachActiveChatListeners();
     markSessionAsRead(sessionId);
@@ -554,385 +536,138 @@
         '<button class="btn-underline" onclick="sendAdminReply(\'' + escapeHtml(sessionId) + '\')">Send</button>' +
       '</div>';
 
-    // Attach messages listener
-    chatMsgRef = rtdb.ref('chats/' + sessionId + '/messages');
-    chatMsgCallback = function (snapshot) {
+    chatMsgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages');
+    chatMsgCallback = function(snapshot) {
       var messages = [];
-      snapshot.forEach(function (child) {
+      snapshot.forEach(function(child) {
         messages.push(Object.assign({ _key: child.key }, child.val()));
       });
-      messages.sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
+      messages.sort(function(a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
       renderChatMessages(messages);
     };
-    chatMsgRef.on('value', chatMsgCallback, function (err) {
+    chatMsgRef.on('value', chatMsgCallback, function(err) {
       console.warn('[ADMIN CHAT] message listener error:', err.message);
     });
 
-    // Attach typing listener
-    chatTypingRef = rtdb.ref('chats/' + sessionId + '/typing');
-    chatTypingCallback = function (snapshot) {
-      var data = snapshot.val();
+    chatTypingRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/customerTyping');
+    chatTypingCallback = function(snapshot) {
       var indicator = safeEl('typing-indicator');
-      if (indicator) {
-        indicator.style.display = (data && data.customer) ? 'block' : 'none';
-      }
+      if(indicator) indicator.style.display = snapshot.val() === true ? 'block' : 'none';
     };
-    chatTypingRef.on('value', chatTypingCallback, function (err) {
+    chatTypingRef.on('value', chatTypingCallback, function(err) {
       console.warn('[ADMIN CHAT] typing listener error:', err.message);
     });
   };
 
   function renderChatMessages(messages) {
     var panel = safeEl('chat-messages-panel');
-    if (!panel) return;
+    if(!panel) return;
     var wasAtBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 40;
     panel.innerHTML = '';
-
-    if (!messages || messages.length === 0) {
+    if(!messages || messages.length === 0) {
       panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">No messages yet.</div>';
       return;
     }
-
-    messages.forEach(function (m) {
-      var time = m.timestamp
-        ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : '';
+    messages.forEach(function(m) {
+      var time = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
       var div = document.createElement('div');
       div.className = 'chat-msg-admin ' + (m.sender === 'customer' ? 'customer-msg' : 'admin-msg');
-      div.innerHTML =
-        '<div>' + escapeHtml(m.text) + '</div>' +
-        '<div class="msg-meta">' + escapeHtml(m.sender || '') + ' · ' + time + '</div>';
+      div.innerHTML = '<div>' + escapeHtml(m.text) + '</div><div class="msg-meta">' + escapeHtml(m.sender||'') + ' · ' + time + '</div>';
       panel.appendChild(div);
     });
-
-    if (wasAtBottom) panel.scrollTop = panel.scrollHeight;
+    if(wasAtBottom) panel.scrollTop = panel.scrollHeight;
   }
 
-  // ── Messages tab ─────────────────────────────────────────────────
+  // ── MESSAGES TAB (⭐ uses live_chat path + createdAt) ──────────
   function renderMessagesTab() {
     var mc = safeEl('main-content');
     activeChatSession = null;
     detachActiveChatListeners();
-
     mc.innerHTML = '<div class="section-title">Loading sessions...</div>';
 
-    rtdb.ref('chats').once('value').then(function (snap) {
+    rtdb.ref(CHAT_ROOT).once('value').then(function(snap) {
       var sessions = {};
-
-      snap.forEach(function (sessionSnap) {
-        var sessionId    = sessionSnap.key;
+      snap.forEach(function(sessionSnap) {
+        var sessionId = sessionSnap.key;
         var messagesSnap = sessionSnap.child('messages');
-        if (!messagesSnap.exists()) return;
-
+        if(!messagesSnap.exists()) return;
         sessions[sessionId] = { messages: [], lastTime: 0, unreadCount: 0 };
-
-        messagesSnap.forEach(function (msgSnap) {
+        messagesSnap.forEach(function(msgSnap) {
           var msg = msgSnap.val();
-          if (!msg) return;
+          if(!msg) return;
           sessions[sessionId].messages.push(msg);
-          if (msg.timestamp > sessions[sessionId].lastTime) {
-            sessions[sessionId].lastTime = msg.timestamp;
-          }
-          if (msg.sender === 'customer' && msg.read === false) {
-            sessions[sessionId].unreadCount++;
-          }
+          var msgTime = msg.createdAt || 0;
+          if(msgTime > sessions[sessionId].lastTime) sessions[sessionId].lastTime = msgTime;
+          if(msg.sender === 'customer' && msg.read === false) sessions[sessionId].unreadCount++;
         });
       });
-
-      var sessionIds = Object.keys(sessions).sort(function (a, b) {
-        return (sessions[b].lastTime || 0) - (sessions[a].lastTime || 0);
-      });
-
-      var cardsHtml = sessionIds.map(function (sid) {
-        var s       = sessions[sid];
-        var msgs    = s.messages;
-        var lastMsg = msgs[msgs.length - 1];
-        var preview = ((lastMsg && lastMsg.text) || '').substring(0, 80);
-        var time    = s.lastTime ? new Date(s.lastTime).toLocaleDateString() : '';
-        return '<div class="chat-session-card ' + (s.unreadCount > 0 ? 'unread' : '') + '" onclick="openChatSession(\'' + escapeHtml(sid) + '\')">' +
-          '<div class="session-id">' + escapeHtml(sid.substring(0, 25)) + '...</div>' +
-          '<div class="session-preview">' + escapeHtml(preview) + (preview.length >= 80 ? '...' : '') + '</div>' +
-          '<div style="font-size:8px;color:var(--muted);margin-top:4px;">' + msgs.length + ' messages · ' + time + '</div>' +
-          (s.unreadCount > 0 ? '<div class="unread-count" style="display:inline-block;">' + s.unreadCount + ' new</div>' : '') +
+      var sessionIds = Object.keys(sessions).sort(function(a,b){ return (sessions[b].lastTime||0) - (sessions[a].lastTime||0); });
+      var cardsHtml = sessionIds.map(function(sid) {
+        var s = sessions[sid];
+        var msgs = s.messages;
+        var lastMsg = msgs[msgs.length-1];
+        var preview = ((lastMsg&&lastMsg.text)||'').substring(0,80);
+        var time = s.lastTime ? new Date(s.lastTime).toLocaleDateString() : '';
+        return '<div class="chat-session-card '+(s.unreadCount>0?'unread':'')+'" onclick="openChatSession(\''+escapeHtml(sid)+'\')">'+
+          '<div class="session-id">'+escapeHtml(sid.substring(0,25))+'...</div>'+
+          '<div class="session-preview">'+escapeHtml(preview)+(preview.length>=80?'...':'')+'</div>'+
+          '<div style="font-size:8px;color:var(--muted);margin-top:4px;">'+msgs.length+' messages · '+time+'</div>'+
+          (s.unreadCount>0?'<div class="unread-count" style="display:inline-block;">'+s.unreadCount+' new</div>':'')+
           '</div>';
       }).join('');
-
-      mc.innerHTML =
-        '<div class="section-title">Customer Messages (' + sessionIds.length + ' sessions)</div>' +
-        '<div class="chat-sessions-list">' +
-          (sessionIds.length === 0
-            ? '<p style="font-size:12px;color:var(--muted);">No messages yet.</p>'
-            : cardsHtml) +
-        '</div>';
-    }).catch(function (e) {
-      mc.innerHTML = '<p style="color:var(--danger);">Error loading messages: ' + escapeHtml(e.message) + '</p>';
+      mc.innerHTML = '<div class="section-title">Customer Messages ('+sessionIds.length+' sessions)</div><div class="chat-sessions-list">'+
+        (sessionIds.length===0?'<p style="font-size:12px;color:var(--muted);">No messages yet.</p>':cardsHtml)+'</div>';
+    }).catch(function(e) {
+      mc.innerHTML = '<p style="color:var(--danger);">Error loading messages: '+escapeHtml(e.message)+'</p>';
     });
   }
 
-  // ── Product modal ─────────────────────────────────────────────────
-  window.openNewProductModal = function () { openProductModal(null); };
-
-  window.openProductModal = function (product) {
-    var p = product || {
-      id: '', sku: '', name: '', brand: 'JANEDORE', category: 'dresses',
-      price: 0, salePrice: null, badge: '', sizes: [], stock: 0, status: 'active',
-      featured: false, description: '', productFeatures: '', compositionCare: '',
-      shippingReturns: '',
-      variants: [{ color: '', swatch: '#111', images: { model: [''], ghost: [''], detail: [] } }]
-    };
-    var html =
-      '<div class="modal-overlay" id="product-modal-overlay" onclick="closeModal()">' +
-        '<div class="modal" onclick="event.stopPropagation()">' +
-          '<button class="modal-close" onclick="closeModal()">✕</button>' +
-          '<h2 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin-bottom:24px;">' + (product ? 'Edit' : 'New') + ' Product</h2>' +
-          '<form id="product-form" onsubmit="handleProductSubmit(event,\'' + escapeHtml(p.id) + '\')">' +
-            '<div class="form-row">' +
-              '<div class="form-group"><label>Name</label><input name="name" value="' + escapeHtml(p.name) + '" required></div>' +
-              '<div class="form-group"><label>SKU</label><input name="sku" value="' + escapeHtml(p.sku) + '"></div>' +
-            '</div>' +
-            '<div class="form-row-3">' +
-              '<div class="form-group"><label>Brand</label><select name="brand">' +
-                '<option value="JANEDORE"' + (p.brand === 'JANEDORE' ? ' selected' : '') + '>JANEDORE</option>' +
-                '<option value="NIRIUS CO"' + (p.brand === 'NIRIUS CO' ? ' selected' : '') + '>NIRIUS CO</option>' +
-                '<option value="THATO"' + (p.brand === 'THATO' ? ' selected' : '') + '>THATO</option>' +
-              '</select></div>' +
-              '<div class="form-group"><label>Category</label><select name="category">' +
-                ['dresses','tops','bottoms','jackets','sets','sunglasses','jewelry','bags','parfum'].map(function (c) {
-                  return '<option value="' + c + '"' + (p.category === c ? ' selected' : '') + '>' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>';
-                }).join('') +
-              '</select></div>' +
-              '<div class="form-group"><label>Status</label><select name="status">' +
-                '<option value="active"' + (p.status === 'active' ? ' selected' : '') + '>Active</option>' +
-                '<option value="draft"' + (p.status === 'draft' ? ' selected' : '') + '>Draft</option>' +
-              '</select></div>' +
-            '</div>' +
-            '<div class="form-row-3">' +
-              '<div class="form-group"><label>Price (R)</label><input name="price" type="number" value="' + escapeHtml(String(p.price)) + '" required></div>' +
-              '<div class="form-group"><label>Sale Price</label><input name="salePrice" type="number" value="' + escapeHtml(String(p.salePrice || '')) + '"></div>' +
-              '<div class="form-group"><label>Stock</label><input name="stock" type="number" value="' + escapeHtml(String(p.stock)) + '"></div>' +
-            '</div>' +
-            '<div class="form-row-3">' +
-              '<div class="form-group"><label>Badge</label><select name="badge">' +
-                '<option value="">None</option>' +
-                '<option value="new"' + (p.badge === 'new' ? ' selected' : '') + '>New</option>' +
-                '<option value="sale"' + (p.badge === 'sale' ? ' selected' : '') + '>Sale</option>' +
-                '<option value="sold"' + (p.badge === 'sold' ? ' selected' : '') + '>Sold Out</option>' +
-              '</select></div>' +
-              '<div class="form-group"><label>Sizes (comma separated)</label><input name="sizes" value="' + escapeHtml((p.sizes || []).join(',')) + '"></div>' +
-              '<div class="form-group"><label>Featured</label><select name="featured">' +
-                '<option value="false"' + (!p.featured ? ' selected' : '') + '>No</option>' +
-                '<option value="true"' + (p.featured ? ' selected' : '') + '>Yes</option>' +
-              '</select></div>' +
-            '</div>' +
-            '<div class="form-group"><label>Description</label><textarea name="description">' + escapeHtml(p.description || '') + '</textarea></div>' +
-            '<div class="form-row">' +
-              '<div class="form-group"><label>Product Features</label><textarea name="productFeatures">' + escapeHtml(p.productFeatures || '') + '</textarea></div>' +
-              '<div class="form-group"><label>Composition &amp; Care</label><textarea name="compositionCare">' + escapeHtml(p.compositionCare || '') + '</textarea></div>' +
-            '</div>' +
-            '<div class="form-group"><label>Shipping &amp; Returns</label><input name="shippingReturns" value="' + escapeHtml(p.shippingReturns || '') + '"></div>' +
-            '<h3 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin:20px 0 12px;">Variants</h3>' +
-            '<div id="variants-container">' + (p.variants || []).map(function (v, i) { return buildVariantBlock(v, i); }).join('') + '</div>' +
-            '<button type="button" class="btn-underline" onclick="addVariant()" style="margin-top:8px;">+ Add Variant</button>' +
-            '<div style="margin-top:24px;display:flex;gap:12px;">' +
-              '<button type="submit" class="btn-underline">Save Product</button>' +
-              (p.id ? '<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + escapeHtml(p.id) + '\')">Delete</button>' : '') +
-            '</div>' +
-          '</form>' +
-        '</div>' +
-      '</div>';
+  // ── PRODUCT MODAL ─────────────────────────────────────────────
+  window.openNewProductModal = function(){ openProductModal(null); };
+  window.openProductModal = function(product) {
+    var p = product || { id:'', sku:'', name:'', brand:'JANEDORE', category:'dresses', price:0, salePrice:null, badge:'', sizes:[], stock:0, status:'active', featured:false, description:'', productFeatures:'', compositionCare:'', shippingReturns:'', variants:[{ color:'', swatch:'#111', images:{ model:[''], ghost:[''], detail:[] } }] };
+    var html = '<div class="modal-overlay" id="product-modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">'+
+      '<button class="modal-close" onclick="closeModal()">✕</button>'+
+      '<h2 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin-bottom:24px;">'+(product?'Edit':'New')+' Product</h2>'+
+      '<form id="product-form" onsubmit="handleProductSubmit(event,\''+escapeHtml(p.id)+'\')">'+
+      '<div class="form-row"><div class="form-group"><label>Name</label><input name="name" value="'+escapeHtml(p.name)+'" required></div><div class="form-group"><label>SKU</label><input name="sku" value="'+escapeHtml(p.sku)+'"></div></div>'+
+      '<div class="form-row-3"><div class="form-group"><label>Brand</label><select name="brand"><option value="JANEDORE"'+(p.brand==='JANEDORE'?' selected':'')+'>JANEDORE</option><option value="NIRIUS CO"'+(p.brand==='NIRIUS CO'?' selected':'')+'>NIRIUS CO</option><option value="THATO"'+(p.brand==='THATO'?' selected':'')+'>THATO</option></select></div><div class="form-group"><label>Category</label><select name="category">'+['dresses','tops','bottoms','jackets','sets','sunglasses','jewelry','bags','parfum'].map(function(c){return '<option value="'+c+'"'+(p.category===c?' selected':'')+'>'+c.charAt(0).toUpperCase()+c.slice(1)+'</option>';}).join('')+'</select></div><div class="form-group"><label>Status</label><select name="status"><option value="active"'+(p.status==='active'?' selected':'')+'>Active</option><option value="draft"'+(p.status==='draft'?' selected':'')+'>Draft</option></select></div></div>'+
+      '<div class="form-row-3"><div class="form-group"><label>Price (R)</label><input name="price" type="number" value="'+escapeHtml(String(p.price))+'" required></div><div class="form-group"><label>Sale Price</label><input name="salePrice" type="number" value="'+escapeHtml(String(p.salePrice||''))+'"></div><div class="form-group"><label>Stock</label><input name="stock" type="number" value="'+escapeHtml(String(p.stock))+'"></div></div>'+
+      '<div class="form-row-3"><div class="form-group"><label>Badge</label><select name="badge"><option value="">None</option><option value="new"'+(p.badge==='new'?' selected':'')+'>New</option><option value="sale"'+(p.badge==='sale'?' selected':'')+'>Sale</option><option value="sold"'+(p.badge==='sold'?' selected':'')+'>Sold Out</option></select></div><div class="form-group"><label>Sizes (comma separated)</label><input name="sizes" value="'+escapeHtml((p.sizes||[]).join(','))+'"></div><div class="form-group"><label>Featured</label><select name="featured"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div></div>'+
+      '<div class="form-group"><label>Description</label><textarea name="description">'+escapeHtml(p.description||'')+'</textarea></div>'+
+      '<div class="form-row"><div class="form-group"><label>Product Features</label><textarea name="productFeatures">'+escapeHtml(p.productFeatures||'')+'</textarea></div><div class="form-group"><label>Composition &amp; Care</label><textarea name="compositionCare">'+escapeHtml(p.compositionCare||'')+'</textarea></div></div>'+
+      '<div class="form-group"><label>Shipping &amp; Returns</label><input name="shippingReturns" value="'+escapeHtml(p.shippingReturns||'')+'"></div>'+
+      '<h3 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin:20px 0 12px;">Variants</h3>'+
+      '<div id="variants-container">'+(p.variants||[]).map(function(v,i){return buildVariantBlock(v,i);}).join('')+'</div>'+
+      '<button type="button" class="btn-underline" onclick="addVariant()" style="margin-top:8px;">+ Add Variant</button>'+
+      '<div style="margin-top:24px;display:flex;gap:12px;"><button type="submit" class="btn-underline">Save Product</button>'+(p.id?'<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(\''+escapeHtml(p.id)+'\')">Delete</button>':'')+'</div></form></div></div>';
     safeEl('modal-container').innerHTML = html;
   };
 
-  function buildVariantBlock(v, index) {
-    v = v || {};
-    var images    = v.images || { model: [], ghost: [], detail: [] };
-    var modelUrls = (images.model && images.model.length) ? images.model : [''];
-    var ghostUrls = (images.ghost && images.ghost.length) ? images.ghost : [''];
-    var detailUrls= (images.detail && images.detail.length) ? images.detail : [];
-    var modelRows = modelUrls.map(function (url) { return buildImageUrlRow('model', index, url); }).join('');
-    var ghostRows = ghostUrls.map(function (url) { return buildImageUrlRow('ghost', index, url); }).join('');
-    var detailRows= detailUrls.map(function (url) { return buildImageUrlRow('detail', index, url); }).join('');
-    return '<div class="variant-block">' +
-      '<h4>Variant ' + (index + 1) + '</h4>' +
-      '<div class="form-row">' +
-        '<div class="form-group"><label>Color Name</label><input name="variant-color-' + index + '" value="' + escapeHtml(v.color || '') + '" placeholder="e.g. Black"></div>' +
-        '<div class="form-group"><label>Swatch (hex)</label><div style="display:flex;gap:8px;align-items:center;">' +
-          '<input name="variant-swatch-' + index + '" value="' + escapeHtml(v.swatch || '#111') + '" placeholder="#111" style="flex:1;">' +
-          '<input type="color" value="' + escapeHtml(v.swatch || '#111') + '" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector(\'[name=variant-swatch-' + index + ']\').value=this.value">' +
-        '</div></div>' +
-      '</div>' +
-      '<div class="form-group"><label>Model Images</label><div class="image-url-inputs" id="variant-model-' + index + '">' + modelRows + '</div><button type="button" class="btn-underline" onclick="addImageUrl(\'model\',' + index + ')" style="margin-top:6px;font-size:8px;">+ Add Model Image</button></div>' +
-      '<div class="form-group"><label>Ghost / Flat Lay Images</label><div class="image-url-inputs" id="variant-ghost-' + index + '">' + ghostRows + '</div><button type="button" class="btn-underline" onclick="addImageUrl(\'ghost\',' + index + ')" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button></div>' +
-      '<div class="form-group"><label>Detail Images</label><div class="image-url-inputs" id="variant-detail-' + index + '">' + detailRows + '</div><button type="button" class="btn-underline" onclick="addImageUrl(\'detail\',' + index + ')" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button></div>' +
-    '</div>';
+  function buildVariantBlock(v,index){ /* same as before */ 
+    v=v||{};var images=v.images||{model:[],ghost:[],detail:[]};var modelUrls=(images.model&&images.model.length)?images.model:[''];var ghostUrls=(images.ghost&&images.ghost.length)?images.ghost:[''];var detailUrls=(images.detail&&images.detail.length)?images.detail:[];var modelRows=modelUrls.map(function(url){return buildImageUrlRow('model',index,url);}).join('');var ghostRows=ghostUrls.map(function(url){return buildImageUrlRow('ghost',index,url);}).join('');var detailRows=detailUrls.map(function(url){return buildImageUrlRow('detail',index,url);}).join('');return '<div class="variant-block"><h4>Variant '+(index+1)+'</h4><div class="form-row"><div class="form-group"><label>Color Name</label><input name="variant-color-'+index+'" value="'+escapeHtml(v.color||'')+'" placeholder="e.g. Black"></div><div class="form-group"><label>Swatch (hex)</label><div style="display:flex;gap:8px;align-items:center;"><input name="variant-swatch-'+index+'" value="'+escapeHtml(v.swatch||'#111')+'" placeholder="#111" style="flex:1;"><input type="color" value="'+escapeHtml(v.swatch||'#111')+'" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector(\'[name=variant-swatch-'+index+']\').value=this.value"></div></div></div><div class="form-group"><label>Model Images</label><div class="image-url-inputs" id="variant-model-'+index+'">'+modelRows+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'model\','+index+')" style="margin-top:6px;font-size:8px;">+ Add Model Image</button></div><div class="form-group"><label>Ghost / Flat Lay Images</label><div class="image-url-inputs" id="variant-ghost-'+index+'">'+ghostRows+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'ghost\','+index+')" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button></div><div class="form-group"><label>Detail Images</label><div class="image-url-inputs" id="variant-detail-'+index+'">'+detailRows+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'detail\','+index+')" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button></div></div>';
   }
+  function buildImageUrlRow(type,variantIndex,url){var placeholder='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';return '<div class="image-url-row"><input name="variant-'+type+'-'+variantIndex+'[]" value="'+escapeHtml(url||'')+'" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||\''+placeholder+'\'"><img class="image-preview" src="'+(escapeHtml(url)||placeholder)+'" onerror="this.src=\''+placeholder+'\'"></div>';}
+  window.addVariant=function(){var c=safeEl('variants-container');if(c)c.insertAdjacentHTML('beforeend',buildVariantBlock({},c.children.length));};
+  window.addImageUrl=function(type,vi){var container=safeEl('variant-'+type+'-'+vi);if(container)container.insertAdjacentHTML('beforeend',buildImageUrlRow(type,vi,''));};
+  window.handleProductSubmit=function(e,existingId){e.preventDefault();var form=e.target;var data={id:existingId||form.sku.value||('prod-'+Date.now()),sku:form.sku.value,name:form.name.value,brand:form.brand.value,category:form.category.value,price:parseFloat(form.price.value),salePrice:form.salePrice.value?parseFloat(form.salePrice.value):null,badge:form.badge.value||null,sizes:form.sizes.value.split(',').map(function(s){return s.trim();}).filter(Boolean),stock:parseInt(form.stock.value,10),status:form.status.value,featured:form.featured.value==='true',description:form.description.value,productFeatures:form.productFeatures.value,compositionCare:form.compositionCare.value,shippingReturns:form.shippingReturns.value,createdAt:existingId?((allProducts.find(function(p){return p.id===existingId;})||{}).createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),variants:[]};var vi=0;while(form['variant-color-'+vi]){var mI=form.querySelectorAll('[name="variant-model-'+vi+'[]"]');var gI=form.querySelectorAll('[name="variant-ghost-'+vi+'[]"]');var dI=form.querySelectorAll('[name="variant-detail-'+vi+'[]"]');data.variants.push({color:form['variant-color-'+vi].value,swatch:form['variant-swatch-'+vi].value,images:{model:Array.from(mI).map(function(i){return i.value;}).filter(Boolean),ghost:Array.from(gI).map(function(i){return i.value;}).filter(Boolean),detail:Array.from(dI).map(function(i){return i.value;}).filter(Boolean)}});vi++;}saveProduct(data);};
+  window.closeModal=function(){var mc=safeEl('modal-container');if(mc)mc.innerHTML='';};
 
-  function buildImageUrlRow(type, variantIndex, url) {
-    var placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
-    return '<div class="image-url-row">' +
-      '<input name="variant-' + type + '-' + variantIndex + '[]" value="' + escapeHtml(url || '') + '" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||\''+placeholder+'\'">' +
-      '<img class="image-preview" src="' + (escapeHtml(url) || placeholder) + '" onerror="this.src=\'' + placeholder + '\'">' +
-    '</div>';
-  }
+  // ── TABS ──────────────────────────────────────────────────────
+  window.switchTab=function(tab){currentTab=tab;if(tab!=='messages'){activeChatSession=null;detachActiveChatListeners();}document.querySelectorAll('.sidebar-btn').forEach(function(b){b.classList.remove('active');});var activeBtn=document.querySelector('[onclick="switchTab(\''+tab+'\')"]');if(activeBtn)activeBtn.classList.add('active');renderCurrentTab();};
 
-  window.addVariant = function () {
-    var c = safeEl('variants-container');
-    if (c) c.insertAdjacentHTML('beforeend', buildVariantBlock({}, c.children.length));
-  };
-
-  window.addImageUrl = function (type, vi) {
-    var container = safeEl('variant-' + type + '-' + vi);
-    if (container) container.insertAdjacentHTML('beforeend', buildImageUrlRow(type, vi, ''));
-  };
-
-  window.handleProductSubmit = function (e, existingId) {
-    e.preventDefault();
-    var form = e.target;
-    var data = {
-      id:               existingId || form.sku.value || ('prod-' + Date.now()),
-      sku:              form.sku.value,
-      name:             form.name.value,
-      brand:            form.brand.value,
-      category:         form.category.value,
-      price:            parseFloat(form.price.value),
-      salePrice:        form.salePrice.value ? parseFloat(form.salePrice.value) : null,
-      badge:            form.badge.value || null,
-      sizes:            form.sizes.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean),
-      stock:            parseInt(form.stock.value, 10),
-      status:           form.status.value,
-      featured:         form.featured.value === 'true',
-      description:      form.description.value,
-      productFeatures:  form.productFeatures.value,
-      compositionCare:  form.compositionCare.value,
-      shippingReturns:  form.shippingReturns.value,
-      createdAt:        existingId
-        ? ((allProducts.find(function (p) { return p.id === existingId; }) || {}).createdAt || new Date().toISOString())
-        : new Date().toISOString(),
-      updatedAt:        new Date().toISOString(),
-      variants:         []
-    };
-    var vi = 0;
-    while (form['variant-color-' + vi]) {
-      var mI = form.querySelectorAll('[name="variant-model-' + vi + '[]"]');
-      var gI = form.querySelectorAll('[name="variant-ghost-' + vi + '[]"]');
-      var dI = form.querySelectorAll('[name="variant-detail-' + vi + '[]"]');
-      data.variants.push({
-        color: form['variant-color-' + vi].value,
-        swatch: form['variant-swatch-' + vi].value,
-        images: {
-          model:  Array.from(mI).map(function (i) { return i.value; }).filter(Boolean),
-          ghost:  Array.from(gI).map(function (i) { return i.value; }).filter(Boolean),
-          detail: Array.from(dI).map(function (i) { return i.value; }).filter(Boolean)
-        }
-      });
-      vi++;
-    }
-    saveProduct(data);
-  };
-
-  window.closeModal = function () {
-    var mc = safeEl('modal-container');
-    if (mc) mc.innerHTML = '';
-  };
-
-  // ── Tab switching ────────────────────────────────────────────────
-  window.switchTab = function (tab) {
-    currentTab = tab;
-    if (tab !== 'messages') {
-      activeChatSession = null;
-      detachActiveChatListeners();
-    }
-    document.querySelectorAll('.sidebar-btn').forEach(function (b) { b.classList.remove('active'); });
-    var activeBtn = document.querySelector('[onclick="switchTab(\'' + tab + '\')"]');
-    if (activeBtn) activeBtn.classList.add('active');
-    renderCurrentTab();
-  };
-
-  function renderCurrentTab() {
-    var mc = safeEl('main-content');
-    if (!mc) return;
-
-    switch (currentTab) {
-      case 'dashboard':
-        Promise.all([productsRef.get(), reviewsRef.get(), newsletterRef.get(), ordersRef.get()])
-          .then(function (results) {
-            mc.innerHTML =
-              '<div class="stats-grid">' +
-                '<div class="stat-card"><div class="stat-number">' + results[0].size + '</div><div class="stat-label">Products</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + results[1].size + '</div><div class="stat-label">Reviews</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + results[2].size + '</div><div class="stat-label">Subscribers</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + results[3].size + '</div><div class="stat-label">Orders</div></div>' +
-              '</div>' +
-              '<div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);font-size:12px;">Connected — Firestore + Realtime DB</p></div>';
-          }).catch(function (e) {
-            mc.innerHTML = '<div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--danger);font-size:12px;">Error: ' + escapeHtml(e.message) + '</p></div>';
-          });
-        break;
-
-      case 'products':
-        mc.innerHTML =
-          '<div class="section-title">All Products (' + allProducts.length + ')</div>' +
-          '<div class="product-list">' +
-          allProducts.map(function (p) {
-            return '<div class="product-row" onclick="openProductModal(' + escapeHtml(JSON.stringify(p)) + ')">' +
-              '<div><div class="pi-name">' + escapeHtml(p.name) + '</div><div class="pi-meta">' + escapeHtml(p.brand) + ' · ' + escapeHtml(p.category) + ' · R' + escapeHtml(String(p.price)) + '</div></div>' +
-              '<span class="badge badge-' + (p.status === 'active' ? 'active' : 'draft') + '">' + escapeHtml(p.status) + '</span>' +
-            '</div>';
-          }).join('') +
-          '</div>';
-        break;
-
-      case 'messages':
-        renderMessagesTab();
-        break;
-
-      case 'reviews':
-        reviewsRef.orderBy('createdAt', 'desc').limit(50).get().then(function (revs) {
-          mc.innerHTML =
-            '<div class="section-title">Recent Reviews</div>' +
-            (revs.empty
-              ? '<p style="font-size:12px;color:var(--muted);">No reviews yet.</p>'
-              : revs.docs.map(function (d) {
-                  var data = d.data();
-                  return '<div class="card"><div class="card-header"><span>' + '★'.repeat(data.rating || 0) + '</span><span style="font-size:var(--ui-font-size);color:var(--muted);">' + escapeHtml(data.name || 'Anonymous') + '</span></div><p style="font-size:12px;">' + escapeHtml(data.text || '') + '</p></div>';
-                }).join(''));
-        }).catch(function () {
-          mc.innerHTML = '<div class="section-title">Recent Reviews</div><p style="font-size:12px;color:var(--muted);">No reviews yet.</p>';
-        });
-        break;
-
-      case 'newsletter':
-        newsletterRef.orderBy('subscribedAt', 'desc').limit(50).get().then(function (subs) {
-          mc.innerHTML =
-            '<div class="section-title">Newsletter (' + subs.size + ')</div>' +
-            (subs.empty
-              ? '<p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>'
-              : subs.docs.map(function (d) {
-                  return '<div class="card"><span style="font-size:12px;">' + escapeHtml(d.data().email) + '</span></div>';
-                }).join(''));
-        }).catch(function () {
-          mc.innerHTML = '<div class="section-title">Newsletter</div><p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>';
-        });
-        break;
-
-      case 'orders':
-        ordersRef.orderBy('createdAt', 'desc').limit(50).get().then(function (ords) {
-          mc.innerHTML =
-            '<div class="section-title">Orders (' + ords.size + ')</div>' +
-            (ords.empty
-              ? '<p style="font-size:12px;color:var(--muted);">No orders yet.</p>'
-              : ords.docs.map(function (d) {
-                  var data = d.data();
-                  return '<div class="card"><div class="card-header"><span style="font-size:var(--ui-font-size);">Order</span><span class="badge badge-active">' + escapeHtml(data.status || 'pending') + '</span></div><p style="font-size:12px;">' + escapeHtml(String(data.itemCount || 0)) + ' items · R' + escapeHtml(String(data.subtotal || 0)) + '</p></div>';
-                }).join(''));
-        }).catch(function () {
-          mc.innerHTML = '<div class="section-title">Orders</div><p style="font-size:12px;color:var(--muted);">No orders yet.</p>';
-        });
-        break;
+  function renderCurrentTab(){
+    var mc=safeEl('main-content');if(!mc)return;
+    switch(currentTab){
+      case 'dashboard':Promise.all([productsRef.get(),reviewsRef.get(),newsletterRef.get(),ordersRef.get()]).then(function(results){mc.innerHTML='<div class="stats-grid"><div class="stat-card"><div class="stat-number">'+results[0].size+'</div><div class="stat-label">Products</div></div><div class="stat-card"><div class="stat-number">'+results[1].size+'</div><div class="stat-label">Reviews</div></div><div class="stat-card"><div class="stat-number">'+results[2].size+'</div><div class="stat-label">Subscribers</div></div><div class="stat-card"><div class="stat-number">'+results[3].size+'</div><div class="stat-label">Orders</div></div></div><div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);font-size:12px;">Connected — Firestore + Realtime DB (live_chat)</p></div>';}).catch(function(e){mc.innerHTML='<div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--danger);font-size:12px;">Error: '+escapeHtml(e.message)+'</p></div>';});break;
+      case 'products':mc.innerHTML='<div class="section-title">All Products ('+allProducts.length+')</div><div class="product-list">'+allProducts.map(function(p){return '<div class="product-row" onclick="openProductModal('+escapeHtml(JSON.stringify(p))+')"><div><div class="pi-name">'+escapeHtml(p.name)+'</div><div class="pi-meta">'+escapeHtml(p.brand)+' · '+escapeHtml(p.category)+' · R'+escapeHtml(String(p.price))+'</div></div><span class="badge badge-'+(p.status==='active'?'active':'draft')+'">'+escapeHtml(p.status)+'</span></div>';}).join('')+'</div>';break;
+      case 'messages':renderMessagesTab();break;
+      case 'reviews':reviewsRef.orderBy('createdAt','desc').limit(50).get().then(function(revs){mc.innerHTML='<div class="section-title">Recent Reviews</div>'+(revs.empty?'<p style="font-size:12px;color:var(--muted);">No reviews yet.</p>':revs.docs.map(function(d){var data=d.data();return '<div class="card"><div class="card-header"><span>'+'★'.repeat(data.rating||0)+'</span><span style="font-size:var(--ui-font-size);color:var(--muted);">'+escapeHtml(data.name||'Anonymous')+'</span></div><p style="font-size:12px;">'+escapeHtml(data.text||'')+'</p></div>';}).join(''));}).catch(function(){mc.innerHTML='<div class="section-title">Recent Reviews</div><p style="font-size:12px;color:var(--muted);">No reviews yet.</p>';});break;
+      case 'newsletter':newsletterRef.orderBy('subscribedAt','desc').limit(50).get().then(function(subs){mc.innerHTML='<div class="section-title">Newsletter ('+subs.size+')</div>'+(subs.empty?'<p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>':subs.docs.map(function(d){return '<div class="card"><span style="font-size:12px;">'+escapeHtml(d.data().email)+'</span></div>';}).join(''));}).catch(function(){mc.innerHTML='<div class="section-title">Newsletter</div><p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>';});break;
+      case 'orders':ordersRef.orderBy('createdAt','desc').limit(50).get().then(function(ords){mc.innerHTML='<div class="section-title">Orders ('+ords.size+')</div>'+(ords.empty?'<p style="font-size:12px;color:var(--muted);">No orders yet.</p>':ords.docs.map(function(d){var data=d.data();return '<div class="card"><div class="card-header"><span style="font-size:var(--ui-font-size);">Order</span><span class="badge badge-active">'+escapeHtml(data.status||'pending')+'</span></div><p style="font-size:12px;">'+escapeHtml(String(data.itemCount||0))+' items · R'+escapeHtml(String(data.subtotal||0))+'</p></div>';}).join(''));}).catch(function(){mc.innerHTML='<div class="section-title">Orders</div><p style="font-size:12px;color:var(--muted);">No orders yet.</p>';});break;
     }
   }
-
-})(); // end IIFE
+})();
 </script>
 </body>
 </html>
