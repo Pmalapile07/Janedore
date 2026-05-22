@@ -2,87 +2,17 @@
 // Chats & live messages → Firebase Realtime Database (RTDB)
 // Order lookups, stats → Firestore
 
-// ==================== DEBUG PANEL ====================
-(function initDebugPanel() {
-  const panel = document.createElement('div');
-  panel.id = 'janedore-debug-panel';
-  panel.innerHTML = `
-    <div style="position:fixed;left:10px;top:10px;width:300px;max-height:400px;background:#1a1a2e;color:#e0e0e0;font:11px monospace;border-radius:6px;z-index:999999;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.5);">
-      <div style="background:#16213e;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #0f3460;">
-        <span style="font-weight:bold;color:#e94560;">🐛 Debug</span>
-        <button onclick="document.getElementById('janedore-debug-panel').style.display='none'" style="background:none;border:none;color:#e0e0e0;cursor:pointer;font-size:14px;">×</button>
-      </div>
-      <div id="debug-content" style="padding:10px;max-height:350px;overflow-y:auto;line-height:1.6;">
-        <div style="color:#888;">Initializing...</div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(panel);
-  
-  window.debugLog = function(message, type = 'info') {
-    const content = document.getElementById('debug-content');
-    if (!content) return;
-    const colors = { error: '#ff6b6b', warn: '#ffd93d', info: '#6c5ce7', success: '#51cf66', firebase: '#ff922b' };
-    const color = colors[type] || '#e0e0e0';
-    const time = new Date().toLocaleTimeString();
-    const entry = document.createElement('div');
-    entry.style.cssText = `padding:2px 0;border-bottom:1px solid #16213e;color:${color};`;
-    entry.textContent = `[${time}] ${message}`;
-    content.appendChild(entry);
-    content.scrollTop = content.scrollHeight;
-    if (content.children.length > 50) content.removeChild(content.firstChild);
-  };
-  
-  window.debugChatState = function() {
-    console.log('=== CHAT STATE ===');
-    console.log('currentUser:', currentUser?.uid || 'null');
-    console.log('customerEmail:', customerEmail);
-    console.log('chatSessionId:', chatSessionId);
-    console.log('chatOpen:', chatOpen);
-    console.log('chatMode:', chatMode);
-    console.log('hasListener:', !!chatUnsub);
-    console.log('anonInProgress:', anonAuthInProgress);
-  };
-  
-  window.testSendMessage = function(text) {
-    const input = safeEl('chat-input');
-    if (input) {
-      input.value = text || 'Test message ' + Date.now();
-      sendChatMessage();
-    }
-  };
-  
-  window.testOrderLookup = function(orderNum) {
-    const input = safeEl('order-lookup-input');
-    if (input) {
-      input.value = orderNum || 'ORD-12345';
-      lookupOrder();
-    }
-  };
-  
-  window.resetChat = function() {
-    clearChatSession();
-  };
-  
-  window.debugLog('Debug panel ready', 'success');
-})();
-
-// ==================== FIREBASE (uses your existing initialized app) ====================
-const db = firebase.firestore();
-const rtdb = firebase.database();
-
-// ==================== STATE ====================
 let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
 localStorage.setItem('janedore_chat_session', chatSessionId);
-let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase().trim();
+let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
 let customerName  = localStorage.getItem('janedore_chat_name') || '';
 let chatOpen = false, chatUnsub = null, chatMode = null;
 let currentUser = null;
 let anonAuthInProgress = false;
 let typingTimeout = null;
-let authReady = false;
 
-const renderedMessageIds = new Set();
+// RTDB reference
+const rtdb = firebase.database();
 
 // ==================== HELPERS ====================
 function safeEl(id) { return document.getElementById(id) || null; }
@@ -91,9 +21,6 @@ function setDisplay(id, value) { const el = safeEl(id); if (el) el.style.display
 // ==================== FIREBASE AUTH ====================
 firebase.auth().onAuthStateChanged((user) => {
   currentUser = user;
-  authReady = true;
-  window.debugLog('Auth state: ' + (user ? user.uid : 'null'), 'firebase');
-  
   if (user && user.email) {
     customerEmail = user.email.trim().toLowerCase();
     localStorage.setItem('janedore_chat_email', customerEmail);
@@ -113,10 +40,9 @@ async function ensureAnonymousAuth() {
   try {
     const result = await firebase.auth().signInAnonymously();
     currentUser = result.user;
-    window.debugLog('Anonymous auth success', 'success');
     return currentUser;
   } catch (error) {
-    window.debugLog('Anonymous auth failed: ' + error.message, 'error');
+    console.warn('Anonymous auth failed:', error.message);
     return null;
   } finally {
     anonAuthInProgress = false;
@@ -131,12 +57,12 @@ async function signInWithEmail(email) {
     localStorage.setItem('janedore_chat_email_pending', normalizedEmail);
     return { success: true, method: 'emailLink' };
   } catch (error) {
-    window.debugLog('Email link failed: ' + error.message, 'warn');
+    console.warn('Email link auth failed:', error.message);
     try {
       const user = await ensureAnonymousAuth();
       if (user) return { success: true, method: 'anonymous' };
     } catch (fallbackError) {
-      window.debugLog('Anonymous fallback failed: ' + fallbackError.message, 'error');
+      console.warn('Anonymous fallback failed:', fallbackError.message);
     }
     return { success: false, error: error.message };
   }
@@ -146,9 +72,6 @@ async function signInWithEmail(email) {
 function clearChatSession() {
   firebase.auth().signOut().catch(() => {});
   currentUser = null;
-  authReady = false;
-  renderedMessageIds.clear();
-  
   localStorage.removeItem('janedore_chat_email');
   localStorage.removeItem('janedore_chat_name');
   localStorage.removeItem('janedore_chat_session');
@@ -159,13 +82,13 @@ function clearChatSession() {
   chatMode = null;
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
 
+  // Clear the name input so it's fresh
   const nameInput = safeEl('chat-name-input');
   if (nameInput) nameInput.value = '';
   const emailInput = safeEl('chat-email-input');
   if (emailInput) emailInput.value = '';
 
   showEmailScreen();
-  window.debugLog('Chat session cleared', 'success');
 }
 
 // ==================== SCREEN CONTROL ====================
@@ -218,6 +141,7 @@ async function submitEmail() {
   }
   if (errorEl) errorEl.style.display = 'none';
 
+  // Persist name + email
   customerName  = rawName;
   customerEmail = email;
   localStorage.setItem('janedore_chat_name',  customerName);
@@ -251,6 +175,7 @@ function startChat() {
   setDisplay('chat-typing-indicator','none');
   setDisplay('order-lookup',         'none');
 
+  // Populate the info bar with name + email
   const nameEl  = safeEl('chat-customer-name');
   const emailEl = safeEl('chat-customer-email');
   if (nameEl)  nameEl.textContent  = customerName  || '';
@@ -261,17 +186,8 @@ function startChat() {
   loadAllMessages();
   listenChat();
   listenTypingIndicator();
-  
   const inputEl = safeEl('chat-input');
-  if (inputEl) {
-    inputEl.focus();
-    inputEl.onkeydown = function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-      }
-    };
-  }
+  if (inputEl) inputEl.focus();
 }
 
 // ==================== CUSTOMER STATS (Firestore) ====================
@@ -367,7 +283,6 @@ async function lookupOrder() {
 
     if (orders.length === 0) {
       resultEl.innerHTML = '<p style="color:#888;">No order found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Check the order number and ensure you\'re using the email you ordered with.</p>';
-      window.debugLog('Order not found: ' + rawOrderNumber, 'warn');
       return;
     }
 
@@ -382,9 +297,8 @@ async function lookupOrder() {
         Items: ${itemCount} · Total: R${o.subtotal || o.total || 0}<br>
         Date: ${date}
       </div>`;
-    window.debugLog('Order found: ' + o.orderNumber, 'success');
   } catch (e) {
-    window.debugLog('Order lookup error: ' + e.message, 'error');
+    console.warn('Order lookup error:', e.message);
     if (e.message && e.message.includes('permission')) {
       resultEl.innerHTML = '<p style="color:#888;">Authentication required.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Please contact us via chat for order support.</p>';
     } else {
@@ -400,12 +314,11 @@ async function loadAllMessages() {
   const el = safeEl('chat-messages');
   if (!el) return;
   el.innerHTML = '';
-  renderedMessageIds.clear();
 
   try {
     const snapshot = await rtdb
-      .ref('chats/' + chatSessionId + '/messages')
-      .orderByChild('timestamp')
+      .ref('live_chat/' + chatSessionId + '/messages')
+      .orderByChild('createdAt')
       .once('value');
 
     if (!snapshot.exists()) {
@@ -415,7 +328,7 @@ async function loadAllMessages() {
 
     const messages = [];
     snapshot.forEach(child => messages.push({ _key: child.key, ...child.val() }));
-    messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
 
     messages.forEach(m => {
       if (m.type === 'auth') return;
@@ -423,15 +336,14 @@ async function loadAllMessages() {
     });
 
     el.scrollTop = el.scrollHeight;
-    window.debugLog('Loaded ' + messages.length + ' messages', 'success');
   } catch (e) {
-    window.debugLog('Error loading messages: ' + e.message, 'error');
+    console.warn('Error loading messages:', e);
   }
 }
 
 function appendMessageEl(container, m) {
-  const t = m.timestamp
-    ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const t = m.createdAt
+    ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : '';
   const div = document.createElement('div');
   div.className = 'chat-msg ' + (m.sender || 'customer');
@@ -439,14 +351,17 @@ function appendMessageEl(container, m) {
   container.appendChild(div);
 }
 
+const renderedMessageIds = new Set();
+
 function listenChat() {
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  renderedMessageIds.clear();
 
-  const messagesRef = rtdb.ref('chats/' + chatSessionId + '/messages');
+  const messagesRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
   const startTime   = Date.now();
 
   const handler = messagesRef
-    .orderByChild('timestamp')
+    .orderByChild('createdAt')
     .startAt(startTime)
     .on('child_added', (snap) => {
       const m     = snap.val();
@@ -466,21 +381,22 @@ function listenChat() {
     });
 
   chatUnsub = () => messagesRef.off('child_added', handler);
-  window.debugLog('Chat listener active', 'success');
 }
 
 // ==================== TYPING INDICATOR (RTDB) ====================
 function handleCustomerTyping() {
+  // Write customer typing state to RTDB so admin panel can see it (optional)
   if (!chatSessionId) return;
-  rtdb.ref('chats/' + chatSessionId + '/typing/customer').set(true);
+  rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(true);
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(() => {
-    rtdb.ref('chats/' + chatSessionId + '/typing/customer').set(false);
+    rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(false);
   }, 2000);
 }
 
 function listenTypingIndicator() {
-  const typingRef = rtdb.ref('chats/' + chatSessionId + '/typing/admin');
+  // Listen for admin typing state and show indicator to customer
+  const typingRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/adminTyping');
   typingRef.on('value', (snap) => {
     const isTyping = snap.val() === true;
     const indicator = safeEl('chat-typing-indicator');
@@ -498,24 +414,34 @@ async function sendChatMessage() {
   try {
     await ensureAnonymousAuth();
 
-    const messagesRef = rtdb.ref('chats/' + chatSessionId + '/messages');
+    const messagesRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
     await messagesRef.push({
       sessionId:     chatSessionId,
       customerEmail: customerEmail || '',
       customerName:  customerName  || '',
       text:          text,
       sender:        'customer',
-      timestamp:     firebase.database.ServerValue.TIMESTAMP,
+      createdAt:     Date.now(),
       read:          false,
       userId:        currentUser ? currentUser.uid : 'anonymous'
     });
 
+    // Update session meta for admin panel listing
+    await rtdb.ref('live_chat/' + chatSessionId + '/meta').update({
+      customerEmail:   customerEmail || '',
+      customerName:    customerName  || '',
+      lastMessage:     text,
+      lastMessageAt:   Date.now(),
+      userId:          currentUser ? currentUser.uid : 'anonymous',
+      customerTyping:  false
+    });
+
     input.value = '';
-    rtdb.ref('chats/' + chatSessionId + '/typing/customer').set(false);
+    // Clear typing state immediately after send
+    rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(false);
     clearTimeout(typingTimeout);
-    window.debugLog('Message sent', 'success');
   } catch (e) {
-    window.debugLog('Send error: ' + e.message, 'error');
+    console.warn('Chat send error:', e);
   }
 }
 
@@ -534,9 +460,8 @@ async function handleEmailLinkSignIn() {
         chatSessionId = 'chat-' + normalizedEmail.replace(/[^a-zA-Z0-9]/g, '-');
         localStorage.setItem('janedore_chat_session', chatSessionId);
         window.history.replaceState({}, document.title, window.location.pathname);
-        window.debugLog('Email link sign-in success', 'success');
       } catch (error) {
-        window.debugLog('Email link sign-in failed: ' + error.message, 'error');
+        console.warn('Email link sign-in failed:', error.message);
       }
     }
   }
@@ -544,9 +469,9 @@ async function handleEmailLinkSignIn() {
 
 document.addEventListener('DOMContentLoaded', () => {
   handleEmailLinkSignIn();
+  // Pre-fill name/email if returning user
   const nameInput  = safeEl('chat-name-input');
   const emailInput = safeEl('chat-email-input');
   if (nameInput  && customerName)  nameInput.value  = customerName;
   if (emailInput && customerEmail) emailInput.value = customerEmail;
-  window.debugLog('Chat ready', 'success');
 });
