@@ -9,6 +9,7 @@ let customerName  = localStorage.getItem('janedore_chat_name') || '';
 let chatOpen = false, chatUnsub = null, chatMode = null;
 let currentUser = null;
 let typingTimeout = null;
+let loadedMessageKeys = new Set(); // Track which messages we've already displayed
 
 // Wait for Firebase to be ready
 function getRTDB() {
@@ -46,7 +47,6 @@ async function ensureAuth() {
 
 // ==================== CHAT WIDGET CREATION ====================
 function createChatWidget() {
-  // Remove existing widget if any
   const existing = document.getElementById('chat-widget-container');
   if (existing) existing.remove();
 
@@ -55,7 +55,6 @@ function createChatWidget() {
   widget.innerHTML = `
     <div id="chat-window" style="display:none;position:fixed;bottom:80px;right:20px;width:360px;max-width:90vw;height:520px;max-height:70vh;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:9998;flex-direction:column;overflow:hidden;font-family:system-ui,sans-serif;">
       
-      <!-- Chat Header -->
       <div style="background:#111;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">
         <div>
           <div style="font-size:13px;font-weight:600;">JANEDORE</div>
@@ -64,7 +63,6 @@ function createChatWidget() {
         <button onclick="toggleChat()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:20px;">✕</button>
       </div>
 
-      <!-- Email Screen -->
       <div id="chat-email-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;flex:1;gap:12px;">
         <div style="font-size:28px;">💬</div>
         <div style="font-size:15px;font-weight:600;text-align:center;">Start a conversation</div>
@@ -75,7 +73,6 @@ function createChatWidget() {
         <button onclick="submitEmail()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;">Continue</button>
       </div>
 
-      <!-- Options Screen -->
       <div id="chat-options" style="display:none;flex-direction:column;flex:1;padding:24px;gap:12px;">
         <div style="font-size:15px;font-weight:600;">How can we help?</div>
         <button onclick="startChat()" style="width:100%;padding:14px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;">💬 Start a conversation</button>
@@ -83,18 +80,14 @@ function createChatWidget() {
         <button onclick="clearChatSession()" style="width:100%;padding:10px;background:none;border:none;color:#888;cursor:pointer;font-size:11px;margin-top:auto;">↩ Start over</button>
       </div>
 
-      <!-- Chat Messages Screen -->
       <div id="chat-messages" style="display:none;flex:1;overflow-y:auto;padding:16px;flex-direction:column;gap:8px;background:#fafafa;"></div>
       
-      <!-- Customer Info Bar -->
       <div id="chat-customer-info" style="display:none;padding:8px 16px;background:#f0f0f0;font-size:10px;color:#666;border-top:1px solid #e0e0e0;">
         <span id="chat-customer-name"></span> · <span id="chat-customer-email"></span> · <span id="chat-customer-stats"></span>
       </div>
 
-      <!-- Typing Indicator -->
       <div id="chat-typing-indicator" style="display:none;padding:4px 16px;font-size:10px;color:#888;background:#fafafa;">Admin is typing...</div>
 
-      <!-- Order Lookup Screen -->
       <div id="order-lookup" style="display:none;flex-direction:column;padding:24px;flex:1;gap:12px;">
         <div style="font-size:15px;font-weight:600;">Track Your Order</div>
         <div style="font-size:12px;color:#888;">Enter your order number (e.g., ORD-12345)</div>
@@ -104,7 +97,6 @@ function createChatWidget() {
         <button onclick="backToChatOptions()" style="width:100%;padding:10px;background:none;border:none;color:#888;cursor:pointer;font-size:11px;margin-top:auto;">↩ Back</button>
       </div>
 
-      <!-- Input Area -->
       <div id="chat-input-wrap" style="display:none;padding:12px;border-top:1px solid #e0e0e0;background:#fff;">
         <div style="display:flex;gap:8px;">
           <input id="chat-input" type="text" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)" oninput="handleCustomerTyping()" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:20px;font-size:13px;outline:none;">
@@ -185,6 +177,7 @@ function startChat() {
   if (emailEl) emailEl.textContent = customerEmail || '';
   
   chatMode = 'chat';
+  loadedMessageKeys.clear(); // Reset seen messages
   loadMessages();
   listenChat();
   
@@ -210,6 +203,7 @@ function clearChatSession() {
   chatSessionId = 'chat-' + Date.now();
   chatMode = null;
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  loadedMessageKeys.clear();
   showEmailScreen();
 }
 
@@ -231,7 +225,12 @@ async function loadMessages() {
     }
     
     const messages = [];
-    snap.forEach(child => messages.push(child.val()));
+    snap.forEach(child => {
+      const msg = child.val();
+      const key = child.key;
+      loadedMessageKeys.add(key);
+      messages.push({ _key: key, ...msg });
+    });
     messages.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
     
     messages.forEach(m => {
@@ -271,21 +270,33 @@ function listenChat() {
   if (chatUnsub) chatUnsub();
   
   const ref = rtdb.ref('live_chat/' + chatSessionId + '/messages');
-  const startTime = Date.now();
   
-  chatUnsub = ref.orderByChild('createdAt').startAt(startTime).on('child_added', snap => {
+  // Listen for ALL new messages (child_added fires for each existing child initially,
+  // then for new ones. We use loadedMessageKeys to skip ones we already displayed.)
+  chatUnsub = ref.on('child_added', snap => {
+    const key = snap.key;
     const m = snap.val();
+    
+    // Skip messages we already loaded
+    if (loadedMessageKeys.has(key)) return;
+    loadedMessageKeys.add(key);
+    
     if (!m || m.type === 'auth') return;
+    
     const el = safeEl('chat-messages');
     if (!el) return;
+    
     appendMessage(el, m);
     el.scrollTop = el.scrollHeight;
     
+    // Show unread dot for admin messages when chat is closed
     if (!chatOpen && m.sender === 'admin') {
       const dot = safeEl('chat-unread-dot');
       if (dot) dot.style.display = 'block';
     }
   });
+  
+  console.log('[Chat] Listening for messages on session:', chatSessionId);
 }
 
 // ==================== SEND MESSAGE ====================
@@ -321,6 +332,36 @@ async function sendChatMessage() {
   } finally {
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     if (input) input.focus();
+  }
+}
+
+// ==================== TYPING ====================
+function handleCustomerTyping() {
+  const rtdb = getRTDB();
+  if (!rtdb) return;
+  clearTimeout(typingTimeout);
+  rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(true).catch(()=>{});
+  typingTimeout = setTimeout(() => {
+    rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(false).catch(()=>{});
+  }, 3000);
+}
+
+// Listen for admin typing
+function listenTyping() {
+  const rtdb = getRTDB();
+  if (!rtdb) return;
+  rtdb.ref('live_chat/' + chatSessionId + '/meta/adminTyping').on('value', snap => {
+    const indicator = safeEl('chat-typing-indicator');
+    if (indicator) {
+      indicator.style.display = snap.val() === true ? 'block' : 'none';
+    }
+  });
+}
+
+function handleChatKeyPress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendChatMessage();
   }
 }
 
@@ -365,33 +406,16 @@ async function lookupOrder() {
   }
 }
 
-// ==================== TYPING ====================
-function handleCustomerTyping() {
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {}, 3000);
-}
-
-function handleChatKeyPress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendChatMessage();
-  }
-}
-
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[Chat] Initializing...');
   createChatWidget();
   
-  // Pre-fill fields
   const nameInput = safeEl('chat-name-input');
   const emailInput = safeEl('chat-email-input');
   if (nameInput && customerName) nameInput.value = customerName;
   if (emailInput && customerEmail) emailInput.value = customerEmail;
   
-  // Auto auth
   ensureAuth().then(u => console.log('[Chat] Auth ready:', u ? u.uid : 'failed'));
   
   console.log('[Chat] Ready');
