@@ -1,408 +1,473 @@
-// ==================== JANEDORE CHAT — REALTIME DATABASE ====================
-// Production-ready. Firebase only initializes once (in main HTML).
-// This file assumes firebase and rtdb (Realtime DB) are
-// already initialized globally before this script is loaded.
+// ==================== CHAT LOGIC ====================
+let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
+localStorage.setItem('janedore_chat_session', chatSessionId);
+let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
+let chatOpen = false, chatUnsub = null, chatMode = null;
+let currentUser = null;
+let anonAuthInProgress = false;
 
-(function () {
-  'use strict';
+// ==================== HELPERS ====================
+function safeEl(id) {
+  return document.getElementById(id) || null;
+}
 
-  // ── Session state ────────────────────────────────────────────────
-  var chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
-  localStorage.setItem('janedore_chat_session', chatSessionId);
-  var customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase().trim();
-  var customerName  = localStorage.getItem('janedore_chat_name') || '';
-  var chatOpen      = false;
-  var messagesRef   = null; // cached RTDB ref for current session messages
-  var typingRef     = null; // cached RTDB ref for current session typing
-  var isSending     = false;
-  var typingTimeout = null;
-  var chatMsgUnsub  = null; // listener unsubscribe function
-  var chatTypingUnsub = null;
+function setDisplay(id, value) {
+  const el = safeEl(id);
+  if (el) el.style.display = value;
+}
 
-  // ── Safe DOM helpers ─────────────────────────────────────────────
-  function safeEl(id) { return document.getElementById(id) || null; }
-  function setDisplay(id, value) {
-    var el = safeEl(id);
-    if (el) el.style.display = value;
-  }
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  // ── Wait for Firebase to be ready ───────────────────────────────
-  function waitForFirebase(cb) {
-    if (window.rtdb && window.db) { cb(); return; }
-    var attempts = 0;
-    var poll = setInterval(function () {
-      attempts++;
-      if (window.rtdb && window.db) {
-        clearInterval(poll);
-        cb();
-      } else if (attempts > 50) {
-        clearInterval(poll);
-        console.error('[JANEDORE CHAT] Firebase not initialized after 5s.');
-      }
-    }, 100);
-  }
-
-  // ── Auth state listener ─────────────────────────────────────────
-  function initAuthListener() {
-    if (!window.firebase || !firebase.auth) return;
-    firebase.auth().onAuthStateChanged(function (user) {
-      if (user && !user.isAnonymous && user.email) {
-        customerEmail = user.email.trim().toLowerCase();
-        customerName  = user.displayName || '';
-        localStorage.setItem('janedore_chat_email', customerEmail);
-        if (user.displayName) localStorage.setItem('janedore_chat_name', customerName);
-        chatSessionId = 'chat-' + customerEmail.replace(/[^a-zA-Z0-9]/g, '-');
-        localStorage.setItem('janedore_chat_session', chatSessionId);
-        if (chatOpen) showOptionsScreen();
-      }
-    });
-  }
-
-  // ── Open / Close ─────────────────────────────────────────────────
-  window.toggleChat = function () {
-    chatOpen = !chatOpen;
-    var win = safeEl('chat-window');
-    if (!win) return;
-    win.classList.toggle('open', chatOpen);
-    if (chatOpen) {
-      setDisplay('chat-unread-dot', 'none');
-      if (customerEmail) {
-        showOptionsScreen();
-      } else {
-        showEmailScreen();
-      }
-    } else {
-      detachChatListeners();
-    }
-  };
-
-  // ── Listener cleanup ────────────────────────────────────────────
-  function detachChatListeners() {
-    if (messagesRef && chatMsgUnsub) {
-      messagesRef.off('value', chatMsgUnsub);
-      chatMsgUnsub = null;
-    }
-    if (typingRef && chatTypingUnsub) {
-      typingRef.off('value', chatTypingUnsub);
-      chatTypingUnsub = null;
-    }
-    clearTimeout(typingTimeout);
-  }
-
-  // ── Screens ──────────────────────────────────────────────────────
-  function showEmailScreen() {
-    setDisplay('chat-email-screen', 'flex');
-    setDisplay('chat-options',      'none');
-    setDisplay('chat-messages',     'none');
-    setDisplay('chat-input-wrap',   'none');
-    setDisplay('chat-customer-info','none');
-    setDisplay('order-lookup',      'none');
-    
-    // Clear inputs
-    var nameInput = safeEl('chat-name-input');
-    var emailInput = safeEl('chat-email-input');
-    var errorEl = safeEl('chat-email-error');
-    if (nameInput) nameInput.value = customerName || '';
-    if (emailInput) emailInput.value = customerEmail || '';
-    if (errorEl) errorEl.style.display = 'none';
-  }
-
-  function showOptionsScreen() {
-    setDisplay('chat-email-screen', 'none');
-    setDisplay('chat-options',      'flex');
-    setDisplay('chat-messages',     'none');
-    setDisplay('chat-input-wrap',   'none');
-    setDisplay('chat-customer-info','none');
-    setDisplay('order-lookup',      'none');
-    detachChatListeners();
-  }
-
-  window.submitEmail = function () {
-    var nameInput = safeEl('chat-name-input');
-    var inputEl = safeEl('chat-email-input');
-    var errorEl = safeEl('chat-email-error');
-    if (!inputEl) return;
-    
-    var email = inputEl.value.trim().toLowerCase();
-    var name = nameInput ? nameInput.value.trim() : '';
-    
-    if (!email || !email.includes('@') || !email.includes('.')) {
-      if (errorEl) errorEl.style.display = 'block';
-      return;
-    }
-    
-    if (errorEl) errorEl.style.display = 'none';
-    
-    customerEmail = email;
-    customerName = name;
-    localStorage.setItem('janedore_chat_email', email);
-    if (name) localStorage.setItem('janedore_chat_name', name);
-    chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
+// ==================== FIREBASE AUTH ====================
+firebase.auth().onAuthStateChanged((user) => {
+  currentUser = user;
+  if (user && user.email) {
+    customerEmail = user.email.trim().toLowerCase();
+    localStorage.setItem('janedore_chat_email', customerEmail);
+    chatSessionId = 'chat-' + customerEmail.replace(/[^a-zA-Z0-9]/g, '-');
     localStorage.setItem('janedore_chat_session', chatSessionId);
+    if (chatOpen) showOptionsScreen();
+  }
+});
+
+async function ensureAnonymousAuth() {
+  if (currentUser) return currentUser;
+  if (anonAuthInProgress) {
+    // Wait briefly for ongoing auth to complete
+    await new Promise(r => setTimeout(r, 600));
+    return currentUser;
+  }
+  anonAuthInProgress = true;
+  try {
+    const result = await firebase.auth().signInAnonymously();
+    currentUser = result.user;
+    return currentUser;
+  } catch (error) {
+    console.warn('Anonymous auth failed:', error.message);
+    return null;
+  } finally {
+    anonAuthInProgress = false;
+  }
+}
+
+async function signInWithEmail(email) {
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+    const actionCodeSettings = {
+      url: window.location.href,
+      handleCodeInApp: true
+    };
+    await firebase.auth().sendSignInLinkToEmail(normalizedEmail, actionCodeSettings);
+    localStorage.setItem('janedore_chat_email_pending', normalizedEmail);
+    return { success: true, method: 'emailLink' };
+  } catch (error) {
+    console.warn('Email link auth failed:', error.message);
+    try {
+      const user = await ensureAnonymousAuth();
+      if (user) return { success: true, method: 'anonymous' };
+    } catch (fallbackError) {
+      console.warn('Anonymous fallback failed:', fallbackError.message);
+    }
+    return { success: false, error: error.message };
+  }
+}
+
+// ==================== SESSION MANAGEMENT ====================
+function clearChatSession() {
+  // Sign out of Firebase auth silently
+  firebase.auth().signOut().catch(() => {});
+  currentUser = null;
+
+  // Clear all chat-specific localStorage keys
+  localStorage.removeItem('janedore_chat_email');
+  localStorage.removeItem('janedore_chat_session');
+  localStorage.removeItem('janedore_chat_email_pending');
+
+  // Reset in-memory state
+  customerEmail = '';
+  chatSessionId = 'chat-' + Date.now();
+  chatMode = null;
+
+  // Stop any active listener
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+
+  // Return user to email entry
+  showEmailScreen();
+}
+
+// ==================== SCREEN CONTROL ====================
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const win = safeEl('chat-window');
+  if (!win) return;
+  win.classList.toggle('open', chatOpen);
+  if (chatOpen) {
+    setDisplay('chat-unread-dot', 'none');
+    if (customerEmail) {
+      showOptionsScreen();
+    } else {
+      showEmailScreen();
+    }
+  } else {
+    if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  }
+}
+
+function showEmailScreen() {
+  setDisplay('chat-email-screen', 'flex');
+  setDisplay('chat-options', 'none');
+  setDisplay('chat-messages', 'none');
+  setDisplay('chat-input-wrap', 'none');
+  setDisplay('chat-customer-info', 'none');
+  setDisplay('order-lookup', 'none');
+}
+
+function showOptionsScreen() {
+  setDisplay('chat-email-screen', 'none');
+  setDisplay('chat-options', 'flex');
+  setDisplay('chat-messages', 'none');
+  setDisplay('chat-input-wrap', 'none');
+  setDisplay('chat-customer-info', 'none');
+  setDisplay('order-lookup', 'none');
+}
+
+// ==================== EMAIL SUBMIT ====================
+async function submitEmail() {
+  const inputEl = safeEl('chat-email-input');
+  const errorEl = safeEl('chat-email-error');
+  if (!inputEl) return;
+
+  const rawEmail = inputEl.value.trim();
+  const email = rawEmail.toLowerCase();
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    if (errorEl) errorEl.style.display = 'block';
+    return;
+  }
+  if (errorEl) errorEl.style.display = 'none';
+
+  customerEmail = email;
+  localStorage.setItem('janedore_chat_email', email);
+  chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
+  localStorage.setItem('janedore_chat_session', chatSessionId);
+
+  const authResult = await signInWithEmail(email);
+
+  if (authResult.success && authResult.method === 'emailLink') {
+    const emailScreen = safeEl('chat-email-screen');
+    if (emailScreen) {
+      emailScreen.innerHTML = `
+        <div class="chat-email-title">Check Your Email</div>
+        <div class="chat-email-subtitle">We sent a sign-in link to ${email}. Click the link to continue, or proceed below.</div>
+        <button class="chat-email-btn" onclick="showOptionsScreen()">Continue to Chat</button>
+      `;
+    }
+  } else {
     showOptionsScreen();
-  };
+  }
+}
 
-  window.startChat = function () {
-    setDisplay('chat-email-screen', 'none');
-    setDisplay('chat-options',      'none');
-    setDisplay('chat-messages',     'flex');
-    setDisplay('chat-input-wrap',   'flex');
-    setDisplay('chat-customer-info','flex');
-    setDisplay('order-lookup',      'none');
-    
-    // Update customer info
-    var nameEl = safeEl('chat-customer-name');
-    var emailEl = safeEl('chat-customer-email');
-    if (nameEl) nameEl.textContent = customerName || 'Customer';
-    if (emailEl) emailEl.textContent = customerEmail;
-    
-    listenChat();
-    var inputEl = safeEl('chat-input');
-    if (inputEl) setTimeout(function () { inputEl.focus(); }, 50);
-  };
+// ==================== START CHAT ====================
+function startChat() {
+  setDisplay('chat-email-screen', 'none');
+  setDisplay('chat-options', 'none');
+  setDisplay('chat-messages', 'flex');
+  setDisplay('chat-input-wrap', 'flex');
+  setDisplay('chat-customer-info', 'flex');
+  setDisplay('order-lookup', 'none');
 
-  // ── Listen to RTDB messages ──────────────────────────────────────
-  function listenChat() {
-    if (!window.rtdb) {
-      console.error('[JANEDORE CHAT] rtdb not available');
+  const emailEl = safeEl('chat-customer-email');
+  if (emailEl) emailEl.textContent = customerEmail;
+  loadCustomerStats();
+
+  chatMode = 'chat';
+  loadAllMessages();
+  listenChat();
+  const inputEl = safeEl('chat-input');
+  if (inputEl) inputEl.focus();
+}
+
+// ==================== CUSTOMER STATS ====================
+async function loadCustomerStats() {
+  const statsEl = safeEl('chat-customer-stats');
+  if (!statsEl) return;
+  statsEl.textContent = '';
+
+  try {
+    const parts = [];
+
+    // Orders: exact email match, no full collection scan
+    try {
+      const ordersSnap = await db.collection('orders')
+        .where('customerEmail', '==', customerEmail)
+        .limit(10)
+        .get();
+      if (!ordersSnap.empty) parts.push(`${ordersSnap.size} order${ordersSnap.size > 1 ? 's' : ''}`);
+    } catch (e) {
+      console.warn('Orders stats failed:', e.message);
+    }
+
+    // Reviews: exact email match
+    try {
+      const reviewsSnap = await db.collection('reviews')
+        .where('email', '==', customerEmail)
+        .limit(10)
+        .get();
+      if (!reviewsSnap.empty) parts.push(`${reviewsSnap.size} review${reviewsSnap.size > 1 ? 's' : ''}`);
+    } catch (e) {
+      console.warn('Reviews stats failed:', e.message);
+    }
+
+    // Newsletter: exact email match
+    try {
+      const newsletterSnap = await db.collection('newsletter')
+        .where('email', '==', customerEmail)
+        .limit(1)
+        .get();
+      if (!newsletterSnap.empty) parts.push('subscribed');
+    } catch (e) {
+      console.warn('Newsletter stats failed:', e.message);
+    }
+
+    statsEl.textContent = parts.length > 0 ? parts.join(' · ') : 'Customer';
+  } catch (e) {
+    console.warn('Stats error:', e.message);
+    if (statsEl) statsEl.textContent = 'Customer';
+  }
+}
+
+// ==================== ORDER LOOKUP ====================
+function showOrderLookup() {
+  setDisplay('chat-email-screen', 'none');
+  setDisplay('chat-options', 'none');
+  setDisplay('chat-messages', 'none');
+  setDisplay('chat-input-wrap', 'none');
+  setDisplay('chat-customer-info', 'none');
+  setDisplay('order-lookup', 'flex');
+
+  // Clear any previous result
+  const resultEl = safeEl('order-result');
+  if (resultEl) resultEl.innerHTML = '';
+}
+
+async function lookupOrder() {
+  const resultEl = safeEl('order-result');
+  const inputEl = safeEl('order-lookup-input');
+  if (!resultEl) return;
+
+  const rawOrderNumber = (inputEl?.value || '').trim().toUpperCase();
+
+  // Both fields required — no fishing
+  if (!rawOrderNumber) {
+    resultEl.innerHTML = '<p style="color:#888;">Please enter your order number.</p>';
+    return;
+  }
+  if (!customerEmail) {
+    resultEl.innerHTML = '<p style="color:#888;">No email on file. Please restart the chat.</p>';
+    return;
+  }
+
+  resultEl.textContent = 'Searching…';
+
+  try {
+    await ensureAnonymousAuth();
+
+    const orders = [];
+
+    // Primary: exact match on both order number AND customer email
+    const exactSnap = await db.collection('orders')
+      .where('orderNumber', '==', rawOrderNumber)
+      .where('customerEmail', '==', customerEmail)
+      .limit(1)
+      .get();
+
+    if (!exactSnap.empty) {
+      exactSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+    }
+
+    // Secondary: try normalized variant (strip dashes) if nothing found
+    if (orders.length === 0) {
+      const normalized = rawOrderNumber.replace(/-/g, '');
+      if (normalized !== rawOrderNumber) {
+        const normSnap = await db.collection('orders')
+          .where('orderNumber', '==', normalized)
+          .where('customerEmail', '==', customerEmail)
+          .limit(1)
+          .get();
+        if (!normSnap.empty) {
+          normSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+        }
+      }
+    }
+
+    // Tertiary: try dashed variant (ORD12345 → ORD-12345)
+    if (orders.length === 0 && !rawOrderNumber.includes('-') && rawOrderNumber.startsWith('ORD')) {
+      const dashed = rawOrderNumber.replace(/^(ORD)(\d)/, '$1-$2');
+      const dashedSnap = await db.collection('orders')
+        .where('orderNumber', '==', dashed)
+        .where('customerEmail', '==', customerEmail)
+        .limit(1)
+        .get();
+      if (!dashedSnap.empty) {
+        dashedSnap.docs.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      }
+    }
+
+    if (orders.length === 0) {
+      resultEl.innerHTML = '<p style="color:#888;">No order found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Check the order number and ensure you\'re using the email you ordered with.</p>';
       return;
     }
 
-    // Detach any existing listeners before reattaching
-    detachChatListeners();
+    const o = orders[0];
+    const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+    const itemCount = o.items ? o.items.length : (o.itemCount || 0);
 
-    var el = safeEl('chat-messages');
-    if (el) {
-      el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
+    resultEl.innerHTML = `
+      <p style="margin-bottom:12px;font-size:10px;">Order found</p>
+      <div style="padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.6;">
+        <strong>Order #${o.orderNumber || o.id.substring(0, 12)}</strong><br>
+        Status: ${o.status || 'pending'}<br>
+        Items: ${itemCount} · Total: R${o.subtotal || o.total || 0}<br>
+        Date: ${date}
+      </div>`;
+
+  } catch (e) {
+    console.warn('Order lookup error:', e.message);
+    if (e.message && e.message.includes('permission')) {
+      resultEl.innerHTML = '<p style="color:#888;">Authentication required.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Please contact us via chat for order support.</p>';
+    } else {
+      resultEl.innerHTML = '<p style="color:#888;">No order found.</p><p style="font-size:10px;color:#aaa;margin-top:8px;">Check the order number and try again.</p>';
     }
-
-    messagesRef = window.rtdb.ref('chats/' + chatSessionId + '/messages');
-    typingRef   = window.rtdb.ref('chats/' + chatSessionId + '/typing');
-
-    // Messages listener
-    chatMsgUnsub = messagesRef.on('value', function (snapshot) {
-      var messages = [];
-      snapshot.forEach(function (child) {
-        messages.push(Object.assign({ _key: child.key }, child.val()));
-      });
-      messages.sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
-      renderMessages(messages);
-    }, function (err) {
-      console.warn('[JANEDORE CHAT] messages listener error:', err.message);
-    });
-
-    // Typing listener
-    chatTypingUnsub = typingRef.on('value', function (snapshot) {
-      var data = snapshot.val();
-      var indicator = safeEl('chat-typing-indicator');
-      if (indicator) {
-        var show = !!(data && data.admin);
-        indicator.style.display = show ? 'block' : 'none';
-      }
-    }, function (err) {
-      console.warn('[JANEDORE CHAT] typing listener error:', err.message);
-    });
   }
+}
 
-  // ── Render messages ──────────────────────────────────────────────
-  function renderMessages(messages) {
-    var el = safeEl('chat-messages');
-    if (!el) return;
-    var atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+function backToChatOptions() { showOptionsScreen(); }
 
-    // Remove existing messages
-    el.querySelectorAll('.chat-msg').forEach(function (n) { n.remove(); });
-    var welcome = el.querySelector('.chat-welcome');
+// ==================== MESSAGES ====================
+async function loadAllMessages() {
+  const el = safeEl('chat-messages');
+  if (!el) return;
+  el.innerHTML = '';
+
+  try {
+    const snapshot = await db.collection('live_chat')
+      .where('sessionId', '==', chatSessionId)
+      .get();
+
+    const messages = [];
+    snapshot.docs.forEach(d => messages.push(d.data()));
+    messages.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
 
     if (messages.length === 0) {
-      if (!welcome) {
-        el.insertAdjacentHTML('afterbegin', '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>');
-      }
+      el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
       return;
     }
 
-    if (welcome) welcome.remove();
-
-    messages.forEach(function (m) {
-      var time = m.timestamp
-        ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    messages.forEach(m => {
+      if (m.type === 'auth') return;
+      const t = m.createdAt
+        ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '';
-      var div = document.createElement('div');
-      div.className = 'chat-msg ' + (m.sender || 'customer');
-      div.innerHTML = escapeHtml(m.text || '') + '<div class="chat-msg-time">' + time + '</div>';
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + m.sender;
+      div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
       el.appendChild(div);
-
-      if (!chatOpen && m.sender === 'admin') {
-        var dot = safeEl('chat-unread-dot');
-        if (dot) dot.style.display = 'block';
-      }
     });
 
-    if (atBottom) el.scrollTop = el.scrollHeight;
+    el.scrollTop = el.scrollHeight;
+  } catch (e) {
+    console.warn('Error loading messages:', e);
   }
+}
 
-  // ── Send message ─────────────────────────────────────────────────
-  window.sendChatMessage = function () {
-    if (!window.rtdb) {
-      console.error('[JANEDORE CHAT] rtdb not available for send');
-      return;
-    }
-    var input = safeEl('chat-input');
-    if (!input || isSending) return;
-    var text = input.value.trim();
-    if (!text) return;
+// Track rendered message IDs to prevent duplicates
+const renderedMessageIds = new Set();
 
-    isSending = true;
-    var sendBtn = safeEl('chat-send-btn');
-    if (sendBtn) sendBtn.disabled = true;
-    input.disabled = true;
+function listenChat() {
+  if (chatUnsub) chatUnsub();
+  renderedMessageIds.clear();
 
-    // Clear typing state
-    clearTimeout(typingTimeout);
-    if (typingRef) {
-      typingRef.set({ customer: false }).catch(function () {});
-    }
+  chatUnsub = db.collection('live_chat')
+    .where('sessionId', '==', chatSessionId)
+    .orderBy('createdAt', 'asc')
+    .onSnapshot(snap => {
+      const el = safeEl('chat-messages');
+      if (!el) return;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
 
-    input.value = '';
+      snap.docChanges().forEach(c => {
+        if (c.type === 'added') {
+          const m = c.doc.data();
+          const docId = c.doc.id;
+          if (m.type === 'auth') return;
+          if (renderedMessageIds.has(docId)) return;
+          renderedMessageIds.add(docId);
 
-    var msgRef = window.rtdb.ref('chats/' + chatSessionId + '/messages');
-    msgRef.push({
+          const t = m.createdAt
+            ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+          const div = document.createElement('div');
+          div.className = 'chat-msg ' + m.sender;
+          div.innerHTML = m.text + '<div class="chat-msg-time">' + t + '</div>';
+          el.appendChild(div);
+
+          const unreadDot = safeEl('chat-unread-dot');
+          if (!chatOpen && m.sender === 'admin' && unreadDot) {
+            unreadDot.style.display = 'block';
+          }
+        }
+      });
+
+      if (atBottom) el.scrollTop = el.scrollHeight;
+    });
+}
+
+async function sendChatMessage() {
+  const input = safeEl('chat-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  try {
+    await ensureAnonymousAuth();
+
+    await db.collection('live_chat').add({
+      sessionId: chatSessionId,
+      customerEmail: customerEmail || '',
       text: text,
       sender: 'customer',
-      customerEmail: customerEmail,
-      customerName: customerName || 'Customer',
-      timestamp: firebase.database.ServerValue.TIMESTAMP,
-      read: false
-    }).then(function () {
-      // listener will update UI — nothing needed here
-    }).catch(function (e) {
-      console.warn('[JANEDORE CHAT] send error:', e.message);
-      input.value = text; // restore on failure
-      var el = safeEl('chat-messages');
-      if (el) {
-        var errDiv = document.createElement('div');
-        errDiv.className = 'chat-msg customer';
-        errDiv.style.background = '#c00';
-        errDiv.textContent = 'Message failed. Please try again.';
-        el.appendChild(errDiv);
-      }
-    }).finally(function () {
-      input.disabled = false;
-      if (sendBtn) sendBtn.disabled = false;
-      setTimeout(function () { 
-        if (input) input.focus(); 
-      }, 50);
-      isSending = false;
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      read: false,
+      userId: currentUser ? currentUser.uid : 'anonymous'
     });
-  };
+    input.value = '';
+  } catch (e) {
+    console.warn('Chat send error:', e);
+  }
+}
 
-  // ── Typing indicator ─────────────────────────────────────────────
-  window.handleCustomerTyping = function () {
-    if (!typingRef) return;
-    typingRef.set({ customer: true }).catch(function () {});
-    clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(function () {
-      if (typingRef) typingRef.set({ customer: false }).catch(function () {});
-    }, 3000);
-  };
-
-  // ── Order Lookup ─────────────────────────────────────────────────
-  window.showOrderLookup = function () {
-    setDisplay('chat-email-screen', 'none');
-    setDisplay('chat-options',      'none');
-    setDisplay('chat-messages',     'none');
-    setDisplay('chat-input-wrap',   'none');
-    setDisplay('chat-customer-info','none');
-    setDisplay('order-lookup',      'flex');
-    detachChatListeners();
-    var resultEl = safeEl('order-result');
-    if (resultEl) resultEl.innerHTML = '';
-  };
-
-  window.lookupOrder = function () {
-    if (!window.db) {
-      console.error('[JANEDORE CHAT] Firestore db not available for order lookup');
-      return;
+// ==================== EMAIL LINK SIGN-IN ====================
+async function handleEmailLinkSignIn() {
+  if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
+    let email = localStorage.getItem('janedore_chat_email_pending');
+    if (!email) {
+      email = window.prompt('Please enter your email for confirmation');
     }
-    var resultEl  = safeEl('order-result');
-    var inputEl   = safeEl('order-lookup-input');
-    if (!resultEl) return;
-
-    var rawOrderNumber = ((inputEl && inputEl.value) || '').trim().toUpperCase();
-    if (!rawOrderNumber) {
-      resultEl.innerHTML = '<p style="color:#888;">Please enter your order number.</p>';
-      return;
+    if (email) {
+      const normalizedEmail = email.trim().toLowerCase();
+      try {
+        await firebase.auth().signInWithEmailLink(normalizedEmail, window.location.href);
+        localStorage.removeItem('janedore_chat_email_pending');
+        customerEmail = normalizedEmail;
+        localStorage.setItem('janedore_chat_email', normalizedEmail);
+        chatSessionId = 'chat-' + normalizedEmail.replace(/[^a-zA-Z0-9]/g, '-');
+        localStorage.setItem('janedore_chat_session', chatSessionId);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (error) {
+        console.warn('Email link sign-in failed:', error.message);
+      }
     }
-    if (!customerEmail) {
-      resultEl.innerHTML = '<p style="color:#888;">No email on file. Please restart the chat.</p>';
-      return;
-    }
-    resultEl.textContent = 'Searching...';
+  }
+}
 
-    window.db.collection('orders')
-      .where('customerEmail', '==', customerEmail)
-      .get()
-      .then(function (snap) {
-        var orders = [];
-        snap.forEach(function (d) {
-          var data = d.data();
-          var orderNum = (data.orderNumber || '').toUpperCase();
-          var cleanInput = rawOrderNumber.replace('ORD-', '');
-          if (orderNum.includes(rawOrderNumber) || rawOrderNumber.includes(orderNum.replace('ORD-', '')) || orderNum.includes(cleanInput)) {
-            orders.push(Object.assign({ _id: d.id }, data));
-          }
-        });
-        if (orders.length === 0) {
-          resultEl.innerHTML = '<p style="color:#888;">No order found. Check the order number.</p>';
-          return;
-        }
-        var o    = orders[0];
-        var date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-        resultEl.innerHTML =
-          '<p style="margin-bottom:12px;font-size:10px;">Order found</p>' +
-          '<div style="padding:10px;background:#fafaf9;text-align:left;font-size:10px;line-height:1.6;">' +
-          '<strong>Order #' + escapeHtml(o.orderNumber || o._id.substring(0, 12)) + '</strong><br>' +
-          'Status: ' + escapeHtml(o.status || 'pending') + '<br>' +
-          'Items: ' + escapeHtml(String(o.itemCount || 0)) + ' · Total: R' + escapeHtml(String(o.subtotal || o.total || 0)) + '<br>' +
-          'Date: ' + escapeHtml(date) +
-          '</div>';
-      })
-      .catch(function (e) {
-        console.warn('[JANEDORE CHAT] order lookup error:', e.message);
-        resultEl.innerHTML = '<p style="color:#888;">Unable to look up order. Please try again.</p>';
-      });
-  };
-
-  window.backToChatOptions = function () { 
-    detachChatListeners();
-    showOptionsScreen(); 
-  };
-
-  window.clearChatSession = function () {
-    detachChatListeners();
-    messagesRef = null;
-    typingRef   = null;
-    localStorage.removeItem('janedore_chat_email');
-    localStorage.removeItem('janedore_chat_name');
-    customerEmail = '';
-    customerName  = '';
-    chatSessionId = 'chat-' + Date.now();
-    localStorage.setItem('janedore_chat_session', chatSessionId);
-    var el = safeEl('chat-messages');
-    if (el) el.innerHTML = '';
-    showEmailScreen();
-  };
-
-  // ── Bootstrap ────────────────────────────────────────────────────
-  waitForFirebase(initAuthListener);
-
-})();
+document.addEventListener('DOMContentLoaded', () => {
+  handleEmailLinkSignIn();
+});
