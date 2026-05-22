@@ -3,671 +3,576 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>JANEDORE Admin</title>
+  <title>JANEDORE Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
+    /* ── DESIGN TOKENS ───────────────────────────────────────── */
     :root {
-      --bg: #fff;
-      --card: #fff;
-      --border: #e5e5e5;
-      --text: #111;
-      --muted: #888;
-      --accent: #111;
-      --danger: #c00;
-      --success: #0a0;
-      --ui-font-size: 9px;
-      --ui-letter-spacing: 0.2em;
-      --ui-font-weight: 400;
+      --bg:        #fafaf9;
+      --card:      #ffffff;
+      --border:    #e5e5e5;
+      --border-2:  #d0d0d0;
+      --text:      #111111;
+      --muted:     #888888;
+      --muted-2:   #bbbbbb;
+      --accent:    #111111;
+      --danger:    #b91c1c;
+      --success:   #15803d;
+      --warning:   #b45309;
+      --info:      #1d4ed8;
+      --sidebar-w: 220px;
+      --header-h:  52px;
+      --ui-fs:     9px;
+      --ui-ls:     0.18em;
+      --ui-fw:     400;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── RESET ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: 'Manrope', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
       font-weight: 300;
+      font-size: 13px;
     }
-    .admin-header {
-      background: var(--card);
-      border-bottom: 0.5px solid var(--border);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .admin-header h1 {
+
+    /* ── SCROLLBARS ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ── TYPOGRAPHY UTILITIES ────────────────────────────────── */
+    .ui-label {
       font-family: 'Manrope', sans-serif;
-      font-size: var(--ui-font-size);
+      font-size: var(--ui-fs);
       text-transform: uppercase;
-      letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight);
+      letter-spacing: var(--ui-ls);
+      font-weight: var(--ui-fw);
+      color: var(--muted);
     }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-    .status-dot.online { background: var(--success); }
-    .status-dot.offline { background: var(--danger); }
-    .header-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    .admin-grid { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 57px); }
-    .sidebar { background: var(--card); border-right: 0.5px solid var(--border); padding: 16px; }
-    .sidebar-btn {
-      display: block; width: 100%; padding: 10px 12px; margin-bottom: 2px; border: none;
-      background: transparent; text-align: left; cursor: pointer;
-      font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight); color: var(--muted); transition: all 0.2s;
-      position: relative;
+    .serif { font-family: 'Cormorant Garamond', serif; font-weight: 300; }
+
+    /* ── LOGIN ───────────────────────────────────────────────── */
+    .login-container {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: var(--bg);
     }
-    .sidebar-btn:hover, .sidebar-btn.active { background: #f5f5f5; color: var(--text); }
-    .sidebar-btn .unread-badge {
-      position: absolute; top: 6px; right: 8px; background: var(--danger); color: #fff;
-      font-size: 7px; padding: 2px 5px; border-radius: 0; display: none;
+    .login-box {
+      background: var(--card); padding: 48px 40px;
+      width: 100%; max-width: 400px; border: 0.5px solid var(--border);
     }
-    .sidebar-divider { border: 0; border-top: 0.5px solid var(--border); margin: 10px 0; }
-    .main-content { padding: 20px 16px; overflow-y: auto; }
-    .section-title {
-      font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight); color: var(--muted); margin-bottom: 16px;
-    }
-    .card { background: var(--card); border: 0.5px solid var(--border); padding: 16px; margin-bottom: 12px; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .card-title {
-      font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      font-weight: var(--ui-font-weight); text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
-    }
-    .product-list { display: flex; flex-direction: column; gap: 6px; }
-    .product-row {
+    .login-title { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300; text-align: center; letter-spacing: 0.12em; margin-bottom: 6px; }
+    .login-subtitle { text-align: center; margin-bottom: 32px; }
+    .login-role-badge { display: inline-block; padding: 3px 10px; background: #111; color: #fff; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 20px; }
+    .login-error { color: var(--danger); font-size: 10px; text-align: center; margin-bottom: 12px; display: none; }
+
+    /* ── HEADER ──────────────────────────────────────────────── */
+    .admin-header {
+      background: var(--card); border-bottom: 0.5px solid var(--border);
+      padding: 0 20px; height: var(--header-h);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 14px; background: #fafaf9; border: 0.5px solid var(--border);
-      cursor: pointer; transition: all 0.2s;
+      position: sticky; top: 0; z-index: 100; gap: 12px; flex-wrap: wrap;
     }
-    .product-row:hover { border-color: var(--text); }
-    .product-row .pi-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; }
-    .product-row .pi-meta {
-      font-size: var(--ui-font-size); color: var(--muted); text-transform: uppercase;
-      letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-brand h1 { font-family: 'Manrope', sans-serif; font-size: var(--ui-fs); text-transform: uppercase; letter-spacing: var(--ui-ls); font-weight: var(--ui-fw); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .status-dot.online  { background: var(--success); }
+    .status-dot.offline { background: var(--danger); }
+    .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .role-badge {
+      padding: 3px 8px; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase;
+      background: var(--text); color: #fff; font-family: 'Manrope', sans-serif;
     }
-    .badge { font-size: 8px; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.14em; display: inline-block; }
-    .badge-active { background: #e8f5e9; color: var(--success); }
-    .badge-draft { background: #fff3e0; color: #e65100; }
-    .badge-unread { background: #ffebee; color: var(--danger); }
+    .role-badge.vendor-badge { background: #6b21a8; }
+
+    /* ── LAYOUT ──────────────────────────────────────────────── */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────────────── */
+    .sidebar {
+      background: var(--card); border-right: 0.5px solid var(--border);
+      padding: 16px 0; position: sticky; top: var(--header-h);
+      height: calc(100vh - var(--header-h)); overflow-y: auto;
+    }
+    .sidebar-section-label {
+      padding: 10px 16px 4px; font-family: 'Manrope', sans-serif;
+      font-size: 8px; text-transform: uppercase; letter-spacing: 0.2em;
+      color: var(--muted-2); font-weight: 400;
+    }
+    .sidebar-btn {
+      display: flex; align-items: center; width: 100%; padding: 9px 16px;
+      border: none; background: transparent; text-align: left; cursor: pointer;
+      font-family: 'Manrope', sans-serif; font-size: var(--ui-fs);
+      text-transform: uppercase; letter-spacing: var(--ui-ls);
+      font-weight: var(--ui-fw); color: var(--muted); transition: all 0.15s;
+      position: relative; gap: 8px; white-space: nowrap;
+    }
+    .sidebar-btn:hover  { background: #f5f5f4; color: var(--text); }
+    .sidebar-btn.active { background: #f0ede8; color: var(--text); }
+    .sidebar-btn.active::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 2px; background: var(--text);
+    }
+    .sidebar-icon { font-size: 11px; opacity: 0.7; width: 14px; text-align: center; flex-shrink: 0; }
+    .unread-badge {
+      margin-left: auto; background: var(--danger); color: #fff;
+      font-size: 7px; padding: 2px 5px; letter-spacing: 0; display: none;
+    }
+    .sidebar-divider { border: 0; border-top: 0.5px solid var(--border); margin: 8px 0; }
+
+    /* ── MAIN CONTENT ────────────────────────────────────────── */
+    .main-content { padding: 24px 20px; overflow-y: auto; background: var(--bg); }
+
+    /* ── SECTION HEADER ──────────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+    }
+    .section-title {
+      font-family: 'Manrope', sans-serif; font-size: var(--ui-fs);
+      text-transform: uppercase; letter-spacing: var(--ui-ls);
+      font-weight: var(--ui-fw); color: var(--muted);
+    }
+    .section-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* ── STATS GRID ──────────────────────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 24px; }
+    .stats-grid-6 { grid-template-columns: repeat(6, 1fr); }
+    .stat-card {
+      background: var(--card); border: 0.5px solid var(--border);
+      padding: 16px 14px; position: relative; overflow: hidden;
+    }
+    .stat-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px; background: transparent; transition: background 0.2s;
+    }
+    .stat-card:hover::after { background: var(--border-2); }
+    .stat-number { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 300; line-height: 1; margin-bottom: 6px; }
+    .stat-number.sm { font-size: 22px; }
+    .stat-label  { font-size: 8px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted); font-weight: 400; }
+    .stat-delta  { font-size: 8px; margin-top: 4px; }
+    .stat-delta.up   { color: var(--success); }
+    .stat-delta.down { color: var(--danger); }
+
+    /* ── CARDS ───────────────────────────────────────────────── */
+    .card { background: var(--card); border: 0.5px solid var(--border); padding: 18px; margin-bottom: 12px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .card-title { font-family: 'Manrope', sans-serif; font-size: var(--ui-fs); font-weight: var(--ui-fw); text-transform: uppercase; letter-spacing: var(--ui-ls); }
+
+    /* ── TABLES ──────────────────────────────────────────────── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .data-table th {
+      text-align: left; padding: 8px 12px;
+      font-size: 8px; text-transform: uppercase; letter-spacing: 0.15em;
+      font-weight: 500; color: var(--muted); border-bottom: 0.5px solid var(--border);
+      white-space: nowrap; background: var(--card);
+      position: sticky; top: 0; z-index: 1;
+    }
+    .data-table td {
+      padding: 11px 12px; border-bottom: 0.5px solid var(--border);
+      vertical-align: middle; font-weight: 300;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { transition: background 0.1s; cursor: pointer; }
+    .data-table tbody tr:hover { background: #fafaf8; }
+    .data-table .cell-serif { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; }
+    .data-table .cell-muted { color: var(--muted); font-size: 11px; }
+    .table-wrap { overflow-x: auto; border: 0.5px solid var(--border); background: var(--card); }
+
+    /* ── BADGES ──────────────────────────────────────────────── */
+    .badge { font-size: 8px; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.12em; display: inline-flex; align-items: center; gap: 4px; font-weight: 500; white-space: nowrap; }
+    .badge-active     { background: #dcfce7; color: #166534; }
+    .badge-draft      { background: #fff7ed; color: #9a3412; }
+    .badge-pending    { background: #fef9c3; color: #713f12; }
+    .badge-paid       { background: #dcfce7; color: #166534; }
+    .badge-processing { background: #dbeafe; color: #1e3a8a; }
+    .badge-packed     { background: #ede9fe; color: #4c1d95; }
+    .badge-shipped    { background: #ccfbf1; color: #134e4a; }
+    .badge-delivered  { background: #dcfce7; color: #166534; }
+    .badge-cancelled  { background: #fee2e2; color: #991b1b; }
+    .badge-refunded   { background: #fce7f3; color: #9d174d; }
+    .badge-unread     { background: #fee2e2; color: #991b1b; }
+    .badge-super      { background: #111; color: #fff; }
+    .badge-vendor     { background: #ede9fe; color: #4c1d95; }
+
+    /* ── BUTTONS ─────────────────────────────────────────────── */
     .btn {
       padding: 8px 14px; border: 0.8px solid var(--border); background: var(--card);
-      cursor: pointer; font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight); transition: all 0.2s; color: var(--text);
+      cursor: pointer; font-family: 'Manrope', sans-serif; font-size: var(--ui-fs);
+      text-transform: uppercase; letter-spacing: var(--ui-ls); font-weight: var(--ui-fw);
+      transition: all 0.15s; color: var(--text); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;
     }
     .btn:hover { border-color: var(--text); }
-    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary  { background: var(--accent); color: #fff; border-color: var(--accent); }
     .btn-primary:hover { background: #333; border-color: #333; }
-    .btn-danger { color: var(--danger); border-color: var(--danger); }
-    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-danger   { color: var(--danger); border-color: #fca5a5; }
+    .btn-danger:hover   { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn-success  { color: var(--success); border-color: #86efac; }
+    .btn-success:hover  { background: var(--success); color: #fff; border-color: var(--success); }
+    .btn-ghost    { border-color: transparent; }
+    .btn-ghost:hover    { border-color: var(--border); background: #f5f5f4; }
     .btn-sm { padding: 5px 10px; font-size: 8px; }
+    .btn-xs { padding: 3px 7px; font-size: 7px; }
     .btn-underline {
       background: none; border: none; border-bottom: 0.8px solid var(--text);
-      padding: 6px 2px; font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
-      text-transform: uppercase; color: var(--text); cursor: pointer; transition: all 0.2s;
+      padding: 5px 2px; font-family: 'Manrope', sans-serif; font-size: var(--ui-fs);
+      letter-spacing: var(--ui-ls); font-weight: var(--ui-fw);
+      text-transform: uppercase; color: var(--text); cursor: pointer; transition: all 0.15s;
     }
     .btn-underline:hover { color: var(--muted); border-color: var(--muted); }
+    .btn-underline.danger { color: var(--danger); border-color: var(--danger); }
+    .btn-icon { padding: 6px 8px; font-size: 12px; line-height: 1; }
+
+    /* ── TOOLBAR ─────────────────────────────────────────────── */
+    .toolbar {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      padding: 12px 0; margin-bottom: 16px;
+      border-bottom: 0.5px solid var(--border);
+      position: sticky; top: 0; background: var(--bg); z-index: 5;
+    }
+    .toolbar-spacer { flex: 1; }
+
+    /* ── SEARCH ──────────────────────────────────────────────── */
+    .search-input {
+      padding: 7px 12px; border: 0.5px solid var(--border);
+      font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 300;
+      outline: none; transition: border 0.15s; background: var(--card);
+      color: var(--text); min-width: 200px;
+    }
+    .search-input:focus { border-color: var(--text); }
+    .search-input::placeholder { color: var(--muted-2); }
+
+    /* ── SELECT / FILTER ─────────────────────────────────────── */
+    .filter-select {
+      padding: 7px 12px; border: 0.5px solid var(--border);
+      font-family: 'Manrope', sans-serif; font-size: var(--ui-fs);
+      text-transform: uppercase; letter-spacing: var(--ui-ls);
+      outline: none; background: var(--card); color: var(--text); cursor: pointer;
+      transition: border 0.15s;
+    }
+    .filter-select:focus { border-color: var(--text); }
+
+    /* ── FORMS ───────────────────────────────────────────────── */
     .form-group { margin-bottom: 14px; }
     .form-group label {
-      display: block; font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight); color: var(--muted); margin-bottom: 6px;
+      display: block; font-family: 'Manrope', sans-serif; font-size: var(--ui-fs);
+      text-transform: uppercase; letter-spacing: var(--ui-ls); font-weight: var(--ui-fw);
+      color: var(--muted); margin-bottom: 6px;
     }
     .form-group input, .form-group textarea, .form-group select {
-      width: 100%; padding: 10px 12px; border: 0.5px solid var(--border);
+      width: 100%; padding: 9px 12px; border: 0.5px solid var(--border);
       font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 300;
-      outline: none; transition: border 0.2s; background: #fafaf9; color: var(--text);
+      outline: none; transition: border 0.15s; background: #fafaf9; color: var(--text);
     }
     .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--text); background: #fff; }
     .form-group textarea { min-height: 80px; resize: vertical; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .form-row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+
+    /* ── VARIANTS / IMAGES ───────────────────────────────────── */
     .variant-block { background: #fafaf9; padding: 14px; margin-bottom: 10px; border: 0.5px solid var(--border); }
-    .variant-block h4 {
-      font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight); margin-bottom: 10px;
-    }
+    .variant-block h4 { font-family: 'Manrope', sans-serif; font-size: var(--ui-fs); text-transform: uppercase; letter-spacing: var(--ui-ls); font-weight: var(--ui-fw); margin-bottom: 10px; }
     .image-url-inputs { display: flex; flex-direction: column; gap: 6px; }
     .image-url-row { display: flex; gap: 6px; align-items: center; }
     .image-url-row input { flex: 1; }
-    .image-preview { width: 48px; height: 48px; object-fit: cover; border: 0.5px solid var(--border); }
+    .image-preview { width: 48px; height: 48px; object-fit: cover; border: 0.5px solid var(--border); flex-shrink: 0; }
+
+    /* ── MODAL ───────────────────────────────────────────────── */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200;
       display: flex; align-items: center; justify-content: center; padding: 16px;
+      animation: fadeIn 0.15s ease;
     }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .modal {
-      background: var(--card); width: 100%; max-width: 700px; max-height: 85vh;
-      overflow-y: auto; padding: 24px; position: relative;
+      background: var(--card); width: 100%; max-width: 720px; max-height: 90vh;
+      overflow-y: auto; padding: 28px; position: relative;
+      animation: slideUp 0.18s ease;
     }
-    .modal-close { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--muted); }
+    @keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-lg { max-width: 900px; }
+    .modal-sm { max-width: 480px; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 16px; cursor: pointer; color: var(--muted); padding: 4px; }
     .modal-close:hover { color: var(--text); }
-    .toast {
-      position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; border-radius: 0;
-      color: #fff; font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
-      text-transform: uppercase; z-index: 300;
+    .modal-title { font-family: 'Manrope', sans-serif; font-size: var(--ui-fs); text-transform: uppercase; letter-spacing: var(--ui-ls); font-weight: var(--ui-fw); margin-bottom: 24px; }
+
+    /* ── SLIDE PANEL ─────────────────────────────────────────── */
+    .slide-panel-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 190; animation: fadeIn 0.15s;
     }
-    .toast-success { background: var(--success); }
-    .toast-error { background: var(--danger); }
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
-    .stat-card { background: var(--card); border: 0.5px solid var(--border); padding: 14px; text-align: center; }
-    .stat-number { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; }
-    .stat-label {
-      font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      text-transform: uppercase; letter-spacing: var(--ui-letter-spacing);
-      font-weight: var(--ui-font-weight); color: var(--muted); margin-top: 4px;
+    .slide-panel {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 440px; max-width: 100vw;
+      background: var(--card); border-left: 0.5px solid var(--border);
+      z-index: 191; overflow-y: auto; padding: 24px;
+      animation: slideIn 0.2s ease;
     }
-    .chat-sessions-list { display: flex; flex-direction: column; gap: 6px; }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .slide-panel-close { position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 16px; cursor: pointer; color: var(--muted); }
+
+    /* ── PRODUCT ROW ─────────────────────────────────────────── */
+    .product-list { display: flex; flex-direction: column; gap: 1px; }
+    .product-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: var(--card); border: 0.5px solid var(--border);
+      cursor: pointer; transition: all 0.15s; gap: 12px;
+    }
+    .product-row:hover { border-color: var(--border-2); background: #fafaf8; }
+    .product-row .pi-name { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 400; }
+    .product-row .pi-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .product-row .pi-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
+    .product-row:hover .pi-actions { opacity: 1; }
+
+    /* ── CHAT ────────────────────────────────────────────────── */
+    .chat-sessions-list { display: flex; flex-direction: column; gap: 4px; }
     .chat-session-card {
-      background: #fafaf9; border: 0.5px solid var(--border); padding: 12px 14px;
-      cursor: pointer; transition: all 0.2s; position: relative;
+      background: var(--card); border: 0.5px solid var(--border); padding: 12px 14px;
+      cursor: pointer; transition: all 0.15s; position: relative;
     }
-    .chat-session-card:hover { border-color: var(--text); }
+    .chat-session-card:hover { border-color: var(--border-2); background: #fafaf8; }
     .chat-session-card.unread { border-left: 2px solid var(--danger); }
-    .chat-session-card .session-id {
-      font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
-      text-transform: uppercase; color: var(--muted);
-    }
-    .chat-session-card .session-preview { font-size: 12px; font-weight: 300; color: var(--text); margin-top: 4px; }
-    .chat-session-card .unread-count {
-      position: absolute; top: 8px; right: 8px; background: var(--danger); color: #fff;
-      font-size: 7px; padding: 2px 5px; border-radius: 0; display: none;
-    }
-    .chat-messages-panel { max-height: 350px; overflow-y: auto; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-    .chat-msg-admin { padding: 10px 14px; font-size: 12px; font-weight: 300; line-height: 1.5; max-width: 80%; }
+    .chat-session-card.pinned { border-left: 2px solid var(--info); }
+    .chat-session-card .session-id { font-size: var(--ui-fs); letter-spacing: var(--ui-ls); text-transform: uppercase; color: var(--muted); }
+    .chat-session-card .session-preview { font-size: 12px; font-weight: 300; color: var(--text); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 380px; }
+    .session-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .chat-messages-panel { max-height: 380px; overflow-y: auto; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+    .chat-msg-admin { padding: 10px 14px; font-size: 12px; font-weight: 300; line-height: 1.5; max-width: 78%; }
     .chat-msg-admin.customer-msg { background: #111; color: #fff; align-self: flex-start; }
-    .chat-msg-admin.admin-msg { background: #f5f5f5; border: 0.5px solid var(--border); align-self: flex-end; }
-    .chat-msg-admin .msg-meta {
-      font-size: 8px; opacity: 0.5; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em;
-    }
-    .typing-indicator {
-      font-size: 9px; color: var(--muted); font-style: italic; padding: 4px 14px;
-      text-transform: uppercase; letter-spacing: 0.1em; display: none;
-    }
-    .reply-box { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border); }
-    .reply-box input {
-      flex: 1; border: none; border-bottom: 0.5px solid #ccc; padding: 8px 0;
-      font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 300;
-      outline: none; background: transparent;
-    }
+    .chat-msg-admin.admin-msg    { background: #f5f5f4; border: 0.5px solid var(--border); align-self: flex-end; }
+    .chat-msg-admin .msg-meta    { font-size: 8px; opacity: 0.5; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .typing-indicator { font-size: 9px; color: var(--muted); font-style: italic; padding: 4px 14px; text-transform: uppercase; letter-spacing: 0.1em; display: none; }
+    .reply-box { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border); align-items: flex-start; }
+    .reply-box input { flex: 1; border: none; border-bottom: 0.5px solid var(--border); padding: 8px 0; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 300; outline: none; background: transparent; }
     .reply-box input:focus { border-color: var(--text); }
-    .login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fafaf9; }
-    .login-box { background: #fff; padding: 40px 32px; width: 100%; max-width: 380px; border: 0.5px solid var(--border); }
-    .login-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; text-align: center; margin-bottom: 8px; }
-    .login-subtitle {
-      font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size); text-transform: uppercase;
-      letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
-      color: var(--muted); text-align: center; margin-bottom: 28px;
+    .quick-replies { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .quick-reply-btn { padding: 4px 10px; border: 0.5px solid var(--border); background: var(--card); font-family: 'Manrope', sans-serif; font-size: 9px; cursor: pointer; transition: all 0.15s; font-weight: 300; }
+    .quick-reply-btn:hover { border-color: var(--text); background: #fafaf9; }
+
+    /* ── CUSTOMER INFO PANEL ─────────────────────────────────── */
+    .info-panel { background: #fafaf9; border: 0.5px solid var(--border); padding: 14px; margin-top: 12px; }
+    .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 11px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; }
+
+    /* ── ORDER STATUS TIMELINE ───────────────────────────────── */
+    .order-timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item { display: flex; gap: 12px; padding: 10px 0; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: 8px; top: 22px; bottom: -10px; width: 1px; background: var(--border); }
+    .timeline-item:last-child::before { display: none; }
+    .timeline-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); background: var(--card); flex-shrink: 0; margin-top: 2px; }
+    .timeline-dot.active { border-color: var(--text); background: var(--text); }
+    .timeline-dot.done   { border-color: var(--success); background: var(--success); }
+    .timeline-content { flex: 1; }
+    .timeline-label  { font-size: 11px; font-weight: 400; }
+    .timeline-time   { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+    /* ── ANALYTICS CHART PLACEHOLDER ────────────────────────── */
+    .chart-wrap { position: relative; width: 100%; }
+    .chart-canvas { width: 100% !important; max-height: 180px; }
+
+    /* ── TOAST ───────────────────────────────────────────────── */
+    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 400; display: flex; flex-direction: column; gap: 6px; }
+    .toast {
+      padding: 10px 18px; color: #fff; font-family: 'Manrope', sans-serif;
+      font-size: var(--ui-fs); letter-spacing: var(--ui-ls); font-weight: var(--ui-fw);
+      text-transform: uppercase; animation: slideToast 0.2s ease;
     }
-    .login-error { color: var(--danger); font-size: 10px; text-align: center; margin-bottom: 12px; display: none; }
+    @keyframes slideToast { from { transform: translateX(80px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .toast-success { background: var(--success); }
+    .toast-error   { background: var(--danger); }
+    .toast-info    { background: var(--info); }
+
+    /* ── EMPTY STATE ─────────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state-icon { font-size: 28px; margin-bottom: 12px; opacity: 0.3; }
+    .empty-state-text { font-size: 12px; color: var(--muted); }
+
+    /* ── UTILITY ─────────────────────────────────────────────── */
+    .flex  { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .mt-4 { margin-top: 16px; }
+    .mb-2 { margin-bottom: 8px; }
+    .mb-3 { margin-bottom: 12px; }
+    .text-danger  { color: var(--danger); }
+    .text-success { color: var(--success); }
+    .text-muted   { color: var(--muted); }
+    .text-sm      { font-size: 11px; }
+    .text-xs      { font-size: 9px; }
+    .fw-400       { font-weight: 400; }
+    .hidden { display: none !important; }
+    .divider { border: 0; border-top: 0.5px solid var(--border); margin: 16px 0; }
+
+    /* ── VENDOR PERMISSIONS NOTICE ───────────────────────────── */
+    .vendor-scope-bar {
+      background: #f5f0ff; border: 0.5px solid #c4b5fd; padding: 8px 14px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+      font-size: 10px; color: #4c1d95;
+    }
+
+    /* ── LOGOUT ──────────────────────────────────────────────── */
     .logout-btn {
       background: none; border: none; border-bottom: 0.8px solid var(--danger);
-      padding: 6px 2px; font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-      letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
-      text-transform: uppercase; color: var(--danger); cursor: pointer; transition: all 0.2s;
+      padding: 5px 2px; font-family: 'Manrope', sans-serif; font-size: var(--ui-fs);
+      letter-spacing: var(--ui-ls); font-weight: var(--ui-fw);
+      text-transform: uppercase; color: var(--danger); cursor: pointer; transition: all 0.15s;
     }
     .logout-btn:hover { opacity: 0.7; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .stats-grid   { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid-6 { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 768px) {
+      :root { --sidebar-w: 0px; }
       .admin-grid { grid-template-columns: 1fr; }
-      .sidebar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-right: none; border-bottom: 0.5px solid var(--border); overflow-x: auto; }
-      .sidebar-btn { padding: 8px 10px; margin-bottom: 0; white-space: nowrap; font-size: 8px; }
+      .sidebar {
+        display: flex; flex-wrap: nowrap; gap: 0; padding: 0;
+        border-right: none; border-bottom: 0.5px solid var(--border);
+        height: auto; position: sticky; top: var(--header-h);
+        overflow-x: auto; overflow-y: hidden; z-index: 99;
+      }
+      .sidebar-section-label { display: none; }
       .sidebar-divider { display: none; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .form-row, .form-row-3 { grid-template-columns: 1fr; }
-      .admin-header { flex-direction: column; align-items: flex-start; }
-      .header-actions { width: 100%; }
+      .sidebar-btn { padding: 10px 12px; white-space: nowrap; font-size: 8px; flex-shrink: 0; }
+      .sidebar-btn.active::before { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 2px; }
+      .sidebar-icon { display: none; }
+      .unread-badge { position: relative; top: auto; right: auto; margin-left: 4px; }
+      .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
+      .stats-grid   { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid-6 { grid-template-columns: repeat(2, 1fr); }
+      .main-content { padding: 16px 12px; }
       .modal { padding: 16px; max-width: 100%; }
-      .product-row { flex-direction: column; align-items: flex-start; gap: 6px; }
-      .login-box { margin: 16px; }
-      .chat-msg-admin { max-width: 90%; }
+      .slide-panel { width: 100%; border-left: none; border-top: 0.5px solid var(--border); top: auto; height: 80vh; animation: slideUp 0.2s ease; }
+      .admin-header { height: auto; padding: 10px 14px; }
+      .data-table { font-size: 11px; }
+      .chat-session-card .session-preview { max-width: 200px; }
+      .product-row .pi-actions { opacity: 1; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid, .stats-grid-6 { grid-template-columns: 1fr 1fr; }
+      .section-header { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
 <body>
 
+<!-- ── LOGIN SCREEN ──────────────────────────────────────────── -->
 <div id="login-screen" class="login-container" style="display:none;">
   <div class="login-box">
     <div class="login-title">JANEDORE</div>
-    <div class="login-subtitle">Admin Panel</div>
-    <div class="login-error" id="login-error">Invalid email or password</div>
+    <div class="login-subtitle ui-label">Admin · Studio</div>
+    <div class="login-error" id="login-error">Invalid credentials</div>
     <form onsubmit="handleLogin(event)">
-      <div class="form-group"><label>Email</label><input type="email" id="login-email" required placeholder="admin@janedore.com"></div>
-      <div class="form-group"><label>Password</label><input type="password" id="login-password" required placeholder="••••••••"></div>
-      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">Sign In</button>
+      <div class="form-group"><label>Email</label><input type="email" id="login-email" required placeholder="admin@janedore.com" autocomplete="email"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;padding:11px;">Sign In</button>
     </form>
   </div>
 </div>
 
+<!-- ── ADMIN PANEL ────────────────────────────────────────────── -->
 <div id="admin-panel" style="display:none;">
+
+  <!-- Header -->
   <div class="admin-header">
-    <h1><span class="status-dot online" id="status-dot"></span>JANEDORE Admin</h1>
+    <div class="header-brand">
+      <span class="status-dot online" id="status-dot"></span>
+      <h1>JANEDORE Studio</h1>
+      <span id="admin-role-badge" class="role-badge badge-super" style="display:none;"></span>
+    </div>
     <div class="header-actions">
-      <span style="font-size:var(--ui-font-size);color:var(--muted);" id="admin-email"></span>
-      <span style="font-size:var(--ui-font-size);color:var(--muted);" id="product-count">0 products</span>
-      <button class="btn-underline" onclick="openNewProductModal()">+ New Product</button>
-      <button class="btn-underline" onclick="seedDefaultProducts()">Seed Default</button>
+      <span class="ui-label" id="admin-email" style="color:var(--muted);"></span>
+      <span class="ui-label" id="product-count" style="color:var(--muted);"></span>
+      <button class="btn-underline" onclick="openNewProductModal()" id="btn-new-product">+ Product</button>
+      <button class="btn-underline" onclick="seedDefaultProducts()" id="btn-seed" style="display:none;">Seed</button>
       <button class="logout-btn" onclick="handleLogout()">Logout</button>
     </div>
   </div>
+
+  <!-- Grid: sidebar + main -->
   <div class="admin-grid">
-    <div class="sidebar">
-      <button class="sidebar-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-      <button class="sidebar-btn" onclick="switchTab('products')">Products</button>
-      <button class="sidebar-btn" id="messages-tab-btn" onclick="switchTab('messages')">
-        Messages <span class="unread-badge" id="messages-unread-badge">0</span>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="admin-sidebar">
+      <div class="sidebar-section-label">Overview</div>
+      <button class="sidebar-btn active" onclick="switchTab('dashboard')" data-tab="dashboard">
+        <span class="sidebar-icon">◈</span>Dashboard
       </button>
-      <button class="sidebar-btn" onclick="switchTab('reviews')">Reviews</button>
-      <button class="sidebar-btn" onclick="switchTab('newsletter')">Newsletter</button>
-      <button class="sidebar-btn" onclick="switchTab('orders')">Orders</button>
+
+      <div class="sidebar-section-label">Commerce</div>
+      <button class="sidebar-btn" onclick="switchTab('products')" data-tab="products">
+        <span class="sidebar-icon">◻</span>Products
+      </button>
+      <button class="sidebar-btn" onclick="switchTab('orders')" data-tab="orders">
+        <span class="sidebar-icon">◫</span>Orders
+        <span class="unread-badge" id="orders-badge" style="display:none;"></span>
+      </button>
+      <button class="sidebar-btn" onclick="switchTab('customers')" data-tab="customers">
+        <span class="sidebar-icon">◯</span>Customers
+      </button>
+
+      <div class="sidebar-section-label">Content</div>
+      <button class="sidebar-btn" onclick="switchTab('reviews')" data-tab="reviews">
+        <span class="sidebar-icon">★</span>Reviews
+      </button>
+      <button class="sidebar-btn" onclick="switchTab('newsletter')" data-tab="newsletter">
+        <span class="sidebar-icon">◉</span>Newsletter
+      </button>
+
+      <div class="sidebar-section-label">Support</div>
+      <button class="sidebar-btn" onclick="switchTab('messages')" data-tab="messages" id="messages-tab-btn">
+        <span class="sidebar-icon">◌</span>Messages
+        <span class="unread-badge" id="messages-unread-badge">0</span>
+      </button>
+
+      <div class="sidebar-section-label" id="vendor-section-label">Marketplace</div>
+      <button class="sidebar-btn" onclick="switchTab('vendors')" data-tab="vendors" id="vendors-tab-btn">
+        <span class="sidebar-icon">⬡</span>Vendors
+      </button>
+
       <hr class="sidebar-divider">
-      <button class="sidebar-btn" onclick="window.open('index.html','_blank')">View Store</button>
+      <button class="sidebar-btn" onclick="window.open('index.html','_blank')">
+        <span class="sidebar-icon">↗</span>View Store
+      </button>
     </div>
+
+    <!-- Main Content -->
     <div class="main-content" id="main-content"></div>
   </div>
 </div>
 
+<!-- ── CONTAINERS ─────────────────────────────────────────────── -->
 <div id="modal-container"></div>
+<div id="panel-container"></div>
 <div id="toast-container"></div>
 
+<!-- ── FIREBASE SDK ───────────────────────────────────────────── -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<!-- Chart.js for analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<script>
-(function () {
-  'use strict';
+<!-- ── APP SCRIPT ─────────────────────────────────────────────── -->
+<script src="admin.js"></script>
 
-  var firebaseConfig = {
-    apiKey:            "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-    authDomain:        "janedore-9f035.firebaseapp.com",
-    projectId:         "janedore-9f035",
-    storageBucket:     "janedore-9f035.firebasestorage.app",
-    messagingSenderId: "571299748651",
-    appId:             "1:571299748651:web:01463a772d47b39cc4036e",
-    measurementId:     "G-Y9NMT0ZGKZ",
-    databaseURL:       "https://janedore-9f035-default-rtdb.firebaseio.com"
-  };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-
-  var db           = firebase.firestore();
-  var rtdb         = firebase.database();
-  var auth         = firebase.auth();
-  var productsRef  = db.collection('products');
-  var reviewsRef   = db.collection('reviews');
-  var newsletterRef= db.collection('newsletter');
-  var ordersRef    = db.collection('orders');
-
-  // ⭐ CHAT ROOT PATH - matches your chat widget
-  var CHAT_ROOT = 'live_chat';
-
-  var currentTab          = 'dashboard';
-  var allProducts         = [];
-  var activeChatSession   = null;
-  var chatMsgRef          = null;
-  var chatMsgCallback     = null;
-  var chatTypingRef       = null;
-  var chatTypingCallback  = null;
-  var chatsMonitorRef     = null;
-  var chatsMonitorCallback= null;
-  var totalUnreadMessages = 0;
-
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-
-  function showToast(msg, type) {
-    type = type || 'success';
-    var toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    toast.textContent = msg;
-    document.getElementById('toast-container').appendChild(toast);
-    setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
-  }
-
-  function safeEl(id) { return document.getElementById(id) || null; }
-
-  // ── AUTH ──────────────────────────────────────────────────────
-  auth.onAuthStateChanged(function(user) {
-    if (user) {
-      safeEl('login-screen').style.display = 'none';
-      safeEl('admin-panel').style.display  = 'block';
-      safeEl('admin-email').textContent    = user.email;
-      loadProducts();
-      startChatMonitoring();
-    } else {
-      safeEl('login-screen').style.display = 'flex';
-      safeEl('admin-panel').style.display  = 'none';
-      stopChatMonitoring();
-    }
-  });
-
-  window.handleLogin = function(e) {
-    e.preventDefault();
-    var email = safeEl('login-email').value;
-    var password = safeEl('login-password').value;
-    var errorEl = safeEl('login-error');
-    errorEl.style.display = 'none';
-    auth.signInWithEmailAndPassword(email, password).catch(function(err) {
-      errorEl.textContent = err.message;
-      errorEl.style.display = 'block';
-    });
-  };
-
-  window.handleLogout = function() { auth.signOut(); };
-
-  // ── PRODUCTS ──────────────────────────────────────────────────
-  function loadProducts() {
-    productsRef.get().then(function(snapshot) {
-      allProducts = snapshot.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
-      safeEl('product-count').textContent = allProducts.length + ' products';
-      safeEl('status-dot').className = 'status-dot online';
-      renderCurrentTab();
-    }).catch(function(e) {
-      safeEl('status-dot').className = 'status-dot offline';
-      showToast('Firebase connection failed: ' + e.message, 'error');
-    });
-  }
-
-  function saveProduct(productData) {
-    var ref = productData.id ? productsRef.doc(productData.id) : productsRef.doc(productData.sku || ('prod-' + Date.now()));
-    productData.id = ref.id;
-    ref.set(productData, {merge:true}).then(function() {
-      showToast('Product saved!');
-      loadProducts();
-      closeModal();
-    }).catch(function(e){ showToast('Error saving: '+e.message,'error'); });
-  }
-
-  window.deleteProduct = function(productId) {
-    if(!confirm('Delete this product?')) return;
-    productsRef.doc(productId).delete().then(function() {
-      showToast('Product deleted');
-      loadProducts();
-      closeModal();
-    }).catch(function(e){ showToast('Error deleting: '+e.message,'error'); });
-  };
-
-  var DEFAULT_PRODUCTS = [
-    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:null, badge:"sold", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses with UV protection.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
-    { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings with a modern twist.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
-    { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail:[] } }] },
-    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:null, badge:"new", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"The Raffle Brandy black dress.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
-    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
-    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Pink Rain", swatch:"#F3DBD7", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail:[] } }] },
-    { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
-  ];
-
-  window.seedDefaultProducts = function() {
-    if(!confirm('Seed all 7 default products to Firebase?')) return;
-    var batch = db.batch();
-    DEFAULT_PRODUCTS.forEach(function(p){ batch.set(productsRef.doc(p.id), p); });
-    batch.commit().then(function(){ showToast('7 products seeded!'); loadProducts(); }).catch(function(e){ showToast('Error seeding: '+e.message,'error'); });
-  };
-
-  // ── CHAT MONITORING (⭐ uses live_chat path) ───────────────────
-  function startChatMonitoring() {
-    stopChatMonitoring();
-    console.log('[ADMIN] Starting chat monitor on:', CHAT_ROOT);
-    chatsMonitorRef = rtdb.ref(CHAT_ROOT);
-    chatsMonitorCallback = function(snapshot) {
-      var unread = 0;
-      snapshot.forEach(function(sessionSnap) {
-        var messages = sessionSnap.child('messages');
-        if(messages.exists()) {
-          messages.forEach(function(msgSnap) {
-            var msg = msgSnap.val();
-            if(msg && msg.sender === 'customer' && msg.read === false) unread++;
-          });
-        }
-      });
-      totalUnreadMessages = unread;
-      updateUnreadBadge();
-    };
-    chatsMonitorRef.on('value', chatsMonitorCallback, function(err) {
-      console.warn('[ADMIN CHAT] monitor error:', err.message);
-    });
-  }
-
-  function stopChatMonitoring() {
-    if(chatsMonitorRef && chatsMonitorCallback) {
-      chatsMonitorRef.off('value', chatsMonitorCallback);
-      chatsMonitorRef = null;
-      chatsMonitorCallback = null;
-    }
-    detachActiveChatListeners();
-  }
-
-  function updateUnreadBadge() {
-    var badge = safeEl('messages-unread-badge');
-    if(badge) {
-      badge.textContent = totalUnreadMessages;
-      badge.style.display = totalUnreadMessages > 0 ? 'inline-block' : 'none';
-    }
-  }
-
-  function detachActiveChatListeners() {
-    if(chatMsgRef && chatMsgCallback) { chatMsgRef.off('value', chatMsgCallback); chatMsgRef = null; chatMsgCallback = null; }
-    if(chatTypingRef && chatTypingCallback) { chatTypingRef.off('value', chatTypingCallback); chatTypingRef = null; chatTypingCallback = null; }
-  }
-
-  // ── SEND ADMIN REPLY (⭐ uses live_chat path + createdAt) ──────
-  window.sendAdminReply = function(sessionId) {
-    var input = safeEl('reply-input-' + sessionId);
-    var text = input && input.value && input.value.trim();
-    if(!text || !sessionId) return;
-
-    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/adminTyping').set(false).catch(function(){});
-
-    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push({
-      text:      text,
-      sender:    'admin',
-      createdAt: firebase.database.ServerValue.TIMESTAMP,
-      read:      true,
-      sessionId: sessionId
-    }).then(function() {
-      if(input) input.value = '';
-      rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta').update({
-        lastMessage:   text,
-        lastMessageAt: firebase.database.ServerValue.TIMESTAMP
-      }).catch(function(){});
-    }).catch(function(e) {
-      showToast('Error sending reply: ' + e.message, 'error');
-    });
-  };
-
-  function markSessionAsRead(sessionId) {
-    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').once('value').then(function(snap) {
-      var updates = {};
-      snap.forEach(function(child) {
-        var msg = child.val();
-        if(msg && msg.sender === 'customer' && msg.read === false) {
-          updates[child.key + '/read'] = true;
-        }
-      });
-      if(Object.keys(updates).length > 0) {
-        rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').update(updates).catch(function(e) {
-          console.warn('[ADMIN] mark-read error:', e.message);
-        });
-      }
-    }).catch(function(e){ console.warn('[ADMIN] mark-read fetch error:', e.message); });
-  }
-
-  window.handleAdminTyping = function(sessionId) {
-    rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/adminTyping').set(true).catch(function(){});
-    clearTimeout(window._adminTypingTimeout);
-    window._adminTypingTimeout = setTimeout(function() {
-      rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/adminTyping').set(false).catch(function(){});
-    }, 3000);
-  };
-
-  // ── OPEN CHAT SESSION (⭐ uses live_chat path + createdAt) ─────
-  window.openChatSession = function(sessionId) {
-    activeChatSession = sessionId;
-    detachActiveChatListeners();
-    markSessionAsRead(sessionId);
-
-    var mc = safeEl('main-content');
-    mc.innerHTML =
-      '<button class="btn-underline" onclick="switchTab(\'messages\')" style="margin-bottom:12px;">Back to Sessions</button>' +
-      '<div class="section-title">Chat: ' + escapeHtml(sessionId.substring(0, 30)) + '...</div>' +
-      '<div class="chat-messages-panel" id="chat-messages-panel">' +
-        '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading messages...</div>' +
-      '</div>' +
-      '<div class="typing-indicator" id="typing-indicator">Customer is typing...</div>' +
-      '<div class="reply-box">' +
-        '<input id="reply-input-' + escapeHtml(sessionId) + '" placeholder="Type your reply..." ' +
-          'onkeypress="if(event.key===\'Enter\')sendAdminReply(\'' + escapeHtml(sessionId) + '\')" ' +
-          'oninput="handleAdminTyping(\'' + escapeHtml(sessionId) + '\')">' +
-        '<button class="btn-underline" onclick="sendAdminReply(\'' + escapeHtml(sessionId) + '\')">Send</button>' +
-      '</div>';
-
-    chatMsgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages');
-    chatMsgCallback = function(snapshot) {
-      var messages = [];
-      snapshot.forEach(function(child) {
-        messages.push(Object.assign({ _key: child.key }, child.val()));
-      });
-      messages.sort(function(a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
-      renderChatMessages(messages);
-    };
-    chatMsgRef.on('value', chatMsgCallback, function(err) {
-      console.warn('[ADMIN CHAT] message listener error:', err.message);
-    });
-
-    chatTypingRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/customerTyping');
-    chatTypingCallback = function(snapshot) {
-      var indicator = safeEl('typing-indicator');
-      if(indicator) indicator.style.display = snapshot.val() === true ? 'block' : 'none';
-    };
-    chatTypingRef.on('value', chatTypingCallback, function(err) {
-      console.warn('[ADMIN CHAT] typing listener error:', err.message);
-    });
-  };
-
-  function renderChatMessages(messages) {
-    var panel = safeEl('chat-messages-panel');
-    if(!panel) return;
-    var wasAtBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 40;
-    panel.innerHTML = '';
-    if(!messages || messages.length === 0) {
-      panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:20px;">No messages yet.</div>';
-      return;
-    }
-    messages.forEach(function(m) {
-      var time = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
-      var div = document.createElement('div');
-      div.className = 'chat-msg-admin ' + (m.sender === 'customer' ? 'customer-msg' : 'admin-msg');
-      div.innerHTML = '<div>' + escapeHtml(m.text) + '</div><div class="msg-meta">' + escapeHtml(m.sender||'') + ' · ' + time + '</div>';
-      panel.appendChild(div);
-    });
-    if(wasAtBottom) panel.scrollTop = panel.scrollHeight;
-  }
-
-  // ── MESSAGES TAB (⭐ uses live_chat path + createdAt) ──────────
-  function renderMessagesTab() {
-    var mc = safeEl('main-content');
-    activeChatSession = null;
-    detachActiveChatListeners();
-    mc.innerHTML = '<div class="section-title">Loading sessions...</div>';
-
-    rtdb.ref(CHAT_ROOT).once('value').then(function(snap) {
-      var sessions = {};
-      snap.forEach(function(sessionSnap) {
-        var sessionId = sessionSnap.key;
-        var messagesSnap = sessionSnap.child('messages');
-        if(!messagesSnap.exists()) return;
-        sessions[sessionId] = { messages: [], lastTime: 0, unreadCount: 0 };
-        messagesSnap.forEach(function(msgSnap) {
-          var msg = msgSnap.val();
-          if(!msg) return;
-          sessions[sessionId].messages.push(msg);
-          var msgTime = msg.createdAt || 0;
-          if(msgTime > sessions[sessionId].lastTime) sessions[sessionId].lastTime = msgTime;
-          if(msg.sender === 'customer' && msg.read === false) sessions[sessionId].unreadCount++;
-        });
-      });
-      var sessionIds = Object.keys(sessions).sort(function(a,b){ return (sessions[b].lastTime||0) - (sessions[a].lastTime||0); });
-      var cardsHtml = sessionIds.map(function(sid) {
-        var s = sessions[sid];
-        var msgs = s.messages;
-        var lastMsg = msgs[msgs.length-1];
-        var preview = ((lastMsg&&lastMsg.text)||'').substring(0,80);
-        var time = s.lastTime ? new Date(s.lastTime).toLocaleDateString() : '';
-        return '<div class="chat-session-card '+(s.unreadCount>0?'unread':'')+'" onclick="openChatSession(\''+escapeHtml(sid)+'\')">'+
-          '<div class="session-id">'+escapeHtml(sid.substring(0,25))+'...</div>'+
-          '<div class="session-preview">'+escapeHtml(preview)+(preview.length>=80?'...':'')+'</div>'+
-          '<div style="font-size:8px;color:var(--muted);margin-top:4px;">'+msgs.length+' messages · '+time+'</div>'+
-          (s.unreadCount>0?'<div class="unread-count" style="display:inline-block;">'+s.unreadCount+' new</div>':'')+
-          '</div>';
-      }).join('');
-      mc.innerHTML = '<div class="section-title">Customer Messages ('+sessionIds.length+' sessions)</div><div class="chat-sessions-list">'+
-        (sessionIds.length===0?'<p style="font-size:12px;color:var(--muted);">No messages yet.</p>':cardsHtml)+'</div>';
-    }).catch(function(e) {
-      mc.innerHTML = '<p style="color:var(--danger);">Error loading messages: '+escapeHtml(e.message)+'</p>';
-    });
-  }
-
-  // ── PRODUCT MODAL ─────────────────────────────────────────────
-  window.openNewProductModal = function(){ openProductModal(null); };
-  window.openProductModal = function(product) {
-    var p = product || { id:'', sku:'', name:'', brand:'JANEDORE', category:'dresses', price:0, salePrice:null, badge:'', sizes:[], stock:0, status:'active', featured:false, description:'', productFeatures:'', compositionCare:'', shippingReturns:'', variants:[{ color:'', swatch:'#111', images:{ model:[''], ghost:[''], detail:[] } }] };
-    var html = '<div class="modal-overlay" id="product-modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">'+
-      '<button class="modal-close" onclick="closeModal()">✕</button>'+
-      '<h2 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin-bottom:24px;">'+(product?'Edit':'New')+' Product</h2>'+
-      '<form id="product-form" onsubmit="handleProductSubmit(event,\''+escapeHtml(p.id)+'\')">'+
-      '<div class="form-row"><div class="form-group"><label>Name</label><input name="name" value="'+escapeHtml(p.name)+'" required></div><div class="form-group"><label>SKU</label><input name="sku" value="'+escapeHtml(p.sku)+'"></div></div>'+
-      '<div class="form-row-3"><div class="form-group"><label>Brand</label><select name="brand"><option value="JANEDORE"'+(p.brand==='JANEDORE'?' selected':'')+'>JANEDORE</option><option value="NIRIUS CO"'+(p.brand==='NIRIUS CO'?' selected':'')+'>NIRIUS CO</option><option value="THATO"'+(p.brand==='THATO'?' selected':'')+'>THATO</option></select></div><div class="form-group"><label>Category</label><select name="category">'+['dresses','tops','bottoms','jackets','sets','sunglasses','jewelry','bags','parfum'].map(function(c){return '<option value="'+c+'"'+(p.category===c?' selected':'')+'>'+c.charAt(0).toUpperCase()+c.slice(1)+'</option>';}).join('')+'</select></div><div class="form-group"><label>Status</label><select name="status"><option value="active"'+(p.status==='active'?' selected':'')+'>Active</option><option value="draft"'+(p.status==='draft'?' selected':'')+'>Draft</option></select></div></div>'+
-      '<div class="form-row-3"><div class="form-group"><label>Price (R)</label><input name="price" type="number" value="'+escapeHtml(String(p.price))+'" required></div><div class="form-group"><label>Sale Price</label><input name="salePrice" type="number" value="'+escapeHtml(String(p.salePrice||''))+'"></div><div class="form-group"><label>Stock</label><input name="stock" type="number" value="'+escapeHtml(String(p.stock))+'"></div></div>'+
-      '<div class="form-row-3"><div class="form-group"><label>Badge</label><select name="badge"><option value="">None</option><option value="new"'+(p.badge==='new'?' selected':'')+'>New</option><option value="sale"'+(p.badge==='sale'?' selected':'')+'>Sale</option><option value="sold"'+(p.badge==='sold'?' selected':'')+'>Sold Out</option></select></div><div class="form-group"><label>Sizes (comma separated)</label><input name="sizes" value="'+escapeHtml((p.sizes||[]).join(','))+'"></div><div class="form-group"><label>Featured</label><select name="featured"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div></div>'+
-      '<div class="form-group"><label>Description</label><textarea name="description">'+escapeHtml(p.description||'')+'</textarea></div>'+
-      '<div class="form-row"><div class="form-group"><label>Product Features</label><textarea name="productFeatures">'+escapeHtml(p.productFeatures||'')+'</textarea></div><div class="form-group"><label>Composition &amp; Care</label><textarea name="compositionCare">'+escapeHtml(p.compositionCare||'')+'</textarea></div></div>'+
-      '<div class="form-group"><label>Shipping &amp; Returns</label><input name="shippingReturns" value="'+escapeHtml(p.shippingReturns||'')+'"></div>'+
-      '<h3 style="font-family:\'Manrope\',sans-serif;font-size:var(--ui-font-size);text-transform:uppercase;letter-spacing:var(--ui-letter-spacing);font-weight:var(--ui-font-weight);margin:20px 0 12px;">Variants</h3>'+
-      '<div id="variants-container">'+(p.variants||[]).map(function(v,i){return buildVariantBlock(v,i);}).join('')+'</div>'+
-      '<button type="button" class="btn-underline" onclick="addVariant()" style="margin-top:8px;">+ Add Variant</button>'+
-      '<div style="margin-top:24px;display:flex;gap:12px;"><button type="submit" class="btn-underline">Save Product</button>'+(p.id?'<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(\''+escapeHtml(p.id)+'\')">Delete</button>':'')+'</div></form></div></div>';
-    safeEl('modal-container').innerHTML = html;
-  };
-
-  function buildVariantBlock(v,index){ /* same as before */ 
-    v=v||{};var images=v.images||{model:[],ghost:[],detail:[]};var modelUrls=(images.model&&images.model.length)?images.model:[''];var ghostUrls=(images.ghost&&images.ghost.length)?images.ghost:[''];var detailUrls=(images.detail&&images.detail.length)?images.detail:[];var modelRows=modelUrls.map(function(url){return buildImageUrlRow('model',index,url);}).join('');var ghostRows=ghostUrls.map(function(url){return buildImageUrlRow('ghost',index,url);}).join('');var detailRows=detailUrls.map(function(url){return buildImageUrlRow('detail',index,url);}).join('');return '<div class="variant-block"><h4>Variant '+(index+1)+'</h4><div class="form-row"><div class="form-group"><label>Color Name</label><input name="variant-color-'+index+'" value="'+escapeHtml(v.color||'')+'" placeholder="e.g. Black"></div><div class="form-group"><label>Swatch (hex)</label><div style="display:flex;gap:8px;align-items:center;"><input name="variant-swatch-'+index+'" value="'+escapeHtml(v.swatch||'#111')+'" placeholder="#111" style="flex:1;"><input type="color" value="'+escapeHtml(v.swatch||'#111')+'" style="width:36px;height:36px;padding:2px;border:0.5px solid var(--border);background:#fafaf9;cursor:pointer;" oninput="document.querySelector(\'[name=variant-swatch-'+index+']\').value=this.value"></div></div></div><div class="form-group"><label>Model Images</label><div class="image-url-inputs" id="variant-model-'+index+'">'+modelRows+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'model\','+index+')" style="margin-top:6px;font-size:8px;">+ Add Model Image</button></div><div class="form-group"><label>Ghost / Flat Lay Images</label><div class="image-url-inputs" id="variant-ghost-'+index+'">'+ghostRows+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'ghost\','+index+')" style="margin-top:6px;font-size:8px;">+ Add Ghost Image</button></div><div class="form-group"><label>Detail Images</label><div class="image-url-inputs" id="variant-detail-'+index+'">'+detailRows+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'detail\','+index+')" style="margin-top:6px;font-size:8px;">+ Add Detail Image</button></div></div>';
-  }
-  function buildImageUrlRow(type,variantIndex,url){var placeholder='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';return '<div class="image-url-row"><input name="variant-'+type+'-'+variantIndex+'[]" value="'+escapeHtml(url||'')+'" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||\''+placeholder+'\'"><img class="image-preview" src="'+(escapeHtml(url)||placeholder)+'" onerror="this.src=\''+placeholder+'\'"></div>';}
-  window.addVariant=function(){var c=safeEl('variants-container');if(c)c.insertAdjacentHTML('beforeend',buildVariantBlock({},c.children.length));};
-  window.addImageUrl=function(type,vi){var container=safeEl('variant-'+type+'-'+vi);if(container)container.insertAdjacentHTML('beforeend',buildImageUrlRow(type,vi,''));};
-  window.handleProductSubmit=function(e,existingId){e.preventDefault();var form=e.target;var data={id:existingId||form.sku.value||('prod-'+Date.now()),sku:form.sku.value,name:form.name.value,brand:form.brand.value,category:form.category.value,price:parseFloat(form.price.value),salePrice:form.salePrice.value?parseFloat(form.salePrice.value):null,badge:form.badge.value||null,sizes:form.sizes.value.split(',').map(function(s){return s.trim();}).filter(Boolean),stock:parseInt(form.stock.value,10),status:form.status.value,featured:form.featured.value==='true',description:form.description.value,productFeatures:form.productFeatures.value,compositionCare:form.compositionCare.value,shippingReturns:form.shippingReturns.value,createdAt:existingId?((allProducts.find(function(p){return p.id===existingId;})||{}).createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),variants:[]};var vi=0;while(form['variant-color-'+vi]){var mI=form.querySelectorAll('[name="variant-model-'+vi+'[]"]');var gI=form.querySelectorAll('[name="variant-ghost-'+vi+'[]"]');var dI=form.querySelectorAll('[name="variant-detail-'+vi+'[]"]');data.variants.push({color:form['variant-color-'+vi].value,swatch:form['variant-swatch-'+vi].value,images:{model:Array.from(mI).map(function(i){return i.value;}).filter(Boolean),ghost:Array.from(gI).map(function(i){return i.value;}).filter(Boolean),detail:Array.from(dI).map(function(i){return i.value;}).filter(Boolean)}});vi++;}saveProduct(data);};
-  window.closeModal=function(){var mc=safeEl('modal-container');if(mc)mc.innerHTML='';};
-
-  // ── TABS ──────────────────────────────────────────────────────
-  window.switchTab=function(tab){currentTab=tab;if(tab!=='messages'){activeChatSession=null;detachActiveChatListeners();}document.querySelectorAll('.sidebar-btn').forEach(function(b){b.classList.remove('active');});var activeBtn=document.querySelector('[onclick="switchTab(\''+tab+'\')"]');if(activeBtn)activeBtn.classList.add('active');renderCurrentTab();};
-
-  function renderCurrentTab(){
-    var mc=safeEl('main-content');if(!mc)return;
-    switch(currentTab){
-      case 'dashboard':Promise.all([productsRef.get(),reviewsRef.get(),newsletterRef.get(),ordersRef.get()]).then(function(results){mc.innerHTML='<div class="stats-grid"><div class="stat-card"><div class="stat-number">'+results[0].size+'</div><div class="stat-label">Products</div></div><div class="stat-card"><div class="stat-number">'+results[1].size+'</div><div class="stat-label">Reviews</div></div><div class="stat-card"><div class="stat-number">'+results[2].size+'</div><div class="stat-label">Subscribers</div></div><div class="stat-card"><div class="stat-number">'+results[3].size+'</div><div class="stat-label">Orders</div></div></div><div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--success);font-size:12px;">Connected — Firestore + Realtime DB (live_chat)</p></div>';}).catch(function(e){mc.innerHTML='<div class="card"><div class="card-title">Firebase Status</div><p style="margin-top:8px;color:var(--danger);font-size:12px;">Error: '+escapeHtml(e.message)+'</p></div>';});break;
-      case 'products':mc.innerHTML='<div class="section-title">All Products ('+allProducts.length+')</div><div class="product-list">'+allProducts.map(function(p){return '<div class="product-row" onclick="openProductModal('+escapeHtml(JSON.stringify(p))+')"><div><div class="pi-name">'+escapeHtml(p.name)+'</div><div class="pi-meta">'+escapeHtml(p.brand)+' · '+escapeHtml(p.category)+' · R'+escapeHtml(String(p.price))+'</div></div><span class="badge badge-'+(p.status==='active'?'active':'draft')+'">'+escapeHtml(p.status)+'</span></div>';}).join('')+'</div>';break;
-      case 'messages':renderMessagesTab();break;
-      case 'reviews':reviewsRef.orderBy('createdAt','desc').limit(50).get().then(function(revs){mc.innerHTML='<div class="section-title">Recent Reviews</div>'+(revs.empty?'<p style="font-size:12px;color:var(--muted);">No reviews yet.</p>':revs.docs.map(function(d){var data=d.data();return '<div class="card"><div class="card-header"><span>'+'★'.repeat(data.rating||0)+'</span><span style="font-size:var(--ui-font-size);color:var(--muted);">'+escapeHtml(data.name||'Anonymous')+'</span></div><p style="font-size:12px;">'+escapeHtml(data.text||'')+'</p></div>';}).join(''));}).catch(function(){mc.innerHTML='<div class="section-title">Recent Reviews</div><p style="font-size:12px;color:var(--muted);">No reviews yet.</p>';});break;
-      case 'newsletter':newsletterRef.orderBy('subscribedAt','desc').limit(50).get().then(function(subs){mc.innerHTML='<div class="section-title">Newsletter ('+subs.size+')</div>'+(subs.empty?'<p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>':subs.docs.map(function(d){return '<div class="card"><span style="font-size:12px;">'+escapeHtml(d.data().email)+'</span></div>';}).join(''));}).catch(function(){mc.innerHTML='<div class="section-title">Newsletter</div><p style="font-size:12px;color:var(--muted);">No subscribers yet.</p>';});break;
-      case 'orders':ordersRef.orderBy('createdAt','desc').limit(50).get().then(function(ords){mc.innerHTML='<div class="section-title">Orders ('+ords.size+')</div>'+(ords.empty?'<p style="font-size:12px;color:var(--muted);">No orders yet.</p>':ords.docs.map(function(d){var data=d.data();return '<div class="card"><div class="card-header"><span style="font-size:var(--ui-font-size);">Order</span><span class="badge badge-active">'+escapeHtml(data.status||'pending')+'</span></div><p style="font-size:12px;">'+escapeHtml(String(data.itemCount||0))+' items · R'+escapeHtml(String(data.subtotal||0))+'</p></div>';}).join(''));}).catch(function(){mc.innerHTML='<div class="section-title">Orders</div><p style="font-size:12px;color:var(--muted);">No orders yet.</p>';});break;
-    }
-  }
-})();
-</script>
 </body>
 </html>
