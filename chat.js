@@ -11,10 +11,8 @@ let currentUser = null;
 let anonAuthInProgress = false;
 let typingTimeout = null;
 
-// RTDB reference
+// RTDB reference (reuses existing Firebase instance from main site)
 const rtdb = firebase.database();
-// Firestore reference (WAS MISSING - caused ReferenceError: db is not defined)
-const db = firebase.firestore();
 
 // ==================== HELPERS ====================
 function safeEl(id) { return document.getElementById(id) || null; }
@@ -199,6 +197,7 @@ async function loadCustomerStats() {
   statsEl.textContent = '';
 
   try {
+    const db = firebase.firestore();
     const parts = [];
     try {
       const ordersSnap = await db.collection('orders').where('customerEmail', '==', customerEmail).limit(10).get();
@@ -252,6 +251,7 @@ async function lookupOrder() {
 
   try {
     await ensureAnonymousAuth();
+    const db = firebase.firestore();
     const orders = [];
 
     // Primary: exact match
