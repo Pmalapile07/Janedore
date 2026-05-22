@@ -9,7 +9,7 @@ let customerName  = localStorage.getItem('janedore_chat_name') || '';
 let chatOpen = false, chatUnsub = null, chatMode = null;
 let currentUser = null;
 let typingTimeout = null;
-let loadedMessageKeys = new Set(); // Track which messages we've already displayed
+let loadedMessageKeys = new Set();
 
 // Wait for Firebase to be ready
 function getRTDB() {
@@ -177,7 +177,7 @@ function startChat() {
   if (emailEl) emailEl.textContent = customerEmail || '';
   
   chatMode = 'chat';
-  loadedMessageKeys.clear(); // Reset seen messages
+  loadedMessageKeys.clear();
   loadMessages();
   listenChat();
   
@@ -271,13 +271,10 @@ function listenChat() {
   
   const ref = rtdb.ref('live_chat/' + chatSessionId + '/messages');
   
-  // Listen for ALL new messages (child_added fires for each existing child initially,
-  // then for new ones. We use loadedMessageKeys to skip ones we already displayed.)
   chatUnsub = ref.on('child_added', snap => {
     const key = snap.key;
     const m = snap.val();
     
-    // Skip messages we already loaded
     if (loadedMessageKeys.has(key)) return;
     loadedMessageKeys.add(key);
     
@@ -289,14 +286,11 @@ function listenChat() {
     appendMessage(el, m);
     el.scrollTop = el.scrollHeight;
     
-    // Show unread dot for admin messages when chat is closed
     if (!chatOpen && m.sender === 'admin') {
       const dot = safeEl('chat-unread-dot');
       if (dot) dot.style.display = 'block';
     }
   });
-  
-  console.log('[Chat] Listening for messages on session:', chatSessionId);
 }
 
 // ==================== SEND MESSAGE ====================
@@ -346,7 +340,6 @@ function handleCustomerTyping() {
   }, 3000);
 }
 
-// Listen for admin typing
 function listenTyping() {
   const rtdb = getRTDB();
   if (!rtdb) return;
@@ -365,7 +358,9 @@ function handleChatKeyPress(event) {
   }
 }
 
-// ==================== ORDER LOOKUP ====================
+// ==================== ORDER LOOKUP (READ-ONLY) ====================
+// This function ONLY reads from the 'orders' collection.
+// It does NOT create, write, or log anything.
 async function lookupOrder() {
   const db = getFirestore();
   const input = safeEl('order-lookup-input');
@@ -373,11 +368,15 @@ async function lookupOrder() {
   if (!db || !input || !resultEl) return;
   
   const orderNum = input.value.trim().toUpperCase();
-  if (!orderNum) { resultEl.textContent = 'Please enter an order number.'; return; }
+  if (!orderNum) { 
+    resultEl.textContent = 'Please enter an order number.'; 
+    return; 
+  }
   
   resultEl.textContent = 'Searching...';
   
   try {
+    // ONLY reads from 'orders' collection - no writes, no logs, no lookups collection
     const snap = await db.collection('orders')
       .where('orderNumber', '==', orderNum)
       .limit(1)
@@ -391,7 +390,7 @@ async function lookupOrder() {
     const o = snap.docs[0].data();
     const date = o.createdAt ? new Date(o.createdAt.seconds*1000).toLocaleDateString() : 'N/A';
     resultEl.innerHTML = `
-      <p style="color:green;"> Order found</p>
+      <p style="color:green;">✅ Order found</p>
       <div style="background:#f5f5f5;padding:12px;border-radius:8px;font-size:12px;">
         <strong>#${o.orderNumber || snap.docs[0].id}</strong><br>
         Status: ${o.status || 'pending'}<br>
@@ -407,7 +406,6 @@ async function lookupOrder() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Chat] Initializing...');
   createChatWidget();
   
   const nameInput = safeEl('chat-name-input');
@@ -415,7 +413,5 @@ document.addEventListener('DOMContentLoaded', () => {
   if (nameInput && customerName) nameInput.value = customerName;
   if (emailInput && customerEmail) emailInput.value = customerEmail;
   
-  ensureAuth().then(u => console.log('[Chat] Auth ready:', u ? u.uid : 'failed'));
-  
-  console.log('[Chat] Ready');
+  ensureAuth();
 });
