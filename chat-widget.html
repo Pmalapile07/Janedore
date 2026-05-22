@@ -115,7 +115,7 @@
     font-size: 12px;
     font-weight: 300;
     outline: none;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     color: #111;
     background: transparent;
     text-align: center;
@@ -390,6 +390,15 @@
     flex-shrink: 0;
   }
   .chat-switch-inline:hover { color: #888; }
+  .chat-typing-indicator {
+    padding: 4px 18px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 8px;
+    color: #888;
+    font-style: italic;
+    background: #fafaf9;
+    display: none;
+  }
   @media (max-width: 480px) {
     #chat-window {
       width: calc(100vw - 32px);
@@ -419,7 +428,9 @@
   <!-- Email entry screen -->
   <div class="chat-email-screen" id="chat-email-screen">
     <div class="chat-email-title">Welcome</div>
-    <div class="chat-email-subtitle">Enter your email so we can assist you better</div>
+    <div class="chat-email-subtitle">Enter your details so we can assist you better</div>
+    <input class="chat-email-input" id="chat-name-input" type="text" placeholder="Your name"
+           onkeypress="if(event.key==='Enter')document.getElementById('chat-email-input').focus()">
     <input class="chat-email-input" id="chat-email-input" type="email" placeholder="your@email.com"
            onkeypress="if(event.key==='Enter')submitEmail()">
     <button class="chat-email-btn" onclick="submitEmail()">Continue</button>
@@ -436,11 +447,14 @@
   <!-- Customer info bar (shown during active chat) -->
   <div class="chat-customer-info" id="chat-customer-info" style="display:none;">
     <div class="chat-customer-info-left">
+      <span id="chat-customer-name"></span>
       <span id="chat-customer-email"></span>
-      <span id="chat-customer-stats"></span>
     </div>
     <button class="chat-switch-inline" onclick="clearChatSession()" title="Switch account">Switch</button>
   </div>
+
+  <!-- Typing indicator -->
+  <div class="chat-typing-indicator" id="chat-typing-indicator">JANEDORE is typing...</div>
 
   <!-- Messages -->
   <div class="chat-messages" id="chat-messages" style="display:none;">
@@ -464,7 +478,8 @@
   <!-- Message input -->
   <div class="chat-input-wrap" id="chat-input-wrap" style="display:none;">
     <input class="chat-input" id="chat-input" placeholder="Type your message…"
-           onkeypress="if(event.key==='Enter')sendChatMessage()">
-    <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+           onkeypress="if(event.key==='Enter')sendChatMessage()"
+           oninput="handleCustomerTyping()">
+    <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">Send</button>
   </div>
 </div>
