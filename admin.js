@@ -7,45 +7,21 @@
   'use strict';
 
   /* ================================================================
-     ADMIN ROUTE GUARD
-     Exits the entire IIFE before Firebase or any admin logic runs
-     if this script is loaded on a non-admin route.
+   ADMIN PAGE DETECTION
+   Much safer than pathname detection.
+================================================================ */
 
-     Prevents auth listeners, modal overlays, and the "Verifying
-     access..." screen from mounting on public-facing pages when
-     admin.js is included in a shared bundle.
+var _isAdminPage = !!(
+  document.getElementById('admin-panel') &&
+  document.getElementById('login-screen')
+);
 
-     Two-layer check — either condition is sufficient to proceed:
-       1. URL pathname  — matches a known admin route (see below)
-       2. Body class    — document.body has class "admin-page"
+if (!_isAdminPage) {
+  console.log('[JANEDORE ADMIN] Admin page not detected.');
+  return;
+}
 
-     To activate on your admin page, use one or both:
-       - Host the admin dashboard at one of the routes listed below
-       - Add class="admin-page" to the <body> tag of admin.html
-  ================================================================ */
-  var _path = window.location.pathname;
-
-  var _isAdminPath = (
-    _path === '/admin'              ||
-    _path.startsWith('/admin/')     ||
-    _path === '/studio'             ||
-    _path.startsWith('/studio/')    ||
-    _path === '/dashboard'          ||
-    _path.startsWith('/dashboard/')
-  );
-
-  var _isAdminBody = !!(
-    document.body &&
-    document.body.classList.contains('admin-page')
-  );
-
-  if (!_isAdminPath && !_isAdminBody) {
-    // Not an admin route. Exit immediately.
-    // Firebase will NOT initialize. No auth listeners, no overlays,
-    // no modal systems, no "Verifying access..." screen — nothing runs.
-    return;
-  }
-  /* ── END GUARD ────────────────────────────────────────────── */
+/* ── END ADMIN CHECK ─────────────────────────────────────── */
 
   /* ── FIREBASE CONFIG ──────────────────────────────────────── */
   var firebaseConfig = {
