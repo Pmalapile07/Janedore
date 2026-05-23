@@ -38,7 +38,7 @@
   var currentTab          = 'dashboard';
   var allProducts         = [];
   var currentUser         = null;
-  var currentUserRole     = 'SUPER_ADMIN';
+  var currentUserRole     = null;  // SECURITY: never default to SUPER_ADMIN
   var currentVendorId     = null;
   var activeChatSession   = null;
   var chatMsgRef          = null;
@@ -62,6 +62,9 @@
     'Thank you for your patience.',
     'Could you share your order number?'
   ];
+
+  /* ── HELPER: prevent duplicate event listeners ───────────── */
+  var _boundKeyHandler = null;
 
   /* ── HELPERS ──────────────────────────────────────────────── */
   function esc(str) {
@@ -109,14 +112,33 @@
     setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3200);
   }
 
+  /* ── FIXED CLOSE MODAL with full cleanup ────────────────── */
   function closeModal() {
     var mc = safeEl('modal-container');
-    if (mc) mc.innerHTML = '';
+    if (mc) {
+      // Remove all children & event listeners by replacing innerHTML
+      mc.innerHTML = '';
+    }
+    // Remove escape listener
+    if (_boundKeyHandler) {
+      document.removeEventListener('keydown', _boundKeyHandler);
+      _boundKeyHandler = null;
+    }
   }
+
+  /* ── FIXED CLOSE PANEL with full cleanup ────────────────── */
   function closePanel() {
     var pc = safeEl('panel-container');
-    if (pc) pc.innerHTML = '';
+    if (pc) {
+      pc.innerHTML = '';
+    }
+    // Remove escape listener
+    if (_boundKeyHandler) {
+      document.removeEventListener('keydown', _boundKeyHandler);
+      _boundKeyHandler = null;
+    }
   }
+
   function isSuperAdmin() { return currentUserRole === 'SUPER_ADMIN'; }
 
   /* ── STATUS BADGE ─────────────────────────────────────────── */
@@ -124,6 +146,25 @@
     status = (status || 'pending').toLowerCase();
     return '<span class="badge badge-' + esc(status) + '">' + esc(status) + '</span>';
   }
+
+  /* ── ESCAPE KEY HANDLER (attached once globally) ─────────── */
+  function ensureEscapeHandler() {
+    if (_boundKeyHandler) return; // already attached
+    _boundKeyHandler = function(e) {
+      if (e.key === 'Escape') {
+        var mc = safeEl('modal-container');
+        var pc = safeEl('panel-container');
+        // If panel is open, close it first
+        if (pc && pc.innerHTML.trim() !== '') {
+          closePanel();
+        } else if (mc && mc.innerHTML.trim() !== '') {
+          closeModal();
+        }
+      }
+    };
+    document.addEventListener('keydown', _boundKeyHandler);
+  }
+  ensureEscapeHandler();
 
   /* ── AUTH STATE ───────────────────────────────────────────── */
   auth.onAuthStateChanged(function(user) {
@@ -144,7 +185,7 @@
       });
     } else {
       currentUser = null;
-      currentUserRole = 'SUPER_ADMIN';
+      currentUserRole = null;   // SECURITY: no default role when logged out
       currentVendorId = null;
       safeEl('login-screen').style.display  = 'flex';
       safeEl('admin-panel').style.display   = 'none';
@@ -152,19 +193,24 @@
     }
   });
 
-  /* ── LOAD USER ROLE ───────────────────────────────────────── */
+  /* ── LOAD USER ROLE — SECURITY FIX ──────────────────────── */
   function loadUserRole(user) {
     return adminsRef.doc(user.uid).get().then(function(doc) {
       if (doc.exists) {
         var data = doc.data();
-        currentUserRole = data.role || 'SUPER_ADMIN';
+        currentUserRole = data.role || 'VIEWER';  // Safe fallback: VIEWER, never SUPER_ADMIN
         currentVendorId = data.vendorId || null;
       } else {
-        currentUserRole = 'SUPER_ADMIN';
+        // No admin document — assign safe role, do NOT default to SUPER_ADMIN
+        currentUserRole = 'VIEWER';
         currentVendorId = null;
+        showToast('Your account is not authorized. Contact a Super Admin.', 'error');
       }
     }).catch(function() {
-      currentUserRole = 'SUPER_ADMIN';
+      // Firestore fetch failed — assign safe role, do NOT default to SUPER_ADMIN
+      currentUserRole = 'VIEWER';
+      currentVendorId = null;
+      showToast('Could not verify your role. Limited access granted.', 'error');
     });
   }
 
@@ -172,7 +218,7 @@
     var badge = safeEl('admin-role-badge');
     if (badge) {
       badge.style.display = 'inline-block';
-      badge.textContent   = currentUserRole === 'SUPER_ADMIN' ? 'Super Admin' : 'Vendor';
+      badge.textContent   = currentUserRole === 'SUPER_ADMIN' ? 'Super Admin' : (currentUserRole === 'VIEWER' ? 'Viewer' : 'Vendor');
       badge.className     = 'role-badge ' + (isSuperAdmin() ? 'badge-super' : 'badge-vendor');
     }
     var seedBtn   = safeEl('btn-seed');
@@ -201,6 +247,8 @@
 
   /* ── PRODUCTS ─────────────────────────────────────────────── */
   function loadProducts() {
+    if (!currentUser) return; // Prevent rendering before auth validation completes
+
     var query = isSuperAdmin()
       ? productsRef.get()
       : productsRef.where('vendorId','==', currentVendorId || '__none__').get();
