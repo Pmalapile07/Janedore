@@ -1,12 +1,35 @@
 /* ================================================================
+   CRITICAL: PREVENT EMPTY OVERLAYS FROM BLOCKING LOGIN
+================================================================ */
+#modal-container:empty,
+#panel-container:empty {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#modal-container,
+#panel-container {
+  pointer-events: none;
+}
+
+#modal-container > *,
+#panel-container > * {
+  pointer-events: auto;
+}
+
+/* ================================================================
    GLOBAL TYPOGRAPHY ENFORCEMENT
 ================================================================ */
 * {
   font-family: 'Manrope', sans-serif !important;
 }
 
-/* Preserve icon fonts if you use any */
-[class*="icon-"], [class*="fa-"], .material-icons, [class*="bi-"] {
+/* Preserve icon fonts */
+[class*="icon-"], 
+[class*="fa-"], 
+.material-icons, 
+[class*="bi-"],
+[class*="glyphicon"] {
   font-family: inherit !important;
 }
 
@@ -31,9 +54,18 @@ img[alt*="logo"],
 /* Specific logo containers */
 .sidebar .logo img,
 .login-screen .logo img,
-.mobile-nav .logo img {
+.mobile-nav .logo img,
+.header .logo img {
   content: url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202') !important;
   object-fit: contain !important;
+  width: auto !important;
+  max-height: 40px !important;
+}
+
+/* Login screen specific logo sizing */
+.login-screen .logo img {
+  max-height: 60px !important;
+  margin-bottom: 20px;
 }
 
 /* ================================================================
@@ -61,6 +93,7 @@ img[alt*="logo"],
 .modal {
   position: relative;
   z-index: 1001;
+  pointer-events: auto;
 }
 
 .slide-panel {
@@ -69,4 +102,35 @@ img[alt*="logo"],
   right: 0;
   height: 100%;
   z-index: 1002;
+  pointer-events: auto;
+}
+
+/* Close button safety */
+.modal-close,
+.slide-panel-close {
+  cursor: pointer;
+  z-index: 10;
+  position: relative;
+  pointer-events: auto;
+}
+
+/* ================================================================
+   LOGIN SCREEN SAFETY
+================================================================ */
+#login-screen {
+  position: relative;
+  z-index: 1;
+}
+
+#login-screen form {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+#login-screen input,
+#login-screen button {
+  pointer-events: auto;
+  position: relative;
+  z-index: 3;
 }
