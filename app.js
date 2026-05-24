@@ -53,7 +53,6 @@ const BANNER_ITEMS = ["Complimentary Shipping on Orders Over R1500", "Free Retur
 const CURRENCIES = { ZAR:{label:"ZAR R",symbol:"R"}, BWP:{label:"BWP P",symbol:"P"}, USD:{label:"USD $",symbol:"$"}, LSL:{label:"LSL M",symbol:"M"}, NAD:{label:"NAD N$",symbol:"N$"} };
 const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500'%3E%3Crect fill='%23f0ede8' width='400' height='500'/%3E%3C/svg%3E";
 
-// Collection descriptions
 const COLLECTION_DESCRIPTIONS = {
   'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.',
   'dresses': 'Effortless dresses that balance structure and fluidity.',
@@ -95,7 +94,7 @@ const S = {
   campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, announceIdx:0, announceTimer:null,
   currency:"ZAR", reviewRating:0, reviewImage:null, touchStartX:0, touchEndX:0,
   cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null,
-  currentReviewProductId:null, saleMode:false
+  currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0
 };
 
 async function fetchProducts() {
@@ -121,9 +120,8 @@ function navigateToSale() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-products").classList.add("active");
   S.currentPage = "products";
-  if(document.getElementById("page-products").querySelector(".toolbar-center")) {
-    document.getElementById("page-products").querySelector(".toolbar-center").textContent = "SALE";
-  }
+  const toolbarCenter = document.getElementById("page-products").querySelector(".toolbar-center");
+  if(toolbarCenter) toolbarCenter.textContent = "SALE";
   renderSaleProducts();
   window.scrollTo({top:0,behavior:"smooth"});
   ensureNavScrolled();
@@ -432,6 +430,41 @@ function merchandiseProducts(products) {
 
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
 
+function buildCategoriesSlider() {
+  const grid = document.getElementById('home-categories-grid');
+  const progress = document.getElementById('home-categories-progress');
+  if (!grid || !progress) return;
+  const categories = [
+    { label: 'Clothing', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat: 'all-clothing' },
+    { label: 'Jewellery', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153', cat: 'jewelry' },
+    { label: 'Sunglasses', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287', cat: 'sunglasses' },
+    { label: 'Scent', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat: 'parfum' },
+    { label: 'Bags', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat: 'bags' }
+  ];
+  grid.innerHTML = categories.map(c => 
+    `<div class="home-category-card" onclick="navigateToCategory('${c.cat}')"><div class="home-category-img" style="background-image:url('${c.img}');background-size:cover;background-position:center;"></div><div class="home-category-label">${c.label}</div></div>`
+  ).join('');
+  const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2;
+  const maxIdx = Math.max(0, categories.length - perView);
+  progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => 
+    `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`
+  ).join('');
+  S.categoriesSlideIndex = 0;
+}
+
+function goCategoriesSlide(idx) {
+  const grid = document.getElementById('home-categories-grid');
+  const progress = document.getElementById('home-categories-progress');
+  if (!grid || !progress) return;
+  const cards = grid.querySelectorAll('.home-category-card');
+  const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2;
+  idx = Math.max(0, Math.min(idx, Math.max(0, cards.length - perView)));
+  S.categoriesSlideIndex = idx;
+  const cardWidth = grid.offsetWidth / perView + 8;
+  grid.scrollTo({ left: idx * cardWidth, behavior: 'smooth' });
+  progress.querySelectorAll('.swipe-bar').forEach((b,i) => b.classList.toggle('active', i===idx));
+}
+
 function buildAllProductsHomeSlider() {
   const track = document.getElementById('track-all-products-home');
   const bars = document.getElementById('bars-all-products-home');
@@ -447,20 +480,8 @@ function buildAllProductsHomeSlider() {
 }
 
 function buildArrivals() {
+  buildCategoriesSlider();
   buildAllProductsHomeSlider();
-  const categoriesGrid = document.getElementById('home-categories-grid');
-  if (categoriesGrid) {
-    const categories = [
-      { label: 'Clothing', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat: 'all-clothing' },
-      { label: 'Jewellery', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153', cat: 'jewelry' },
-      { label: 'Sunglasses', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287', cat: 'sunglasses' },
-      { label: 'Scent', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat: 'parfum' },
-      { label: 'Bags', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat: 'bags' }
-    ];
-    categoriesGrid.innerHTML = categories.map(c => 
-      `<div class="home-category-card" onclick="navigateToCategory('${c.cat}')"><div class="home-category-img" style="background-image:url('${c.img}');background-size:cover;background-position:center;"></div><div class="home-category-label">${c.label}</div></div>`
-    ).join('');
-  }
   buildNewsletterSection();
 }
 
