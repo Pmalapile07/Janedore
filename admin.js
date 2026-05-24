@@ -450,7 +450,24 @@ if (!_isAdminPage) {
       : productsRef.where('vendorId','==', currentVendorId || '__none__').get();
 
     query.then(function(snapshot) {
-      allProducts = snapshot.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+      allProducts = snapshot.docs.map(function(d){ 
+        var product = Object.assign({id:d.id}, d.data());
+        // Normalize variant images to ensure backward compatibility
+        if (product.variants && Array.isArray(product.variants)) {
+          product.variants = product.variants.map(function(variant) {
+            if (!variant.images) {
+              variant.images = { model: [], ghost: [], detail: [] };
+            } else {
+              // Ensure all image arrays exist
+              variant.images.model = variant.images.model || [];
+              variant.images.ghost = variant.images.ghost || [];
+              variant.images.detail = variant.images.detail || [];
+            }
+            return variant;
+          });
+        }
+        return product;
+      });
       var el = safeEl('product-count');
       if (el) el.textContent = allProducts.length + ' products';
       var dot = safeEl('status-dot');
@@ -1789,13 +1806,33 @@ if (!_isAdminPage) {
   }
 
   function renderProductRow(p) {
+    // Get first variant thumbnail for preview
+    var firstVariant = (p.variants && p.variants[0]) || {};
+    var firstImages = firstVariant.images || { model: [], ghost: [], detail: [] };
+    var allImages = [];
+    
+    // Combine images in storefront order for preview
+    if (p.category === 'jewelry') {
+      allImages = [].concat(firstImages.model || [], firstImages.ghost || [], firstImages.detail || []);
+    } else {
+      allImages = [].concat(firstImages.ghost || [], firstImages.model || [], firstImages.detail || []);
+    }
+    
+    var thumbnailUrl = allImages[0] || '';
+    var thumbnailHtml = thumbnailUrl ? 
+      '<img src="' + esc(thumbnailUrl) + '" class="pi-thumb" onerror="this.style.display=\'none\'" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:12px;">' : 
+      '';
+
     return '<div class="product-row">' +
-      '<div onclick="openProductModal(' + esc(JSON.stringify(p)) + ')" style="flex:1;min-width:0;">' +
-        '<div class="pi-name">' + esc(p.name) + '</div>' +
-        '<div class="pi-meta">' + esc(p.brand||'') + ' - ' + esc(p.category||'') + ' - ' + fmt(p.price) +
-          (p.stock <= 3
-            ? ' - <span style="color:var(--danger);font-weight:600;">' + esc(String(p.stock)) + ' left</span>'
-            : ' - ' + esc(String(p.stock)) + ' in stock') +
+      '<div onclick="openProductModal(\'' + esc(p.id) + '\')" style="flex:1;min-width:0;display:flex;align-items:center;">' +
+        thumbnailHtml +
+        '<div style="flex:1;min-width:0;">' +
+          '<div class="pi-name">' + esc(p.name) + '</div>' +
+          '<div class="pi-meta">' + esc(p.brand||'') + ' - ' + esc(p.category||'') + ' - ' + fmt(p.price) +
+            (p.stock <= 3
+              ? ' - <span style="color:var(--danger);font-weight:600;">' + esc(String(p.stock)) + ' left</span>'
+              : ' - ' + esc(String(p.stock)) + ' in stock') +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:8px;">' +
@@ -1830,22 +1867,49 @@ if (!_isAdminPage) {
   };
 
   /* ================================================================
-     PRODUCT MODAL
+     PRODUCT MODAL - IMAGE HANDLING SYSTEM
   ================================================================ */
   window.openNewProductModal = function() { openProductModal(null); };
-  window.openProductModal = function(product) {
-    var p = product || {
+  window.openProductModal = function(productOrId) {
+    var p;
+    
+    // Handle both object and string (ID) cases
+    if (typeof productOrId === 'string') {
+      p = allProducts.find(function(x){ return x.id === productOrId; });
+      if (!p) {
+        showToast('Product not found', 'error');
+        return;
+      }
+    } else {
+      p = productOrId;
+    }
+    
+    p = p || {
       id:'', sku:'', name:'', brand:'JANEDORE', vendorId:'janedore',
       category:'dresses', price:0, salePrice:null, badge:'', sizes:[], stock:0,
       status:'active', featured:false, description:'', productFeatures:'',
       compositionCare:'', shippingReturns:'',
-      variants:[{ color:'', swatch:'#111', images:{ model:[''], ghost:[''], detail:[] } }]
+      variants:[{ color:'', swatch:'#111', images:{ model:[], ghost:[], detail:[] } }]
     };
+
+    // Normalize variants to ensure consistent image structure
+    if (p.variants && Array.isArray(p.variants)) {
+      p.variants = p.variants.map(function(v) {
+        if (!v.images || typeof v.images !== 'object') {
+          v.images = { model: [], ghost: [], detail: [] };
+        } else {
+          v.images.model = Array.isArray(v.images.model) ? v.images.model : [];
+          v.images.ghost = Array.isArray(v.images.ghost) ? v.images.ghost : [];
+          v.images.detail = Array.isArray(v.images.detail) ? v.images.detail : [];
+        }
+        return v;
+      });
+    }
 
     var modalHTML = '<div class="modal">' +
       '<div class="modal-handle"></div>' +
       '<button class="modal-close" onclick="closeModal()">X</button>' +
-      '<div class="modal-title">' + (product?'Edit':'New') + ' Product</div>' +
+      '<div class="modal-title">' + (p.id?'Edit':'New') + ' Product</div>' +
       '<form id="product-form" onsubmit="handleProductSubmit(event,\'' + esc(p.id) + '\')">' +
         '<div class="form-row">' +
           '<div class="form-group"><label>Name</label><input name="name" value="' + esc(p.name) + '" required></div>' +
@@ -1895,17 +1959,17 @@ if (!_isAdminPage) {
         '</div>' +
         '<div class="form-group"><label>Shipping & Returns</label><input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '"></div>' +
         '<hr class="divider" style="margin:14px 16px;">' +
-        '<div style="padding:0 16px;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Variants</div>' +
+        '<div style="padding:0 16px;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Variants & Images</div>' +
         '<div id="variants-container" style="padding:0 16px;">' +
-          (p.variants||[]).map(function(v,i){ return buildVariantBlock(v,i); }).join('') +
+          (p.variants||[]).map(function(v,i){ return buildVariantBlock(v,i, p.category); }).join('') +
         '</div>' +
         '<div style="padding:0 16px;">' +
           '<button type="button" class="btn-underline" onclick="addVariant()" style="font-size:12px;">+ Add Variant</button>' +
         '</div>' +
         '<div style="padding:16px 16px 4px;display:flex;gap:10px;align-items:center;">' +
           '<button type="submit" class="btn btn-primary btn-sm">Save Product</button>' +
-          (product && isSuperAdmin() ? '<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + esc(p.id) + '\')">Delete</button>' : '') +
-          (product ? '<button type="button" class="btn btn-ghost btn-sm" onclick="duplicateProduct(\'' + esc(p.id) + '\');closeModal();">Duplicate</button>' : '') +
+          (p.id && isSuperAdmin() ? '<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + esc(p.id) + '\')">Delete</button>' : '') +
+          (p.id ? '<button type="button" class="btn btn-ghost btn-sm" onclick="duplicateProduct(\'' + esc(p.id) + '\');closeModal();">Duplicate</button>' : '') +
         '</div>' +
       '</form>' +
     '</div>';
@@ -1913,30 +1977,43 @@ if (!_isAdminPage) {
     mountModal(modalHTML);
   };
 
-  function buildVariantBlock(v, index) {
+  function buildVariantBlock(v, index, category) {
     v = v || {};
-    var images     = v.images  || {model:[],ghost:[],detail:[]};
-    var modelUrls  = (images.model  && images.model.length)  ? images.model  : [''];
-    var ghostUrls  = (images.ghost  && images.ghost.length)  ? images.ghost  : [''];
-    var detailUrls = (images.detail && images.detail.length) ? images.detail : [];
-    var modelRows  = modelUrls.map(function(u){ return buildImageUrlRow('model', index, u); }).join('');
-    var ghostRows  = ghostUrls.map(function(u){ return buildImageUrlRow('ghost', index, u); }).join('');
-    var detailRows = detailUrls.map(function(u){ return buildImageUrlRow('detail',index, u); }).join('');
-    return '<div class="variant-block">' +
-      '<h4>Variant ' + (index+1) + '</h4>' +
+    
+    // Normalize images structure with fallbacks
+    var images = v.images || { model: [], ghost: [], detail: [] };
+    var modelUrls  = (Array.isArray(images.model) && images.model.length) ? images.model : [];
+    var ghostUrls  = (Array.isArray(images.ghost) && images.ghost.length) ? images.ghost : [];
+    var detailUrls = (Array.isArray(images.detail) && images.detail.length) ? images.detail : [];
+    
+    // Build preview gallery using storefront logic
+    var previewHtml = buildVariantPreview(modelUrls, ghostUrls, detailUrls, category);
+    
+    var modelRows  = modelUrls.length ? modelUrls.map(function(u, i){ return buildImageUrlRow('model', index, u, i); }).join('') : buildImageUrlRow('model', index, '', 0);
+    var ghostRows  = ghostUrls.length ? ghostUrls.map(function(u, i){ return buildImageUrlRow('ghost', index, u, i); }).join('') : buildImageUrlRow('ghost', index, '', 0);
+    var detailRows = detailUrls.length ? detailUrls.map(function(u, i){ return buildImageUrlRow('detail',index, u, i); }).join('') : '';
+    
+    return '<div class="variant-block" data-variant-index="' + index + '">' +
+      '<h4>Variant ' + (index+1) + ' <button type="button" class="btn-underline" onclick="removeVariant(' + index + ')" style="font-size:10px;color:var(--danger);margin-left:auto;">Remove</button></h4>' +
       '<div class="form-row" style="padding:0;">' +
         '<div class="form-group" style="padding:0 0 10px;"><label>Color Name</label>' +
-          '<input name="variant-color-'+index+'" value="'+esc(v.color||'')+'" placeholder="e.g. Black"></div>' +
+          '<input name="variant-color-'+index+'" value="'+esc(v.color||'')+'" placeholder="e.g. Black" oninput="updateVariantPreview(' + index + ')"></div>' +
         '<div class="form-group" style="padding:0 0 10px;"><label>Swatch (hex)</label>' +
           '<div style="display:flex;gap:7px;align-items:center;">' +
-            '<input name="variant-swatch-'+index+'" value="'+esc(v.swatch||'#111')+'" placeholder="#111" style="flex:1;">' +
+            '<input name="variant-swatch-'+index+'" value="'+esc(v.swatch||'#111')+'" placeholder="#111" style="flex:1;" oninput="this.nextElementSibling.value=this.value">' +
             '<input type="color" value="'+esc(v.swatch||'#111')+'" style="width:34px;height:34px;padding:2px;border:0.5px solid var(--border-med);cursor:pointer;border-radius:6px;" oninput="document.querySelector(\'[name=variant-swatch-'+index+']\').value=this.value">' +
           '</div></div>' +
       '</div>' +
-      '<div class="form-group" style="padding:0 0 8px;"><label>Model Images</label>' +
+      
+      // Preview strip showing combined images in storefront order
+      '<div class="variant-preview-strip" id="variant-preview-' + index + '" style="margin-bottom:12px;">' +
+        previewHtml +
+      '</div>' +
+      
+      '<div class="form-group" style="padding:0 0 8px;"><label>Model Images (on model/person)</label>' +
         '<div class="image-url-inputs" id="variant-model-'+index+'">'+modelRows+'</div>' +
         '<button type="button" class="btn-underline" onclick="addImageUrl(\'model\','+index+')" style="font-size:10px;margin-top:5px;">+ Add Model Image</button></div>' +
-      '<div class="form-group" style="padding:0 0 8px;"><label>Ghost / Flat Lay</label>' +
+      '<div class="form-group" style="padding:0 0 8px;"><label>Ghost / Flat Lay Images</label>' +
         '<div class="image-url-inputs" id="variant-ghost-'+index+'">'+ghostRows+'</div>' +
         '<button type="button" class="btn-underline" onclick="addImageUrl(\'ghost\','+index+')" style="font-size:10px;margin-top:5px;">+ Add Ghost Image</button></div>' +
       '<div class="form-group" style="padding:0;"><label>Detail Images</label>' +
@@ -1945,35 +2022,148 @@ if (!_isAdminPage) {
     '</div>';
   }
 
-  function buildImageUrlRow(type, variantIndex, url) {
-    var placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
-    return '<div class="image-url-row">' +
-      '<input name="variant-'+type+'-'+variantIndex+'[]" value="'+esc(url||'')+'" placeholder="https://..." oninput="this.nextElementSibling.src=this.value||\''+placeholder+'\'">' +
-      '<img class="image-preview" src="'+(esc(url)||placeholder)+'" onerror="this.src=\''+placeholder+'\'">' +
+  function buildVariantPreview(modelUrls, ghostUrls, detailUrls, category) {
+    // Combine images using SAME logic as storefront
+    var combinedImages = [];
+    
+    if (category === 'jewelry') {
+      // Jewelry: model first, then ghost, then detail
+      combinedImages = combinedImages.concat(
+        modelUrls || [],
+        ghostUrls || [],
+        detailUrls || []
+      );
+    } else {
+      // Normal products: ghost first, then model, then detail
+      combinedImages = combinedImages.concat(
+        ghostUrls || [],
+        modelUrls || [],
+        detailUrls || []
+      );
+    }
+    
+    if (combinedImages.length === 0) {
+      return '<div style="color:var(--muted);font-size:11px;padding:8px;text-align:center;background:var(--surface2);border-radius:6px;">No images uploaded. Preview will appear here.</div>';
+    }
+    
+    return '<div style="display:flex;gap:6px;overflow-x:auto;padding:8px;background:var(--surface2);border-radius:6px;">' +
+      combinedImages.map(function(url, i) {
+        return '<div style="position:relative;min-width:80px;height:80px;flex-shrink:0;">' +
+          '<img src="' + esc(url) + '" style="width:80px;height:80px;object-fit:cover;border-radius:4px;" onerror="this.src=\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23f0ede8%22 width=%2280%22 height=%2280%22/></svg>\'">' +
+          '<span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:8px;padding:1px 4px;border-radius:2px;">' + (i+1) + '</span>' +
+        '</div>';
+      }).join('') +
     '</div>';
   }
 
+  function buildImageUrlRow(type, variantIndex, url, urlIndex) {
+    url = url || '';
+    urlIndex = (urlIndex !== undefined) ? urlIndex : 0;
+    var placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
+    
+    return '<div class="image-url-row">' +
+      '<input name="variant-'+type+'-'+variantIndex+'[]" value="'+esc(url)+'" placeholder="https://... image URL" ' +
+        'oninput="updateImagePreview(this);updateVariantPreview(' + variantIndex + ')" ' +
+        'style="flex:1;">' +
+      '<img class="image-preview" src="'+(esc(url)||placeholder)+'" onerror="this.src=\''+placeholder+'\'" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:0.5px solid var(--border-light);">' +
+      '<button type="button" class="btn-underline" onclick="removeImageUrl(this)" style="font-size:10px;color:var(--danger);margin-left:4px;" title="Remove image">✕</button>' +
+    '</div>';
+  }
+
+  // Helper to update single image preview
+  window.updateImagePreview = function(input) {
+    var img = input.nextElementSibling;
+    if (img && img.classList.contains('image-preview')) {
+      img.src = input.value || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
+    }
+  };
+
+  // Update variant preview strip
+  window.updateVariantPreview = function(variantIndex) {
+    var previewEl = document.getElementById('variant-preview-' + variantIndex);
+    if (!previewEl) return;
+    
+    var category = document.querySelector('[name="category"]');
+    var cat = category ? category.value : 'dresses';
+    
+    var modelInputs = document.querySelectorAll('[name="variant-model-' + variantIndex + '[]"]');
+    var ghostInputs = document.querySelectorAll('[name="variant-ghost-' + variantIndex + '[]"]');
+    var detailInputs = document.querySelectorAll('[name="variant-detail-' + variantIndex + '[]"]');
+    
+    var modelUrls = Array.from(modelInputs).map(function(i){ return i.value; }).filter(Boolean);
+    var ghostUrls = Array.from(ghostInputs).map(function(i){ return i.value; }).filter(Boolean);
+    var detailUrls = Array.from(detailInputs).map(function(i){ return i.value; }).filter(Boolean);
+    
+    previewEl.innerHTML = buildVariantPreview(modelUrls, ghostUrls, detailUrls, cat);
+  };
+
   window.addVariant = function() {
     var c = safeEl('variants-container');
-    if (c) c.insertAdjacentHTML('beforeend', buildVariantBlock({}, c.children.length));
+    if (c) {
+      var category = document.querySelector('[name="category"]');
+      var cat = category ? category.value : 'dresses';
+      c.insertAdjacentHTML('beforeend', buildVariantBlock({ images: { model: [], ghost: [], detail: [] } }, c.children.length, cat));
+    }
+  };
+
+  window.removeVariant = function(index) {
+    var container = safeEl('variants-container');
+    if (!container) return;
+    var blocks = container.querySelectorAll('.variant-block');
+    if (blocks.length <= 1) {
+      showToast('Need at least one variant', 'info');
+      return;
+    }
+    var block = container.querySelector('[data-variant-index="' + index + '"]');
+    if (block) {
+      block.remove();
+      // Reindex remaining variants
+      container.querySelectorAll('.variant-block').forEach(function(b, i) {
+        b.setAttribute('data-variant-index', i);
+        b.querySelector('h4').innerHTML = 'Variant ' + (i+1) + ' <button type="button" class="btn-underline" onclick="removeVariant(' + i + ')" style="font-size:10px;color:var(--danger);margin-left:auto;">Remove</button>';
+      });
+    }
   };
 
   window.addImageUrl = function(type, vi) {
     var container = safeEl('variant-' + type + '-' + vi);
-    if (container) container.insertAdjacentHTML('beforeend', buildImageUrlRow(type, vi, ''));
+    if (container) {
+      var existingInputs = container.querySelectorAll('input');
+      container.insertAdjacentHTML('beforeend', buildImageUrlRow(type, vi, '', existingInputs.length));
+      updateVariantPreview(vi);
+    }
   };
 
+  window.removeImageUrl = function(button) {
+    var row = button.closest('.image-url-row');
+    if (!row) return;
+    
+    // Get variant index and type for preview update
+    var variantBlock = row.closest('.variant-block');
+    var variantIndex = variantBlock ? parseInt(variantBlock.getAttribute('data-variant-index')) : 0;
+    
+    row.remove();
+    
+    // Update preview after removal
+    if (variantBlock) {
+      updateVariantPreview(variantIndex);
+    }
+  };
+
+  /* ── PRODUCT SUBMIT - FIXED IMAGE SAVING ──────────────────── */
   window.handleProductSubmit = function(e, existingId) {
     e.preventDefault();
     var form = e.target;
+    
+    // Get existing product data if editing
+    var existingProduct = existingId ? allProducts.find(function(p){ return p.id === existingId; }) : null;
+    
     var data = {
       id:              existingId || form.sku.value || ('prod-' + Date.now()),
       sku:             form.sku.value,
       name:            form.name.value,
       brand:           form.brand.value,
-      vendorId:        existingId
-        ? ((allProducts.find(function(p){return p.id===existingId;})||{}).vendorId || currentVendorId || 'janedore')
-        : (currentVendorId || 'janedore'),
+      vendorId:        existingProduct ? existingProduct.vendorId : (currentVendorId || 'janedore'),
       category:        form.category.value,
       price:           parseFloat(form.price.value),
       salePrice:       form.salePrice.value ? parseFloat(form.salePrice.value) : null,
@@ -1986,28 +2176,52 @@ if (!_isAdminPage) {
       productFeatures: form.productFeatures.value,
       compositionCare: form.compositionCare.value,
       shippingReturns: form.shippingReturns.value,
-      createdAt:       existingId
-        ? ((allProducts.find(function(p){return p.id===existingId;})||{}).createdAt || new Date().toISOString())
-        : new Date().toISOString(),
+      createdAt:       existingProduct ? (existingProduct.createdAt || new Date().toISOString()) : new Date().toISOString(),
       updatedAt:       new Date().toISOString(),
       variants:        []
     };
+    
+    // Collect variants with correct image structure
     var vi = 0;
     while (form['variant-color-' + vi]) {
-      var mI = form.querySelectorAll('[name="variant-model-'+vi+'[]"]');
-      var gI = form.querySelectorAll('[name="variant-ghost-'+vi+'[]"]');
-      var dI = form.querySelectorAll('[name="variant-detail-'+vi+'[]"]');
-      data.variants.push({
-        color:  form['variant-color-' + vi].value,
-        swatch: form['variant-swatch-'+ vi].value,
+      // Get image URLs preserving upload order
+      var modelInputs = form.querySelectorAll('[name="variant-model-' + vi + '[]"]');
+      var ghostInputs = form.querySelectorAll('[name="variant-ghost-' + vi + '[]"]');
+      var detailInputs = form.querySelectorAll('[name="variant-detail-' + vi + '[]"]');
+      
+      // Build arrays preserving order, filtering empty values
+      var modelUrls = Array.from(modelInputs).map(function(i){ return i.value.trim(); }).filter(Boolean);
+      var ghostUrls = Array.from(ghostInputs).map(function(i){ return i.value.trim(); }).filter(Boolean);
+      var detailUrls = Array.from(detailInputs).map(function(i){ return i.value.trim(); }).filter(Boolean);
+      
+      // Create variant with standardized image structure
+      var variant = {
+        color:  form['variant-color-' + vi].value.trim(),
+        swatch: form['variant-swatch-' + vi].value.trim() || '#111',
         images: {
-          model:  Array.from(mI).map(function(i){ return i.value; }).filter(Boolean),
-          ghost:  Array.from(gI).map(function(i){ return i.value; }).filter(Boolean),
-          detail: Array.from(dI).map(function(i){ return i.value; }).filter(Boolean)
+          model:  modelUrls,
+          ghost:  ghostUrls,
+          detail: detailUrls
         }
-      });
+      };
+      
+      data.variants.push(variant);
       vi++;
     }
+    
+    // Ensure at least one variant exists
+    if (data.variants.length === 0) {
+      data.variants.push({
+        color: 'Default',
+        swatch: '#111',
+        images: {
+          model: [],
+          ghost: [],
+          detail: []
+        }
+      });
+    }
+    
     saveProduct(data);
   };
 
