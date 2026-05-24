@@ -94,7 +94,7 @@ const S = {
   campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, announceIdx:0, announceTimer:null,
   currency:"ZAR", reviewRating:0, reviewImage:null, touchStartX:0, touchEndX:0,
   cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null,
-  currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0
+  currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, categoriesScrollTimeout:null
 };
 
 async function fetchProducts() {
@@ -430,6 +430,24 @@ function merchandiseProducts(products) {
 
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
 
+function updateCategoriesProgress() {
+  const grid = document.getElementById('home-categories-grid');
+  const progress = document.getElementById('home-categories-progress');
+  if (!grid || !progress) return;
+  const cards = grid.querySelectorAll('.home-category-card');
+  if (!cards.length) return;
+  const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2;
+  const maxIdx = Math.max(0, cards.length - perView);
+  const cardWidth = cards[0].offsetWidth + 8;
+  const scrollLeft = grid.scrollLeft;
+  const idx = Math.round(scrollLeft / cardWidth);
+  const clampedIdx = Math.max(0, Math.min(idx, maxIdx));
+  if (clampedIdx !== S.categoriesSlideIndex) {
+    S.categoriesSlideIndex = clampedIdx;
+    progress.querySelectorAll('.swipe-bar').forEach((b,i) => b.classList.toggle('active', i===clampedIdx));
+  }
+}
+
 function buildCategoriesSlider() {
   const grid = document.getElementById('home-categories-grid');
   const progress = document.getElementById('home-categories-progress');
@@ -450,6 +468,9 @@ function buildCategoriesSlider() {
     `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`
   ).join('');
   S.categoriesSlideIndex = 0;
+  
+  grid.removeEventListener('scroll', updateCategoriesProgress);
+  grid.addEventListener('scroll', updateCategoriesProgress, { passive: true });
 }
 
 function goCategoriesSlide(idx) {
