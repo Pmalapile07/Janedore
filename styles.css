@@ -180,7 +180,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-bottom: 8px;
+  padding-bottom: 0;
 }
 .home-categories-grid::-webkit-scrollbar { display: none; }
 .home-category-card {
@@ -209,6 +209,24 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   text-transform: uppercase;
   color: #111;
   text-align: center;
+}
+.home-categories-progress {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+.home-categories-progress .swipe-bar {
+  width: 24px;
+  height: 0.5px;
+  background: #ccc;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.home-categories-progress .swipe-bar.active {
+  background: #111;
 }
 #new-arrivals { padding: 12px 12px 0; max-width: 1400px; margin: 0 auto; }
 @media (min-width: 768px) { #new-arrivals { padding: 12px 16px 0; } }
