@@ -460,28 +460,17 @@ function goCategoriesSlide(idx) {
   const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2;
   idx = Math.max(0, Math.min(idx, Math.max(0, cards.length - perView)));
   S.categoriesSlideIndex = idx;
-  const cardWidth = grid.offsetWidth / perView + 8;
+  const cardWidth = cards[0]?.offsetWidth + 8 || grid.offsetWidth / perView + 8;
   grid.scrollTo({ left: idx * cardWidth, behavior: 'smooth' });
   progress.querySelectorAll('.swipe-bar').forEach((b,i) => b.classList.toggle('active', i===idx));
 }
 
-function buildAllProductsHomeSlider() {
-  const track = document.getElementById('track-all-products-home');
-  const bars = document.getElementById('bars-all-products-home');
-  if (!track || !bars) return;
-  const active = PRODUCTS.filter(p => p.status === 'active');
-  const prods = merchandiseProducts(active);
-  const cards = prods.map(p => `<div class="product-card" data-product-id="${p.id}" onclick="goToProduct('${p.id}')">${buildSwipeCardInner(p)}</div>`).join('');
-  track.innerHTML = cards;
-  const perView = getSwipePerView();
-  const maxIdx = Math.max(0, prods.length - perView);
-  bars.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goSwipe('all-products-home',${i})"></div>`).join('');
-  S.swipeState['all-products-home'] = 0;
-}
-
 function buildArrivals() {
+  if(DOM.arrivalsGrid) {
+    const active = PRODUCTS.filter(p=>p.status==='active');
+    DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,4).map(p=>productCardHome(p)).join("");
+  }
   buildCategoriesSlider();
-  buildAllProductsHomeSlider();
   buildNewsletterSection();
 }
 
