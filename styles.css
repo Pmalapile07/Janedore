@@ -36,9 +36,10 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 #main-nav {
   height: 64px; background: transparent; display: flex; align-items: center; padding: 0 12px;
   position: sticky; top: 0; z-index: 800; justify-content: space-between;
-  transition: background 0.35s ease, box-shadow 0.35s ease; border-bottom: none; max-width: 100%;
+  transition: background 0.35s ease; border-bottom: none; max-width: 100%;
+  box-shadow: none;
 }
-#main-nav.scrolled { background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
+#main-nav.scrolled { background: #fff; box-shadow: none; }
 #main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link {
   color: #fff; transition: color 0.35s ease, opacity 0.2s;
 }
@@ -164,23 +165,34 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   color: #888;
   font-family: 'Manrope', sans-serif;
 }
+#all-products-home-section {
+  padding: 48px 12px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+@media (min-width: 768px) {
+  #all-products-home-section { padding: 48px 16px 32px; }
+}
 .home-categories-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
   gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 8px;
 }
-@media (min-width: 640px) {
-  .home-categories-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (min-width: 900px) {
-  .home-categories-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
+.home-categories-grid::-webkit-scrollbar { display: none; }
 .home-category-card {
   cursor: pointer;
+  flex: 0 0 calc(50% - 4px);
+  scroll-snap-align: start;
+}
+@media (min-width: 640px) {
+  .home-category-card { flex: 0 0 calc(33.333% - 6px); }
+}
+@media (min-width: 900px) {
+  .home-category-card { flex: 0 0 calc(20% - 7px); }
 }
 .home-category-img {
   aspect-ratio: 3 / 4;
@@ -217,7 +229,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .product-badge-wrap { position: absolute; top: 10px; left: 10px; z-index: 2; }
 .badge-new, .badge-sale, .badge-sold { font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; padding: 4px 8px; display: inline-block; }
 .badge-new { background: #fff; color: #111; }
-.badge-sale { background: #111; color: #fff; }
+.badge-sale { background: #fff; color: #c00; }
 .badge-sold { background: #fff; color: #888; border: none; }
 .product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; width: 100%; }
 .price-bookmark { background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: flex-end; color: #111; cursor: pointer; flex-shrink: 0; margin-left: auto; }
@@ -282,7 +294,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .newsletter-btn:hover { opacity: 0.7; }
 .newsletter-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 .newsletter-disclaimer {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 300;
   color: #aaa;
   text-align: center;
