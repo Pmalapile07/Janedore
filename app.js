@@ -53,6 +53,21 @@ const BANNER_ITEMS = ["Complimentary Shipping on Orders Over R1500", "Free Retur
 const CURRENCIES = { ZAR:{label:"ZAR R",symbol:"R"}, BWP:{label:"BWP P",symbol:"P"}, USD:{label:"USD $",symbol:"$"}, LSL:{label:"LSL M",symbol:"M"}, NAD:{label:"NAD N$",symbol:"N$"} };
 const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500'%3E%3Crect fill='%23f0ede8' width='400' height='500'/%3E%3C/svg%3E";
 
+// Collection descriptions
+const COLLECTION_DESCRIPTIONS = {
+  'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.',
+  'dresses': 'Effortless dresses that balance structure and fluidity.',
+  'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.',
+  'bottoms': 'Tailored trousers and fluid skirts with quiet intention.',
+  'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.',
+  'sets': 'Coordinated pieces designed to be worn together or styled apart.',
+  'bags': 'Understated accessories that complete the look without saying too much.',
+  'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.',
+  'sunglasses': 'Bold yet refined eyewear for the discerning gaze.',
+  'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.',
+  'all': 'All pieces — a curated view of everything in store.'
+};
+
 function loadCartFromStorage() {
   try { const saved = localStorage.getItem('janedore_cart'); if (saved) S.cart = JSON.parse(saved); } catch(e) { S.cart = []; }
 }
@@ -80,7 +95,7 @@ const S = {
   campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, announceIdx:0, announceTimer:null,
   currency:"ZAR", reviewRating:0, reviewImage:null, touchStartX:0, touchEndX:0,
   cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null,
-  currentReviewProductId:null
+  currentReviewProductId:null, saleMode:false
 };
 
 async function fetchProducts() {
@@ -90,14 +105,36 @@ async function fetchProducts() {
   } catch(e) {}
   await new Promise(r=>setTimeout(r,600));
   return [
-    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:null, badge:"sold", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
+    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:280, badge:"sale", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
     { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
     { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail:[] } }] },
-    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:null, badge:"new", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"Fluid silhouette and quiet tension.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
-    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
+    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:380, badge:"sale", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"Fluid silhouette and quiet tension.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
+    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:299, badge:"sale", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
     { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Pink Rain", swatch:"#F3DBD7", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail:[] } }] },
     { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
   ];
+}
+
+function navigateToSale() {
+  S.saleMode = true;
+  updateHash('products');
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-products").classList.add("active");
+  S.currentPage = "products";
+  if(document.getElementById("page-products").querySelector(".toolbar-center")) {
+    document.getElementById("page-products").querySelector(".toolbar-center").textContent = "SALE";
+  }
+  renderSaleProducts();
+  window.scrollTo({top:0,behavior:"smooth"});
+  ensureNavScrolled();
+}
+
+function renderSaleProducts() {
+  if(!DOM.allProductsGrid) return;
+  const saleProds = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice));
+  DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)";
+  DOM.allProductsGrid.innerHTML = saleProds.length ? saleProds.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>';
+  updateGridToggleSVG("grid-toggle-svg", S.gridCols);
 }
 
 function updateHash(hash) { if (window.location.hash !== hash) history.pushState(null, null, hash || '#'); }
@@ -127,6 +164,7 @@ window.addEventListener('popstate', () => {
 });
 
 function navigateTo(page) {
+  S.saleMode = false;
   updateHash(page === 'home' ? '' : page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
@@ -141,6 +179,7 @@ function navigateTo(page) {
   setTimeout(refreshSwipeTracks,50);
 }
 function navigateToCategory(cat) {
+  S.saleMode = false;
   updateHash(`category-${cat}`);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
@@ -149,6 +188,7 @@ function navigateToCategory(cat) {
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
 }
 function goToProduct(productId) {
+  S.saleMode = false;
   updateHash(`product-${productId}`);
   closeCart(); const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
@@ -241,8 +281,8 @@ function productCard(product, compactMode=false, isCollectionPage=false) {
   const allImages = getAllProductImages(product, vi);
   const isWished = S.wishlist.some(w => w.id === product.id);
   const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
-  const badgeLabel = product.badge==="sold"?"Sold Out":product.badge==="new"?"New":product.badge==="sale"?"Sale":"";
-  const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>` : "";
+  const badgeLabel = product.badge==="sold"?"Sold Out":product.badge==="new"?"New":product.salePrice?"Sale":"";
+  const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
   const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
   const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
   const soldOutClass = isProductSoldOut(product) ? ' sold-out' : '';
@@ -262,8 +302,8 @@ function productCardHome(product) {
   const allImages = getAllProductImages(product, vi);
   const isWished = S.wishlist.some(w => w.id === product.id);
   const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
-  const badgeLabel = product.badge==="sold"?"Sold Out":product.badge==="new"?"New":product.badge==="sale"?"Sale":"";
-  const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>` : "";
+  const badgeLabel = product.badge==="sold"?"Sold Out":product.badge==="new"?"New":product.salePrice?"Sale":"";
+  const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
   const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
   const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
   return `<div class="product-card${isProductSoldOut(product)?' sold-out':''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
@@ -327,8 +367,8 @@ function buildSwipeCardInner(product) {
   const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
   const isWished = S.wishlist.some(w => w.id === product.id);
   const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
-  const badgeLabel = product.badge==="sold"?"Sold Out":product.badge==="new"?"New":product.badge==="sale"?"Sale":"";
-  const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>` : "";
+  const badgeLabel = product.badge==="sold"?"Sold Out":product.badge==="new"?"New":product.salePrice?"Sale":"";
+  const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
   const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
   const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
   return `<div class="product-img-wrap${isProductSoldOut(product)?' sold-out':''}" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')"><div class="product-card-slides">${slidesHtml}</div>${barsHtml}${badgeHtml}</div><div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-variant-dots">${variantSwatchesHtml(product, vi)}</div></div><div class="product-name">${product.name||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div><button class="price-bookmark${isWished?' wished':''}" onclick="event.stopPropagation();toggleWish('${product.id}')"><i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i></button></div>`;
@@ -391,13 +431,39 @@ function merchandiseProducts(products) {
 }
 
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
+
+function buildAllProductsHomeSlider() {
+  const track = document.getElementById('track-all-products-home');
+  const bars = document.getElementById('bars-all-products-home');
+  if (!track || !bars) return;
+  const active = PRODUCTS.filter(p => p.status === 'active');
+  const prods = merchandiseProducts(active);
+  const cards = prods.map(p => `<div class="product-card" data-product-id="${p.id}" onclick="goToProduct('${p.id}')">${buildSwipeCardInner(p)}</div>`).join('');
+  track.innerHTML = cards;
+  const perView = getSwipePerView();
+  const maxIdx = Math.max(0, prods.length - perView);
+  bars.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goSwipe('all-products-home',${i})"></div>`).join('');
+  S.swipeState['all-products-home'] = 0;
+}
+
 function buildArrivals() {
-  if(DOM.arrivalsGrid) {
-    const active = PRODUCTS.filter(p=>p.status==='active');
-    DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,4).map(p=>productCardHome(p)).join("");
+  buildAllProductsHomeSlider();
+  const categoriesGrid = document.getElementById('home-categories-grid');
+  if (categoriesGrid) {
+    const categories = [
+      { label: 'Clothing', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat: 'all-clothing' },
+      { label: 'Jewellery', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153', cat: 'jewelry' },
+      { label: 'Sunglasses', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287', cat: 'sunglasses' },
+      { label: 'Scent', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat: 'parfum' },
+      { label: 'Bags', img: 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat: 'bags' }
+    ];
+    categoriesGrid.innerHTML = categories.map(c => 
+      `<div class="home-category-card" onclick="navigateToCategory('${c.cat}')"><div class="home-category-img" style="background-image:url('${c.img}');background-size:cover;background-position:center;"></div><div class="home-category-label">${c.label}</div></div>`
+    ).join('');
   }
   buildNewsletterSection();
 }
+
 function navigateToJanedoreOnly() {
   navigateTo('products');
 }
@@ -406,7 +472,7 @@ function buildNewsletterSection() {
   DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`;
 }
 
-function applyFilter(type, value) { S.filter[type] = value; renderAllProducts(); }
+function applyFilter(type, value) { S.filter[type] = value; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); }
 function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
 function toggleFilterDropdown(source) {
   const id = source === 'category' ? 'filter-options-category' : 'filter-options-products';
@@ -434,8 +500,10 @@ function renderCategoryProducts() {
   DOM.categoryProductsGrid.style.gridTemplateColumns = S.gridColsCat===1?"1fr":S.gridColsCat===2?"repeat(2,1fr)":"repeat(3,1fr)";
   DOM.categoryProductsGrid.innerHTML = prods.map(p => productCard(p, S.gridColsCat===3, true)).join("");
   updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat);
-  if (DOM.categoryDescriptionWrap && S.currentCategoryPage === 'parfum') DOM.categoryDescriptionWrap.innerHTML = '<p class="collection-description">A study in scent. THATO parfums are crafted for the considered wearer.</p>';
-  else if (DOM.categoryDescriptionWrap) DOM.categoryDescriptionWrap.innerHTML = '';
+  if (DOM.categoryDescriptionWrap) {
+    const desc = COLLECTION_DESCRIPTIONS[S.currentCategoryPage] || COLLECTION_DESCRIPTIONS['all'] || '';
+    DOM.categoryDescriptionWrap.innerHTML = desc ? `<p class="collection-description">${desc}</p>` : '';
+  }
 }
 
 function goBackFromProduct() {
@@ -544,8 +612,8 @@ function renderWishlistPage() {
     const vi=S.productVariantSelections[p.id]??0;
     const isWished = S.wishlist.some(w=>w.id===p.id);
     const priceHtml=p.salePrice?`<span class="product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span>`:formatPrice(p.price);
-    const badgeLabel=p.badge==="sold"?"Sold Out":p.badge==="new"?"New":p.badge==="sale"?"Sale":"";
-    const badgeHtml=badgeLabel?`<div class="product-badge-wrap"><span class="badge-${p.badge==='sold'?'sold':p.badge==='new'?'new':'sale'}">${badgeLabel}</span></div>`:"";
+    const badgeLabel=p.badge==="sold"?"Sold Out":p.badge==="new"?"New":p.salePrice?"Sale":"";
+    const badgeHtml=badgeLabel?`<div class="product-badge-wrap"><span class="badge-${p.badge==='sold'?'sold':p.salePrice?'sale':'new'}">${badgeLabel}</span></div>`:"";
     const allImages = getAllProductImages(p, vi);
     const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
     const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
@@ -572,7 +640,7 @@ function buildFooter(id) {
 }
 function toggleFooterCollapse(id) { document.getElementById(`footer-collapse-${id}`)?.classList.toggle("open"); }
 function toggleFooterDropdown(type, footerId) { const dd = document.getElementById(type.includes("currency")?`currency-dropdown-${footerId}`:`lang-dropdown-${footerId}`); if(dd){dd.classList.toggle("open");setTimeout(()=>dd.classList.remove("open"),4000);} }
-function selectCurrency(code) { S.currency=code; document.querySelectorAll(".footer-currency-label").forEach(el=>el.textContent=CURRENCIES[code]?.label??code); if(S.currentPage==="home") buildArrivals(); if(S.currentPage==="products") renderAllProducts(); if(S.currentPage==="category") renderCategoryProducts(); renderCart(); }
+function selectCurrency(code) { S.currency=code; document.querySelectorAll(".footer-currency-label").forEach(el=>el.textContent=CURRENCIES[code]?.label??code); if(S.currentPage==="home") buildArrivals(); if(S.currentPage==="products") { if(S.saleMode) renderSaleProducts(); else renderAllProducts(); } if(S.currentPage==="category") renderCategoryProducts(); renderCart(); }
 
 function openSearch() { DOM.searchOverlay.classList.add("open"); document.body.style.overflow="hidden"; setTimeout(()=>DOM.searchInput.focus(),100); renderSearchDefault(); }
 function closeSearch() { DOM.searchOverlay.classList.remove("open"); document.body.style.overflow=""; DOM.searchInput.value=""; }
@@ -613,7 +681,7 @@ function renderCartPage() {
 function applyPromoCode(){}
 function buildBanner(){if(!DOM.announceText0||!DOM.announceText1)return;DOM.announceText0.textContent=BANNER_ITEMS[0];DOM.announceText0.classList.add("active");DOM.announceText1.classList.remove("active");S.announceIdx=0;if(S.announceTimer)clearInterval(S.announceTimer);S.announceTimer=setInterval(()=>{const n=(S.announceIdx+1)%BANNER_ITEMS.length;document.getElementById(`announce-text-${S.announceIdx%2}`)?.classList.remove("active");const ne=document.getElementById(`announce-text-${n%2}`);if(ne){ne.textContent=BANNER_ITEMS[n];ne.classList.add("active");}S.announceIdx=n;},2000);}
 function updateGridToggleSVG(svgId,cols){const svg=document.getElementById(svgId);if(svg)svg.querySelectorAll(".grid-block").forEach((b,i)=>b.classList.toggle("active",i<cols));}
-function toggleGrid(){S.gridCols=S.gridCols===1?2:S.gridCols===2?3:1;renderAllProducts();}
+function toggleGrid(){S.gridCols=S.gridCols===1?2:S.gridCols===2?3:1;if(S.saleMode) renderSaleProducts(); else renderAllProducts();}
 function toggleGridCat(){S.gridColsCat=S.gridColsCat===1?2:S.gridColsCat===2?3:1;renderCategoryProducts();}
 function buildCampaignSlider(){if(!DOM.campaignSlides)return;const prods=merchandiseProducts(PRODUCTS.filter(p=>p.status==='active'));const pages=Math.ceil(prods.length/4);DOM.campaignSlides.innerHTML=Array.from({length:pages},(_,i)=>`<div class="campaign-slide">${prods.slice(i*4,(i+1)*4).map(p=>productCard(p)).join("")}</div>`).join("");}
 function moveCampaignSlider(dir){const total=Math.ceil(PRODUCTS.filter(p=>p.status==='active').length/4)||1;S.campaignSlideIndex=(S.campaignSlideIndex+dir+total)%total;if(DOM.campaignSlides)DOM.campaignSlides.style.transform=`translateX(-${S.campaignSlideIndex*100}%)`;}
