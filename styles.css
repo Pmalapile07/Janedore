@@ -341,20 +341,20 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .cart-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
 .cart-item-row { display: flex; gap: 14px; padding: 16px 0; align-items: flex-start; cursor: pointer; position: relative; }
 .cart-item-img-placeholder { width: 72px; height: 88px; flex-shrink: 0; background-size: cover; background-position: center; background-color: #f0ede8; }
-.ci-brand { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; margin-bottom: 3px; }
-.ci-name { font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 400; color: #111; margin-bottom: 3px; }
-.ci-meta { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #888; margin-bottom: 10px; }
+.ci-brand { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; margin-bottom: 4px; }
+.ci-name { font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 400; color: #111; margin-bottom: 4px; line-height: 1.3; }
+.ci-meta { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #888; margin-bottom: 8px; }
 .ci-qty { display: flex; align-items: center; gap: 10px; }
 .ci-qty-btn { width: 26px; height: 26px; border: 0.8px solid #ddd; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #111; }
 .ci-qty-btn:hover { border-color: #111; }
 .ci-qty-num { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); min-width: 16px; text-align: center; }
-.ci-price { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: #111; }
+.ci-price { font-size: 12px; font-weight: 300; letter-spacing: 0.04em; color: #111; }
 .ci-remove { position: absolute; bottom: 16px; right: 0; background: none; border: none; font-size: 16px; color: #bbb; transition: color 0.2s; line-height: 1; padding: 0; cursor: pointer; }
 .ci-remove:hover { color: #111; }
 .cart-foot { padding: 16px 24px; flex-shrink: 0; }
 .cart-subtotal { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .cart-subtotal-label { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; }
-.cart-subtotal-val { font-size: 12px; letter-spacing: 0.04em; font-weight: 700; }
+.cart-subtotal-val { font-size: 12px; letter-spacing: 0.04em; font-weight: 300; }
 .cart-ship-note { font-size: var(--ui-font-size); color: #888; letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 .cart-ship-note svg { width: 12px; height: 12px; stroke: #888; fill: none; stroke-width: 1.5; }
 .cart-multi-package-note { font-size: 9px; color: #aaa; letter-spacing: 0.06em; margin-bottom: 12px; text-align: center; font-weight: 300; }
@@ -541,19 +541,19 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .cart-page-item { display: flex; gap: 20px; padding: 24px 0; align-items: flex-start; cursor: pointer; position: relative; }
 .cart-page-img { width: 120px; height: 150px; background-size: cover; background-position: center; flex-shrink: 0; background-color: #f0ede8; }
 .cart-page-details { flex: 1; }
-.cart-page-brand { font-size: 11px; letter-spacing: 0.04em; font-weight: 400; text-transform: uppercase; color: #888; margin-bottom: 6px; font-family: 'Manrope', sans-serif; }
+.cart-page-brand { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; margin-bottom: 6px; font-family: 'Manrope', sans-serif; }
 .cart-page-name { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 400; color: #111; margin-bottom: 6px; line-height: 1.3; }
-.cart-page-meta { font-size: 11px; font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-family: 'Manrope', sans-serif; }
+.cart-page-meta { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #888; margin-bottom: 10px; font-family: 'Manrope', sans-serif; }
 .cart-page-qty-wrap { display: flex; align-items: center; gap: 12px; }
 .cart-page-qty-btn { width: 32px; height: 32px; border: 0.8px solid #ddd; background: #fff; font-size: 16px; color: #111; cursor: pointer; }
 .cart-page-qty-btn:hover { border-color: #111; }
 .cart-page-qty-num { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); min-width: 20px; text-align: center; }
-.cart-page-price { font-size: 11px; font-weight: 300; letter-spacing: 0.04em; color: #111; font-family: 'Manrope', sans-serif; }
+.cart-page-price { font-size: 12px; font-weight: 300; letter-spacing: 0.04em; color: #111; font-family: 'Manrope', sans-serif; }
 .cart-page-remove { position: absolute; bottom: 24px; right: 0; background: none; border: none; font-size: 18px; color: #bbb; cursor: pointer; padding: 4px 8px; transition: color 0.2s; }
 .cart-page-remove:hover { color: #111; }
 .cart-page-summary { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
 .cart-page-subtotal { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #111; }
-.cart-page-subtotal strong { font-weight: 700; font-size: 12px; letter-spacing: 0.04em; }
+.cart-page-subtotal strong { font-weight: 300; font-size: 12px; letter-spacing: 0.04em; }
 .cart-page-ship-note { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #888; }
 .cart-page-multi-package-note { font-size: 9px; color: #aaa; letter-spacing: 0.06em; font-weight: 300; text-align: right; }
 .cart-page-actions { display: flex; gap: 12px; margin-top: 16px; }
