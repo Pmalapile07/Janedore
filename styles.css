@@ -253,7 +253,14 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .price-bookmark { background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: flex-end; color: #111; cursor: pointer; flex-shrink: 0; margin-left: auto; }
 .price-bookmark i { font-size: 18px; }
 .product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-.product-brand-tag { font-size: 11px; letter-spacing: 0.04em; font-weight: 400; text-transform: uppercase; color: #888; font-family: 'Manrope', sans-serif; }
+.product-brand-tag {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  color: #888;
+  font-family: 'Manrope', sans-serif;
+}
 .product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
 .variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
