@@ -424,7 +424,14 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .slider-bar.active { background: #111; }
 .product-info { padding: 24px 12px; max-width: 720px; margin: 0 auto; }
 @media (min-width: 768px) { .product-info { padding: 24px 16px; } }
-.product-info .modal-brand { font-size: 11px; letter-spacing: 0.04em; font-weight: 400; text-transform: uppercase; color: #888; margin-bottom: 6px; font-family: 'Manrope', sans-serif; }
+.product-info .modal-brand {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  color: #888;
+  font-family: 'Manrope', sans-serif;
+}
 .product-info .modal-brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .product-info .modal-variant-dots { display: flex; align-items: center; gap: 6px; }
 .product-info .modal-variant-dots .variant-swatch { width: 17px; height: 17px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
