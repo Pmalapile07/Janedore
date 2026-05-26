@@ -27,6 +27,132 @@ async function subscribeNewsletter(email) {
 async function saveOrder(orderData) { try { await db.collection('orders').add({...orderData, createdAt:firebase.firestore.FieldValue.serverTimestamp(), status:'pending'}); } catch(e) {} }
 async function getVisitorCountry() { try { const r=await fetch('https://ipapi.co/json/'); const d=await r.json(); return d.country_name||'Unknown'; } catch(e) { return 'Unknown'; } }
 
+/* ──────────────── VENDORS / BRANDS FETCH ──────────────── */
+async function fetchVendors() {
+  try {
+    const snapshot = await db.collection('vendors').where('status','==','active').get();
+    if (!snapshot.empty) {
+      const vendors = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      return vendors;
+    }
+  } catch(e) {
+    console.error('fetchVendors error:', e);
+  }
+  return [];
+}
+
+function renderVendorsDesktop(vendors) {
+  const navLinksContainer = document.querySelector('.desktop-nav-links');
+  if (!navLinksContainer) return;
+
+  // Remove any existing dynamic brands dropdown
+  const existing = navLinksContainer.querySelector('.desktop-dropdown-wrap.brands-dynamic');
+  if (existing) existing.remove();
+
+  // Also hide the old hardcoded "Brands" link
+  const oldBrandsLink = navLinksContainer.querySelector('.desktop-nav-link[onclick="return false;"]');
+  if (oldBrandsLink) oldBrandsLink.style.display = 'none';
+
+  if (!vendors.length) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'desktop-dropdown-wrap brands-dynamic';
+
+  const span = document.createElement('span');
+  span.className = 'desktop-nav-link';
+  span.style.cssText = 'display:flex;align-items:center;gap:4px;';
+  span.innerHTML = 'Brands <i class="ph-light ph-caret-down" style="font-size:10px;"></i>';
+
+  const menu = document.createElement('div');
+  menu.className = 'desktop-dropdown-menu';
+
+  vendors.forEach(vendor => {
+    const name = vendor.name || vendor.brandName || 'Unknown Brand';
+    const a = document.createElement('a');
+    a.className = 'desktop-dropdown-item';
+    a.textContent = name;
+    a.onclick = function(e) {
+      e.preventDefault();
+      navigateToBrandProducts(name);
+    };
+    menu.appendChild(a);
+  });
+
+  wrap.appendChild(span);
+  wrap.appendChild(menu);
+  navLinksContainer.appendChild(wrap);
+}
+
+function renderVendorsMobile(vendors) {
+  const brandsBody = document.querySelector('#brands-collapse .brands-collapse-body');
+  if (!brandsBody) return;
+
+  if (!vendors.length) {
+    brandsBody.innerHTML = '<div class="brand-logo-placeholder">No brands available</div>';
+    return;
+  }
+
+  brandsBody.innerHTML = vendors.map(vendor => {
+    const name = vendor.name || vendor.brandName || 'Unknown Brand';
+    const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `<div class="brand-logo-placeholder" onclick="navigateToBrandProducts('${escaped}');closeMenu();">${name}</div>`;
+  }).join('');
+}
+
+function renderVendorsFooter(vendors) {
+  document.querySelectorAll('.footer-collapse').forEach(collapse => {
+    const header = collapse.querySelector('.footer-collapse-header');
+    if (!header) return;
+    const headerText = header.textContent.trim().toLowerCase();
+    if (headerText !== 'brands') return;
+
+    const body = collapse.querySelector('.footer-collapse-body');
+    if (!body) return;
+
+    const ul = body.querySelector('.footer-links');
+    if (!ul) return;
+
+    if (!vendors.length) {
+      ul.innerHTML = '<li><a>No brands available</a></li>';
+      return;
+    }
+
+    ul.innerHTML = vendors.map(vendor => {
+      const name = vendor.name || vendor.brandName || 'Unknown Brand';
+      const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `<li><a onclick="navigateToBrandProducts('${escaped}')">${name}</a></li>`;
+    }).join('');
+  });
+}
+
+function navigateToBrandProducts(brandName) {
+  S.saleMode = false;
+  updateHash('products');
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-products").classList.add("active");
+  S.currentPage = "products";
+  const toolbarCenter = document.getElementById("page-products").querySelector(".toolbar-center");
+  if(toolbarCenter) toolbarCenter.textContent = brandName.toUpperCase();
+
+  const filtered = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName);
+  const prods = merchandiseProducts(filtered);
+  if(DOM.allProductsGrid) {
+    DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)";
+    DOM.allProductsGrid.innerHTML = prods.length ? prods.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products from this brand yet.</div>';
+    updateGridToggleSVG("grid-toggle-svg", S.gridCols);
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+  ensureNavScrolled();
+}
+
+async function initVendors() {
+  const vendors = await fetchVendors();
+  renderVendorsDesktop(vendors);
+  renderVendorsMobile(vendors);
+  renderVendorsFooter(vendors);
+}
+/* ──────────────── END VENDORS ──────────────── */
+
 const DOM = {
   cartBadge: document.getElementById("cart-badge"), wishBadge: document.getElementById("wish-badge"),
   cartItemCount: document.getElementById("cart-item-count"), searchOverlay: document.getElementById("search-overlay"),
@@ -90,7 +216,7 @@ function cleanCartOrphans() {
 const S = {
   cart:[], wishlist:[], currentPage:"home", currentCategoryPage:null, selectedSize:null,
   productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2,
-  filter:{cat:"all",size:"all",price:"all"}, catFilter:{size:"all",price:"all"},
+  filter:{cat:"all",size:"all",price:"all",vendor:null}, catFilter:{size:"all",price:"all"},
   campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, announceIdx:0, announceTimer:null,
   currency:"ZAR", reviewRating:0, reviewImage:null, touchStartX:0, touchEndX:0,
   cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null,
@@ -116,6 +242,7 @@ async function fetchProducts() {
 
 function navigateToSale() {
   S.saleMode = true;
+  S.filter.vendor = null;
   updateHash('products');
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-products").classList.add("active");
@@ -163,6 +290,7 @@ window.addEventListener('popstate', () => {
 
 function navigateTo(page) {
   S.saleMode = false;
+  S.filter.vendor = null;
   updateHash(page === 'home' ? '' : page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
@@ -178,6 +306,7 @@ function navigateTo(page) {
 }
 function navigateToCategory(cat) {
   S.saleMode = false;
+  S.filter.vendor = null;
   updateHash(`category-${cat}`);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
@@ -187,6 +316,7 @@ function navigateToCategory(cat) {
 }
 function goToProduct(productId) {
   S.saleMode = false;
+  S.filter.vendor = null;
   updateHash(`product-${productId}`);
   closeCart(); const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
@@ -664,7 +794,7 @@ function buildFooter(id) {
   const currLabel=CURRENCIES[S.currency]?.label??"ZAR R";
   const sections = ["shop","brands","policies","help"];
   const collapseHTML = sections.map(sec => {
-    const links = { shop:["New In","Dresses","Tops","Bottoms","Jackets","Sets","Bags","Jewelry","Scent","Sale"], brands:["JANEDORE","NIRIUS CO","THATO"], policies:["About","Shipping Policy","Return Policy","Privacy Policy","Terms & Conditions"], help:["FAQ","Size Guide","Shipping","Returns","Contact"] }[sec];
+    const links = { shop:["New In","Dresses","Tops","Bottoms","Jackets","Sets","Bags","Jewelry","Scent","Sale"], brands:[], policies:["About","Shipping Policy","Return Policy","Privacy Policy","Terms & Conditions"], help:["FAQ","Size Guide","Shipping","Returns","Contact"] }[sec];
     return `<div class="footer-collapse" id="footer-collapse-${sec}-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('${sec}-${id}')">${sec.charAt(0).toUpperCase()+sec.slice(1)} <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links">${links.map(l=>`<li><a>${l}</a></li>`).join("")}</ul></div></div>`;
   }).join("");
   el.innerHTML = `<div class="footer-top">${collapseHTML}</div><p class="footer-about">Janedore is a curated multi-brand fashion destination rooted in South Africa.</p><div class="footer-currency-lang"><div class="footer-currency" onclick="toggleFooterDropdown('currency-${id}','${id}')"><span class="footer-currency-label">${currLabel}</span><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="currency-dropdown" id="currency-dropdown-${id}"><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('ZAR')">ZAR R</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('BWP')">BWP P</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('USD')">USD $</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('LSL')">LSL M</div><div class="dropdown-option" onclick="event.stopPropagation();selectCurrency('NAD')">NAD N$</div></div></div><div class="footer-lang" onclick="toggleFooterDropdown('lang-${id}','${id}')">EN <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="lang-dropdown" id="lang-dropdown-${id}">EN</div></div></div><div class="footer-bottom"><div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div></div>`;
@@ -728,6 +858,8 @@ async function init() {
   setHeroImage(); buildArrivals();
   ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"].forEach(buildFooter);
   buildCampaignSlider();
+  // Load vendors dynamically
+  initVendors();
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId);
   else if (route.page === 'category') navigateToCategory(route.cat);
