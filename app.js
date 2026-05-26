@@ -537,26 +537,41 @@ function refreshSwipeTracks() {
   });
 }
 
+/* ────────────────────────────────────────────── */
+/*  REFACTORED MERCHANDISING HIERARCHY (CLOTHING-FIRST)  */
+/* ────────────────────────────────────────────── */
+const CATEGORY_ORDER = {
+  tops: 1,
+  bottoms: 2,
+  dresses: 3,
+  sets: 4,
+  jackets: 5,
+  bags: 6,
+  jewelry: 7,
+  sunglasses: 8,
+  parfum: 9
+};
+
 function merchandiseProducts(products) {
-  if(!products?.length) return [];
+  if (!products || !products.length) return [];
+
+  // 1. Exclude leather pouch from general merchandising (it's conditionally added later)
   const filtered = products.filter(p => p.id !== 'janedore-leather-pouch');
-  const clothingCats = ['dresses','tops','bottoms','jackets','sets'];
-  const clothing = filtered.filter(p => clothingCats.includes(p.category));
-  const accessories = filtered.filter(p => ['sunglasses','jewelry','bags'].includes(p.category));
-  const parfum = filtered.filter(p => p.category === 'parfum');
-  const other = filtered.filter(p => !clothingCats.includes(p.category) && !['sunglasses','jewelry','bags'].includes(p.category) && p.category !== 'parfum');
-  const result = []; let ci=0, ai=0, oi=0, patIdx=0;
-  const pattern = ['clothing','accessory','accessory','clothing','accessory'];
-  const allRem = [...parfum, ...other];
-  while(ci < clothing.length || ai < accessories.length || oi < allRem.length) {
-    const slot = pattern[patIdx % pattern.length]; patIdx++;
-    if(slot==='clothing' && ci < clothing.length) result.push(clothing[ci++]);
-    else if(slot==='accessory' && ai < accessories.length) result.push(accessories[ai++]);
-    else { if(ci < clothing.length) result.push(clothing[ci++]); else if(ai < accessories.length) result.push(accessories[ai++]); else if(oi < allRem.length) result.push(allRem[oi++]); else break; }
-  }
-  while(oi < allRem.length) result.push(allRem[oi++]);
-  return result;
+
+  // 2. Sort by strict category priority, then by price (ascending) for a premium feel
+  const sorted = [...filtered].sort((a, b) => {
+    const orderA = CATEGORY_ORDER[a.category] ?? 99;
+    const orderB = CATEGORY_ORDER[b.category] ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    // Secondary sort: sale price or regular price ascending
+    const priceA = a.salePrice ?? a.price ?? 0;
+    const priceB = b.salePrice ?? b.price ?? 0;
+    return priceA - priceB;
+  });
+
+  return sorted;
 }
+/* ────────────────────────────────────────────── */
 
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
 
