@@ -44,40 +44,27 @@ async function fetchVendors() {
 function renderVendorsDesktop(vendors) {
   const navLinksContainer = document.querySelector('.desktop-nav-links');
   if (!navLinksContainer) return;
-
-  // Remove any existing dynamic brands dropdown
   const existing = navLinksContainer.querySelector('.desktop-dropdown-wrap.brands-dynamic');
   if (existing) existing.remove();
-
-  // Also hide the old hardcoded "Brands" link
   const oldBrandsLink = navLinksContainer.querySelector('.desktop-nav-link[onclick="return false;"]');
   if (oldBrandsLink) oldBrandsLink.style.display = 'none';
-
   if (!vendors.length) return;
-
   const wrap = document.createElement('div');
   wrap.className = 'desktop-dropdown-wrap brands-dynamic';
-
   const span = document.createElement('span');
   span.className = 'desktop-nav-link';
   span.style.cssText = 'display:flex;align-items:center;gap:4px;';
   span.innerHTML = 'Brands <i class="ph-light ph-caret-down" style="font-size:10px;"></i>';
-
   const menu = document.createElement('div');
   menu.className = 'desktop-dropdown-menu';
-
   vendors.forEach(vendor => {
     const name = vendor.name || vendor.brandName || 'Unknown Brand';
     const a = document.createElement('a');
     a.className = 'desktop-dropdown-item';
     a.textContent = name;
-    a.onclick = function(e) {
-      e.preventDefault();
-      navigateToBrandProducts(name);
-    };
+    a.onclick = function(e) { e.preventDefault(); navigateToBrandProducts(name); };
     menu.appendChild(a);
   });
-
   wrap.appendChild(span);
   wrap.appendChild(menu);
   navLinksContainer.appendChild(wrap);
@@ -86,12 +73,7 @@ function renderVendorsDesktop(vendors) {
 function renderVendorsMobile(vendors) {
   const brandsBody = document.querySelector('#brands-collapse .brands-collapse-body');
   if (!brandsBody) return;
-
-  if (!vendors.length) {
-    brandsBody.innerHTML = '<div class="brand-logo-placeholder">No brands available</div>';
-    return;
-  }
-
+  if (!vendors.length) { brandsBody.innerHTML = '<div class="brand-logo-placeholder">No brands available</div>'; return; }
   brandsBody.innerHTML = vendors.map(vendor => {
     const name = vendor.name || vendor.brandName || 'Unknown Brand';
     const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -105,18 +87,11 @@ function renderVendorsFooter(vendors) {
     if (!header) return;
     const headerText = header.textContent.trim().toLowerCase();
     if (headerText !== 'brands') return;
-
     const body = collapse.querySelector('.footer-collapse-body');
     if (!body) return;
-
     const ul = body.querySelector('.footer-links');
     if (!ul) return;
-
-    if (!vendors.length) {
-      ul.innerHTML = '<li><a>No brands available</a></li>';
-      return;
-    }
-
+    if (!vendors.length) { ul.innerHTML = '<li><a>No brands available</a></li>'; return; }
     ul.innerHTML = vendors.map(vendor => {
       const name = vendor.name || vendor.brandName || 'Unknown Brand';
       const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -133,7 +108,6 @@ function navigateToBrandProducts(brandName) {
   S.currentPage = "products";
   const toolbarCenter = document.getElementById("page-products").querySelector(".toolbar-center");
   if(toolbarCenter) toolbarCenter.textContent = brandName.toUpperCase();
-
   const filtered = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName);
   const prods = merchandiseProducts(filtered);
   if(DOM.allProductsGrid) {
@@ -220,7 +194,8 @@ const S = {
   campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, announceIdx:0, announceTimer:null,
   currency:"ZAR", reviewRating:0, reviewImage:null, touchStartX:0, touchEndX:0,
   cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null,
-  currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, categoriesScrollTimeout:null
+  currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, categoriesScrollTimeout:null,
+  productInfoTab: 'description'
 };
 
 async function fetchProducts() {
@@ -230,13 +205,13 @@ async function fetchProducts() {
   } catch(e) {}
   await new Promise(r=>setTimeout(r,600));
   return [
-    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:280, badge:"sale", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
-    { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
-    { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail:[] } }] },
-    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:380, badge:"sale", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"Fluid silhouette and quiet tension.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
-    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:299, badge:"sale", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
-    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Pink Rain", swatch:"#F3DBD7", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail:[] } }] },
-    { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
+    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:280, badge:"sale", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size OS. Lens width: 52mm.", variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
+    { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", measurements:"Length: 3.5cm. Weight: 12g each.", variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
+    { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", measurements:"Dimensions: 18cm x 12cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail:[] } }] },
+    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:380, badge:"sale", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"Fluid silhouette and quiet tension.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size S. Length: 98cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
+    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:299, badge:"sale", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", measurements:"Volume: 50ml.", variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
+    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", measurements:"Volume: 50ml.", variants:[{ color:"Pink Rain", swatch:"#F3DBD7", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail:[] } }] },
+    { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size S. Length: 92cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
   ];
 }
 
@@ -295,6 +270,8 @@ function navigateTo(page) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
   S.currentPage = page; window.scrollTo({top:0,behavior:"smooth"});
+  removeStickyBar();
+  if(DOM.mainNav) DOM.mainNav.classList.remove("product-page");
   if(page==="products"){renderAllProducts();ensureNavScrolled();S.previousCollectionPage='products';}
   if(page==="cart"){renderCartPage();ensureNavScrolled();}
   if(page==="wishlist"){renderWishlistPage();ensureNavScrolled();}
@@ -311,6 +288,8 @@ function navigateToCategory(cat) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
   S.previousCollectionPage = cat;
+  removeStickyBar();
+  if(DOM.mainNav) DOM.mainNav.classList.remove("product-page");
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = (cat.charAt(0).toUpperCase()+cat.slice(1)).replace(/-/g,' ').toUpperCase();
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
 }
@@ -330,6 +309,7 @@ function initNavScroll() {
   window.addEventListener("scroll", () => {
     if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; }
     DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0);
+    updateStickyBarOnScroll();
   }, { passive: true });
 }
 function ensureNavScrolled() { DOM.mainNav.classList.add("scrolled"); }
@@ -359,7 +339,7 @@ function getAllProductImages(product, variantIndex) {
 }
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
 function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'…'; }
-function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toLocaleString()}`; }
+function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toFixed(2)}`; }
 function isProductSoldOut(product) { return (product?.stock??0)<=0; }
 function cartHasMultipleTypes() { const types = new Set(S.cart.map(i=>PRODUCTS.find(p=>p.id===i.productId)?.category).filter(Boolean)); return types.size>1; }
 
@@ -399,6 +379,7 @@ function selectVariant(productId, variantIndex, evt) {
       else if (isDesktop()) slidesEl.classList.add('single-image');
     }
     document.querySelectorAll(".product-info .modal-variant-dots .variant-swatch").forEach((dot,i)=>{ dot.classList.toggle("selected", i===variantIndex); });
+    updateStickyBar(product);
   }
 }
 
@@ -554,21 +535,15 @@ const CATEGORY_ORDER = {
 
 function merchandiseProducts(products) {
   if (!products || !products.length) return [];
-
-  // 1. Exclude leather pouch from general merchandising (it's conditionally added later)
   const filtered = products.filter(p => p.id !== 'janedore-leather-pouch');
-
-  // 2. Sort by strict category priority, then by price (ascending) for a premium feel
   const sorted = [...filtered].sort((a, b) => {
     const orderA = CATEGORY_ORDER[a.category] ?? 99;
     const orderB = CATEGORY_ORDER[b.category] ?? 99;
     if (orderA !== orderB) return orderA - orderB;
-    // Secondary sort: sale price or regular price ascending
     const priceA = a.salePrice ?? a.price ?? 0;
     const priceB = b.salePrice ?? b.price ?? 0;
     return priceA - priceB;
   });
-
   return sorted;
 }
 /* ────────────────────────────────────────────── */
@@ -613,7 +588,6 @@ function buildCategoriesSlider() {
     `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`
   ).join('');
   S.categoriesSlideIndex = 0;
-  
   grid.removeEventListener('scroll', updateCategoriesProgress);
   grid.addEventListener('scroll', updateCategoriesProgress, { passive: true });
 }
@@ -640,9 +614,7 @@ function buildArrivals() {
   buildNewsletterSection();
 }
 
-function navigateToJanedoreOnly() {
-  navigateTo('products');
-}
+function navigateToJanedoreOnly() { navigateTo('products'); }
 function buildNewsletterSection() {
   if(!DOM.homepageNewsletterSection) return;
   DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`;
@@ -683,13 +655,106 @@ function renderCategoryProducts() {
 }
 
 function goBackFromProduct() {
+  removeStickyBar();
+  if(DOM.mainNav) DOM.mainNav.classList.remove("product-page");
   if (S.previousCollectionPage && S.previousCollectionPage !== 'products') navigateToCategory(S.previousCollectionPage);
   else navigateTo('products');
 }
-function goBackHome() { navigateTo('home'); }
+function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); navigateTo('home'); }
+
+/* ── Sticky Add to Bag Bar ── */
+function removeStickyBar() {
+  const existing = document.getElementById('sticky-add-bar');
+  if (existing) existing.remove();
+}
+
+function createStickyBar(product) {
+  removeStickyBar();
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const variant = product.variants?.[vi] ?? {};
+  const price = product.salePrice ? product.salePrice : product.price;
+  const bar = document.createElement('div');
+  bar.id = 'sticky-add-bar';
+  bar.className = 'sticky-add-bar';
+  bar.innerHTML = `
+    <div class="sticky-brand">${product.brand||''}</div>
+    <div class="sticky-name">${product.name||''}</div>
+    <div class="sticky-price">${formatPrice(price)}</div>
+    <button class="sticky-add-btn" onclick="addToCartFromDetailSticky('${product.id}')"${soldOut?' disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>
+  `;
+  document.body.appendChild(bar);
+  updateStickyBarOnScroll();
+}
+
+function updateStickyBarOnScroll() {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar || S.currentPage !== 'product-detail') return;
+  const productInfo = document.querySelector('.product-info');
+  if (!productInfo) return;
+  const rect = productInfo.getBoundingClientRect();
+  const windowHeight = window.innerHeight;
+  if (rect.top < windowHeight * 0.3) {
+    bar.classList.add('minimized');
+    const btn = bar.querySelector('.sticky-add-btn');
+    if (btn && !btn.disabled) btn.textContent = 'Add';
+  } else {
+    bar.classList.remove('minimized');
+    const btn = bar.querySelector('.sticky-add-btn');
+    const soldOut = btn && btn.disabled;
+    if (btn && !soldOut) btn.textContent = 'Add to Bag';
+  }
+}
+
+function updateStickyBar(product) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) { createStickyBar(product); return; }
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+  bar.querySelector('.sticky-brand').textContent = product.brand||'';
+  bar.querySelector('.sticky-name').textContent = product.name||'';
+  bar.querySelector('.sticky-price').textContent = formatPrice(price);
+  const btn = bar.querySelector('.sticky-add-btn');
+  btn.disabled = soldOut;
+  btn.textContent = soldOut ? 'Sold Out' : (bar.classList.contains('minimized') ? 'Add' : 'Add to Bag');
+}
+
+function addToCartFromDetailSticky(id) {
+  if(!S.selectedSize) {
+    const sizeBtns = document.querySelectorAll('.modal-size-btn');
+    if (sizeBtns.length) sizeBtns[0].scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  const product = PRODUCTS.find(p=>p.id===id);
+  if(product && isProductSoldOut(product)) return;
+  addToCart(id, S.selectedSize);
+  openCart();
+}
+
+function switchInfoTab(tab) {
+  S.productInfoTab = tab;
+  document.querySelectorAll('.info-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.info-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+}
+
+function toggleDescExpand() {
+  const desc = document.getElementById('modal-desc');
+  const toggle = document.getElementById('desc-toggle');
+  if (!desc || !toggle) return;
+  if (desc.classList.contains('expanded')) {
+    desc.classList.remove('expanded');
+    toggle.textContent = 'View More';
+  } else {
+    desc.classList.add('expanded');
+    toggle.textContent = 'View Less';
+  }
+}
+/* ── End Sticky Bar ── */
 
 async function renderProductPage(product) {
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null;
+  if(DOM.mainNav) DOM.mainNav.classList.add("product-page");
   showLoading(DOM.productDetail);
   const vi=S.productVariantSelections[product.id]??0; const images=getAllProductImages(product, vi); const isWished=S.wishlist.some(w=>w.id===product.id); const soldOut=isProductSoldOut(product);
   const sizeLabel = product.category === 'jewelry' ? 'Material' : 'Size';
@@ -702,20 +767,37 @@ async function renderProductPage(product) {
   const reviews = await getProductReviews(product.id);
   const reviewsHtml = reviews.length ? reviews.map(r=>`<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text||'No comment'}<br><small style="color:#aaa;">${r.name||'Anonymous'} · ${r.country||'Unknown'} · ${r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString():'Recently'}</small></div>`).join('') : '<p class="no-reviews">No reviews yet.</p>';
   const slidesClass = (isDesktop() && images.length >= 4) ? '' : 'single-image';
+  const price = product.salePrice ? product.salePrice : product.price;
+  const hasDesc = product.description && product.description.length > 0;
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider"><div class="product-slides ${slidesClass}" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div><div class="slider-bars" id="slider-bars">${images.map((_,i)=>`<button class="slider-bar${i===0?" active":""}" onclick="goToSlide(${i})"></button>`).join("")}</div></div>
-    <div class="product-info">
-      <div class="modal-brand-row"><div class="modal-brand">${product.brand||''}</div><div class="modal-variant-dots">${variantSwatchesHtml(product, vi)}</div></div>
+    <div class="product-info" style="margin-top:5px;">
+      <!-- Horizontal Info Tabs -->
+      <div class="info-tabs-wrap">
+        <button class="info-tab-btn active" data-tab="description" onclick="switchInfoTab('description')">Description</button>
+        <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
+        <button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Measurements</button>
+      </div>
+      <div class="info-tab-panel active" data-tab="description">
+        ${hasDesc ? `<div class="modal-desc" id="modal-desc">${product.description||''}</div><button class="modal-desc-toggle" id="desc-toggle" onclick="toggleDescExpand()">View More</button>` : '<p style="font-size:12px;font-weight:300;color:#888;">No description available.</p>'}
+      </div>
+      <div class="info-tab-panel" data-tab="composition">
+        <p>${product.compositionCare||'No composition details available.'}</p>
+      </div>
+      <div class="info-tab-panel" data-tab="measurements">
+        <p>${product.measurements||'No measurements available.'}</p>
+      </div>
+
+      <!-- Variants -->
+      <div class="modal-brand-row" style="margin-top:16px;"><div class="modal-brand">${product.brand||''}</div><div class="modal-variant-dots">${variantSwatchesHtml(product, vi)}</div></div>
       <div class="modal-title">${product.name||''}</div>
       <div class="modal-price-row"><div class="modal-price">${product.salePrice?`<span>${formatPrice(product.salePrice)}</span> <span style="text-decoration:line-through;color:#aaa;">${formatPrice(product.price)}</span>`:formatPrice(product.price)}</div><button class="modal-wish-btn${isWished?" wished":""}" onclick="toggleWish('${product.id}')"><i class="${isWished?'ph-fill ph-bookmark-simple':'ph-thin ph-bookmark-simple'}"></i></button></div>
-      <p class="modal-desc">${product.description||''}</p>
       <div class="modal-size-label">${sizeLabel}</div><div class="modal-sizes">${(product.sizes||[]).map(s=>`<button class="modal-size-btn" onclick="selectSize(this,'${s}')">${s}</button>`).join("")}</div>
-      <div class="product-actions"><button class="modal-add-btn" onclick="addToCartFromDetail('${product.id}')" style="width:100%;"${soldOut?' disabled':''}>${soldOut?'Sold Out':'Add to Cart'}</button></div>
+      <div class="product-actions"><button class="modal-add-btn" onclick="addToCartFromDetail('${product.id}')" style="width:100%;"${soldOut?' disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button></div>
       <div class="ai-disclaimer-notice"><span>*</span><p>Select imagery may include AI-assisted production.<br><strong>Product accuracy remains a priority.</strong></p></div>
-      <div class="info-collapse" id="collapse-shipping"><div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping & Returns <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">${product.shippingReturns||''}<div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div></div>
-      <div class="info-collapse" id="collapse-features"><div class="info-collapse-header" onclick="toggleInfoCollapse('features')">Product Features <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">${product.productFeatures||''}</div></div>
-      <div class="info-collapse" id="collapse-care"><div class="info-collapse-header" onclick="toggleInfoCollapse('care')">Composition & Care <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">${product.compositionCare||''}</div></div>
-      <div class="info-collapse" id="collapse-sizing"><div class="info-collapse-header" onclick="toggleInfoCollapse('sizing')">Sizing & Fit <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body"><p>Model wears size S. Please refer to our size guide for detailed measurements.</p></div></div>
+      <!-- Shipping & Features sections -->
+      <div class="info-collapse" id="collapse-shipping"><div class="info-collapse-header" onclick="toggleInfoCollapse('shipping')">Shipping <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">${product.shippingReturns||''}<div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div></div>
+      <div class="info-collapse" id="collapse-features"><div class="info-collapse-header" onclick="toggleInfoCollapse('features')">Features <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="info-collapse-body">${product.productFeatures||''}</div></div>
       ${ctlSection}${relatedSection}
       <div class="reviews-section"><div class="reviews-title">Reviews</div>${reviewsHtml}<button class="write-review-btn" onclick="openReviewModal()">Write a Review</button></div>
       ${rvSection}
@@ -723,6 +805,8 @@ async function renderProductPage(product) {
     <div class="back-btn-wrap"><button class="back-btn" onclick="goBackFromProduct()">Back</button></div>
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer"); S.currentSlide=0; setupProductSliderTouch(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
+  createStickyBar(product);
+  S.productInfoTab = 'description';
 }
 
 function setupProductSliderTouch() { const slider = document.getElementById("product-slider"); if(!slider) return; slider.addEventListener("touchstart", e => S.touchStartX = e.touches[0].clientX); slider.addEventListener("touchend", e => { S.touchEndX = e.changedTouches[0].clientX; handleSwipe(); }); }
@@ -744,13 +828,8 @@ function changeQty(productId, size, delta, vi) {
   const item=S.cart.find(i=>i.productId===productId&&i.size===size&&i.variantIndex===vi);
   if(!item) return;
   const newQty = item.qty + delta;
-  if(newQty <= 0) {
-    removeFromCart(productId, size, vi);
-  } else {
-    item.qty = newQty;
-    renderCart();
-    saveCartToStorage();
-  }
+  if(newQty <= 0) { removeFromCart(productId, size, vi); }
+  else { item.qty = newQty; renderCart(); saveCartToStorage(); }
 }
 function addPouchToCart() { const pouch = PRODUCTS.find(p => p.id === 'janedore-leather-pouch'); if (pouch) { addToCart('janedore-leather-pouch', 'OS'); renderCart(); } }
 function hasSunglassesInCart() { return S.cart.some(item => PRODUCTS.find(p => p.id === item.productId)?.category === 'sunglasses'); }
@@ -816,7 +895,7 @@ function buildFooter(id) {
 }
 function toggleFooterCollapse(id) { document.getElementById(`footer-collapse-${id}`)?.classList.toggle("open"); }
 function toggleFooterDropdown(type, footerId) { const dd = document.getElementById(type.includes("currency")?`currency-dropdown-${footerId}`:`lang-dropdown-${footerId}`); if(dd){dd.classList.toggle("open");setTimeout(()=>dd.classList.remove("open"),4000);} }
-function selectCurrency(code) { S.currency=code; document.querySelectorAll(".footer-currency-label").forEach(el=>el.textContent=CURRENCIES[code]?.label??code); if(S.currentPage==="home") buildArrivals(); if(S.currentPage==="products") { if(S.saleMode) renderSaleProducts(); else renderAllProducts(); } if(S.currentPage==="category") renderCategoryProducts(); renderCart(); }
+function selectCurrency(code) { S.currency=code; document.querySelectorAll(".footer-currency-label").forEach(el=>el.textContent=CURRENCIES[code]?.label??code); if(S.currentPage==="home") buildArrivals(); if(S.currentPage==="products") { if(S.saleMode) renderSaleProducts(); else renderAllProducts(); } if(S.currentPage==="category") renderCategoryProducts(); renderCart(); if(S.currentPage==="product-detail"){ const bar = document.getElementById('sticky-add-bar'); if(bar) bar.querySelector('.sticky-price').textContent = formatPrice(PRODUCTS.find(p=>p.id===S.currentReviewProductId)?.salePrice||PRODUCTS.find(p=>p.id===S.currentReviewProductId)?.price||0); } }
 
 function openSearch() { DOM.searchOverlay.classList.add("open"); document.body.style.overflow="hidden"; setTimeout(()=>DOM.searchInput.focus(),100); renderSearchDefault(); }
 function closeSearch() { DOM.searchOverlay.classList.remove("open"); document.body.style.overflow=""; DOM.searchInput.value=""; }
@@ -873,7 +952,6 @@ async function init() {
   setHeroImage(); buildArrivals();
   ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"].forEach(buildFooter);
   buildCampaignSlider();
-  // Load vendors dynamically
   initVendors();
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId);
