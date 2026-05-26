@@ -2,6 +2,31 @@ const firebaseConfig = { apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI", auth
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+/* ══════════════════════════════════════════════════════════════
+   iOS SAFARI VIEWPORT HEIGHT FIX
+   ══════════════════════════════════════════════════════════════ */
+function setViewportHeight() {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  // Also set dvh fallback for iOS 15.4+
+  if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('height', '100dvh')) {
+    document.documentElement.style.setProperty('--dvh', '1dvh');
+  } else {
+    document.documentElement.style.setProperty('--dvh', `${vh}px`);
+  }
+}
+window.addEventListener('resize', setViewportHeight);
+window.addEventListener('orientationchange', () => setTimeout(setViewportHeight, 100));
+// Handle iOS Safari toolbar collapse/expand
+if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+  window.addEventListener('scroll', setViewportHeight, { passive: true });
+}
+setViewportHeight();
+
+/* ── Fix body overflow when modals/panels open ── */
+function lockBodyScroll() { document.body.style.overflow = 'hidden'; document.body.style.position = 'fixed'; document.body.style.width = '100%'; }
+function unlockBodyScroll() { document.body.style.overflow = ''; document.body.style.position = ''; document.body.style.width = ''; }
+
 async function getProductReviews(productId) {
   try { const s = await db.collection('reviews').where('productId','==',productId).get(); const reviews = s.docs.map(d=>({id:d.id,...d.data()})); reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)); return reviews; } catch(e) { return []; }
 }
@@ -250,16 +275,183 @@ function renderCategoryProducts() { if(!S.currentCategoryPage || !DOM.categoryPr
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
 
-/* ── Sticky Bar ── */
-function removeStickyBar() { const e=document.getElementById('sticky-add-bar'); if(e)e.remove(); S.stickyExtended=false; }
-function createStickyBar(product) { removeStickyBar(); const soldOut=isProductSoldOut(product); const vi=S.productVariantSelections[product.id]??0; const price=product.salePrice?product.salePrice:product.price; const isWished=S.wishlist.some(w=>w.id===product.id); const wishIconClass=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple"; const bar=document.createElement('div'); bar.id='sticky-add-bar'; bar.className='sticky-add-bar'; bar.innerHTML=`<div class="sticky-name-row"><span class="sticky-name">${product.name||''}</span><button class="sticky-wish-btn${S.stickyWishHidden?' hidden':''}" id="sticky-wish-btn" onclick="event.stopPropagation();stickyToggleWish('${product.id}')"><i class="${wishIconClass}"></i></button></div><div class="sticky-price">${formatPrice(price)}</div><div class="sticky-extras"><div class="sticky-sizes" id="sticky-sizes">${(product.sizes||[]).map(s=>`<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join("")}</div><div class="sticky-swatches" id="sticky-swatches">${stickySwatchesHtml(product,vi)}</div></div><button class="sticky-add-btn" onclick="handleStickyAddClick('${product.id}')"${soldOut?' disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>`; document.body.appendChild(bar); updateStickyBarOnScroll(); }
-function stickyToggleWish(productId) { toggleWish(productId); const product=PRODUCTS.find(p=>p.id===productId); if(!product) return; const isWished=S.wishlist.some(w=>w.id===productId); const iconClass=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple"; const btn=document.getElementById('sticky-wish-btn'); if(btn) btn.querySelector('i').className=iconClass; }
-function handleStickyAddClick(productId) { const bar=document.getElementById('sticky-add-bar'); if(!bar) return; if(!S.stickyExtended){bar.classList.add('extended');S.stickyExtended=true;} else { addToCartFromDetailSticky(productId); } }
-function selectStickySize(btn,size) { document.querySelectorAll('#sticky-sizes .sticky-size-btn').forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
-function updateStickyBarExtras() { const product=PRODUCTS.find(p=>p.id===S.currentReviewProductId); if(!product) return; const vi=S.productVariantSelections[product.id]??0; const se=document.getElementById('sticky-swatches'); if(se) se.innerHTML=stickySwatchesHtml(product,vi); }
-function updateStickyBarOnScroll() { const bar=document.getElementById('sticky-add-bar'); if(!bar||S.currentPage!=='product-detail') return; const pi=document.querySelector('.product-info'); if(!pi) return; if(pi.getBoundingClientRect().top<window.innerHeight*0.3){bar.classList.add('minimized');if(S.stickyExtended){bar.classList.remove('extended');S.stickyExtended=false;}const btn=bar.querySelector('.sticky-add-btn');if(btn&&!btn.disabled)btn.textContent='Add';}else{bar.classList.remove('minimized');const btn=bar.querySelector('.sticky-add-btn');if(btn&&!btn.disabled)btn.textContent='Add to Bag';} }
-function updateStickyBar(product) { const bar=document.getElementById('sticky-add-bar'); if(!bar){createStickyBar(product);return;} const soldOut=isProductSoldOut(product); const vi=S.productVariantSelections[product.id]??0; const price=product.salePrice?product.salePrice:product.price; bar.querySelector('.sticky-name').textContent=product.name||''; bar.querySelector('.sticky-price').textContent=formatPrice(price); const se=bar.querySelector('#sticky-sizes'); if(se)se.innerHTML=(product.sizes||[]).map(s=>`<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join(""); const sw=bar.querySelector('#sticky-swatches'); if(sw)sw.innerHTML=stickySwatchesHtml(product,vi); const btn=bar.querySelector('.sticky-add-btn'); btn.disabled=soldOut; btn.textContent=soldOut?'Sold Out':(bar.classList.contains('minimized')?'Add':'Add to Bag'); const isWished=S.wishlist.some(w=>w.id===product.id); const wishBtn=bar.querySelector('#sticky-wish-btn'); if(wishBtn){wishBtn.querySelector('i').className=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple";} }
-function addToCartFromDetailSticky(id) { if(!S.selectedSize){const bar=document.getElementById('sticky-add-bar'); if(bar&&!S.stickyExtended){bar.classList.add('extended');S.stickyExtended=true;}return;} const product=PRODUCTS.find(p=>p.id===id); if(product&&isProductSoldOut(product))return; addToCart(id,S.selectedSize); openCart(); const bar=document.getElementById('sticky-add-bar'); if(bar){bar.classList.remove('extended');S.stickyExtended=false; S.stickyWishHidden=true; const wishBtn=bar.querySelector('#sticky-wish-btn'); if(wishBtn) wishBtn.classList.add('hidden'); } }
+/* ══════════════════════════════════════════════════════════════
+   STICKY BAR — iOS SAFARI PRODUCTION FIX
+   ══════════════════════════════════════════════════════════════ */
+
+function removeStickyBar() {
+  const e = document.getElementById('sticky-add-bar');
+  if (e) e.remove();
+  S.stickyExtended = false;
+  document.body.classList.remove('has-sticky-bar');
+}
+
+function createStickyBar(product) {
+  removeStickyBar();
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+  const isWished = S.wishlist.some(w => w.id === product.id);
+  const wishIconClass = isWished ? "ph-fill ph-bookmark-simple" : "ph-thin ph-bookmark-simple";
+
+  const bar = document.createElement('div');
+  bar.id = 'sticky-add-bar';
+  bar.className = 'sticky-add-bar';
+  bar.innerHTML = `
+    <div class="sticky-name-row">
+      <span class="sticky-name">${product.name || ''}</span>
+      <button class="sticky-wish-btn${S.stickyWishHidden ? ' hidden' : ''}" id="sticky-wish-btn" onclick="event.stopPropagation();stickyToggleWish('${product.id}')">
+        <i class="${wishIconClass}"></i>
+      </button>
+    </div>
+    <div class="sticky-price">${formatPrice(price)}</div>
+    <div class="sticky-extras">
+      <div class="sticky-sizes" id="sticky-sizes">
+        ${(product.sizes || []).map(s => `<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join("")}
+      </div>
+      <div class="sticky-swatches" id="sticky-swatches">
+        ${stickySwatchesHtml(product, vi)}
+      </div>
+    </div>
+    <button class="sticky-add-btn" onclick="handleStickyAddClick('${product.id}')"${soldOut ? ' disabled' : ''}>
+      ${soldOut ? 'Sold Out' : 'Add to Bag'}
+    </button>`;
+
+  document.body.appendChild(bar);
+  document.body.classList.add('has-sticky-bar');
+  updateStickyBarOnScroll();
+
+  // Force GPU layer after DOM insertion
+  requestAnimationFrame(() => {
+    bar.style.transform = 'translateZ(0)';
+    bar.style.webkitTransform = 'translateZ(0)';
+  });
+}
+
+function stickyToggleWish(productId) {
+  toggleWish(productId);
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+  const isWished = S.wishlist.some(w => w.id === productId);
+  const iconClass = isWished ? "ph-fill ph-bookmark-simple" : "ph-thin ph-bookmark-simple";
+  const btn = document.getElementById('sticky-wish-btn');
+  if (btn) btn.querySelector('i').className = iconClass;
+}
+
+function handleStickyAddClick(productId) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) return;
+  if (!S.stickyExtended) {
+    bar.classList.add('extended');
+    S.stickyExtended = true;
+    // Notify Safari of layout change
+    setViewportHeight();
+  } else {
+    addToCartFromDetailSticky(productId);
+  }
+}
+
+function selectStickySize(btn, size) {
+  document.querySelectorAll('#sticky-sizes .sticky-size-btn').forEach(b => b.classList.remove("sel"));
+  btn.classList.add("sel");
+  S.selectedSize = size;
+}
+
+function updateStickyBarExtras() {
+  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
+  if (!product) return;
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const se = document.getElementById('sticky-swatches');
+  if (se) se.innerHTML = stickySwatchesHtml(product, vi);
+}
+
+function updateStickyBarOnScroll() {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar || S.currentPage !== 'product-detail') return;
+  const pi = document.querySelector('.product-info');
+  if (!pi) return;
+
+  const shouldMinimize = pi.getBoundingClientRect().top < window.innerHeight * 0.3;
+
+  if (shouldMinimize && !bar.classList.contains('minimized')) {
+    bar.classList.add('minimized');
+    if (S.stickyExtended) {
+      bar.classList.remove('extended');
+      S.stickyExtended = false;
+    }
+    const btn = bar.querySelector('.sticky-add-btn');
+    if (btn && !btn.disabled) btn.textContent = 'Add';
+    setViewportHeight();
+  } else if (!shouldMinimize && bar.classList.contains('minimized')) {
+    bar.classList.remove('minimized');
+    const btn = bar.querySelector('.sticky-add-btn');
+    if (btn && !btn.disabled) btn.textContent = 'Add to Bag';
+    setViewportHeight();
+  }
+}
+
+function updateStickyBar(product) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) { createStickyBar(product); return; }
+
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+
+  bar.querySelector('.sticky-name').textContent = product.name || '';
+  bar.querySelector('.sticky-price').textContent = formatPrice(price);
+
+  const se = bar.querySelector('#sticky-sizes');
+  if (se) se.innerHTML = (product.sizes || []).map(s =>
+    `<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`
+  ).join("");
+
+  const sw = bar.querySelector('#sticky-swatches');
+  if (sw) sw.innerHTML = stickySwatchesHtml(product, vi);
+
+  const btn = bar.querySelector('.sticky-add-btn');
+  btn.disabled = soldOut;
+  btn.textContent = soldOut ? 'Sold Out' : (bar.classList.contains('minimized') ? 'Add' : 'Add to Bag');
+
+  const isWished = S.wishlist.some(w => w.id === product.id);
+  const wishBtn = bar.querySelector('#sticky-wish-btn');
+  if (wishBtn) {
+    wishBtn.querySelector('i').className = isWished ? "ph-fill ph-bookmark-simple" : "ph-thin ph-bookmark-simple";
+  }
+
+  setViewportHeight();
+}
+
+function addToCartFromDetailSticky(id) {
+  if (!S.selectedSize) {
+    const bar = document.getElementById('sticky-add-bar');
+    if (bar && !S.stickyExtended) {
+      bar.classList.add('extended');
+      S.stickyExtended = true;
+      setViewportHeight();
+    }
+    return;
+  }
+  const product = PRODUCTS.find(p => p.id === id);
+  if (product && isProductSoldOut(product)) return;
+
+  addToCart(id, S.selectedSize);
+  openCart();
+
+  const bar = document.getElementById('sticky-add-bar');
+  if (bar) {
+    bar.classList.remove('extended');
+    S.stickyExtended = false;
+    S.stickyWishHidden = true;
+    const wishBtn = bar.querySelector('#sticky-wish-btn');
+    if (wishBtn) wishBtn.classList.add('hidden');
+    setViewportHeight();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   END STICKY BAR
+   ══════════════════════════════════════════════════════════════ */
 
 function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
 function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
@@ -377,17 +569,17 @@ function moveCampaignSlider(dir){const total=Math.ceil(PRODUCTS.filter(p=>p.stat
 function buildFooter(id) { const el=document.getElementById(id); if(!el)return; const currLabel=CURRENCIES[S.currency]?.label??"ZAR R"; const sections=["shop","brands","policies","help"]; const collapseHTML=sections.map(sec=>{const links={shop:["New In","Dresses","Tops","Bottoms","Jackets","Sets","Bags","Jewelry","Scent","Sale"],brands:[],policies:["About","Shipping Policy","Return Policy","Privacy Policy","Terms & Conditions"],help:["FAQ","Size Guide","Shipping","Returns","Contact"]}[sec]; return `<div class="footer-collapse" id="footer-collapse-${sec}-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('${sec}-${id}')">${sec.charAt(0).toUpperCase()+sec.slice(1)} <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links">${links.map(l=>`<li><a>${l}</a></li>`).join("")}</ul></div></div>`;}).join(""); el.innerHTML=`<div class="footer-top">${collapseHTML}</div><p class="footer-about">Janedore is a curated multi-brand fashion destination rooted in South Africa.</p><div class="footer-currency-lang">...</div><div class="footer-bottom"><div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div></div>`; }
 function toggleFooterCollapse(id) { document.getElementById(`footer-collapse-${id}`)?.classList.toggle("open"); }
 
-function openSearch() { DOM.searchOverlay.classList.add("open"); document.body.style.overflow="hidden"; setTimeout(()=>DOM.searchInput.focus(),100); renderSearchDefault(); }
-function closeSearch() { DOM.searchOverlay.classList.remove("open"); document.body.style.overflow=""; DOM.searchInput.value=""; }
+function openSearch() { DOM.searchOverlay.classList.add("open"); lockBodyScroll(); setTimeout(()=>DOM.searchInput.focus(),100); renderSearchDefault(); }
+function closeSearch() { DOM.searchOverlay.classList.remove("open"); unlockBodyScroll(); DOM.searchInput.value=""; }
 function handleSearch(val) { const v=val.trim().toLowerCase(); if(!v){renderSearchDefault();return;} const results=PRODUCTS.filter(p=>p.status==='active'&&((p.name||'').toLowerCase().includes(v)||(p.brand||'').toLowerCase().includes(v)||(p.category||'').toLowerCase().includes(v))); DOM.searchBody.innerHTML=`<div class="search-results-title">${results.length} Result${results.length!==1?"s":""}</div>${results.length?`<div class="search-results-grid">${results.map(p=>productCard(p)).join("")}</div>`:'<div class="search-no-results">No pieces found.</div>'}`; }
 function renderSearchDefault() { DOM.searchBody.innerHTML='<div class="search-suggestions"><div class="search-suggestions-title">Popular Searches</div><div class="search-suggestion-pills">'+["Sunglasses","Jewelry","Pouch","Earrings","Scent"].map(s=>`<button class="search-pill" onclick="searchFor('${s}')">${s}</button>`).join("")+'</div></div>'; }
 function searchFor(term) { DOM.searchInput.value=term; handleSearch(term); }
-function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
-function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
-function openCart() { DOM.cartBackdrop.classList.add("open"); DOM.cartPanel.classList.add("open"); renderCart(); }
-function closeCart() { DOM.cartBackdrop.classList.remove("open"); DOM.cartPanel.classList.remove("open"); }
-function openReviewModal() { DOM.reviewModalBackdrop.classList.add("open"); S.reviewRating=0; S.reviewImage=null; updateReviewStars(); DOM.reviewText.value=""; DOM.reviewName.value=""; DOM.reviewImagePreview.style.display="none"; DOM.reviewImageInput.value=""; }
-function closeReviewModal() { DOM.reviewModalBackdrop.classList.remove("open"); }
+function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); lockBodyScroll(); }
+function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); unlockBodyScroll(); }
+function openCart() { DOM.cartBackdrop.classList.add("open"); DOM.cartPanel.classList.add("open"); renderCart(); lockBodyScroll(); }
+function closeCart() { DOM.cartBackdrop.classList.remove("open"); DOM.cartPanel.classList.remove("open"); unlockBodyScroll(); }
+function openReviewModal() { DOM.reviewModalBackdrop.classList.add("open"); S.reviewRating=0; S.reviewImage=null; updateReviewStars(); DOM.reviewText.value=""; DOM.reviewName.value=""; DOM.reviewImagePreview.style.display="none"; DOM.reviewImageInput.value=""; lockBodyScroll(); }
+function closeReviewModal() { DOM.reviewModalBackdrop.classList.remove("open"); unlockBodyScroll(); }
 function setReviewRating(r) { S.reviewRating=r; updateReviewStars(); }
 function updateReviewStars() { document.querySelectorAll("#review-stars .review-star-btn").forEach((b,i)=>{ b.innerHTML = i < S.reviewRating ? '<i class="ph-fill ph-star"></i>' : '<i class="ph-thin ph-star"></i>'; b.classList.toggle("filled", i < S.reviewRating); }); }
 function handleReviewImage(event) { const file=event.target.files[0]; if(file){ S.reviewImage=file; const reader=new FileReader(); reader.onload=e=>{ DOM.reviewImagePreview.src=e.target.result; DOM.reviewImagePreview.style.display="block"; }; reader.readAsDataURL(file); } }
