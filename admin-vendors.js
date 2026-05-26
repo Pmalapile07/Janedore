@@ -1,452 +1,389 @@
 (function () {
   'use strict';
 
-  // ─────────────────────────────────────────────
-  // WAIT UNTIL ADMIN/FIREBASE LOADS
-  // ─────────────────────────────────────────────
-  function initVendorsModule() {
+  if (!window._adminDB) return;
 
-    if (!window._adminDB) {
-      console.warn('[VENDORS] _adminDB missing.');
-      return;
+  var esc        = window._esc;
+  var safeEl     = window._safeEl;
+  var showToast  = window._showToast;
+  var statusBadge = window._statusBadge;
+  var isSuperAdmin = window._isSuperAdmin;
+  var requireSuperAdmin = window._requireSuperAdmin;
+  var mountModal = window._mountModal;
+  var closeModal = window._closeModal;
+
+  /* ─────────────────────────────────────────────────────────
+     SAFE VENDORS REF INITIALIZATION
+  ───────────────────────────────────────────────────────── */
+  function getVendorsRef() {
+    if (window._vendorsRef && typeof window._vendorsRef.get === 'function') {
+      return window._vendorsRef;
     }
-
-    // ─────────────────────────────────────────────
-    // SAFE DEPENDENCIES
-    // ─────────────────────────────────────────────
-    var esc = window._esc || function (s) {
-      return s === undefined || s === null ? '' : String(s);
-    };
-
-    var safeEl = window._safeEl || function (id) {
-      return document.getElementById(id);
-    };
-
-    var showToast = window._showToast || function (msg) {
-      console.log(msg);
-    };
-
-    var statusBadge = window._statusBadge || function (status) {
-      return '<span>' + esc(status) + '</span>';
-    };
-
-    var isSuperAdmin = window._isSuperAdmin || function () {
-      return true;
-    };
-
-    var requireSuperAdmin = window._requireSuperAdmin || function () {
-      return true;
-    };
-
-    var mountModal = window._mountModal || function (html) {
-      var div = document.createElement('div');
-      div.innerHTML = html;
-      document.body.appendChild(div);
-    };
-
-    var closeModal = window._closeModal || function () {
-      document.querySelectorAll('.modal').forEach(function (m) {
-        m.remove();
-      });
-    };
-
-    // ─────────────────────────────────────────────
-    // FIXED FIRESTORE REFERENCE
-    // ─────────────────────────────────────────────
-    var vendorsRef = null;
-
-    try {
-
-      if (window._vendorsRef) {
-
-        vendorsRef = window._vendorsRef;
-
-      } else {
-
-        vendorsRef = window._adminDB.collection('vendors');
-        window._vendorsRef = vendorsRef;
-
+    console.warn('[VENDORS] _vendorsRef unavailable, falling back to db.collection("vendors")');
+    if (window._adminDB && typeof window._adminDB.collection === 'function') {
+      try {
+        var ref = window._adminDB.collection('vendors');
+        window._vendorsRef = ref;
+        return ref;
+      } catch (e) {
+        console.error('[VENDORS] Failed to create collection ref:', e);
+        return null;
       }
-
-      console.log('[VENDORS] vendorsRef initialized:', vendorsRef);
-
-    } catch (e) {
-
-      console.error('[VENDORS] Failed to initialize vendorsRef:', e);
-      return;
-
     }
-
-    // ─────────────────────────────────────────────
-    // RENDER TAB
-    // ─────────────────────────────────────────────
-    window._renderVendorsTab = function () {
-
-      if (!isSuperAdmin()) {
-
-        var denied = safeEl('main-content');
-
-        if (denied) {
-          denied.innerHTML =
-            '<div class="empty-state">' +
-            '<div class="empty-state-text">Access denied.</div>' +
-            '</div>';
-        }
-
-        return;
-      }
-
-      var mc = safeEl('main-content');
-
-      if (!mc) return;
-
-      mc.innerHTML =
-        '<div class="section-header" style="margin-bottom:12px;">' +
-        '<div class="section-title">Vendors</div>' +
-        '<div style="display:flex;gap:8px;">' +
-        '<button class="btn btn-sm btn-outline" id="seed-vendors-btn" onclick="window._seedDefaultVendors()">Seed Default Vendors</button>' +
-        '<button class="btn btn-sm btn-primary" onclick="window._openVendorModal(null)">+ Add Vendor</button>' +
-        '</div>' +
-        '</div>' +
-        '<div id="vendors-list">' +
-        '<div class="empty-state">' +
-        '<div class="empty-state-icon">⬡</div>' +
-        '<div class="empty-state-text">Loading...</div>' +
-        '</div>' +
-        '</div>';
-
-      if (!vendorsRef) {
-
-        console.error('[VENDORS] vendorsRef missing.');
-
-        var fail = safeEl('vendors-list');
-
-        if (fail) {
-          fail.innerHTML =
-            '<div class="empty-state">' +
-            '<div class="empty-state-text">Database connection failed.</div>' +
-            '</div>';
-        }
-
-        return;
-      }
-
-      vendorsRef.get()
-
-        .then(function (snap) {
-
-          window._vendorsData = snap.docs.map(function (d) {
-            return Object.assign({ id: d.id }, d.data());
-          });
-
-          renderVendorsList(window._vendorsData);
-
-        })
-
-        .catch(function (e) {
-
-          console.error('[VENDORS_TAB]', e);
-
-          var el = safeEl('vendors-list');
-
-          if (el) {
-            el.innerHTML =
-              '<div class="empty-state">' +
-              '<div class="empty-state-text">Could not load vendors.</div>' +
-              '<div style="font-size:11px;color:#999;margin-top:6px;">' +
-              esc(e.message || 'Unknown error') +
-              '</div>' +
-              '</div>';
-          }
-
-        });
-
-    };
-
-    // ─────────────────────────────────────────────
-    // RENDER LIST
-    // ─────────────────────────────────────────────
-    function renderVendorsList(vendors) {
-
-      var el = safeEl('vendors-list');
-
-      if (!el) return;
-
-      if (!vendors || !vendors.length) {
-
-        el.innerHTML =
-          '<div class="empty-state">' +
-          '<div class="empty-state-icon">⬡</div>' +
-          '<div class="empty-state-text">No vendors yet.</div>' +
-          '</div>';
-
-        return;
-      }
-
-      var allProducts = window._allProducts || [];
-
-      el.innerHTML =
-        '<div class="table-wrap">' +
-        '<table class="data-table">' +
-        '<thead>' +
-        '<tr>' +
-        '<th>Vendor</th>' +
-        '<th>Brand</th>' +
-        '<th>Email</th>' +
-        '<th>Status</th>' +
-        '<th>Products</th>' +
-        '<th></th>' +
-        '</tr>' +
-        '</thead>' +
-        '<tbody>' +
-
-        vendors.map(function (v) {
-
-          var productCount = allProducts.filter(function (p) {
-            return p.vendorId === v.id;
-          }).length;
-
-          return (
-            '<tr>' +
-            '<td style="font-weight:400;">' + esc(v.name || '—') + '</td>' +
-            '<td class="cell-muted">' + esc(v.brand || '—') + '</td>' +
-            '<td class="cell-muted">' + esc(v.email || '—') + '</td>' +
-            '<td>' + statusBadge(v.status || 'active') + '</td>' +
-            '<td>' + productCount + '</td>' +
-            '<td>' +
-            '<button class="btn btn-xs btn-ghost" onclick="window._openVendorModal(\'' + esc(v.id) + '\')">Edit</button>' +
-            '</td>' +
-            '</tr>'
-          );
-
-        }).join('') +
-
-        '</tbody>' +
-        '</table>' +
-        '</div>';
-    }
-
-    // ─────────────────────────────────────────────
-    // OPEN MODAL
-    // ─────────────────────────────────────────────
-    window._openVendorModal = function (vendorId) {
-
-      if (!requireSuperAdmin()) return;
-
-      var v = vendorId
-        ? (window._vendorsData || []).find(function (x) {
-            return x.id === vendorId;
-          })
-        : null;
-
-      v = v || {
-        id: '',
-        name: '',
-        brand: '',
-        email: '',
-        commissionRate: 15,
-        status: 'active',
-        notes: ''
-      };
-
-      var modalHTML =
-        '<div class="modal modal-sm">' +
-        '<button class="modal-close" onclick="window._closeModal()">X</button>' +
-        '<div class="modal-title">' +
-        (vendorId ? 'Edit' : 'New') +
-        ' Vendor</div>' +
-
-        '<form id="vendor-form" onsubmit="window._handleVendorSubmit(event,\'' + esc(v.id) + '\')">' +
-
-        '<div class="form-group">' +
-        '<label>Vendor Name</label>' +
-        '<input name="name" value="' + esc(v.name) + '" required>' +
-        '</div>' +
-
-        '<div class="form-group">' +
-        '<label>Brand Name</label>' +
-        '<input name="brand" value="' + esc(v.brand) + '">' +
-        '</div>' +
-
-        '<div class="form-group">' +
-        '<label>Email</label>' +
-        '<input type="email" name="email" value="' + esc(v.email) + '">' +
-        '</div>' +
-
-        '<div style="display:flex;gap:10px;padding-top:12px;">' +
-        '<button type="submit" class="btn btn-primary btn-sm">Save Vendor</button>' +
-
-        (vendorId
-          ? '<button type="button" class="btn btn-danger btn-sm" onclick="window._deleteVendor(\'' + esc(vendorId) + '\')">Delete</button>'
-          : '') +
-
-        '</div>' +
-        '</form>' +
-        '</div>';
-
-      mountModal(modalHTML);
-    };
-
-    // ─────────────────────────────────────────────
-    // SUBMIT
-    // ─────────────────────────────────────────────
-    window._handleVendorSubmit = function (e, existingId) {
-
-      e.preventDefault();
-
-      var form = e.target;
-
-      var vendorId = existingId || ('vendor-' + Date.now());
-
-      var data = {
-        id: vendorId,
-        name: form.name.value || '',
-        brand: form.brand.value || '',
-        email: form.email.value || '',
-        updatedAt: new Date().toISOString()
-      };
-
-      if (!existingId) {
-        data.createdAt = new Date().toISOString();
-      }
-
-      vendorsRef.doc(vendorId)
-        .set(data, { merge: true })
-
-        .then(function () {
-
-          showToast('Vendor saved');
-
-          closeModal();
-
-          window._renderVendorsTab();
-
-        })
-
-        .catch(function (e) {
-
-          console.error('[VENDOR_SUBMIT]', e);
-
-          showToast(e.message || 'Error saving vendor');
-
-        });
-    };
-
-    // ─────────────────────────────────────────────
-    // DELETE
-    // ─────────────────────────────────────────────
-    window._deleteVendor = function (vendorId) {
-
-      if (!confirm('Delete this vendor?')) return;
-
-      vendorsRef.doc(vendorId)
-
-        .delete()
-
-        .then(function () {
-
-          showToast('Vendor deleted');
-
-          closeModal();
-
-          window._renderVendorsTab();
-
-        })
-
-        .catch(function (e) {
-
-          console.error('[DELETE_VENDOR]', e);
-
-          showToast(e.message || 'Delete failed');
-
-        });
-    };
-
-    // ─────────────────────────────────────────────
-    // SEED DEFAULTS
-    // ─────────────────────────────────────────────
-    window._seedDefaultVendors = function () {
-
-      var defaults = [
-
-        {
-          id: 'vendor-janedore',
-          name: 'JANEDORE',
-          brand: 'JANEDORE',
-          status: 'active'
-        },
-
-        {
-          id: 'vendor-nirius',
-          name: 'NIRIUS CO',
-          brand: 'NIRIUS CO',
-          status: 'active'
-        },
-
-        {
-          id: 'vendor-thato',
-          name: 'THATO',
-          brand: 'THATO',
-          status: 'active'
-        }
-
-      ];
-
-      Promise.all(
-
-        defaults.map(function (v) {
-          return vendorsRef.doc(v.id).set(v, { merge: true });
-        })
-
-      )
-
-      .then(function () {
-
-        showToast('Default vendors seeded');
-
-        window._renderVendorsTab();
-
-      })
-
-      .catch(function (e) {
-
-        console.error('[SEED]', e);
-
-        showToast(e.message || 'Seed failed');
-
-      });
-
-    };
-
-    console.log('[VENDORS] Module initialized successfully.');
-
+    console.error('[VENDORS] No Firestore instance available');
+    return null;
   }
 
-  // ─────────────────────────────────────────────
-  // WAIT FOR FIREBASE/ADMIN
-  // ─────────────────────────────────────────────
-  var tries = 0;
-
-  var wait = setInterval(function () {
-
-    tries++;
-
-    if (window._adminDB) {
-
-      clearInterval(wait);
-
-      initVendorsModule();
-
+  /* ─────────────────────────────────────────────────────────
+     VENDORS FETCH WITH TIMEOUT
+  ───────────────────────────────────────────────────────── */
+  function fetchVendorsWithTimeout(timeoutMs) {
+    timeoutMs = timeoutMs || 12000;
+    var vendorsRef = getVendorsRef();
+    if (!vendorsRef) {
+      return Promise.reject(new Error('VENDORS_REF_UNAVAILABLE'));
     }
 
-    if (tries > 50) {
+    var fetchPromise = vendorsRef.get().then(function(snap) {
+      if (!snap) {
+        throw new Error('NULL_SNAPSHOT');
+      }
+      console.log('[VENDORS] Fetch succeeded, docs:', snap.docs ? snap.docs.length : 0);
+      return snap;
+    });
 
-      clearInterval(wait);
+    var timeoutPromise = new Promise(function(_, reject) {
+      setTimeout(function() {
+        reject(new Error('FETCH_TIMEOUT'));
+      }, timeoutMs);
+    });
 
-      console.error('[VENDORS] Timed out waiting for _adminDB.');
+    return Promise.race([fetchPromise, timeoutPromise]);
+  }
 
+  /* ─────────────────────────────────────────────────────────
+     RENDER LOADING STATE
+  ───────────────────────────────────────────────────────── */
+  function renderLoadingState() {
+    var el = safeEl('vendors-list');
+    if (!el) return;
+    el.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-state-icon">⬡</div>' +
+        '<div class="empty-state-text">Loading vendors...</div>' +
+      '</div>';
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     RENDER ERROR STATE
+  ───────────────────────────────────────────────────────── */
+  function renderErrorState(errorCode, errorMessage, retryCount) {
+    var el = safeEl('vendors-list');
+    if (!el) return;
+    retryCount = retryCount || 0;
+
+    var icon = '⚠';
+    var title = 'Could not load vendors';
+    var detail = errorMessage || 'An unexpected error occurred.';
+    var showRetry = true;
+    var showSeed = false;
+
+    switch (errorCode) {
+      case 'FETCH_TIMEOUT':
+        icon = '⏳';
+        title = 'Request timed out';
+        detail = 'Firestore took too long to respond. Check your connection.';
+        break;
+      case 'PERMISSION_DENIED':
+      case 'permission-denied':
+        icon = '🔒';
+        title = 'Permission denied';
+        detail = 'Your Firestore security rules may be blocking this request.';
+        showSeed = isSuperAdmin();
+        break;
+      case 'VENDORS_REF_UNAVAILABLE':
+        icon = '🔌';
+        title = 'Firestore not connected';
+        detail = 'The vendors collection reference is not available. Firebase may not be initialized.';
+        showRetry = false;
+        break;
+      case 'NULL_SNAPSHOT':
+        icon = '📭';
+        title = 'Empty response';
+        detail = 'Firestore returned no data. The collection may not exist.';
+        showSeed = isSuperAdmin();
+        break;
+      case 'UNKNOWN':
+      default:
+        icon = '⚠';
+        title = 'Something went wrong';
+        showSeed = isSuperAdmin();
+        break;
     }
 
-  }, 200);
+    el.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-state-icon">' + icon + '</div>' +
+        '<div class="empty-state-text" style="font-weight:500;">' + title + '</div>' +
+        '<div class="empty-state-text" style="font-size:12px;color:#999;margin-top:4px;">' + detail + '</div>' +
+        (showRetry ?
+          '<button class="btn btn-sm btn-outline" style="margin-top:12px;" onclick="window._retryLoadVendors(' + retryCount + ')">Retry</button>'
+          : '') +
+        (showSeed ?
+          '<button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="window._seedDefaultVendors()">Seed Default Vendors</button>'
+          : '') +
+      '</div>';
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     RETRY LOGIC
+  ───────────────────────────────────────────────────────── */
+  window._retryLoadVendors = function(previousRetryCount) {
+    var retryCount = (previousRetryCount || 0) + 1;
+    var maxRetries = 3;
+
+    if (retryCount > maxRetries) {
+      renderErrorState('MAX_RETRIES', 'Maximum retry attempts reached (' + maxRetries + '). Please refresh the page or check your Firestore configuration.', retryCount);
+      return;
+    }
+
+    console.log('[VENDORS] Retry attempt ' + retryCount + ' of ' + maxRetries);
+    renderLoadingState();
+
+    var timeoutMs = 12000 + (retryCount * 4000);
+
+    fetchVendorsWithTimeout(timeoutMs).then(function(snap) {
+      window._vendorsData = snap.docs.map(function(d) {
+        return Object.assign({id: d.id}, d.data());
+      });
+      renderVendorsList(window._vendorsData);
+    }).catch(function(err) {
+      var code = (err && err.code) || (err && err.message) || 'UNKNOWN';
+      var msg  = (err && err.message) || String(err);
+      console.error('[VENDORS] Fetch error (retry ' + retryCount + '):', code, msg);
+      renderErrorState(code, msg, retryCount);
+    });
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     RENDER VENDORS TAB (ENTRY POINT)
+  ───────────────────────────────────────────────────────── */
+  window._renderVendorsTab = function() {
+    if (!isSuperAdmin()) {
+      var mc = safeEl('main-content');
+      if (mc) mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Access denied.</div></div>';
+      return;
+    }
+    var mc = safeEl('main-content');
+    if (!mc) return;
+
+    mc.innerHTML =
+      '<div class="section-header" style="margin-bottom:12px;">' +
+        '<div class="section-title">Vendors</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="btn btn-sm btn-outline" id="seed-vendors-btn" onclick="window._seedDefaultVendors()">Seed Default Vendors</button>' +
+          '<button class="btn btn-sm btn-primary" onclick="window._openVendorModal(null)">+ Add Vendor</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="vendors-list"></div>';
+
+    renderLoadingState();
+
+    console.log('[VENDORS] Starting vendors fetch...');
+    fetchVendorsWithTimeout(12000).then(function(snap) {
+      window._vendorsData = snap.docs.map(function(d) {
+        return Object.assign({id: d.id}, d.data());
+      });
+      console.log('[VENDORS] Loaded', window._vendorsData.length, 'vendors');
+      renderVendorsList(window._vendorsData);
+    }).catch(function(err) {
+      var code = (err && err.code) || (err && err.message) || 'UNKNOWN';
+      var msg  = (err && err.message) || String(err);
+      console.error('[VENDORS] Fetch failed:', code, msg);
+
+      if (code === 'permission-denied' || (msg && msg.indexOf('permission') !== -1)) {
+        renderErrorState('PERMISSION_DENIED', 'Firestore permission denied. Check your security rules.', 0);
+      } else if (code === 'FETCH_TIMEOUT') {
+        renderErrorState('FETCH_TIMEOUT', 'Firestore request timed out after 12 seconds.', 0);
+      } else if (code === 'VENDORS_REF_UNAVAILABLE') {
+        renderErrorState('VENDORS_REF_UNAVAILABLE', 'Could not access vendors collection.', 0);
+      } else if (code === 'NULL_SNAPSHOT') {
+        renderErrorState('NULL_SNAPSHOT', 'Firestore returned an empty snapshot.', 0);
+      } else {
+        renderErrorState('UNKNOWN', msg, 0);
+      }
+    });
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     RENDER VENDORS LIST
+  ───────────────────────────────────────────────────────── */
+  function renderVendorsList(vendors) {
+    var el = safeEl('vendors-list');
+    if (!el) return;
+
+    if (!vendors || vendors.length === 0) {
+      el.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="empty-state-icon">⬡</div>' +
+          '<div class="empty-state-text">No vendors yet.</div>' +
+          (isSuperAdmin() ? '<button class="btn btn-sm btn-outline" style="margin-top:12px;" onclick="window._seedDefaultVendors()">Seed Default Vendors</button>' : '') +
+        '</div>';
+      return;
+    }
+
+    var allProducts = window._allProducts || [];
+
+    el.innerHTML =
+      '<div class="table-wrap"><table class="data-table">' +
+      '<thead><tr><th>Vendor</th><th>Brand</th><th>Email</th><th>Status</th><th>Products</th><th></th></tr></thead>' +
+      '<tbody>' +
+      vendors.map(function(v) {
+        var productCount = allProducts.filter(function(p) {
+          return p.vendorId === v.id || (p.brand && v.brand && p.brand.toUpperCase() === v.brand.toUpperCase());
+        }).length;
+        return '<tr>' +
+          '<td style="font-weight:400;">' + esc(v.name || '—') + '</td>' +
+          '<td class="cell-muted">' + esc(v.brand || '—') + '</td>' +
+          '<td class="cell-muted">' + esc(v.email || '—') + '</td>' +
+          '<td>' + statusBadge(v.status || 'active') + '</td>' +
+          '<td>' + productCount + '</td>' +
+          '<td onclick="event.stopPropagation()">' +
+            '<button class="btn btn-xs btn-ghost" onclick="window._openVendorModal(\'' + esc(v.id) + '\')">Edit</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     VENDOR MODAL (CREATE / EDIT)
+  ───────────────────────────────────────────────────────── */
+  window._openVendorModal = function(vendorId) {
+    if (!requireSuperAdmin('openVendorModal')) return;
+    var v = vendorId ? (window._vendorsData || []).find(function(x) { return x.id === vendorId; }) : null;
+    v = v || { id: '', name: '', brand: '', email: '', commissionRate: 15, status: 'active', notes: '' };
+
+    var modalHTML =
+      '<div class="modal modal-sm">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" onclick="window._closeModal()">X</button>' +
+        '<div class="modal-title">' + (vendorId ? 'Edit' : 'New') + ' Vendor</div>' +
+        '<form id="vendor-form" onsubmit="window._handleVendorSubmit(event, \'' + esc(v.id) + '\')">' +
+          '<div class="form-group"><label>Vendor Name</label><input name="name" value="' + esc(v.name) + '" required placeholder="e.g. Thato"></div>' +
+          '<div class="form-group"><label>Brand Name</label><input name="brand" value="' + esc(v.brand) + '" placeholder="e.g. THATO"></div>' +
+          '<div class="form-group"><label>Contact Email</label><input name="email" type="email" value="' + esc(v.email) + '" placeholder="vendor@brand.com"></div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label>Commission %</label><input name="commissionRate" type="number" value="' + esc(String(v.commissionRate || 15)) + '" min="0" max="100"></div>' +
+            '<div class="form-group"><label>Status</label><select name="status"><option value="active"' + (v.status === 'active' ? ' selected' : '') + '>Active</option><option value="suspended"' + (v.status === 'suspended' ? ' selected' : '') + '>Suspended</option></select></div>' +
+          '</div>' +
+          '<div class="form-group"><label>Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
+          '<div style="display:flex;gap:10px;padding:14px 16px 4px;">' +
+            '<button type="submit" class="btn btn-primary btn-sm">Save Vendor</button>' +
+            (vendorId ? '<button type="button" class="btn btn-danger btn-sm" onclick="window._deleteVendor(\'' + esc(vendorId) + '\')">Delete</button>' : '') +
+          '</div>' +
+        '</form>' +
+      '</div>';
+
+    mountModal(modalHTML);
+  };
+
+  window._handleVendorSubmit = function(e, existingId) {
+    if (!requireSuperAdmin('handleVendorSubmit')) return;
+    e.preventDefault();
+    var form     = e.target;
+    var vendorId = existingId || ('vendor-' + Date.now());
+
+    var commission = parseFloat(form.commissionRate.value) || 15;
+    commission = Math.min(100, Math.max(0, commission));
+
+    var vendorsRef = getVendorsRef();
+    if (!vendorsRef) {
+      showToast('Error: Firestore not available', 'error');
+      console.error('[VENDORS] handleVendorSubmit failed — no ref');
+      return;
+    }
+
+    var data = {
+      id:             vendorId,
+      name:           form.name.value,
+      brand:          form.brand.value,
+      email:          form.email.value,
+      commissionRate: commission,
+      status:         form.status.value === 'suspended' ? 'suspended' : 'active',
+      notes:          form.notes.value,
+      updatedAt:      new Date().toISOString()
+    };
+    if (!existingId) {
+      data.createdAt = new Date().toISOString();
+    }
+
+    vendorsRef.doc(vendorId).set(data, { merge: true }).then(function() {
+      showToast('Vendor saved');
+      closeModal();
+      window._renderVendorsTab();
+    }).catch(function(e) {
+      console.error('[VENDORS] handleVendorSubmit error:', e);
+      showToast('Error: ' + (e.message || 'Unknown error'), 'error');
+    });
+  };
+
+  window._deleteVendor = function(vendorId) {
+    if (!requireSuperAdmin('deleteVendor')) return;
+    if (!confirm('Delete this vendor? This cannot be undone.')) return;
+
+    var vendorsRef = getVendorsRef();
+    if (!vendorsRef) {
+      showToast('Error: Firestore not available', 'error');
+      console.error('[VENDORS] deleteVendor failed — no ref');
+      return;
+    }
+
+    vendorsRef.doc(vendorId).delete().then(function() {
+      showToast('Vendor deleted');
+      closeModal();
+      window._renderVendorsTab();
+    }).catch(function(e) {
+      console.error('[VENDORS] deleteVendor error:', e);
+      showToast('Error: ' + (e.message || 'Unknown error'), 'error');
+    });
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     SEED DEFAULT VENDORS
+  ───────────────────────────────────────────────────────── */
+  window._seedDefaultVendors = function() {
+    if (!requireSuperAdmin('seedDefaultVendors')) return;
+
+    var vendorsRef = getVendorsRef();
+    if (!vendorsRef) {
+      showToast('Error: Firestore not available', 'error');
+      console.error('[VENDORS] seedDefaultVendors failed — no ref');
+      return;
+    }
+
+    var btn = safeEl('seed-vendors-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Seeding...'; }
+
+    var defaults = [
+      { id: 'vendor-janedore', name: 'JANEDORE', brand: 'JANEDORE', email: '', commissionRate: 0, status: 'active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: 'Default brand — house label' },
+      { id: 'vendor-nirius',   name: 'NIRIUS CO', brand: 'NIRIUS CO', email: '', commissionRate: 15, status: 'active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: 'Default brand' },
+      { id: 'vendor-thato',    name: 'THATO', brand: 'THATO', email: '', commissionRate: 15, status: 'active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: 'Default brand — parfum' }
+    ];
+
+    var promises = defaults.map(function(v) {
+      return vendorsRef.doc(v.id).set(v, { merge: true });
+    });
+
+    Promise.all(promises).then(function() {
+      showToast('Default vendors seeded!');
+      if (btn) { btn.disabled = false; btn.textContent = 'Seed Default Vendors'; }
+      window._renderVendorsTab();
+    }).catch(function(e) {
+      console.error('[VENDORS] seedDefaultVendors error:', e);
+      showToast('Error: ' + (e.message || 'Unknown error'), 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Seed Default Vendors'; }
+    });
+  };
 
 })();
