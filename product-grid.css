@@ -1,29 +1,87 @@
-.product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-@media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
-.product-grid.editorial-2col {
+/* ============================================
+   JANEDORE · STRICT LUXURY PRODUCT GRID
+   No spanning, no masonry, no variable heights
+   ============================================ */
+
+.product-grid {
+  display: grid;
+  gap: 8px;
   grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: auto;
 }
-.product-grid.editorial-2col .product-card.featured-card {
-  grid-column: span 2;
-}
-.product-grid.editorial-2col .product-card.featured-card .product-img-wrap {
-  aspect-ratio: 4/5;
-}
-.product-grid.editorial-2col .product-card.tall-card .product-img-wrap {
-  aspect-ratio: 4/5;
-}
-.product-grid.editorial-1col {
+
+/* 1 column mode */
+.product-grid.col-1 {
   grid-template-columns: 1fr;
 }
+
+/* 3 column mode */
+@media (min-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .product-grid.col-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .product-grid.col-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ============================================
+   PRODUCT CARD — strict equal sizing
+   ============================================ */
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove ALL spanning behavior */
+.product-card.featured-card,
+.product-card.tall-card {
+  grid-column: auto;
+}
+
+/* ============================================
+   IMAGE WRAP — enforced 4:5 aspect ratio
+   No exceptions
+   ============================================ */
+
+.product-img-wrap {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  width: 100%;
+}
+
+.product-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Remove all editorial overrides */
+.product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
+.product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
-.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap {
-  aspect-ratio: 4/5;
-}
-.product-grid.editorial-3col {
-  grid-template-columns: repeat(3, 1fr);
-}
+.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 4/5;
+  aspect-ratio: 4 / 5;
+}
+
+/* ============================================
+   TYPOGRAPHY SPACING — tightened rhythm
+   ============================================ */
+
+.product-card .product-title {
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.product-card .product-price {
+  margin-top: 0;
+  margin-bottom: 0;
 }
