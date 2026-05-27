@@ -1,169 +1,366 @@
+/* =========================================
+   STICKY ADD TO CART — JANEDORE
+   Zara-style minimized sticky bar
+   ========================================= */
+
 #sticky-add-bar,
 .sticky-add-bar {
   position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
-  background: #fff;
+  bottom: 0;
+
   z-index: 850;
+
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 16px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  transform: translateZ(0);
+
+  gap: 6px;
+
+  background: #fff;
+
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+
+  border-top: 0.5px solid rgba(0,0,0,0.06);
+
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+
+  transition:
+    transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    padding 0.3s ease,
+    gap 0.3s ease;
+
   -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+
   will-change: transform;
-  contain: layout style;
+
   touch-action: manipulation;
-  border: none;
-  box-shadow: none;
-  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), padding 0.35s ease;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-.sticky-add-bar .sticky-brand { display: none; }
+
+/* REMOVE THIS — causes iOS gaps */
+/* contain: layout style; */
+
+.sticky-add-bar .sticky-brand {
+  display: none;
+}
+
+/* PRODUCT NAME */
 .sticky-add-bar .sticky-name {
   font-family: 'Manrope', sans-serif;
+
   font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
   font-weight: var(--ui-font-weight);
+
+  letter-spacing: var(--ui-letter-spacing);
+
   text-transform: uppercase;
+
   color: #111;
+
   line-height: 1.3;
 }
+
+/* PRICE */
 .sticky-add-bar .sticky-price {
   font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
+
   font-weight: var(--ui-font-weight);
+
+  letter-spacing: var(--ui-letter-spacing);
+
   text-transform: uppercase;
+
   color: #111;
-  margin-bottom: 6px;
+
+  margin-bottom: 4px;
 }
+
+/* MAIN BUTTON */
 .sticky-add-bar .sticky-add-btn {
+  width: 100%;
+
+  height: 54px;
+
+  border: 0.8px solid #111;
+
   background: #fff;
   color: #111;
-  border: 0.8px solid #111;
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
-  text-transform: uppercase;
-  padding: 12px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 24px;
+
   cursor: pointer;
-  transition: background 0.2s, opacity 0.3s, width 0.3s;
+
   white-space: nowrap;
+
   font-family: inherit;
-  width: 100%;
+
+  font-size: var(--ui-font-size);
+
+  font-weight: var(--ui-font-weight);
+
+  letter-spacing: var(--ui-letter-spacing);
+
+  text-transform: uppercase;
+
+  transition:
+    background 0.2s ease,
+    opacity 0.25s ease,
+    border-color 0.2s ease;
+
   -webkit-appearance: none;
+  appearance: none;
 }
-.sticky-add-bar .sticky-add-btn:hover { background: #f5f5f5; }
+
+.sticky-add-bar .sticky-add-btn:hover {
+  background: #f7f7f7;
+}
+
 .sticky-add-bar .sticky-add-btn:disabled {
-  color: #aaa;
+  color: #999;
   border-color: #ddd;
   cursor: not-allowed;
+  background: #fafafa;
 }
+
+/* =========================================
+   MINIMIZED STATE (AFTER SCROLL)
+   ZARA STYLE
+   ========================================= */
+
 .sticky-add-bar.minimized {
   flex-direction: row;
+
   align-items: center;
-  justify-content: flex-start;
-  padding: 10px 16px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  gap: 8px;
-  flex-wrap: nowrap;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+
+  background: #f8f8f8;
 }
-.sticky-add-bar.minimized .sticky-name { display: none; }
-.sticky-add-bar.minimized .sticky-price {
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
-  letter-spacing: var(--ui-letter-spacing);
-  margin-bottom: 0;
-  flex-shrink: 0;
-  order: 2;
-  white-space: nowrap;
+
+/* HIDE PRODUCT NAME */
+.sticky-add-bar.minimized .sticky-name {
+  display: none;
 }
+
+/* BUTTON */
 .sticky-add-bar.minimized .sticky-add-btn {
+  flex: 1;
+
   width: auto;
-  flex: 0 1 80%;
-  padding: 10px 20px;
-  order: 1;
   min-width: 0;
+
+  height: 56px;
+
+  padding: 0 24px;
+
+  border: 0.8px solid #111;
+
+  background: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: 400;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
 }
-.sticky-add-bar.minimized .sticky-extras { display: none; }
+
+/* PRICE */
+.sticky-add-bar.minimized .sticky-price {
+  margin: 0;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+
+  white-space: nowrap;
+
+  font-size: 14px;
+  font-weight: 400;
+
+  letter-spacing: 0.04em;
+
+  color: #111;
+}
+
+/* HIDE EXTRA CONTENT */
+.sticky-add-bar.minimized .sticky-extras {
+  display: none;
+}
+
+/* =========================================
+   EXTENDED STATE
+   ========================================= */
+
 .sticky-add-bar.extended {
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  gap: 10px;
+
+  gap: 12px;
 }
-.sticky-add-bar.extended .sticky-name { display: none; }
-.sticky-add-bar.extended .sticky-price { display: none; }
+
+.sticky-add-bar.extended .sticky-name,
+.sticky-add-bar.extended .sticky-price,
 .sticky-add-bar.extended .sticky-add-btn {
   display: none;
-  opacity: 0;
-  pointer-events: none;
 }
-.sticky-add-bar .sticky-extras { display: none; }
+
+/* =========================================
+   EXTRA OPTIONS
+   ========================================= */
+
+.sticky-add-bar .sticky-extras {
+  display: none;
+}
+
 .sticky-add-bar.extended .sticky-extras {
   display: flex;
   flex-direction: column;
+
   gap: 12px;
 }
+
+/* SIZES */
 .sticky-add-bar .sticky-extras .sticky-sizes {
   display: flex;
   flex-direction: column;
+
   gap: 6px;
-  flex-wrap: nowrap;
 }
+
 .sticky-add-bar .sticky-extras .sticky-size-btn {
   border: none;
   background: none;
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
-  letter-spacing: var(--ui-letter-spacing);
-  text-transform: uppercase;
-  color: #888;
-  cursor: pointer;
+
   padding: 6px 0;
-  min-width: 36px;
+
   text-align: left;
-  transition: color 0.2s;
+
+  cursor: pointer;
+
+  color: #888;
+
+  font-size: var(--ui-font-size);
+
+  font-weight: var(--ui-font-weight);
+
+  letter-spacing: var(--ui-letter-spacing);
+
+  text-transform: uppercase;
+
+  transition: color 0.2s ease;
 }
-.sticky-add-bar .sticky-extras .sticky-size-btn:hover { color: #111; }
+
+.sticky-add-bar .sticky-extras .sticky-size-btn:hover {
+  color: #111;
+}
+
 .sticky-add-bar .sticky-extras .sticky-size-btn.sel {
   color: #111;
   font-weight: 600;
 }
+
+/* SWATCHES */
 .sticky-add-bar .sticky-extras .sticky-swatches {
   display: flex;
   align-items: center;
+
   gap: 8px;
+
   order: 10;
 }
+
 .sticky-add-bar .sticky-extras .sticky-swatch {
   width: 18px;
   height: 18px;
-  display: inline-block;
-  cursor: pointer;
+
   position: relative;
+
+  display: inline-block;
+
+  cursor: pointer;
+
   background: #ccc;
 }
+
 .sticky-add-bar .sticky-extras .sticky-swatch.selected::after {
   content: '';
+
   position: absolute;
-  bottom: -4px;
+
   left: 0;
   right: 0;
+  bottom: -4px;
+
   height: 0.5px;
+
   background: #111;
 }
+
+/* SOLD OUT */
 .sticky-add-bar .sticky-extras .sticky-swatch.sold-out {
   overflow: hidden;
   background: #aaa;
 }
+
 .sticky-add-bar .sticky-extras .sticky-swatch.sold-out::before {
   content: '';
+
   position: absolute;
+
   top: 50%;
   left: -3px;
   right: -3px;
+
   height: 0.8px;
+
   background: #fff;
+
   transform: rotate(-45deg);
+}
+
+/* =========================================
+   IOS SAFARI SAFE AREA FIX
+   ========================================= */
+
+@supports (padding: max(0px)) {
+
+  .sticky-add-bar,
+  .sticky-add-bar.minimized,
+  .sticky-add-bar.extended {
+
+    padding-bottom:
+      max(14px, env(safe-area-inset-bottom));
+  }
+}
+
+/* =========================================
+   PREVENT IOS JITTER / GAP BUGS
+   ========================================= */
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  -webkit-overflow-scrolling: touch;
 }
