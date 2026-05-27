@@ -1,366 +1,195 @@
-/* =========================================
-   STICKY ADD TO CART — JANEDORE
-   Zara-style minimized sticky bar
-   ========================================= */
+// =========================================
+//  STICKY ADD TO CART — JANEDORE
+//  Zara-style UX: tap size → instant add
+// =========================================
 
-#sticky-add-bar,
-.sticky-add-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  z-index: 850;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 6px;
-
-  background: #fff;
-
-  padding: 14px 16px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-
-  border-top: 0.5px solid rgba(0,0,0,0.06);
-
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
-
-  transition:
-    transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    padding 0.3s ease,
-    gap 0.3s ease;
-
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-
-  will-change: transform;
-
-  touch-action: manipulation;
-
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+function removeStickyBar() {
+  const e = document.getElementById('sticky-add-bar');
+  if (e) e.remove();
+  S.stickyExtended = false;
 }
 
-/* REMOVE THIS — causes iOS gaps */
-/* contain: layout style; */
-
-.sticky-add-bar .sticky-brand {
-  display: none;
+function createStickyBar(product) {
+  removeStickyBar();
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+  const bar = document.createElement('div');
+  bar.id = 'sticky-add-bar';
+  bar.className = 'sticky-add-bar';
+  bar.innerHTML = `
+    <div class="sticky-name">${product.name || ''}</div>
+    <div class="sticky-price">${formatPrice(price)}</div>
+    <div class="sticky-extras">
+      <div class="sticky-sizes" id="sticky-sizes">
+        ${(product.sizes || []).map(s =>
+          `<button class="sticky-size-btn${S.selectedSize === s ? ' sel' : ''}"
+            onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
+          >${s}</button>`
+        ).join('')}
+      </div>
+      <div class="sticky-swatches" id="sticky-swatches">${stickySwatchesHtml(product, vi)}</div>
+    </div>
+    <button class="sticky-add-btn"
+      onclick="handleStickyAddClick('${product.id}')"
+      ${soldOut ? ' disabled' : ''}
+    >${soldOut ? 'Sold Out' : 'Add to Bag'}</button>`;
+  document.body.appendChild(bar);
+  S.stickyExtended = false;
+  updateStickyBarOnScroll();
 }
 
-/* PRODUCT NAME */
-.sticky-add-bar .sticky-name {
-  font-family: 'Manrope', sans-serif;
+// ─── Open size panel ───────────────────────────────────────
+function handleStickyAddClick(productId) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) return;
 
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  // Already extended — do nothing (sizes handle their own tap)
+  if (S.stickyExtended) return;
 
-  letter-spacing: var(--ui-letter-spacing);
-
-  text-transform: uppercase;
-
-  color: #111;
-
-  line-height: 1.3;
+  // Expand to show sizes
+  bar.classList.add('extended');
+  S.stickyExtended = true;
+  setTimeout(() => {
+    const barHeight = bar.offsetHeight;
+    bar.style.transform = `translateY(-${barHeight - 60}px)`;
+  }, 10);
 }
 
-/* PRICE */
-.sticky-add-bar .sticky-price {
-  font-size: var(--ui-font-size);
+// ─── Tap size → instant add ────────────────────────────────
+function onStickySelectSize(btn, size, productId) {
+  // Visual selection
+  document.querySelectorAll('#sticky-sizes .sticky-size-btn')
+    .forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  S.selectedSize = size;
 
-  font-weight: var(--ui-font-weight);
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product || isProductSoldOut(product)) return;
 
-  letter-spacing: var(--ui-letter-spacing);
+  // Instant add
+  addToCart(productId, size);
 
-  text-transform: uppercase;
-
-  color: #111;
-
-  margin-bottom: 4px;
+  // Luxury feedback — no aggressive cart drawer
+  _stickyAddedFeedback(productId, product);
 }
 
-/* MAIN BUTTON */
-.sticky-add-bar .sticky-add-btn {
-  width: 100%;
-
-  height: 54px;
-
-  border: 0.8px solid #111;
-
-  background: #fff;
-  color: #111;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0 24px;
-
-  cursor: pointer;
-
-  white-space: nowrap;
-
-  font-family: inherit;
-
-  font-size: var(--ui-font-size);
-
-  font-weight: var(--ui-font-weight);
-
-  letter-spacing: var(--ui-letter-spacing);
-
-  text-transform: uppercase;
-
-  transition:
-    background 0.2s ease,
-    opacity 0.25s ease,
-    border-color 0.2s ease;
-
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.sticky-add-bar .sticky-add-btn:hover {
-  background: #f7f7f7;
-}
-
-.sticky-add-bar .sticky-add-btn:disabled {
-  color: #999;
-  border-color: #ddd;
-  cursor: not-allowed;
-  background: #fafafa;
-}
-
-/* =========================================
-   MINIMIZED STATE (AFTER SCROLL)
-   ZARA STYLE
-   ========================================= */
-
-.sticky-add-bar.minimized {
-  flex-direction: row;
-
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 14px;
-
-  padding: 14px 16px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-
-  background: #f8f8f8;
-}
-
-/* HIDE PRODUCT NAME */
-.sticky-add-bar.minimized .sticky-name {
-  display: none;
-}
-
-/* BUTTON */
-.sticky-add-bar.minimized .sticky-add-btn {
-  flex: 1;
-
-  width: auto;
-  min-width: 0;
-
-  height: 56px;
-
-  padding: 0 24px;
-
-  border: 0.8px solid #111;
-
-  background: #fff;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 14px;
-  font-weight: 400;
-
-  letter-spacing: 0.08em;
-
-  text-transform: uppercase;
-}
-
-/* PRICE */
-.sticky-add-bar.minimized .sticky-price {
-  margin: 0;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-
-  white-space: nowrap;
-
-  font-size: 14px;
-  font-weight: 400;
-
-  letter-spacing: 0.04em;
-
-  color: #111;
-}
-
-/* HIDE EXTRA CONTENT */
-.sticky-add-bar.minimized .sticky-extras {
-  display: none;
-}
-
-/* =========================================
-   EXTENDED STATE
-   ========================================= */
-
-.sticky-add-bar.extended {
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-
-  gap: 12px;
-}
-
-.sticky-add-bar.extended .sticky-name,
-.sticky-add-bar.extended .sticky-price,
-.sticky-add-bar.extended .sticky-add-btn {
-  display: none;
-}
-
-/* =========================================
-   EXTRA OPTIONS
-   ========================================= */
-
-.sticky-add-bar .sticky-extras {
-  display: none;
-}
-
-.sticky-add-bar.extended .sticky-extras {
-  display: flex;
-  flex-direction: column;
-
-  gap: 12px;
-}
-
-/* SIZES */
-.sticky-add-bar .sticky-extras .sticky-sizes {
-  display: flex;
-  flex-direction: column;
-
-  gap: 6px;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn {
-  border: none;
-  background: none;
-
-  padding: 6px 0;
-
-  text-align: left;
-
-  cursor: pointer;
-
-  color: #888;
-
-  font-size: var(--ui-font-size);
-
-  font-weight: var(--ui-font-weight);
-
-  letter-spacing: var(--ui-letter-spacing);
-
-  text-transform: uppercase;
-
-  transition: color 0.2s ease;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn:hover {
-  color: #111;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn.sel {
-  color: #111;
-  font-weight: 600;
-}
-
-/* SWATCHES */
-.sticky-add-bar .sticky-extras .sticky-swatches {
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  order: 10;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch {
-  width: 18px;
-  height: 18px;
-
-  position: relative;
-
-  display: inline-block;
-
-  cursor: pointer;
-
-  background: #ccc;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.selected::after {
-  content: '';
-
-  position: absolute;
-
-  left: 0;
-  right: 0;
-  bottom: -4px;
-
-  height: 0.5px;
-
-  background: #111;
-}
-
-/* SOLD OUT */
-.sticky-add-bar .sticky-extras .sticky-swatch.sold-out {
-  overflow: hidden;
-  background: #aaa;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.sold-out::before {
-  content: '';
-
-  position: absolute;
-
-  top: 50%;
-  left: -3px;
-  right: -3px;
-
-  height: 0.8px;
-
-  background: #fff;
-
-  transform: rotate(-45deg);
-}
-
-/* =========================================
-   IOS SAFARI SAFE AREA FIX
-   ========================================= */
-
-@supports (padding: max(0px)) {
-
-  .sticky-add-bar,
-  .sticky-add-bar.minimized,
-  .sticky-add-bar.extended {
-
-    padding-bottom:
-      max(14px, env(safe-area-inset-bottom));
+// ─── "Added" feedback then collapse ───────────────────────
+function _stickyAddedFeedback(productId, product) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) return;
+
+  // Collapse extended panel
+  bar.classList.remove('extended');
+  bar.style.transform = '';
+  S.stickyExtended = false;
+  S.selectedSize = null;
+
+  // Reset size button states
+  const sizesEl = bar.querySelector('#sticky-sizes');
+  if (sizesEl && product) {
+    sizesEl.innerHTML = (product.sizes || []).map(s =>
+      `<button class="sticky-size-btn"
+        onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
+      >${s}</button>`
+    ).join('');
+  }
+
+  // Brief "Added" state on the button — then restore
+  const btn = bar.querySelector('.sticky-add-btn');
+  if (btn) {
+    bar.classList.add('added-feedback');
+    btn.textContent = 'Added';
+
+    setTimeout(() => {
+      bar.classList.remove('added-feedback');
+      const isMin = bar.classList.contains('minimized');
+      btn.textContent = isMin ? 'Add' : 'Add to Bag';
+    }, 1600);
   }
 }
 
-/* =========================================
-   PREVENT IOS JITTER / GAP BUGS
-   ========================================= */
-
-html,
-body {
-  overflow-x: hidden;
+// ─── Legacy: size chosen via selectStickySize ─────────────
+// Kept for any direct call sites outside the bar
+function selectStickySize(btn, size) {
+  document.querySelectorAll('#sticky-sizes .sticky-size-btn')
+    .forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  S.selectedSize = size;
 }
 
-body {
-  -webkit-overflow-scrolling: touch;
+// ─── Scroll state: full → minimized ───────────────────────
+function updateStickyBarOnScroll() {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar || S.currentPage !== 'product-detail') return;
+  const pi = document.querySelector('.product-info');
+  if (!pi) return;
+
+  const isMin = pi.getBoundingClientRect().top < window.innerHeight * 0.3;
+
+  if (isMin) {
+    bar.classList.add('minimized');
+    if (!S.stickyExtended) bar.style.transform = '';
+    const btn = bar.querySelector('.sticky-add-btn');
+    if (btn && !btn.disabled && btn.textContent !== 'Added') btn.textContent = 'Add';
+  } else {
+    bar.classList.remove('minimized');
+    if (!S.stickyExtended) bar.style.transform = '';
+    const btn = bar.querySelector('.sticky-add-btn');
+    if (btn && !btn.disabled && btn.textContent !== 'Added') btn.textContent = 'Add to Bag';
+  }
+}
+
+// ─── Update swatches only ──────────────────────────────────
+function updateStickyBarExtras() {
+  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
+  if (!product) return;
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const se = document.getElementById('sticky-swatches');
+  if (se) se.innerHTML = stickySwatchesHtml(product, vi);
+}
+
+// ─── Full bar update (variant/price change) ────────────────
+function updateStickyBar(product) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) { createStickyBar(product); return; }
+
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+
+  bar.querySelector('.sticky-name').textContent = product.name || '';
+  bar.querySelector('.sticky-price').textContent = formatPrice(price);
+
+  const se = bar.querySelector('#sticky-sizes');
+  if (se) se.innerHTML = (product.sizes || []).map(s =>
+    `<button class="sticky-size-btn${S.selectedSize === s ? ' sel' : ''}"
+      onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
+    >${s}</button>`
+  ).join('');
+
+  const sw = bar.querySelector('#sticky-swatches');
+  if (sw) sw.innerHTML = stickySwatchesHtml(product, vi);
+
+  const btn = bar.querySelector('.sticky-add-btn');
+  if (btn) {
+    btn.disabled = soldOut;
+    if (soldOut) {
+      btn.textContent = 'Sold Out';
+    } else if (btn.textContent !== 'Added') {
+      btn.textContent = bar.classList.contains('minimized') ? 'Add' : 'Add to Bag';
+    }
+  }
+}
+
+// ─── Legacy shim — kept for any existing call sites ────────
+function addToCartFromDetailSticky(id) {
+  if (!S.selectedSize) {
+    handleStickyAddClick(id);
+    return;
+  }
+  const product = PRODUCTS.find(p => p.id === id);
+  if (product && isProductSoldOut(product)) return;
+  addToCart(id, S.selectedSize);
+  _stickyAddedFeedback(id, product);
 }
