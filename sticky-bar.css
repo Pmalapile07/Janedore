@@ -128,9 +128,9 @@
   background: #fafafa;
 }
 
-/* Button internal spans for minimized state */
+/* Button internal spans — hidden by default, shown only in minimized */
 .sticky-add-bar .sticky-btn-label {
-  display: none;
+  /* Don't hide — let the button's ::after or direct text work */
 }
 
 .sticky-add-bar .sticky-btn-price {
@@ -182,12 +182,7 @@
   padding-right: 20px;
 }
 
-/* Show the internal spans in minimized */
-.sticky-add-bar.minimized .sticky-btn-label {
-  display: inline;
-  white-space: nowrap;
-}
-
+/* Show the price span in minimized */
 .sticky-add-bar.minimized .sticky-btn-price {
   display: inline;
   white-space: nowrap;
