@@ -99,13 +99,13 @@
 <script src="app.js"></script>
 
 <div id="chat-container"></div>
-
 <script>
   fetch('chat-widget.html')
     .then(r => r.text())
     .then(html => {
       document.getElementById('chat-container').innerHTML = html;
-    });
+    })
+    .catch(err => console.error('Chat widget failed:', err));
 </script>
 
 <div class="page" id="page-checkout">
