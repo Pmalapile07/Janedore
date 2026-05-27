@@ -1,7 +1,6 @@
 /* =========================================
    STICKY ADD TO CART — JANEDORE
    Zara-style minimized sticky bar
-   Price integrated inside button
    ========================================= */
 
 #sticky-add-bar,
@@ -23,7 +22,8 @@
   padding: 14px 16px;
   padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
-  border-top: 0.5px solid rgba(0,0,0,0.10);
+  /* NO border-top */
+  border-top: none;
 
   box-shadow: none;
 
@@ -34,8 +34,6 @@
 
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
-
-  will-change: auto;
 
   touch-action: manipulation;
 
@@ -63,7 +61,22 @@
   line-height: 1.3;
 }
 
-/* MAIN BUTTON — unified: label left, price right */
+/* PRICE — standalone, above button in default state */
+.sticky-add-bar .sticky-price {
+  font-size: var(--ui-font-size);
+
+  font-weight: var(--ui-font-weight);
+
+  letter-spacing: var(--ui-letter-spacing);
+
+  text-transform: uppercase;
+
+  color: #111;
+
+  margin-bottom: 4px;
+}
+
+/* MAIN BUTTON */
 .sticky-add-bar .sticky-add-btn {
   width: 100%;
 
@@ -76,11 +89,13 @@
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 
   padding: 0 24px;
 
   cursor: pointer;
+
+  white-space: nowrap;
 
   font-family: inherit;
 
@@ -113,55 +128,73 @@
   background: #fafafa;
 }
 
-/* Button internal spans */
+/* Button internal spans for minimized state */
 .sticky-add-bar .sticky-btn-label {
-  white-space: nowrap;
+  display: none;
 }
 
 .sticky-add-bar .sticky-btn-price {
-  white-space: nowrap;
-  flex-shrink: 0;
+  display: none;
 }
 
 /* =========================================
-   MINIMIZED STATE — SINGLE UNIFIED BUTTON
-   Price lives inside the button
-   Bar stays glued to bottom:0
+   MINIMIZED STATE — COMPACT ROW
+   Button keeps same 52px height
+   Price moves INSIDE button on the right
    ========================================= */
 
 .sticky-add-bar.minimized {
   display: flex;
   flex-direction: row;
   align-items: center;
-  
+
   gap: 0;
-  
-  padding: 12px 16px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  
+
+  padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+
   height: auto;
-  
+
   background: #f8f8f8;
-  
-  border-top: 0.5px solid rgba(0,0,0,0.10);
-  
+
+  border-top: none;
+
   box-shadow: none;
 }
 
-/* Minimized button — full width, price inside on right */
+/* Minimized: hide standalone price and name */
+.sticky-add-bar.minimized .sticky-name,
+.sticky-add-bar.minimized .sticky-price {
+  display: none;
+}
+
+/* Minimized: button fills full width */
 .sticky-add-bar.minimized .sticky-add-btn {
   flex: 1;
   min-width: 0;
-  
-  /* Inherits all typography, height, border from default .sticky-add-btn */
-  /* justify-content: space-between already set — label left, price right */
-  
+
+  /* Keep same 52px height — no override */
+  /* Keep same border, typography, everything */
+
+  justify-content: space-between;
+
   padding-left: 20px;
   padding-right: 20px;
 }
 
-/* Hide everything else */
-.sticky-add-bar.minimized .sticky-name,
+/* Show the internal spans in minimized */
+.sticky-add-bar.minimized .sticky-btn-label {
+  display: inline;
+  white-space: nowrap;
+}
+
+.sticky-add-bar.minimized .sticky-btn-price {
+  display: inline;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Hide extras in minimized */
 .sticky-add-bar.minimized .sticky-extras {
   display: none;
 }
@@ -178,10 +211,13 @@
   gap: 0;
 
   background: #fff;
+
+  border-top: none;
 }
 
-/* In extended: hide name and CTA button */
+/* In extended: hide name, price, and CTA button */
 .sticky-add-bar.extended .sticky-name,
+.sticky-add-bar.extended .sticky-price,
 .sticky-add-bar.extended .sticky-add-btn {
   display: none;
 }
@@ -333,7 +369,7 @@
   }
 
   .sticky-add-bar.minimized {
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
 
