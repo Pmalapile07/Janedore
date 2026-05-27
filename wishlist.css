@@ -1,0 +1,25 @@
+.wish-page { max-width: 1000px; margin: 0 auto; padding: 60px 12px; }
+@media (min-width: 768px) { .wish-page { padding: 60px 16px; } }
+.wish-page-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; margin-bottom: 40px; }
+.wish-page-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 640px) { .wish-page-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .wish-page-grid { grid-template-columns: repeat(4, 1fr); } }
+.wish-page-item { cursor: pointer; }
+.wish-page-img { aspect-ratio: 3/4; background-size: cover; background-position: center; background-color: #f0ede8; margin-bottom: 6px; position: relative; }
+.wish-page-name {
+  font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
+  text-transform: uppercase; color: #111; margin-bottom: 4px; line-height: 1.3;
+}
+.wish-page-price {
+  font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight); text-transform: uppercase;
+  color: #111; margin-bottom: 0; font-family: 'Manrope', sans-serif;
+}
+.wish-page-add-btn { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; background: #fff; color: #111; border: 0.8px solid #111; padding: 7px 14px; cursor: pointer; transition: all 0.2s; width: 100%; }
+.wish-page-add-btn:hover { background: #111; color: #fff; }
+.wish-page-add-btn:disabled { background: #fff; color: #aaa; border-color: #ddd; cursor: not-allowed; }
+.wish-page-empty { text-align: center; padding: 60px 0; }
+.wish-page-empty-title { font-family: 'Manrope', sans-serif; font-size: var(--body-font-size); font-weight: 500; color: #111; letter-spacing: var(--body-letter-spacing); margin-bottom: 24px; }
+.wish-page-price-sale { color: #111; }
+.wish-page-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: var(--ui-font-size); text-transform: uppercase; }
