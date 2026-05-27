@@ -1,5 +1,38 @@
 const DOM = {
-  cartBadge: document.getElementById("cart-badge"), wishBadge: document.getElementById("wish-badge"), cartItemCount: document.getElementById("cart-item-count"), searchOverlay: document.getElementById("search-overlay"), searchInput: document.getElementById("search-input"), searchBody: document.getElementById("search-body"), menuBackdrop: document.getElementById("menu-backdrop"), menuDrawer: document.getElementById("menu-drawer"), cartBackdrop: document.getElementById("cart-backdrop"), cartPanel: document.getElementById("cart-panel"), arrivalsGrid: document.getElementById("arrivals-grid"), allProductsGrid: document.getElementById("all-products-grid"), categoryProductsGrid: document.getElementById("category-products-grid"), categoryNameTag: document.getElementById("category-name-tag"), categoryDescriptionWrap: document.getElementById("category-description-wrap"), productDetail: document.getElementById("page-product-detail"), cartBody: document.getElementById("cart-body"), cartFoot: document.getElementById("cart-foot"), cartPageContent: document.getElementById("cart-page-content"), wishPageContent: document.getElementById("wish-page-content"), campaignSlides: document.getElementById("campaign-slides"), reviewStars: document.getElementById("review-stars"), reviewText: document.getElementById("review-text"), reviewName: document.getElementById("review-name"), reviewImageInput: document.getElementById("review-image-input"), reviewImagePreview: document.getElementById("review-image-preview"), reviewModalBackdrop: document.getElementById("review-modal-backdrop"), gridToggleSvg: document.getElementById("grid-toggle-svg"), catGridToggleSvg: document.getElementById("cat-grid-toggle-svg"), mainNav: document.getElementById("main-nav"), homepageNewsletterSection: document.getElementById("homepage-newsletter-section"), heroBg: document.getElementById("hero-bg"), hero: null, chatBubble: document.getElementById("live-chat-bubble")
+  get cartBadge() { return document.getElementById("cart-badge"); },
+  get wishBadge() { return document.getElementById("wish-badge"); },
+  get cartItemCount() { return document.getElementById("cart-item-count"); },
+  get searchOverlay() { return document.getElementById("search-overlay"); },
+  get searchInput() { return document.getElementById("search-input"); },
+  get searchBody() { return document.getElementById("search-body"); },
+  get menuBackdrop() { return document.getElementById("menu-backdrop"); },
+  get menuDrawer() { return document.getElementById("menu-drawer"); },
+  get cartBackdrop() { return document.getElementById("cart-backdrop"); },
+  get cartPanel() { return document.getElementById("cart-panel"); },
+  get arrivalsGrid() { return document.getElementById("arrivals-grid"); },
+  get allProductsGrid() { return document.getElementById("all-products-grid"); },
+  get categoryProductsGrid() { return document.getElementById("category-products-grid"); },
+  get categoryNameTag() { return document.getElementById("category-name-tag"); },
+  get categoryDescriptionWrap() { return document.getElementById("category-description-wrap"); },
+  get productDetail() { return document.getElementById("page-product-detail"); },
+  get cartBody() { return document.getElementById("cart-body"); },
+  get cartFoot() { return document.getElementById("cart-foot"); },
+  get cartPageContent() { return document.getElementById("cart-page-content"); },
+  get wishPageContent() { return document.getElementById("wish-page-content"); },
+  get campaignSlides() { return document.getElementById("campaign-slides"); },
+  get reviewStars() { return document.getElementById("review-stars"); },
+  get reviewText() { return document.getElementById("review-text"); },
+  get reviewName() { return document.getElementById("review-name"); },
+  get reviewImageInput() { return document.getElementById("review-image-input"); },
+  get reviewImagePreview() { return document.getElementById("review-image-preview"); },
+  get reviewModalBackdrop() { return document.getElementById("review-modal-backdrop"); },
+  get gridToggleSvg() { return document.getElementById("grid-toggle-svg"); },
+  get catGridToggleSvg() { return document.getElementById("cat-grid-toggle-svg"); },
+  get mainNav() { return document.getElementById("main-nav"); },
+  get homepageNewsletterSection() { return document.getElementById("homepage-newsletter-section"); },
+  get heroBg() { return document.getElementById("hero-bg"); },
+  hero: null,
+  get chatBubble() { return document.getElementById("live-chat-bubble"); }
 };
 
 let PRODUCTS = [];
@@ -24,11 +57,95 @@ async function fetchProducts() {
   ];
 }
 
+// Expose critical functions to window for onclick handlers
+window.navigateTo = navigateTo;
+window.navigateToCategory = navigateToCategory;
+window.navigateToSale = navigateToSale;
+window.goToProduct = goToProduct;
+window.goBackFromProduct = goBackFromProduct;
+window.goBackHome = goBackHome;
+window.openMenu = openMenu;
+window.closeMenu = closeMenu;
+window.openCart = openCart;
+window.closeCart = closeCart;
+window.openSearch = openSearch;
+window.closeSearch = closeSearch;
+window.toggleSubmenuCollapse = toggleSubmenuCollapse;
+window.toggleBrandsCollapse = toggleBrandsCollapse;
+window.handleSearch = handleSearch;
+window.toggleGrid = toggleGrid;
+window.toggleGridCat = toggleGridCat;
+window.toggleFilterDropdown = toggleFilterDropdown;
+window.applyFilter = applyFilter;
+window.applyCatFilter = applyCatFilter;
+window.selectSortTab = selectSortTab;
+window.openReviewModal = openReviewModal;
+window.closeReviewModal = closeReviewModal;
+window.setReviewRating = setReviewRating;
+window.submitReview = submitReview;
+window.handleReviewImage = handleReviewImage;
+window.toggleWish = toggleWish;
+window.addPouchToCart = addPouchToCart;
+window.moveCampaignSlider = moveCampaignSlider;
+window.calculateShipping = calculateShipping;
+window.switchInfoTab = switchInfoTab;
+window.toggleDescExpand = toggleDescExpand;
+window.selectStickySize = selectStickySize;
+window.handleStickyAddClick = handleStickyAddClick;
+window.subscribeNewsletter = subscribeNewsletter;
+
 async function init() {
-  if(DOM.mainNav)DOM.mainNav.classList.add("scrolled"); initNavScroll(); showLoading(DOM.arrivalsGrid); showLoading(DOM.allProductsGrid);
-  loadCartFromStorage(); updateBadges(); PRODUCTS=await fetchProducts(); cleanCartOrphans(); loadWishlistFromStorage(); updateBadges();
-  setHeroImage(); buildArrivals(); ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"].forEach(buildFooter); buildCampaignSlider(); initVendors();
-  const route=getRouteFromHash(); if(route.page==='product-detail')goToProduct(route.productId); else if(route.page==='category')navigateToCategory(route.cat); else if(route.page==='login')navigateToLogin(); else if(route.page==='account')navigateToAccount(); else navigateTo(route.page);
-  setTimeout(checkNavForHome,100); updateChatVisibility();
+  // Ensure nav starts scrolled
+  if (DOM.mainNav) DOM.mainNav.classList.add("scrolled");
+  
+  // Initialize nav scroll behavior
+  initNavScroll();
+  
+  // Load cart from storage first
+  loadCartFromStorage();
+  updateBadges();
+  
+  // Fetch products from Firebase (with fallback)
+  PRODUCTS = await fetchProducts();
+  
+  // Clean cart orphans now that products are loaded
+  cleanCartOrphans();
+  
+  // Load wishlist (depends on PRODUCTS)
+  loadWishlistFromStorage();
+  updateBadges();
+  
+  // Set hero image
+  setHeroImage();
+  
+  // Build homepage content
+  buildArrivals();
+  
+  // Build all footers
+  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"];
+  footerIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) buildFooter(id);
+  });
+  
+  // Build campaign slider
+  buildCampaignSlider();
+  
+  // Initialize vendors
+  initVendors();
+  
+  // Handle initial route
+  const route = getRouteFromHash();
+  if (route.page === 'product-detail') goToProduct(route.productId);
+  else if (route.page === 'category') navigateToCategory(route.cat);
+  else if (route.page === 'login') navigateToLogin();
+  else if (route.page === 'account') navigateToAccount();
+  else navigateTo(route.page);
+  
+  // Final checks
+  setTimeout(checkNavForHome, 100);
+  updateChatVisibility();
 }
-init();
+
+// Wait for DOM to be fully ready before initializing
+window.addEventListener('DOMContentLoaded', init);
