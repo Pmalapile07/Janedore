@@ -1,6 +1,7 @@
 // =========================================
 //  STICKY ADD TO CART — JANEDORE
 //  Zara-style UX: tap size → instant add
+//  Permanently glued to bottom:0
 // =========================================
 
 function removeStickyBar() {
@@ -19,7 +20,6 @@ function createStickyBar(product) {
   bar.className = 'sticky-add-bar';
   bar.innerHTML = `
     <div class="sticky-name">${product.name || ''}</div>
-    <div class="sticky-price">${formatPrice(price)}</div>
     <div class="sticky-extras">
       <div class="sticky-sizes" id="sticky-sizes">
         ${(product.sizes || []).map(s =>
@@ -33,7 +33,7 @@ function createStickyBar(product) {
     <button class="sticky-add-btn"
       onclick="handleStickyAddClick('${product.id}')"
       ${soldOut ? ' disabled' : ''}
-    >${soldOut ? 'Sold Out' : 'Add to Bag'}</button>`;
+    ><span class="sticky-btn-label">${soldOut ? 'Sold Out' : 'Add to Bag'}</span><span class="sticky-btn-price">${formatPrice(price)}</span></button>`;
   document.body.appendChild(bar);
   S.stickyExtended = false;
   updateStickyBarOnScroll();
@@ -47,13 +47,10 @@ function handleStickyAddClick(productId) {
   // Already extended — do nothing (sizes handle their own tap)
   if (S.stickyExtended) return;
 
-  // Expand to show sizes
+  // Expand to show sizes — bar stays glued to bottom
   bar.classList.add('extended');
   S.stickyExtended = true;
-  setTimeout(() => {
-    const barHeight = bar.offsetHeight;
-    bar.style.transform = `translateY(-${barHeight - 60}px)`;
-  }, 10);
+  // NO translateY — panel expands upward naturally
 }
 
 // ─── Tap size → instant add ────────────────────────────────
@@ -79,9 +76,9 @@ function _stickyAddedFeedback(productId, product) {
   const bar = document.getElementById('sticky-add-bar');
   if (!bar) return;
 
-  // Collapse extended panel
+  // Collapse extended panel — bar stays glued to bottom
   bar.classList.remove('extended');
-  bar.style.transform = '';
+  // NO transform reset needed
   S.stickyExtended = false;
   S.selectedSize = null;
 
@@ -97,14 +94,15 @@ function _stickyAddedFeedback(productId, product) {
 
   // Brief "Added" state on the button — then restore
   const btn = bar.querySelector('.sticky-add-btn');
-  if (btn) {
+  const label = bar.querySelector('.sticky-btn-label');
+  if (btn && label) {
     bar.classList.add('added-feedback');
-    btn.textContent = 'Added';
+    label.textContent = 'Added';
 
     setTimeout(() => {
       bar.classList.remove('added-feedback');
       const isMin = bar.classList.contains('minimized');
-      btn.textContent = isMin ? 'Add' : 'Add to Bag';
+      label.textContent = isMin ? 'Add' : 'Add to Bag';
     }, 1600);
   }
 }
@@ -129,14 +127,18 @@ function updateStickyBarOnScroll() {
 
   if (isMin) {
     bar.classList.add('minimized');
-    if (!S.stickyExtended) bar.style.transform = '';
-    const btn = bar.querySelector('.sticky-add-btn');
-    if (btn && !btn.disabled && btn.textContent !== 'Added') btn.textContent = 'Add';
+    // NO transform — bar stays at bottom:0
+    const label = bar.querySelector('.sticky-btn-label');
+    if (label && !bar.querySelector('.sticky-add-btn').disabled && label.textContent !== 'Added') {
+      label.textContent = 'Add';
+    }
   } else {
     bar.classList.remove('minimized');
-    if (!S.stickyExtended) bar.style.transform = '';
-    const btn = bar.querySelector('.sticky-add-btn');
-    if (btn && !btn.disabled && btn.textContent !== 'Added') btn.textContent = 'Add to Bag';
+    // NO transform — bar stays at bottom:0
+    const label = bar.querySelector('.sticky-btn-label');
+    if (label && !bar.querySelector('.sticky-add-btn').disabled && label.textContent !== 'Added') {
+      label.textContent = 'Add to Bag';
+    }
   }
 }
 
@@ -159,7 +161,9 @@ function updateStickyBar(product) {
   const price = product.salePrice ? product.salePrice : product.price;
 
   bar.querySelector('.sticky-name').textContent = product.name || '';
-  bar.querySelector('.sticky-price').textContent = formatPrice(price);
+
+  const priceEl = bar.querySelector('.sticky-btn-price');
+  if (priceEl) priceEl.textContent = formatPrice(price);
 
   const se = bar.querySelector('#sticky-sizes');
   if (se) se.innerHTML = (product.sizes || []).map(s =>
@@ -172,12 +176,13 @@ function updateStickyBar(product) {
   if (sw) sw.innerHTML = stickySwatchesHtml(product, vi);
 
   const btn = bar.querySelector('.sticky-add-btn');
-  if (btn) {
+  const label = bar.querySelector('.sticky-btn-label');
+  if (btn && label) {
     btn.disabled = soldOut;
     if (soldOut) {
-      btn.textContent = 'Sold Out';
-    } else if (btn.textContent !== 'Added') {
-      btn.textContent = bar.classList.contains('minimized') ? 'Add' : 'Add to Bag';
+      label.textContent = 'Sold Out';
+    } else if (label.textContent !== 'Added') {
+      label.textContent = bar.classList.contains('minimized') ? 'Add' : 'Add to Bag';
     }
   }
 }
