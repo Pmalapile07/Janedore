@@ -134,8 +134,8 @@
 }
 
 /* =========================================
-   MINIMIZED STATE — CLEAN FLEX ROW
-   Consistent button styling preserved
+   MINIMIZED STATE — TRUE ZARA ROW
+   Glued to bottom, no compression
    ========================================= */
 
 .sticky-add-bar.minimized {
@@ -147,12 +147,12 @@
   /* Reset all spacing */
   gap: 12px;
   
-  padding: 0 16px;
-  padding-bottom: 0;
+  /* Proper padding that keeps bar glued to bottom */
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   
-  /* Remove any fixed height */
+  /* Let content determine height naturally — no min-height fighting */
   height: auto;
-  min-height: 52px;
   
   background: #f8f8f8;
   
@@ -161,22 +161,23 @@
   box-shadow: none;
 }
 
-/* Button takes available space — inherits ALL styling from default */
+/* Force visual order: button first, price second */
 .sticky-add-bar.minimized .sticky-add-btn {
+  order: 1;
+  
   flex: 1;
   min-width: 0;
   
-  /* Inherit default height — no override needed */
-  /* height, font-size, font-weight, letter-spacing, border all cascade from .sticky-add-btn */
+  /* Slightly reduced horizontal padding for compact row */
+  padding-left: 20px;
+  padding-right: 20px;
   
-  /* Only adjust what layout requires */
-  padding: 0 20px;
-  
-  /* Keep the button visually identical to the default state */
+  /* Let the inherited 52px height breathe — no compression */
 }
 
-/* Price stays compact on the right */
 .sticky-add-bar.minimized .sticky-price {
+  order: 2;
+  
   flex-shrink: 0;
   white-space: nowrap;
   
@@ -185,7 +186,7 @@
   display: flex;
   align-items: center;
   
-  /* Price keeps its own typography from the default .sticky-price */
+  /* Price inherits typography from default .sticky-price — no override needed */
 }
 
 /* Hide everything else in minimized */
@@ -361,8 +362,7 @@
   }
 
   .sticky-add-bar.minimized {
-    /* Let the bar itself absorb safe area via padding-bottom */
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 }
 
