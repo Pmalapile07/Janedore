@@ -1,0 +1,169 @@
+#sticky-add-bar,
+.sticky-add-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  z-index: 850;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  contain: layout style;
+  touch-action: manipulation;
+  border: none;
+  box-shadow: none;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), padding 0.35s ease;
+}
+.sticky-add-bar .sticky-brand { display: none; }
+.sticky-add-bar .sticky-name {
+  font-family: 'Manrope', sans-serif;
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  color: #111;
+  line-height: 1.3;
+}
+.sticky-add-bar .sticky-price {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  color: #111;
+  margin-bottom: 6px;
+}
+.sticky-add-bar .sticky-add-btn {
+  background: #fff;
+  color: #111;
+  border: 0.8px solid #111;
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.3s, width 0.3s;
+  white-space: nowrap;
+  font-family: inherit;
+  width: 100%;
+  -webkit-appearance: none;
+}
+.sticky-add-bar .sticky-add-btn:hover { background: #f5f5f5; }
+.sticky-add-bar .sticky-add-btn:disabled {
+  color: #aaa;
+  border-color: #ddd;
+  cursor: not-allowed;
+}
+.sticky-add-bar.minimized {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.sticky-add-bar.minimized .sticky-name { display: none; }
+.sticky-add-bar.minimized .sticky-price {
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight);
+  letter-spacing: var(--ui-letter-spacing);
+  margin-bottom: 0;
+  flex-shrink: 0;
+  order: 2;
+  white-space: nowrap;
+}
+.sticky-add-bar.minimized .sticky-add-btn {
+  width: auto;
+  flex: 0 1 80%;
+  padding: 10px 20px;
+  order: 1;
+  min-width: 0;
+}
+.sticky-add-bar.minimized .sticky-extras { display: none; }
+.sticky-add-bar.extended {
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  gap: 10px;
+}
+.sticky-add-bar.extended .sticky-name { display: none; }
+.sticky-add-bar.extended .sticky-price { display: none; }
+.sticky-add-bar.extended .sticky-add-btn {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+.sticky-add-bar .sticky-extras { display: none; }
+.sticky-add-bar.extended .sticky-extras {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sticky-add-bar .sticky-extras .sticky-sizes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.sticky-add-bar .sticky-extras .sticky-size-btn {
+  border: none;
+  background: none;
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight);
+  letter-spacing: var(--ui-letter-spacing);
+  text-transform: uppercase;
+  color: #888;
+  cursor: pointer;
+  padding: 6px 0;
+  min-width: 36px;
+  text-align: left;
+  transition: color 0.2s;
+}
+.sticky-add-bar .sticky-extras .sticky-size-btn:hover { color: #111; }
+.sticky-add-bar .sticky-extras .sticky-size-btn.sel {
+  color: #111;
+  font-weight: 600;
+}
+.sticky-add-bar .sticky-extras .sticky-swatches {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  order: 10;
+}
+.sticky-add-bar .sticky-extras .sticky-swatch {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  cursor: pointer;
+  position: relative;
+  background: #ccc;
+}
+.sticky-add-bar .sticky-extras .sticky-swatch.selected::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 0.5px;
+  background: #111;
+}
+.sticky-add-bar .sticky-extras .sticky-swatch.sold-out {
+  overflow: hidden;
+  background: #aaa;
+}
+.sticky-add-bar .sticky-extras .sticky-swatch.sold-out::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -3px;
+  right: -3px;
+  height: 0.8px;
+  background: #fff;
+  transform: rotate(-45deg);
+}
