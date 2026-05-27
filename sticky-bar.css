@@ -135,6 +135,7 @@
 
 /* =========================================
    MINIMIZED STATE — CLEAN FLEX ROW
+   Consistent button styling preserved
    ========================================= */
 
 .sticky-add-bar.minimized {
@@ -160,29 +161,18 @@
   box-shadow: none;
 }
 
-/* Button takes available space */
+/* Button takes available space — inherits ALL styling from default */
 .sticky-add-bar.minimized .sticky-add-btn {
   flex: 1;
   min-width: 0;
   
-  height: 40px;
+  /* Inherit default height — no override needed */
+  /* height, font-size, font-weight, letter-spacing, border all cascade from .sticky-add-btn */
   
+  /* Only adjust what layout requires */
   padding: 0 20px;
   
-  border: 0.8px solid #111;
-  
-  background: #fff;
-  
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  font-size: 13px;
-  font-weight: 400;
-  
-  letter-spacing: 0.09em;
-  
-  text-transform: uppercase;
+  /* Keep the button visually identical to the default state */
 }
 
 /* Price stays compact on the right */
@@ -195,12 +185,7 @@
   display: flex;
   align-items: center;
   
-  font-size: 13px;
-  font-weight: 400;
-  
-  letter-spacing: 0.04em;
-  
-  color: #111;
+  /* Price keeps its own typography from the default .sticky-price */
 }
 
 /* Hide everything else in minimized */
