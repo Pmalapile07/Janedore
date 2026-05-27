@@ -213,6 +213,12 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
 
+/* ── COLLECTION PAGES: force uniform image ratio ── */
+#all-products-grid .product-img-wrap,
+#category-products-grid .product-img-wrap {
+  aspect-ratio: 3 / 4 !important;
+}
+
 /* Editorial grid: 2-col base with occasional featured card */
 .product-grid.editorial-2col {
   grid-template-columns: repeat(2, 1fr);
@@ -245,6 +251,20 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 /* Editorial grid: 3-col tighter */
 .product-grid.editorial-3col {
   grid-template-columns: repeat(3, 1fr);
+}
+
+/* Override editorial varied ratios on collection grids — uniform only */
+#all-products-grid.product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
+#all-products-grid.product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
+#all-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
+#all-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
+#all-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
+#category-products-grid.product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
+#category-products-grid.product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
+#category-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
+#category-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
+#category-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap {
+  aspect-ratio: 3 / 4 !important;
 }
 
 .product-card { cursor: pointer; }
@@ -484,14 +504,12 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 @media (max-width: 768px) { .collection-toolbar { top: 56px; } }
 @media (max-width: 480px) { .collection-toolbar { top: 52px; } }
 
-/* ── Left group: toggle + FILTER ── */
 .toolbar-left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-/* ── Center: collection title ── */
 .toolbar-center {
   font-size: var(--ui-font-size);
   letter-spacing: var(--ui-letter-spacing);
@@ -506,14 +524,12 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   white-space: nowrap;
 }
 
-/* ── Right: search + cart ── */
 .toolbar-right {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-/* ── Filter trigger ── */
 .filter-dropdown { position: relative; }
 .filter-trigger {
   background: none; border: none;
@@ -544,10 +560,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .filter-option:hover { color: #111; }
 .filter-option input { margin: 0; accent-color: #111; }
 
-/* ══════════════════════════════════════════════════════════════
-   GRID TOGGLE — Editorial Thin Bars
-   ══════════════════════════════════════════════════════════════ */
-
+/* ── Grid Toggle ── */
 .toolbar-toggle-btn {
   background: none;
   border: none;
@@ -568,35 +581,25 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   transition: all 0.35s ease;
 }
 
-/* Thin vertical bars — base */
 .grid-block {
   flex: 1;
   background: #d4d4d4;
   transition: background 0.3s ease, height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   min-width: 2px;
 }
-.grid-block.active {
-  background: #111;
-}
+.grid-block.active { background: #111; }
 
-/* ── 1 column: single tall bar, two shorter ── */
 .grid-toggle-svg.cols-1 .grid-block:nth-child(1) { height: 100%; }
 .grid-toggle-svg.cols-1 .grid-block:nth-child(2) { height: 50%; }
 .grid-toggle-svg.cols-1 .grid-block:nth-child(3) { height: 25%; }
 
-/* ── 2 columns: two even bars, one short ── */
 .grid-toggle-svg.cols-2 .grid-block:nth-child(1) { height: 100%; }
 .grid-toggle-svg.cols-2 .grid-block:nth-child(2) { height: 100%; }
 .grid-toggle-svg.cols-2 .grid-block:nth-child(3) { height: 50%; }
 
-/* ── 3 columns: three even bars ── */
 .grid-toggle-svg.cols-3 .grid-block:nth-child(1) { height: 100%; }
 .grid-toggle-svg.cols-3 .grid-block:nth-child(2) { height: 100%; }
 .grid-toggle-svg.cols-3 .grid-block:nth-child(3) { height: 100%; }
-
-/* ══════════════════════════════════════════════════════════════
-   END TOOLBAR
-   ══════════════════════════════════════════════════════════════ */
 
 /* ── Collection Sorting Tabs ── */
 .collection-sorting-tabs {
@@ -713,7 +716,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .product-secondary-images img { width: 100%; height: auto; display: block; object-fit: cover; }
 
 /* ══════════════════════════════════════════════════════════════
-   STICKY ADD-TO-BAG BAR
+   STICKY ADD-TO-BAG BAR — REDESIGNED
    ══════════════════════════════════════════════════════════════ */
 
 #sticky-add-bar,
@@ -736,8 +739,10 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   touch-action: manipulation;
   border: none;
   box-shadow: none;
+  transition: padding 0.3s ease;
 }
 
+/* ── DEFAULT STATE: name + price + full-width add button ── */
 .sticky-add-bar .sticky-brand { display: none; }
 
 .sticky-add-bar .sticky-name {
@@ -769,7 +774,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   text-transform: uppercase;
   padding: 12px 24px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, width 0.35s ease, opacity 0.25s ease;
   white-space: nowrap;
   font-family: inherit;
   width: 100%;
@@ -782,46 +787,34 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   cursor: not-allowed;
 }
 
-.sticky-add-bar.minimized {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  gap: 12px;
-}
-.sticky-add-bar.minimized .sticky-name { display: none; }
-.sticky-add-bar.minimized .sticky-price {
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
-  letter-spacing: var(--ui-letter-spacing);
-  margin-bottom: 0;
-  flex-shrink: 0;
-}
-.sticky-add-bar.minimized .sticky-add-btn {
-  width: auto;
-  padding: 10px 20px;
-  flex-shrink: 0;
-}
+/* ── EXTENDED STATE: sizes vertical + swatches at bottom, no add btn ── */
+.sticky-add-bar .sticky-extras { display: none; }
 
 .sticky-add-bar.extended {
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  gap: 10px;
+  gap: 0;
 }
-.sticky-add-bar .sticky-extras { display: none; }
-.sticky-add-bar.extended .sticky-name,
+
+/* In extended state: hide name, price, and the add button */
+.sticky-add-bar.extended .sticky-name { display: none; }
 .sticky-add-bar.extended .sticky-price { display: none; }
+.sticky-add-bar.extended .sticky-add-btn { display: none; }
+
+/* Show extras in extended state */
 .sticky-add-bar.extended .sticky-extras {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
+
+/* Sizes vertical stack */
 .sticky-add-bar .sticky-extras .sticky-sizes {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0;
 }
+
 .sticky-add-bar .sticky-extras .sticky-size-btn {
   border: none;
   background: none;
@@ -831,21 +824,27 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   text-transform: uppercase;
   color: #888;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 10px 0;
+  text-align: left;
   min-width: 36px;
-  text-align: center;
   transition: color 0.2s;
+  border-bottom: 0.5px solid #f0f0f0;
 }
+.sticky-add-bar .sticky-extras .sticky-size-btn:last-child { border-bottom: none; }
 .sticky-add-bar .sticky-extras .sticky-size-btn:hover { color: #111; }
 .sticky-add-bar .sticky-extras .sticky-size-btn.sel {
   color: #111;
   font-weight: 600;
 }
+
+/* Swatches row at the bottom of extended */
 .sticky-add-bar .sticky-extras .sticky-swatches {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding-top: 4px;
 }
+
 .sticky-add-bar .sticky-extras .sticky-swatch {
   width: 18px;
   height: 18px;
@@ -876,6 +875,55 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   height: 0.8px;
   background: #fff;
   transform: rotate(-45deg);
+}
+
+/* ── MINIMIZED STATE: scrolled down — wide btn left, price right ── */
+.sticky-add-bar.minimized {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  gap: 12px;
+}
+
+/* Hide name in minimized */
+.sticky-add-bar.minimized .sticky-name { display: none; }
+
+/* Price on the right side */
+.sticky-add-bar.minimized .sticky-price {
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight);
+  letter-spacing: var(--ui-letter-spacing);
+  margin-bottom: 0;
+  flex-shrink: 0;
+  order: 2;
+}
+
+/* Button on left, ~80% width */
+.sticky-add-bar.minimized .sticky-add-btn {
+  width: 80%;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  order: 1;
+}
+
+/* Minimized extended: same as default extended but triggered from minimized */
+.sticky-add-bar.minimized.extended {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  gap: 0;
+}
+.sticky-add-bar.minimized.extended .sticky-price { order: 0; display: none; }
+.sticky-add-bar.minimized.extended .sticky-add-btn { display: none; width: 100%; order: 0; }
+.sticky-add-bar.minimized.extended .sticky-extras {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  order: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════
