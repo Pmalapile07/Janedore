@@ -213,13 +213,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
 
-/* ── COLLECTION PAGES: force uniform image ratio ── */
-#all-products-grid .product-img-wrap,
-#category-products-grid .product-img-wrap {
-  aspect-ratio: 3 / 4 !important;
-}
-
-/* Editorial grid: 2-col base with occasional featured card */
+/* Editorial grid: 2-col base — all cards consistent 3/4 ratio */
 .product-grid.editorial-2col {
   grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: auto;
@@ -228,47 +222,32 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   grid-column: span 2;
 }
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 3 / 4;
 }
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap {
-  aspect-ratio: 3 / 5;
+  aspect-ratio: 3 / 4;
 }
 
-/* Editorial grid: 1-col with alternating image heights */
+/* Editorial grid: 1-col — all consistent ratio */
 .product-grid.editorial-1col {
   grid-template-columns: 1fr;
 }
-.product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap {
-  aspect-ratio: 4 / 5;
-}
-.product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap {
+.product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
+.product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
+.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap {
   aspect-ratio: 3 / 4;
 }
-.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap {
-  aspect-ratio: 4 / 5.2;
-}
 
-/* Editorial grid: 3-col tighter */
+/* Editorial grid: 3-col — all consistent ratio */
 .product-grid.editorial-3col {
   grid-template-columns: repeat(3, 1fr);
 }
-
-/* Override editorial varied ratios on collection grids — uniform only */
-#all-products-grid.product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
-#all-products-grid.product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
-#all-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
-#all-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
-#all-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
-#category-products-grid.product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
-#category-products-grid.product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
-#category-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
-#category-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
-#category-products-grid.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap {
-  aspect-ratio: 3 / 4 !important;
+.product-grid.editorial-3col .product-card .product-img-wrap {
+  aspect-ratio: 3 / 4;
 }
 
 .product-card { cursor: pointer; }
-.product-img-wrap { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #f0ede8; margin-bottom: 10px; touch-action: pan-y pinch-zoom; transition: aspect-ratio 0.35s ease; }
+.product-img-wrap { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #f0ede8; margin-bottom: 10px; touch-action: pan-y pinch-zoom; }
 .product-card.sold-out .product-img-wrap { opacity: 0.6; filter: grayscale(0.3); }
 .product-card-slides { display: flex; transition: transform 0.4s ease; height: 100%; }
 .product-card-slide { min-width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
@@ -504,12 +483,14 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 @media (max-width: 768px) { .collection-toolbar { top: 56px; } }
 @media (max-width: 480px) { .collection-toolbar { top: 52px; } }
 
+/* ── Left group: toggle + FILTER ── */
 .toolbar-left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
+/* ── Center: collection title ── */
 .toolbar-center {
   font-size: var(--ui-font-size);
   letter-spacing: var(--ui-letter-spacing);
@@ -524,12 +505,14 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   white-space: nowrap;
 }
 
+/* ── Right: search + cart ── */
 .toolbar-right {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
+/* ── Filter trigger ── */
 .filter-dropdown { position: relative; }
 .filter-trigger {
   background: none; border: none;
@@ -560,7 +543,10 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .filter-option:hover { color: #111; }
 .filter-option input { margin: 0; accent-color: #111; }
 
-/* ── Grid Toggle ── */
+/* ══════════════════════════════════════════════════════════════
+   GRID TOGGLE — Editorial Thin Bars
+   ══════════════════════════════════════════════════════════════ */
+
 .toolbar-toggle-btn {
   background: none;
   border: none;
@@ -581,25 +567,35 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   transition: all 0.35s ease;
 }
 
+/* Thin vertical bars — base */
 .grid-block {
   flex: 1;
   background: #d4d4d4;
   transition: background 0.3s ease, height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   min-width: 2px;
 }
-.grid-block.active { background: #111; }
+.grid-block.active {
+  background: #111;
+}
 
+/* ── 1 column: single tall bar, two shorter ── */
 .grid-toggle-svg.cols-1 .grid-block:nth-child(1) { height: 100%; }
 .grid-toggle-svg.cols-1 .grid-block:nth-child(2) { height: 50%; }
 .grid-toggle-svg.cols-1 .grid-block:nth-child(3) { height: 25%; }
 
+/* ── 2 columns: two even bars, one short ── */
 .grid-toggle-svg.cols-2 .grid-block:nth-child(1) { height: 100%; }
 .grid-toggle-svg.cols-2 .grid-block:nth-child(2) { height: 100%; }
 .grid-toggle-svg.cols-2 .grid-block:nth-child(3) { height: 50%; }
 
+/* ── 3 columns: three even bars ── */
 .grid-toggle-svg.cols-3 .grid-block:nth-child(1) { height: 100%; }
 .grid-toggle-svg.cols-3 .grid-block:nth-child(2) { height: 100%; }
 .grid-toggle-svg.cols-3 .grid-block:nth-child(3) { height: 100%; }
+
+/* ══════════════════════════════════════════════════════════════
+   END TOOLBAR
+   ══════════════════════════════════════════════════════════════ */
 
 /* ── Collection Sorting Tabs ── */
 .collection-sorting-tabs {
@@ -716,7 +712,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .product-secondary-images img { width: 100%; height: auto; display: block; object-fit: cover; }
 
 /* ══════════════════════════════════════════════════════════════
-   STICKY ADD-TO-BAG BAR — REDESIGNED
+   STICKY ADD-TO-BAG BAR
    ══════════════════════════════════════════════════════════════ */
 
 #sticky-add-bar,
@@ -739,10 +735,9 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   touch-action: manipulation;
   border: none;
   box-shadow: none;
-  transition: padding 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), padding 0.35s ease;
 }
 
-/* ── DEFAULT STATE: name + price + full-width add button ── */
 .sticky-add-bar .sticky-brand { display: none; }
 
 .sticky-add-bar .sticky-name {
@@ -774,7 +769,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   text-transform: uppercase;
   padding: 12px 24px;
   cursor: pointer;
-  transition: background 0.2s, width 0.35s ease, opacity 0.25s ease;
+  transition: background 0.2s, opacity 0.3s, width 0.3s;
   white-space: nowrap;
   font-family: inherit;
   width: 100%;
@@ -787,34 +782,60 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   cursor: not-allowed;
 }
 
-/* ── EXTENDED STATE: sizes vertical + swatches at bottom, no add btn ── */
-.sticky-add-bar .sticky-extras { display: none; }
+/* MINIMIZED (scrolled down) — button takes ~80% width on left, price on right */
+.sticky-add-bar.minimized {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.sticky-add-bar.minimized .sticky-name { display: none; }
+.sticky-add-bar.minimized .sticky-price {
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight);
+  letter-spacing: var(--ui-letter-spacing);
+  margin-bottom: 0;
+  flex-shrink: 0;
+  order: 2;
+  white-space: nowrap;
+}
+.sticky-add-bar.minimized .sticky-add-btn {
+  width: auto;
+  flex: 0 1 80%;
+  padding: 10px 20px;
+  order: 1;
+  min-width: 0;
+}
+.sticky-add-bar.minimized .sticky-extras { display: none; }
 
+/* EXTENDED (clicked "Add to Bag") — button hidden, sizes vertical, swatches at bottom */
 .sticky-add-bar.extended {
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  gap: 0;
+  gap: 10px;
 }
-
-/* In extended state: hide name, price, and the add button */
 .sticky-add-bar.extended .sticky-name { display: none; }
 .sticky-add-bar.extended .sticky-price { display: none; }
-.sticky-add-bar.extended .sticky-add-btn { display: none; }
-
-/* Show extras in extended state */
+.sticky-add-bar.extended .sticky-add-btn {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+.sticky-add-bar .sticky-extras { display: none; }
 .sticky-add-bar.extended .sticky-extras {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
-
-/* Sizes vertical stack */
 .sticky-add-bar .sticky-extras .sticky-sizes {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
-
 .sticky-add-bar .sticky-extras .sticky-size-btn {
   border: none;
   background: none;
@@ -824,27 +845,22 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   text-transform: uppercase;
   color: #888;
   cursor: pointer;
-  padding: 10px 0;
-  text-align: left;
+  padding: 6px 0;
   min-width: 36px;
+  text-align: left;
   transition: color 0.2s;
-  border-bottom: 0.5px solid #f0f0f0;
 }
-.sticky-add-bar .sticky-extras .sticky-size-btn:last-child { border-bottom: none; }
 .sticky-add-bar .sticky-extras .sticky-size-btn:hover { color: #111; }
 .sticky-add-bar .sticky-extras .sticky-size-btn.sel {
   color: #111;
   font-weight: 600;
 }
-
-/* Swatches row at the bottom of extended */
 .sticky-add-bar .sticky-extras .sticky-swatches {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-top: 4px;
+  gap: 8px;
+  order: 10;
 }
-
 .sticky-add-bar .sticky-extras .sticky-swatch {
   width: 18px;
   height: 18px;
@@ -875,55 +891,6 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   height: 0.8px;
   background: #fff;
   transform: rotate(-45deg);
-}
-
-/* ── MINIMIZED STATE: scrolled down — wide btn left, price right ── */
-.sticky-add-bar.minimized {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  gap: 12px;
-}
-
-/* Hide name in minimized */
-.sticky-add-bar.minimized .sticky-name { display: none; }
-
-/* Price on the right side */
-.sticky-add-bar.minimized .sticky-price {
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
-  letter-spacing: var(--ui-letter-spacing);
-  margin-bottom: 0;
-  flex-shrink: 0;
-  order: 2;
-}
-
-/* Button on left, ~80% width */
-.sticky-add-bar.minimized .sticky-add-btn {
-  width: 80%;
-  flex-shrink: 0;
-  padding: 12px 16px;
-  order: 1;
-}
-
-/* Minimized extended: same as default extended but triggered from minimized */
-.sticky-add-bar.minimized.extended {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  gap: 0;
-}
-.sticky-add-bar.minimized.extended .sticky-price { order: 0; display: none; }
-.sticky-add-bar.minimized.extended .sticky-add-btn { display: none; width: 100%; order: 0; }
-.sticky-add-bar.minimized.extended .sticky-extras {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  order: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════
