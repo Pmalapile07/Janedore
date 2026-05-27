@@ -166,10 +166,69 @@ function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDe
 window.addEventListener('resize', setHeroImage);
 
 function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
-function getProductImages(product, variantIndex) { const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0); const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {}; if (product.category === 'jewelry') return [...(variant.images?.model||[]), ...(variant.images?.ghost||[])].filter(Boolean).length ? [...(variant.images?.model||[]), ...(variant.images?.ghost||[])].filter(Boolean) : [PLACEHOLDER_IMAGE]; return variant.images?.[S.imageMode] || variant.images?.ghost || variant.images?.model || [PLACEHOLDER_IMAGE]; }
+
+/* ── Image helpers — NO duplication ── */
+function getProductImages(product, variantIndex) {
+  const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
+  const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
+  if (product.category === 'jewelry') {
+    const modelImgs = (variant.images?.model || []).filter(Boolean);
+    const ghostImgs = (variant.images?.ghost || []).filter(Boolean);
+    // Deduplicate: use model if available, otherwise ghost, no combining both
+    const combined = modelImgs.length ? modelImgs : ghostImgs;
+    return combined.length ? combined : [PLACEHOLDER_IMAGE];
+  }
+  const imgs = (variant.images?.[S.imageMode] || []).filter(Boolean);
+  if (imgs.length) return imgs;
+  const ghost = (variant.images?.ghost || []).filter(Boolean);
+  if (ghost.length) return ghost;
+  const model = (variant.images?.model || []).filter(Boolean);
+  return model.length ? model : [PLACEHOLDER_IMAGE];
+}
+
 function getProductThumbnail(product, variantIndex) { return safeImage(getProductImages(product, variantIndex)[0]); }
-function getAllProductImages(product, variantIndex) { const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0); const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {}; const detail = (variant.images?.detail || []).filter(Boolean); if (product.category === 'jewelry') return [...(variant.images?.model||[]), ...(variant.images?.ghost||[]), ...detail].map(safeImage).filter(Boolean).length ? [...(variant.images?.model||[]), ...(variant.images?.ghost||[]), ...detail].map(safeImage) : [PLACEHOLDER_IMAGE]; return [...(variant.images?.ghost||[]), ...(variant.images?.model||[]), ...detail].map(safeImage) || [PLACEHOLDER_IMAGE]; }
-function getSecondaryImages(product, variantIndex) { const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0); const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {}; const detail = (variant.images?.detail || []).filter(Boolean); const model = (variant.images?.model || []).filter(Boolean); return [...model, ...detail]; }
+
+function getAllProductImages(product, variantIndex) {
+  const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
+  const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
+  const detail = (variant.images?.detail || []).filter(Boolean);
+  const ghost = (variant.images?.ghost || []).filter(Boolean);
+  const model = (variant.images?.model || []).filter(Boolean);
+
+  if (product.category === 'jewelry') {
+    // For jewelry: prefer model, fallback ghost — never combine both sets
+    const primary = model.length ? model : ghost;
+    const all = [...primary, ...detail];
+    // Deduplicate by URL
+    const seen = new Set();
+    const deduped = all.filter(u => { if (seen.has(u)) return false; seen.add(u); return true; });
+    return deduped.length ? deduped : [PLACEHOLDER_IMAGE];
+  }
+
+  // For non-jewelry: ghost first, then model only if ghost is empty, then detail
+  let primary;
+  if (ghost.length) {
+    primary = ghost;
+  } else {
+    primary = model;
+  }
+  const all = [...primary, ...detail];
+  const seen = new Set();
+  const deduped = all.filter(u => { if (seen.has(u)) return false; seen.add(u); return true; });
+  return deduped.length ? deduped : [PLACEHOLDER_IMAGE];
+}
+
+function getSecondaryImages(product, variantIndex) {
+  const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
+  const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
+  const detail = (variant.images?.detail || []).filter(Boolean);
+  const model = (variant.images?.model || []).filter(Boolean);
+  // Return only model + detail for the below-fold secondary images
+  const all = [...model, ...detail];
+  const seen = new Set();
+  return all.filter(u => { if (seen.has(u)) return false; seen.add(u); return true; });
+}
+
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
 function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'…'; }
 function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toFixed(2)}`; }
@@ -248,7 +307,6 @@ function toggleFilterDropdown(source) { const id = source === 'category' ? 'filt
 function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false; if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false; const price = p.salePrice ?? p.price; if(S.filter.price==='low' && price >= 500) return false; if(S.filter.price==='high' && price < 500) return false; return true; }); }
 function getCatFilteredProducts() { const isAllClothing = S.currentCategoryPage === 'all-clothing'; const clothingCats = ['dresses','tops','bottoms','jackets','sets']; return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(p.id==='janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return false; if(isAllClothing) { if(!clothingCats.includes(p.category)) return false; } else if(S.currentCategoryPage && p.category !== S.currentCategoryPage) return false; if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= 500) return false; if(S.catFilter.price==='high' && price < 500) return false; return true; }); }
 
-/* ── Editorial Grid ── */
 function applyEditorialGrid(gridEl, cols) {
   if (!gridEl) return;
   gridEl.classList.remove('editorial-1col', 'editorial-2col', 'editorial-3col');
@@ -315,15 +373,126 @@ function toggleGridCat() {
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
 
-/* ── Sticky Bar ── */
+/* ══════════════════════════════════════════════════════════════
+   STICKY BAR — REWORKED
+   ══════════════════════════════════════════════════════════════ */
+
 function removeStickyBar() { const e=document.getElementById('sticky-add-bar'); if(e)e.remove(); S.stickyExtended=false; }
-function createStickyBar(product) { removeStickyBar(); const soldOut=isProductSoldOut(product); const vi=S.productVariantSelections[product.id]??0; const price=product.salePrice?product.salePrice:product.price; const bar=document.createElement('div'); bar.id='sticky-add-bar'; bar.className='sticky-add-bar'; bar.innerHTML=`<div class="sticky-name">${product.name||''}</div><div class="sticky-price">${formatPrice(price)}</div><div class="sticky-extras"><div class="sticky-sizes" id="sticky-sizes">${(product.sizes||[]).map(s=>`<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join("")}</div><div class="sticky-swatches" id="sticky-swatches">${stickySwatchesHtml(product,vi)}</div></div><button class="sticky-add-btn" onclick="handleStickyAddClick('${product.id}')"${soldOut?' disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>`; document.body.appendChild(bar); updateStickyBarOnScroll(); }
-function handleStickyAddClick(productId) { const bar=document.getElementById('sticky-add-bar'); if(!bar) return; if(!S.stickyExtended){bar.classList.add('extended');S.stickyExtended=true;} else { addToCartFromDetailSticky(productId); } }
-function selectStickySize(btn,size) { document.querySelectorAll('#sticky-sizes .sticky-size-btn').forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
-function updateStickyBarExtras() { const product=PRODUCTS.find(p=>p.id===S.currentReviewProductId); if(!product) return; const vi=S.productVariantSelections[product.id]??0; const se=document.getElementById('sticky-swatches'); if(se) se.innerHTML=stickySwatchesHtml(product,vi); }
-function updateStickyBarOnScroll() { const bar=document.getElementById('sticky-add-bar'); if(!bar||S.currentPage!=='product-detail') return; const pi=document.querySelector('.product-info'); if(!pi) return; if(pi.getBoundingClientRect().top<window.innerHeight*0.3){bar.classList.add('minimized');if(S.stickyExtended){bar.classList.remove('extended');S.stickyExtended=false;}const btn=bar.querySelector('.sticky-add-btn');if(btn&&!btn.disabled)btn.textContent='Add';}else{bar.classList.remove('minimized');const btn=bar.querySelector('.sticky-add-btn');if(btn&&!btn.disabled)btn.textContent='Add to Bag';} }
-function updateStickyBar(product) { const bar=document.getElementById('sticky-add-bar'); if(!bar){createStickyBar(product);return;} const soldOut=isProductSoldOut(product); const vi=S.productVariantSelections[product.id]??0; const price=product.salePrice?product.salePrice:product.price; bar.querySelector('.sticky-name').textContent=product.name||''; bar.querySelector('.sticky-price').textContent=formatPrice(price); const se=bar.querySelector('#sticky-sizes'); if(se)se.innerHTML=(product.sizes||[]).map(s=>`<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join(""); const sw=bar.querySelector('#sticky-swatches'); if(sw)sw.innerHTML=stickySwatchesHtml(product,vi); const btn=bar.querySelector('.sticky-add-btn'); btn.disabled=soldOut; btn.textContent=soldOut?'Sold Out':(bar.classList.contains('minimized')?'Add':'Add to Bag'); }
-function addToCartFromDetailSticky(id) { if(!S.selectedSize){const bar=document.getElementById('sticky-add-bar'); if(bar&&!S.stickyExtended){bar.classList.add('extended');S.stickyExtended=true;}return;} const product=PRODUCTS.find(p=>p.id===id); if(product&&isProductSoldOut(product))return; addToCart(id,S.selectedSize); openCart(); const bar=document.getElementById('sticky-add-bar'); if(bar){bar.classList.remove('extended');S.stickyExtended=false;} }
+
+function createStickyBar(product) {
+  removeStickyBar();
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+  const bar = document.createElement('div');
+  bar.id = 'sticky-add-bar';
+  bar.className = 'sticky-add-bar';
+  bar.innerHTML = `
+    <div class="sticky-name">${product.name || ''}</div>
+    <div class="sticky-price">${formatPrice(price)}</div>
+    <div class="sticky-extras">
+      <div class="sticky-sizes" id="sticky-sizes">
+        ${(product.sizes || []).map(s => `<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join('')}
+      </div>
+      <div class="sticky-swatches" id="sticky-swatches">${stickySwatchesHtml(product, vi)}</div>
+    </div>
+    <button class="sticky-add-btn" id="sticky-add-btn" onclick="handleStickyAddClick('${product.id}')" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold Out' : 'Add to Bag'}</button>
+  `;
+  document.body.appendChild(bar);
+  updateStickyBarOnScroll();
+}
+
+function handleStickyAddClick(productId) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) return;
+  if (!S.stickyExtended) {
+    // First click: expand — show sizes & swatches, hide the add button
+    bar.classList.add('extended');
+    S.stickyExtended = true;
+  } else {
+    // Second click (only reachable if button somehow still visible — fallback)
+    addToCartFromDetailSticky(productId);
+  }
+}
+
+function selectStickySize(btn, size) {
+  document.querySelectorAll('#sticky-sizes .sticky-size-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  S.selectedSize = size;
+  // After selecting a size, add to cart and collapse
+  addToCartFromDetailSticky(btn.closest('#sticky-add-bar')?.dataset?.productId || S.currentReviewProductId);
+}
+
+function updateStickyBarExtras() {
+  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
+  if (!product) return;
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const se = document.getElementById('sticky-swatches');
+  if (se) se.innerHTML = stickySwatchesHtml(product, vi);
+}
+
+function updateStickyBarOnScroll() {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar || S.currentPage !== 'product-detail') return;
+  const pi = document.querySelector('.product-info');
+  if (!pi) return;
+  const isScrolled = pi.getBoundingClientRect().top < window.innerHeight * 0.3;
+  if (isScrolled) {
+    // Minimized state: btn left 80%, price right
+    if (!S.stickyExtended) {
+      bar.classList.add('minimized');
+    }
+  } else {
+    // Default full state
+    if (!S.stickyExtended) {
+      bar.classList.remove('minimized');
+    }
+  }
+}
+
+function updateStickyBar(product) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) { createStickyBar(product); return; }
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+  const nameEl = bar.querySelector('.sticky-name');
+  const priceEl = bar.querySelector('.sticky-price');
+  const se = bar.querySelector('#sticky-sizes');
+  const sw = bar.querySelector('#sticky-swatches');
+  const btn = bar.querySelector('.sticky-add-btn');
+  if (nameEl) nameEl.textContent = product.name || '';
+  if (priceEl) priceEl.textContent = formatPrice(price);
+  if (se) se.innerHTML = (product.sizes || []).map(s => `<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join('');
+  if (sw) sw.innerHTML = stickySwatchesHtml(product, vi);
+  if (btn) { btn.disabled = soldOut; btn.textContent = soldOut ? 'Sold Out' : (bar.classList.contains('minimized') ? 'Add' : 'Add to Bag'); }
+}
+
+function addToCartFromDetailSticky(id) {
+  if (!S.selectedSize) {
+    // Expand to show sizes if not already
+    const bar = document.getElementById('sticky-add-bar');
+    if (bar && !S.stickyExtended) { bar.classList.add('extended'); S.stickyExtended = true; }
+    return;
+  }
+  const product = PRODUCTS.find(p => p.id === id);
+  if (product && isProductSoldOut(product)) return;
+  addToCart(id, S.selectedSize);
+  openCart();
+  // Collapse back to default state
+  const bar = document.getElementById('sticky-add-bar');
+  if (bar) {
+    bar.classList.remove('extended');
+    S.stickyExtended = false;
+    // Restore correct state (minimized or not)
+    updateStickyBarOnScroll();
+  }
+  S.selectedSize = null;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   END STICKY BAR
+   ══════════════════════════════════════════════════════════════ */
 
 function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
 function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
@@ -439,7 +608,6 @@ function moveCampaignSlider(dir){const total=Math.ceil(PRODUCTS.filter(p=>p.stat
 function buildFooter(id) { const el=document.getElementById(id); if(!el)return; const currLabel=CURRENCIES[S.currency]?.label??"ZAR R"; const sections=["shop","brands","policies","help"]; const collapseHTML=sections.map(sec=>{const links={shop:["New In","Dresses","Tops","Bottoms","Jackets","Sets","Bags","Jewelry","Scent","Sale"],brands:[],policies:["About","Shipping Policy","Return Policy","Privacy Policy","Terms & Conditions"],help:["FAQ","Size Guide","Shipping","Returns","Contact"]}[sec]; return `<div class="footer-collapse" id="footer-collapse-${sec}-${id}"><div class="footer-collapse-header" onclick="toggleFooterCollapse('${sec}-${id}')">${sec.charAt(0).toUpperCase()+sec.slice(1)} <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="footer-collapse-body"><ul class="footer-links">${links.map(l=>`<li><a>${l}</a></li>`).join("")}</ul></div></div>`;}).join(""); el.innerHTML=`<div class="footer-top">${collapseHTML}</div><p class="footer-about">Janedore is a curated multi-brand fashion destination rooted in South Africa.</p><div class="footer-currency-lang">...</div><div class="footer-bottom"><div class="footer-copy">© 2025 JANEDORE. ALL RIGHTS RESERVED.</div></div>`; }
 function toggleFooterCollapse(id) { document.getElementById(`footer-collapse-${id}`)?.classList.toggle("open"); }
 
-/* ── Menu & Submenu Collapse ── */
 function toggleSubmenuCollapse(section) {
   const el = document.getElementById(section + '-collapse');
   if (el) el.classList.toggle('open');
