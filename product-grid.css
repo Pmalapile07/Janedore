@@ -8,10 +8,10 @@
   grid-column: span 2;
 }
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4/5;
 }
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4/5;
 }
 .product-grid.editorial-1col {
   grid-template-columns: 1fr;
@@ -19,11 +19,11 @@
 .product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4/5;
 }
 .product-grid.editorial-3col {
   grid-template-columns: repeat(3, 1fr);
 }
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4/5;
 }
