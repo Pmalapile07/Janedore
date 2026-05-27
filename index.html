@@ -82,7 +82,6 @@
 </button>
 
 <script src="firebase.js"></script>
-<script src="app.js"></script>
 
 <script src="vendors.js"></script>
 <script src="cart.js"></script>
@@ -96,8 +95,10 @@
 <script src="sliders.js"></script>
 <script src="footer.js"></script>
 <script src="chat.js"></script>
+
+<script src="app.js"></script>
+
 <div id="chat-container"></div>
-<script>
   fetch('chat-widget.html').then(r=>r.text()).then(html=>{
     document.getElementById('chat-container').innerHTML = html;
   });
