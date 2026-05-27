@@ -1,0 +1,17 @@
+.swipe-section { position: relative; padding: 32px 0; max-width: 1400px; margin: 0 auto; }
+.swipe-section-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 12px; }
+.swipe-track-wrap { overflow: hidden; touch-action: pan-y pinch-zoom; cursor: grab; }
+.swipe-track-wrap:active { cursor: grabbing; }
+.swipe-track { display: flex; gap: 8px; transition: transform 0.4s ease; will-change: transform; }
+.swipe-track .product-card { flex: 0 0 calc(50% - 4px); }
+@media (min-width: 640px) { .swipe-track .product-card { flex: 0 0 calc(33.333% - 6px); } }
+@media (min-width: 1024px) { .swipe-track .product-card { flex: 0 0 calc(25% - 6px); } }
+.swipe-bars { display: flex; justify-content: flex-start; gap: 6px; margin-top: 14px; }
+.swipe-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
+.swipe-bar.active { background: #111; }
+.reviews-section, .recently-viewed-section { padding: 32px 0; }
+.reviews-title, .recently-viewed-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 12px; }
+.recently-viewed-title { margin-bottom: 16px; }
+.no-reviews { font-size: var(--body-font-size); font-weight: var(--body-font-weight); color: #888; margin-bottom: 12px; }
+.write-review-btn { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #555; background: none; padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; cursor: pointer; border: none; border-bottom: 1px solid #555; }
+.write-review-btn:hover { color: #111; border-color: #111; }
