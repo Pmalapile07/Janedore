@@ -1,113 +1,195 @@
-function removeStickyBar() { const e=document.getElementById('sticky-add-bar'); if(e)e.remove(); S.stickyExtended=false; }
+// =========================================
+//  STICKY ADD TO CART — JANEDORE
+//  Zara-style UX: tap size → instant add
+// =========================================
+
+function removeStickyBar() {
+  const e = document.getElementById('sticky-add-bar');
+  if (e) e.remove();
+  S.stickyExtended = false;
+}
+
 function createStickyBar(product) {
   removeStickyBar();
-  const soldOut=isProductSoldOut(product);
-  const vi=S.productVariantSelections[product.id]??0;
-  const price=product.salePrice?product.salePrice:product.price;
-  const bar=document.createElement('div');
-  bar.id='sticky-add-bar';
-  bar.className='sticky-add-bar';
-  bar.innerHTML=`
-    <div class="sticky-name">${product.name||''}</div>
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+  const bar = document.createElement('div');
+  bar.id = 'sticky-add-bar';
+  bar.className = 'sticky-add-bar';
+  bar.innerHTML = `
+    <div class="sticky-name">${product.name || ''}</div>
     <div class="sticky-price">${formatPrice(price)}</div>
     <div class="sticky-extras">
-      <div class="sticky-sizes" id="sticky-sizes">${(product.sizes||[]).map(s=>`<button class="sticky-size-btn${S.selectedSize===s?' sel':''}" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join("")}</div>
-      <div class="sticky-swatches" id="sticky-swatches">${stickySwatchesHtml(product,vi)}</div>
+      <div class="sticky-sizes" id="sticky-sizes">
+        ${(product.sizes || []).map(s =>
+          `<button class="sticky-size-btn${S.selectedSize === s ? ' sel' : ''}"
+            onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
+          >${s}</button>`
+        ).join('')}
+      </div>
+      <div class="sticky-swatches" id="sticky-swatches">${stickySwatchesHtml(product, vi)}</div>
     </div>
-    <button class="sticky-add-btn" onclick="handleStickyAddClick('${product.id}')"${soldOut?' disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>`;
+    <button class="sticky-add-btn"
+      onclick="handleStickyAddClick('${product.id}')"
+      ${soldOut ? ' disabled' : ''}
+    >${soldOut ? 'Sold Out' : 'Add to Bag'}</button>`;
   document.body.appendChild(bar);
   S.stickyExtended = false;
   updateStickyBarOnScroll();
 }
+
+// ─── Open size panel ───────────────────────────────────────
 function handleStickyAddClick(productId) {
-  const bar=document.getElementById('sticky-add-bar');
-  if(!bar) return;
-  if(!S.stickyExtended) {
-    bar.classList.add('extended');
-    S.stickyExtended = true;
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) return;
+
+  // Already extended — do nothing (sizes handle their own tap)
+  if (S.stickyExtended) return;
+
+  // Expand to show sizes
+  bar.classList.add('extended');
+  S.stickyExtended = true;
+  setTimeout(() => {
+    const barHeight = bar.offsetHeight;
+    bar.style.transform = `translateY(-${barHeight - 60}px)`;
+  }, 10);
+}
+
+// ─── Tap size → instant add ────────────────────────────────
+function onStickySelectSize(btn, size, productId) {
+  // Visual selection
+  document.querySelectorAll('#sticky-sizes .sticky-size-btn')
+    .forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  S.selectedSize = size;
+
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product || isProductSoldOut(product)) return;
+
+  // Instant add
+  addToCart(productId, size);
+
+  // Luxury feedback — no aggressive cart drawer
+  _stickyAddedFeedback(productId, product);
+}
+
+// ─── "Added" feedback then collapse ───────────────────────
+function _stickyAddedFeedback(productId, product) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) return;
+
+  // Collapse extended panel
+  bar.classList.remove('extended');
+  bar.style.transform = '';
+  S.stickyExtended = false;
+  S.selectedSize = null;
+
+  // Reset size button states
+  const sizesEl = bar.querySelector('#sticky-sizes');
+  if (sizesEl && product) {
+    sizesEl.innerHTML = (product.sizes || []).map(s =>
+      `<button class="sticky-size-btn"
+        onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
+      >${s}</button>`
+    ).join('');
+  }
+
+  // Brief "Added" state on the button — then restore
+  const btn = bar.querySelector('.sticky-add-btn');
+  if (btn) {
+    bar.classList.add('added-feedback');
+    btn.textContent = 'Added';
+
     setTimeout(() => {
-      const barHeight = bar.offsetHeight;
-      bar.style.transform = `translateY(-${barHeight - 60}px)`;
-    }, 10);
-  } else {
-    addToCartFromDetailSticky(productId);
+      bar.classList.remove('added-feedback');
+      const isMin = bar.classList.contains('minimized');
+      btn.textContent = isMin ? 'Add' : 'Add to Bag';
+    }, 1600);
   }
 }
-function selectStickySize(btn,size) {
-  document.querySelectorAll('#sticky-sizes .sticky-size-btn').forEach(b=>b.classList.remove("sel"));
-  btn.classList.add("sel");
-  S.selectedSize=size;
+
+// ─── Legacy: size chosen via selectStickySize ─────────────
+// Kept for any direct call sites outside the bar
+function selectStickySize(btn, size) {
+  document.querySelectorAll('#sticky-sizes .sticky-size-btn')
+    .forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  S.selectedSize = size;
 }
-function updateStickyBarExtras() {
-  const product=PRODUCTS.find(p=>p.id===S.currentReviewProductId);
-  if(!product) return;
-  const vi=S.productVariantSelections[product.id]??0;
-  const se=document.getElementById('sticky-swatches');
-  if(se) se.innerHTML=stickySwatchesHtml(product,vi);
-}
+
+// ─── Scroll state: full → minimized ───────────────────────
 function updateStickyBarOnScroll() {
-  const bar=document.getElementById('sticky-add-bar');
-  if(!bar||S.currentPage!=='product-detail') return;
-  const pi=document.querySelector('.product-info');
-  if(!pi) return;
-  if(pi.getBoundingClientRect().top<window.innerHeight*0.3){
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar || S.currentPage !== 'product-detail') return;
+  const pi = document.querySelector('.product-info');
+  if (!pi) return;
+
+  const isMin = pi.getBoundingClientRect().top < window.innerHeight * 0.3;
+
+  if (isMin) {
     bar.classList.add('minimized');
-    if(!S.stickyExtended) {
-      bar.style.transform = '';
-    }
-    const btn=bar.querySelector('.sticky-add-btn');
-    if(btn&&!btn.disabled)btn.textContent='Add';
+    if (!S.stickyExtended) bar.style.transform = '';
+    const btn = bar.querySelector('.sticky-add-btn');
+    if (btn && !btn.disabled && btn.textContent !== 'Added') btn.textContent = 'Add';
   } else {
     bar.classList.remove('minimized');
-    if(!S.stickyExtended) {
-      bar.style.transform = '';
-    }
-    const btn=bar.querySelector('.sticky-add-btn');
-    if(btn&&!btn.disabled)btn.textContent='Add to Bag';
+    if (!S.stickyExtended) bar.style.transform = '';
+    const btn = bar.querySelector('.sticky-add-btn');
+    if (btn && !btn.disabled && btn.textContent !== 'Added') btn.textContent = 'Add to Bag';
   }
 }
-function updateStickyBar(product) {
-  const bar=document.getElementById('sticky-add-bar');
-  if(!bar){createStickyBar(product);return;}
-  const soldOut=isProductSoldOut(product);
-  const vi=S.productVariantSelections[product.id]??0;
-  const price=product.salePrice?product.salePrice:product.price;
-  bar.querySelector('.sticky-name').textContent=product.name||'';
-  bar.querySelector('.sticky-price').textContent=formatPrice(price);
-  const se=bar.querySelector('#sticky-sizes');
-  if(se)se.innerHTML=(product.sizes||[]).map(s=>`<button class="sticky-size-btn${S.selectedSize===s?' sel':''}" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join("");
-  const sw=bar.querySelector('#sticky-swatches');
-  if(sw)sw.innerHTML=stickySwatchesHtml(product,vi);
-  const btn=bar.querySelector('.sticky-add-btn');
-  btn.disabled=soldOut;
-  btn.textContent=soldOut?'Sold Out':(bar.classList.contains('minimized')?'Add':'Add to Bag');
+
+// ─── Update swatches only ──────────────────────────────────
+function updateStickyBarExtras() {
+  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
+  if (!product) return;
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const se = document.getElementById('sticky-swatches');
+  if (se) se.innerHTML = stickySwatchesHtml(product, vi);
 }
-function addToCartFromDetailSticky(id) {
-  if(!S.selectedSize){
-    const bar=document.getElementById('sticky-add-bar');
-    if(bar&&!S.stickyExtended){
-      bar.classList.add('extended');
-      S.stickyExtended=true;
-      setTimeout(() => {
-        const barHeight = bar.offsetHeight;
-        bar.style.transform = `translateY(-${barHeight - 60}px)`;
-      }, 10);
+
+// ─── Full bar update (variant/price change) ────────────────
+function updateStickyBar(product) {
+  const bar = document.getElementById('sticky-add-bar');
+  if (!bar) { createStickyBar(product); return; }
+
+  const soldOut = isProductSoldOut(product);
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const price = product.salePrice ? product.salePrice : product.price;
+
+  bar.querySelector('.sticky-name').textContent = product.name || '';
+  bar.querySelector('.sticky-price').textContent = formatPrice(price);
+
+  const se = bar.querySelector('#sticky-sizes');
+  if (se) se.innerHTML = (product.sizes || []).map(s =>
+    `<button class="sticky-size-btn${S.selectedSize === s ? ' sel' : ''}"
+      onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
+    >${s}</button>`
+  ).join('');
+
+  const sw = bar.querySelector('#sticky-swatches');
+  if (sw) sw.innerHTML = stickySwatchesHtml(product, vi);
+
+  const btn = bar.querySelector('.sticky-add-btn');
+  if (btn) {
+    btn.disabled = soldOut;
+    if (soldOut) {
+      btn.textContent = 'Sold Out';
+    } else if (btn.textContent !== 'Added') {
+      btn.textContent = bar.classList.contains('minimized') ? 'Add' : 'Add to Bag';
     }
+  }
+}
+
+// ─── Legacy shim — kept for any existing call sites ────────
+function addToCartFromDetailSticky(id) {
+  if (!S.selectedSize) {
+    handleStickyAddClick(id);
     return;
   }
-  const product=PRODUCTS.find(p=>p.id===id);
-  if(product&&isProductSoldOut(product))return;
-  addToCart(id,S.selectedSize);
-  openCart();
-  const bar=document.getElementById('sticky-add-bar');
-  if(bar){
-    bar.classList.remove('extended');
-    bar.style.transform = '';
-    S.stickyExtended=false;
-    S.selectedSize = null;
-    const sizesEl = bar.querySelector('#sticky-sizes');
-    if(sizesEl && product) {
-      sizesEl.innerHTML = (product.sizes||[]).map(s=>`<button class="sticky-size-btn" onclick="event.stopPropagation();selectStickySize(this,'${s}')">${s}</button>`).join("");
-    }
-  }
+  const product = PRODUCTS.find(p => p.id === id);
+  if (product && isProductSoldOut(product)) return;
+  addToCart(id, S.selectedSize);
+  _stickyAddedFeedback(id, product);
 }
