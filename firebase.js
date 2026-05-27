@@ -1,6 +1,9 @@
-const firebaseConfig = { apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI", authDomain: "janedore-9f035.firebaseapp.com", projectId: "janedore-9f035", storageBucket: "janedore-9f035.firebasestorage.app", messagingSenderId: "571299748651", appId: "1:571299748651:web:01463a772d47b39cc4036e", measurementId: "G-Y9NMT0ZGKZ" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+window.db = firebase.firestore();
+const db = window.db;
 
 async function getProductReviews(productId) {
   try { const s = await db.collection('reviews').where('productId','==',productId).get(); const reviews = s.docs.map(d=>({id:d.id,...d.data()})); reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)); return reviews; } catch(e) { return []; }
