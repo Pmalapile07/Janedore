@@ -1,0 +1,5 @@
+.back-btn-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 860; }
+.back-btn { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; background: none; padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; cursor: pointer; border: none; border-bottom: 1px solid #111; }
+.back-btn:hover { color: #555; border-color: #555; }
+#live-chat-bubble { display: none !important; }
+#page-home.active ~ #live-chat-bubble { display: flex !important; }
