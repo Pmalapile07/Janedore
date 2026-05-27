@@ -134,85 +134,72 @@
 }
 
 /* =========================================
-   MINIMIZED STATE — TRUE ZARA ROW
-   Uses display:grid to fully escape
-   any inherited flex-column spacing
+   MINIMIZED STATE — CLEAN FLEX ROW
    ========================================= */
 
 .sticky-add-bar.minimized {
-  /* Override flex-column entirely with grid */
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto;
-
+  /* Override to flex row */
+  display: flex;
+  flex-direction: row;
   align-items: center;
-
-  /* Reset all spacing — no inherited gaps */
-  gap: 0;
-  column-gap: 14px;
-
+  
+  /* Reset all spacing */
+  gap: 12px;
+  
   padding: 0 16px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-
-  /* Exact compact height — no extra space */
-  height: calc(56px + env(safe-area-inset-bottom, 0px));
-  min-height: unset;
-
+  padding-bottom: 0;
+  
+  /* Remove any fixed height */
+  height: auto;
+  min-height: 52px;
+  
   background: #f8f8f8;
-
+  
   border-top: 0.5px solid rgba(0,0,0,0.10);
-
+  
   box-shadow: none;
 }
 
-/* In minimized: map grid children explicitly */
+/* Button takes available space */
 .sticky-add-bar.minimized .sticky-add-btn {
-  grid-column: 1;
-  grid-row: 1;
-
-  /* Reset inherited full-width */
-  width: auto;
+  flex: 1;
   min-width: 0;
-
+  
   height: 40px;
-
+  
   padding: 0 20px;
-
+  
   border: 0.8px solid #111;
-
+  
   background: #fff;
-
+  
   display: flex;
   align-items: center;
   justify-content: center;
-
+  
   font-size: 13px;
   font-weight: 400;
-
+  
   letter-spacing: 0.09em;
-
+  
   text-transform: uppercase;
 }
 
+/* Price stays compact on the right */
 .sticky-add-bar.minimized .sticky-price {
-  grid-column: 2;
-  grid-row: 1;
-
-  /* Reset inherited margin */
-  margin: 0;
-
   flex-shrink: 0;
-
+  white-space: nowrap;
+  
+  margin: 0;
+  
   display: flex;
   align-items: center;
-
-  white-space: nowrap;
-
+  
   font-size: 13px;
   font-weight: 400;
-
+  
   letter-spacing: 0.04em;
-
+  
   color: #111;
 }
 
@@ -389,9 +376,8 @@
   }
 
   .sticky-add-bar.minimized {
-    /* Height absorbs safe area — no extra padding needed */
-    height: calc(56px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: 0;
+    /* Let the bar itself absorb safe area via padding-bottom */
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
