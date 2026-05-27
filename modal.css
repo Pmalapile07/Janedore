@@ -1,0 +1,25 @@
+#review-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#review-modal-backdrop.open { opacity: 1; pointer-events: all; }
+#review-modal { background: #fff; width: 90%; max-width: 480px; padding: 40px 32px; position: relative; }
+.review-modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+.review-modal-title {
+  font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight); text-transform: uppercase; margin-bottom: 24px; text-align: center;
+}
+.review-stars { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.review-star-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #ccc; transition: color 0.2s; padding: 0; }
+.review-star-btn.filled { color: #111; }
+.review-textarea { width: 100%; border: 0.8px solid #ddd; padding: 14px; font-family: 'Manrope', sans-serif; font-size: 12px; resize: vertical; min-height: 100px; margin-bottom: 20px; outline: none; }
+.review-textarea:focus { border-color: #111; }
+.review-image-upload { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+.review-image-label { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: 400; text-transform: uppercase; color: #888; cursor: pointer; display: flex; align-items: center; gap: 8px; border: 0.8px solid #ddd; padding: 10px 16px; transition: all 0.2s; }
+.review-image-label:hover { border-color: #111; color: #111; }
+.review-image-label i { font-size: 18px; }
+#review-image-input { display: none; }
+.review-image-preview { width: 60px; height: 60px; object-fit: cover; display: none; border: 0.8px solid #ddd; }
+.review-submit-btn { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+.review-submit-btn:hover { background: #333; }
