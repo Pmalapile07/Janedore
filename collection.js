@@ -1,0 +1,112 @@
+const COLLECTION_DESCRIPTIONS = {
+  'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.', 'dresses': 'Effortless dresses that balance structure and fluidity.', 'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.', 'bottoms': 'Tailored trousers and fluid skirts with quiet intention.', 'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.', 'sets': 'Coordinated pieces designed to be worn together or styled apart.', 'bags': 'Understated accessories that complete the look without saying too much.', 'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.', 'sunglasses': 'Bold yet refined eyewear for the discerning gaze.', 'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.', 'all': 'All pieces — a curated view of everything in store.'
+};
+const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
+
+function merchandiseProducts(products) { if (!products || !products.length) return []; const filtered = products.filter(p => p.id !== 'janedore-leather-pouch'); const sorted = [...filtered].sort((a, b) => { const oA = CATEGORY_ORDER[a.category] ?? 99; const oB = CATEGORY_ORDER[b.category] ?? 99; if (oA !== oB) return oA - oB; const pA = a.salePrice ?? a.price ?? 0; const pB = b.salePrice ?? b.price ?? 0; return pA - pB; }); return sorted; }
+function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
+function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false; if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false; const price = p.salePrice ?? p.price; if(S.filter.price==='low' && price >= 500) return false; if(S.filter.price==='high' && price < 500) return false; return true; }); }
+function getCatFilteredProducts() { const isAllClothing = S.currentCategoryPage === 'all-clothing'; const clothingCats = ['dresses','tops','bottoms','jackets','sets']; return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(p.id==='janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return false; if(isAllClothing) { if(!clothingCats.includes(p.category)) return false; } else if(S.currentCategoryPage && p.category !== S.currentCategoryPage) return false; if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= 500) return false; if(S.catFilter.price==='high' && price < 500) return false; return true; }); }
+function applyFilter(type, value) { S.filter[type] = value; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); }
+function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
+function toggleFilterDropdown(source) { const id = source === 'category' ? 'filter-options-category' : 'filter-options-products'; const el = document.getElementById(id); if(el) { el.classList.toggle("open"); if(el.classList.contains("open")) setTimeout(() => document.addEventListener("click", function cf(e) { if(!el.contains(e.target) && !e.target.classList.contains("filter-trigger")) { el.classList.remove("open"); document.removeEventListener("click", cf); } }), 10); } }
+function applyEditorialGrid(gridEl, cols) {
+  if (!gridEl) return;
+  gridEl.classList.remove('editorial-1col', 'editorial-2col', 'editorial-3col');
+  gridEl.classList.add('editorial-' + cols + 'col');
+  const cards = gridEl.querySelectorAll('.product-card');
+  cards.forEach((card, i) => {
+    card.classList.remove('featured-card', 'tall-card');
+    if (cols === 2) {
+      if (i === 1 || i === 6 || i === 11) card.classList.add('featured-card');
+      if (i === 3 || i === 8) card.classList.add('tall-card');
+    }
+  });
+}
+function updateGridToggleSVG(svgId, cols) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  svg.classList.remove('cols-1', 'cols-2', 'cols-3');
+  svg.classList.add('cols-' + cols);
+  svg.querySelectorAll('.grid-block').forEach((b, i) => {
+    b.classList.toggle('active', i < cols);
+  });
+}
+function renderAllProducts() {
+  if(!DOM.allProductsGrid) return;
+  let prods = merchandiseProducts(getFilteredProducts());
+  DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)";
+  DOM.allProductsGrid.innerHTML = prods.map(p=>productCard(p, S.gridCols===3, true)).join("");
+  applyEditorialGrid(DOM.allProductsGrid, S.gridCols);
+  updateGridToggleSVG("grid-toggle-svg", S.gridCols);
+}
+function renderCategoryProducts() {
+  if(!S.currentCategoryPage || !DOM.categoryProductsGrid) return;
+  let cp;
+  if(S.currentCategoryPage==='parfum') cp=getCatFilteredProducts().filter(p=>p.category==='parfum');
+  else if(S.currentCategoryPage==='jewelry') cp=getCatFilteredProducts().filter(p=>p.category==='jewelry');
+  else if(S.currentCategoryPage==='sunglasses') cp=getCatFilteredProducts().filter(p=>p.category==='sunglasses'||p.id==='janedore-leather-pouch');
+  else if(S.currentCategoryPage==='all-clothing') cp=getCatFilteredProducts().filter(p=>['dresses','tops','bottoms','jackets','sets'].includes(p.category));
+  else if(['dresses','tops','bottoms','jackets','sets'].includes(S.currentCategoryPage)) cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage);
+  else if(S.currentCategoryPage==='bags') cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage&&p.id!=='janedore-leather-pouch');
+  else cp=getCatFilteredProducts();
+  let prods=merchandiseProducts(cp);
+  DOM.categoryProductsGrid.style.gridTemplateColumns=S.gridColsCat===1?"1fr":S.gridColsCat===2?"repeat(2,1fr)":"repeat(3,1fr)";
+  DOM.categoryProductsGrid.innerHTML=prods.map(p=>productCard(p,S.gridColsCat===3,true)).join("");
+  applyEditorialGrid(DOM.categoryProductsGrid, S.gridColsCat);
+  updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
+  if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
+}
+function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = sp.length ? sp.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
+function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
+function toggleGridCat() { S.gridColsCat = S.gridColsCat === 1 ? 2 : S.gridColsCat === 2 ? 3 : 1; renderCategoryProducts(); updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat); }
+function renderCollectionSortingTabs() {
+  const page = document.getElementById(S.currentPage === 'products' ? 'page-products' : 'page-category');
+  if (!page) return;
+  let existing = page.querySelector('.collection-sorting-tabs');
+  if (existing) existing.remove();
+  if (S.currentPage === 'category') return;
+  const tabs = [
+    { label: 'View All', cat: 'all' },
+    { label: 'Clothing', cat: 'all-clothing' },
+    { label: 'Dresses', cat: 'dresses' },
+    { label: 'Tops', cat: 'tops' },
+    { label: 'Bottoms', cat: 'bottoms' },
+    { label: 'Jackets', cat: 'jackets' },
+    { label: 'Sets', cat: 'sets' },
+    { label: 'Bags', cat: 'bags' },
+    { label: 'Jewelry', cat: 'jewelry' },
+    { label: 'Sunglasses', cat: 'sunglasses' },
+    { label: 'Scent', cat: 'parfum' },
+    { label: 'Sale', cat: 'sale' }
+  ];
+  const active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
+  const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${t.cat}')">${t.label}</button>`).join('');
+  const toolbarEl = page.querySelector('.collection-toolbar');
+  const container = document.createElement('div');
+  container.className = 'collection-sorting-tabs';
+  container.innerHTML = tabsHtml;
+  if (toolbarEl) {
+    toolbarEl.insertAdjacentElement('afterend', container);
+  }
+}
+function selectSortTab(cat) {
+  S.activeSortTab = cat;
+  if (cat === 'sale') { navigateToSale(); return; }
+  S.saleMode = false;
+  if (cat === 'all') { S.filter.cat = 'all'; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.currentCategoryPage = null; renderAllProducts(); }
+  else { navigateToCategory(cat); }
+  renderCollectionSortingTabs();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function buildCategoriesSlider() {
+  const grid = document.getElementById('home-categories-grid'); const progress = document.getElementById('home-categories-progress'); if (!grid || !progress) return;
+  const categories = [{ label:'Clothing',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287',cat:'all-clothing'},{ label:'Jewellery',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153',cat:'jewelry'},{ label:'Sunglasses',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287',cat:'sunglasses'},{ label:'Scent',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601',cat:'parfum'},{ label:'Bags',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703',cat:'bags'}];
+  grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${c.cat}')"><div class="home-category-img" style="background-image:url('${c.img}');background-size:cover;background-position:center;"></div><div class="home-category-label">${c.label}</div></div>`).join('');
+  const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
+  progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
+  grid.addEventListener('scroll', () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = window.innerWidth>=900?5:window.innerWidth>=640?3:2; const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); }, {passive:true});
+}
+function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,4).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildNewsletterSection(); }
+function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
