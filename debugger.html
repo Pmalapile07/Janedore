@@ -4,280 +4,162 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JANEDORE Debugger</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
+  <script src="vendors.js"></script>
+  <script src="cart.js"></script>
+  <script src="wishlist.js"></script>
+  <script src="navigation.js"></script>
+  <script src="search.js"></script>
+  <script src="modals.js"></script>
+  <script src="product-detail.js"></script>
+  <script src="sticky-bar.js"></script>
+  <script src="collection.js"></script>
+  <script src="sliders.js"></script>
+  <script src="footer.js"></script>
+  <script src="app.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Manrope', monospace; background: #0a0a0a; color: #e0e0e0; padding: 20px; }
-    h1 { font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 20px; color: #fff; }
-    .section { background: #1a1a1a; border: 1px solid #2a2a2a; padding: 16px; margin-bottom: 12px; border-radius: 4px; }
-    .section h2 { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+    body { font-family: sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 16px; font-size: 13px; }
+    h1 { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; color: #fff; text-align: center; }
+    .section { background: #1a1a1a; border: 1px solid #2a2a2a; padding: 12px; margin-bottom: 10px; border-radius: 6px; }
+    .section h2 { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
     .pass { color: #4ade80; }
     .fail { color: #f87171; }
     .warn { color: #fbbf24; }
     .info { color: #60a5fa; }
-    .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; border-bottom: 1px solid #1f1f1f; }
+    .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; border-bottom: 1px solid #1f1f1f; flex-wrap: wrap; gap: 4px; }
     .row:last-child { border-bottom: none; }
-    pre { background: #111; padding: 10px; font-size: 10px; overflow-x: auto; margin-top: 8px; border-radius: 3px; max-height: 300px; overflow-y: auto; }
-    button { background: #fff; color: #000; border: none; padding: 10px 20px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; margin-top: 10px; border-radius: 3px; }
-    button:hover { background: #ddd; }
+    button { background: #fff; color: #000; border: none; padding: 12px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 4px; width: 100%; margin-top: 6px; font-weight: 600; }
+    button:active { background: #ccc; }
+    .big-status { text-align: center; padding: 20px; font-size: 16px; font-weight: 700; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .badge-ok { background: #166534; color: #4ade80; }
+    .badge-bad { background: #7f1d1d; color: #f87171; }
   </style>
 </head>
 <body>
-  <h1>🔍 Janedore Debugger</h1>
+  <h1>Janedore Debugger</h1>
+  <div class="big-status" id="overall-status">Loading...</div>
 
   <div class="section">
-    <h2>📦 Files Loaded Check</h2>
-    <div id="files-check"></div>
+    <h2>Global Variables</h2>
+    <div id="globals"></div>
   </div>
 
   <div class="section">
-    <h2>🌐 Global Variables</h2>
-    <div id="globals-check"></div>
+    <h2>Products (PRODUCTS)</h2>
+    <div id="products-info"></div>
   </div>
 
   <div class="section">
-    <h2>🔌 Firebase Status</h2>
-    <div id="firebase-check"></div>
+    <h2>DOM Elements</h2>
+    <div id="dom-info"></div>
   </div>
 
   <div class="section">
-    <h2>🛒 Products (PRODUCTS)</h2>
-    <div id="products-check"></div>
+    <h2>Critical Functions</h2>
+    <div id="funcs-info"></div>
   </div>
 
   <div class="section">
-    <h2>🖥️ DOM Elements</h2>
-    <div id="dom-check"></div>
+    <h2>Page State</h2>
+    <div id="page-info"></div>
   </div>
 
-  <div class="section">
-    <h2>📄 Current Page State</h2>
-    <div id="page-check"></div>
-  </div>
-
-  <div class="section">
-    <h2>🛠️ Function Checks</h2>
-    <div id="function-check"></div>
-  </div>
-
-  <div class="section">
-    <h2>📋 Console Log</h2>
-    <pre id="console-log">Waiting for checks...</pre>
-    <button onclick="runAllChecks()">🔄 Re-run All Checks</button>
-    <button onclick="testHomepageRender()">🏠 Test Homepage Render</button>
-  </div>
+  <button onclick="location.reload()">Refresh Checks</button>
+  <button onclick="window.location.href='index.html'" style="background:#333;color:#fff;">Go to Main Site</button>
 
   <script>
-    const logEl = document.getElementById('console-log');
-    const logs = [];
-
-    function log(msg, type) {
-      const time = new Date().toLocaleTimeString();
-      logs.push(`[${time}] ${type ? type + ' ' : ''}${msg}`);
-      if (logs.length > 100) logs.shift();
-      logEl.textContent = logs.join('\n');
-    }
-
-    function check(name, condition) {
-      return condition ? `<span class="pass">✅ ${name}</span>` : `<span class="fail">❌ ${name}</span>`;
-    }
-
-    function checkFiles() {
-      const el = document.getElementById('files-check');
-      const expectedCSS = ['variables.css','utilities.css','navigation.css','hero.css','home-categories.css','product-card.css','product-grid.css','product-slider.css','product-info.css','collection.css','sticky-bar.css','cart.css','wishlist.css','search.css','modals.css','campaign.css','sliders.css','footer.css','buttons.css','responsive.css'];
-      const expectedJS = ['firebase.js','app.js','vendors.js','cart.js','wishlist.js','navigation.js','search.js','modals.js','product-detail.js','sticky-bar.js','collection.js','sliders.js','footer.js'];
+    setTimeout(() => {
+      const results = { pass: 0, fail: 0, warn: 0 };
       
-      let html = '<div style="margin-bottom:8px;"><span class="info">CSS Files (check Network tab for load failures):</span></div>';
-      expectedCSS.forEach(f => {
-        const loaded = document.querySelector(`link[href="${f}"]`);
-        html += `<div class="row"><span>${f}</span><span>${loaded ? '<span class="pass">Found in DOM</span>' : '<span class="warn">⚠️ Not found</span>'}</span></div>`;
+      // Globals
+      const globalsEl = document.getElementById('globals');
+      const checks = [
+        ['DOM', typeof DOM],
+        ['S', typeof S],
+        ['PRODUCTS', typeof PRODUCTS],
+        ['CURRENCIES', typeof CURRENCIES],
+        ['PLACEHOLDER_IMAGE', typeof PLACEHOLDER_IMAGE],
+        ['db', typeof db],
+        ['firebase', typeof firebase]
+      ];
+      let ghtml = '';
+      checks.forEach(([name, type]) => {
+        const ok = type !== 'undefined';
+        if (ok) results.pass++; else results.fail++;
+        ghtml += `<div class="row"><span>${name}</span><span class="${ok ? 'pass' : 'fail'}">${ok ? '✅ Defined' : '❌ Undefined'}</span></div>`;
       });
-      
-      html += '<div style="margin:12px 0 8px;"><span class="info">JS Files (check Network tab for load failures):</span></div>';
-      expectedJS.forEach(f => {
-        const loaded = document.querySelector(`script[src="${f}"]`);
-        html += `<div class="row"><span>${f}</span><span>${loaded ? '<span class="pass">Found in DOM</span>' : '<span class="warn">⚠️ Not found</span>'}</span></div>`;
-      });
-      
-      el.innerHTML = html;
-      log('File check complete');
-    }
+      globalsEl.innerHTML = ghtml;
 
-    function checkGlobals() {
-      const el = document.getElementById('globals-check');
-      let html = '';
-      html += `<div class="row"><span>DOM object</span><span>${typeof DOM !== 'undefined' ? '<span class="pass">Defined (' + Object.keys(DOM).length + ' keys)</span>' : '<span class="fail">Undefined</span>'}</span></div>`;
-      html += `<div class="row"><span>S object</span><span>${typeof S !== 'undefined' ? '<span class="pass">Defined (' + Object.keys(S).length + ' keys)</span>' : '<span class="fail">Undefined</span>'}</span></div>`;
-      html += `<div class="row"><span>PRODUCTS</span><span>${typeof PRODUCTS !== 'undefined' ? '<span class="pass">Defined (' + PRODUCTS.length + ' items)</span>' : '<span class="fail">Undefined</span>'}</span></div>`;
-      html += `<div class="row"><span>CURRENCIES</span><span>${typeof CURRENCIES !== 'undefined' ? '<span class="pass">Defined</span>' : '<span class="fail">Undefined</span>'}</span></div>`;
-      html += `<div class="row"><span>PLACEHOLDER_IMAGE</span><span>${typeof PLACEHOLDER_IMAGE !== 'undefined' ? '<span class="pass">Defined</span>' : '<span class="fail">Undefined</span>'}</span></div>`;
-      html += `<div class="row"><span>db (Firestore)</span><span>${typeof db !== 'undefined' ? '<span class="pass">Defined</span>' : '<span class="fail">Undefined</span>'}</span></div>`;
-      html += `<div class="row"><span>firebase</span><span>${typeof firebase !== 'undefined' ? '<span class="pass">Defined</span>' : '<span class="fail">Undefined</span>'}</span></div>`;
-      el.innerHTML = html;
-      log('Globals check complete');
-    }
-
-    function checkFirebase() {
-      const el = document.getElementById('firebase-check');
-      let html = '';
-      try {
-        html += `<div class="row"><span>Firebase initialized</span><span class="pass">✅ Yes</span></div>`;
-        html += `<div class="row"><span>Firestore db</span><span>${typeof db !== 'undefined' ? '<span class="pass">Available</span>' : '<span class="fail">Not available</span>'}</span></div>`;
-      } catch(e) {
-        html += `<div class="row"><span>Firebase</span><span class="fail">❌ Error: ${e.message}</span></div>`;
-      }
-      el.innerHTML = html;
-      log('Firebase check complete');
-    }
-
-    function checkProducts() {
-      const el = document.getElementById('products-check');
-      let html = '';
-      if (typeof PRODUCTS === 'undefined') {
-        html += '<span class="fail">❌ PRODUCTS is undefined</span>';
-      } else if (PRODUCTS.length === 0) {
-        html += '<span class="warn">⚠️ PRODUCTS array is empty (Firebase may have failed, using fallback)</span>';
-        html += '<div style="margin-top:8px;"><span class="info">This means fetchProducts() either failed or returned no results.</span></div>';
+      // Products
+      const prodEl = document.getElementById('products-info');
+      if (typeof PRODUCTS !== 'undefined') {
+        if (PRODUCTS.length === 0) {
+          prodEl.innerHTML = '<span class="warn">⚠️ PRODUCTS array is empty. Firebase might have failed, or fetchProducts() returned nothing.</span>';
+          results.warn++;
+        } else {
+          const activeCount = PRODUCTS.filter(p => p.status === 'active').length;
+          prodEl.innerHTML = `<span class="pass">✅ ${PRODUCTS.length} total products (${activeCount} active)</span>`;
+          PRODUCTS.slice(0, 5).forEach(p => {
+            prodEl.innerHTML += `<div class="row"><span>${p.name || 'unnamed'}</span><span>${p.status} | ${p.category}</span></div>`;
+          });
+          if (PRODUCTS.length > 5) prodEl.innerHTML += `<div class="row"><span>...</span><span>+${PRODUCTS.length - 5} more</span></div>`;
+          results.pass++;
+        }
       } else {
-        html += `<span class="pass">✅ ${PRODUCTS.length} products loaded</span>`;
-        html += '<div style="margin-top:8px;max-height:200px;overflow-y:auto;">';
-        PRODUCTS.forEach((p, i) => {
-          html += `<div class="row"><span>${i+1}. ${p.name || 'unnamed'}</span><span>${p.status || 'no status'} | ${p.category || 'no cat'}</span></div>`;
-        });
-        html += '</div>';
+        prodEl.innerHTML = '<span class="fail">❌ PRODUCTS is undefined</span>';
+        results.fail++;
       }
-      el.innerHTML = html;
-      log(`Products check: ${typeof PRODUCTS !== 'undefined' ? PRODUCTS.length : 'undefined'} items`);
-    }
 
-    function checkDOM() {
-      const el = document.getElementById('dom-check');
-      const critical = [
-        'arrivalsGrid', 'allProductsGrid', 'categoryProductsGrid', 'productDetail',
-        'cartBody', 'cartFoot', 'cartPageContent', 'wishPageContent',
-        'searchOverlay', 'searchInput', 'searchBody',
-        'menuBackdrop', 'menuDrawer', 'cartBackdrop', 'cartPanel',
-        'mainNav', 'heroBg', 'homepageNewsletterSection',
-        'reviewModalBackdrop', 'reviewStars', 'campaignSlides',
-        'gridToggleSvg', 'catGridToggleSvg'
-      ];
-      let html = '';
-      critical.forEach(id => {
-        const exists = DOM && DOM[id];
-        html += `<div class="row"><span>DOM.${id}</span><span>${exists ? '<span class="pass">Found</span>' : '<span class="fail">NULL</span>'}</span></div>`;
+      // DOM
+      const domEl = document.getElementById('dom-info');
+      const domIds = ['arrivalsGrid','allProductsGrid','productDetail','cartBody','cartFoot','mainNav','heroBg','homepageNewsletterSection','searchOverlay'];
+      let dhtml = '';
+      domIds.forEach(id => {
+        const el = DOM && DOM[id];
+        if (el) results.pass++; else results.fail++;
+        dhtml += `<div class="row"><span>DOM.${id}</span><span class="${el ? 'pass' : 'fail'}">${el ? '✅ Found' : '❌ NULL'}</span></div>`;
       });
-      el.innerHTML = html;
-      log('DOM check complete');
-    }
+      domEl.innerHTML = dhtml;
 
-    function checkPage() {
-      const el = document.getElementById('page-check');
-      let html = '';
-      if (typeof S !== 'undefined') {
-        html += `<div class="row"><span>S.currentPage</span><span class="info">${S.currentPage}</span></div>`;
-        html += `<div class="row"><span>S.currentCategoryPage</span><span class="info">${S.currentCategoryPage || 'null'}</span></div>`;
-        html += `<div class="row"><span>S.gridCols</span><span class="info">${S.gridCols}</span></div>`;
-        html += `<div class="row"><span>S.saleMode</span><span class="info">${S.saleMode}</span></div>`;
-        html += `<div class="row"><span>S.cart.length</span><span class="info">${S.cart.length}</span></div>`;
-        html += `<div class="row"><span>S.wishlist.length</span><span class="info">${S.wishlist.length}</span></div>`;
-      }
-      const activePage = document.querySelector('.page.active');
-      html += `<div class="row"><span>Active page ID</span><span class="info">${activePage ? activePage.id : 'none'}</span></div>`;
-      const hash = window.location.hash;
-      html += `<div class="row"><span>URL hash</span><span class="info">${hash || '(empty)'}</span></div>`;
-      el.innerHTML = html;
-      log('Page state check complete');
-    }
-
-    function checkFunctions() {
-      const el = document.getElementById('function-check');
-      const funcs = [
-        'init', 'fetchProducts', 'buildArrivals', 'buildFooter',
-        'renderAllProducts', 'renderCategoryProducts', 'renderCartPage',
-        'renderWishlistPage', 'renderProductPage', 'productCard', 'productCardHome',
-        'navigateTo', 'navigateToCategory', 'goToProduct', 'goBackFromProduct',
-        'openCart', 'closeCart', 'openMenu', 'closeMenu',
-        'openSearch', 'closeSearch', 'handleSearch',
-        'addToCart', 'removeFromCart', 'toggleWish',
-        'openReviewModal', 'closeReviewModal', 'submitReview',
-        'createStickyBar', 'removeStickyBar', 'updateStickyBar',
-        'toggleGrid', 'toggleGridCat', 'applyEditorialGrid',
-        'buildCampaignSlider', 'moveCampaignSlider',
-        'merchandiseProducts', 'getFilteredProducts',
-        'selectVariant', 'selectSortTab', 'toggleFilterDropdown',
-        'initVendors', 'fetchVendors', 'navigateToBrandProducts',
-        'subscribeNewsletter', 'getProductReviews', 'addProductReview',
-        'buildSwipeSection', 'swipeGo', 'refreshSwipeTracks',
-        'buildCategoriesSlider', 'goCategoriesSlide', 'buildNewsletterSection'
-      ];
-      let html = '';
-      let missing = 0;
+      // Functions
+      const funcsEl = document.getElementById('funcs-info');
+      const funcs = ['buildArrivals','productCardHome','merchandiseProducts','renderAllProducts','buildFooter','buildCategoriesSlider','buildNewsletterSection','renderCartPage','renderWishlistPage','createStickyBar','toggleGrid','openCart','addToCart','navigateTo','goToProduct','selectVariant'];
+      let fhtml = '';
       funcs.forEach(fn => {
         const exists = typeof window[fn] === 'function';
-        if (!exists) missing++;
-        html += `<div class="row"><span>${fn}()</span><span>${exists ? '<span class="pass">Defined</span>' : '<span class="fail">MISSING</span>'}</span></div>`;
+        if (exists) results.pass++; else results.fail++;
+        fhtml += `<div class="row"><span>${fn}()</span><span class="${exists ? 'pass' : 'fail'}">${exists ? '✅' : '❌ MISSING'}</span></div>`;
       });
-      html += `<div style="margin-top:8px;"><span class="${missing === 0 ? 'pass' : 'fail'}">${missing} functions missing</span></div>`;
-      el.innerHTML = html;
-      log(`Function check: ${missing} missing out of ${funcs.length}`);
-    }
+      funcsEl.innerHTML = fhtml;
 
-    function testHomepageRender() {
-      log('Testing homepage render...', '🧪');
-      try {
-        if (typeof PRODUCTS === 'undefined' || PRODUCTS.length === 0) {
-          log('PRODUCTS is empty - cannot render', '❌');
-          return;
-        }
-        if (!DOM.arrivalsGrid) {
-          log('DOM.arrivalsGrid is null', '❌');
-          return;
-        }
-        const active = PRODUCTS.filter(p => p.status === 'active');
-        log(`Found ${active.length} active products`);
-        
-        if (typeof merchandiseProducts !== 'function') {
-          log('merchandiseProducts() is not defined', '❌');
-          return;
-        }
-        
-        const prods = merchandiseProducts(active);
-        log(`After merchandise: ${prods.length} products`);
-        
-        if (typeof productCardHome !== 'function') {
-          log('productCardHome() is not defined', '❌');
-          return;
-        }
-        
-        DOM.arrivalsGrid.innerHTML = prods.slice(0, 4).map(p => productCardHome(p)).join('');
-        log('Homepage products rendered!', '✅');
-        
-        if (typeof buildCategoriesSlider === 'function') {
-          buildCategoriesSlider();
-          log('Categories slider built', '✅');
-        } else {
-          log('buildCategoriesSlider() is not defined', '❌');
-        }
-      } catch(e) {
-        log(`Error: ${e.message}`, '❌');
-        console.error(e);
+      // Page state
+      const pageEl = document.getElementById('page-info');
+      if (typeof S !== 'undefined') {
+        pageEl.innerHTML = `
+          <div class="row"><span>currentPage</span><span class="info">${S.currentPage}</span></div>
+          <div class="row"><span>cart items</span><span class="info">${S.cart.length}</span></div>
+          <div class="row"><span>wishlist items</span><span class="info">${S.wishlist.length}</span></div>
+          <div class="row"><span>URL hash</span><span class="info">${window.location.hash || '(none)'}</span></div>`;
+      } else {
+        pageEl.innerHTML = '<span class="fail">❌ S object is undefined</span>';
       }
-    }
 
-    function runAllChecks() {
-      logs.length = 0;
-      log('Running all checks...', '🔄');
-      checkFiles();
-      checkGlobals();
-      checkFirebase();
-      checkProducts();
-      checkDOM();
-      checkPage();
-      checkFunctions();
-      log('All checks complete', '✅');
-    }
-
-    // Auto-run on load
-    setTimeout(runAllChecks, 1000);
+      // Overall
+      const total = results.pass + results.fail + results.warn;
+      const statusEl = document.getElementById('overall-status');
+      if (results.fail === 0 && results.warn === 0) {
+        statusEl.innerHTML = '<span class="pass">✅ ALL CHECKS PASSED</span><br><small style="color:#888;">Site should be working. If products still dont show, the issue is timing (Firebase slow to respond).</small>';
+      } else if (results.fail > 0) {
+        statusEl.innerHTML = `<span class="fail">❌ ${results.fail} FAILURES</span> <span class="warn">${results.warn} warnings</span> <span class="pass">${results.pass} passed</span><br><small style="color:#888;">Scroll down to see what's broken.</small>`;
+      } else {
+        statusEl.innerHTML = `<span class="warn">⚠️ ${results.warn} WARNINGS</span> <span class="pass">${results.pass} passed</span><br><small style="color:#888;">Mostly working — warnings may be timing-related.</small>`;
+      }
+    }, 2000);
   </script>
 </body>
 </html>
