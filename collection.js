@@ -9,7 +9,82 @@ function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='acti
 function getCatFilteredProducts() { const isAllClothing = S.currentCategoryPage === 'all-clothing'; const clothingCats = ['dresses','tops','bottoms','jackets','sets']; return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(p.id==='janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return false; if(isAllClothing) { if(!clothingCats.includes(p.category)) return false; } else if(S.currentCategoryPage && p.category !== S.currentCategoryPage) return false; if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= 500) return false; if(S.catFilter.price==='high' && price < 500) return false; return true; }); }
 function applyFilter(type, value) { S.filter[type] = value; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); }
 function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
-function toggleFilterDropdown(source) { const id = source === 'category' ? 'filter-options-category' : 'filter-options-products'; const el = document.getElementById(id); if(el) { el.classList.toggle("open"); if(el.classList.contains("open")) setTimeout(() => document.addEventListener("click", function cf(e) { if(!el.contains(e.target) && !e.target.classList.contains("filter-trigger")) { el.classList.remove("open"); document.removeEventListener("click", cf); } }), 10); } }
+
+function toggleFilterDropdown(source) {
+  const id = source === 'category' ? 'filter-options-category' : 'filter-options-products';
+  const el = document.getElementById(id);
+  if(el) {
+    el.classList.toggle("open");
+    if(el.classList.contains("open")) setTimeout(() => document.addEventListener("click", function cf(e) {
+      if(!el.contains(e.target) && !e.target.classList.contains("filter-trigger")) {
+        el.classList.remove("open");
+        document.removeEventListener("click", cf);
+      }
+    }), 10);
+  }
+}
+
+// Collection nav filter toggle - reuses the same source-based logic
+function toggleCollectionFilter() {
+  const el = document.getElementById('collection-filter-options');
+  if(el) {
+    el.classList.toggle("open");
+    if(el.classList.contains("open")) setTimeout(() => document.addEventListener("click", function cf(e) {
+      if(!el.contains(e.target) && !e.target.classList.contains("collection-filter-trigger")) {
+        el.classList.remove("open");
+        document.removeEventListener("click", cf);
+      }
+    }), 10);
+  }
+}
+
+// Collection nav filter application
+function applyCollectionFilter(type, value) {
+  const el = document.getElementById('collection-filter-options');
+  if(el) el.classList.remove("open");
+  
+  if (S.currentPage === 'products') {
+    applyFilter(type, value);
+  } else if (S.currentPage === 'category') {
+    applyCatFilter(type, value);
+  }
+  
+  // Update the collection grid toggle icon to match
+  updateCollectionGridIcon();
+}
+
+// Collection nav grid toggle
+function toggleCollectionGrid() {
+  if (S.currentPage === 'products') {
+    toggleGrid();
+  } else if (S.currentPage === 'category') {
+    toggleGridCat();
+  }
+  updateCollectionGridIcon();
+}
+
+// Sync the collection nav grid icon with current state
+function updateCollectionGridIcon() {
+  const icon = document.getElementById('col-grid-icon');
+  if (!icon) return;
+  
+  let cols;
+  if (S.currentPage === 'products') {
+    cols = S.gridCols || 2;
+  } else if (S.currentPage === 'category') {
+    cols = S.gridColsCat || 2;
+  } else {
+    cols = 2;
+  }
+  
+  icon.classList.remove('cols-1', 'cols-2');
+  if (cols === 1) {
+    icon.classList.add('cols-1');
+  } else {
+    icon.classList.add('cols-2');
+  }
+}
+
 function applyEditorialGrid(gridEl, cols) {
   if (!gridEl) return;
   gridEl.classList.remove('editorial-1col', 'editorial-2col', 'editorial-3col');
@@ -23,6 +98,7 @@ function applyEditorialGrid(gridEl, cols) {
     }
   });
 }
+
 function updateGridToggleSVG(svgId, cols) {
   const svg = document.getElementById(svgId);
   if (!svg) return;
@@ -31,7 +107,10 @@ function updateGridToggleSVG(svgId, cols) {
   svg.querySelectorAll('.grid-block').forEach((b, i) => {
     b.classList.toggle('active', i < cols);
   });
+  // Also update the collection nav icon
+  updateCollectionGridIcon();
 }
+
 function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
   let prods = merchandiseProducts(getFilteredProducts());
@@ -40,6 +119,7 @@ function renderAllProducts() {
   applyEditorialGrid(DOM.allProductsGrid, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
 }
+
 function renderCategoryProducts() {
   if(!S.currentCategoryPage || !DOM.categoryProductsGrid) return;
   let cp;
@@ -57,9 +137,13 @@ function renderCategoryProducts() {
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
 }
+
 function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = sp.length ? sp.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
-function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
-function toggleGridCat() { S.gridColsCat = S.gridColsCat === 1 ? 2 : S.gridColsCat === 2 ? 3 : 1; renderCategoryProducts(); updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat); }
+
+function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
+
+function toggleGridCat() { S.gridColsCat = S.gridColsCat === 1 ? 2 : S.gridColsCat === 2 ? 3 : 1; renderCategoryProducts(); updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat); updateCollectionGridIcon(); }
+
 function renderCollectionSortingTabs() {
   const page = document.getElementById(S.currentPage === 'products' ? 'page-products' : 'page-category');
   if (!page) return;
@@ -90,6 +174,7 @@ function renderCollectionSortingTabs() {
     toolbarEl.insertAdjacentElement('afterend', container);
   }
 }
+
 function selectSortTab(cat) {
   S.activeSortTab = cat;
   if (cat === 'sale') { navigateToSale(); return; }
@@ -98,7 +183,9 @@ function selectSortTab(cat) {
   else { navigateToCategory(cat); }
   renderCollectionSortingTabs();
   window.scrollTo({top:0,behavior:"smooth"});
+  updateCollectionGridIcon();
 }
+
 function buildCategoriesSlider() {
   const grid = document.getElementById('home-categories-grid'); const progress = document.getElementById('home-categories-progress'); if (!grid || !progress) return;
   const categories = [{ label:'Clothing',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287',cat:'all-clothing'},{ label:'Jewellery',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153',cat:'jewelry'},{ label:'Sunglasses',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287',cat:'sunglasses'},{ label:'Scent',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601',cat:'parfum'},{ label:'Bags',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703',cat:'bags'}];
@@ -107,6 +194,9 @@ function buildCategoriesSlider() {
   progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
   grid.addEventListener('scroll', () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = window.innerWidth>=900?5:window.innerWidth>=640?3:2; const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); }, {passive:true});
 }
+
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
+
 function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,4).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildNewsletterSection(); }
+
 function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
