@@ -1,396 +1,87 @@
-/* =========================================
-  STICKY ADD TO CART — JANEDORE
-  Zara-style minimized sticky bar
-  ========================================= */
+/* ============================================
+   JANEDORE · STRICT LUXURY PRODUCT GRID
+   No spanning, no masonry, no variable heights
+   ============================================ */
 
-#sticky-add-bar,
-.sticky-add-bar {
- position: fixed;
- left: 0;
- right: 0;
- bottom: 0;
-
- z-index: 850;
-
- display: flex;
- flex-direction: column;
-
- gap: 6px;
-
- background: #fff;
-
- padding: 14px 16px;
- padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-
- border-top: none;
-
- box-shadow: none;
-
- transition:
-   padding 0.3s ease,
-   gap 0.3s ease,
-   background 0.25s ease;
-
- -webkit-transform: translateZ(0);
- transform: translateZ(0);
-
- touch-action: manipulation;
-
- backface-visibility: hidden;
- -webkit-backface-visibility: hidden;
+.product-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
 }
 
-.sticky-add-bar .sticky-brand {
- display: none;
+/* 1 column mode */
+.product-grid.col-1 {
+  grid-template-columns: 1fr;
 }
 
-/* PRODUCT NAME */
-.sticky-add-bar .sticky-name {
- font-family: 'Manrope', sans-serif;
-
- font-size: var(--ui-font-size);
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- color: #111;
-
- line-height: 1.3;
+/* 3 column mode */
+@media (min-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .product-grid.col-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .product-grid.col-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-/* PRICE — standalone, above button in default state */
-.sticky-add-bar .sticky-price {
- font-size: var(--ui-font-size);
+/* ============================================
+   PRODUCT CARD — strict equal sizing
+   ============================================ */
 
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- color: #111;
-
- margin-bottom: 4px;
+.product-card {
+  display: flex;
+  flex-direction: column;
 }
 
-/* MAIN BUTTON */
-.sticky-add-bar .sticky-add-btn {
- width: 100%;
-
- height: 46px;
-
- border: 0.8px solid #111;
-
- background: #fff;
- color: #111;
-
- display: flex;
- align-items: center;
- justify-content: center;
-
- padding: 0 24px;
-
- cursor: pointer;
-
- white-space: nowrap;
-
- font-family: inherit;
-
- font-size: var(--ui-font-size);
-
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- transition:
-   background 0.2s ease,
-   opacity 0.25s ease,
-   border-color 0.2s ease,
-   color 0.2s ease;
-
- -webkit-appearance: none;
- appearance: none;
+/* Remove ALL spanning behavior */
+.product-card.featured-card,
+.product-card.tall-card {
+  grid-column: auto;
 }
 
-.sticky-add-bar .sticky-add-btn:hover {
- background: #f7f7f7;
+/* ============================================
+   IMAGE WRAP — enforced 4:5 aspect ratio
+   No exceptions
+   ============================================ */
+
+.product-img-wrap {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  width: 100%;
 }
 
-.sticky-add-bar .sticky-add-btn:disabled {
- color: #999;
- border-color: #ddd;
- cursor: not-allowed;
- background: #fafafa;
+.product-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.sticky-add-bar .sticky-btn-price {
- display: none;
+/* Remove all editorial overrides */
+.product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
+.product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
+.product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
+.product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
+.product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
+.product-grid.editorial-3col .product-card .product-img-wrap {
+  aspect-ratio: 4 / 5;
 }
 
-/* =========================================
-  MINIMIZED STATE — SLIM STRIP
-  Single borderline row, COS/Zara feel
-  ========================================= */
+/* ============================================
+   TYPOGRAPHY SPACING — tightened rhythm
+   ============================================ */
 
-.sticky-add-bar.minimized {
- display: flex;
- flex-direction: row;
- align-items: center;
-
- gap: 0;
-
- padding: 10px 16px;
- padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-
- height: auto !important;
- min-height: unset !important;
- max-height: unset !important;
-
- background: #fff;
-
- border-top: 0.8px solid #111;
-
- box-shadow: none;
+.product-card .product-title {
+  margin-top: 6px;
+  margin-bottom: 2px;
 }
 
-/* Minimized: hide standalone price and name */
-.sticky-add-bar.minimized .sticky-name,
-.sticky-add-bar.minimized .sticky-price {
- display: none;
-}
-
-/* Minimized: slim borderless full-width button */
-.sticky-add-bar.minimized .sticky-add-btn {
- flex: 1;
- min-width: 0;
-
- height: 36px !important;
- min-height: unset !important;
-
- display: flex;
- align-items: center;
- justify-content: space-between;
-
- border: none;
-
- background: transparent;
-
- padding-left: 0;
- padding-right: 0;
-}
-
-.sticky-add-bar.minimized .sticky-add-btn:hover {
- background: transparent;
-}
-
-/* Show the price span in minimized */
-.sticky-add-bar.minimized .sticky-btn-price {
- display: inline;
- white-space: nowrap;
- flex-shrink: 0;
-}
-
-/* Hide extras in minimized */
-.sticky-add-bar.minimized .sticky-extras {
- display: none;
-}
-
-/* =========================================
-  EXTENDED STATE — SIZE SELECTION
-  ========================================= */
-
-.sticky-add-bar.extended {
- padding: 16px;
- padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-
- gap: 0;
-
- background: #fff;
-
- border-top: none;
-}
-
-/* In extended: hide name, price, and CTA button */
-.sticky-add-bar.extended .sticky-name,
-.sticky-add-bar.extended .sticky-price,
-.sticky-add-bar.extended .sticky-add-btn {
- display: none;
-}
-
-/* =========================================
-  EXTRA OPTIONS (sizes + swatches)
-  ========================================= */
-
-.sticky-add-bar .sticky-extras {
- display: none;
-}
-
-.sticky-add-bar.extended .sticky-extras {
- display: flex;
- flex-direction: column;
-
- gap: 0;
-}
-
-/* SIZES — vertical list, centered */
-.sticky-add-bar .sticky-extras .sticky-sizes {
- display: flex;
- flex-direction: column;
-
- align-items: center;
-
- gap: 0;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn {
- border: none;
- border-bottom: 0.5px solid rgba(0,0,0,0.06);
-
- background: none;
-
- padding: 13px 0;
-
- text-align: center;
- width: 100%;
-
- cursor: pointer;
-
- color: #888;
-
- font-size: var(--ui-font-size);
-
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- transition: color 0.15s ease, background 0.15s ease;
-
- -webkit-tap-highlight-color: transparent;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn:last-child {
- border-bottom: none;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn:hover,
-.sticky-add-bar .sticky-extras .sticky-size-btn:active {
- color: #111;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn.sel {
- color: #111;
- font-weight: 600;
-}
-
-/* SWATCHES — centered */
-.sticky-add-bar .sticky-extras .sticky-swatches {
- display: flex;
- align-items: center;
- justify-content: center;
-
- gap: 8px;
-
- order: 10;
-
- padding-top: 10px;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch {
- width: 18px;
- height: 18px;
-
- position: relative;
-
- display: inline-block;
-
- cursor: pointer;
-
- background: #ccc;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.selected::after {
- content: '';
-
- position: absolute;
-
- left: 0;
- right: 0;
- bottom: -4px;
-
- height: 0.5px;
-
- background: #111;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.sold-out {
- overflow: hidden;
- background: #aaa;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.sold-out::before {
- content: '';
-
- position: absolute;
-
- top: 50%;
- left: -3px;
- right: -3px;
-
- height: 0.8px;
-
- background: #fff;
-
- transform: rotate(-45deg);
-}
-
-/* =========================================
-  ADDED FEEDBACK STATE
-  ========================================= */
-
-.sticky-add-bar.added-feedback .sticky-add-btn {
- color: #555;
- border-color: #bbb;
- background: #fafafa;
- pointer-events: none;
-}
-
-.sticky-add-bar.minimized.added-feedback .sticky-add-btn {
- background: transparent;
- border: none;
- color: #555;
-}
-
-/* =========================================
-  IOS SAFARI SAFE AREA
-  ========================================= */
-
-@supports (padding: max(0px)) {
-
- .sticky-add-bar,
- .sticky-add-bar.extended {
-   padding-bottom: max(14px, env(safe-area-inset-bottom));
- }
-
- .sticky-add-bar.minimized {
-   padding-bottom: max(10px, env(safe-area-inset-bottom));
- }
-}
-
-/* =========================================
-  PREVENT IOS JITTER / GAP BUGS
-  ========================================= */
-
-html,
-body {
- overflow-x: hidden;
-}
-
-body {
- -webkit-overflow-scrolling: touch;
+.product-card .product-price {
+  margin-top: 0;
+  margin-bottom: 0;
 }
