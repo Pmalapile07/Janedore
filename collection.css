@@ -101,6 +101,17 @@ body.on-collection-page .collection-nav-controls {
 .collection-filter-options.open {
   display: block;
 }
+/* Show collection controls */
+.collection-nav-controls {
+  display: none;
+}
+
+body.on-collection-page .collection-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: auto;
+}
 
 /* =========================================
    GRID TOGGLE - Minimal luxury style
