@@ -236,10 +236,12 @@
  gap: 0;
 }
 
-/* SIZES — vertical list, tap to instantly add */
+/* SIZES — vertical list, centered */
 .sticky-add-bar .sticky-extras .sticky-sizes {
  display: flex;
  flex-direction: column;
+
+ align-items: center;
 
  gap: 0;
 }
@@ -252,7 +254,8 @@
 
  padding: 13px 0;
 
- text-align: left;
+ text-align: center;
+ width: 100%;
 
  cursor: pointer;
 
@@ -285,10 +288,11 @@
  font-weight: 600;
 }
 
-/* SWATCHES */
+/* SWATCHES — centered */
 .sticky-add-bar .sticky-extras .sticky-swatches {
  display: flex;
  align-items: center;
+ justify-content: center;
 
  gap: 8px;
 
