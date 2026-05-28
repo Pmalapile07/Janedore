@@ -266,3 +266,17 @@
     padding: 0 16px;
   }
 }
+
+/* =========================================
+   COLLECTION PAGES - HIDE DUPLICATE GLOBAL NAV CONTROLS
+   ========================================= */
+
+/* Hide menu icon from global nav on collection pages */
+body.on-collection-page #main-nav .nav-left .nav-icon-btn {
+  display: none !important;
+}
+
+/* Hide search icon from global nav on collection pages */
+body.on-collection-page #main-nav .nav-right .nav-icon-btn[title="Search"] {
+  display: none !important;
+}
