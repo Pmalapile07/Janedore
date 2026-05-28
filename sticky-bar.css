@@ -1,141 +1,170 @@
 /* =========================================
-  STICKY ADD TO CART — JANEDORE
-  Zara-style minimized sticky bar
-  ========================================= */
+   STICKY ADD TO CART — JANEDORE
+   Refined Luxury Editorial Version
+   ========================================= */
 
 #sticky-add-bar,
 .sticky-add-bar {
- position: fixed;
- left: 0;
- right: 0;
- bottom: 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
- z-index: 850;
+  z-index: 850;
 
- display: flex;
- flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
- gap: 6px;
+  gap: 6px;
 
- background: #fff;
+  background: rgba(255,255,255,0.82);
 
- padding: 14px 16px;
- padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 
- border-top: none;
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
- box-shadow: none;
+  border-top: 0.5px solid rgba(0,0,0,0.05);
 
- transition:
-   padding 0.3s ease,
-   gap 0.3s ease,
-   background 0.25s ease;
+  box-shadow: none;
 
- -webkit-transform: translateZ(0);
- transform: translateZ(0);
+  transition:
+    padding 0.3s ease,
+    gap 0.3s ease,
+    background 0.25s ease,
+    height 0.25s ease;
 
- touch-action: manipulation;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 
- backface-visibility: hidden;
- -webkit-backface-visibility: hidden;
+  touch-action: manipulation;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
+/* Hide unused brand */
 .sticky-add-bar .sticky-brand {
- display: none;
-}
-
-/* PRODUCT NAME */
-.sticky-add-bar .sticky-name {
- font-family: 'Manrope', sans-serif;
-
- font-size: var(--ui-font-size);
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- color: #111;
-
- line-height: 1.3;
-}
-
-/* PRICE — standalone, above button in default state */
-.sticky-add-bar .sticky-price {
- font-size: var(--ui-font-size);
-
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- color: #111;
-
- margin-bottom: 4px;
-}
-
-/* MAIN BUTTON */
-.sticky-add-bar .sticky-add-btn {
- width: 100%;
-
- height: 46px;
-
- border: 0.8px solid #111;
-
- background: #fff;
- color: #111;
-
- display: flex;
- align-items: center;
- justify-content: center;
-
- padding: 0 24px;
-
- cursor: pointer;
-
- white-space: nowrap;
-
- font-family: inherit;
-
- font-size: var(--ui-font-size);
-
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- transition:
-   background 0.2s ease,
-   opacity 0.25s ease,
-   border-color 0.2s ease,
-   color 0.2s ease;
-
- -webkit-appearance: none;
- appearance: none;
-}
-
-.sticky-add-bar .sticky-add-btn:hover {
- background: #f7f7f7;
-}
-
-.sticky-add-bar .sticky-add-btn:disabled {
- color: #999;
- border-color: #ddd;
- cursor: not-allowed;
- background: #fafafa;
-}
-
-.sticky-add-bar .sticky-btn-price {
- display: none;
+  display: none;
 }
 
 /* =========================================
-  MINIMIZED STATE — COMPACT ROW
-  Button height expanded to match default
-  bar's total content height
-  ========================================= */
+   PRODUCT NAME
+   ========================================= */
+
+.sticky-add-bar .sticky-name {
+  font-family: 'Manrope', sans-serif;
+
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight);
+
+  letter-spacing: var(--ui-letter-spacing);
+
+  text-transform: uppercase;
+
+  color: #111;
+
+  line-height: 1.3;
+}
+
+/* =========================================
+   PRICE
+   ========================================= */
+
+.sticky-add-bar .sticky-price {
+  font-size: var(--ui-font-size);
+
+  font-weight: var(--ui-font-weight);
+
+  letter-spacing: var(--ui-letter-spacing);
+
+  text-transform: uppercase;
+
+  color: #111;
+
+  margin-bottom: 4px;
+}
+
+/* =========================================
+   MAIN BUTTON
+   ========================================= */
+
+.sticky-add-bar .sticky-add-btn {
+  width: 100%;
+
+  height: 46px;
+
+  border: 0.8px solid #111;
+
+  background: rgba(255,255,255,0.72);
+  color: #111;
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 24px;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  font-family: inherit;
+
+  font-size: var(--ui-font-size);
+
+  font-weight: 500;
+
+  letter-spacing: var(--ui-letter-spacing);
+
+  text-transform: uppercase;
+
+  transition:
+    background 0.2s ease,
+    opacity 0.25s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Hover */
+
+.sticky-add-bar .sticky-add-btn:hover {
+  background: rgba(243,243,240,0.92);
+}
+
+/* Active */
+
+.sticky-add-bar .sticky-add-btn:active {
+  transform: scale(0.995);
+}
+
+/* Disabled */
+
+.sticky-add-bar .sticky-add-btn:disabled {
+  color: #999;
+  border-color: #ddd;
+  cursor: not-allowed;
+  background: #fafafa;
+}
+
+/* Hidden in default */
+
+.sticky-add-bar .sticky-btn-price {
+  display: none;
+}
+
+/* =========================================
+   MINIMIZED STATE
+   Premium Zara/COS-inspired compact row
+   ========================================= */
 
 .sticky-add-bar.minimized {
   display: flex;
@@ -144,233 +173,267 @@
 
   gap: 0;
 
-  padding: 14px 16px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 
-  height: 74px !important;
-  min-height: 74px !important;
-  max-height: 74px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
 
-  background: #f8f8f8;
+  background: rgba(242,242,239,0.88);
 
-  border-top: none;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-top: 0.5px solid rgba(0,0,0,0.05);
 
   box-shadow: none;
 }
 
+/* Hide standalone content */
 
-/* Minimized: hide standalone price and name */
 .sticky-add-bar.minimized .sticky-name,
 .sticky-add-bar.minimized .sticky-price {
- display: none;
+  display: none;
 }
 
-/* Minimized: button fills full width, taller to compensate for hidden rows */
+/* Full-width minimized button */
+
 .sticky-add-bar.minimized .sticky-add-btn {
- flex: 1;
- min-width: 0;
+  flex: 1;
+  min-width: 0;
 
- height: 74px !important;
- min-height: 74px !important;
+  height: 64px !important;
+  min-height: 64px !important;
 
- align-items: center;
- justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
- padding-left: 20px;
- padding-right: 20px;
+  gap: 16px;
+
+  padding-left: 20px;
+  padding-right: 20px;
+
+  background: transparent;
+
+  border: none;
 }
 
-/* Show the price span in minimized */
+/* Price inside minimized button */
+
 .sticky-add-bar.minimized .sticky-btn-price {
- display: inline;
- white-space: nowrap;
- flex-shrink: 0;
+  display: inline;
+
+  white-space: nowrap;
+
+  flex-shrink: 0;
 }
 
 /* Hide extras in minimized */
+
 .sticky-add-bar.minimized .sticky-extras {
- display: none;
+  display: none;
 }
 
 /* =========================================
-  EXTENDED STATE — SIZE SELECTION
-  ========================================= */
+   EXTENDED STATE
+   ========================================= */
 
 .sticky-add-bar.extended {
- padding: 16px;
- padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 
- gap: 0;
+  gap: 0;
 
- background: #fff;
+  background: rgba(255,255,255,0.92);
 
- border-top: none;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-top: 0.5px solid rgba(0,0,0,0.05);
 }
 
-/* In extended: hide name, price, and CTA button */
+/* Hide compact content */
+
 .sticky-add-bar.extended .sticky-name,
 .sticky-add-bar.extended .sticky-price,
 .sticky-add-bar.extended .sticky-add-btn {
- display: none;
+  display: none;
 }
 
 /* =========================================
-  EXTRA OPTIONS (sizes + swatches)
-  ========================================= */
+   EXTRA OPTIONS
+   ========================================= */
 
 .sticky-add-bar .sticky-extras {
- display: none;
+  display: none;
 }
 
 .sticky-add-bar.extended .sticky-extras {
- display: flex;
- flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
- gap: 0;
+  gap: 0;
 }
 
-/* SIZES — vertical list, tap to instantly add */
-.sticky-add-bar .sticky-extras .sticky-sizes {
- display: flex;
- flex-direction: column;
+/* =========================================
+   SIZE BUTTONS
+   ========================================= */
 
- gap: 0;
+.sticky-add-bar .sticky-extras .sticky-sizes {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn {
- border: none;
- border-bottom: 0.5px solid rgba(0,0,0,0.06);
+  border: none;
+  border-bottom: 0.5px solid rgba(0,0,0,0.06);
 
- background: none;
+  background: none;
 
- padding: 13px 0;
+  padding: 14px 0;
 
- text-align: left;
+  text-align: left;
 
- cursor: pointer;
+  cursor: pointer;
 
- color: #888;
+  color: #888;
 
- font-size: var(--ui-font-size);
+  font-size: var(--ui-font-size);
 
- font-weight: var(--ui-font-weight);
+  font-weight: var(--ui-font-weight);
 
- letter-spacing: var(--ui-letter-spacing);
+  letter-spacing: var(--ui-letter-spacing);
 
- text-transform: uppercase;
+  text-transform: uppercase;
 
- transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 
- -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn:last-child {
- border-bottom: none;
+  border-bottom: none;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn:hover,
 .sticky-add-bar .sticky-extras .sticky-size-btn:active {
- color: #111;
+  color: #111;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn.sel {
- color: #111;
- font-weight: 600;
+  color: #111;
+  font-weight: 600;
 }
 
-/* SWATCHES */
+/* =========================================
+   SWATCHES
+   ========================================= */
+
 .sticky-add-bar .sticky-extras .sticky-swatches {
- display: flex;
- align-items: center;
+  display: flex;
+  align-items: center;
 
- gap: 8px;
+  gap: 8px;
 
- order: 10;
+  order: 10;
 
- padding-top: 10px;
+  padding-top: 12px;
 }
 
 .sticky-add-bar .sticky-extras .sticky-swatch {
- width: 18px;
- height: 18px;
+  width: 18px;
+  height: 18px;
 
- position: relative;
+  position: relative;
 
- display: inline-block;
+  display: inline-block;
 
- cursor: pointer;
+  cursor: pointer;
 
- background: #ccc;
+  background: #ccc;
 }
+
+/* Selected */
 
 .sticky-add-bar .sticky-extras .sticky-swatch.selected::after {
- content: '';
+  content: '';
 
- position: absolute;
+  position: absolute;
 
- left: 0;
- right: 0;
- bottom: -4px;
+  left: 0;
+  right: 0;
+  bottom: -4px;
 
- height: 0.5px;
+  height: 0.5px;
 
- background: #111;
+  background: #111;
 }
 
+/* Sold out */
+
 .sticky-add-bar .sticky-extras .sticky-swatch.sold-out {
- overflow: hidden;
- background: #aaa;
+  overflow: hidden;
+  background: #aaa;
 }
 
 .sticky-add-bar .sticky-extras .sticky-swatch.sold-out::before {
- content: '';
+  content: '';
 
- position: absolute;
+  position: absolute;
 
- top: 50%;
- left: -3px;
- right: -3px;
+  top: 50%;
+  left: -3px;
+  right: -3px;
 
- height: 0.8px;
+  height: 0.8px;
 
- background: #fff;
+  background: #fff;
 
- transform: rotate(-45deg);
+  transform: rotate(-45deg);
 }
 
 /* =========================================
-  ADDED FEEDBACK STATE
-  ========================================= */
+   ADDED FEEDBACK STATE
+   ========================================= */
 
 .sticky-add-bar.added-feedback .sticky-add-btn {
- color: #555;
- border-color: #bbb;
- background: #fafafa;
- pointer-events: none;
+  color: #555;
+
+  border-color: #bbb;
+
+  background: rgba(250,250,250,0.92);
+
+  pointer-events: none;
 }
 
 /* =========================================
-  IOS SAFARI SAFE AREA
-  ========================================= */
+   IOS SAFE AREA
+   ========================================= */
 
 @supports (padding: max(0px)) {
 
- .sticky-add-bar,
- .sticky-add-bar.minimized,
- .sticky-add-bar.extended {
-   padding-bottom: max(14px, env(safe-area-inset-bottom));
- }
+  .sticky-add-bar,
+  .sticky-add-bar.minimized,
+  .sticky-add-bar.extended {
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
 }
 
 /* =========================================
-  PREVENT IOS JITTER / GAP BUGS
-  ========================================= */
+   PREVENT IOS JITTER / GAP BUGS
+   ========================================= */
 
 html,
 body {
- overflow-x: hidden;
+  overflow-x: hidden;
 }
 
 body {
- -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch;
 }
