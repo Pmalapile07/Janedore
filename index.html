@@ -50,15 +50,8 @@
   </div>
   <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
   <div class="nav-right">
-    <!-- Collection controls injected here on collection pages -->
+    <!-- Collection controls - only visible on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
-      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
-        <div class="col-grid-icon cols-2" id="col-grid-icon">
-          <div class="col-grid-bar"></div>
-          <div class="col-grid-bar"></div>
-          <div class="col-grid-bar"></div>
-        </div>
-      </button>
       <div class="collection-filter-dropdown">
         <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">
           FILTER
@@ -87,11 +80,17 @@
           </div>
         </div>
       </div>
+      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
+        <div class="col-grid-icon cols-2" id="col-grid-icon">
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+        </div>
+      </button>
       <button class="collection-search-btn" onclick="openSearch()">
         <i class="ph-thin ph-magnifying-glass"></i>
       </button>
     </div>
-    <!-- Regular nav icons hidden on collection pages -->
+    <!-- Regular nav icons - hidden on collection pages -->
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
