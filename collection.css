@@ -103,19 +103,18 @@ body.on-collection-page .collection-nav-controls {
 }
 
 /* =========================================
-   GRID TOGGLE - Refined minimal luxury style
+   GRID TOGGLE - Minimal luxury style
    ========================================= */
 
-/* Sits tighter to filter, more breathing room before search */
 .col-grid-toggle-btn {
   background: none;
   border: none;
-  padding: 6px 4px;
+  padding: 4px 2px;
   cursor: pointer;
   display: flex;
   align-items: center;
   transition: opacity 0.25s ease;
-  margin-right: 14px;
+  margin-right: 6px;
 }
 
 .col-grid-toggle-btn:hover {
@@ -123,18 +122,18 @@ body.on-collection-page .collection-nav-controls {
 }
 
 .col-grid-icon {
-  width: 18px;
-  height: 16px;
+  width: 14px;
+  height: 12px;
   display: flex;
   align-items: flex-end;
-  gap: 5px;
+  gap: 3px;
   background: none;
 }
 
 .col-grid-bar {
   width: 100%;
   background: transparent;
-  border: 1px solid #111;
+  border: 0.8px solid #111;
   box-sizing: border-box;
 }
 
@@ -160,6 +159,7 @@ body.on-collection-page .collection-nav-controls {
   font-size: 20px;
   color: #111;
   transition: opacity 0.2s;
+  margin-left: -2px;
 }
 
 .collection-search-btn:hover {
