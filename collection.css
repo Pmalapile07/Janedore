@@ -1,5 +1,5 @@
 /* =========================================
-   HIDE OLD TOOLBAR ENTIRELY
+   HIDE OLD TOOLBAR
    ========================================= */
 
 .collection-toolbar {
@@ -15,10 +15,10 @@
 }
 
 /* =========================================
-   COLLECTION PAGES - TRANSFORM MAIN NAV
+   COLLECTION PAGES - NAV TRANSFORMATION
    ========================================= */
 
-/* Hide everything we don't want in the nav on collection pages */
+/* Hide standard nav elements on collection pages */
 body.on-collection-page #main-nav .nav-logo {
   display: none !important;
 }
@@ -31,32 +31,21 @@ body.on-collection-page #main-nav .desktop-utility-links {
   display: none !important;
 }
 
-/* Hide wishlist and cart icons */
-body.on-collection-page #main-nav .nav-right .nav-icon-btn:nth-child(2),
-body.on-collection-page #main-nav .nav-right .nav-icon-btn:nth-child(3) {
+/* Hide cart and wishlist using stable onclick selectors */
+body.on-collection-page button[onclick*="openCart"] {
   display: none !important;
 }
 
-/* Transform nav-right to hold collection controls */
-body.on-collection-page #main-nav .nav-right {
-  gap: 20px;
-}
-
-/* Hide the original search icon - we'll add a new one */
-body.on-collection-page #main-nav .nav-right .nav-icon-btn:nth-child(1) {
+body.on-collection-page button[onclick*="navigateTo('wishlist')"] {
   display: none !important;
 }
 
-/* Keep nav-left visible but only for menu icon */
-body.on-collection-page #main-nav .nav-left {
-  display: flex !important;
+/* Hide original search icon */
+body.on-collection-page .nav-search-icon {
+  display: none !important;
 }
 
-/* =========================================
-   COLLECTION CONTROLS IN MAIN NAV
-   ========================================= */
-
-/* Container for collection controls injected into nav-right */
+/* Show collection controls */
 .collection-nav-controls {
   display: none;
 }
@@ -64,58 +53,14 @@ body.on-collection-page #main-nav .nav-left {
 body.on-collection-page .collection-nav-controls {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 28px;
+  margin-left: auto;
 }
 
-/* Grid toggle — outlined bars only */
-.col-grid-toggle-btn {
-  background: none;
-  border: none;
-  padding: 4px 2px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.25s ease;
-}
+/* =========================================
+   FILTER DROPDOWN
+   ========================================= */
 
-.col-grid-toggle-btn:hover {
-  opacity: 0.6;
-}
-
-.col-grid-icon {
-  width: 18px;
-  height: 14px;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  background: none;
-}
-
-.col-grid-bar {
-  flex: 1;
-  min-width: 2px;
-  background: transparent;
-  border: 0.8px solid #111;
-  box-sizing: border-box;
-  transition: height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* 2-col state (default) */
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(2) { height: 100%; }
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(3) { height: 50%; }
-
-/* 1-col state */
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { height: 50%; }
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(3) { height: 25%; }
-
-/* 3-col state */
-.col-grid-icon.cols-3 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-3 .col-grid-bar:nth-child(2) { height: 100%; }
-.col-grid-icon.cols-3 .col-grid-bar:nth-child(3) { height: 100%; }
-
-/* Filter dropdown */
 .collection-filter-dropdown {
   position: relative;
 }
@@ -157,7 +102,52 @@ body.on-collection-page .collection-nav-controls {
   display: block;
 }
 
-/* Search icon in nav */
+/* =========================================
+   GRID TOGGLE - Minimal luxury style
+   ========================================= */
+
+.col-grid-toggle-btn {
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.25s ease;
+}
+
+.col-grid-toggle-btn:hover {
+  opacity: 0.6;
+}
+
+.col-grid-icon {
+  width: 16px;
+  height: 14px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  background: none;
+}
+
+.col-grid-bar {
+  width: 100%;
+  background: transparent;
+  border: 0.8px solid #111;
+  box-sizing: border-box;
+}
+
+/* 2-col state (default) - two full-height bars */
+.col-grid-icon.cols-2 .col-grid-bar:nth-child(1) { height: 100%; }
+.col-grid-icon.cols-2 .col-grid-bar:nth-child(2) { height: 100%; }
+
+/* 1-col state - one full bar, one shorter */
+.col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { height: 100%; }
+.col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { height: 60%; }
+
+/* =========================================
+   SEARCH ICON
+   ========================================= */
+
 .collection-search-btn {
   background: none;
   border: none;
@@ -175,7 +165,7 @@ body.on-collection-page .collection-nav-controls {
 }
 
 /* =========================================
-   FILTER GROUP STYLES
+   FILTER GROUP STYLES (shared)
    ========================================= */
 
 .filter-group {
