@@ -22,7 +22,6 @@
   padding: 14px 16px;
   padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
-  /* NO border-top */
   border-top: none;
 
   box-shadow: none;
@@ -128,19 +127,14 @@
   background: #fafafa;
 }
 
-/* Button internal spans — hidden by default, shown only in minimized */
-.sticky-add-bar .sticky-btn-label {
-  /* Don't hide — let the button's ::after or direct text work */
-}
-
 .sticky-add-bar .sticky-btn-price {
   display: none;
 }
 
 /* =========================================
    MINIMIZED STATE — COMPACT ROW
-   Button keeps same 46px height
-   Price moves INSIDE button on the right
+   Button height expanded to match default
+   bar's total content height
    ========================================= */
 
 .sticky-add-bar.minimized {
@@ -168,14 +162,14 @@
   display: none;
 }
 
-/* Minimized: button fills full width */
+/* Minimized: button fills full width, taller to compensate for hidden rows */
 .sticky-add-bar.minimized .sticky-add-btn {
   flex: 1;
   min-width: 0;
 
-  /* Keep same 46px height — no override */
-  /* Keep same border, typography, everything */
+  height: 98px; /* matches default bar's name + price + button total */
 
+  align-items: center;
   justify-content: space-between;
 
   padding-left: 20px;
@@ -196,7 +190,6 @@
 
 /* =========================================
    EXTENDED STATE — SIZE SELECTION
-   Expands upward from bottom:0
    ========================================= */
 
 .sticky-add-bar.extended {
