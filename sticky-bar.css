@@ -138,23 +138,26 @@
   ========================================= */
 
 .sticky-add-bar.minimized {
- display: flex;
- flex-direction: row;
- align-items: center;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
 
- gap: 0;
+  gap: 0;
 
- padding: 14px 16px;
- padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
- height: auto;
+  height: 74px !important;
+  min-height: 74px !important;
+  max-height: 74px !important;
 
- background: #f8f8f8;
+  background: #f8f8f8;
 
- border-top: none;
+  border-top: none;
 
- box-shadow: none;
+  box-shadow: none;
 }
+
 
 /* Minimized: hide standalone price and name */
 .sticky-add-bar.minimized .sticky-name,
