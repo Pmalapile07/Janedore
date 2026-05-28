@@ -1,372 +1,373 @@
 /* =========================================
-   STICKY ADD TO CART — JANEDORE
-   Zara-style minimized sticky bar
-   ========================================= */
+  STICKY ADD TO CART — JANEDORE
+  Zara-style minimized sticky bar
+  ========================================= */
 
 #sticky-add-bar,
 .sticky-add-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+ position: fixed;
+ left: 0;
+ right: 0;
+ bottom: 0;
 
-  z-index: 850;
+ z-index: 850;
 
-  display: flex;
-  flex-direction: column;
+ display: flex;
+ flex-direction: column;
 
-  gap: 6px;
+ gap: 6px;
 
-  background: #fff;
+ background: #fff;
 
-  padding: 14px 16px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+ padding: 14px 16px;
+ padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
-  border-top: none;
+ border-top: none;
 
-  box-shadow: none;
+ box-shadow: none;
 
-  transition:
-    padding 0.3s ease,
-    gap 0.3s ease,
-    background 0.25s ease;
+ transition:
+   padding 0.3s ease,
+   gap 0.3s ease,
+   background 0.25s ease;
 
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+ -webkit-transform: translateZ(0);
+ transform: translateZ(0);
 
-  touch-action: manipulation;
+ touch-action: manipulation;
 
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+ backface-visibility: hidden;
+ -webkit-backface-visibility: hidden;
 }
 
 .sticky-add-bar .sticky-brand {
-  display: none;
+ display: none;
 }
 
 /* PRODUCT NAME */
 .sticky-add-bar .sticky-name {
-  font-family: 'Manrope', sans-serif;
+ font-family: 'Manrope', sans-serif;
 
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+ font-size: var(--ui-font-size);
+ font-weight: var(--ui-font-weight);
 
-  letter-spacing: var(--ui-letter-spacing);
+ letter-spacing: var(--ui-letter-spacing);
 
-  text-transform: uppercase;
+ text-transform: uppercase;
 
-  color: #111;
+ color: #111;
 
-  line-height: 1.3;
+ line-height: 1.3;
 }
 
 /* PRICE — standalone, above button in default state */
 .sticky-add-bar .sticky-price {
-  font-size: var(--ui-font-size);
+ font-size: var(--ui-font-size);
 
-  font-weight: var(--ui-font-weight);
+ font-weight: var(--ui-font-weight);
 
-  letter-spacing: var(--ui-letter-spacing);
+ letter-spacing: var(--ui-letter-spacing);
 
-  text-transform: uppercase;
+ text-transform: uppercase;
 
-  color: #111;
+ color: #111;
 
-  margin-bottom: 4px;
+ margin-bottom: 4px;
 }
 
 /* MAIN BUTTON */
 .sticky-add-bar .sticky-add-btn {
-  width: 100%;
+ width: 100%;
 
-  height: 46px;
+ height: 46px;
 
-  border: 0.8px solid #111;
+ border: 0.8px solid #111;
 
-  background: #fff;
-  color: #111;
+ background: #fff;
+ color: #111;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+ display: flex;
+ align-items: center;
+ justify-content: center;
 
-  padding: 0 24px;
+ padding: 0 24px;
 
-  cursor: pointer;
+ cursor: pointer;
 
-  white-space: nowrap;
+ white-space: nowrap;
 
-  font-family: inherit;
+ font-family: inherit;
 
-  font-size: var(--ui-font-size);
+ font-size: var(--ui-font-size);
 
-  font-weight: var(--ui-font-weight);
+ font-weight: var(--ui-font-weight);
 
-  letter-spacing: var(--ui-letter-spacing);
+ letter-spacing: var(--ui-letter-spacing);
 
-  text-transform: uppercase;
+ text-transform: uppercase;
 
-  transition:
-    background 0.2s ease,
-    opacity 0.25s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+ transition:
+   background 0.2s ease,
+   opacity 0.25s ease,
+   border-color 0.2s ease,
+   color 0.2s ease;
 
-  -webkit-appearance: none;
-  appearance: none;
+ -webkit-appearance: none;
+ appearance: none;
 }
 
 .sticky-add-bar .sticky-add-btn:hover {
-  background: #f7f7f7;
+ background: #f7f7f7;
 }
 
 .sticky-add-bar .sticky-add-btn:disabled {
-  color: #999;
-  border-color: #ddd;
-  cursor: not-allowed;
-  background: #fafafa;
+ color: #999;
+ border-color: #ddd;
+ cursor: not-allowed;
+ background: #fafafa;
 }
 
 .sticky-add-bar .sticky-btn-price {
-  display: none;
+ display: none;
 }
 
 /* =========================================
-   MINIMIZED STATE — COMPACT ROW
-   Button height expanded to match default
-   bar's total content height
-   ========================================= */
+  MINIMIZED STATE — COMPACT ROW
+  Button height expanded to match default
+  bar's total content height
+  ========================================= */
 
 .sticky-add-bar.minimized {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+ display: flex;
+ flex-direction: row;
+ align-items: center;
 
-  gap: 0;
+ gap: 0;
 
-  padding: 14px 16px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+ padding: 14px 16px;
+ padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
-  height: auto;
+ height: auto;
 
-  background: #f8f8f8;
+ background: #f8f8f8;
 
-  border-top: none;
+ border-top: none;
 
-  box-shadow: none;
+ box-shadow: none;
 }
 
 /* Minimized: hide standalone price and name */
 .sticky-add-bar.minimized .sticky-name,
 .sticky-add-bar.minimized .sticky-price {
-  display: none;
+ display: none;
 }
 
 /* Minimized: button fills full width, taller to compensate for hidden rows */
 .sticky-add-bar.minimized .sticky-add-btn {
-  flex: 1;
-  min-width: 0;
+ flex: 1;
+ min-width: 0;
 
-  height: 98px; /* matches default bar's name + price + button total */
+ height: 98px !important;
+ min-height: 98px !important;
 
-  align-items: center;
-  justify-content: space-between;
+ align-items: center;
+ justify-content: space-between;
 
-  padding-left: 20px;
-  padding-right: 20px;
+ padding-left: 20px;
+ padding-right: 20px;
 }
 
 /* Show the price span in minimized */
 .sticky-add-bar.minimized .sticky-btn-price {
-  display: inline;
-  white-space: nowrap;
-  flex-shrink: 0;
+ display: inline;
+ white-space: nowrap;
+ flex-shrink: 0;
 }
 
 /* Hide extras in minimized */
 .sticky-add-bar.minimized .sticky-extras {
-  display: none;
+ display: none;
 }
 
 /* =========================================
-   EXTENDED STATE — SIZE SELECTION
-   ========================================= */
+  EXTENDED STATE — SIZE SELECTION
+  ========================================= */
 
 .sticky-add-bar.extended {
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+ padding: 16px;
+ padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 
-  gap: 0;
+ gap: 0;
 
-  background: #fff;
+ background: #fff;
 
-  border-top: none;
+ border-top: none;
 }
 
 /* In extended: hide name, price, and CTA button */
 .sticky-add-bar.extended .sticky-name,
 .sticky-add-bar.extended .sticky-price,
 .sticky-add-bar.extended .sticky-add-btn {
-  display: none;
+ display: none;
 }
 
 /* =========================================
-   EXTRA OPTIONS (sizes + swatches)
-   ========================================= */
+  EXTRA OPTIONS (sizes + swatches)
+  ========================================= */
 
 .sticky-add-bar .sticky-extras {
-  display: none;
+ display: none;
 }
 
 .sticky-add-bar.extended .sticky-extras {
-  display: flex;
-  flex-direction: column;
+ display: flex;
+ flex-direction: column;
 
-  gap: 0;
+ gap: 0;
 }
 
 /* SIZES — vertical list, tap to instantly add */
 .sticky-add-bar .sticky-extras .sticky-sizes {
-  display: flex;
-  flex-direction: column;
+ display: flex;
+ flex-direction: column;
 
-  gap: 0;
+ gap: 0;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn {
-  border: none;
-  border-bottom: 0.5px solid rgba(0,0,0,0.06);
+ border: none;
+ border-bottom: 0.5px solid rgba(0,0,0,0.06);
 
-  background: none;
+ background: none;
 
-  padding: 13px 0;
+ padding: 13px 0;
 
-  text-align: left;
+ text-align: left;
 
-  cursor: pointer;
+ cursor: pointer;
 
-  color: #888;
+ color: #888;
 
-  font-size: var(--ui-font-size);
+ font-size: var(--ui-font-size);
 
-  font-weight: var(--ui-font-weight);
+ font-weight: var(--ui-font-weight);
 
-  letter-spacing: var(--ui-letter-spacing);
+ letter-spacing: var(--ui-letter-spacing);
 
-  text-transform: uppercase;
+ text-transform: uppercase;
 
-  transition: color 0.15s ease, background 0.15s ease;
+ transition: color 0.15s ease, background 0.15s ease;
 
-  -webkit-tap-highlight-color: transparent;
+ -webkit-tap-highlight-color: transparent;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn:last-child {
-  border-bottom: none;
+ border-bottom: none;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn:hover,
 .sticky-add-bar .sticky-extras .sticky-size-btn:active {
-  color: #111;
+ color: #111;
 }
 
 .sticky-add-bar .sticky-extras .sticky-size-btn.sel {
-  color: #111;
-  font-weight: 600;
+ color: #111;
+ font-weight: 600;
 }
 
 /* SWATCHES */
 .sticky-add-bar .sticky-extras .sticky-swatches {
-  display: flex;
-  align-items: center;
+ display: flex;
+ align-items: center;
 
-  gap: 8px;
+ gap: 8px;
 
-  order: 10;
+ order: 10;
 
-  padding-top: 10px;
+ padding-top: 10px;
 }
 
 .sticky-add-bar .sticky-extras .sticky-swatch {
-  width: 18px;
-  height: 18px;
+ width: 18px;
+ height: 18px;
 
-  position: relative;
+ position: relative;
 
-  display: inline-block;
+ display: inline-block;
 
-  cursor: pointer;
+ cursor: pointer;
 
-  background: #ccc;
+ background: #ccc;
 }
 
 .sticky-add-bar .sticky-extras .sticky-swatch.selected::after {
-  content: '';
+ content: '';
 
-  position: absolute;
+ position: absolute;
 
-  left: 0;
-  right: 0;
-  bottom: -4px;
+ left: 0;
+ right: 0;
+ bottom: -4px;
 
-  height: 0.5px;
+ height: 0.5px;
 
-  background: #111;
+ background: #111;
 }
 
 .sticky-add-bar .sticky-extras .sticky-swatch.sold-out {
-  overflow: hidden;
-  background: #aaa;
+ overflow: hidden;
+ background: #aaa;
 }
 
 .sticky-add-bar .sticky-extras .sticky-swatch.sold-out::before {
-  content: '';
+ content: '';
 
-  position: absolute;
+ position: absolute;
 
-  top: 50%;
-  left: -3px;
-  right: -3px;
+ top: 50%;
+ left: -3px;
+ right: -3px;
 
-  height: 0.8px;
+ height: 0.8px;
 
-  background: #fff;
+ background: #fff;
 
-  transform: rotate(-45deg);
+ transform: rotate(-45deg);
 }
 
 /* =========================================
-   ADDED FEEDBACK STATE
-   ========================================= */
+  ADDED FEEDBACK STATE
+  ========================================= */
 
 .sticky-add-bar.added-feedback .sticky-add-btn {
-  color: #555;
-  border-color: #bbb;
-  background: #fafafa;
-  pointer-events: none;
+ color: #555;
+ border-color: #bbb;
+ background: #fafafa;
+ pointer-events: none;
 }
 
 /* =========================================
-   IOS SAFARI SAFE AREA
-   ========================================= */
+  IOS SAFARI SAFE AREA
+  ========================================= */
 
 @supports (padding: max(0px)) {
 
-  .sticky-add-bar,
-  .sticky-add-bar.minimized,
-  .sticky-add-bar.extended {
-    padding-bottom: max(14px, env(safe-area-inset-bottom));
-  }
+ .sticky-add-bar,
+ .sticky-add-bar.minimized,
+ .sticky-add-bar.extended {
+   padding-bottom: max(14px, env(safe-area-inset-bottom));
+ }
 }
 
 /* =========================================
-   PREVENT IOS JITTER / GAP BUGS
-   ========================================= */
+  PREVENT IOS JITTER / GAP BUGS
+  ========================================= */
 
 html,
 body {
-  overflow-x: hidden;
+ overflow-x: hidden;
 }
 
 body {
-  -webkit-overflow-scrolling: touch;
+ -webkit-overflow-scrolling: touch;
 }
