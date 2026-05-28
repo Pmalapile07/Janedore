@@ -1,291 +1,57 @@
-/* =========================================
-   HIDE OLD TOOLBAR ENTIRELY
-   ========================================= */
+<div class="page" id="page-products">
+  
+  <!-- Custom collection header - THE ONLY NAV ROW -->
+  <div class="collection-custom-header">
+    <div class="col-header-left">
+      <button class="nav-icon-btn" onclick="openMenu()">
+        <i class="ph-thin ph-list"></i>
+      </button>
+    </div>
+    <div class="col-header-right">
+      <button class="col-grid-toggle-btn" onclick="toggleGrid()" id="col-grid-toggle-btn">
+        <div class="col-grid-icon cols-2" id="col-grid-icon">
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+        </div>
+      </button>
+      <div class="filter-dropdown">
+        <button class="filter-trigger" onclick="toggleFilterDropdown('products')">
+          FILTER
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="filter-options" id="filter-options-products">
+          <div class="filter-group">
+            <div class="filter-group-title">Category</div>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="all" checked onchange="applyFilter('cat','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="sunglasses" onchange="applyFilter('cat','sunglasses')"> Sunglasses</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="jewelry" onchange="applyFilter('cat','jewelry')"> Jewelry</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="bags" onchange="applyFilter('cat','bags')"> Bags</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="parfum" onchange="applyFilter('cat','parfum')"> Scent</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Size</div>
+            <label class="filter-option"><input type="radio" name="filter-size-products" value="all" checked onchange="applyFilter('size','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-size-products" value="OS" onchange="applyFilter('size','OS')"> OS</label>
+            <label class="filter-option"><input type="radio" name="filter-size-products" value="Stainless Steel" onchange="applyFilter('size','Stainless Steel')"> Stainless Steel</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Price</div>
+            <label class="filter-option"><input type="radio" name="filter-price-products" value="all" checked onchange="applyFilter('price','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-price-products" value="low" onchange="applyFilter('price','low')"> Under R500</label>
+            <label class="filter-option"><input type="radio" name="filter-price-products" value="high" onchange="applyFilter('price','high')"> R500+</label>
+          </div>
+        </div>
+      </div>
+      <button class="col-header-search-btn" onclick="openSearch()">
+        <i class="ph-thin ph-magnifying-glass"></i>
+      </button>
+    </div>
+  </div>
 
-.collection-toolbar {
-  display: none !important;
-}
-
-.collection-sorting-tabs {
-  display: none !important;
-}
-
-.toolbar-center {
-  display: none !important;
-}
-
-/* =========================================
-   CUSTOM COLLECTION HEADER
-   Shared across page-products + page-category
-   ========================================= */
-
-.site-collection-layout {
-  padding-left: 12px;
-  padding-right: 12px;
-  padding-top: 0;
-  padding-bottom: 60px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-@media (min-width: 768px) {
-  .site-collection-layout {
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-top: 0;
-  }
-}
-
-/* ─── Custom header bar ─────────────────── */
-
-.collection-custom-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 12px 0 10px;
-
-  position: sticky;
-  top: 64px;
-  z-index: 100;
-
-  background: #fff;
-
-  border-bottom: 0.5px solid rgba(0,0,0,0.08);
-
-  margin-bottom: 20px;
-}
-
-@media (max-width: 768px) {
-  .collection-custom-header {
-    top: 56px;
-  }
-}
-
-@media (max-width: 480px) {
-  .collection-custom-header {
-    top: 52px;
-  }
-}
-
-/* ─── Left: menu icon ───────────────────── */
-
-.col-header-left {
-  display: flex;
-  align-items: center;
-}
-
-.col-header-left .nav-icon-btn {
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  font-size: 22px;
-  color: #111;
-  transition: opacity 0.2s;
-}
-
-.col-header-left .nav-icon-btn:hover {
-  opacity: 0.6;
-}
-
-/* ─── Right: grid toggle + filter + search ─ */
-
-.col-header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* Filter trigger — no background, no border */
-.col-header-right .filter-dropdown {
-  position: relative;
-}
-
-.col-header-right .filter-trigger {
-  background: none;
-  border: none;
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
-  text-transform: uppercase;
-  color: #111;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 0;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.col-header-right .filter-trigger:hover {
-  opacity: 0.6;
-}
-
-.col-header-right .filter-options {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: #fff;
-  border: 0.8px solid #e5e5e5;
-  padding: 14px 16px;
-  min-width: 200px;
-  display: none;
-  z-index: 200;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-}
-
-.col-header-right .filter-options.open {
-  display: block;
-}
-
-/* Search icon button */
-.col-header-search-btn {
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  font-size: 20px;
-  color: #111;
-  transition: opacity 0.2s;
-}
-
-.col-header-search-btn:hover {
-  opacity: 0.6;
-}
-
-/* ─── Grid toggle — outlined bars only ─────*/
-
-.col-grid-toggle-btn {
-  background: none;
-  border: none;
-  padding: 4px 2px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.25s ease;
-}
-
-.col-grid-toggle-btn:hover {
-  opacity: 0.6;
-}
-
-.col-grid-icon {
-  width: 18px;
-  height: 14px;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  background: none;
-}
-
-.col-grid-bar {
-  flex: 1;
-  min-width: 2px;
-  background: transparent;
-  border: 0.8px solid #111;
-  box-sizing: border-box;
-  transition: height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* 2-col state (default) */
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(2) { height: 100%; }
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(3) { height: 50%; }
-
-/* 1-col state */
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { height: 50%; }
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(3) { height: 25%; }
-
-/* 3-col state */
-.col-grid-icon.cols-3 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-3 .col-grid-bar:nth-child(2) { height: 100%; }
-.col-grid-icon.cols-3 .col-grid-bar:nth-child(3) { height: 100%; }
-
-/* ─── Filter group styles (shared) ─────── */
-
-.filter-group {
-  margin-bottom: 16px;
-}
-
-.filter-group:last-child {
-  margin-bottom: 0;
-}
-
-.filter-group-title {
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
-  text-transform: uppercase;
-  color: #111;
-  margin-bottom: 8px;
-}
-
-.filter-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: var(--body-font-weight);
-  color: #777;
-  padding: 5px 0;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.filter-option:hover {
-  color: #111;
-}
-
-.filter-option input {
-  margin: 0;
-  accent-color: #111;
-}
-
-/* ─── Collection description ─────────────*/
-
-.collection-description {
-  font-size: var(--body-font-size);
-  font-weight: var(--body-font-weight);
-  line-height: var(--body-line-height);
-  letter-spacing: var(--body-letter-spacing);
-  color: #777;
-  max-width: 480px;
-  margin: 0 auto 32px;
-  text-align: center;
-  padding: 0 12px;
-}
-
-@media (min-width: 768px) {
-  .collection-description {
-    padding: 0 16px;
-  }
-}
-
-/* =========================================
-   COLLECTION PAGES - HIDE DUPLICATE GLOBAL NAV CONTROLS
-   ========================================= */
-
-/* Hide the FIRST nav-icon-btn in nav-left (menu/hamburger icon) */
-body.on-collection-page #main-nav .nav-left > .nav-icon-btn:first-child {
-  display: none !important;
-}
-
-/* Hide the FIRST nav-icon-btn in nav-right (search icon) */
-body.on-collection-page #main-nav .nav-right > .nav-icon-btn:first-child {
-  display: none !important;
-}
-
-/* Backup selectors in case the above don't match */
-body.on-collection-page #main-nav .nav-left button[onclick*="openMenu"] {
-  display: none !important;
-}
-
-body.on-collection-page #main-nav .nav-right button[onclick*="openSearch"] {
-  display: none !important;
-}
+  <section class="site-collection-layout">
+    <div class="product-grid" id="all-products-grid"></div>
+  </section>
+  <div class="back-btn-wrap"><button class="back-btn" onclick="goBackHome()">Back Home</button></div>
+  <footer id="products-footer"></footer>
+</div>
