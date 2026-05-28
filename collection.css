@@ -271,12 +271,21 @@
    COLLECTION PAGES - HIDE DUPLICATE GLOBAL NAV CONTROLS
    ========================================= */
 
-/* Hide menu icon from global nav on collection pages */
-body.on-collection-page #main-nav .nav-left .nav-icon-btn {
+/* Hide the FIRST nav-icon-btn in nav-left (menu/hamburger icon) */
+body.on-collection-page #main-nav .nav-left > .nav-icon-btn:first-child {
   display: none !important;
 }
 
-/* Hide search icon from global nav on collection pages */
-body.on-collection-page #main-nav .nav-right .nav-icon-btn[title="Search"] {
+/* Hide the FIRST nav-icon-btn in nav-right (search icon) */
+body.on-collection-page #main-nav .nav-right > .nav-icon-btn:first-child {
+  display: none !important;
+}
+
+/* Backup selectors in case the above don't match */
+body.on-collection-page #main-nav .nav-left button[onclick*="openMenu"] {
+  display: none !important;
+}
+
+body.on-collection-page #main-nav .nav-right button[onclick*="openSearch"] {
   display: none !important;
 }
