@@ -2,6 +2,18 @@ function updateHash(hash) { if (window.location.hash !== hash) history.pushState
 function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 window.addEventListener('popstate', () => { const route = getRouteFromHash(); if (route.page === 'product-detail') goToProduct(route.productId); else if (route.page === 'category') navigateToCategory(route.cat); else if (route.page === 'login') navigateToLogin(); else if (route.page === 'account') navigateToAccount(); else navigateTo(route.page); });
 
+function updateBodyClassForCollection() {
+  const productsPage = document.getElementById('page-products');
+  const categoryPage = document.getElementById('page-category');
+  
+  if ((productsPage && productsPage.classList.contains('active')) || 
+      (categoryPage && categoryPage.classList.contains('active'))) {
+    document.body.classList.add('on-collection-page');
+  } else {
+    document.body.classList.remove('on-collection-page');
+  }
+}
+
 function navigateTo(page) {
   S.saleMode = false; S.filter.vendor = null; updateHash(page === 'home' ? '' : page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -15,6 +27,7 @@ function navigateTo(page) {
   if(page==="home") setTimeout(checkNavForHome,50);
   if(page==="editorial") ensureNavScrolled();
   updateChatVisibility(); setTimeout(refreshSwipeTracks,50);
+  updateBodyClassForCollection();
 }
 function navigateToCategory(cat) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`category-${cat}`);
@@ -26,6 +39,7 @@ function navigateToCategory(cat) {
   renderCollectionSortingTabs();
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50); updateChatVisibility();
+  updateBodyClassForCollection();
 }
 function goToProduct(productId) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`product-${productId}`); closeCart();
@@ -36,10 +50,41 @@ function goToProduct(productId) {
   S.stickyWishHidden = false;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   renderProductPage(product); updateChatVisibility();
+  updateBodyClassForCollection();
 }
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
-function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); updateChatVisibility(); updateBodyClassForCollection(); }
+
+function navigateToLogin() {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-login").classList.add("active");
+  S.currentPage = "login";
+  updateHash('login');
+  window.scrollTo({top:0,behavior:"smooth"});
+  ensureNavScrolled();
+  updateBodyClassForCollection();
+}
+
+function navigateToAccount() {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-account").classList.add("active");
+  S.currentPage = "account";
+  updateHash('account');
+  window.scrollTo({top:0,behavior:"smooth"});
+  ensureNavScrolled();
+  updateBodyClassForCollection();
+}
+
+function navigateToCheckout() {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-checkout").classList.add("active");
+  S.currentPage = "checkout";
+  updateHash('checkout');
+  window.scrollTo({top:0,behavior:"smooth"});
+  ensureNavScrolled();
+  updateBodyClassForCollection();
+}
 
 function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
 function ensureNavScrolled() { DOM.mainNav.classList.add("scrolled"); }
