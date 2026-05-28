@@ -139,7 +139,7 @@
 
 /* =========================================
    MINIMIZED STATE — COMPACT ROW
-   Button keeps same 52px height
+   Button keeps same 46px height
    Price moves INSIDE button on the right
    ========================================= */
 
@@ -150,8 +150,8 @@
 
   gap: 0;
 
-  padding: 8px 16px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 
   height: auto;
 
@@ -173,7 +173,7 @@
   flex: 1;
   min-width: 0;
 
-  /* Keep same 52px height — no override */
+  /* Keep same 46px height — no override */
   /* Keep same border, typography, everything */
 
   justify-content: space-between;
@@ -359,12 +359,9 @@
 @supports (padding: max(0px)) {
 
   .sticky-add-bar,
+  .sticky-add-bar.minimized,
   .sticky-add-bar.extended {
     padding-bottom: max(14px, env(safe-area-inset-bottom));
-  }
-
-  .sticky-add-bar.minimized {
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
 
