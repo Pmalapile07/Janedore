@@ -72,57 +72,57 @@
 <div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
 <div class="page" id="page-products">
-  <section class="site-collection-layout">
-
-    <!-- CLEAN SINGLE COLLECTION HEADER - No old toolbar -->
-    <div class="collection-custom-header">
-      <div class="col-header-left">
-        <button class="nav-icon-btn" onclick="openMenu()">
-          <i class="ph-thin ph-list"></i>
+  
+  <!-- SINGLE CLEAN COLLECTION HEADER - THE ONLY NAV ROW -->
+  <div class="collection-custom-header">
+    <div class="col-header-left">
+      <button class="nav-icon-btn" onclick="openMenu()">
+        <i class="ph-thin ph-list"></i>
+      </button>
+    </div>
+    <div class="col-header-right">
+      <button class="col-grid-toggle-btn" onclick="toggleGrid()" id="col-grid-toggle-btn">
+        <div class="col-grid-icon cols-2" id="col-grid-icon">
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+        </div>
+      </button>
+      <div class="filter-dropdown">
+        <button class="filter-trigger" onclick="toggleFilterDropdown('products')">
+          FILTER
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-      </div>
-      <div class="col-header-right">
-        <button class="col-grid-toggle-btn" onclick="toggleGrid()" id="col-grid-toggle-btn">
-          <div class="col-grid-icon cols-2" id="col-grid-icon">
-            <div class="col-grid-bar"></div>
-            <div class="col-grid-bar"></div>
-            <div class="col-grid-bar"></div>
+        <div class="filter-options" id="filter-options-products">
+          <div class="filter-group">
+            <div class="filter-group-title">Category</div>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="all" checked onchange="applyFilter('cat','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="sunglasses" onchange="applyFilter('cat','sunglasses')"> Sunglasses</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="jewelry" onchange="applyFilter('cat','jewelry')"> Jewelry</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="bags" onchange="applyFilter('cat','bags')"> Bags</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-products" value="parfum" onchange="applyFilter('cat','parfum')"> Scent</label>
           </div>
-        </button>
-        <div class="filter-dropdown">
-          <button class="filter-trigger" onclick="toggleFilterDropdown('products')">
-            FILTER
-            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="filter-options" id="filter-options-products">
-            <div class="filter-group">
-              <div class="filter-group-title">Category</div>
-              <label class="filter-option"><input type="radio" name="filter-cat-products" value="all" checked onchange="applyFilter('cat','all')"> All</label>
-              <label class="filter-option"><input type="radio" name="filter-cat-products" value="sunglasses" onchange="applyFilter('cat','sunglasses')"> Sunglasses</label>
-              <label class="filter-option"><input type="radio" name="filter-cat-products" value="jewelry" onchange="applyFilter('cat','jewelry')"> Jewelry</label>
-              <label class="filter-option"><input type="radio" name="filter-cat-products" value="bags" onchange="applyFilter('cat','bags')"> Bags</label>
-              <label class="filter-option"><input type="radio" name="filter-cat-products" value="parfum" onchange="applyFilter('cat','parfum')"> Scent</label>
-            </div>
-            <div class="filter-group">
-              <div class="filter-group-title">Size</div>
-              <label class="filter-option"><input type="radio" name="filter-size-products" value="all" checked onchange="applyFilter('size','all')"> All</label>
-              <label class="filter-option"><input type="radio" name="filter-size-products" value="OS" onchange="applyFilter('size','OS')"> OS</label>
-              <label class="filter-option"><input type="radio" name="filter-size-products" value="Stainless Steel" onchange="applyFilter('size','Stainless Steel')"> Stainless Steel</label>
-            </div>
-            <div class="filter-group">
-              <div class="filter-group-title">Price</div>
-              <label class="filter-option"><input type="radio" name="filter-price-products" value="all" checked onchange="applyFilter('price','all')"> All</label>
-              <label class="filter-option"><input type="radio" name="filter-price-products" value="low" onchange="applyFilter('price','low')"> Under R500</label>
-              <label class="filter-option"><input type="radio" name="filter-price-products" value="high" onchange="applyFilter('price','high')"> R500+</label>
-            </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Size</div>
+            <label class="filter-option"><input type="radio" name="filter-size-products" value="all" checked onchange="applyFilter('size','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-size-products" value="OS" onchange="applyFilter('size','OS')"> OS</label>
+            <label class="filter-option"><input type="radio" name="filter-size-products" value="Stainless Steel" onchange="applyFilter('size','Stainless Steel')"> Stainless Steel</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Price</div>
+            <label class="filter-option"><input type="radio" name="filter-price-products" value="all" checked onchange="applyFilter('price','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-price-products" value="low" onchange="applyFilter('price','low')"> Under R500</label>
+            <label class="filter-option"><input type="radio" name="filter-price-products" value="high" onchange="applyFilter('price','high')"> R500+</label>
           </div>
         </div>
-        <button class="col-header-search-btn" onclick="openSearch()">
-          <i class="ph-thin ph-magnifying-glass"></i>
-        </button>
       </div>
+      <button class="col-header-search-btn" onclick="openSearch()">
+        <i class="ph-thin ph-magnifying-glass"></i>
+      </button>
     </div>
+  </div>
 
+  <section class="site-collection-layout">
     <div class="product-grid" id="all-products-grid"></div>
   </section>
   <div class="back-btn-wrap"><button class="back-btn" onclick="goBackHome()">Back Home</button></div>
@@ -130,49 +130,49 @@
 </div>
 
 <div class="page" id="page-category">
-  <section class="site-collection-layout">
-
-    <!-- CLEAN SINGLE COLLECTION HEADER - No old toolbar -->
-    <div class="collection-custom-header">
-      <div class="col-header-left">
-        <button class="nav-icon-btn" onclick="openMenu()">
-          <i class="ph-thin ph-list"></i>
+  
+  <!-- SINGLE CLEAN COLLECTION HEADER - THE ONLY NAV ROW -->
+  <div class="collection-custom-header">
+    <div class="col-header-left">
+      <button class="nav-icon-btn" onclick="openMenu()">
+        <i class="ph-thin ph-list"></i>
+      </button>
+    </div>
+    <div class="col-header-right">
+      <button class="col-grid-toggle-btn" onclick="toggleGridCat()" id="col-cat-grid-toggle-btn">
+        <div class="col-grid-icon cols-2" id="col-cat-grid-icon">
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+        </div>
+      </button>
+      <div class="filter-dropdown">
+        <button class="filter-trigger" onclick="toggleFilterDropdown('category')">
+          FILTER
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-      </div>
-      <div class="col-header-right">
-        <button class="col-grid-toggle-btn" onclick="toggleGridCat()" id="col-cat-grid-toggle-btn">
-          <div class="col-grid-icon cols-2" id="col-cat-grid-icon">
-            <div class="col-grid-bar"></div>
-            <div class="col-grid-bar"></div>
-            <div class="col-grid-bar"></div>
+        <div class="filter-options" id="filter-options-category">
+          <div class="filter-group">
+            <div class="filter-group-title">Size</div>
+            <label class="filter-option"><input type="radio" name="filter-size-category" value="all" checked onchange="applyCatFilter('size','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-size-category" value="OS" onchange="applyCatFilter('size','OS')"> OS</label>
+            <label class="filter-option"><input type="radio" name="filter-size-category" value="Stainless Steel" onchange="applyCatFilter('size','Stainless Steel')"> Stainless Steel</label>
           </div>
-        </button>
-        <div class="filter-dropdown">
-          <button class="filter-trigger" onclick="toggleFilterDropdown('category')">
-            FILTER
-            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="filter-options" id="filter-options-category">
-            <div class="filter-group">
-              <div class="filter-group-title">Size</div>
-              <label class="filter-option"><input type="radio" name="filter-size-category" value="all" checked onchange="applyCatFilter('size','all')"> All</label>
-              <label class="filter-option"><input type="radio" name="filter-size-category" value="OS" onchange="applyCatFilter('size','OS')"> OS</label>
-              <label class="filter-option"><input type="radio" name="filter-size-category" value="Stainless Steel" onchange="applyCatFilter('size','Stainless Steel')"> Stainless Steel</label>
-            </div>
-            <div class="filter-group">
-              <div class="filter-group-title">Price</div>
-              <label class="filter-option"><input type="radio" name="filter-price-category" value="all" checked onchange="applyCatFilter('price','all')"> All</label>
-              <label class="filter-option"><input type="radio" name="filter-price-category" value="low" onchange="applyCatFilter('price','low')"> Under R500</label>
-              <label class="filter-option"><input type="radio" name="filter-price-category" value="high" onchange="applyCatFilter('price','high')"> R500+</label>
-            </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Price</div>
+            <label class="filter-option"><input type="radio" name="filter-price-category" value="all" checked onchange="applyCatFilter('price','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-price-category" value="low" onchange="applyCatFilter('price','low')"> Under R500</label>
+            <label class="filter-option"><input type="radio" name="filter-price-category" value="high" onchange="applyCatFilter('price','high')"> R500+</label>
           </div>
         </div>
-        <button class="col-header-search-btn" onclick="openSearch()">
-          <i class="ph-thin ph-magnifying-glass"></i>
-        </button>
       </div>
+      <button class="col-header-search-btn" onclick="openSearch()">
+        <i class="ph-thin ph-magnifying-glass"></i>
+      </button>
     </div>
+  </div>
 
+  <section class="site-collection-layout">
     <div id="category-description-wrap"></div>
     <div class="product-grid" id="category-products-grid"></div>
   </section>
