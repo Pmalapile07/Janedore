@@ -88,7 +88,6 @@ async function renderProductPage(product) {
   const slidesClass=(isDesktop()&&images.length>=4)?'':'single-image';
   const hasDesc=product.description&&product.description.length>0; const descWordCount=wordCount(product.description); const showViewMore=descWordCount>20;
   const wishIconClass=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple";
-  const hasSizeGuide=!!(product.measurements&&product.measurements.trim().length>0);
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider" style="position:relative;">
       <div class="product-slides ${slidesClass}" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div>
@@ -97,7 +96,7 @@ async function renderProductPage(product) {
       <div class="info-tabs-wrap">
         <button class="info-tab-btn active" data-tab="description" onclick="switchInfoTab('description')">Description</button>
         <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
-        ${hasSizeGuide ? `<button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Size Guide</button>` : ''}
+        <button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Measurements</button>
         <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
       </div>
       <div class="info-tab-panel active" data-tab="description">
@@ -105,7 +104,7 @@ async function renderProductPage(product) {
         <div class="product-brand-under-desc"><span>Brand: ${product.brand||''}</span><button class="inline-wish-btn" onclick="event.stopPropagation();toggleWish('${product.id}');var t=this.querySelector('i');t.className=t.className.includes('ph-fill')?'ph-thin ph-bookmark-simple':'ph-fill ph-bookmark-simple';"><i class="${wishIconClass}"></i></button></div>
       </div>
       <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
-      ${hasSizeGuide ? `<div class="info-tab-panel" data-tab="measurements"><p style="white-space:pre-line;font-size:12px;font-weight:300;line-height:1.8;">${product.measurements}</p></div>` : ''}
+      <div class="info-tab-panel" data-tab="measurements"><p>${product.measurements||'No measurements available.'}</p></div>
       <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
     </div>
     ${secondaryImagesHtml?`<div class="product-secondary-images">${secondaryImagesHtml}</div>`:''}
