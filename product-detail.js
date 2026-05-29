@@ -5,6 +5,31 @@ function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; 
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
 function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'…'; }
 
+function buildSizeTable(raw) {
+  if (!raw) return '';
+  const lines = raw.trim().split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+  const isCSV = lines.length > 1 && lines[0].includes(',');
+  if (!isCSV) return '<p style="white-space:pre-line;font-size:12px;font-weight:300;line-height:1.8;color:#555;">' + raw + '</p>';
+  const rows = lines.map(function(l){ return l.split(',').map(function(c){ return c.trim(); }); });
+  const header = rows[0];
+  const body = rows.slice(1);
+  const headerHtml = header.map(function(h, i){
+    return '<th style="padding:8px 10px;text-align:' + (i===0?'left':'center') + ';font-weight:500;letter-spacing:0.08em;text-transform:uppercase;font-size:10px;border-bottom:0.5px solid #d6cfc8;color:#333;">' + h + '</th>';
+  }).join('');
+  const bodyHtml = body.map(function(row, ri){
+    const cells = row.map(function(cell, ci){
+      return '<td style="padding:8px 10px;text-align:' + (ci===0?'left':'center') + ';color:#555;font-size:12px;">' + cell + '</td>';
+    }).join('');
+    return '<tr style="background:' + (ri%2===0?'transparent':'rgba(214,207,200,0.15)') + ';">' + cells + '</tr>';
+  }).join('');
+  return '<div style="overflow-x:auto;">' +
+    '<table style="width:100%;border-collapse:collapse;">' +
+      '<thead><tr>' + headerHtml + '</tr></thead>' +
+      '<tbody>' + bodyHtml + '</tbody>' +
+    '</table></div>' +
+    '<p style="font-size:10px;font-weight:300;color:#aaa;margin-top:12px;line-height:1.6;">All measurements are in cm. A 2–3cm variance may occur due to manual measurement.</p>';
+}
+
 function getProductImages(product, variantIndex) {
   const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
   const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
@@ -89,6 +114,7 @@ async function renderProductPage(product) {
   const hasDesc=product.description&&product.description.length>0; const descWordCount=wordCount(product.description); const showViewMore=descWordCount>20;
   const wishIconClass=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple";
   const hasSizeGuide=!!(product.measurements&&product.measurements.trim().length>0);
+  const sizeGuideHtml=hasSizeGuide?buildSizeTable(product.measurements):'';
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider" style="position:relative;">
       <div class="product-slides ${slidesClass}" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div>
@@ -105,7 +131,7 @@ async function renderProductPage(product) {
         <div class="product-brand-under-desc"><span>Brand: ${product.brand||''}</span><button class="inline-wish-btn" onclick="event.stopPropagation();toggleWish('${product.id}');var t=this.querySelector('i');t.className=t.className.includes('ph-fill')?'ph-thin ph-bookmark-simple':'ph-fill ph-bookmark-simple';"><i class="${wishIconClass}"></i></button></div>
       </div>
       <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
-      ${hasSizeGuide ? `<div class="info-tab-panel" data-tab="measurements"><p style="white-space:pre-line;font-size:12px;font-weight:300;line-height:1.8;">${product.measurements}</p></div>` : ''}
+      ${hasSizeGuide ? `<div class="info-tab-panel" data-tab="measurements" style="padding:12px 0;">${sizeGuideHtml}</div>` : ''}
       <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
     </div>
     ${secondaryImagesHtml?`<div class="product-secondary-images">${secondaryImagesHtml}</div>`:''}
