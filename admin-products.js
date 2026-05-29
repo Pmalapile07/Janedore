@@ -107,13 +107,13 @@
      SEED PRODUCTS
   ───────────────────────────────────────────────────────── */
   var DEFAULT_PRODUCTS = [
-    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", vendorId:"janedore", category:"sunglasses", price:350, salePrice:null, badge:"sold", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses with UV protection.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", measurements:"", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Warm Brown",swatch:"#AF3E06",images:{model:[],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"],detail:[]}}] },
-    { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenese Gold Earrings", brand:"NIRIUS CO", vendorId:"nirius-co", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings with a modern twist.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", measurements:"", shippingReturns:"Free shipping over R1500.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Gold",swatch:"#d4af37",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"],detail:[]}}] },
-    { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", vendorId:"janedore", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", measurements:"", shippingReturns:"Free with sunglass purchase.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"],detail:[]}}] },
-    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", vendorId:"janedore", category:"dresses", price:450, salePrice:null, badge:"new", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"The Raffle Brandy black dress.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", measurements:"", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"],detail:[]}}] },
-    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", vendorId:"thato", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", measurements:"", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Pale Linen",swatch:"#EBEDE0",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"],detail:[]}}] },
-    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", vendorId:"thato", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", measurements:"", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Pink Rain",swatch:"#F3DBD7",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"],detail:[]}}] },
-    { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", vendorId:"janedore", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", measurements:"", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"],detail:[]}}] }
+    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", vendorId:"janedore", category:"sunglasses", price:350, salePrice:null, badge:"sold", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses with UV protection.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", measurements:"MEASUREMENT,VALUE\nFrame Width,145 mm\nLens Width,52 mm\nLens Height,42 mm\nBridge Width,20 mm\nTemple Length,145 mm", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Warm Brown",swatch:"#AF3E06",images:{model:[],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"],detail:[]}}] },
+    { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenese Gold Earrings", brand:"NIRIUS CO", vendorId:"nirius-co", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings with a modern twist.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", measurements:"MEASUREMENT,VALUE\nLength,35 mm\nWidth,12 mm\nWeight,4 g", shippingReturns:"Free shipping over R1500.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Gold",swatch:"#d4af37",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"],detail:[]}}] },
+    { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", vendorId:"janedore", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", measurements:"MEASUREMENT,VALUE\nWidth,22 cm\nHeight,14 cm\nDepth,3 cm", shippingReturns:"Free with sunglass purchase.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"],detail:[]}}] },
+    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", vendorId:"janedore", category:"dresses", price:450, salePrice:null, badge:"new", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"The Raffle Brandy black dress.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", measurements:"SIZE,S,M,L\nLength,122,124,126\nBust,84,88,92\nWaist,66,70,74\nHip,90,94,98", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"],detail:[]}}] },
+    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", vendorId:"thato", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", measurements:"DETAIL,VALUE\nVolume,50 ml\nType,Eau de Parfum", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Pale Linen",swatch:"#EBEDE0",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"],detail:[]}}] },
+    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", vendorId:"thato", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", measurements:"DETAIL,VALUE\nVolume,50 ml\nType,Eau de Parfum", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Pink Rain",swatch:"#F3DBD7",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"],detail:[]}}] },
+    { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", vendorId:"janedore", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", measurements:"SIZE,XS,S,M,L\nLength,118,122,124,126\nBust,80,84,88,92\nWaist,62,66,70,74\nHip,86,90,94,98", shippingReturns:"Free shipping over R1000.", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"],detail:[]}}] }
   ];
 
   window.seedDefaultProducts = function() {
@@ -127,6 +127,100 @@
         console.error('[SEED_PRODUCTS]', e);
         showToast('Error: ' + e.message, 'error');
       });
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     ADMIN SIZE GUIDE PREVIEW
+  ───────────────────────────────────────────────────────── */
+  function getCategoryConfig(category) {
+    var configs = {
+      tops:       { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      shirts:     { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      vests:      { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      dresses:    { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      bottoms:    { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      trousers:   { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      jackets:    { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      outerwear:  { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      sets:       { isTable: true,  unit: 'CM', tabTitle: 'Size Guide' },
+      bags:       { isTable: false, unit: '',   tabTitle: 'Dimensions' },
+      sunglasses: { isTable: false, unit: 'MM', tabTitle: 'Measurements' },
+      jewelry:    { isTable: false, unit: '',   tabTitle: 'Specifications' },
+      parfum:     { isTable: false, unit: '',   tabTitle: null },
+      perfume:    { isTable: false, unit: '',   tabTitle: null }
+    };
+    return configs[category] || { isTable: true, unit: 'CM', tabTitle: 'Size Guide' };
+  }
+
+  window._updateSizeGuidePreview = function() {
+    var textarea = document.querySelector('[name="measurements"]');
+    var preview  = document.getElementById('size-guide-preview');
+    var categorySelect = document.querySelector('[name="category"]');
+    
+    if (!textarea || !preview) return;
+    
+    var raw = textarea.value;
+    var category = categorySelect ? categorySelect.value : 'dresses';
+    var config = getCategoryConfig(category);
+    
+    if (!raw || !raw.trim()) {
+      preview.innerHTML = '<div style="color:#999;font-size:11px;padding:12px;text-align:center;background:#f9f8f6;border-radius:6px;border:1px dashed #e0dcd5;">Enter measurements above to preview</div>';
+      return;
+    }
+    
+    var lines = raw.trim().split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+    var isCSV = lines.length > 1 && lines[0].includes(',');
+    
+    var tabLabel = config.tabTitle || 'No tab shown';
+    var tabBadge = config.tabTitle ? '<span style="display:inline-block;background:#111;color:#fff;font-size:9px;padding:3px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Tab: ' + esc(tabLabel) + '</span>' : '<span style="display:inline-block;background:#e0dcd5;color:#888;font-size:9px;padding:3px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">No tab shown (Perfume)</span>';
+    
+    var previewHTML = '<div style="font-family:\'Manrope\',sans-serif;background:#fff;border:1px solid #e8e8e8;border-radius:4px;padding:16px;">';
+    previewHTML += tabBadge;
+    
+    if (config.isTable && isCSV) {
+      var rows = lines.map(function(l) { return l.split(',').map(function(c) { return c.trim(); }); });
+      var header = rows[0];
+      var body = rows.slice(1);
+      
+      previewHTML += '<div style="text-align:right;font-size:8px;font-weight:400;letter-spacing:0.12em;text-transform:uppercase;color:#999;margin-bottom:8px;">' + esc(config.unit) + '</div>';
+      previewHTML += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:11px;">';
+      previewHTML += '<thead><tr>' + header.map(function(h) {
+        return '<th style="padding:10px 12px;text-align:left;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;font-size:9px;color:#333;border-bottom:1px solid #e8e8e8;">' + esc(h) + '</th>';
+      }).join('') + '</tr></thead>';
+      previewHTML += '<tbody>' + body.map(function(row) {
+        return '<tr>' + row.map(function(cell, ci) {
+          return '<td style="padding:10px 12px;color:#666;border-bottom:1px solid #e8e8e8;' + (ci === 0 ? 'font-weight:400;' : '') + '">' + esc(cell) + '</td>';
+        }).join('') + '</tr>';
+      }).join('') + '</tbody>';
+      previewHTML += '</table></div>';
+    } else {
+      var pairs = lines.map(function(line) {
+        if (line.includes(',')) {
+          var parts = line.split(',').map(function(p) { return p.trim(); });
+          return { label: parts[0], value: parts.slice(1).join(', ') };
+        }
+        return null;
+      }).filter(Boolean);
+      
+      if (pairs.length > 0) {
+        previewHTML += '<div style="text-align:right;font-size:8px;font-weight:400;letter-spacing:0.12em;text-transform:uppercase;color:#999;margin-bottom:8px;">' + esc(config.unit) + '</div>';
+        pairs.forEach(function(pair, i) {
+          previewHTML += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid #e8e8e8;' + (i === 0 ? 'padding-top:0;' : '') + '">';
+          previewHTML += '<span style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#333;">' + esc(pair.label) + '</span>';
+          previewHTML += '<span style="font-size:11px;font-weight:300;color:#666;">' + esc(pair.value) + '</span>';
+          previewHTML += '</div>';
+        });
+      } else {
+        previewHTML += '<div style="font-size:11px;color:#666;white-space:pre-line;">' + esc(raw) + '</div>';
+      }
+    }
+    
+    if (config.tabTitle !== null) {
+      previewHTML += '<p style="font-size:9px;font-weight:300;color:#999;margin-top:12px;line-height:1.6;">Measurements are provided as a guide. A variance of 1–3cm may occur.</p>';
+    }
+    
+    previewHTML += '</div>';
+    preview.innerHTML = previewHTML;
   };
 
   /* ─────────────────────────────────────────────────────────
@@ -272,7 +366,7 @@
           '<div class="form-group"><label>Brand</label><select name="brand">' +
             ['JANEDORE','NIRIUS CO','THATO'].map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') +
           '</select></div>' +
-          '<div class="form-group"><label>Category</label><select name="category">' +
+          '<div class="form-group"><label>Category</label><select name="category" onchange="window._updateSizeGuidePreview()">' +
             ['dresses','tops','bottoms','jackets','sets','sunglasses','jewelry','bags','parfum'].map(function(c){
               return '<option value="'+c+'"'+(p.category===c?' selected':'')+'>'+c.charAt(0).toUpperCase()+c.slice(1)+'</option>';
             }).join('') +
@@ -303,7 +397,11 @@
         '<div class="form-group"><label>Description</label><textarea name="description">' + esc(p.description||'') + '</textarea></div>' +
         '<div class="form-row">' +
           '<div class="form-group"><label>Composition & Care</label><textarea name="compositionCare">' + esc(p.compositionCare||'') + '</textarea></div>' +
-          '<div class="form-group"><label>Size Guide</label><textarea name="measurements">' + esc(p.measurements||'') + '</textarea></div>' +
+          '<div class="form-group">' +
+            '<label>Size Guide</label>' +
+            '<textarea name="measurements" oninput="window._updateSizeGuidePreview()">' + esc(p.measurements||'') + '</textarea>' +
+            '<div id="size-guide-preview" style="margin-top:10px;"></div>' +
+          '</div>' +
         '</div>' +
         '<div class="form-group"><label>Shipping & Returns</label><input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '"></div>' +
         '<hr class="divider" style="margin:14px 16px;">' +
@@ -323,6 +421,11 @@
     '</div>';
 
     mountModal(modalHTML);
+    
+    // Initialize size guide preview after modal is mounted
+    setTimeout(function() {
+      window._updateSizeGuidePreview();
+    }, 50);
   };
 
   /* ─────────────────────────────────────────────────────────
