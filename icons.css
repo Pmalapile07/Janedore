@@ -1,12 +1,13 @@
+ICONS.CSS
 /* ============================================================
    JANEDORE — icons.css
-   Pure CSS icon system. No SVG. No external libraries.
-   All icons inherit color via currentColor.
-   Namespaced under .jd- to prevent style conflicts.
-   Unified 20x20px optical grid.
+   Pure CSS. No SVG. No libraries. No images.
+   currentColor throughout.
+   Namespaced .jd- to prevent conflicts.
+   Unified 20×20px optical grid.
    ============================================================ */
 
-/* Base container */
+/* Shared base container */
 .jd-icon,
 .jd-icon-menu {
   display: inline-flex;
@@ -17,6 +18,7 @@
   height: 20px;
   flex-shrink: 0;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 /* Count badge */
@@ -37,7 +39,7 @@
   padding: 0 2px;
 }
 
-/* Badge color swap — mirrors your .badge rule */
+/* Badge swap — mirrors your existing .badge rule */
 #main-nav .jd-count {
   background: #fff;
   color: #111;
@@ -47,53 +49,72 @@
   color: #fff;
 }
 
-/* ── MENU ── */
+/* ── MENU ──
+   Two equal lines. Centered as a pair.
+   Lines at 7px and 13px = optically centered in 20px canvas. */
 .jd-icon-menu::before,
 .jd-icon-menu::after {
   content: '';
   position: absolute;
   left: 0;
-  height: 0.8px;
+  width: 100%;
+  height: 0.75px;
   background: currentColor;
 }
-.jd-icon-menu::before {
-  width: 100%;
-  top: 7px;
-}
-.jd-icon-menu::after {
-  width: 75%;
-  top: 13px;
-}
+.jd-icon-menu::before { top: 7px; }
+.jd-icon-menu::after  { top: 13px; }
 
-/* ── BOOKMARK ── */
+/* ── BOOKMARK ──
+   12×16px silhouette. V-notch tip at 55% height.
+   Notch depth: 45% of 16px = 7.2px — unmistakable at 18–20px. */
 .jd-icon-bookmark::before {
   content: '';
   position: absolute;
-  left: 4.5px;
+  left: 4px;
   top: 2px;
-  width: 11px;
-  height: 15px;
+  width: 12px;
+  height: 16px;
   background: transparent;
-  box-shadow: inset 0 0 0 0.8px currentColor;
+  box-shadow: inset 0 0 0 0.75px currentColor;
   clip-path: polygon(
     0%   0%,
     100% 0%,
     100% 100%,
-    50%  58%,
+    50%  55%,
     0%   100%
   );
 }
 
-/* ── SHOPPING BAG ── */
+/* ── SHOPPING BAG ──
+   Body: three-sided open rectangle (no top border).
+   Handles: arched loops above the body using border-radius. */
+
+/* Body */
 .jd-icon-bag::before {
   content: '';
   position: absolute;
   left: 3.5px;
   right: 3.5px;
-  top: 7px;
+  top: 8px;
   bottom: 2px;
-  border-left: 0.8px solid currentColor;
-  border-right: 0.8px solid currentColor;
-  border-bottom: 0.8px solid currentColor;
+  border-left: 0.75px solid currentColor;
+  border-right: 0.75px solid currentColor;
+  border-bottom: 0.75px solid currentColor;
   border-top: none;
+}
+
+/* Handles */
+.jd-icon-bag::after {
+  content: '';
+  position: absolute;
+  left: 6.5px;
+  right: 6.5px;
+  top: 4px;
+  height: 5px;
+  border-left: 0.75px solid currentColor;
+  border-right: 0.75px solid currentColor;
+  border-top: 0.75px solid currentColor;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  background: transparent;
 }
