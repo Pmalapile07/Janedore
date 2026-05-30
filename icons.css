@@ -1,4 +1,3 @@
-ICONS.CSS
 /* ============================================================
    JANEDORE — icons.css
    Pure CSS. No SVG. No libraries. No images.
@@ -65,56 +64,44 @@ ICONS.CSS
 .jd-icon-menu::after  { top: 13px; }
 
 /* ── BOOKMARK ──
-   12×16px silhouette. V-notch tip at 55% height.
-   Notch depth: 45% of 16px = 7.2px — unmistakable at 18–20px. */
+   Zara-esque: thin, architectural, elongated.
+   9×17px silhouette with a sharp V-notch at 58% height.
+   Sits optically centered in the 20×20 grid. */
 .jd-icon-bookmark::before {
   content: '';
   position: absolute;
-  left: 4px;
-  top: 2px;
-  width: 12px;
-  height: 16px;
+  left: 5.5px;
+  top: 1.5px;
+  width: 9px;
+  height: 17px;
   background: transparent;
   box-shadow: inset 0 0 0 0.75px currentColor;
   clip-path: polygon(
     0%   0%,
     100% 0%,
     100% 100%,
-    50%  55%,
+    50%  58%,
     0%   100%
   );
 }
 
 /* ── SHOPPING BAG ──
-   Body: three-sided open rectangle (no top border).
-   Handles: arched loops above the body using border-radius. */
-
-/* Body */
+   One clean square. No handles. No extra detailing.
+   Simple 13×14px rectangle with open top. */
 .jd-icon-bag::before {
   content: '';
   position: absolute;
   left: 3.5px;
   right: 3.5px;
-  top: 8px;
-  bottom: 2px;
+  top: 3px;
+  bottom: 3px;
   border-left: 0.75px solid currentColor;
   border-right: 0.75px solid currentColor;
   border-bottom: 0.75px solid currentColor;
   border-top: none;
 }
 
-/* Handles */
+/* No ::after — handles removed */
 .jd-icon-bag::after {
-  content: '';
-  position: absolute;
-  left: 6.5px;
-  right: 6.5px;
-  top: 4px;
-  height: 5px;
-  border-left: 0.75px solid currentColor;
-  border-right: 0.75px solid currentColor;
-  border-top: 0.75px solid currentColor;
-  border-bottom: none;
-  border-radius: 3px 3px 0 0;
-  background: transparent;
+  content: none;
 }
