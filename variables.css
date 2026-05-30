@@ -1,5 +1,5 @@
 :root {
-  --ui-font-size: 10.5px;
+  --ui-font-size: 10px !important;
   --ui-letter-spacing: 0.2em;
   --ui-font-weight: 100;
   --body-font-size: 12px;
