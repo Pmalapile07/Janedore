@@ -1,8 +1,8 @@
 #hero {
   position: relative;
-  height: calc(110vh + 2px);
-  min-height: 450px;
-  max-height: 800px;
+  height: 140vh;
+  min-height: 1000px;
+  max-height: none;
   overflow: hidden;
   background: #1a1a1a;
   display: flex;
@@ -14,8 +14,8 @@
 
 @media (min-width: 769px) {
   #hero {
-    height: calc(88vh + 2px);
-    min-height: 500px;
+    height: 140vh;
+    min-height: 1200px;
   }
 }
 
