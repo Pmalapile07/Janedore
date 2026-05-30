@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="variables.css">
   <link rel="stylesheet" href="utilities.css">
   <link rel="stylesheet" href="navigation.css">
+  <link rel="stylesheet" href="icons.css">
   <link rel="stylesheet" href="hero.css">
   <link rel="stylesheet" href="home-categories.css">
   <link rel="stylesheet" href="product-card.css">
@@ -39,7 +40,7 @@
 
 <nav id="main-nav">
   <div class="nav-left">
-    <button class="nav-icon-btn" onclick="openMenu()"><i class="ph-thin ph-list"></i></button>
+    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
       <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
@@ -92,8 +93,8 @@
     </div>
     <!-- Regular nav icons - hidden on collection pages -->
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
-    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
-    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
+    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><span class="jd-icon jd-icon-bookmark"><span class="jd-count" id="wish-badge" style="display:none">0</span></span></button>
+    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><span class="jd-icon jd-icon-bag"><span class="jd-count" id="cart-badge" style="display:none">0</span></span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
