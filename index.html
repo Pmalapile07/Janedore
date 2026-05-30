@@ -33,8 +33,32 @@
   <link rel="stylesheet" href="footer.css">
   <link rel="stylesheet" href="buttons.css">
   <link rel="stylesheet" href="responsive.css">
+  <style>
+    /* Announcement bar styling */
+    #announcement-bar {
+      background: #000;
+      color: #fff;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: var(--ui-font-size, 11px);
+      letter-spacing: var(--ui-letter-spacing, 0.08em);
+      font-weight: var(--ui-font-weight, 500);
+      text-transform: uppercase;
+      position: relative;
+      z-index: 801;
+    }
+    @media (max-width: 480px) {
+      #announcement-bar {
+        font-size: 10px;
+        padding: 6px 12px;
+      }
+    }
+  </style>
 </head>
 <body>
+
+<!-- Announcement Bar -->
+<div id="announcement-bar">Free shipping on orders over R1500.</div>
 
 <div id="banner"><div class="announcement-text active" id="announce-text-0"></div><div class="announcement-text" id="announce-text-1"></div></div>
 
@@ -93,8 +117,8 @@
     </div>
     <!-- Regular nav icons - hidden on collection pages -->
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
-    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><span class="jd-icon jd-icon-bookmark"><span class="jd-count" id="wish-badge" style="display:none">0</span></span></button>
-    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><span class="jd-icon jd-icon-bag"><span class="jd-count" id="cart-badge" style="display:none">0</span></span></button>
+    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
+    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-trolley"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
