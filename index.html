@@ -59,12 +59,6 @@
     #main-nav .desktop-nav-link,
     #main-nav .utility-text-link { color: #111 !important; }
     #main-nav .nav-logo img { filter: brightness(0) saturate(100%) !important; }
-    /* Logo sits inline in nav-left, not centred absolutely */
-    #main-nav .nav-logo {
-      position: static !important;
-      transform: none !important;
-      margin-right: 4px;
-    }
   </style>
 </head>
 <body>
@@ -75,7 +69,7 @@
 
 <nav id="main-nav">
   <div class="nav-left">
-    <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
+    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
       <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
@@ -84,6 +78,7 @@
       <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
     </div>
   </div>
+  <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
   <div class="nav-right">
     <!-- Collection controls - only visible on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
@@ -128,8 +123,7 @@
     <!-- Regular nav icons - hidden on collection pages -->
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
-    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-trolley"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
-    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
+    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
@@ -190,6 +184,32 @@
 <script src="footer.js"></script>
 <script src="chat.js"></script>
 <script src="app.js"></script>
+
+<script>
+  // Hide search icon on homepage, show on all other pages
+  (function() {
+    function updateSearchIcon() {
+      const searchBtn = document.querySelector('.nav-search-icon');
+      if (!searchBtn) return;
+      const homePage = document.getElementById('page-home');
+      if (homePage && homePage.classList.contains('active')) {
+        searchBtn.style.display = 'none';
+      } else {
+        searchBtn.style.display = '';
+      }
+    }
+    // Run on load
+    document.addEventListener('DOMContentLoaded', updateSearchIcon);
+    // Hook into any navigateTo calls by observing class changes on pages
+    const observer = new MutationObserver(updateSearchIcon);
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.page').forEach(function(page) {
+        observer.observe(page, { attributes: true, attributeFilter: ['class'] });
+      });
+      updateSearchIcon();
+    });
+  })();
+</script>
 
 <div id="chat-container"></div>
 <script>
