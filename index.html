@@ -36,19 +36,27 @@
   <style>
     /* Announcement bar — deep charcoal, white text, COS/Arket/Toteme register */
     #announcement-bar {
-      background: white;
-      color: black;
+      background: #1a1a1a;
+      color: #fff;
       text-align: center;
       padding: 9px 12px;
-      font-size: 10px;
+      font-size: var(--ui-font-size, 11px);
       letter-spacing: var(--ui-letter-spacing, 0.08em);
-      font-weight: 700;
+      font-weight: var(--ui-font-weight, 500);
       text-transform: uppercase;
       position: relative;
       z-index: 801;
     }
     @media (max-width: 480px) {
       #announcement-bar { font-size: 10px; padding: 6px 12px; }
+    }
+    /* TT Drugs Trial — logo only, never applied to body/nav/buttons */
+    @font-face {
+      font-family: 'TTDrugs';
+      src: url('TT Drugs Trial Regular.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
     }
     /* Nav: white background, black icons/text, sticky on its own */
     #main-nav {
@@ -58,7 +66,18 @@
     #main-nav .nav-icon-btn,
     #main-nav .desktop-nav-link,
     #main-nav .utility-text-link { color: #111 !important; }
-    #main-nav .nav-logo img { filter: brightness(0) saturate(100%) !important; }
+    /* Logo text */
+    .nav-logo-text {
+      font-family: 'TTDrugs', serif;
+      font-size: 22px;
+      font-weight: normal;
+      letter-spacing: 0.04em;
+      color: #111;
+      text-transform: none;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -78,7 +97,7 @@
       <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
     </div>
   </div>
-  <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
+  <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
   <div class="nav-right">
     <!-- Collection controls - only visible on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
