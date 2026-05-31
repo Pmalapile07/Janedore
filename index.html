@@ -34,9 +34,9 @@
   <link rel="stylesheet" href="buttons.css">
   <link rel="stylesheet" href="responsive.css">
   <style>
-    /* Announcement bar — deep warm clay, white text, sits above nav in normal flow */
+    /* Announcement bar — deep charcoal, white text, COS/Arket/Toteme register */
     #announcement-bar {
-      background: #8B7355;
+      background: #1a1a1a;
       color: #fff;
       text-align: center;
       padding: 9px 12px;
@@ -76,7 +76,6 @@
 <nav id="main-nav">
   <div class="nav-left">
     <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
-    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
       <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
@@ -130,6 +129,7 @@
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-trolley"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
+    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
