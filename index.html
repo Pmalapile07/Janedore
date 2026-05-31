@@ -34,9 +34,9 @@
   <link rel="stylesheet" href="buttons.css">
   <link rel="stylesheet" href="responsive.css">
   <style>
-    /* Announcement bar — black background, white text, sits above nav in normal flow */
+    /* Announcement bar — deep warm clay, white text, sits above nav in normal flow */
     #announcement-bar {
-      background: #000;
+      background: #8B7355;
       color: #fff;
       text-align: center;
       padding: 9px 12px;
@@ -59,6 +59,12 @@
     #main-nav .desktop-nav-link,
     #main-nav .utility-text-link { color: #111 !important; }
     #main-nav .nav-logo img { filter: brightness(0) saturate(100%) !important; }
+    /* Logo sits inline in nav-left, not centred absolutely */
+    #main-nav .nav-logo {
+      position: static !important;
+      transform: none !important;
+      margin-right: 4px;
+    }
   </style>
 </head>
 <body>
@@ -69,6 +75,7 @@
 
 <nav id="main-nav">
   <div class="nav-left">
+    <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
     <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
@@ -78,7 +85,6 @@
       <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
     </div>
   </div>
-  <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
   <div class="nav-right">
     <!-- Collection controls - only visible on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
