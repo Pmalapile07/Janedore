@@ -1,5 +1,18 @@
-.product-info { padding: 24px 12px; max-width: 720px; margin: 0 auto; padding-bottom: 40px; }
-@media (min-width: 768px) { .product-info { padding: 24px 16px; padding-bottom: 40px; } }
+/* ── Product Info Container ── */
+.product-info {
+  padding: 24px 12px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+@media (min-width: 768px) {
+  .product-info {
+    padding: 24px 16px;
+    padding-bottom: 40px;
+  }
+}
+
+/* ── Description ── */
 .modal-desc {
   font-size: var(--body-font-size); font-weight: var(--body-font-weight);
   line-height: var(--body-line-height); letter-spacing: var(--body-letter-spacing);
@@ -13,6 +26,8 @@
   color: #111; cursor: pointer; background: none; border: none;
   border-bottom: 1px solid #111; padding: 0; margin-bottom: 10px; display: inline-block;
 }
+
+/* ── Brand row ── */
 .product-brand-under-desc {
   font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
   font-weight: var(--ui-font-weight); text-transform: uppercase;
@@ -24,22 +39,58 @@
   display: flex; align-items: center; color: #111;
 }
 .product-brand-under-desc .inline-wish-btn i { font-size: 18px; }
+
+/* ── Accordion wrapper (replaces .info-tabs-wrap) ── */
 .info-tabs-wrap {
-  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
-  margin-bottom: 16px; margin-top: 8px; padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+  margin-top: 8px;
+  padding: 0;
+  /* remove horizontal scroll behaviour */
+  overflow-x: unset;
+  scrollbar-width: unset;
 }
 .info-tabs-wrap::-webkit-scrollbar { display: none; }
-@media (min-width: 768px) { .info-tabs-wrap { justify-content: flex-start; } }
+
+/* ── Accordion trigger button (replaces .info-tab-btn) ── */
 .info-tab-btn {
   font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
   font-weight: var(--ui-font-weight); text-transform: uppercase;
   color: #888; background: none; border: none;
-  padding: 8px 14px; cursor: pointer; transition: color 0.2s;
+  padding: 12px 0;
+  cursor: pointer; transition: color 0.2s;
   white-space: nowrap; flex-shrink: 0;
+  /* full-width row with chevron */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 0.8px solid #e8e8e8;
+  text-align: left;
 }
-.info-tab-btn:first-child { padding-left: 0; }
+.info-tab-btn:last-of-type { border-bottom: 0.8px solid #e8e8e8; }
 .info-tab-btn:hover { color: #111; }
 .info-tab-btn.active { color: #111; font-weight: 600; }
+
+/* chevron icon — rotates when open */
+.info-tab-btn::after {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-right: 1.2px solid currentColor;
+  border-bottom: 1.2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.22s ease;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+.info-tab-btn.active::after {
+  transform: rotate(-135deg);
+}
+
+/* ── Accordion panel (replaces .info-tab-panel) ── */
 .info-tab-panel {
   display: none;
   font-size: var(--body-font-size); font-weight: var(--body-font-weight);
@@ -47,13 +98,35 @@
   color: #666; padding: 0 0 16px;
 }
 .info-tab-panel.active { display: block; }
-.info-tab-panel .shipping-calc { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
-.info-tab-panel .shipping-calc input { flex: 1; min-width: 120px; border: 0.8px solid #ddd; padding: 10px 12px; font-size: 11px; font-family: 'Manrope', sans-serif; outline: none; }
+
+/* ── Shipping calc (unchanged) ── */
+.info-tab-panel .shipping-calc {
+  display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap;
+}
+.info-tab-panel .shipping-calc input {
+  flex: 1; min-width: 120px; border: 0.8px solid #ddd;
+  padding: 10px 12px; font-size: 11px; font-family: 'Manrope', sans-serif; outline: none;
+}
 .info-tab-panel .shipping-calc input:focus { border-color: #111; }
-.info-tab-panel .shipping-calc button { background: #111; color: #fff; border: none; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 16px; white-space: nowrap; cursor: pointer; transition: background 0.2s; }
+.info-tab-panel .shipping-calc button {
+  background: #111; color: #fff; border: none; font-size: 9px;
+  letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 16px;
+  white-space: nowrap; cursor: pointer; transition: background 0.2s;
+}
 .info-tab-panel .shipping-calc button:hover { background: #333; }
-.info-tab-panel .shipping-result { font-size: var(--body-font-size); font-weight: var(--body-font-weight); color: #111; margin-top: 6px; }
-.ai-disclaimer-notice { background: #fff; padding: 14px 16px; margin-bottom: 6px; margin-top: 4px; display: flex; gap: 10px; align-items: flex-start; }
+.info-tab-panel .shipping-result {
+  font-size: var(--body-font-size); font-weight: var(--body-font-weight);
+  color: #111; margin-top: 6px;
+}
+
+/* ── AI disclaimer (unchanged) ── */
+.ai-disclaimer-notice {
+  background: #fff; padding: 14px 16px; margin-bottom: 6px; margin-top: 4px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
 .ai-disclaimer-notice span { flex-shrink: 0; font-size: 16px; color: #aaa; line-height: 1; margin-top: 0; }
-.ai-disclaimer-notice p { font-size: 10px; font-weight: var(--body-font-weight); color: #888; line-height: 1.7; letter-spacing: var(--body-letter-spacing); }
+.ai-disclaimer-notice p {
+  font-size: 10px; font-weight: var(--body-font-weight); color: #888;
+  line-height: 1.7; letter-spacing: var(--body-letter-spacing);
+}
 .ai-disclaimer-notice p strong { font-weight: 700; color: #111; }
