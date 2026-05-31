@@ -90,7 +90,7 @@ function initNavScroll() { DOM.hero = document.getElementById("hero"); window.ad
 function ensureNavScrolled() { DOM.mainNav.classList.add("scrolled"); }
 function checkNavForHome() { DOM.hero = document.getElementById("hero"); if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); }
 function isDesktop() { return window.innerWidth >= 769; }
-function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"; }
+function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-7400.png?v=1780251951')"; }
 window.addEventListener('resize', setHeroImage);
 
 function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
