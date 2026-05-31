@@ -1,107 +1,282 @@
-/* ============================================================
-   JANEDORE — icons.css
-   Pure CSS. No SVG. No libraries. No images.
-   currentColor throughout.
-   Namespaced .jd- to prevent conflicts.
-   Unified 20×20px optical grid.
-   ============================================================ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>JANEDORE | Curated Fashion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-/* Shared base container */
-.jd-icon,
-.jd-icon-menu {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  vertical-align: middle;
-  cursor: pointer;
-}
+  <link rel="stylesheet" href="variables.css">
+  <link rel="stylesheet" href="utilities.css">
+  <link rel="stylesheet" href="navigation.css">
+  <link rel="stylesheet" href="icons.css">
+  <link rel="stylesheet" href="hero.css">
+  <link rel="stylesheet" href="home-categories.css">
+  <link rel="stylesheet" href="product-card.css">
+  <link rel="stylesheet" href="product-grid.css">
+  <link rel="stylesheet" href="product-slider.css">
+  <link rel="stylesheet" href="product-info.css">
+  <link rel="stylesheet" href="collection.css">
+  <link rel="stylesheet" href="sticky-bar.css">
+  <link rel="stylesheet" href="cart.css">
+  <link rel="stylesheet" href="wishlist.css">
+  <link rel="stylesheet" href="search.css">
+  <link rel="stylesheet" href="modals.css">
+  <link rel="stylesheet" href="campaign.css">
+  <link rel="stylesheet" href="sliders.css">
+  <link rel="stylesheet" href="footer.css">
+  <link rel="stylesheet" href="buttons.css">
+  <link rel="stylesheet" href="responsive.css">
+  <style>
+    /* Announcement bar — deep charcoal, white text, COS/Arket/Toteme register */
+    #announcement-bar {
+      background: #1a1a1a;
+      color: #fff;
+      text-align: center;
+      padding: 9px 12px;
+      font-size: var(--ui-font-size, 11px);
+      letter-spacing: var(--ui-letter-spacing, 0.08em);
+      font-weight: var(--ui-font-weight, 500);
+      text-transform: uppercase;
+      position: relative;
+      z-index: 801;
+    }
+    @media (max-width: 480px) {
+      #announcement-bar { font-size: 10px; padding: 6px 12px; }
+    }
+    /* TT Drugs Trial — logo only, never applied to body/nav/buttons */
+    @font-face {
+      font-family: 'TTDrugs';
+      src: url('TT Drugs Trial Regular.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    /* Nav: white background, black icons/text, sticky on its own */
+    #main-nav {
+      background: #fff !important;
+      top: 0 !important;
+    }
+    #main-nav .nav-icon-btn,
+    #main-nav .desktop-nav-link,
+    #main-nav .utility-text-link { color: #111 !important; }
+    /* Logo text */
+    .nav-logo-text {
+      font-family: 'TTDrugs', serif;
+      font-size: 22px;
+      font-weight: normal;
+      letter-spacing: 0.04em;
+      color: #111;
+      text-transform: none;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
 
-/* Count badge */
-.jd-count {
-  position: absolute;
-  top: -3px;
-  right: -4px;
-  min-width: 13px;
-  height: 13px;
-  font-size: 7px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  font-family: 'Manrope', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  padding: 0 2px;
-}
+<div id="announcement-bar">Free shipping on orders over R1500</div>
 
-/* Badge swap — mirrors your existing .badge rule */
-#main-nav .jd-count {
-  background: #fff;
-  color: #111;
-}
-#main-nav.scrolled .jd-count {
-  background: #111;
-  color: #fff;
-}
+<div id="banner"><div class="announcement-text active" id="announce-text-0"></div><div class="announcement-text" id="announce-text-1"></div></div>
 
-/* ── MENU ──
-   Two equal lines. Centered as a pair.
-   Lines at 7px and 13px = optically centered in 20px canvas. */
-.jd-icon-menu::before,
-.jd-icon-menu::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 0.75px;
-  background: currentColor;
-}
-.jd-icon-menu::before { top: 7px; }
-.jd-icon-menu::after  { top: 13px; }
+<nav id="main-nav">
+  <div class="nav-left">
+    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
+    <div class="desktop-nav-links">
+      <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
+      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
+      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Accessories <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('bags')">Bags</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jewelry')">Jewelry</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sunglasses')">Sunglasses</a></div></div>
+      <a class="desktop-nav-link" onclick="navigateToCategory('parfum')">Scent</a>
+      <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
+    </div>
+  </div>
+  <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
+  <div class="nav-right">
+    <!-- Collection controls - only visible on collection pages -->
+    <div class="collection-nav-controls" id="collection-nav-controls">
+      <div class="collection-filter-dropdown">
+        <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">
+          FILTER
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collection-filter-options" id="collection-filter-options">
+          <div class="filter-group">
+            <div class="filter-group-title">Category</div>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Size</div>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Price</div>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label>
+          </div>
+        </div>
+      </div>
+      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
+        <div class="col-grid-icon cols-2" id="col-grid-icon">
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+        </div>
+      </button>
+      <button class="collection-search-btn" onclick="openSearch()">
+        <i class="ph-thin ph-magnifying-glass"></i>
+      </button>
+    </div>
+    <!-- Regular nav icons - hidden on collection pages -->
+    <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
+    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
+    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
+    <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
+  </div>
+</nav>
 
-/* ── BOOKMARK ──
-   Zara-esque: thin, architectural, elongated.
-   9×17px silhouette with a sharp V-notch at 58% height.
-   Sits optically centered in the 20×20 grid. */
-.jd-icon-bookmark::before {
-  content: '';
-  position: absolute;
-  left: 5.5px;
-  top: 1.5px;
-  width: 9px;
-  height: 17px;
-  background: transparent;
-  box-shadow: inset 0 0 0 0.75px currentColor;
-  clip-path: polygon(
-    0%   0%,
-    100% 0%,
-    100% 100%,
-    50%  58%,
-    0%   100%
-  );
-}
+<div id="search-overlay"><div class="search-overlay-header"><div class="search-input-wrap"><i class="ph-thin ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i><input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)"></div><button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="search-body" id="search-body"></div></div>
 
-/* ── SHOPPING BAG ──
-   One clean square. No handles. No extra detailing.
-   Simple 13×14px rectangle with open top. */
-.jd-icon-bag::before {
-  content: '';
-  position: absolute;
-  left: 3.5px;
-  right: 3.5px;
-  top: 3px;
-  bottom: 3px;
-  border-left: 0.75px solid currentColor;
-  border-right: 0.75px solid currentColor;
-  border-bottom: 0.75px solid currentColor;
-  border-top: none;
-}
+<div id="menu-backdrop" onclick="closeMenu()"></div>
+<div id="menu-drawer"><div class="drawer-header"><div class="drawer-title">Menu</div><button class="drawer-close" onclick="closeMenu()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="drawer-body"><a class="drawer-link" onclick="navigateTo('home');closeMenu();">The Understated</a><div class="submenu-collapse" id="clothing-collapse"><div class="submenu-collapse-header" onclick="toggleSubmenuCollapse('clothing')">Clothing <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="submenu-collapse-body"><a class="submenu-link" onclick="navigateToCategory('all-clothing');closeMenu();">All Clothing</a><a class="submenu-link" onclick="navigateToCategory('dresses');closeMenu();">Dresses</a><a class="submenu-link" onclick="navigateToCategory('tops');closeMenu();">Tops</a><a class="submenu-link" onclick="navigateToCategory('bottoms');closeMenu();">Bottoms</a><a class="submenu-link" onclick="navigateToCategory('jackets');closeMenu();">Jackets</a><a class="submenu-link" onclick="navigateToCategory('sets');closeMenu();">Sets</a></div></div><div class="submenu-collapse" id="accessories-collapse"><div class="submenu-collapse-header" onclick="toggleSubmenuCollapse('accessories')">Accessories <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="submenu-collapse-body"><a class="submenu-link" onclick="navigateToCategory('bags');closeMenu();">Bags</a><a class="submenu-link" onclick="navigateToCategory('jewelry');closeMenu();">Jewelry</a><a class="submenu-link" onclick="navigateToCategory('sunglasses');closeMenu();">Sunglasses</a></div></div><a class="drawer-link" onclick="navigateToCategory('parfum');closeMenu();">Scent</a><div class="brands-collapse" id="brands-collapse"><div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="brands-collapse-body"></div></div><a class="drawer-link sale" onclick="navigateToSale();closeMenu();">Sale</a><div class="drawer-spacer"></div><div class="drawer-section-title">Account</div><a class="drawer-link" onclick="navigateTo('login');closeMenu();">Login</a><a class="drawer-link" onclick="closeMenu();">Track Order</a><a class="drawer-link" onclick="closeMenu();">Blog</a><a class="drawer-link" onclick="navigateTo('editorial');closeMenu();">Editorial</a></div></div>
 
-/* No ::after — handles removed */
-.jd-icon-bag::after {
-  content: none;
-}
+<div id="cart-backdrop" onclick="closeCart()"></div>
+<div id="cart-panel"><div class="panel-header"><div><div class="panel-title">Your Bag (<span id="cart-item-count">0</span>)</div></div><button class="panel-close" onclick="closeCart()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="cart-body" id="cart-body"></div><div class="cart-foot" id="cart-foot"></div></div>
+
+<div id="review-modal-backdrop" onclick="closeReviewModal()"><div id="review-modal" onclick="event.stopPropagation()"><button class="review-modal-close" onclick="closeReviewModal()">✕</button><div class="review-modal-title">Write a Review</div><div class="review-stars" id="review-stars"><button class="review-star-btn" onclick="setReviewRating(1)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(2)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(3)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph-thin ph-star"></i></button></div><input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height:auto;margin-bottom:12px;"><textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea><div class="review-image-upload"><label class="review-image-label" for="review-image-input"><i class="ph-thin ph-image"></i> Add Image</label><input type="file" id="review-image-input" accept="image/*" onchange="handleReviewImage(event)"><img class="review-image-preview" id="review-image-preview" alt="Preview"></div><button class="review-submit-btn" onclick="submitReview()">Submit Review</button></div></div>
+
+<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-sub" onclick="navigateTo('products')">understated boldness</div><button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">    A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
+
+<div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
+
+<div class="page" id="page-products">
+  <section class="site-collection-layout">
+    <div class="product-grid" id="all-products-grid"></div>
+  </section>
+  <div class="back-btn-wrap"><button class="back-btn" onclick="goBackHome()">Back Home</button></div>
+  <footer id="products-footer"></footer>
+</div>
+
+<div class="page" id="page-category">
+  <section class="site-collection-layout">
+    <div id="category-description-wrap"></div>
+    <div class="product-grid" id="category-products-grid"></div>
+  </section>
+  <div class="back-btn-wrap"><button class="back-btn" onclick="goBackHome()">Back Home</button></div>
+  <footer id="category-footer"></footer>
+</div>
+
+<div class="page" id="page-editorial"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300">Editorial</div></div></section><footer id="editorial-footer"></footer></div>
+<div class="page" id="page-cart"><div class="cart-page" id="cart-page-content"></div><footer id="cart-footer"></footer></div>
+<div class="page" id="page-wishlist"><div class="wish-page" id="wish-page-content"></div><footer id="wishlist-footer"></footer></div>
+<div class="page" id="page-product-detail"></div>
+
+<button id="live-chat-bubble" onclick="toggleChat()">
+  <i class="ph-thin ph-chat"></i>
+  <span class="chat-unread-dot" id="chat-unread-dot"></span>
+</button>
+
+<script src="firebase.js"></script>
+<script src="vendors.js"></script>
+<script src="cart.js"></script>
+<script src="wishlist.js"></script>
+<script src="navigation.js"></script>
+<script src="search.js"></script>
+<script src="modals.js"></script>
+<script src="product-detail.js"></script>
+<script src="product-info.js"></script>
+<script src="sticky-bar.js"></script>
+<script src="collection.js"></script>
+<script src="sliders.js"></script>
+<script src="footer.js"></script>
+<script src="chat.js"></script>
+<script src="app.js"></script>
+
+<script>
+  // Hide search icon on homepage, show on all other pages
+  (function() {
+    function updateSearchIcon() {
+      const searchBtn = document.querySelector('.nav-search-icon');
+      if (!searchBtn) return;
+      const homePage = document.getElementById('page-home');
+      if (homePage && homePage.classList.contains('active')) {
+        searchBtn.style.display = 'none';
+      } else {
+        searchBtn.style.display = '';
+      }
+    }
+    // Run on load
+    document.addEventListener('DOMContentLoaded', updateSearchIcon);
+    // Hook into any navigateTo calls by observing class changes on pages
+    const observer = new MutationObserver(updateSearchIcon);
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.page').forEach(function(page) {
+        observer.observe(page, { attributes: true, attributeFilter: ['class'] });
+      });
+      updateSearchIcon();
+    });
+  })();
+</script>
+
+<div id="chat-container"></div>
+<script>
+  fetch('chat-widget.html')
+    .then(r => r.text())
+    .then(html => {
+      document.getElementById('chat-container').innerHTML = html;
+    })
+    .catch(err => console.error('Chat widget failed:', err));
+</script>
+
+<div class="page" id="page-checkout">
+  <div id="checkout-loaded"></div>
+  <footer id="checkout-footer"></footer>
+</div>
+
+<script>
+  fetch('checkout.html').then(r => r.text()).then(html => {
+    document.getElementById('checkout-loaded').innerHTML = html;
+  });
+</script>
+
+<script src="checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="admin.js"></script>
+<script src="login.js"></script>
+
+<div class="page" id="page-login">
+  <div id="login-loaded"></div>
+  <footer id="login-footer"></footer>
+</div>
+
+<div class="page" id="page-account">
+  <div id="account-loaded"></div>
+  <footer id="account-footer"></footer>
+</div>
+
+<script>
+  fetch('login.html').then(r => r.text()).then(html => {
+    document.getElementById('login-loaded').innerHTML = html;
+  });
+</script>
+
+<script>
+  fetch('login.html').then(r => r.text()).then(html => {
+    document.getElementById('account-loaded').innerHTML = html;
+  });
+</script>
+
+</body>
+</html>
