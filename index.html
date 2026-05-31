@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="buttons.css">
   <link rel="stylesheet" href="responsive.css">
   <style>
-    /* ─── Announcement bar: absolute, overlays the hero ─── */
+    /* Announcement bar — lives inside #hero, floats at the top of the image */
     #announcement-bar {
       position: absolute;
       top: 0;
@@ -48,24 +48,13 @@
       letter-spacing: var(--ui-letter-spacing, 0.08em);
       font-weight: var(--ui-font-weight, 500);
       text-transform: uppercase;
-      z-index: 802; /* sits above nav (801) so it renders on top of the hero image layer */
-      pointer-events: none; /* lets clicks pass through to nav/hero below */
+      z-index: 1; /* within hero stacking context, above hero-bg but below nav */
     }
     @media (max-width: 480px) {
       #announcement-bar {
         font-size: 10px;
         padding: 6px 12px;
       }
-    }
-
-    /* ─── Hero: extend upward so it sits behind the bar + nav ─── */
-    /* The bar is ~36px tall; the nav is typically ~56px tall.
-       We push the hero to start at the very top of the viewport so
-       the image fills behind both elements without moving any existing
-       hero content (hero-content-wrap is already centred inside hero). */
-    #page-home #hero {
-      margin-top: 0 !important;
-      padding-top: 0 !important;
     }
   </style>
 </head>
