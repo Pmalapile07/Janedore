@@ -57,13 +57,13 @@
       font-display: swap;
     }
 
-    /* ── Nav: sticky, transparent over hero, white on scroll ── */
+    /* ── Nav: sits below announcement bar, transparent over hero, white on scroll ── */
     #main-nav {
       background: transparent !important;
       border-bottom: none !important;
       box-shadow: none !important;
+      position: sticky !important;
       top: 0 !important;
-      position: fixed !important;
       z-index: 800 !important;
     }
     #main-nav.scrolled {
@@ -86,12 +86,14 @@
     /* On non-hero pages nav is always scrolled (white), so always black text */
     #main-nav.scrolled .jd-icon-menu { color: #111 !important; }
 
-    /* Logo */
+    /* Logo — kept in normal flex flow, not absolute */
     .nav-logo {
       position: static !important;
       transform: none !important;
       left: auto !important;
-      margin-right: auto !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
     }
     .nav-logo-text {
       font-family: 'TTDrugs', serif;
@@ -143,49 +145,6 @@
 
     /* Hide secondary nav completely */
     #secondary-nav { display: none !important; }
-
-    /* ── Mobile header alignment fix ── */
-    @media (max-width: 1023px) {
-      #main-nav {
-        justify-content: space-between !important;
-        padding: 0 16px !important;
-      }
-      #main-nav .nav-left {
-        display: flex !important;
-        align-items: center !important;
-        gap: 12px !important;
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-      }
-      #main-nav .nav-left .nav-icon-btn {
-        flex: 0 0 auto !important;
-        margin: 0 !important;
-        padding: 6px !important;
-      }
-      #main-nav .nav-logo {
-        flex: 0 1 auto !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-      }
-      #main-nav .nav-right {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        flex: 0 0 auto !important;
-        margin-left: 12px !important;
-      }
-      #main-nav .nav-right .cart-text-btn {
-        margin: 0 !important;
-        padding: 6px 0 !important;
-      }
-      #main-nav .nav-right .nav-search-icon,
-      #main-nav .nav-right .nav-wishlist-icon,
-      #main-nav .nav-right .nav-cart-icon,
-      #main-nav .nav-right .collection-nav-controls,
-      #main-nav .nav-right .desktop-utility-links {
-        display: none !important;
-      }
-    }
 
     /* ── Hero ── */
     #hero {
