@@ -87,8 +87,24 @@ function navigateToCheckout() {
 }
 
 function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
-function ensureNavScrolled() { DOM.mainNav.classList.add("scrolled"); }
-function checkNavForHome() { DOM.hero = document.getElementById("hero"); if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); }
+
+function ensureNavScrolled() { 
+  // Only force scrolled class on non-home pages
+  if (S.currentPage !== 'home') {
+    DOM.mainNav.classList.add("scrolled"); 
+  }
+}
+
+function checkNavForHome() { 
+  DOM.hero = document.getElementById("hero"); 
+  if (!DOM.hero) { 
+    DOM.mainNav.classList.add("scrolled"); 
+    return; 
+  } 
+  const heroBottom = DOM.hero.getBoundingClientRect().bottom;
+  DOM.mainNav.classList.toggle("scrolled", heroBottom <= 0); 
+}
+
 function isDesktop() { return window.innerWidth >= 769; }
 function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"; }
 window.addEventListener('resize', setHeroImage);
