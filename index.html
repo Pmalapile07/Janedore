@@ -60,17 +60,15 @@
     /* ── Nav: transparent, sits ON TOP of hero, directly under announcement bar ── */
     #main-nav {
       background: transparent !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+      top: 0 !important;
+      position: absolute !important;
       z-index: 800;
-      padding: 14px 20px;
-      box-sizing: border-box;
-      border-bottom: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      border-bottom: none !important;
+    }
+    #main-nav .nav-icon-btn,
+    #main-nav .desktop-nav-link,
+    #main-nav .utility-text-link { 
+      color: #fff !important; 
     }
 
     /* Left section: menu icon + logo */
@@ -120,11 +118,16 @@
       white-space: nowrap;
     }
 
-    /* Hide desktop nav links, search icon, wishlist icon */
+    /* Hide desktop nav links, search icon, wishlist icon, utility links */
     .desktop-nav-links,
     .nav-search-icon,
     .nav-wishlist-icon,
     .desktop-utility-links {
+      display: none !important;
+    }
+
+    /* Hide the original nav-cart-icon since we use text now */
+    .nav-cart-icon {
       display: none !important;
     }
 
@@ -161,14 +164,9 @@
       display: none !important;
     }
 
-    /* Collection controls hidden */
+    /* Collection controls hidden on home */
     #collection-nav-controls {
       display: none !important;
-    }
-
-    /* Hero wrapper to position nav on top */
-    #hero-wrapper {
-      position: relative;
     }
 
     /* ── Hero: starts right under announcement bar, NO gap ── */
@@ -281,47 +279,69 @@
 
 <div id="banner"><div class="announcement-text active" id="announce-text-0"></div><div class="announcement-text" id="announce-text-1"></div></div>
 
-<!-- HERO WRAPPER — nav sits on top of hero -->
-<div id="hero-wrapper">
-  <!-- NAVIGATION — transparent, on top of hero, directly under announcement bar -->
-  <!-- Menu icon LEFT | Logo | Cart text RIGHT — all on same line -->
-  <nav id="main-nav">
-    <div class="nav-left">
-      <button class="nav-menu-icon" onclick="openMenu()" aria-label="Menu">
-        <i class="ph-thin ph-list"></i>
-      </button>
-      <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
+<nav id="main-nav">
+  <div class="nav-left">
+    <button class="nav-menu-icon" onclick="openMenu()" aria-label="Menu">
+      <i class="ph-thin ph-list"></i>
+    </button>
+    <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
+    <div class="desktop-nav-links">
+      <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
+      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
+      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Accessories <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('bags')">Bags</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jewelry')">Jewelry</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sunglasses')">Sunglasses</a></div></div>
+      <a class="desktop-nav-link" onclick="navigateToCategory('parfum')">Scent</a>
+      <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
     </div>
-    <div class="nav-right">
-      <button class="cart-text-btn" onclick="openCart()">
-        Cart (<span id="cart-badge-text">0</span>)
-      </button>
-    </div>
-  </nav>
-
-  <!-- HERO SECTION — starts right under announcement bar -->
-  <div class="page active" id="page-home">
-    <section id="hero">
-      <div class="hero-bg-placeholder" id="hero-bg"></div>
-      <div class="hero-overlay"></div>
-      <div class="hero-content-wrap">
-        <div class="hero-headline-block">
-          <div class="hero-campaign-label">A multi-brand fashion house</div>
-          <h1 class="hero-headline">One destination.<br>Every brand<br>worth knowing.</h1>
-          <button class="hero-shop-btn" onclick="navigateTo('products')">Explore the Edit</button>
+  </div>
+  <div class="nav-right">
+    <div class="collection-nav-controls" id="collection-nav-controls">
+      <div class="collection-filter-dropdown">
+        <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">
+          FILTER
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collection-filter-options" id="collection-filter-options">
+          <div class="filter-group">
+            <div class="filter-group-title">Category</div>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Size</div>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Price</div>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label>
+          </div>
         </div>
       </div>
-    </section>
+      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
+        <div class="col-grid-icon cols-2" id="col-grid-icon">
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+        </div>
+      </button>
+      <button class="collection-search-btn" onclick="openSearch()">
+        <i class="ph-thin ph-magnifying-glass"></i>
+      </button>
+    </div>
+    <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
+    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
+    <button class="cart-text-btn" onclick="openCart()">
+      Cart (<span id="cart-badge-text">0</span>)
+    </button>
+    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
+    <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
-</div>
-
-<!-- Rest of home page content -->
-<div id="home-content" style="display:block;">
-  <section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section>
-  <section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section>
-  <section id="homepage-newsletter-section"></section>
-  <footer id="main-footer"></footer>
-</div>
+</nav>
 
 <div id="search-overlay"><div class="search-overlay-header"><div class="search-input-wrap"><i class="ph-thin ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i><input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)"></div><button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="search-body" id="search-body"></div></div>
 
@@ -332,6 +352,8 @@
 <div id="cart-panel"><div class="panel-header"><div><div class="panel-title">Your Bag (<span id="cart-item-count">0</span>)</div></div><button class="panel-close" onclick="closeCart()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="cart-body" id="cart-body"></div><div class="cart-foot" id="cart-foot"></div></div>
 
 <div id="review-modal-backdrop" onclick="closeReviewModal()"><div id="review-modal" onclick="event.stopPropagation()"><button class="review-modal-close" onclick="closeReviewModal()">✕</button><div class="review-modal-title">Write a Review</div><div class="review-stars" id="review-stars"><button class="review-star-btn" onclick="setReviewRating(1)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(2)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(3)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph-thin ph-star"></i></button></div><input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height:auto;margin-bottom:12px;"><textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea><div class="review-image-upload"><label class="review-image-label" for="review-image-input"><i class="ph-thin ph-image"></i> Add Image</label><input type="file" id="review-image-input" accept="image/*" onchange="handleReviewImage(event)"><img class="review-image-preview" id="review-image-preview" alt="Preview"></div><button class="review-submit-btn" onclick="submitReview()">Submit Review</button></div></div>
+
+<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-headline-block"><div class="hero-campaign-label">A multi-brand fashion house</div><h1 class="hero-headline">One destination.<br>Every brand<br>worth knowing.</h1><button class="hero-shop-btn" onclick="navigateTo('products')">Explore the Edit</button></div></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
 
 <div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
