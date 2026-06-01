@@ -11,7 +11,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
   <link rel="stylesheet" href="variables.css">
   <link rel="stylesheet" href="utilities.css">
   <link rel="stylesheet" href="navigation.css">
@@ -57,16 +56,23 @@
       font-display: swap;
     }
 
-    /* ── Nav: logo far left, icons far right ── */
+    /* ── Nav: transparent background, overlays hero ── */
     #main-nav {
-      background: #fff !important;
-      top: 0 !important;
+      background: transparent !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 800;
+      border-bottom: none;
+      padding: 12px 20px;
+      box-sizing: border-box;
     }
     #main-nav .nav-icon-btn,
     #main-nav .desktop-nav-link,
-    #main-nav .utility-text-link { color: #111 !important; }
+    #main-nav .utility-text-link { color: #fff !important; }
 
-    /* Logo: pull out of absolute centre, sit inline far left */
+    /* Logo: left aligned, after menu icon */
     .nav-logo {
       position: static !important;
       transform: none !important;
@@ -78,17 +84,67 @@
       font-size: 16px;
       font-weight: normal;
       letter-spacing: 0.04em;
-      color: #111;
+      color: #fff;
       text-transform: none;
       line-height: 1;
       cursor: pointer;
       user-select: none;
     }
 
-    /* Search visible in nav-left on mobile */
-    .nav-left .nav-search-icon { display: flex !important; }
+    /* Menu icon on the left, before logo */
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .nav-menu-icon {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .nav-menu-icon i {
+      font-size: 22px;
+    }
 
-    /* ── Hero ── */
+    /* Hide desktop nav links and search icon */
+    .desktop-nav-links, .nav-search-icon, .nav-wishlist-icon {
+      display: none !important;
+    }
+
+    /* Cart text style */
+    .cart-text-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      font-weight: 400;
+      cursor: pointer;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .cart-text-btn:hover {
+      opacity: 0.8;
+    }
+    #cart-badge-text {
+      font-weight: 600;
+    }
+
+    /* Hide secondary nav completely */
+    #secondary-nav { display: none !important; }
+
+    /* ── Hero: starts right under announcement bar, no top margin ── */
     #hero {
       position: relative;
       height: 75vh !important;
@@ -120,7 +176,7 @@
       );
     }
 
-    /* ── CHANGED: centred + pushed up ── */
+    /* ── CHANGED: centred + pushed down by 2px as requested ── */
     .hero-content-wrap {
       position: relative;
       z-index: 10;
@@ -136,9 +192,9 @@
       margin: 0;
       box-sizing: border-box;
       text-align: center;
+      transform: translateY(2px);
     }
 
-    /* ── CHANGED: centred block ── */
     .hero-headline-block {
       display: flex;
       flex-direction: column;
@@ -157,7 +213,6 @@
       font-weight: 500;
     }
 
-    /* ── CHANGED: TTDrugs font, no italic ── */
     .hero-headline {
       font-family: 'TTDrugs', serif !important;
       font-size: clamp(36px, 9vw, 64px);
@@ -197,7 +252,6 @@
     }
     .hero-sub:hover { color: rgba(255,255,255,0.9); }
 
-    /* ── CHANGED: button centred ── */
     .hero-shop-btn {
       font-family: 'Manrope', sans-serif;
       font-size: 10px;
@@ -220,7 +274,6 @@
       background: #f0f0f0;
     }
 
-    /* ── Hero paragraph ── */
     .hero-desc {
       font-family: 'Manrope', sans-serif;
       font-size: 11px;
@@ -231,41 +284,18 @@
       max-width: 280px;
     }
 
-    /* ── Secondary nav — mobile only ── */
-    #secondary-nav {
+    /* Adjust nav right side */
+    .nav-right {
       display: flex;
       align-items: center;
-      gap: 0;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      background: #fff;
-      padding: 0 12px;
-      position: sticky;
-      top: 64px;
-      z-index: 799;
+      gap: 16px;
     }
-    #secondary-nav::-webkit-scrollbar { display: none; }
-    .snav-link {
-      flex-shrink: 0;
-      font-family: 'Manrope', sans-serif;
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      font-weight: 500;
-      color: #555;
-      padding: 10px 12px 10px 0;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: color 0.2s;
-      margin-right: 16px;
+    .desktop-utility-links {
+      display: none;
     }
-    .snav-link:first-child { padding-left: 0; }
-    .snav-link:hover { color: #111; }
-    .snav-link.sale { color: #c00; }
-    /* Hide on desktop */
-    @media (min-width: 1024px) {
-      #secondary-nav { display: none; }
+    /* Hide other icons except cart text */
+    .nav-icon-btn:not(.nav-menu-icon) {
+      display: none;
     }
   </style>
 </head>
@@ -277,76 +307,25 @@
 
 <nav id="main-nav">
   <div class="nav-left">
+    <button class="nav-menu-icon nav-icon-btn" onclick="openMenu()" aria-label="Menu">
+      <i class="ph-thin ph-list"></i>
+    </button>
     <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
-    <div class="desktop-nav-links">
-      <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
-      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
-      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Accessories <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('bags')">Bags</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jewelry')">Jewelry</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sunglasses')">Sunglasses</a></div></div>
-      <a class="desktop-nav-link" onclick="navigateToCategory('parfum')">Scent</a>
-      <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
+    <div class="desktop-nav-links" style="display:none;">
+      <!-- hidden -->
     </div>
   </div>
   <div class="nav-right">
-    <!-- Collection controls - only visible on collection pages -->
-    <div class="collection-nav-controls" id="collection-nav-controls">
-      <div class="collection-filter-dropdown">
-        <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">
-          FILTER
-          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="collection-filter-options" id="collection-filter-options">
-          <div class="filter-group">
-            <div class="filter-group-title">Category</div>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label>
-          </div>
-          <div class="filter-group">
-            <div class="filter-group-title">Size</div>
-            <label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label>
-            <label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label>
-            <label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label>
-          </div>
-          <div class="filter-group">
-            <div class="filter-group-title">Price</div>
-            <label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label>
-            <label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label>
-            <label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label>
-          </div>
-        </div>
-      </div>
-      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
-        <div class="col-grid-icon cols-2" id="col-grid-icon">
-          <div class="col-grid-bar"></div>
-          <div class="col-grid-bar"></div>
-        </div>
-      </button>
-      <button class="collection-search-btn" onclick="openSearch()">
-        <i class="ph-thin ph-magnifying-glass"></i>
-      </button>
-    </div>
-    <!-- Regular nav icons - hidden on collection pages -->
-    <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
-    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
-    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
-    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
-    <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
+    <!-- Collection controls hidden on home -->
+    <div class="collection-nav-controls" id="collection-nav-controls" style="display:none;"></div>
+    <button class="cart-text-btn" onclick="openCart()">
+      Cart (<span id="cart-badge-text">0</span>)
+    </button>
+    <button class="nav-icon-btn nav-menu-icon" style="display:none;" onclick="openMenu()"></button>
   </div>
 </nav>
 
-<!-- Secondary nav — mobile only, sits flush under header like one unit -->
-<div id="secondary-nav">
-  <a class="snav-link" onclick="toggleBrandsCollapse()">Brands</a>
-  <a class="snav-link" onclick="navigateTo('products')">New In</a>
-  <a class="snav-link" onclick="navigateToCategory('all-clothing')">Clothing</a>
-  <a class="snav-link" onclick="navigateToCategory('jewelry')">Jewelry</a>
-  <a class="snav-link" onclick="navigateToCategory('bags')">Bags</a>
-  <a class="snav-link" onclick="navigateToCategory('parfum')">Scent</a>
-  <a class="snav-link" onclick="navigateToCategory('sunglasses')">Sunglasses</a>
-  <a class="snav-link sale" onclick="navigateToSale()">Sale</a>
-</div>
+<!-- Secondary nav removed completely -->
 
 <div id="search-overlay"><div class="search-overlay-header"><div class="search-input-wrap"><i class="ph-thin ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i><input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)"></div><button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="search-body" id="search-body"></div></div>
 
