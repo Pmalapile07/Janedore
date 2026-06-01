@@ -16,20 +16,18 @@ function updateBodyClassForCollection() {
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
+  // Clear any inline styles first
+  DOM.mainNav.style.position = '';
+  DOM.mainNav.style.top = '';
+  DOM.mainNav.style.left = '';
+  DOM.mainNav.style.right = '';
+  DOM.mainNav.style.background = '';
+  
   if (page === 'home') {
     DOM.mainNav.classList.add('home-sticky');
-    DOM.mainNav.style.position = 'fixed';
-    DOM.mainNav.style.top = '32px';
-    DOM.mainNav.style.left = '0';
-    DOM.mainNav.style.right = '0';
-    DOM.mainNav.style.background = 'transparent';
+    DOM.mainNav.classList.remove('scrolled');
   } else {
     DOM.mainNav.classList.remove('home-sticky');
-    DOM.mainNav.style.position = 'sticky';
-    DOM.mainNav.style.top = '0';
-    DOM.mainNav.style.left = '';
-    DOM.mainNav.style.right = '';
-    DOM.mainNav.style.background = '#fff';
     DOM.mainNav.classList.add('scrolled');
   }
 }
