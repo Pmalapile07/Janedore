@@ -57,223 +57,176 @@
       font-display: swap;
     }
 
-    /* ── Nav: transparent overlay on hero, directly under announcement bar ── */
+    /* ── Nav: logo far left, icons far right ── */
     #main-nav {
-      background: transparent !important;
+      background: #fff !important;
       top: 0 !important;
-      position: absolute !important;
-      z-index: 800;
-      border-bottom: none !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      padding: 14px 20px !important;
-      width: 100% !important;
-      box-sizing: border-box !important;
     }
+    #main-nav .nav-icon-btn,
+    #main-nav .desktop-nav-link,
+    #main-nav .utility-text-link { color: #111 !important; }
 
-    /* Nav left: menu icon + logo */
-    .nav-left {
-      display: flex !important;
-      align-items: center !important;
-      gap: 20px !important;
-      flex-shrink: 0;
-    }
-
-    /* Nav right: cart text only */
-    .nav-right {
-      display: flex !important;
-      align-items: center !important;
-      gap: 0 !important;
-      flex-shrink: 0;
-      margin-left: auto !important;
-    }
-
-    /* Menu icon */
-    .nav-menu-icon {
-      background: none !important;
-      border: none !important;
-      color: #fff !important;
-      cursor: pointer !important;
-      padding: 4px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      font-size: 22px !important;
-      flex-shrink: 0 !important;
-      order: -1 !important;
-    }
-    .nav-menu-icon i {
-      color: #fff !important;
-    }
-
-    /* Logo */
+    /* Logo: pull out of absolute centre, sit inline far left */
     .nav-logo {
       position: static !important;
       transform: none !important;
       left: auto !important;
-      margin-right: 0 !important;
+      margin-right: auto !important;
     }
     .nav-logo-text {
-      font-family: 'TTDrugs', serif !important;
-      font-size: 16px !important;
-      font-weight: normal !important;
-      letter-spacing: 0.04em !important;
-      color: #fff !important;
-      text-transform: none !important;
-      line-height: 1 !important;
-      cursor: pointer !important;
-      user-select: none !important;
-      white-space: nowrap !important;
+      font-family: 'TTDrugs', serif;
+      font-size: 16px;
+      font-weight: normal;
+      letter-spacing: 0.04em;
+      color: #111;
+      text-transform: none;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
     }
 
-    /* Hide ALL desktop nav links */
-    .desktop-nav-links {
-      display: none !important;
-    }
+    /* Search visible in nav-left on mobile */
+    .nav-left .nav-search-icon { display: flex !important; }
 
-    /* Hide search, wishlist, utility icons */
-    .nav-search-icon,
-    .nav-wishlist-icon,
-    .desktop-utility-links,
-    .nav-icon-btn:not(.nav-menu-icon) {
-      display: none !important;
-    }
-
-    /* Cart text button */
-    .cart-text-btn {
-      background: none !important;
-      border: none !important;
-      color: #fff !important;
-      font-family: 'Manrope', sans-serif !important;
-      font-size: 11px !important;
-      letter-spacing: 0.08em !important;
-      font-weight: 500 !important;
-      cursor: pointer !important;
-      padding: 6px 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 4px !important;
-      text-transform: uppercase !important;
-      white-space: nowrap !important;
-      flex-shrink: 0 !important;
-    }
-    .cart-text-btn:hover {
-      opacity: 0.7;
-    }
-    #cart-badge-text {
-      font-weight: 700 !important;
-    }
-
-    /* Hide secondary nav */
-    #secondary-nav { display: none !important; }
-
-    /* Hide collection controls on home */
-    #collection-nav-controls {
-      display: none !important;
-    }
-
-    /* ── Hero: starts right under announcement bar, NO gap ── */
+    /* ── Hero ── */
     #hero {
-      position: relative !important;
+      position: relative;
       height: 75vh !important;
       min-height: 520px !important;
       max-height: 820px !important;
       margin-top: 0 !important;
-      overflow: hidden !important;
-      background: #111 !important;
-      display: flex !important;
-      align-items: stretch !important;
-      justify-content: stretch !important;
+      overflow: hidden;
+      background: #111;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
       padding-bottom: 0 !important;
     }
     .hero-bg-placeholder {
-      position: absolute !important;
-      inset: 0 !important;
-      background-size: cover !important;
-      background-position: center top !important;
-      background-repeat: no-repeat !important;
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
     }
     .hero-overlay {
-      position: absolute !important;
-      inset: 0 !important;
+      position: absolute;
+      inset: 0;
       background: linear-gradient(
         160deg,
         rgba(0,0,0,0.38) 0%,
         rgba(0,0,0,0.0) 45%,
         rgba(0,0,0,0.55) 100%
-      ) !important;
+      );
     }
-
-    /* Hero content — pushed down 2px */
     .hero-content-wrap {
-      position: relative !important;
-      z-index: 10 !important;
-      width: 100% !important;
-      height: 100% !important;
-      padding: 32px 24px 36px !important;
-      padding-bottom: 2vh !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      max-width: 100% !important;
-      margin: 0 !important;
-      box-sizing: border-box !important;
-      text-align: center !important;
-      transform: translateY(2px) !important;
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      padding: 32px 24px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+      margin: 0;
+      box-sizing: border-box;
+      text-align: center;
     }
-
     .hero-headline-block {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      gap: 10px !important;
-      width: fit-content !important;
-      text-align: center !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
     }
-
     .hero-campaign-label {
-      font-size: 9px !important;
-      letter-spacing: 0.22em !important;
-      text-transform: uppercase !important;
-      color: rgba(255,255,255,0.6) !important;
-      font-family: 'Manrope', sans-serif !important;
-      font-weight: 500 !important;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      font-family: 'Manrope', sans-serif;
+      font-weight: 500;
     }
-
     .hero-headline {
-      font-family: 'TTDrugs', serif !important;
-      font-size: clamp(36px, 9vw, 64px) !important;
-      font-weight: normal !important;
-      font-style: normal !important;
-      color: #fff !important;
-      line-height: 1.1 !important;
-      letter-spacing: 0.04em !important;
-      margin: 0 !important;
-      text-align: center !important;
+      font-family: 'TTDrugs', serif;
+      font-size: clamp(33px, 8vw, 61px);
+      font-weight: normal;
+      font-style: normal;
+      color: #fff;
+      line-height: 1.1;
+      letter-spacing: 0.12em;
+      margin: 0;
+      text-align: center;
     }
-
     .hero-shop-btn {
-      font-family: 'Manrope', sans-serif !important;
-      font-size: 10px !important;
-      letter-spacing: 0.2em !important;
-      font-weight: 600 !important;
-      text-transform: uppercase !important;
-      color: #111 !important;
-      background: #fff !important;
-      border: none !important;
-      padding: 12px 24px !important;
-      cursor: pointer !important;
-      transition: background 0.2s, color 0.2s !important;
-      display: block !important;
-      width: fit-content !important;
-      align-self: center !important;
-      margin-left: 0 !important;
-      margin-top: 6px !important;
+      font-family: 'Manrope', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #111;
+      background: #fff;
+      border: none;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      display: block;
+      width: fit-content;
+      align-self: center;
+      margin: 0 auto;
     }
     .hero-shop-btn:hover {
-      background: #f0f0f0 !important;
+      background: #f0f0f0;
+    }
+
+    /* ── Hero paragraph ── */
+    .hero-desc {
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      line-height: 1.7;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.6);
+      margin: 10px 0 0;
+      max-width: 280px;
+    }
+
+    /* ── Secondary nav — mobile only ── */
+    #secondary-nav {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      background: #fff;
+      padding: 0 12px;
+      position: sticky;
+      top: 64px;
+      z-index: 799;
+    }
+    #secondary-nav::-webkit-scrollbar { display: none; }
+    .snav-link {
+      flex-shrink: 0;
+      font-family: 'Manrope', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: #555;
+      padding: 10px 12px 10px 0;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.2s;
+      margin-right: 16px;
+    }
+    .snav-link:first-child { padding-left: 0; }
+    .snav-link:hover { color: #111; }
+    .snav-link.sale { color: #c00; }
+    /* Hide on desktop */
+    @media (min-width: 1024px) {
+      #secondary-nav { display: none; }
     }
   </style>
 </head>
@@ -285,9 +238,6 @@
 
 <nav id="main-nav">
   <div class="nav-left">
-    <button class="nav-menu-icon" onclick="openMenu()" aria-label="Menu">
-      <i class="ph-thin ph-list"></i>
-    </button>
     <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
@@ -298,6 +248,7 @@
     </div>
   </div>
   <div class="nav-right">
+    <!-- Collection controls - only visible on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
       <div class="collection-filter-dropdown">
         <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">
@@ -337,15 +288,26 @@
         <i class="ph-thin ph-magnifying-glass"></i>
       </button>
     </div>
+    <!-- Regular nav icons - hidden on collection pages -->
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
-    <button class="cart-text-btn" onclick="openCart()">
-      Cart (<span id="cart-badge-text">0</span>)
-    </button>
+    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
+
+<!-- Secondary nav — mobile only, sits flush under header like one unit -->
+<div id="secondary-nav">
+  <a class="snav-link" onclick="toggleBrandsCollapse()">Brands</a>
+  <a class="snav-link" onclick="navigateTo('products')">New In</a>
+  <a class="snav-link" onclick="navigateToCategory('all-clothing')">Clothing</a>
+  <a class="snav-link" onclick="navigateToCategory('jewelry')">Jewelry</a>
+  <a class="snav-link" onclick="navigateToCategory('bags')">Bags</a>
+  <a class="snav-link" onclick="navigateToCategory('parfum')">Scent</a>
+  <a class="snav-link" onclick="navigateToCategory('sunglasses')">Sunglasses</a>
+  <a class="snav-link sale" onclick="navigateToSale()">Sale</a>
+</div>
 
 <div id="search-overlay"><div class="search-overlay-header"><div class="search-input-wrap"><i class="ph-thin ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i><input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)"></div><button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="search-body" id="search-body"></div></div>
 
