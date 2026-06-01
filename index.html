@@ -11,7 +11,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
   <link rel="stylesheet" href="variables.css">
   <link rel="stylesheet" href="utilities.css">
   <link rel="stylesheet" href="navigation.css">
@@ -34,6 +33,7 @@
   <link rel="stylesheet" href="buttons.css">
   <link rel="stylesheet" href="responsive.css">
   <style>
+
     /* ── Announcement bar ── */
     #announcement-bar {
       background: #111;
@@ -57,16 +57,24 @@
       font-display: swap;
     }
 
-    /* ── Nav: logo far left, icons far right ── */
+    /* ── Nav: transparent over hero, turns white on scroll ── */
     #main-nav {
-      background: #fff !important;
+      background: transparent !important;
+      border-bottom: none !important;
+      box-shadow: none !important;
       top: 0 !important;
+    }
+    #main-nav.scrolled {
+      background: #fff !important;
     }
     #main-nav .nav-icon-btn,
     #main-nav .desktop-nav-link,
-    #main-nav .utility-text-link { color: #111 !important; }
+    #main-nav .utility-text-link { color: #fff; }
+    #main-nav.scrolled .nav-icon-btn,
+    #main-nav.scrolled .desktop-nav-link,
+    #main-nav.scrolled .utility-text-link { color: #111 !important; }
 
-    /* Logo: pull out of absolute centre, sit inline far left */
+    /* Logo left */
     .nav-logo {
       position: static !important;
       transform: none !important;
@@ -78,15 +86,80 @@
       font-size: 16px;
       font-weight: normal;
       letter-spacing: 0.04em;
-      color: #111;
+      color: #fff;
       text-transform: none;
       line-height: 1;
       cursor: pointer;
       user-select: none;
     }
+    #main-nav.scrolled .nav-logo-text { color: #111; }
 
-    /* Search visible in nav-left on mobile */
-    .nav-left .nav-search-icon { display: flex !important; }
+    /* Desktop nav links hidden on mobile */
+    .desktop-nav-links { display: none !important; }
+    @media (min-width: 1024px) { .desktop-nav-links { display: flex !important; } }
+
+    /* Cart text button — mobile only */
+    .cart-text-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    #main-nav.scrolled .cart-text-btn { color: #111; }
+    .cart-text-btn:hover { opacity: 0.7; }
+
+    /* On mobile: hide icon buttons, show cart text */
+    .nav-cart-icon,
+    .nav-wishlist-icon,
+    .nav-search-icon { display: none !important; }
+    @media (min-width: 1024px) {
+      .nav-cart-icon { display: flex !important; }
+      .nav-wishlist-icon { display: flex !important; }
+      .nav-search-icon { display: flex !important; }
+      .cart-text-btn { display: none !important; }
+    }
+
+    /* ── Secondary nav — mobile only ── */
+    #secondary-nav {
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      background: #fff;
+      padding: 0 12px;
+      position: sticky;
+      top: 64px;
+      z-index: 799;
+    }
+    #secondary-nav::-webkit-scrollbar { display: none; }
+    .snav-link {
+      flex-shrink: 0;
+      font-family: 'Manrope', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: #555;
+      padding: 10px 0;
+      margin-right: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    .snav-link:hover { color: #111; }
+    .snav-link.sale { color: #c00; }
+    @media (min-width: 1024px) { #secondary-nav { display: none; } }
 
     /* ── Hero ── */
     #hero {
@@ -112,12 +185,7 @@
     .hero-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(
-        160deg,
-        rgba(0,0,0,0.38) 0%,
-        rgba(0,0,0,0.0) 45%,
-        rgba(0,0,0,0.55) 100%
-      );
+      background: linear-gradient(160deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.0) 45%, rgba(0,0,0,0.55) 100%);
     }
     .hero-content-wrap {
       position: relative;
@@ -129,8 +197,6 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      max-width: 100%;
-      margin: 0;
       box-sizing: border-box;
       text-align: center;
     }
@@ -153,7 +219,6 @@
       font-family: 'TTDrugs', serif;
       font-size: clamp(33px, 8vw, 61px);
       font-weight: normal;
-      font-style: normal;
       color: #fff;
       line-height: 1.1;
       letter-spacing: 0.12em;
@@ -171,63 +236,13 @@
       border: none;
       padding: 12px 24px;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.2s;
       display: block;
       width: fit-content;
-      align-self: center;
       margin: 0 auto;
     }
-    .hero-shop-btn:hover {
-      background: #f0f0f0;
-    }
+    .hero-shop-btn:hover { background: #f0f0f0; }
 
-    /* ── Hero paragraph ── */
-    .hero-desc {
-      font-family: 'Manrope', sans-serif;
-      font-size: 11px;
-      line-height: 1.7;
-      letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.6);
-      margin: 10px 0 0;
-      max-width: 280px;
-    }
-
-    /* ── Secondary nav — mobile only ── */
-    #secondary-nav {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      background: #fff;
-      padding: 0 12px;
-      position: sticky;
-      top: 64px;
-      z-index: 799;
-    }
-    #secondary-nav::-webkit-scrollbar { display: none; }
-    .snav-link {
-      flex-shrink: 0;
-      font-family: 'Manrope', sans-serif;
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      font-weight: 500;
-      color: #555;
-      padding: 10px 12px 10px 0;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: color 0.2s;
-      margin-right: 16px;
-    }
-    .snav-link:first-child { padding-left: 0; }
-    .snav-link:hover { color: #111; }
-    .snav-link.sale { color: #c00; }
-    /* Hide on desktop */
-    @media (min-width: 1024px) {
-      #secondary-nav { display: none; }
-    }
   </style>
 </head>
 <body>
@@ -248,58 +263,30 @@
     </div>
   </div>
   <div class="nav-right">
-    <!-- Collection controls - only visible on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
       <div class="collection-filter-dropdown">
-        <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">
-          FILTER
-          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
+        <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">FILTER<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg></button>
         <div class="collection-filter-options" id="collection-filter-options">
-          <div class="filter-group">
-            <div class="filter-group-title">Category</div>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label>
-            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label>
-          </div>
-          <div class="filter-group">
-            <div class="filter-group-title">Size</div>
-            <label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label>
-            <label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label>
-            <label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label>
-          </div>
-          <div class="filter-group">
-            <div class="filter-group-title">Price</div>
-            <label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label>
-            <label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label>
-            <label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label>
-          </div>
+          <div class="filter-group"><div class="filter-group-title">Category</div><label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label><label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label><label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label><label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label><label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label></div>
+          <div class="filter-group"><div class="filter-group-title">Size</div><label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label><label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label><label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label></div>
+          <div class="filter-group"><div class="filter-group-title">Price</div><label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label><label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label><label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label></div>
         </div>
       </div>
-      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
-        <div class="col-grid-icon cols-2" id="col-grid-icon">
-          <div class="col-grid-bar"></div>
-          <div class="col-grid-bar"></div>
-        </div>
-      </button>
-      <button class="collection-search-btn" onclick="openSearch()">
-        <i class="ph-thin ph-magnifying-glass"></i>
-      </button>
+      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn"><div class="col-grid-icon cols-2" id="col-grid-icon"><div class="col-grid-bar"></div><div class="col-grid-bar"></div></div></button>
+      <button class="collection-search-btn" onclick="openSearch()"><i class="ph-thin ph-magnifying-glass"></i></button>
     </div>
-    <!-- Regular nav icons - hidden on collection pages -->
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
+    <button class="cart-text-btn" onclick="openCart()">Bag (<span id="cart-badge-text">0</span>)</button>
     <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
 
-<!-- Secondary nav — mobile only, sits flush under header like one unit -->
+<!-- Secondary nav — mobile only -->
 <div id="secondary-nav">
-  <a class="snav-link" onclick="toggleBrandsCollapse()">Brands</a>
+  <a class="snav-link" onclick="navigateTo('products')">Brands</a>
   <a class="snav-link" onclick="navigateTo('products')">New In</a>
   <a class="snav-link" onclick="navigateToCategory('all-clothing')">Clothing</a>
   <a class="snav-link" onclick="navigateToCategory('jewelry')">Jewelry</a>
@@ -366,13 +353,24 @@
 <script src="chat.js"></script>
 <script src="app.js"></script>
 
+<script>
+  /* Sync cart-badge-text with cart-badge for mobile cart text button */
+  document.addEventListener('DOMContentLoaded', function() {
+    const cartBadge = document.getElementById('cart-badge');
+    const cartBadgeText = document.getElementById('cart-badge-text');
+    if (!cartBadge || !cartBadgeText) return;
+    const observer = new MutationObserver(function() {
+      cartBadgeText.textContent = cartBadge.textContent;
+    });
+    observer.observe(cartBadge, { childList: true, characterData: true, subtree: true });
+  });
+</script>
+
 <div id="chat-container"></div>
 <script>
   fetch('chat-widget.html')
     .then(r => r.text())
-    .then(html => {
-      document.getElementById('chat-container').innerHTML = html;
-    })
+    .then(html => { document.getElementById('chat-container').innerHTML = html; })
     .catch(err => console.error('Chat widget failed:', err));
 </script>
 
@@ -380,7 +378,6 @@
   <div id="checkout-loaded"></div>
   <footer id="checkout-footer"></footer>
 </div>
-
 <script>
   fetch('checkout.html').then(r => r.text()).then(html => {
     document.getElementById('checkout-loaded').innerHTML = html;
@@ -407,7 +404,6 @@
     document.getElementById('login-loaded').innerHTML = html;
   });
 </script>
-
 <script>
   fetch('login.html').then(r => r.text()).then(html => {
     document.getElementById('account-loaded').innerHTML = html;
