@@ -63,6 +63,8 @@
       border-bottom: none !important;
       box-shadow: none !important;
       top: 0 !important;
+      position: fixed !important;
+      z-index: 800 !important;
     }
     #main-nav.scrolled {
       background: #fff !important;
@@ -223,6 +225,12 @@
     }
     .hero-shop-btn:hover { background: #f0f0f0; }
 
+    /* Nav left section - menu icon first */
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
   </style>
 </head>
 <body>
@@ -233,8 +241,8 @@
 
 <nav id="main-nav">
   <div class="nav-left">
-    <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
     <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
+    <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
       <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
