@@ -90,12 +90,13 @@
 
     #main-nav.scrolled .jd-icon-menu { color: #111 !important; }
 
-    /* Logo — in normal flex flow */
+    /* Logo — in normal flex flow with breathing room */
     .nav-logo {
       position: static !important;
       transform: none !important;
       left: auto !important;
       margin: 0 !important;
+      margin-left: 16px !important;
       display: flex !important;
       align-items: center !important;
     }
@@ -153,9 +154,9 @@
     /* ── Hero ── */
     #hero {
       position: relative;
-      height: 100vh !important;
+      height: 75vh !important;
       min-height: 520px !important;
-      max-height: none !important;
+      max-height: 820px !important;
       margin-top: 0 !important;
       overflow: hidden;
       background: #111;
@@ -232,9 +233,9 @@
     }
     .hero-shop-btn:hover { background: #f0f0f0; }
 
-    /* Push page content below announcement bar */
+    /* Push page content below fixed header area */
     body {
-      padding-top: 32px;
+      padding-top: 0;
     }
 
   </style>
