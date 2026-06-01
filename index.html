@@ -44,10 +44,7 @@
       letter-spacing: 0.18em;
       font-weight: 400;
       text-transform: uppercase;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      position: relative;
       z-index: 801;
     }
 
@@ -60,7 +57,7 @@
       font-display: swap;
     }
 
-    /* ── Nav: only sticky/fixed on homepage, normal flow on other pages ── */
+    /* ── Nav defaults: normal flow, white bg, black text ── */
     #main-nav {
       background: #fff !important;
       border-bottom: none !important;
@@ -69,38 +66,38 @@
       top: 0 !important;
       z-index: 800 !important;
     }
+
+    /* Non-home pages: black text */
+    #main-nav .nav-icon-btn,
+    #main-nav .desktop-nav-link,
+    #main-nav .utility-text-link,
+    #main-nav .cart-text-btn,
+    #main-nav .nav-logo-text { color: #111; }
+
+    /* ── Homepage override: fixed over hero, transparent bg, white text ── */
     #main-nav.home-sticky {
       background: transparent !important;
       position: fixed !important;
-      top: 32px !important;
+      top: 0 !important;
       left: 0 !important;
       right: 0 !important;
     }
-    #main-nav.scrolled {
-      background: #fff !important;
-    }
-
-    /* Icons/text white when transparent on home, black otherwise */
     #main-nav.home-sticky .nav-icon-btn,
     #main-nav.home-sticky .desktop-nav-link,
     #main-nav.home-sticky .utility-text-link,
     #main-nav.home-sticky .cart-text-btn,
     #main-nav.home-sticky .nav-logo-text { color: #fff; }
 
+    /* Homepage scrolled: white bg, black text */
+    #main-nav.home-sticky.scrolled {
+      background: #fff !important;
+    }
     #main-nav.home-sticky.scrolled .nav-icon-btn,
     #main-nav.home-sticky.scrolled .desktop-nav-link,
     #main-nav.home-sticky.scrolled .utility-text-link,
     #main-nav.home-sticky.scrolled .cart-text-btn,
     #main-nav.home-sticky.scrolled .nav-logo-text { color: #111 !important; }
-
     #main-nav.home-sticky.scrolled .jd-icon-menu { color: #111 !important; }
-
-    /* Non-home pages always black text */
-    #main-nav:not(.home-sticky) .nav-icon-btn,
-    #main-nav:not(.home-sticky) .desktop-nav-link,
-    #main-nav:not(.home-sticky) .utility-text-link,
-    #main-nav:not(.home-sticky) .cart-text-btn,
-    #main-nav:not(.home-sticky) .nav-logo-text { color: #111; }
 
     /* Logo — in normal flex flow */
     .nav-logo {
@@ -117,7 +114,6 @@
       font-size: 16px;
       font-weight: normal;
       letter-spacing: 0.04em;
-      color: #fff;
       text-transform: none;
       line-height: 1;
       cursor: pointer;
