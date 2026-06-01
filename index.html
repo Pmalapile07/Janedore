@@ -57,16 +57,19 @@
       font-display: swap;
     }
 
-    /* ── Nav: transparent over hero, turns white on scroll ── */
+    /* ── Nav: sticky, transparent over hero, white on scroll ── */
     #main-nav {
       background: transparent !important;
       border-bottom: none !important;
       box-shadow: none !important;
       top: 0 !important;
+      /* stays sticky — NOT absolute, so Firebase layout is unaffected */
     }
     #main-nav.scrolled {
       background: #fff !important;
     }
+
+    /* Icons white on hero, black when scrolled */
     #main-nav .nav-icon-btn,
     #main-nav .desktop-nav-link,
     #main-nav .utility-text-link { color: #fff; }
@@ -94,11 +97,24 @@
     }
     #main-nav.scrolled .nav-logo-text { color: #111; }
 
-    /* Desktop nav links hidden on mobile */
+    /* Desktop nav links */
     .desktop-nav-links { display: none !important; }
     @media (min-width: 1024px) { .desktop-nav-links { display: flex !important; } }
 
-    /* Cart text button — mobile only */
+    /* Hide all right-side icon buttons on mobile */
+    .nav-search-icon,
+    .nav-wishlist-icon,
+    .nav-cart-icon,
+    .desktop-utility-links { display: none !important; }
+    @media (min-width: 1024px) {
+      .nav-search-icon { display: flex !important; }
+      .nav-wishlist-icon { display: flex !important; }
+      .nav-cart-icon { display: flex !important; }
+      .desktop-utility-links { display: flex !important; }
+      .cart-text-btn { display: none !important; }
+    }
+
+    /* Cart text button — mobile only, uses existing cart-badge for count */
     .cart-text-btn {
       background: none;
       border: none;
@@ -118,48 +134,11 @@
     #main-nav.scrolled .cart-text-btn { color: #111; }
     .cart-text-btn:hover { opacity: 0.7; }
 
-    /* On mobile: hide icon buttons, show cart text */
-    .nav-cart-icon,
-    .nav-wishlist-icon,
-    .nav-search-icon { display: none !important; }
-    @media (min-width: 1024px) {
-      .nav-cart-icon { display: flex !important; }
-      .nav-wishlist-icon { display: flex !important; }
-      .nav-search-icon { display: flex !important; }
-      .cart-text-btn { display: none !important; }
-    }
+    /* Menu icon white on hero */
+    .nav-icon-btn .jd-icon-menu { color: #fff; }
 
-    /* ── Secondary nav — mobile only ── */
-    #secondary-nav {
-      display: flex;
-      align-items: center;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      background: #fff;
-      padding: 0 12px;
-      position: sticky;
-      top: 64px;
-      z-index: 799;
-    }
-    #secondary-nav::-webkit-scrollbar { display: none; }
-    .snav-link {
-      flex-shrink: 0;
-      font-family: 'Manrope', sans-serif;
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      font-weight: 500;
-      color: #555;
-      padding: 10px 0;
-      margin-right: 20px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: color 0.2s;
-    }
-    .snav-link:hover { color: #111; }
-    .snav-link.sale { color: #c00; }
-    @media (min-width: 1024px) { #secondary-nav { display: none; } }
+    /* Hide secondary nav completely */
+    #secondary-nav { display: none !important; }
 
     /* ── Hero ── */
     #hero {
@@ -278,13 +257,13 @@
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
-    <button class="cart-text-btn" onclick="openCart()">Bag (<span id="cart-badge-text">0</span>)</button>
+    <button class="cart-text-btn" onclick="openCart()">Bag (<span id="cart-count-mobile">0</span>)</button>
     <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
 
-<!-- Secondary nav — mobile only -->
+<!-- Secondary nav kept in DOM but hidden — used by other pages -->
 <div id="secondary-nav">
   <a class="snav-link" onclick="navigateTo('products')">Brands</a>
   <a class="snav-link" onclick="navigateTo('products')">New In</a>
@@ -354,15 +333,14 @@
 <script src="app.js"></script>
 
 <script>
-  /* Sync cart-badge-text with cart-badge for mobile cart text button */
+  /* Sync mobile cart count from the real cart-badge */
   document.addEventListener('DOMContentLoaded', function() {
-    const cartBadge = document.getElementById('cart-badge');
-    const cartBadgeText = document.getElementById('cart-badge-text');
-    if (!cartBadge || !cartBadgeText) return;
-    const observer = new MutationObserver(function() {
-      cartBadgeText.textContent = cartBadge.textContent;
-    });
-    observer.observe(cartBadge, { childList: true, characterData: true, subtree: true });
+    var badge = document.getElementById('cart-badge');
+    var mobile = document.getElementById('cart-count-mobile');
+    if (!badge || !mobile) return;
+    new MutationObserver(function() {
+      mobile.textContent = badge.textContent;
+    }).observe(badge, { childList: true, subtree: true, characterData: true });
   });
 </script>
 
