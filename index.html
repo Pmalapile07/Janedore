@@ -119,27 +119,35 @@
         rgba(0,0,0,0.55) 100%
       );
     }
+
+    /* ── CHANGED: centred + pushed up ── */
     .hero-content-wrap {
       position: relative;
       z-index: 10;
       width: 100%;
       height: 100%;
       padding: 32px 24px 36px;
+      padding-bottom: 18vh;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      justify-content: flex-end;
+      align-items: center;
+      justify-content: center;
       max-width: 100%;
       margin: 0;
       box-sizing: border-box;
+      text-align: center;
     }
+
+    /* ── CHANGED: centred block ── */
     .hero-headline-block {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
+      align-items: center;
       gap: 10px;
       width: fit-content;
+      text-align: center;
     }
+
     .hero-campaign-label {
       font-size: 9px;
       letter-spacing: 0.22em;
@@ -148,16 +156,20 @@
       font-family: 'Manrope', sans-serif;
       font-weight: 500;
     }
+
+    /* ── CHANGED: TTDrugs font, no italic ── */
     .hero-headline {
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'TTDrugs', serif !important;
       font-size: clamp(36px, 9vw, 64px);
-      font-weight: 300;
-      font-style: italic;
+      font-weight: normal;
+      font-style: normal;
       color: #fff;
-      line-height: 1.05;
-      letter-spacing: -0.01em;
+      line-height: 1.1;
+      letter-spacing: 0.04em;
       margin: 0;
+      text-align: center;
     }
+
     .hero-brand-roll {
       font-family: 'Manrope', sans-serif;
       font-size: 9px;
@@ -184,6 +196,8 @@
       text-align: right;
     }
     .hero-sub:hover { color: rgba(255,255,255,0.9); }
+
+    /* ── CHANGED: button centred ── */
     .hero-shop-btn {
       font-family: 'Manrope', sans-serif;
       font-size: 10px;
@@ -198,8 +212,9 @@
       transition: background 0.2s, color 0.2s;
       display: block;
       width: fit-content;
-      align-self: flex-start;
+      align-self: center;
       margin-left: 0;
+      margin-top: 6px;
     }
     .hero-shop-btn:hover {
       background: #f0f0f0;
