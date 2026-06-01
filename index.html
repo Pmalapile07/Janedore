@@ -57,7 +57,7 @@
       font-display: swap;
     }
 
-    /* ── Nav ── */
+    /* ── Nav: logo far left, icons far right ── */
     #main-nav {
       background: #fff !important;
       top: 0 !important;
@@ -67,7 +67,13 @@
     #main-nav .desktop-nav-link,
     #main-nav .utility-text-link { color: #111 !important; }
 
-    /* ── Logo ── */
+    /* Logo: pull out of absolute centre, sit inline far left */
+    .nav-logo {
+      position: static !important;
+      transform: none !important;
+      left: auto !important;
+      margin-right: auto !important;
+    }
     .nav-logo-text {
       font-family: 'TTDrugs', serif;
       font-size: 16px;
@@ -79,17 +85,16 @@
       cursor: pointer;
       user-select: none;
     }
-    .nav-logo { left: calc(50% + 5px) !important; }
 
-    /* ── Search icon visible in nav-left ── */
+    /* Search visible in nav-left on mobile */
     .nav-left .nav-search-icon { display: flex !important; }
 
-    /* ── Hero redesign ── */
+    /* ── Hero ── */
     #hero {
       position: relative;
-      height: 92vh !important;
-      min-height: 580px !important;
-      max-height: none !important;
+      height: 75vh !important;
+      min-height: 520px !important;
+      max-height: 820px !important;
       margin-top: 0 !important;
       overflow: hidden;
       background: #111;
@@ -105,7 +110,6 @@
       background-position: center top;
       background-repeat: no-repeat;
     }
-    /* Lighter, more editorial overlay — image should breathe */
     .hero-overlay {
       position: absolute;
       inset: 0;
@@ -116,13 +120,12 @@
         rgba(0,0,0,0.55) 100%
       );
     }
-    /* Full-area content wrap — headline top-left, CTA bottom-right */
     .hero-content-wrap {
       position: relative;
       z-index: 10;
       width: 100%;
       height: 100%;
-      padding: 36px 24px 32px;
+      padding: 32px 24px 28px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -131,7 +134,6 @@
       margin: 0;
       box-sizing: border-box;
     }
-    /* Editorial headline block — top left */
     .hero-headline-block {
       display: flex;
       flex-direction: column;
@@ -147,7 +149,7 @@
     }
     .hero-headline {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(42px, 11vw, 72px);
+      font-size: clamp(36px, 9vw, 64px);
       font-weight: 300;
       font-style: italic;
       color: #fff;
@@ -155,12 +157,19 @@
       letter-spacing: -0.01em;
       margin: 0;
     }
-    /* CTA block — bottom right */
+    .hero-brand-roll {
+      font-family: 'Manrope', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-top: 4px;
+    }
     .hero-cta-block {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 12px;
+      gap: 10px;
       align-self: flex-end;
     }
     .hero-sub {
@@ -192,33 +201,6 @@
       color: rgba(255,255,255,0.7);
       border-color: rgba(255,255,255,0.4);
     }
-
-    /* ── Section headers — editorial, clean ── */
-    #home-categories .home-categories-title,
-    #home-all-products .home-categories-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 28px;
-      font-weight: 300;
-      font-style: italic;
-      letter-spacing: 0.01em;
-      text-transform: none;
-      color: #111;
-    }
-    #home-categories .home-categories-subtitle,
-    #home-all-products .home-categories-subtitle {
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #999;
-      font-family: 'Manrope', sans-serif;
-      font-weight: 400;
-    }
-    #home-categories .home-categories-header,
-    #home-all-products .home-categories-header {
-      border-bottom: 1px solid #e8e8e8;
-      padding-bottom: 16px;
-      margin-bottom: 24px;
-    }
   </style>
 </head>
 <body>
@@ -229,8 +211,7 @@
 
 <nav id="main-nav">
   <div class="nav-left">
-    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
-    <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
+    <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
       <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
@@ -239,7 +220,6 @@
       <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
     </div>
   </div>
-  <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
   <div class="nav-right">
     <!-- Collection controls - only visible on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
@@ -282,8 +262,10 @@
       </button>
     </div>
     <!-- Regular nav icons - hidden on collection pages -->
+    <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
+    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
@@ -298,7 +280,7 @@
 
 <div id="review-modal-backdrop" onclick="closeReviewModal()"><div id="review-modal" onclick="event.stopPropagation()"><button class="review-modal-close" onclick="closeReviewModal()">✕</button><div class="review-modal-title">Write a Review</div><div class="review-stars" id="review-stars"><button class="review-star-btn" onclick="setReviewRating(1)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(2)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(3)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph-thin ph-star"></i></button></div><input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height:auto;margin-bottom:12px;"><textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea><div class="review-image-upload"><label class="review-image-label" for="review-image-input"><i class="ph-thin ph-image"></i> Add Image</label><input type="file" id="review-image-input" accept="image/*" onchange="handleReviewImage(event)"><img class="review-image-preview" id="review-image-preview" alt="Preview"></div><button class="review-submit-btn" onclick="submitReview()">Submit Review</button></div></div>
 
-<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-headline-block"><div class="hero-campaign-label">New Season — 2025</div><h1 class="hero-headline">The Art of<br>Understated<br>Dressing.</h1></div><div class="hero-cta-block"><div class="hero-sub" onclick="navigateTo('products')">Multi-brand curation</div><button class="hero-shop-btn" onclick="navigateTo('products')">Shop the Edit</button></div></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">Just In</div><div class="home-categories-subtitle">Explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">The Edit</div><div class="home-categories-subtitle">A curated selection of emerging labels and under-the-radar favourites.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">    A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
+<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-headline-block"><div class="hero-campaign-label">Clothing · Jewelry · Bags · Scent</div><h1 class="hero-headline">One destination.<br>Every brand<br>worth knowing.</h1><div class="hero-brand-roll">Janédore · Nirius Co · Thato · and more</div></div><div class="hero-cta-block"><div class="hero-sub" onclick="navigateTo('products')">Multi-brand fashion house</div><button class="hero-shop-btn" onclick="navigateTo('products')">Shop the Edit</button></div></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">    A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
 
 <div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
