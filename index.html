@@ -57,45 +57,54 @@
       font-display: swap;
     }
 
-    /* ── Nav: transparent, sits ON TOP of hero, directly under announcement bar ── */
+    /* ── Nav: transparent overlay on hero, directly under announcement bar ── */
     #main-nav {
       background: transparent !important;
       top: 0 !important;
       position: absolute !important;
       z-index: 800;
       border-bottom: none !important;
-    }
-    #main-nav .nav-icon-btn,
-    #main-nav .desktop-nav-link,
-    #main-nav .utility-text-link { 
-      color: #fff !important; 
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 14px 20px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
     }
 
-    /* Left section: menu icon + logo */
+    /* Nav left: menu icon + logo */
     .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex !important;
+      align-items: center !important;
+      gap: 20px !important;
+      flex-shrink: 0;
     }
 
-    /* Right section: cart text */
+    /* Nav right: cart text only */
     .nav-right {
-      display: flex;
-      align-items: center;
+      display: flex !important;
+      align-items: center !important;
+      gap: 0 !important;
+      flex-shrink: 0;
+      margin-left: auto !important;
     }
 
     /* Menu icon */
     .nav-menu-icon {
-      background: none;
-      border: none;
-      color: #fff;
-      cursor: pointer;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
+      background: none !important;
+      border: none !important;
+      color: #fff !important;
+      cursor: pointer !important;
+      padding: 4px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 22px !important;
+      flex-shrink: 0 !important;
+      order: -1 !important;
+    }
+    .nav-menu-icon i {
+      color: #fff !important;
     }
 
     /* Logo */
@@ -106,170 +115,165 @@
       margin-right: 0 !important;
     }
     .nav-logo-text {
-      font-family: 'TTDrugs', serif;
-      font-size: 16px;
-      font-weight: normal;
-      letter-spacing: 0.04em;
-      color: #fff;
-      text-transform: none;
-      line-height: 1;
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
+      font-family: 'TTDrugs', serif !important;
+      font-size: 16px !important;
+      font-weight: normal !important;
+      letter-spacing: 0.04em !important;
+      color: #fff !important;
+      text-transform: none !important;
+      line-height: 1 !important;
+      cursor: pointer !important;
+      user-select: none !important;
+      white-space: nowrap !important;
     }
 
-    /* Hide desktop nav links, search icon, wishlist icon, utility links */
-    .desktop-nav-links,
+    /* Hide ALL desktop nav links */
+    .desktop-nav-links {
+      display: none !important;
+    }
+
+    /* Hide search, wishlist, utility icons */
     .nav-search-icon,
     .nav-wishlist-icon,
-    .desktop-utility-links {
+    .desktop-utility-links,
+    .nav-icon-btn:not(.nav-menu-icon) {
       display: none !important;
     }
 
-    /* Hide the original nav-cart-icon since we use text now */
-    .nav-cart-icon {
-      display: none !important;
-    }
-
-    /* Cart text style */
+    /* Cart text button */
     .cart-text-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      font-family: 'Manrope', sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 6px 0;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
+      background: none !important;
+      border: none !important;
+      color: #fff !important;
+      font-family: 'Manrope', sans-serif !important;
+      font-size: 11px !important;
+      letter-spacing: 0.08em !important;
+      font-weight: 500 !important;
+      cursor: pointer !important;
+      padding: 6px 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      text-transform: uppercase !important;
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
     }
     .cart-text-btn:hover {
       opacity: 0.7;
     }
     #cart-badge-text {
-      font-weight: 700;
+      font-weight: 700 !important;
     }
 
-    /* Hide secondary nav completely */
+    /* Hide secondary nav */
     #secondary-nav { display: none !important; }
 
-    /* Hide other icon buttons */
-    .nav-icon-btn:not(.nav-menu-icon) {
-      display: none !important;
-    }
-
-    /* Collection controls hidden on home */
+    /* Hide collection controls on home */
     #collection-nav-controls {
       display: none !important;
     }
 
     /* ── Hero: starts right under announcement bar, NO gap ── */
     #hero {
-      position: relative;
+      position: relative !important;
       height: 75vh !important;
       min-height: 520px !important;
       max-height: 820px !important;
       margin-top: 0 !important;
-      overflow: hidden;
-      background: #111;
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
+      overflow: hidden !important;
+      background: #111 !important;
+      display: flex !important;
+      align-items: stretch !important;
+      justify-content: stretch !important;
       padding-bottom: 0 !important;
     }
     .hero-bg-placeholder {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center top;
-      background-repeat: no-repeat;
+      position: absolute !important;
+      inset: 0 !important;
+      background-size: cover !important;
+      background-position: center top !important;
+      background-repeat: no-repeat !important;
     }
     .hero-overlay {
-      position: absolute;
-      inset: 0;
+      position: absolute !important;
+      inset: 0 !important;
       background: linear-gradient(
         160deg,
         rgba(0,0,0,0.38) 0%,
         rgba(0,0,0,0.0) 45%,
         rgba(0,0,0,0.55) 100%
-      );
+      ) !important;
     }
 
-    /* ── Centred + pushed down by 2px ── */
+    /* Hero content — pushed down 2px */
     .hero-content-wrap {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      height: 100%;
-      padding: 32px 24px 36px;
-      padding-bottom: 2vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      max-width: 100%;
-      margin: 0;
-      box-sizing: border-box;
-      text-align: center;
-      transform: translateY(2px);
+      position: relative !important;
+      z-index: 10 !important;
+      width: 100% !important;
+      height: 100% !important;
+      padding: 32px 24px 36px !important;
+      padding-bottom: 2vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      text-align: center !important;
+      transform: translateY(2px) !important;
     }
 
     .hero-headline-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      width: fit-content;
-      text-align: center;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 10px !important;
+      width: fit-content !important;
+      text-align: center !important;
     }
 
     .hero-campaign-label {
-      font-size: 9px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.6);
-      font-family: 'Manrope', sans-serif;
-      font-weight: 500;
+      font-size: 9px !important;
+      letter-spacing: 0.22em !important;
+      text-transform: uppercase !important;
+      color: rgba(255,255,255,0.6) !important;
+      font-family: 'Manrope', sans-serif !important;
+      font-weight: 500 !important;
     }
 
     .hero-headline {
       font-family: 'TTDrugs', serif !important;
-      font-size: clamp(36px, 9vw, 64px);
-      font-weight: normal;
-      font-style: normal;
-      color: #fff;
-      line-height: 1.1;
-      letter-spacing: 0.04em;
-      margin: 0;
-      text-align: center;
+      font-size: clamp(36px, 9vw, 64px) !important;
+      font-weight: normal !important;
+      font-style: normal !important;
+      color: #fff !important;
+      line-height: 1.1 !important;
+      letter-spacing: 0.04em !important;
+      margin: 0 !important;
+      text-align: center !important;
     }
 
     .hero-shop-btn {
-      font-family: 'Manrope', sans-serif;
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: #111;
-      background: #fff;
-      border: none;
-      padding: 12px 24px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-      display: block;
-      width: fit-content;
-      align-self: center;
-      margin-left: 0;
-      margin-top: 6px;
+      font-family: 'Manrope', sans-serif !important;
+      font-size: 10px !important;
+      letter-spacing: 0.2em !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      color: #111 !important;
+      background: #fff !important;
+      border: none !important;
+      padding: 12px 24px !important;
+      cursor: pointer !important;
+      transition: background 0.2s, color 0.2s !important;
+      display: block !important;
+      width: fit-content !important;
+      align-self: center !important;
+      margin-left: 0 !important;
+      margin-top: 6px !important;
     }
     .hero-shop-btn:hover {
-      background: #f0f0f0;
+      background: #f0f0f0 !important;
     }
   </style>
 </head>
