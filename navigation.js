@@ -14,12 +14,33 @@ function updateBodyClassForCollection() {
   }
 }
 
+function setNavForPage(page) {
+  if (!DOM.mainNav) return;
+  if (page === 'home') {
+    DOM.mainNav.classList.add('home-sticky');
+    DOM.mainNav.style.position = 'fixed';
+    DOM.mainNav.style.top = '32px';
+    DOM.mainNav.style.left = '0';
+    DOM.mainNav.style.right = '0';
+    DOM.mainNav.style.background = 'transparent';
+  } else {
+    DOM.mainNav.classList.remove('home-sticky');
+    DOM.mainNav.style.position = 'sticky';
+    DOM.mainNav.style.top = '0';
+    DOM.mainNav.style.left = '';
+    DOM.mainNav.style.right = '';
+    DOM.mainNav.style.background = '#fff';
+    DOM.mainNav.classList.add('scrolled');
+  }
+}
+
 function navigateTo(page) {
   S.saleMode = false; S.filter.vendor = null; updateHash(page === 'home' ? '' : page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
   S.currentPage = page; window.scrollTo({top:0,behavior:"smooth"}); removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page","collection-page"); }
+  setNavForPage(page);
   if(page==="products"){ DOM.mainNav?.classList.add("collection-page"); S.activeSortTab = 'all'; renderCollectionSortingTabs(); renderAllProducts(); ensureNavScrolled(); S.previousCollectionPage='products'; }
   if(page==="cart"){ renderCartPage(); ensureNavScrolled(); }
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
@@ -35,6 +56,7 @@ function navigateToCategory(cat) {
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
   S.previousCollectionPage = cat; removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page"); DOM.mainNav.classList.add("collection-page"); }
+  setNavForPage('category');
   S.activeSortTab = cat;
   renderCollectionSortingTabs();
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
@@ -54,7 +76,7 @@ function goToProduct(productId) {
 }
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
-function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); updateChatVisibility(); updateBodyClassForCollection(); }
+function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); updateBodyClassForCollection(); }
 
 function navigateToLogin() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -62,6 +84,7 @@ function navigateToLogin() {
   S.currentPage = "login";
   updateHash('login');
   window.scrollTo({top:0,behavior:"smooth"});
+  setNavForPage('login');
   ensureNavScrolled();
   updateBodyClassForCollection();
 }
@@ -72,6 +95,7 @@ function navigateToAccount() {
   S.currentPage = "account";
   updateHash('account');
   window.scrollTo({top:0,behavior:"smooth"});
+  setNavForPage('account');
   ensureNavScrolled();
   updateBodyClassForCollection();
 }
@@ -82,6 +106,7 @@ function navigateToCheckout() {
   S.currentPage = "checkout";
   updateHash('checkout');
   window.scrollTo({top:0,behavior:"smooth"});
+  setNavForPage('checkout');
   ensureNavScrolled();
   updateBodyClassForCollection();
 }
@@ -89,7 +114,6 @@ function navigateToCheckout() {
 function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
 
 function ensureNavScrolled() { 
-  // Only add scrolled class on non-home pages
   if (S.currentPage !== 'home') {
     DOM.mainNav.classList.add("scrolled"); 
   }
