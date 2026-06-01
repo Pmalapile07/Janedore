@@ -99,9 +99,8 @@
       font-family: 'TTDrugs', serif;
       font-size: 16px;
       font-weight: normal;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      text-transform: none;
       line-height: 1;
       cursor: pointer;
       user-select: none;
@@ -177,13 +176,14 @@
       z-index: 10;
       width: 100%;
       height: 100%;
-      padding: 96px 24px 36px;
+      padding: 32px 24px 36px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
       box-sizing: border-box;
       text-align: center;
+      padding-bottom: 64px;
     }
     .hero-headline-block {
       display: flex;
@@ -202,7 +202,7 @@
     }
     .hero-headline {
       font-family: 'TTDrugs', serif;
-      font-size: clamp(33px, 8vw, 61px);
+      font-size: clamp(31px, 7.5vw, 59px);
       font-weight: normal;
       color: #fff;
       line-height: 1.1;
