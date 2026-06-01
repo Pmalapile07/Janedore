@@ -63,21 +63,28 @@
       border-bottom: none !important;
       box-shadow: none !important;
       top: 0 !important;
-      /* stays sticky — NOT absolute, so Firebase layout is unaffected */
     }
     #main-nav.scrolled {
       background: #fff !important;
     }
 
-    /* Icons white on hero, black when scrolled */
+    /* Icons/text white when transparent, black when scrolled */
     #main-nav .nav-icon-btn,
     #main-nav .desktop-nav-link,
-    #main-nav .utility-text-link { color: #fff; }
+    #main-nav .utility-text-link,
+    #main-nav .cart-text-btn,
+    #main-nav .nav-logo-text { color: #fff; }
+
     #main-nav.scrolled .nav-icon-btn,
     #main-nav.scrolled .desktop-nav-link,
-    #main-nav.scrolled .utility-text-link { color: #111 !important; }
+    #main-nav.scrolled .utility-text-link,
+    #main-nav.scrolled .cart-text-btn,
+    #main-nav.scrolled .nav-logo-text { color: #111 !important; }
 
-    /* Logo left */
+    /* On non-hero pages nav is always scrolled (white), so always black text */
+    #main-nav.scrolled .jd-icon-menu { color: #111 !important; }
+
+    /* Logo */
     .nav-logo {
       position: static !important;
       transform: none !important;
@@ -95,13 +102,12 @@
       cursor: pointer;
       user-select: none;
     }
-    #main-nav.scrolled .nav-logo-text { color: #111; }
 
     /* Desktop nav links */
     .desktop-nav-links { display: none !important; }
     @media (min-width: 1024px) { .desktop-nav-links { display: flex !important; } }
 
-    /* Hide all right-side icon buttons on mobile */
+    /* Hide icon buttons on mobile, show cart text instead */
     .nav-search-icon,
     .nav-wishlist-icon,
     .nav-cart-icon,
@@ -114,11 +120,10 @@
       .cart-text-btn { display: none !important; }
     }
 
-    /* Cart text button — mobile only, uses existing cart-badge for count */
+    /* Cart text button — mobile only */
     .cart-text-btn {
       background: none;
       border: none;
-      color: #fff;
       font-family: 'Manrope', sans-serif;
       font-size: 11px;
       letter-spacing: 0.08em;
@@ -131,11 +136,7 @@
       text-transform: uppercase;
       white-space: nowrap;
     }
-    #main-nav.scrolled .cart-text-btn { color: #111; }
     .cart-text-btn:hover { opacity: 0.7; }
-
-    /* Menu icon white on hero */
-    .nav-icon-btn .jd-icon-menu { color: #fff; }
 
     /* Hide secondary nav completely */
     #secondary-nav { display: none !important; }
@@ -233,6 +234,7 @@
 <nav id="main-nav">
   <div class="nav-left">
     <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">Janédore Studio</span></div>
+    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-nav-links">
       <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
       <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
@@ -258,7 +260,6 @@
     <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="jd-count" id="wish-badge" style="display:none">0</span></button>
     <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="jd-count" id="cart-badge" style="display:none">0</span></button>
     <button class="cart-text-btn" onclick="openCart()">Bag (<span id="cart-count-mobile">0</span>)</button>
-    <button class="nav-icon-btn" onclick="openMenu()"><span class="jd-icon-menu"></span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
