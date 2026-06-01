@@ -89,7 +89,7 @@ function navigateToCheckout() {
 function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
 
 function ensureNavScrolled() { 
-  // Only force scrolled class on non-home pages
+  // Only add scrolled class on non-home pages
   if (S.currentPage !== 'home') {
     DOM.mainNav.classList.add("scrolled"); 
   }
@@ -102,7 +102,11 @@ function checkNavForHome() {
     return; 
   } 
   const heroBottom = DOM.hero.getBoundingClientRect().bottom;
-  DOM.mainNav.classList.toggle("scrolled", heroBottom <= 0); 
+  if (heroBottom <= 0) {
+    DOM.mainNav.classList.add("scrolled");
+  } else {
+    DOM.mainNav.classList.remove("scrolled");
+  }
 }
 
 function isDesktop() { return window.innerWidth >= 769; }
