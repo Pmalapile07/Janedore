@@ -66,7 +66,6 @@
   window._currentVendorId = null;
   window._roleResolved = false;
 
-  var totalUnreadMessages = 0;
   window._totalUnreadMessages = 0;
 
   var analyticsChart = null;
@@ -188,7 +187,7 @@
 
   window.switchTab = function(tab) {
     window._currentTab = tab;
-    if (tab !== 'messages') { window._activeChatSession = null; window._detachActiveChatListeners && window._detachActiveChatListeners(); }
+    if (tab !== 'messages') { window._activeChatSession = null; if (window._detachActiveChatListeners) window._detachActiveChatListeners(); }
     document.querySelectorAll('.sidebar-btn[data-tab]').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.bnav-btn[data-tab]').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) { b.classList.remove('active'); });
@@ -196,7 +195,7 @@
     renderCurrentTab();
   };
 
-  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; destroyCharts(); switch (window._currentTab) { case 'dashboard': window._renderDashboardTab && window._renderDashboardTab(); break; case 'products': window._renderProductsTab && window._renderProductsTab(); break; case 'messages': window._renderMessagesTab && window._renderMessagesTab(); break; case 'reviews': window._renderReviewsTab && window._renderReviewsTab(); break; case 'newsletter': window._renderNewsletterTab && window._renderNewsletterTab(); break; case 'orders': window._renderOrdersTab && window._renderOrdersTab(); break; case 'customers': window._renderCustomersTab && window._renderCustomersTab(); break; case 'vendors': window._renderVendorsTab && window._renderVendorsTab(); break; } }
+  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; destroyCharts(); switch (window._currentTab) { case 'dashboard': if (window._renderDashboardTab) window._renderDashboardTab(); break; case 'products': if (window._renderProductsTab) window._renderProductsTab(); break; case 'messages': if (window._renderMessagesTab) window._renderMessagesTab(); break; case 'reviews': if (window._renderReviewsTab) window._renderReviewsTab(); break; case 'newsletter': if (window._renderNewsletterTab) window._renderNewsletterTab(); break; case 'orders': if (window._renderOrdersTab) window._renderOrdersTab(); break; case 'customers': if (window._renderCustomersTab) window._renderCustomersTab(); break; case 'vendors': if (window._renderVendorsTab) window._renderVendorsTab(); break; } }
 
   function destroyCharts() { if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; } if (window._revenueChart) { window._revenueChart.destroy(); window._revenueChart = null; } }
   window._destroyCharts = destroyCharts;
@@ -214,12 +213,10 @@
   function startChatMonitoring() { stopChatMonitoring(); chatsMonitorRef = rtdb.ref(CHAT_ROOT).limitToLast(CHAT_MONITOR_LIMIT); chatsMonitorCallback = function(snapshot) { var unread = 0; snapshot.forEach(function(sessionSnap) { var messages = sessionSnap.child('messages'); if (messages.exists()) { messages.forEach(function(msgSnap) { var msg = msgSnap.val(); if (msg && msg.sender === 'customer' && msg.read === false) unread++; }); } }); window._totalUnreadMessages = unread; updateUnreadBadge(); }; chatsMonitorRef.on('value', chatsMonitorCallback, function(err) { logError('CHAT_MONITOR', err); }); }
   window._startChatMonitoring = startChatMonitoring;
 
-  function stopChatMonitoring() { if (chatsMonitorRef && chatsMonitorCallback) { chatsMonitorRef.off('value', chatsMonitorCallback); chatsMonitorRef = null; chatsMonitorCallback = null; } window._detachActiveChatListeners && window._detachActiveChatListeners(); }
+  function stopChatMonitoring() { if (chatsMonitorRef && chatsMonitorCallback) { chatsMonitorRef.off('value', chatsMonitorCallback); chatsMonitorRef = null; chatsMonitorCallback = null; } if (window._detachActiveChatListeners) window._detachActiveChatListeners(); }
   window._stopChatMonitoring = stopChatMonitoring;
 
   function updateUnreadBadge() { ['messages-unread-badge','bnav-msg-badge'].forEach(function(id) { var badge = safeEl(id); if (badge) { badge.textContent = window._totalUnreadMessages; badge.style.display = window._totalUnreadMessages > 0 ? 'inline-flex' : 'none'; } }); }
-
-  window.addEventListener('beforeunload', function() { stopChatMonitoring(); destroyCharts(); });
 
   // Cloudinary upload
   window.uploadToCloudinary = function(inputElement, variantIndex) {
@@ -233,12 +230,30 @@
         if (error) { logError('CLOUDINARY_UPLOAD', error); showToast('Upload failed.', 'error'); return; }
         if (result && result.event === 'success') {
           var secureUrl = result.info.secure_url;
-          if (inputElement) { inputElement.value = secureUrl; inputElement.dispatchEvent(new Event('input', { bubbles: true })); window._updateImagePreview && window._updateImagePreview(inputElement); if (variantIndex !== undefined && window._updateVariantPreview) { window._updateVariantPreview(variantIndex); } }
+          if (inputElement) { inputElement.value = secureUrl; inputElement.dispatchEvent(new Event('input', { bubbles: true })); if (window._updateImagePreview) window._updateImagePreview(inputElement); if (variantIndex !== undefined && window._updateVariantPreview) window._updateVariantPreview(variantIndex); }
           showToast('Image uploaded!');
         }
       }
     );
     widget.open();
   };
+
+  window.addEventListener('beforeunload', function() { stopChatMonitoring(); destroyCharts(); });
+
+  // ========== ALIASES for HTML onclick handlers ==========
+  window.loadProducts = loadProducts;
+  window.seedDefaultData = window._seedDefaultData;
+  window.openNewProductModal = window._openNewProductModal;
+  window.openProductModal = window._openProductModal;
+  window.filterProducts = window._filterProducts;
+  window.addVariant = window._addVariant;
+  window.removeVariant = window._removeVariant;
+  window.addImageUrl = window._addImageUrl;
+  window.removeImageUrl = window._removeImageUrl;
+  window.updateImagePreview = window._updateImagePreview;
+  window.updateVariantPreview = window._updateVariantPreview;
+  window.closeModal = closeModal;
+  window.closePanel = closePanel;
+  window.handleProductSubmit = window._handleProductSubmit;
 
 })();
