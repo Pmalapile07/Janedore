@@ -15,18 +15,18 @@
   var productsRef = window._productsRef;
 
   /* ─────────────────────────────────────────────────────────
-     CLOUDINARY UPLOAD HELPER
+     CLOUDINARY UPLOAD
   ───────────────────────────────────────────────────────── */
   window._uploadToCloudinary = function(inputElement, variantIndex) {
     var cloudName = window.CLOUDINARY_CLOUD_NAME;
     var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
 
-    if (!cloudName || cloudName === 'YOUR_CLOUD_NAME') {
-      showToast('Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME.', 'error');
+    if (!cloudName) {
+      showToast('Cloudinary cloud name not configured.', 'error');
       return;
     }
-    if (!uploadPreset || uploadPreset === 'YOUR_UPLOAD_PRESET') {
-      showToast('Cloudinary upload preset not set.', 'error');
+    if (!uploadPreset) {
+      showToast('Cloudinary upload preset not configured.', 'error');
       return;
     }
 
@@ -38,24 +38,7 @@
         multiple: false,
         maxFiles: 1,
         clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'],
-        maxFileSize: 20000000,
-        styles: {
-          palette: {
-            window: '#FFFFFF',
-            sourceBg: '#F4F4F6',
-            windowBorder: '#D1D5DB',
-            tabIcon: '#1A56DB',
-            inactiveTabIcon: '#9CA3AF',
-            menuIcons: '#6B7280',
-            link: '#1A56DB',
-            action: '#1A56DB',
-            inProgress: '#1A56DB',
-            complete: '#1A8742',
-            error: '#C0392B',
-            textDark: '#111111',
-            textLight: '#FFFFFF'
-          }
-        }
+        maxFileSize: 20000000
       },
       function(error, result) {
         if (error) {
@@ -69,7 +52,7 @@
             inputElement.value = secureUrl;
             inputElement.dispatchEvent(new Event('input', { bubbles: true }));
             window._updateImagePreview(inputElement);
-            if (variantIndex !== undefined && window._updateVariantPreview) {
+            if (variantIndex !== undefined) {
               window._updateVariantPreview(variantIndex);
             }
           }
