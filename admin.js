@@ -139,13 +139,29 @@
   function closePanel() { cleanupModalState(); }
   window._closePanel = closePanel;
 
+  // ─── UI STATE ────────────────────────────────────────────────────────────────
+  // UNCHANGED from original. Login screen shows immediately as before.
+  // Reason: changing this requires a timeout fallback to be safe, and we are
+  // not deploying that change until diagnostics confirm the session is genuinely
+  // being destroyed (vs. a flash being mistaken for a logout).
+
   function showAuthLoading() { var loader = safeEl('auth-loading'); if (!loader) { loader = document.createElement('div'); loader.id = 'auth-loading'; loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.97);display:flex;align-items:center;justify-content:center;z-index:9999;'; loader.innerHTML = '<div style="text-align:center;font-family:Manrope,sans-serif;"><div style="font-size:14px;color:#666;">Verifying access...</div></div>'; document.body.appendChild(loader); } loader.style.display = 'flex'; }
   function hideAuthLoading() { var loader = safeEl('auth-loading'); if (loader) loader.style.display = 'none'; }
+
   function initUIState() { safeSetDisplay('login-screen', 'flex'); safeSetDisplay('admin-panel', 'none'); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initUIState); } else { initUIState(); }
 
+  // ─── AUTH STATE ───────────────────────────────────────────────────────────────
+  // CHANGE 1 of 2: Diagnostics added to onAuthStateChanged and onIdTokenChanged.
+  // These logs tell us whether the session is genuinely being destroyed
+  // (onAuthStateChanged fires null) or whether it is a UI flash only.
+  // Nothing else changed in this block.
+
   auth.onAuthStateChanged(function(user) {
     if (user) {
+      // DIAGNOSTIC: confirms session was restored from persistence or fresh login
+      console.log('[JANEDORE AUTH] onAuthStateChanged: user present —', user.email, '| uid:', user.uid);
+
       window._currentUser = user;
       safeSetDisplay('login-screen', 'none'); safeSetDisplay('admin-panel', 'none');
       showAuthLoading();
@@ -159,15 +175,45 @@
         loadProducts();
         startChatMonitoring();
         renderRoleUI();
-      }).catch(function(err) { logError('AUTH/ROLE', err); hideAuthLoading(); auth.signOut().catch(function(e){ logError('AUTH/SIGNOUT', e); }); safeSetDisplay('login-screen', 'flex'); safeSetDisplay('admin-panel', 'none'); showToast('Authentication failed. Please try again.', 'error'); });
+      }).catch(function(err) {
+        // CHANGE 2 of 2: Removed auth.signOut() from this catch block.
+        // Original code called auth.signOut() here, which destroyed the session
+        // permanently whenever Firestore had a transient network error.
+        // Now we fall back to VIEWER and show a toast. The session is preserved.
+        // The user can reload to retry role loading without losing their login.
+        logError('AUTH/ROLE', err);
+        hideAuthLoading();
+        window._currentUserRole = 'VIEWER';
+        window._roleResolved = true;
+        safeSetDisplay('admin-panel', 'block');
+        showToast('Could not verify your role — limited access. Reload to retry.', 'error');
+        loadProducts();
+        renderRoleUI();
+      });
     } else {
+      // DIAGNOSTIC: if this fires when you return to Safari without manually
+      // logging out, the session is genuinely being destroyed. That is the
+      // signal to deploy the setPersistence fix next.
+      console.warn('[JANEDORE AUTH] onAuthStateChanged: null — no session.');
+
       window._currentUser = null; window._currentUserRole = null; window._roleResolved = false; window._currentVendorId = null;
       hideAuthLoading(); safeSetDisplay('login-screen', 'flex'); safeSetDisplay('admin-panel', 'none');
       stopChatMonitoring();
     }
   });
 
-  function loadUserRole(user) { return adminsRef.doc(user.uid).get().then(function(doc) { if (doc.exists) { var data = doc.data(); var rawRole = data.role || 'VIEWER'; window._currentUserRole = ALLOWED_ROLES[rawRole] ? rawRole : 'VIEWER'; window._currentVendorId = (window._currentUserRole === 'VENDOR') ? (data.vendorId || null) : null; } else { window._currentUserRole = 'VIEWER'; window._currentVendorId = null; showToast('Your account is not authorized. Contact a Super Admin.', 'error'); } }).catch(function(err) { logError('ROLE_FETCH', err); window._currentUserRole = 'VIEWER'; window._currentVendorId = null; showToast('Could not verify your role. Limited access granted.', 'error'); }); }
+  // DIAGNOSTIC: fires on every token refresh (every ~55 minutes).
+  // If you see this fire followed immediately by onAuthStateChanged(null),
+  // something in the codebase is calling auth.signOut() after a token refresh.
+  auth.onIdTokenChanged(function(user) {
+    if (user) {
+      console.log('[JANEDORE AUTH] onIdTokenChanged: token present or refreshed —', user.email);
+    } else {
+      console.warn('[JANEDORE AUTH] onIdTokenChanged: null — token gone.');
+    }
+  });
+
+  function loadUserRole(user) { return adminsRef.doc(user.uid).get().then(function(doc) { if (doc.exists) { var data = doc.data(); var rawRole = data.role || 'VIEWER'; window._currentUserRole = ALLOWED_ROLES[rawRole] ? rawRole : 'VIEWER'; window._currentVendorId = (window._currentUserRole === 'VENDOR') ? (data.vendorId || null) : null; console.log('[JANEDORE AUTH] Role resolved:', window._currentUserRole); } else { window._currentUserRole = 'VIEWER'; window._currentVendorId = null; showToast('Your account is not authorized. Contact a Super Admin.', 'error'); } }).catch(function(err) { logError('ROLE_FETCH', err); window._currentUserRole = 'VIEWER'; window._currentVendorId = null; showToast('Could not verify your role. Limited access granted.', 'error'); }); }
 
   function renderRoleUI() { var badge = safeEl('admin-role-badge'); if (badge) { badge.style.display = 'inline-block'; badge.textContent = isSuperAdmin() ? 'Super Admin' : (window._currentUserRole === 'VIEWER' ? 'Viewer' : 'Vendor'); badge.className = 'role-badge ' + (isSuperAdmin() ? 'badge-super' : 'badge-vendor'); } var items = { 'btn-seed': isSuperAdmin(), 'btn-seed-more': isSuperAdmin(), 'vendors-tab-btn': isSuperAdmin(), 'vendors-more-item': isSuperAdmin() }; Object.keys(items).forEach(function(id) { var el = safeEl(id); if (el) el.style.display = items[id] ? 'flex' : 'none'; }); }
 
@@ -218,7 +264,6 @@
 
   function updateUnreadBadge() { ['messages-unread-badge','bnav-msg-badge'].forEach(function(id) { var badge = safeEl(id); if (badge) { badge.textContent = window._totalUnreadMessages; badge.style.display = window._totalUnreadMessages > 0 ? 'inline-flex' : 'none'; } }); }
 
-  // Cloudinary upload
   window.uploadToCloudinary = function(inputElement, variantIndex) {
     var cloudName = window.CLOUDINARY_CLOUD_NAME;
     var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
@@ -240,7 +285,6 @@
 
   window.addEventListener('beforeunload', function() { stopChatMonitoring(); destroyCharts(); });
 
-  // ========== ALIASES for HTML onclick handlers ==========
   window.loadProducts = loadProducts;
   window.seedDefaultData = window._seedDefaultData;
   window.openNewProductModal = window._openNewProductModal;
