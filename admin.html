@@ -12,6 +12,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Cloudinary Upload Widget -->
+<script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
@@ -145,6 +147,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .btn-underline{background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12.5px;color:var(--accent);padding:4px 0;}
 .btn-underline.danger{color:var(--danger);}
 .btn-underline:active{opacity:.65;}
+/* Cloudinary upload button */
+.cloudinary-upload-btn{background:var(--accent-soft);border:0.5px solid var(--accent);color:var(--accent);cursor:pointer;font-size:13px;font-weight:600;padding:2px 7px;border-radius:5px;transition:all .12s;white-space:nowrap;flex-shrink:0;margin-left:4px;}
+.cloudinary-upload-btn:hover{background:var(--accent);color:#fff;}
+.cloudinary-upload-btn.uploading{opacity:.5;pointer-events:none;}
 .table-wrap{background:var(--surface);border-radius:var(--r);border:0.5px solid var(--border);overflow:hidden;overflow-x:auto;box-shadow:var(--shadow-xs);}
 .data-table{width:100%;border-collapse:collapse;min-width:480px;}
 .data-table thead tr{border-bottom:0.5px solid var(--border);}
@@ -234,7 +240,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:14px 0;}
 .toast-info{background:rgba(26,86,219,0.92);}
 .variant-block{background:var(--surface2);border-radius:var(--r-sm);border:0.5px solid var(--border-med);padding:14px 16px;margin-bottom:10px;}
 .variant-block h4{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px;}
-.image-url-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.image-url-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 .image-url-row input{flex:1;background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-xs);padding:8px 10px;font-size:12px;font-family:var(--font);color:var(--text);outline:none;}
 .image-preview{width:40px;height:40px;border-radius:7px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0;}
 .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:var(--font);padding:0;margin-bottom:14px;}
@@ -323,6 +329,13 @@ function togglePw(){
 }
 function openMoreMenu(){document.getElementById('more-menu-overlay').classList.add('open');document.getElementById('more-menu-panel').classList.add('open');}
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');}
+</script>
+
+<!-- Cloudinary Config — inject these from your Render environment -->
+<script>
+// These should be set by your server/Render from environment variables
+window.CLOUDINARY_CLOUD_NAME = window.CLOUDINARY_CLOUD_NAME || 'YOUR_CLOUD_NAME';
+window.CLOUDINARY_UPLOAD_PRESET = window.CLOUDINARY_UPLOAD_PRESET || 'YOUR_UPLOAD_PRESET';
 </script>
 
 <script>
@@ -447,6 +460,78 @@ function statCard(v,l){return'<div class="stat-card"><div class="stat-number sm"
 function buildOrdersChart(ords){var c=safeEl('orders-chart');if(!c||!window.Chart)return;if(analyticsChart){analyticsChart.destroy();analyticsChart=null;}var days={},now=Date.now(),DAY=86400000;for(var i=29;i>=0;i--){var d=new Date(now-i*DAY);days[d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'})]=0;}ords.forEach(function(o){if(!o.createdAt)return;var d=o.createdAt.toDate?o.createdAt.toDate():new Date(o.createdAt),k=d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'});if(days[k]!==undefined)days[k]++;});analyticsChart=new Chart(c,{type:'line',data:{labels:Object.keys(days),datasets:[{label:'Orders',data:Object.values(days),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.06)',borderWidth:1.5,tension:0.35,fill:true,pointRadius:2,pointBackgroundColor:'#3b82f6'}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Manrope'},maxTicksLimit:8,color:'#aaa'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Manrope'},precision:0,color:'#aaa'},beginAtZero:true}}}});}
 function buildRevenueChart(ords,prods){var c=safeEl('revenue-chart');if(!c||!window.Chart)return;if(revenueChart){revenueChart.destroy();revenueChart=null;}var bm={};prods.forEach(function(p){bm[p.id]=p.brand||'JANEDORE';});var br={};ords.forEach(function(o){var brand=(o.brand||(o.items&&o.items[0]&&bm[o.items[0].productId])||'JANEDORE');br[brand]=(br[brand]||0)+(o.subtotal||0);});var labels=Object.keys(br),data=Object.values(br);if(!labels.length){labels=['No data'];data=[0];}revenueChart=new Chart(c,{type:'bar',data:{labels:labels,datasets:[{label:'Revenue',data:data,backgroundColor:['#1a56db','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'].slice(0,labels.length),borderWidth:0,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9,family:'Manrope'},color:'#aaa'}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Manrope'},callback:function(v){return'R'+v;},color:'#aaa'},beginAtZero:true}}}});}
 
+/* ── CLOUDINARY UPLOAD HELPER ──────────────────────────── */
+window.uploadToCloudinary = function(inputElement, variantIndex) {
+  var cloudName = window.CLOUDINARY_CLOUD_NAME;
+  var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || cloudName === 'YOUR_CLOUD_NAME') {
+    showToast('Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME.', 'error');
+    return;
+  }
+  if (!uploadPreset || uploadPreset === 'YOUR_UPLOAD_PRESET') {
+    showToast('Cloudinary upload preset not set.', 'error');
+    return;
+  }
+
+  var widget = window.cloudinary.createUploadWidget(
+    {
+      cloudName: cloudName,
+      uploadPreset: uploadPreset,
+      sources: ['local', 'url', 'camera', 'dropbox', 'google_drive'],
+      multiple: false,
+      maxFiles: 1,
+      clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'],
+      maxFileSize: 20000000,
+      styles: {
+        palette: {
+          window: '#FFFFFF',
+          sourceBg: '#F4F4F6',
+          windowBorder: '#D1D5DB',
+          tabIcon: '#1A56DB',
+          inactiveTabIcon: '#9CA3AF',
+          menuIcons: '#6B7280',
+          link: '#1A56DB',
+          action: '#1A56DB',
+          inProgress: '#1A56DB',
+          complete: '#1A8742',
+          error: '#C0392B',
+          textDark: '#111111',
+          textLight: '#FFFFFF'
+        },
+        fonts: {
+          default: null,
+          "'Manrope', sans-serif": {
+            url: 'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600',
+            active: true
+          }
+        }
+      }
+    },
+    function(error, result) {
+      if (error) {
+        logError('CLOUDINARY_UPLOAD', error);
+        showToast('Upload failed: ' + (error.message || 'Unknown error'), 'error');
+        return;
+      }
+      if (result && result.event === 'success') {
+        var secureUrl = result.info.secure_url;
+        if (inputElement) {
+          inputElement.value = secureUrl;
+          inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+          // Update preview image
+          window.updateImagePreview(inputElement);
+          if (variantIndex !== undefined) {
+            window.updateVariantPreview(variantIndex);
+          }
+        }
+        showToast('Image uploaded successfully!');
+      }
+    }
+  );
+  widget.open();
+};
+
 /* ── PRODUCTS ──────────────────────────────────────────── */
 function saveProduct(productData){
   if(!currentUser||!roleResolved){showToast('Not authenticated','error');return;}
@@ -507,7 +592,7 @@ window.openProductModal=function(poi){
 
 function buildVariantBlock(v,i,cat){v=v||{};var im=v.images||{model:[],ghost:[],detail:[]},mu=Array.isArray(im.model)?im.model:[],gu=Array.isArray(im.ghost)?im.ghost:[],du=Array.isArray(im.detail)?im.detail:[],pv=buildVariantPreview(mu,gu,du,cat);var mr=mu.length?mu.map(function(u,j){return buildImageUrlRow('model',i,u,j);}).join(''):buildImageUrlRow('model',i,'',0);var gr=gu.length?gu.map(function(u,j){return buildImageUrlRow('ghost',i,u,j);}).join(''):buildImageUrlRow('ghost',i,'',0);var dr=du.length?du.map(function(u,j){return buildImageUrlRow('detail',i,u,j);}).join(''):'';return'<div class="variant-block" data-variant-index="'+i+'"><h4>Variant '+(i+1)+' <button type="button" class="btn-underline" onclick="removeVariant('+i+')" style="font-size:10px;color:var(--danger);margin-left:auto;">Remove</button></h4><div class="form-row" style="padding:0;"><div class="form-group" style="padding:0 0 10px;"><label>Color Name</label><input name="variant-color-'+i+'" value="'+esc(v.color||'')+'" placeholder="e.g. Black" oninput="updateVariantPreview('+i+')"></div><div class="form-group" style="padding:0 0 10px;"><label>Swatch (hex)</label><div style="display:flex;gap:7px;align-items:center;"><input name="variant-swatch-'+i+'" value="'+esc(v.swatch||'#111')+'" placeholder="#111" style="flex:1;" oninput="this.nextElementSibling.value=this.value"><input type="color" value="'+esc(v.swatch||'#111')+'" style="width:34px;height:34px;padding:2px;border:0.5px solid var(--border-med);cursor:pointer;border-radius:6px;" oninput="document.querySelector(\'[name=variant-swatch-'+i+']\').value=this.value"></div></div></div><div class="variant-preview-strip" id="variant-preview-'+i+'" style="margin-bottom:12px;">'+pv+'</div><div class="form-group" style="padding:0 0 8px;"><label>Model Images</label><div class="image-url-inputs" id="variant-model-'+i+'">'+mr+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'model\','+i+')" style="font-size:10px;margin-top:5px;">+ Add Model Image</button></div><div class="form-group" style="padding:0 0 8px;"><label>Ghost / Flat Lay Images</label><div class="image-url-inputs" id="variant-ghost-'+i+'">'+gr+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'ghost\','+i+')" style="font-size:10px;margin-top:5px;">+ Add Ghost Image</button></div><div class="form-group" style="padding:0;"><label>Detail Images</label><div class="image-url-inputs" id="variant-detail-'+i+'">'+dr+'</div><button type="button" class="btn-underline" onclick="addImageUrl(\'detail\','+i+')" style="font-size:10px;margin-top:5px;">+ Add Detail Image</button></div></div>';}
 function buildVariantPreview(mu,gu,du,cat){var ci=cat==='jewelry'?[].concat(mu||[],gu||[],du||[]):[].concat(gu||[],mu||[],du||[]),si=ci.map(safeUrl).filter(Boolean);if(!si.length)return'<div style="color:var(--muted);font-size:11px;padding:8px;text-align:center;background:var(--surface2);border-radius:6px;">No images.</div>';return'<div style="display:flex;gap:6px;overflow-x:auto;padding:8px;background:var(--surface2);border-radius:6px;">'+si.map(function(u,j){return'<div style="position:relative;min-width:80px;height:80px;flex-shrink:0;"><img src="'+esc(u)+'" style="width:80px;height:80px;object-fit:cover;border-radius:4px;" onerror="this.src=\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23f0ede8%22 width=%2280%22 height=%2280%22/></svg>\'"><span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:8px;padding:1px 4px;border-radius:2px;">'+(j+1)+'</span></div>';}).join('')+'</div>';}
-function buildImageUrlRow(t,vi,u,ui){u=safeUrl(u||'');ui=(ui!==undefined)?ui:0;var ph='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';return'<div class="image-url-row"><input name="variant-'+t+'-'+vi+'[]" value="'+esc(u)+'" placeholder="https://... image URL" oninput="updateImagePreview(this);updateVariantPreview('+vi+')" style="flex:1;"><img class="image-preview" src="'+(u?esc(u):ph)+'" onerror="this.src=\''+ph+'\'" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:0.5px solid var(--border-light);"><button type="button" class="btn-underline" onclick="removeImageUrl(this)" style="font-size:10px;color:var(--danger);margin-left:4px;">✕</button></div>';}
+function buildImageUrlRow(t,vi,u,ui){u=safeUrl(u||'');ui=(ui!==undefined)?ui:0;var ph='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';return'<div class="image-url-row"><input name="variant-'+t+'-'+vi+'[]" value="'+esc(u)+'" placeholder="https://... image URL" oninput="updateImagePreview(this);updateVariantPreview('+vi+')" style="flex:1;"><img class="image-preview" src="'+(u?esc(u):ph)+'" onerror="this.src=\''+ph+'\'" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:0.5px solid var(--border-light);"><button type="button" class="cloudinary-upload-btn" onclick="event.preventDefault();uploadToCloudinary(this.previousElementSibling.previousElementSibling,'+vi+')" title="Upload to Cloudinary">☁</button><button type="button" class="btn-underline" onclick="removeImageUrl(this)" style="font-size:10px;color:var(--danger);margin-left:4px;">✕</button></div>';}
 window.updateImagePreview=function(inp){var s=safeUrl(inp.value),img=inp.nextElementSibling;if(img&&img.classList.contains('image-preview'))img.src=s||'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';};
 window.updateVariantPreview=function(vi){var pe=document.getElementById('variant-preview-'+vi);if(!pe)return;var cat=(document.querySelector('[name="category"]')||{}).value||'dresses';var mu=Array.from(document.querySelectorAll('[name="variant-model-'+vi+'[]"]')).map(function(i){return i.value;}).filter(Boolean),gu=Array.from(document.querySelectorAll('[name="variant-ghost-'+vi+'[]"]')).map(function(i){return i.value;}).filter(Boolean),du=Array.from(document.querySelectorAll('[name="variant-detail-'+vi+'[]"]')).map(function(i){return i.value;}).filter(Boolean);pe.innerHTML=buildVariantPreview(mu,gu,du,cat);};
 window.addVariant=function(){var c=safeEl('variants-container');if(c){var cat=(document.querySelector('[name="category"]')||{}).value||'dresses';c.insertAdjacentHTML('beforeend',buildVariantBlock({images:{model:[],ghost:[],detail:[]}},c.children.length,cat));}};
@@ -532,7 +617,7 @@ window.sendAdminReply=function(sid){if(!sid||typeof sid!=='string')return;var in
 window.handleAdminTyping=function(sid){if(!sid)return;rtdb.ref(CHAT_ROOT+'/'+sid+'/meta/adminTyping').set(true).catch(function(e){logError('CHAT_TYPING_SET',e);});if(window._adminTypingTimeout)clearTimeout(window._adminTypingTimeout);window._adminTypingTimeout=setTimeout(function(){rtdb.ref(CHAT_ROOT+'/'+sid+'/meta/adminTyping').set(false).catch(function(e){logError('CHAT_TYPING_RESET',e);});window._adminTypingTimeout=null;},3000);};
 window.applyQuickReply=function(sid,text){var inp=safeEl('reply-input-'+sid);if(inp){inp.value=text;inp.focus();}};
 window.pinChatSession=function(sid){if(!sid)return;rtdb.ref(CHAT_ROOT+'/'+sid+'/meta/pinned').set(true).then(function(){showToast('Chat pinned');}).catch(function(e){logError('CHAT_PIN',e);showToast('Error: '+e.message,'error');});};
-window.lookupOrderInChat=function(sid){ordersRef.where('chatSessionId','==',sid).limit(10).get().then(function(snap){if(snap.empty){showToast('No orders linked','info');return;}showToast('Found '+snap.size+' order(s)','info');}).catch(function(e){logError('CHAT_ORDER_LOOKUP',e);});};
+window.lookupOrderInChat=function(sid){ordersRef.where('chatSessionId','==',sid).limit(10).get().then(function(snap){if(snap.empty){showToast('No orders linked','info');}else{showToast('Found '+snap.size+' order(s)','info');}}).catch(function(e){logError('CHAT_ORDER_LOOKUP',e);});};
 
 /* ── ORDERS ────────────────────────────────────────────── */
 function renderOrdersTab(){var mc=safeEl('main-content');if(!mc)return;mc.innerHTML='';if(!isSuperAdmin())mc.innerHTML+='<div class="vendor-scope-bar">Showing orders for your brand only</div>';mc.innerHTML+='<div class="section-header" style="margin-bottom:10px;"><div class="section-title">Orders</div></div><div class="toolbar"><input class="search-input" id="order-search" placeholder="Search orders..." oninput="filterOrders()" style="min-width:180px;"><select class="filter-select" id="order-status-filter" onchange="filterOrders()"><option value="">All Statuses</option>'+ORDER_STATUSES.map(function(s){return'<option value="'+s+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>';}).join('')+'</select><select class="filter-select" id="order-payment-filter" onchange="filterOrders()"><option value="">All Payments</option><option value="paid">Paid</option><option value="unpaid">Unpaid</option><option value="refunded">Refunded</option></select><div class="toolbar-spacer"></div><span id="orders-count" class="ui-label"></span></div>';var c=document.createElement('div');c.id='orders-table-wrap';c.innerHTML='<div class="empty-state"><div class="empty-state-icon">◫</div><div class="empty-state-text">Loading orders...</div></div>';mc.appendChild(c);var q=isSuperAdmin()?ordersRef.orderBy('createdAt','desc').limit(100):ordersRef.where('vendorIds','array-contains',currentVendorId||'__none__').orderBy('createdAt','desc').limit(100);q.get().then(function(o){window._ordersData=o.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderOrdersTable(window._ordersData);}).catch(function(e){logError('ORDERS_TAB',e);c.innerHTML='<p style="color:var(--danger);font-size:12px;padding:16px;">Error: '+esc(e.message)+'</p>';});}
@@ -565,7 +650,7 @@ window.deleteReview=function(rid){if(!requireSuperAdmin('deleteReview'))return;i
 function renderNewsletterTab(){var mc=safeEl('main-content');if(!mc)return;mc.innerHTML='<div class="section-header" style="margin-bottom:12px;"><div class="section-title">Newsletter</div><div class="section-actions"><input class="search-input" id="nl-search" placeholder="Search emails..." oninput="filterNewsletter()" style="max-width:180px;"><button class="btn btn-sm btn-ghost" onclick="exportNewsletterCSV()">Export CSV</button></div></div><div id="nl-stats" style="margin-bottom:12px;"></div><div id="nl-list"></div>';newsletterRef.orderBy('subscribedAt','desc').limit(200).get().then(function(s){window._nlData=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});var ce=safeEl('nl-stats');if(ce)ce.innerHTML='<div class="stat-card"><div class="stat-number sm">'+s.size+'</div><div class="stat-label">Total Subscribers</div></div>';renderNewsletterList(window._nlData);}).catch(function(e){logError('NEWSLETTER_TAB',e);});}
 function renderNewsletterList(subs){var s=(safeEl('nl-search')||{}).value||'',f=s?subs.filter(function(sb){return(sb.email||'').toLowerCase().indexOf(s.toLowerCase())!==-1;}):subs;var el=safeEl('nl-list');if(!el)return;if(!f.length){el.innerHTML='<div class="empty-state"><div class="empty-state-text">No subscribers.</div></div>';return;}el.innerHTML='<div class="table-wrap"><table class="data-table"><thead><tr><th>Email</th><th>Subscribed</th><th>Tags</th></tr></thead><tbody>'+f.map(function(sb){return'<tr><td style="font-weight:400;">'+esc(sb.email||'')+'</td><td class="cell-muted">'+fmtDate(sb.subscribedAt)+'</td><td><span style="font-size:9.5px;color:var(--muted);">'+esc((sb.tags||[]).join(', ')||'—')+'</span></td></tr>';}).join('')+'</tbody></table></div>';}
 window.filterNewsletter=function(){if(window._nlData)renderNewsletterList(window._nlData);};
-window.exportNewsletterCSV=function(){var s=window._nlData||[];if(!s.length){showToast('No subscribers','info');return;}var rows=['Email,Subscribed,Tags'];s.forEach(function(sb){rows.push('"'+(sb.email||'').replace(/"/g,'""')+'","'+fmtDate(sb.subscribedAt).replace(/"/g,'""')+'","'+(sb.tags||[]).join(';').replace(/"/g,'""')+'"');});var blob=new Blob([rows.join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='janedore-subscribers.csv';a.click();URL.revokeObjectURL(a.href);showToast('CSV exported');};
+window.exportNewsletterCSV=function(){var s=window._nlData||[];if(!s.length){showToast('No subscribers','info');}var rows=['Email,Subscribed,Tags'];s.forEach(function(sb){rows.push('"'+(sb.email||'').replace(/"/g,'""')+'","'+fmtDate(sb.subscribedAt).replace(/"/g,'""')+'","'+(sb.tags||[]).join(';').replace(/"/g,'""')+'"');});var blob=new Blob([rows.join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='janedore-subscribers.csv';a.click();URL.revokeObjectURL(a.href);showToast('CSV exported');};
 
 /* ── VENDORS ───────────────────────────────────────────── */
 function renderVendorsTab(){if(!isSuperAdmin()){var mc=safeEl('main-content');if(mc)mc.innerHTML='<div class="empty-state"><div class="empty-state-text">Access denied.</div></div>';return;}var mc=safeEl('main-content');if(!mc)return;mc.innerHTML='<div class="section-header" style="margin-bottom:12px;"><div class="section-title">Vendors</div><button class="btn btn-sm btn-primary" onclick="openVendorModal(null)">+ Add Vendor</button></div><div id="vendors-list"><div class="empty-state"><div class="empty-state-icon">⬡</div><div class="empty-state-text">Loading...</div></div></div>';var loaded=false,timeout=setTimeout(function(){if(!loaded){var el=safeEl('vendors-list');if(el)el.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠</div><div class="empty-state-text">Permission error. Check Firestore rules.</div><button class="btn btn-sm btn-outline" style="margin-top:12px;" onclick="renderVendorsTab()">Retry</button></div>';}},10000);vendorsRef.get().then(function(snap){loaded=true;clearTimeout(timeout);window._vendorsData=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderVendorsList(window._vendorsData);}).catch(function(e){loaded=true;clearTimeout(timeout);logError('VENDORS_TAB',e);var el=safeEl('vendors-list');if(el)el.innerHTML='<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-text">Permission denied. Fix Firestore rules.</div><button class="btn btn-sm btn-outline" style="margin-top:12px;" onclick="renderVendorsTab()">Retry</button></div>';});}
