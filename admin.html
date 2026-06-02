@@ -331,13 +331,6 @@ function openMoreMenu(){document.getElementById('more-menu-overlay').classList.a
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');}
 </script>
 
-<!-- Cloudinary Config — inject these from your Render environment -->
-<script>
-// These should be set by your server/Render from environment variables
-window.CLOUDINARY_CLOUD_NAME = window.CLOUDINARY_CLOUD_NAME || 'YOUR_CLOUD_NAME';
-window.CLOUDINARY_UPLOAD_PRESET = window.CLOUDINARY_UPLOAD_PRESET || 'YOUR_UPLOAD_PRESET';
-</script>
-
 <script>
 (function(){
 'use strict';
@@ -466,7 +459,7 @@ window.uploadToCloudinary = function(inputElement, variantIndex) {
   var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
 
   if (!cloudName || cloudName === 'YOUR_CLOUD_NAME') {
-    showToast('Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME.', 'error');
+    showToast('Cloudinary not configured.', 'error');
     return;
   }
   if (!uploadPreset || uploadPreset === 'YOUR_UPLOAD_PRESET') {
@@ -478,40 +471,16 @@ window.uploadToCloudinary = function(inputElement, variantIndex) {
     {
       cloudName: cloudName,
       uploadPreset: uploadPreset,
-      sources: ['local', 'url', 'camera', 'dropbox', 'google_drive'],
+      sources: ['local', 'url', 'camera'],
       multiple: false,
       maxFiles: 1,
       clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'],
-      maxFileSize: 20000000,
-      styles: {
-        palette: {
-          window: '#FFFFFF',
-          sourceBg: '#F4F4F6',
-          windowBorder: '#D1D5DB',
-          tabIcon: '#1A56DB',
-          inactiveTabIcon: '#9CA3AF',
-          menuIcons: '#6B7280',
-          link: '#1A56DB',
-          action: '#1A56DB',
-          inProgress: '#1A56DB',
-          complete: '#1A8742',
-          error: '#C0392B',
-          textDark: '#111111',
-          textLight: '#FFFFFF'
-        },
-        fonts: {
-          default: null,
-          "'Manrope', sans-serif": {
-            url: 'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600',
-            active: true
-          }
-        }
-      }
+      maxFileSize: 20000000
     },
     function(error, result) {
       if (error) {
         logError('CLOUDINARY_UPLOAD', error);
-        showToast('Upload failed: ' + (error.message || 'Unknown error'), 'error');
+        showToast('Upload failed.', 'error');
         return;
       }
       if (result && result.event === 'success') {
@@ -519,13 +488,12 @@ window.uploadToCloudinary = function(inputElement, variantIndex) {
         if (inputElement) {
           inputElement.value = secureUrl;
           inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-          // Update preview image
           window.updateImagePreview(inputElement);
           if (variantIndex !== undefined) {
             window.updateVariantPreview(variantIndex);
           }
         }
-        showToast('Image uploaded successfully!');
+        showToast('Image uploaded!');
       }
     }
   );
