@@ -15,6 +15,72 @@
   var productsRef = window._productsRef;
 
   /* ─────────────────────────────────────────────────────────
+     CLOUDINARY UPLOAD HELPER
+  ───────────────────────────────────────────────────────── */
+  window._uploadToCloudinary = function(inputElement, variantIndex) {
+    var cloudName = window.CLOUDINARY_CLOUD_NAME;
+    var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || cloudName === 'YOUR_CLOUD_NAME') {
+      showToast('Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME.', 'error');
+      return;
+    }
+    if (!uploadPreset || uploadPreset === 'YOUR_UPLOAD_PRESET') {
+      showToast('Cloudinary upload preset not set.', 'error');
+      return;
+    }
+
+    var widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: cloudName,
+        uploadPreset: uploadPreset,
+        sources: ['local', 'url', 'camera', 'dropbox', 'google_drive'],
+        multiple: false,
+        maxFiles: 1,
+        clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'],
+        maxFileSize: 20000000,
+        styles: {
+          palette: {
+            window: '#FFFFFF',
+            sourceBg: '#F4F4F6',
+            windowBorder: '#D1D5DB',
+            tabIcon: '#1A56DB',
+            inactiveTabIcon: '#9CA3AF',
+            menuIcons: '#6B7280',
+            link: '#1A56DB',
+            action: '#1A56DB',
+            inProgress: '#1A56DB',
+            complete: '#1A8742',
+            error: '#C0392B',
+            textDark: '#111111',
+            textLight: '#FFFFFF'
+          }
+        }
+      },
+      function(error, result) {
+        if (error) {
+          console.error('[CLOUDINARY_UPLOAD]', error);
+          showToast('Upload failed: ' + (error.message || 'Unknown error'), 'error');
+          return;
+        }
+        if (result && result.event === 'success') {
+          var secureUrl = result.info.secure_url;
+          if (inputElement) {
+            inputElement.value = secureUrl;
+            inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+            window._updateImagePreview(inputElement);
+            if (variantIndex !== undefined && window._updateVariantPreview) {
+              window._updateVariantPreview(variantIndex);
+            }
+          }
+          showToast('Image uploaded successfully!');
+        }
+      }
+    );
+    widget.open();
+  };
+
+  /* ─────────────────────────────────────────────────────────
      SAVE PRODUCT
   ───────────────────────────────────────────────────────── */
   function saveProduct(productData) {
@@ -392,9 +458,10 @@
     var placeholder = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23f0ede8%22 width=%2248%22 height=%2248%22/></svg>';
 
     return '<div class="image-url-row">' +
-      '<input name="variant-'+type+'-'+variantIndex+'[]" value="'+esc(url)+'" placeholder="https://... image URL" ' +
+      '<input name="variant-'+type+'-'+variantIndex+'[]" value="'+esc(url)+'" placeholder="https://... or upload" ' +
         'oninput="window._updateImagePreview(this);window._updateVariantPreview('+variantIndex+')" style="flex:1;">' +
       '<img class="image-preview" src="'+(url?esc(url):placeholder)+'" onerror="this.src=\''+placeholder+'\'" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:0.5px solid var(--border-light);">' +
+      '<button type="button" class="cloudinary-upload-btn" onclick="event.preventDefault();window._uploadToCloudinary(this.previousElementSibling.previousElementSibling,'+variantIndex+')" title="Upload to Cloudinary">☁</button>' +
       '<button type="button" class="btn-underline" onclick="window._removeImageUrl(this)" style="font-size:10px;color:var(--danger);margin-left:4px;" title="Remove image">✕</button>' +
     '</div>';
   }
