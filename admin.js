@@ -135,8 +135,10 @@
 
   function setupEscapeHandler() { if (modalState.escapeHandler) document.removeEventListener('keydown', modalState.escapeHandler); modalState.escapeHandler = function(e) { if (e.key === 'Escape') { if (modalState.type === 'panel') closePanel(); else if (modalState.type === 'modal') closeModal(); } }; document.addEventListener('keydown', modalState.escapeHandler); }
   function cleanupModalState() { if (modalState.escapeHandler) { document.removeEventListener('keydown', modalState.escapeHandler); modalState.escapeHandler = null; } var mc = safeEl('modal-container'); var pc = safeEl('panel-container'); if (mc) mc.innerHTML = ''; if (pc) pc.innerHTML = ''; modalState.isOpen = false; modalState.type = null; modalState.overlayElement = null; modalState.contentElement = null; }
-  window._closeModal = function() { cleanupModalState(); };
-  window._closePanel = function() { cleanupModalState(); };
+  function closeModal() { cleanupModalState(); }
+  window._closeModal = closeModal;
+  function closePanel() { cleanupModalState(); }
+  window._closePanel = closePanel;
 
   function showAuthLoading() { var loader = safeEl('auth-loading'); if (!loader) { loader = document.createElement('div'); loader.id = 'auth-loading'; loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.97);display:flex;align-items:center;justify-content:center;z-index:9999;'; loader.innerHTML = '<div style="text-align:center;font-family:Manrope,sans-serif;"><div style="font-size:14px;color:#666;">Verifying access...</div></div>'; document.body.appendChild(loader); } loader.style.display = 'flex'; }
   function hideAuthLoading() { var loader = safeEl('auth-loading'); if (loader) loader.style.display = 'none'; }
@@ -155,14 +157,14 @@
         window._roleResolved = true;
         hideAuthLoading();
         safeSetDisplay('admin-panel', 'block');
-        window._loadProducts();
-        window._startChatMonitoring();
+        loadProducts();
+        startChatMonitoring();
         renderRoleUI();
       }).catch(function(err) { logError('AUTH/ROLE', err); hideAuthLoading(); auth.signOut().catch(function(e){ logError('AUTH/SIGNOUT', e); }); safeSetDisplay('login-screen', 'flex'); safeSetDisplay('admin-panel', 'none'); showToast('Authentication failed. Please try again.', 'error'); });
     } else {
       window._currentUser = null; window._currentUserRole = null; window._roleResolved = false; window._currentVendorId = null;
       hideAuthLoading(); safeSetDisplay('login-screen', 'flex'); safeSetDisplay('admin-panel', 'none');
-      window._stopChatMonitoring();
+      stopChatMonitoring();
     }
   });
 
@@ -186,7 +188,7 @@
 
   window.switchTab = function(tab) {
     window._currentTab = tab;
-    if (tab !== 'messages') { window._activeChatSession = null; window._detachActiveChatListeners(); }
+    if (tab !== 'messages') { window._activeChatSession = null; window._detachActiveChatListeners && window._detachActiveChatListeners(); }
     document.querySelectorAll('.sidebar-btn[data-tab]').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.bnav-btn[data-tab]').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) { b.classList.remove('active'); });
@@ -194,7 +196,7 @@
     renderCurrentTab();
   };
 
-  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; window._destroyCharts(); switch (window._currentTab) { case 'dashboard': window._renderDashboardTab(); break; case 'products': window._renderProductsTab(); break; case 'messages': window._renderMessagesTab(); break; case 'reviews': window._renderReviewsTab(); break; case 'newsletter': window._renderNewsletterTab(); break; case 'orders': window._renderOrdersTab(); break; case 'customers': window._renderCustomersTab(); break; case 'vendors': window._renderVendorsTab(); break; } }
+  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; destroyCharts(); switch (window._currentTab) { case 'dashboard': window._renderDashboardTab && window._renderDashboardTab(); break; case 'products': window._renderProductsTab && window._renderProductsTab(); break; case 'messages': window._renderMessagesTab && window._renderMessagesTab(); break; case 'reviews': window._renderReviewsTab && window._renderReviewsTab(); break; case 'newsletter': window._renderNewsletterTab && window._renderNewsletterTab(); break; case 'orders': window._renderOrdersTab && window._renderOrdersTab(); break; case 'customers': window._renderCustomersTab && window._renderCustomersTab(); break; case 'vendors': window._renderVendorsTab && window._renderVendorsTab(); break; } }
 
   function destroyCharts() { if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; } if (window._revenueChart) { window._revenueChart.destroy(); window._revenueChart = null; } }
   window._destroyCharts = destroyCharts;
@@ -209,14 +211,34 @@
   var chatsMonitorRef = null;
   var chatsMonitorCallback = null;
   var CHAT_MONITOR_LIMIT = 100;
-  function startChatMonitoring() { window._stopChatMonitoring(); chatsMonitorRef = rtdb.ref(CHAT_ROOT).limitToLast(CHAT_MONITOR_LIMIT); chatsMonitorCallback = function(snapshot) { var unread = 0; snapshot.forEach(function(sessionSnap) { var messages = sessionSnap.child('messages'); if (messages.exists()) { messages.forEach(function(msgSnap) { var msg = msgSnap.val(); if (msg && msg.sender === 'customer' && msg.read === false) unread++; }); } }); window._totalUnreadMessages = unread; updateUnreadBadge(); }; chatsMonitorRef.on('value', chatsMonitorCallback, function(err) { logError('CHAT_MONITOR', err); }); }
+  function startChatMonitoring() { stopChatMonitoring(); chatsMonitorRef = rtdb.ref(CHAT_ROOT).limitToLast(CHAT_MONITOR_LIMIT); chatsMonitorCallback = function(snapshot) { var unread = 0; snapshot.forEach(function(sessionSnap) { var messages = sessionSnap.child('messages'); if (messages.exists()) { messages.forEach(function(msgSnap) { var msg = msgSnap.val(); if (msg && msg.sender === 'customer' && msg.read === false) unread++; }); } }); window._totalUnreadMessages = unread; updateUnreadBadge(); }; chatsMonitorRef.on('value', chatsMonitorCallback, function(err) { logError('CHAT_MONITOR', err); }); }
   window._startChatMonitoring = startChatMonitoring;
 
-  function stopChatMonitoring() { if (chatsMonitorRef && chatsMonitorCallback) { chatsMonitorRef.off('value', chatsMonitorCallback); chatsMonitorRef = null; chatsMonitorCallback = null; } window._detachActiveChatListeners(); }
+  function stopChatMonitoring() { if (chatsMonitorRef && chatsMonitorCallback) { chatsMonitorRef.off('value', chatsMonitorCallback); chatsMonitorRef = null; chatsMonitorCallback = null; } window._detachActiveChatListeners && window._detachActiveChatListeners(); }
   window._stopChatMonitoring = stopChatMonitoring;
 
   function updateUnreadBadge() { ['messages-unread-badge','bnav-msg-badge'].forEach(function(id) { var badge = safeEl(id); if (badge) { badge.textContent = window._totalUnreadMessages; badge.style.display = window._totalUnreadMessages > 0 ? 'inline-flex' : 'none'; } }); }
 
-  window.addEventListener('beforeunload', function() { window._stopChatMonitoring(); destroyCharts(); });
+  window.addEventListener('beforeunload', function() { stopChatMonitoring(); destroyCharts(); });
+
+  // Cloudinary upload
+  window.uploadToCloudinary = function(inputElement, variantIndex) {
+    var cloudName = window.CLOUDINARY_CLOUD_NAME;
+    var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName) { showToast('Cloudinary still loading, try again...', 'error'); return; }
+    if (!uploadPreset) { showToast('Cloudinary upload preset not configured.', 'error'); return; }
+    var widget = window.cloudinary.createUploadWidget(
+      { cloudName: cloudName, uploadPreset: uploadPreset, sources: ['local', 'url', 'camera'], multiple: false, maxFiles: 1, clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'], maxFileSize: 20000000 },
+      function(error, result) {
+        if (error) { logError('CLOUDINARY_UPLOAD', error); showToast('Upload failed.', 'error'); return; }
+        if (result && result.event === 'success') {
+          var secureUrl = result.info.secure_url;
+          if (inputElement) { inputElement.value = secureUrl; inputElement.dispatchEvent(new Event('input', { bubbles: true })); window._updateImagePreview && window._updateImagePreview(inputElement); if (variantIndex !== undefined && window._updateVariantPreview) { window._updateVariantPreview(variantIndex); } }
+          showToast('Image uploaded!');
+        }
+      }
+    );
+    widget.open();
+  };
 
 })();
