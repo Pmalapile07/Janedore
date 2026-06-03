@@ -5,203 +5,361 @@
 
   var esc       = window._esc;
   var safeEl    = window._safeEl;
-  var fmt       = window._fmt;
   var fmtDate   = window._fmtDate;
   var ordersRef = window._ordersRef;
   var db        = window._adminDB;
   var showToast = window._showToast;
 
-  var BRANDS = [
-    { key: 'JANEDORE', color: '#1a56db', bg: 'rgba(26,86,219,0.07)' },
-    { key: 'NIRIUS CO', color: '#6e40c9', bg: 'rgba(110,64,201,0.07)' },
-    { key: 'THATO',    color: '#111111', bg: 'rgba(17,17,17,0.06)'  }
+  /* ─── BRAND IDENTITY ─────────────────────────────────────────────────────── */
+  var HOUSE_BRANDS = [
+    { key: 'JANEDORE',  color: '#1a56db', bg: 'rgba(26,86,219,0.07)'   },
+    { key: 'NIRIUS CO', color: '#6e40c9', bg: 'rgba(110,64,201,0.07)'  },
+    { key: 'THATO',     color: '#111111', bg: 'rgba(17,17,17,0.06)'    }
   ];
 
   var _activeFilters = { 'JANEDORE': true, 'NIRIUS CO': true, 'THATO': true };
-  var _allOrders = [];
+  var _allOrders     = [];
+  var _mcView        = 'overview';
 
-  /* ─── FIRESTORE REFS ────────────────────────────────────────────────────── */
-  var brandsRef          = db.collection('brands');
-  var suppliersRef       = db.collection('suppliers');
-  var samplesRef         = db.collection('samples');
-  var campaignsRef       = db.collection('campaigns');
-  var founderNotesRef    = db.collection('founder_notes');
-  var waitingOnRef       = db.collection('waiting_on');
-  var launchMilestonesRef= db.collection('launch_milestones');
+  /* ─── FIRESTORE COLLECTIONS ──────────────────────────────────────────────── */
+  var projectsRef     = db.collection('launch_projects');   // core object
+  var suppliersRef    = db.collection('suppliers');
+  var waitingOnRef    = db.collection('waiting_on');
+  var founderNotesRef = db.collection('founder_notes');
+  var winsRef         = db.collection('recent_wins');
+  var milestonesRef   = db.collection('milestones');
 
-  window._brandsRef           = brandsRef;
-  window._suppliersRef        = suppliersRef;
-  window._samplesRef          = samplesRef;
-  window._campaignsRef        = campaignsRef;
-  window._founderNotesRef     = founderNotesRef;
-  window._waitingOnRef        = waitingOnRef;
-  window._launchMilestonesRef = launchMilestonesRef;
+  window._projectsRef     = projectsRef;
+  window._suppliersRef    = suppliersRef;
+  window._waitingOnRef    = waitingOnRef;
+  window._founderNotesRef = founderNotesRef;
+  window._winsRef         = winsRef;
+  window._milestonesRef   = milestonesRef;
 
-  /* ─── PIPELINE STAGES ───────────────────────────────────────────────────── */
-  var BRAND_STAGES = ['Discovered','Researching','Contacted','In Discussion','Samples Requested','Approved','Contract Signed','Onboarding','Live'];
-  var SAMPLE_STATUSES = ['Requested','In Production','Shipped','Customs','Delivered','Approved','Rejected'];
-  var CAMPAIGN_STAGES = ['Moodboard','Creative Direction','Models Booked','Photographer Booked','Studio Booked','Shoot Complete','Editing','Content Scheduled','Campaign Ready'];
-  var JANEDORE_STAGES = ['Supplier Confirmed','Sample Requested','Sample Shipped','Sample Received','Production Approved','Photography Scheduled','Campaign Ready'];
+  /* ─── LAUNCH STAGE TEMPLATES ─────────────────────────────────────────────── */
+  var STAGE_TEMPLATES = {
+    'Product': [
+      'Concept','Moodboard','Sketches','Supplier Found',
+      'Sample Requested','Sample Shipped','Sample Received',
+      'Revisions Complete','Production Approved',
+      'Photography Complete','Product Upload Complete','Launch Ready'
+    ],
+    'Eyewear': [
+      'Concept','Sketches','Supplier Found',
+      'Sample Requested','Sample Shipped','Sample Received',
+      'Pouch Design Complete','Photography Complete',
+      'Product Upload Complete','Launch Ready'
+    ],
+    'Fragrance': [
+      'Fragrance Direction','Formula Development',
+      'Bottle Supplier','Bottle Design','Packaging Design',
+      'Sample Bottles','Photography','Product Upload','Launch Ready'
+    ],
+    'Jewelry': [
+      'Collection Direction','Piece Designs Complete',
+      'Manufacturer Confirmed','Samples Requested','Samples Received',
+      'Photography','Product Upload','Launch Ready'
+    ],
+    'Packaging': [
+      'Design Concept','Supplier Identified','Quote Received',
+      'Design Approved','Sample Ordered','Sample Received',
+      'Sample Approved','Production Ordered','Received'
+    ],
+    'Campaign': [
+      'Moodboard','Creative Direction Approved',
+      'Models Confirmed','Photographer Confirmed','Studio Confirmed',
+      'Shoot Complete','Editing Complete',
+      'Content Scheduled','Campaign Ready'
+    ],
+    'Custom': []
+  };
 
-  /* ─── ACTIVE SUB-VIEW ───────────────────────────────────────────────────── */
-  var _mcView = 'overview'; // overview | brands | janedore | suppliers | samples | campaigns | notes | waiting
+  var WAITING_CATEGORIES = ['Supplier','Manufacturer','Sample','Packaging','Design','Photography','Quote','Logistics','Other'];
 
   /* ══════════════════════════════════════════════════════════════════════════
-     MAIN RENDER
+     MAIN ENTRY POINT
   ══════════════════════════════════════════════════════════════════════════ */
   window._renderDashboardTab = function () {
     var mc = safeEl('main-content');
     if (!mc) return;
-
     injectMCStyles();
-
     mc.innerHTML =
       '<div class="mc-shell">' +
-        renderMCNav() +
-        '<div id="mc-view-area"></div>' +
+        buildSideNav() +
+        '<div id="mc-view-area" class="mc-view-area"></div>' +
       '</div>';
-
-    renderMCView();
+    renderView();
   };
 
-  /* ─── MISSION CONTROL NAV ───────────────────────────────────────────────── */
-  function renderMCNav() {
+  /* ─── SIDE NAV ───────────────────────────────────────────────────────────── */
+  function buildSideNav() {
     var items = [
-      { id: 'overview',   icon: 'ph-radar',             label: 'Overview'   },
-      { id: 'brands',     icon: 'ph-handshake',         label: 'Brands'     },
-      { id: 'janedore',   icon: 'ph-crown-simple',      label: 'JANEDORE'   },
-      { id: 'suppliers',  icon: 'ph-factory',           label: 'Suppliers'  },
-      { id: 'samples',    icon: 'ph-package',           label: 'Samples'    },
-      { id: 'campaigns',  icon: 'ph-camera',            label: 'Campaigns'  },
-      { id: 'waiting',    icon: 'ph-hourglass',         label: 'Waiting On' },
-      { id: 'notes',      icon: 'ph-notebook',          label: 'Notes'      }
+      { id: 'overview',   icon: 'ph-squares-four',    label: 'Overview'     },
+      { id: 'projects',   icon: 'ph-rocket-launch',   label: 'Projects'     },
+      { id: 'suppliers',  icon: 'ph-factory',         label: 'Suppliers'    },
+      { id: 'waiting',    icon: 'ph-hourglass-medium',label: 'Waiting On'   },
+      { id: 'wins',       icon: 'ph-trophy',          label: 'Recent Wins'  },
+      { id: 'milestones', icon: 'ph-calendar-check',  label: 'Milestones'   },
+      { id: 'notes',      icon: 'ph-notebook-text',   label: 'Founder Notes'}
     ];
 
-    return '<nav class="mc-nav">' +
-      '<div class="mc-nav-header">' +
-        '<div class="mc-nav-wordmark">MISSION CONTROL</div>' +
-        '<div class="mc-nav-date">' + new Date().toLocaleDateString('en-ZA',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase() + '</div>' +
+    return '<nav class="mc-sidenav">' +
+      '<div class="mc-sidenav-brand">' +
+        '<div class="mc-sidenav-wordmark">MISSION CONTROL</div>' +
+        '<div class="mc-sidenav-date">' +
+          new Date().toLocaleDateString('en-ZA',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase() +
+        '</div>' +
       '</div>' +
-      '<div class="mc-nav-items">' +
-        items.map(function(item) {
-          return '<button class="mc-nav-item' + (_mcView === item.id ? ' active' : '') + '" onclick="window._mcSwitchView(\'' + item.id + '\')">' +
-            '<i class="ph-light ' + item.icon + '"></i>' +
-            '<span>' + item.label + '</span>' +
-          '</button>';
-        }).join('') +
-      '</div>' +
+      items.map(function(item){
+        return '<button class="mc-sidenav-btn' + (_mcView === item.id ? ' mc-active' : '') + '" ' +
+          'onclick="window._mcNav(\'' + item.id + '\')">' +
+          '<i class="ph-light ' + item.icon + '"></i>' +
+          '<span>' + item.label + '</span>' +
+        '</button>';
+      }).join('') +
     '</nav>';
   }
 
-  window._mcSwitchView = function(view) {
+  window._mcNav = function(view) {
     _mcView = view;
-    /* Update nav active states */
-    document.querySelectorAll('.mc-nav-item').forEach(function(btn) {
-      btn.classList.remove('active');
+    document.querySelectorAll('.mc-sidenav-btn').forEach(function(b){
+      b.classList.toggle('mc-active', b.textContent.trim().indexOf(
+        view === 'overview' ? 'Overview' :
+        view === 'projects' ? 'Projects' :
+        view === 'suppliers' ? 'Suppliers' :
+        view === 'waiting'  ? 'Waiting' :
+        view === 'wins'     ? 'Recent' :
+        view === 'milestones'? 'Milestones' : 'Founder'
+      ) === 0);
     });
-    var activeBtn = document.querySelector('.mc-nav-item[onclick*="\'' + view + '\'"]');
-    if (activeBtn) activeBtn.classList.add('active');
-    renderMCView();
+    /* simpler: re-query by onclick attr */
+    document.querySelectorAll('.mc-sidenav-btn').forEach(function(b){
+      var match = b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'" + view + "'") > -1;
+      b.classList.toggle('mc-active', match);
+    });
+    renderView();
+    /* update mobile pills */
+    document.querySelectorAll('.mc-mobile-pill').forEach(function(b){
+      var match = b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'" + view + "'") > -1;
+      b.classList.toggle('mc-active', match);
+    });
   };
 
-  function renderMCView() {
+  function renderView() {
     var area = safeEl('mc-view-area');
     if (!area) return;
-    area.innerHTML = '<div class="mc-loading"><i class="ph-light ph-spinner mc-spin"></i></div>';
-
+    area.innerHTML = '<div class="mc-spinner"><i class="ph-light ph-circle-notch mc-spin"></i></div>';
     switch (_mcView) {
-      case 'overview':   renderOverview(area);   break;
-      case 'brands':     renderBrands(area);     break;
-      case 'janedore':   renderJanedore(area);   break;
-      case 'suppliers':  renderSuppliers(area);  break;
-      case 'samples':    renderSamples(area);    break;
-      case 'campaigns':  renderCampaigns(area);  break;
-      case 'waiting':    renderWaiting(area);    break;
-      case 'notes':      renderNotes(area);      break;
-      default:           renderOverview(area);
+      case 'overview':   viewOverview(area);   break;
+      case 'projects':   viewProjects(area);   break;
+      case 'suppliers':  viewSuppliers(area);  break;
+      case 'waiting':    viewWaiting(area);    break;
+      case 'wins':       viewWins(area);       break;
+      case 'milestones': viewMilestones(area); break;
+      case 'notes':      viewNotes(area);      break;
     }
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 1 — OVERVIEW (FASHION HOUSE HQ)
+     VIEW: OVERVIEW — the founder dashboard
   ══════════════════════════════════════════════════════════════════════════ */
-  function renderOverview(area) {
+  function viewOverview(area) {
     Promise.all([
-      brandsRef.get(),
+      projectsRef.get(),
       suppliersRef.get(),
-      samplesRef.get(),
-      campaignsRef.get(),
-      waitingOnRef.where('resolved','==',false).get().catch(function(){ return { docs: [] }; }),
-      ordersRef.get().catch(function(){ return { docs: [] }; })
-    ]).then(function(results) {
-      var brands    = results[0].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var suppliers = results[1].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var samples   = results[2].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var campaigns = results[3].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var waiting   = results[4].docs;
-      var orders    = results[5].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      waitingOnRef.where('resolved','==',false).get().catch(function(){ return {docs:[]}; }),
+      winsRef.orderBy('createdAt','desc').limit(5).get().catch(function(){ return {docs:[]}; }),
+      milestonesRef.orderBy('date','asc').limit(6).get().catch(function(){ return {docs:[]}; }),
+      ordersRef.get().catch(function(){ return {docs:[]}; })
+    ]).then(function(res){
+      var projects   = res[0].docs.map(d2o);
+      var suppliers  = res[1].docs.map(d2o);
+      var waiting    = res[2].docs.map(d2o);
+      var wins       = res[3].docs.map(d2o);
+      var milestones = res[4].docs.map(d2o);
+      var orders     = res[5].docs.map(d2o);
+      _allOrders     = orders;
 
-      /* Launch readiness score */
-      var score = calcLaunchScore(brands, suppliers, samples, campaigns);
+      /* Readiness scores */
+      var readiness = calcReadiness(projects);
 
-      var approvedBrands = brands.filter(function(b){ return b.stage === 'Approved' || b.stage === 'Contract Signed' || b.stage === 'Onboarding' || b.stage === 'Live'; });
-      var reviewBrands   = brands.filter(function(b){ return b.stage !== 'Live' && b.stage !== 'Rejected'; });
-      var approvedSamples= samples.filter(function(s){ return s.status === 'Approved'; });
-      var readyCampaigns = campaigns.filter(function(c){ return c.stage === 'Campaign Ready'; });
+      /* Blocked projects = have incomplete stage but supplier waiting */
+      var blocked = projects.filter(function(p){
+        return p.stages && p.stages.some(function(s){ return !s.done; }) && p.blocked;
+      });
 
-      _allOrders = orders;
+      /* In transit */
+      var inTransit = projects.filter(function(p){
+        return p.stages && p.stages.some(function(s){
+          return !s.done && (s.name === 'Sample Shipped' || s.name === 'Sample Received' || s.name === 'Sample Bottles');
+        });
+      });
+
+      /* Today's priorities: next incomplete stage for each project, sorted by priority */
+      var priorities = [];
+      projects.forEach(function(p){
+        if (!p.stages) return;
+        var nextStage = p.stages.find(function(s){ return !s.done; });
+        if (nextStage) priorities.push({ project: p, stage: nextStage.name });
+      });
+      priorities = priorities.slice(0, 8);
 
       area.innerHTML =
-        /* ── Hero readiness ── */
-        '<div class="mc-hero">' +
-          '<div class="mc-hero-left">' +
-            '<div class="mc-hero-eyebrow">Fashion House Status</div>' +
-            '<div class="mc-hero-score">' + score.pct + '<span class="mc-hero-score-unit">%</span></div>' +
-            '<div class="mc-hero-label">Launch Readiness</div>' +
-            '<div class="mc-hero-bar-wrap"><div class="mc-hero-bar" style="width:' + score.pct + '%"></div></div>' +
-            '<div class="mc-hero-sublabel">' + score.note + '</div>' +
+
+        /* ── Readiness hero ── */
+        '<div class="ov-hero">' +
+          '<div class="ov-hero-left">' +
+            '<div class="ov-eyebrow">Fashion House Status</div>' +
+            '<div class="ov-score-row">' +
+              '<div class="ov-score">' + readiness.overall + '<span class="ov-score-unit">%</span></div>' +
+              '<div class="ov-score-info">' +
+                '<div class="ov-score-label">Launch Readiness</div>' +
+                '<div class="ov-score-note">' + readiness.note + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ov-readiness-bars">' +
+              ovBar('Product Readiness',  readiness.product)  +
+              ovBar('Content Readiness',  readiness.content)  +
+              ovBar('Packaging Readiness',readiness.packaging) +
+              ovBar('Website Readiness',  readiness.website)  +
+            '</div>' +
           '</div>' +
-          '<div class="mc-hero-right">' +
-            '<div class="mc-kpi-grid">' +
-              mcKpi('ph-buildings', approvedBrands.length, 'Brands Approved',   '#1a56db') +
-              mcKpi('ph-clock',     reviewBrands.length,   'In Review',          '#c07000') +
-              mcKpi('ph-package',   approvedSamples.length,'Samples Approved',   '#1a8742') +
-              mcKpi('ph-camera',    readyCampaigns.length, 'Campaigns Ready',    '#6e40c9') +
-              mcKpi('ph-hourglass', waiting.length,        'Waiting On',         '#c0392b') +
-              mcKpi('ph-receipt',   orders.length,         'Total Orders',       '#111111') +
+          '<div class="ov-hero-right">' +
+            '<div class="ov-stats">' +
+              ovStat(projects.length,          'Projects',        '#1a56db') +
+              ovStat(readiness.launchReady,     'Launch Ready',    '#1a8742') +
+              ovStat(inTransit.length,          'In Transit',      '#6e40c9') +
+              ovStat(waiting.length,            'Waiting On',      '#c07000') +
+              ovStat(blocked.length,            'Blocked',         '#c0392b') +
+              ovStat(suppliers.length,          'Suppliers',       '#111111') +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        /* ── Today's Focus ── */
-        renderFocusArea(brands, suppliers, samples, campaigns, waiting) +
+        /* ── Today's Priorities ── */
+        '<div class="ov-section-row">' +
+          '<div class="ov-section-title">Today\'s Priorities</div>' +
+          '<button class="ov-section-link" onclick="window._mcNav(\'projects\')">View Projects</button>' +
+        '</div>' +
+        '<div class="ov-priorities">' +
+          (priorities.length ?
+            priorities.map(function(item){
+              var brand = getBrandMeta(item.project.brand);
+              return '<div class="ov-priority-row" onclick="window._mcOpenProject(\'' + item.project.id + '\')">' +
+                '<span class="ov-priority-dot" style="background:' + brand.color + ';"></span>' +
+                '<div class="ov-priority-info">' +
+                  '<div class="ov-priority-name">' + esc(item.project.name) + '</div>' +
+                  '<div class="ov-priority-stage">Next: ' + esc(item.stage) + '</div>' +
+                '</div>' +
+                (item.project.blocked ? '<span class="ov-blocked-badge">Blocked</span>' : '') +
+                '<i class="ph-light ph-arrow-right ov-priority-arrow"></i>' +
+              '</div>';
+            }).join('') :
+            '<div class="ov-empty-row"><i class="ph-light ph-check-circle" style="color:#1a8742;font-size:18px;"></i> All projects have been completed or no projects added yet.</div>'
+          ) +
+        '</div>' +
 
-        /* ── Orders chart ── */
-        '<div class="mc-section-label">Order Activity</div>' +
-        '<div class="mc-card" style="margin-bottom:10px;">' +
+        /* ── In Transit ── */
+        (inTransit.length ?
+          '<div class="ov-section-row">' +
+            '<div class="ov-section-title">In Transit</div>' +
+          '</div>' +
+          '<div class="ov-transit-list">' +
+            inTransit.map(function(p){
+              var brand = getBrandMeta(p.brand);
+              var transitStage = p.stages.find(function(s){ return !s.done && (s.name === 'Sample Shipped' || s.name === 'Sample Received' || s.name === 'Sample Bottles'); });
+              return '<div class="ov-transit-card">' +
+                '<div class="ov-transit-dot" style="background:' + brand.color + ';"></div>' +
+                '<div>' +
+                  '<div class="ov-transit-name">' + esc(p.name) + '</div>' +
+                  '<div class="ov-transit-stage">' + esc(transitStage ? transitStage.name : '—') + '</div>' +
+                '</div>' +
+              '</div>';
+            }).join('') +
+          '</div>' : ''
+        ) +
+
+        /* ── Waiting On ── */
+        (waiting.length ?
+          '<div class="ov-section-row">' +
+            '<div class="ov-section-title">Waiting On</div>' +
+            '<button class="ov-section-link" onclick="window._mcNav(\'waiting\')">View All</button>' +
+          '</div>' +
+          '<div class="ov-waiting-list">' +
+            waiting.slice(0,5).map(function(w){
+              var age = w.createdAt ? Math.round((Date.now() - (w.createdAt.toDate ? w.createdAt.toDate() : new Date(w.createdAt)).getTime()) / 86400000) : 0;
+              return '<div class="ov-waiting-row' + (age >= 5 ? ' urgent' : '') + '" onclick="window._mcNav(\'waiting\')">' +
+                '<i class="ph-light ph-hourglass" style="font-size:15px;flex-shrink:0;color:' + (age >= 5 ? '#c0392b' : 'var(--muted)') + ';"></i>' +
+                '<span class="ov-waiting-text">' + esc(w.description) + '</span>' +
+                '<span class="ov-waiting-age">' + age + 'd</span>' +
+              '</div>';
+            }).join('') +
+          '</div>' : ''
+        ) +
+
+        /* ── Recent Wins ── */
+        (wins.length ?
+          '<div class="ov-section-row">' +
+            '<div class="ov-section-title">Recent Wins</div>' +
+            '<button class="ov-section-link" onclick="window._mcNav(\'wins\')">View All</button>' +
+          '</div>' +
+          '<div class="ov-wins-list">' +
+            wins.map(function(w){
+              return '<div class="ov-win-card">' +
+                '<i class="ph-light ph-star ov-win-icon"></i>' +
+                '<div>' +
+                  '<div class="ov-win-text">' + esc(w.title) + '</div>' +
+                  (w.createdAt ? '<div class="ov-win-date">' + fmtDate(w.createdAt) + '</div>' : '') +
+                '</div>' +
+              '</div>';
+            }).join('') +
+          '</div>' : ''
+        ) +
+
+        /* ── Upcoming Milestones ── */
+        (milestones.length ?
+          '<div class="ov-section-row">' +
+            '<div class="ov-section-title">Upcoming Milestones</div>' +
+            '<button class="ov-section-link" onclick="window._mcNav(\'milestones\')">View All</button>' +
+          '</div>' +
+          '<div class="ov-milestones-list">' +
+            milestones.map(function(m){
+              var d = m.date ? (m.date.toDate ? m.date.toDate() : new Date(m.date)) : null;
+              var daysUntil = d ? Math.ceil((d.getTime() - Date.now()) / 86400000) : null;
+              var urgent = daysUntil !== null && daysUntil <= 7;
+              return '<div class="ov-milestone-row' + (urgent ? ' urgent' : '') + '">' +
+                '<div class="ov-milestone-date">' +
+                  (d ? d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'}) : '—') +
+                '</div>' +
+                '<div class="ov-milestone-title">' + esc(m.title) + '</div>' +
+                (daysUntil !== null ? '<div class="ov-milestone-days' + (urgent ? ' urgent' : '') + '">' + (daysUntil > 0 ? daysUntil + 'd' : 'Today') + '</div>' : '') +
+              '</div>';
+            }).join('') +
+          '</div>' : ''
+        ) +
+
+        /* ── Orders Chart ── */
+        '<div class="ov-section-row" style="margin-top:6px;">' +
+          '<div class="ov-section-title">Order Activity</div>' +
+        '</div>' +
+        '<div class="mc-card" style="margin-bottom:12px;">' +
           '<div class="mc-card-header">' +
             '<span class="mc-card-title">Orders — Last 30 Days</span>' +
-            '<div style="display:flex;align-items:center;gap:8px;margin-left:auto;">' +
-              '<div class="dash-live-pill" id="dash-live-pill"><span class="dash-live-dot"></span><span id="dash-live-count">Live View</span></div>' +
-              BRANDS.map(function(b){
-                var key = b.key.replace(/\s/g,'-');
-                return '<button class="dash-brand-toggle active" id="dash-toggle-' + key + '"' +
-                  ' onclick="window._dashToggleBrand(\'' + b.key + '\')"' +
-                  ' style="--brand-color:' + b.color + ';">' +
-                  '<span class="dash-brand-dot" style="background:' + b.color + ';"></span>' +
-                  b.key +
+            '<div style="display:flex;align-items:center;gap:7px;margin-left:auto;">' +
+              '<div class="dash-live-pill" id="dash-live-pill"><span class="dash-live-dot"></span><span id="dash-live-count">Live</span></div>' +
+              HOUSE_BRANDS.map(function(b){
+                var safeKey = b.key.replace(/\s/g,'-');
+                return '<button class="dash-brand-toggle active" id="dash-toggle-' + safeKey + '" ' +
+                  'onclick="window._dashToggleBrand(\'' + b.key + '\')" style="--brand-color:' + b.color + ';">' +
+                  '<span class="dash-brand-dot" style="background:' + b.color + ';"></span>' + b.key +
                 '</button>';
               }).join('') +
             '</div>' +
           '</div>' +
-          '<div class="chart-wrap" style="position:relative;"><canvas id="orders-chart" class="chart-canvas"></canvas></div>' +
+          '<div class="chart-wrap"><canvas id="orders-chart" class="chart-canvas"></canvas></div>' +
         '</div>' +
 
-        /* ── Curation pipeline funnel ── */
-        '<div class="mc-section-label">Curation Pipeline</div>' +
-        renderCurationFunnel(brands) +
-
-        /* ── Day popup ── */
+        /* ── Day popup (preserved) ── */
         '<div id="dash-day-popup" class="dash-day-popup" style="display:none;">' +
           '<div class="dash-day-popup-inner">' +
             '<div class="dash-day-popup-header">' +
@@ -215,361 +373,339 @@
       if (window._initLaunchCenter) window._initLaunchCenter();
       buildChart(orders);
 
-    }).catch(function(e) {
-      area.innerHTML = '<div class="mc-error"><i class="ph-light ph-warning"></i> ' + esc(e.message) + '</div>';
-    });
+    }).catch(function(e){ area.innerHTML = mcError(e); });
   }
 
-  function mcKpi(icon, value, label, color) {
-    return '<div class="mc-kpi-card">' +
-      '<div class="mc-kpi-icon" style="color:' + color + ';"><i class="ph-light ' + icon + '"></i></div>' +
-      '<div class="mc-kpi-value">' + value + '</div>' +
-      '<div class="mc-kpi-label">' + label + '</div>' +
+  function ovBar(label, pct) {
+    return '<div class="ov-bar-row">' +
+      '<span class="ov-bar-label">' + label + '</span>' +
+      '<div class="ov-bar-track"><div class="ov-bar-fill" style="width:' + pct + '%;"></div></div>' +
+      '<span class="ov-bar-pct">' + pct + '%</span>' +
     '</div>';
   }
 
-  function calcLaunchScore(brands, suppliers, samples, campaigns) {
-    var points = 0, max = 0;
-    /* Brands */
-    max += 30;
-    var live = brands.filter(function(b){ return b.stage === 'Live'; }).length;
-    var approved = brands.filter(function(b){ return b.stage === 'Approved' || b.stage === 'Contract Signed' || b.stage === 'Onboarding'; }).length;
-    points += Math.min(live * 6 + approved * 3, 30);
-    /* Suppliers */
-    max += 20;
-    var confirmedSuppliers = suppliers.filter(function(s){ return s.status === 'Confirmed' || s.status === 'Active'; }).length;
-    points += Math.min(confirmedSuppliers * 5, 20);
-    /* Samples */
-    max += 25;
-    var approvedSamples = samples.filter(function(s){ return s.status === 'Approved'; }).length;
-    points += Math.min(approvedSamples * 5, 25);
-    /* Campaigns */
-    max += 25;
-    var readyCampaigns = campaigns.filter(function(c){ return c.stage === 'Campaign Ready'; }).length;
-    points += Math.min(readyCampaigns * 8, 25);
-
-    var pct = max > 0 ? Math.round((points / max) * 100) : 0;
-    var note = pct < 25 ? 'Early stage — build your brand pipeline' :
-               pct < 50 ? 'Gaining momentum — keep sourcing' :
-               pct < 75 ? 'Strong progress — finalise campaigns' :
-               pct < 95 ? 'Almost launch-ready' : 'Ready to launch';
-    return { pct: pct, note: note };
+  function ovStat(value, label, color) {
+    return '<div class="ov-stat-card">' +
+      '<div class="ov-stat-value" style="color:' + color + ';">' + value + '</div>' +
+      '<div class="ov-stat-label">' + label + '</div>' +
+    '</div>';
   }
 
-  function renderFocusArea(brands, suppliers, samples, campaigns, waiting) {
-    var items = [];
-    /* Stalled brands */
-    var stalled = brands.filter(function(b){
-      if (!b.lastContact) return false;
-      var d = b.lastContact.toDate ? b.lastContact.toDate() : new Date(b.lastContact);
-      return (Date.now() - d.getTime()) > 5 * 86400000 && b.stage !== 'Live';
-    });
-    if (stalled.length) items.push({ icon:'ph-hand-pointing', color:'#c07000', text: stalled.length + ' brand' + (stalled.length>1?'s':'') + ' not contacted in 5+ days', action:'brands' });
-    /* Samples in transit */
-    var inTransit = samples.filter(function(s){ return s.status === 'Shipped' || s.status === 'Customs'; });
-    if (inTransit.length) items.push({ icon:'ph-airplane-takeoff', color:'#6e40c9', text: inTransit.length + ' sample' + (inTransit.length>1?'s':'') + ' in transit', action:'samples' });
-    /* Campaign deadlines */
-    var nearCampaigns = campaigns.filter(function(c){ return c.stage && c.stage !== 'Campaign Ready'; });
-    if (nearCampaigns.length) items.push({ icon:'ph-camera', color:'#1a56db', text: nearCampaigns.length + ' campaign' + (nearCampaigns.length>1?'s':'') + ' in production', action:'campaigns' });
-    /* Waiting items */
-    if (waiting.length) items.push({ icon:'ph-hourglass', color:'#c0392b', text: waiting.length + ' item' + (waiting.length>1?'s':'') + ' waiting on external reply', action:'waiting' });
+  /* ─── READINESS CALCULATOR ───────────────────────────────────────────────── */
+  function calcReadiness(projects) {
+    if (!projects.length) return { overall: 0, product: 0, content: 0, packaging: 0, website: 0, launchReady: 0, note: 'No projects yet — add your first launch project' };
 
-    if (!items.length) {
-      return '<div class="mc-focus-empty"><i class="ph-light ph-check-circle" style="font-size:22px;color:#1a8742;"></i><span>All clear — no urgent items today</span></div>';
+    var productProjects   = projects.filter(function(p){ return p.type !== 'Campaign' && p.type !== 'Packaging'; });
+    var campaignProjects  = projects.filter(function(p){ return p.type === 'Campaign'; });
+    var packagingProjects = projects.filter(function(p){ return p.type === 'Packaging'; });
+    var launchReady       = projects.filter(function(p){ return p.launchReady; }).length;
+
+    function stagesPct(list) {
+      if (!list.length) return 0;
+      var total = 0, done = 0;
+      list.forEach(function(p){
+        if (!p.stages || !p.stages.length) return;
+        total += p.stages.length;
+        done  += p.stages.filter(function(s){ return s.done; }).length;
+      });
+      return total ? Math.round((done / total) * 100) : 0;
     }
 
-    return '<div class="mc-section-label">Focus Today</div>' +
-      '<div class="mc-focus-list">' +
-        items.map(function(item) {
-          return '<div class="mc-focus-item" onclick="window._mcSwitchView(\'' + item.action + '\')">' +
-            '<span class="mc-focus-dot" style="background:' + item.color + ';"></span>' +
-            '<span class="mc-focus-text">' + esc(item.text) + '</span>' +
-            '<i class="ph-light ph-arrow-right mc-focus-arrow"></i>' +
-          '</div>';
-        }).join('') +
-      '</div>';
-  }
+    /* Website readiness: any project with 'Product Upload Complete' done */
+    var uploadDone = projects.filter(function(p){
+      return p.stages && p.stages.some(function(s){ return s.done && s.name === 'Product Upload Complete'; });
+    }).length;
+    var websitePct = projects.length ? Math.round((uploadDone / projects.length) * 100) : 0;
 
-  function renderCurationFunnel(brands) {
-    var stageCounts = {};
-    BRAND_STAGES.forEach(function(s){ stageCounts[s] = 0; });
-    brands.forEach(function(b){ if (stageCounts[b.stage] !== undefined) stageCounts[b.stage]++; });
-    var max = Math.max.apply(null, Object.values(stageCounts).concat([1]));
+    var product   = stagesPct(productProjects);
+    var content   = stagesPct(campaignProjects);
+    var packaging = stagesPct(packagingProjects);
+    var overall   = Math.round((product + content + packaging + websitePct) / 4);
 
-    return '<div class="mc-funnel">' +
-      BRAND_STAGES.map(function(stage) {
-        var count = stageCounts[stage] || 0;
-        var pct = Math.round((count / max) * 100);
-        var isLive = stage === 'Live';
-        return '<div class="mc-funnel-row" onclick="window._mcSwitchView(\'brands\')">' +
-          '<div class="mc-funnel-label">' + stage + '</div>' +
-          '<div class="mc-funnel-bar-wrap">' +
-            '<div class="mc-funnel-bar' + (isLive ? ' live' : '') + '" style="width:' + Math.max(pct, 2) + '%"></div>' +
-          '</div>' +
-          '<div class="mc-funnel-count">' + count + '</div>' +
-        '</div>';
-      }).join('') +
-    '</div>';
+    var note = overall < 20 ? 'Early stage — your launch journey begins here' :
+               overall < 45 ? 'Building momentum — keep pushing' :
+               overall < 70 ? 'Strong progress — finalise samples and campaigns' :
+               overall < 90 ? 'Almost there — close the final gaps' :
+                              'Near launch-ready — final checks';
+
+    return { overall: overall, product: product, content: content, packaging: packaging, website: websitePct, launchReady: launchReady, note: note };
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 2 — BRAND ACQUISITION PIPELINE
+     VIEW: PROJECTS — the core launch journey tracker
   ══════════════════════════════════════════════════════════════════════════ */
-  function renderBrands(area) {
-    brandsRef.orderBy('createdAt','desc').get().catch(function(){
-      return brandsRef.get();
-    }).then(function(snap) {
-      var brands = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+  function viewProjects(area) {
+    projectsRef.get().then(function(snap){
+      var projects = snap.docs.map(d2o);
+
+      /* Group by brand */
+      var byBrand = {};
+      HOUSE_BRANDS.forEach(function(b){ byBrand[b.key] = []; });
+      projects.forEach(function(p){
+        var key = p.brand || 'JANEDORE';
+        if (!byBrand[key]) byBrand[key] = [];
+        byBrand[key].push(p);
+      });
 
       area.innerHTML =
         '<div class="mc-view-header">' +
           '<div>' +
-            '<div class="mc-view-title">Brand Acquisition Pipeline</div>' +
-            '<div class="mc-view-sub">' + brands.length + ' brands tracked</div>' +
+            '<div class="mc-view-title">Launch Projects</div>' +
+            '<div class="mc-view-sub">' + projects.length + ' projects tracked</div>' +
           '</div>' +
-          '<button class="mc-action-btn" onclick="window._mcAddBrand()"><i class="ph-light ph-plus"></i> Add Brand</button>' +
+          '<button class="mc-action-btn" onclick="window._mcNewProject()"><i class="ph-light ph-plus"></i> New Project</button>' +
         '</div>' +
 
-        /* Stage filter pills */
-        '<div class="mc-stage-pills">' +
-          '<button class="mc-stage-pill active" onclick="window._mcFilterBrands(this, \'\')" data-stage="">All (' + brands.length + ')</button>' +
-          BRAND_STAGES.map(function(s) {
-            var cnt = brands.filter(function(b){ return b.stage === s; }).length;
-            return cnt > 0 ? '<button class="mc-stage-pill" onclick="window._mcFilterBrands(this, \'' + s + '\')" data-stage="' + s + '">' + s + ' <span class="mc-pill-count">' + cnt + '</span></button>' : '';
-          }).join('') +
-        '</div>' +
+        HOUSE_BRANDS.map(function(brand){
+          var list = byBrand[brand.key] || [];
+          return '<div class="proj-brand-group">' +
+            '<div class="proj-brand-header">' +
+              '<div class="proj-brand-dot" style="background:' + brand.color + ';"></div>' +
+              '<div class="proj-brand-name">' + brand.key + '</div>' +
+              '<div class="proj-brand-count">' + list.length + ' project' + (list.length !== 1 ? 's' : '') + '</div>' +
+              '<button class="mc-action-btn-sm" onclick="window._mcNewProjectFor(\'' + brand.key + '\')">+ Add</button>' +
+            '</div>' +
+            (list.length ?
+              '<div class="proj-list">' +
+                list.map(function(p){ return renderProjectCard(p, brand); }).join('') +
+              '</div>' :
+              '<div class="proj-empty-brand">No projects yet for ' + brand.key + '.</div>'
+            ) +
+          '</div>';
+        }).join('');
 
-        '<div id="mc-brands-grid" class="mc-brands-grid">' +
-          (brands.length ? renderBrandCards(brands) : mcEmpty('ph-handshake','No brands yet','Start building your curation pipeline')) +
+    }).catch(function(e){ area.innerHTML = mcError(e); });
+  }
+
+  function renderProjectCard(p, brand) {
+    var stages   = p.stages || [];
+    var total    = stages.length;
+    var done     = stages.filter(function(s){ return s.done; }).length;
+    var pct      = total ? Math.round((done / total) * 100) : 0;
+    var nextStage= stages.find(function(s){ return !s.done; });
+    var isReady  = pct === 100 || p.launchReady;
+
+    return '<div class="proj-card" onclick="window._mcOpenProject(\'' + p.id + '\')">' +
+      '<div class="proj-card-top">' +
+        '<div class="proj-card-info">' +
+          '<div class="proj-card-name">' + esc(p.name) + '</div>' +
+          '<div class="proj-card-meta">' + esc(p.type || 'Product') +
+            (p.blocked ? ' · <span style="color:#c0392b;font-weight:600;">Blocked</span>' : '') +
+          '</div>' +
+        '</div>' +
+        (isReady ?
+          '<span class="proj-ready-badge">Launch Ready</span>' :
+          '<span class="proj-pct-badge">' + pct + '%</span>'
+        ) +
+      '</div>' +
+      '<div class="proj-progress-track"><div class="proj-progress-fill" style="width:' + pct + '%;background:' + (isReady ? '#1a8742' : brand.color) + ';"></div></div>' +
+      '<div class="proj-stages-row">' +
+        stages.map(function(s){
+          return '<div class="proj-stage-dot' + (s.done ? ' done' : '') + '" title="' + esc(s.name) + '" style="' + (s.done ? 'background:' + brand.color + ';' : '') + '"></div>';
+        }).join('') +
+      '</div>' +
+      (nextStage ? '<div class="proj-next-stage">Next: ' + esc(nextStage.name) + '</div>' : '') +
+    '</div>';
+  }
+
+  /* ─── PROJECT DETAIL MODAL ───────────────────────────────────────────────── */
+  window._mcOpenProject = function(id) {
+    projectsRef.doc(id).get().then(function(doc){
+      if (!doc.exists) return;
+      var p     = Object.assign({ id: doc.id }, doc.data());
+      var brand = getBrandMeta(p.brand);
+      var stages= p.stages || [];
+      var done  = stages.filter(function(s){ return s.done; }).length;
+      var pct   = stages.length ? Math.round((done / stages.length) * 100) : 0;
+
+      var html =
+        '<div class="modal" style="max-width:600px;">' +
+          '<div class="modal-handle"></div>' +
+          '<div style="padding:16px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+            '<div>' +
+              '<div style="font-size:9px;font-weight:700;letter-spacing:.14em;color:' + brand.color + ';margin-bottom:4px;">' + esc(p.brand) + '</div>' +
+              '<div class="modal-title" style="padding:0;border:none;font-size:22px;">' + esc(p.name) + '</div>' +
+              '<div style="font-size:11px;color:var(--muted);margin-top:3px;">' + esc(p.type||'Product') + ' · ' + pct + '% complete</div>' +
+            '</div>' +
+            '<button class="modal-close" style="position:relative;top:0;right:0;" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
+          '</div>' +
+
+          /* Progress bar */
+          '<div style="padding:12px 20px;">' +
+            '<div style="height:4px;background:var(--border-med);border-radius:2px;overflow:hidden;">' +
+              '<div style="height:100%;border-radius:2px;background:' + brand.color + ';width:' + pct + '%;transition:width .6s;"></div>' +
+            '</div>' +
+          '</div>' +
+          '<hr class="divider" style="margin:0;">' +
+
+          /* Checklist */
+          '<div style="padding:8px 0 4px;">' +
+            stages.map(function(s, idx){
+              return '<div class="lc-task-row" onclick="window._mcToggleStage(\'' + id + '\',' + idx + ',' + !s.done + ')">' +
+                '<div class="lc-checkbox' + (s.done ? ' checked' : '') + '">' +
+                  (s.done ? '<i class="ph-light ph-check" style="font-size:11px;"></i>' : '') +
+                '</div>' +
+                '<span class="lc-task-label' + (s.done ? ' done' : '') + '">' + esc(s.name) + '</span>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+          '<hr class="divider" style="margin:4px 0;">' +
+
+          /* Notes + blocked toggle */
+          '<div class="form-group">' +
+            '<label>Project Notes</label>' +
+            '<textarea id="proj-modal-notes">' + esc(p.notes || '') + '</textarea>' +
+          '</div>' +
+          '<div style="padding:0 16px 4px;display:flex;align-items:center;gap:10px;">' +
+            '<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2);cursor:pointer;">' +
+              '<input type="checkbox" id="proj-modal-blocked"' + (p.blocked ? ' checked' : '') + ' style="width:14px;height:14px;">' +
+              'Mark as blocked' +
+            '</label>' +
+            '<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2);cursor:pointer;margin-left:10px;">' +
+              '<input type="checkbox" id="proj-modal-ready"' + (p.launchReady ? ' checked' : '') + ' style="width:14px;height:14px;">' +
+              'Launch Ready' +
+            '</label>' +
+          '</div>' +
+          '<div style="padding:12px 16px 20px;display:flex;gap:8px;justify-content:flex-end;">' +
+            '<button class="btn btn-danger btn-sm" onclick="window._mcDeleteProject(\'' + id + '\')">Delete</button>' +
+            '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Close</button>' +
+            '<button class="btn btn-primary btn-sm" onclick="window._mcSaveProjectMeta(\'' + id + '\')">Save</button>' +
+          '</div>' +
         '</div>';
 
-    }).catch(function(e){
-      area.innerHTML = mcError(e);
-    });
-  }
-
-  function renderBrandCards(brands) {
-    return brands.map(function(b) {
-      var daysSince = b.lastContact ? Math.round((Date.now() - (b.lastContact.toDate ? b.lastContact.toDate() : new Date(b.lastContact)).getTime()) / 86400000) : null;
-      var stageClass = b.stage === 'Live' ? 'mc-stage-live' : b.stage === 'Approved' || b.stage === 'Contract Signed' ? 'mc-stage-approved' : 'mc-stage-default';
-      var priorityDot = b.priority === 'High' ? '#c0392b' : b.priority === 'Medium' ? '#c07000' : '#b0b0b0';
-
-      return '<div class="mc-brand-card" onclick="window._mcViewBrand(\'' + b.id + '\')">' +
-        '<div class="mc-brand-card-top">' +
-          '<div class="mc-brand-avatar">' + (b.name || '?').substring(0,2).toUpperCase() + '</div>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div class="mc-brand-name">' + esc(b.name || '—') + '</div>' +
-            '<div class="mc-brand-meta">' + esc(b.country || '—') + ' · ' + esc(b.category || '—') + '</div>' +
-          '</div>' +
-          '<span class="mc-priority-dot" style="background:' + priorityDot + ';" title="' + (b.priority||'Low') + ' priority"></span>' +
-        '</div>' +
-        '<div class="mc-brand-stage ' + stageClass + '">' + esc(b.stage || 'Discovered') + '</div>' +
-        (b.notes ? '<div class="mc-brand-notes">' + esc(b.notes.substring(0,80)) + (b.notes.length > 80 ? '…' : '') + '</div>' : '') +
-        '<div class="mc-brand-card-footer">' +
-          (daysSince !== null ? '<span class="mc-brand-since">Last contact ' + daysSince + 'd ago</span>' : '<span class="mc-brand-since">No contact recorded</span>') +
-          '<button class="mc-icon-btn" onclick="event.stopPropagation();window._mcEditBrand(\'' + b.id + '\')"><i class="ph-light ph-pencil-simple"></i></button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  window._mcFilterBrands = function(btn, stage) {
-    document.querySelectorAll('.mc-stage-pill').forEach(function(p){ p.classList.remove('active'); });
-    btn.classList.add('active');
-    var grid = safeEl('mc-brands-grid');
-    if (!grid) return;
-    brandsRef.get().then(function(snap) {
-      var brands = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var filtered = stage ? brands.filter(function(b){ return b.stage === stage; }) : brands;
-      grid.innerHTML = filtered.length ? renderBrandCards(filtered) : mcEmpty('ph-handshake','No brands in this stage','');
+      window._mountModal(html);
     });
   };
 
-  window._mcAddBrand = function() {
-    showBrandModal(null);
-  };
-  window._mcEditBrand = function(id) {
-    brandsRef.doc(id).get().then(function(doc){
-      if (doc.exists) showBrandModal(Object.assign({id:doc.id}, doc.data()));
-    });
-  };
-  window._mcViewBrand = function(id) {
-    window._mcEditBrand(id);
+  window._mcToggleStage = function(id, idx, newVal) {
+    projectsRef.doc(id).get().then(function(doc){
+      if (!doc.exists) return;
+      var stages = (doc.data().stages || []).slice();
+      if (stages[idx]) stages[idx].done = newVal;
+      return projectsRef.doc(id).update({ stages: stages });
+    }).then(function(){
+      /* Refresh the checkbox visually */
+      var rows = document.querySelectorAll('.lc-task-row');
+      if (rows[idx]) {
+        var box   = rows[idx].querySelector('.lc-checkbox');
+        var label = rows[idx].querySelector('.lc-task-label');
+        if (box)   { box.classList.toggle('checked', newVal); box.innerHTML = newVal ? '<i class="ph-light ph-check" style="font-size:11px;"></i>' : ''; }
+        if (label) label.classList.toggle('done', newVal);
+        rows[idx].setAttribute('onclick', 'window._mcToggleStage(\'' + id + '\',' + idx + ',' + !newVal + ')');
+      }
+    }).catch(function(e){ showToast(e.message, 'error'); });
   };
 
-  function showBrandModal(brand) {
-    var isEdit = !!brand;
+  window._mcSaveProjectMeta = function(id) {
+    var notes   = (safeEl('proj-modal-notes')   || {}).value || '';
+    var blocked = !!(safeEl('proj-modal-blocked') || {}).checked;
+    var ready   = !!(safeEl('proj-modal-ready')   || {}).checked;
+    projectsRef.doc(id).update({ notes: notes, blocked: blocked, launchReady: ready })
+      .then(function(){ window._closeModal(); showToast('Project saved'); })
+      .catch(function(e){ showToast(e.message, 'error'); });
+  };
+
+  window._mcDeleteProject = function(id) {
+    if (!confirm('Delete this project?')) return;
+    projectsRef.doc(id).delete().then(function(){
+      window._closeModal();
+      showToast('Project deleted');
+      window._mcNav('projects');
+    }).catch(function(e){ showToast(e.message, 'error'); });
+  };
+
+  /* ─── NEW PROJECT MODAL ──────────────────────────────────────────────────── */
+  window._mcNewProject    = function(){ showNewProjectModal(''); };
+  window._mcNewProjectFor = function(brand){ showNewProjectModal(brand); };
+
+  function showNewProjectModal(presetBrand) {
+    var typeKeys = Object.keys(STAGE_TEMPLATES);
     var html =
-      '<div class="modal">' +
+      '<div class="modal modal-sm">' +
         '<div class="modal-handle"></div>' +
-        '<div class="modal-title">' + (isEdit ? 'Edit Brand' : 'Add Brand') + '</div>' +
+        '<div class="modal-title">New Launch Project</div>' +
         '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
-        '<div class="form-group"><label>Brand Name</label><input id="mb-name" value="' + esc(brand ? brand.name : '') + '"></div>' +
+        '<div class="form-group"><label>Project Name</label><input id="np-name" placeholder="e.g. Handbag Collection, SS26 Campaign"></div>' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>Country</label><input id="mb-country" value="' + esc(brand ? brand.country : '') + '"></div>' +
-          '<div class="form-group"><label>Category</label><input id="mb-category" value="' + esc(brand ? brand.category : '') + '" placeholder="e.g. Ready-to-wear"></div>' +
+          '<div class="form-group"><label>Brand</label><select id="np-brand">' +
+            HOUSE_BRANDS.map(function(b){ return '<option value="' + b.key + '"' + (b.key === presetBrand ? ' selected' : '') + '>' + b.key + '</option>'; }).join('') +
+          '</select></div>' +
+          '<div class="form-group"><label>Type</label><select id="np-type" onchange="window._mcPreviewStages()">' +
+            typeKeys.map(function(k){ return '<option value="' + k + '">' + k + '</option>'; }).join('') +
+          '</select></div>' +
         '</div>' +
-        '<div class="form-row">' +
-          '<div class="form-group"><label>Stage</label><select id="mb-stage">' + BRAND_STAGES.map(function(s){ return '<option value="' + s + '"' + (brand && brand.stage === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group"><label>Priority</label><select id="mb-priority"><option value="Low"' + (brand && brand.priority === 'Low' ? ' selected' : '') + '>Low</option><option value="Medium"' + (brand && brand.priority === 'Medium' ? ' selected' : '') + '>Medium</option><option value="High"' + (brand && brand.priority === 'High' ? ' selected' : '') + '>High</option></select></div>' +
+        /* Stage preview */
+        '<div class="form-group">' +
+          '<label>Launch Journey <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;">(edit after creating)</span></label>' +
+          '<div id="np-stages-preview" class="np-stages-preview">' + renderStagePreview('Product') + '</div>' +
         '</div>' +
-        '<div class="form-group"><label>Notes</label><textarea id="mb-notes" rows="3">' + esc(brand ? (brand.notes||'') : '') + '</textarea></div>' +
-        '<div style="padding:0 16px 16px;display:flex;gap:8px;justify-content:flex-end;">' +
-          (isEdit ? '<button class="btn btn-danger btn-sm" onclick="window._mcDeleteBrand(\'' + brand.id + '\')">Delete</button>' : '') +
+        '<div style="padding:0 16px 20px;display:flex;gap:8px;justify-content:flex-end;">' +
           '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Cancel</button>' +
-          '<button class="btn btn-primary btn-sm" onclick="window._mcSaveBrand(\'' + (isEdit ? brand.id : '') + '\')">' + (isEdit ? 'Save' : 'Add Brand') + '</button>' +
+          '<button class="btn btn-primary btn-sm" onclick="window._mcCreateProject()">Create Project</button>' +
         '</div>' +
       '</div>';
     window._mountModal(html);
   }
 
-  window._mcSaveBrand = function(id) {
-    var data = {
-      name:        (safeEl('mb-name') || {}).value || '',
-      country:     (safeEl('mb-country') || {}).value || '',
-      category:    (safeEl('mb-category') || {}).value || '',
-      stage:       (safeEl('mb-stage') || {}).value || 'Discovered',
-      priority:    (safeEl('mb-priority') || {}).value || 'Low',
-      notes:       (safeEl('mb-notes') || {}).value || '',
-      lastContact: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    var op = id ? brandsRef.doc(id).update(data) : brandsRef.add(Object.assign(data, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
-    op.then(function(){
-      window._closeModal();
-      showToast(id ? 'Brand updated' : 'Brand added');
-      window._mcSwitchView('brands');
-    }).catch(function(e){ showToast(e.message, 'error'); });
+  window._mcPreviewStages = function() {
+    var sel = safeEl('np-type');
+    var preview = safeEl('np-stages-preview');
+    if (sel && preview) preview.innerHTML = renderStagePreview(sel.value);
   };
 
-  window._mcDeleteBrand = function(id) {
-    if (!confirm('Delete this brand?')) return;
-    brandsRef.doc(id).delete().then(function(){
-      window._closeModal();
-      showToast('Brand removed');
-      window._mcSwitchView('brands');
-    }).catch(function(e){ showToast(e.message, 'error'); });
-  };
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 3 — JANEDORE HOUSE BRAND
-  ══════════════════════════════════════════════════════════════════════════ */
-  function renderJanedore(area) {
-    Promise.all([
-      suppliersRef.where('brand','==','JANEDORE').get().catch(function(){ return suppliersRef.get(); }),
-      samplesRef.where('brand','==','JANEDORE').get().catch(function(){ return { docs: [] }; })
-    ]).then(function(results) {
-      var suppliers = results[0].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var samples   = results[1].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-
-      /* Track JANEDORE milestone stages */
-      var stageProgress = {};
-      JANEDORE_STAGES.forEach(function(s){ stageProgress[s] = false; });
-      suppliers.forEach(function(s){ if (s.status === 'Confirmed' || s.status === 'Active') stageProgress['Supplier Confirmed'] = true; });
-      samples.forEach(function(s){
-        if (s.status === 'Requested' || s.status === 'In Production') stageProgress['Sample Requested'] = true;
-        if (s.status === 'Shipped' || s.status === 'Customs') stageProgress['Sample Shipped'] = true;
-        if (s.status === 'Delivered') stageProgress['Sample Received'] = true;
-        if (s.status === 'Approved') stageProgress['Production Approved'] = true;
-      });
-
-      var completedCount = Object.values(stageProgress).filter(Boolean).length;
-      var pct = Math.round((completedCount / JANEDORE_STAGES.length) * 100);
-
-      area.innerHTML =
-        '<div class="mc-view-header">' +
-          '<div>' +
-            '<div class="mc-view-title">JANEDORE House Brand</div>' +
-            '<div class="mc-view-sub">In-house private label — launch readiness</div>' +
-          '</div>' +
-        '</div>' +
-
-        /* Readiness ring */
-        '<div class="mc-jd-hero">' +
-          '<div class="mc-jd-ring-wrap">' +
-            '<svg viewBox="0 0 80 80" class="mc-jd-ring-svg">' +
-              '<circle cx="40" cy="40" r="32" class="mc-jd-ring-bg"/>' +
-              '<circle cx="40" cy="40" r="32" class="mc-jd-ring-fill" style="stroke-dasharray:' + (2*Math.PI*32).toFixed(1) + ';stroke-dashoffset:' + ((2*Math.PI*32) * (1 - pct/100)).toFixed(1) + '"/>' +
-            '</svg>' +
-            '<div class="mc-jd-ring-label"><div class="mc-jd-ring-pct">' + pct + '%</div><div class="mc-jd-ring-sub">Ready</div></div>' +
-          '</div>' +
-          '<div class="mc-jd-stages">' +
-            JANEDORE_STAGES.map(function(s) {
-              var done = stageProgress[s];
-              return '<div class="mc-jd-stage-row">' +
-                '<div class="mc-jd-stage-check' + (done ? ' done' : '') + '"><i class="ph-light ' + (done ? 'ph-check' : 'ph-circle') + '"></i></div>' +
-                '<span class="mc-jd-stage-label' + (done ? ' done' : '') + '">' + s + '</span>' +
-              '</div>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-
-        /* Suppliers */
-        '<div class="mc-section-label">Supplier Relationships</div>' +
-        '<div class="mc-card" style="margin-bottom:10px;">' +
-          '<div class="mc-card-header"><span class="mc-card-title">Suppliers</span>' +
-            '<button class="mc-action-btn-sm" onclick="window._mcSwitchView(\'suppliers\')">View All</button>' +
-          '</div>' +
-          (suppliers.length ?
-            '<div>' + suppliers.slice(0,4).map(function(s){
-              return '<div class="mc-supplier-row">' +
-                '<div style="flex:1;min-width:0;">' +
-                  '<div style="font-size:13px;font-weight:400;">' + esc(s.name||'—') + '</div>' +
-                  '<div class="mc-row-meta">' + esc(s.country||'—') + ' · MOQ ' + esc(s.moq||'—') + '</div>' +
-                '</div>' +
-                statusPill(s.status) +
-              '</div>';
-            }).join('') + '</div>' :
-            '<div style="padding:18px 16px;font-size:12px;color:var(--muted);">No JANEDORE suppliers yet.</div>'
-          ) +
-        '</div>' +
-
-        /* Samples */
-        '<div class="mc-section-label">Sampling</div>' +
-        '<div class="mc-card">' +
-          '<div class="mc-card-header"><span class="mc-card-title">Samples</span>' +
-            '<button class="mc-action-btn-sm" onclick="window._mcSwitchView(\'samples\')">View All</button>' +
-          '</div>' +
-          (samples.length ?
-            '<div>' + samples.slice(0,4).map(function(s){
-              return '<div class="mc-supplier-row">' +
-                '<div style="flex:1;min-width:0;">' +
-                  '<div style="font-size:13px;">' + esc(s.productName||'—') + '</div>' +
-                  '<div class="mc-row-meta">' + esc(s.material||'—') + '</div>' +
-                '</div>' +
-                statusPill(s.status) +
-              '</div>';
-            }).join('') + '</div>' :
-            '<div style="padding:18px 16px;font-size:12px;color:var(--muted);">No samples tracked yet.</div>'
-          ) +
-        '</div>';
-
-    }).catch(function(e){ area.innerHTML = mcError(e); });
+  function renderStagePreview(type) {
+    var stages = STAGE_TEMPLATES[type] || [];
+    if (!stages.length) return '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Custom — you\'ll add stages after creating.</div>';
+    return stages.map(function(s){
+      return '<div class="np-stage-item"><i class="ph-light ph-circle" style="font-size:13px;color:var(--muted2);"></i> ' + esc(s) + '</div>';
+    }).join('');
   }
 
-  /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 4 — SUPPLIER CENTER
-  ══════════════════════════════════════════════════════════════════════════ */
-  function renderSuppliers(area) {
-    suppliersRef.get().then(function(snap) {
-      var suppliers = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+  window._mcCreateProject = function() {
+    var name  = ((safeEl('np-name') || {}).value || '').trim();
+    var brand = (safeEl('np-brand') || {}).value || 'JANEDORE';
+    var type  = (safeEl('np-type')  || {}).value || 'Product';
+    if (!name) { showToast('Enter a project name', 'error'); return; }
+    var stageNames = STAGE_TEMPLATES[type] || [];
+    var stages = stageNames.map(function(s){ return { name: s, done: false }; });
+    projectsRef.add({
+      name: name, brand: brand, type: type,
+      stages: stages, notes: '',
+      blocked: false, launchReady: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(ref){
+      window._closeModal();
+      showToast('Project created');
+      /* Open it immediately */
+      window._mcOpenProject(ref.id);
+    }).catch(function(e){ showToast(e.message, 'error'); });
+  };
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     VIEW: SUPPLIERS
+  ══════════════════════════════════════════════════════════════════════════ */
+  function viewSuppliers(area) {
+    suppliersRef.get().then(function(snap){
+      var suppliers = snap.docs.map(d2o);
       area.innerHTML =
         '<div class="mc-view-header">' +
-          '<div><div class="mc-view-title">Supplier Center</div><div class="mc-view-sub">' + suppliers.length + ' suppliers tracked</div></div>' +
-          '<button class="mc-action-btn" onclick="window._mcAddSupplier()"><i class="ph-light ph-plus"></i> Add Supplier</button>' +
+          '<div><div class="mc-view-title">Suppliers</div><div class="mc-view-sub">' + suppliers.length + ' suppliers</div></div>' +
+          '<button class="mc-action-btn" onclick="window._mcNewSupplier()"><i class="ph-light ph-plus"></i> Add Supplier</button>' +
         '</div>' +
         (suppliers.length ?
           '<div class="mc-table-wrap">' +
             '<table class="mc-table">' +
-              '<thead><tr><th>Supplier</th><th>Country</th><th>MOQ</th><th>Lead Time</th><th>Last Contact</th><th>Status</th><th></th></tr></thead>' +
+              '<thead><tr><th>Supplier</th><th>Country</th><th>Category</th><th>MOQ</th><th>Lead Time</th><th>Status</th><th></th></tr></thead>' +
               '<tbody>' +
                 suppliers.map(function(s){
                   return '<tr onclick="window._mcEditSupplier(\'' + s.id + '\')">' +
-                    '<td><div style="font-weight:400;">' + esc(s.name||'—') + '</div><div class="cell-muted">' + esc(s.brand||'—') + '</div></td>' +
+                    '<td><div style="font-weight:400;">' + esc(s.name||'—') + '</div>' +
+                      (s.brand ? '<div class="cell-muted">' + esc(s.brand) + '</div>' : '') +
+                    '</td>' +
                     '<td class="cell-muted">' + esc(s.country||'—') + '</td>' +
+                    '<td class="cell-muted">' + esc(s.category||'—') + '</td>' +
                     '<td class="cell-muted">' + esc(s.moq||'—') + '</td>' +
                     '<td class="cell-muted">' + esc(s.leadTime||'—') + '</td>' +
-                    '<td class="cell-muted">' + (s.lastContact ? fmtDate(s.lastContact) : '—') + '</td>' +
                     '<td>' + statusPill(s.status) + '</td>' +
                     '<td><button class="mc-icon-btn" onclick="event.stopPropagation();window._mcEditSupplier(\'' + s.id + '\')"><i class="ph-light ph-pencil-simple"></i></button></td>' +
                   '</tr>';
@@ -577,337 +713,119 @@
               '</tbody>' +
             '</table>' +
           '</div>' :
-          mcEmpty('ph-factory','No suppliers yet','Add your first supplier to begin sourcing')
+          mcEmpty('ph-factory','No suppliers yet','Add your first supplier')
         );
     }).catch(function(e){ area.innerHTML = mcError(e); });
   }
 
-  window._mcAddSupplier = function(){ showSupplierModal(null); };
+  window._mcNewSupplier  = function(){ showSupplierModal(null); };
   window._mcEditSupplier = function(id){
     suppliersRef.doc(id).get().then(function(doc){
-      if (doc.exists) showSupplierModal(Object.assign({id:doc.id},doc.data()));
+      if (doc.exists) showSupplierModal(d2o(doc));
     });
   };
 
-  function showSupplierModal(sup) {
-    var isEdit = !!sup;
+  function showSupplierModal(s) {
+    var isEdit = !!s;
+    var statuses = ['Prospecting','Contacted','Sampling','Confirmed','Active','Paused','Dropped'];
     var html =
-      '<div class="modal">' +
+      '<div class="modal modal-sm">' +
         '<div class="modal-handle"></div>' +
         '<div class="modal-title">' + (isEdit ? 'Edit Supplier' : 'Add Supplier') + '</div>' +
         '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
-        '<div class="form-group"><label>Supplier Name</label><input id="ms-name" value="' + esc(sup ? sup.name : '') + '"></div>' +
+        '<div class="form-group"><label>Supplier Name</label><input id="ms-name" value="' + esc(s ? s.name : '') + '"></div>' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>Country</label><input id="ms-country" value="' + esc(sup ? sup.country : '') + '"></div>' +
-          '<div class="form-group"><label>Brand</label><input id="ms-brand" value="' + esc(sup ? sup.brand : '') + '" placeholder="e.g. JANEDORE"></div>' +
+          '<div class="form-group"><label>Country</label><input id="ms-country" value="' + esc(s ? s.country : '') + '"></div>' +
+          '<div class="form-group"><label>Category</label><input id="ms-category" value="' + esc(s ? s.category : '') + '" placeholder="e.g. Leather goods, Packaging"></div>' +
         '</div>' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>MOQ</label><input id="ms-moq" value="' + esc(sup ? sup.moq : '') + '" placeholder="Minimum order qty"></div>' +
-          '<div class="form-group"><label>Lead Time</label><input id="ms-lead" value="' + esc(sup ? sup.leadTime : '') + '" placeholder="e.g. 6-8 weeks"></div>' +
+          '<div class="form-group"><label>Brand / Project</label><input id="ms-brand" value="' + esc(s ? s.brand : '') + '" placeholder="e.g. JANEDORE Handbags"></div>' +
+          '<div class="form-group"><label>Status</label><select id="ms-status">' +
+            statuses.map(function(st){ return '<option' + (s && s.status === st ? ' selected' : '') + '>' + st + '</option>'; }).join('') +
+          '</select></div>' +
         '</div>' +
         '<div class="form-row">' +
-          '<div class="form-group"><label>Status</label><select id="ms-status"><option value="Prospecting">Prospecting</option><option value="Contacted">Contacted</option><option value="Sampling">Sampling</option><option value="Confirmed">Confirmed</option><option value="Active">Active</option><option value="Paused">Paused</option></select></div>' +
-          '<div class="form-group"><label>Sample Status</label><input id="ms-sample" value="' + esc(sup ? sup.sampleStatus : '') + '"></div>' +
+          '<div class="form-group"><label>MOQ</label><input id="ms-moq" value="' + esc(s ? s.moq : '') + '"></div>' +
+          '<div class="form-group"><label>Lead Time</label><input id="ms-lead" value="' + esc(s ? s.leadTime : '') + '" placeholder="e.g. 6–8 weeks"></div>' +
         '</div>' +
-        '<div class="form-group"><label>Notes</label><textarea id="ms-notes">' + esc(sup ? (sup.notes||'') : '') + '</textarea></div>' +
-        '<div style="padding:0 16px 16px;display:flex;gap:8px;justify-content:flex-end;">' +
-          (isEdit ? '<button class="btn btn-danger btn-sm" onclick="window._mcDeleteSupplier(\'' + sup.id + '\')">Delete</button>' : '') +
+        '<div class="form-group"><label>Notes</label><textarea id="ms-notes">' + esc(s ? (s.notes||'') : '') + '</textarea></div>' +
+        '<div style="padding:0 16px 20px;display:flex;gap:8px;justify-content:flex-end;">' +
+          (isEdit ? '<button class="btn btn-danger btn-sm" onclick="window._mcDeleteSupplier(\'' + s.id + '\')">Delete</button>' : '') +
           '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Cancel</button>' +
-          '<button class="btn btn-primary btn-sm" onclick="window._mcSaveSupplier(\'' + (isEdit ? sup.id : '') + '\')">' + (isEdit ? 'Save' : 'Add') + '</button>' +
+          '<button class="btn btn-primary btn-sm" onclick="window._mcSaveSupplier(\'' + (isEdit ? s.id : '') + '\')">' + (isEdit ? 'Save' : 'Add') + '</button>' +
         '</div>' +
       '</div>';
-    if (sup && sup.status) { setTimeout(function(){ var el = safeEl('ms-status'); if(el) el.value = sup.status; }, 0); }
     window._mountModal(html);
   }
 
   window._mcSaveSupplier = function(id){
     var data = {
-      name:         (safeEl('ms-name')||{}).value||'',
-      country:      (safeEl('ms-country')||{}).value||'',
-      brand:        (safeEl('ms-brand')||{}).value||'',
-      moq:          (safeEl('ms-moq')||{}).value||'',
-      leadTime:     (safeEl('ms-lead')||{}).value||'',
-      status:       (safeEl('ms-status')||{}).value||'Prospecting',
-      sampleStatus: (safeEl('ms-sample')||{}).value||'',
-      notes:        (safeEl('ms-notes')||{}).value||'',
-      lastContact:  firebase.firestore.FieldValue.serverTimestamp()
+      name: (safeEl('ms-name')||{}).value||'', country: (safeEl('ms-country')||{}).value||'',
+      category: (safeEl('ms-category')||{}).value||'', brand: (safeEl('ms-brand')||{}).value||'',
+      status: (safeEl('ms-status')||{}).value||'Prospecting',
+      moq: (safeEl('ms-moq')||{}).value||'', leadTime: (safeEl('ms-lead')||{}).value||'',
+      notes: (safeEl('ms-notes')||{}).value||'',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     var op = id ? suppliersRef.doc(id).update(data) : suppliersRef.add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-    op.then(function(){ window._closeModal(); showToast(id ? 'Supplier updated' : 'Supplier added'); window._mcSwitchView('suppliers'); }).catch(function(e){ showToast(e.message,'error'); });
+    op.then(function(){ window._closeModal(); showToast(id ? 'Supplier updated' : 'Supplier added'); window._mcNav('suppliers'); })
+      .catch(function(e){ showToast(e.message,'error'); });
   };
   window._mcDeleteSupplier = function(id){
     if (!confirm('Delete supplier?')) return;
-    suppliersRef.doc(id).delete().then(function(){ window._closeModal(); showToast('Supplier removed'); window._mcSwitchView('suppliers'); }).catch(function(e){ showToast(e.message,'error'); });
+    suppliersRef.doc(id).delete().then(function(){ window._closeModal(); showToast('Supplier removed'); window._mcNav('suppliers'); })
+      .catch(function(e){ showToast(e.message,'error'); });
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 5 — SAMPLE TRACKER
+     VIEW: WAITING ON
   ══════════════════════════════════════════════════════════════════════════ */
-  function renderSamples(area) {
-    samplesRef.get().then(function(snap) {
-      var samples = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-
-      var statusCounts = {};
-      SAMPLE_STATUSES.forEach(function(s){ statusCounts[s] = 0; });
-      samples.forEach(function(s){ if (statusCounts[s.status] !== undefined) statusCounts[s.status]++; });
-
-      area.innerHTML =
-        '<div class="mc-view-header">' +
-          '<div><div class="mc-view-title">Sample Tracker</div><div class="mc-view-sub">' + samples.length + ' samples total</div></div>' +
-          '<button class="mc-action-btn" onclick="window._mcAddSample()"><i class="ph-light ph-plus"></i> Add Sample</button>' +
-        '</div>' +
-
-        /* Status swimlane counters */
-        '<div class="mc-sample-lanes">' +
-          SAMPLE_STATUSES.map(function(s) {
-            var cnt = statusCounts[s];
-            var active = cnt > 0;
-            return '<div class="mc-sample-lane' + (active ? ' active' : '') + '" onclick="window._mcFilterSamples(\'' + s + '\')">' +
-              '<div class="mc-sample-lane-count">' + cnt + '</div>' +
-              '<div class="mc-sample-lane-label">' + s + '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>' +
-
-        '<div id="mc-samples-list">' +
-          (samples.length ? renderSampleCards(samples) : mcEmpty('ph-package','No samples tracked','Begin sampling with your first request')) +
-        '</div>';
-    }).catch(function(e){ area.innerHTML = mcError(e); });
-  }
-
-  window._mcFilterSamples = function(status) {
-    samplesRef.get().then(function(snap){
-      var all = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var filtered = all.filter(function(s){ return s.status === status; });
-      var list = safeEl('mc-samples-list');
-      if (list) list.innerHTML = filtered.length ? renderSampleCards(filtered) : mcEmpty('ph-package','No samples in this status','');
-    });
-  };
-
-  function renderSampleCards(samples) {
-    return '<div class="mc-sample-grid">' +
-      samples.map(function(s) {
-        var statusColors = { 'Approved':'#1a8742','Rejected':'#c0392b','Delivered':'#1a56db','Shipped':'#6e40c9','Customs':'#c07000','In Production':'#c07000','Requested':'#8a8a8a' };
-        var col = statusColors[s.status] || '#8a8a8a';
-        return '<div class="mc-sample-card" onclick="window._mcEditSample(\'' + s.id + '\')">' +
-          '<div class="mc-sample-card-top">' +
-            (s.imageUrl ? '<img src="' + esc(s.imageUrl) + '" class="mc-sample-img" alt="">' : '<div class="mc-sample-img-placeholder"><i class="ph-light ph-package"></i></div>') +
-            '<div style="flex:1;min-width:0;">' +
-              '<div class="mc-sample-name">' + esc(s.productName||'—') + '</div>' +
-              '<div class="mc-row-meta">' + esc(s.brand||'—') + ' · ' + esc(s.supplier||'—') + '</div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="mc-sample-status" style="border-color:' + col + ';color:' + col + ';">' + esc(s.status||'Requested') + '</div>' +
-          (s.qualityNotes ? '<div class="mc-sample-notes">' + esc(s.qualityNotes.substring(0,60)) + '…</div>' : '') +
-        '</div>';
-      }).join('') +
-    '</div>';
-  }
-
-  window._mcAddSample = function(){ showSampleModal(null); };
-  window._mcEditSample = function(id){
-    samplesRef.doc(id).get().then(function(doc){
-      if (doc.exists) showSampleModal(Object.assign({id:doc.id},doc.data()));
-    });
-  };
-
-  function showSampleModal(s) {
-    var isEdit = !!s;
-    var html =
-      '<div class="modal">' +
-        '<div class="modal-handle"></div>' +
-        '<div class="modal-title">' + (isEdit ? 'Edit Sample' : 'Add Sample') + '</div>' +
-        '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
-        '<div class="form-group"><label>Product Name</label><input id="msp-name" value="' + esc(s ? s.productName : '') + '"></div>' +
-        '<div class="form-row">' +
-          '<div class="form-group"><label>Brand</label><input id="msp-brand" value="' + esc(s ? s.brand : '') + '"></div>' +
-          '<div class="form-group"><label>Supplier</label><input id="msp-supplier" value="' + esc(s ? s.supplier : '') + '"></div>' +
-        '</div>' +
-        '<div class="form-row">' +
-          '<div class="form-group"><label>Status</label><select id="msp-status">' + SAMPLE_STATUSES.map(function(st){ return '<option value="' + st + '"' + (s && s.status === st ? ' selected' : '') + '>' + st + '</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group"><label>Material</label><input id="msp-material" value="' + esc(s ? s.material : '') + '"></div>' +
-        '</div>' +
-        '<div class="form-group"><label>Image URL</label><input id="msp-img" value="' + esc(s ? s.imageUrl : '') + '" placeholder="https://..."></div>' +
-        '<div class="form-group"><label>Quality Notes</label><textarea id="msp-quality">' + esc(s ? (s.qualityNotes||'') : '') + '</textarea></div>' +
-        '<div class="form-group"><label>Fit Notes</label><textarea id="msp-fit">' + esc(s ? (s.fitNotes||'') : '') + '</textarea></div>' +
-        '<div style="padding:0 16px 16px;display:flex;gap:8px;justify-content:flex-end;">' +
-          (isEdit ? '<button class="btn btn-danger btn-sm" onclick="window._mcDeleteSample(\'' + s.id + '\')">Delete</button>' : '') +
-          '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Cancel</button>' +
-          '<button class="btn btn-primary btn-sm" onclick="window._mcSaveSample(\'' + (isEdit ? s.id : '') + '\')">' + (isEdit ? 'Save' : 'Add') + '</button>' +
-        '</div>' +
-      '</div>';
-    window._mountModal(html);
-  }
-
-  window._mcSaveSample = function(id){
-    var data = {
-      productName:  (safeEl('msp-name')||{}).value||'',
-      brand:        (safeEl('msp-brand')||{}).value||'',
-      supplier:     (safeEl('msp-supplier')||{}).value||'',
-      status:       (safeEl('msp-status')||{}).value||'Requested',
-      material:     (safeEl('msp-material')||{}).value||'',
-      imageUrl:     (safeEl('msp-img')||{}).value||'',
-      qualityNotes: (safeEl('msp-quality')||{}).value||'',
-      fitNotes:     (safeEl('msp-fit')||{}).value||'',
-      updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
-    };
-    var op = id ? samplesRef.doc(id).update(data) : samplesRef.add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-    op.then(function(){ window._closeModal(); showToast(id ? 'Sample updated' : 'Sample added'); window._mcSwitchView('samples'); }).catch(function(e){ showToast(e.message,'error'); });
-  };
-  window._mcDeleteSample = function(id){
-    if (!confirm('Delete sample?')) return;
-    samplesRef.doc(id).delete().then(function(){ window._closeModal(); showToast('Sample removed'); window._mcSwitchView('samples'); }).catch(function(e){ showToast(e.message,'error'); });
-  };
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 6 — CAMPAIGN PRODUCTION
-  ══════════════════════════════════════════════════════════════════════════ */
-  function renderCampaigns(area) {
-    campaignsRef.get().then(function(snap) {
-      var campaigns = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-
-      area.innerHTML =
-        '<div class="mc-view-header">' +
-          '<div><div class="mc-view-title">Campaign Production</div><div class="mc-view-sub">' + campaigns.length + ' campaigns tracked</div></div>' +
-          '<button class="mc-action-btn" onclick="window._mcAddCampaign()"><i class="ph-light ph-plus"></i> New Campaign</button>' +
-        '</div>' +
-        (campaigns.length ?
-          '<div class="mc-campaign-list">' +
-            campaigns.map(function(c){
-              var stageIdx = CAMPAIGN_STAGES.indexOf(c.stage);
-              var pct = stageIdx < 0 ? 0 : Math.round(((stageIdx + 1) / CAMPAIGN_STAGES.length) * 100);
-              var isReady = c.stage === 'Campaign Ready';
-              return '<div class="mc-campaign-card" onclick="window._mcEditCampaign(\'' + c.id + '\')">' +
-                '<div class="mc-campaign-card-top">' +
-                  '<div>' +
-                    '<div class="mc-campaign-name">' + esc(c.name||'—') + '</div>' +
-                    '<div class="mc-row-meta">' + esc(c.brand||'—') + (c.season ? ' · ' + esc(c.season) : '') + '</div>' +
-                  '</div>' +
-                  (isReady ? '<span class="mc-campaign-ready-badge">Ready</span>' : '') +
-                '</div>' +
-                '<div class="mc-campaign-progress-wrap">' +
-                  '<div class="mc-campaign-progress-bar" style="width:' + pct + '%;background:' + (isReady ? '#1a8742' : 'var(--accent)') + ';"></div>' +
-                '</div>' +
-                '<div class="mc-campaign-stages">' +
-                  CAMPAIGN_STAGES.map(function(s) {
-                    var done = CAMPAIGN_STAGES.indexOf(s) <= stageIdx;
-                    return '<div class="mc-cam-stage' + (done ? ' done' : '') + '" title="' + s + '">' +
-                      '<i class="ph-light ' + (done ? 'ph-check-circle' : 'ph-circle') + '"></i>' +
-                      '<span>' + s.split(' ')[0] + '</span>' +
-                    '</div>';
-                  }).join('') +
-                '</div>' +
-              '</div>';
-            }).join('') +
-          '</div>' :
-          mcEmpty('ph-camera','No campaigns in production','Create your first campaign to begin production tracking')
-        );
-    }).catch(function(e){ area.innerHTML = mcError(e); });
-  }
-
-  window._mcAddCampaign = function(){ showCampaignModal(null); };
-  window._mcEditCampaign = function(id){
-    campaignsRef.doc(id).get().then(function(doc){
-      if (doc.exists) showCampaignModal(Object.assign({id:doc.id},doc.data()));
-    });
-  };
-
-  function showCampaignModal(c) {
-    var isEdit = !!c;
-    var html =
-      '<div class="modal">' +
-        '<div class="modal-handle"></div>' +
-        '<div class="modal-title">' + (isEdit ? 'Edit Campaign' : 'New Campaign') + '</div>' +
-        '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
-        '<div class="form-group"><label>Campaign Name</label><input id="mc-name" value="' + esc(c ? c.name : '') + '" placeholder="e.g. Winter 2026 Editorial"></div>' +
-        '<div class="form-row">' +
-          '<div class="form-group"><label>Brand</label><input id="mc-brand" value="' + esc(c ? c.brand : '') + '"></div>' +
-          '<div class="form-group"><label>Season</label><input id="mc-season" value="' + esc(c ? c.season : '') + '" placeholder="e.g. SS26"></div>' +
-        '</div>' +
-        '<div class="form-group"><label>Current Stage</label><select id="mc-stage">' + CAMPAIGN_STAGES.map(function(s){ return '<option value="' + s + '"' + (c && c.stage === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div>' +
-        '<div class="form-group"><label>Notes</label><textarea id="mc-notes">' + esc(c ? (c.notes||'') : '') + '</textarea></div>' +
-        '<div style="padding:0 16px 16px;display:flex;gap:8px;justify-content:flex-end;">' +
-          (isEdit ? '<button class="btn btn-danger btn-sm" onclick="window._mcDeleteCampaign(\'' + c.id + '\')">Delete</button>' : '') +
-          '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Cancel</button>' +
-          '<button class="btn btn-primary btn-sm" onclick="window._mcSaveCampaign(\'' + (isEdit ? c.id : '') + '\')">' + (isEdit ? 'Save' : 'Create') + '</button>' +
-        '</div>' +
-      '</div>';
-    window._mountModal(html);
-  }
-
-  window._mcSaveCampaign = function(id){
-    var data = {
-      name:      (safeEl('mc-name')||{}).value||'',
-      brand:     (safeEl('mc-brand')||{}).value||'',
-      season:    (safeEl('mc-season')||{}).value||'',
-      stage:     (safeEl('mc-stage')||{}).value||'Moodboard',
-      notes:     (safeEl('mc-notes')||{}).value||'',
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    var op = id ? campaignsRef.doc(id).update(data) : campaignsRef.add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-    op.then(function(){ window._closeModal(); showToast(id ? 'Campaign updated' : 'Campaign created'); window._mcSwitchView('campaigns'); }).catch(function(e){ showToast(e.message,'error'); });
-  };
-  window._mcDeleteCampaign = function(id){
-    if (!confirm('Delete campaign?')) return;
-    campaignsRef.doc(id).delete().then(function(){ window._closeModal(); showToast('Campaign removed'); window._mcSwitchView('campaigns'); }).catch(function(e){ showToast(e.message,'error'); });
-  };
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 8 — WAITING ON
-  ══════════════════════════════════════════════════════════════════════════ */
-  function renderWaiting(area) {
-    waitingOnRef.where('resolved','==',false).get().catch(function(){
-      return waitingOnRef.get();
-    }).then(function(snap) {
-      var items = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-
-      var cats = ['Brands','Suppliers','Samples','Campaigns','Operations','Launch','JANEDORE'];
-      var grouped = {};
-      cats.forEach(function(c){ grouped[c] = []; });
-      items.forEach(function(item){
-        var cat = item.category || 'Operations';
-        if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(item);
-      });
-
+  function viewWaiting(area) {
+    waitingOnRef.where('resolved','==',false).get().catch(function(){ return waitingOnRef.get(); })
+    .then(function(snap){
+      var items = snap.docs.map(d2o).filter(function(i){ return !i.resolved; });
       area.innerHTML =
         '<div class="mc-view-header">' +
           '<div><div class="mc-view-title">Waiting On</div><div class="mc-view-sub">Items outside your control</div></div>' +
           '<button class="mc-action-btn" onclick="window._mcAddWaiting()"><i class="ph-light ph-plus"></i> Add Item</button>' +
         '</div>' +
         (items.length ?
-          cats.filter(function(c){ return grouped[c] && grouped[c].length; }).map(function(cat) {
-            return '<div class="mc-section-label">' + cat + '</div>' +
-              '<div class="mc-card" style="margin-bottom:10px;">' +
-                grouped[cat].map(function(item) {
-                  var daysSince = item.createdAt ? Math.round((Date.now() - (item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt)).getTime()) / 86400000) : 0;
-                  var urgent = daysSince >= 5;
-                  return '<div class="mc-waiting-row' + (urgent ? ' urgent' : '') + '">' +
-                    '<i class="ph-light ph-hourglass" style="font-size:16px;color:' + (urgent ? '#c0392b' : 'var(--muted)') + ';flex-shrink:0;"></i>' +
-                    '<div style="flex:1;min-width:0;">' +
-                      '<div class="mc-waiting-text">' + esc(item.description||'—') + '</div>' +
-                      '<div class="mc-row-meta">Added ' + daysSince + ' day' + (daysSince !== 1 ? 's' : '') + ' ago</div>' +
-                    '</div>' +
-                    '<button class="mc-resolve-btn" onclick="window._mcResolveWaiting(\'' + item.id + '\')">Resolve</button>' +
-                  '</div>';
-                }).join('') +
+          '<div class="waiting-list">' +
+            items.map(function(w){
+              var age = w.createdAt ? Math.round((Date.now() - (w.createdAt.toDate ? w.createdAt.toDate() : new Date(w.createdAt)).getTime()) / 86400000) : 0;
+              var urgent = age >= 5;
+              return '<div class="waiting-card' + (urgent ? ' urgent' : '') + '">' +
+                '<div class="waiting-card-top">' +
+                  '<span class="waiting-cat-pill">' + esc(w.category||'Other') + '</span>' +
+                  '<span class="waiting-age' + (urgent ? ' urgent' : '') + '">' + age + 'd ago</span>' +
+                '</div>' +
+                '<div class="waiting-desc">' + esc(w.description) + '</div>' +
+                (w.project ? '<div class="waiting-project">Re: ' + esc(w.project) + '</div>' : '') +
+                '<button class="waiting-resolve-btn" onclick="window._mcResolveWaiting(\'' + w.id + '\')">Mark Resolved</button>' +
               '</div>';
-          }).join('') :
-          mcEmpty('ph-hourglass','Nothing waiting','All external items are resolved')
+            }).join('') +
+          '</div>' :
+          mcEmpty('ph-hourglass','Nothing pending','All waiting items have been resolved')
         );
     }).catch(function(e){ area.innerHTML = mcError(e); });
   }
 
   window._mcAddWaiting = function(){
-    var cats = ['Brands','Suppliers','Samples','Campaigns','Operations','Launch','JANEDORE'];
     var html =
       '<div class="modal modal-sm">' +
         '<div class="modal-handle"></div>' +
-        '<div class="modal-title">Waiting On</div>' +
+        '<div class="modal-title">Add Waiting Item</div>' +
         '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
-        '<div class="form-group"><label>Description</label><textarea id="mw-desc" rows="3" placeholder="Waiting for supplier reply re: fabric MOQ..."></textarea></div>' +
-        '<div class="form-group"><label>Category</label><select id="mw-cat">' + cats.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select></div>' +
-        '<div style="padding:0 16px 16px;display:flex;gap:8px;justify-content:flex-end;">' +
+        '<div class="form-group"><label>What are you waiting for?</label>' +
+          '<textarea id="mw-desc" rows="3" placeholder="Waiting for supplier quote on 500 units leather handbags..."></textarea>' +
+        '</div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Category</label><select id="mw-cat">' +
+            WAITING_CATEGORIES.map(function(c){ return '<option>' + c + '</option>'; }).join('') +
+          '</select></div>' +
+          '<div class="form-group"><label>Related Project (optional)</label><input id="mw-project" placeholder="e.g. JANEDORE Handbags"></div>' +
+        '</div>' +
+        '<div style="padding:0 16px 20px;display:flex;gap:8px;justify-content:flex-end;">' +
           '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Cancel</button>' +
           '<button class="btn btn-primary btn-sm" onclick="window._mcSaveWaiting()">Add</button>' +
         '</div>' +
@@ -917,84 +835,206 @@
   window._mcSaveWaiting = function(){
     var data = {
       description: (safeEl('mw-desc')||{}).value||'',
-      category:    (safeEl('mw-cat')||{}).value||'Operations',
+      category:    (safeEl('mw-cat')||{}).value||'Other',
+      project:     (safeEl('mw-project')||{}).value||'',
       resolved:    false,
       createdAt:   firebase.firestore.FieldValue.serverTimestamp()
     };
-    waitingOnRef.add(data).then(function(){ window._closeModal(); showToast('Added to waiting list'); window._mcSwitchView('waiting'); }).catch(function(e){ showToast(e.message,'error'); });
+    waitingOnRef.add(data).then(function(){ window._closeModal(); showToast('Added'); window._mcNav('waiting'); })
+      .catch(function(e){ showToast(e.message,'error'); });
   };
   window._mcResolveWaiting = function(id){
-    waitingOnRef.doc(id).update({ resolved: true }).then(function(){ showToast('Resolved'); window._mcSwitchView('waiting'); }).catch(function(e){ showToast(e.message,'error'); });
+    waitingOnRef.doc(id).update({ resolved: true })
+      .then(function(){ showToast('Resolved'); window._mcNav('waiting'); })
+      .catch(function(e){ showToast(e.message,'error'); });
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
-     SECTION 9 — FOUNDER NOTES
+     VIEW: RECENT WINS
   ══════════════════════════════════════════════════════════════════════════ */
-  function renderNotes(area) {
-    founderNotesRef.orderBy('createdAt','desc').limit(50).get().then(function(snap) {
-      var notes = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-
+  function viewWins(area) {
+    winsRef.orderBy('createdAt','desc').get().then(function(snap){
+      var wins = snap.docs.map(d2o);
       area.innerHTML =
         '<div class="mc-view-header">' +
-          '<div><div class="mc-view-title">Founder Notes</div><div class="mc-view-sub">Your running journal</div></div>' +
+          '<div><div class="mc-view-title">Recent Wins</div><div class="mc-view-sub">Celebrate progress</div></div>' +
+          '<button class="mc-action-btn" onclick="window._mcAddWin()"><i class="ph-light ph-plus"></i> Log Win</button>' +
         '</div>' +
-
-        /* Quick note entry */
-        '<div class="mc-card" style="margin-bottom:14px;padding:16px;">' +
-          '<textarea id="mc-note-input" class="mc-note-textarea" placeholder="Note something down... Found a better supplier today. Campaign direction needs work."></textarea>' +
-          '<div style="display:flex;align-items:center;gap:8px;margin-top:10px;">' +
-            '<select id="mc-note-tag" class="mc-note-tag-select">' +
-              '<option value="">General</option>' +
-              '<option value="Brand">Brand</option>' +
-              '<option value="Supplier">Supplier</option>' +
-              '<option value="Campaign">Campaign</option>' +
-              '<option value="JANEDORE">JANEDORE</option>' +
-              '<option value="Operations">Operations</option>' +
-            '</select>' +
-            '<button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="window._mcSaveNote()"><i class="ph-light ph-pencil-line"></i> Save Note</button>' +
-          '</div>' +
-        '</div>' +
-
-        (notes.length ?
-          '<div class="mc-notes-feed">' +
-            notes.map(function(note) {
-              var d = note.createdAt ? (note.createdAt.toDate ? note.createdAt.toDate() : new Date(note.createdAt)) : new Date();
-              var timeStr = d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}) + ' at ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-              return '<div class="mc-note-card">' +
-                '<div class="mc-note-card-top">' +
-                  (note.tag ? '<span class="mc-note-tag">' + esc(note.tag) + '</span>' : '') +
-                  '<span class="mc-note-time">' + timeStr + '</span>' +
-                  '<button class="mc-icon-btn" onclick="window._mcDeleteNote(\'' + note.id + '\')"><i class="ph-light ph-trash"></i></button>' +
-                '</div>' +
-                '<div class="mc-note-body">' + esc(note.text||'') + '</div>' +
+        (wins.length ?
+          '<div class="wins-grid">' +
+            wins.map(function(w){
+              return '<div class="win-card">' +
+                '<div class="win-icon-wrap"><i class="ph-light ph-trophy"></i></div>' +
+                '<div class="win-title">' + esc(w.title) + '</div>' +
+                (w.note ? '<div class="win-note">' + esc(w.note) + '</div>' : '') +
+                (w.createdAt ? '<div class="win-date">' + fmtDate(w.createdAt) + '</div>' : '') +
+                '<button class="mc-icon-btn" style="margin-top:8px;" onclick="window._mcDeleteWin(\'' + w.id + '\')"><i class="ph-light ph-trash"></i></button>' +
               '</div>';
             }).join('') +
           '</div>' :
-          mcEmpty('ph-notebook','No notes yet','Your first note will appear here')
+          mcEmpty('ph-trophy','No wins logged yet','Start celebrating your milestones')
+        );
+    }).catch(function(e){ area.innerHTML = mcError(e); });
+  }
+
+  window._mcAddWin = function(){
+    var html =
+      '<div class="modal modal-sm">' +
+        '<div class="modal-handle"></div>' +
+        '<div class="modal-title">Log a Win</div>' +
+        '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
+        '<div class="form-group"><label>What happened?</label><input id="mwin-title" placeholder="e.g. Supplier confirmed, Sample approved, Photoshoot booked"></div>' +
+        '<div class="form-group"><label>Notes (optional)</label><textarea id="mwin-note" rows="2"></textarea></div>' +
+        '<div style="padding:0 16px 20px;display:flex;gap:8px;justify-content:flex-end;">' +
+          '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Cancel</button>' +
+          '<button class="btn btn-primary btn-sm" onclick="window._mcSaveWin()">Log It</button>' +
+        '</div>' +
+      '</div>';
+    window._mountModal(html);
+  };
+  window._mcSaveWin = function(){
+    var title = ((safeEl('mwin-title')||{}).value||'').trim();
+    if (!title) { showToast('Add a title','error'); return; }
+    winsRef.add({ title: title, note: (safeEl('mwin-note')||{}).value||'', createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function(){ window._closeModal(); showToast('Win logged'); window._mcNav('wins'); })
+      .catch(function(e){ showToast(e.message,'error'); });
+  };
+  window._mcDeleteWin = function(id){
+    if (!confirm('Remove this win?')) return;
+    winsRef.doc(id).delete().then(function(){ showToast('Removed'); window._mcNav('wins'); });
+  };
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     VIEW: MILESTONES
+  ══════════════════════════════════════════════════════════════════════════ */
+  function viewMilestones(area) {
+    milestonesRef.orderBy('date','asc').get().catch(function(){ return milestonesRef.get(); })
+    .then(function(snap){
+      var items = snap.docs.map(d2o);
+      area.innerHTML =
+        '<div class="mc-view-header">' +
+          '<div><div class="mc-view-title">Milestones</div><div class="mc-view-sub">Key dates and deadlines</div></div>' +
+          '<button class="mc-action-btn" onclick="window._mcAddMilestone()"><i class="ph-light ph-plus"></i> Add Date</button>' +
+        '</div>' +
+        (items.length ?
+          '<div class="milestone-list">' +
+            items.map(function(m){
+              var d = m.date ? (m.date.toDate ? m.date.toDate() : new Date(m.date)) : null;
+              var daysUntil = d ? Math.ceil((d.getTime() - Date.now()) / 86400000) : null;
+              var past = daysUntil !== null && daysUntil < 0;
+              var soon = daysUntil !== null && daysUntil >= 0 && daysUntil <= 7;
+              return '<div class="milestone-row' + (soon ? ' soon' : past ? ' past' : '') + '">' +
+                '<div class="milestone-date-col">' +
+                  '<div class="milestone-day">' + (d ? d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'}) : '—') + '</div>' +
+                  (daysUntil !== null ? '<div class="milestone-countdown' + (past ? ' past' : soon ? ' soon' : '') + '">' + (past ? 'Past' : daysUntil === 0 ? 'Today' : daysUntil + 'd') + '</div>' : '') +
+                '</div>' +
+                '<div class="milestone-info">' +
+                  '<div class="milestone-title">' + esc(m.title) + '</div>' +
+                  (m.project ? '<div class="cell-muted" style="font-size:11px;margin-top:2px;">' + esc(m.project) + '</div>' : '') +
+                '</div>' +
+                '<button class="mc-icon-btn" onclick="window._mcDeleteMilestone(\'' + m.id + '\')"><i class="ph-light ph-trash"></i></button>' +
+              '</div>';
+            }).join('') +
+          '</div>' :
+          mcEmpty('ph-calendar-check','No milestones yet','Add sample arrival dates, shoot dates, launch dates')
+        );
+    }).catch(function(e){ area.innerHTML = mcError(e); });
+  }
+
+  window._mcAddMilestone = function(){
+    var html =
+      '<div class="modal modal-sm">' +
+        '<div class="modal-handle"></div>' +
+        '<div class="modal-title">Add Milestone</div>' +
+        '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
+        '<div class="form-group"><label>Title</label><input id="mm-title" placeholder="e.g. Sample arrival, Photoshoot, Launch date"></div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Date</label><input type="date" id="mm-date"></div>' +
+          '<div class="form-group"><label>Related Project (optional)</label><input id="mm-project"></div>' +
+        '</div>' +
+        '<div style="padding:0 16px 20px;display:flex;gap:8px;justify-content:flex-end;">' +
+          '<button class="btn btn-ghost btn-sm" onclick="window._closeModal()">Cancel</button>' +
+          '<button class="btn btn-primary btn-sm" onclick="window._mcSaveMilestone()">Add</button>' +
+        '</div>' +
+      '</div>';
+    window._mountModal(html);
+  };
+  window._mcSaveMilestone = function(){
+    var title = ((safeEl('mm-title')||{}).value||'').trim();
+    var dateVal = (safeEl('mm-date')||{}).value;
+    if (!title || !dateVal) { showToast('Add a title and date','error'); return; }
+    milestonesRef.add({
+      title: title,
+      date: firebase.firestore.Timestamp.fromDate(new Date(dateVal)),
+      project: (safeEl('mm-project')||{}).value||'',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){ window._closeModal(); showToast('Milestone added'); window._mcNav('milestones'); })
+      .catch(function(e){ showToast(e.message,'error'); });
+  };
+  window._mcDeleteMilestone = function(id){
+    if (!confirm('Delete this milestone?')) return;
+    milestonesRef.doc(id).delete().then(function(){ showToast('Deleted'); window._mcNav('milestones'); });
+  };
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     VIEW: FOUNDER NOTES
+  ══════════════════════════════════════════════════════════════════════════ */
+  function viewNotes(area) {
+    founderNotesRef.orderBy('createdAt','desc').limit(60).get().then(function(snap){
+      var notes = snap.docs.map(d2o);
+      var tags  = ['General','Product','Packaging','Campaign','Supplier','Collection','Launch'];
+      area.innerHTML =
+        '<div class="mc-view-header">' +
+          '<div><div class="mc-view-title">Founder Notes</div><div class="mc-view-sub">Ideas, decisions, observations</div></div>' +
+        '</div>' +
+        '<div class="note-compose">' +
+          '<textarea id="mc-note-input" class="note-textarea" placeholder="Found a better packaging supplier today. Need to compare pricing on the velvet pouches..."></textarea>' +
+          '<div class="note-compose-footer">' +
+            '<select id="mc-note-tag" class="note-tag-select">' +
+              tags.map(function(t){ return '<option>' + t + '</option>'; }).join('') +
+            '</select>' +
+            '<button class="btn btn-primary btn-sm" onclick="window._mcSaveNote()"><i class="ph-light ph-pencil-line"></i> Save Note</button>' +
+          '</div>' +
+        '</div>' +
+        (notes.length ?
+          '<div class="notes-feed">' +
+            notes.map(function(n){
+              var d = n.createdAt ? (n.createdAt.toDate ? n.createdAt.toDate() : new Date(n.createdAt)) : new Date();
+              var ts = d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+              return '<div class="note-card">' +
+                '<div class="note-card-header">' +
+                  (n.tag && n.tag !== 'General' ? '<span class="note-tag-badge">' + esc(n.tag) + '</span>' : '') +
+                  '<span class="note-timestamp">' + ts + '</span>' +
+                  '<button class="mc-icon-btn" onclick="window._mcDeleteNote(\'' + n.id + '\')"><i class="ph-light ph-trash"></i></button>' +
+                '</div>' +
+                '<div class="note-body">' + esc(n.text||'') + '</div>' +
+              '</div>';
+            }).join('') +
+          '</div>' :
+          mcEmpty('ph-notebook-text','No notes yet','Start capturing your ideas')
         );
     }).catch(function(e){ area.innerHTML = mcError(e); });
   }
 
   window._mcSaveNote = function(){
-    var text = (safeEl('mc-note-input')||{}).value||'';
-    if (!text.trim()) { showToast('Write something first','error'); return; }
-    var tag = (safeEl('mc-note-tag')||{}).value||'';
-    founderNotesRef.add({ text: text.trim(), tag: tag, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
-      .then(function(){ showToast('Note saved'); window._mcSwitchView('notes'); })
+    var text = ((safeEl('mc-note-input')||{}).value||'').trim();
+    if (!text) { showToast('Write something first','error'); return; }
+    founderNotesRef.add({ text: text, tag: (safeEl('mc-note-tag')||{}).value||'General', createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function(){ showToast('Note saved'); window._mcNav('notes'); })
       .catch(function(e){ showToast(e.message,'error'); });
   };
   window._mcDeleteNote = function(id){
-    if (!confirm('Delete this note?')) return;
-    founderNotesRef.doc(id).delete().then(function(){ showToast('Note deleted'); window._mcSwitchView('notes'); }).catch(function(e){ showToast(e.message,'error'); });
+    if (!confirm('Delete note?')) return;
+    founderNotesRef.doc(id).delete().then(function(){ showToast('Deleted'); window._mcNav('notes'); });
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
-     CHART (from original dashboard)
+     ORDERS CHART (preserved from original)
   ══════════════════════════════════════════════════════════════════════════ */
   window._dashToggleBrand = function(key) {
     _activeFilters[key] = !_activeFilters[key];
-    var btnKey = key.replace(/\s/g,'-');
-    var btn = safeEl('dash-toggle-' + btnKey);
+    var safeKey = key.replace(/\s/g,'-');
+    var btn = safeEl('dash-toggle-' + safeKey);
     if (btn) btn.classList.toggle('active', _activeFilters[key]);
     buildChart(_allOrders);
   };
@@ -1003,8 +1043,8 @@
     var days = {}, now = Date.now(), DAY = 86400000;
     for (var i = 29; i >= 0; i--) {
       var d = new Date(now - i * DAY);
-      var key = d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'});
-      days[key] = key;
+      var k = d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'});
+      days[k] = k;
     }
     return Object.keys(days);
   }
@@ -1013,39 +1053,29 @@
     var canvas = safeEl('orders-chart');
     if (!canvas || !window.Chart) return;
     if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; }
-
     var labels = buildDayMap();
-    var brandDayData   = {};
-    var brandDayOrders = {};
-
-    BRANDS.forEach(function(b){
-      brandDayData[b.key] = {};
-      brandDayOrders[b.key] = {};
-      labels.forEach(function(lbl){ brandDayData[b.key][lbl] = 0; brandDayOrders[b.key][lbl] = []; });
+    var bdd = {}, bdo = {};
+    HOUSE_BRANDS.forEach(function(b){
+      bdd[b.key] = {}; bdo[b.key] = {};
+      labels.forEach(function(l){ bdd[b.key][l] = 0; bdo[b.key][l] = []; });
     });
-
     orders.forEach(function(o){
       if (!o.createdAt) return;
       var d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
       var lbl = d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'});
       var brand = (o.brand||'').toUpperCase();
-      var matched = BRANDS.find(function(b){ return b.key === brand; });
+      var matched = HOUSE_BRANDS.find(function(b){ return b.key === brand; });
       var key = matched ? matched.key : 'JANEDORE';
-      if (brandDayData[key][lbl] === undefined) return;
-      brandDayData[key][lbl]++;
-      brandDayOrders[key][lbl].push(o);
+      if (bdd[key][lbl] === undefined) return;
+      bdd[key][lbl]++; bdo[key][lbl].push(o);
     });
-
-    window._dashBrandDayOrders = brandDayOrders;
+    window._dashBrandDayOrders = bdo;
     window._dashLabels = labels;
-
-    var datasets = BRANDS.filter(function(b){ return _activeFilters[b.key]; }).map(function(b){
-      return { label: b.key, data: labels.map(function(lbl){ return brandDayData[b.key][lbl]; }), borderColor: b.color, backgroundColor: b.bg, borderWidth: 1.5, tension: 0.4, fill: true, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: b.color, pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2 };
+    var datasets = HOUSE_BRANDS.filter(function(b){ return _activeFilters[b.key]; }).map(function(b){
+      return { label: b.key, data: labels.map(function(l){ return bdd[b.key][l]; }), borderColor: b.color, backgroundColor: b.bg, borderWidth: 1.5, tension: 0.4, fill: true, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: b.color, pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2 };
     });
-
     window._analyticsChart = new Chart(canvas, {
-      type: 'line',
-      data: { labels: labels, datasets: datasets },
+      type: 'line', data: { labels: labels, datasets: datasets },
       options: {
         responsive: true, maintainAspectRatio: true,
         interaction: { mode: 'index', intersect: false },
@@ -1054,124 +1084,112 @@
           x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 9, family: 'Manrope' }, maxTicksLimit: 8, color: '#bbb' } },
           y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 9, family: 'Manrope' }, precision: 0, color: '#bbb' }, beginAtZero: true }
         },
-        onClick: function(evt, elements){ if (elements && elements.length) { var idx = elements[0].index; window._dashOpenDayPopup(labels[idx]); } }
+        onClick: function(evt, elements){ if (elements && elements.length) window._dashOpenDayPopup(labels[elements[0].index]); }
       }
     });
   }
 
   window._dashOpenDayPopup = function(dayLabel) {
     var popup = safeEl('dash-day-popup'), titleEl = safeEl('dash-popup-title'), bodyEl = safeEl('dash-popup-body');
-    if (!popup || !titleEl || !bodyEl) return;
-    var allDayOrders = [];
-    var bdOrders = window._dashBrandDayOrders || {};
-    BRANDS.forEach(function(b){
-      if (bdOrders[b.key] && bdOrders[b.key][dayLabel]) {
-        bdOrders[b.key][dayLabel].forEach(function(o){ allDayOrders.push(Object.assign({_brand:b.key,_color:b.color},o)); });
-      }
-    });
+    if (!popup||!titleEl||!bodyEl) return;
+    var all = [];
+    var bdo = window._dashBrandDayOrders || {};
+    HOUSE_BRANDS.forEach(function(b){ if (bdo[b.key] && bdo[b.key][dayLabel]) bdo[b.key][dayLabel].forEach(function(o){ all.push(Object.assign({_color:b.color},o)); }); });
     titleEl.textContent = dayLabel;
-    if (!allDayOrders.length) {
-      bodyEl.innerHTML = '<div class="dash-popup-empty"><i class="ph-light ph-receipt" style="font-size:22px;opacity:.2;"></i><span>No orders on this day</span></div>';
-    } else {
-      bodyEl.innerHTML = allDayOrders.map(function(o){
-        var orderId = (o.orderId||o.id||'—').toString().slice(-6).toUpperCase();
-        var customer = o.customerName||o.email||'Customer';
-        var amount = o.subtotal != null ? 'R'+Number(o.subtotal).toFixed(2) : '—';
-        var status = o.status||'pending';
-        return '<div class="dash-popup-row"><div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;"><span class="dash-popup-brand-dot" style="background:'+o._color+';"></span><div><div class="dash-popup-order-id">#'+esc(orderId)+'</div><div class="dash-popup-customer">'+esc(customer)+'</div></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;"><span class="dash-popup-amount">'+esc(amount)+'</span><span class="badge badge-'+esc(status)+'">'+esc(status)+'</span></div></div>';
-      }).join('');
-    }
+    bodyEl.innerHTML = all.length ? all.map(function(o){
+      var oid = (o.orderId||o.id||'—').toString().slice(-6).toUpperCase();
+      return '<div class="dash-popup-row"><div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;"><span class="dash-popup-brand-dot" style="background:'+o._color+';"></span><div><div class="dash-popup-order-id">#'+esc(oid)+'</div><div class="dash-popup-customer">'+esc(o.customerName||o.email||'Customer')+'</div></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;"><span class="dash-popup-amount">'+(o.subtotal!=null?'R'+Number(o.subtotal).toFixed(2):'—')+'</span><span class="badge badge-'+esc(o.status||'pending')+'">'+esc(o.status||'pending')+'</span></div></div>';
+    }).join('') : '<div class="dash-popup-empty"><i class="ph-light ph-receipt" style="font-size:22px;opacity:.2;"></i><span>No orders on this day</span></div>';
     popup.style.display = 'block';
     requestAnimationFrame(function(){ popup.classList.add('open'); });
   };
-
   window._dashClosePopup = function(){
     var popup = safeEl('dash-day-popup');
     if (!popup) return;
     popup.classList.remove('open');
     setTimeout(function(){ popup.style.display = 'none'; }, 220);
   };
-
   document.addEventListener('click', function(e){
     var popup = safeEl('dash-day-popup');
     if (!popup || popup.style.display === 'none') return;
     if (!popup.contains(e.target) && !e.target.closest('#orders-chart')) window._dashClosePopup();
   });
 
-  /* ─── HELPERS ────────────────────────────────────────────────────────────── */
+  /* ══════════════════════════════════════════════════════════════════════════
+     HELPERS
+  ══════════════════════════════════════════════════════════════════════════ */
+  function d2o(doc) { return Object.assign({ id: doc.id }, doc.data()); }
+  function getBrandMeta(key) { return HOUSE_BRANDS.find(function(b){ return b.key === key; }) || HOUSE_BRANDS[0]; }
+
   function statusPill(status) {
     if (!status) return '';
-    var colors = { 'Active':'#1a8742','Confirmed':'#1a8742','Approved':'#1a8742','Live':'#1a8742','Delivered':'#1a56db','Shipped':'#6e40c9','Customs':'#c07000','In Production':'#c07000','Sampling':'#c07000','Contacted':'#c07000','Campaign Ready':'#1a8742','Rejected':'#c0392b','Paused':'#c0392b' };
-    var col = colors[status] || '#8a8a8a';
-    return '<span style="font-size:10px;font-weight:600;letter-spacing:.04em;padding:2px 8px;border-radius:20px;border:1px solid ' + col + ';color:' + col + ';white-space:nowrap;">' + esc(status) + '</span>';
+    var map = { 'Active':'#1a8742','Confirmed':'#1a8742','Approved':'#1a8742','Delivered':'#1a56db','Shipped':'#6e40c9','Customs':'#c07000','Sampling':'#c07000','Contacted':'#c07000','Paused':'#c0392b','Dropped':'#c0392b' };
+    var col = map[status] || '#8a8a8a';
+    return '<span style="font-size:10px;font-weight:600;letter-spacing:.04em;padding:2px 9px;border-radius:20px;border:1px solid '+col+';color:'+col+';">'+esc(status)+'</span>';
   }
-
   function mcEmpty(icon, title, sub) {
-    return '<div class="mc-empty"><i class="ph-light ' + icon + '"></i><div class="mc-empty-title">' + title + '</div>' + (sub ? '<div class="mc-empty-sub">' + sub + '</div>' : '') + '</div>';
+    return '<div class="mc-empty"><i class="ph-light '+icon+'"></i><div class="mc-empty-title">'+title+'</div>'+(sub?'<div class="mc-empty-sub">'+sub+'</div>':'')+'</div>';
   }
-
   function mcError(e) {
-    return '<div class="mc-error"><i class="ph-light ph-warning"></i> ' + esc(e ? e.message : 'Error') + '</div>';
+    return '<div class="mc-error-banner"><i class="ph-light ph-warning"></i> '+esc(e?e.message:'Unknown error')+'</div>';
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     CSS INJECTION — Mission Control styles
+     CSS INJECTION
   ══════════════════════════════════════════════════════════════════════════ */
   function injectMCStyles() {
     if (document.getElementById('mc-styles')) return;
-    var style = document.createElement('style');
-    style.id = 'mc-styles';
-    style.textContent = `
+    var s = document.createElement('style');
+    s.id = 'mc-styles';
+    s.textContent = `
 
-/* ── MC SHELL ── */
+/* ══ SHELL ════════════════════════════════════════════════════════ */
 .mc-shell {
   display: flex;
-  gap: 0;
+  align-items: flex-start;
   min-height: calc(100vh - var(--nav-h));
 }
+.mc-view-area {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 60px;
+}
 
-/* ── MC NAV (left rail) ── */
-.mc-nav {
-  width: 200px;
+/* ══ SIDE NAV ═════════════════════════════════════════════════════ */
+.mc-sidenav {
+  width: 196px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 0.5px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 0 0 20px;
+  padding: 0 8px 20px;
   position: sticky;
   top: var(--nav-h);
   height: calc(100vh - var(--nav-h));
   overflow-y: auto;
 }
-@media(max-width: 1023px) {
-  .mc-nav { display: none; }
-}
-.mc-nav-header {
-  padding: 16px 14px 12px;
+@media(max-width:1023px){ .mc-sidenav { display: none; } }
+
+.mc-sidenav-brand {
+  padding: 16px 6px 12px;
   border-bottom: 0.5px solid var(--border);
   margin-bottom: 8px;
 }
-.mc-nav-wordmark {
-  font-size: 9px;
+.mc-sidenav-wordmark {
+  font-size: 8.5px;
   font-weight: 700;
-  letter-spacing: .18em;
+  letter-spacing: .2em;
   color: var(--muted2);
-  margin-bottom: 3px;
 }
-.mc-nav-date {
+.mc-sidenav-date {
   font-size: 10px;
   color: var(--muted);
-  letter-spacing: .06em;
+  margin-top: 3px;
+  letter-spacing: .05em;
   font-weight: 500;
 }
-.mc-nav-items {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 0 8px;
-}
-.mc-nav-item {
+.mc-sidenav-btn {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -1188,253 +1206,185 @@
   width: 100%;
   transition: background .12s, color .12s;
 }
-.mc-nav-item:hover { background: var(--bg); color: var(--text); }
-.mc-nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
-.mc-nav-item i { font-size: 16px; width: 18px; text-align: center; flex-shrink: 0; opacity: .5; }
-.mc-nav-item.active i { opacity: 1; }
+.mc-sidenav-btn:hover { background: var(--bg); color: var(--text); }
+.mc-sidenav-btn.mc-active { background: var(--bg); color: var(--text); font-weight: 500; }
+.mc-sidenav-btn i { font-size: 16px; width: 18px; flex-shrink: 0; opacity: .45; display: flex; align-items: center; justify-content: center; }
+.mc-sidenav-btn.mc-active i { opacity: 1; }
 
-/* ── MC VIEW AREA ── */
-#mc-view-area {
-  flex: 1;
-  min-width: 0;
-  padding: 0 0 40px;
+/* Mobile nav pills (injected) */
+.mc-mobile-nav-wrap {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+}
+.mc-mobile-nav-wrap::-webkit-scrollbar { display: none; }
+.mc-mobile-pill {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 0.5px solid var(--border-med);
+  border-radius: 20px;
+  padding: 5px 13px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .12s;
+}
+.mc-mobile-pill.mc-active {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+  font-weight: 500;
 }
 
-/* ── MC LOADING ── */
-.mc-loading {
+/* ══ SPINNER ══════════════════════════════════════════════════════ */
+.mc-spinner {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: var(--muted2);
+  padding: 60px;
   font-size: 22px;
+  color: var(--muted2);
 }
-.mc-spin { animation: mcSpin .8s linear infinite; }
+.mc-spin { animation: mcSpin .75s linear infinite; }
 @keyframes mcSpin { to { transform: rotate(360deg); } }
 
-/* ── HERO ── */
-.mc-hero {
+/* ══ OVERVIEW HERO ════════════════════════════════════════════════ */
+.ov-hero {
   display: flex;
   gap: 16px;
   background: var(--surface);
-  border-radius: var(--r);
   border: 0.5px solid var(--border);
+  border-radius: var(--r);
   padding: 20px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   box-shadow: var(--shadow-xs);
   flex-wrap: wrap;
 }
-.mc-hero-left {
-  flex: 1;
-  min-width: 180px;
-}
-.mc-hero-right {
-  flex: 1;
-  min-width: 200px;
-}
-.mc-hero-eyebrow {
-  font-size: 9px;
+.ov-hero-left { flex: 1.2; min-width: 200px; }
+.ov-hero-right { flex: 1; min-width: 180px; }
+.ov-eyebrow {
+  font-size: 8.5px;
   font-weight: 700;
-  letter-spacing: .16em;
+  letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--muted2);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
-.mc-hero-score {
+.ov-score-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.ov-score {
   font-family: var(--font);
-  font-size: 64px;
+  font-size: 68px;
   font-weight: 200;
   color: var(--text);
   line-height: 1;
-  letter-spacing: -.03em;
+  letter-spacing: -.04em;
+  flex-shrink: 0;
 }
-.mc-hero-score-unit {
-  font-size: 28px;
+.ov-score-unit {
+  font-size: 26px;
   font-weight: 300;
+  opacity: .4;
   letter-spacing: 0;
-  opacity: .45;
 }
-.mc-hero-label {
+.ov-score-label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 8px 0 10px;
+  margin-bottom: 3px;
 }
-.mc-hero-bar-wrap {
-  height: 3px;
-  background: var(--border-med);
-  border-radius: 2px;
-  overflow: hidden;
-  max-width: 220px;
-  margin-bottom: 8px;
-}
-.mc-hero-bar {
-  height: 100%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--accent), #60a5fa);
-  transition: width .8s cubic-bezier(.32,.72,0,1);
-}
-.mc-hero-sublabel {
+.ov-score-note {
   font-size: 12px;
   color: var(--muted);
   font-weight: 300;
+  line-height: 1.45;
 }
-.mc-kpi-grid {
+.ov-readiness-bars { display: flex; flex-direction: column; gap: 8px; }
+.ov-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ov-bar-label {
+  font-size: 10.5px;
+  color: var(--muted);
+  width: 140px;
+  flex-shrink: 0;
+}
+.ov-bar-track {
+  flex: 1;
+  height: 4px;
+  background: var(--border-med);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ov-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width .8s cubic-bezier(.32,.72,0,1);
+}
+.ov-bar-pct {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text2);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.ov-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-.mc-kpi-card {
+.ov-stat-card {
   background: var(--surface2);
   border: 0.5px solid var(--border);
   border-radius: var(--r-sm);
   padding: 11px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
 }
-.mc-kpi-icon { font-size: 16px; margin-bottom: 2px; }
-.mc-kpi-value {
-  font-family: var(--font);
-  font-size: 22px;
+.ov-stat-value {
+  font-size: 26px;
   font-weight: 200;
-  color: var(--text);
   line-height: 1;
+  font-family: var(--font);
+  letter-spacing: -.02em;
 }
-.mc-kpi-label {
+.ov-stat-label {
   font-size: 9.5px;
   color: var(--muted);
+  margin-top: 4px;
   font-weight: 500;
-  letter-spacing: .04em;
+  letter-spacing: .05em;
 }
 
-/* ── FOCUS ── */
-.mc-focus-list {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-xs);
-}
-.mc-focus-item {
+/* ══ SECTION ROW ══════════════════════════════════════════════════ */
+.ov-section-row {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 12px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-  cursor: pointer;
-  transition: background .1s;
+  justify-content: space-between;
+  margin: 16px 0 8px;
 }
-.mc-focus-item:last-child { border-bottom: none; }
-.mc-focus-item:active { background: var(--surface2); }
-.mc-focus-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.mc-focus-text { font-size: 13px; color: var(--text); flex: 1; }
-.mc-focus-arrow { font-size: 16px; color: var(--muted2); }
-.mc-focus-empty {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  padding: 16px 18px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: var(--muted);
-  box-shadow: var(--shadow-xs);
-}
-
-/* ── FUNNEL ── */
-.mc-funnel {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-xs);
-}
-.mc-funnel-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-  cursor: pointer;
-  transition: background .1s;
-}
-.mc-funnel-row:last-child { border-bottom: none; }
-.mc-funnel-row:active { background: var(--surface2); }
-.mc-funnel-label {
-  font-size: 11.5px;
-  color: var(--muted);
-  width: 130px;
-  flex-shrink: 0;
-  font-weight: 400;
-}
-.mc-funnel-bar-wrap {
-  flex: 1;
-  height: 6px;
-  background: var(--surface3);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.mc-funnel-bar {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--border-med);
-  transition: width .5s cubic-bezier(.32,.72,0,1);
-}
-.mc-funnel-bar.live { background: #1a8742; }
-.mc-funnel-count {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  width: 24px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-/* ── SECTION LABELS ── */
-.mc-section-label {
+.ov-section-title {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
   color: var(--muted2);
-  margin: 16px 0 7px;
-  padding: 0 2px;
 }
-
-/* ── MC CARD ── */
-.mc-card {
-  background: var(--surface);
-  border-radius: var(--r);
-  border: 0.5px solid var(--border);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-.mc-card-header {
-  padding: 11px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 0.5px solid var(--border);
-}
-.mc-card-title {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.mc-action-btn-sm {
+.ov-section-link {
   font-size: 11px;
   font-weight: 500;
   color: var(--accent);
@@ -1442,16 +1392,149 @@
   border: none;
   cursor: pointer;
   font-family: var(--font);
-  letter-spacing: .02em;
 }
 
-/* ── VIEW HEADER ── */
+/* ══ PRIORITIES ══════════════════════════════════════════════════ */
+.ov-priorities {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 4px;
+}
+.ov-priority-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: background .1s;
+}
+.ov-priority-row:last-child { border-bottom: none; }
+.ov-priority-row:active { background: var(--surface2); }
+.ov-priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ov-priority-info { flex: 1; min-width: 0; }
+.ov-priority-name { font-size: 13px; font-weight: 400; color: var(--text); }
+.ov-priority-stage { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.ov-priority-arrow { font-size: 16px; color: var(--muted2); flex-shrink: 0; }
+.ov-blocked-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  flex-shrink: 0;
+}
+.ov-empty-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ══ IN TRANSIT ══════════════════════════════════════════════════ */
+.ov-transit-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.ov-transit-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-xs);
+}
+.ov-transit-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ov-transit-name { font-size: 12.5px; font-weight: 400; }
+.ov-transit-stage { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+
+/* ══ WAITING ══════════════════════════════════════════════════════ */
+.ov-waiting-list {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 4px;
+}
+.ov-waiting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: background .1s;
+}
+.ov-waiting-row:last-child { border-bottom: none; }
+.ov-waiting-row.urgent { background: rgba(192,57,43,0.03); }
+.ov-waiting-text { flex: 1; font-size: 12.5px; color: var(--text); }
+.ov-waiting-age { font-size: 10.5px; color: var(--muted2); flex-shrink: 0; font-weight: 500; }
+.ov-waiting-age.urgent { color: var(--danger); }
+
+/* ══ WINS ═════════════════════════════════════════════════════════ */
+.ov-wins-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.ov-win-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  box-shadow: var(--shadow-xs);
+  flex: 1;
+  min-width: 180px;
+}
+.ov-win-icon { font-size: 16px; color: #c07000; flex-shrink: 0; }
+.ov-win-text { font-size: 12.5px; color: var(--text); }
+.ov-win-date { font-size: 10.5px; color: var(--muted2); margin-top: 1px; }
+
+/* ══ MILESTONES ═══════════════════════════════════════════════════ */
+.ov-milestones-list {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+.ov-milestone-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+}
+.ov-milestone-row:last-child { border-bottom: none; }
+.ov-milestone-row.urgent { background: rgba(192,112,0,0.04); }
+.ov-milestone-date { font-size: 11px; font-weight: 600; color: var(--muted); width: 52px; flex-shrink: 0; }
+.ov-milestone-title { flex: 1; font-size: 12.5px; color: var(--text); }
+.ov-milestone-days { font-size: 11px; font-weight: 600; color: var(--muted2); flex-shrink: 0; }
+.ov-milestone-days.urgent { color: var(--warning); }
+
+/* ══ VIEW HEADER ══════════════════════════════════════════════════ */
 .mc-view-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 .mc-view-title {
@@ -1461,11 +1544,7 @@
   color: var(--text);
   letter-spacing: .02em;
 }
-.mc-view-sub {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 3px;
-}
+.mc-view-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
 .mc-action-btn {
   display: inline-flex;
   align-items: center;
@@ -1479,67 +1558,47 @@
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  letter-spacing: .02em;
-  transition: opacity .15s;
   white-space: nowrap;
+  transition: opacity .15s;
 }
 .mc-action-btn:active { opacity: .8; }
-
-/* ── STAGE PILLS ── */
-.mc-stage-pills {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin-bottom: 14px;
-  padding-bottom: 2px;
-}
-.mc-stage-pills::-webkit-scrollbar { display: none; }
-.mc-stage-pill {
-  flex-shrink: 0;
-  background: var(--surface);
-  border: 0.5px solid var(--border-med);
-  border-radius: 20px;
-  padding: 5px 12px;
-  font-family: var(--font);
+.mc-action-btn-sm {
   font-size: 11px;
-  font-weight: 400;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all .12s;
-  white-space: nowrap;
-}
-.mc-stage-pill.active {
-  background: var(--text);
-  border-color: var(--text);
-  color: #fff;
   font-weight: 500;
-}
-.mc-pill-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  background: rgba(255,255,255,0.25);
-  border-radius: 8px;
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 0 4px;
-  margin-left: 3px;
-}
-.mc-stage-pill:not(.active) .mc-pill-count {
-  background: var(--surface3);
-  color: var(--text2);
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 2px 0;
 }
 
-/* ── BRAND CARDS ── */
-.mc-brands-grid {
+/* ══ PROJECTS ═════════════════════════════════════════════════════ */
+.proj-brand-group { margin-bottom: 22px; }
+.proj-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 0.5px solid var(--border);
+}
+.proj-brand-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.proj-brand-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text);
+  flex: 1;
+}
+.proj-brand-count { font-size: 11px; color: var(--muted); }
+.proj-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
 }
-.mc-brand-card {
+.proj-card {
   background: var(--surface);
   border: 0.5px solid var(--border);
   border-radius: var(--r);
@@ -1548,121 +1607,77 @@
   transition: box-shadow .15s, transform .1s;
   box-shadow: var(--shadow-xs);
 }
-.mc-brand-card:active { transform: scale(0.99); box-shadow: var(--shadow-md); }
-.mc-brand-card-top {
+.proj-card:active { transform: scale(0.99); box-shadow: var(--shadow-sm); }
+.proj-card-top {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 10px;
 }
-.mc-brand-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: var(--surface3);
-  border: 0.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  flex-shrink: 0;
-  letter-spacing: .04em;
-}
-.mc-brand-name {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.mc-brand-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
-.mc-priority-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.mc-brand-stage {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .06em;
-  padding: 3px 10px;
+.proj-card-name { font-size: 13.5px; font-weight: 400; color: var(--text); }
+.proj-card-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.proj-ready-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding: 2px 8px;
   border-radius: 20px;
-  display: inline-flex;
-  margin-bottom: 8px;
+  background: var(--success-soft);
+  color: var(--success);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
-.mc-stage-live { background: var(--success-soft); color: var(--success); }
-.mc-stage-approved { background: var(--accent-soft); color: var(--accent); }
-.mc-stage-default { background: var(--surface3); color: var(--muted); }
-.mc-brand-notes {
-  font-size: 11.5px;
+.proj-pct-badge {
+  font-size: 11px;
+  font-weight: 600;
   color: var(--muted);
-  line-height: 1.45;
-  margin-bottom: 9px;
-  font-style: italic;
-}
-.mc-brand-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 0.5px solid rgba(0,0,0,0.05);
-  padding-top: 9px;
-  margin-top: 4px;
-}
-.mc-brand-since { font-size: 10.5px; color: var(--muted2); }
-.mc-icon-btn {
-  width: 26px; height: 26px;
-  border-radius: 6px;
-  background: var(--surface3);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: var(--muted);
-  transition: background .12s;
-}
-.mc-icon-btn:active { background: var(--border-med); }
-
-/* ── JANEDORE RING ── */
-.mc-jd-hero {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  padding: 20px;
-  margin-bottom: 14px;
-  box-shadow: var(--shadow-xs);
-  flex-wrap: wrap;
-}
-.mc-jd-ring-wrap {
-  position: relative;
-  width: 80px;
-  height: 80px;
   flex-shrink: 0;
 }
-.mc-jd-ring-svg { width: 80px; height: 80px; transform: rotate(-90deg); }
-.mc-jd-ring-bg { fill: none; stroke: var(--border-med); stroke-width: 6; }
-.mc-jd-ring-fill { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .8s cubic-bezier(.32,.72,0,1); }
-.mc-jd-ring-label {
-  position: absolute;
-  inset: 0;
+.proj-progress-track {
+  height: 3px;
+  background: var(--border-med);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 9px;
+}
+.proj-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .6s cubic-bezier(.32,.72,0,1);
+}
+.proj-stages-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 7px;
+}
+.proj-stage-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-med);
+  transition: background .2s;
+}
+.proj-stage-dot.done { opacity: 1; }
+.proj-next-stage { font-size: 11px; color: var(--muted); }
+.proj-empty-brand { font-size: 12px; color: var(--muted); padding: 10px 0; }
+
+/* Stage preview in new project modal */
+.np-stages-preview {
+  background: var(--surface2);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-xs);
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  gap: 5px;
+  max-height: 200px;
+  overflow-y: auto;
 }
-.mc-jd-ring-pct { font-size: 18px; font-weight: 200; color: var(--text); line-height: 1; }
-.mc-jd-ring-sub { font-size: 9px; color: var(--muted); margin-top: 1px; font-weight: 500; letter-spacing: .06em; }
-.mc-jd-stages { flex: 1; display: flex; flex-direction: column; gap: 7px; }
-.mc-jd-stage-row { display: flex; align-items: center; gap: 9px; }
-.mc-jd-stage-check { font-size: 16px; color: var(--muted2); flex-shrink: 0; }
-.mc-jd-stage-check.done { color: var(--success); }
-.mc-jd-stage-label { font-size: 12.5px; color: var(--text2); }
-.mc-jd-stage-label.done { color: var(--muted); text-decoration: line-through; }
+.np-stage-item { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 7px; }
 
-/* ── TABLE ── */
+/* ══ SUPPLIERS TABLE ══════════════════════════════════════════════ */
 .mc-table-wrap {
   background: var(--surface);
   border-radius: var(--r);
@@ -1671,11 +1686,7 @@
   overflow-x: auto;
   box-shadow: var(--shadow-xs);
 }
-.mc-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 540px;
-}
+.mc-table { width: 100%; border-collapse: collapse; min-width: 520px; }
 .mc-table thead tr { border-bottom: 0.5px solid var(--border); }
 .mc-table th {
   padding: 9px 14px;
@@ -1688,112 +1699,42 @@
   white-space: nowrap;
   background: var(--surface2);
 }
-.mc-table td {
-  padding: 10px 14px;
-  font-size: 12.5px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-  vertical-align: middle;
-}
+.mc-table td { padding: 10px 14px; font-size: 12.5px; border-bottom: 0.5px solid rgba(0,0,0,0.04); vertical-align: middle; }
 .mc-table tbody tr:last-child td { border-bottom: none; }
 .mc-table tbody tr { cursor: pointer; transition: background .1s; }
 .mc-table tbody tr:hover { background: var(--surface2); }
 
-/* ── SAMPLE LANES ── */
-.mc-sample-lanes {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin-bottom: 14px;
-}
-.mc-sample-lanes::-webkit-scrollbar { display: none; }
-.mc-sample-lane {
-  flex: 1;
-  min-width: 80px;
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 10px 10px 9px;
-  text-align: center;
-  cursor: pointer;
-  transition: all .12s;
-  box-shadow: var(--shadow-xs);
-  opacity: .5;
-}
-.mc-sample-lane.active { opacity: 1; border-color: var(--accent); }
-.mc-sample-lane-count { font-size: 20px; font-weight: 200; color: var(--text); line-height: 1; }
-.mc-sample-lane-label { font-size: 9px; color: var(--muted); margin-top: 3px; font-weight: 600; letter-spacing: .05em; }
-
-/* ── SAMPLE CARDS ── */
-.mc-sample-grid {
+/* ══ WAITING CARDS ════════════════════════════════════════════════ */
+.waiting-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 10px;
 }
-.mc-sample-card {
+.waiting-card {
   background: var(--surface);
   border: 0.5px solid var(--border);
   border-radius: var(--r);
-  padding: 12px;
-  cursor: pointer;
-  transition: box-shadow .15s;
+  padding: 14px;
   box-shadow: var(--shadow-xs);
 }
-.mc-sample-card:active { box-shadow: var(--shadow-md); }
-.mc-sample-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
-.mc-sample-img { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; border: 0.5px solid var(--border); flex-shrink: 0; }
-.mc-sample-img-placeholder { width: 42px; height: 42px; border-radius: 8px; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--muted2); flex-shrink: 0; }
-.mc-sample-name { font-size: 13px; font-weight: 400; color: var(--text); }
-.mc-sample-status { font-size: 10px; font-weight: 600; letter-spacing: .05em; padding: 2px 8px; border-radius: 20px; border: 1px solid; display: inline-flex; margin-bottom: 6px; }
-.mc-sample-notes { font-size: 11px; color: var(--muted); font-style: italic; line-height: 1.4; }
-
-/* ── CAMPAIGN CARDS ── */
-.mc-campaign-list { display: flex; flex-direction: column; gap: 10px; }
-.mc-campaign-card {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  padding: 16px;
-  cursor: pointer;
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow .15s;
+.waiting-card.urgent { border-color: rgba(192,57,43,0.25); background: rgba(192,57,43,0.02); }
+.waiting-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.waiting-cat-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--surface3);
+  color: var(--muted);
 }
-.mc-campaign-card:active { box-shadow: var(--shadow-md); }
-.mc-campaign-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 11px; }
-.mc-campaign-name { font-size: 14px; font-weight: 400; color: var(--text); }
-.mc-campaign-ready-badge {
-  font-size: 10px; font-weight: 600; letter-spacing: .05em;
-  padding: 3px 9px; border-radius: 20px;
-  background: var(--success-soft); color: var(--success);
-  flex-shrink: 0;
-}
-.mc-campaign-progress-wrap { height: 3px; background: var(--border-med); border-radius: 2px; overflow: hidden; margin-bottom: 12px; }
-.mc-campaign-progress-bar { height: 100%; border-radius: 2px; transition: width .6s cubic-bezier(.32,.72,0,1); }
-.mc-campaign-stages { display: flex; gap: 6px; flex-wrap: wrap; }
-.mc-cam-stage {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  color: var(--muted2);
-  font-weight: 400;
-}
-.mc-cam-stage.done { color: var(--text2); }
-.mc-cam-stage i { font-size: 13px; }
-
-/* ── WAITING ROWS ── */
-.mc-waiting-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-}
-.mc-waiting-row:last-child { border-bottom: none; }
-.mc-waiting-row.urgent { background: rgba(192,57,43,0.03); }
-.mc-waiting-text { font-size: 13px; color: var(--text); }
-.mc-resolve-btn {
-  font-size: 11px; font-weight: 600;
+.waiting-age { font-size: 10.5px; color: var(--muted2); font-weight: 500; }
+.waiting-age.urgent { color: var(--danger); font-weight: 700; }
+.waiting-desc { font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 6px; }
+.waiting-project { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.waiting-resolve-btn {
+  font-size: 11px;
+  font-weight: 600;
   color: var(--success);
   background: var(--success-soft);
   border: none;
@@ -1801,13 +1742,75 @@
   padding: 4px 10px;
   cursor: pointer;
   font-family: var(--font);
-  flex-shrink: 0;
   transition: opacity .12s;
 }
-.mc-resolve-btn:active { opacity: .75; }
+.waiting-resolve-btn:active { opacity: .7; }
 
-/* ── NOTES ── */
-.mc-note-textarea {
+/* ══ WINS GRID ════════════════════════════════════════════════════ */
+.wins-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.win-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  box-shadow: var(--shadow-xs);
+}
+.win-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--warning-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: var(--warning);
+  margin-bottom: 10px;
+}
+.win-title { font-size: 13.5px; font-weight: 400; color: var(--text); margin-bottom: 4px; }
+.win-note { font-size: 12px; color: var(--muted); margin-bottom: 4px; line-height: 1.45; }
+.win-date { font-size: 10.5px; color: var(--muted2); }
+
+/* ══ MILESTONES LIST ══════════════════════════════════════════════ */
+.milestone-list {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+.milestone-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+}
+.milestone-row:last-child { border-bottom: none; }
+.milestone-row.soon { background: rgba(192,112,0,0.04); }
+.milestone-row.past { opacity: .5; }
+.milestone-date-col { width: 60px; flex-shrink: 0; text-align: center; }
+.milestone-day { font-size: 11.5px; font-weight: 600; color: var(--text); }
+.milestone-countdown { font-size: 10px; color: var(--muted2); margin-top: 2px; font-weight: 500; }
+.milestone-countdown.soon { color: var(--warning); }
+.milestone-countdown.past { color: var(--muted2); }
+.milestone-info { flex: 1; }
+.milestone-title { font-size: 13px; color: var(--text); }
+
+/* ══ NOTES ════════════════════════════════════════════════════════ */
+.note-compose {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-xs);
+}
+.note-textarea {
   width: 100%;
   background: var(--surface2);
   border: 0.5px solid var(--border-med);
@@ -1821,8 +1824,15 @@
   outline: none;
   transition: border-color .18s;
 }
-.mc-note-textarea:focus { border-color: rgba(26,86,219,0.35); }
-.mc-note-tag-select {
+.note-textarea:focus { border-color: rgba(26,86,219,0.35); }
+.note-compose-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 8px;
+}
+.note-tag-select {
   background: var(--surface2);
   border: 0.5px solid var(--border-med);
   border-radius: var(--r-xs);
@@ -1832,100 +1842,120 @@
   color: var(--text2);
   outline: none;
 }
-.mc-notes-feed { display: flex; flex-direction: column; gap: 8px; }
-.mc-note-card {
+.notes-feed { display: flex; flex-direction: column; gap: 8px; }
+.note-card {
   background: var(--surface);
   border: 0.5px solid var(--border);
   border-radius: var(--r);
   padding: 13px 14px;
   box-shadow: var(--shadow-xs);
 }
-.mc-note-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
-.mc-note-tag {
-  font-size: 9.5px; font-weight: 700;
-  letter-spacing: .07em;
-  padding: 2px 8px; border-radius: 20px;
-  background: var(--accent-soft); color: var(--accent);
-}
-.mc-note-time { font-size: 10.5px; color: var(--muted2); }
-.mc-note-body { font-size: 13px; color: var(--text); line-height: 1.55; font-weight: 300; }
-
-/* ── SUPPLIER ROW ── */
-.mc-supplier-row {
+.note-card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+  gap: 8px;
+  margin-bottom: 7px;
 }
-.mc-supplier-row:last-child { border-bottom: none; }
-.mc-row-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.note-tag-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.note-timestamp { font-size: 10.5px; color: var(--muted2); flex: 1; }
+.note-body { font-size: 13px; color: var(--text); line-height: 1.55; font-weight: 300; }
 
-/* ── EMPTY / ERROR ── */
+/* ══ SHARED COMPONENTS ════════════════════════════════════════════ */
+.mc-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+.mc-card-header {
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 0.5px solid var(--border);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mc-card-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mc-icon-btn {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: var(--surface3);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--muted);
+  transition: background .12s;
+  flex-shrink: 0;
+}
+.mc-icon-btn:active { background: var(--border-med); }
 .mc-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 48px 20px;
+  padding: 52px 20px;
   gap: 8px;
   color: var(--muted);
 }
-.mc-empty i { font-size: 30px; opacity: .2; }
+.mc-empty i { font-size: 28px; opacity: .2; }
 .mc-empty-title { font-size: 15px; font-weight: 300; color: var(--text); }
-.mc-empty-sub { font-size: 12px; color: var(--muted); max-width: 280px; line-height: 1.55; }
-.mc-error {
+.mc-empty-sub { font-size: 12px; color: var(--muted); max-width: 260px; line-height: 1.55; }
+.mc-error-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 18px 16px;
+  padding: 16px;
   font-size: 12.5px;
   color: var(--danger);
   background: var(--danger-soft);
   border-radius: var(--r-sm);
 }
 
-/* ── RESPONSIVE: mobile MC nav becomes horizontal scroll ── */
-@media(max-width: 1023px) {
-  .mc-shell { flex-direction: column; }
-  .mc-mobile-nav {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding: 0 0 10px;
-    margin-bottom: 4px;
-  }
-  .mc-mobile-nav::-webkit-scrollbar { display: none; }
-}
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(s);
 
-    /* On mobile, inject a horizontal nav above the view */
+    /* Inject mobile pill nav on small screens */
     if (window.innerWidth < 1024) {
-      var mobileNav = document.getElementById('mc-mobile-nav');
-      if (!mobileNav) {
+      setTimeout(function(){
         var shell = document.querySelector('.mc-shell');
-        if (shell) {
-          var navDiv = document.createElement('div');
-          navDiv.id = 'mc-mobile-nav';
-          navDiv.className = 'mc-mobile-nav';
-          var items = [
+        var area  = safeEl('mc-view-area');
+        if (shell && area && !document.querySelector('.mc-mobile-nav-wrap')) {
+          var navItems = [
             {id:'overview',label:'Overview'},
-            {id:'brands',label:'Brands'},
-            {id:'janedore',label:'JANEDORE'},
+            {id:'projects',label:'Projects'},
             {id:'suppliers',label:'Suppliers'},
-            {id:'samples',label:'Samples'},
-            {id:'campaigns',label:'Campaigns'},
-            {id:'waiting',label:'Waiting'},
+            {id:'waiting',label:'Waiting On'},
+            {id:'wins',label:'Wins'},
+            {id:'milestones',label:'Milestones'},
             {id:'notes',label:'Notes'}
           ];
-          navDiv.innerHTML = items.map(function(i){
-            return '<button class="mc-stage-pill' + (_mcView === i.id ? ' active' : '') + '" onclick="window._mcSwitchView(\'' + i.id + '\')">' + i.label + '</button>';
+          var wrap = document.createElement('div');
+          wrap.className = 'mc-mobile-nav-wrap';
+          wrap.innerHTML = navItems.map(function(i){
+            return '<button class="mc-mobile-pill' + (_mcView===i.id?' mc-active':'') + '" onclick="window._mcNav(\''+i.id+'\')">'+i.label+'</button>';
           }).join('');
-          shell.insertBefore(navDiv, shell.firstChild);
+          area.insertAdjacentElement('beforebegin', wrap);
         }
-      }
+      }, 0);
     }
   }
 
