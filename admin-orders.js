@@ -39,17 +39,15 @@
     if (!mc) return;
 
     mc.innerHTML =
-      '<div class="section-header" style="margin-bottom:10px;">' +
-        '<div class="section-title">Orders</div>' +
-        '<div class="section-actions">' +
-          '<button class="btn btn-sm btn-ghost" onclick="window._refreshOrders()" title="Refresh">' +
-            '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
-          '</button>' +
-          '<button class="btn btn-sm btn-primary" onclick="window._openNewOrderForm()">' +
-            '<i class="ph-light ph-plus"></i> New Order' +
-          '</button>' +
-        '</div>' +
-      '</div>' +
+    '<div class="section-header" style="margin-bottom:10px;">' +
+  '<div class="section-title">Orders</div>' +
+  '<div class="section-actions">' +
+    '<button class="btn btn-sm btn-ghost" onclick="window._refreshOrders()" title="Refresh">' +
+      '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
+    '</button>' +
+  '</div>' +
+'</div>' +
+
       ((!isSuperAdmin())
         ? '<div class="vendor-scope-bar">Showing orders for your brand only</div>'
         : '') +
