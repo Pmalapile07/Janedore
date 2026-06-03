@@ -1,10 +1,13 @@
 (function () {
   'use strict';
 
-  if (!window._adminDB) return;
+  if (!window._adminDB) {
+    console.error('[LAUNCH] window._adminDB is not defined — launch center will not work');
+    return;
+  }
 
-  var db    = window._adminDB;
-  var esc   = window._esc;
+  var db     = window._adminDB;
+  var esc    = window._esc;
   var safeEl = window._safeEl;
 
   /* ─────────────────────────────────────────────────────────
@@ -58,17 +61,23 @@
 
   /* ─────────────────────────────────────────────────────────
      FIRESTORE REF
+     Using collection 'admin_launch' doc 'checklist' to avoid
+     any rules conflicts with other collections
   ───────────────────────────────────────────────────────── */
-  var launchRef = db.collection('launch_checklist').doc('state');
+  var launchRef = db.collection('admin_launch').doc('checklist');
 
   /* ─────────────────────────────────────────────────────────
-     CALCULATE STATS FROM STATE
+     IN-MEMORY STATE — single source of truth
+     Never reset this except on fresh load from Firestore
+  ───────────────────────────────────────────────────────── */
+  window._lcState = window._lcState || {};
+  var _stateLoaded = false;
+
+  /* ─────────────────────────────────────────────────────────
+     CALC STATS
   ───────────────────────────────────────────────────────── */
   function calcStats(state) {
-    var total     = 0;
-    var completed = 0;
-    var nextTask  = null;
-
+    var total = 0, completed = 0, nextTask = null;
     LAUNCH_SECTIONS.forEach(function (section) {
       section.tasks.forEach(function (task) {
         total++;
@@ -79,56 +88,102 @@
         }
       });
     });
-
-    var pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total: total, completed: completed, pct: pct, nextTask: nextTask };
+    return {
+      total: total,
+      completed: completed,
+      pct: total > 0 ? Math.round((completed / total) * 100) : 0,
+      nextTask: nextTask
+    };
   }
 
   /* ─────────────────────────────────────────────────────────
-     UPDATE DASHBOARD CARD (called after any state change)
+     SYNC DASHBOARD CARD
+     Called after any state change or on dashboard render
   ───────────────────────────────────────────────────────── */
   function syncDashboardCard(state) {
     var stats = calcStats(state);
 
-    var bar     = safeEl('launch-bar');
-    var pctNum  = safeEl('launch-pct-num');
-    var pctSub  = safeEl('launch-pct-label');
-    var nextEl  = safeEl('launch-next-text');
-    var progEl  = safeEl('launch-progress-detail');
+    var bar      = safeEl('launch-bar');
+    var pctNum   = safeEl('launch-pct-num');
+    var pctLabel = safeEl('launch-pct-label');
+    var nextText = safeEl('launch-next-text');
+    var detail   = safeEl('launch-progress-detail');
 
-    if (bar)    bar.style.width = stats.pct + '%';
-    if (pctNum) pctNum.textContent = stats.pct + '%';
-    if (pctSub) pctSub.textContent = 'Complete';
-    if (nextEl) nextEl.textContent = stats.nextTask || 'All tasks complete';
-    if (progEl) progEl.textContent = stats.completed + ' / ' + stats.total + ' tasks';
+    requestAnimationFrame(function () {
+      if (bar)      bar.style.width = stats.pct + '%';
+      if (pctNum)   pctNum.textContent = stats.pct + '%';
+      if (pctLabel) pctLabel.textContent = 'Complete';
+      if (nextText) nextText.textContent = stats.nextTask || 'All tasks complete';
+      if (detail)   detail.textContent = stats.completed + ' / ' + stats.total + ' tasks';
+    });
 
     window._launchStats = stats;
   }
 
   /* ─────────────────────────────────────────────────────────
-     SAVE TASK TOGGLE TO FIRESTORE
+     SAVE TO FIRESTORE
+     Writes the full state object each time (safer than merge
+     for small documents like this)
   ───────────────────────────────────────────────────────── */
-  function toggleTask(taskId, checked, state) {
-    state[taskId] = checked;
-    syncDashboardCard(state);
+  function saveToFirestore(state) {
+    console.log('[LAUNCH] Saving to Firestore:', state);
+    launchRef.set(state)
+      .then(function () {
+        console.log('[LAUNCH] Saved successfully');
+      })
+      .catch(function (e) {
+        console.error('[LAUNCH] Firestore save FAILED:', e.code, e.message);
+        showLaunchSaveError();
+      });
+  }
 
-    var update = {};
-    update[taskId] = checked;
-    launchRef.set(update, { merge: true }).catch(function (e) {
-      console.error('[LAUNCH] save error', e);
-    });
+  function showLaunchSaveError() {
+    var el = safeEl('lc-save-status');
+    if (el) {
+      el.textContent = 'Save failed — check Firestore rules';
+      el.style.color = 'var(--danger)';
+      el.style.display = 'block';
+      setTimeout(function () { el.style.display = 'none'; }, 4000);
+    }
   }
 
   /* ─────────────────────────────────────────────────────────
-     RENDER LAUNCH CENTER SCREEN
+     INIT — load from Firestore once, cache in window._lcState
+     On subsequent dashboard renders, use cache (no re-fetch)
+  ───────────────────────────────────────────────────────── */
+  window._initLaunchCenter = function () {
+    if (_stateLoaded) {
+      /* Already loaded — just re-sync the card with cached state */
+      syncDashboardCard(window._lcState);
+      return;
+    }
+
+    console.log('[LAUNCH] Loading state from Firestore...');
+    launchRef.get()
+      .then(function (snap) {
+        if (snap.exists) {
+          window._lcState = snap.data();
+          console.log('[LAUNCH] Loaded state:', window._lcState);
+        } else {
+          window._lcState = {};
+          console.log('[LAUNCH] No existing state, starting fresh');
+        }
+        _stateLoaded = true;
+        syncDashboardCard(window._lcState);
+      })
+      .catch(function (e) {
+        console.error('[LAUNCH] Load failed:', e.code, e.message);
+        window._lcState = {};
+        _stateLoaded = true;
+        syncDashboardCard(window._lcState);
+      });
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     OPEN LAUNCH CENTER SCREEN
   ───────────────────────────────────────────────────────── */
   window._openLaunchCenter = function () {
-    launchRef.get().then(function (snap) {
-      var state = snap.exists ? snap.data() : {};
-      renderLaunchScreen(state);
-    }).catch(function () {
-      renderLaunchScreen({});
-    });
+    renderLaunchScreen(window._lcState);
   };
 
   function renderLaunchScreen(state) {
@@ -137,13 +192,11 @@
 
     var stats = calcStats(state);
 
-    /* Switch active tab indicator to none (we're on a sub-screen) */
     document.querySelectorAll('.bnav-btn, .sidebar-btn').forEach(function (b) {
       b.classList.remove('active');
     });
 
     mc.innerHTML =
-      /* ── BACK + HEADER ── */
       '<button class="back-link" onclick="window._exitLaunchCenter()">' +
         '<i class="ph-light ph-arrow-left"></i> Dashboard' +
       '</button>' +
@@ -152,8 +205,11 @@
         '<div class="section-title">Launch Center</div>' +
       '</div>' +
 
+      /* Save status indicator */
+      '<div id="lc-save-status" style="display:none;font-size:11px;padding:6px 0;margin-bottom:6px;"></div>' +
+
       /* ── PROGRESS SUMMARY CARD ── */
-      '<div class="launch-summary-card" id="lc-summary">' +
+      '<div class="launch-summary-card">' +
         '<div class="lc-summary-left">' +
           '<div class="lc-summary-pct" id="lc-pct-display">' + stats.pct + '%</div>' +
           '<div class="lc-summary-sub" id="lc-tasks-display">' + stats.completed + ' / ' + stats.total + ' tasks complete</div>' +
@@ -173,52 +229,51 @@
       /* ── NEXT TASK BANNER ── */
       (stats.nextTask
         ? '<div class="lc-next-banner">' +
-            '<i class="ph-light ph-arrow-circle-right" style="font-size:16px;flex-shrink:0;"></i>' +
+            '<i class="ph-light ph-arrow-circle-right" style="font-size:16px;flex-shrink:0;margin-top:1px;"></i>' +
             '<div>' +
               '<div class="lc-next-banner-label">Next Task</div>' +
               '<div class="lc-next-banner-text" id="lc-next-display">' + esc(stats.nextTask) + '</div>' +
             '</div>' +
           '</div>'
         : '<div class="lc-complete-banner">' +
-            '<i class="ph-light ph-check-circle" style="font-size:16px;flex-shrink:0;color:var(--success);"></i>' +
-            '<div class="lc-next-banner-text">All tasks complete — ready to launch!</div>' +
+            '<i class="ph-light ph-check-circle" style="font-size:16px;flex-shrink:0;"></i>' +
+            '<div class="lc-next-banner-text">All tasks complete — ready to launch.</div>' +
           '</div>') +
 
-      /* ── SECTIONS ── */
+      /* ── TASK SECTIONS ── */
       LAUNCH_SECTIONS.map(function (section) {
         var sectionDone = section.tasks.filter(function (t) { return state[t.id]; }).length;
-        var sectionTotal = section.tasks.length;
-
         return '<div class="card" style="margin-bottom:10px;">' +
           '<div class="card-header">' +
             '<div style="display:flex;align-items:center;gap:9px;">' +
-              '<span style="font-size:17px;opacity:.6;display:flex;align-items:center;"><i class="ph-light ' + section.icon + '"></i></span>' +
+              '<span style="font-size:17px;opacity:.55;display:flex;align-items:center;">' +
+                '<i class="ph-light ' + section.icon + '"></i>' +
+              '</span>' +
               '<span class="card-title">' + esc(section.label) + '</span>' +
             '</div>' +
-            '<span class="lc-section-count">' + sectionDone + '<span style="color:var(--muted2);">/' + sectionTotal + '</span></span>' +
+            '<span class="lc-section-count" id="lc-sec-' + section.id + '">' +
+              sectionDone + '<span style="color:var(--muted2);">/' + section.tasks.length + '</span>' +
+            '</span>' +
           '</div>' +
           '<div style="padding:4px 0;">' +
             section.tasks.map(function (task) {
               var checked = !!state[task.id];
-              return '<label class="lc-task-row" data-task="' + task.id + '">' +
+              return '<label class="lc-task-row">' +
                 '<div class="lc-checkbox' + (checked ? ' checked' : '') + '" id="lc-cb-' + task.id + '">' +
                   (checked ? '<i class="ph-light ph-check" style="font-size:11px;"></i>' : '') +
                 '</div>' +
-                '<span class="lc-task-label' + (checked ? ' done' : '') + '" id="lc-label-' + task.id + '">' +
+                '<span class="lc-task-label' + (checked ? ' done' : '') + '" id="lc-lbl-' + task.id + '">' +
                   esc(task.label) +
                 '</span>' +
-                '<input type="checkbox" style="display:none;" ' + (checked ? 'checked' : '') +
-                  ' onchange="window._lcToggle(\'' + task.id + '\',this.checked)">' +
+                '<input type="checkbox" style="display:none;"' + (checked ? ' checked' : '') +
+                  ' onchange="window._lcToggle(\'' + task.id + '\',\'' + section.id + '\',this.checked)">' +
               '</label>';
             }).join('') +
           '</div>' +
         '</div>';
       }).join('');
 
-    /* Store state reference for toggles */
-    window._lcState = state;
-
-    /* Animate ring on load */
+    /* Animate ring */
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         var ring = safeEl('lc-ring-fill');
@@ -231,30 +286,31 @@
   }
 
   /* ─────────────────────────────────────────────────────────
-     TASK TOGGLE (called from inline onchange)
+     TASK TOGGLE
+     Updates in-memory state, saves to Firestore, updates UI
   ───────────────────────────────────────────────────────── */
-  window._lcToggle = function (taskId, checked) {
-    var state = window._lcState || {};
-    state[taskId] = checked;
-    toggleTask(taskId, checked, state);
+  window._lcToggle = function (taskId, sectionId, checked) {
+    /* 1. Update in-memory state */
+    window._lcState[taskId] = checked;
 
-    /* Update checkbox visual */
-    var cb    = safeEl('lc-cb-' + taskId);
-    var label = safeEl('lc-label-' + taskId);
+    /* 2. Persist to Firestore immediately */
+    saveToFirestore(window._lcState);
+
+    /* 3. Update checkbox visual */
+    var cb  = safeEl('lc-cb-' + taskId);
+    var lbl = safeEl('lc-lbl-' + taskId);
     if (cb) {
       cb.className = 'lc-checkbox' + (checked ? ' checked' : '');
       cb.innerHTML = checked ? '<i class="ph-light ph-check" style="font-size:11px;"></i>' : '';
     }
-    if (label) {
-      label.className = 'lc-task-label' + (checked ? ' done' : '');
+    if (lbl) {
+      lbl.className = 'lc-task-label' + (checked ? ' done' : '');
     }
 
-    /* Update section counts */
-    var stats = calcStats(state);
-    updateLCSummary(stats);
-  };
+    /* 4. Recalculate stats */
+    var stats = calcStats(window._lcState);
 
-  function updateLCSummary(stats) {
+    /* 5. Update summary card */
     var pctEl  = safeEl('lc-pct-display');
     var taskEl = safeEl('lc-tasks-display');
     var nextEl = safeEl('lc-next-display');
@@ -265,39 +321,25 @@
     if (nextEl) nextEl.textContent = stats.nextTask || 'All tasks complete';
     if (ring)   ring.setAttribute('stroke-dashoffset', String(113.1 - (113.1 * stats.pct / 100)));
 
-    /* Update section count badges */
-    LAUNCH_SECTIONS.forEach(function (section) {
-      var done  = section.tasks.filter(function (t) { return (window._lcState || {})[t.id]; }).length;
-      var total = section.tasks.length;
-      /* Re-render section counts by finding them — simplest approach */
-      document.querySelectorAll('.lc-section-count').forEach(function (el, i) {
-        if (LAUNCH_SECTIONS[i]) {
-          var s = LAUNCH_SECTIONS[i];
-          var d = s.tasks.filter(function (t) { return (window._lcState || {})[t.id]; }).length;
-          el.innerHTML = d + '<span style="color:var(--muted2);">/' + s.tasks.length + '</span>';
-        }
-      });
-    });
-  }
+    /* 6. Update section count badge */
+    var section = LAUNCH_SECTIONS.find(function (s) { return s.id === sectionId; });
+    if (section) {
+      var secEl = safeEl('lc-sec-' + sectionId);
+      if (secEl) {
+        var done = section.tasks.filter(function (t) { return window._lcState[t.id]; }).length;
+        secEl.innerHTML = done + '<span style="color:var(--muted2);">/' + section.tasks.length + '</span>';
+      }
+    }
 
-  /* ─────────────────────────────────────────────────────────
-     EXIT LAUNCH CENTER → BACK TO DASHBOARD
-  ───────────────────────────────────────────────────────── */
-  window._exitLaunchCenter = function () {
-    if (window.switchTab) window.switchTab('dashboard');
+    /* 7. Also sync dashboard card (in case it's visible behind) */
+    syncDashboardCard(window._lcState);
   };
 
   /* ─────────────────────────────────────────────────────────
-     INIT — load state on boot and sync dashboard card
+     EXIT BACK TO DASHBOARD
   ───────────────────────────────────────────────────────── */
-  window._initLaunchCenter = function () {
-    launchRef.get().then(function (snap) {
-      var state = snap.exists ? snap.data() : {};
-      window._lcState = state;
-      syncDashboardCard(state);
-    }).catch(function (e) {
-      console.error('[LAUNCH] init error', e);
-    });
+  window._exitLaunchCenter = function () {
+    if (window.switchTab) window.switchTab('dashboard');
   };
 
 })();
