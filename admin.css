@@ -564,3 +564,27 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:14px 0;}
   .stat-number        { font-size: 30px; }
   .stat-revenue       { font-size: 24px; }
 }
+/* ── LAUNCH READY STATE (dashboard card) ──────────────────────────────────── */
+.launch-ready-state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── RING COMPLETE STATE ───────────────────────────────────────────────────── */
+.lc-ring-fill.complete {
+  stroke: var(--success);
+}
+
+/* ── ALL DONE TEXT (launch center screen) ─────────────────────────────────── */
+.lc-all-done-text {
+  font-size: 12px;
+  color: var(--success);
+  font-weight: 500;
+  margin-top: 6px;
+  letter-spacing: .02em;
+}
+
