@@ -777,5 +777,107 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:14px 0;}
     opacity: 1;
   }
 }
+/* ── ORDERS EMPTY STATE ───────────────────────────────────────────────────── */
+.orders-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 52px 24px 48px;
+  gap: 10px;
+}
+.orders-empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--surface3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--muted2);
+  margin-bottom: 4px;
+}
+.orders-empty-title {
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--text);
+  letter-spacing: .02em;
+}
+.orders-empty-sub {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 320px;
+  line-height: 1.55;
+  font-weight: 300;
+}
+.orders-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  background: var(--text);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 11px 22px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .03em;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+.orders-empty-btn:active { opacity: .8; transform: scale(0.99); }
+
+/* ── NEW ORDER FORM ───────────────────────────────────────────────────────── */
+.no-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid rgba(0,0,0,0.05);
+}
+.no-item-row:last-child { border-bottom: none; }
+.no-qty-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border-med);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--text2);
+  transition: background .1s;
+  flex-shrink: 0;
+}
+.no-qty-btn:active { background: var(--surface3); }
+.no-qty-remove {
+  border-color: transparent;
+  color: var(--muted2);
+}
+.no-qty-remove:active { color: var(--danger); }
+
+/* ── BOTTOM ACTION BAR ────────────────────────────────────────────────────── */
+.no-action-bar {
+  position: sticky;
+  bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 0.5px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  z-index: 50;
+  margin: 0 -14px;
+}
+@media(min-width:1024px) {
+  .no-action-bar { bottom: 0; }
+}
 
 
