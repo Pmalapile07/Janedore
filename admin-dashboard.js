@@ -12,13 +12,6 @@
   var ordersRef     = window._ordersRef;
 
   /* ─────────────────────────────────────────────────────────
-     LAUNCH CENTER CONFIG
-     Edit these values to update progress/task
-  ───────────────────────────────────────────────────────── */
-  var LAUNCH_PCT  = 63;
-  var LAUNCH_TASK = 'Add first hero product';
-
-  /* ─────────────────────────────────────────────────────────
      RENDER DASHBOARD TAB
   ───────────────────────────────────────────────────────── */
   window._renderDashboardTab = function () {
@@ -26,26 +19,31 @@
     if (!mc) return;
 
     mc.innerHTML =
-      /* ── LAUNCH CENTER ── */
+
+      /* ── LAUNCH CENTER CARD ── */
       '<div class="launch-center-card" id="launch-center-card">' +
         '<div class="launch-card-top">' +
-          '<div>' +
+          '<div style="flex:1;min-width:0;">' +
             '<div class="launch-card-label">Launch Center</div>' +
-            '<div class="launch-pct" id="launch-pct-num">0%</div>' +
-            '<div class="launch-pct-label">Complete</div>' +
+            '<div class="launch-pct" id="launch-pct-num">—</div>' +
+            '<div class="launch-pct-label" id="launch-pct-label">Loading</div>' +
           '</div>' +
-          '<span class="launch-card-emoji">🚀</span>' +
+          '<div class="launch-card-icon-wrap">' +
+            '<i class="ph-light ph-rocket-launch" style="font-size:22px;color:var(--accent);opacity:.7;"></i>' +
+          '</div>' +
         '</div>' +
         '<div class="launch-progress-wrap">' +
           '<div class="launch-progress-bar-bg">' +
-            '<div class="launch-progress-bar-fill" id="launch-bar" style="width:0%"></div>' +
+            '<div class="launch-progress-bar-fill" id="launch-bar" style="width:0%;transition:width .6s cubic-bezier(.32,.72,0,1);"></div>' +
           '</div>' +
+          '<div class="launch-progress-detail" id="launch-progress-detail" style="font-size:10px;color:var(--muted2);margin-top:5px;letter-spacing:.03em;"></div>' +
         '</div>' +
         '<div class="launch-next-task">' +
           '<div class="launch-next-label">Next Task</div>' +
-          '<div class="launch-next-text">' + esc(LAUNCH_TASK) + '</div>' +
+          '<div class="launch-next-text" id="launch-next-text">—</div>' +
         '</div>' +
         '<button class="launch-open-btn" onclick="window._openLaunchCenter && window._openLaunchCenter()">' +
+          '<i class="ph-light ph-arrow-square-out" style="font-size:15px;"></i>' +
           'Open Launch Center' +
         '</button>' +
       '</div>' +
@@ -62,18 +60,19 @@
       '<div class="stats-grid" id="dash-stats">' +
         Array(4).fill(
           '<div class="stat-card">' +
-            '<div class="stat-number" style="opacity:.15;font-size:24px;">—</div>' +
-            '<div class="stat-label" style="opacity:.3;">Loading</div>' +
+            '<div class="stat-number" style="opacity:.15;">—</div>' +
+            '<div class="stat-label" style="opacity:.25;">Loading</div>' +
           '</div>'
         ).join('') +
       '</div>' +
 
-      /* ── CHARTS ── */
+      /* ── ORDERS CHART ── */
       '<div style="display:grid;grid-template-columns:1fr;gap:10px;">' +
         '<div class="card"><div class="card-header"><span class="card-title">Orders — Last 30 Days</span></div>' +
         '<div class="chart-wrap"><canvas id="orders-chart" class="chart-canvas"></canvas></div></div>' +
       '</div>' +
 
+      /* ── TOP PRODUCTS + LOW STOCK ── */
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">' +
         '<div class="card"><div class="card-header"><span class="card-title">Top Products</span></div>' +
         '<div id="top-products-list" style="padding:4px 0;"></div></div>' +
@@ -81,45 +80,39 @@
         '<div id="low-stock-list" style="padding:4px 0;"></div></div>' +
       '</div>' +
 
+      /* ── REVENUE CHART ── */
       '<div style="margin-top:10px;" class="card"><div class="card-header"><span class="card-title">Revenue by Brand</span></div>' +
       '<div class="chart-wrap"><canvas id="revenue-chart" class="chart-canvas"></canvas></div></div>';
 
-    /* Animate launch bar after paint */
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        var bar = safeEl('launch-bar');
-        var pct = safeEl('launch-pct-num');
-        if (bar) bar.style.width = LAUNCH_PCT + '%';
-        if (pct) pct.textContent = LAUNCH_PCT + '%';
-      });
-    });
+    /* Sync launch card from cached state */
+    if (window._initLaunchCenter) window._initLaunchCenter();
 
-    /* ── FETCH DATA ── */
+    /* ── FETCH STORE DATA ── */
     Promise.all([
       productsRef.get(),
       reviewsRef.get(),
       newsletterRef.get(),
       ordersRef.get()
     ]).then(function (results) {
-      var products     = results[0].docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
-      var orders       = results[3].docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
-      var totalRevenue = orders.reduce(function (s, o) { return s + (o.subtotal || 0); }, 0);
+      var products      = results[0].docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      var orders        = results[3].docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      var totalRevenue  = orders.reduce(function (s, o) { return s + (o.subtotal || 0); }, 0);
       var pendingOrders = orders.filter(function (o) { return (o.status || 'pending') === 'pending'; }).length;
-      var avgOrder     = orders.length ? totalRevenue / orders.length : 0;
+      var avgOrder      = orders.length ? totalRevenue / orders.length : 0;
 
       var statsEl = safeEl('dash-stats');
       if (statsEl) {
         statsEl.className = 'stats-grid';
         statsEl.style.gridTemplateColumns = 'repeat(4,1fr)';
         statsEl.innerHTML =
-          statCard(fmt(totalRevenue), 'Total Revenue', true) +
-          statCard(orders.length,     'Total Orders') +
-          statCard(fmt(avgOrder),     'Avg Order', true) +
-          statCard(pendingOrders,     'Pending') +
-          statCard(results[0].size,   'Products') +
-          statCard(results[1].size,   'Reviews') +
-          statCard(results[2].size,   'Subscribers') +
-          statCard(window._totalUnreadMessages || 0, 'Unread Chats');
+          statCard(fmt(totalRevenue), 'Revenue',    'revenue') +
+          statCard(orders.length,     'Orders',     'count') +
+          statCard(fmt(avgOrder),     'Avg Order',  'revenue') +
+          statCard(pendingOrders,     'Pending',    'count') +
+          statCard(results[0].size,   'Products',   'count') +
+          statCard(results[1].size,   'Reviews',    'count') +
+          statCard(results[2].size,   'Subscribers','count') +
+          statCard(window._totalUnreadMessages || 0, 'Unread', 'count');
       }
 
       buildOrdersChart(orders);
@@ -132,8 +125,9 @@
         topEl.innerHTML = sorted.length === 0
           ? '<div class="empty-state" style="padding:20px;"><div class="empty-state-text">No data yet</div></div>'
           : sorted.map(function (p) {
+              var name = p.name || 'Untitled';
               return '<div class="info-row">' +
-                '<span style="font-size:12.5px;">' + esc(p.name.substring(0, 24)) + (p.name.length > 24 ? '…' : '') + '</span>' +
+                '<span style="font-size:12.5px;">' + esc(name.substring(0, 26)) + (name.length > 26 ? '…' : '') + '</span>' +
                 '<span class="ui-label">' + esc(String(p.unitsSold || 0)) + ' sold</span>' +
               '</div>';
             }).join('');
@@ -147,8 +141,9 @@
         lowEl.innerHTML = lowStock.length === 0
           ? '<div class="empty-state" style="padding:20px;"><div class="empty-state-text">All well stocked</div></div>'
           : lowStock.map(function (p) {
+              var name = p.name || 'Untitled';
               return '<div class="info-row">' +
-                '<span style="font-size:12.5px;">' + esc(p.name.substring(0, 24)) + (p.name.length > 24 ? '…' : '') + '</span>' +
+                '<span style="font-size:12.5px;">' + esc(name.substring(0, 26)) + (name.length > 26 ? '…' : '') + '</span>' +
                 '<span style="color:' + (p.stock === 0 ? 'var(--danger)' : 'var(--warning)') + ';font-size:11px;font-weight:600;">' +
                   esc(String(p.stock || 0)) + ' left' +
                 '</span>' +
@@ -157,20 +152,15 @@
       }
 
     }).catch(function (e) {
-      console.error('[DASHBOARD_TAB]', e);
-      var statsEl = safeEl('dash-stats');
-      if (statsEl) {
-        statsEl.innerHTML = '<p style="color:var(--danger);padding:16px;font-size:12px;">Error: ' + esc(e.message) + '</p>';
-      }
+      console.error('[DASHBOARD]', e);
     });
   };
 
   /* ─────────────────────────────────────────────────────────
      STAT CARD BUILDER
-     isRevenue = true → use smaller, weighted revenue style
   ───────────────────────────────────────────────────────── */
-  function statCard(value, label, isRevenue) {
-    var numClass = 'stat-number' + (isRevenue ? ' revenue' : '');
+  function statCard(value, label, type) {
+    var numClass = type === 'revenue' ? 'stat-number stat-revenue' : 'stat-number';
     return '<div class="stat-card">' +
       '<div class="' + numClass + '">' + esc(String(value)) + '</div>' +
       '<div class="stat-label">' + esc(label) + '</div>' +
