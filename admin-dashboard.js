@@ -28,6 +28,7 @@
   var waitingRef    = db.collection('waiting_on');
   var notesRef      = db.collection('founder_notes');
   var ordersRef     = window._ordersRef    || db.collection('orders');
+  var activityRef   = db.collection('activity_feed');
 
   window._projectsRef  = projectsRef;
   window._suppliersRef = suppliersRef;
@@ -135,8 +136,8 @@
 
   /* ─── NAV ────────────────────────────────────────────────────────────────── */
   var NAV_ITEMS = [
-    { id: 'dashboard',    icon: 'ph-squares-four',  label: 'Dashboard'   },
-    { id: 'collections',  icon: 'ph-stack',         label: 'Collections' },
+    { id: 'dashboard',    icon: 'ph-house',          label: 'Home'        },
+    { id: 'collections',  icon: 'ph-stack',          label: 'Collections' },
     { id: 'projects',     icon: 'ph-rocket-launch',  label: 'Projects'    },
     { id: 'orders',       icon: 'ph-receipt',        label: 'Orders'      },
     { id: 'suppliers',    icon: 'ph-factory',        label: 'Suppliers'   },
@@ -146,9 +147,9 @@
   function buildSideNav() {
     return '<nav class="mc-sidenav">' +
       '<div class="mc-sidenav-top">' +
-        '<div class="mc-sidenav-word">MISSION CONTROL</div>' +
+        '<div class="mc-sidenav-brand">Janedore</div>' +
         '<div class="mc-sidenav-date">' +
-          new Date().toLocaleDateString('en-ZA', { weekday:'short', day:'2-digit', month:'short' }).toUpperCase() +
+          new Date().toLocaleDateString('en-ZA', { weekday:'long', day:'2-digit', month:'long' }) +
         '</div>' +
       '</div>' +
       NAV_ITEMS.map(function (n) {
@@ -193,101 +194,84 @@
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     VIEW: DASHBOARD — the 8am founder view
+     VIEW: DASHBOARD — focused founder homepage
+     Answers: Where am I? What's blocking me? What do I do next?
   ══════════════════════════════════════════════════════════════════════════ */
   function viewDashboard(area) {
     Promise.all([
       productsRef.get(),
-      projectsRef.get(),
-      milestonesRef.orderBy('date', 'asc').limit(6).get().catch(function () { return milestonesRef.get(); }),
       waitingRef.get(),
-      ordersRef.get().catch(function () { return { docs: [] }; })
+      activityRef.orderBy('createdAt', 'desc').limit(10).get().catch(function () { return { docs: [] }; }),
+      projectsRef.get().catch(function () { return { docs: [] }; })
     ]).then(function (res) {
 
-      var products   = res[0].docs.map(d2o);
-      var projects   = res[1].docs.map(d2o);
-      var milestones = res[2].docs.map(d2o);
-      var waiting    = res[3].docs.map(d2o).filter(function (w) { return !w.resolved; });
-      var orders     = res[4].docs.map(d2o);
-      _allOrders     = orders;
+      var products  = res[0].docs.map(d2o);
+      var waiting   = res[1].docs.map(d2o).filter(function (w) { return !w.resolved; });
+      var activity  = res[2].docs.map(d2o);
+      var projects  = res[3].docs.map(d2o);
 
       /* Score every product */
       var scored = products.map(function (p) {
         return Object.assign({}, p, { _score: scoreProduct(p), _brand: getBrand(p) });
       });
 
-      /* Readiness calculations */
-      var total = scored.length;
-      var rd    = calcReadiness(scored);
+      /* Readiness */
+      var rd = calcReadiness(scored);
 
-      /* Ready vs blocked */
-      var ready   = scored.filter(function (p) { return p._score.total === 4; });
+      /* Next best action: product closest to ready */
       var blocked = scored.filter(function (p) { return p._score.total < 4; })
                           .sort(function (a, b) { return b._score.total - a._score.total; });
-
-      /* Next best action: product with highest score < 4 */
       var nba = blocked[0] || null;
 
-      /* Incoming: projects with expectedDate, sorted soonest first */
-      var now = Date.now();
-      var incoming = projects
-        .filter(function (p) { return p.expectedDate; })
-        .map(function (p) {
-          var d   = p.expectedDate.toDate ? p.expectedDate.toDate() : new Date(p.expectedDate);
-          var dif = Math.ceil((d.getTime() - now) / 86400000);
-          return Object.assign({}, p, { _daysUntil: dif, _date: d });
-        })
-        .filter(function (p) { return p._daysUntil >= -1; })
-        .sort(function (a, b) { return a._daysUntil - b._daysUntil })
-        .slice(0, 6);
+      /* If no product action, look for overdue project */
+      var overdueProject = null;
+      if (!nba) {
+        var now = Date.now();
+        overdueProject = projects
+          .filter(function (p) {
+            if (!p.expectedDate) return false;
+            var d = p.expectedDate.toDate ? p.expectedDate.toDate() : new Date(p.expectedDate);
+            return d.getTime() < now;
+          })
+          .sort(function (a, b) {
+            var da = a.expectedDate.toDate ? a.expectedDate.toDate() : new Date(a.expectedDate);
+            var db2 = b.expectedDate.toDate ? b.expectedDate.toDate() : new Date(b.expectedDate);
+            return da.getTime() - db2.getTime();
+          })[0] || null;
+      }
 
-      /* Deadlines */
-      var deadlines = milestones
-        .map(function (m) {
-          var d   = m.date ? (m.date.toDate ? m.date.toDate() : new Date(m.date)) : null;
-          var dif = d ? Math.ceil((d.getTime() - now) / 86400000) : 999;
-          return Object.assign({}, m, { _daysUntil: dif, _date: d });
-        })
-        .filter(function (m) { return m._daysUntil >= 0; })
-        .slice(0, 5);
+      /* Greeting */
+      var hour = new Date().getHours();
+      var greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
       area.innerHTML =
+        '<div class="fd-page">' +
+          /* Greeting */
+          '<div class="fd-greeting">' +
+            '<span class="fd-greeting-text">' + greeting + '</span>' +
+          '</div>' +
 
-        /* ── A: Launch Readiness ── */
-        sectionA(rd, scored) +
+          /* Row: Readiness + Next Action */
+          '<div class="fd-top-row">' +
+            buildReadinessCard(rd, scored.length) +
+            buildNextActionCard(nba, overdueProject) +
+          '</div>' +
 
-        /* ── B: Ready To Sell ── */
-        sectionB(ready) +
+          /* Waiting On */
+          buildWaitingSection(waiting) +
 
-        /* ── C: Blockers ── */
-        sectionC(blocked) +
+          /* Activity Feed */
+          buildActivitySection(activity, products, projects) +
 
-        /* ── D: Next Best Action ── */
-        sectionD(nba) +
-
-        /* ── E: Incoming ── */
-        sectionE(incoming) +
-
-        /* ── F: Deadlines ── */
-        sectionF(deadlines) +
-
-        /* ── G: External Blockers ── */
-        sectionG(waiting) +
-
-        /* ── H: Orders ── */
-        sectionH(orders);
-
-      /* Init launch center if exists */
-      if (window._initLaunchCenter) window._initLaunchCenter();
-      buildChart(orders);
+        '</div>';
 
     }).catch(function (e) { area.innerHTML = errBanner(e); });
   }
 
-  /* ─── SECTION A: LAUNCH READINESS ───────────────────────────────────────── */
+  /* ─── READINESS CARD ─────────────────────────────────────────────────────── */
   function calcReadiness(scored) {
     var n = scored.length;
-    if (!n) return { overall: 0, img: 0, prc: 0, inv: 0, pub: 0, brands: {} };
+    if (!n) return { overall: 0, readyCount: 0, total: 0, bottleneck: null };
     var totals = { pts: 0, img: 0, prc: 0, inv: 0, pub: 0 };
     scored.forEach(function (p) {
       totals.pts += p._score.total;
@@ -296,212 +280,248 @@
       totals.inv += p._score.inv;
       totals.pub += p._score.pub;
     });
-    var pct = function (x) { return Math.round((x / n) * 100); };
-    var brands = {};
-    BRANDS.forEach(function (b) {
-      var bp = scored.filter(function (p) { return p._brand === b.key; });
-      if (!bp.length) { brands[b.key] = 0; return; }
-      var bpts = bp.reduce(function (s, p) { return s + p._score.total; }, 0);
-      brands[b.key] = Math.round((bpts / (bp.length * 4)) * 100);
-    });
+    /* Find the biggest gap — the bottleneck */
+    var checks = [
+      { label: 'photography', count: n - totals.img },
+      { label: 'pricing',     count: n - totals.prc },
+      { label: 'inventory',   count: n - totals.inv },
+      { label: 'publishing',  count: n - totals.pub }
+    ].filter(function (c) { return c.count > 0; })
+     .sort(function (a, b) { return b.count - a.count; });
+
     return {
       overall: Math.round((totals.pts / (n * 4)) * 100),
-      img: pct(totals.img), prc: pct(totals.prc),
-      inv: pct(totals.inv), pub: pct(totals.pub),
-      brands: brands, total: n,
-      readyCount: scored.filter(function (p) { return p._score.total === 4; }).length
+      readyCount: scored.filter(function (p) { return p._score.total === 4; }).length,
+      total: n,
+      bottleneck: checks[0] || null
     };
   }
 
-  function sectionA(rd, scored) {
-    var n = scored.length;
-    return '<div class="ds-readiness-hero">' +
-      '<div class="ds-rh-top">' +
-        '<div class="ds-rh-left">' +
-          '<div class="ds-rh-eyebrow">Launch Readiness</div>' +
-          '<div class="ds-rh-score">' + rd.overall + '<span class="ds-rh-unit">%</span></div>' +
-          '<div class="ds-rh-sub">' + rd.readyCount + ' of ' + n + ' products ready to sell</div>' +
-          '<div class="ds-rh-bar-wrap"><div class="ds-rh-bar" style="width:' + rd.overall + '%;"></div></div>' +
+  function buildReadinessCard(rd, total) {
+    var pct = rd.overall;
+    /* Arc progress: circumference of r=36 circle = ~226 */
+    var circ = 226;
+    var dash = Math.round((pct / 100) * circ);
+    var scoreColor = pct >= 80 ? 'var(--fd-green)' : pct >= 50 ? 'var(--fd-amber)' : 'var(--fd-red)';
+
+    var sub = rd.readyCount + ' of ' + total + ' products ready';
+    var bottleneckHtml = '';
+    if (rd.bottleneck) {
+      bottleneckHtml = '<div class="fd-ready-hint">Missing ' + rd.bottleneck.label + ' on ' + rd.bottleneck.count + ' product' + (rd.bottleneck.count > 1 ? 's' : '') + '</div>';
+    }
+
+    return '<div class="fd-card fd-readiness-card" onclick="window._mcGo(\'collections\')">' +
+      '<div class="fd-card-label">Launch Readiness</div>' +
+      '<div class="fd-readiness-body">' +
+        '<div class="fd-arc-wrap">' +
+          '<svg class="fd-arc-svg" viewBox="0 0 80 80">' +
+            '<circle class="fd-arc-track" cx="40" cy="40" r="36" fill="none" stroke-width="5"/>' +
+            '<circle class="fd-arc-fill" cx="40" cy="40" r="36" fill="none" stroke-width="5"' +
+              ' stroke="' + scoreColor + '"' +
+              ' stroke-dasharray="' + dash + ' ' + circ + '"' +
+              ' stroke-dashoffset="0"' +
+              ' transform="rotate(-90 40 40)"/>' +
+          '</svg>' +
+          '<div class="fd-arc-inner">' +
+            '<div class="fd-arc-pct" style="color:' + scoreColor + ';">' + pct + '</div>' +
+            '<div class="fd-arc-unit">%</div>' +
+          '</div>' +
         '</div>' +
-        '<div class="ds-rh-right">' +
-          '<div class="ds-subscore-grid">' +
-            dsSubscore('Photography', rd.img,  'ph-camera') +
-            dsSubscore('Pricing',     rd.prc,  'ph-tag') +
-            dsSubscore('Inventory',   rd.inv,  'ph-package') +
-            dsSubscore('Live',        rd.pub,  'ph-globe') +
-          '</div>' +
-          '<div class="ds-brand-scores">' +
-            BRANDS.map(function (b) {
-              var pct = rd.brands[b.key] || 0;
-              return '<div class="ds-brand-score-row">' +
-                '<span class="ds-brand-dot" style="background:' + b.color + ';"></span>' +
-                '<span class="ds-brand-score-name">' + b.key + '</span>' +
-                '<div class="ds-brand-score-track"><div class="ds-brand-score-fill" style="width:' + pct + '%;background:' + b.color + ';"></div></div>' +
-                '<span class="ds-brand-score-pct">' + pct + '%</span>' +
-              '</div>';
-            }).join('') +
-          '</div>' +
+        '<div class="fd-readiness-info">' +
+          '<div class="fd-readiness-sub">' + sub + '</div>' +
+          bottleneckHtml +
+          '<div class="fd-card-cta">View Collections <i class="ph-light ph-arrow-right"></i></div>' +
         '</div>' +
       '</div>' +
     '</div>';
   }
 
-  function dsSubscore(label, pct, icon) {
-    var color = pct >= 80 ? '#1a8742' : pct >= 50 ? '#c07000' : '#c0392b';
-    return '<div class="ds-subscore-card">' +
-      '<i class="ph-light ' + icon + '" style="font-size:16px;color:' + color + ';margin-bottom:3px;"></i>' +
-      '<div class="ds-subscore-pct" style="color:' + color + ';">' + pct + '%</div>' +
-      '<div class="ds-subscore-label">' + label + '</div>' +
-    '</div>';
-  }
-
-  /* ─── SECTION B: READY TO SELL ──────────────────────────────────────────── */
-  function sectionB(ready) {
-    if (!ready.length) {
-      return dsLabel('Ready to Sell') +
-        '<div class="ds-empty-gentle">' +
-          '<i class="ph-light ph-storefront"></i>' +
-          '<span>No products are fully ready yet — blockers below show what to fix.</span>' +
-        '</div>';
+  /* ─── NEXT ACTION CARD ───────────────────────────────────────────────────── */
+  function buildNextActionCard(p, overdueProject) {
+    /* No blockers at all */
+    if (!p && !overdueProject) {
+      return '<div class="fd-card fd-next-card fd-next-clear">' +
+        '<div class="fd-card-label">Next Action</div>' +
+        '<div class="fd-next-body">' +
+          '<div class="fd-next-icon fd-next-icon-ok"><i class="ph-light ph-check-circle"></i></div>' +
+          '<div class="fd-next-content">' +
+            '<div class="fd-next-title">You\'re all clear</div>' +
+            '<div class="fd-next-desc">No immediate actions required. Keep it up.</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }
-    return dsLabel('Ready to Sell') +
-      '<div class="ds-ready-list">' +
-        ready.map(function (p) {
-          var bm = brandMeta(p._brand);
-          var price = getPrice(p);
-          return '<div class="ds-ready-row" onclick="window._openProductModal && window._openProductModal(\'' + p.id + '\')">' +
-            '<span class="ds-ready-dot" style="background:' + bm.color + ';"></span>' +
-            '<div class="ds-ready-info">' +
-              '<div class="ds-ready-name">' + esc(p.name || '—') + '</div>' +
-              '<div class="ds-ready-brand">' + esc(p._brand) + '</div>' +
-            '</div>' +
-            (price ? '<div class="ds-ready-price">' + esc(price) + '</div>' : '') +
-            '<span class="ds-live-badge">Live</span>' +
-          '</div>';
-        }).join('') +
-      '</div>';
-  }
 
-  /* ─── SECTION C: BLOCKERS ────────────────────────────────────────────────── */
-  function sectionC(blocked) {
-    if (!blocked.length) return '';
-    return dsLabel('Blockers') +
-      '<div class="ds-blockers">' +
-        blocked.map(function (p) {
-          var bm   = brandMeta(p._brand);
-          var s    = p._score;
-          var tags = [];
-          if (!s.img) tags.push(['Missing Photography', '#c0392b']);
-          if (!s.prc) tags.push(['Missing Price',       '#c07000']);
-          if (!s.inv) tags.push(['Missing Inventory',   '#c07000']);
-          if (!s.pub) tags.push(['Not Published',       '#8a8a8a']);
-          return '<div class="ds-blocker-row" onclick="window._openProductModal && window._openProductModal(\'' + p.id + '\')">' +
-            '<div class="ds-blocker-left">' +
-              '<span class="ds-blocker-dot" style="background:' + bm.color + ';"></span>' +
-              '<div class="ds-blocker-info">' +
-                '<div class="ds-blocker-name">' + esc(p.name || '—') + '</div>' +
-                '<div class="ds-blocker-brand">' + esc(p._brand) + '</div>' +
-              '</div>' +
-            '</div>' +
-            '<div class="ds-blocker-tags">' +
-              tags.map(function (t) {
-                return '<span class="ds-blocker-tag" style="color:' + t[1] + ';border-color:' + t[1] + ';">' + t[0] + '</span>';
-              }).join('') +
-            '</div>' +
-            '<i class="ph-light ph-arrow-right ds-blocker-arrow"></i>' +
-          '</div>';
-        }).join('') +
+    /* Overdue project action */
+    if (!p && overdueProject) {
+      return '<div class="fd-card fd-next-card" onclick="window._mcGo(\'projects\')">' +
+        '<div class="fd-card-label">Next Action</div>' +
+        '<div class="fd-next-body">' +
+          '<div class="fd-next-icon"><i class="ph-light ph-calendar-x"></i></div>' +
+          '<div class="fd-next-content">' +
+            '<div class="fd-next-title">Follow up on overdue project</div>' +
+            '<div class="fd-next-desc">' + esc(overdueProject.name || '—') + ' has passed its expected date.</div>' +
+            '<div class="fd-next-cta">Open Projects <i class="ph-light ph-arrow-right"></i></div>' +
+          '</div>' +
+        '</div>' +
       '</div>';
-  }
+    }
 
-  /* ─── SECTION D: NEXT BEST ACTION ───────────────────────────────────────── */
-  function sectionD(p) {
-    if (!p) return '';
+    /* Product action */
     var s    = p._score;
     var miss = !s.img ? 'photography' : !s.prc ? 'pricing' : !s.inv ? 'inventory' : 'publishing';
-    var verb = !s.img ? 'Add photography' : !s.prc ? 'Set a price' : !s.inv ? 'Add inventory' : 'Publish the product';
+    var icon = !s.img ? 'ph-camera' : !s.prc ? 'ph-tag' : !s.inv ? 'ph-package' : 'ph-globe';
+    var verb = !s.img ? 'Add photography'   :
+               !s.prc ? 'Set a price'        :
+               !s.inv ? 'Add inventory'      : 'Publish product';
     var steps = 4 - s.total;
-    return '<div class="ds-nba-card" onclick="window._openProductModal && window._openProductModal(\'' + p.id + '\')">' +
-      '<div class="ds-nba-label">Next Best Action</div>' +
-      '<div class="ds-nba-text">' +
-        '<strong>' + esc(p.name || '—') + '</strong> is ' +
-        (steps === 1 ? 'one step' : steps + ' steps') +
-        ' from being ready to sell. ' + verb + ' to' + (steps === 1 ? ' unlock it.' : ' move forward.') +
-      '</div>' +
-      '<div class="ds-nba-footer">' +
-        '<span class="ds-nba-action">' + verb + ' <i class="ph-light ph-arrow-right"></i></span>' +
+    var stepsText = steps === 1 ? '1 step from ready' : steps + ' steps from ready';
+
+    return '<div class="fd-card fd-next-card" onclick="window._openProductModal && window._openProductModal(\'' + p.id + '\')">' +
+      '<div class="fd-card-label">Next Action</div>' +
+      '<div class="fd-next-body">' +
+        '<div class="fd-next-icon"><i class="ph-light ' + icon + '"></i></div>' +
+        '<div class="fd-next-content">' +
+          '<div class="fd-next-title">' + verb + '</div>' +
+          '<div class="fd-next-desc">' + esc(p.name || '—') + ' · ' + stepsText + '</div>' +
+          '<div class="fd-next-cta">Open product <i class="ph-light ph-arrow-right"></i></div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }
 
-  /* ─── SECTION E: INCOMING ────────────────────────────────────────────────── */
-  function sectionE(incoming) {
-    if (!incoming.length) return '';
-    return dsLabel('Incoming') +
-      '<div class="ds-incoming-list">' +
-        incoming.map(function (p) {
-          var d   = p._daysUntil;
-          var bm  = brandMeta(p.brand || '');
-          var txt = d === 0 ? 'arriving today' : d === 1 ? 'arriving tomorrow' :
-                    d < 0  ? 'overdue by ' + Math.abs(d) + ' day' + (Math.abs(d) > 1 ? 's' : '') :
-                    'arriving in ' + d + ' day' + (d > 1 ? 's' : '');
-          var urg = d <= 0 ? '#c0392b' : d <= 3 ? '#c07000' : '#1a8742';
-          return '<div class="ds-incoming-row" onclick="window._mcGo(\'projects\')">' +
-            '<div class="ds-incoming-icon" style="background:' + bm.bg + ';color:' + bm.color + ';">' +
-              '<i class="ph-light ph-arrow-down"></i>' +
-            '</div>' +
-            '<div class="ds-incoming-info">' +
-              '<div class="ds-incoming-name">' + esc(p.name || '—') + '</div>' +
-              '<div class="ds-incoming-type">' + esc(p.type || '') + (p.brand ? ' · ' + esc(p.brand) : '') + '</div>' +
-            '</div>' +
-            '<div class="ds-incoming-when" style="color:' + urg + ';">' + txt + '</div>' +
-          '</div>';
-        }).join('') +
-      '</div>';
-  }
+  /* ─── WAITING ON SECTION ─────────────────────────────────────────────────── */
+  function buildWaitingSection(waiting) {
+    var header = '<div class="fd-section-hdr">' +
+      '<div class="fd-section-label">Waiting On' +
+        (waiting.length ? ' <span class="fd-badge">' + waiting.length + '</span>' : '') +
+      '</div>' +
+      '<button class="fd-text-btn" onclick="window._mcAddWaiting()"><i class="ph-light ph-plus"></i> Add</button>' +
+    '</div>';
 
-  /* ─── SECTION F: DEADLINES ───────────────────────────────────────────────── */
-  function sectionF(deadlines) {
-    if (!deadlines.length) return '';
-    return dsLabel('Upcoming Deadlines') +
-      '<div class="ds-deadlines">' +
-        deadlines.map(function (m) {
-          var d   = m._daysUntil;
-          var col = d > 14 ? '#1a8742' : d > 7 ? '#c07000' : '#c0392b';
-          var bg  = d > 14 ? 'rgba(26,135,66,0.07)' : d > 7 ? 'rgba(192,112,0,0.07)' : 'rgba(192,57,43,0.07)';
-          var dateStr = m._date ? m._date.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' }) : '—';
-          return '<div class="ds-deadline-card" style="border-color:' + col + ';background:' + bg + ';">' +
-            '<div class="ds-deadline-date" style="color:' + col + ';">' + dateStr + '</div>' +
-            '<div class="ds-deadline-title">' + esc(m.title || '—') + '</div>' +
-            '<div class="ds-deadline-days" style="color:' + col + ';">' +
-              (d === 0 ? 'Today' : d + 'd') +
+    if (!waiting.length) {
+      return header +
+        '<div class="fd-waiting-empty">' +
+          '<i class="ph-light ph-hourglass" style="opacity:.2;font-size:18px;"></i>' +
+          '<span>Nothing waiting on external parties</span>' +
+        '</div>';
+    }
+
+    var now = Date.now();
+    /* Sort: oldest (most urgent) first */
+    var sorted = waiting.slice().sort(function (a, b) {
+      var aa = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)).getTime() : 0;
+      var bb = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)).getTime() : 0;
+      return aa - bb;
+    });
+
+    return header +
+      '<div class="fd-waiting-list">' +
+        sorted.map(function (w) {
+          var age = w.createdAt ? Math.round((now - (w.createdAt.toDate ? w.createdAt.toDate() : new Date(w.createdAt)).getTime()) / 86400000) : 0;
+          var urgent = age >= 5;
+          var ageLabel = age === 0 ? 'today' : age === 1 ? '1 day' : age + ' days';
+          return '<div class="fd-waiting-row' + (urgent ? ' fd-waiting-urgent' : '') + '">' +
+            '<div class="fd-waiting-main">' +
+              '<span class="fd-waiting-dot' + (urgent ? ' urgent' : '') + '"></span>' +
+              '<span class="fd-waiting-text">' + esc(w.description || '—') + '</span>' +
+            '</div>' +
+            '<div class="fd-waiting-meta">' +
+              '<span class="fd-waiting-age">' + ageLabel + '</span>' +
+              '<button class="fd-resolve-btn" onclick="event.stopPropagation();window._mcResolveWaiting(\'' + w.id + '\')">Done</button>' +
             '</div>' +
           '</div>';
         }).join('') +
       '</div>';
   }
 
-  /* ─── SECTION G: EXTERNAL BLOCKERS ──────────────────────────────────────── */
-  function sectionG(waiting) {
-    if (!waiting.length) return '';
-    return dsLabel('Waiting On') +
-      '<div class="ds-waiting-list">' +
-        waiting.slice(0, 6).map(function (w) {
-          var age = w.createdAt ? Math.round((Date.now() - (w.createdAt.toDate ? w.createdAt.toDate() : new Date(w.createdAt)).getTime()) / 86400000) : 0;
-          var urg = age >= 5;
-          return '<div class="ds-waiting-row' + (urg ? ' urgent' : '') + '">' +
-            '<i class="ph-light ph-hourglass" style="font-size:15px;flex-shrink:0;color:' + (urg ? '#c0392b' : 'var(--muted)') + '"></i>' +
-            '<span class="ds-waiting-text">' + esc(w.description || '—') + '</span>' +
-            '<span class="ds-waiting-age' + (urg ? ' urgent' : '') + '">' + age + 'd</span>' +
-            '<button class="ds-resolve-btn" onclick="event.stopPropagation();window._mcResolveWaiting(\'' + w.id + '\')">Resolve</button>' +
+  /* ─── ACTIVITY FEED ──────────────────────────────────────────────────────── */
+  function buildActivitySection(activity, products, projects) {
+    var header = '<div class="fd-section-hdr" style="margin-top:24px;">' +
+      '<div class="fd-section-label">Recent Activity</div>' +
+    '</div>';
+
+    /* Build synthetic activity from products & projects if activity collection is empty */
+    var events = activity.slice();
+
+    if (!events.length) {
+      /* Synthetic: recently updated products */
+      products
+        .filter(function (p) { return p.updatedAt || p.createdAt; })
+        .sort(function (a, b) {
+          var ta = a.updatedAt || a.createdAt;
+          var tb = b.updatedAt || b.createdAt;
+          var da = ta ? (ta.toDate ? ta.toDate() : new Date(ta)).getTime() : 0;
+          var db2 = tb ? (tb.toDate ? tb.toDate() : new Date(tb)).getTime() : 0;
+          return db2 - da;
+        })
+        .slice(0, 5)
+        .forEach(function (p) {
+          var ts = p.updatedAt || p.createdAt;
+          events.push({ type: 'product', text: (p.name || 'Product') + ' updated', createdAt: ts, icon: 'ph-cube' });
+        });
+
+      /* Synthetic: recent projects */
+      projects
+        .filter(function (p) { return p.updatedAt || p.createdAt; })
+        .sort(function (a, b) {
+          var ta = a.updatedAt || a.createdAt;
+          var tb = b.updatedAt || b.createdAt;
+          var da = ta ? (ta.toDate ? ta.toDate() : new Date(ta)).getTime() : 0;
+          var db2 = tb ? (tb.toDate ? tb.toDate() : new Date(tb)).getTime() : 0;
+          return db2 - da;
+        })
+        .slice(0, 3)
+        .forEach(function (p) {
+          var ts = p.updatedAt || p.createdAt;
+          events.push({ type: 'project', text: (p.name || 'Project') + ' · ' + (p.type || 'Project'), createdAt: ts, icon: 'ph-rocket-launch' });
+        });
+
+      /* Sort combined synthetic events */
+      events.sort(function (a, b) {
+        var ta = a.createdAt;
+        var tb = b.createdAt;
+        var da = ta ? (ta.toDate ? ta.toDate() : new Date(ta)).getTime() : 0;
+        var db2 = tb ? (tb.toDate ? tb.toDate() : new Date(tb)).getTime() : 0;
+        return db2 - da;
+      });
+      events = events.slice(0, 7);
+    }
+
+    if (!events.length) {
+      return header +
+        '<div class="fd-activity-empty">' +
+          '<i class="ph-light ph-activity" style="opacity:.2;font-size:18px;"></i>' +
+          '<span>No recent activity yet</span>' +
+        '</div>';
+    }
+
+    var now = Date.now();
+    function relTime(ts) {
+      if (!ts) return '';
+      var d = ts.toDate ? ts.toDate() : new Date(ts);
+      var diff = Math.floor((now - d.getTime()) / 60000); /* minutes */
+      if (diff < 1)   return 'just now';
+      if (diff < 60)  return diff + 'm ago';
+      if (diff < 1440) return Math.floor(diff / 60) + 'h ago';
+      if (diff < 10080) return Math.floor(diff / 1440) + 'd ago';
+      return d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' });
+    }
+
+    return header +
+      '<div class="fd-activity-list">' +
+        events.map(function (e) {
+          var icon = e.icon || (e.type === 'order' ? 'ph-receipt' : e.type === 'product' ? 'ph-cube' : 'ph-rocket-launch');
+          return '<div class="fd-activity-row">' +
+            '<div class="fd-activity-icon"><i class="ph-light ' + icon + '"></i></div>' +
+            '<div class="fd-activity-text">' + esc(e.text || '—') + '</div>' +
+            '<div class="fd-activity-time">' + relTime(e.createdAt) + '</div>' +
           '</div>';
         }).join('') +
-        '<div style="padding:8px 16px 12px;">' +
-          '<button class="mc-link-btn" onclick="window._mcAddWaiting()"><i class="ph-light ph-plus"></i> Add waiting item</button>' +
-        '</div>' +
       '</div>';
   }
 
+  /* ─── WAITING ON MODALS (preserved) ─────────────────────────────────────── */
   window._mcResolveWaiting = function (id) {
     waitingRef.doc(id).update({ resolved: true })
       .then(function () { showToast('Resolved'); window._mcGo('dashboard'); })
@@ -516,7 +536,7 @@
         '<div class="modal-title">Add Waiting Item</div>' +
         '<button class="modal-close" onclick="window._closeModal()"><i class="ph-light ph-x"></i></button>' +
         '<div class="form-group"><label>What are you waiting for?</label>' +
-          '<textarea id="mw-desc" rows="3" placeholder="Waiting for supplier quote on MOQ..."></textarea>' +
+          '<textarea id="mw-desc" rows="3" placeholder="Waiting for supplier quote on MOQ…"></textarea>' +
         '</div>' +
         '<div class="form-row">' +
           '<div class="form-group"><label>Category</label><select id="mw-cat">' + cats.map(function (c) { return '<option>' + c + '</option>'; }).join('') + '</select></div>' +
@@ -543,38 +563,8 @@
       .catch(function (e) { showToast(e.message, 'error'); });
   };
 
-  /* ─── SECTION H: ORDERS CHART ────────────────────────────────────────────── */
-  function sectionH(orders) {
-    return dsLabel('Order Activity') +
-      '<div class="mc-card" style="margin-bottom:12px;">' +
-        '<div class="mc-card-hdr">' +
-          '<span class="mc-card-ttl">Orders — Last 30 Days</span>' +
-          '<div style="display:flex;align-items:center;gap:7px;margin-left:auto;flex-wrap:wrap;">' +
-            '<div class="dash-live-pill" id="dash-live-pill"><span class="dash-live-dot"></span><span id="dash-live-count">Live</span></div>' +
-            BRANDS.map(function (b) {
-              var k = b.key.replace(/\s/g, '-');
-              return '<button class="dash-brand-toggle active" id="dash-toggle-' + k + '" ' +
-                'onclick="window._dashToggleBrand(\'' + b.key + '\')" style="--brand-color:' + b.color + ';">' +
-                '<span class="dash-brand-dot" style="background:' + b.color + ';"></span>' + b.key +
-              '</button>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-        '<div class="chart-wrap"><canvas id="orders-chart" class="chart-canvas"></canvas></div>' +
-      '</div>' +
-      '<div id="dash-day-popup" class="dash-day-popup" style="display:none;">' +
-        '<div class="dash-day-popup-inner">' +
-          '<div class="dash-day-popup-header">' +
-            '<span class="dash-day-popup-title" id="dash-popup-title">—</span>' +
-            '<button class="dash-day-popup-close" onclick="window._dashClosePopup()"><i class="ph-light ph-x"></i></button>' +
-          '</div>' +
-          '<div id="dash-popup-body" class="dash-day-popup-body"></div>' +
-        '</div>' +
-      '</div>';
-  }
-
   /* ══════════════════════════════════════════════════════════════════════════
-     VIEW: COLLECTIONS — product readiness detail
+     VIEW: COLLECTIONS — product readiness detail (unchanged)
   ══════════════════════════════════════════════════════════════════════════ */
   function viewCollections(area) {
     productsRef.get().then(function (snap) {
@@ -645,7 +635,7 @@
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     VIEW: PROJECTS — non-product operational work
+     VIEW: PROJECTS (unchanged)
   ══════════════════════════════════════════════════════════════════════════ */
   function viewProjects(area) {
     projectsRef.get().then(function (snap) {
@@ -760,7 +750,7 @@
             types.map(function (t) { return '<option value="' + t + '"' + (t === curType ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
           '</select></div>' +
         '</div>' +
-        '<div class="form-group"><label>Expected Date <span style="font-weight:400;color:var(--muted);">(feeds Incoming on Dashboard)</span></label>' +
+        '<div class="form-group"><label>Expected Date</label>' +
           '<input type="date" id="pj-date" value="' + dateVal + '"></div>' +
         '<div class="form-group">' +
           '<label>Stages</label>' +
@@ -804,7 +794,6 @@
     var notes   = (safeEl('pj-notes') || {}).value || '';
     if (!name) { showToast('Enter a project name', 'error'); return; }
 
-    /* Collect stages from DOM */
     var stages = [];
     document.querySelectorAll('.pj-stage-row').forEach(function (row) {
       var nameEl = row.querySelector('.pj-stage-name');
@@ -834,7 +823,7 @@
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
-     VIEW: ORDERS
+     VIEW: ORDERS (unchanged)
   ══════════════════════════════════════════════════════════════════════════ */
   function viewOrders(area) {
     ordersRef.get().catch(function () { return { docs: [] }; }).then(function (snap) {
@@ -875,7 +864,7 @@
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     VIEW: SUPPLIERS
+     VIEW: SUPPLIERS (unchanged)
   ══════════════════════════════════════════════════════════════════════════ */
   function viewSuppliers(area) {
     suppliersRef.get().then(function (snap) {
@@ -959,7 +948,7 @@
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
-     VIEW: NOTES
+     VIEW: NOTES (unchanged)
   ══════════════════════════════════════════════════════════════════════════ */
   function viewNotes(area) {
     notesRef.orderBy('createdAt', 'desc').limit(60).get().then(function (snap) {
@@ -1010,7 +999,7 @@
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
-     ORDERS CHART — preserved exactly from original
+     ORDERS CHART (preserved, used in Orders view)
   ══════════════════════════════════════════════════════════════════════════ */
   window._dashToggleBrand = function (key) {
     _brandFilters[key] = !_brandFilters[key];
@@ -1110,10 +1099,6 @@
   ══════════════════════════════════════════════════════════════════════════ */
   function d2o(doc) { return Object.assign({ id: doc.id }, doc.data()); }
 
-  function dsLabel(text) {
-    return '<div class="ds-section-label">' + text + '</div>';
-  }
-
   function statusPill(status) {
     if (!status) return '';
     var map = { 'Active': '#1a8742', 'Confirmed': '#1a8742', 'Approved': '#1a8742', 'Shipped': '#6e40c9', 'Sampling': '#c07000', 'Contacted': '#c07000', 'Paused': '#c0392b', 'Dropped': '#c0392b' };
@@ -1157,20 +1142,20 @@
   flex: 1;
   min-width: 0;
   width: 100%;
-  padding: 16px 16px 80px;
+  padding: 0 0 80px;
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
 /* ── SIDE NAV ─────────────────────────────────────────────────────── */
 .mc-sidenav {
-  width: 192px;
+  width: 200px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 0.5px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 0 8px 24px;
+  padding: 0 10px 24px;
   position: sticky;
   top: var(--nav-h);
   height: calc(100vh - var(--nav-h));
@@ -1180,35 +1165,35 @@
 @media(max-width:1023px) { .mc-sidenav { display: none; } }
 
 .mc-sidenav-top {
-  padding: 16px 6px 12px;
+  padding: 20px 6px 16px;
   border-bottom: 0.5px solid var(--border);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
-.mc-sidenav-word {
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: .2em;
-  color: var(--muted2);
+.mc-sidenav-brand {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  color: var(--text);
   text-transform: uppercase;
 }
 .mc-sidenav-date {
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--muted);
-  margin-top: 3px;
-  letter-spacing: .06em;
-  font-weight: 500;
+  margin-top: 4px;
+  font-weight: 400;
 }
 .mc-snav-btn {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   padding: 9px 10px;
   border: none;
   background: none;
   cursor: pointer;
   border-radius: var(--r-sm);
   font-family: var(--font);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 400;
   color: var(--text2);
   text-align: left;
@@ -1218,7 +1203,7 @@
 }
 .mc-snav-btn:hover  { background: var(--bg); color: var(--text); }
 .mc-snav-btn.mc-on  { background: var(--bg); color: var(--text); font-weight: 500; }
-.mc-snav-btn i { font-size: 16px; width: 18px; flex-shrink: 0; opacity: .45; }
+.mc-snav-btn i { font-size: 16px; width: 18px; flex-shrink: 0; opacity: .4; }
 .mc-snav-btn.mc-on i { opacity: 1; }
 
 /* ── MOBILE NAV ───────────────────────────────────────────────────── */
@@ -1227,7 +1212,7 @@
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 12px 0 10px;
+  padding: 12px 16px 10px;
   border-bottom: 0.5px solid var(--border);
   background: var(--bg);
   position: sticky;
@@ -1251,7 +1236,6 @@
   white-space: nowrap;
   transition: all .12s;
 }
-.mc-mpill:first-child { margin-left: 0; }
 .mc-mpill.mc-on {
   background: var(--text);
   border-color: var(--text);
@@ -1279,19 +1263,360 @@
   color: var(--danger);
   border-radius: var(--r-sm);
   font-size: 12.5px;
+  margin: 16px;
 }
 
-/* ── SECTION LABEL ────────────────────────────────────────────────── */
-.ds-section-label {
+/* ── DASHBOARD PALETTE ────────────────────────────────────────────── */
+:root {
+  --fd-green: #1a7a42;
+  --fd-amber: #b06000;
+  --fd-red:   #c0392b;
+}
+
+/* ══ FOUNDER DASHBOARD ════════════════════════════════════════════════ */
+
+.fd-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+}
+
+/* Greeting */
+.fd-greeting {
+  margin-bottom: 24px;
+}
+.fd-greeting-text {
+  font-family: var(--font);
+  font-size: 22px;
+  font-weight: 200;
+  color: var(--text);
+  letter-spacing: .01em;
+}
+
+/* Top row: readiness + next action side by side */
+.fd-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+@media(max-width: 620px) {
+  .fd-top-row { grid-template-columns: 1fr; }
+}
+
+/* Card base */
+.fd-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  box-shadow: var(--shadow-xs);
+  position: relative;
+  overflow: hidden;
+}
+.fd-card-label {
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: .16em;
+  letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--muted2);
-  margin: 18px 0 8px;
-  padding: 0 2px;
+  margin-bottom: 14px;
 }
-.ds-section-label:first-child { margin-top: 0; }
+.fd-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+/* Readiness card */
+.fd-readiness-card {
+  cursor: pointer;
+  transition: box-shadow .15s;
+}
+.fd-readiness-card:active { box-shadow: var(--shadow-md); }
+.fd-readiness-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.fd-arc-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+.fd-arc-svg {
+  width: 72px;
+  height: 72px;
+}
+.fd-arc-track {
+  stroke: var(--border-med);
+}
+.fd-arc-fill {
+  stroke-linecap: round;
+  transition: stroke-dasharray .8s cubic-bezier(.32,.72,0,1);
+}
+.fd-arc-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.fd-arc-pct {
+  font-family: var(--font);
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+.fd-arc-unit {
+  font-size: 9px;
+  color: var(--muted2);
+  font-weight: 600;
+  margin-top: 1px;
+  letter-spacing: .04em;
+}
+.fd-readiness-info { flex: 1; min-width: 0; }
+.fd-readiness-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  font-weight: 400;
+}
+.fd-ready-hint {
+  font-size: 11px;
+  color: var(--fd-amber);
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* Next action card */
+.fd-next-card {
+  cursor: pointer;
+  transition: box-shadow .15s;
+  border-left: 2.5px solid var(--accent);
+}
+.fd-next-card:active { box-shadow: var(--shadow-md); }
+.fd-next-clear { border-left-color: var(--fd-green); cursor: default; }
+.fd-next-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.fd-next-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.fd-next-icon-ok { color: var(--fd-green); }
+.fd-next-content { flex: 1; min-width: 0; }
+.fd-next-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+  margin-bottom: 5px;
+}
+.fd-next-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.fd-next-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 10px;
+}
+
+/* Section headers */
+.fd-section-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.fd-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.fd-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--fd-amber);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.fd-text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+/* Waiting On */
+.fd-waiting-list {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 4px;
+}
+.fd-waiting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+}
+.fd-waiting-row:last-child { border-bottom: none; }
+.fd-waiting-row.fd-waiting-urgent { background: rgba(192,57,43,0.02); }
+.fd-waiting-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.fd-waiting-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted2);
+  flex-shrink: 0;
+}
+.fd-waiting-dot.urgent { background: var(--fd-red); }
+.fd-waiting-text {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 300;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fd-waiting-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.fd-waiting-age {
+  font-size: 11px;
+  color: var(--muted2);
+  font-weight: 500;
+}
+.fd-resolve-btn {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--success);
+  background: var(--success-soft);
+  border: none;
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: opacity .12s;
+}
+.fd-resolve-btn:active { opacity: .7; }
+.fd-waiting-empty {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 12.5px;
+  padding: 4px 2px 12px;
+}
+
+/* Activity Feed */
+.fd-activity-list {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+.fd-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+}
+.fd-activity-row:last-child { border-bottom: none; }
+.fd-activity-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.fd-activity-text {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 300;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fd-activity-time {
+  font-size: 10.5px;
+  color: var(--muted2);
+  flex-shrink: 0;
+  font-weight: 400;
+}
+.fd-activity-empty {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 12.5px;
+  padding: 4px 2px 12px;
+}
 
 /* ── VIEW HEADER ──────────────────────────────────────────────────── */
 .mc-view-hdr {
@@ -1301,6 +1626,7 @@
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  padding: 20px 20px 0;
 }
 .mc-view-title {
   font-family: var(--font);
@@ -1370,7 +1696,7 @@
 .mc-empty-sub { font-size: 12px; color: var(--muted); max-width: 260px; line-height: 1.55; }
 
 /* ── TABLE ────────────────────────────────────────────────────────── */
-.mc-table-wrap { background: var(--surface); border-radius: var(--r); border: 0.5px solid var(--border); overflow: hidden; overflow-x: auto; box-shadow: var(--shadow-xs); }
+.mc-table-wrap { background: var(--surface); border-radius: var(--r); border: 0.5px solid var(--border); overflow: hidden; overflow-x: auto; box-shadow: var(--shadow-xs); margin: 0 20px; }
 .mc-table { width: 100%; border-collapse: collapse; min-width: 500px; }
 .mc-table thead tr { border-bottom: 0.5px solid var(--border); }
 .mc-table th { padding: 9px 14px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; white-space: nowrap; background: var(--surface2); }
@@ -1379,294 +1705,8 @@
 .mc-table tbody tr { cursor: pointer; transition: background .1s; }
 .mc-table tbody tr:hover { background: var(--surface2); }
 
-/* ══ DASHBOARD SECTIONS ═══════════════════════════════════════════════ */
-
-/* ── A: READINESS HERO ────────────────────────────────────────────── */
-.ds-readiness-hero {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  padding: 20px;
-  margin-bottom: 4px;
-  box-shadow: var(--shadow-xs);
-  position: relative;
-  overflow: hidden;
-}
-.ds-readiness-hero::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent) 0%, #60a5fa 100%);
-}
-.ds-rh-top {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-.ds-rh-left { flex: 1; min-width: 200px; }
-.ds-rh-right { flex: 1; min-width: 200px; }
-.ds-rh-eyebrow {
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: var(--muted2);
-  margin-bottom: 8px;
-}
-.ds-rh-score {
-  font-family: var(--font);
-  font-size: 64px;
-  font-weight: 200;
-  color: var(--text);
-  line-height: 1;
-  letter-spacing: -.04em;
-}
-.ds-rh-unit { font-size: 24px; font-weight: 300; opacity: .4; letter-spacing: 0; }
-.ds-rh-sub { font-size: 12px; color: var(--muted); margin: 6px 0 12px; font-weight: 300; }
-.ds-rh-bar-wrap {
-  height: 4px;
-  background: var(--border-med);
-  border-radius: 2px;
-  overflow: hidden;
-  max-width: 240px;
-}
-.ds-rh-bar {
-  height: 100%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--accent), #60a5fa);
-  transition: width .8s cubic-bezier(.32,.72,0,1);
-}
-.ds-subscore-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.ds-subscore-card {
-  background: var(--surface2);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 10px 8px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.ds-subscore-pct { font-size: 18px; font-weight: 200; line-height: 1; font-family: var(--font); }
-.ds-subscore-label { font-size: 9px; color: var(--muted); margin-top: 3px; font-weight: 600; letter-spacing: .05em; }
-.ds-brand-scores { display: flex; flex-direction: column; gap: 7px; }
-.ds-brand-score-row { display: flex; align-items: center; gap: 8px; }
-.ds-brand-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.ds-brand-score-name { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; color: var(--text2); width: 72px; flex-shrink: 0; }
-.ds-brand-score-track { flex: 1; height: 4px; background: var(--border-med); border-radius: 2px; overflow: hidden; }
-.ds-brand-score-fill { height: 100%; border-radius: 2px; transition: width .7s cubic-bezier(.32,.72,0,1); }
-.ds-brand-score-pct { font-size: 10.5px; font-weight: 600; color: var(--text2); width: 30px; text-align: right; flex-shrink: 0; }
-
-/* ── B: READY TO SELL ─────────────────────────────────────────────── */
-.ds-ready-list {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-.ds-ready-row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 11px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-  cursor: pointer;
-  transition: background .1s;
-}
-.ds-ready-row:last-child { border-bottom: none; }
-.ds-ready-row:active { background: var(--surface2); }
-.ds-ready-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.ds-ready-info { flex: 1; min-width: 0; }
-.ds-ready-name { font-size: 13px; font-weight: 400; color: var(--text); }
-.ds-ready-brand { font-size: 10.5px; color: var(--muted); margin-top: 1px; letter-spacing: .04em; }
-.ds-ready-price { font-size: 13px; font-weight: 500; color: var(--text); flex-shrink: 0; }
-.ds-live-badge {
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  padding: 2px 8px;
-  border-radius: 20px;
-  background: var(--success-soft);
-  color: var(--success);
-  flex-shrink: 0;
-}
-.ds-empty-gentle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  padding: 16px;
-  font-size: 12.5px;
-  color: var(--muted);
-  box-shadow: var(--shadow-xs);
-}
-.ds-empty-gentle i { font-size: 20px; opacity: .3; flex-shrink: 0; }
-
-/* ── C: BLOCKERS ──────────────────────────────────────────────────── */
-.ds-blockers {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-.ds-blocker-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-  cursor: pointer;
-  transition: background .1s;
-}
-.ds-blocker-row:last-child { border-bottom: none; }
-.ds-blocker-row:active { background: var(--surface2); }
-.ds-blocker-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.ds-blocker-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.ds-blocker-info { min-width: 0; }
-.ds-blocker-name { font-size: 13px; font-weight: 400; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ds-blocker-brand { font-size: 10.5px; color: var(--muted); margin-top: 1px; letter-spacing: .04em; }
-.ds-blocker-tags { display: flex; gap: 5px; flex-wrap: wrap; flex-shrink: 0; }
-.ds-blocker-tag {
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: .04em;
-  padding: 2px 7px;
-  border-radius: 20px;
-  border: 1px solid;
-  white-space: nowrap;
-}
-.ds-blocker-arrow { font-size: 15px; color: var(--muted2); flex-shrink: 0; }
-
-/* ── D: NEXT BEST ACTION ──────────────────────────────────────────── */
-.ds-nba-card {
-  background: var(--surface);
-  border: 0.5px solid rgba(26,86,219,0.2);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--r);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-xs);
-  cursor: pointer;
-  transition: box-shadow .15s;
-}
-.ds-nba-card:active { box-shadow: var(--shadow-md); }
-.ds-nba-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 7px;
-}
-.ds-nba-text {
-  font-size: 13.5px;
-  color: var(--text);
-  line-height: 1.55;
-  font-weight: 300;
-}
-.ds-nba-footer { margin-top: 12px; }
-.ds-nba-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: .02em;
-}
-
-/* ── E: INCOMING ──────────────────────────────────────────────────── */
-.ds-incoming-list {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-.ds-incoming-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-  cursor: pointer;
-  transition: background .1s;
-}
-.ds-incoming-row:last-child { border-bottom: none; }
-.ds-incoming-row:active { background: var(--surface2); }
-.ds-incoming-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-.ds-incoming-info { flex: 1; min-width: 0; }
-.ds-incoming-name { font-size: 13px; font-weight: 400; color: var(--text); }
-.ds-incoming-type { font-size: 11px; color: var(--muted); margin-top: 1px; }
-.ds-incoming-when { font-size: 11px; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
-
-/* ── F: DEADLINES ─────────────────────────────────────────────────── */
-.ds-deadlines {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
-}
-.ds-deadline-card {
-  flex: 1;
-  min-width: 110px;
-  background: var(--surface);
-  border: 1px solid;
-  border-radius: var(--r-sm);
-  padding: 12px 14px;
-  box-shadow: var(--shadow-xs);
-}
-.ds-deadline-date { font-size: 10px; font-weight: 700; letter-spacing: .07em; margin-bottom: 4px; }
-.ds-deadline-title { font-size: 12.5px; font-weight: 400; color: var(--text); line-height: 1.35; margin-bottom: 5px; }
-.ds-deadline-days { font-size: 20px; font-weight: 200; font-family: var(--font); line-height: 1; letter-spacing: -.02em; }
-
-/* ── G: WAITING ───────────────────────────────────────────────────── */
-.ds-waiting-list {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-.ds-waiting-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.04);
-}
-.ds-waiting-row:last-child { border-bottom: none; }
-.ds-waiting-row.urgent { background: rgba(192,57,43,0.03); }
-.ds-waiting-text { flex: 1; font-size: 12.5px; color: var(--text); }
-.ds-waiting-age { font-size: 10.5px; color: var(--muted2); flex-shrink: 0; font-weight: 500; }
-.ds-waiting-age.urgent { color: var(--danger); font-weight: 700; }
-.ds-resolve-btn {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--success);
-  background: var(--success-soft);
-  border: none;
-  border-radius: 6px;
-  padding: 3px 9px;
-  cursor: pointer;
-  font-family: var(--font);
-  flex-shrink: 0;
-  transition: opacity .12s;
-}
-.ds-resolve-btn:active { opacity: .7; }
-
 /* ══ COLLECTIONS ══════════════════════════════════════════════════════ */
-.coll-brand-block { margin-bottom: 24px; }
+.coll-brand-block { margin: 0 20px 24px; }
 .coll-brand-hdr {
   display: flex;
   align-items: center;
@@ -1697,7 +1737,7 @@
 .coll-empty { font-size: 12px; color: var(--muted); padding: 12px 0; }
 
 /* ══ PROJECTS ════════════════════════════════════════════════════════ */
-.proj-brand-group { margin-bottom: 22px; }
+.proj-brand-group { margin: 0 20px 22px; }
 .proj-brand-hdr {
   display: flex;
   align-items: center;
@@ -1734,45 +1774,35 @@
 .pj-stage-row { display: flex; align-items: center; gap: 9px; }
 .pj-stage-name { font-size: 12.5px; color: var(--text2); }
 
+/* ══ ORDERS ══════════════════════════════════════════════════════════ */
+.chart-wrap { padding: 12px 16px 16px; }
+.chart-canvas { max-height: 220px; }
+
 /* ══ NOTES ═══════════════════════════════════════════════════════════ */
-.note-compose { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 14px; box-shadow: var(--shadow-xs); }
+.note-compose { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r); padding: 14px; margin: 0 20px 14px; box-shadow: var(--shadow-xs); }
 .note-textarea { width: 100%; background: var(--surface2); border: 0.5px solid var(--border-med); border-radius: var(--r-sm); padding: 11px 13px; font-family: var(--font); font-size: 13px; color: var(--text); resize: vertical; min-height: 80px; outline: none; transition: border-color .18s; box-sizing: border-box; }
 .note-textarea:focus { border-color: rgba(26,86,219,.35); }
 .note-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 8px; }
 .note-tag-sel { background: var(--surface2); border: 0.5px solid var(--border-med); border-radius: var(--r-xs); padding: 7px 10px; font-family: var(--font); font-size: 12px; color: var(--text2); outline: none; }
-.notes-feed { display: flex; flex-direction: column; gap: 8px; }
+.notes-feed { display: flex; flex-direction: column; gap: 8px; padding: 0 20px; }
 .note-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r); padding: 13px 14px; box-shadow: var(--shadow-xs); }
 .note-card-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
 .note-tag-badge { font-size: 9.5px; font-weight: 700; letter-spacing: .07em; padding: 2px 8px; border-radius: 20px; background: var(--accent-soft); color: var(--accent); }
 .note-ts { font-size: 10.5px; color: var(--muted2); flex: 1; }
 .note-body { font-size: 13px; color: var(--text); line-height: 1.55; font-weight: 300; }
 
+/* cell muted */
+.cell-muted { color: var(--muted); font-size: 12px; }
+
 /* ══ MOBILE OVERRIDES ════════════════════════════════════════════════ */
 @media(max-width: 767px) {
-  #mc-area { padding: 14px 14px 80px; }
-
-  /* Hero stacks */
-  .ds-rh-top { flex-direction: column; gap: 16px; }
-  .ds-rh-left, .ds-rh-right { min-width: 0; width: 100%; }
-  .ds-rh-score { font-size: 52px; }
-  .ds-rh-bar-wrap { max-width: 100%; }
-
-  /* Subscores 2x2 on small */
-  .ds-subscore-grid { grid-template-columns: repeat(2, 1fr); }
-
-  /* Deadlines scroll horizontal */
-  .ds-deadlines { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
-  .ds-deadlines::-webkit-scrollbar { display: none; }
-  .ds-deadline-card { min-width: 110px; flex-shrink: 0; }
-
-  /* Projects single column */
-  .proj-cards { grid-template-columns: 1fr; }
-
-  /* Blocker tags wrap */
-  .ds-blocker-tags { max-width: 140px; }
-
-  /* Brand score name shorter */
-  .ds-brand-score-name { width: 60px; font-size: 9.5px; }
+  .fd-page { padding: 20px 16px 80px; }
+  .fd-greeting-text { font-size: 18px; }
+  .fd-arc-wrap { width: 60px; height: 60px; }
+  .fd-arc-svg { width: 60px; height: 60px; }
+  .fd-arc-pct { font-size: 17px; }
+  .mc-view-hdr { padding: 16px 16px 0; }
+  .mc-table-wrap, .coll-brand-block, .proj-brand-group, .note-compose, .notes-feed { margin-left: 16px; margin-right: 16px; }
 }
 
     `;
