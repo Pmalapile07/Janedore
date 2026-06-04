@@ -86,7 +86,10 @@
     mc.innerHTML =
       '<div class="mc-shell">' +
         buildSideNav() +
-        '<div id="mc-view-area" class="mc-view-area"></div>' +
+        '<div class="mc-content-col">' +
+          buildMobileNav() +
+          '<div id="mc-view-area" class="mc-view-area"></div>' +
+        '</div>' +
       '</div>';
     renderView();
   };
@@ -120,29 +123,33 @@
     '</nav>';
   }
 
+  /* ─── MOBILE NAV (always in DOM, hidden on desktop) ─────────────────────── */
+  function buildMobileNav() {
+    var items = [
+      { id: 'overview',   label: 'Overview'  },
+      { id: 'projects',   label: 'Projects'  },
+      { id: 'suppliers',  label: 'Suppliers' },
+      { id: 'waiting',    label: 'Waiting'   },
+      { id: 'wins',       label: 'Wins'      },
+      { id: 'milestones', label: 'Dates'     },
+      { id: 'notes',      label: 'Notes'     }
+    ];
+    return '<div class="mc-mobile-nav-wrap">' +
+      items.map(function(item){
+        return '<button class="mc-mobile-pill' + (_mcView === item.id ? ' mc-active' : '') + '" ' +
+          'onclick="window._mcNav(\'' + item.id + '\')">' + item.label + '</button>';
+      }).join('') +
+    '</div>';
+  }
+
   window._mcNav = function(view) {
     _mcView = view;
-    document.querySelectorAll('.mc-sidenav-btn').forEach(function(b){
-      b.classList.toggle('mc-active', b.textContent.trim().indexOf(
-        view === 'overview' ? 'Overview' :
-        view === 'projects' ? 'Projects' :
-        view === 'suppliers' ? 'Suppliers' :
-        view === 'waiting'  ? 'Waiting' :
-        view === 'wins'     ? 'Recent' :
-        view === 'milestones'? 'Milestones' : 'Founder'
-      ) === 0);
-    });
-    /* simpler: re-query by onclick attr */
-    document.querySelectorAll('.mc-sidenav-btn').forEach(function(b){
+    /* Update both navs by matching onclick attribute */
+    document.querySelectorAll('.mc-sidenav-btn, .mc-mobile-pill').forEach(function(b){
       var match = b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'" + view + "'") > -1;
       b.classList.toggle('mc-active', match);
     });
     renderView();
-    /* update mobile pills */
-    document.querySelectorAll('.mc-mobile-pill').forEach(function(b){
-      var match = b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'" + view + "'") > -1;
-      b.classList.toggle('mc-active', match);
-    });
   };
 
   function renderView() {
@@ -1149,10 +1156,21 @@
   align-items: flex-start;
   min-height: calc(100vh - var(--nav-h));
 }
+/* Content column: holds mobile nav + view area */
+.mc-content-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .mc-view-area {
   flex: 1;
   min-width: 0;
-  padding: 0 0 60px;
+  padding: 0 0 80px;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ══ SIDE NAV ═════════════════════════════════════════════════════ */
@@ -1211,30 +1229,37 @@
 .mc-sidenav-btn i { font-size: 16px; width: 18px; flex-shrink: 0; opacity: .45; display: flex; align-items: center; justify-content: center; }
 .mc-sidenav-btn.mc-active i { opacity: 1; }
 
-/* Mobile nav pills (injected) */
+/* Mobile nav pills */
 .mc-mobile-nav-wrap {
   display: flex;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding-bottom: 12px;
-  margin-bottom: 4px;
+  padding: 12px 0 10px;
+  margin-bottom: 2px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 0.5px solid var(--border);
 }
 .mc-mobile-nav-wrap::-webkit-scrollbar { display: none; }
+@media(min-width: 1024px) { .mc-mobile-nav-wrap { display: none; } }
 .mc-mobile-pill {
   flex-shrink: 0;
   background: var(--surface);
   border: 0.5px solid var(--border-med);
   border-radius: 20px;
-  padding: 5px 13px;
+  padding: 7px 14px;
   font-family: var(--font);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--muted);
   cursor: pointer;
   white-space: nowrap;
   transition: all .12s;
 }
+.mc-mobile-pill:first-child { margin-left: 0; }
 .mc-mobile-pill.mc-active {
   background: var(--text);
   border-color: var(--text);
@@ -1266,8 +1291,8 @@
   box-shadow: var(--shadow-xs);
   flex-wrap: wrap;
 }
-.ov-hero-left { flex: 1.2; min-width: 200px; }
-.ov-hero-right { flex: 1; min-width: 180px; }
+.ov-hero-left { flex: 1; min-width: 0; width: 100%; }
+.ov-hero-right { flex: 1; min-width: 0; width: 100%; }
 .ov-eyebrow {
   font-size: 8.5px;
   font-weight: 700;
@@ -1930,33 +1955,67 @@
   border-radius: var(--r-sm);
 }
 
+/* ══ MOBILE OVERRIDES ════════════════════════════════════════════ */
+@media(max-width: 767px) {
+
+  /* View area full width with proper padding */
+  .mc-view-area {
+    padding: 14px 14px 80px !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hero stacks vertically */
+  .ov-hero {
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+  }
+  .ov-hero-left, .ov-hero-right {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Smaller score on mobile */
+  .ov-score { font-size: 52px; }
+  .ov-score-unit { font-size: 20px; }
+
+  /* Bar label narrower */
+  .ov-bar-label { width: 110px; font-size: 10px; }
+
+  /* Stats 3 columns on mobile */
+  .ov-stats { grid-template-columns: 1fr 1fr 1fr; }
+  .ov-stat-value { font-size: 22px; }
+
+  /* Projects single column */
+  .proj-list { grid-template-columns: 1fr; }
+
+  /* Waiting cards single column */
+  .waiting-list { grid-template-columns: 1fr; }
+
+  /* Wins cards single column */
+  .wins-grid { grid-template-columns: 1fr; }
+
+  /* Transit list wraps */
+  .ov-transit-list { flex-direction: column; }
+  .ov-transit-card { width: 100%; box-sizing: border-box; }
+
+  /* Wins list full width */
+  .ov-wins-list { flex-direction: column; }
+  .ov-win-card { min-width: 0; width: 100%; box-sizing: border-box; }
+
+  /* View header wraps cleanly */
+  .mc-view-header { gap: 10px; }
+  .mc-view-title { font-size: 20px; }
+
+  /* Readiness score row stacks */
+  .ov-score-row { flex-wrap: wrap; gap: 8px; }
+}
+
     `;
     document.head.appendChild(s);
 
-    /* Inject mobile pill nav on small screens */
-    if (window.innerWidth < 1024) {
-      setTimeout(function(){
-        var shell = document.querySelector('.mc-shell');
-        var area  = safeEl('mc-view-area');
-        if (shell && area && !document.querySelector('.mc-mobile-nav-wrap')) {
-          var navItems = [
-            {id:'overview',label:'Overview'},
-            {id:'projects',label:'Projects'},
-            {id:'suppliers',label:'Suppliers'},
-            {id:'waiting',label:'Waiting On'},
-            {id:'wins',label:'Wins'},
-            {id:'milestones',label:'Milestones'},
-            {id:'notes',label:'Notes'}
-          ];
-          var wrap = document.createElement('div');
-          wrap.className = 'mc-mobile-nav-wrap';
-          wrap.innerHTML = navItems.map(function(i){
-            return '<button class="mc-mobile-pill' + (_mcView===i.id?' mc-active':'') + '" onclick="window._mcNav(\''+i.id+'\')">'+i.label+'</button>';
-          }).join('');
-          area.insertAdjacentElement('beforebegin', wrap);
-        }
-      }, 0);
-    }
-  }
+      }
 
 })();
