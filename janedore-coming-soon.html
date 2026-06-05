@@ -31,7 +31,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/phosphor-icons"></script>
 
-<!-- Firebase compat SDKs (same versions used in your admin) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -57,6 +56,32 @@
     overscroll-behavior: none;
   }
 
+  /* ─── STORE OWNER LINK (top right) ──────────────────────────── */
+  .store-owner-link {
+    position: fixed; top: 20px; right: 20px;
+    z-index: 50;
+    text-align: right;
+    line-height: 1.6;
+  }
+  .store-owner-link span {
+    display: block;
+    font-size: 11px; font-weight: 300;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.02em;
+  }
+  .store-owner-link button {
+    background: transparent; border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px; font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer; padding: 0;
+    letter-spacing: 0.05em;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .store-owner-link button:hover { color: rgba(255,255,255,0.9); }
+
   /* ─── MAIN CONTAINER ─────────────────────────────────────────── */
   .cs-container {
     width: 100%; max-width: 520px;
@@ -77,23 +102,12 @@
   }
 
   /* ─── LOGO ──────────────────────────────────────────────────── */
-  .logo-wrap { margin-top: 24px; margin-bottom: 8px; cursor: pointer; user-select: none; }
+  .logo-wrap { margin-top: 24px; margin-bottom: 8px; user-select: none; }
   .logo {
     width: 100%; max-width: 182px; height: auto;
     display: block; margin: 0 auto;
     filter: brightness(0) invert(1);
-    transition: opacity 0.15s;
   }
-  .logo-wrap:active .logo { opacity: 0.6; }
-
-  /* tap counter hint — fades in after 3 taps */
-  .tap-hint {
-    font-size: 10px; letter-spacing: 0.2em; color: rgba(255,255,255,0.2);
-    margin-top: 6px; min-height: 14px;
-    transition: opacity 0.3s;
-    opacity: 0;
-  }
-  .tap-hint.show { opacity: 1; }
 
   /* ─── TAGLINE ────────────────────────────────────────────────── */
   .cs-tagline {
@@ -177,7 +191,6 @@
 
   .admin-box {
     width: 100%; max-width: 380px; padding: 0 24px;
-    animation: fadeUp 0.4s ease both;
   }
 
   .admin-logo {
@@ -190,6 +203,7 @@
     color: rgba(255,255,255,0.35); margin-bottom: 32px; text-align: center;
   }
 
+  /* Using text inputs not email/password to prevent Safari password manager */
   .admin-field {
     width: 100%; background: transparent; border: none;
     border-bottom: 1px solid rgba(255,255,255,0.2);
@@ -275,9 +289,7 @@
   }
   .social-link:hover { color: rgba(255,255,255,0.8); }
 
-  .copyright {
-    font-size: 11px; color: rgba(255,255,255,0.25);
-  }
+  .copyright { font-size: 11px; color: rgba(255,255,255,0.25); }
 
   .sr-only {
     position: absolute; width: 1px; height: 1px;
@@ -297,19 +309,24 @@
 
 <a href="#main" class="sr-only">Skip to main content</a>
 
+<!-- ─── STORE OWNER LINK ───────────────────────────────────── -->
+<div class="store-owner-link">
+  <span>Is this your store?</span>
+  <button onclick="openAdminPanel()">Log in</button>
+</div>
+
 <!-- ─── COMING SOON CONTENT ─────────────────────────────────── -->
 <main id="main" class="cs-container">
 
-  <div class="logo-wrap" id="logo-wrap" role="button" tabindex="0" aria-label="Janedore logo">
+  <div class="logo-wrap">
     <img class="logo"
          src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
          alt="Janedore">
-    <div class="tap-hint" id="tap-hint"></div>
   </div>
 
   <div class="cs-tagline">Coming soon</div>
 
-  <form class="signup-form" id="signup-form" onsubmit="return false;">
+  <form class="signup-form" id="signup-form" onsubmit="return false;" autocomplete="off">
     <div class="input-wrap">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email" class="email-input" id="email-input"
@@ -365,13 +382,17 @@
          alt="Janedore">
     <div class="admin-title">Admin Access</div>
 
-    <label for="admin-email" class="sr-only">Email</label>
-    <input type="email" class="admin-field" id="admin-email"
-           placeholder="Email" autocomplete="username">
+    <!-- type="text" + autocomplete="off" prevents Safari password manager popup -->
+    <input type="text" class="admin-field" id="admin-email"
+           placeholder="Email"
+           autocomplete="off"
+           autocorrect="off"
+           autocapitalize="off"
+           spellcheck="false">
 
-    <label for="admin-password" class="sr-only">Password</label>
     <input type="password" class="admin-field" id="admin-password"
-           placeholder="Password" autocomplete="current-password">
+           placeholder="Password"
+           autocomplete="new-password">
 
     <button class="admin-submit" id="admin-login-btn" onclick="adminLogin()">
       Sign In
@@ -399,9 +420,7 @@
     databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
   };
 
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db   = firebase.firestore();
 
@@ -464,16 +483,22 @@
 
     const clientId = localStorage.getItem('jd_cid') || 'c_' + Math.random().toString(36).substr(2,9);
     localStorage.setItem('jd_cid', clientId);
-    if (!RateLimiter.check(clientId + '_s')) { showMsg('Too many attempts. Please wait a few minutes.', 'error'); return; }
+    if (!RateLimiter.check(clientId + '_s')) {
+      showMsg('Too many attempts. Please wait a few minutes.', 'error'); return;
+    }
 
     clearMsg(); setLoading(true);
     try {
-      const docId  = email.replace(/\./g,'_');
-      const docRef = db.collection('newsletter_subscribers').doc(docId);
+      const docId  = email.replace(/\./g, '_');
+      const docRef = db.collection('newsletter').doc(docId);
       const snap   = await docRef.get();
-      if (snap.exists) { showMsg("You're already on the list — we'll be in touch!", 'info'); return; }
+      if (snap.exists) {
+        showMsg("You're already on the list — we'll be in touch!", 'info');
+        return;
+      }
       await docRef.set({
-        email, source: 'coming_soon_page',
+        email,
+        source: 'coming_soon_page',
         subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
         userAgent: navigator.userAgent,
         referrer: document.referrer || 'direct'
@@ -494,70 +519,27 @@
     if (formMsg.classList.contains('error')) clearMsg();
   });
 
-  // ─── SECRET ADMIN LOGIN (5 taps on logo) ─────────────────────
-  const logoWrap   = document.getElementById('logo-wrap');
-  const tapHint    = document.getElementById('tap-hint');
-  const adminPanel = document.getElementById('admin-panel');
-  const adminClose = document.getElementById('admin-close-btn');
-
-  let tapCount  = 0;
-  let tapTimer  = null;
-
-  const TAP_REQUIRED = 5;
-  const TAP_WINDOW   = 3000; // ms to complete all taps
-
-  logoWrap.addEventListener('click', () => {
-    tapCount++;
-
-    // Show subtle hint after 3rd tap
-    if (tapCount === 3) {
-      tapHint.textContent = '· · ·';
-      tapHint.classList.add('show');
-    }
-    if (tapCount === 4) {
-      tapHint.textContent = '· · · ·';
-    }
-
-    if (tapCount >= TAP_REQUIRED) {
-      clearTimeout(tapTimer);
-      tapCount = 0;
-      tapHint.classList.remove('show');
-      tapHint.textContent = '';
-      openAdminPanel();
-      return;
-    }
-
-    clearTimeout(tapTimer);
-    tapTimer = setTimeout(() => {
-      tapCount = 0;
-      tapHint.classList.remove('show');
-      tapHint.textContent = '';
-    }, TAP_WINDOW);
-  });
-
-  // Also allow keyboard: Enter/Space on focused logo
-  logoWrap.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') logoWrap.click();
-  });
-
-  function openAdminPanel() {
-    adminPanel.classList.add('open');
-    setTimeout(() => document.getElementById('admin-email').focus(), 300);
-  }
+  // ─── ADMIN PANEL ─────────────────────────────────────────────
+  window.openAdminPanel = function() {
+    document.getElementById('admin-panel').classList.add('open');
+    // Small delay before focus so Safari doesn't trigger password manager on open
+    setTimeout(() => document.getElementById('admin-email').focus(), 400);
+  };
 
   function closeAdminPanel() {
-    adminPanel.classList.remove('open');
+    document.getElementById('admin-panel').classList.remove('open');
     document.getElementById('admin-error').className = 'admin-error';
     document.getElementById('admin-error').textContent = '';
     document.getElementById('admin-email').value    = '';
     document.getElementById('admin-password').value = '';
   }
 
-  adminClose.addEventListener('click', closeAdminPanel);
+  document.getElementById('admin-close-btn').addEventListener('click', closeAdminPanel);
 
-  // Close on Escape
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && adminPanel.classList.contains('open')) closeAdminPanel();
+    if (e.key === 'Escape' && document.getElementById('admin-panel').classList.contains('open')) {
+      closeAdminPanel();
+    }
   });
 
   // ─── ADMIN SIGN IN ────────────────────────────────────────────
@@ -570,12 +552,12 @@
     const email    = emailEl.value.trim();
     const password = passwordEl.value;
 
-    errorEl.className  = 'admin-error';
+    errorEl.className   = 'admin-error';
     errorEl.textContent = '';
 
     if (!email || !password) {
       errorEl.textContent = 'Please enter your email and password.';
-      errorEl.className  = 'admin-error show';
+      errorEl.className   = 'admin-error show';
       return;
     }
 
@@ -583,11 +565,8 @@
     loginBtn.textContent = 'Signing in...';
 
     try {
-      const cred = await auth.signInWithEmailAndPassword(email, password);
-      const uid  = cred.user.uid;
-
-      // Verify this user is in the admins collection
-      const adminDoc = await db.collection('admins').doc(uid).get();
+      const cred     = await auth.signInWithEmailAndPassword(email, password);
+      const adminDoc = await db.collection('admins').doc(cred.user.uid).get();
 
       if (!adminDoc.exists) {
         await auth.signOut();
@@ -608,13 +587,12 @@
         return;
       }
 
-      // Success — redirect to admin panel
       window.location.href = 'admin.html';
 
     } catch (err) {
       console.error('[Janedore Admin] Login error:', err.code, err.message);
       let msg = 'Invalid credentials. Please try again.';
-      if (err.code === 'auth/too-many-requests') msg = 'Too many failed attempts. Please wait and try again.';
+      if (err.code === 'auth/too-many-requests')      msg = 'Too many failed attempts. Please wait and try again.';
       if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
       errorEl.textContent = msg;
       errorEl.className   = 'admin-error show';
@@ -623,7 +601,6 @@
     }
   };
 
-  // Allow Enter key in password field to submit
   document.getElementById('admin-password').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') adminLogin();
   });
