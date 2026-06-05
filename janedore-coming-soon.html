@@ -374,37 +374,7 @@
   <p class="copyright" id="copyright"></p>
 </div>
 
-<!-- ─── ADMIN LOGIN PANEL ──────────────────────────────────── -->
-<div class="admin-panel" id="admin-panel" role="dialog" aria-modal="true" aria-label="Admin login">
-  <div class="admin-box">
-    <img class="admin-logo"
-         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
-         alt="Janedore">
-    <div class="admin-title">Admin Access</div>
-
-    <!-- type="text" + autocomplete="off" prevents Safari password manager popup -->
-    <input type="text" class="admin-field" id="admin-email"
-           placeholder="Email"
-           autocomplete="off"
-           autocorrect="off"
-           autocapitalize="off"
-           spellcheck="false">
-
-    <input type="password" class="admin-field" id="admin-password"
-           placeholder="Password"
-           autocomplete="new-password">
-
-    <button class="admin-submit" id="admin-login-btn" onclick="adminLogin()">
-      Sign In
-    </button>
-
-    <div class="admin-error" id="admin-error"></div>
-  </div>
-
-  <button class="admin-close" id="admin-close-btn" aria-label="Close admin login">
-    <i class="ph ph-x"></i>
-  </button>
-</div>
+<!-- Admin panel injected by JS on demand to prevent Safari password manager -->
 
 
 <script>
@@ -519,27 +489,66 @@
     if (formMsg.classList.contains('error')) clearMsg();
   });
 
-  // ─── ADMIN PANEL ─────────────────────────────────────────────
+  // ─── ADMIN PANEL (injected on demand — never in DOM on page load) ───────────
   window.openAdminPanel = function() {
-    document.getElementById('admin-panel').classList.add('open');
-    // Small delay before focus so Safari doesn't trigger password manager on open
-    setTimeout(() => document.getElementById('admin-email').focus(), 400);
+    // If already open, do nothing
+    if (document.getElementById('admin-panel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'admin-panel';
+    panel.className = 'admin-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-label', 'Admin login');
+    panel.innerHTML = `
+      <div class="admin-box">
+        <img class="admin-logo"
+             src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
+             alt="Janedore">
+        <div class="admin-title">Admin Access</div>
+        <input type="text" class="admin-field" id="admin-email"
+               placeholder="Email"
+               autocomplete="off" autocorrect="off"
+               autocapitalize="off" spellcheck="false">
+        <input type="text" class="admin-field" id="admin-password"
+               placeholder="Password"
+               style="-webkit-text-security:disc;"
+               autocomplete="off">
+        <button class="admin-submit" id="admin-login-btn" onclick="adminLogin()">Sign In</button>
+        <div class="admin-error" id="admin-error"></div>
+      </div>
+      <button class="admin-close" id="admin-close-btn" aria-label="Close admin login">
+        <i class="ph ph-x"></i>
+      </button>
+    `;
+
+    document.body.appendChild(panel);
+
+    // Trigger open animation on next frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => panel.classList.add('open'));
+    });
+
+    document.getElementById('admin-close-btn').addEventListener('click', closeAdminPanel);
+    document.getElementById('admin-password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') adminLogin();
+    });
+    document.getElementById('admin-email').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('admin-password').focus();
+    });
+
+    setTimeout(() => document.getElementById('admin-email').focus(), 350);
   };
 
   function closeAdminPanel() {
-    document.getElementById('admin-panel').classList.remove('open');
-    document.getElementById('admin-error').className = 'admin-error';
-    document.getElementById('admin-error').textContent = '';
-    document.getElementById('admin-email').value    = '';
-    document.getElementById('admin-password').value = '';
+    const panel = document.getElementById('admin-panel');
+    if (!panel) return;
+    panel.classList.remove('open');
+    setTimeout(() => { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 350);
   }
 
-  document.getElementById('admin-close-btn').addEventListener('click', closeAdminPanel);
-
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('admin-panel').classList.contains('open')) {
-      closeAdminPanel();
-    }
+    if (e.key === 'Escape' && document.getElementById('admin-panel')) closeAdminPanel();
   });
 
   // ─── ADMIN SIGN IN ────────────────────────────────────────────
@@ -601,12 +610,7 @@
     }
   };
 
-  document.getElementById('admin-password').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') adminLogin();
-  });
-  document.getElementById('admin-email').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('admin-password').focus();
-  });
+
 
   // ─── SCROLL LOCK ──────────────────────────────────────────────
   window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
