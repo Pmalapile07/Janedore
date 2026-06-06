@@ -909,4 +909,156 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:14px 0;}
 .order-row-abandoned td { background: rgba(192,112,0,0.03); }
 .order-row-abandoned:hover td { background: rgba(192,112,0,0.06) !important; }
 
+/* ══════════════════════════════════════════════════════
+   SETUP GUIDE — append to admin.css
+   Uses only existing CSS variables from :root
+══════════════════════════════════════════════════════ */
+
+.setup-guide {
+  max-width: 520px;
+  padding: 8px 0 48px;
+}
+
+/* Header */
+.setup-guide-hd {
+  margin-bottom: 22px;
+}
+
+.setup-guide-title {
+  font-family: var(--font);
+  font-size: 26px;
+  font-weight: 200;
+  color: var(--text);
+  letter-spacing: -0.2px;
+  margin: 0 0 5px;
+  line-height: 1.15;
+}
+
+.setup-guide-caption {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Progress row */
+.setup-guide-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.setup-progress-track {
+  flex: 1;
+  height: 3px;
+  background: var(--border-med);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.setup-progress-fill {
+  height: 100%;
+  background: var(--text);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.setup-progress-count {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Steps container */
+.setup-steps {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+/* Individual step */
+.setup-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
+  transition: background 0.1s;
+}
+
+.setup-step:last-child {
+  border-bottom: none;
+}
+
+.setup-step--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.setup-step--done {
+  background: var(--surface2);
+}
+
+/* Indicator column */
+.setup-step-indicator {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.setup-check-svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.setup-step-num {
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted2);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border-med);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Step text */
+.setup-step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.setup-step-title {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+  line-height: 1.35;
+}
+
+.setup-step--done .setup-step-title {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--muted2);
+}
+
+.setup-step-desc {
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
 
