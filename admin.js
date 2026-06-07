@@ -139,14 +139,12 @@
   function closePanel() { cleanupModalState(); }
   window._closePanel = closePanel;
 
-  // ─── UI STATE ────────────────────────────────────────────────────────────────
   function showAuthLoading() { var loader = safeEl('auth-loading'); if (!loader) { loader = document.createElement('div'); loader.id = 'auth-loading'; loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.97);display:flex;align-items:center;justify-content:center;z-index:9999;'; loader.innerHTML = '<div style="text-align:center;font-family:Manrope,sans-serif;"><div style="font-size:14px;color:#666;">Verifying access...</div></div>'; document.body.appendChild(loader); } loader.style.display = 'flex'; }
   function hideAuthLoading() { var loader = safeEl('auth-loading'); if (loader) loader.style.display = 'none'; }
 
   function initUIState() { safeSetDisplay('login-screen', 'flex'); safeSetDisplay('admin-panel', 'none'); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initUIState); } else { initUIState(); }
 
-  // ─── AUTH STATE ───────────────────────────────────────────────────────────────
   auth.onAuthStateChanged(function(user) {
     if (user) {
       console.log('[JANEDORE AUTH] onAuthStateChanged: user present —', user.email, '| uid:', user.uid);
@@ -216,25 +214,10 @@
     document.querySelectorAll('.bnav-btn[data-tab]').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) { b.classList.remove('active'); });
     cleanupModalState();
-    
-    // FIX: Ensure inbox renders when messages tab is opened
-    if (tab === 'messages') {
-      if (typeof window._renderMessagesTab === 'function') {
-        window._renderMessagesTab();
-      } else {
-        setTimeout(function() {
-          if (typeof window._renderMessagesTab === 'function') {
-            window._renderMessagesTab();
-          }
-        }, 100);
-      }
-      return;
-    }
-    
     renderCurrentTab();
   };
 
-  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; destroyCharts(); switch (window._currentTab) { case 'dashboard': if (window._renderDashboardTab) window._renderDashboardTab(); break; case 'products': if (window._renderProductsTab) window._renderProductsTab(); break; case 'reviews': if (window._renderReviewsTab) window._renderReviewsTab(); break; case 'newsletter': if (window._renderNewsletterTab) window._renderNewsletterTab(); break; case 'orders': if (window._renderOrdersTab) window._renderOrdersTab(); break; case 'customers': if (window._renderCustomersTab) window._renderCustomersTab(); break; case 'vendors': if (window._renderVendorsTab) window._renderVendorsTab(); break; } }
+  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; destroyCharts(); switch (window._currentTab) { case 'dashboard': if (window._renderDashboardTab) window._renderDashboardTab(); break; case 'products': if (window._renderProductsTab) window._renderProductsTab(); break; case 'messages': if (window._renderMessagesTab) window._renderMessagesTab(); break; case 'reviews': if (window._renderReviewsTab) window._renderReviewsTab(); break; case 'newsletter': if (window._renderNewsletterTab) window._renderNewsletterTab(); break; case 'orders': if (window._renderOrdersTab) window._renderOrdersTab(); break; case 'customers': if (window._renderCustomersTab) window._renderCustomersTab(); break; case 'vendors': if (window._renderVendorsTab) window._renderVendorsTab(); break; } }
 
   function destroyCharts() { if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; } if (window._revenueChart) { window._revenueChart.destroy(); window._revenueChart = null; } }
   window._destroyCharts = destroyCharts;
