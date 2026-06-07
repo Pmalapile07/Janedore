@@ -244,15 +244,27 @@ async function sendChatMessage() {
     await ensureAuth();
     const user = firebase.auth().currentUser;
     
-    await rtdb.ref('live_chat/' + chatSessionId + '/messages').push({
+    const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+    const ts = firebase.database.ServerValue.TIMESTAMP;
+    
+    const updates = {};
+    updates['live_chat/' + chatSessionId + '/messages/' + msgRef.key] = {
       sessionId: chatSessionId,
       customerEmail: customerEmail,
       customerName: customerName,
       text: text,
       sender: 'customer',
-      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      createdAt: ts,
+      read: false,
+      delivered: false,
       userId: user ? user.uid : 'anonymous'
-    });
+    };
+    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = text;
+    updates['chat_inbox/' + chatSessionId + '/lastMessageAt'] = ts;
+    updates['chat_inbox/' + chatSessionId + '/customerEmail'] = customerEmail;
+    updates['chat_inbox/' + chatSessionId + '/customerName'] = customerName || 'Guest';
+    
+    await rtdb.ref('/').update(updates);
     
     input.value = '';
   } catch(e) {
