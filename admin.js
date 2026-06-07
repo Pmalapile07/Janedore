@@ -140,11 +140,6 @@
   window._closePanel = closePanel;
 
   // ─── UI STATE ────────────────────────────────────────────────────────────────
-  // UNCHANGED from original. Login screen shows immediately as before.
-  // Reason: changing this requires a timeout fallback to be safe, and we are
-  // not deploying that change until diagnostics confirm the session is genuinely
-  // being destroyed (vs. a flash being mistaken for a logout).
-
   function showAuthLoading() { var loader = safeEl('auth-loading'); if (!loader) { loader = document.createElement('div'); loader.id = 'auth-loading'; loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.97);display:flex;align-items:center;justify-content:center;z-index:9999;'; loader.innerHTML = '<div style="text-align:center;font-family:Manrope,sans-serif;"><div style="font-size:14px;color:#666;">Verifying access...</div></div>'; document.body.appendChild(loader); } loader.style.display = 'flex'; }
   function hideAuthLoading() { var loader = safeEl('auth-loading'); if (loader) loader.style.display = 'none'; }
 
@@ -152,14 +147,8 @@
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initUIState); } else { initUIState(); }
 
   // ─── AUTH STATE ───────────────────────────────────────────────────────────────
-  // CHANGE 1 of 2: Diagnostics added to onAuthStateChanged and onIdTokenChanged.
-  // These logs tell us whether the session is genuinely being destroyed
-  // (onAuthStateChanged fires null) or whether it is a UI flash only.
-  // Nothing else changed in this block.
-
   auth.onAuthStateChanged(function(user) {
     if (user) {
-      // DIAGNOSTIC: confirms session was restored from persistence or fresh login
       console.log('[JANEDORE AUTH] onAuthStateChanged: user present —', user.email, '| uid:', user.uid);
 
       window._currentUser = user;
@@ -176,11 +165,6 @@
         startChatMonitoring();
         renderRoleUI();
       }).catch(function(err) {
-        // CHANGE 2 of 2: Removed auth.signOut() from this catch block.
-        // Original code called auth.signOut() here, which destroyed the session
-        // permanently whenever Firestore had a transient network error.
-        // Now we fall back to VIEWER and show a toast. The session is preserved.
-        // The user can reload to retry role loading without losing their login.
         logError('AUTH/ROLE', err);
         hideAuthLoading();
         window._currentUserRole = 'VIEWER';
@@ -191,9 +175,6 @@
         renderRoleUI();
       });
     } else {
-      // DIAGNOSTIC: if this fires when you return to Safari without manually
-      // logging out, the session is genuinely being destroyed. That is the
-      // signal to deploy the setPersistence fix next.
       console.warn('[JANEDORE AUTH] onAuthStateChanged: null — no session.');
 
       window._currentUser = null; window._currentUserRole = null; window._roleResolved = false; window._currentVendorId = null;
@@ -202,9 +183,6 @@
     }
   });
 
-  // DIAGNOSTIC: fires on every token refresh (every ~55 minutes).
-  // If you see this fire followed immediately by onAuthStateChanged(null),
-  // something in the codebase is calling auth.signOut() after a token refresh.
   auth.onIdTokenChanged(function(user) {
     if (user) {
       console.log('[JANEDORE AUTH] onIdTokenChanged: token present or refreshed —', user.email);
@@ -238,10 +216,25 @@
     document.querySelectorAll('.bnav-btn[data-tab]').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) { b.classList.remove('active'); });
     cleanupModalState();
+    
+    // FIX: Ensure inbox renders when messages tab is opened
+    if (tab === 'messages') {
+      if (typeof window._renderMessagesTab === 'function') {
+        window._renderMessagesTab();
+      } else {
+        setTimeout(function() {
+          if (typeof window._renderMessagesTab === 'function') {
+            window._renderMessagesTab();
+          }
+        }, 100);
+      }
+      return;
+    }
+    
     renderCurrentTab();
   };
 
-  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; destroyCharts(); switch (window._currentTab) { case 'dashboard': if (window._renderDashboardTab) window._renderDashboardTab(); break; case 'products': if (window._renderProductsTab) window._renderProductsTab(); break; case 'messages': if (window._renderMessagesTab) window._renderMessagesTab(); break; case 'reviews': if (window._renderReviewsTab) window._renderReviewsTab(); break; case 'newsletter': if (window._renderNewsletterTab) window._renderNewsletterTab(); break; case 'orders': if (window._renderOrdersTab) window._renderOrdersTab(); break; case 'customers': if (window._renderCustomersTab) window._renderCustomersTab(); break; case 'vendors': if (window._renderVendorsTab) window._renderVendorsTab(); break; } }
+  function renderCurrentTab() { var mc = safeEl('main-content'); if (!mc) return; destroyCharts(); switch (window._currentTab) { case 'dashboard': if (window._renderDashboardTab) window._renderDashboardTab(); break; case 'products': if (window._renderProductsTab) window._renderProductsTab(); break; case 'reviews': if (window._renderReviewsTab) window._renderReviewsTab(); break; case 'newsletter': if (window._renderNewsletterTab) window._renderNewsletterTab(); break; case 'orders': if (window._renderOrdersTab) window._renderOrdersTab(); break; case 'customers': if (window._renderCustomersTab) window._renderCustomersTab(); break; case 'vendors': if (window._renderVendorsTab) window._renderVendorsTab(); break; } }
 
   function destroyCharts() { if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; } if (window._revenueChart) { window._revenueChart.destroy(); window._revenueChart = null; } }
   window._destroyCharts = destroyCharts;
