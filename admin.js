@@ -217,17 +217,21 @@
     document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) { b.classList.remove('active'); });
     cleanupModalState();
     
-    // FIX: Ensure inbox renders when messages tab is opened
     if (tab === 'messages') {
-      if (typeof window._renderMessagesTab === 'function') {
-        window._renderMessagesTab();
-      } else {
-        setTimeout(function() {
-          if (typeof window._renderMessagesTab === 'function') {
-            window._renderMessagesTab();
-          }
-        }, 100);
+      var attempts = 0;
+      var maxAttempts = 20;
+      function tryRender() {
+        attempts++;
+        if (typeof window._renderMessagesTab === 'function') {
+          window._renderMessagesTab();
+        } else if (attempts < maxAttempts) {
+          setTimeout(tryRender, 100);
+        } else {
+          var mc = document.getElementById('main-content');
+          if (mc) mc.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger);font-family:Manrope,sans-serif;">Inbox failed to load. _renderMessagesTab not found after ' + maxAttempts + ' attempts.</div>';
+        }
       }
+      tryRender();
       return;
     }
     
