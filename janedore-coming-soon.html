@@ -1,262 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>JANEDORE | Coming Soon</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Janedore · Coming Soon</title>
 
-  <link rel="stylesheet" href="variables.css">
-  <link rel="stylesheet" href="utilities.css">
-  <link rel="stylesheet" href="footer.css">
-  <link rel="stylesheet" href="buttons.css">
-  
-  <!-- Chat Widget CSS -->
-  <link rel="stylesheet" href="chat-widget.css">
+<meta name="description" content="Janedore - The rarest finds, within reach. Something extraordinary is coming. Sign up to be the first to know when we launch.">
+<meta name="keywords" content="fashion, clothing, accessories, curated fashion, South Africa, coming soon">
+<meta name="author" content="Janedore">
+<meta name="robots" content="index, follow">
 
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    body {
-      font-family: 'Manrope', sans-serif;
-      background: #fafaf9;
-      color: #1a1a1a;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
+<meta property="og:title" content="Janedore · Coming Soon">
+<meta property="og:description" content="The rarest finds, within reach. Sign up to be the first to know when we launch.">
+<meta property="og:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
+<meta property="og:url" content="https://janedore.co.za">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Janedore · Coming Soon">
+<meta name="twitter:description" content="The rarest finds, within reach.">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/IMG_5654.jpeg">
+
+<link rel="canonical" href="https://janedore.co.za">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/phosphor-icons"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    font-family: 'Manrope', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    zoom: 80%;
+  }
+
+  body {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0 20px;
+    overflow: hidden; position: fixed;
+    height: 100vh; width: 100%;
+    overscroll-behavior: none;
+  }
+
+  .store-owner-link {
+    position: fixed; top: 20px; right: 20px;
+    z-index: 50;
+    text-align: right;
+    line-height: 1.6;
+  }
+  .store-owner-link span {
+    display: block;
+    font-size: 11px; font-weight: 300;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.02em;
+  }
+  .store-owner-link button {
+    background: transparent; border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px; font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer; padding: 0;
+    letter-spacing: 0.05em;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .store-owner-link button:hover { color: rgba(255,255,255,0.9); }
+
+  .cs-container {
+    width: 100%; max-width: 520px;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    animation: fadeUp 1.2s ease-out both;
+    padding-bottom: 70px;
+    max-height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cs-container::-webkit-scrollbar { display: none; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo-wrap { margin-top: 24px; margin-bottom: 8px; user-select: none; }
+  .logo {
+    width: 100%; max-width: 182px; height: auto;
+    display: block; margin: 0 auto;
+    filter: brightness(0) invert(1);
+  }
+
+  .cs-tagline {
+    font-size: 14px; font-weight: 300;
+    letter-spacing: 2px; color: rgba(255,255,255,0.6);
+    text-transform: uppercase; margin-bottom: 32px;
+  }
+
+  .signup-form {
+    width: 100%; margin-bottom: 24px;
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1),
+                opacity 0.3s ease, margin 0.3s ease;
+  }
+  .signup-form.visible { max-height: 300px; opacity: 1; }
+
+  .input-wrap { position: relative; width: 100%; margin-bottom: 8px; }
+
+  .email-input {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    padding: 16px 48px 16px 0;
+    font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 400;
+    color: #fff; outline: none;
+    transition: border-color 0.3s;
+    -webkit-appearance: none;
+  }
+  .email-input:-webkit-autofill,
+  .email-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px #000 inset !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+  .email-input::placeholder { color: rgba(255,255,255,0.4); font-weight: 300; }
+  .email-input:focus { border-bottom-color: #fff; }
+
+  .submit-btn {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; padding: 8px;
+    color: rgba(255,255,255,0.6); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s; -webkit-appearance: none;
+  }
+  .submit-btn:hover { color: #fff; }
+  .submit-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .submit-btn i { font-size: 24px; }
+  .spinner {
+    display: inline-block; width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .form-msg {
+    font-size: 12px; min-height: 32px; padding: 8px 0;
+    text-align: left; display: none;
+  }
+  .form-msg.show { display: block; }
+  .form-msg.success { color: #4ade80; }
+  .form-msg.error   { color: #f87171; }
+  .form-msg.info    { color: rgba(255,255,255,0.6); }
+
+  .legal-text {
+    font-size: 11px; font-weight: 300;
+    color: rgba(255,255,255,0.35); line-height: 1.6;
+    margin-top: 12px; text-align: left;
+  }
+  .legal-text a { color: rgba(255,255,255,0.5); text-underline-offset: 2px; }
+  .legal-text a:hover { color: rgba(255,255,255,0.8); }
+
+  .admin-panel {
+    position: fixed; inset: 0;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  .admin-panel.open { opacity: 1; pointer-events: all; }
+
+  .admin-box {
+    width: 100%; max-width: 380px; padding: 0 24px;
+  }
+
+  .admin-logo {
+    display: block; max-width: 120px; margin: 0 auto 28px;
+    filter: brightness(0) invert(1); opacity: 0.7;
+  }
+
+  .admin-title {
+    font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(255,255,255,0.35); margin-bottom: 32px; text-align: center;
+  }
+
+  .admin-field {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding: 14px 0; margin-bottom: 20px;
+    font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 400;
+    color: #fff; outline: none; -webkit-appearance: none;
+    transition: border-color 0.25s;
+  }
+  .admin-field:-webkit-autofill,
+  .admin-field:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px #000 inset !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+  .admin-field::placeholder { color: rgba(255,255,255,0.3); }
+  .admin-field:focus { border-bottom-color: rgba(255,255,255,0.7); }
+
+  .admin-submit {
+    width: 100%; background: transparent;
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 14px; margin-top: 8px;
+    font-family: 'Manrope', sans-serif; font-size: 12px;
+    font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.7); cursor: pointer;
+    transition: border-color 0.2s, color 0.2s; -webkit-appearance: none;
+  }
+  .admin-submit:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
+  .admin-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .admin-error {
+    font-size: 12px; color: #f87171;
+    margin-top: 12px; min-height: 18px;
+    text-align: center; display: none;
+  }
+  .admin-error.show { display: block; }
+
+  .admin-close {
+    position: absolute; top: 20px; right: 20px;
+    background: transparent; border: none;
+    color: rgba(255,255,255,0.3); cursor: pointer;
+    font-size: 20px; line-height: 1; padding: 8px;
+    transition: color 0.2s;
+  }
+  .admin-close:hover { color: rgba(255,255,255,0.7); }
+
+  .bottom-cta {
+    position: fixed; bottom: 16px; left: 0; right: 0;
+    text-align: center; z-index: 20; pointer-events: none;
+  }
+  .launch-trigger {
+    background: transparent; border: none;
+    font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 400;
+    color: rgba(255,255,255,0.6); cursor: pointer;
+    padding: 8px 16px; letter-spacing: 0.3px;
+    transition: color 0.2s; pointer-events: auto; -webkit-appearance: none;
+  }
+  .launch-trigger:hover { color: #fff; }
+
+  .fixed-footer {
+    position: fixed; bottom: 16px; left: 0; right: 0;
+    display: none; flex-direction: column;
+    align-items: center; z-index: 25;
+  }
+  .fixed-footer.visible { display: flex; }
+
+  .back-row { display: flex; justify-content: center; margin-bottom: 12px; }
+  .back-btn {
+    background: transparent; border: none;
+    color: rgba(255,255,255,0.6); cursor: pointer;
+    padding: 8px; display: flex; align-items: center;
+    transition: color 0.2s; -webkit-appearance: none;
+  }
+  .back-btn:hover { color: #fff; }
+  .back-btn i { font-size: 20px; }
+
+  .social-row { display: flex; gap: 4px; margin-bottom: 6px; }
+  .social-link {
+    color: rgba(255,255,255,0.4); font-size: 16px;
+    text-decoration: none; transition: color 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 32px; min-width: 32px;
+  }
+  .social-link:hover { color: rgba(255,255,255,0.8); }
+
+  .copyright { font-size: 11px; color: rgba(255,255,255,0.25); }
+
+  /* Chat Widget Styles */
+  #chat-container {
+    position: fixed;
+    bottom: 80px;
+    right: 16px;
+    z-index: 60;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
     }
-
-    .coming-soon-logo {
-      width: 120px;
-      height: auto;
-      margin-bottom: 48px;
-      opacity: 0.9;
-    }
-
-    .coming-soon-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(36px, 8vw, 64px);
-      font-weight: 300;
-      letter-spacing: 0.04em;
-      color: #1a1a1a;
-      margin-bottom: 16px;
-      line-height: 1.1;
-    }
-
-    .coming-soon-subtitle {
-      font-size: 12px;
-      font-weight: 400;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: #888;
-      margin-bottom: 40px;
-    }
-
-    .coming-soon-description {
-      max-width: 420px;
-      font-size: 14px;
-      font-weight: 300;
-      line-height: 1.8;
-      color: #666;
-      margin-bottom: 48px;
-    }
-
-    .coming-soon-email-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      max-width: 400px;
-      width: 100%;
-      margin-bottom: 48px;
-    }
-
-    .coming-soon-input {
-      flex: 1 1 240px;
-      padding: 14px 18px;
-      border: 0.5px solid #d5d5d5;
-      border-radius: 4px;
-      font-family: 'Manrope', sans-serif;
-      font-size: 13px;
-      font-weight: 300;
-      letter-spacing: 0.02em;
-      background: #fff;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .coming-soon-input:focus {
-      border-color: #1a1a1a;
-    }
-
-    .coming-soon-btn {
-      flex: 0 0 auto;
-      padding: 14px 28px;
-      background: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-family: 'Manrope', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-
-    .coming-soon-btn:hover {
-      background: #333;
-    }
-
-    .coming-soon-social {
-      display: flex;
-      gap: 24px;
-      margin-bottom: 32px;
-    }
-
-    .coming-soon-social a {
-      color: #888;
-      text-decoration: none;
-      font-size: 20px;
-      transition: color 0.2s;
-    }
-
-    .coming-soon-social a:hover {
-      color: #1a1a1a;
-    }
-
-    .coming-soon-footer-text {
-      font-size: 10px;
-      font-weight: 300;
-      letter-spacing: 0.05em;
-      color: #aaa;
-    }
-
-    .coming-soon-success {
-      display: none;
-      font-size: 13px;
-      font-weight: 400;
-      color: #2d7d46;
-      margin-top: 16px;
-    }
-
-    /* Chat widget */
-    #chat-container {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 9999;
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
 
-  <img 
-    class="coming-soon-logo" 
-    src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" 
-    alt="JANEDORE"
-  >
+<a href="#main" class="sr-only">Skip to main content</a>
 
-  <h1 class="coming-soon-title">Coming Soon</h1>
-  <p class="coming-soon-subtitle">Something curated is on the way</p>
-  
-  <p class="coming-soon-description">
-    We're carefully selecting pieces that embody understated boldness. 
-    Join the waitlist to be the first to know when we launch.
-  </p>
+<div class="store-owner-link">
+  <span>Is this your store?</span>
+  <button onclick="openAdminPanel()">Log in</button>
+</div>
 
-  <form class="coming-soon-email-form" onsubmit="submitWaitlist(event)">
-    <input 
-      class="coming-soon-input" 
-      type="email" 
-      id="waitlist-email" 
-      placeholder="Your email address" 
-      required
-    >
-    <button class="coming-soon-btn" type="submit">Notify Me</button>
-  </form>
-  <div class="coming-soon-success" id="waitlist-success">✓ You're on the list. We'll be in touch.</div>
+<main id="main" class="cs-container">
 
-  <div class="coming-soon-social">
-    <a href="https://instagram.com/janedore" target="_blank" title="Instagram">
-      <i class="ph-thin ph-instagram-logo"></i>
-    </a>
-    <a href="https://tiktok.com/@janedore" target="_blank" title="TikTok">
-      <i class="ph-thin ph-tiktok-logo"></i>
-    </a>
-    <a href="mailto:hello@janedore.co.za" title="Email">
-      <i class="ph-thin ph-envelope"></i>
-    </a>
+  <div class="logo-wrap">
+    <img class="logo"
+         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
+         alt="Janedore">
   </div>
 
-  <p class="coming-soon-footer-text">JANEDORE STUDIO &copy; 2026</p>
+  <div class="cs-tagline">Coming soon</div>
 
-  <!-- Chat Widget Container -->
-  <div id="chat-container"></div>
+  <form class="signup-form" id="signup-form" onsubmit="return false;" autocomplete="off">
+    <div class="input-wrap">
+      <label for="email-input" class="sr-only">Email address</label>
+      <input type="email" class="email-input" id="email-input"
+             placeholder="Enter your email"
+             aria-label="Email address for launch notification"
+             autocomplete="off" required>
+      <button type="submit" class="submit-btn" id="submit-btn" aria-label="Subscribe">
+        <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
+        <span id="btn-spinner" class="spinner" style="display:none;"></span>
+      </button>
+    </div>
+    <div class="form-msg" id="form-msg" role="status" aria-live="polite"></div>
+    <p class="legal-text">
+      By signing up, you agree to receive emails from Janedore.
+      We respect your privacy — <a href="unsubscribe.html">unsubscribe anytime</a>.
+    </p>
+  </form>
 
-  <!-- Firebase Config -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-      authDomain: "janedore-9f035.firebaseapp.com",
-      projectId: "janedore-9f035",
-      storageBucket: "janedore-9f035.firebasestorage.app",
-      messagingSenderId: "571299748651",
-      appId: "1:571299748651:web:01463a772d47b39cc4036e",
-      measurementId: "G-Y9NMT0ZGKZ",
-      databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  </script>
+</main>
 
-  <!-- Load Chat Widget -->
-  <script>
-    fetch('chat-widget.html')
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById('chat-container').innerHTML = html;
-        // Load chat.js after widget HTML is injected
-        var script = document.createElement('script');
-        script.src = 'chat.js';
-        document.body.appendChild(script);
-      })
-      .catch(err => console.error('Chat widget failed:', err));
-  </script>
+<div class="bottom-cta" id="bottom-cta">
+  <button class="launch-trigger" id="reveal-btn">Let me know when you launch</button>
+</div>
 
-  <!-- Waitlist Form Handler -->
-  <script>
-    function submitWaitlist(e) {
-      e.preventDefault();
-      var email = document.getElementById('waitlist-email').value.trim();
-      if (!email) return;
-      
-      var db = firebase.firestore();
-      db.collection('newsletter').add({
-        email: email,
-        source: 'coming-soon',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function() {
-        document.getElementById('waitlist-success').style.display = 'block';
-        document.getElementById('waitlist-email').value = '';
-      }).catch(function(err) {
-        console.error('Waitlist signup failed:', err);
-        alert('Something went wrong. Please try again.');
-      });
+<div class="fixed-footer" id="fixed-footer">
+  <div class="back-row">
+    <button class="back-btn" id="back-btn" aria-label="Go back">
+      <i class="ph ph-arrow-left" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="social-row">
+    <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer"
+       class="social-link" aria-label="Instagram">
+      <i class="ph ph-instagram-logo"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="TikTok">
+      <i class="ph ph-tiktok-logo"></i>
+    </a>
+    <a href="#" class="social-link" aria-label="Pinterest">
+      <i class="ph ph-pinterest-logo"></i>
+    </a>
+  </div>
+  <p class="copyright" id="copyright"></p>
+</div>
+
+<!-- Chat Widget -->
+<div id="chat-container"></div>
+
+<script>
+  // ─── FIREBASE INIT ────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ",
+    databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
+  };
+
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  document.getElementById('copyright').innerHTML =
+    '&copy; ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
+
+  const signupForm  = document.getElementById('signup-form');
+  const emailInput  = document.getElementById('email-input');
+  const submitBtn   = document.getElementById('submit-btn');
+  const btnSpinner  = document.getElementById('btn-spinner');
+  const arrowIcon   = document.getElementById('arrow-icon');
+  const formMsg     = document.getElementById('form-msg');
+  const revealBtn   = document.getElementById('reveal-btn');
+  const backBtn     = document.getElementById('back-btn');
+  const bottomCta   = document.getElementById('bottom-cta');
+  const fixedFooter = document.getElementById('fixed-footer');
+
+  revealBtn.addEventListener('click', () => {
+    signupForm.classList.add('visible');
+    bottomCta.style.display = 'none';
+    fixedFooter.classList.add('visible');
+    setTimeout(() => emailInput.focus(), 100);
+  });
+
+  backBtn.addEventListener('click', () => {
+    signupForm.classList.remove('visible');
+    bottomCta.style.display = 'block';
+    fixedFooter.classList.remove('visible');
+    formMsg.className = 'form-msg';
+    formMsg.textContent = '';
+  });
+
+  const RateLimiter = {
+    attempts: {},
+    check(key, limit = 5, windowMs = 300000) {
+      const now = Date.now();
+      this.attempts[key] = (this.attempts[key] || []).filter(t => now - t < windowMs);
+      if (this.attempts[key].length >= limit) return false;
+      this.attempts[key].push(now);
+      return true;
     }
-  </script>
+  };
+
+  function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+  function showMsg(text, type) { formMsg.textContent = text; formMsg.className = 'form-msg show ' + type; }
+  function clearMsg() { formMsg.className = 'form-msg'; formMsg.textContent = ''; }
+  function setLoading(v) {
+    submitBtn.disabled       = v;
+    arrowIcon.style.display  = v ? 'none'         : 'block';
+    btnSpinner.style.display = v ? 'inline-block' : 'none';
+  }
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) { showMsg('Please enter your email address.', 'error'); return; }
+    if (!isValidEmail(email)) { showMsg('Please enter a valid email address.', 'error'); return; }
+
+    const clientId = localStorage.getItem('jd_cid') || 'c_' + Math.random().toString(36).substr(2,9);
+    localStorage.setItem('jd_cid', clientId);
+    if (!RateLimiter.check(clientId + '_s')) {
+      showMsg('Too many attempts. Please wait a few minutes.', 'error'); return;
+    }
+
+    clearMsg(); setLoading(true);
+    try {
+      const docId  = email.replace(/\./g, '_');
+      const docRef = db.collection('newsletter').doc(docId);
+      const snap   = await docRef.get();
+      if (snap.exists) {
+        showMsg("You're already on the list — we'll be in touch!", 'info');
+        return;
+      }
+      await docRef.set({
+        email,
+        source: 'coming_soon_page',
+        subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || 'direct'
+      });
+      showMsg("✓ You're on the list! We'll notify you when we launch.", 'success');
+      emailInput.value = '';
+    } catch (err) {
+      console.error('[Janedore] Subscription error:', err.code, err.message);
+      if      (err.code === 'permission-denied') showMsg('Unable to subscribe right now — please try again later.', 'error');
+      else if (err.code === 'unavailable')       showMsg('No connection. Please check your internet and try again.', 'error');
+      else                                       showMsg('Something went wrong. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  emailInput.addEventListener('input', () => {
+    if (formMsg.classList.contains('error')) clearMsg();
+  });
+
+  window.openAdminPanel = function() {
+    if (document.getElementById('admin-panel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'admin-panel';
+    panel.className = 'admin-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-label', 'Admin login');
+    panel.innerHTML = `
+      <div class="admin-box">
+        <img class="admin-logo"
+             src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
+             alt="Janedore">
+        <div class="admin-title">Admin Access</div>
+        <input type="text" class="admin-field" id="admin-email"
+               placeholder="Email"
+               autocomplete="off" autocorrect="off"
+               autocapitalize="off" spellcheck="false">
+        <input type="text" class="admin-field" id="admin-password"
+               placeholder="Password"
+               style="-webkit-text-security:disc;"
+               autocomplete="off">
+        <button class="admin-submit" id="admin-login-btn" onclick="adminLogin()">Sign In</button>
+        <div class="admin-error" id="admin-error"></div>
+      </div>
+      <button class="admin-close" id="admin-close-btn" aria-label="Close admin login">
+        <i class="ph ph-x"></i>
+      </button>
+    `;
+
+    document.body.appendChild(panel);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => panel.classList.add('open'));
+    });
+
+    document.getElementById('admin-close-btn').addEventListener('click', closeAdminPanel);
+    document.getElementById('admin-password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') adminLogin();
+    });
+    document.getElementById('admin-email').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('admin-password').focus();
+    });
+
+    setTimeout(() => document.getElementById('admin-email').focus(), 350);
+  };
+
+  function closeAdminPanel() {
+    const panel = document.getElementById('admin-panel');
+    if (!panel) return;
+    panel.classList.remove('open');
+    setTimeout(() => { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 350);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('admin-panel')) closeAdminPanel();
+  });
+
+  window.adminLogin = async function() {
+    const emailEl    = document.getElementById('admin-email');
+    const passwordEl = document.getElementById('admin-password');
+    const errorEl    = document.getElementById('admin-error');
+    const loginBtn   = document.getElementById('admin-login-btn');
+
+    const email    = emailEl.value.trim();
+    const password = passwordEl.value;
+
+    errorEl.className   = 'admin-error';
+    errorEl.textContent = '';
+
+    if (!email || !password) {
+      errorEl.textContent = 'Please enter your email and password.';
+      errorEl.className   = 'admin-error show';
+      return;
+    }
+
+    loginBtn.disabled    = true;
+    loginBtn.textContent = 'Signing in...';
+
+    try {
+      const cred     = await auth.signInWithEmailAndPassword(email, password);
+      const adminDoc = await db.collection('admins').doc(cred.user.uid).get();
+
+      if (!adminDoc.exists) {
+        await auth.signOut();
+        errorEl.textContent = 'Access denied. Not an authorised admin.';
+        errorEl.className   = 'admin-error show';
+        loginBtn.disabled    = false;
+        loginBtn.textContent = 'Sign In';
+        return;
+      }
+
+      const role = (adminDoc.data().role || '').toUpperCase();
+      if (role !== 'SUPER_ADMIN' && role !== 'VENDOR' && role !== 'VIEWER') {
+        await auth.signOut();
+        errorEl.textContent = 'Access denied. Invalid role.';
+        errorEl.className   = 'admin-error show';
+        loginBtn.disabled    = false;
+        loginBtn.textContent = 'Sign In';
+        return;
+      }
+
+      window.location.href = 'admin.html';
+
+    } catch (err) {
+      console.error('[Janedore Admin] Login error:', err.code, err.message);
+      let msg = 'Invalid credentials. Please try again.';
+      if (err.code === 'auth/too-many-requests')      msg = 'Too many failed attempts. Please wait and try again.';
+      if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
+      errorEl.textContent = msg;
+      errorEl.className   = 'admin-error show';
+      loginBtn.disabled    = false;
+      loginBtn.textContent = 'Sign In';
+    }
+  };
+
+  // ─── LOAD CHAT WIDGET ─────────────────────────────────────────
+  fetch('chat-widget.html')
+    .then(r => r.text())
+    .then(html => {
+      document.getElementById('chat-container').innerHTML = html;
+      var script = document.createElement('script');
+      script.src = 'chat.js';
+      document.body.appendChild(script);
+    })
+    .catch(err => console.error('Chat widget failed:', err));
+
+  // ─── SCROLL LOCK ──────────────────────────────────────────────
+  window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
+  window.addEventListener('touchmove', (e) => {
+    if (!e.target.closest('.cs-container')) e.preventDefault();
+  }, { passive: false });
+  document.body.addEventListener('wheel', (e) => {
+    const c = document.querySelector('.cs-container');
+    if (c && !c.contains(e.target)) e.preventDefault();
+  }, { passive: false });
+</script>
 
 </body>
 </html>
