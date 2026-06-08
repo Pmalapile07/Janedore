@@ -38,6 +38,10 @@
       }
       _notifAudio.currentTime = 0;
       _notifAudio.play().catch(function () {});
+      setTimeout(function () {
+        _notifAudio.pause();
+        _notifAudio.currentTime = 0;
+      }, 1000);
     } catch (_) {}
   }
   // ────────────────────────────────────────────────────────────────
