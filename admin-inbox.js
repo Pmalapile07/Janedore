@@ -28,20 +28,20 @@
   var avatarInitials = window._avatarInitials;
   var QUICK_REPLIES  = window._QUICK_REPLIES || [];
 
-  // ── Notification sound ──────────────────────────────────────────
-  var _notifAudio = null;
+  // ── Notification sound (Web Audio API — no file needed) ─────────
   function _playNotifSound() {
     try {
-      if (!_notifAudio) {
-        _notifAudio = new Audio('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/freesound_community-glass-and-chrystal-ping-ding-67117.mp3');
-        _notifAudio.volume = 0.6;
-      }
-      _notifAudio.currentTime = 0.3;
-      _notifAudio.play().catch(function () {});
-      setTimeout(function () {
-        _notifAudio.pause();
-        _notifAudio.currentTime = 0;
-      }, 1500);
+      var audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
+      var oscillator = audioCtx.createOscillator();
+      var gainNode   = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type            = 'sine';
+      oscillator.frequency.value = 1200;
+      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.3);
     } catch (_) {}
   }
   // ────────────────────────────────────────────────────────────────
