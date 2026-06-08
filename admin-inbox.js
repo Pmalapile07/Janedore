@@ -28,6 +28,20 @@
   var avatarInitials = window._avatarInitials;
   var QUICK_REPLIES  = window._QUICK_REPLIES || [];
 
+  // ── Notification sound ──────────────────────────────────────────
+  var _notifAudio = null;
+  function _playNotifSound() {
+    try {
+      if (!_notifAudio) {
+        _notifAudio = new Audio('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/freesound_community-glass-and-chrystal-ping-ding-67117.mp3');
+        _notifAudio.volume = 0.6;
+      }
+      _notifAudio.currentTime = 0;
+      _notifAudio.play().catch(function () {});
+    } catch (_) {}
+  }
+  // ────────────────────────────────────────────────────────────────
+
   var Cfg = Object.freeze({
     MSG_INITIAL:        80,
     MSG_PAGE:           50,
@@ -645,7 +659,10 @@
           var added   = ChatState.appendMessage(msg);
           if (!added && !tempKey) return;
           ChatRenderer.appendMessage(msg, safeEl('chat-messages-panel'), tempKey);
-          if (msg.sender === 'customer') ChatDB.markSessionAsRead(sessionId, ChatState.bumpReadGen());
+          if (msg.sender === 'customer') {
+            _playNotifSound();
+            ChatDB.markSessionAsRead(sessionId, ChatState.bumpReadGen());
+          }
         },
         function (sub) {
           if (ChatState.getActiveSid() !== sessionId) { ChatDB.detach(sub, 'child_added'); return; }
