@@ -41,7 +41,7 @@
       setTimeout(function () {
         _notifAudio.pause();
         _notifAudio.currentTime = 0;
-      }, 1000);
+      }, 1500);
     } catch (_) {}
   }
   // ────────────────────────────────────────────────────────────────
