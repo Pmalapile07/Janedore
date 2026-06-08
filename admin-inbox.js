@@ -28,20 +28,44 @@
   var avatarInitials = window._avatarInitials;
   var QUICK_REPLIES  = window._QUICK_REPLIES || [];
 
-  // ── Notification sound (Web Audio API — no file needed) ─────────
+  // ── Notification sound (Web Audio API — iOS PWA safe) ───────────
+  var _audioCtx = null;
+
+  // iOS requires AudioContext to be created AND resumed inside a user gesture.
+  // We create it on the first tap anywhere, then reuse it for every ping.
+  function _unlockAudio() {
+    if (_audioCtx) return;
+    try {
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var buf = _audioCtx.createBuffer(1, 1, 22050);
+      var src = _audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(_audioCtx.destination);
+      src.start(0);
+      if (_audioCtx.state === 'suspended') {
+        _audioCtx.resume().catch(function () {});
+      }
+    } catch (_) {}
+  }
+  document.addEventListener('touchstart', _unlockAudio, { once: true });
+  document.addEventListener('mousedown',  _unlockAudio, { once: true });
+
   function _playNotifSound() {
     try {
-      var audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
-      var oscillator = audioCtx.createOscillator();
-      var gainNode   = audioCtx.createGain();
+      if (!_audioCtx) return;
+      if (_audioCtx.state === 'suspended') {
+        _audioCtx.resume().catch(function () {});
+      }
+      var oscillator = _audioCtx.createOscillator();
+      var gainNode   = _audioCtx.createGain();
       oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
+      gainNode.connect(_audioCtx.destination);
       oscillator.type            = 'sine';
       oscillator.frequency.value = 1200;
-      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(0.15, _audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, _audioCtx.currentTime + 0.3);
       oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.3);
+      oscillator.stop(_audioCtx.currentTime + 0.3);
     } catch (_) {}
   }
   // ────────────────────────────────────────────────────────────────
