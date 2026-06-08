@@ -36,7 +36,7 @@
         _notifAudio = new Audio('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/freesound_community-glass-and-chrystal-ping-ding-67117.mp3');
         _notifAudio.volume = 0.6;
       }
-      _notifAudio.currentTime = 0;
+      _notifAudio.currentTime = 0.3;
       _notifAudio.play().catch(function () {});
       setTimeout(function () {
         _notifAudio.pause();
