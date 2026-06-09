@@ -28,34 +28,54 @@
   var avatarInitials = window._avatarInitials;
   var QUICK_REPLIES  = window._QUICK_REPLIES || [];
 
-  // ── Notification sound (Web Audio API — iOS PWA safe) ───────────
+  // ── Notification sound (Web Audio API — production-grade iOS PWA) ─
   var _audioCtx = null;
 
-  // iOS requires AudioContext to be created AND resumed inside a user gesture.
-  // We create it on the first tap anywhere, then reuse it for every ping.
+  // Re-runs on EVERY gesture (not once:true) so backgrounding is recoverable.
+  // iOS suspends the context when the PWA is backgrounded; the next tap re-runs
+  // this and resumes it before any ping is needed.
   function _unlockAudio() {
-    if (_audioCtx) return;
+    if (_audioCtx) {
+      if (_audioCtx.state === 'suspended') {
+        _audioCtx.resume().catch(function(e) { console.warn('[audio] resume failed', e); });
+      }
+      return;
+    }
     try {
       _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // Play a silent buffer — required to fully unlock on iOS Safari
       var buf = _audioCtx.createBuffer(1, 1, 22050);
       var src = _audioCtx.createBufferSource();
       src.buffer = buf;
       src.connect(_audioCtx.destination);
       src.start(0);
-      if (_audioCtx.state === 'suspended') {
-        _audioCtx.resume().catch(function () {});
-      }
-    } catch (_) {}
+      _audioCtx.resume().then(function() {
+        console.log('[audio] context unlocked, state:', _audioCtx.state);
+      }).catch(function(e) { console.warn('[audio] unlock resume failed', e); });
+    } catch(e) { console.warn('[audio] context creation failed', e); }
   }
-  document.addEventListener('touchstart', _unlockAudio, { once: true });
-  document.addEventListener('mousedown',  _unlockAudio, { once: true });
+  document.addEventListener('touchstart', _unlockAudio);
+  document.addEventListener('mousedown',  _unlockAudio);
+
+  // Re-unlock automatically when PWA returns to foreground
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && _audioCtx && _audioCtx.state === 'suspended') {
+      console.log('[audio] page foregrounded, context suspended — will recover on next tap');
+    }
+  });
 
   function _playNotifSound() {
+    // Do not attempt if context was never unlocked by a real gesture
+    if (!_audioCtx) {
+      console.warn('[audio] no context — user has not tapped yet');
+      return;
+    }
+    // Do not attempt if context is not running — silent failure guaranteed
+    if (_audioCtx.state !== 'running') {
+      console.warn('[audio] context not running, state:', _audioCtx.state, '— will recover on next tap');
+      return;
+    }
     try {
-      if (!_audioCtx) return;
-      if (_audioCtx.state === 'suspended') {
-        _audioCtx.resume().catch(function () {});
-      }
       var oscillator = _audioCtx.createOscillator();
       var gainNode   = _audioCtx.createGain();
       oscillator.connect(gainNode);
@@ -66,7 +86,7 @@
       gainNode.gain.exponentialRampToValueAtTime(0.001, _audioCtx.currentTime + 0.3);
       oscillator.start();
       oscillator.stop(_audioCtx.currentTime + 0.3);
-    } catch (_) {}
+    } catch(e) { console.warn('[audio] playback failed', e); }
   }
   // ────────────────────────────────────────────────────────────────
 
