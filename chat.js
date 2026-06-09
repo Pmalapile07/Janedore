@@ -279,6 +279,23 @@ async function sendChatMessage() {
     updates['chat_inbox/' + chatSessionId + '/customerName']   = customerName || 'Guest';
     updates['chat_inbox/' + chatSessionId + '/unreadCount']    = firebase.database.ServerValue.increment(1);
 
+    // Snapshot cart at time of message so admin can see what customer had
+    try {
+      const rawCart = localStorage.getItem('janedore_cart');
+      const cart    = rawCart ? JSON.parse(rawCart) : [];
+      updates['chat_inbox/' + chatSessionId + '/cart'] = cart.length > 0
+        ? cart.map(i => ({
+            name:      i.name      || '',
+            brand:     i.brand     || '',
+            color:     i.color     || '',
+            size:      i.size      || '',
+            qty:       i.qty       || 1,
+            price:     i.salePrice != null ? i.salePrice : (i.price || 0),
+            productId: i.productId || ''
+          }))
+        : [];
+    } catch(_) {}
+
     await rtdb.ref('/').update(updates);
     input.value = '';
   } catch(e) {
