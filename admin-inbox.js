@@ -531,7 +531,113 @@
       var avClass = esc(avatarClass(sessionId));
       var avInit  = esc(avatarInitials(sessionId));
       var name    = esc(sessionId.substring(0, 26));
-      container.innerHTML = '<button class="back-link" id="chat-back-btn">← Inbox</button><div class="section-header"><div style="display:flex;align-items:center;gap:10px;"><div class="chat-avatar ' + avClass + '" style="width:36px;height:36px;font-size:12px;">' + avInit + '</div><div><div style="font-size:14px;font-weight:500;" id="session-name-label">' + name + '</div><div id="session-status-label" style="font-size:11px;color:var(--muted);margin-top:1px;">Live Session</div></div></div><div style="display:flex;gap:8px;"><button class="btn btn-sm btn-ghost" id="chat-pin-btn" data-pinned="' + (isPinned ? '1' : '0') + '">' + (isPinned ? 'Unpin' : 'Pin') + '</button><button class="btn btn-sm btn-ghost" id="chat-orders-btn">Orders</button></div></div><div style="display:grid;grid-template-columns:1fr;gap:12px;"><div class="chat-view-wrap"><div id="chat-load-more-wrap" style="text-align:center;padding:6px;display:none;"><button class="btn btn-sm btn-ghost" id="chat-load-more-btn">Load older messages</button></div><div id="chat-history-start" style="display:none;text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0;">— Beginning of conversation —</div><div class="chat-messages-panel" id="chat-messages-panel"><div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">Loading…</div></div><div id="chat-new-msg-banner" style="display:none;text-align:center;padding:4px 0;"><button class="btn btn-sm btn-primary" id="chat-scroll-down-btn">↓ New messages</button></div><div class="typing-indicator" id="typing-indicator" style="display:none;align-items:center;gap:2px;"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span><em style="font-size:10px;margin-left:6px;">Customer is typing…</em></div><div class="quick-replies" id="quick-replies-row">' + QUICK_REPLIES.map(function (r) { return '<button class="quick-reply-btn" data-reply="' + esc(r) + '">' + esc(r) + '</button>'; }).join('') + '</div><div class="reply-box"><input id="reply-input" placeholder="Write a reply…" autocomplete="off"><button class="chat-send-btn" id="chat-send-btn">Send</button></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="card"><div class="card-header"><span class="card-title">Customer Info</span></div><div style="padding:12px 14px;"><div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Session</span><span style="font-size:10.5px;">' + esc(sessionId.substring(0, 14)) + '</span></div><div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Status</span><span style="color:var(--success);">Active</span></div></div></div><div class="card"><div class="card-header"><span class="card-title">Support Notes</span><span id="note-lock-indicator" style="font-size:9px;color:var(--warning,#f59e0b);margin-left:8px;display:none;">⚠️ Locked by another admin</span></div><div style="padding:12px 14px;"><textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Manrope,sans-serif;font-size:11.5px;font-weight:300;min-height:60px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes…"></textarea><button class="btn btn-sm btn-ghost" id="chat-save-note-btn" style="margin-top:7px;width:100%;">Save Note</button></div></div></div></div>';
+      var shellTop = '<button class="back-link" id="chat-back-btn">← Inbox</button>'
+        + '<div class="section-header"><div style="display:flex;align-items:center;gap:10px;">'
+        + '<div class="chat-avatar ' + avClass + '" style="width:36px;height:36px;font-size:12px;">' + avInit + '</div>'
+        + '<div><div style="font-size:14px;font-weight:500;" id="session-name-label">' + name + '</div>'
+        + '<div id="session-status-label" style="font-size:11px;color:var(--muted);margin-top:1px;">Live Session</div></div></div>'
+        + '<div style="display:flex;gap:8px;">'
+        + '<button class="btn btn-sm btn-ghost" id="chat-pin-btn" data-pinned="' + (isPinned ? '1' : '0') + '">' + (isPinned ? 'Unpin' : 'Pin') + '</button>'
+        + '</div></div>';
+      var shellChat = '<div style="display:grid;grid-template-columns:1fr;gap:12px;"><div class="chat-view-wrap">'
+        + '<div id="chat-load-more-wrap" style="text-align:center;padding:6px;display:none;"><button class="btn btn-sm btn-ghost" id="chat-load-more-btn">Load older messages</button></div>'
+        + '<div id="chat-history-start" style="display:none;text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0;">— Beginning of conversation —</div>'
+        + '<div class="chat-messages-panel" id="chat-messages-panel"><div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">Loading…</div></div>'
+        + '<div id="chat-new-msg-banner" style="display:none;text-align:center;padding:4px 0;"><button class="btn btn-sm btn-primary" id="chat-scroll-down-btn">↓ New messages</button></div>'
+        + '<div class="typing-indicator" id="typing-indicator" style="display:none;align-items:center;gap:2px;"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span><em style="font-size:10px;margin-left:6px;">Customer is typing…</em></div>'
+        + '<div class="quick-replies" id="quick-replies-row">' + QUICK_REPLIES.map(function (r) { return '<button class="quick-reply-btn" data-reply="' + esc(r) + '">' + esc(r) + '</button>'; }).join('') + '</div>'
+        + '<div class="reply-box"><input id="reply-input" placeholder="Write a reply…" autocomplete="off"><button class="chat-send-btn" id="chat-send-btn">Send</button></div>'
+        + '</div>';
+      var shellCards = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+        // Customer card
+        + '<div class="card"><div class="card-header"><span class="card-title">Customer</span></div><div style="padding:12px 14px;">'
+        + '<div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Name</span><span id="cinfo-name" style="font-size:10.5px;">—</span></div>'
+        + '<div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Email</span><span id="cinfo-email" style="font-size:10.5px;">—</span></div>'
+        + '<div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Session</span><span style="font-size:10.5px;">' + esc(sessionId.substring(0, 14)) + '</span></div>'
+        + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px;">'
+        + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Cart when they messaged</div>'
+        + '<div id="cinfo-cart"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div></div>'
+        + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px;">'
+        + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Order history</div>'
+        + '<div id="cinfo-orders"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div></div>'
+        + '</div></div>'
+        // Notes card
+        + '<div class="card"><div class="card-header"><span class="card-title">Support Notes</span>'
+        + '<span id="note-lock-indicator" style="font-size:9px;color:var(--warning,#f59e0b);margin-left:8px;display:none;">Locked by another admin</span></div>'
+        + '<div style="padding:12px 14px;"><textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Manrope,sans-serif;font-size:11.5px;font-weight:300;min-height:60px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes…"></textarea>'
+        + '<button class="btn btn-sm btn-ghost" id="chat-save-note-btn" style="margin-top:7px;width:100%;">Save Note</button></div></div>'
+        + '</div></div>';
+      container.innerHTML = shellTop + shellChat + shellCards;
+    },
+
+    renderCustomerInfo: function (sessionData) {
+      var nameEl   = safeEl('cinfo-name');
+      var emailEl  = safeEl('cinfo-email');
+      var cartEl   = safeEl('cinfo-cart');
+      var ordersEl = safeEl('cinfo-orders');
+
+      if (nameEl)  nameEl.textContent  = sessionData.customerName  || 'Guest';
+      if (emailEl) emailEl.textContent = sessionData.customerEmail || '—';
+
+      // Cart snapshot
+      if (cartEl) {
+        var cart = sessionData.cart;
+        if (!cart || !Array.isArray(cart) || cart.length === 0) {
+          cartEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Empty cart</span>';
+        } else {
+          var cartTotal = cart.reduce(function(sum, i) { return sum + (i.price || 0) * (i.qty || 1); }, 0);
+          var cartHtml  = cart.map(function(i) {
+            var label = esc(i.name || '');
+            if (i.color) label += ' · ' + esc(i.color);
+            if (i.size && i.size !== 'OS') label += ' / ' + esc(i.size);
+            if (i.qty > 1) label += ' x' + i.qty;
+            return '<div style="display:flex;justify-content:space-between;font-size:10.5px;padding:2px 0;">'
+              + '<span style="color:var(--text);">' + label + '</span>'
+              + '<span style="color:var(--muted);">R' + Number((i.price || 0) * (i.qty || 1)).toLocaleString('en-ZA') + '</span>'
+              + '</div>';
+          }).join('');
+          cartHtml += '<div style="display:flex;justify-content:space-between;font-size:10px;font-weight:500;margin-top:4px;border-top:0.5px solid var(--border);padding-top:4px;">'
+            + '<span>Total</span><span>R' + Number(cartTotal).toLocaleString('en-ZA') + '</span></div>';
+          cartEl.innerHTML = cartHtml;
+        }
+      }
+
+      // Order history from Firestore by email
+      if (ordersEl && sessionData.customerEmail) {
+        window._ordersRef.where('customerEmail', '==', sessionData.customerEmail)
+          .orderBy('createdAt', 'desc').limit(5).get()
+          .then(function(snap) {
+            var el = safeEl('cinfo-orders');
+            if (!el) return;
+            if (snap.empty) {
+              el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No orders found</span>';
+              return;
+            }
+            var html = snap.docs.map(function(d) {
+              var o       = d.data();
+              var status  = o.status || 'pending';
+              var raw     = o.createdAt;
+              var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
+              var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+              var total   = 'R' + Number(o.subtotal || o.total || 0).toLocaleString('en-ZA');
+              return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
+                + '<div style="display:flex;justify-content:space-between;font-size:10.5px;">'
+                + '<span style="font-weight:500;">' + esc(o.orderNumber || d.id.substring(0, 10)) + '</span>'
+                + '<span>' + total + '</span></div>'
+                + '<div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin-top:1px;">'
+                + '<span>' + dateStr + '</span>'
+                + '<span class="badge badge-' + esc(status) + '" style="font-size:8px;">' + esc(status) + '</span>'
+                + '</div></div>';
+            }).join('');
+            el.innerHTML = html;
+          })
+          .catch(function() {
+            var el = safeEl('cinfo-orders');
+            if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load orders</span>';
+          });
+      } else if (ordersEl) {
+        ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No email on file</span>';
+      }
     },
     renderMessages: function (msgs, panel) {
       if (!panel) return;
@@ -692,7 +798,20 @@
       ChatRenderer.setTypingVisible(false);
       var gen = ChatState.bumpReadGen(); ChatDB.markSessionAsRead(sessionId, gen);
       ChatDB.loadNote(sessionId).then(function (snap) { var el = safeEl('chat-note'); if (el && snap.val()) el.value = snap.val(); }).catch(function () {});
-      if (sessionData && sessionData.customerName) { var nameEl = safeEl('session-name-label'); if (nameEl) nameEl.textContent = sessionData.customerName; }
+      // Populate customer info — use cached data first, then re-fetch for freshest cart
+      if (sessionData) {
+        if (sessionData.customerName) { var nameEl = safeEl('session-name-label'); if (nameEl) nameEl.textContent = sessionData.customerName; }
+        ChatRenderer.renderCustomerInfo(sessionData);
+      }
+      rtdb.ref(INBOX_ROOT + '/' + sessionId).once('value').then(function(snap) {
+        if (ChatState.getActiveSid() !== sessionId) return;
+        var fresh = snap.val();
+        if (!fresh) return;
+        ChatState.upsertSession(sessionId, fresh);
+        ChatRenderer.renderCustomerInfo(fresh);
+        var nameEl2 = safeEl('session-name-label');
+        if (nameEl2 && fresh.customerName) nameEl2.textContent = fresh.customerName;
+      }).catch(function() {});
       ChatDB.loadAndSubscribeMessages(sessionId,
         function (msgs, hasMore) {
           if (ChatState.getActiveSid() !== sessionId) return;
