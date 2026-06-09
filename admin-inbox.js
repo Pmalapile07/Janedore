@@ -570,7 +570,7 @@
       container.innerHTML = shellTop + shellChat + shellCards;
     },
 
-    renderCustomerInfo: function (sessionData) {
+    renderCustomerInfo: function (sessionData, sessionId) {
       var nameEl   = safeEl('cinfo-name');
       var emailEl  = safeEl('cinfo-email');
       var cartEl   = safeEl('cinfo-cart');
@@ -602,15 +602,15 @@
         }
       }
 
-      // Order history from Firestore by email
-      if (ordersEl && sessionData.customerEmail) {
-        window._ordersRef.where('customerEmail', '==', sessionData.customerEmail)
+      // Order history from Firestore by chatSessionId
+      if (ordersEl && sessionId) {
+        window._ordersRef.where('chatSessionId', '==', sessionId)
           .orderBy('createdAt', 'desc').limit(5).get()
           .then(function(snap) {
             var el = safeEl('cinfo-orders');
             if (!el) return;
             if (snap.empty) {
-              el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No orders found</span>';
+              el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No orders linked to this session</span>';
               return;
             }
             var html = snap.docs.map(function(d) {
@@ -618,7 +618,7 @@
               var status  = o.status || 'pending';
               var raw     = o.createdAt;
               var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
-              var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+              var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '\u2014';
               var total   = 'R' + Number(o.subtotal || o.total || 0).toLocaleString('en-ZA');
               return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
                 + '<div style="display:flex;justify-content:space-between;font-size:10.5px;">'
@@ -636,7 +636,7 @@
             if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load orders</span>';
           });
       } else if (ordersEl) {
-        ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No email on file</span>';
+        ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No session ID</span>';
       }
     },
     renderMessages: function (msgs, panel) {
@@ -801,14 +801,14 @@
       // Populate customer info — use cached data first, then re-fetch for freshest cart
       if (sessionData) {
         if (sessionData.customerName) { var nameEl = safeEl('session-name-label'); if (nameEl) nameEl.textContent = sessionData.customerName; }
-        ChatRenderer.renderCustomerInfo(sessionData);
+        ChatRenderer.renderCustomerInfo(sessionData, sessionId);
       }
       rtdb.ref(INBOX_ROOT + '/' + sessionId).once('value').then(function(snap) {
         if (ChatState.getActiveSid() !== sessionId) return;
         var fresh = snap.val();
         if (!fresh) return;
         ChatState.upsertSession(sessionId, fresh);
-        ChatRenderer.renderCustomerInfo(fresh);
+        ChatRenderer.renderCustomerInfo(fresh, sessionId);
         var nameEl2 = safeEl('session-name-label');
         if (nameEl2 && fresh.customerName) nameEl2.textContent = fresh.customerName;
       }).catch(function() {});
