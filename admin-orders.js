@@ -10,17 +10,18 @@
   var fmtDate           = window._fmtDate;
   var showToast         = window._showToast;
   var statusBadge       = window._statusBadge;
-  var isSuperAdmin      = window._isSuperAdmin;
-  var requireSuperAdmin = window._requireSuperAdmin;
   var mountPanel        = window._mountPanel;
   var closePanel        = window._closePanel;
   var ordersRef         = window._ordersRef;
   var productsRef       = window._productsRef;
   var ORDER_STATUSES    = window._ORDER_STATUSES;
 
+  // All permission checks go through _can() / _guard() from permissions.js.
+  // No direct isSuperAdmin() / requireSuperAdmin() calls in this module.
+
   var draftsRef = db.collection('order_drafts');
 
-  /* Abandoned = pending + unpaid + older than 1 hour */
+  // Abandoned = pending + unpaid + older than 1 hour.
   var ABANDONED_THRESHOLD_MS = 60 * 60 * 1000;
 
   function isAbandoned(o) {
@@ -31,36 +32,48 @@
     return (Date.now() - ts.getTime()) > ABANDONED_THRESHOLD_MS;
   }
 
-  /* ─────────────────────────────────────────────────────────
-     RENDER ORDERS TAB
-  ───────────────────────────────────────────────────────── */
+  // ─── RENDER ORDERS TAB ───────────────────────────────────────
+
   window._renderOrdersTab = function () {
     var mc = safeEl('main-content');
     if (!mc) return;
 
     mc.innerHTML =
-    '<div class="section-header" style="margin-bottom:10px;">' +
-  '<div class="section-title">Orders</div>' +
-  '<div class="section-actions">' +
-    '<button class="btn btn-sm btn-ghost" onclick="window._refreshOrders()" title="Refresh">' +
-      '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
-    '</button>' +
-  '</div>' +
-'</div>' +
-
-      ((!isSuperAdmin())
-        ? '<div class="vendor-scope-bar">Showing orders for your brand only</div>'
-        : '') +
+      '<div class="section-header" style="margin-bottom:10px;">' +
+        '<div class="section-title">Orders</div>' +
+        '<div class="section-actions">' +
+          '<button class="btn btn-sm btn-ghost" onclick="window._refreshOrders()" title="Refresh">' +
+            '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
+          '</button>' +
+          // Only Super Admin and Admin can create manual orders.
+          (window._can('orders', 'create')
+            ? '<button class="btn btn-sm btn-primary" onclick="window._openNewOrderForm()">' +
+                '<i class="ph-light ph-plus"></i> New Order' +
+              '</button>'
+            : '') +
+        '</div>' +
+      '</div>' +
       '<div id="orders-toolbar-wrap"></div>' +
       '<div id="orders-table-wrap"></div>';
 
     loadOrders();
   };
 
-  /* ─────────────────────────────────────────────────────────
-     LOAD — always fresh from Firestore
-  ───────────────────────────────────────────────────────── */
+  // ─── LOAD ────────────────────────────────────────────────────
+  //
+  // Super Admin + Admin see all orders.
+  // Vendors are not permitted to query this collection at all —
+  // their sales data is surfaced separately via vendor_sales.
+  // _can() check in switchTab() already blocks the tab for vendors,
+  // but we guard here too as a second layer.
+
   function loadOrders() {
+    if (!window._can('orders', 'read')) {
+      var wrap = safeEl('orders-table-wrap');
+      if (wrap) wrap.innerHTML = '<p style="padding:16px;color:var(--danger);font-size:12px;">Access denied.</p>';
+      return;
+    }
+
     var wrap = safeEl('orders-table-wrap');
     if (wrap) {
       wrap.innerHTML =
@@ -69,14 +82,7 @@
         '</div>';
     }
 
-    var query = isSuperAdmin()
-      ? ordersRef.orderBy('createdAt', 'desc').limit(200)
-      : ordersRef
-          .where('vendorIds', 'array-contains', window._currentVendorId || '__none__')
-          .orderBy('createdAt', 'desc')
-          .limit(200);
-
-    query.get().then(function (snap) {
+    ordersRef.orderBy('createdAt', 'desc').limit(200).get().then(function (snap) {
       window._ordersData = snap.docs.map(function (d) {
         return Object.assign({ id: d.id }, d.data());
       });
@@ -95,50 +101,38 @@
     loadOrders();
   };
 
-  /* ─────────────────────────────────────────────────────────
-     RENDER UI — toolbar + table, or empty state
-  ───────────────────────────────────────────────────────── */
+  // ─── RENDER UI ───────────────────────────────────────────────
+
   function renderOrdersUI(orders) {
     var toolbarWrap = safeEl('orders-toolbar-wrap');
     var tableWrap   = safeEl('orders-table-wrap');
     if (!toolbarWrap || !tableWrap) return;
 
-    var hasAny = orders.length > 0;
-
-    /* No orders at all — hide toolbar, show empty state */
-    if (!hasAny) {
+    if (orders.length === 0) {
       toolbarWrap.innerHTML = '';
       tableWrap.innerHTML   = renderEmptyState(false);
       return;
     }
 
-    /* Has orders — render toolbar */
     toolbarWrap.innerHTML =
       '<div class="toolbar" style="margin-bottom:12px;">' +
         '<input class="search-input" id="order-search"' +
           ' placeholder="Search by name, email, order ID..."' +
           ' oninput="window._filterOrders()"' +
           ' style="min-width:180px;">' +
-
-        /* Status dropdown — includes Abandoned as a virtual status */
         '<select class="filter-select" id="order-status-filter" onchange="window._filterOrders()">' +
           '<option value="">All Orders</option>' +
           '<option value="abandoned">Abandoned</option>' +
           ORDER_STATUSES.map(function (s) {
-            return '<option value="' + s + '">' +
-              s.charAt(0).toUpperCase() + s.slice(1) +
-            '</option>';
+            return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
           }).join('') +
         '</select>' +
-
-        /* Payment dropdown */
         '<select class="filter-select" id="order-payment-filter" onchange="window._filterOrders()">' +
           '<option value="">All Payments</option>' +
           '<option value="paid">Paid</option>' +
           '<option value="unpaid">Unpaid</option>' +
           '<option value="refunded">Refunded</option>' +
         '</select>' +
-
         '<div class="toolbar-spacer"></div>' +
         '<span id="orders-count" class="ui-label"></span>' +
       '</div>';
@@ -146,9 +140,8 @@
     renderOrdersTable(orders);
   }
 
-  /* ─────────────────────────────────────────────────────────
-     RENDER TABLE (with active filters)
-  ───────────────────────────────────────────────────────── */
+  // ─── RENDER TABLE ────────────────────────────────────────────
+
   function renderOrdersTable(orders) {
     var statusFilterEl  = safeEl('order-status-filter');
     var paymentFilterEl = safeEl('order-payment-filter');
@@ -159,25 +152,21 @@
     var search        = searchEl ? (searchEl.value || '').toLowerCase() : '';
 
     var filtered = orders.filter(function (o) {
-      /* Virtual "abandoned" filter */
       if (statusFilter === 'abandoned') {
         if (!isAbandoned(o)) return false;
       } else if (statusFilter) {
         if ((o.status || 'pending') !== statusFilter) return false;
       }
-
       if (paymentFilter && (o.paymentStatus || 'unpaid') !== paymentFilter) return false;
-
       if (search) {
         var hay = (
           o.id +
-          (o.customerEmail || '') +
-          (o.customerName  || '') +
-          (o.orderNumber   || '')
+          (o.customerEmail  || '') +
+          (o.customerName   || '') +
+          (o.orderNumber    || '')
         ).toLowerCase();
         if (hay.indexOf(search) === -1) return false;
       }
-
       return true;
     });
 
@@ -187,13 +176,11 @@
     var wrap = safeEl('orders-table-wrap');
     if (!wrap) return;
 
-    /* Filtered but no results */
     if (filtered.length === 0) {
       wrap.innerHTML = renderEmptyState(true);
       return;
     }
 
-    /* Count abandoned for banner */
     var abandonedCount = orders.filter(isAbandoned).length;
     var bannerHTML = '';
     if (abandonedCount > 0 && statusFilter !== 'abandoned') {
@@ -238,7 +225,7 @@
                 '<div class="cell-muted">'        + esc(o.customerEmail || '')      + '</div>' +
               '</td>' +
               '<td class="cell-muted">' + esc(String(o.itemCount || 0)) + '</td>' +
-              '<td style="font-weight:400;">' + fmt(o.subtotal || 0) + '</td>' +
+              '<td style="font-weight:400;">' + fmt(o.total || o.subtotal || 0) + '</td>' +
               '<td>' + statusBadge(o.paymentStatus || 'unpaid') + '</td>' +
               '<td>' + statusBadge(o.status        || 'pending') + '</td>' +
               '<td class="cell-muted">' + fmtDate(o.createdAt) + '</td>' +
@@ -262,28 +249,27 @@
     if (el) { el.value = 'abandoned'; window._filterOrders(); }
   };
 
-  /* ─────────────────────────────────────────────────────────
-     EMPTY STATE
-  ───────────────────────────────────────────────────────── */
+  // ─── EMPTY STATE ─────────────────────────────────────────────
+
   function renderEmptyState(isFiltered) {
+    var canCreate = window._can('orders', 'create');
     return '<div class="orders-empty-state">' +
-      '<div class="orders-empty-icon">' +
-        '<i class="ph-light ph-receipt"></i>' +
-      '</div>' +
+      '<div class="orders-empty-icon"><i class="ph-light ph-receipt"></i></div>' +
       '<div class="orders-empty-title">Manage your orders</div>' +
       '<div class="orders-empty-sub">' +
         (isFiltered
           ? 'No orders match your current filters. Try adjusting your search or filter.'
-          : 'Orders placed on your store will appear here. You can also create an order manually for phone or in-person sales.') +
+          : 'Orders placed on your store will appear here.' +
+            (canCreate ? ' You can also create an order manually for phone or in-person sales.' : '')) +
       '</div>' +
-      (!isFiltered
+      (!isFiltered && canCreate
         ? '<button class="orders-empty-btn" onclick="window._openNewOrderForm()">' +
             '<i class="ph-light ph-plus" style="font-size:15px;"></i>' +
             'Create your first order' +
           '</button>'
-        : '<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="window._clearOrderFilters()">' +
-            'Clear filters' +
-          '</button>') +
+        : (isFiltered
+          ? '<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="window._clearOrderFilters()">Clear filters</button>'
+          : '')) +
     '</div>';
   }
 
@@ -291,16 +277,15 @@
     var s = safeEl('order-status-filter');
     var p = safeEl('order-payment-filter');
     var q = safeEl('order-search');
-    if (s) s.value = '';
-    if (p) p.value = '';
-    if (q) q.value = '';
+    if (s) s.value = ''; if (p) p.value = ''; if (q) q.value = '';
     window._filterOrders();
   };
 
-  /* ─────────────────────────────────────────────────────────
-     NEW ORDER FORM
-  ───────────────────────────────────────────────────────── */
+  // ─── NEW ORDER FORM ──────────────────────────────────────────
+
   window._openNewOrderForm = function (draftId, draftData) {
+    if (!window._guard('orders', 'create')) return;
+
     productsRef.get().then(function (snap) {
       var products = snap.docs.map(function (d) {
         return Object.assign({ id: d.id }, d.data());
@@ -322,58 +307,48 @@
       '<button class="back-link" onclick="window._renderOrdersTab()">' +
         '<i class="ph-light ph-arrow-left"></i> Orders' +
       '</button>' +
-
       '<div class="section-header" style="margin-bottom:16px;">' +
         '<div class="section-title">' + (draftId ? 'Edit Draft' : 'New Order') + '</div>' +
         '<div class="section-actions">' +
-          '<button class="btn btn-sm btn-ghost"' +
-            ' onclick="window._saveOrderDraft(\'' + esc(draftId || '') + '\')">' +
+          '<button class="btn btn-sm btn-ghost" onclick="window._saveOrderDraft(\'' + esc(draftId || '') + '\')">' +
             '<i class="ph-light ph-floppy-disk"></i> Save Draft' +
           '</button>' +
-          '<button class="btn btn-sm btn-primary"' +
-            ' onclick="window._submitNewOrder(\'' + esc(draftId || '') + '\')">' +
+          '<button class="btn btn-sm btn-primary" onclick="window._submitNewOrder(\'' + esc(draftId || '') + '\')">' +
             '<i class="ph-light ph-check"></i> Place Order' +
           '</button>' +
         '</div>' +
       '</div>' +
 
-      /* ── CUSTOMER ── */
       '<div class="card" style="margin-bottom:10px;">' +
         '<div class="card-header"><span class="card-title">Customer</span></div>' +
         '<div class="form-group">' +
           '<label>Full Name</label>' +
-          '<input id="no-customer-name" placeholder="e.g. Lerato Dlamini"' +
-            ' value="' + esc(d.customerName || '') + '">' +
+          '<input id="no-customer-name" placeholder="e.g. Lerato Dlamini" value="' + esc(d.customerName || '') + '">' +
         '</div>' +
         '<div class="form-row">' +
           '<div class="form-group" style="padding:0;">' +
             '<label>Email</label>' +
-            '<input id="no-customer-email" type="email" placeholder="email@example.com"' +
-              ' value="' + esc(d.customerEmail || '') + '">' +
+            '<input id="no-customer-email" type="email" placeholder="email@example.com" value="' + esc(d.customerEmail || '') + '">' +
           '</div>' +
           '<div class="form-group" style="padding:0;">' +
             '<label>Phone</label>' +
-            '<input id="no-customer-phone" type="tel" placeholder="+27 ..."' +
-              ' value="' + esc(d.customerPhone || '') + '">' +
+            '<input id="no-customer-phone" type="tel" placeholder="+27 ..." value="' + esc(d.customerPhone || '') + '">' +
           '</div>' +
         '</div>' +
       '</div>' +
 
-      /* ── PRODUCTS ── */
       '<div class="card" style="margin-bottom:10px;">' +
         '<div class="card-header"><span class="card-title">Products</span></div>' +
         '<div style="padding:12px 16px;">' +
-          '<select id="no-product-picker" class="filter-select"' +
-            ' style="width:100%;margin-bottom:10px;"' +
-            ' onchange="window._noPickProduct(this)">' +
+          '<select id="no-product-picker" class="filter-select" style="width:100%;margin-bottom:10px;" onchange="window._noPickProduct(this)">' +
             '<option value="">Select a product to add...</option>' +
             products.map(function (p) {
-              var price = p.price ||
-                (p.variants && p.variants[0] && p.variants[0].price) || 0;
+              var price = p.price || (p.variants && p.variants[0] && p.variants[0].price) || 0;
               return '<option value="' + esc(p.id) + '"' +
-                ' data-name="'  + esc(p.name  || '')  + '"' +
-                ' data-price="' + price               + '"' +
-                ' data-brand="' + esc(p.brand || '')  + '">' +
+                ' data-name="'     + esc(p.name     || '') + '"' +
+                ' data-price="'    + price                 + '"' +
+                ' data-brand="'    + esc(p.brand    || '') + '"' +
+                ' data-vendor-id="' + esc(p.vendorId || '') + '">' +
                 esc(p.name || 'Unnamed') + ' — ' + fmt(price) +
               '</option>';
             }).join('') +
@@ -382,41 +357,34 @@
         '</div>' +
       '</div>' +
 
-      /* ── SHIPPING ADDRESS ── */
       '<div class="card" style="margin-bottom:10px;">' +
         '<div class="card-header"><span class="card-title">Shipping Address</span></div>' +
         '<div class="form-group">' +
           '<label>Street Address</label>' +
-          '<input id="no-address" placeholder="123 Example Street"' +
-            ' value="' + esc(d.shippingAddress || '') + '">' +
+          '<input id="no-address" placeholder="123 Example Street" value="' + esc(d.shippingAddress || '') + '">' +
         '</div>' +
         '<div class="form-row">' +
           '<div class="form-group" style="padding:0;">' +
             '<label>City</label>' +
-            '<input id="no-city" placeholder="Johannesburg"' +
-              ' value="' + esc(d.city || '') + '">' +
+            '<input id="no-city" placeholder="Johannesburg" value="' + esc(d.city || '') + '">' +
           '</div>' +
           '<div class="form-group" style="padding:0;">' +
             '<label>Province</label>' +
-            '<input id="no-province" placeholder="Gauteng"' +
-              ' value="' + esc(d.province || '') + '">' +
+            '<input id="no-province" placeholder="Gauteng" value="' + esc(d.province || '') + '">' +
           '</div>' +
         '</div>' +
         '<div class="form-row">' +
           '<div class="form-group" style="padding:0;">' +
             '<label>Postal Code</label>' +
-            '<input id="no-postal" placeholder="2000"' +
-              ' value="' + esc(d.postalCode || '') + '">' +
+            '<input id="no-postal" placeholder="2000" value="' + esc(d.postalCode || '') + '">' +
           '</div>' +
           '<div class="form-group" style="padding:0;">' +
             '<label>Country</label>' +
-            '<input id="no-country" placeholder="South Africa"' +
-              ' value="' + esc(d.country || 'South Africa') + '">' +
+            '<input id="no-country" placeholder="South Africa" value="' + esc(d.country || 'South Africa') + '">' +
           '</div>' +
         '</div>' +
       '</div>' +
 
-      /* ── PAYMENT ── */
       '<div class="card" style="margin-bottom:10px;">' +
         '<div class="card-header"><span class="card-title">Payment</span></div>' +
         '<div class="form-row">' +
@@ -456,7 +424,6 @@
         '<div id="no-totals" style="margin:4px 16px 14px;background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;"></div>' +
       '</div>' +
 
-      /* ── INTERNAL NOTES ── */
       '<div class="card" style="margin-bottom:80px;">' +
         '<div class="card-header"><span class="card-title">Internal Notes</span></div>' +
         '<div class="form-group">' +
@@ -467,17 +434,14 @@
         '</div>' +
       '</div>' +
 
-      /* ── STICKY BOTTOM BAR ── */
       '<div class="no-action-bar">' +
         '<button class="btn btn-ghost" onclick="window._renderOrdersTab()">' +
           '<i class="ph-light ph-x"></i> Cancel' +
         '</button>' +
-        '<button class="btn btn-ghost"' +
-          ' onclick="window._saveOrderDraft(\'' + esc(draftId || '') + '\')">' +
+        '<button class="btn btn-ghost" onclick="window._saveOrderDraft(\'' + esc(draftId || '') + '\')">' +
           '<i class="ph-light ph-floppy-disk"></i> Save Draft' +
         '</button>' +
-        '<button class="btn btn-primary"' +
-          ' onclick="window._submitNewOrder(\'' + esc(draftId || '') + '\')">' +
+        '<button class="btn btn-primary" onclick="window._submitNewOrder(\'' + esc(draftId || '') + '\')">' +
           '<i class="ph-light ph-check"></i> Place Order' +
         '</button>' +
       '</div>';
@@ -486,26 +450,24 @@
     window._noRecalcTotal();
   }
 
-  /* ─────────────────────────────────────────────────────────
-     PRODUCT PICKER
-  ───────────────────────────────────────────────────────── */
+  // ─── PRODUCT PICKER ──────────────────────────────────────────
+
   window._noPickProduct = function (select) {
     var opt = select.options[select.selectedIndex];
     if (!opt || !opt.value) return;
 
-    var id    = opt.value;
-    var name  = opt.getAttribute('data-name')  || '';
-    var price = parseFloat(opt.getAttribute('data-price')) || 0;
-    var brand = opt.getAttribute('data-brand') || '';
+    var id       = opt.value;
+    var name     = opt.getAttribute('data-name')      || '';
+    var price    = parseFloat(opt.getAttribute('data-price'))  || 0;
+    var brand    = opt.getAttribute('data-brand')     || '';
+    var vendorId = opt.getAttribute('data-vendor-id') || '';
 
-    var existing = (window._newOrderItems || []).find(function (i) {
-      return i.productId === id;
-    });
+    var existing = (window._newOrderItems || []).filter(function (i) { return i.productId === id; })[0];
     if (existing) {
       existing.qty++;
     } else {
       window._newOrderItems.push({
-        productId: id, name: name, price: price, brand: brand, qty: 1
+        productId: id, name: name, price: price, brand: brand, vendorId: vendorId, qty: 1
       });
     }
 
@@ -521,9 +483,7 @@
     var items = window._newOrderItems || [];
     if (items.length === 0) {
       listEl.innerHTML =
-        '<div style="text-align:center;padding:20px 0;color:var(--muted2);font-size:12px;">' +
-          'No products added yet' +
-        '</div>';
+        '<div style="text-align:center;padding:20px 0;color:var(--muted2);font-size:12px;">No products added yet</div>';
       return;
     }
 
@@ -533,24 +493,15 @@
           '<div style="font-size:13px;font-weight:400;">' + esc(item.name) + '</div>' +
           '<div style="font-size:11px;color:var(--muted);margin-top:2px;">' +
             fmt(item.price) + ' each' +
+            (item.brand ? ' · ' + esc(item.brand) : '') +
           '</div>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-          '<button class="no-qty-btn" onclick="window._noChangeQty(' + idx + ',-1)">' +
-            '<i class="ph-light ph-minus"></i>' +
-          '</button>' +
-          '<span style="font-size:13px;font-weight:500;min-width:18px;text-align:center;">' +
-            item.qty +
-          '</span>' +
-          '<button class="no-qty-btn" onclick="window._noChangeQty(' + idx + ',1)">' +
-            '<i class="ph-light ph-plus"></i>' +
-          '</button>' +
-          '<span style="font-size:13px;font-weight:500;min-width:52px;text-align:right;">' +
-            fmt(item.price * item.qty) +
-          '</span>' +
-          '<button class="no-qty-btn no-qty-remove" onclick="window._noRemoveItem(' + idx + ')">' +
-            '<i class="ph-light ph-x"></i>' +
-          '</button>' +
+          '<button class="no-qty-btn" onclick="window._noChangeQty(' + idx + ',-1)"><i class="ph-light ph-minus"></i></button>' +
+          '<span style="font-size:13px;font-weight:500;min-width:18px;text-align:center;">' + item.qty + '</span>' +
+          '<button class="no-qty-btn" onclick="window._noChangeQty(' + idx + ',1)"><i class="ph-light ph-plus"></i></button>' +
+          '<span style="font-size:13px;font-weight:500;min-width:52px;text-align:right;">' + fmt(item.price * item.qty) + '</span>' +
+          '<button class="no-qty-btn no-qty-remove" onclick="window._noRemoveItem(' + idx + ')"><i class="ph-light ph-x"></i></button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -570,9 +521,8 @@
     window._noRecalcTotal();
   };
 
-  /* ─────────────────────────────────────────────────────────
-     TOTALS
-  ───────────────────────────────────────────────────────── */
+  // ─── TOTALS ──────────────────────────────────────────────────
+
   window._noRecalcTotal = function () {
     var totalsEl = safeEl('no-totals');
     if (!totalsEl) return;
@@ -584,17 +534,10 @@
     var total    = Math.max(0, subtotal + shipping - discount);
 
     totalsEl.innerHTML =
-      '<div class="info-row">' +
-        '<span class="label">Subtotal</span><span>' + fmt(subtotal) + '</span>' +
-      '</div>' +
-      '<div class="info-row">' +
-        '<span class="label">Shipping</span><span>' + fmt(shipping) + '</span>' +
-      '</div>' +
+      '<div class="info-row"><span class="label">Subtotal</span><span>' + fmt(subtotal) + '</span></div>' +
+      '<div class="info-row"><span class="label">Shipping</span><span>' + fmt(shipping) + '</span></div>' +
       (discount > 0
-        ? '<div class="info-row">' +
-            '<span class="label">Discount</span>' +
-            '<span style="color:var(--success);">− ' + fmt(discount) + '</span>' +
-          '</div>'
+        ? '<div class="info-row"><span class="label">Discount</span><span style="color:var(--success);">- ' + fmt(discount) + '</span></div>'
         : '') +
       '<div class="info-row" style="border-top:0.5px solid var(--border);">' +
         '<span class="label" style="color:var(--text);font-weight:600;">Total</span>' +
@@ -602,9 +545,17 @@
       '</div>';
   };
 
-  /* ─────────────────────────────────────────────────────────
-     BUILD PAYLOAD
-  ───────────────────────────────────────────────────────── */
+  // ─── BUILD PAYLOAD ───────────────────────────────────────────
+  //
+  // Stores on every order:
+  //   vendorIds       : unique array of vendorIds from items (for future querying)
+  //   vendorPayouts   : per-vendor breakdown { subtotal, commission, payout }
+  //   platformRevenue : total platform commission across non-house-brand items
+  //   createdBy       : uid of the admin who created this (null for storefront orders)
+  //   source          : 'manual' | 'storefront'
+  //
+  // Shipping is excluded from commission — commission is on product subtotal only.
+
   function buildOrderPayload(status) {
     var items    = window._newOrderItems || [];
     var subtotal = items.reduce(function (s, i) { return s + (i.price * i.qty); }, 0);
@@ -612,33 +563,51 @@
     var discount = parseFloat((safeEl('no-discount') || {}).value) || 0;
     var total    = Math.max(0, subtotal + shipping - discount);
 
+    // Unique vendorIds from items — written so Firestore rules
+    // and Cloud Functions can reference them server-side.
+    var vendorIds = [];
+    items.forEach(function (item) {
+      if (item.vendorId && vendorIds.indexOf(item.vendorId) === -1) {
+        vendorIds.push(item.vendorId);
+      }
+    });
+
+    // Commission, vendorPayouts, and platformRevenue are calculated
+    // server-side by a Cloud Function — never in client code.
+
     return {
-      customerName:      (safeEl('no-customer-name')   || {}).value || '',
-      customerEmail:     (safeEl('no-customer-email')  || {}).value || '',
-      customerPhone:     (safeEl('no-customer-phone')  || {}).value || '',
-      shippingAddress:   (safeEl('no-address')         || {}).value || '',
-      city:              (safeEl('no-city')             || {}).value || '',
-      province:          (safeEl('no-province')         || {}).value || '',
-      postalCode:        (safeEl('no-postal')           || {}).value || '',
-      country:           (safeEl('no-country')          || {}).value || 'South Africa',
-      paymentStatus:     (safeEl('no-payment-status')   || {}).value || 'unpaid',
-      paymentMethod:     (safeEl('no-payment-method')   || {}).value || 'eft',
+      customerName:      (safeEl('no-customer-name')  || {}).value || '',
+      customerEmail:     (safeEl('no-customer-email') || {}).value || '',
+      customerPhone:     (safeEl('no-customer-phone') || {}).value || '',
+      shippingAddress:   (safeEl('no-address')        || {}).value || '',
+      city:              (safeEl('no-city')            || {}).value || '',
+      province:          (safeEl('no-province')        || {}).value || '',
+      postalCode:        (safeEl('no-postal')          || {}).value || '',
+      country:           (safeEl('no-country')         || {}).value || 'South Africa',
+      paymentStatus:     (safeEl('no-payment-status')  || {}).value || 'unpaid',
+      paymentMethod:     (safeEl('no-payment-method')  || {}).value || 'eft',
       shippingFee:       shipping,
       discount:          discount,
-      subtotal:          total,
+      subtotal:          subtotal,
+      total:             total,
       itemCount:         items.reduce(function (s, i) { return s + i.qty; }, 0),
       items:             items,
+      vendorIds:         vendorIds,
+      // vendorPayouts and platformRevenue are set by Cloud Function only.
       internalNotes:     (safeEl('no-notes') || {}).value || '',
       status:            status || 'pending',
       fulfillmentStatus: 'unfulfilled',
-      source:            'manual'
+      payoutStatus:      'pending',
+      source:            'manual',
+      // uid of the admin who created this order manually.
+      createdBy:         (window._currentUser && window._currentUser.uid) || null
     };
   }
 
-  /* ─────────────────────────────────────────────────────────
-     SAVE DRAFT
-  ───────────────────────────────────────────────────────── */
+  // ─── SAVE DRAFT ──────────────────────────────────────────────
+
   window._saveOrderDraft = function (existingDraftId) {
+    if (!window._guard('orders', 'create')) return;
     var payload = buildOrderPayload('draft');
     payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
 
@@ -655,22 +624,19 @@
     });
   };
 
-  /* ─────────────────────────────────────────────────────────
-     SUBMIT ORDER
-  ───────────────────────────────────────────────────────── */
+  // ─── SUBMIT ORDER ────────────────────────────────────────────
+
   window._submitNewOrder = function (draftId) {
+    if (!window._guard('orders', 'create')) return;
+
     var name = (safeEl('no-customer-name') || {}).value || '';
-    if (!name.trim()) {
-      showToast('Please enter a customer name', 'error');
-      return;
-    }
+    if (!name.trim()) { showToast('Please enter a customer name', 'error'); return; }
     if (!window._newOrderItems || window._newOrderItems.length === 0) {
-      showToast('Please add at least one product', 'error');
-      return;
+      showToast('Please add at least one product', 'error'); return;
     }
 
     var payload = buildOrderPayload('pending');
-    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    payload.createdAt   = firebase.firestore.FieldValue.serverTimestamp();
     payload.orderNumber = 'ORD-' + Date.now();
 
     ordersRef.add(payload).then(function (ref) {
@@ -683,16 +649,17 @@
     });
   };
 
-  /* ─────────────────────────────────────────────────────────
-     ORDER DETAIL PANEL
-  ───────────────────────────────────────────────────────── */
+  // ─── ORDER DETAIL PANEL ──────────────────────────────────────
+
   window._openOrderDetail = function (orderId) {
     if (!orderId || typeof orderId !== 'string') return;
-    var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
+    if (!window._can('orders', 'read')) return;
+
+    var o = (window._ordersData || []).filter(function (x) { return x.id === orderId; })[0];
 
     var panelHTML =
       '<div class="slide-panel">' +
-        '<button class="slide-panel-close" onclick="window._closePanel()">✕</button>' +
+        '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
         '<div class="ui-label" style="margin-bottom:4px;">Order</div>' +
         '<div style="font-size:21px;font-weight:400;margin-bottom:18px;">' +
           '#' + esc(orderId.substring(0, 14)) +
@@ -707,7 +674,7 @@
     if (!o) {
       ordersRef.doc(orderId).get().then(function (doc) {
         if (!doc.exists) return;
-        var data = Object.assign({ id: doc.id }, doc.data());
+        var data  = Object.assign({ id: doc.id }, doc.data());
         var loadEl = safeEl('order-detail-loading');
         if (loadEl) loadEl.outerHTML = renderOrderDetailContent(data, orderId);
       }).catch(function (e) { console.error('[ORDER_DETAIL_FETCH]', e); });
@@ -715,8 +682,10 @@
   };
 
   function renderOrderDetailContent(o, orderId) {
-    var abandoned = isAbandoned(o);
-    var html = '';
+    var canUpdate  = window._can('orders', 'update');
+    var canRefund  = window._can('orders', 'approve');   // Super Admin only action.
+    var abandoned  = isAbandoned(o);
+    var html       = '';
 
     if (abandoned) {
       html +=
@@ -735,16 +704,13 @@
 
     html +=
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">' +
-        '<button class="btn btn-sm btn-ghost"' +
-          ' onclick="window._copyOrderId(\'' + esc(orderId) + '\')">Copy #</button>' +
+        '<button class="btn btn-sm btn-ghost" onclick="window._copyOrderId(\'' + esc(orderId) + '\')">Copy #</button>' +
         (o.customerPhone
-          ? '<button class="btn btn-sm btn-ghost"' +
-              ' onclick="window._whatsappCustomer(\'' + esc(o.customerPhone) + '\')">WhatsApp</button>'
+          ? '<button class="btn btn-sm btn-ghost" onclick="window._whatsappCustomer(\'' + esc(o.customerPhone) + '\')">WhatsApp</button>'
           : '') +
         '<button class="btn btn-sm btn-ghost" onclick="window._printOrderInvoice()">Invoice</button>' +
-        (isSuperAdmin()
-          ? '<button class="btn btn-sm btn-danger"' +
-              ' onclick="window._quickRefund(\'' + esc(orderId) + '\')">Refund</button>'
+        (canRefund
+          ? '<button class="btn btn-sm btn-danger" onclick="window._quickRefund(\'' + esc(orderId) + '\')">Refund</button>'
           : '') +
       '</div>';
 
@@ -767,26 +733,42 @@
         '</div>';
     }
 
-    html +=
-      '<div class="card-title" style="margin-bottom:7px;">Revenue</div>' +
-      '<div class="info-panel" style="margin-bottom:14px;">' +
-        '<div class="info-row"><span class="label">Subtotal</span><span>' + fmt(o.subtotal || 0) + '</span></div>' +
-        (isSuperAdmin()
-          ? '<div class="info-row"><span class="label">Platform Rev</span><span>' + fmt(o.platformRevenue || 0) + '</span></div>'
-          : '') +
-        (isSuperAdmin()
-          ? '<div class="info-row"><span class="label">Vendor Rev</span><span>' + fmt(o.vendorRevenue || 0) + '</span></div>'
-          : '') +
-        '<div class="info-row"><span class="label">Payout</span><span>' +
-          statusBadge(o.payoutStatus || 'pending') +
-        '</span></div>' +
-      '</div>';
+    // Revenue breakdown — Super Admin only.
+    if (canRefund) {
+      html +=
+        '<div class="card-title" style="margin-bottom:7px;">Revenue</div>' +
+        '<div class="info-panel" style="margin-bottom:14px;">' +
+          '<div class="info-row"><span class="label">Subtotal</span><span>'         + fmt(o.subtotal        || 0) + '</span></div>' +
+          '<div class="info-row"><span class="label">Shipping</span><span>'         + fmt(o.shippingFee     || 0) + '</span></div>' +
+          '<div class="info-row"><span class="label">Total</span><span>'            + fmt(o.total           || 0) + '</span></div>' +
+          '<div class="info-row"><span class="label">Platform Revenue</span><span>' + fmt(o.platformRevenue || 0) + '</span></div>' +
+          '<div class="info-row"><span class="label">Payout Status</span><span>'    + statusBadge(o.payoutStatus || 'pending') + '</span></div>' +
+        '</div>';
 
-    if (isSuperAdmin()) {
+      // Per-vendor payout breakdown.
+      if (o.vendorPayouts && Object.keys(o.vendorPayouts).length > 0) {
+        html += '<div class="card-title" style="margin-bottom:7px;">Vendor Payouts</div>' +
+          '<div class="info-panel" style="margin-bottom:14px;">';
+        Object.keys(o.vendorPayouts).forEach(function (vid) {
+          var vp = o.vendorPayouts[vid];
+          html +=
+            '<div class="info-row">' +
+              '<span class="label">' + esc(vid) + (vp.isHouseBrand ? ' (house)' : '') + '</span>' +
+              '<span>' + fmt(vp.payout) + '</span>' +
+            '</div>';
+        });
+        html += '</div>';
+      }
+    }
+
+    // Status controls — Super Admin and Admin (with different permissions).
+    if (canUpdate) {
       html +=
         '<div class="card-title" style="margin-bottom:8px;">Update Status</div>' +
         '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;">' +
           ORDER_STATUSES.map(function (s) {
+            // Refund status — Super Admin only.
+            if (s === 'refunded' && !canRefund) return '';
             return '<button class="btn btn-xs ' + (o.status === s ? 'btn-primary' : 'btn-ghost') + '"' +
               ' onclick="window._updateOrderStatus(\'' + esc(orderId) + '\',\'' + esc(s) + '\')">' +
               esc(s) + '</button>';
@@ -797,33 +779,26 @@
           '<div style="display:flex;gap:6px;">' +
             '<input id="tracking-input" value="' + esc(o.trackingNumber || '') + '"' +
               ' placeholder="Tracking #"' +
-              ' style="flex:1;padding:8px 11px;border:0.5px solid var(--border-med);' +
-                'font-family:Manrope,sans-serif;font-size:12px;background:var(--surface2);' +
-                'outline:none;border-radius:7px;">' +
-            '<button class="btn btn-sm"' +
-              ' onclick="window._saveTracking(\'' + esc(orderId) + '\')">Save</button>' +
+              ' style="flex:1;padding:8px 11px;border:0.5px solid var(--border-med);font-family:Manrope,sans-serif;font-size:12px;background:var(--surface2);outline:none;border-radius:7px;">' +
+            '<button class="btn btn-sm" onclick="window._saveTracking(\'' + esc(orderId) + '\')">Save</button>' +
           '</div>' +
         '</div>' +
         '<div>' +
           '<div class="card-title" style="margin-bottom:7px;">Internal Notes</div>' +
           '<textarea id="order-note-input"' +
-            ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;' +
-              'font-family:Manrope,sans-serif;font-size:12px;font-weight:300;min-height:68px;' +
-              'background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
+            ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;font-family:Manrope,sans-serif;font-size:12px;font-weight:300;min-height:68px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
             ' placeholder="Internal notes...">' +
             esc(o.internalNotes || '') +
           '</textarea>' +
-          '<button class="btn btn-sm btn-ghost" style="margin-top:7px;"' +
-            ' onclick="window._saveOrderNote(\'' + esc(orderId) + '\')">Save Note</button>' +
+          '<button class="btn btn-sm btn-ghost" style="margin-top:7px;" onclick="window._saveOrderNote(\'' + esc(orderId) + '\')">Save Note</button>' +
         '</div>';
     }
 
     return html;
   }
 
-  /* ─────────────────────────────────────────────────────────
-     ORDER ACTIONS
-  ───────────────────────────────────────────────────────── */
+  // ─── ORDER ACTIONS ───────────────────────────────────────────
+
   window._copyOrderId = function (orderId) {
     navigator.clipboard.writeText(orderId)
       .then(function () { showToast('Order # copied'); })
@@ -840,43 +815,40 @@
   };
 
   window._quickRefund = function (orderId) {
-    if (!requireSuperAdmin('quickRefund')) return;
+    if (!window._guard('orders', 'approve')) return;
     if (!confirm('Mark order #' + orderId.substring(0, 10) + ' as refunded?')) return;
     ordersRef.doc(orderId)
       .update({ status: 'refunded', updatedAt: new Date().toISOString() })
       .then(function () {
         showToast('Order marked as refunded');
         if (window._ordersData) {
-          var o = window._ordersData.find(function (x) { return x.id === orderId; });
+          var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
           if (o) o.status = 'refunded';
         }
         closePanel();
-      }).catch(function (e) {
-        showToast('Error: ' + e.message, 'error');
-      });
+      }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
   window._updateOrderStatus = function (orderId, status) {
-    if (!requireSuperAdmin('updateOrderStatus')) return;
-    if (ORDER_STATUSES.indexOf(status) === -1) {
-      showToast('Invalid status value', 'error');
-      return;
+    if (!window._guard('orders', 'update')) return;
+    if (status === 'refunded' && !window._can('orders', 'approve')) {
+      showToast('Only Super Admin can issue refunds.', 'error'); return;
     }
+    if (ORDER_STATUSES.indexOf(status) === -1) { showToast('Invalid status value', 'error'); return; }
     ordersRef.doc(orderId)
       .update({ status: status, updatedAt: new Date().toISOString() })
       .then(function () {
         showToast('Status updated to ' + status);
         if (window._ordersData) {
-          var o = window._ordersData.find(function (x) { return x.id === orderId; });
+          var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
           if (o) { o.status = status; renderOrdersTable(window._ordersData); }
         }
         closePanel();
-      }).catch(function (e) {
-        showToast('Error: ' + e.message, 'error');
-      });
+      }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
   window._saveTracking = function (orderId) {
+    if (!window._guard('orders', 'update')) return;
     var input = safeEl('tracking-input');
     if (!input) return;
     ordersRef.doc(orderId)
@@ -886,6 +858,7 @@
   };
 
   window._saveOrderNote = function (orderId) {
+    if (!window._guard('orders', 'update')) return;
     var input = safeEl('order-note-input');
     if (!input) return;
     ordersRef.doc(orderId)
