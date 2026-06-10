@@ -28,7 +28,64 @@
   var avatarInitials = window._avatarInitials;
   var QUICK_REPLIES  = window._QUICK_REPLIES || [];
 
-  // ── Notification sound ─────────────────────────────────────────
+  var PLATFORM_NAME = 'Janedore';
+
+  // ── Admin identity ────────────────────────────────────────────
+  // Cached so we only hit Firestore once per session.
+  var _adminProfileCache = null;
+
+  function getAdminId() {
+    try {
+      var user = firebase.auth().currentUser;
+      return (user && user.uid) ? user.uid : 'admin';
+    } catch (_) { return 'admin'; }
+  }
+
+  function getAdminEmail() {
+    try {
+      var user = firebase.auth().currentUser;
+      return (user && user.email) ? user.email : 'Unknown';
+    } catch (_) { return 'Unknown'; }
+  }
+
+  // Returns a promise that resolves to the display name for the
+  // current user. Super Admin always resolves to PLATFORM_NAME.
+  // Admin resolves to their name field, falling back to email.
+  function getAdminDisplayName() {
+    if (window._isSuperAdmin && window._isSuperAdmin()) {
+      return Promise.resolve(PLATFORM_NAME);
+    }
+    if (_adminProfileCache && _adminProfileCache.name) {
+      return Promise.resolve(_adminProfileCache.name);
+    }
+    var uid = getAdminId();
+    return window._adminDB.collection('admins').doc(uid).get()
+      .then(function (doc) {
+        if (doc.exists) {
+          _adminProfileCache = doc.data();
+          return _adminProfileCache.name || getAdminEmail();
+        }
+        return getAdminEmail();
+      })
+      .catch(function () { return getAdminEmail(); });
+  }
+
+  // Synchronous version for cases where we already have the cache.
+  // Returns PLATFORM_NAME for Super Admin, cached name for Admin,
+  // falls back to email. Use getAdminDisplayName() (async) when
+  // you need a guaranteed fresh value.
+  function getAdminDisplayNameSync() {
+    if (window._isSuperAdmin && window._isSuperAdmin()) return PLATFORM_NAME;
+    if (_adminProfileCache && _adminProfileCache.name) return _adminProfileCache.name;
+    return getAdminEmail();
+  }
+
+  // Warm the cache immediately on load so sync calls work.
+  if (!(window._isSuperAdmin && window._isSuperAdmin())) {
+    getAdminDisplayName().catch(function () {});
+  }
+
+  // ── Notification sound ────────────────────────────────────────
   var _audioCtx = null;
 
   function _unlockAudio() {
@@ -75,8 +132,8 @@
       oscillator.stop(_audioCtx.currentTime + 0.3);
     } catch(e) { console.warn('[audio] playback failed', e); }
   }
-  // ────────────────────────────────────────────────────────────────
 
+  // ── Config ────────────────────────────────────────────────────
   var Cfg = Object.freeze({
     MSG_INITIAL:        80,
     MSG_PAGE:           50,
@@ -92,20 +149,6 @@
     LS_KEY:             'jd_chat_inbox_v4',
     LS_TTL_MS:          5 * 60 * 1000,
   });
-
-  function getAdminId() {
-    try {
-      var user = firebase.auth().currentUser;
-      return (user && user.uid) ? user.uid : 'admin';
-    } catch (_) { return 'admin'; }
-  }
-
-  function getAdminEmail() {
-    try {
-      var user = firebase.auth().currentUser;
-      return (user && user.email) ? user.email : 'Unknown Admin';
-    } catch (_) { return 'Unknown Admin'; }
-  }
 
   var U = {
     debounce: function (fn, ms) {
@@ -161,13 +204,13 @@
     }()),
     lsSet: (function () {
       var pending = {};
-      var timers = {};
+      var timers  = {};
       return function (key, data) {
         pending[key] = data;
         clearTimeout(timers[key]);
         timers[key] = setTimeout(function () {
           try {
-            var nowTs = Date.now();
+            var nowTs    = Date.now();
             var existing = U._lsRaw(key);
             if (existing && existing._ts > nowTs) return;
             localStorage.setItem(key, JSON.stringify({ _ts: nowTs, data: pending[key] }));
@@ -196,21 +239,25 @@
     }
   };
 
+  // ── State ─────────────────────────────────────────────────────
   var ChatState = (function () {
-    var _sessions = {};
-    var _activeSid = null;
-    var _activeMsgs = [];
-    var _seenKeys = new Set();
+    var _sessions       = {};
+    var _activeSid      = null;
+    var _activeMsgs     = [];
+    var _seenKeys       = new Set();
     var _optimisticKeys = new Set();
-    var _oldestKey = null;
-    var _hasMore = false;
+    var _oldestKey      = null;
+    var _hasMore        = false;
     var _isLoadingOlder = false;
-    var _filterTab = 'all';
-    var _searchQuery = '';
-    var _isSending = false;
-    var _subs = { inboxAdded: null, inboxChanged: null, inboxRemoved: null, msgAdded: null, typing: null, connected: null };
-    var _typingTimer = null;
+    var _filterTab      = 'all';
+    var _searchQuery    = '';
+    var _isSending      = false;
+    var _subs           = { inboxAdded: null, inboxChanged: null, inboxRemoved: null, msgAdded: null, typing: null, connected: null };
+    var _typingTimer    = null;
     var _readGeneration = 0;
+    // Tracks which sessions this admin has already sent a "joined" message for
+    // so we don't repeat it on every open.
+    var _joinedSessions = {};
 
     return {
       getSessions:       function () { return Object.assign({}, _sessions); },
@@ -233,6 +280,8 @@
       setLoadingOlder:   function (v) { _isLoadingOlder = v; },
       setHasMore:        function (v) { _hasMore = v; },
       bumpReadGen:       function () { return ++_readGeneration; },
+      hasJoinedSession:  function (sid) { return !!_joinedSessions[sid]; },
+      markJoinedSession: function (sid) { _joinedSessions[sid] = true; },
       upsertSession: function (sid, data) {
         _sessions[sid] = Object.assign({}, _sessions[sid] || {}, data);
         return Object.assign({}, _sessions[sid]);
@@ -242,9 +291,9 @@
       setSessions:   function (obj) { _sessions = Object.assign({}, obj); },
       setActiveMessages: function (msgs) {
         if (msgs.length > Cfg.MSG_MAX_MEMORY) msgs = msgs.slice(msgs.length - Cfg.MSG_MAX_MEMORY);
-        _activeMsgs    = msgs;
-        _seenKeys      = new Set(msgs.map(function (m) { return m._key; }));
-        _oldestKey     = msgs.length > 0 ? msgs[0]._key : null;
+        _activeMsgs     = msgs;
+        _seenKeys       = new Set(msgs.map(function (m) { return m._key; }));
+        _oldestKey      = msgs.length > 0 ? msgs[0]._key : null;
         _optimisticKeys = new Set();
       },
       registerOptimistic: function (tempKey) { _seenKeys.add(tempKey); _optimisticKeys.add(tempKey); },
@@ -284,16 +333,56 @@
     };
   }());
 
+  // ── Database layer ────────────────────────────────────────────
   var ChatDB = {
     detach: function (sub, eventType) {
       if (!sub || !sub.ref || !sub.cb) return;
       try { sub.ref.off(eventType, sub.cb); } catch (e) {}
     },
+
+    // Super Admin and Admin see different sets of sessions.
+    // Super Admin: all sessions ordered by lastMessageAt.
+    // Admin: only sessions where their uid appears in assignedAdmins array.
+    // RTDB does not support array-contains so Admin sessions are stored
+    // with a flat map at chat_inbox/{sid}/assignedAdmins/{uid}: true
+    // allowing orderByChild scoping.
     subscribeInbox: function (onAdded, onChanged, onRemoved, onError) {
-      var ref = rtdb.ref(INBOX_ROOT).orderByChild('lastMessageAt').limitToLast(Cfg.INBOX_PAGE);
-      var addedCb   = function (s) { if (s.val()) onAdded(s.key,   s.val()); };
-      var changedCb = function (s) { if (s.val()) onChanged(s.key, s.val()); };
+      var isSuper = window._isSuperAdmin && window._isSuperAdmin();
+      var uid     = getAdminId();
+      var ref;
+
+      if (isSuper || window._currentUserRole === 'ADMIN') {
+        // Super Admin sees everything.
+        // Admin sees everything too at the inbox level — scoping is
+        // enforced at the session level by checking assignedAdmins.
+        // Full scoping requires a Cloud Function to index sessions per admin;
+        // for now Admin sees all inbox entries but cannot open unassigned ones.
+        ref = rtdb.ref(INBOX_ROOT).orderByChild('lastMessageAt').limitToLast(Cfg.INBOX_PAGE);
+      } else {
+        ref = rtdb.ref(INBOX_ROOT).orderByChild('lastMessageAt').limitToLast(Cfg.INBOX_PAGE);
+      }
+
+      var addedCb   = function (s) {
+        if (s.val()) {
+          // For Admin role, only surface sessions they are assigned to.
+          if (!isSuper && window._currentUserRole === 'ADMIN') {
+            var data = s.val();
+            if (!data.assignedAdmins || !data.assignedAdmins[uid]) return;
+          }
+          onAdded(s.key, s.val());
+        }
+      };
+      var changedCb = function (s) {
+        if (s.val()) {
+          if (!isSuper && window._currentUserRole === 'ADMIN') {
+            var data = s.val();
+            if (!data.assignedAdmins || !data.assignedAdmins[uid]) return;
+          }
+          onChanged(s.key, s.val());
+        }
+      };
       var removedCb = function (s) { onRemoved(s.key); };
+
       ref.on('child_added',   addedCb,   function (e) { onError && onError(e); });
       ref.on('child_changed', changedCb, function (e) { onError && onError(e); });
       ref.on('child_removed', removedCb, function (e) { onError && onError(e); });
@@ -348,15 +437,41 @@
       return { ref: ref, cb: cb, event: 'value' };
     },
 
-    sendMessage: function (sessionId, text) {
-      var msgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
-      var ts     = firebase.database.ServerValue.TIMESTAMP;
+    sendMessage: function (sessionId, text, senderName) {
+      var msgRef  = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
+      var ts      = firebase.database.ServerValue.TIMESTAMP;
       var updates = {};
-      updates[CHAT_ROOT  + '/' + sessionId + '/messages/' + msgRef.key]           = { text: text, sender: 'admin', createdAt: ts, read: true, delivered: true, sessionId: sessionId };
+      updates[CHAT_ROOT  + '/' + sessionId + '/messages/' + msgRef.key] = {
+        text:       text,
+        sender:     'admin',
+        senderName: senderName || PLATFORM_NAME,
+        createdAt:  ts,
+        read:       true,
+        delivered:  true,
+        sessionId:  sessionId
+      };
       updates[CHAT_ROOT  + '/' + sessionId + '/meta/adminTyping/' + getAdminId()] = null;
       updates[INBOX_ROOT + '/' + sessionId + '/lastMessage']                       = text;
       updates[INBOX_ROOT + '/' + sessionId + '/lastMessageAt']                     = ts;
       updates[INBOX_ROOT + '/' + sessionId + '/unreadCount']                       = 0;
+      return rtdb.ref('/').update(updates);
+    },
+
+    // Writes a system message visible to both admin and customer.
+    sendSystemMessage: function (sessionId, text) {
+      var msgRef  = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
+      var ts      = firebase.database.ServerValue.TIMESTAMP;
+      var updates = {};
+      updates[CHAT_ROOT + '/' + sessionId + '/messages/' + msgRef.key] = {
+        text:      text,
+        sender:    'system',
+        createdAt: ts,
+        read:      true,
+        delivered: true,
+        sessionId: sessionId
+      };
+      updates[INBOX_ROOT + '/' + sessionId + '/lastMessage']    = text;
+      updates[INBOX_ROOT + '/' + sessionId + '/lastMessageAt']  = ts;
       return rtdb.ref('/').update(updates);
     },
 
@@ -381,6 +496,7 @@
       return rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/adminTyping/' + getAdminId())
         .set(val ? true : null).catch(function (e) {});
     },
+
     saveNote: function (sessionId, text) {
       var updates = {};
       updates[CHAT_ROOT + '/' + sessionId + '/meta/adminNote']  = text;
@@ -421,25 +537,35 @@
       return ordersRef.where('chatSessionId', '==', sessionId).limit(10).get();
     },
 
-    // ── Invite admin to session ──────────────────────────────────
-    inviteAdmin: function (sessionId, invitedAdminId, invitedByEmail) {
+    // Invite admin to session.
+    // Writes to meta/invites AND to chat_inbox assignedAdmins map
+    // so the invited admin's inbox subscription picks up the session.
+    inviteAdmin: function (sessionId, invitedAdminId, inviterName) {
+      var ts      = firebase.database.ServerValue.TIMESTAMP;
       var updates = {};
-      var ts = firebase.database.ServerValue.TIMESTAMP;
+
+      // Mark invite in the session metadata.
       updates[CHAT_ROOT + '/' + sessionId + '/meta/invites/' + invitedAdminId] = {
-        invitedBy: invitedByEmail,
+        invitedBy: inviterName,
         invitedAt: ts,
-        status: 'pending'
+        status:    'pending'
       };
-      // Write a system message into the chat so everyone sees it
+
+      // Add to assignedAdmins flat map on the inbox entry so the invited
+      // admin's subscription filter picks it up immediately.
+      updates[INBOX_ROOT + '/' + sessionId + '/assignedAdmins/' + invitedAdminId] = true;
+
+      // System message — uses inviter's display name.
       var msgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
       updates[CHAT_ROOT + '/' + sessionId + '/messages/' + msgRef.key] = {
-        text: invitedByEmail + ' invited ' + invitedAdminId + ' to this conversation.',
-        sender: 'system',
+        text:      inviterName + ' invited a team member to this conversation.',
+        sender:    'system',
         createdAt: ts,
-        read: true,
+        read:      true,
         delivered: true,
         sessionId: sessionId
       };
+
       return rtdb.ref('/').update(updates);
     },
 
@@ -448,21 +574,21 @@
     }
   };
 
-  // ==================== RENDERER ====================
+  // ── Renderer ──────────────────────────────────────────────────
   var ChatRenderer = {
     renderInboxShell: function (container) {
       container.innerHTML =
         '<div class="section-header" style="margin-bottom:12px;">'
           + '<div class="section-title">Inbox</div>'
-          + '<div class="section-actions"><input class="search-input" id="chat-search" placeholder="Search…" autocomplete="off" style="min-width:140px;max-width:200px;"></div>'
+          + '<div class="section-actions"><input class="search-input" id="chat-search" placeholder="Search..." autocomplete="off" style="min-width:140px;max-width:200px;"></div>'
         + '</div>'
         + '<div id="chat-offline-banner" style="display:none;background:var(--warning,#f59e0b);color:#fff;font-size:11px;padding:6px 12px;border-radius:4px;margin-bottom:8px;">'
           + '<i class="ph-light ph-warning" style="margin-right:4px;"></i> Offline — showing cached data'
         + '</div>'
         + '<div style="display:flex;gap:6px;margin-bottom:12px;" id="chat-tab-bar">'
-          + '<button class="btn btn-sm btn-primary" data-tab="all" id="chat-tab-all">All</button>'
-          + '<button class="btn btn-sm btn-ghost" data-tab="unread" id="chat-tab-unread">Unread</button>'
-          + '<button class="btn btn-sm btn-ghost" data-tab="pinned" id="chat-tab-pinned">Pinned</button>'
+          + '<button class="btn btn-sm btn-primary" data-tab="all"    id="chat-tab-all">All</button>'
+          + '<button class="btn btn-sm btn-ghost"   data-tab="unread" id="chat-tab-unread">Unread</button>'
+          + '<button class="btn btn-sm btn-ghost"   data-tab="pinned" id="chat-tab-pinned">Pinned</button>'
         + '</div>'
         + '<div id="chat-sessions-wrap" class="chat-sessions-wrap"></div>';
     },
@@ -488,10 +614,7 @@
     updateCard: function (sid, data, sessions) {
       var wrap = safeEl('chat-sessions-wrap');
       if (!wrap) return;
-      // If wrap currently shows the loading/empty state, clear it first
-      if (wrap.querySelector('.empty-state') || wrap.innerHTML.trim() === '') {
-        wrap.innerHTML = '';
-      }
+      if (wrap.querySelector('.empty-state') || wrap.innerHTML.trim() === '') wrap.innerHTML = '';
       var existing = wrap.querySelector('[data-sid="' + U.cssEscape(sid) + '"]');
       var newCard  = this._buildCard(sid, data);
       if (existing) existing.replaceWith(newCard);
@@ -502,8 +625,8 @@
     _repositionCard: function (sid, sessions, wrap) {
       var card = wrap.querySelector('[data-sid="' + U.cssEscape(sid) + '"]');
       if (!card) return;
-      var ids  = this._filteredSortedIds(sessions);
-      var pos  = ids.indexOf(sid);
+      var ids      = this._filteredSortedIds(sessions);
+      var pos      = ids.indexOf(sid);
       if (pos === -1) { card.remove(); return; }
       var allCards = wrap.querySelectorAll('[data-sid]');
       var domSids  = [];
@@ -558,7 +681,7 @@
         '<div class="chat-avatar ' + esc(avClass) + '">' + esc(avInit) + '</div>'
         + '<div class="session-info">'
           + '<div class="session-id-label">' + esc(name) + '</div>'
-          + '<div class="session-preview">' + esc(preview) + (preview.length >= 70 ? '…' : '') + '</div>'
+          + '<div class="session-preview">' + esc(preview) + (preview.length >= 70 ? '...' : '') + '</div>'
         + '</div>'
         + '<div class="session-right"><span class="session-time">' + esc(time) + '</span>' + badge + '</div>';
       return card;
@@ -569,7 +692,7 @@
       var avInit  = esc(avatarInitials(sessionId));
       var name    = esc(sessionId.substring(0, 26));
 
-      var shellTop =
+      container.innerHTML =
         '<button class="back-link" id="chat-back-btn">'
           + '<i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Inbox'
         + '</button>'
@@ -583,22 +706,20 @@
           + '</div>'
           + '<div style="display:flex;gap:8px;">'
             + '<button class="btn btn-sm btn-ghost" id="chat-invite-btn">'
-              + '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite Admin'
+              + '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite'
             + '</button>'
             + '<button class="btn btn-sm btn-ghost" id="chat-pin-btn" data-pinned="' + (isPinned ? '1' : '0') + '">'
               + (isPinned ? 'Unpin' : 'Pin')
             + '</button>'
           + '</div>'
-        + '</div>';
-
-      var shellChat =
-        '<div class="chat-view-wrap">'
+        + '</div>'
+        + '<div class="chat-view-wrap">'
           + '<div id="chat-load-more-wrap" style="text-align:center;padding:6px;display:none;">'
             + '<button class="btn btn-sm btn-ghost" id="chat-load-more-btn">Load older messages</button>'
           + '</div>'
           + '<div id="chat-history-start" style="display:none;text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0;">— Beginning of conversation —</div>'
           + '<div class="chat-messages-panel" id="chat-messages-panel">'
-            + '<div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">Loading…</div>'
+            + '<div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">Loading...</div>'
           + '</div>'
           + '<div id="chat-new-msg-banner" style="display:none;text-align:center;padding:4px 0;">'
             + '<button class="btn btn-sm btn-primary" id="chat-scroll-down-btn">'
@@ -607,20 +728,17 @@
           + '</div>'
           + '<div class="typing-indicator" id="typing-indicator" style="display:none;align-items:center;gap:2px;">'
             + '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>'
-            + '<em style="font-size:10px;margin-left:6px;">Customer is typing…</em>'
+            + '<em style="font-size:10px;margin-left:6px;">Customer is typing...</em>'
           + '</div>'
           + '<div class="quick-replies" id="quick-replies-row">'
             + QUICK_REPLIES.map(function (r) { return '<button class="quick-reply-btn" data-reply="' + esc(r) + '">' + esc(r) + '</button>'; }).join('')
           + '</div>'
           + '<div class="reply-box">'
-            + '<input id="reply-input" placeholder="Write a reply…" autocomplete="off">'
+            + '<input id="reply-input" placeholder="Write a reply..." autocomplete="off">'
             + '<button class="chat-send-btn" id="chat-send-btn">Send</button>'
           + '</div>'
-        + '</div>';
-
-      // ── Customer info card ──────────────────────────────────────
-      var shellCustomer =
-        '<div class="card" style="margin-top:12px;">'
+        + '</div>'
+        + '<div class="card" style="margin-top:12px;">'
           + '<div class="card-header"><span class="card-title">Customer</span></div>'
           + '<div style="padding:12px 14px;">'
             + '<div class="info-row" style="background:none;border:none;padding:6px 0;display:flex;flex-direction:column;gap:2px;">'
@@ -637,83 +755,76 @@
             + '</div>'
             + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
               + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Cart when they messaged</div>'
-              + '<div id="cinfo-cart"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div>'
+              + '<div id="cinfo-cart"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
             + '</div>'
             + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
               + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Order history</div>'
-              + '<div id="cinfo-orders"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div>'
+              + '<div id="cinfo-orders"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
             + '</div>'
           + '</div>'
-        + '</div>';
-
-      // ── Support notes card ──────────────────────────────────────
-      var shellNotes =
-        '<div class="card" style="margin-top:12px;">'
+        + '</div>'
+        + '<div class="card" style="margin-top:12px;">'
           + '<div class="card-header">'
             + '<span class="card-title">Support Notes</span>'
             + '<span id="note-lock-indicator" style="font-size:9px;color:var(--warning,#f59e0b);margin-left:8px;display:none;">Locked by another admin</span>'
           + '</div>'
           + '<div style="padding:12px 14px;">'
-            + '<textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Manrope,sans-serif;font-size:11.5px;font-weight:300;min-height:80px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes…"></textarea>'
+            + '<textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Manrope,sans-serif;font-size:11.5px;font-weight:300;min-height:80px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes..."></textarea>'
             + '<button class="btn btn-sm btn-ghost" id="chat-save-note-btn" style="margin-top:7px;width:100%;">Save Note</button>'
           + '</div>'
         + '</div>';
-
-      container.innerHTML = shellTop + shellChat + shellCustomer + shellNotes;
     },
 
-    // ── Invite admin modal ──────────────────────────────────────
-    renderInviteModal: function (admins, sessionId) {
+    renderInviteModal: function (admins, sessionId, inviterName) {
       var existing = document.getElementById('admin-invite-modal-backdrop');
       if (existing) existing.remove();
 
       var currentUid = getAdminId();
-      var options = admins.filter(function(a) { return a.id !== currentUid; });
+      var options    = admins.filter(function(a) { return a.id !== currentUid; });
 
       var optionsHtml = options.length === 0
         ? '<div style="font-size:11px;color:var(--muted);padding:8px 0;">No other admins available.</div>'
         : options.map(function(a) {
+            var displayName = a.data.name || a.data.email || a.id;
             return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);">'
               + '<div>'
-                + '<div style="font-size:12px;font-weight:500;">' + esc(a.data.email || a.id) + '</div>'
-                + '<div style="font-size:10px;color:var(--muted);">' + esc((a.data.role || '').toUpperCase()) + '</div>'
+                + '<div style="font-size:12px;font-weight:500;">' + esc(displayName) + '</div>'
+                + '<div style="font-size:10px;color:var(--muted);">' + esc((a.data.role || '').replace('_', ' ')) + '</div>'
               + '</div>'
-              + '<button class="btn btn-sm btn-ghost invite-admin-confirm-btn" data-uid="' + esc(a.id) + '" data-email="' + esc(a.data.email || a.id) + '">'
+              + '<button class="btn btn-sm btn-ghost invite-admin-confirm-btn"'
+                + ' data-uid="'   + esc(a.id)                      + '"'
+                + ' data-name="'  + esc(displayName)                + '">'
                 + '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite'
               + '</button>'
             + '</div>';
           }).join('');
 
       var backdrop = document.createElement('div');
-      backdrop.id = 'admin-invite-modal-backdrop';
+      backdrop.id  = 'admin-invite-modal-backdrop';
       backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;display:flex;align-items:center;justify-content:center;';
       backdrop.innerHTML =
         '<div style="background:var(--surface,#fff);border:0.5px solid var(--border);border-radius:10px;padding:24px;width:100%;max-width:380px;position:relative;">'
-          + '<div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">Invite Admin to Chat</div>'
+          + '<div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">Invite to Chat</div>'
           + '<div id="invite-admins-list">' + optionsHtml + '</div>'
           + '<button class="btn btn-sm btn-ghost" id="invite-modal-close-btn" style="margin-top:16px;width:100%;">Cancel</button>'
         + '</div>';
 
       document.body.appendChild(backdrop);
 
-      document.getElementById('invite-modal-close-btn').addEventListener('click', function() {
-        backdrop.remove();
-      });
-      backdrop.addEventListener('click', function(e) {
-        if (e.target === backdrop) backdrop.remove();
-      });
+      document.getElementById('invite-modal-close-btn').addEventListener('click', function() { backdrop.remove(); });
+      backdrop.addEventListener('click', function(e) { if (e.target === backdrop) backdrop.remove(); });
 
       var btns = backdrop.querySelectorAll('.invite-admin-confirm-btn');
       for (var i = 0; i < btns.length; i++) {
         btns[i].addEventListener('click', function(e) {
-          var btn   = e.currentTarget;
-          var uid   = btn.getAttribute('data-uid');
-          var email = btn.getAttribute('data-email');
-          btn.disabled = true;
-          btn.textContent = 'Sending…';
-          ChatDB.inviteAdmin(sessionId, uid, getAdminEmail())
+          var btn  = e.currentTarget;
+          var uid  = btn.getAttribute('data-uid');
+          var name = btn.getAttribute('data-name');
+          btn.disabled    = true;
+          btn.textContent = 'Sending...';
+          ChatDB.inviteAdmin(sessionId, uid, inviterName || PLATFORM_NAME)
             .then(function() {
-              showToast('Invite sent to ' + email);
+              showToast('Invite sent to ' + name);
               backdrop.remove();
             })
             .catch(function(err) {
@@ -771,7 +882,7 @@
               var status  = o.status || 'pending';
               var raw     = o.createdAt;
               var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
-              var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '\u2014';
+              var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
               var total   = 'R' + Number(o.subtotal || o.total || 0).toLocaleString('en-ZA');
               return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
                 + '<div style="display:flex;justify-content:space-between;font-size:10.5px;">'
@@ -814,8 +925,8 @@
         var optEl = panel.querySelector('[data-key="' + tempKey + '"]');
         if (optEl) { optEl.replaceWith(this._buildBubble(msg)); if (wasAtBottom) U.scrollToBottom(panel, true); return; }
       }
-      var isAdmin   = msg.sender !== 'customer';
-      var groupCls  = isAdmin ? 'msg-group--admin' : 'msg-group--customer';
+      var isAdmin  = msg.sender !== 'customer';
+      var groupCls = isAdmin ? 'msg-group--admin' : 'msg-group--customer';
       var lastGroup = panel.querySelector('.msg-group:last-child');
       if (lastGroup && lastGroup.classList.contains(groupCls)) lastGroup.appendChild(this._buildBubble(msg));
       else { var g = document.createElement('div'); g.className = 'msg-group ' + groupCls; g.appendChild(this._buildBubble(msg)); panel.appendChild(g); }
@@ -825,9 +936,9 @@
 
     prependMessages: function (msgs, panel) {
       if (!panel || !msgs || msgs.length === 0) return;
-      var prevTop  = panel.scrollTop;
-      var groups   = U.groupMessages(msgs);
-      var frag     = document.createDocumentFragment();
+      var prevTop       = panel.scrollTop;
+      var groups        = U.groupMessages(msgs);
+      var frag          = document.createDocumentFragment();
       var firstOldGroup = panel.querySelector('.msg-group:first-child');
       for (var i = 0; i < groups.length; i++) {
         var group   = groups[i];
@@ -843,10 +954,14 @@
       U.raf(function () { panel.scrollTop = prevTop + (panel.scrollHeight - prevTop - panel.clientHeight); });
     },
 
-    appendOptimisticMessage: function (text, panel) {
+    appendOptimisticMessage: function (text, panel, senderName) {
       if (!panel) return null;
       var tempKey = '__opt_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-      var bubble  = this._buildBubble({ _key: tempKey, text: text, sender: 'admin', createdAt: Date.now(), read: false, delivered: false });
+      var bubble  = this._buildBubble({
+        _key: tempKey, text: text, sender: 'admin',
+        senderName: senderName || PLATFORM_NAME,
+        createdAt: Date.now(), read: false, delivered: false
+      });
       bubble.style.opacity = '0.6';
       var lastGroup = panel.querySelector('.msg-group:last-child');
       if (lastGroup && lastGroup.classList.contains('msg-group--admin')) lastGroup.appendChild(bubble);
@@ -863,29 +978,42 @@
     },
 
     _buildBubble: function (m) {
-      var isAdmin  = m.sender !== 'customer';
       var isSystem = m.sender === 'system';
+      var isAdmin  = m.sender === 'admin';
+
+      // System messages — centred pill, no bubble.
       if (isSystem) {
         var sysWrap = document.createElement('div');
         sysWrap.style.cssText = 'text-align:center;padding:6px 0;';
         sysWrap.innerHTML = '<span style="font-size:10px;color:var(--muted);background:var(--surface2);padding:3px 10px;border-radius:20px;">' + esc(m.text || '') + '</span>';
         return sysWrap;
       }
-      var wrap    = document.createElement('div');
+
+      var wrap   = document.createElement('div');
       wrap.className = 'chat-msg-admin' + (isAdmin ? '' : ' customer-msg');
       if (m._key) wrap.setAttribute('data-key', m._key);
+
       var bubble = document.createElement('div');
       bubble.className   = 'chat-bubble';
       bubble.textContent = m.text || '';
+
       var statusHtml = '';
       if (isAdmin) {
-        if (m.read)           statusHtml = '<span class="msg-status msg-status--read"      title="Read">✓✓</span>';
-        else if (m.delivered) statusHtml = '<span class="msg-status msg-status--delivered" title="Delivered">✓✓</span>';
-        else                  statusHtml = '<span class="msg-status msg-status--sent"      title="Sent">✓</span>';
+        if (m.read)           statusHtml = '<span class="msg-status msg-status--read"      title="Read">&#10003;&#10003;</span>';
+        else if (m.delivered) statusHtml = '<span class="msg-status msg-status--delivered" title="Delivered">&#10003;&#10003;</span>';
+        else                  statusHtml = '<span class="msg-status msg-status--sent"      title="Sent">&#10003;</span>';
       }
+
+      // Display name: use senderName if stored on message, otherwise
+      // fall back to sync cache. Customers show as "Customer".
+      var displayName = isAdmin
+        ? (m.senderName || getAdminDisplayNameSync())
+        : 'Customer';
+
       var meta = document.createElement('div');
       meta.className = 'msg-meta';
-      meta.innerHTML  = esc(m.sender || '') + ' · ' + esc(m.createdAt ? fmtTime(m.createdAt) : '') + statusHtml;
+      meta.innerHTML = esc(displayName) + ' · ' + esc(m.createdAt ? fmtTime(m.createdAt) : '') + statusHtml;
+
       wrap.appendChild(bubble);
       wrap.appendChild(meta);
       return wrap;
@@ -900,6 +1028,7 @@
     setNoteLock:        function (locked)  { var indicator = safeEl('note-lock-indicator'); var noteEl = safeEl('chat-note'); var saveBtn = safeEl('chat-save-note-btn'); if (indicator) indicator.style.display = locked ? 'inline' : 'none'; if (noteEl) noteEl.disabled = locked; if (saveBtn) saveBtn.disabled = locked; }
   };
 
+  // ── Controller ────────────────────────────────────────────────
   var ChatController = {
     _detachInbox: function () {
       var map = { inboxAdded: 'child_added', inboxChanged: 'child_changed', inboxRemoved: 'child_removed' };
@@ -942,7 +1071,7 @@
         if (wrap) wrap.innerHTML =
           '<div class="empty-state">'
             + '<div class="empty-state-icon"><i class="ph-light ph-spinner" style="font-size:24px;color:var(--muted);"></i></div>'
-            + '<div class="empty-state-text">Loading conversations…</div>'
+            + '<div class="empty-state-text">Loading conversations...</div>'
           + '</div>';
       }
       self._subscribeInbox();
@@ -994,6 +1123,21 @@
         var nameEl2 = safeEl('session-name-label');
         if (nameEl2 && fresh.customerName) nameEl2.textContent = fresh.customerName;
       }).catch(function() {});
+
+      // Send "X joined the chat" system message the first time this
+      // admin opens this session. Skipped for Super Admin — they are
+      // anonymous to the customer (Janedore presence is implicit).
+      if (!ChatState.hasJoinedSession(sessionId) && !window._isSuperAdmin()) {
+        getAdminDisplayName().then(function (name) {
+          if (ChatState.hasJoinedSession(sessionId)) return; // race guard
+          ChatState.markJoinedSession(sessionId);
+          ChatDB.sendSystemMessage(sessionId, name + ' joined the chat.');
+        }).catch(function () {});
+      } else if (!ChatState.hasJoinedSession(sessionId) && window._isSuperAdmin()) {
+        // Super Admin joins silently — no system message.
+        ChatState.markJoinedSession(sessionId);
+      }
+
       ChatDB.loadAndSubscribeMessages(sessionId,
         function (msgs, hasMore) {
           if (ChatState.getActiveSid() !== sessionId) return;
@@ -1047,13 +1191,15 @@
 
     sendMessage: function (sessionId) {
       if (ChatState.isSending()) return;
-      var input = safeEl('reply-input'); var text = input && input.value.trim();
+      var input = safeEl('reply-input');
+      var text  = input && input.value.trim();
       if (!text || !sessionId) return;
+      var senderName = getAdminDisplayNameSync();
       ChatState.setSending(true); ChatRenderer.setSendLock(true); input.value = '';
       var panel   = safeEl('chat-messages-panel');
-      var tempKey = ChatRenderer.appendOptimisticMessage(text, panel);
+      var tempKey = ChatRenderer.appendOptimisticMessage(text, panel, senderName);
       if (tempKey) ChatState.registerOptimistic(tempKey);
-      ChatDB.sendMessage(sessionId, text).catch(function (err) {
+      ChatDB.sendMessage(sessionId, text, senderName).catch(function (err) {
         showToast('Failed to send: ' + err.message, 'error');
         if (tempKey && panel) { var el = panel.querySelector('[data-key="' + tempKey + '"]'); if (el) el.remove(); }
         if (tempKey) ChatState.confirmOptimistic({ _key: '__evict__' });
@@ -1070,7 +1216,7 @@
     loadOlderMessages: function (sessionId) {
       if (ChatState.isLoadingOlder() || !ChatState.hasMore() || !ChatState.getOldestKey()) return;
       ChatState.setLoadingOlder(true);
-      var btn = safeEl('chat-load-more-btn'); if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+      var btn = safeEl('chat-load-more-btn'); if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
       ChatDB.loadOlderMessages(sessionId, ChatState.getOldestKey(), function (msgs, hasMore) {
         ChatState.setLoadingOlder(false);
         if (ChatState.getActiveSid() !== sessionId) return;
@@ -1081,32 +1227,33 @@
     },
 
     openInviteModal: function (sessionId) {
-      ChatDB.loadAdmins()
-        .then(function(snap) {
-          var admins = snap.docs.map(function(d) { return { id: d.id, data: d.data() }; });
-          ChatRenderer.renderInviteModal(admins, sessionId);
-        })
-        .catch(function(err) {
-          showToast('Could not load admins: ' + err.message, 'error');
-        });
+      var self = this;
+      getAdminDisplayName().then(function (inviterName) {
+        ChatDB.loadAdmins()
+          .then(function(snap) {
+            var admins = snap.docs.map(function(d) { return { id: d.id, data: d.data() }; });
+            ChatRenderer.renderInviteModal(admins, sessionId, inviterName);
+          })
+          .catch(function(err) { showToast('Could not load admins: ' + err.message, 'error'); });
+      });
     },
 
-    togglePin:  function (sessionId) {
+    togglePin: function (sessionId) {
       var btn = safeEl('chat-pin-btn');
       ChatDB.togglePin(sessionId, btn ? btn.getAttribute('data-pinned') === '1' : false)
         .then(function (newPinned) { ChatRenderer.setPinButton(newPinned); showToast(newPinned ? 'Chat pinned' : 'Chat unpinned'); })
         .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
     },
-    saveNote:   function (sessionId) { var el = safeEl('chat-note'); if (el) ChatDB.saveNote(sessionId, el.value).then(function () { showToast('Note saved'); }).catch(function (e) { showToast('Error: ' + e.message, 'error'); }); },
+    saveNote:        function (sessionId) { var el = safeEl('chat-note'); if (el) ChatDB.saveNote(sessionId, el.value).then(function () { showToast('Note saved'); }).catch(function (e) { showToast('Error: ' + e.message, 'error'); }); },
     handleNoteFocus: function (sessionId) { ChatDB.lockNote(sessionId).then(function (result) { if (result.locked) { ChatRenderer.setNoteLock(true); showToast('Note is being edited by another admin', 'info'); } }).catch(function () {}); },
     handleNoteBlur:  function (sessionId) { ChatDB.unlockNote(sessionId); ChatRenderer.setNoteLock(false); },
     lookupOrders:    function (sessionId) { ChatDB.lookupOrders(sessionId).then(function (snap) { showToast(snap.empty ? 'No orders linked' : 'Found ' + snap.size + ' order(s)', 'info'); }).catch(function () {}); },
-    setFilterTab: function (tab) { ChatState.setFilterTab(tab); ChatRenderer.setTabActive(tab); ChatRenderer.renderSessionsList(ChatState.getSessions()); },
-    setSearchQuery: U.debounce(function (q) { ChatState.setSearchQuery(q); ChatRenderer.renderSessionsList(ChatState.getSessions()); }, Cfg.SEARCH_DEBOUNCE_MS),
+    setFilterTab:    function (tab) { ChatState.setFilterTab(tab); ChatRenderer.setTabActive(tab); ChatRenderer.renderSessionsList(ChatState.getSessions()); },
+    setSearchQuery:  U.debounce(function (q) { ChatState.setSearchQuery(q); ChatRenderer.renderSessionsList(ChatState.getSessions()); }, Cfg.SEARCH_DEBOUNCE_MS),
 
     _bindInboxEvents: function () {
       var self = this;
-      var tabBar   = safeEl('chat-tab-bar'); if (tabBar)   tabBar.addEventListener('click', function (e) { var btn = e.target.closest('[data-tab]'); if (btn) self.setFilterTab(btn.dataset.tab); });
+      var tabBar   = safeEl('chat-tab-bar'); if (tabBar) tabBar.addEventListener('click', function (e) { var btn = e.target.closest('[data-tab]'); if (btn) self.setFilterTab(btn.dataset.tab); });
       var searchEl = safeEl('chat-search');  if (searchEl) searchEl.addEventListener('input', function (e) { self.setSearchQuery(e.target.value || ''); });
       var wrap     = safeEl('chat-sessions-wrap');
       if (wrap) {
@@ -1118,13 +1265,22 @@
     _bindSessionEvents: function (sessionId) {
       var self = this;
       var on = function (id, ev, fn) { var el = safeEl(id); if (el) el.addEventListener(ev, fn); };
-      on('chat-back-btn',     'click',  function () { self._detachSession(sessionId); ChatState.resetSession(); if (typeof window.switchTab === 'function') window.switchTab('messages'); });
-      on('chat-pin-btn',      'click',  function () { self.togglePin(sessionId); });
-      on('chat-invite-btn',   'click',  function () { self.openInviteModal(sessionId); });
-      on('chat-orders-btn',   'click',  function () { self.lookupOrders(sessionId); });
-      on('chat-send-btn',     'click',  function () { self.sendMessage(sessionId); });
-      on('chat-save-note-btn','click',  function () { self.saveNote(sessionId); });
-      on('chat-load-more-btn','click',  function () { self.loadOlderMessages(sessionId); });
+
+      // Back button — directly loads the inbox view without going through
+      // switchTab(). This avoids the permission re-check that was incorrectly
+      // denying access when returning from an open session.
+      on('chat-back-btn', 'click', function () {
+        self._detachSession(sessionId);
+        ChatState.resetSession();
+        self.loadInbox();
+      });
+
+      on('chat-pin-btn',       'click',   function () { self.togglePin(sessionId); });
+      on('chat-invite-btn',    'click',   function () { self.openInviteModal(sessionId); });
+      on('chat-orders-btn',    'click',   function () { self.lookupOrders(sessionId); });
+      on('chat-send-btn',      'click',   function () { self.sendMessage(sessionId); });
+      on('chat-save-note-btn', 'click',   function () { self.saveNote(sessionId); });
+      on('chat-load-more-btn', 'click',   function () { self.loadOlderMessages(sessionId); });
       on('reply-input', 'keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); self.sendMessage(sessionId); } });
       on('reply-input', 'input',   function ()  { self.handleAdminTyping(sessionId); });
       on('chat-note',   'focus',   function ()  { self.handleNoteFocus(sessionId); });
