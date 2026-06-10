@@ -283,7 +283,6 @@
 
   .copyright { font-size: 11px; color: rgba(255,255,255,0.25); }
 
-  /* Chat Widget Styles */
   #chat-container {
     position: fixed;
     bottom: 80px;
@@ -370,11 +369,9 @@
   <p class="copyright" id="copyright"></p>
 </div>
 
-<!-- Chat Widget -->
 <div id="chat-container"></div>
 
 <script>
-  // ─── FIREBASE INIT ────────────────────────────────────────────
   const firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
     authDomain: "janedore-9f035.firebaseapp.com",
@@ -586,7 +583,8 @@
         return;
       }
 
-      window.location.href = 'index.html';
+      // ✅ Redirect to storefront preview
+      window.location.href = 'index.html?preview=true';
 
     } catch (err) {
       console.error('[Janedore Admin] Login error:', err.code, err.message);
@@ -600,7 +598,6 @@
     }
   };
 
-  // ─── LOAD CHAT WIDGET ─────────────────────────────────────────
   fetch('chat-widget.html')
     .then(r => r.text())
     .then(html => {
@@ -611,7 +608,6 @@
     })
     .catch(err => console.error('Chat widget failed:', err));
 
-  // ─── SCROLL LOCK ──────────────────────────────────────────────
   window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
   window.addEventListener('touchmove', (e) => {
     if (!e.target.closest('.cs-container')) e.preventDefault();
