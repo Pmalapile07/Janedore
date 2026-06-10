@@ -28,12 +28,9 @@
   var avatarInitials = window._avatarInitials;
   var QUICK_REPLIES  = window._QUICK_REPLIES || [];
 
-  // ── Notification sound (Web Audio API — production-grade iOS PWA) ─
+  // ── Notification sound ─────────────────────────────────────────
   var _audioCtx = null;
 
-  // Re-runs on EVERY gesture (not once:true) so backgrounding is recoverable.
-  // iOS suspends the context when the PWA is backgrounded; the next tap re-runs
-  // this and resumes it before any ping is needed.
   function _unlockAudio() {
     if (_audioCtx) {
       if (_audioCtx.state === 'suspended') {
@@ -43,7 +40,6 @@
     }
     try {
       _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      // Play a silent buffer — required to fully unlock on iOS Safari
       var buf = _audioCtx.createBuffer(1, 1, 22050);
       var src = _audioCtx.createBufferSource();
       src.buffer = buf;
@@ -57,7 +53,6 @@
   document.addEventListener('touchstart', _unlockAudio);
   document.addEventListener('mousedown',  _unlockAudio);
 
-  // Re-unlock automatically when PWA returns to foreground
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible' && _audioCtx && _audioCtx.state === 'suspended') {
       console.log('[audio] page foregrounded, context suspended — will recover on next tap');
@@ -65,16 +60,8 @@
   });
 
   function _playNotifSound() {
-    // Do not attempt if context was never unlocked by a real gesture
-    if (!_audioCtx) {
-      console.warn('[audio] no context — user has not tapped yet');
-      return;
-    }
-    // Do not attempt if context is not running — silent failure guaranteed
-    if (_audioCtx.state !== 'running') {
-      console.warn('[audio] context not running, state:', _audioCtx.state, '— will recover on next tap');
-      return;
-    }
+    if (!_audioCtx) { console.warn('[audio] no context — user has not tapped yet'); return; }
+    if (_audioCtx.state !== 'running') { console.warn('[audio] context not running, state:', _audioCtx.state); return; }
     try {
       var oscillator = _audioCtx.createOscillator();
       var gainNode   = _audioCtx.createGain();
@@ -111,6 +98,13 @@
       var user = firebase.auth().currentUser;
       return (user && user.uid) ? user.uid : 'admin';
     } catch (_) { return 'admin'; }
+  }
+
+  function getAdminEmail() {
+    try {
+      var user = firebase.auth().currentUser;
+      return (user && user.email) ? user.email : 'Unknown Admin';
+    } catch (_) { return 'Unknown Admin'; }
   }
 
   var U = {
@@ -158,9 +152,6 @@
       if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') return CSS.escape(s);
       return String(s).replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, '\\$&');
     },
-    // FIX #5: don't rely on startAfter detection — use a safer limitToLast approach
-    // We keep this flag for informational purposes only; the live listener now uses
-    // a different strategy that works on both SDK v8 and v9-compat.
     sdkHasStartAfter: (function () {
       try {
         var testRef = rtdb.ref('/');
@@ -299,9 +290,6 @@
       try { sub.ref.off(eventType, sub.cb); } catch (e) {}
     },
     subscribeInbox: function (onAdded, onChanged, onRemoved, onError) {
-      // orderByChild requires an index — see database rules note in README.
-      // If you haven't added the index yet, this falls back gracefully but
-      // ordering will be client-side only (Firebase will still deliver all items).
       var ref = rtdb.ref(INBOX_ROOT).orderByChild('lastMessageAt').limitToLast(Cfg.INBOX_PAGE);
       var addedCb   = function (s) { if (s.val()) onAdded(s.key,   s.val()); };
       var changedCb = function (s) { if (s.val()) onChanged(s.key, s.val()); };
@@ -316,32 +304,22 @@
       };
     },
 
-    // FIX #5: replaced the startAfter/startAt live-listener with a simple
-    // limitToLast(1) gap-listener that uses the dedup set — works on ALL SDK versions.
     loadAndSubscribeMessages: function (sessionId, onInitial, onNewMessage, onSubReady, onError) {
       var msgsRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages');
-
-      // Step 1 — load the initial batch synchronously via once('value')
       msgsRef.orderByKey().limitToLast(Cfg.MSG_INITIAL).once('value').then(function (snap) {
         var msgs = [];
         snap.forEach(function (child) {
           msgs.push(Object.assign({ _key: child.key }, child.val()));
         });
         msgs.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
-
         var hasMore = snap.numChildren() >= Cfg.MSG_INITIAL;
         onInitial(msgs, hasMore);
-
-        // Step 2 — subscribe to ALL new children after this point.
-        // Using orderByKey with no startAt/startAfter — dedup set in ChatState
-        // handles ignoring already-seen keys. This is the safest cross-version approach.
         var liveRef = msgsRef.orderByKey();
         var liveCb  = function (childSnap) {
           onNewMessage(Object.assign({ _key: childSnap.key }, childSnap.val()));
         };
         liveRef.on('child_added', liveCb, function (e) { onError && onError(e); });
         onSubReady({ ref: liveRef, cb: liveCb, event: 'child_added' });
-
       }).catch(function (err) { onError && onError(err); });
     },
 
@@ -374,18 +352,14 @@
       var msgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
       var ts     = firebase.database.ServerValue.TIMESTAMP;
       var updates = {};
-      updates[CHAT_ROOT  + '/' + sessionId + '/messages/' + msgRef.key]          = { text: text, sender: 'admin', createdAt: ts, read: true, delivered: true, sessionId: sessionId };
+      updates[CHAT_ROOT  + '/' + sessionId + '/messages/' + msgRef.key]           = { text: text, sender: 'admin', createdAt: ts, read: true, delivered: true, sessionId: sessionId };
       updates[CHAT_ROOT  + '/' + sessionId + '/meta/adminTyping/' + getAdminId()] = null;
-      updates[INBOX_ROOT + '/' + sessionId + '/lastMessage']                      = text;
-      updates[INBOX_ROOT + '/' + sessionId + '/lastMessageAt']                    = ts;
-      // When admin replies, reset the unread counter
-      updates[INBOX_ROOT + '/' + sessionId + '/unreadCount']                      = 0;
+      updates[INBOX_ROOT + '/' + sessionId + '/lastMessage']                       = text;
+      updates[INBOX_ROOT + '/' + sessionId + '/lastMessageAt']                     = ts;
+      updates[INBOX_ROOT + '/' + sessionId + '/unreadCount']                       = 0;
       return rtdb.ref('/').update(updates);
     },
 
-    // FIX #3: replaced orderByChild('read').equalTo(false) with a simple scan
-    // to avoid requiring a Firebase index on 'read'. Reads all messages in the
-    // session and filters client-side — safe for typical chat volumes.
     markSessionAsRead: function (sessionId, gen) {
       rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').once('value').then(function (snap) {
         if (ChatState.getReadGen() !== gen) return;
@@ -409,8 +383,8 @@
     },
     saveNote: function (sessionId, text) {
       var updates = {};
-      updates[CHAT_ROOT + '/' + sessionId + '/meta/adminNote']   = text;
-      updates[CHAT_ROOT + '/' + sessionId + '/meta/noteLocked']  = null;
+      updates[CHAT_ROOT + '/' + sessionId + '/meta/adminNote']  = text;
+      updates[CHAT_ROOT + '/' + sessionId + '/meta/noteLocked'] = null;
       return rtdb.ref('/').update(updates);
     },
     loadNote: function (sessionId) {
@@ -439,39 +413,92 @@
     togglePin: function (sessionId, currentlyPinned) {
       var pinned  = !currentlyPinned;
       var updates = {};
-      updates[CHAT_ROOT  + '/' + sessionId + '/meta/pinned']  = pinned;
-      updates[INBOX_ROOT + '/' + sessionId + '/pinned']        = pinned;
+      updates[CHAT_ROOT  + '/' + sessionId + '/meta/pinned'] = pinned;
+      updates[INBOX_ROOT + '/' + sessionId + '/pinned']       = pinned;
       return rtdb.ref('/').update(updates).then(function () { return pinned; });
     },
     lookupOrders: function (sessionId) {
       return ordersRef.where('chatSessionId', '==', sessionId).limit(10).get();
+    },
+
+    // ── Invite admin to session ──────────────────────────────────
+    inviteAdmin: function (sessionId, invitedAdminId, invitedByEmail) {
+      var updates = {};
+      var ts = firebase.database.ServerValue.TIMESTAMP;
+      updates[CHAT_ROOT + '/' + sessionId + '/meta/invites/' + invitedAdminId] = {
+        invitedBy: invitedByEmail,
+        invitedAt: ts,
+        status: 'pending'
+      };
+      // Write a system message into the chat so everyone sees it
+      var msgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
+      updates[CHAT_ROOT + '/' + sessionId + '/messages/' + msgRef.key] = {
+        text: invitedByEmail + ' invited ' + invitedAdminId + ' to this conversation.',
+        sender: 'system',
+        createdAt: ts,
+        read: true,
+        delivered: true,
+        sessionId: sessionId
+      };
+      return rtdb.ref('/').update(updates);
+    },
+
+    loadAdmins: function () {
+      return window._adminDB.collection('admins').get();
     }
   };
 
-  // ==================== RENDERER (unchanged) ====================
+  // ==================== RENDERER ====================
   var ChatRenderer = {
     renderInboxShell: function (container) {
-      container.innerHTML = '<div class="section-header" style="margin-bottom:12px;"><div class="section-title">Inbox</div><div class="section-actions"><input class="search-input" id="chat-search" placeholder="Search…" autocomplete="off" style="min-width:140px;max-width:200px;"></div></div><div id="chat-offline-banner" style="display:none;background:var(--warning,#f59e0b);color:#fff;font-size:11px;padding:6px 12px;border-radius:4px;margin-bottom:8px;">⚠️ Offline — showing cached data</div><div style="display:flex;gap:6px;margin-bottom:12px;" id="chat-tab-bar"><button class="btn btn-sm btn-primary" data-tab="all" id="chat-tab-all">All</button><button class="btn btn-sm btn-ghost" data-tab="unread" id="chat-tab-unread">Unread</button><button class="btn btn-sm btn-ghost" data-tab="pinned" id="chat-tab-pinned">Pinned</button></div><div id="chat-sessions-wrap" class="chat-sessions-wrap"></div>';
+      container.innerHTML =
+        '<div class="section-header" style="margin-bottom:12px;">'
+          + '<div class="section-title">Inbox</div>'
+          + '<div class="section-actions"><input class="search-input" id="chat-search" placeholder="Search…" autocomplete="off" style="min-width:140px;max-width:200px;"></div>'
+        + '</div>'
+        + '<div id="chat-offline-banner" style="display:none;background:var(--warning,#f59e0b);color:#fff;font-size:11px;padding:6px 12px;border-radius:4px;margin-bottom:8px;">'
+          + '<i class="ph-light ph-warning" style="margin-right:4px;"></i> Offline — showing cached data'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;margin-bottom:12px;" id="chat-tab-bar">'
+          + '<button class="btn btn-sm btn-primary" data-tab="all" id="chat-tab-all">All</button>'
+          + '<button class="btn btn-sm btn-ghost" data-tab="unread" id="chat-tab-unread">Unread</button>'
+          + '<button class="btn btn-sm btn-ghost" data-tab="pinned" id="chat-tab-pinned">Pinned</button>'
+        + '</div>'
+        + '<div id="chat-sessions-wrap" class="chat-sessions-wrap"></div>';
     },
+
     renderSessionsList: function (sessions) {
       var wrap = safeEl('chat-sessions-wrap');
       if (!wrap) return;
       var ids = this._filteredSortedIds(sessions);
-      if (ids.length === 0) { wrap.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✉</div><div class="empty-state-text">No conversations yet</div></div>'; return; }
+      if (ids.length === 0) {
+        wrap.innerHTML =
+          '<div class="empty-state">'
+            + '<div class="empty-state-icon"><i class="ph-light ph-chat-circle-dots" style="font-size:32px;color:var(--muted);"></i></div>'
+            + '<div class="empty-state-text">No conversations yet</div>'
+          + '</div>';
+        return;
+      }
       var frag = document.createDocumentFragment();
       for (var i = 0; i < ids.length; i++) frag.appendChild(this._buildCard(ids[i], sessions[ids[i]]));
       wrap.innerHTML = '';
       wrap.appendChild(frag);
     },
+
     updateCard: function (sid, data, sessions) {
       var wrap = safeEl('chat-sessions-wrap');
       if (!wrap) return;
+      // If wrap currently shows the loading/empty state, clear it first
+      if (wrap.querySelector('.empty-state') || wrap.innerHTML.trim() === '') {
+        wrap.innerHTML = '';
+      }
       var existing = wrap.querySelector('[data-sid="' + U.cssEscape(sid) + '"]');
       var newCard  = this._buildCard(sid, data);
       if (existing) existing.replaceWith(newCard);
       else wrap.appendChild(newCard);
       this._repositionCard(sid, sessions, wrap);
     },
+
     _repositionCard: function (sid, sessions, wrap) {
       var card = wrap.querySelector('[data-sid="' + U.cssEscape(sid) + '"]');
       if (!card) return;
@@ -488,10 +515,12 @@
       if (insertBefore) wrap.insertBefore(card, insertBefore);
       else wrap.appendChild(card);
     },
+
     removeCard: function (sid) {
       var el = (safeEl('chat-sessions-wrap') || document).querySelector('[data-sid="' + U.cssEscape(sid) + '"]');
       if (el) el.remove();
     },
+
     _filteredSortedIds: function (sessions) {
       var tab    = ChatState.getFilterTab();
       var search = ChatState.getSearchQuery().toLowerCase();
@@ -510,6 +539,7 @@
       });
       return ids;
     },
+
     _buildCard: function (sid, s) {
       var avClass = avatarClass(sid);
       var avInit  = avatarInitials(sid);
@@ -521,53 +551,178 @@
         : (s.pinned ? '<span class="badge badge-processing" style="font-size:9px;">Pinned</span>' : '');
       var card = document.createElement('div');
       card.className = 'chat-session-card' + (s.unreadCount > 0 ? ' unread' : '');
-      card.setAttribute('data-sid',    sid);
-      card.setAttribute('role',        'button');
-      card.setAttribute('tabindex',    '0');
-      card.innerHTML = '<div class="chat-avatar ' + esc(avClass) + '">' + esc(avInit) + '</div><div class="session-info"><div class="session-id-label">' + esc(name) + '</div><div class="session-preview">' + esc(preview) + (preview.length >= 70 ? '…' : '') + '</div></div><div class="session-right"><span class="session-time">' + esc(time) + '</span>' + badge + '</div>';
+      card.setAttribute('data-sid',  sid);
+      card.setAttribute('role',      'button');
+      card.setAttribute('tabindex',  '0');
+      card.innerHTML =
+        '<div class="chat-avatar ' + esc(avClass) + '">' + esc(avInit) + '</div>'
+        + '<div class="session-info">'
+          + '<div class="session-id-label">' + esc(name) + '</div>'
+          + '<div class="session-preview">' + esc(preview) + (preview.length >= 70 ? '…' : '') + '</div>'
+        + '</div>'
+        + '<div class="session-right"><span class="session-time">' + esc(time) + '</span>' + badge + '</div>';
       return card;
     },
+
     renderSessionShell: function (container, sessionId, isPinned) {
       var avClass = esc(avatarClass(sessionId));
       var avInit  = esc(avatarInitials(sessionId));
       var name    = esc(sessionId.substring(0, 26));
-      var shellTop = '<button class="back-link" id="chat-back-btn">← Inbox</button>'
-        + '<div class="section-header"><div style="display:flex;align-items:center;gap:10px;">'
-        + '<div class="chat-avatar ' + avClass + '" style="width:36px;height:36px;font-size:12px;">' + avInit + '</div>'
-        + '<div><div style="font-size:14px;font-weight:500;" id="session-name-label">' + name + '</div>'
-        + '<div id="session-status-label" style="font-size:11px;color:var(--muted);margin-top:1px;">Live Session</div></div></div>'
-        + '<div style="display:flex;gap:8px;">'
-        + '<button class="btn btn-sm btn-ghost" id="chat-pin-btn" data-pinned="' + (isPinned ? '1' : '0') + '">' + (isPinned ? 'Unpin' : 'Pin') + '</button>'
-        + '</div></div>';
-      var shellChat = '<div style="display:grid;grid-template-columns:1fr;gap:12px;"><div class="chat-view-wrap">'
-        + '<div id="chat-load-more-wrap" style="text-align:center;padding:6px;display:none;"><button class="btn btn-sm btn-ghost" id="chat-load-more-btn">Load older messages</button></div>'
-        + '<div id="chat-history-start" style="display:none;text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0;">— Beginning of conversation —</div>'
-        + '<div class="chat-messages-panel" id="chat-messages-panel"><div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">Loading…</div></div>'
-        + '<div id="chat-new-msg-banner" style="display:none;text-align:center;padding:4px 0;"><button class="btn btn-sm btn-primary" id="chat-scroll-down-btn">↓ New messages</button></div>'
-        + '<div class="typing-indicator" id="typing-indicator" style="display:none;align-items:center;gap:2px;"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span><em style="font-size:10px;margin-left:6px;">Customer is typing…</em></div>'
-        + '<div class="quick-replies" id="quick-replies-row">' + QUICK_REPLIES.map(function (r) { return '<button class="quick-reply-btn" data-reply="' + esc(r) + '">' + esc(r) + '</button>'; }).join('') + '</div>'
-        + '<div class="reply-box"><input id="reply-input" placeholder="Write a reply…" autocomplete="off"><button class="chat-send-btn" id="chat-send-btn">Send</button></div>'
+
+      var shellTop =
+        '<button class="back-link" id="chat-back-btn">'
+          + '<i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Inbox'
+        + '</button>'
+        + '<div class="section-header">'
+          + '<div style="display:flex;align-items:center;gap:10px;">'
+            + '<div class="chat-avatar ' + avClass + '" style="width:36px;height:36px;font-size:12px;">' + avInit + '</div>'
+            + '<div>'
+              + '<div style="font-size:14px;font-weight:500;" id="session-name-label">' + name + '</div>'
+              + '<div id="session-status-label" style="font-size:11px;color:var(--muted);margin-top:1px;">Live Session</div>'
+            + '</div>'
+          + '</div>'
+          + '<div style="display:flex;gap:8px;">'
+            + '<button class="btn btn-sm btn-ghost" id="chat-invite-btn">'
+              + '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite Admin'
+            + '</button>'
+            + '<button class="btn btn-sm btn-ghost" id="chat-pin-btn" data-pinned="' + (isPinned ? '1' : '0') + '">'
+              + (isPinned ? 'Unpin' : 'Pin')
+            + '</button>'
+          + '</div>'
         + '</div>';
-      var shellCards = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-        // Customer card
-        + '<div class="card"><div class="card-header"><span class="card-title">Customer</span></div><div style="padding:12px 14px;">'
-        + '<div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Name</span><span id="cinfo-name" style="font-size:10.5px;">—</span></div>'
-        + '<div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Email</span><span id="cinfo-email" style="font-size:10.5px;">—</span></div>'
-        + '<div class="info-row" style="background:none;border:none;padding:4px 0;"><span class="label">Session</span><span style="font-size:10.5px;">' + esc(sessionId.substring(0, 14)) + '</span></div>'
-        + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px;">'
-        + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Cart when they messaged</div>'
-        + '<div id="cinfo-cart"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div></div>'
-        + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px;">'
-        + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Order history</div>'
-        + '<div id="cinfo-orders"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div></div>'
-        + '</div></div>'
-        // Notes card
-        + '<div class="card"><div class="card-header"><span class="card-title">Support Notes</span>'
-        + '<span id="note-lock-indicator" style="font-size:9px;color:var(--warning,#f59e0b);margin-left:8px;display:none;">Locked by another admin</span></div>'
-        + '<div style="padding:12px 14px;"><textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Manrope,sans-serif;font-size:11.5px;font-weight:300;min-height:60px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes…"></textarea>'
-        + '<button class="btn btn-sm btn-ghost" id="chat-save-note-btn" style="margin-top:7px;width:100%;">Save Note</button></div></div>'
-        + '</div></div>';
-      container.innerHTML = shellTop + shellChat + shellCards;
+
+      var shellChat =
+        '<div class="chat-view-wrap">'
+          + '<div id="chat-load-more-wrap" style="text-align:center;padding:6px;display:none;">'
+            + '<button class="btn btn-sm btn-ghost" id="chat-load-more-btn">Load older messages</button>'
+          + '</div>'
+          + '<div id="chat-history-start" style="display:none;text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0;">— Beginning of conversation —</div>'
+          + '<div class="chat-messages-panel" id="chat-messages-panel">'
+            + '<div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">Loading…</div>'
+          + '</div>'
+          + '<div id="chat-new-msg-banner" style="display:none;text-align:center;padding:4px 0;">'
+            + '<button class="btn btn-sm btn-primary" id="chat-scroll-down-btn">'
+              + '<i class="ph-light ph-arrow-down" style="margin-right:4px;"></i> New messages'
+            + '</button>'
+          + '</div>'
+          + '<div class="typing-indicator" id="typing-indicator" style="display:none;align-items:center;gap:2px;">'
+            + '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>'
+            + '<em style="font-size:10px;margin-left:6px;">Customer is typing…</em>'
+          + '</div>'
+          + '<div class="quick-replies" id="quick-replies-row">'
+            + QUICK_REPLIES.map(function (r) { return '<button class="quick-reply-btn" data-reply="' + esc(r) + '">' + esc(r) + '</button>'; }).join('')
+          + '</div>'
+          + '<div class="reply-box">'
+            + '<input id="reply-input" placeholder="Write a reply…" autocomplete="off">'
+            + '<button class="chat-send-btn" id="chat-send-btn">Send</button>'
+          + '</div>'
+        + '</div>';
+
+      // ── Customer info card ──────────────────────────────────────
+      var shellCustomer =
+        '<div class="card" style="margin-top:12px;">'
+          + '<div class="card-header"><span class="card-title">Customer</span></div>'
+          + '<div style="padding:12px 14px;">'
+            + '<div class="info-row" style="background:none;border:none;padding:6px 0;display:flex;flex-direction:column;gap:2px;">'
+              + '<span class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Name</span>'
+              + '<span id="cinfo-name" style="font-size:12px;font-weight:400;word-break:break-all;">—</span>'
+            + '</div>'
+            + '<div class="info-row" style="background:none;border:none;padding:6px 0;display:flex;flex-direction:column;gap:2px;">'
+              + '<span class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Email</span>'
+              + '<span id="cinfo-email" style="font-size:12px;font-weight:400;word-break:break-all;">—</span>'
+            + '</div>'
+            + '<div class="info-row" style="background:none;border:none;padding:6px 0;display:flex;flex-direction:column;gap:2px;">'
+              + '<span class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Session</span>'
+              + '<span style="font-size:12px;font-weight:400;word-break:break-all;">' + esc(sessionId) + '</span>'
+            + '</div>'
+            + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
+              + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Cart when they messaged</div>'
+              + '<div id="cinfo-cart"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div>'
+            + '</div>'
+            + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
+              + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Order history</div>'
+              + '<div id="cinfo-orders"><span style="font-size:10.5px;color:var(--muted);">Loading…</span></div>'
+            + '</div>'
+          + '</div>'
+        + '</div>';
+
+      // ── Support notes card ──────────────────────────────────────
+      var shellNotes =
+        '<div class="card" style="margin-top:12px;">'
+          + '<div class="card-header">'
+            + '<span class="card-title">Support Notes</span>'
+            + '<span id="note-lock-indicator" style="font-size:9px;color:var(--warning,#f59e0b);margin-left:8px;display:none;">Locked by another admin</span>'
+          + '</div>'
+          + '<div style="padding:12px 14px;">'
+            + '<textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Manrope,sans-serif;font-size:11.5px;font-weight:300;min-height:80px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes…"></textarea>'
+            + '<button class="btn btn-sm btn-ghost" id="chat-save-note-btn" style="margin-top:7px;width:100%;">Save Note</button>'
+          + '</div>'
+        + '</div>';
+
+      container.innerHTML = shellTop + shellChat + shellCustomer + shellNotes;
+    },
+
+    // ── Invite admin modal ──────────────────────────────────────
+    renderInviteModal: function (admins, sessionId) {
+      var existing = document.getElementById('admin-invite-modal-backdrop');
+      if (existing) existing.remove();
+
+      var currentUid = getAdminId();
+      var options = admins.filter(function(a) { return a.id !== currentUid; });
+
+      var optionsHtml = options.length === 0
+        ? '<div style="font-size:11px;color:var(--muted);padding:8px 0;">No other admins available.</div>'
+        : options.map(function(a) {
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);">'
+              + '<div>'
+                + '<div style="font-size:12px;font-weight:500;">' + esc(a.data.email || a.id) + '</div>'
+                + '<div style="font-size:10px;color:var(--muted);">' + esc((a.data.role || '').toUpperCase()) + '</div>'
+              + '</div>'
+              + '<button class="btn btn-sm btn-ghost invite-admin-confirm-btn" data-uid="' + esc(a.id) + '" data-email="' + esc(a.data.email || a.id) + '">'
+                + '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite'
+              + '</button>'
+            + '</div>';
+          }).join('');
+
+      var backdrop = document.createElement('div');
+      backdrop.id = 'admin-invite-modal-backdrop';
+      backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;display:flex;align-items:center;justify-content:center;';
+      backdrop.innerHTML =
+        '<div style="background:var(--surface,#fff);border:0.5px solid var(--border);border-radius:10px;padding:24px;width:100%;max-width:380px;position:relative;">'
+          + '<div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">Invite Admin to Chat</div>'
+          + '<div id="invite-admins-list">' + optionsHtml + '</div>'
+          + '<button class="btn btn-sm btn-ghost" id="invite-modal-close-btn" style="margin-top:16px;width:100%;">Cancel</button>'
+        + '</div>';
+
+      document.body.appendChild(backdrop);
+
+      document.getElementById('invite-modal-close-btn').addEventListener('click', function() {
+        backdrop.remove();
+      });
+      backdrop.addEventListener('click', function(e) {
+        if (e.target === backdrop) backdrop.remove();
+      });
+
+      var btns = backdrop.querySelectorAll('.invite-admin-confirm-btn');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].addEventListener('click', function(e) {
+          var btn   = e.currentTarget;
+          var uid   = btn.getAttribute('data-uid');
+          var email = btn.getAttribute('data-email');
+          btn.disabled = true;
+          btn.textContent = 'Sending…';
+          ChatDB.inviteAdmin(sessionId, uid, getAdminEmail())
+            .then(function() {
+              showToast('Invite sent to ' + email);
+              backdrop.remove();
+            })
+            .catch(function(err) {
+              showToast('Failed to invite: ' + err.message, 'error');
+              btn.disabled = false;
+              btn.innerHTML = '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite';
+            });
+        });
+      }
     },
 
     renderCustomerInfo: function (sessionData, sessionId) {
@@ -579,7 +734,6 @@
       if (nameEl)  nameEl.textContent  = sessionData.customerName  || 'Guest';
       if (emailEl) emailEl.textContent = sessionData.customerEmail || '—';
 
-      // Cart snapshot
       if (cartEl) {
         var cart = sessionData.cart;
         if (!cart || !Array.isArray(cart) || cart.length === 0) {
@@ -602,7 +756,6 @@
         }
       }
 
-      // Order history from Firestore by chatSessionId
       if (ordersEl && sessionId) {
         window._ordersRef.where('chatSessionId', '==', sessionId)
           .orderBy('createdAt', 'desc').limit(5).get()
@@ -639,9 +792,13 @@
         ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No session ID</span>';
       }
     },
+
     renderMessages: function (msgs, panel) {
       if (!panel) return;
-      if (!msgs || msgs.length === 0) { panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">No messages yet.</div>'; return; }
+      if (!msgs || msgs.length === 0) {
+        panel.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">No messages yet.</div>';
+        return;
+      }
       var frag   = document.createDocumentFragment();
       var groups = U.groupMessages(msgs);
       for (var i = 0; i < groups.length; i++) frag.appendChild(this._buildGroup(groups[i]));
@@ -649,6 +806,7 @@
       panel.appendChild(frag);
       U.scrollToBottom(panel);
     },
+
     appendMessage: function (msg, panel, tempKey) {
       if (!panel) return;
       var wasAtBottom = U.isNearBottom(panel);
@@ -664,6 +822,7 @@
       if (wasAtBottom) { U.scrollToBottom(panel, true); var banner = safeEl('chat-new-msg-banner'); if (banner) banner.style.display = 'none'; }
       else { var banner2 = safeEl('chat-new-msg-banner'); if (banner2) banner2.style.display = 'block'; }
     },
+
     prependMessages: function (msgs, panel) {
       if (!panel || !msgs || msgs.length === 0) return;
       var prevTop  = panel.scrollTop;
@@ -683,6 +842,7 @@
       panel.insertBefore(frag, panel.firstChild);
       U.raf(function () { panel.scrollTop = prevTop + (panel.scrollHeight - prevTop - panel.clientHeight); });
     },
+
     appendOptimisticMessage: function (text, panel) {
       if (!panel) return null;
       var tempKey = '__opt_' + Date.now() + '_' + Math.random().toString(36).slice(2);
@@ -694,25 +854,34 @@
       U.scrollToBottom(panel, true);
       return tempKey;
     },
+
     _buildGroup: function (group) {
       var el = document.createElement('div');
       el.className = 'msg-group' + (group.sender !== 'customer' ? ' msg-group--admin' : ' msg-group--customer');
       for (var i = 0; i < group.items.length; i++) el.appendChild(this._buildBubble(group.items[i]));
       return el;
     },
+
     _buildBubble: function (m) {
-      var isAdmin = m.sender !== 'customer';
+      var isAdmin  = m.sender !== 'customer';
+      var isSystem = m.sender === 'system';
+      if (isSystem) {
+        var sysWrap = document.createElement('div');
+        sysWrap.style.cssText = 'text-align:center;padding:6px 0;';
+        sysWrap.innerHTML = '<span style="font-size:10px;color:var(--muted);background:var(--surface2);padding:3px 10px;border-radius:20px;">' + esc(m.text || '') + '</span>';
+        return sysWrap;
+      }
       var wrap    = document.createElement('div');
       wrap.className = 'chat-msg-admin' + (isAdmin ? '' : ' customer-msg');
       if (m._key) wrap.setAttribute('data-key', m._key);
       var bubble = document.createElement('div');
-      bubble.className  = 'chat-bubble';
+      bubble.className   = 'chat-bubble';
       bubble.textContent = m.text || '';
       var statusHtml = '';
       if (isAdmin) {
-        if (m.read)      statusHtml = '<span class="msg-status msg-status--read"      title="Read">✓✓</span>';
+        if (m.read)           statusHtml = '<span class="msg-status msg-status--read"      title="Read">✓✓</span>';
         else if (m.delivered) statusHtml = '<span class="msg-status msg-status--delivered" title="Delivered">✓✓</span>';
-        else             statusHtml = '<span class="msg-status msg-status--sent"      title="Sent">✓</span>';
+        else                  statusHtml = '<span class="msg-status msg-status--sent"      title="Sent">✓</span>';
       }
       var meta = document.createElement('div');
       meta.className = 'msg-meta';
@@ -721,13 +890,14 @@
       wrap.appendChild(meta);
       return wrap;
     },
-    setTypingVisible:  function (v) { var el = safeEl('typing-indicator'); if (el) el.style.display = v ? 'flex' : 'none'; },
+
+    setTypingVisible:   function (v) { var el = safeEl('typing-indicator'); if (el) el.style.display = v ? 'flex' : 'none'; },
     setLoadMoreVisible: function (v) { var w = safeEl('chat-load-more-wrap'); if (w) w.style.display = v ? 'block' : 'none'; var h = safeEl('chat-history-start'); if (h) h.style.display = v ? 'none' : 'block'; },
-    setSendLock:       function (locked) { var input = safeEl('reply-input'); var btn = safeEl('chat-send-btn'); if (input) input.disabled = locked; if (btn) btn.disabled = locked; },
-    setOfflineBanner:  function (offline) { var el = safeEl('chat-offline-banner'); if (el) el.style.display = offline ? 'block' : 'none'; },
-    setPinButton:      function (pinned)  { var btn = safeEl('chat-pin-btn'); if (btn) { btn.textContent = pinned ? 'Unpin' : 'Pin'; btn.setAttribute('data-pinned', pinned ? '1' : '0'); } },
-    setTabActive:      function (tab)     { ['all','unread','pinned'].forEach(function (t) { var b = safeEl('chat-tab-' + t); if (b) b.className = 'btn btn-sm ' + (t === tab ? 'btn-primary' : 'btn-ghost'); }); },
-    setNoteLock:       function (locked)  { var indicator = safeEl('note-lock-indicator'); var noteEl = safeEl('chat-note'); var saveBtn = safeEl('chat-save-note-btn'); if (indicator) indicator.style.display = locked ? 'inline' : 'none'; if (noteEl) noteEl.disabled = locked; if (saveBtn) saveBtn.disabled = locked; }
+    setSendLock:        function (locked) { var input = safeEl('reply-input'); var btn = safeEl('chat-send-btn'); if (input) input.disabled = locked; if (btn) btn.disabled = locked; },
+    setOfflineBanner:   function (offline) { var el = safeEl('chat-offline-banner'); if (el) el.style.display = offline ? 'block' : 'none'; },
+    setPinButton:       function (pinned)  { var btn = safeEl('chat-pin-btn'); if (btn) { btn.textContent = pinned ? 'Unpin' : 'Pin'; btn.setAttribute('data-pinned', pinned ? '1' : '0'); } },
+    setTabActive:       function (tab)     { ['all','unread','pinned'].forEach(function (t) { var b = safeEl('chat-tab-' + t); if (b) b.className = 'btn btn-sm ' + (t === tab ? 'btn-primary' : 'btn-ghost'); }); },
+    setNoteLock:        function (locked)  { var indicator = safeEl('note-lock-indicator'); var noteEl = safeEl('chat-note'); var saveBtn = safeEl('chat-save-note-btn'); if (indicator) indicator.style.display = locked ? 'inline' : 'none'; if (noteEl) noteEl.disabled = locked; if (saveBtn) saveBtn.disabled = locked; }
   };
 
   var ChatController = {
@@ -752,6 +922,7 @@
         if (online) { var sid = ChatState.getActiveSid(); if (sid) { var gen = ChatState.bumpReadGen(); ChatDB.markSessionAsRead(sid, gen); } }
       }));
     },
+
     loadInbox: function () {
       var self = this;
       var mc   = safeEl('main-content');
@@ -763,10 +934,20 @@
       self._bindInboxEvents();
       self._initConnectionMonitor();
       var cached = U.lsGet(Cfg.LS_KEY, Cfg.LS_TTL_MS);
-      if (cached) { ChatState.setSessions(cached); ChatRenderer.renderSessionsList(cached); }
-      else { var wrap = safeEl('chat-sessions-wrap'); if (wrap) wrap.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✉</div><div class="empty-state-text">Loading…</div></div>'; }
+      if (cached) {
+        ChatState.setSessions(cached);
+        ChatRenderer.renderSessionsList(cached);
+      } else {
+        var wrap = safeEl('chat-sessions-wrap');
+        if (wrap) wrap.innerHTML =
+          '<div class="empty-state">'
+            + '<div class="empty-state-icon"><i class="ph-light ph-spinner" style="font-size:24px;color:var(--muted);"></i></div>'
+            + '<div class="empty-state-text">Loading conversations…</div>'
+          + '</div>';
+      }
       self._subscribeInbox();
     },
+
     _subscribeInbox: function () {
       var self = this;
       self._detachInbox();
@@ -780,11 +961,13 @@
       ChatState.registerSub('inboxChanged', subs.changed);
       ChatState.registerSub('inboxRemoved', subs.removed);
     },
+
     _retryInbox: function (attempt) {
       var self = this;
       if (attempt >= Cfg.RETRY_MAX_ATTEMPTS) { showToast('Inbox connection lost. Please reload.', 'error'); return; }
       setTimeout(function () { self._subscribeInbox(); }, U.retryDelay(attempt));
     },
+
     openSession: function (sessionId) {
       var self = this;
       if (!sessionId || ChatState.getActiveSid() === sessionId) return;
@@ -798,7 +981,6 @@
       ChatRenderer.setTypingVisible(false);
       var gen = ChatState.bumpReadGen(); ChatDB.markSessionAsRead(sessionId, gen);
       ChatDB.loadNote(sessionId).then(function (snap) { var el = safeEl('chat-note'); if (el && snap.val()) el.value = snap.val(); }).catch(function () {});
-      // Populate customer info — use cached data first, then re-fetch for freshest cart
       if (sessionData) {
         if (sessionData.customerName) { var nameEl = safeEl('session-name-label'); if (nameEl) nameEl.textContent = sessionData.customerName; }
         ChatRenderer.renderCustomerInfo(sessionData, sessionId);
@@ -847,6 +1029,7 @@
         if (ChatState.getActiveSid() === sessionId) ChatRenderer.setTypingVisible(isTyping);
       }));
     },
+
     _retryMsgSub: function (sessionId, attempt) {
       var self = this;
       if (attempt >= Cfg.RETRY_MAX_ATTEMPTS || ChatState.getActiveSid() !== sessionId) return;
@@ -861,6 +1044,7 @@
         );
       }, U.retryDelay(attempt));
     },
+
     sendMessage: function (sessionId) {
       if (ChatState.isSending()) return;
       var input = safeEl('reply-input'); var text = input && input.value.trim();
@@ -876,11 +1060,13 @@
         if (input) input.value = text;
       }).finally(function () { ChatState.setSending(false); ChatRenderer.setSendLock(false); if (input && !input.disabled) input.focus(); });
     },
+
     handleAdminTyping: function (sessionId) {
       ChatDB.setAdminTyping(sessionId, true);
       var t = ChatState.getTypingTimer(); if (t) clearTimeout(t);
       ChatState.setTypingTimer(setTimeout(function () { ChatDB.setAdminTyping(sessionId, false); ChatState.setTypingTimer(null); }, Cfg.TYPING_MS));
     },
+
     loadOlderMessages: function (sessionId) {
       if (ChatState.isLoadingOlder() || !ChatState.hasMore() || !ChatState.getOldestKey()) return;
       ChatState.setLoadingOlder(true);
@@ -893,6 +1079,18 @@
         if (btn) { btn.disabled = false; btn.textContent = 'Load older messages'; }
       }, function () { ChatState.setLoadingOlder(false); showToast('Failed to load older messages', 'error'); if (btn) { btn.disabled = false; btn.textContent = 'Load older messages'; } });
     },
+
+    openInviteModal: function (sessionId) {
+      ChatDB.loadAdmins()
+        .then(function(snap) {
+          var admins = snap.docs.map(function(d) { return { id: d.id, data: d.data() }; });
+          ChatRenderer.renderInviteModal(admins, sessionId);
+        })
+        .catch(function(err) {
+          showToast('Could not load admins: ' + err.message, 'error');
+        });
+    },
+
     togglePin:  function (sessionId) {
       var btn = safeEl('chat-pin-btn');
       ChatDB.togglePin(sessionId, btn ? btn.getAttribute('data-pinned') === '1' : false)
@@ -905,6 +1103,7 @@
     lookupOrders:    function (sessionId) { ChatDB.lookupOrders(sessionId).then(function (snap) { showToast(snap.empty ? 'No orders linked' : 'Found ' + snap.size + ' order(s)', 'info'); }).catch(function () {}); },
     setFilterTab: function (tab) { ChatState.setFilterTab(tab); ChatRenderer.setTabActive(tab); ChatRenderer.renderSessionsList(ChatState.getSessions()); },
     setSearchQuery: U.debounce(function (q) { ChatState.setSearchQuery(q); ChatRenderer.renderSessionsList(ChatState.getSessions()); }, Cfg.SEARCH_DEBOUNCE_MS),
+
     _bindInboxEvents: function () {
       var self = this;
       var tabBar   = safeEl('chat-tab-bar'); if (tabBar)   tabBar.addEventListener('click', function (e) { var btn = e.target.closest('[data-tab]'); if (btn) self.setFilterTab(btn.dataset.tab); });
@@ -915,13 +1114,15 @@
         wrap.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { var card = e.target.closest('[data-sid]'); if (card) self.openSession(card.dataset.sid); } });
       }
     },
+
     _bindSessionEvents: function (sessionId) {
       var self = this;
       var on = function (id, ev, fn) { var el = safeEl(id); if (el) el.addEventListener(ev, fn); };
-      on('chat-back-btn',    'click',   function () { self._detachSession(sessionId); ChatState.resetSession(); if (typeof window.switchTab === 'function') window.switchTab('messages'); });
-      on('chat-pin-btn',     'click',   function () { self.togglePin(sessionId); });
-      on('chat-orders-btn',  'click',   function () { self.lookupOrders(sessionId); });
-      on('chat-send-btn',    'click',   function () { self.sendMessage(sessionId); });
+      on('chat-back-btn',     'click',  function () { self._detachSession(sessionId); ChatState.resetSession(); if (typeof window.switchTab === 'function') window.switchTab('messages'); });
+      on('chat-pin-btn',      'click',  function () { self.togglePin(sessionId); });
+      on('chat-invite-btn',   'click',  function () { self.openInviteModal(sessionId); });
+      on('chat-orders-btn',   'click',  function () { self.lookupOrders(sessionId); });
+      on('chat-send-btn',     'click',  function () { self.sendMessage(sessionId); });
       on('chat-save-note-btn','click',  function () { self.saveNote(sessionId); });
       on('chat-load-more-btn','click',  function () { self.loadOlderMessages(sessionId); });
       on('reply-input', 'keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); self.sendMessage(sessionId); } });
@@ -933,8 +1134,8 @@
     }
   };
 
-  window._renderMessagesTab       = function () { ChatController.loadInbox(); };
-  window._openChatSession         = function (sid) { ChatController.openSession(sid); };
+  window._renderMessagesTab         = function () { ChatController.loadInbox(); };
+  window._openChatSession           = function (sid) { ChatController.openSession(sid); };
   window._detachActiveChatListeners = function () { ChatController._detachSession(ChatState.getActiveSid()); ChatController._detachInbox(); };
 
   }
