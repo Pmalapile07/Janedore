@@ -214,11 +214,19 @@
       });
     });
 
-    // Super-admin-only elements (seed button, vendor management link, etc.)
-    // Any element with data-require="super_admin" is shown only to SUPER_ADMIN.
+    // Super-admin-only elements — targeted by their actual HTML IDs.
+    // vendors tab and seed data buttons are hidden by default in the HTML
+    // and only shown to Super Admin.
     var isSA = window._isSuperAdmin();
-    document.querySelectorAll('[data-require="super_admin"]').forEach(function (el) {
-      el.style.display = isSA ? '' : 'none';
+    var superAdminOnlyIds = [
+      'vendors-tab-btn',   // sidebar vendors tab
+      'vendors-more-item', // more menu vendors item
+      'btn-seed',          // sidebar seed button
+      'btn-seed-more'      // more menu seed button
+    ];
+    superAdminOnlyIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = isSA ? '' : 'none';
     });
 
     // Role badge in the header.
