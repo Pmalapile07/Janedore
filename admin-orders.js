@@ -8,6 +8,7 @@
   var safeEl            = window._safeEl;
   var fmt               = window._fmt;
   var fmtDate           = window._fmtDate;
+  var fmtTime           = window._fmtTime;
   var showToast         = window._showToast;
   var statusBadge       = window._statusBadge;
   var mountPanel        = window._mountPanel;
@@ -16,13 +17,26 @@
   var productsRef       = window._productsRef;
   var ORDER_STATUSES    = window._ORDER_STATUSES;
 
-  // All permission checks go through _can() / _guard() from permissions.js.
-  // No direct isSuperAdmin() / requireSuperAdmin() calls in this module.
-
   var draftsRef = db.collection('order_drafts');
 
-  // Abandoned = pending + unpaid + older than 1 hour.
+  // Couriers available in South Africa
+  var COURIERS = [
+    'The Courier Guy',
+    'Fastway',
+    'DHL',
+    'Aramex',
+    'DSV',
+    'Internet Express',
+    'MDS Collivery',
+    'Rhenus',
+    'Other'
+  ];
+
   var ABANDONED_THRESHOLD_MS = 60 * 60 * 1000;
+
+  // Bulk selection state
+  window._selectedOrders = {};
+  window._bulkMode = false;
 
   function isAbandoned(o) {
     if ((o.status || 'pending') !== 'pending') return false;
@@ -37,6 +51,10 @@
   window._renderOrdersTab = function () {
     var mc = safeEl('main-content');
     if (!mc) return;
+    window._selectedOrders = {};
+    window._bulkMode = false;
+
+    var canUpdate = window._can('orders', 'update');
 
     mc.innerHTML =
       '<div class="section-header" style="margin-bottom:10px;">' +
@@ -45,7 +63,20 @@
           '<button class="btn btn-sm btn-ghost" onclick="window._refreshOrders()" title="Refresh">' +
             '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
           '</button>' +
-          // Only Super Admin and Admin can create manual orders.
+          (canUpdate
+            ? '<button class="btn btn-sm btn-ghost" id="bulk-toggle-btn" onclick="window._toggleBulkMode()" style="display:none;">' +
+                '<i class="ph-light ph-check-square"></i> Select</button>' +
+              '<div id="bulk-actions" style="display:none;gap:6px;">' +
+                '<select class="filter-select" id="bulk-status-select" style="padding:6px 24px 6px 9px;font-size:11px;">' +
+                  '<option value="">Bulk status...</option>' +
+                  ORDER_STATUSES.map(function (s) {
+                    return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+                  }).join('') +
+                '</select>' +
+                '<button class="btn btn-xs btn-primary" onclick="window._applyBulkStatus()">Apply</button>' +
+                '<button class="btn btn-xs btn-ghost" onclick="window._toggleBulkMode()">Cancel</button>' +
+              '</div>'
+            : '') +
           (window._can('orders', 'create')
             ? '<button class="btn btn-sm btn-primary" onclick="window._openNewOrderForm()">' +
                 '<i class="ph-light ph-plus"></i> New Order' +
@@ -60,12 +91,6 @@
   };
 
   // ─── LOAD ────────────────────────────────────────────────────
-  //
-  // Super Admin + Admin see all orders.
-  // Vendors are not permitted to query this collection at all —
-  // their sales data is surfaced separately via vendor_sales.
-  // _can() check in switchTab() already blocks the tab for vendors,
-  // but we guard here too as a second layer.
 
   function loadOrders() {
     if (!window._can('orders', 'read')) {
@@ -86,6 +111,7 @@
       window._ordersData = snap.docs.map(function (d) {
         return Object.assign({ id: d.id }, d.data());
       });
+      window._selectedOrders = {};
       renderOrdersUI(window._ordersData);
     }).catch(function (e) {
       console.error('[ORDERS_LOAD]', e);
@@ -101,6 +127,87 @@
     loadOrders();
   };
 
+  // ─── BULK MODE ───────────────────────────────────────────────
+
+  window._toggleBulkMode = function () {
+    window._bulkMode = !window._bulkMode;
+    window._selectedOrders = {};
+
+    var toggleBtn = safeEl('bulk-toggle-btn');
+    var bulkActions = safeEl('bulk-actions');
+
+    if (toggleBtn) toggleBtn.style.display = window._bulkMode ? 'none' : '';
+    if (bulkActions) bulkActions.style.display = window._bulkMode ? 'flex' : 'none';
+
+    if (window._ordersData) renderOrdersTable(window._ordersData);
+  };
+
+  window._toggleOrderSelection = function (orderId, checked) {
+    if (checked) {
+      window._selectedOrders[orderId] = true;
+    } else {
+      delete window._selectedOrders[orderId];
+    }
+    updateBulkCount();
+  };
+
+  window._toggleAllOrders = function (checked) {
+    if (checked && window._ordersData) {
+      window._ordersData.forEach(function (o) {
+        window._selectedOrders[o.id] = true;
+      });
+    } else {
+      window._selectedOrders = {};
+    }
+    if (window._ordersData) renderOrdersTable(window._ordersData);
+    updateBulkCount();
+  };
+
+  function updateBulkCount() {
+    var count = Object.keys(window._selectedOrders).length;
+    var bulkActions = safeEl('bulk-actions');
+    if (bulkActions) {
+      var select = bulkActions.querySelector('select');
+      if (select && count > 0) {
+        select.options[0].textContent = count + ' order' + (count !== 1 ? 's' : '') + ' selected';
+      } else if (select) {
+        select.options[0].textContent = 'Bulk status...';
+      }
+    }
+  }
+
+  window._applyBulkStatus = function () {
+    var status = (safeEl('bulk-status-select') || {}).value;
+    if (!status) { showToast('Select a status first', 'error'); return; }
+    if (ORDER_STATUSES.indexOf(status) === -1) { showToast('Invalid status', 'error'); return; }
+
+    var ids = Object.keys(window._selectedOrders);
+    if (ids.length === 0) { showToast('No orders selected', 'error'); return; }
+
+    if (!confirm('Update ' + ids.length + ' order' + (ids.length !== 1 ? 's' : '') + ' to "' + status + '"?')) return;
+
+    var batch = db.batch();
+    var now = new Date().toISOString();
+    ids.forEach(function (id) {
+      batch.update(ordersRef.doc(id), { status: status, updatedAt: now });
+    });
+
+    batch.commit().then(function () {
+      showToast(ids.length + ' order' + (ids.length !== 1 ? 's' : '') + ' updated to ' + status);
+      // Update local data
+      ids.forEach(function (id) {
+        var o = (window._ordersData || []).find(function (x) { return x.id === id; });
+        if (o) o.status = status;
+      });
+      window._selectedOrders = {};
+      window._bulkMode = false;
+      window._toggleBulkMode();
+      renderOrdersTable(window._ordersData);
+    }).catch(function (e) {
+      showToast('Error: ' + e.message, 'error');
+    });
+  };
+
   // ─── RENDER UI ───────────────────────────────────────────────
 
   function renderOrdersUI(orders) {
@@ -108,9 +215,14 @@
     var tableWrap   = safeEl('orders-table-wrap');
     if (!toolbarWrap || !tableWrap) return;
 
+    // Show bulk toggle if there are orders and user can update
+    var toggleBtn = safeEl('bulk-toggle-btn');
+    if (toggleBtn) toggleBtn.style.display = orders.length > 0 && !window._bulkMode ? '' : 'none';
+
     if (orders.length === 0) {
       toolbarWrap.innerHTML = '';
       tableWrap.innerHTML   = renderEmptyState(false);
+      if (toggleBtn) toggleBtn.style.display = 'none';
       return;
     }
 
@@ -193,11 +305,14 @@
         '</div>';
     }
 
+    var allSelected = filtered.length > 0 && filtered.every(function (o) { return window._selectedOrders[o.id]; });
+
     wrap.innerHTML =
       bannerHTML +
       '<div class="table-wrap">' +
         '<table class="data-table">' +
           '<thead><tr>' +
+            (window._bulkMode ? '<th style="width:34px;"><input type="checkbox" onchange="window._toggleAllOrders(this.checked)"' + (allSelected ? ' checked' : '') + ' style="cursor:pointer;"></th>' : '') +
             '<th>Order</th>' +
             '<th>Customer</th>' +
             '<th>Items</th>' +
@@ -210,13 +325,18 @@
           '<tbody>' +
           filtered.map(function (o) {
             var abandoned = isAbandoned(o);
-            return '<tr onclick="window._openOrderDetail(\'' + esc(o.id) + '\')"' +
-              (abandoned ? ' class="order-row-abandoned"' : '') + '>' +
+            var isSelected = !!window._selectedOrders[o.id];
+            return '<tr onclick="' + (window._bulkMode ? 'window._toggleOrderSelection(\'' + esc(o.id) + '\',' + !isSelected + ');event.stopPropagation();' : 'window._openOrderDetail(\'' + esc(o.id) + '\')') + '"' +
+              (abandoned && !window._bulkMode ? ' class="order-row-abandoned"' : '') +
+              (isSelected ? ' style="background:var(--accent-soft);"' : '') + '>' +
+              (window._bulkMode
+                ? '<td onclick="event.stopPropagation();"><input type="checkbox"' + (isSelected ? ' checked' : '') + ' onchange="window._toggleOrderSelection(\'' + esc(o.id) + '\',this.checked)" style="cursor:pointer;"></td>'
+                : '') +
               '<td>' +
                 '<span style="font-size:11.5px;font-weight:500;">' +
                   '#' + esc((o.orderNumber || o.id).toString().slice(-8).toUpperCase()) +
                 '</span>' +
-                (abandoned
+                (abandoned && !window._bulkMode
                   ? '<div><span class="badge badge-warning" style="font-size:9px;padding:2px 6px;">Abandoned</span></div>'
                   : '') +
               '</td>' +
@@ -255,7 +375,6 @@
     var canCreate = window._can('orders', 'create');
     var role = window._currentUserRole;
 
-    // Role-appropriate subtitle
     var subtitle;
     if (isFiltered) {
       subtitle = 'No orders match your current filters. Try adjusting your search or filter.';
@@ -291,6 +410,8 @@
   };
 
   // ─── NEW ORDER FORM ──────────────────────────────────────────
+  // (unchanged — keeping it for reference but not duplicating here for brevity)
+  // ... [rest of the new order form functions remain identical] ...
 
   window._openNewOrderForm = function (draftId, draftData) {
     if (!window._guard('orders', 'create')) return;
@@ -555,15 +676,6 @@
   };
 
   // ─── BUILD PAYLOAD ───────────────────────────────────────────
-  //
-  // Stores on every order:
-  //   vendorIds       : unique array of vendorIds from items (for future querying)
-  //   vendorPayouts   : per-vendor breakdown { subtotal, commission, payout }
-  //   platformRevenue : total platform commission across non-house-brand items
-  //   createdBy       : uid of the admin who created this (null for storefront orders)
-  //   source          : 'manual' | 'storefront'
-  //
-  // Shipping is excluded from commission — commission is on product subtotal only.
 
   function buildOrderPayload(status) {
     var items    = window._newOrderItems || [];
@@ -572,17 +684,12 @@
     var discount = parseFloat((safeEl('no-discount') || {}).value) || 0;
     var total    = Math.max(0, subtotal + shipping - discount);
 
-    // Unique vendorIds from items — written so Firestore rules
-    // and Cloud Functions can reference them server-side.
     var vendorIds = [];
     items.forEach(function (item) {
       if (item.vendorId && vendorIds.indexOf(item.vendorId) === -1) {
         vendorIds.push(item.vendorId);
       }
     });
-
-    // Commission, vendorPayouts, and platformRevenue are calculated
-    // server-side by a Cloud Function — never in client code.
 
     return {
       customerName:      (safeEl('no-customer-name')  || {}).value || '',
@@ -602,13 +709,11 @@
       itemCount:         items.reduce(function (s, i) { return s + i.qty; }, 0),
       items:             items,
       vendorIds:         vendorIds,
-      // vendorPayouts and platformRevenue are set by Cloud Function only.
       internalNotes:     (safeEl('no-notes') || {}).value || '',
       status:            status || 'pending',
       fulfillmentStatus: 'unfulfilled',
       payoutStatus:      'pending',
       source:            'manual',
-      // uid of the admin who created this order manually.
       createdBy:         (window._currentUser && window._currentUser.uid) || null
     };
   }
@@ -667,7 +772,7 @@
     var o = (window._ordersData || []).filter(function (x) { return x.id === orderId; })[0];
 
     var panelHTML =
-      '<div class="slide-panel">' +
+      '<div class="slide-panel" style="width:min(92vw,460px);">' +
         '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
         '<div class="ui-label" style="margin-bottom:4px;">Order</div>' +
         '<div style="font-size:21px;font-weight:400;margin-bottom:18px;">' +
@@ -692,7 +797,7 @@
 
   function renderOrderDetailContent(o, orderId) {
     var canUpdate  = window._can('orders', 'update');
-    var canRefund  = window._can('orders', 'approve');   // Super Admin only action.
+    var canRefund  = window._can('orders', 'approve');
     var abandoned  = isAbandoned(o);
     var html       = '';
 
@@ -704,6 +809,7 @@
         '</div>';
     }
 
+    // Status badges
     html +=
       '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;">' +
         statusBadge(o.status) +
@@ -711,18 +817,24 @@
         statusBadge(o.fulfillmentStatus || 'unfulfilled') +
       '</div>';
 
+    // ── Order Timeline ──
+    html += '<div class="card-title" style="margin-bottom:8px;">Order Progress</div>';
+    html += renderOrderTimeline(o);
+
+    // Action buttons
     html +=
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;margin-top:14px;">' +
         '<button class="btn btn-sm btn-ghost" onclick="window._copyOrderId(\'' + esc(orderId) + '\')">Copy #</button>' +
         (o.customerPhone
           ? '<button class="btn btn-sm btn-ghost" onclick="window._whatsappCustomer(\'' + esc(o.customerPhone) + '\')">WhatsApp</button>'
           : '') +
-        '<button class="btn btn-sm btn-ghost" onclick="window._printOrderInvoice()">Invoice</button>' +
+        '<button class="btn btn-sm btn-ghost" onclick="window._printPackingSlip(\'' + esc(orderId) + '\')">Packing Slip</button>' +
         (canRefund
           ? '<button class="btn btn-sm btn-danger" onclick="window._quickRefund(\'' + esc(orderId) + '\')">Refund</button>'
           : '') +
       '</div>';
 
+    // Customer info
     html +=
       '<div class="card-title" style="margin-bottom:7px;">Customer</div>' +
       '<div class="info-panel" style="margin-bottom:14px;">' +
@@ -731,18 +843,40 @@
         '<div class="info-row"><span class="label">Phone</span><span>' + esc(o.customerPhone || '—') + '</span></div>' +
       '</div>';
 
+    // Order items
+    if (o.items && o.items.length > 0) {
+      html +=
+        '<div class="card-title" style="margin-bottom:7px;">Items (' + o.items.length + ')</div>' +
+        '<div class="info-panel" style="margin-bottom:14px;">';
+      o.items.forEach(function (item) {
+        html +=
+          '<div class="info-row">' +
+            '<span class="label">' + esc(item.name) + ' × ' + item.qty + '</span>' +
+            '<span>' + fmt((item.price || 0) * item.qty) + '</span>' +
+          '</div>';
+      });
+      html +=
+          '<div class="info-row" style="border-top:0.5px solid var(--border);font-weight:500;">' +
+            '<span class="label">Total</span>' +
+            '<span>' + fmt(o.total || o.subtotal || 0) + '</span>' +
+          '</div>' +
+        '</div>';
+    }
+
+    // Shipping
     if (o.shippingAddress) {
       html +=
         '<div class="card-title" style="margin-bottom:7px;">Shipping</div>' +
         '<div class="info-panel" style="margin-bottom:14px;">' +
-          '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress   || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Tracking</span><span>' + esc(o.trackingNumber    || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Courier</span><span>'  + esc(o.courier           || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">ETA</span><span>'      + esc(o.estimatedDelivery || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress || o.city || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">City</span><span>'     + esc(o.city || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Province</span><span>' + esc(o.province || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Tracking</span><span>' + esc(o.trackingNumber || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Courier</span><span>'  + esc(o.courier || '—') + '</span></div>' +
         '</div>';
     }
 
-    // Revenue breakdown — Super Admin only.
+    // Revenue breakdown — Super Admin only
     if (canRefund) {
       html +=
         '<div class="card-title" style="margin-bottom:7px;">Revenue</div>' +
@@ -754,7 +888,6 @@
           '<div class="info-row"><span class="label">Payout Status</span><span>'    + statusBadge(o.payoutStatus || 'pending') + '</span></div>' +
         '</div>';
 
-      // Per-vendor payout breakdown.
       if (o.vendorPayouts && Object.keys(o.vendorPayouts).length > 0) {
         html += '<div class="card-title" style="margin-bottom:7px;">Vendor Payouts</div>' +
           '<div class="info-panel" style="margin-bottom:14px;">';
@@ -770,28 +903,37 @@
       }
     }
 
-    // Status controls — Super Admin and Admin (with different permissions).
+    // Status controls
     if (canUpdate) {
       html +=
         '<div class="card-title" style="margin-bottom:8px;">Update Status</div>' +
         '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;">' +
           ORDER_STATUSES.map(function (s) {
-            // Refund status — Super Admin only.
             if (s === 'refunded' && !canRefund) return '';
             return '<button class="btn btn-xs ' + (o.status === s ? 'btn-primary' : 'btn-ghost') + '"' +
               ' onclick="window._updateOrderStatus(\'' + esc(orderId) + '\',\'' + esc(s) + '\')">' +
               esc(s) + '</button>';
           }).join('') +
         '</div>' +
+
+        // Courier + Tracking
         '<div style="margin-bottom:12px;">' +
-          '<div class="card-title" style="margin-bottom:7px;">Tracking Number</div>' +
+          '<div class="card-title" style="margin-bottom:7px;">Courier &amp; Tracking</div>' +
+          '<select id="courier-select" style="width:100%;margin-bottom:6px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:7px;padding:8px 11px;font-family:Manrope,sans-serif;font-size:12px;color:var(--text);outline:none;">' +
+            '<option value="">Select courier...</option>' +
+            COURIERS.map(function (c) {
+              return '<option value="' + c + '"' + (o.courier === c ? ' selected' : '') + '>' + c + '</option>';
+            }).join('') +
+          '</select>' +
           '<div style="display:flex;gap:6px;">' +
             '<input id="tracking-input" value="' + esc(o.trackingNumber || '') + '"' +
-              ' placeholder="Tracking #"' +
+              ' placeholder="Tracking number"' +
               ' style="flex:1;padding:8px 11px;border:0.5px solid var(--border-med);font-family:Manrope,sans-serif;font-size:12px;background:var(--surface2);outline:none;border-radius:7px;">' +
-            '<button class="btn btn-sm" onclick="window._saveTracking(\'' + esc(orderId) + '\')">Save</button>' +
+            '<button class="btn btn-sm" onclick="window._saveTrackingAndCourier(\'' + esc(orderId) + '\')">Save</button>' +
           '</div>' +
         '</div>' +
+
+        // Internal notes
         '<div>' +
           '<div class="card-title" style="margin-bottom:7px;">Internal Notes</div>' +
           '<textarea id="order-note-input"' +
@@ -806,6 +948,115 @@
     return html;
   }
 
+  // ─── ORDER TIMELINE ──────────────────────────────────────────
+
+  var TIMELINE_STEPS = [
+    { key: 'pending',     label: 'Order Placed',    icon: 'ph-shopping-cart' },
+    { key: 'paid',        label: 'Payment Confirmed', icon: 'ph-credit-card' },
+    { key: 'processing',  label: 'Processing',       icon: 'ph-package' },
+    { key: 'packed',      label: 'Packed',           icon: 'ph-archive' },
+    { key: 'shipped',     label: 'Shipped',          icon: 'ph-truck' },
+    { key: 'delivered',   label: 'Delivered',        icon: 'ph-check-circle' }
+  ];
+
+  function renderOrderTimeline(o) {
+    var currentStatus = o.status || 'pending';
+    var currentIndex = -1;
+
+    for (var i = 0; i < TIMELINE_STEPS.length; i++) {
+      if (TIMELINE_STEPS[i].key === currentStatus) {
+        currentIndex = i;
+        break;
+      }
+    }
+
+    // If status isn't in timeline (e.g. cancelled, refunded), show a message
+    if (currentIndex === -1) {
+      var label = currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1);
+      return '<div style="padding:10px 0;font-size:12px;color:var(--muted);text-align:center;">' +
+        'Status: <span style="color:var(--text);font-weight:500;">' + label + '</span>' +
+      '</div>';
+    }
+
+    var html = '<div style="padding:8px 0 4px;">';
+    for (var j = 0; j < TIMELINE_STEPS.length; j++) {
+      var step = TIMELINE_STEPS[j];
+      var isComplete = j <= currentIndex;
+      var isCurrent = j === currentIndex;
+
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;">' +
+        '<div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;' +
+          (isComplete
+            ? 'background:var(--text);color:#fff;'
+            : 'background:var(--surface3);color:var(--muted2);') +
+          'font-size:11px;">' +
+          (isComplete ? '<i class="ph-light ph-check" style="font-size:12px;"></i>' : (j + 1)) +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:11.5px;font-weight:' + (isCurrent ? '500' : '400') + ';color:' + (isComplete ? 'var(--text)' : 'var(--muted2)') + ';">' +
+            step.label +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+      // Connector line
+      if (j < TIMELINE_STEPS.length - 1) {
+        html += '<div style="margin-left:11px;width:2px;height:8px;background:' + (j < currentIndex ? 'var(--text)' : 'var(--border-med)') + ';border-radius:1px;"></div>';
+      }
+    }
+    html += '</div>';
+
+    return html;
+  }
+
+  // ─── PACKING SLIP ────────────────────────────────────────────
+
+  window._printPackingSlip = function (orderId) {
+    var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
+    if (!o) { showToast('Order not found', 'error'); return; }
+
+    var itemsHTML = (o.items || []).map(function (item) {
+      return '<tr>' +
+        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;">' + esc(item.name) + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;text-align:center;">' + esc(item.size || '—') + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;text-align:center;">' + item.qty + '</td>' +
+      '</tr>';
+    }).join('');
+
+    var win = window.open('', '_blank', 'width=680,height=700');
+    win.document.write(
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Packing Slip #' + esc(o.orderNumber || orderId) + '</title>' +
+      '<style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:40px;color:#222;}' +
+      'h1{font-size:22px;font-weight:300;margin:0 0 4px;}' +
+      '.order-num{font-size:13px;color:#888;margin-bottom:24px;}' +
+      'h2{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#aaa;margin:20px 0 8px;border-bottom:0.5px solid #eee;padding-bottom:4px;}' +
+      'p{font-size:13px;margin:3px 0;color:#444;}' +
+      'table{width:100%;border-collapse:collapse;margin-top:8px;}' +
+      'th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;border-bottom:0.5px solid #ddd;}' +
+      '@media print{body{padding:20px;}}' +
+      '</style></head><body>' +
+      '<h1>Janedore</h1>' +
+      '<div class="order-num">Order #' + esc((o.orderNumber || orderId).toString().slice(-8).toUpperCase()) + ' · ' + fmtDate(o.createdAt) + '</div>' +
+      '<h2>Customer</h2>' +
+      '<p>' + esc(o.customerName || 'Guest') + '</p>' +
+      '<p>' + esc(o.customerEmail || '') + '</p>' +
+      '<p>' + esc(o.customerPhone || '') + '</p>' +
+      '<h2>Shipping Address</h2>' +
+      '<p>' + esc(o.shippingAddress || '') + '</p>' +
+      '<p>' + esc(o.city || '') + (o.province ? ', ' + esc(o.province) : '') + (o.postalCode ? ' ' + esc(o.postalCode) : '') + '</p>' +
+      '<p>' + esc(o.country || 'South Africa') + '</p>' +
+      (o.trackingNumber ? '<h2>Tracking</h2><p>' + esc(o.courier || '') + ' — ' + esc(o.trackingNumber) + '</p>' : '') +
+      '<h2>Items</h2>' +
+      '<table><thead><tr><th>Product</th><th>Size</th><th>Qty</th></tr></thead><tbody>' +
+      itemsHTML +
+      '</tbody></table>' +
+      '<div style="margin-top:24px;font-size:11px;color:#aaa;text-align:center;">Thank you for shopping with Janedore</div>' +
+      '</body></html>'
+    );
+    win.document.close();
+    setTimeout(function () { win.print(); }, 300);
+  };
+
   // ─── ORDER ACTIONS ───────────────────────────────────────────
 
   window._copyOrderId = function (orderId) {
@@ -817,10 +1068,6 @@
   window._whatsappCustomer = function (phone) {
     var sanitized = phone.replace(/[^\d+]/g, '');
     if (sanitized) window.open('https://wa.me/' + sanitized, '_blank', 'noopener,noreferrer');
-  };
-
-  window._printOrderInvoice = function () {
-    showToast('Invoice print — add your template', 'info');
   };
 
   window._quickRefund = function (orderId) {
@@ -856,14 +1103,24 @@
       }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
-  window._saveTracking = function (orderId) {
+  window._saveTrackingAndCourier = function (orderId) {
     if (!window._guard('orders', 'update')) return;
-    var input = safeEl('tracking-input');
-    if (!input) return;
-    ordersRef.doc(orderId)
-      .update({ trackingNumber: input.value, updatedAt: new Date().toISOString() })
-      .then(function () { showToast('Tracking saved'); })
-      .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+    var tracking = safeEl('tracking-input');
+    var courier  = safeEl('courier-select');
+    if (!tracking) return;
+
+    var data = {
+      trackingNumber: tracking.value.trim(),
+      courier: courier ? courier.value : '',
+      updatedAt: new Date().toISOString()
+    };
+
+    ordersRef.doc(orderId).update(data).then(function () {
+      showToast('Tracking saved');
+      // Update local
+      var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
+      if (o) { o.trackingNumber = data.trackingNumber; o.courier = data.courier; }
+    }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
   window._saveOrderNote = function (orderId) {
