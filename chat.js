@@ -352,6 +352,15 @@ async function sendChatMessage() {
 
     await rtdb.ref('/').update(updates);
     input.value = '';
+    
+    // FIX: Immediately re-enable input in case it was disabled due to resolved status
+    if (input.disabled) {
+      input.disabled = false;
+      input.placeholder = 'Type your message...';
+      _satisfactionShown = false;
+      const prompt = document.getElementById('satisfaction-prompt');
+      if (prompt) prompt.remove();
+    }
   } catch(e) {
     console.error('[Chat] Send error:', e.message);
     alert('Failed to send message. Please try again.');
