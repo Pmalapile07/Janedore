@@ -153,6 +153,7 @@ function startChat() {
   detachTypingListener();
   detachStatusListener();
   _satisfactionShown = false;
+  _resolvedActive = false;
   loadMessages();
   listenChat();
   listenTyping();
@@ -185,6 +186,7 @@ function clearChatSession() {
   detachTypingListener();
   detachStatusListener();
   _satisfactionShown = false;
+  _resolvedActive = false;
   loadedMessageKeys.clear();
   showEmailScreen();
 }
@@ -296,6 +298,19 @@ async function sendChatMessage() {
   const input = safeEl('chat-input');
   if (!rtdb || !input) return;
 
+  // If input is disabled, re-enable it first before sending
+  // This handles the case where conversation was marked as resolved
+  if (input.disabled) {
+    input.disabled = false;
+    input.placeholder = 'Type your message...';
+    const sendBtn = safeEl('chat-send-btn');
+    if (sendBtn) sendBtn.disabled = false;
+    _satisfactionShown = false;
+    _resolvedActive = false;
+    const prompt = document.getElementById('satisfaction-prompt');
+    if (prompt) prompt.remove();
+  }
+
   const text = input.value.trim();
   if (!text) return;
 
@@ -353,20 +368,20 @@ async function sendChatMessage() {
     await rtdb.ref('/').update(updates);
     input.value = '';
     
-    // FIX: Immediately re-enable input in case it was disabled due to resolved status
-    if (input.disabled) {
-      input.disabled = false;
-      input.placeholder = 'Type your message...';
-      _satisfactionShown = false;
-      const prompt = document.getElementById('satisfaction-prompt');
-      if (prompt) prompt.remove();
-    }
+    // Ensure input stays enabled after sending
+    input.disabled = false;
+    input.placeholder = 'Type your message...';
+    _satisfactionShown = false;
+    _resolvedActive = false;
   } catch(e) {
     console.error('[Chat] Send error:', e.message);
     alert('Failed to send message. Please try again.');
   } finally {
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    if (input) input.focus();
+    if (input) {
+      input.disabled = false;
+      input.focus();
+    }
   }
 }
 
@@ -412,6 +427,7 @@ function listenTyping() {
 let _statusListenerRef = null;
 let _statusListenerCb  = null;
 let _satisfactionShown = false;
+let _resolvedActive = false;
 
 function detachStatusListener() {
   if (_statusListenerRef && _statusListenerCb) {
@@ -427,13 +443,18 @@ function listenStatus() {
   _statusListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/status');
   _statusListenerCb  = snap => {
     const status = snap.val();
+    
+    // If status is resolved and we haven't shown satisfaction yet
     if (status === 'resolved' && !_satisfactionShown) {
       _satisfactionShown = true;
+      _resolvedActive = true;
       showSatisfactionPrompt();
     }
-    // FIX: When status changes back to open, re-enable the chat input
-    if (status !== 'resolved' && _satisfactionShown) {
+    
+    // If status changes to something other than resolved, re-enable chat
+    if (status !== 'resolved') {
       _satisfactionShown = false;
+      _resolvedActive = false;
       const input   = safeEl('chat-input');
       const sendBtn = safeEl('chat-send-btn');
       if (input)   { input.disabled = false; input.placeholder = 'Type your message...'; }
