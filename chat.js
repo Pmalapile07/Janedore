@@ -67,8 +67,26 @@ function toggleChat() {
     win.classList.add('open');
     const dot = safeEl('chat-unread-dot');
     if (dot) dot.style.display = 'none';
-    if (customerEmail) showOptionsScreen();
-    else showEmailScreen();
+    // If customer was mid-chat, resume it directly instead of showing options.
+    if (chatMode === 'chat') {
+      showScreen('chat-messages');
+      const inputWrap = safeEl('chat-input-wrap');
+      const infoBar   = safeEl('chat-customer-info');
+      if (inputWrap) inputWrap.style.display = 'flex';
+      if (infoBar)   infoBar.style.display   = 'flex';
+      // Re-attach listeners if they were detached on close.
+      if (!_chatListenerRef) {
+        detachChatListener();
+        detachTypingListener();
+        listenChat();
+        listenTyping();
+        listenStatus();
+      }
+    } else if (customerEmail) {
+      showOptionsScreen();
+    } else {
+      showEmailScreen();
+    }
     ensureAuth();
   } else {
     win.classList.remove('open');
@@ -356,6 +374,16 @@ function listenTyping() {
       : val === true;
     const indicator = safeEl('chat-typing-indicator');
     if (indicator) indicator.style.display = isTyping ? 'block' : 'none';
+    // Show the name of who is typing if stored under the typing node.
+    // Falls back to JANEDORE for Super Admin who is anonymous.
+    if (indicator && isTyping && val && typeof val === 'object') {
+      const names = Object.keys(val).filter(k => val[k] === true);
+      indicator.textContent = names.length > 0
+        ? names[0] + ' is typing...'
+        : 'JANEDORE is typing...';
+    } else if (indicator && isTyping) {
+      indicator.textContent = 'JANEDORE is typing...';
+    }
   };
   _typingListenerRef.on('value', _typingListenerCb);
 }
