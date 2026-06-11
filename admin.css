@@ -483,3 +483,29 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
   #main-content{max-width:820px;}
   .no-action-bar{bottom:0;}
 }
+/* Dashboard */
+.dashboard-shell { padding: 0; }
+.dash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.dash-stat-card {
+  background: var(--surface, #fff);
+  border: 0.5px solid var(--border, #e5e5e5);
+  border-radius: var(--r-sm, 8px);
+  padding: 14px 16px;
+}
+.dash-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted, #999);
+  margin-bottom: 4px;
+}
+.dash-stat-value {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text, #111);
+}
