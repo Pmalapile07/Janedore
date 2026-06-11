@@ -1,101 +1,800 @@
-/* ── DARK MODE ───────────────────────────────────────────────── */
-/* System preference */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light-mode) {
-    --bg: #0f0f11;
-    --surface: #1a1a1e;
-    --surface2: #222228;
-    --surface3: #2a2a30;
-    --border: rgba(255,255,255,0.08);
-    --border-med: rgba(255,255,255,0.12);
-    --border-light: rgba(255,255,255,0.04);
-    --text: #f0f0f2;
-    --text2: #c8c8ce;
-    --muted: #8e8e96;
-    --muted2: #666670;
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
-    --shadow-sm: 0 1px 4px rgba(0,0,0,0.3);
-    --accent-soft: rgba(96,165,250,0.12);
-    --success-soft: rgba(52,211,153,0.12);
-    --warning-soft: rgba(251,191,36,0.12);
-    --danger-soft: rgba(248,113,113,0.12);
-    --purple-soft: rgba(167,139,250,0.12);
-  }
-  :root:not(.light-mode) .chat-messages-panel {
-    background: #141418;
-  }
-  :root:not(.light-mode) .vendor-scope-bar {
-    background: rgba(96,165,250,0.08);
-    border-color: rgba(96,165,250,0.2);
-    color: #93c5fd;
-  }
-  :root:not(.light-mode) .orders-abandoned-banner {
-    background: rgba(251,191,36,0.08);
-  }
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Janedore · Coming Soon</title>
 
-/* Forced dark mode (user toggled) */
-:root.dark-mode {
-  --bg: #0f0f11;
-  --surface: #1a1a1e;
-  --surface2: #222228;
-  --surface3: #2a2a30;
-  --border: rgba(255,255,255,0.08);
-  --border-med: rgba(255,255,255,0.12);
-  --border-light: rgba(255,255,255,0.04);
-  --text: #f0f0f2;
-  --text2: #c8c8ce;
-  --muted: #8e8e96;
-  --muted2: #666670;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.3);
-  --accent-soft: rgba(96,165,250,0.12);
-  --success-soft: rgba(52,211,153,0.12);
-  --warning-soft: rgba(251,191,36,0.12);
-  --danger-soft: rgba(248,113,113,0.12);
-  --purple-soft: rgba(167,139,250,0.12);
-}
-:root.dark-mode .chat-messages-panel {
-  background: #141418;
-}
-:root.dark-mode .vendor-scope-bar {
-  background: rgba(96,165,250,0.08);
-  border-color: rgba(96,165,250,0.2);
-  color: #93c5fd;
-}
-:root.dark-mode .orders-abandoned-banner {
-  background: rgba(251,191,36,0.08);
-}
+<meta name="description" content="Janedore - The rarest finds, within reach. Something extraordinary is coming. Sign up to be the first to know when we launch.">
+<meta name="keywords" content="fashion, clothing, accessories, curated fashion, South Africa, coming soon">
+<meta name="author" content="Janedore">
+<meta name="robots" content="index, follow">
 
-/* Forced light mode (user toggled) */
-:root.light-mode {
-  --bg: #f2f2f4;
-  --surface: #ffffff;
-  --surface2: #f9f9fb;
-  --surface3: #f4f4f6;
-  --border: rgba(0,0,0,0.09);
-  --border-med: rgba(0,0,0,0.13);
-  --border-light: rgba(0,0,0,0.05);
-  --text: #111111;
-  --text2: #3a3a3a;
-  --muted: #8a8a8a;
-  --muted2: #b0b0b0;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.07);
-  --accent-soft: rgba(26,86,219,0.09);
-  --success-soft: rgba(26,135,66,0.1);
-  --warning-soft: rgba(192,112,0,0.1);
-  --danger-soft: rgba(192,57,43,0.1);
-  --purple-soft: rgba(110,64,201,0.1);
-}
-:root.light-mode .chat-messages-panel {
-  background: #f0f2f5;
-}
-:root.light-mode .vendor-scope-bar {
-  background: var(--accent-soft);
-  border-color: rgba(26,86,219,0.18);
-  color: var(--accent);
-}
-:root.light-mode .orders-abandoned-banner {
-  background: var(--warning-soft);
-}
+<meta property="og:title" content="Janedore · Coming Soon">
+<meta property="og:description" content="The rarest finds, within reach. Sign up to be the first to know when we launch.">
+<meta property="og:image" content="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287">
+<meta property="og:url" content="https://janedore.co.za">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Janedore · Coming Soon">
+<meta name="twitter:description" content="The rarest finds, within reach.">
+<meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287">
+
+<link rel="canonical" href="https://janedore.co.za">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Manrope:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://www.gstatic.com">
+
+<script src="https://unpkg.com/phosphor-icons"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white:   #ffffff;
+    --black:   #0a0a0a;
+    --muted:   #888880;
+    --dust:    #c8b89a;
+    --border:  rgba(0,0,0,0.1);
+  }
+
+  /* ── Reset — no zoom, no fixed body, Safari-safe ─────────── */
+  html {
+    font-family: 'Manrope', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* NO zoom property — causes Safari keyboard freeze */
+  }
+
+  body {
+    min-height: 100dvh; /* dvh accounts for Safari address bar */
+    background: var(--white);
+    color: var(--black);
+    /* NO position:fixed, NO overflow:hidden — both break iOS keyboard */
+    overscroll-behavior-y: none;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* ── Header ───────────────────────────────────────────────── */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--white);
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 56px;
+  }
+
+  .header-logo {
+    height: 18px;
+    width: auto;
+    display: block;
+  }
+
+  .header-admin {
+    text-align: right;
+    line-height: 1.5;
+  }
+  .header-admin-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .header-admin-btn {
+    background: transparent;
+    border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+    letter-spacing: 0.04em;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+  }
+  .header-admin-btn:hover { color: var(--black); }
+
+  /* ── Hero ─────────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    width: 100%;
+    /* Use calc to subtract the header height */
+    height: calc(100dvh - 56px);
+    overflow: hidden;
+  }
+
+  .hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    /* Subtle dark wash at the bottom so text is always readable */
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 55%, rgba(0,0,0,0.55) 100%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 55%, rgba(0,0,0,0.55) 100%);
+  }
+
+  /* Gradient overlay — bottom portion only so image reads editorial at top */
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 30%,
+      rgba(0,0,0,0.15) 60%,
+      rgba(0,0,0,0.55) 100%
+    );
+  }
+
+  /* ── Hero content — bottom-left editorial treatment ──────── */
+  .hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 36px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Manrope', sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+  }
+
+  .hero-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(38px, 7vw, 68px);
+    line-height: 1.08;
+    color: var(--white);
+    /* Text shadow so it reads on any image without a heavy overlay */
+    text-shadow: 0 1px 24px rgba(0,0,0,0.22);
+    max-width: 560px;
+  }
+
+  /* ── Signup row ───────────────────────────────────────────── */
+  .signup-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .signup-trigger {
+    background: transparent;
+    border: none;
+    border-bottom: 0.8px solid rgba(255,255,255,0.5);
+    padding: 10px 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .signup-trigger:hover {
+    color: var(--white);
+    border-color: var(--white);
+  }
+  .signup-trigger i { font-size: 14px; }
+
+  .signup-form {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  }
+  .signup-form.open {
+    max-height: 200px;
+    opacity: 1;
+  }
+
+  .signup-form-inner {
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .signup-input-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .signup-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 0.8px solid rgba(255,255,255,0.4);
+    padding: 12px 44px 12px 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--white);
+    outline: none;
+    transition: border-color 0.25s;
+    /* Safari: prevent auto-zoom on focus (font-size >= 16px or use this) */
+    font-size: max(16px, 13px);
+    -webkit-appearance: none;
+  }
+  .signup-input:-webkit-autofill,
+  .signup-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+  .signup-input::placeholder { color: rgba(255,255,255,0.4); font-weight: 300; }
+  .signup-input:focus { border-color: rgba(255,255,255,0.85); }
+
+  .signup-submit {
+    position: absolute;
+    right: 0; top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 8px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    -webkit-appearance: none;
+  }
+  .signup-submit:hover { color: var(--white); }
+  .signup-submit:disabled { opacity: 0.3; cursor: not-allowed; }
+  .signup-submit i { font-size: 20px; }
+
+  .signup-spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-top-color: var(--white);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .signup-msg {
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    min-height: 20px;
+    display: none;
+    padding: 2px 0;
+  }
+  .signup-msg.show { display: block; }
+  .signup-msg.success { color: #86efac; }
+  .signup-msg.error   { color: #fca5a5; }
+  .signup-msg.info    { color: rgba(255,255,255,0.55); }
+
+  .signup-legal {
+    font-size: 10px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+  }
+  .signup-legal a {
+    color: rgba(255,255,255,0.4);
+    text-underline-offset: 2px;
+  }
+
+  /* ── Footer strip ─────────────────────────────────────────── */
+  .site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    background: var(--white);
+    border-top: 0.5px solid var(--border);
+  }
+
+  .footer-copy {
+    font-size: 10px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  .footer-social {
+    display: flex;
+    gap: 2px;
+  }
+  .footer-social a {
+    color: var(--muted);
+    font-size: 16px;
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 32px;
+  }
+  .footer-social a:hover { color: var(--black); }
+
+  /* ── Admin login overlay ──────────────────────────────────── */
+  .admin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,10,0.92);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .admin-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .admin-box {
+    width: 100%;
+    max-width: 360px;
+    padding: 0 28px;
+    position: relative;
+  }
+
+  .admin-logo {
+    display: block;
+    height: 16px;
+    width: auto;
+    margin: 0 auto 32px;
+    filter: brightness(0) invert(1);
+    opacity: 0.6;
+  }
+
+  .admin-label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .admin-field {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 0.8px solid rgba(255,255,255,0.18);
+    padding: 14px 0;
+    margin-bottom: 20px;
+    font-family: 'Manrope', sans-serif;
+    font-size: max(16px, 14px);
+    font-weight: 300;
+    color: var(--white);
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color 0.25s;
+  }
+  .admin-field:-webkit-autofill,
+  .admin-field:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px rgba(10,10,10,0.92) inset !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+  .admin-field::placeholder { color: rgba(255,255,255,0.25); }
+  .admin-field:focus { border-color: rgba(255,255,255,0.5); }
+
+  .admin-submit {
+    width: 100%;
+    background: transparent;
+    border: 0.8px solid rgba(255,255,255,0.22);
+    padding: 14px;
+    margin-top: 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    -webkit-appearance: none;
+  }
+  .admin-submit:hover { border-color: rgba(255,255,255,0.55); color: var(--white); }
+  .admin-submit:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .admin-error {
+    font-size: 11px;
+    color: #fca5a5;
+    margin-top: 14px;
+    min-height: 18px;
+    text-align: center;
+    display: none;
+  }
+  .admin-error.show { display: block; }
+
+  .admin-close {
+    position: absolute;
+    top: -8px; right: 0;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.25);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 8px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .admin-close:hover { color: rgba(255,255,255,0.7); }
+
+  /* ── Chat container — Safari-safe positioning ─────────────── */
+  /* Using fixed but NOT on body — only the chat bubble itself.  */
+  /* This way body layout is unaffected when keyboard opens.     */
+  #chat-container {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 60;
+    /* Pointer events on children only */
+  }
+
+  /* ── Mobile adjustments ───────────────────────────────────── */
+  @media (max-width: 600px) {
+    .site-header { padding: 0 18px; }
+    .hero-content { padding: 0 20px 32px; }
+    .hero-tagline { font-size: clamp(32px, 10vw, 48px); }
+    .site-footer { padding: 14px 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="sr-only">Skip to main content</a>
+
+<!-- ── Header ────────────────────────────────────────────── -->
+<header class="site-header">
+  <a href="/" aria-label="Janedore home">
+    <img class="header-logo"
+         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
+         alt="Janedore">
+  </a>
+  <div class="header-admin">
+    <span class="header-admin-label">Is this your store?</span>
+    <button class="header-admin-btn" onclick="openAdminPanel()">Log in</button>
+  </div>
+</header>
+
+<!-- ── Hero ──────────────────────────────────────────────── -->
+<main id="main">
+  <section class="hero" aria-label="Coming soon">
+
+    <img class="hero-img"
+         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287"
+         alt="Janedore editorial"
+         loading="eager"
+         fetchpriority="high">
+
+    <div class="hero-overlay" aria-hidden="true"></div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">Coming soon &nbsp;·&nbsp; South Africa</p>
+
+      <h1 class="hero-tagline">The rarest finds,<br>within reach.</h1>
+
+      <div class="signup-row">
+        <button class="signup-trigger" id="signup-trigger" aria-expanded="false" aria-controls="signup-form">
+          <i class="ph ph-envelope-simple" aria-hidden="true"></i>
+          Let me know when you launch
+        </button>
+
+        <div class="signup-form" id="signup-form" role="region" aria-label="Newsletter signup">
+          <div class="signup-form-inner">
+            <div class="signup-input-wrap">
+              <label for="email-input" class="sr-only">Email address</label>
+              <input type="email"
+                     class="signup-input"
+                     id="email-input"
+                     placeholder="your@email.com"
+                     autocomplete="email"
+                     aria-describedby="signup-msg"
+                     required>
+              <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
+                <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
+                <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
+            <p class="signup-legal">
+              By signing up, you agree to receive emails from Janedore.
+              <a href="unsubscribe.html">Unsubscribe anytime.</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <p class="footer-copy" id="copyright"></p>
+  <nav class="footer-social" aria-label="Social media">
+    <a href="https://www.instagram.com/janedor.e" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+      <i class="ph ph-instagram-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" aria-label="TikTok">
+      <i class="ph ph-tiktok-logo" aria-hidden="true"></i>
+    </a>
+    <a href="#" aria-label="Pinterest">
+      <i class="ph ph-pinterest-logo" aria-hidden="true"></i>
+    </a>
+  </nav>
+</footer>
+
+<!-- ── Admin overlay ─────────────────────────────────────── -->
+<div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
+  <div class="admin-box">
+    <button class="admin-close" id="admin-close-btn" aria-label="Close">
+      <i class="ph ph-x"></i>
+    </button>
+    <img class="admin-logo"
+         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
+         alt="Janedore">
+    <span class="admin-label">Admin Access</span>
+    <input type="email" class="admin-field" id="admin-email"
+           placeholder="Email"
+           autocomplete="email"
+           autocorrect="off"
+           autocapitalize="off"
+           spellcheck="false">
+    <input type="password" class="admin-field" id="admin-password"
+           placeholder="Password"
+           autocomplete="current-password">
+    <button class="admin-submit" id="admin-login-btn">Sign In</button>
+    <div class="admin-error" id="admin-error"></div>
+  </div>
+</div>
+
+<!-- ── Chat widget ────────────────────────────────────────── -->
+<div id="chat-container"></div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ",
+    databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
+  };
+
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  document.getElementById('copyright').textContent =
+    '\u00a9 ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
+
+  // ── Newsletter signup ─────────────────────────────────────
+  const trigger   = document.getElementById('signup-trigger');
+  const form      = document.getElementById('signup-form');
+  const emailEl   = document.getElementById('email-input');
+  const signupBtn = document.getElementById('signup-btn');
+  const arrowIcon = document.getElementById('arrow-icon');
+  const spinner   = document.getElementById('btn-spinner');
+  const msgEl     = document.getElementById('signup-msg');
+
+  trigger.addEventListener('click', function () {
+    var open = form.classList.toggle('open');
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) setTimeout(function () { emailEl.focus(); }, 380);
+  });
+
+  function showMsg(text, type) {
+    msgEl.textContent = text;
+    msgEl.className   = 'signup-msg show ' + type;
+  }
+  function clearMsg() {
+    msgEl.className   = 'signup-msg';
+    msgEl.textContent = '';
+  }
+  function setLoading(v) {
+    signupBtn.disabled       = v;
+    arrowIcon.style.display  = v ? 'none'         : 'block';
+    spinner.style.display    = v ? 'inline-block' : 'none';
+  }
+  function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  var RateLimiter = {
+    attempts: {},
+    check: function (key, limit, windowMs) {
+      limit    = limit    || 5;
+      windowMs = windowMs || 300000;
+      var now  = Date.now();
+      this.attempts[key] = (this.attempts[key] || []).filter(function (t) { return now - t < windowMs; });
+      if (this.attempts[key].length >= limit) return false;
+      this.attempts[key].push(now);
+      return true;
+    }
+  };
+
+  function handleSignup() {
+    var email = emailEl.value.trim().toLowerCase();
+    if (!email) { showMsg('Please enter your email address.', 'error'); return; }
+    if (!isValidEmail(email)) { showMsg('Please enter a valid email address.', 'error'); return; }
+
+    var cid = localStorage.getItem('jd_cid') || ('c_' + Math.random().toString(36).substr(2, 9));
+    localStorage.setItem('jd_cid', cid);
+    if (!RateLimiter.check(cid + '_s')) {
+      showMsg('Too many attempts. Please wait a few minutes.', 'error'); return;
+    }
+
+    clearMsg(); setLoading(true);
+    var docId  = email.replace(/\./g, '_');
+    var docRef = db.collection('newsletter').doc(docId);
+    docRef.get().then(function (snap) {
+      if (snap.exists) {
+        showMsg("You're already on the list — we'll be in touch!", 'info');
+        setLoading(false);
+        return;
+      }
+      return docRef.set({
+        email:        email,
+        source:       'coming_soon_page',
+        subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        userAgent:    navigator.userAgent,
+        referrer:     document.referrer || 'direct'
+      }).then(function () {
+        showMsg("You're on the list. We'll notify you when we launch.", 'success');
+        emailEl.value = '';
+        setLoading(false);
+      });
+    }).catch(function (err) {
+      var msg = 'Something went wrong. Please try again.';
+      if (err.code === 'permission-denied') msg = 'Unable to subscribe right now — please try again later.';
+      if (err.code === 'unavailable')       msg = 'No connection. Please check your internet and try again.';
+      showMsg(msg, 'error');
+      setLoading(false);
+    });
+  }
+
+  signupBtn.addEventListener('click', handleSignup);
+  emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleSignup(); });
+  emailEl.addEventListener('input',   function ()  { if (msgEl.classList.contains('error')) clearMsg(); });
+
+  // ── Admin login ───────────────────────────────────────────
+  var overlay   = document.getElementById('admin-overlay');
+  var closeBtn  = document.getElementById('admin-close-btn');
+  var loginBtn  = document.getElementById('admin-login-btn');
+  var adminEmail = document.getElementById('admin-email');
+  var adminPw   = document.getElementById('admin-password');
+  var adminErr  = document.getElementById('admin-error');
+
+  function openAdminPanel() {
+    overlay.classList.add('open');
+    setTimeout(function () { adminEmail.focus(); }, 300);
+  }
+  function closeAdminPanel() {
+    overlay.classList.remove('open');
+    adminEmail.value  = '';
+    adminPw.value     = '';
+    adminErr.className = 'admin-error';
+    adminErr.textContent = '';
+    loginBtn.disabled    = false;
+    loginBtn.textContent = 'Sign In';
+  }
+
+  closeBtn.addEventListener('click', closeAdminPanel);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeAdminPanel();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeAdminPanel();
+  });
+
+  adminEmail.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') adminPw.focus();
+  });
+  adminPw.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') doAdminLogin();
+  });
+  loginBtn.addEventListener('click', doAdminLogin);
+
+  function doAdminLogin() {
+    var email    = adminEmail.value.trim();
+    var password = adminPw.value;
+    adminErr.className   = 'admin-error';
+    adminErr.textContent = '';
+
+    if (!email || !password) {
+      adminErr.textContent = 'Please enter your email and password.';
+      adminErr.className   = 'admin-error show';
+      return;
+    }
+
+    loginBtn.disabled    = true;
+    loginBtn.textContent = 'Signing in...';
+
+    auth.signInWithEmailAndPassword(email, password).then(function (cred) {
+      return db.collection('admins').doc(cred.user.uid).get().then(function (doc) {
+        if (!doc.exists) {
+          return auth.signOut().then(function () {
+            throw { friendly: 'Access denied. Not an authorised admin.' };
+          });
+        }
+        var role = (doc.data().role || '').toUpperCase();
+        if (role !== 'SUPER_ADMIN' && role !== 'ADMIN' && role !== 'VENDOR') {
+          return auth.signOut().then(function () {
+            throw { friendly: 'Access denied. Invalid role.' };
+          });
+        }
+        window.location.href = 'admin.html';
+      });
+    }).catch(function (err) {
+      var msg = err.friendly || 'Invalid credentials. Please try again.';
+      if (err.code === 'auth/too-many-requests')      msg = 'Too many failed attempts. Please wait and try again.';
+      if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
+      adminErr.textContent = msg;
+      adminErr.className   = 'admin-error show';
+      loginBtn.disabled    = false;
+      loginBtn.textContent = 'Sign In';
+    });
+  }
+
+  // ── Chat widget ───────────────────────────────────────────
+  fetch('chat-widget.html')
+    .then(function (r) { return r.text(); })
+    .then(function (html) {
+      document.getElementById('chat-container').innerHTML = html;
+      var script = document.createElement('script');
+      script.src = 'chat.js';
+      document.body.appendChild(script);
+    })
+    .catch(function (err) { console.error('Chat widget failed:', err); });
+</script>
+
+</body>
+</html>
