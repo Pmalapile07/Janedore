@@ -8,14 +8,6 @@
 
   if (!_isAdminPage) { return; }
 
-  // ─── permissions.js must be loaded before this file ──────────
-  // All role checks, UI gating, and data scoping go through:
-  //   window._can(module, action, context)
-  //   window._guard(module, action, context)
-  //   window._applyRoleUI()
-  //   window._scopedQuery(collectionRef)
-  // ─────────────────────────────────────────────────────────────
-
   function logError(context, err) {
     var msg = err && (err.message || String(err));
     console.error('[JANEDORE ADMIN][' + context + ']', msg);
@@ -70,8 +62,8 @@
   window._currentTab       = 'dashboard';
   window._allProducts      = [];
   window._currentUser      = null;
-  window._currentUserRole  = null;   // Set by loadUserRole() below.
-  window._currentVendorId  = null;   // Set for VENDOR role only.
+  window._currentUserRole  = null;
+  window._currentVendorId  = null;
   window._roleResolved     = false;
 
   window._totalUnreadMessages = 0;
@@ -95,7 +87,6 @@
     'Could you share your order number?'
   ];
 
-  // Roles that may log in at all. VIEWER is a safe fallback.
   var ALLOWED_ROLES = { SUPER_ADMIN: true, ADMIN: true, VENDOR: true, VIEWER: true };
 
   // ─── UTILITY FUNCTIONS ───────────────────────────────────────
@@ -283,8 +274,6 @@
         window._roleResolved = true;
         hideAuthLoading();
         safeSetDisplay('admin-panel', 'block');
-        // Apply role-driven UI — tabs, badges, super-admin elements.
-        // _applyRoleUI() is defined in permissions.js.
         window._applyRoleUI();
         loadProducts();
         startChatMonitoring();
@@ -320,18 +309,13 @@
   });
 
   // ─── ROLE LOADING ────────────────────────────────────────────
-  //
-  // Reads the admins collection for the signed-in uid.
-  // Sets window._currentUserRole and window._currentVendorId.
-  // permissions.js consumes these two globals for all _can() checks.
 
   function loadUserRole(user) {
     return adminsRef.doc(user.uid).get().then(function(doc) {
       if (doc.exists) {
         var data    = doc.data();
-        var rawRole = data.role || 'VIEWER';
+        var rawRole = (data.role || 'VIEWER').toUpperCase();
         window._currentUserRole = ALLOWED_ROLES[rawRole] ? rawRole : 'VIEWER';
-        // vendorId is only meaningful (and only set) for VENDOR role.
         window._currentVendorId = (window._currentUserRole === 'VENDOR')
           ? (data.vendorId || null)
           : null;
@@ -352,11 +336,10 @@
   // ─── TAB NAVIGATION ──────────────────────────────────────────
 
   window.switchTab = function(tab) {
-    // Deny navigation to tabs the current role cannot access.
     var TAB_MODULE_MAP = {
       dashboard: 'dashboard', products: 'products', orders: 'orders',
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
-      vendors: 'vendors', customers: 'customers'
+      vendors: 'vendors', customers: 'customers', settings: 'settings'
     };
     var module = TAB_MODULE_MAP[tab];
     if (module && !window._can(module, 'read')) {
@@ -395,6 +378,7 @@
       case 'orders':      if (window._renderOrdersTab)      window._renderOrdersTab();      break;
       case 'customers':   if (window._renderCustomersTab)   window._renderCustomersTab();   break;
       case 'vendors':     if (window._renderVendorsTab)     window._renderVendorsTab();     break;
+      case 'settings':    if (window._renderSettingsTab)    window._renderSettingsTab();    break;
     }
   }
 
@@ -405,8 +389,6 @@
   window._destroyCharts = destroyCharts;
 
   // ─── PRODUCT LOADING ─────────────────────────────────────────
-  //
-  // Uses _scopedQuery() from permissions.js — no role branching here.
 
   function loadProducts() {
     if (!window._currentUser || !window._roleResolved) return;
@@ -444,9 +426,6 @@
   window._loadProducts = loadProducts;
 
   // ─── CHAT MONITORING ─────────────────────────────────────────
-  //
-  // VENDOR users only see unread counts for their own sessions.
-  // SUPER_ADMIN and ADMIN see the global count.
 
   var chatsMonitorRef      = null;
   var chatsMonitorCallback = null;
@@ -461,7 +440,6 @@
       var isVendor = window._currentUserRole === 'VENDOR';
 
       snapshot.forEach(function(sessionSnap) {
-        // Vendors only count unread in their own sessions.
         if (isVendor) {
           var sessionData = sessionSnap.val() || {};
           if (sessionData.vendorId && sessionData.vendorId !== vid) return;
@@ -572,8 +550,6 @@
   window.addEventListener('beforeunload', function() { stopChatMonitoring(); destroyCharts(); });
 
   // ─── PUBLIC API ALIASES ──────────────────────────────────────
-  // Keep these so HTML onclick attributes and other modules that
-  // reference window.X continue to work without changes.
 
   window.loadProducts        = loadProducts;
   window.seedDefaultData     = window._seedDefaultData;
