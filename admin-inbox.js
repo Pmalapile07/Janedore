@@ -28,7 +28,10 @@
   var avatarInitials = window._avatarInitials;
   var QUICK_REPLIES  = window._QUICK_REPLIES || [];
 
-  var PLATFORM_NAME = 'Janedore';
+  var PLATFORM_NAME    = 'Janedore';
+  var PRESENCE_ROOT    = 'admin_presence';
+  var ASSIGNMENTS_ROOT = 'admin_assignments';
+  var INVITE_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 
   // ── Admin identity ────────────────────────────────────────────
   // Cached so we only hit Firestore once per session.
@@ -83,6 +86,181 @@
   // Warm the cache immediately on load so sync calls work.
   if (!(window._isSuperAdmin && window._isSuperAdmin())) {
     getAdminDisplayName().catch(function () {});
+  }
+
+  // ── Admin presence / availability ────────────────────────────
+  // Each admin can mark themselves available or unavailable.
+  // Stored at /admin_presence/{uid}/available: true|false
+  // Super Admin is never shown the toggle — they are always present.
+
+  var _availabilityRef = null;
+
+  function setAvailability(available) {
+    var uid = getAdminId();
+    rtdb.ref(PRESENCE_ROOT + '/' + uid).set({
+      available:   available,
+      updatedAt:   firebase.database.ServerValue.TIMESTAMP,
+      displayName: getAdminDisplayNameSync()
+    }).catch(function (e) { console.warn('[inbox] presence write failed', e.message); });
+    // Update toggle UI.
+    var toggle = document.getElementById('availability-toggle');
+    if (toggle) {
+      toggle.setAttribute('data-available', available ? '1' : '0');
+      toggle.textContent = available ? 'Available' : 'Busy';
+      toggle.className   = 'btn btn-sm ' + (available ? 'btn-primary' : 'btn-ghost');
+    }
+  }
+
+  function initPresence() {
+    // Only Admin role gets the availability toggle.
+    if (window._isSuperAdmin && window._isSuperAdmin()) return;
+    var uid = getAdminId();
+    // Default to available on login.
+    setAvailability(true);
+    // Mark unavailable on page unload.
+    window.addEventListener('beforeunload', function () {
+      rtdb.ref(PRESENCE_ROOT + '/' + uid + '/available').set(false).catch(function () {});
+    });
+  }
+
+  function readAdminAvailability(uid) {
+    return rtdb.ref(PRESENCE_ROOT + '/' + uid + '/available').once('value')
+      .then(function (snap) { return snap.val() !== false; }) // default true if no record
+      .catch(function () { return true; });
+  }
+
+  // ── Incoming invite notification for Admin ────────────────────
+  // Listens for pending invites on the admin_assignments node.
+  // Shows an accept/decline banner with a 2-minute auto-decline timer.
+
+  var _inviteListenerRef = null;
+  var _inviteTimers      = {};
+
+  function listenForInvites() {
+    if (window._isSuperAdmin && window._isSuperAdmin()) return;
+    var uid = getAdminId();
+    if (_inviteListenerRef) { _inviteListenerRef.off('child_added'); }
+    _inviteListenerRef = rtdb.ref(ASSIGNMENTS_ROOT + '/' + uid);
+    _inviteListenerRef.on('child_added', function (snap) {
+      var sessionId = snap.key;
+      // Only show banner if not already in this session.
+      if (window._activeChatSession === sessionId) return;
+      showInviteBanner(sessionId);
+    });
+  }
+
+  function showInviteBanner(sessionId) {
+    // Don't show duplicate banners for the same session.
+    if (document.getElementById('invite-banner-' + sessionId)) return;
+
+    var banner = document.createElement('div');
+    banner.id  = 'invite-banner-' + sessionId;
+    banner.style.cssText =
+      'position:fixed;top:0;left:0;right:0;z-index:8000;background:var(--surface,#fff);' +
+      'border-bottom:0.5px solid var(--border);padding:12px 16px;' +
+      'display:flex;align-items:center;gap:10px;justify-content:space-between;' +
+      'box-shadow:0 2px 12px rgba(0,0,0,0.08);animation:slideDown 0.2s ease;';
+
+    var timeLeft = Math.floor(INVITE_TIMEOUT_MS / 1000);
+    banner.innerHTML =
+      '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:12px;font-weight:500;color:var(--text);">Janedore assigned you to a chat</div>'
+        + '<div style="font-size:10px;color:var(--muted);margin-top:2px;" id="invite-timer-' + sessionId + '">'
+          + 'Auto-declining in ' + timeLeft + 's'
+        + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:6px;flex-shrink:0;">'
+        + '<button class="btn btn-sm btn-ghost" id="invite-decline-' + sessionId + '">Decline</button>'
+        + '<button class="btn btn-sm btn-primary" id="invite-accept-' + sessionId + '">Accept</button>'
+      + '</div>';
+
+    document.body.appendChild(banner);
+
+    // Countdown timer.
+    var elapsed = 0;
+    _inviteTimers[sessionId] = setInterval(function () {
+      elapsed += 1000;
+      timeLeft = Math.max(0, Math.floor((INVITE_TIMEOUT_MS - elapsed) / 1000));
+      var timerEl = document.getElementById('invite-timer-' + sessionId);
+      if (timerEl) timerEl.textContent = 'Auto-declining in ' + timeLeft + 's';
+      if (elapsed >= INVITE_TIMEOUT_MS) {
+        clearInterval(_inviteTimers[sessionId]);
+        delete _inviteTimers[sessionId];
+        declineInvite(sessionId, true);
+      }
+    }, 1000);
+
+    // Accept button.
+    var acceptBtn = document.getElementById('invite-accept-' + sessionId);
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', function () { acceptInvite(sessionId); });
+    }
+
+    // Decline button.
+    var declineBtn = document.getElementById('invite-decline-' + sessionId);
+    if (declineBtn) {
+      declineBtn.addEventListener('click', function () { declineInvite(sessionId, false); });
+    }
+  }
+
+  function dismissInviteBanner(sessionId) {
+    if (_inviteTimers[sessionId]) {
+      clearInterval(_inviteTimers[sessionId]);
+      delete _inviteTimers[sessionId];
+    }
+    var banner = document.getElementById('invite-banner-' + sessionId);
+    if (banner) banner.remove();
+  }
+
+  function acceptInvite(sessionId) {
+    dismissInviteBanner(sessionId);
+    var uid = getAdminId();
+    var ts  = firebase.database.ServerValue.TIMESTAMP;
+    var updates = {};
+    updates[ASSIGNMENTS_ROOT + '/' + uid + '/' + sessionId]                             = true;
+    updates['chat_inbox/' + sessionId + '/assignedAdmins/' + uid]                       = true;
+    updates[window._CHAT_ROOT + '/' + sessionId + '/meta/invites/' + uid + '/status']   = 'accepted';
+    updates[window._CHAT_ROOT + '/' + sessionId + '/meta/invites/' + uid + '/acceptedAt'] = ts;
+    rtdb.ref('/').update(updates).then(function () {
+      // Now send the "joined" system message.
+      getAdminDisplayName().then(function (name) {
+        var msgRef  = rtdb.ref(window._CHAT_ROOT + '/' + sessionId + '/messages').push();
+        var msgTs   = firebase.database.ServerValue.TIMESTAMP;
+        var msgUp   = {};
+        msgUp[window._CHAT_ROOT + '/' + sessionId + '/messages/' + msgRef.key] = {
+          text:      name + ' joined the chat.',
+          sender:    'system',
+          createdAt: msgTs,
+          read:      true,
+          delivered: true,
+          sessionId: sessionId
+        };
+        msgUp['chat_inbox/' + sessionId + '/lastMessage']   = name + ' joined the chat.';
+        msgUp['chat_inbox/' + sessionId + '/lastMessageAt'] = msgTs;
+        return rtdb.ref('/').update(msgUp);
+      }).catch(function () {});
+      // Open the session immediately.
+      if (window._renderMessagesTab) window._renderMessagesTab();
+      setTimeout(function () {
+        if (window._openChatSession) window._openChatSession(sessionId);
+      }, 300);
+    }).catch(function (e) {
+      if (window._showToast) window._showToast('Could not accept chat: ' + e.message, 'error');
+    });
+  }
+
+  function declineInvite(sessionId, timedOut) {
+    dismissInviteBanner(sessionId);
+    var uid     = getAdminId();
+    var updates = {};
+    // Remove from assignment index so their inbox subscription drops it.
+    updates[ASSIGNMENTS_ROOT + '/' + uid + '/' + sessionId]                            = null;
+    updates['chat_inbox/' + sessionId + '/assignedAdmins/' + uid]                      = null;
+    updates[window._CHAT_ROOT + '/' + sessionId + '/meta/invites/' + uid + '/status']  = timedOut ? 'timed_out' : 'declined';
+    rtdb.ref('/').update(updates).catch(function () {});
+    if (window._showToast) {
+      window._showToast(timedOut ? 'Chat invite expired — Janedore has been notified.' : 'Chat declined.', 'info');
+    }
   }
 
   // ── Notification sound ────────────────────────────────────────
@@ -581,18 +759,26 @@
   // ── Renderer ──────────────────────────────────────────────────
   var ChatRenderer = {
     renderInboxShell: function (container) {
+      var isAdmin = !window._isSuperAdmin || !window._isSuperAdmin();
       container.innerHTML =
         '<div class="section-header" style="margin-bottom:12px;">'
           + '<div class="section-title">Inbox</div>'
-          + '<div class="section-actions"><input class="search-input" id="chat-search" placeholder="Search..." autocomplete="off" style="min-width:140px;max-width:200px;"></div>'
+          + '<div class="section-actions" style="display:flex;gap:8px;align-items:center;">'
+            + '<input class="search-input" id="chat-search" placeholder="Search..." autocomplete="off" style="min-width:140px;max-width:200px;">'
+            // Availability toggle — Admin only, Super Admin never sees this.
+            + (isAdmin
+                ? '<button class="btn btn-sm btn-primary" id="availability-toggle" data-available="1">Available</button>'
+                : '')
+          + '</div>'
         + '</div>'
         + '<div id="chat-offline-banner" style="display:none;background:var(--warning,#f59e0b);color:#fff;font-size:11px;padding:6px 12px;border-radius:4px;margin-bottom:8px;">'
           + '<i class="ph-light ph-warning" style="margin-right:4px;"></i> Offline — showing cached data'
         + '</div>'
         + '<div style="display:flex;gap:6px;margin-bottom:12px;" id="chat-tab-bar">'
-          + '<button class="btn btn-sm btn-primary" data-tab="all"    id="chat-tab-all">All</button>'
-          + '<button class="btn btn-sm btn-ghost"   data-tab="unread" id="chat-tab-unread">Unread</button>'
-          + '<button class="btn btn-sm btn-ghost"   data-tab="pinned" id="chat-tab-pinned">Pinned</button>'
+          + '<button class="btn btn-sm btn-primary" data-tab="all"      id="chat-tab-all">All</button>'
+          + '<button class="btn btn-sm btn-ghost"   data-tab="unread"   id="chat-tab-unread">Unread</button>'
+          + '<button class="btn btn-sm btn-ghost"   data-tab="pinned"   id="chat-tab-pinned">Pinned</button>'
+          + '<button class="btn btn-sm btn-ghost"   data-tab="resolved" id="chat-tab-resolved">Resolved</button>'
         + '</div>'
         + '<div id="chat-sessions-wrap" class="chat-sessions-wrap"></div>';
     },
@@ -652,9 +838,13 @@
       var tab    = ChatState.getFilterTab();
       var search = ChatState.getSearchQuery().toLowerCase();
       var ids    = Object.keys(sessions).filter(function (sid) {
-        var s = sessions[sid];
-        if (tab === 'unread' && !s.unreadCount) return false;
-        if (tab === 'pinned' && !s.pinned)      return false;
+        var s          = sessions[sid];
+        var isResolved = s.status === 'resolved';
+        // Resolved tab shows only resolved. All other tabs hide resolved.
+        if (tab === 'resolved' && !isResolved)  return false;
+        if (tab !== 'resolved' && isResolved)   return false;
+        if (tab === 'unread'   && !s.unreadCount) return false;
+        if (tab === 'pinned'   && !s.pinned)      return false;
         if (search && ((s.customerName || '') + ' ' + sid).toLowerCase().indexOf(search) === -1) return false;
         return true;
       });
@@ -675,7 +865,9 @@
       var name    = s.customerName || sid.substring(0, 22);
       var badge   = s.unreadCount > 0
         ? '<span class="session-unread-count">' + Number(s.unreadCount) + '</span>'
-        : (s.pinned ? '<span class="badge badge-processing" style="font-size:9px;">Pinned</span>' : '');
+        : s.status === 'resolved'
+          ? '<span class="badge badge-delivered" style="font-size:9px;">Resolved</span>'
+          : (s.pinned ? '<span class="badge badge-processing" style="font-size:9px;">Pinned</span>' : '');
       var card = document.createElement('div');
       card.className = 'chat-session-card' + (s.unreadCount > 0 ? ' unread' : '');
       card.setAttribute('data-sid',  sid);
@@ -768,6 +960,10 @@
               + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Order history</div>'
               + '<div id="cinfo-orders"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
             + '</div>'
+            + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
+              + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Customer satisfaction</div>'
+              + '<div id="cinfo-satisfaction"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
+            + '</div>'
           + '</div>'
         + '</div>'
         + '<div class="card" style="margin-top:12px;">'
@@ -793,16 +989,22 @@
         ? '<div style="font-size:11px;color:var(--muted);padding:8px 0;">No other admins available.</div>'
         : options.map(function(a) {
             var displayName = a.data.name || a.data.email || a.id;
+            var available   = a.available !== false; // default true if not set
             return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);">'
               + '<div>'
                 + '<div style="font-size:12px;font-weight:500;">' + esc(displayName) + '</div>'
-                + '<div style="font-size:10px;color:var(--muted);">' + esc((a.data.role || '').replace('_', ' ')) + '</div>'
+                + '<div style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px;">'
+                  + '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + (available ? 'var(--success,#22c55e)' : 'var(--danger,#ef4444)') + ';"></span>'
+                  + (available ? 'Available' : 'Busy')
+                + '</div>'
               + '</div>'
-              + '<button class="btn btn-sm btn-ghost invite-admin-confirm-btn"'
-                + ' data-uid="'   + esc(a.id)                      + '"'
-                + ' data-name="'  + esc(displayName)                + '">'
-                + '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite'
-              + '</button>'
+              + (available
+                  ? '<button class="btn btn-sm btn-ghost invite-admin-confirm-btn"'
+                      + ' data-uid="'  + esc(a.id)          + '"'
+                      + ' data-name="' + esc(displayName)    + '">'
+                      + '<i class="ph-light ph-user-plus" style="margin-right:4px;"></i>Invite'
+                    + '</button>'
+                  : '<span style="font-size:10px;color:var(--muted);">Unavailable</span>')
             + '</div>';
           }).join('');
 
@@ -908,6 +1110,31 @@
           });
       } else if (ordersEl) {
         ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No session ID</span>';
+      }
+
+      // Satisfaction result.
+      var satEl = safeEl('cinfo-satisfaction');
+      if (satEl && sessionId) {
+        rtdb.ref(window._CHAT_ROOT + '/' + sessionId + '/meta/satisfaction').once('value')
+          .then(function (snap) {
+            var el = safeEl('cinfo-satisfaction');
+            if (!el) return;
+            var sat = snap.val();
+            if (!sat) {
+              el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Not yet rated</span>';
+              return;
+            }
+            var dot   = sat.satisfied
+              ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--success,#22c55e);margin-right:5px;vertical-align:middle;"></span>'
+              : '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--danger,#ef4444);margin-right:5px;vertical-align:middle;"></span>';
+            var label = sat.satisfied ? 'Satisfied' : 'Needs follow-up';
+            var time  = sat.respondedAt ? ' · ' + window._fmtTime(sat.respondedAt) : '';
+            el.innerHTML = '<span style="font-size:10.5px;">' + dot + label + '<span style="color:var(--muted);">' + time + '</span></span>';
+          })
+          .catch(function () {
+            var el = safeEl('cinfo-satisfaction');
+            if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load</span>';
+          });
       }
     },
 
@@ -1031,7 +1258,7 @@
     setSendLock:        function (locked) { var input = safeEl('reply-input'); var btn = safeEl('chat-send-btn'); if (input) input.disabled = locked; if (btn) btn.disabled = locked; },
     setOfflineBanner:   function (offline) { var el = safeEl('chat-offline-banner'); if (el) el.style.display = offline ? 'block' : 'none'; },
     setPinButton:       function (pinned)  { var btn = safeEl('chat-pin-btn'); if (btn) { btn.textContent = pinned ? 'Unpin' : 'Pin'; btn.setAttribute('data-pinned', pinned ? '1' : '0'); } },
-    setTabActive:       function (tab)     { ['all','unread','pinned'].forEach(function (t) { var b = safeEl('chat-tab-' + t); if (b) b.className = 'btn btn-sm ' + (t === tab ? 'btn-primary' : 'btn-ghost'); }); },
+    setTabActive:       function (tab)     { ['all','unread','pinned','resolved'].forEach(function (t) { var b = safeEl('chat-tab-' + t); if (b) b.className = 'btn btn-sm ' + (t === tab ? 'btn-primary' : 'btn-ghost'); }); },
     setNoteLock:        function (locked)  { var indicator = safeEl('note-lock-indicator'); var noteEl = safeEl('chat-note'); var saveBtn = safeEl('chat-save-note-btn'); if (indicator) indicator.style.display = locked ? 'inline' : 'none'; if (noteEl) noteEl.disabled = locked; if (saveBtn) saveBtn.disabled = locked; }
   };
 
@@ -1069,6 +1296,8 @@
       ChatRenderer.renderInboxShell(mc);
       self._bindInboxEvents();
       self._initConnectionMonitor();
+      initPresence();
+      listenForInvites();
       var cached = U.lsGet(Cfg.LS_KEY, Cfg.LS_TTL_MS);
       if (cached) {
         ChatState.setSessions(cached);
@@ -1131,19 +1360,9 @@
         if (nameEl2 && fresh.customerName) nameEl2.textContent = fresh.customerName;
       }).catch(function() {});
 
-      // Send "X joined the chat" system message the first time this
-      // admin opens this session. Skipped for Super Admin — they are
-      // anonymous to the customer (Janedore presence is implicit).
-      if (!ChatState.hasJoinedSession(sessionId) && !window._isSuperAdmin()) {
-        getAdminDisplayName().then(function (name) {
-          if (ChatState.hasJoinedSession(sessionId)) return; // race guard
-          ChatState.markJoinedSession(sessionId);
-          ChatDB.sendSystemMessage(sessionId, name + ' joined the chat.');
-        }).catch(function () {});
-      } else if (!ChatState.hasJoinedSession(sessionId) && window._isSuperAdmin()) {
-        // Super Admin joins silently — no system message.
-        ChatState.markJoinedSession(sessionId);
-      }
+      // "X joined the chat" fires inside acceptInvite() — not here.
+      // Super Admin opens silently. Admin only announces after accepting.
+      ChatState.markJoinedSession(sessionId);
 
       ChatDB.loadAndSubscribeMessages(sessionId,
         function (msgs, hasMore) {
@@ -1234,12 +1453,19 @@
     },
 
     openInviteModal: function (sessionId) {
-      var self = this;
       getAdminDisplayName().then(function (inviterName) {
         ChatDB.loadAdmins()
           .then(function(snap) {
             var admins = snap.docs.map(function(d) { return { id: d.id, data: d.data() }; });
-            ChatRenderer.renderInviteModal(admins, sessionId, inviterName);
+            // Fetch availability for each admin from RTDB presence node.
+            var presencePromises = admins.map(function (a) {
+              return rtdb.ref(PRESENCE_ROOT + '/' + a.id + '/available').once('value')
+                .then(function (s) { a.available = s.val() !== false; })
+                .catch(function () { a.available = true; });
+            });
+            return Promise.all(presencePromises).then(function () {
+              ChatRenderer.renderInviteModal(admins, sessionId, inviterName);
+            });
           })
           .catch(function(err) { showToast('Could not load admins: ' + err.message, 'error'); });
       });
@@ -1298,6 +1524,13 @@
       var self = this;
       var tabBar   = safeEl('chat-tab-bar'); if (tabBar) tabBar.addEventListener('click', function (e) { var btn = e.target.closest('[data-tab]'); if (btn) self.setFilterTab(btn.dataset.tab); });
       var searchEl = safeEl('chat-search');  if (searchEl) searchEl.addEventListener('input', function (e) { self.setSearchQuery(e.target.value || ''); });
+      var avToggle = safeEl('availability-toggle');
+      if (avToggle) {
+        avToggle.addEventListener('click', function () {
+          var current = avToggle.getAttribute('data-available') === '1';
+          setAvailability(!current);
+        });
+      }
       var wrap     = safeEl('chat-sessions-wrap');
       if (wrap) {
         wrap.addEventListener('click',   function (e) { var card = e.target.closest('[data-sid]'); if (card) self.openSession(card.dataset.sid); });
