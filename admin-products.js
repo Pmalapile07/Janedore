@@ -101,7 +101,7 @@
     { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", vendorId:"janedore", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", tags:[], shippingWeight:0.3, internationalShipping:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"],detail:[]}}] },
     { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", vendorId:"janedore", category:"dresses", price:450, salePrice:null, badge:"new", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"The Raffle Brandy black dress.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", tags:[], shippingWeight:0.5, internationalShipping:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"],detail:[]}}] },
     { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", vendorId:"thato", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", tags:[], shippingWeight:0.2, internationalShipping:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Pale Linen",swatch:"#EBEDE0",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"],detail:[]}}] },
-    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", vendorId:"thato", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", tags:[], shippingWeight:0.2, internationalShipping:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Pink Rain",swatch:"#F3DBD7",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"],detail:[]}}] },
+    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", vendorId:"thato", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", tags:[], shippingWeight:0.2, internationalShipping:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Pink Rain",swatch:"#F3DBD7",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4C42-421E-A549-F67099AD9B79.png?v=1778801677"],detail:[]}}] },
     { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", vendorId:"janedore", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", tags:[], shippingWeight:0.4, internationalShipping:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), variants:[{color:"Black",swatch:"#111",images:{model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"],ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"],detail:[]}}] }
   ];
 
@@ -125,7 +125,7 @@
     var hasAny = allProducts.length > 0;
 
     mc.innerHTML =
-      (!isSuperAdmin() ? '<div class="vendor-scope-bar">Showing your brand products only</div>' : '') +
+      (window._currentUserRole === 'VENDOR' ? '<div class="vendor-scope-bar">Showing your brand products only</div>' : '') +
       '<div class="section-header" style="margin-bottom:10px;">' +
         '<div class="section-title">Products</div>' +
         '<div class="section-actions">' +
@@ -225,7 +225,6 @@
      Variants simply reference URLs from this pool.
   ───────────────────────────────────────────────────────── */
 
-  // In-memory pool for the current editing session: array of secure_url strings
   var _mediaPool = [];
 
   function _poolFromProduct(p) {
@@ -260,13 +259,11 @@
         '</button>' +
       '</div>';
     }).join('');
-    // Also refresh variant image selectors
     _renderAllVariantImageSelectors();
   }
 
   window._removeFromPool = function(index) {
     var removed = _mediaPool.splice(index, 1)[0];
-    // Remove from any variant that references it
     var container = safeEl('variants-container');
     if (container) {
       container.querySelectorAll('.variant-block').forEach(function(block) {
@@ -292,8 +289,6 @@
 
   /* ─────────────────────────────────────────────────────────
      VARIANT IMAGE SELECTORS
-     Each variant has 3 multi-selects: model, ghost, detail
-     Options are populated from _mediaPool
   ───────────────────────────────────────────────────────── */
   function _buildVariantImageSelector(type, variantIndex, selectedUrls) {
     selectedUrls = selectedUrls || [];
@@ -319,7 +314,6 @@
   }
 
   window._onVariantImgChange = function(variantIndex) {
-    // Refresh the preview strip for this variant
     _refreshVariantPreviewStrip(variantIndex);
   };
 
@@ -354,7 +348,6 @@
     if (!container) return;
     container.querySelectorAll('.variant-block').forEach(function(block) {
       var vi = parseInt(block.getAttribute('data-variant-index'), 10);
-      // Get currently selected values before re-rendering
       var getSelected = function(type) {
         var sel = block.querySelector('[data-img-type="' + type + '"]');
         return sel ? Array.from(sel.selectedOptions).map(function(o){ return o.value; }) : [];
@@ -408,7 +401,6 @@
       });
     }
 
-    // Seed the media pool from existing product images
     _mediaPool = _poolFromProduct(p);
 
     var mc = safeEl('main-content');
@@ -416,7 +408,6 @@
     var isNew = !p.id;
 
     mc.innerHTML =
-      /* ── Top bar: Cancel left, Save right ── */
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
         '<button type="button" class="btn btn-ghost" onclick="window._renderProductsTab()">' +
           '<i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Cancel' +
@@ -429,9 +420,6 @@
 
       '<form id="product-form" onsubmit="window._handleProductSubmit(event,\'' + esc(p.id) + '\')">' +
 
-      /* ══════════════════════════════════════════
-         STATUS
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Status</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
@@ -458,9 +446,6 @@
         '</div>' +
       '</div>' +
 
-      /* ══════════════════════════════════════════
-         MEDIA POOL — upload everything here first
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header" style="justify-content:space-between;">' +
           '<span class="card-title">Media</span>' +
@@ -475,9 +460,6 @@
         '</div>' +
       '</div>' +
 
-      /* ══════════════════════════════════════════
-         PRODUCT INFO
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Product info</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
@@ -512,9 +494,6 @@
         '</div>' +
       '</div>' +
 
-      /* ══════════════════════════════════════════
-         PRICING
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Pricing</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
@@ -530,9 +509,6 @@
         '</div>' +
       '</div>' +
 
-      /* ══════════════════════════════════════════
-         INVENTORY
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Inventory</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
@@ -556,9 +532,6 @@
         '</div>' +
       '</div>' +
 
-      /* ══════════════════════════════════════════
-         VARIANTS — color + image assignment only
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header" style="justify-content:space-between;">' +
           '<span class="card-title">Variants</span>' +
@@ -569,9 +542,6 @@
         '</div>' +
       '</div>' +
 
-      /* ══════════════════════════════════════════
-         SHIPPING
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Shipping</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
@@ -593,9 +563,6 @@
         '</div>' +
       '</div>' +
 
-      /* ══════════════════════════════════════════
-         TAGS
-      ══════════════════════════════════════════ */
       '<div class="card" style="margin-bottom:24px;">' +
         '<div class="card-header"><span class="card-title">Tags</span></div>' +
         '<div style="padding:12px 16px;">' +
@@ -608,14 +575,13 @@
 
       '</form>';
 
-    // Render media pool and init helpers
     _renderMediaPool();
     window._pfUpdateMargin();
     window._pfUpdateStockLabel();
   };
 
   /* ─────────────────────────────────────────────────────────
-     VARIANT BLOCK — simplified: color + swatch + image assignment
+     VARIANT BLOCK
   ───────────────────────────────────────────────────────── */
   function buildVariantBlock(v, index, category) {
     v = v || {};
@@ -631,7 +597,6 @@
         '<button type="button" class="btn btn-xs btn-ghost" style="color:var(--danger);" onclick="window._removeVariant('+index+')">Remove</button>' +
       '</div>' +
 
-      /* Color name + swatch */
       '<div style="display:flex;gap:10px;margin-bottom:12px;">' +
         '<div class="form-group" style="padding:0;flex:1;">' +
           '<label>Color name</label>' +
@@ -646,14 +611,12 @@
         '</div>' +
       '</div>' +
 
-      /* Image assignment from pool */
       '<div class="variant-img-selectors">' +
         _buildVariantImageSelector('model',  index, modelUrls)  +
         _buildVariantImageSelector('ghost',  index, ghostUrls)  +
         _buildVariantImageSelector('detail', index, detailUrls) +
       '</div>' +
 
-      /* Preview strip */
       '<div id="variant-preview-strip-' + index + '" style="margin-top:8px;">' +
         '<div style="font-size:10.5px;color:var(--muted);">No images assigned</div>' +
       '</div>' +
@@ -766,7 +729,6 @@
       variants:             []
     };
 
-    // Collect variants — images come from the multi-selects
     var vi = 0;
     while (form['variant-color-' + vi] !== undefined) {
       var block = document.querySelector('[data-variant-index="' + vi + '"]');
