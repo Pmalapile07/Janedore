@@ -36,6 +36,9 @@
 <div id="admin-panel">
   <nav id="top-nav">
     <span class="nav-brand">JANEDORE</span>
+    <button class="nav-icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme" style="margin-right:4px;">
+      <i class="ph-light ph-moon" id="theme-icon"></i>
+    </button>
     <div class="nav-avatar" id="admin-avatar" title="Account"><span id="admin-initials">A</span></div>
   </nav>
 
@@ -100,6 +103,59 @@ function togglePw(){
 }
 function openMoreMenu(){document.getElementById('more-menu-overlay').classList.add('open');document.getElementById('more-menu-panel').classList.add('open');}
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');}
+
+// ─── THEME TOGGLE ──────────────────────────────────────────
+function toggleTheme() {
+  var root = document.documentElement;
+  var icon = document.getElementById('theme-icon');
+  
+  if (root.classList.contains('dark-mode')) {
+    // Switch to light
+    root.classList.remove('dark-mode');
+    root.classList.add('light-mode');
+    localStorage.setItem('jd_theme', 'light');
+    if (icon) { icon.className = 'ph-light ph-sun'; }
+  } else if (root.classList.contains('light-mode')) {
+    // Switch to system default
+    root.classList.remove('light-mode');
+    localStorage.removeItem('jd_theme');
+    updateThemeIcon();
+  } else {
+    // Switch to dark
+    root.classList.add('dark-mode');
+    localStorage.setItem('jd_theme', 'dark');
+    if (icon) { icon.className = 'ph-light ph-sun'; }
+  }
+}
+
+function updateThemeIcon() {
+  var icon = document.getElementById('theme-icon');
+  if (!icon) return;
+  var root = document.documentElement;
+  var isDark = root.classList.contains('dark-mode') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches && !root.classList.contains('light-mode'));
+  icon.className = isDark ? 'ph-light ph-sun' : 'ph-light ph-moon';
+}
+
+// Apply saved theme on load
+(function initTheme() {
+  var saved = localStorage.getItem('jd_theme');
+  var root = document.documentElement;
+  
+  if (saved === 'dark') {
+    root.classList.add('dark-mode');
+  } else if (saved === 'light') {
+    root.classList.add('light-mode');
+  }
+  
+  setTimeout(updateThemeIcon, 100);
+  
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    if (!localStorage.getItem('jd_theme')) {
+      updateThemeIcon();
+    }
+  });
+})();
 </script>
 
 <script>
