@@ -461,3 +461,104 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
   .dash-stat-grid{grid-template-columns:repeat(4,1fr);}
   .no-action-bar{bottom:0;}
 }
+/* ── DARK MODE ───────────────────────────────────────────────── */
+/* System preference */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-mode) {
+    --bg: #0f0f11;
+    --surface: #1a1a1e;
+    --surface2: #222228;
+    --surface3: #2a2a30;
+    --border: rgba(255,255,255,0.08);
+    --border-med: rgba(255,255,255,0.12);
+    --border-light: rgba(255,255,255,0.04);
+    --text: #f0f0f2;
+    --text2: #c8c8ce;
+    --muted: #8e8e96;
+    --muted2: #666670;
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.3);
+    --accent-soft: rgba(96,165,250,0.12);
+    --success-soft: rgba(52,211,153,0.12);
+    --warning-soft: rgba(251,191,36,0.12);
+    --danger-soft: rgba(248,113,113,0.12);
+    --purple-soft: rgba(167,139,250,0.12);
+  }
+  :root:not(.light-mode) .chat-messages-panel {
+    background: #141418;
+  }
+  :root:not(.light-mode) .vendor-scope-bar {
+    background: rgba(96,165,250,0.08);
+    border-color: rgba(96,165,250,0.2);
+    color: #93c5fd;
+  }
+  :root:not(.light-mode) .orders-abandoned-banner {
+    background: rgba(251,191,36,0.08);
+  }
+}
+
+/* Forced dark mode (user toggled) */
+:root.dark-mode {
+  --bg: #0f0f11;
+  --surface: #1a1a1e;
+  --surface2: #222228;
+  --surface3: #2a2a30;
+  --border: rgba(255,255,255,0.08);
+  --border-med: rgba(255,255,255,0.12);
+  --border-light: rgba(255,255,255,0.04);
+  --text: #f0f0f2;
+  --text2: #c8c8ce;
+  --muted: #8e8e96;
+  --muted2: #666670;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.3);
+  --accent-soft: rgba(96,165,250,0.12);
+  --success-soft: rgba(52,211,153,0.12);
+  --warning-soft: rgba(251,191,36,0.12);
+  --danger-soft: rgba(248,113,113,0.12);
+  --purple-soft: rgba(167,139,250,0.12);
+}
+:root.dark-mode .chat-messages-panel {
+  background: #141418;
+}
+:root.dark-mode .vendor-scope-bar {
+  background: rgba(96,165,250,0.08);
+  border-color: rgba(96,165,250,0.2);
+  color: #93c5fd;
+}
+:root.dark-mode .orders-abandoned-banner {
+  background: rgba(251,191,36,0.08);
+}
+
+/* Forced light mode (user toggled) */
+:root.light-mode {
+  --bg: #f2f2f4;
+  --surface: #ffffff;
+  --surface2: #f9f9fb;
+  --surface3: #f4f4f6;
+  --border: rgba(0,0,0,0.09);
+  --border-med: rgba(0,0,0,0.13);
+  --border-light: rgba(0,0,0,0.05);
+  --text: #111111;
+  --text2: #3a3a3a;
+  --muted: #8a8a8a;
+  --muted2: #b0b0b0;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.07);
+  --accent-soft: rgba(26,86,219,0.09);
+  --success-soft: rgba(26,135,66,0.1);
+  --warning-soft: rgba(192,112,0,0.1);
+  --danger-soft: rgba(192,57,43,0.1);
+  --purple-soft: rgba(110,64,201,0.1);
+}
+:root.light-mode .chat-messages-panel {
+  background: #f0f2f5;
+}
+:root.light-mode .vendor-scope-bar {
+  background: var(--accent-soft);
+  border-color: rgba(26,86,219,0.18);
+  color: var(--accent);
+}
+:root.light-mode .orders-abandoned-banner {
+  background: var(--warning-soft);
+}
