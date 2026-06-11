@@ -412,23 +412,122 @@ function listenStatus() {
   if (!rtdb) return;
   _statusListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/status');
   _statusListenerCb  = snap => {
-    if (snap.val() === 'resolved' && !_satisfactionShown) {
+    const status = snap.val();
+    if (status === 'resolved' && !_satisfactionShown) {
       _satisfactionShown = true;
-      showSatisfactionPrompt();
+      showResolvedState();
+    } else if (status !== 'resolved' && _satisfactionShown) {
+      // Status changed back from resolved, re-enable chat
+      _satisfactionShown = false;
+      const input = safeEl('chat-input');
+      const sendBtn = safeEl('chat-send-btn');
+      if (input) { 
+        input.disabled = false; 
+        input.placeholder = 'Type your message...'; 
+      }
+      if (sendBtn) sendBtn.disabled = false;
+      
+      // Remove any existing reopen button
+      const reopenBtn = document.getElementById('chat-reopen-btn');
+      if (reopenBtn) reopenBtn.remove();
     }
   };
   _statusListenerRef.on('value', _statusListenerCb);
 }
 
-function showSatisfactionPrompt() {
+function showResolvedState() {
   const el = safeEl('chat-messages');
   if (!el) return;
 
   // Disable the input — conversation is closed.
   const input   = safeEl('chat-input');
   const sendBtn = safeEl('chat-send-btn');
-  if (input)   { input.disabled = true; input.placeholder = 'Conversation resolved'; }
+  if (input)   { input.disabled = true; input.placeholder = 'Conversation resolved - Reply below to reopen'; }
   if (sendBtn) sendBtn.disabled = true;
+  
+  // Add a reopen button below the input area
+  const inputWrap = safeEl('chat-input-wrap');
+  if (inputWrap) {
+    // Remove existing reopen button if any
+    const existingBtn = document.getElementById('chat-reopen-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    const reopenBtn = document.createElement('button');
+    reopenBtn.id = 'chat-reopen-btn';
+    reopenBtn.textContent = 'Need more help? Click here to reopen';
+    reopenBtn.style.cssText = 'width:100%;padding:8px;margin-top:5px;background:#f0f0f0;border:0.5px solid #ccc;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;color:#555;';
+    reopenBtn.addEventListener('click', reopenChat);
+    inputWrap.parentNode.insertBefore(reopenBtn, inputWrap.nextSibling);
+  }
+
+  showSatisfactionPrompt();
+}
+
+async function reopenChat() {
+  const rtdb = getRTDB();
+  if (!rtdb) return;
+  
+  try {
+    await ensureAuth();
+    const user = firebase.auth().currentUser;
+    
+    // Reset the status to open
+    await rtdb.ref('live_chat/' + chatSessionId + '/meta/status').set('open');
+    
+    // Add a system message indicating the chat was reopened
+    const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+    await msgRef.set({
+      sessionId:     chatSessionId,
+      customerEmail: customerEmail,
+      customerName:  customerName,
+      text:          'Customer requested to reopen this conversation',
+      sender:        'system',
+      type:          'reopen',
+      createdAt:     firebase.database.ServerValue.TIMESTAMP,
+      userId:        user ? user.uid : 'anonymous'
+    });
+    
+    // Update inbox
+    const updates = {};
+    updates['chat_inbox/' + chatSessionId + '/status'] = 'open';
+    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = 'Conversation reopened by customer';
+    updates['chat_inbox/' + chatSessionId + '/lastMessageAt'] = firebase.database.ServerValue.TIMESTAMP;
+    updates['chat_inbox/' + chatSessionId + '/unreadCount'] = firebase.database.ServerValue.increment(1);
+    await rtdb.ref('/').update(updates);
+    
+    // Re-enable the input
+    const input = safeEl('chat-input');
+    const sendBtn = safeEl('chat-send-btn');
+    if (input) { 
+      input.disabled = false; 
+      input.placeholder = 'Type your message...'; 
+      input.focus();
+    }
+    if (sendBtn) sendBtn.disabled = false;
+    
+    // Remove the reopen button
+    const reopenBtn = document.getElementById('chat-reopen-btn');
+    if (reopenBtn) reopenBtn.remove();
+    
+    // Reset satisfaction flag
+    _satisfactionShown = false;
+    
+    // Remove satisfaction prompt if it exists
+    const satPrompt = document.getElementById('satisfaction-prompt');
+    if (satPrompt) satPrompt.remove();
+    
+  } catch(e) {
+    console.error('[Chat] Reopen error:', e.message);
+    alert('Failed to reopen conversation. Please try again.');
+  }
+}
+
+function showSatisfactionPrompt() {
+  const el = safeEl('chat-messages');
+  if (!el) return;
+
+  // Don't show duplicate prompt
+  if (document.getElementById('satisfaction-prompt')) return;
 
   const prompt = document.createElement('div');
   prompt.id        = 'satisfaction-prompt';
@@ -484,6 +583,19 @@ async function submitSatisfaction(satisfied) {
     + '</div>';
   el.appendChild(thanks);
   el.scrollTop = el.scrollHeight;
+  
+  // Keep the reopen button visible even after satisfaction response
+  if (!document.getElementById('chat-reopen-btn')) {
+    const inputWrap = safeEl('chat-input-wrap');
+    if (inputWrap) {
+      const reopenBtn = document.createElement('button');
+      reopenBtn.id = 'chat-reopen-btn';
+      reopenBtn.textContent = 'Need more help? Click here to reopen';
+      reopenBtn.style.cssText = 'width:100%;padding:8px;margin-top:5px;background:#f0f0f0;border:0.5px solid #ccc;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;color:#555;';
+      reopenBtn.addEventListener('click', reopenChat);
+      inputWrap.parentNode.insertBefore(reopenBtn, inputWrap.nextSibling);
+    }
+  }
 }
 
 // ==================== ORDER LOOKUP ====================
