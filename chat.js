@@ -252,8 +252,13 @@ function appendMessage(m) {
 
   // Show sender name on admin messages if stored — so customer knows
   // whether they are speaking to Janedore or a named team member.
-  const nameHtml = (!isCustomer && m.senderName)
-    ? '<div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:400;">' + m.senderName + '</div>'
+  // Never render email addresses — if senderName looks like an email,
+  // fall back to Janedore so internal addresses are never exposed.
+  var rawName    = (!isCustomer && m.senderName) ? m.senderName : '';
+  var safeName   = (rawName && rawName.indexOf('@') === -1) ? rawName : 'Janedore';
+  var showName   = !isCustomer && rawName;
+  const nameHtml = showName
+    ? '<div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:400;">' + safeName + '</div>'
     : '';
 
   div.innerHTML = nameHtml + m.text + '<div class="chat-msg-time">' + time + '</div>';
