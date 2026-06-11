@@ -341,55 +341,57 @@
     },
 
     // Super Admin and Admin see different sets of sessions.
-    // Super Admin: all sessions ordered by lastMessageAt.
-    // Admin: only sessions where their uid appears in assignedAdmins array.
-    // RTDB does not support array-contains so Admin sessions are stored
-    // with a flat map at chat_inbox/{sid}/assignedAdmins/{uid}: true
-    // allowing orderByChild scoping.
+    // Super Admin: subscribes to all of chat_inbox.
+    // Admin: subscribes ONLY to /admin_assignments/{uid} — a flat list of
+    // sessionIds assigned to them. For each assignment, the inbox entry is
+    // fetched from chat_inbox and kept live. This means Admin never receives
+    // sessions they were not explicitly assigned to — zero leakage.
     subscribeInbox: function (onAdded, onChanged, onRemoved, onError) {
       var isSuper = window._isSuperAdmin && window._isSuperAdmin();
       var uid     = getAdminId();
-      var ref;
 
-      if (isSuper || window._currentUserRole === 'ADMIN') {
-        // Super Admin sees everything.
-        // Admin sees everything too at the inbox level — scoping is
-        // enforced at the session level by checking assignedAdmins.
-        // Full scoping requires a Cloud Function to index sessions per admin;
-        // for now Admin sees all inbox entries but cannot open unassigned ones.
-        ref = rtdb.ref(INBOX_ROOT).orderByChild('lastMessageAt').limitToLast(Cfg.INBOX_PAGE);
-      } else {
-        ref = rtdb.ref(INBOX_ROOT).orderByChild('lastMessageAt').limitToLast(Cfg.INBOX_PAGE);
+      if (isSuper) {
+        // Super Admin — full inbox, all sessions.
+        var ref       = rtdb.ref(INBOX_ROOT).orderByChild('lastMessageAt').limitToLast(Cfg.INBOX_PAGE);
+        var addedCb   = function (s) { if (s.val()) onAdded(s.key,   s.val()); };
+        var changedCb = function (s) { if (s.val()) onChanged(s.key, s.val()); };
+        var removedCb = function (s) { onRemoved(s.key); };
+        ref.on('child_added',   addedCb,   function (e) { onError && onError(e); });
+        ref.on('child_changed', changedCb, function (e) { onError && onError(e); });
+        ref.on('child_removed', removedCb, function (e) { onError && onError(e); });
+        return {
+          added:   { ref: ref, cb: addedCb,   event: 'child_added'   },
+          changed: { ref: ref, cb: changedCb, event: 'child_changed' },
+          removed: { ref: ref, cb: removedCb, event: 'child_removed' }
+        };
       }
 
-      var addedCb   = function (s) {
-        if (s.val()) {
-          // For Admin role, only surface sessions they are assigned to.
-          if (!isSuper && window._currentUserRole === 'ADMIN') {
-            var data = s.val();
-            if (!data.assignedAdmins || !data.assignedAdmins[uid]) return;
-          }
-          onAdded(s.key, s.val());
-        }
+      // Admin — subscribe to their personal assignment index.
+      // /admin_assignments/{uid}/{sessionId}: true
+      // When a session is assigned, fetch its inbox entry and surface it.
+      // When removed, remove it from the inbox view.
+      var assignRef   = rtdb.ref('admin_assignments/' + uid);
+      var addedCb     = function (s) {
+        if (!s.val()) return;
+        var sid = s.key;
+        rtdb.ref(INBOX_ROOT + '/' + sid).once('value')
+          .then(function (snap) { if (snap.val()) onAdded(sid, snap.val()); })
+          .catch(function () {});
+        // Keep the inbox entry live so changes (new messages, unread count) update.
+        rtdb.ref(INBOX_ROOT + '/' + sid).on('value', function (snap) {
+          if (snap.val()) onChanged(sid, snap.val());
+        });
       };
-      var changedCb = function (s) {
-        if (s.val()) {
-          if (!isSuper && window._currentUserRole === 'ADMIN') {
-            var data = s.val();
-            if (!data.assignedAdmins || !data.assignedAdmins[uid]) return;
-          }
-          onChanged(s.key, s.val());
-        }
+      var removedCb   = function (s) {
+        rtdb.ref(INBOX_ROOT + '/' + s.key).off('value');
+        onRemoved(s.key);
       };
-      var removedCb = function (s) { onRemoved(s.key); };
-
-      ref.on('child_added',   addedCb,   function (e) { onError && onError(e); });
-      ref.on('child_changed', changedCb, function (e) { onError && onError(e); });
-      ref.on('child_removed', removedCb, function (e) { onError && onError(e); });
+      assignRef.on('child_added',   addedCb,   function (e) { onError && onError(e); });
+      assignRef.on('child_removed', removedCb, function (e) { onError && onError(e); });
       return {
-        added:   { ref: ref, cb: addedCb,   event: 'child_added'   },
-        changed: { ref: ref, cb: changedCb, event: 'child_changed' },
-        removed: { ref: ref, cb: removedCb, event: 'child_removed' }
+        added:   { ref: assignRef, cb: addedCb,   event: 'child_added'   },
+        changed: { ref: assignRef, cb: null,       event: 'child_changed' },
+        removed: { ref: assignRef, cb: removedCb, event: 'child_removed' }
       };
     },
 
@@ -551,9 +553,11 @@
         status:    'pending'
       };
 
-      // Add to assignedAdmins flat map on the inbox entry so the invited
-      // admin's subscription filter picks it up immediately.
+      // Add to assignedAdmins flat map on the inbox entry (legacy compat).
       updates[INBOX_ROOT + '/' + sessionId + '/assignedAdmins/' + invitedAdminId] = true;
+      // Write to the personal assignment index — this is what the Admin's
+      // subscribeInbox() actually listens to.
+      updates['admin_assignments/' + invitedAdminId + '/' + sessionId] = true;
 
       // System message — uses inviter's display name.
       var msgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
@@ -710,6 +714,9 @@
             + '</button>'
             + '<button class="btn btn-sm btn-ghost" id="chat-pin-btn" data-pinned="' + (isPinned ? '1' : '0') + '">'
               + (isPinned ? 'Unpin' : 'Pin')
+            + '</button>'
+            + '<button class="btn btn-sm btn-danger" id="chat-resolve-btn">'
+              + '<i class="ph-light ph-check-circle" style="margin-right:4px;"></i>Resolve'
             + '</button>'
           + '</div>'
         + '</div>'
@@ -1238,6 +1245,42 @@
       });
     },
 
+    resolveSession: function (sessionId) {
+      var self = this;
+      if (!confirm('Mark this conversation as resolved? The customer will be asked to rate their experience.')) return;
+      var ts      = firebase.database.ServerValue.TIMESTAMP;
+      var updates = {};
+      updates[CHAT_ROOT  + '/' + sessionId + '/meta/status']     = 'resolved';
+      updates[CHAT_ROOT  + '/' + sessionId + '/meta/resolvedAt'] = ts;
+      updates[INBOX_ROOT + '/' + sessionId + '/status']          = 'resolved';
+      // System message visible to customer — triggers satisfaction prompt in chat.js.
+      var msgRef = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/messages').push();
+      updates[CHAT_ROOT + '/' + sessionId + '/messages/' + msgRef.key] = {
+        text:      'This conversation has been marked as resolved.',
+        sender:    'system',
+        type:      'resolved',
+        createdAt: ts,
+        read:      true,
+        delivered: true,
+        sessionId: sessionId
+      };
+      rtdb.ref('/').update(updates)
+        .then(function () {
+          showToast('Conversation resolved');
+          // Update status label in the header.
+          var statusEl = safeEl('session-status-label');
+          if (statusEl) { statusEl.textContent = 'Resolved'; statusEl.style.color = 'var(--success)'; }
+          // Disable the reply input — conversation is closed.
+          var input   = safeEl('reply-input');
+          var sendBtn = safeEl('chat-send-btn');
+          var resolve = safeEl('chat-resolve-btn');
+          if (input)   { input.disabled = true; input.placeholder = 'Conversation resolved'; }
+          if (sendBtn) sendBtn.disabled = true;
+          if (resolve) resolve.disabled = true;
+        })
+        .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+    },
+
     togglePin: function (sessionId) {
       var btn = safeEl('chat-pin-btn');
       ChatDB.togglePin(sessionId, btn ? btn.getAttribute('data-pinned') === '1' : false)
@@ -1276,6 +1319,7 @@
       });
 
       on('chat-pin-btn',       'click',   function () { self.togglePin(sessionId); });
+      on('chat-resolve-btn',   'click',   function () { self.resolveSession(sessionId); });
       on('chat-invite-btn',    'click',   function () { self.openInviteModal(sessionId); });
       on('chat-orders-btn',    'click',   function () { self.lookupOrders(sessionId); });
       on('chat-send-btn',      'click',   function () { self.sendMessage(sessionId); });
