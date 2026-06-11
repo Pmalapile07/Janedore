@@ -123,6 +123,7 @@
     if (!mc) return;
     var allProducts = window._allProducts || [];
     var hasAny = allProducts.length > 0;
+    var canAdd = isSuperAdmin() || window._currentUserRole === 'VENDOR';
 
     mc.innerHTML =
       (window._currentUserRole === 'VENDOR' ? '<div class="vendor-scope-bar">Showing your brand products only</div>' : '') +
@@ -132,7 +133,7 @@
           '<button class="btn btn-sm btn-ghost" onclick="window._refreshProducts()" title="Refresh">' +
             '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
           '</button>' +
-          (hasAny ? '<button class="btn btn-sm btn-primary" onclick="window._openProductForm(null)">Add product</button>' : '') +
+          (hasAny && canAdd ? '<button class="btn btn-sm btn-primary" onclick="window._openProductForm(null)">Add product</button>' : '') +
         '</div>' +
       '</div>' +
       (hasAny ? (
@@ -161,6 +162,16 @@
   };
 
   function renderEmptyState() {
+    // Admin can't add products — show a different message
+    if (window._currentUserRole === 'ADMIN') {
+      return '<div class="orders-empty-state">' +
+        '<div class="orders-empty-icon"><i class="ph-light ph-package"></i></div>' +
+        '<div class="orders-empty-title">No products yet</div>' +
+        '<div class="orders-empty-sub">Products from all brands will appear here once added by vendors or Super Admin.</div>' +
+      '</div>';
+    }
+
+    // Vendor or Super Admin — show the add button
     return '<div class="orders-empty-state">' +
       '<div class="orders-empty-icon"><i class="ph-light ph-package"></i></div>' +
       '<div class="orders-empty-title">Add your first product</div>' +
@@ -221,8 +232,6 @@
 
   /* ─────────────────────────────────────────────────────────
      SHARED MEDIA POOL
-     All uploaded images live here keyed by URL.
-     Variants simply reference URLs from this pool.
   ───────────────────────────────────────────────────────── */
 
   var _mediaPool = [];
