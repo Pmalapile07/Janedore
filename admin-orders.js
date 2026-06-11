@@ -253,15 +253,24 @@
 
   function renderEmptyState(isFiltered) {
     var canCreate = window._can('orders', 'create');
+    var role = window._currentUserRole;
+
+    // Role-appropriate subtitle
+    var subtitle;
+    if (isFiltered) {
+      subtitle = 'No orders match your current filters. Try adjusting your search or filter.';
+    } else if (role === 'ADMIN') {
+      subtitle = 'Orders from all brands will appear here once customers start placing them.' +
+        (canCreate ? ' You can also create an order manually for phone or in-person sales.' : '');
+    } else {
+      subtitle = 'Orders placed on your store will appear here.' +
+        (canCreate ? ' You can also create an order manually for phone or in-person sales.' : '');
+    }
+
     return '<div class="orders-empty-state">' +
       '<div class="orders-empty-icon"><i class="ph-light ph-receipt"></i></div>' +
       '<div class="orders-empty-title">Manage your orders</div>' +
-      '<div class="orders-empty-sub">' +
-        (isFiltered
-          ? 'No orders match your current filters. Try adjusting your search or filter.'
-          : 'Orders placed on your store will appear here.' +
-            (canCreate ? ' You can also create an order manually for phone or in-person sales.' : '')) +
-      '</div>' +
+      '<div class="orders-empty-sub">' + subtitle + '</div>' +
       (!isFiltered && canCreate
         ? '<button class="orders-empty-btn" onclick="window._openNewOrderForm()">' +
             '<i class="ph-light ph-plus" style="font-size:15px;"></i>' +
