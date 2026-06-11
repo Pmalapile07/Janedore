@@ -74,6 +74,7 @@ function toggleChat() {
     win.classList.remove('open');
     detachChatListener();
     detachTypingListener();
+    detachStatusListener();
   }
 }
 
@@ -132,9 +133,12 @@ function startChat() {
   loadedMessageKeys.clear();
   detachChatListener();
   detachTypingListener();
+  detachStatusListener();
+  _satisfactionShown = false;
   loadMessages();
   listenChat();
   listenTyping();
+  listenStatus();
 
   const input = safeEl('chat-input');
   if (input) setTimeout(() => input.focus(), 100);
@@ -161,6 +165,8 @@ function clearChatSession() {
   chatMode      = null;
   detachChatListener();
   detachTypingListener();
+  detachStatusListener();
+  _satisfactionShown = false;
   loadedMessageKeys.clear();
   showEmailScreen();
 }
@@ -171,7 +177,7 @@ async function loadMessages() {
   const el   = safeEl('chat-messages');
   if (!rtdb || !el) return;
 
-  el.innerHTML = '<div class="chat-welcome"><strong>Loading…</strong></div>';
+  el.innerHTML = '<div class="chat-welcome"><strong>Loading...</strong></div>';
 
   try {
     const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages')
@@ -203,6 +209,21 @@ function appendMessage(m) {
   const el = safeEl('chat-messages');
   if (!el) return;
 
+  // System messages — centred pill, no bubble.
+  if (m.sender === 'system') {
+    // The 'resolved' type triggers the satisfaction prompt via the
+    // status listener — no need to render it as a visible bubble.
+    if (m.type === 'resolved') return;
+    const pill = document.createElement('div');
+    pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
+    pill.innerHTML =
+      '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
+        + (m.text || '')
+      + '</span>';
+    el.appendChild(pill);
+    return;
+  }
+
   const time = m.createdAt
     ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : '';
@@ -210,7 +231,14 @@ function appendMessage(m) {
 
   const div = document.createElement('div');
   div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin');
-  div.innerHTML = m.text + '<div class="chat-msg-time">' + time + '</div>';
+
+  // Show sender name on admin messages if stored — so customer knows
+  // whether they are speaking to Janedore or a named team member.
+  const nameHtml = (!isCustomer && m.senderName)
+    ? '<div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:400;">' + m.senderName + '</div>'
+    : '';
+
+  div.innerHTML = nameHtml + m.text + '<div class="chat-msg-time">' + time + '</div>';
   el.appendChild(div);
 }
 
@@ -218,7 +246,6 @@ function listenChat() {
   const rtdb = getRTDB();
   if (!rtdb) return;
 
-  // FIX #6: store ref + callback separately so we can properly detach
   _chatListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
   _chatListenerCb  = snap => {
     const key = snap.key;
@@ -272,14 +299,13 @@ async function sendChatMessage() {
       userId:        user ? user.uid : 'anonymous'
     };
 
-    // FIX #2: write unreadCount so the admin inbox badge shows
     updates['chat_inbox/' + chatSessionId + '/lastMessage']    = text;
     updates['chat_inbox/' + chatSessionId + '/lastMessageAt']  = ts;
     updates['chat_inbox/' + chatSessionId + '/customerEmail']  = customerEmail;
     updates['chat_inbox/' + chatSessionId + '/customerName']   = customerName || 'Guest';
     updates['chat_inbox/' + chatSessionId + '/unreadCount']    = firebase.database.ServerValue.increment(1);
 
-    // Snapshot cart at time of message so admin can see what customer had
+    // Snapshot cart at time of message so admin can see what customer had.
     try {
       const rawCart = localStorage.getItem('janedore_cart');
       const cart    = rawCart ? JSON.parse(rawCart) : [];
@@ -322,18 +348,109 @@ function listenTyping() {
   const rtdb = getRTDB();
   if (!rtdb) return;
 
-  // FIX #1: adminTyping is an object { adminId: true }, not a boolean.
-  // Check whether ANY key in the object is truthy, not whether value === true.
   _typingListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/adminTyping');
   _typingListenerCb  = snap => {
-    const val        = snap.val();
-    const isTyping   = val !== null && typeof val === 'object'
+    const val      = snap.val();
+    const isTyping = val !== null && typeof val === 'object'
       ? Object.values(val).some(v => v === true)
       : val === true;
-    const indicator  = safeEl('chat-typing-indicator');
+    const indicator = safeEl('chat-typing-indicator');
     if (indicator) indicator.style.display = isTyping ? 'block' : 'none';
   };
   _typingListenerRef.on('value', _typingListenerCb);
+}
+
+// ==================== RESOLVE / SATISFACTION ====================
+
+let _statusListenerRef = null;
+let _statusListenerCb  = null;
+let _satisfactionShown = false;
+
+function detachStatusListener() {
+  if (_statusListenerRef && _statusListenerCb) {
+    _statusListenerRef.off('value', _statusListenerCb);
+    _statusListenerRef = null;
+    _statusListenerCb  = null;
+  }
+}
+
+function listenStatus() {
+  const rtdb = getRTDB();
+  if (!rtdb) return;
+  _statusListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/status');
+  _statusListenerCb  = snap => {
+    if (snap.val() === 'resolved' && !_satisfactionShown) {
+      _satisfactionShown = true;
+      showSatisfactionPrompt();
+    }
+  };
+  _statusListenerRef.on('value', _statusListenerCb);
+}
+
+function showSatisfactionPrompt() {
+  const el = safeEl('chat-messages');
+  if (!el) return;
+
+  // Disable the input — conversation is closed.
+  const input   = safeEl('chat-input');
+  const sendBtn = safeEl('chat-send-btn');
+  if (input)   { input.disabled = true; input.placeholder = 'Conversation resolved'; }
+  if (sendBtn) sendBtn.disabled = true;
+
+  const prompt = document.createElement('div');
+  prompt.id        = 'satisfaction-prompt';
+  prompt.className = 'chat-msg admin';
+  prompt.innerHTML =
+    '<div style="font-size:11px;font-weight:400;margin-bottom:10px;line-height:1.6;">'
+      + 'We\'re glad we could help. Was your issue resolved?'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;">'
+      + '<button id="sat-yes" style="background:none;border:0.5px solid currentColor;padding:6px 18px;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;">'
+        + 'Yes'
+      + '</button>'
+      + '<button id="sat-no" style="background:none;border:0.5px solid currentColor;padding:6px 18px;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;">'
+        + 'Not really'
+      + '</button>'
+    + '</div>';
+
+  el.appendChild(prompt);
+  el.scrollTop = el.scrollHeight;
+
+  const yesBtn = document.getElementById('sat-yes');
+  const noBtn  = document.getElementById('sat-no');
+  if (yesBtn) yesBtn.addEventListener('click', function () { submitSatisfaction(true); });
+  if (noBtn)  noBtn.addEventListener('click',  function () { submitSatisfaction(false); });
+}
+
+async function submitSatisfaction(satisfied) {
+  const rtdb   = getRTDB();
+  const prompt = document.getElementById('satisfaction-prompt');
+  const el     = safeEl('chat-messages');
+  if (!el) return;
+
+  if (prompt) prompt.remove();
+
+  try {
+    if (rtdb) {
+      await rtdb.ref('live_chat/' + chatSessionId + '/meta/satisfaction').set({
+        satisfied:   satisfied,
+        respondedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+  } catch(e) {
+    console.warn('[Chat] Satisfaction write failed:', e.message);
+  }
+
+  const thanks = document.createElement('div');
+  thanks.className = 'chat-msg admin';
+  thanks.innerHTML =
+    '<div style="font-size:11px;font-weight:300;line-height:1.6;">'
+      + (satisfied
+          ? 'Thank you for letting us know. We hope to see you again soon.'
+          : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.')
+    + '</div>';
+  el.appendChild(thanks);
+  el.scrollTop = el.scrollHeight;
 }
 
 // ==================== ORDER LOOKUP ====================
@@ -349,7 +466,7 @@ async function lookupOrder() {
     return;
   }
 
-  resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Searching…</div>';
+  resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Searching...</div>';
 
   try {
     const snap = await db.collection('orders')
