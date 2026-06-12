@@ -16,7 +16,6 @@
   var ordersRef    = window._ordersRef;
   var productsRef  = window._productsRef;
   var adminsRef    = window._adminsRef;
-  var auth         = window._adminAuth;
 
   var role = null;
 
@@ -172,7 +171,7 @@
         '</div>' +
 
         (canEdit
-          ? '<div style="margin-bottom:14px;display:flex;gap:6px;">' +
+          ? '<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap;">' +
               '<button class="btn btn-sm btn-ghost" onclick="window._openVendorModal(\'' + esc(vendorId) + '\')">Edit Vendor</button>' +
               (v.accountEmail
                 ? '<button class="btn btn-sm btn-ghost" onclick="window._resetVendorPassword(\'' + esc(vendorId) + '\')">Reset Password</button>'
@@ -210,6 +209,7 @@
 
   /* ─────────────────────────────────────────────────────────
      CREATE VENDOR ACCOUNT (Super Admin only)
+     Uses a secondary Firebase app so Super Admin stays logged in.
   ───────────────────────────────────────────────────────── */
   window._createVendorAccount = function(vendorId) {
     if (!isSuperAdmin()) return;
@@ -218,7 +218,6 @@
     if (!v) { showToast('Vendor not found', 'error'); return; }
     if (!v.email) { showToast('Vendor must have a contact email first. Edit the vendor and add an email.', 'error'); return; }
 
-    // Show a modal to set password
     var modalHTML = '<div class="modal modal-sm">' +
       '<div class="modal-handle"></div>' +
       '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
@@ -257,19 +256,38 @@
     if (!email || !password) { showToast('Email and password are required.', 'error'); return; }
     if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
 
-    // Step 1: Create Firebase Auth account
-    auth.createUserWithEmailAndPassword(email, password).then(function(userCredential) {
+    // Use a secondary Firebase app to create the account
+    // This prevents logging out the current Super Admin
+    var secondaryAppName = 'vendor-creator-' + Date.now();
+    var secondaryApp = firebase.initializeApp({
+      apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+      authDomain: "janedore-9f035.firebaseapp.com",
+      projectId: "janedore-9f035",
+      storageBucket: "janedore-9f035.firebasestorage.app",
+      messagingSenderId: "571299748651",
+      appId: "1:571299748651:web:01463a772d47b39cc4036e"
+    }, secondaryAppName);
+
+    var secondaryAuth = secondaryApp.auth();
+
+    secondaryAuth.createUserWithEmailAndPassword(email, password).then(function(userCredential) {
       var uid = userCredential.user.uid;
 
-      // Step 2: Add to admins collection with VENDOR role
-      return adminsRef.doc(uid).set({
-        email: email,
-        role: 'VENDOR',
-        vendorId: vendorId,
-        createdAt: new Date().toISOString(),
-        createdBy: window._currentUser.uid
+      // Sign out the secondary instance immediately
+      return secondaryAuth.signOut().then(function() {
+        // Clean up the secondary app
+        return secondaryApp.delete();
       }).then(function() {
-        // Step 3: Update vendor doc with accountEmail
+        // Add to admins collection with VENDOR role
+        return adminsRef.doc(uid).set({
+          email: email,
+          role: 'VENDOR',
+          vendorId: vendorId,
+          createdAt: new Date().toISOString(),
+          createdBy: window._currentUser.uid
+        });
+      }).then(function() {
+        // Update vendor doc with accountEmail
         return vendorsRef.doc(vendorId).update({
           accountEmail: email,
           accountUid: uid,
@@ -283,7 +301,7 @@
         closeModal();
         showToast('Account created! Vendor can now log in with ' + email);
 
-        // Show credentials for sharing
+        // Show credentials modal
         setTimeout(function() {
           var credHTML = '<div class="modal modal-sm">' +
             '<div class="modal-handle"></div>' +
@@ -309,6 +327,11 @@
       });
     }).catch(function(e) {
       console.error('[CREATE_VENDOR_ACCOUNT]', e);
+
+      // Clean up the secondary app on error too
+      secondaryAuth.signOut().catch(function() {});
+      secondaryApp.delete().catch(function() {});
+
       if (e.code === 'auth/email-already-in-use') {
         showToast('An account with this email already exists.', 'error');
       } else if (e.code === 'auth/weak-password') {
@@ -335,47 +358,7 @@
     var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
     if (!v || !v.accountEmail) { showToast('Vendor has no login account.', 'error'); return; }
 
-    var modalHTML = '<div class="modal modal-sm">' +
-      '<div class="modal-handle"></div>' +
-      '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
-      '<div class="modal-title">Reset Password</div>' +
-      '<div style="padding:16px 20px;">' +
-        '<p style="font-size:12.5px;color:var(--text);margin-bottom:16px;">' +
-          'Reset the password for <strong>' + esc(v.name) + '</strong> (' + esc(v.accountEmail) + ').' +
-        '</p>' +
-        '<form id="reset-password-form" onsubmit="window._handleResetVendorPassword(event, \'' + esc(vendorId) + '\')">' +
-          '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
-            '<label>New Password</label>' +
-            '<input name="newPassword" type="text" required placeholder="New password" minlength="6">' +
-          '</div>' +
-          '<button type="submit" class="btn btn-primary" style="width:100%;">Reset Password</button>' +
-        '</form>' +
-      '</div>' +
-    '</div>';
-
-    mountModal(modalHTML);
-  };
-
-  window._handleResetVendorPassword = function(e, vendorId) {
-    e.preventDefault();
-    if (!isSuperAdmin()) return;
-
-    var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
-    if (!v || !v.accountEmail) return;
-
-    var newPassword = e.target.newPassword.value;
-    if (newPassword.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
-
-    // Firebase requires the user to be signed in to update password via client SDK.
-    // For admin-initiated resets, we use a workaround: delete and recreate.
-    // Or we tell the vendor to use "Forgot Password".
-    // For now, show the password to admin so they can share it.
-
-    showToast('For security, please use Firebase Console to reset the password for ' + v.accountEmail + '. Or ask the vendor to use "Forgot Password" on the login page.', 'info');
-    closeModal();
-
-    // Alternative: Use Firebase Admin SDK via a Cloud Function (recommended for production)
-    // For now, we show the manual path.
+    showToast('Ask the vendor to use "Forgot Password" on the login page, or reset via Firebase Console for ' + v.accountEmail, 'info');
   };
 
   /* ─────────────────────────────────────────────────────────
@@ -550,7 +533,7 @@
 
         // Account info (read-only if exists)
         (v.accountEmail
-          ? '<div class="form-group"><label>Login Account</label><input value="' + esc(v.accountEmail) + '" disabled style="opacity:0.6;"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Use "Reset Password" to change vendor credentials.</div></div>'
+          ? '<div class="form-group"><label>Login Account</label><input value="' + esc(v.accountEmail) + '" disabled style="opacity:0.6;"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Account exists. Create a new one or use Reset Password.</div></div>'
           : '') +
 
         '<div style="display:flex;gap:10px;padding:14px 20px 4px;">' +
