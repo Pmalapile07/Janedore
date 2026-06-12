@@ -29,6 +29,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
+<!-- Custom font for JANEDORE logo -->
+<style>
+  @font-face {
+    font-family: 'Telegraf';
+    src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+
 <script src="https://unpkg.com/phosphor-icons"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -75,11 +86,20 @@
     background: transparent;
   }
 
+  /* New logo style using the custom font */
   .header-logo {
-    height: 24px;
-    width: auto;
+    font-family: 'Telegraf', 'Inter', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-decoration: none;
     display: block;
-    filter: brightness(0);
+    line-height: 1;
+    /* Removed the image-specific styles, kept the aesthetic */
+    height: auto;
+    width: auto;
+    filter: none;
   }
 
   .header-admin {
@@ -244,8 +264,10 @@
   .site-footer {
     padding: 40px 60px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   .footer-copy {
@@ -253,6 +275,24 @@
     font-weight: 300;
     color: var(--muted);
     letter-spacing: 0.03em;
+    margin-bottom: 4px;
+  }
+
+  .footer-credit {
+    font-size: 10px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  .footer-credit a {
+    color: var(--muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+  }
+  .footer-credit a:hover {
+    color: var(--text);
   }
 
   /* ── Admin overlay ─────────────────────────────────────────── */
@@ -283,12 +323,15 @@
   }
 
   .admin-logo {
-    display: block;
-    height: 14px;
-    width: auto;
-    margin: 0 auto 48px;
+    font-family: 'Telegraf', 'Inter', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.08em;
+    color: var(--text);
     opacity: 0.4;
-    filter: brightness(0);
+    display: block;
+    text-align: center;
+    margin: 0 auto 48px;
+    text-decoration: none;
   }
 
   .admin-label {
@@ -418,10 +461,8 @@
 <body>
 
 <header class="site-header">
-  <a href="/" aria-label="Janedore home">
-    <img class="header-logo"
-         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
-         alt="Janedore">
+  <a href="/" aria-label="Janedore home" class="header-logo">
+    JANEDORE
   </a>
   <div class="header-admin">
     <span class="header-admin-label">Is this your store?</span>
@@ -463,6 +504,7 @@
 
 <footer class="site-footer">
   <p class="footer-copy" id="copyright"></p>
+  <p class="footer-credit">Web design by <a href="mailto:dev@janedore.co.za">Spite</a></p>
 </footer>
 
 <div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
@@ -470,9 +512,7 @@
     <button class="admin-close" id="admin-close-btn" aria-label="Close">
       <i class="ph ph-x"></i>
     </button>
-    <img class="admin-logo"
-         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
-         alt="Janedore">
+    <span class="admin-logo">JANEDORE</span>
     <span class="admin-label">Admin Access</span>
     <input type="email" class="admin-field" id="admin-email"
            placeholder="Email"
