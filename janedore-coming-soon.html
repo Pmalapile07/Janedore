@@ -6,7 +6,7 @@
 <title>Janedore · Coming Soon</title>
 
 <meta name="description" content="Janedore - The rarest finds, within reach. Something extraordinary is coming. Sign up to be the first to know when we launch.">
-<meta name="keywords" content="fashion, clothing, accessories, curated fashion, South Africa, coming soon">
+<meta name="keywords" content="fashion, clothing, accessories, curated fashion, coming soon">
 <meta name="author" content="Janedore">
 <meta name="robots" content="index, follow">
 
@@ -21,14 +21,13 @@
 <meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287">
 
 <link rel="canonical" href="https://janedore.co.za">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f4f4f4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="preconnect" href="https://www.gstatic.com">
 
 <script src="https://unpkg.com/phosphor-icons"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -40,26 +39,24 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:      #1c1a17;
-    --ivory:   #f7f1e8;
-    --terra:   #c97b4a;
-    --stone:   #8a8378;
-    --border:  rgba(247,241,232,0.14);
+    --bg:       #ffffff;
+    --surface:  #f4f4f4;
+    --text:     #111111;
+    --muted:    #777777;
+    --border:   rgba(0,0,0,0.10);
+    --accent:   #000000;
   }
 
-  /* ── Reset — no zoom, no fixed body, Safari-safe ─────────── */
   html {
     font-family: 'Manrope', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* NO zoom property — causes Safari keyboard freeze */
   }
 
   body {
-    min-height: 100dvh; /* dvh accounts for Safari address bar */
+    min-height: 100dvh;
     background: var(--bg);
-    color: var(--ivory);
-    /* NO position:fixed, NO overflow:hidden — both break iOS keyboard */
+    color: var(--text);
     overscroll-behavior-y: none;
   }
 
@@ -80,13 +77,13 @@
     justify-content: space-between;
     padding: 0 28px;
     height: 56px;
+    border-bottom: 1px solid var(--border);
   }
 
   .header-logo {
-    height: 35px;
+    height: 28px;
     width: auto;
     display: block;
-    filter: brightness(0) invert(1);
   }
 
   .header-admin {
@@ -97,7 +94,7 @@
     display: block;
     font-size: 10px;
     font-weight: 300;
-    color: var(--stone);
+    color: var(--muted);
     letter-spacing: 0.02em;
   }
   .header-admin-btn {
@@ -106,7 +103,7 @@
     font-family: 'Manrope', sans-serif;
     font-size: 10px;
     font-weight: 500;
-    color: var(--stone);
+    color: var(--muted);
     cursor: pointer;
     padding: 0;
     letter-spacing: 0.04em;
@@ -114,7 +111,7 @@
     text-underline-offset: 2px;
     transition: color 0.2s;
   }
-  .header-admin-btn:hover { color: var(--ivory); }
+  .header-admin-btn:hover { color: var(--text); }
 
   /* ── Hero ─────────────────────────────────────────────────── */
   .hero {
@@ -128,29 +125,27 @@
     background: var(--bg);
   }
 
-  /* The signature: a single bordered frame, like a hangtag,
-     that holds everything as one composed object */
   .frame {
     position: relative;
     width: 100%;
     max-width: 460px;
-    border: 1px solid var(--terra);
+    border: 1px solid var(--border);
     padding: 56px 32px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 28px;
+    background: var(--surface);
   }
 
-  /* corner ticks — small label-like marks at top-left and bottom-right */
   .frame::before,
   .frame::after {
     content: '';
     position: absolute;
     width: 9px;
     height: 9px;
-    border: 1px solid var(--terra);
+    border: 1px solid var(--border);
   }
   .frame::before { top: -5px; left: -5px; border-width: 1px 0 0 1px; background: var(--bg); }
   .frame::after  { bottom: -5px; right: -5px; border-width: 0 1px 1px 0; background: var(--bg); }
@@ -161,7 +156,7 @@
     font-weight: 600;
     letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--terra);
+    color: var(--muted);
   }
 
   .hero-tagline {
@@ -171,7 +166,7 @@
     font-size: clamp(34px, 8vw, 58px);
     line-height: 1.12;
     letter-spacing: -0.01em;
-    color: var(--ivory);
+    color: var(--text);
   }
 
   .hero-sub {
@@ -179,7 +174,7 @@
     font-size: 13px;
     font-weight: 300;
     line-height: 1.6;
-    color: var(--stone);
+    color: var(--muted);
     max-width: 320px;
   }
 
@@ -195,14 +190,14 @@
   .signup-trigger {
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--terra);
+    border-bottom: 1px solid var(--accent);
     padding: 10px 0;
     font-family: 'Manrope', sans-serif;
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--ivory);
+    color: var(--text);
     cursor: pointer;
     text-align: center;
     transition: color 0.2s, border-color 0.2s, opacity 0.2s;
@@ -212,7 +207,7 @@
     gap: 10px;
   }
   .signup-trigger:hover {
-    color: var(--terra);
+    color: var(--muted);
     opacity: 0.85;
   }
   .signup-trigger i { font-size: 14px; }
@@ -247,23 +242,21 @@
     border-bottom: 1px solid var(--border);
     padding: 12px 44px 12px 0;
     font-family: 'Manrope', sans-serif;
-    font-size: 13px;
+    font-size: max(16px, 13px);
     font-weight: 300;
-    color: var(--ivory);
+    color: var(--text);
     outline: none;
     transition: border-color 0.25s;
-    /* Safari: prevent auto-zoom on focus (font-size >= 16px or use this) */
-    font-size: max(16px, 13px);
     -webkit-appearance: none;
     text-align: center;
   }
   .signup-input:-webkit-autofill,
   .signup-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px var(--bg) inset !important;
-    -webkit-text-fill-color: #f7f1e8 !important;
+    -webkit-box-shadow: 0 0 0 30px var(--surface) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
   }
-  .signup-input::placeholder { color: var(--stone); font-weight: 300; }
-  .signup-input:focus { border-color: var(--terra); }
+  .signup-input::placeholder { color: var(--muted); font-weight: 300; }
+  .signup-input:focus { border-color: var(--accent); }
 
   .signup-submit {
     position: absolute;
@@ -272,14 +265,14 @@
     background: transparent;
     border: none;
     padding: 8px;
-    color: var(--stone);
+    color: var(--muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     transition: color 0.2s;
     -webkit-appearance: none;
   }
-  .signup-submit:hover { color: var(--terra); }
+  .signup-submit:hover { color: var(--accent); }
   .signup-submit:disabled { opacity: 0.3; cursor: not-allowed; }
   .signup-submit i { font-size: 20px; }
 
@@ -287,7 +280,7 @@
     display: inline-block;
     width: 18px; height: 18px;
     border: 1.5px solid var(--border);
-    border-top-color: var(--terra);
+    border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -303,21 +296,21 @@
     text-align: center;
   }
   .signup-msg.show { display: block; }
-  .signup-msg.success { color: #9fb892; }
-  .signup-msg.error   { color: #d98a6f; }
-  .signup-msg.info    { color: var(--stone); }
+  .signup-msg.success { color: #4a8c4a; }
+  .signup-msg.error   { color: #c44; }
+  .signup-msg.info    { color: var(--muted); }
 
   .signup-legal {
     font-size: 10px;
     font-weight: 300;
-    color: var(--stone);
+    color: var(--muted);
     line-height: 1.5;
     letter-spacing: 0.02em;
     text-align: center;
     opacity: 0.7;
   }
   .signup-legal a {
-    color: var(--stone);
+    color: var(--muted);
     text-underline-offset: 2px;
   }
 
@@ -328,37 +321,21 @@
     justify-content: center;
     padding: 16px 28px;
     background: var(--bg);
+    border-top: 1px solid var(--border);
   }
 
   .footer-copy {
     font-size: 10px;
     font-weight: 300;
-    color: var(--stone);
+    color: var(--muted);
     letter-spacing: 0.03em;
   }
-
-  .footer-social {
-    display: flex;
-    gap: 2px;
-  }
-  .footer-social a {
-    color: var(--muted);
-    font-size: 16px;
-    text-decoration: none;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 32px;
-    min-width: 32px;
-  }
-  .footer-social a:hover { color: var(--black); }
 
   /* ── Admin login overlay ──────────────────────────────────── */
   .admin-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(10,9,8,0.96);
+    background: rgba(255,255,255,0.97);
     z-index: 100;
     display: flex;
     align-items: center;
@@ -384,8 +361,7 @@
     height: 16px;
     width: auto;
     margin: 0 auto 32px;
-    filter: brightness(0) invert(1);
-    opacity: 0.6;
+    opacity: 0.5;
   }
 
   .admin-label {
@@ -393,7 +369,7 @@
     font-size: 9px;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: var(--stone);
+    color: var(--muted);
     text-align: center;
     margin-bottom: 36px;
   }
@@ -408,23 +384,23 @@
     font-family: 'Manrope', sans-serif;
     font-size: max(16px, 14px);
     font-weight: 300;
-    color: var(--ivory);
+    color: var(--text);
     outline: none;
     -webkit-appearance: none;
     transition: border-color 0.25s;
   }
   .admin-field:-webkit-autofill,
   .admin-field:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px rgba(10,9,8,0.96) inset !important;
-    -webkit-text-fill-color: #f7f1e8 !important;
+    -webkit-box-shadow: 0 0 0 30px rgba(255,255,255,0.97) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
   }
-  .admin-field::placeholder { color: var(--stone); opacity: 0.6; }
-  .admin-field:focus { border-color: var(--terra); }
+  .admin-field::placeholder { color: var(--muted); opacity: 0.6; }
+  .admin-field:focus { border-color: var(--accent); }
 
   .admin-submit {
     width: 100%;
     background: transparent;
-    border: 1px solid var(--terra);
+    border: 1px solid var(--accent);
     padding: 14px;
     margin-top: 8px;
     font-family: 'Manrope', sans-serif;
@@ -432,17 +408,17 @@
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--ivory);
+    color: var(--text);
     cursor: pointer;
-    transition: border-color 0.2s, color 0.2s, opacity 0.2s;
+    transition: background 0.2s, color 0.2s, opacity 0.2s;
     -webkit-appearance: none;
   }
-  .admin-submit:hover { opacity: 0.8; }
+  .admin-submit:hover { background: var(--accent); color: #fff; opacity: 1; }
   .admin-submit:disabled { opacity: 0.35; cursor: not-allowed; }
 
   .admin-error {
     font-size: 11px;
-    color: #d98a6f;
+    color: #c44;
     margin-top: 14px;
     min-height: 18px;
     text-align: center;
@@ -455,24 +431,21 @@
     top: -8px; right: 0;
     background: transparent;
     border: none;
-    color: var(--stone);
+    color: var(--muted);
     cursor: pointer;
     font-size: 18px;
     padding: 8px;
     transition: color 0.2s;
     line-height: 1;
   }
-  .admin-close:hover { color: var(--ivory); }
+  .admin-close:hover { color: var(--text); }
 
-  /* ── Chat container — Safari-safe positioning ─────────────── */
-  /* Using fixed but NOT on body — only the chat bubble itself.  */
-  /* This way body layout is unaffected when keyboard opens.     */
+  /* ── Chat container ───────────────────────────────────────── */
   #chat-container {
     position: fixed;
     bottom: 24px;
     right: 20px;
     z-index: 60;
-    /* Pointer events on children only */
   }
 
   /* ── Mobile adjustments ───────────────────────────────────── */
@@ -517,7 +490,7 @@
 
       <h1 class="hero-tagline">You found us early.</h1>
 
-      <p class="hero-sub">A multi-brand curated fashion house from South Africa. Be the first to know when the doors open.</p>
+      <p class="hero-sub">A multi-brand curated fashion house. Be the first to know when the doors open.</p>
 
       <div class="signup-row">
         <button class="signup-trigger" id="signup-trigger" aria-expanded="false" aria-controls="signup-form">
