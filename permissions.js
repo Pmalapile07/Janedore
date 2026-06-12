@@ -59,13 +59,23 @@
 
     if (!allowed || !Array.isArray(allowed)) return false;
 
+    // Direct action match
     if (allowed.indexOf(action) !== -1) {
+      // If action is a scoped variant, enforce scope
       if (action.indexOf('_own') !== -1) {
         return _checkScope(context);
       }
       return true;
     }
 
+    // Check if role has the scoped version (e.g. has 'read_own' and action is 'read')
+    // This handles switchTab() calling _can('products', 'read') when vendor only has 'read_own'
+    var scopedAction = action + '_own';
+    if (allowed.indexOf(scopedAction) !== -1) {
+      return _checkScope(context);
+    }
+
+    // Check if role has the bare version (e.g. has 'read' and action is 'read_own')
     var bareAction = action.replace('_own', '');
     if (allowed.indexOf(bareAction) !== -1) {
       return _checkScope(context);
