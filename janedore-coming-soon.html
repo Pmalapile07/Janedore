@@ -27,7 +27,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <script src="https://unpkg.com/phosphor-icons"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -76,7 +76,7 @@
   }
 
   .header-logo {
-    height: 28px;
+    height: 22px;
     width: auto;
     display: block;
     filter: brightness(0);
@@ -117,34 +117,53 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 80px 60px;
-    max-width: 680px;
+    padding: 80px 60px 80px;
+    max-width: 720px;
   }
 
+  /* ── Stacked headline ──────────────────────────────────────── */
   .headline {
     font-family: 'Fraunces', serif;
-    font-weight: 500;
+    font-weight: 400;
     font-style: italic;
-    font-size: clamp(42px, 7vw, 80px);
-    line-height: 1.05;
-    letter-spacing: -0.01em;
+    font-size: clamp(52px, 8vw, 96px);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
     color: var(--text);
-    margin-bottom: 24px;
+    margin-bottom: 48px;
+
+    /* Stack each word on its own line */
+    display: flex;
+    flex-direction: column;
+    gap: 0.04em;
+  }
+
+  .headline-line {
+    display: block;
+  }
+
+  /* Slight indent on alternating lines — Totême-ish rhythm */
+  .headline-line:nth-child(2) {
+    padding-left: 0.12em;
+  }
+  .headline-line:nth-child(3) {
+    padding-left: 0.04em;
   }
 
   .subhead {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 300;
-    line-height: 1.7;
+    line-height: 1.8;
     color: var(--muted);
-    max-width: 440px;
-    margin-bottom: 48px;
+    max-width: 340px;
+    margin-bottom: 56px;
+    letter-spacing: 0.01em;
   }
 
   /* ── Signup ────────────────────────────────────────────────── */
   .signup-wrapper {
     width: 100%;
-    max-width: 440px;
+    max-width: 380px;
   }
 
   .signup-row {
@@ -165,11 +184,12 @@
     border: none;
     padding: 8px 0;
     font-family: 'Inter', sans-serif;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 300;
     color: var(--text);
     outline: none;
     -webkit-appearance: none;
+    letter-spacing: 0.02em;
   }
   .signup-input::placeholder { color: var(--muted); }
   .signup-input:-webkit-autofill,
@@ -183,9 +203,10 @@
     border: none;
     padding: 8px 0 8px 8px;
     font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    font-weight: 300;
-    letter-spacing: 0.02em;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: var(--muted);
     cursor: pointer;
     white-space: nowrap;
@@ -196,12 +217,12 @@
   }
   .signup-submit:hover { color: var(--text); }
   .signup-submit:disabled { opacity: 0.25; cursor: not-allowed; }
-  .signup-submit i { font-size: 14px; }
+  .signup-submit i { font-size: 12px; }
 
   .signup-spinner {
     display: inline-block;
-    width: 14px; height: 14px;
-    border: 1.5px solid var(--border);
+    width: 12px; height: 12px;
+    border: 1px solid var(--border);
     border-top-color: var(--text);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -212,9 +233,10 @@
     font-size: 11px;
     font-weight: 300;
     color: var(--muted);
-    margin-top: 12px;
+    margin-top: 14px;
     min-height: 18px;
     transition: color 0.2s;
+    letter-spacing: 0.01em;
   }
   .signup-msg.success { color: #5a8a5a; }
   .signup-msg.error   { color: #c0392b; }
@@ -223,7 +245,7 @@
   .site-footer {
     padding: 32px 60px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
   }
 
@@ -232,7 +254,6 @@
     font-weight: 300;
     color: var(--muted);
     letter-spacing: 0.03em;
-    text-align: center;
   }
 
   /* ── Admin overlay ─────────────────────────────────────────── */
@@ -361,19 +382,24 @@
   /* ── Responsive ────────────────────────────────────────────── */
   @media (max-width: 768px) {
     .site-header {
-      padding: 28px 24px 0;
+      padding: 28px 28px 0;
     }
 
     .main-content {
-      padding: 60px 24px;
+      padding: 64px 28px 56px;
     }
 
     .headline {
-      font-size: clamp(36px, 10vw, 56px);
+      font-size: clamp(44px, 13vw, 72px);
+      margin-bottom: 36px;
+    }
+
+    .subhead {
+      margin-bottom: 44px;
     }
 
     .site-footer {
-      padding: 24px;
+      padding: 24px 28px;
     }
 
     #chat-container {
@@ -406,7 +432,10 @@
 
 <main id="main" class="main-content">
 
-  <h1 class="headline">You found us early.</h1>
+  <h1 class="headline">
+    <span class="headline-line">You found</span>
+    <span class="headline-line">us early.</span>
+  </h1>
 
   <p class="subhead">
     A curated multi-brand fashion house. Refined pieces, considered edits. Be the first to know when we open.
@@ -423,7 +452,7 @@
              aria-describedby="signup-msg"
              required>
       <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
-        <span id="btn-text">Subscribe</span>
+        <span id="btn-text">Notify me</span>
         <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
         <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
       </button>
