@@ -121,68 +121,41 @@
   .hero {
     position: relative;
     width: 100%;
-    /* Use calc to subtract the header height */
     height: calc(100dvh - 56px);
-    overflow: hidden;
-  }
-
-  .hero-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
-    /* Subtle dark wash at the bottom so text is always readable */
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 55%, rgba(0,0,0,0.55) 100%);
-    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 55%, rgba(0,0,0,0.55) 100%);
-  }
-
-  /* Gradient overlay — bottom portion only so image reads editorial at top */
-  .hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      transparent 30%,
-      rgba(0,0,0,0.15) 60%,
-      rgba(0,0,0,0.55) 100%
-    );
-  }
-
-  /* ── Hero content — bottom-left editorial treatment ──────── */
-  .hero-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0 36px 40px;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 28px;
+    background: var(--white);
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    max-width: 520px;
   }
 
   .hero-eyebrow {
     font-family: 'Manrope', sans-serif;
-    font-size: 9px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 600;
     letter-spacing: 0.25em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.65);
+    color: var(--muted);
   }
 
   .hero-tagline {
     font-family: 'Manrope', sans-serif;
     font-weight: 800;
     font-style: normal;
-    font-size: clamp(34px, 7vw, 64px);
+    font-size: clamp(36px, 9vw, 72px);
     line-height: 1.08;
     letter-spacing: -0.01em;
-    color: var(--white);
-    /* Text shadow so it reads on any image without a heavy overlay */
-    text-shadow: 0 1px 24px rgba(0,0,0,0.22);
-    max-width: 560px;
+    color: var(--black);
   }
 
   /* ── Signup row ───────────────────────────────────────────── */
@@ -197,24 +170,25 @@
   .signup-trigger {
     background: transparent;
     border: none;
-    border-bottom: 0.8px solid rgba(255,255,255,0.5);
+    border-bottom: 0.8px solid rgba(0,0,0,0.25);
     padding: 10px 0;
     font-family: 'Manrope', sans-serif;
     font-size: 11px;
     font-weight: 400;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.75);
+    color: var(--muted);
     cursor: pointer;
-    text-align: left;
+    text-align: center;
     transition: color 0.2s, border-color 0.2s;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
   }
   .signup-trigger:hover {
-    color: var(--white);
-    border-color: var(--white);
+    color: var(--black);
+    border-color: var(--black);
   }
   .signup-trigger i { font-size: 14px; }
 
@@ -245,25 +219,26 @@
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 0.8px solid rgba(255,255,255,0.4);
+    border-bottom: 0.8px solid rgba(0,0,0,0.2);
     padding: 12px 44px 12px 0;
     font-family: 'Manrope', sans-serif;
     font-size: 13px;
     font-weight: 300;
-    color: var(--white);
+    color: var(--black);
     outline: none;
     transition: border-color 0.25s;
     /* Safari: prevent auto-zoom on focus (font-size >= 16px or use this) */
     font-size: max(16px, 13px);
     -webkit-appearance: none;
+    text-align: center;
   }
   .signup-input:-webkit-autofill,
   .signup-input:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-    -webkit-text-fill-color: #fff !important;
+    -webkit-text-fill-color: #0a0a0a !important;
   }
-  .signup-input::placeholder { color: rgba(255,255,255,0.4); font-weight: 300; }
-  .signup-input:focus { border-color: rgba(255,255,255,0.85); }
+  .signup-input::placeholder { color: rgba(0,0,0,0.3); font-weight: 300; }
+  .signup-input:focus { border-color: rgba(0,0,0,0.6); }
 
   .signup-submit {
     position: absolute;
@@ -272,22 +247,22 @@
     background: transparent;
     border: none;
     padding: 8px;
-    color: rgba(255,255,255,0.6);
+    color: var(--muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     transition: color 0.2s;
     -webkit-appearance: none;
   }
-  .signup-submit:hover { color: var(--white); }
+  .signup-submit:hover { color: var(--black); }
   .signup-submit:disabled { opacity: 0.3; cursor: not-allowed; }
   .signup-submit i { font-size: 20px; }
 
   .signup-spinner {
     display: inline-block;
     width: 18px; height: 18px;
-    border: 1.5px solid rgba(255,255,255,0.3);
-    border-top-color: var(--white);
+    border: 1.5px solid rgba(0,0,0,0.15);
+    border-top-color: var(--black);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -300,21 +275,23 @@
     min-height: 20px;
     display: none;
     padding: 2px 0;
+    text-align: center;
   }
   .signup-msg.show { display: block; }
-  .signup-msg.success { color: #86efac; }
-  .signup-msg.error   { color: #fca5a5; }
-  .signup-msg.info    { color: rgba(255,255,255,0.55); }
+  .signup-msg.success { color: #16a34a; }
+  .signup-msg.error   { color: #dc2626; }
+  .signup-msg.info    { color: var(--muted); }
 
   .signup-legal {
     font-size: 10px;
     font-weight: 300;
-    color: rgba(255,255,255,0.3);
+    color: rgba(0,0,0,0.35);
     line-height: 1.5;
     letter-spacing: 0.02em;
+    text-align: center;
   }
   .signup-legal a {
-    color: rgba(255,255,255,0.4);
+    color: rgba(0,0,0,0.45);
     text-underline-offset: 2px;
   }
 
@@ -476,8 +453,8 @@
   /* ── Mobile adjustments ───────────────────────────────────── */
   @media (max-width: 600px) {
     .site-header { padding: 0 18px; }
-    .hero-content { padding: 0 20px 32px; }
-    .hero-tagline { font-size: clamp(30px, 10vw, 46px); }
+    .hero { padding: 0 20px; }
+    .hero-tagline { font-size: clamp(32px, 11vw, 48px); }
     .site-footer { padding: 14px 18px; }
   }
 
@@ -509,14 +486,6 @@
 <!-- ── Hero ──────────────────────────────────────────────── -->
 <main id="main">
   <section class="hero" aria-label="Coming soon">
-
-    <img class="hero-img"
-         src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287"
-         alt="Janedore editorial"
-         loading="eager"
-         fetchpriority="high">
-
-    <div class="hero-overlay" aria-hidden="true"></div>
 
     <div class="hero-content">
       <p class="hero-eyebrow">Multi-Brand Curated Fashion House</p>
