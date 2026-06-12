@@ -392,7 +392,6 @@
 </head>
 <body>
 
-<!-- ── Header ────────────────────────────────────────────── -->
 <header class="site-header">
   <a href="/" aria-label="Janedore home">
     <img class="header-logo"
@@ -405,7 +404,6 @@
   </div>
 </header>
 
-<!-- ── Main ──────────────────────────────────────────────── -->
 <main id="main" class="main-content">
 
   <h1 class="headline">You found us early.</h1>
@@ -435,12 +433,10 @@
 
 </main>
 
-<!-- ── Footer ────────────────────────────────────────────── -->
 <footer class="site-footer">
   <p class="footer-copy" id="copyright"></p>
 </footer>
 
-<!-- ── Admin overlay ─────────────────────────────────────── -->
 <div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
   <div class="admin-box">
     <button class="admin-close" id="admin-close-btn" aria-label="Close">
@@ -464,7 +460,6 @@
   </div>
 </div>
 
-<!-- ── Chat widget ────────────────────────────────────────── -->
 <div id="chat-container"></div>
 
 <script>
@@ -486,7 +481,6 @@
   document.getElementById('copyright').textContent =
     '\u00a9 ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
 
-  // ── Newsletter signup ─────────────────────────────────────
   const emailEl   = document.getElementById('email-input');
   const signupBtn = document.getElementById('signup-btn');
   const btnText   = document.getElementById('btn-text');
@@ -567,7 +561,6 @@
   emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleSignup(); });
   emailEl.addEventListener('input',   function ()  { if (msgEl.classList.contains('error')) clearMsg(); });
 
-  // ── Admin login ───────────────────────────────────────────
   var overlay   = document.getElementById('admin-overlay');
   var closeBtn  = document.getElementById('admin-close-btn');
   var loginBtn  = document.getElementById('admin-login-btn');
@@ -646,7 +639,6 @@
     });
   }
 
-  // ── Chat widget ───────────────────────────────────────────
   fetch('chat-widget.html')
     .then(function (r) { return r.text(); })
     .then(function (html) {
