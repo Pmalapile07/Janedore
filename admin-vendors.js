@@ -15,8 +15,10 @@
   var vendorsRef   = window._vendorsRef;
   var ordersRef    = window._ordersRef;
   var productsRef  = window._productsRef;
+  var adminsRef    = window._adminsRef;
+  var auth         = window._adminAuth;
 
-  var role = null; // cached on render
+  var role = null;
 
   /* ─────────────────────────────────────────────────────────
      RENDER VENDORS TAB — role-based
@@ -47,7 +49,6 @@
       '</div>' +
       '<div id="vendors-list"><div class="empty-state"><div class="empty-state-text">Loading...</div></div></div>';
 
-    // Load vendors + orders for revenue calculation
     Promise.all([
       vendorsRef.get(),
       ordersRef.orderBy('createdAt', 'desc').limit(200).get()
@@ -63,7 +64,6 @@
         return Object.assign({ id: d.id }, d.data());
       });
 
-      // Calculate revenue per vendor
       var vendorRevenue = {};
       var vendorOrders = {};
       orders.forEach(function(o) {
@@ -112,6 +112,7 @@
         '<th>Orders</th>' +
         '<th>Revenue</th>' +
         '<th>Commission</th>' +
+        '<th>Account</th>' +
         '<th>Status</th>' +
         (canEdit ? '<th></th>' : '') +
       '</tr></thead>' +
@@ -121,6 +122,7 @@
         var revenue      = vendorRevenue[v.id] || 0;
         var orderCount   = vendorOrders[v.id] || 0;
         var commission   = v.commissionRate || 0;
+        var hasAccount   = v.accountEmail ? true : false;
 
         return '<tr onclick="window._openVendorDetail(\'' + esc(v.id) + '\')" style="cursor:pointer;">' +
           '<td style="font-weight:500;">' + esc(v.name || v.id) + '</td>' +
@@ -129,6 +131,11 @@
           '<td>' + orderCount + '</td>' +
           '<td>' + fmt(revenue) + '</td>' +
           '<td>' + commission + '%</td>' +
+          '<td>' +
+            (hasAccount
+              ? '<span style="font-size:10px;color:var(--success);">✓ ' + esc(v.accountEmail) + '</span>'
+              : '<span style="font-size:10px;color:var(--muted2);">No login</span>') +
+          '</td>' +
           '<td>' + statusBadge(v.status || 'active') + '</td>' +
           (canEdit
             ? '<td onclick="event.stopPropagation()">' +
@@ -141,7 +148,7 @@
   }
 
   /* ─────────────────────────────────────────────────────────
-     VENDOR DETAIL PANEL (click a vendor row)
+     VENDOR DETAIL PANEL
   ───────────────────────────────────────────────────────── */
   window._openVendorDetail = function(vendorId) {
     var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
@@ -161,11 +168,15 @@
         '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;">' +
           statusBadge(v.status || 'active') +
           '<span class="badge badge-muted">' + esc(v.commissionRate || 0) + '% commission</span>' +
+          (v.accountEmail ? '<span class="badge badge-success">Has login</span>' : '<span class="badge badge-warning">No login</span>') +
         '</div>' +
 
         (canEdit
-          ? '<div style="margin-bottom:14px;">' +
+          ? '<div style="margin-bottom:14px;display:flex;gap:6px;">' +
               '<button class="btn btn-sm btn-ghost" onclick="window._openVendorModal(\'' + esc(vendorId) + '\')">Edit Vendor</button>' +
+              (v.accountEmail
+                ? '<button class="btn btn-sm btn-ghost" onclick="window._resetVendorPassword(\'' + esc(vendorId) + '\')">Reset Password</button>'
+                : '<button class="btn btn-sm btn-primary" onclick="window._createVendorAccount(\'' + esc(vendorId) + '\')">Create Login Account</button>') +
             '</div>'
           : '') +
 
@@ -174,6 +185,7 @@
           '<div class="info-row"><span class="label">Name</span><span>' + esc(v.name || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">Brand</span><span>' + esc(v.brand || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">Email</span><span>' + esc(v.email || '—') + '</span></div>' +
+          (v.accountEmail ? '<div class="info-row"><span class="label">Login Email</span><span>' + esc(v.accountEmail) + '</span></div>' : '') +
           '<div class="info-row"><span class="label">Created</span><span>' + fmtDate(v.createdAt) + '</span></div>' +
           (v.notes ? '<div class="info-row"><span class="label">Notes</span><span>' + esc(v.notes) + '</span></div>' : '') +
         '</div>' +
@@ -197,12 +209,183 @@
   };
 
   /* ─────────────────────────────────────────────────────────
+     CREATE VENDOR ACCOUNT (Super Admin only)
+  ───────────────────────────────────────────────────────── */
+  window._createVendorAccount = function(vendorId) {
+    if (!isSuperAdmin()) return;
+
+    var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
+    if (!v) { showToast('Vendor not found', 'error'); return; }
+    if (!v.email) { showToast('Vendor must have a contact email first. Edit the vendor and add an email.', 'error'); return; }
+
+    // Show a modal to set password
+    var modalHTML = '<div class="modal modal-sm">' +
+      '<div class="modal-handle"></div>' +
+      '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
+      '<div class="modal-title">Create Login Account</div>' +
+      '<div style="padding:16px 20px;">' +
+        '<p style="font-size:12.5px;color:var(--text);margin-bottom:16px;">' +
+          'Create a login account for <strong>' + esc(v.name) + '</strong>. ' +
+          'They will use this email and password to sign in to the Janedore Studio.' +
+        '</p>' +
+        '<form id="create-account-form" onsubmit="window._handleCreateVendorAccount(event, \'' + esc(vendorId) + '\')">' +
+          '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
+            '<label>Login Email</label>' +
+            '<input name="accountEmail" type="email" value="' + esc(v.email) + '" required placeholder="vendor@brand.com">' +
+          '</div>' +
+          '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
+            '<label>Password</label>' +
+            '<input name="accountPassword" type="text" required placeholder="Set a password" minlength="6">' +
+            '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Minimum 6 characters. Share this with the vendor securely.</div>' +
+          '</div>' +
+          '<button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>' +
+        '</form>' +
+      '</div>' +
+    '</div>';
+
+    mountModal(modalHTML);
+  };
+
+  window._handleCreateVendorAccount = function(e, vendorId) {
+    e.preventDefault();
+    if (!isSuperAdmin()) return;
+
+    var form = e.target;
+    var email = form.accountEmail.value.trim();
+    var password = form.accountPassword.value;
+
+    if (!email || !password) { showToast('Email and password are required.', 'error'); return; }
+    if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+
+    // Step 1: Create Firebase Auth account
+    auth.createUserWithEmailAndPassword(email, password).then(function(userCredential) {
+      var uid = userCredential.user.uid;
+
+      // Step 2: Add to admins collection with VENDOR role
+      return adminsRef.doc(uid).set({
+        email: email,
+        role: 'VENDOR',
+        vendorId: vendorId,
+        createdAt: new Date().toISOString(),
+        createdBy: window._currentUser.uid
+      }).then(function() {
+        // Step 3: Update vendor doc with accountEmail
+        return vendorsRef.doc(vendorId).update({
+          accountEmail: email,
+          accountUid: uid,
+          updatedAt: new Date().toISOString()
+        });
+      }).then(function() {
+        // Update local data
+        var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
+        if (v) { v.accountEmail = email; v.accountUid = uid; }
+
+        closeModal();
+        showToast('Account created! Vendor can now log in with ' + email);
+
+        // Show credentials for sharing
+        setTimeout(function() {
+          var credHTML = '<div class="modal modal-sm">' +
+            '<div class="modal-handle"></div>' +
+            '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
+            '<div class="modal-title">Account Created</div>' +
+            '<div style="padding:16px 20px;">' +
+              '<p style="font-size:12.5px;color:var(--text);margin-bottom:16px;">' +
+                'Share these credentials with the vendor. They can log in at the Janedore Studio admin page.' +
+              '</p>' +
+              '<div class="info-panel" style="margin-bottom:16px;">' +
+                '<div class="info-row"><span class="label">Login URL</span><span style="font-size:11px;">' + window.location.origin + window.location.pathname + '</span></div>' +
+                '<div class="info-row"><span class="label">Email</span><span>' + esc(email) + '</span></div>' +
+                '<div class="info-row"><span class="label">Password</span><span>' + esc(password) + '</span></div>' +
+              '</div>' +
+              '<button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px;" onclick="window._copyCredentials(\'' + esc(email) + '\',\'' + esc(password) + '\')">Copy Credentials</button>' +
+              '<button class="btn btn-ghost btn-sm" style="width:100%;" onclick="window._closeModal()">Done</button>' +
+            '</div>' +
+          '</div>';
+          mountModal(credHTML);
+        }, 400);
+
+        window._renderVendorsTab();
+      });
+    }).catch(function(e) {
+      console.error('[CREATE_VENDOR_ACCOUNT]', e);
+      if (e.code === 'auth/email-already-in-use') {
+        showToast('An account with this email already exists.', 'error');
+      } else if (e.code === 'auth/weak-password') {
+        showToast('Password is too weak. Use at least 6 characters.', 'error');
+      } else {
+        showToast('Error: ' + e.message, 'error');
+      }
+    });
+  };
+
+  window._copyCredentials = function(email, password) {
+    var text = 'Login: ' + window.location.origin + window.location.pathname + '\nEmail: ' + email + '\nPassword: ' + password;
+    navigator.clipboard.writeText(text)
+      .then(function() { showToast('Credentials copied to clipboard'); })
+      .catch(function() { showToast('Could not copy', 'error'); });
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     RESET VENDOR PASSWORD (Super Admin only)
+  ───────────────────────────────────────────────────────── */
+  window._resetVendorPassword = function(vendorId) {
+    if (!isSuperAdmin()) return;
+
+    var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
+    if (!v || !v.accountEmail) { showToast('Vendor has no login account.', 'error'); return; }
+
+    var modalHTML = '<div class="modal modal-sm">' +
+      '<div class="modal-handle"></div>' +
+      '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
+      '<div class="modal-title">Reset Password</div>' +
+      '<div style="padding:16px 20px;">' +
+        '<p style="font-size:12.5px;color:var(--text);margin-bottom:16px;">' +
+          'Reset the password for <strong>' + esc(v.name) + '</strong> (' + esc(v.accountEmail) + ').' +
+        '</p>' +
+        '<form id="reset-password-form" onsubmit="window._handleResetVendorPassword(event, \'' + esc(vendorId) + '\')">' +
+          '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
+            '<label>New Password</label>' +
+            '<input name="newPassword" type="text" required placeholder="New password" minlength="6">' +
+          '</div>' +
+          '<button type="submit" class="btn btn-primary" style="width:100%;">Reset Password</button>' +
+        '</form>' +
+      '</div>' +
+    '</div>';
+
+    mountModal(modalHTML);
+  };
+
+  window._handleResetVendorPassword = function(e, vendorId) {
+    e.preventDefault();
+    if (!isSuperAdmin()) return;
+
+    var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
+    if (!v || !v.accountEmail) return;
+
+    var newPassword = e.target.newPassword.value;
+    if (newPassword.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+
+    // Firebase requires the user to be signed in to update password via client SDK.
+    // For admin-initiated resets, we use a workaround: delete and recreate.
+    // Or we tell the vendor to use "Forgot Password".
+    // For now, show the password to admin so they can share it.
+
+    showToast('For security, please use Firebase Console to reset the password for ' + v.accountEmail + '. Or ask the vendor to use "Forgot Password" on the login page.', 'info');
+    closeModal();
+
+    // Alternative: Use Firebase Admin SDK via a Cloud Function (recommended for production)
+    // For now, we show the manual path.
+  };
+
+  /* ─────────────────────────────────────────────────────────
      VENDOR OWN PROFILE (Vendor role only)
+     Includes onboarding welcome for first-time login
   ───────────────────────────────────────────────────────── */
   function renderVendorProfile(mc) {
     var vendorId = window._currentVendorId;
     if (!vendorId) {
-      mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">No vendor profile linked to your account.</div></div>';
+      mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">No vendor profile linked to your account. Contact Super Admin.</div></div>';
       return;
     }
 
@@ -216,10 +399,23 @@
 
       var v = Object.assign({ id: doc.id }, doc.data());
 
+      // Check if this is first login (no products yet = new vendor)
+      var allProducts = window._allProducts || [];
+      var vendorProducts = allProducts.filter(function(p) { return p.vendorId === vendorId; });
+      var isNewVendor = vendorProducts.length === 0;
+
       mc.innerHTML =
         '<div class="section-header" style="margin-bottom:16px;">' +
           '<div class="section-title">Your Brand</div>' +
         '</div>' +
+
+        // Welcome banner for new vendors
+        (isNewVendor
+          ? '<div class="vendor-scope-bar" style="margin-bottom:16px;background:var(--success-soft);border-color:rgba(26,135,66,0.2);color:var(--success);">' +
+              '<i class="ph-light ph-confetti" style="font-size:16px;margin-right:6px;"></i>' +
+              'Welcome to Janedore! Get started by adding your first product or updating your brand profile below.' +
+            '</div>'
+          : '') +
 
         '<div class="card" style="margin-bottom:12px;">' +
           '<div class="card-header"><span class="card-title">Brand Profile</span></div>' +
@@ -255,7 +451,6 @@
           '</div>' +
         '</div>' +
 
-        // Commission & Status — READ ONLY for vendor
         '<div class="card" style="margin-bottom:12px;">' +
           '<div class="card-header"><span class="card-title">Platform Details</span></div>' +
           '<div style="padding:12px 16px;">' +
@@ -277,8 +472,22 @@
           '</div>' +
         '</div>' +
 
-        // Save button
-        '<button class="btn btn-primary" style="width:100%;margin-bottom:16px;" onclick="document.getElementById(\'vendor-profile-form\').requestSubmit()">' +
+        // Quick actions for new vendors
+        (isNewVendor
+          ? '<div class="card" style="margin-bottom:12px;">' +
+              '<div class="card-header"><span class="card-title">Get Started</span></div>' +
+              '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;">' +
+                '<button class="btn btn-ghost" style="justify-content:flex-start;" onclick="window.switchTab(\'products\')">' +
+                  '<i class="ph-light ph-barcode" style="margin-right:8px;font-size:16px;"></i> Add Your First Product' +
+                '</button>' +
+                '<button class="btn btn-ghost" style="justify-content:flex-start;" onclick="document.getElementById(\'vendor-profile-form\').querySelector(\'[name=name]\').focus()">' +
+                  '<i class="ph-light ph-storefront" style="margin-right:8px;font-size:16px;"></i> Update Brand Profile' +
+                '</button>' +
+              '</div>' +
+            '</div>'
+          : '') +
+
+        '<button class="btn btn-primary" style="width:100%;margin-bottom:80px;" onclick="document.getElementById(\'vendor-profile-form\').requestSubmit()">' +
           'Save Changes' +
         '</button>';
     }).catch(function(e) {
@@ -318,7 +527,7 @@
     }
 
     var v = vendorId ? (window._vendorsData || []).find(function(x) { return x.id === vendorId; }) : null;
-    v = v || { id:'', name:'', brand:'', email:'', description:'', logoUrl:'', commissionRate:15, status:'active', notes:'' };
+    v = v || { id:'', name:'', brand:'', email:'', description:'', logoUrl:'', commissionRate:15, status:'active', notes:'', accountEmail:'' };
 
     var modalHTML = '<div class="modal modal-sm">' +
       '<div class="modal-handle"></div>' +
@@ -338,6 +547,11 @@
         '</div>' +
 
         '<div class="form-group"><label>Internal Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
+
+        // Account info (read-only if exists)
+        (v.accountEmail
+          ? '<div class="form-group"><label>Login Account</label><input value="' + esc(v.accountEmail) + '" disabled style="opacity:0.6;"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Use "Reset Password" to change vendor credentials.</div></div>'
+          : '') +
 
         '<div style="display:flex;gap:10px;padding:14px 20px 4px;">' +
           '<button type="submit" class="btn btn-primary">Save Vendor</button>' +
