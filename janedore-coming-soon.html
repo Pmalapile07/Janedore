@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Janedore · Coming Soon</title>
 
-<meta name="description" content="Janedore - The rarest finds, within reach. Something extraordinary is coming. Sign up to be the first to know when we launch.">
+<meta name="description" content="Janedore - A curated fashion house. Something extraordinary is coming. Sign up to be the first to know when we launch.">
 <meta name="keywords" content="fashion, clothing, accessories, curated fashion, coming soon">
 <meta name="author" content="Janedore">
 <meta name="robots" content="index, follow">
@@ -21,13 +21,13 @@
 <meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287">
 
 <link rel="canonical" href="https://janedore.co.za">
-<meta name="theme-color" content="#f4f4f4">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <script src="https://unpkg.com/phosphor-icons"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -39,25 +39,25 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:       #ffffff;
-    --surface:  #f4f4f4;
-    --text:     #111111;
-    --muted:    #777777;
-    --border:   rgba(0,0,0,0.10);
-    --accent:   #000000;
+    --bg:      #ffffff;
+    --text:    #1a1a1a;
+    --muted:   #999999;
+    --border:  #e0e0e0;
   }
 
   html {
-    font-family: 'Manrope', sans-serif;
+    font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
   }
 
   body {
     min-height: 100dvh;
     background: var(--bg);
     color: var(--text);
-    overscroll-behavior-y: none;
+    display: flex;
+    flex-direction: column;
   }
 
   .sr-only {
@@ -66,221 +66,138 @@
     clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
 
-  /* ── Header ───────────────────────────────────────────────── */
+  /* ── Header: ultra-minimal, just logo ──────────────────── */
   .site-header {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background: var(--bg);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 28px;
-    height: 56px;
-    border-bottom: 1px solid var(--border);
+    padding: 40px 60px 0;
+    background: transparent;
   }
 
   .header-logo {
-    height: 28px;
+    height: 20px;
     width: auto;
     display: block;
   }
 
-  .header-admin {
-    text-align: right;
-    line-height: 1.5;
-  }
-  .header-admin-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 300;
-    color: var(--muted);
-    letter-spacing: 0.02em;
-  }
   .header-admin-btn {
-    background: transparent;
-    border: none;
-    font-family: 'Manrope', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
     color: var(--muted);
+    background: none;
+    border: none;
     cursor: pointer;
-    padding: 0;
-    letter-spacing: 0.04em;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    letter-spacing: 0.02em;
     transition: color 0.2s;
+    text-decoration: none;
   }
   .header-admin-btn:hover { color: var(--text); }
 
-  /* ── Hero ─────────────────────────────────────────────────── */
-  .hero {
-    position: relative;
-    width: 100%;
-    min-height: calc(100dvh - 56px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 24px;
-    background: var(--bg);
-  }
-
-  .frame {
-    position: relative;
-    width: 100%;
-    max-width: 460px;
-    border: 1px solid var(--border);
-    padding: 56px 32px;
+  /* ── Main: pure typographic layout ─────────────────────── */
+  .main-content {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 28px;
-    background: var(--surface);
+    justify-content: center;
+    padding: 80px 60px;
+    max-width: 680px;
   }
 
-  .frame::before,
-  .frame::after {
-    content: '';
-    position: absolute;
-    width: 9px;
-    height: 9px;
-    border: 1px solid var(--border);
-  }
-  .frame::before { top: -5px; left: -5px; border-width: 1px 0 0 1px; background: var(--bg); }
-  .frame::after  { bottom: -5px; right: -5px; border-width: 0 1px 1px 0; background: var(--bg); }
-
-  .hero-eyebrow {
-    font-family: 'Manrope', sans-serif;
+  /* Small label above headline */
+  .coming-soon-label {
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.3em;
+    font-weight: 500;
+    letter-spacing: 0.35em;
     text-transform: uppercase;
     color: var(--muted);
+    margin-bottom: 32px;
   }
 
-  .hero-tagline {
-    font-family: 'Fraunces', serif;
-    font-weight: 500;
-    font-style: italic;
-    font-size: clamp(34px, 8vw, 58px);
-    line-height: 1.12;
-    letter-spacing: -0.01em;
-    color: var(--text);
-  }
-
-  .hero-sub {
-    font-family: 'Manrope', sans-serif;
-    font-size: 13px;
+  /* Bold headline — this IS the hero. No image, no frame */
+  .headline {
+    font-size: clamp(42px, 7vw, 80px);
     font-weight: 300;
-    line-height: 1.6;
-    color: var(--muted);
-    max-width: 320px;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 24px;
   }
 
-  /* ── Signup row ───────────────────────────────────────────── */
+  /* Subhead — restrained, quiet */
+  .subhead {
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 440px;
+    margin-bottom: 64px;
+  }
+
+  /* ── Signup: inline, COS-style ─────────────────────────── */
+  .signup-wrapper {
+    width: 100%;
+    max-width: 440px;
+  }
+
   .signup-row {
     display: flex;
-    flex-direction: column;
-    gap: 0;
-    width: 100%;
-    max-width: 340px;
+    align-items: flex-end;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    transition: border-color 0.3s;
   }
-
-  .signup-trigger {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--accent);
-    padding: 10px 0;
-    font-family: 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text);
-    cursor: pointer;
-    text-align: center;
-    transition: color 0.2s, border-color 0.2s, opacity 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-  .signup-trigger:hover {
-    color: var(--muted);
-    opacity: 0.85;
-  }
-  .signup-trigger i { font-size: 14px; }
-
-  .signup-form {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
-  }
-  .signup-form.open {
-    max-height: 200px;
-    opacity: 1;
-  }
-
-  .signup-form-inner {
-    padding-top: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .signup-input-wrap {
-    position: relative;
-    width: 100%;
+  .signup-row:focus-within {
+    border-color: var(--text);
   }
 
   .signup-input {
-    width: 100%;
+    flex: 1;
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--border);
-    padding: 12px 44px 12px 0;
-    font-family: 'Manrope', sans-serif;
-    font-size: max(16px, 13px);
+    padding: 8px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
     font-weight: 300;
     color: var(--text);
     outline: none;
-    transition: border-color 0.25s;
     -webkit-appearance: none;
-    text-align: center;
   }
+  .signup-input::placeholder { color: var(--muted); }
   .signup-input:-webkit-autofill,
   .signup-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px var(--surface) inset !important;
+    -webkit-box-shadow: 0 0 0 30px var(--bg) inset !important;
     -webkit-text-fill-color: var(--text) !important;
   }
-  .signup-input::placeholder { color: var(--muted); font-weight: 300; }
-  .signup-input:focus { border-color: var(--accent); }
 
   .signup-submit {
-    position: absolute;
-    right: 0; top: 50%;
-    transform: translateY(-50%);
     background: transparent;
     border: none;
-    padding: 8px;
-    color: var(--muted);
+    padding: 8px 0 8px 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
     cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
     display: flex;
     align-items: center;
-    transition: color 0.2s;
-    -webkit-appearance: none;
+    gap: 6px;
   }
-  .signup-submit:hover { color: var(--accent); }
-  .signup-submit:disabled { opacity: 0.3; cursor: not-allowed; }
-  .signup-submit i { font-size: 20px; }
+  .signup-submit:hover { opacity: 0.5; }
+  .signup-submit:disabled { opacity: 0.25; cursor: not-allowed; }
+  .signup-submit i { font-size: 14px; }
 
   .signup-spinner {
     display: inline-block;
-    width: 18px; height: 18px;
+    width: 14px; height: 14px;
     border: 1.5px solid var(--border);
-    border-top-color: var(--accent);
+    border-top-color: var(--text);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -289,39 +206,29 @@
   .signup-msg {
     font-size: 11px;
     font-weight: 300;
-    letter-spacing: 0.03em;
-    min-height: 20px;
-    display: none;
-    padding: 2px 0;
-    text-align: center;
+    color: var(--muted);
+    margin-top: 12px;
+    min-height: 18px;
+    transition: color 0.2s;
   }
-  .signup-msg.show { display: block; }
-  .signup-msg.success { color: #4a8c4a; }
-  .signup-msg.error   { color: #c44; }
-  .signup-msg.info    { color: var(--muted); }
+  .signup-msg.success { color: #5a8a5a; }
+  .signup-msg.error   { color: #c0392b; }
 
   .signup-legal {
     font-size: 10px;
     font-weight: 300;
     color: var(--muted);
-    line-height: 1.5;
-    letter-spacing: 0.02em;
-    text-align: center;
-    opacity: 0.7;
-  }
-  .signup-legal a {
-    color: var(--muted);
-    text-underline-offset: 2px;
+    margin-top: 8px;
+    opacity: 0.6;
   }
 
-  /* ── Footer strip ─────────────────────────────────────────── */
+  /* ── Footer: ghostly minimal ────────────────────────────── */
   .site-footer {
+    padding: 32px 60px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    padding: 16px 28px;
-    background: var(--bg);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid #f5f5f5;
   }
 
   .footer-copy {
@@ -331,18 +238,27 @@
     letter-spacing: 0.03em;
   }
 
-  /* ── Admin login overlay ──────────────────────────────────── */
+  .footer-location {
+    font-size: 10px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Admin overlay: COS-toned ───────────────────────────── */
   .admin-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(255,255,255,0.97);
+    background: rgba(255,255,255,0.98);
     z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   .admin-overlay.open {
     opacity: 1;
@@ -351,27 +267,29 @@
 
   .admin-box {
     width: 100%;
-    max-width: 360px;
-    padding: 0 28px;
+    max-width: 340px;
+    padding: 0 32px;
     position: relative;
   }
 
   .admin-logo {
     display: block;
-    height: 16px;
+    height: 14px;
     width: auto;
-    margin: 0 auto 32px;
-    opacity: 0.5;
+    margin: 0 auto 48px;
+    opacity: 0.4;
   }
 
   .admin-label {
     display: block;
-    font-size: 9px;
-    letter-spacing: 0.28em;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
     color: var(--muted);
     text-align: center;
-    margin-bottom: 36px;
+    margin-bottom: 40px;
   }
 
   .admin-field {
@@ -380,46 +298,47 @@
     border: none;
     border-bottom: 1px solid var(--border);
     padding: 14px 0;
-    margin-bottom: 20px;
-    font-family: 'Manrope', sans-serif;
-    font-size: max(16px, 14px);
+    margin-bottom: 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
     font-weight: 300;
     color: var(--text);
     outline: none;
     -webkit-appearance: none;
-    transition: border-color 0.25s;
+    transition: border-color 0.3s;
   }
+  .admin-field:focus { border-color: var(--text); }
+  .admin-field::placeholder { color: var(--muted); opacity: 0.5; }
   .admin-field:-webkit-autofill,
   .admin-field:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px rgba(255,255,255,0.97) inset !important;
+    -webkit-box-shadow: 0 0 0 30px rgba(255,255,255,0.98) inset !important;
     -webkit-text-fill-color: var(--text) !important;
   }
-  .admin-field::placeholder { color: var(--muted); opacity: 0.6; }
-  .admin-field:focus { border-color: var(--accent); }
 
   .admin-submit {
     width: 100%;
-    background: transparent;
-    border: 1px solid var(--accent);
-    padding: 14px;
-    margin-top: 8px;
-    font-family: 'Manrope', sans-serif;
+    background: var(--text);
+    border: none;
+    padding: 16px;
+    margin-top: 16px;
+    font-family: 'Inter', sans-serif;
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text);
+    color: #ffffff;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, opacity 0.2s;
+    transition: opacity 0.2s;
     -webkit-appearance: none;
   }
-  .admin-submit:hover { background: var(--accent); color: #fff; opacity: 1; }
-  .admin-submit:disabled { opacity: 0.35; cursor: not-allowed; }
+  .admin-submit:hover { opacity: 0.8; }
+  .admin-submit:disabled { opacity: 0.3; cursor: not-allowed; }
 
   .admin-error {
     font-size: 11px;
-    color: #c44;
-    margin-top: 14px;
+    font-weight: 300;
+    color: #c0392b;
+    margin-top: 16px;
     min-height: 18px;
     text-align: center;
     display: none;
@@ -428,32 +347,55 @@
 
   .admin-close {
     position: absolute;
-    top: -8px; right: 0;
+    top: -40px; right: -8px;
     background: transparent;
     border: none;
     color: var(--muted);
     cursor: pointer;
-    font-size: 18px;
+    font-size: 20px;
     padding: 8px;
     transition: color 0.2s;
     line-height: 1;
   }
   .admin-close:hover { color: var(--text); }
 
-  /* ── Chat container ───────────────────────────────────────── */
+  /* ── Chat container ─────────────────────────────────────── */
   #chat-container {
     position: fixed;
-    bottom: 24px;
-    right: 20px;
+    bottom: 32px;
+    right: 32px;
     z-index: 60;
   }
 
-  /* ── Mobile adjustments ───────────────────────────────────── */
-  @media (max-width: 600px) {
-    .site-header { padding: 0 18px; }
-    .hero { padding: 0 20px; }
-    .hero-tagline { font-size: clamp(32px, 11vw, 48px); }
-    .site-footer { padding: 14px 18px; }
+  /* ── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .site-header {
+      padding: 28px 24px 0;
+    }
+
+    .main-content {
+      padding: 60px 24px;
+    }
+
+    .headline {
+      font-size: clamp(36px, 10vw, 56px);
+    }
+
+    .subhead {
+      margin-bottom: 48px;
+    }
+
+    .site-footer {
+      padding: 24px;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    #chat-container {
+      bottom: 20px;
+      right: 16px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -466,70 +408,55 @@
 </head>
 <body>
 
-<a href="#main" class="sr-only">Skip to main content</a>
-
-<!-- ── Header ────────────────────────────────────────────── -->
+<!-- ── Header: just logo + subtle admin link ────────────── -->
 <header class="site-header">
   <a href="/" aria-label="Janedore home">
     <img class="header-logo"
          src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore-logo.png?v=1776021202"
          alt="Janedore">
   </a>
-  <div class="header-admin">
-    <span class="header-admin-label">Is this your store?</span>
-    <button class="header-admin-btn" onclick="openAdminPanel()">Log in</button>
-  </div>
+  <button class="header-admin-btn" onclick="openAdminPanel()">Log in</button>
 </header>
 
-<!-- ── Hero ──────────────────────────────────────────────── -->
-<main id="main">
-  <section class="hero" aria-label="Coming soon">
+<!-- ── Main: typography-only hero ────────────────────────── -->
+<main id="main" class="main-content">
 
-    <div class="frame">
-      <p class="hero-eyebrow">Coming Soon</p>
+  <p class="coming-soon-label">Coming soon</p>
 
-      <h1 class="hero-tagline">You found us early.</h1>
+  <h1 class="headline">You found<br>us early.</h1>
 
-      <p class="hero-sub">A multi-brand curated fashion house. Be the first to know when the doors open.</p>
+  <p class="subhead">
+    A curated multi-brand fashion house. Refined pieces, considered edits. Be the first to know when we open.
+  </p>
 
-      <div class="signup-row">
-        <button class="signup-trigger" id="signup-trigger" aria-expanded="false" aria-controls="signup-form">
-          <i class="ph ph-envelope-simple" aria-hidden="true"></i>
-          Let me know when you launch
-        </button>
-
-        <div class="signup-form" id="signup-form" role="region" aria-label="Newsletter signup">
-          <div class="signup-form-inner">
-            <div class="signup-input-wrap">
-              <label for="email-input" class="sr-only">Email address</label>
-              <input type="email"
-                     class="signup-input"
-                     id="email-input"
-                     placeholder="your@email.com"
-                     autocomplete="email"
-                     aria-describedby="signup-msg"
-                     required>
-              <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
-                <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
-                <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
-              </button>
-            </div>
-            <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
-            <p class="signup-legal">
-              By signing up, you agree to receive emails from Janedore.
-              <a href="unsubscribe.html">Unsubscribe anytime.</a>
-            </p>
-          </div>
-        </div>
-      </div>
+  <div class="signup-wrapper">
+    <div class="signup-row">
+      <label for="email-input" class="sr-only">Email address</label>
+      <input type="email"
+             class="signup-input"
+             id="email-input"
+             placeholder="Enter your email"
+             autocomplete="email"
+             aria-describedby="signup-msg"
+             required>
+      <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
+        <span id="btn-text">Subscribe</span>
+        <i class="ph ph-arrow-right" id="arrow-icon" aria-hidden="true"></i>
+        <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
+      </button>
     </div>
+    <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
+    <p class="signup-legal">
+      By subscribing, you agree to receive emails from Janedore. No spam, ever.
+    </p>
+  </div>
 
-  </section>
 </main>
 
-<!-- ── Footer ────────────────────────────────────────────── -->
+<!-- ── Footer: split left/right, barely there ─────────────── -->
 <footer class="site-footer">
   <p class="footer-copy" id="copyright"></p>
+  <p class="footer-location">South Africa</p>
 </footer>
 
 <!-- ── Admin overlay ─────────────────────────────────────── -->
@@ -576,35 +503,28 @@
   const db   = firebase.firestore();
 
   document.getElementById('copyright').textContent =
-    '\u00a9 ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
-
+    '\u00a9 ' + new Date().getFullYear() + ' Janedore';
 
   // ── Newsletter signup ─────────────────────────────────────
-  const trigger   = document.getElementById('signup-trigger');
-  const form      = document.getElementById('signup-form');
   const emailEl   = document.getElementById('email-input');
   const signupBtn = document.getElementById('signup-btn');
+  const btnText   = document.getElementById('btn-text');
   const arrowIcon = document.getElementById('arrow-icon');
   const spinner   = document.getElementById('btn-spinner');
   const msgEl     = document.getElementById('signup-msg');
 
-  trigger.addEventListener('click', function () {
-    var open = form.classList.toggle('open');
-    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) setTimeout(function () { emailEl.focus(); }, 380);
-  });
-
   function showMsg(text, type) {
     msgEl.textContent = text;
-    msgEl.className   = 'signup-msg show ' + type;
+    msgEl.className   = 'signup-msg ' + type;
   }
   function clearMsg() {
-    msgEl.className   = 'signup-msg';
+    msgEl.className = 'signup-msg';
     msgEl.textContent = '';
   }
   function setLoading(v) {
-    signupBtn.disabled       = v;
-    arrowIcon.style.display  = v ? 'none'         : 'block';
+    signupBtn.disabled    = v;
+    btnText.style.display = v ? 'none' : 'inline';
+    arrowIcon.style.display  = v ? 'none' : 'inline';
     spinner.style.display    = v ? 'inline-block' : 'none';
   }
   function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
@@ -638,7 +558,7 @@
     var docRef = db.collection('newsletter').doc(docId);
     docRef.get().then(function (snap) {
       if (snap.exists) {
-        showMsg("You're already on the list — we'll be in touch!", 'info');
+        showMsg("You're already on the list.", 'error');
         setLoading(false);
         return;
       }
@@ -649,14 +569,14 @@
         userAgent:    navigator.userAgent,
         referrer:     document.referrer || 'direct'
       }).then(function () {
-        showMsg("You're on the list. We'll notify you when we launch.", 'success');
+        showMsg("You're on the list. We'll be in touch.", 'success');
         emailEl.value = '';
         setLoading(false);
       });
     }).catch(function (err) {
       var msg = 'Something went wrong. Please try again.';
-      if (err.code === 'permission-denied') msg = 'Unable to subscribe right now — please try again later.';
-      if (err.code === 'unavailable')       msg = 'No connection. Please check your internet and try again.';
+      if (err.code === 'permission-denied') msg = 'Unable to subscribe — try again later.';
+      if (err.code === 'unavailable')       msg = 'No connection. Check your internet and try again.';
       showMsg(msg, 'error');
       setLoading(false);
     });
@@ -723,20 +643,20 @@
       return db.collection('admins').doc(cred.user.uid).get().then(function (doc) {
         if (!doc.exists) {
           return auth.signOut().then(function () {
-            throw { friendly: 'Access denied. Not an authorised admin.' };
+            throw { friendly: 'Access denied.' };
           });
         }
         var role = (doc.data().role || '').toUpperCase();
         if (role !== 'SUPER_ADMIN' && role !== 'ADMIN' && role !== 'VENDOR') {
           return auth.signOut().then(function () {
-            throw { friendly: 'Access denied. Invalid role.' };
+            throw { friendly: 'Access denied.' };
           });
         }
         window.location.href = 'admin.html';
       });
     }).catch(function (err) {
-      var msg = err.friendly || 'Invalid credentials. Please try again.';
-      if (err.code === 'auth/too-many-requests')      msg = 'Too many failed attempts. Please wait and try again.';
+      var msg = err.friendly || 'Invalid credentials.';
+      if (err.code === 'auth/too-many-requests')      msg = 'Too many attempts. Wait and try again.';
       if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
       adminErr.textContent = msg;
       adminErr.className   = 'admin-error show';
