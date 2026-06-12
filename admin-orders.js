@@ -19,7 +19,6 @@
 
   var draftsRef = db.collection('order_drafts');
 
-  // Couriers available in South Africa
   var COURIERS = [
     'The Courier Guy',
     'Fastway',
@@ -34,7 +33,6 @@
 
   var ABANDONED_THRESHOLD_MS = 60 * 60 * 1000;
 
-  // Bulk selection state
   window._selectedOrders = {};
   window._bulkMode = false;
 
@@ -51,6 +49,17 @@
   window._renderOrdersTab = function () {
     var mc = safeEl('main-content');
     if (!mc) return;
+
+    // Vendor: blocked from orders collection by Firestore rules
+    if (window._currentUserRole === 'VENDOR') {
+      mc.innerHTML = '<div class="orders-empty-state">' +
+        '<div class="orders-empty-icon"><i class="ph-light ph-receipt"></i></div>' +
+        '<div class="orders-empty-title">Your Orders</div>' +
+        '<div class="orders-empty-sub">Your sales and order data will appear here. Revenue reports are updated periodically by Janedore.</div>' +
+      '</div>';
+      return;
+    }
+
     window._selectedOrders = {};
     window._bulkMode = false;
 
@@ -93,6 +102,9 @@
   // ─── LOAD ────────────────────────────────────────────────────
 
   function loadOrders() {
+    // Vendor can't read orders collection
+    if (window._currentUserRole === 'VENDOR') return;
+
     if (!window._can('orders', 'read')) {
       var wrap = safeEl('orders-table-wrap');
       if (wrap) wrap.innerHTML = '<p style="padding:16px;color:var(--danger);font-size:12px;">Access denied.</p>';
@@ -194,7 +206,6 @@
 
     batch.commit().then(function () {
       showToast(ids.length + ' order' + (ids.length !== 1 ? 's' : '') + ' updated to ' + status);
-      // Update local data
       ids.forEach(function (id) {
         var o = (window._ordersData || []).find(function (x) { return x.id === id; });
         if (o) o.status = status;
@@ -215,7 +226,6 @@
     var tableWrap   = safeEl('orders-table-wrap');
     if (!toolbarWrap || !tableWrap) return;
 
-    // Show bulk toggle if there are orders and user can update
     var toggleBtn = safeEl('bulk-toggle-btn');
     if (toggleBtn) toggleBtn.style.display = orders.length > 0 && !window._bulkMode ? '' : 'none';
 
@@ -410,8 +420,6 @@
   };
 
   // ─── NEW ORDER FORM ──────────────────────────────────────────
-  // (unchanged — keeping it for reference but not duplicating here for brevity)
-  // ... [rest of the new order form functions remain identical] ...
 
   window._openNewOrderForm = function (draftId, draftData) {
     if (!window._guard('orders', 'create')) return;
@@ -809,7 +817,6 @@
         '</div>';
     }
 
-    // Status badges
     html +=
       '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;">' +
         statusBadge(o.status) +
@@ -817,11 +824,9 @@
         statusBadge(o.fulfillmentStatus || 'unfulfilled') +
       '</div>';
 
-    // ── Order Timeline ──
     html += '<div class="card-title" style="margin-bottom:8px;">Order Progress</div>';
     html += renderOrderTimeline(o);
 
-    // Action buttons
     html +=
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;margin-top:14px;">' +
         '<button class="btn btn-sm btn-ghost" onclick="window._copyOrderId(\'' + esc(orderId) + '\')">Copy #</button>' +
@@ -834,7 +839,6 @@
           : '') +
       '</div>';
 
-    // Customer info
     html +=
       '<div class="card-title" style="margin-bottom:7px;">Customer</div>' +
       '<div class="info-panel" style="margin-bottom:14px;">' +
@@ -843,7 +847,6 @@
         '<div class="info-row"><span class="label">Phone</span><span>' + esc(o.customerPhone || '—') + '</span></div>' +
       '</div>';
 
-    // Order items
     if (o.items && o.items.length > 0) {
       html +=
         '<div class="card-title" style="margin-bottom:7px;">Items (' + o.items.length + ')</div>' +
@@ -863,7 +866,6 @@
         '</div>';
     }
 
-    // Shipping
     if (o.shippingAddress) {
       html +=
         '<div class="card-title" style="margin-bottom:7px;">Shipping</div>' +
@@ -876,7 +878,6 @@
         '</div>';
     }
 
-    // Revenue breakdown — Super Admin only
     if (canRefund) {
       html +=
         '<div class="card-title" style="margin-bottom:7px;">Revenue</div>' +
@@ -903,7 +904,6 @@
       }
     }
 
-    // Status controls
     if (canUpdate) {
       html +=
         '<div class="card-title" style="margin-bottom:8px;">Update Status</div>' +
@@ -916,7 +916,6 @@
           }).join('') +
         '</div>' +
 
-        // Courier + Tracking
         '<div style="margin-bottom:12px;">' +
           '<div class="card-title" style="margin-bottom:7px;">Courier &amp; Tracking</div>' +
           '<select id="courier-select" style="width:100%;margin-bottom:6px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:7px;padding:8px 11px;font-family:Manrope,sans-serif;font-size:12px;color:var(--text);outline:none;">' +
@@ -933,7 +932,6 @@
           '</div>' +
         '</div>' +
 
-        // Internal notes
         '<div>' +
           '<div class="card-title" style="margin-bottom:7px;">Internal Notes</div>' +
           '<textarea id="order-note-input"' +
@@ -970,7 +968,6 @@
       }
     }
 
-    // If status isn't in timeline (e.g. cancelled, refunded), show a message
     if (currentIndex === -1) {
       var label = currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1);
       return '<div style="padding:10px 0;font-size:12px;color:var(--muted);text-align:center;">' +
@@ -999,7 +996,6 @@
         '</div>' +
       '</div>';
 
-      // Connector line
       if (j < TIMELINE_STEPS.length - 1) {
         html += '<div style="margin-left:11px;width:2px;height:8px;background:' + (j < currentIndex ? 'var(--text)' : 'var(--border-med)') + ';border-radius:1px;"></div>';
       }
@@ -1117,7 +1113,6 @@
 
     ordersRef.doc(orderId).update(data).then(function () {
       showToast('Tracking saved');
-      // Update local
       var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
       if (o) { o.trackingNumber = data.trackingNumber; o.courier = data.courier; }
     }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
