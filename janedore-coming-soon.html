@@ -27,7 +27,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <script src="https://unpkg.com/phosphor-icons"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -76,7 +76,7 @@
   }
 
   .header-logo {
-    height: 20px;
+    height: 28px;
     width: auto;
     display: block;
     filter: brightness(0);
@@ -121,15 +121,6 @@
     max-width: 680px;
   }
 
-  .coming-soon-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 32px;
-  }
-
   .headline {
     font-family: 'Fraunces', serif;
     font-weight: 500;
@@ -142,12 +133,12 @@
   }
 
   .subhead {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 300;
     line-height: 1.7;
     color: var(--muted);
     max-width: 440px;
-    margin-bottom: 64px;
+    margin-bottom: 48px;
   }
 
   /* ── Signup ────────────────────────────────────────────────── */
@@ -192,19 +183,18 @@
     border: none;
     padding: 8px 0 8px 8px;
     font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text);
+    font-size: 16px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: var(--muted);
     cursor: pointer;
     white-space: nowrap;
-    transition: opacity 0.2s;
+    transition: color 0.2s;
     display: flex;
     align-items: center;
     gap: 6px;
   }
-  .signup-submit:hover { opacity: 0.5; }
+  .signup-submit:hover { color: var(--text); }
   .signup-submit:disabled { opacity: 0.25; cursor: not-allowed; }
   .signup-submit i { font-size: 14px; }
 
@@ -382,10 +372,6 @@
       font-size: clamp(36px, 10vw, 56px);
     }
 
-    .subhead {
-      margin-bottom: 48px;
-    }
-
     .site-footer {
       padding: 24px;
     }
@@ -421,8 +407,6 @@
 
 <!-- ── Main ──────────────────────────────────────────────── -->
 <main id="main" class="main-content">
-
-  <p class="coming-soon-label">Coming soon</p>
 
   <h1 class="headline">You found us early.</h1>
 
