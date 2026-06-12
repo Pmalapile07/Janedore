@@ -27,7 +27,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://www.gstatic.com">
 
 <script src="https://unpkg.com/phosphor-icons"></script>
@@ -40,11 +40,11 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --white:   #ffffff;
-    --black:   #0a0a0a;
-    --muted:   #888880;
-    --dust:    #c8b89a;
-    --border:  rgba(0,0,0,0.1);
+    --bg:      #1c1a17;
+    --ivory:   #f7f1e8;
+    --terra:   #c97b4a;
+    --stone:   #8a8378;
+    --border:  rgba(247,241,232,0.14);
   }
 
   /* ── Reset — no zoom, no fixed body, Safari-safe ─────────── */
@@ -57,8 +57,8 @@
 
   body {
     min-height: 100dvh; /* dvh accounts for Safari address bar */
-    background: var(--white);
-    color: var(--black);
+    background: var(--bg);
+    color: var(--ivory);
     /* NO position:fixed, NO overflow:hidden — both break iOS keyboard */
     overscroll-behavior-y: none;
   }
@@ -74,7 +74,7 @@
     position: sticky;
     top: 0;
     z-index: 40;
-    background: var(--white);
+    background: var(--bg);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -86,7 +86,7 @@
     height: 35px;
     width: auto;
     display: block;
-   filter: brightness(0);
+    filter: brightness(0) invert(1);
   }
 
   .header-admin {
@@ -97,7 +97,7 @@
     display: block;
     font-size: 10px;
     font-weight: 300;
-    color: var(--muted);
+    color: var(--stone);
     letter-spacing: 0.02em;
   }
   .header-admin-btn {
@@ -106,7 +106,7 @@
     font-family: 'Manrope', sans-serif;
     font-size: 10px;
     font-weight: 500;
-    color: var(--muted);
+    color: var(--stone);
     cursor: pointer;
     padding: 0;
     letter-spacing: 0.04em;
@@ -114,47 +114,73 @@
     text-underline-offset: 2px;
     transition: color 0.2s;
   }
-  .header-admin-btn:hover { color: var(--black); }
+  .header-admin-btn:hover { color: var(--ivory); }
 
   /* ── Hero ─────────────────────────────────────────────────── */
   .hero {
     position: relative;
     width: 100%;
-    height: calc(100dvh - 56px);
+    min-height: calc(100dvh - 56px);
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    padding: 0 28px;
-    background: var(--white);
+    padding: 32px 24px;
+    background: var(--bg);
   }
 
-  .hero-content {
+  /* The signature: a single bordered frame, like a hangtag,
+     that holds everything as one composed object */
+  .frame {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    border: 1px solid var(--terra);
+    padding: 56px 32px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
-    max-width: 520px;
+    text-align: center;
+    gap: 28px;
   }
+
+  /* corner ticks — small label-like marks at top-left and bottom-right */
+  .frame::before,
+  .frame::after {
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border: 1px solid var(--terra);
+  }
+  .frame::before { top: -5px; left: -5px; border-width: 1px 0 0 1px; background: var(--bg); }
+  .frame::after  { bottom: -5px; right: -5px; border-width: 0 1px 1px 0; background: var(--bg); }
 
   .hero-eyebrow {
     font-family: 'Manrope', sans-serif;
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--terra);
   }
 
   .hero-tagline {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 800;
-    font-style: normal;
-    font-size: clamp(36px, 9vw, 72px);
-    line-height: 1.08;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(34px, 8vw, 58px);
+    line-height: 1.12;
     letter-spacing: -0.01em;
-    color: var(--black);
+    color: var(--ivory);
+  }
+
+  .hero-sub {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--stone);
+    max-width: 320px;
   }
 
   /* ── Signup row ───────────────────────────────────────────── */
@@ -163,32 +189,31 @@
     flex-direction: column;
     gap: 0;
     width: 100%;
-    max-width: 400px;
-    margin-top: 30%;
+    max-width: 340px;
   }
 
   .signup-trigger {
     background: transparent;
     border: none;
-    border-bottom: 0.8px solid rgba(0,0,0,0.25);
+    border-bottom: 1px solid var(--terra);
     padding: 10px 0;
     font-family: 'Manrope', sans-serif;
     font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 0.18em;
+    font-weight: 500;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ivory);
     cursor: pointer;
     text-align: center;
-    transition: color 0.2s, border-color 0.2s;
+    transition: color 0.2s, border-color 0.2s, opacity 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
   }
   .signup-trigger:hover {
-    color: var(--black);
-    border-color: var(--black);
+    color: var(--terra);
+    opacity: 0.85;
   }
   .signup-trigger i { font-size: 14px; }
 
@@ -219,12 +244,12 @@
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 0.8px solid rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--border);
     padding: 12px 44px 12px 0;
     font-family: 'Manrope', sans-serif;
     font-size: 13px;
     font-weight: 300;
-    color: var(--black);
+    color: var(--ivory);
     outline: none;
     transition: border-color 0.25s;
     /* Safari: prevent auto-zoom on focus (font-size >= 16px or use this) */
@@ -234,11 +259,11 @@
   }
   .signup-input:-webkit-autofill,
   .signup-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-    -webkit-text-fill-color: #0a0a0a !important;
+    -webkit-box-shadow: 0 0 0 30px var(--bg) inset !important;
+    -webkit-text-fill-color: #f7f1e8 !important;
   }
-  .signup-input::placeholder { color: rgba(0,0,0,0.3); font-weight: 300; }
-  .signup-input:focus { border-color: rgba(0,0,0,0.6); }
+  .signup-input::placeholder { color: var(--stone); font-weight: 300; }
+  .signup-input:focus { border-color: var(--terra); }
 
   .signup-submit {
     position: absolute;
@@ -247,22 +272,22 @@
     background: transparent;
     border: none;
     padding: 8px;
-    color: var(--muted);
+    color: var(--stone);
     cursor: pointer;
     display: flex;
     align-items: center;
     transition: color 0.2s;
     -webkit-appearance: none;
   }
-  .signup-submit:hover { color: var(--black); }
+  .signup-submit:hover { color: var(--terra); }
   .signup-submit:disabled { opacity: 0.3; cursor: not-allowed; }
   .signup-submit i { font-size: 20px; }
 
   .signup-spinner {
     display: inline-block;
     width: 18px; height: 18px;
-    border: 1.5px solid rgba(0,0,0,0.15);
-    border-top-color: var(--black);
+    border: 1.5px solid var(--border);
+    border-top-color: var(--terra);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -278,20 +303,21 @@
     text-align: center;
   }
   .signup-msg.show { display: block; }
-  .signup-msg.success { color: #16a34a; }
-  .signup-msg.error   { color: #dc2626; }
-  .signup-msg.info    { color: var(--muted); }
+  .signup-msg.success { color: #9fb892; }
+  .signup-msg.error   { color: #d98a6f; }
+  .signup-msg.info    { color: var(--stone); }
 
   .signup-legal {
     font-size: 10px;
     font-weight: 300;
-    color: rgba(0,0,0,0.35);
+    color: var(--stone);
     line-height: 1.5;
     letter-spacing: 0.02em;
     text-align: center;
+    opacity: 0.7;
   }
   .signup-legal a {
-    color: rgba(0,0,0,0.45);
+    color: var(--stone);
     text-underline-offset: 2px;
   }
 
@@ -301,14 +327,13 @@
     align-items: center;
     justify-content: center;
     padding: 16px 28px;
-    background: var(--white);
-    border-top: 0.5px solid var(--border);
+    background: var(--bg);
   }
 
   .footer-copy {
     font-size: 10px;
     font-weight: 300;
-    color: var(--muted);
+    color: var(--stone);
     letter-spacing: 0.03em;
   }
 
@@ -333,7 +358,7 @@
   .admin-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(10,10,10,0.92);
+    background: rgba(10,9,8,0.96);
     z-index: 100;
     display: flex;
     align-items: center;
@@ -368,7 +393,7 @@
     font-size: 9px;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
+    color: var(--stone);
     text-align: center;
     margin-bottom: 36px;
   }
@@ -377,29 +402,29 @@
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 0.8px solid rgba(255,255,255,0.18);
+    border-bottom: 1px solid var(--border);
     padding: 14px 0;
     margin-bottom: 20px;
     font-family: 'Manrope', sans-serif;
     font-size: max(16px, 14px);
     font-weight: 300;
-    color: var(--white);
+    color: var(--ivory);
     outline: none;
     -webkit-appearance: none;
     transition: border-color 0.25s;
   }
   .admin-field:-webkit-autofill,
   .admin-field:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px rgba(10,10,10,0.92) inset !important;
-    -webkit-text-fill-color: #fff !important;
+    -webkit-box-shadow: 0 0 0 30px rgba(10,9,8,0.96) inset !important;
+    -webkit-text-fill-color: #f7f1e8 !important;
   }
-  .admin-field::placeholder { color: rgba(255,255,255,0.25); }
-  .admin-field:focus { border-color: rgba(255,255,255,0.5); }
+  .admin-field::placeholder { color: var(--stone); opacity: 0.6; }
+  .admin-field:focus { border-color: var(--terra); }
 
   .admin-submit {
     width: 100%;
     background: transparent;
-    border: 0.8px solid rgba(255,255,255,0.22);
+    border: 1px solid var(--terra);
     padding: 14px;
     margin-top: 8px;
     font-family: 'Manrope', sans-serif;
@@ -407,17 +432,17 @@
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.6);
+    color: var(--ivory);
     cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
+    transition: border-color 0.2s, color 0.2s, opacity 0.2s;
     -webkit-appearance: none;
   }
-  .admin-submit:hover { border-color: rgba(255,255,255,0.55); color: var(--white); }
+  .admin-submit:hover { opacity: 0.8; }
   .admin-submit:disabled { opacity: 0.35; cursor: not-allowed; }
 
   .admin-error {
     font-size: 11px;
-    color: #fca5a5;
+    color: #d98a6f;
     margin-top: 14px;
     min-height: 18px;
     text-align: center;
@@ -430,14 +455,14 @@
     top: -8px; right: 0;
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.25);
+    color: var(--stone);
     cursor: pointer;
     font-size: 18px;
     padding: 8px;
     transition: color 0.2s;
     line-height: 1;
   }
-  .admin-close:hover { color: rgba(255,255,255,0.7); }
+  .admin-close:hover { color: var(--ivory); }
 
   /* ── Chat container — Safari-safe positioning ─────────────── */
   /* Using fixed but NOT on body — only the chat bubble itself.  */
@@ -487,8 +512,12 @@
 <main id="main">
   <section class="hero" aria-label="Coming soon">
 
-    <div class="hero-content">
+    <div class="frame">
+      <p class="hero-eyebrow">Coming Soon</p>
+
       <h1 class="hero-tagline">You found us early.</h1>
+
+      <p class="hero-sub">A multi-brand curated fashion house from South Africa. Be the first to know when the doors open.</p>
 
       <div class="signup-row">
         <button class="signup-trigger" id="signup-trigger" aria-expanded="false" aria-controls="signup-form">
