@@ -39,7 +39,6 @@
 
   /* ═══════════════════════════════════════════════════════════
      SUPER ADMIN DASHBOARD
-     Platform owner — sees everything across all brands.
   ═══════════════════════════════════════════════════════════ */
   function renderSuperAdminDashboard(mc) {
     mc.innerHTML =
@@ -70,7 +69,6 @@
   }
 
   function loadSuperAdminStats() {
-    // Fetch everything in parallel
     Promise.all([
       ordersRef.orderBy('createdAt', 'desc').limit(200).get(),
       productsRef.get(),
@@ -84,7 +82,6 @@
       var products = productsSnap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       var vendors  = vendorsSnap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
 
-      // Stats
       var totalRevenue   = orders.reduce(function (s, o) { return s + (o.total || o.subtotal || 0); }, 0);
       var totalOrders    = orders.length;
       var activeBrands   = vendors.filter(function (v) { return v.status !== 'inactive'; }).length;
@@ -98,7 +95,6 @@
         return (Date.now() - ts.getTime()) > (60 * 60 * 1000);
       }).length;
 
-      // Update stat cards
       setStat('stat-revenue',  'R' + totalRevenue.toLocaleString('en-ZA'));
       setStat('stat-orders',   totalOrders);
       setStat('stat-brands',   activeBrands);
@@ -106,7 +102,6 @@
       setStat('stat-payouts',  pendingPayouts);
       setStat('stat-abandoned', abandoned);
 
-      // Recent orders (last 8)
       var recent = orders.slice(0, 8);
       var recentEl = safeEl('dash-recent-orders');
       if (recentEl) {
@@ -130,13 +125,11 @@
         }
       }
 
-      // Brand performance
       var brandPerfEl = safeEl('dash-brand-perf');
       if (brandPerfEl) {
         if (vendors.length === 0) {
           brandPerfEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--muted);">No brands yet</div>';
         } else {
-          // Calculate per-brand revenue from orders
           var brandRevenue = {};
           orders.forEach(function (o) {
             var brands = {};
@@ -173,7 +166,6 @@
 
   /* ═══════════════════════════════════════════════════════════
      ADMIN DASHBOARD
-     Platform staff — operational view, no financials.
   ═══════════════════════════════════════════════════════════ */
   function renderAdminDashboard(mc) {
     mc.innerHTML =
@@ -207,7 +199,7 @@
     Promise.all([
       ordersRef.orderBy('createdAt', 'desc').limit(200).get(),
       productsRef.get(),
-      reviewsRef.where('status', '==', 'pending').get(),
+      reviewsRef.where('moderationStatus', '==', 'pending').get(),
       vendorsRef.get()
     ]).then(function (results) {
       var ordersSnap   = results[0];
@@ -220,7 +212,6 @@
       var pendingReviews = reviewsSnap.size;
       var activeBrands   = vendorsSnap.docs.filter(function (d) { return d.data().status !== 'inactive'; }).length;
 
-      // Stats
       var ordersPending = orders.filter(function (o) { return o.status === 'pending' || o.status === 'processing'; }).length;
       var unreadChats   = window._totalUnreadMessages || 0;
       var lowStock      = products.filter(function (p) { return p.stock > 0 && p.stock <= 3 && p.status === 'active'; });
@@ -239,7 +230,6 @@
       setStat('stat-abandoned', abandoned);
       setStat('stat-brands',    activeBrands);
 
-      // Recent orders (last 8)
       var recent = orders.slice(0, 8);
       var recentEl = safeEl('dash-recent-orders');
       if (recentEl) {
@@ -261,7 +251,6 @@
         }
       }
 
-      // Low stock list
       var stockEl = safeEl('dash-lowstock-list');
       if (stockEl) {
         if (lowStock.length === 0) {
@@ -286,7 +275,8 @@
 
   /* ═══════════════════════════════════════════════════════════
      VENDOR DASHBOARD
-     Brand owner — sees only their own brand's data.
+     Uses vendor_sales for revenue/orders instead of orders collection
+     since Firestore rules block vendor order access.
   ═══════════════════════════════════════════════════════════ */
   function renderVendorDashboard(mc) {
     var vendorId   = window._currentVendorId;
@@ -295,16 +285,16 @@
     mc.innerHTML =
       '<div class="dashboard-shell">' +
         '<div class="section-header" style="margin-bottom:16px;">' +
-          '<div class="section-title">Dashboard</div>' +
+          '<div class="section-title" id="vendor-dash-title">Dashboard</div>' +
           '<div style="font-size:11px;color:var(--muted);">' + new Date().toLocaleDateString('en-ZA', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + '</div>' +
         '</div>' +
         '<div class="dash-stat-grid" id="dash-stat-grid">' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Your Revenue</div><div class="dash-stat-value" id="stat-revenue">—</div></div>' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Your Orders</div><div class="dash-stat-value" id="stat-orders">—</div></div>' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Your Products</div><div class="dash-stat-value" id="stat-products">—</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Pending Orders</div><div class="dash-stat-value" id="stat-pending">—</div></div>' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Unread Messages</div><div class="dash-stat-value" id="stat-unread">—</div></div>' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Your Reviews</div><div class="dash-stat-value" id="stat-reviews">—</div></div>' +
+          '<div class="dash-stat-card"><div class="dash-stat-label">Commission</div><div class="dash-stat-value" id="stat-commission">—</div></div>' +
         '</div>' +
         '<div class="card" style="margin-bottom:16px;">' +
           '<div class="card-header"><span class="card-title">Recent Orders</span></div>' +
@@ -325,94 +315,83 @@
       if (doc.exists) {
         var data = doc.data();
         vendorName = data.name || vendorName;
-        // Update the title
-        var title = safeEl('section-title');
+        var title = safeEl('vendor-dash-title');
         if (title) title.textContent = vendorName + ' Dashboard';
       }
-    }).catch(function () {});
+      return doc.exists ? doc.data() : {};
+    }).catch(function () { return {}; });
 
     Promise.all([
       vendorPromise,
-      ordersRef.where('vendorIds', 'array-contains', vendorId).orderBy('createdAt', 'desc').limit(100).get(),
       productsRef.where('vendorId', '==', vendorId).get(),
-      reviewsRef.where('vendorId', '==', vendorId).get()
+      reviewsRef.where('vendorId', '==', vendorId).get(),
+      // Try vendor_sales first, fall back to calculating from orders (won't work for vendor)
+      db.collection('vendor_sales').doc(vendorId).get()
     ]).then(function (results) {
-      var ordersSnap   = results[1];
-      var productsSnap = results[2];
-      var reviewsSnap  = results[3];
+      var vendorData   = results[0];
+      var productsSnap = results[1];
+      var reviewsSnap  = results[2];
+      var salesDoc     = results[3];
 
-      var orders   = ordersSnap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       var products = productsSnap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       var reviews  = reviewsSnap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
 
-      // Calculate revenue — only this vendor's items
-      var totalRevenue = orders.reduce(function (sum, o) {
-        return sum + (o.items || []).reduce(function (s, item) {
-          if (item.vendorId === vendorId) return s + (item.price * item.qty);
-          return s;
-        }, 0);
-      }, 0);
+      var activeProducts = products.filter(function (p) { return p.status === 'active'; }).length;
+      var totalReviews   = reviews.length;
+      var commissionRate = vendorData.commissionRate || 0;
+      var unreadChats    = window._totalUnreadMessages || 0;
 
-      var totalOrders   = orders.length;
-      var totalProducts = products.filter(function (p) { return p.status === 'active'; }).length;
-      var pendingOrders = orders.filter(function (o) { return o.status === 'pending' || o.status === 'processing'; }).length;
-      var unreadChats   = window._totalUnreadMessages || 0;
-      var totalReviews  = reviews.length;
+      // Revenue from vendor_sales collection
+      var totalRevenue = 0;
+      var totalOrders  = 0;
+      var recentOrders = [];
 
-      setStat('stat-revenue',  'R' + totalRevenue.toLocaleString('en-ZA'));
-      setStat('stat-orders',   totalOrders);
-      setStat('stat-products', totalProducts);
-      setStat('stat-pending',  pendingOrders);
-      setStat('stat-unread',   unreadChats);
-      setStat('stat-reviews',  totalReviews);
+      if (salesDoc.exists) {
+        var salesData = salesDoc.data();
+        totalRevenue = salesData.totalRevenue || 0;
+        totalOrders  = salesData.totalOrders || 0;
+        recentOrders = salesData.recentOrders || [];
+      }
+
+      setStat('stat-revenue',    'R' + totalRevenue.toLocaleString('en-ZA'));
+      setStat('stat-orders',     totalOrders);
+      setStat('stat-products',   activeProducts);
+      setStat('stat-unread',     unreadChats);
+      setStat('stat-reviews',    totalReviews);
+      setStat('stat-commission', commissionRate + '%');
 
       // Recent orders
-      var recent = orders.slice(0, 8);
       var recentEl = safeEl('dash-recent-orders');
       if (recentEl) {
-        if (recent.length === 0) {
-          recentEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--muted);">No orders yet</div>';
+        if (recentOrders.length === 0) {
+          recentEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--muted);">No orders yet. Revenue data updates periodically.</div>';
         } else {
           recentEl.innerHTML = '<div class="table-wrap" style="margin-top:8px;"><table class="data-table">' +
             '<thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>' +
-            '<tbody>' + recent.map(function (o) {
-              return '<tr onclick="window.switchTab(\'orders\')" style="cursor:pointer;">' +
-                '<td style="font-weight:500;">#' + esc((o.orderNumber || o.id).toString().slice(-8).toUpperCase()) + '</td>' +
+            '<tbody>' + recentOrders.slice(0, 8).map(function (o) {
+              return '<tr>' +
+                '<td style="font-weight:500;">#' + esc((o.orderNumber || o.id || '').toString().slice(-8).toUpperCase()) + '</td>' +
                 '<td>' + esc(o.customerName || 'Guest') + '</td>' +
-                '<td>' + fmt(o.total || o.subtotal || 0) + '</td>' +
+                '<td>' + fmt(o.total || 0) + '</td>' +
                 '<td>' + window._statusBadge(o.status || 'pending') + '</td>' +
-                '<td class="cell-muted">' + fmtDate(o.createdAt) + '</td>' +
+                '<td class="cell-muted">' + fmtDate(o.createdAt || o.date) + '</td>' +
               '</tr>';
             }).join('') +
             '</tbody></table></div>';
         }
       }
 
-      // Top products (by order frequency)
-      var productSales = {};
-      orders.forEach(function (o) {
-        (o.items || []).forEach(function (item) {
-          if (item.vendorId === vendorId) {
-            productSales[item.productId] = (productSales[item.productId] || 0) + item.qty;
-          }
-        });
-      });
-
-      var topProducts = products
-        .map(function (p) { return { name: p.name, sold: productSales[p.id] || 0, stock: p.stock }; })
-        .sort(function (a, b) { return b.sold - a.sold; })
-        .slice(0, 5);
-
+      // Top products — calculate from products collection only (no order data available)
       var topEl = safeEl('dash-top-products');
       if (topEl) {
-        if (topProducts.length === 0 || topProducts.every(function (p) { return p.sold === 0; })) {
-          topEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--muted);">No sales data yet</div>';
+        if (activeProducts === 0) {
+          topEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--muted);">No active products yet. Add your first product to see performance.</div>';
         } else {
           topEl.innerHTML = '<div style="margin-top:8px;">' +
-            topProducts.map(function (p, i) {
+            products.filter(function(p) { return p.status === 'active'; }).slice(0, 5).map(function (p, i) {
               return '<div class="info-row" style="padding:8px 0;">' +
                 '<span class="label">' + (i + 1) + '. ' + esc(p.name) + '</span>' +
-                '<span style="font-size:12px;">' + p.sold + ' sold · ' + p.stock + ' in stock</span>' +
+                '<span style="font-size:12px;">' + fmt(p.price || 0) + ' · ' + p.stock + ' in stock</span>' +
               '</div>';
             }).join('') +
           '</div>';
@@ -421,7 +400,10 @@
 
     }).catch(function (e) {
       console.error('[DASHBOARD VENDOR]', e);
-      showToast('Could not load dashboard stats', 'error');
+      // Still show basic stats even if vendor_sales fails
+      setStat('stat-revenue',  '—');
+      setStat('stat-orders',   '—');
+      showToast('Could not load full dashboard. Some data may be unavailable.', 'error');
     });
   }
 
