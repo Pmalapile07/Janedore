@@ -36,14 +36,6 @@
   <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
-<script>
-  // Remove this block when you're ready to launch
-  if (window.location.pathname !== '/coming-soon.html' && !window.location.search.includes('preview=true')) {
-    window.location.replace('janedore-coming-soon.html');
-  }
-</script>
-
-
 
 <div id="banner"><div class="announcement-text active" id="announce-text-0"></div><div class="announcement-text" id="announce-text-1"></div></div>
 
@@ -151,6 +143,15 @@
 </button>
 
 <script src="firebase.js"></script>
+<script>
+  // Redirect unauthenticated visitors to coming soon page.
+  // Runs after firebase.js so Firebase Auth is already initialised.
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (!user && !window.location.search.includes('preview=true')) {
+      window.location.replace('janedore-coming-soon.html');
+    }
+  });
+</script>
 <script src="vendors.js"></script>
 <script src="cart.js"></script>
 <script src="wishlist.js"></script>
