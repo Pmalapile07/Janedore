@@ -283,6 +283,7 @@
     font-weight: 300;
     color: var(--text);
     letter-spacing: 0.03em;
+    margin-bottom: 12px;
   }
 
   .footer-credit a {
@@ -294,6 +295,16 @@
   }
   .footer-credit a:hover {
     opacity: 0.7;
+  }
+
+  .footer-image {
+    width: 120px;
+    height: auto;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .footer-image:hover {
+    opacity: 0.8;
   }
 
   /* ── Admin overlay ─────────────────────────────────────────── */
@@ -506,6 +517,9 @@
 <footer class="site-footer">
   <p class="footer-copy" id="copyright"></p>
   <p class="footer-credit">Web design by <a href="mailto:dev@janedore.co.za">Spite</a></p>
+  <img class="footer-image" 
+       src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Janedore.jpeg" 
+       alt="Janedore">
 </footer>
 
 <div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
