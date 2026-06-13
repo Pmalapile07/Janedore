@@ -29,7 +29,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<!-- Custom font for JANEDORE logo -->
 <style>
   @font-face {
     font-family: 'Telegraf';
@@ -86,7 +85,6 @@
     background: transparent;
   }
 
-  /* New logo style using the custom font */
   .header-logo {
     font-family: 'Telegraf', 'Inter', sans-serif;
     font-size: 1.3rem;
@@ -96,7 +94,6 @@
     text-decoration: none;
     display: block;
     line-height: 1;
-    /* Removed the image-specific styles, kept the aesthetic */
     height: auto;
     width: auto;
     filter: none;
@@ -136,7 +133,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 0 60px;
+    align-self: stretch;
+    padding: 60px 60px;
     max-width: 720px;
   }
 
@@ -150,8 +148,6 @@
     letter-spacing: -0.02em;
     color: var(--text);
     margin-bottom: 48px;
-
-    /* Stack each word on its own line */
     display: flex;
     flex-direction: column;
     gap: 0.04em;
@@ -161,7 +157,6 @@
     display: block;
   }
 
-  /* Slight indent on alternating lines — Totême-ish rhythm */
   .headline-line:nth-child(2) {
     padding-left: 0.12em;
   }
@@ -270,16 +265,19 @@
     text-align: center;
   }
 
+  /* CHANGE 1: copyright text uppercase */
   .footer-copy {
     font-size: 10px;
     font-weight: 300;
     color: var(--muted);
     letter-spacing: 0.03em;
     margin-bottom: 12px;
+    text-transform: uppercase;
   }
 
+  /* CHANGE 2: footer image increased from 123px to 200px */
   .footer-image {
-    width: 123px;
+    width: 200px;
     height: auto;
   }
 
@@ -416,7 +414,7 @@
     }
 
     .main-content {
-      padding: 0 28px;
+      padding: 40px 28px;
     }
 
     .headline {
@@ -521,7 +519,7 @@
 <div id="chat-container"></div>
 
 <script>
-  const firebaseConfig = {
+  var firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
     authDomain: "janedore-9f035.firebaseapp.com",
     projectId: "janedore-9f035",
@@ -533,18 +531,19 @@
   };
 
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db   = firebase.firestore();
+  var auth = firebase.auth();
+  var db   = firebase.firestore();
 
+  // CHANGE 3: copyright text is now set in uppercase via CSS (text-transform: uppercase)
   document.getElementById('copyright').textContent =
     '\u00a9 ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
 
-  const emailEl   = document.getElementById('email-input');
-  const signupBtn = document.getElementById('signup-btn');
-  const btnText   = document.getElementById('btn-text');
-  const arrowIcon = document.getElementById('arrow-icon');
-  const spinner   = document.getElementById('btn-spinner');
-  const msgEl     = document.getElementById('signup-msg');
+  var emailEl   = document.getElementById('email-input');
+  var signupBtn = document.getElementById('signup-btn');
+  var btnText   = document.getElementById('btn-text');
+  var arrowIcon = document.getElementById('arrow-icon');
+  var spinner   = document.getElementById('btn-spinner');
+  var msgEl     = document.getElementById('signup-msg');
 
   function showMsg(text, type) {
     msgEl.textContent = text;
@@ -555,8 +554,8 @@
     msgEl.textContent = '';
   }
   function setLoading(v) {
-    signupBtn.disabled    = v;
-    btnText.style.display = v ? 'none' : 'inline';
+    signupBtn.disabled       = v;
+    btnText.style.display    = v ? 'none' : 'inline';
     arrowIcon.style.display  = v ? 'none' : 'inline';
     spinner.style.display    = v ? 'inline-block' : 'none';
   }
@@ -587,8 +586,11 @@
     }
 
     clearMsg(); setLoading(true);
-    var docId  = email.replace(/\./g, '_');
-    var docRef = db.collection('newsletter').doc(docId);
+
+    // CHANGE 4: collection renamed from 'newsletter' to 'newsletters' to match your Firestore
+    var docId  = email.replace(/[.#$[\]]/g, '_');
+    var docRef = db.collection('newsletters').doc(docId);
+
     docRef.get().then(function (snap) {
       if (snap.exists) {
         showMsg("You're already on the list.", 'error');
@@ -607,6 +609,7 @@
         setLoading(false);
       });
     }).catch(function (err) {
+      console.error('Newsletter error:', err.code, err.message);
       var msg = 'Something went wrong. Please try again.';
       if (err.code === 'permission-denied') msg = 'Unable to subscribe — try again later.';
       if (err.code === 'unavailable')       msg = 'No connection. Check your internet and try again.';
@@ -619,12 +622,12 @@
   emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleSignup(); });
   emailEl.addEventListener('input',   function ()  { if (msgEl.classList.contains('error')) clearMsg(); });
 
-  var overlay   = document.getElementById('admin-overlay');
-  var closeBtn  = document.getElementById('admin-close-btn');
-  var loginBtn  = document.getElementById('admin-login-btn');
+  var overlay    = document.getElementById('admin-overlay');
+  var closeBtn   = document.getElementById('admin-close-btn');
+  var loginBtn   = document.getElementById('admin-login-btn');
   var adminEmail = document.getElementById('admin-email');
-  var adminPw   = document.getElementById('admin-password');
-  var adminErr  = document.getElementById('admin-error');
+  var adminPw    = document.getElementById('admin-password');
+  var adminErr   = document.getElementById('admin-error');
 
   function openAdminPanel() {
     overlay.classList.add('open');
@@ -632,9 +635,9 @@
   }
   function closeAdminPanel() {
     overlay.classList.remove('open');
-    adminEmail.value  = '';
-    adminPw.value     = '';
-    adminErr.className = 'admin-error';
+    adminEmail.value     = '';
+    adminPw.value        = '';
+    adminErr.className   = 'admin-error';
     adminErr.textContent = '';
     loginBtn.disabled    = false;
     loginBtn.textContent = 'Sign In';
