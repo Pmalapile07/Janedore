@@ -86,17 +86,15 @@
   }
 
   .header-logo {
-    font-family: 'Telegraf', 'Inter', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    color: var(--text);
-    text-decoration: none;
     display: block;
     line-height: 1;
+    text-decoration: none;
+  }
+
+  .header-logo-img {
+    width: 130px;
     height: auto;
-    width: auto;
-    filter: none;
+    display: block;
   }
 
   .header-admin {
@@ -265,20 +263,13 @@
     text-align: center;
   }
 
-  /* CHANGE 1: copyright text uppercase */
   .footer-copy {
     font-size: 10px;
     font-weight: 300;
     color: var(--muted);
     letter-spacing: 0.03em;
-    margin-bottom: 12px;
+    margin-bottom: 0;
     text-transform: uppercase;
-  }
-
-  /* CHANGE 2: footer image increased from 123px to 200px */
-  .footer-image {
-    width: 170px;
-    height: auto;
   }
 
   /* ── Admin overlay ─────────────────────────────────────────── */
@@ -413,6 +404,10 @@
       padding: 28px 28px;
     }
 
+    .header-logo-img {
+      width: 110px;
+    }
+
     .main-content {
       padding: 40px 28px;
     }
@@ -448,7 +443,9 @@
 
 <header class="site-header">
   <a href="/" aria-label="Janedore home" class="header-logo">
-    JANEDORE
+    <img class="header-logo-img" 
+         src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Janedore.png" 
+         alt="Janedore">
   </a>
   <div class="header-admin">
     <span class="header-admin-label">Is this your store?</span>
@@ -490,9 +487,6 @@
 
 <footer class="site-footer">
   <p class="footer-copy" id="copyright"></p>
-  <img class="footer-image" 
-       src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Janedore.png" 
-       alt="Janedore">
 </footer>
 
 <div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
@@ -534,7 +528,6 @@
   var auth = firebase.auth();
   var db   = firebase.firestore();
 
-  // CHANGE 3: copyright text is now set in uppercase via CSS (text-transform: uppercase)
   document.getElementById('copyright').textContent =
     '\u00a9 ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
 
@@ -587,7 +580,6 @@
 
     clearMsg(); setLoading(true);
 
-    // CHANGE 4: collection renamed from 'newsletter' to 'newsletters' to match your Firestore
     var docId  = email.replace(/[.#$[\]]/g, '_');
     var docRef = db.collection('newsletters').doc(docId);
 
