@@ -27,9 +27,16 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital@0;1&family=DM+Sans:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
+  @font-face {
+    font-family: 'The Seasons';
+    src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/the-seasons-regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
   @font-face {
     font-family: 'Telegraf';
     src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
@@ -51,7 +58,7 @@
   :root {
     --bg:      #ffffff;
     --text:    #1a1a1a;
-    --muted:   #1a1a1a;
+    --muted:   #6b6b6b;
     --border:  #e0e0e0;
   }
 
@@ -110,10 +117,10 @@
 
   /* ── Stacked headline ──────────────────────────────────────── */
   .headline {
-    font-family: 'Lora', serif;
+    font-family: 'The Seasons', serif;
     font-weight: 400;
     font-style: italic;
-    font-size: clamp(42px, 7vw, 80px);
+    font-size: clamp(52px, 8vw, 96px);
     line-height: 1.0;
     letter-spacing: -0.02em;
     color: var(--text);
@@ -135,11 +142,11 @@
   }
 
   .subhead {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 13px;
     font-weight: 300;
     line-height: 1.8;
-    color: var(--text);
+    color: var(--muted);
     max-width: 340px;
     margin-bottom: 56px;
     letter-spacing: 0.01em;
@@ -390,7 +397,7 @@
     }
 
     .subhead {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
       margin-bottom: 44px;
     }
 
@@ -430,7 +437,7 @@
   </h1>
 
   <p class="subhead">
-    We're taking our time. Good things usually do.<br>Sign up and you'll be the first to know when we lauch.
+    We're taking our time. Good things usually do. Sign up and you'll be first to know when we launch.
   </p>
 
   <div class="signup-wrapper">
