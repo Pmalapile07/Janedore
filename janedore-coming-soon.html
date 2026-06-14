@@ -27,7 +27,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
   @font-face {
@@ -51,7 +51,7 @@
   :root {
     --bg:      #ffffff;
     --text:    #1a1a1a;
-    --muted:   #999999;
+    --muted:   #1a1a1a;
     --border:  #e0e0e0;
   }
 
@@ -110,7 +110,7 @@
 
   /* ── Stacked headline ──────────────────────────────────────── */
   .headline {
-    font-family: 'Fraunces', serif;
+    font-family: 'DM Serif Display', serif;
     font-weight: 400;
     font-style: italic;
     font-size: clamp(52px, 8vw, 96px);
@@ -135,10 +135,11 @@
   }
 
   .subhead {
+    font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     font-weight: 300;
     line-height: 1.8;
-    color: var(--muted);
+    color: var(--text);
     max-width: 340px;
     margin-bottom: 56px;
     letter-spacing: 0.01em;
@@ -167,7 +168,7 @@
     background: transparent;
     border: none;
     padding: 8px 0;
-    font-family: 'Inter', sans-serif;
+    
     font-size: 13px;
     font-weight: 300;
     color: var(--text);
@@ -175,7 +176,7 @@
     -webkit-appearance: none;
     letter-spacing: 0.02em;
   }
-  .signup-input::placeholder { color: var(--muted); }
+  .signup-input::placeholder { color: var(--text); }
   .signup-input:-webkit-autofill,
   .signup-input:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 30px var(--bg) inset !important;
@@ -191,7 +192,7 @@
     font-weight: 400;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--text);
     cursor: pointer;
     white-space: nowrap;
     transition: color 0.2s;
@@ -216,7 +217,7 @@
   .signup-msg {
     font-size: 11px;
     font-weight: 300;
-    color: var(--muted);
+    color: var(--text);
     margin-top: 14px;
     min-height: 18px;
     transition: color 0.2s;
@@ -237,7 +238,7 @@
   .footer-copy {
     font-size: 10px;
     font-weight: 300;
-    color: var(--muted);
+    color: var(--text);
     letter-spacing: 0.03em;
     cursor: default;
     user-select: none;
@@ -289,7 +290,7 @@
     font-weight: 500;
     letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--text);
     text-align: center;
     margin-bottom: 40px;
   }
@@ -310,7 +311,7 @@
     transition: border-color 0.3s;
   }
   .admin-field:focus { border-color: var(--text); }
-  .admin-field::placeholder { color: var(--muted); opacity: 0.5; }
+  .admin-field::placeholder { color: var(--text); opacity: 0.5; }
   .admin-field:-webkit-autofill,
   .admin-field:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 30px rgba(255,255,255,0.98) inset !important;
@@ -352,7 +353,7 @@
     top: -40px; right: -8px;
     background: transparent;
     border: none;
-    color: var(--muted);
+    color: var(--text);
     cursor: pointer;
     font-size: 20px;
     padding: 8px;
@@ -389,6 +390,7 @@
     }
 
     .subhead {
+    font-family: 'DM Sans', sans-serif;
       margin-bottom: 44px;
     }
 
@@ -423,13 +425,12 @@
 <main id="main" class="main-content">
 
   <h1 class="headline">
-    <span class="headline-line">Something is</span>
-    <span class="headline-line">coming.</span>
-
+    <span class="headline-line">You found</span>
+    <span class="headline-line">us early.</span>
   </h1>
 
   <p class="subhead">
-    We're taking our time. Good things usually do. Sign up and you'll be the first to know when we open.
+    We're taking our time. Good things usually do. Sign up and you'll be the first to know when we lauch.
   </p>
 
   <div class="signup-wrapper">
