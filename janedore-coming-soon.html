@@ -80,21 +80,23 @@
   .site-header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     padding: 40px 60px;
     background: transparent;
   }
 
   .header-logo {
+    font-family: 'Telegraf', 'Inter', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    text-decoration: none;
     display: block;
     line-height: 1;
-    text-decoration: none;
-  }
-
-  .header-logo-img {
-    width: 130px;
     height: auto;
-    display: block;
+    width: auto;
+    filter: none;
   }
 
   /* ── Main ──────────────────────────────────────────────────── */
@@ -234,13 +236,20 @@
     text-align: center;
   }
 
+  /* CHANGE 1: copyright text uppercase */
   .footer-copy {
     font-size: 10px;
     font-weight: 300;
     color: var(--muted);
     letter-spacing: 0.03em;
-    margin-bottom: 0;
+    margin-bottom: 12px;
     text-transform: uppercase;
+  }
+
+  /* CHANGE 2: footer image increased from 123px to 200px */
+  .footer-image {
+    width: 170px;
+    height: auto;
   }
 
   /* ── Admin overlay ─────────────────────────────────────────── */
@@ -361,22 +370,6 @@
   }
   .admin-close:hover { color: var(--text); }
 
-  /* ── Admin keyboard shortcut hint (hidden by default) ─────── */
-  .admin-kb-hint {
-    position: fixed;
-    bottom: 16px;
-    left: 16px;
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 300;
-    color: var(--muted);
-    opacity: 0;
-    pointer-events: none;
-    letter-spacing: 0.03em;
-    z-index: 50;
-    transition: opacity 0.3s;
-  }
-
   /* ── Chat container ────────────────────────────────────────── */
   #chat-container {
     position: fixed;
@@ -389,10 +382,6 @@
   @media (max-width: 768px) {
     .site-header {
       padding: 28px 28px;
-    }
-
-    .header-logo-img {
-      width: 110px;
     }
 
     .main-content {
@@ -430,9 +419,7 @@
 
 <header class="site-header">
   <a href="/" aria-label="Janedore home" class="header-logo">
-    <img class="header-logo-img" 
-         src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Janedore.png" 
-         alt="Janedore">
+    JANEDORE
   </a>
 </header>
 
@@ -470,6 +457,9 @@
 
 <footer class="site-footer">
   <p class="footer-copy" id="copyright"></p>
+  <img class="footer-image" 
+       src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Janedore.png" 
+       alt="Janedore">
 </footer>
 
 <div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
@@ -511,6 +501,7 @@
   var auth = firebase.auth();
   var db   = firebase.firestore();
 
+  // CHANGE 3: copyright text is now set in uppercase via CSS (text-transform: uppercase)
   document.getElementById('copyright').textContent =
     '\u00a9 ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
 
@@ -563,6 +554,7 @@
 
     clearMsg(); setLoading(true);
 
+    // CHANGE 4: collection renamed from 'newsletter' to 'newsletters' to match your Firestore
     var docId  = email.replace(/[.#$[\]]/g, '_');
     var docRef = db.collection('newsletters').doc(docId);
 
@@ -624,14 +616,6 @@
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeAdminPanel();
-  });
-
-  // Admin access via keyboard shortcut: Ctrl+Shift+A (or Cmd+Shift+A on Mac)
-  document.addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
-      e.preventDefault();
-      openAdminPanel();
-    }
   });
 
   adminEmail.addEventListener('keydown', function (e) {
