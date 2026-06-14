@@ -239,6 +239,8 @@
     font-weight: 300;
     color: var(--muted);
     letter-spacing: 0.03em;
+    cursor: default;
+    user-select: none;
   }
 
   /* ── Admin overlay ─────────────────────────────────────────── */
@@ -412,8 +414,8 @@
 
 <header class="site-header">
   <a aria-label="Janedore" class="header-logo">
-    <img class="header-logo-img" 
-         src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Janedore.png" 
+    <img class="header-logo-img"
+         src="https://raw.githubusercontent.com/Pmalapile07/Janedore/main/Janedore.png"
          alt="Janedore">
   </a>
 </header>
@@ -421,12 +423,13 @@
 <main id="main" class="main-content">
 
   <h1 class="headline">
-    <span class="headline-line">You found</span>
-    <span class="headline-line">us early.</span>
+    <span class="headline-line">Something is</span>
+    <span class="headline-line">coming.</span>
+
   </h1>
 
   <p class="subhead">
-    A curated multi-brand fashion house. Refined pieces, considered edits. Be the first to know when we open.
+    We're taking our time. Good things usually do. Sign up and you'll be the first to know when we open.
   </p>
 
   <div class="signup-wrapper">
@@ -493,8 +496,23 @@
   var auth = firebase.auth();
   var db   = firebase.firestore();
 
+  // Copyright — just the year and name, nothing more
   document.getElementById('copyright').textContent =
-    '\u00a9 ' + new Date().getFullYear() + ' Janedore. All rights reserved.';
+    '\u00a9 ' + new Date().getFullYear() + ' Janedore';
+
+  // Secret admin trigger: 5 rapid clicks on the copyright text
+  var clickCount = 0;
+  var clickTimer = null;
+  document.getElementById('copyright').addEventListener('click', function() {
+    clickCount++;
+    clearTimeout(clickTimer);
+    if (clickCount >= 5) {
+      clickCount = 0;
+      openAdminPanel();
+    } else {
+      clickTimer = setTimeout(function() { clickCount = 0; }, 2000);
+    }
+  });
 
   var emailEl   = document.getElementById('email-input');
   var signupBtn = document.getElementById('signup-btn');
