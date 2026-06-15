@@ -570,26 +570,16 @@
 
     clearMsg(); setLoading(true);
 
-    var docId  = email.replace(/[.#$[\]]/g, '_');
-    var docRef = db.collection('newsletter').doc(docId);
-
-    docRef.get().then(function (snap) {
-      if (snap.exists) {
-        showMsg("You're already on the list.", 'error');
-        setLoading(false);
-        return;
-      }
-      return docRef.set({
-        email:        email,
-        source:       'coming_soon_page',
-        subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        userAgent:    navigator.userAgent,
-        referrer:     document.referrer || 'direct'
-      }).then(function () {
-        showMsg("You're on the list. We'll be in touch.", 'success');
-        emailEl.value = '';
-        setLoading(false);
-      });
+    db.collection('newsletter').add({
+      email:        email,
+      source:       'coming_soon_page',
+      subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      userAgent:    navigator.userAgent,
+      referrer:     document.referrer || 'direct'
+    }).then(function () {
+      showMsg("You're on the list. We'll be in touch.", 'success');
+      emailEl.value = '';
+      setLoading(false);
     }).catch(function (err) {
       console.error('Newsletter error:', err.code, err.message);
       var msg = 'Something went wrong. Please try again.';
