@@ -570,7 +570,10 @@
 
     clearMsg(); setLoading(true);
 
-    db.collection('newsletter').add({
+    var docId  = email.replace(/[@.]/g, '_');
+    var docRef = db.collection('newsletter').doc(docId);
+
+    docRef.set({
       email:        email,
       source:       'coming_soon_page',
       subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
