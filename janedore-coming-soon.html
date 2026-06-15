@@ -585,10 +585,11 @@
       setLoading(false);
     }).catch(function (err) {
       console.error('Newsletter error:', err.code, err.message);
-      var msg = 'Something went wrong. Please try again.';
-      if (err.code === 'permission-denied') msg = 'Unable to subscribe — try again later.';
-      if (err.code === 'unavailable')       msg = 'No connection. Check your internet and try again.';
-      showMsg(msg, 'error');
+      if (err.code === 'unavailable') {
+        showMsg('No connection. Check your internet and try again.', 'error');
+      } else {
+        showMsg('Something went wrong. Please try again.', 'error');
+      }
       setLoading(false);
     });
   }
