@@ -585,6 +585,14 @@
       showMsg("You're on the list. We'll be in touch.", 'success');
       emailEl.value = '';
       setLoading(false);
+      // Fire welcome email — non-blocking, failure is silent to user
+      fetch('/api/send-welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      }).catch(function(e) {
+        console.warn('[EMAIL] Welcome email failed:', e.message);
+      });
     }).catch(function (err) {
       console.error('Newsletter error:', err.code, err.message);
       if (err.code === 'unavailable') {
