@@ -1,70 +1,22 @@
-/* =============================================
-   ANNOUNCEMENT BAR
-   ============================================= */
-#banner {
-  background: #111;
-  color: #fff;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  text-align: center;
-  padding: 7px 16px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 500;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1002;
-  overflow: hidden;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.announcement-text {
-  position: absolute;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  pointer-events: none;
-  white-space: nowrap;
-  color: #fff;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  font-weight: 500;
-  text-transform: uppercase;
-  width: 100%;
-  text-align: center;
-}
-
-.announcement-text.active {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* =============================================
-   HERO
-   ============================================= */
 #hero {
   position: relative;
-  height: 100svh;
-  min-height: 500px;
+  height: 75vh;
+  min-height: 520px;
+  max-height: 820px;
+  margin-top: 0;
   overflow: hidden;
-  background: #1a1a1a;
+  background: #111;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 24px;
-  margin-top: -64px;
+  align-items: stretch;
+  justify-content: stretch;
+  padding-bottom: 0;
 }
 
 @media (min-width: 769px) {
   #hero {
-    height: 100svh;
+    height: 85vh;
     min-height: 600px;
+    max-height: none;
   }
 }
 
@@ -79,58 +31,66 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.18) 0%,
-    rgba(0,0,0,0.08) 40%,
-    rgba(0,0,0,0.52) 100%
-  );
+  background: linear-gradient(160deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.0) 45%, rgba(0,0,0,0.55) 100%);
 }
 
 .hero-content-wrap {
   position: relative;
   z-index: 10;
   width: 100%;
-  padding: 0 20px;
+  height: 100%;
+  padding: 32px 24px 36px;
   display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
-  max-width: 1400px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.hero-headline-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+}
+
+.hero-campaign-label {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+}
+
+.hero-headline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(33px, 8vw, 61px);
+  font-weight: 300;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+  margin: 0;
+  text-align: center;
+}
+
+.hero-shop-btn {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #111;
+  background: #fff;
+  border: none;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: block;
+  width: fit-content;
   margin: 0 auto;
 }
 
-.hero-sub {
-  font-family: 'Manrope', sans-serif;
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.65);
-  flex: 1;
-  text-align: left;
-  cursor: pointer;
-}
-
-.hero-sub:hover { color: rgba(255,255,255,0.9); }
-
-.hero-shop-btn {
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.65);
-  background: none;
-  border: none;
-  border-bottom: 1px solid rgba(255,255,255,0.5);
-  padding-bottom: 2px;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-  flex-shrink: 0;
-}
-
-.hero-shop-btn:hover {
-  color: rgba(255,255,255,0.9);
-  border-color: rgba(255,255,255,0.9);
-}
+.hero-shop-btn:hover { background: #f0f0f0; }
