@@ -186,22 +186,16 @@
   color: #111 !important;
 }
 
-/* Logo — show the image, no filter */
-#main-nav .nav-logo {
+/* Logo — scoped ONLY to #main-nav */
+#main-nav > .nav-logo {
   display: flex !important;
   position: static !important;
   transform: none !important;
 }
 
-#main-nav .nav-logo img {
+#main-nav > .nav-logo img {
   height: 25px;
   width: auto;
-  display: block !important;
-  filter: none !important;
-}
-
-#main-nav.scrolled .nav-logo img {
-  filter: none !important;
 }
 
 /* Badge always black on white */
@@ -211,13 +205,13 @@
 }
 
 /* Nav sections */
-.nav-left {
+#main-nav .nav-left {
   display: flex;
   align-items: center;
   flex: 1;
 }
 
-.nav-right {
+#main-nav .nav-right {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -225,7 +219,7 @@
   justify-content: flex-end;
 }
 
-.nav-icon-btn {
+#main-nav .nav-icon-btn {
   background: none;
   border: none;
   padding: 8px;
@@ -236,12 +230,12 @@
   cursor: pointer;
 }
 
-.nav-icon-btn i {
+#main-nav .nav-icon-btn i {
   font-size: 20px;
 }
 
-/* Hide desktop nav elements since we only want 3 icons */
-.desktop-nav-links,
-.desktop-utility-links {
+/* Only hide desktop nav inside #main-nav */
+#main-nav .desktop-nav-links,
+#main-nav .desktop-utility-links {
   display: none !important;
 }
