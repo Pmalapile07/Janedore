@@ -1,8 +1,57 @@
+/* =============================================
+   ANNOUNCEMENT BAR
+   ============================================= */
+#banner {
+  background: #111;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 7px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1002;
+  overflow: hidden;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announcement-text {
+  position: absolute;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  text-transform: uppercase;
+  width: 100%;
+  text-align: center;
+}
+
+.announcement-text.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* =============================================
+   HERO
+   ============================================= */
 #hero {
   position: relative;
-  height: 65vh !important;
-  min-height: 1000px;
-  max-height: none;
+  height: 100svh;
+  min-height: 500px;
   overflow: hidden;
   background: #1a1a1a;
   display: flex;
@@ -14,8 +63,8 @@
 
 @media (min-width: 769px) {
   #hero {
-    height: 140vh;
-    min-height: 1200px;
+    height: 100svh;
+    min-height: 600px;
   }
 }
 
@@ -59,15 +108,12 @@
   font-weight: var(--ui-font-weight);
   text-transform: uppercase;
   color: rgba(255,255,255,0.65);
-  margin-bottom: 0;
   flex: 1;
   text-align: left;
   cursor: pointer;
 }
 
-.hero-sub:hover {
-  color: rgba(255,255,255,0.9);
-}
+.hero-sub:hover { color: rgba(255,255,255,0.9); }
 
 .hero-shop-btn {
   font-size: var(--ui-font-size);
@@ -82,131 +128,9 @@
   cursor: pointer;
   transition: color 0.2s, border-color 0.2s;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .hero-shop-btn:hover {
   color: rgba(255,255,255,0.9);
   border-color: rgba(255,255,255,0.9);
-}
-
-#page-products #hero,
-#page-category #hero,
-#page-product-detail #hero {
-  display: none;
-}
-
-/* =============================================
-   ANNOUNCEMENT BAR
-   ============================================= */
-#banner {
-  background: #111 !important;
-  color: #fff !important;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  text-align: center;
-  padding: 7px 16px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 500;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1002;
-  overflow: hidden;
-  height: 30px;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-}
-
-.announcement-text {
-  position: absolute;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  pointer-events: none;
-  white-space: nowrap;
-  color: #fff !important;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  font-weight: 500;
-  text-transform: uppercase;
-  width: 100%;
-  text-align: center;
-}
-
-.announcement-text.active {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* =============================================
-   HEADER
-   ============================================= */
-#main-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10%;
-  height: 56px;
-  position: fixed;
-  top: 30px;
-  left: 0;
-  right: 0;
-  z-index: 1001;
-  background: #fff !important;
-}
-
-/* Keep logo visible on ALL pages */
-#main-nav .nav-logo {
-  display: flex !important;
-}
-
-#main-nav .nav-logo img {
-  height: 25px;
-  width: auto;
-}
-
-/* Black icons */
-#main-nav .nav-icon-btn,
-#main-nav .nav-icon-btn i {
-  color: #111 !important;
-}
-
-/* Badge */
-#main-nav .badge {
-  background: #111 !important;
-  color: #fff !important;
-}
-
-.nav-left {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-  justify-content: flex-end;
-}
-
-.nav-icon-btn {
-  background: none;
-  border: none;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  cursor: pointer;
-}
-
-.nav-icon-btn i {
-  font-size: 20px;
 }
