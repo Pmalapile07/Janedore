@@ -57,7 +57,6 @@ async function fetchProducts() {
   ];
 }
 
-// Expose critical functions to window for onclick handlers
 window.navigateTo = navigateTo;
 window.navigateToCategory = navigateToCategory;
 window.navigateToSale = navigateToSale;
@@ -95,62 +94,31 @@ window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
 async function init() {
-  // Ensure nav starts scrolled
   if (DOM.mainNav) DOM.mainNav.classList.add("scrolled");
-  
-  // Initialize nav scroll behavior
   initNavScroll();
-  
-  // Load cart from storage first
   loadCartFromStorage();
   updateBadges();
-  
-  // Fetch products from Firebase (with fallback)
   PRODUCTS = await fetchProducts();
-  
-  // Clean cart orphans now that products are loaded
   cleanCartOrphans();
-  
-  // Load wishlist (depends on PRODUCTS)
   loadWishlistFromStorage();
   updateBadges();
-  
-  // Set hero image
   setHeroImage();
-  
-  // Initialize announcements
   initAnnouncements();
-  
-  // Build homepage content
   buildArrivals();
-  
-  // Build all footers
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"];
-  footerIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) buildFooter(id);
-  });
-  
-  // Build campaign slider
+  footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
-  
-  // Initialize vendors
   initVendors();
-  
-  // Handle initial route
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId);
   else if (route.page === 'category') navigateToCategory(route.cat);
   else if (route.page === 'login') navigateToLogin();
   else if (route.page === 'account') navigateToAccount();
   else navigateTo(route.page);
-  
-  // Final checks
   setTimeout(checkNavForHome, 100);
   updateChatVisibility();
 }
 
-// Wait for DOM to be fully ready before initializing
 window.addEventListener('DOMContentLoaded', init);
 
 function updateHash(hash) { if (window.location.hash !== hash) history.pushState(null, null, hash || '#'); }
@@ -160,8 +128,7 @@ window.addEventListener('popstate', () => { const route = getRouteFromHash(); if
 function updateBodyClassForCollection() {
   const productsPage = document.getElementById('page-products');
   const categoryPage = document.getElementById('page-category');
-  
-  if ((productsPage && productsPage.classList.contains('active')) || 
+  if ((productsPage && productsPage.classList.contains('active')) ||
       (categoryPage && categoryPage.classList.contains('active'))) {
     document.body.classList.add('on-collection-page');
   } else {
@@ -171,7 +138,6 @@ function updateBodyClassForCollection() {
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
-  // Simplified for fixed-position header — only toggle classes
   if (page === 'home') {
     DOM.mainNav.classList.add('home-sticky');
     DOM.mainNav.classList.remove('scrolled');
@@ -197,6 +163,7 @@ function navigateTo(page) {
   updateChatVisibility(); setTimeout(refreshSwipeTracks,50);
   updateBodyClassForCollection();
 }
+
 function navigateToCategory(cat) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`category-${cat}`);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -210,6 +177,7 @@ function navigateToCategory(cat) {
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50); updateChatVisibility();
   updateBodyClassForCollection();
 }
+
 function goToProduct(productId) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`product-${productId}`); closeCart();
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
@@ -221,6 +189,7 @@ function goToProduct(productId) {
   renderProductPage(product); updateChatVisibility();
   updateBodyClassForCollection();
 }
+
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
 function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); updateBodyClassForCollection(); }
@@ -228,56 +197,46 @@ function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHas
 function navigateToLogin() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-login").classList.add("active");
-  S.currentPage = "login";
-  updateHash('login');
+  S.currentPage = "login"; updateHash('login');
   window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('login');
-  ensureNavScrolled();
-  updateBodyClassForCollection();
+  setNavForPage('login'); ensureNavScrolled(); updateBodyClassForCollection();
 }
 
 function navigateToAccount() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-account").classList.add("active");
-  S.currentPage = "account";
-  updateHash('account');
+  S.currentPage = "account"; updateHash('account');
   window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('account');
-  ensureNavScrolled();
-  updateBodyClassForCollection();
+  setNavForPage('account'); ensureNavScrolled(); updateBodyClassForCollection();
 }
 
 function navigateToCheckout() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-checkout").classList.add("active");
-  S.currentPage = "checkout";
-  updateHash('checkout');
+  S.currentPage = "checkout"; updateHash('checkout');
   window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('checkout');
-  ensureNavScrolled();
-  updateBodyClassForCollection();
+  setNavForPage('checkout'); ensureNavScrolled(); updateBodyClassForCollection();
 }
 
-function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav?.classList.add("scrolled"); return; } DOM.mainNav?.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
-
-function ensureNavScrolled() { 
-  if (S.currentPage !== 'home' && DOM.mainNav) {
-    DOM.mainNav.classList.add("scrolled"); 
-  }
+function initNavScroll() {
+  DOM.hero = document.getElementById("hero");
+  window.addEventListener("scroll", () => {
+    if (!DOM.hero) { if(DOM.mainNav) DOM.mainNav.classList.add("scrolled"); return; }
+    if(DOM.mainNav) DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0);
+    updateStickyBarOnScroll();
+  }, { passive: true });
 }
 
-function checkNavForHome() { 
-  DOM.hero = document.getElementById("hero"); 
-  if (!DOM.hero || !DOM.mainNav) { 
-    if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); 
-    return; 
-  } 
+function ensureNavScrolled() {
+  if (S.currentPage !== 'home' && DOM.mainNav) DOM.mainNav.classList.add("scrolled");
+}
+
+function checkNavForHome() {
+  DOM.hero = document.getElementById("hero");
+  if (!DOM.hero || !DOM.mainNav) { if(DOM.mainNav) DOM.mainNav.classList.add("scrolled"); return; }
   const heroBottom = DOM.hero.getBoundingClientRect().bottom;
-  if (heroBottom <= 0) {
-    DOM.mainNav.classList.add("scrolled");
-  } else {
-    DOM.mainNav.classList.remove("scrolled");
-  }
+  if (heroBottom <= 0) { DOM.mainNav.classList.add("scrolled"); }
+  else { DOM.mainNav.classList.remove("scrolled"); }
 }
 
 function isDesktop() { return window.innerWidth >= 769; }
@@ -290,18 +249,14 @@ function initAnnouncements() {
     "New collection: The Understated — shop now",
     "Sign up for early access to drops"
   ];
-  
   const el0 = document.getElementById('announce-text-0');
   const el1 = document.getElementById('announce-text-1');
   if (!el0 || !el1) return;
-  
   el0.textContent = announcements[0];
   el1.textContent = announcements[1];
-  
   let currentIndex = 0;
   let activeEl = el0;
   let inactiveEl = el1;
-  
   setInterval(() => {
     currentIndex = (currentIndex + 1) % announcements.length;
     inactiveEl.textContent = announcements[currentIndex];
