@@ -1,3 +1,6 @@
+/* =============================================
+   HERO SECTION
+   ============================================= */
 #hero {
   position: relative;
   height: 65vh !important;
@@ -97,11 +100,11 @@
 }
 
 /* =============================================
-   ANNOUNCEMENT BAR - BLACK
+   ANNOUNCEMENT BAR - BLACK BG, WHITE TEXT
    ============================================= */
 #banner {
-  background: #111;
-  color: #fff;
+  background: #111 !important;
+  color: #fff !important;
   font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -116,13 +119,20 @@
   z-index: 1002;
   overflow: hidden;
   height: 30px;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
 }
 
 .announcement-text {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #fff !important;
   position: absolute;
+  width: 100%;
+  text-align: center;
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.5s ease, transform 0.5s ease;
@@ -137,8 +147,8 @@
 }
 
 /* =============================================
-   HEADER - WHITE BG, BLACK ICONS
-   menu icon | logo | search + cart
+   HEADER - WHITE BG, BLACK ICONS, LOGO IMAGE
+   menu icon | Janedore.png logo | search + cart
    ============================================= */
 #main-nav {
   display: flex;
@@ -151,7 +161,7 @@
   left: 0;
   right: 0;
   z-index: 1001;
-  background: #fff;
+  background: #fff !important;
 }
 
 #main-nav.home-sticky {
@@ -162,29 +172,49 @@
 }
 
 #main-nav.scrolled {
-  background: #fff;
-  color: #111;
+  background: #fff !important;
 }
 
+/* Override navigation.css icon colors — force black always */
+#main-nav .nav-icon-btn,
+#main-nav .nav-icon-btn i {
+  color: #111 !important;
+}
+
+#main-nav.scrolled .nav-icon-btn,
+#main-nav.scrolled .nav-icon-btn i {
+  color: #111 !important;
+}
+
+/* Logo — show the image, no filter */
+#main-nav .nav-logo {
+  display: flex !important;
+  position: static !important;
+  transform: none !important;
+}
+
+#main-nav .nav-logo img {
+  height: 25px;
+  width: auto;
+  display: block !important;
+  filter: none !important;
+}
+
+#main-nav.scrolled .nav-logo img {
+  filter: none !important;
+}
+
+/* Badge always black on white */
+#main-nav .badge {
+  background: #111 !important;
+  color: #fff !important;
+}
+
+/* Nav sections */
 .nav-left {
   display: flex;
   align-items: center;
   flex: 1;
-}
-
-.nav-logo {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0 12px;
-}
-
-.nav-logo img {
-  height: 25px;
-  width: auto;
-  display: block;
 }
 
 .nav-right {
@@ -198,39 +228,20 @@
 .nav-icon-btn {
   background: none;
   border: none;
-  cursor: pointer;
   padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #111;
   position: relative;
-  transition: opacity 0.2s;
-}
-
-.nav-icon-btn:hover {
-  opacity: 0.6;
+  cursor: pointer;
 }
 
 .nav-icon-btn i {
   font-size: 20px;
 }
 
-.badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background: #111;
-  color: #fff;
-  font-size: 8px;
-  min-width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 600;
-  pointer-events: none;
+/* Hide desktop nav elements since we only want 3 icons */
+.desktop-nav-links,
+.desktop-utility-links {
+  display: none !important;
 }
