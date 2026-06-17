@@ -64,7 +64,7 @@
 
 <div id="review-modal-backdrop" onclick="closeReviewModal()"><div id="review-modal" onclick="event.stopPropagation()"><button class="review-modal-close" onclick="closeReviewModal()">✕</button><div class="review-modal-title">Write a Review</div><div class="review-stars" id="review-stars"><button class="review-star-btn" onclick="setReviewRating(1)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(2)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(3)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph-thin ph-star"></i></button></div><input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height:auto;margin-bottom:12px;"><textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea><div class="review-image-upload"><label class="review-image-label" for="review-image-input"><i class="ph-thin ph-image"></i> Add Image</label><input type="file" id="review-image-input" accept="image/*" onchange="handleReviewImage(event)"><img class="review-image-preview" id="review-image-preview" alt="Preview"></div><button class="review-submit-btn" onclick="submitReview()">Submit Review</button></div></div>
 
-<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-sub" onclick="navigateTo('products')">understated boldness</div><button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">    A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
+<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-sub" onclick="navigateTo('products')">understated boldness</div><button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
 
 <div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
@@ -98,7 +98,6 @@
 <script src="firebase.js"></script>
 <script>
   var _authResolved = false;
-
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
     if (!user) {
@@ -119,7 +118,6 @@
       var guard = document.getElementById('auth-guard-style');
       if (guard) guard.parentNode.removeChild(guard);
     }).catch(function(err) {
-      console.warn('[AUTH GUARD] Firestore read failed, allowing through:', err.message);
       _authResolved = true;
       var guard = document.getElementById('auth-guard-style');
       if (guard) guard.parentNode.removeChild(guard);
@@ -144,9 +142,7 @@
 <script>
   fetch('chat-widget.html')
     .then(r => r.text())
-    .then(html => {
-      document.getElementById('chat-container').innerHTML = html;
-    })
+    .then(html => { document.getElementById('chat-container').innerHTML = html; })
     .catch(err => console.error('Chat widget failed:', err));
 </script>
 
@@ -154,7 +150,6 @@
   <div id="checkout-loaded"></div>
   <footer id="checkout-footer"></footer>
 </div>
-
 <script>
   fetch('checkout.html').then(r => r.text()).then(html => {
     document.getElementById('checkout-loaded').innerHTML = html;
@@ -181,7 +176,6 @@
     document.getElementById('login-loaded').innerHTML = html;
   });
 </script>
-
 <script>
   fetch('login.html').then(r => r.text()).then(html => {
     document.getElementById('account-loaded').innerHTML = html;
