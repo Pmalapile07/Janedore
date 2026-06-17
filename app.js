@@ -57,6 +57,7 @@ async function fetchProducts() {
   ];
 }
 
+// Expose critical functions to window for onclick handlers
 window.navigateTo = navigateTo;
 window.navigateToCategory = navigateToCategory;
 window.navigateToSale = navigateToSale;
@@ -94,35 +95,49 @@ window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
 async function init() {
+  // Ensure nav starts scrolled
   if (DOM.mainNav) DOM.mainNav.classList.add("scrolled");
   
+  // Initialize nav scroll behavior
   initNavScroll();
   
+  // Load cart from storage first
   loadCartFromStorage();
   updateBadges();
   
+  // Fetch products from Firebase (with fallback)
   PRODUCTS = await fetchProducts();
   
+  // Clean cart orphans now that products are loaded
   cleanCartOrphans();
   
+  // Load wishlist (depends on PRODUCTS)
   loadWishlistFromStorage();
   updateBadges();
   
+  // Set hero image
   setHeroImage();
+  
+  // Initialize announcements
   initAnnouncements();
   
+  // Build homepage content
   buildArrivals();
   
+  // Build all footers
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"];
   footerIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) buildFooter(id);
   });
   
+  // Build campaign slider
   buildCampaignSlider();
   
+  // Initialize vendors
   initVendors();
   
+  // Handle initial route
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId);
   else if (route.page === 'category') navigateToCategory(route.cat);
@@ -130,10 +145,12 @@ async function init() {
   else if (route.page === 'account') navigateToAccount();
   else navigateTo(route.page);
   
+  // Final checks
   setTimeout(checkNavForHome, 100);
   updateChatVisibility();
 }
 
+// Wait for DOM to be fully ready before initializing
 window.addEventListener('DOMContentLoaded', init);
 
 function updateHash(hash) { if (window.location.hash !== hash) history.pushState(null, null, hash || '#'); }
@@ -154,7 +171,7 @@ function updateBodyClassForCollection() {
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
-  
+  // Simplified for fixed-position header — only toggle classes
   if (page === 'home') {
     DOM.mainNav.classList.add('home-sticky');
     DOM.mainNav.classList.remove('scrolled');
@@ -189,6 +206,7 @@ function navigateToCategory(cat) {
   setNavForPage('category');
   S.activeSortTab = cat;
   renderCollectionSortingTabs();
+  if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50); updateChatVisibility();
   updateBodyClassForCollection();
 }
