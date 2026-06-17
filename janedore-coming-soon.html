@@ -477,11 +477,15 @@
            autocorrect="off"
            autocapitalize="off"
            spellcheck="false">
-    <input type="password" class="admin-field" id="admin-password"
+    <input type="text" class="admin-field" id="admin-password"
            placeholder="Password"
            autocomplete="off"
+           autocorrect="off"
+           autocapitalize="off"
+           spellcheck="false"
            readonly
-           onfocus="this.removeAttribute('readonly')">
+           onfocus="this.removeAttribute('readonly');this.type='password';"
+           style="-webkit-text-security:disc;">
     <button class="admin-submit" id="admin-login-btn">Sign In</button>
     <div class="admin-error" id="admin-error"></div>
   </div>
@@ -578,7 +582,7 @@
     // Check if already subscribed first
     docRef.get().then(function(snap) {
       if (snap.exists) {
-        showMsg("You're already on the list.", 'error');
+        showMsg("You've already subscribed.", 'success');
         setLoading(false);
         return;
       }
@@ -624,7 +628,14 @@
   var adminPw    = document.getElementById('admin-password');
   var adminErr   = document.getElementById('admin-error');
 
+  // Keep fields disabled on page load so Safari never sees them as fillable
+  adminEmail.setAttribute('disabled', 'true');
+  adminPw.setAttribute('disabled', 'true');
+
   function openAdminPanel() {
+    // Re-enable fields only when panel is deliberately opened
+    adminEmail.removeAttribute('disabled');
+    adminPw.removeAttribute('disabled');
     overlay.classList.add('open');
     setTimeout(function () { adminEmail.focus(); }, 300);
   }
