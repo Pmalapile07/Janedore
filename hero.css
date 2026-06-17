@@ -95,3 +95,712 @@
 #page-product-detail #hero {
   display: none;
 }
+
+/* =============================================
+   ANNOUNCEMENT BAR
+   ============================================= */
+#banner {
+  background: #f4f4f4;
+  color: #111;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 8px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  position: relative;
+  z-index: 1001;
+  overflow: hidden;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announcement-text {
+  position: absolute;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.announcement-text.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* =============================================
+   HEADER / NAVIGATION LAYOUT
+   menu icon → search icon → Logo → wishlist icon → cart icon
+   ============================================= */
+#main-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: transparent;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+#main-nav.scrolled {
+  background: #fff;
+  color: #111;
+}
+
+#main-nav.home-sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Nav left group: menu icon + search icon + desktop links */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+/* Nav right group: desktop utility links + wishlist icon + cart icon */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* Logo centered between left and right groups */
+.nav-logo {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.nav-logo img {
+  height: 28px;
+  width: auto;
+}
+
+/* =============================================
+   TELEGRAF FONT
+   ============================================= */
+@font-face {
+  font-family: 'Telegraf';
+  src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =============================================
+   NAV ICON BUTTONS
+   ============================================= */
+.nav-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  position: relative;
+  transition: opacity 0.2s;
+}
+
+.nav-icon-btn:hover {
+  opacity: 0.7;
+}
+
+.nav-icon-btn i {
+  font-size: 22px;
+}
+
+/* =============================================
+   DESKTOP NAV LINKS (hidden on mobile)
+   ============================================= */
+.desktop-nav-links {
+  display: none;
+}
+
+.desktop-utility-links {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .desktop-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-left: 16px;
+  }
+  
+  .desktop-utility-links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-right: 8px;
+  }
+  
+  /* Hide individual icon buttons on desktop when utility links are shown */
+  .nav-search-icon,
+  .nav-wishlist-icon,
+  .nav-cart-icon {
+    display: none;
+  }
+}
+
+/* Desktop nav link styling */
+.desktop-nav-link {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.desktop-nav-link:hover {
+  opacity: 0.7;
+}
+
+.desktop-nav-link.sale {
+  color: #c44;
+}
+
+/* Utility text links */
+.utility-text-link {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.utility-text-link:hover {
+  color: #111;
+}
+
+/* =============================================
+   DESKTOP DROPDOWN MENUS
+   ============================================= */
+.desktop-dropdown-wrap {
+  position: relative;
+}
+
+.desktop-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 12px 0;
+  min-width: 160px;
+  z-index: 1002;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.desktop-dropdown-wrap:hover .desktop-dropdown-menu {
+  display: block;
+}
+
+.desktop-dropdown-item {
+  display: block;
+  padding: 8px 20px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #111;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.desktop-dropdown-item:hover {
+  background: #f8f8f8;
+}
+
+/* =============================================
+   BADGE
+   ============================================= */
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #111;
+  color: #fff;
+  font-size: 9px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* =============================================
+   COLLECTION NAV CONTROLS
+   ============================================= */
+.collection-nav-controls {
+  display: none;
+}
+
+/* =============================================
+   SEARCH OVERLAY
+   ============================================= */
+#search-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 2000;
+  display: none;
+  flex-direction: column;
+}
+
+#search-overlay.open {
+  display: flex;
+}
+
+.search-overlay-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  color: #111;
+  background: transparent;
+}
+
+#search-input::placeholder {
+  color: #aaa;
+}
+
+.search-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #111;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* =============================================
+   MENU DRAWER
+   ============================================= */
+#menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#menu-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#menu-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 320px;
+  max-width: 85vw;
+  background: #fff;
+  z-index: 1501;
+  transform: translateX(-100%);
+  transition: transform 0.35s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+#menu-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.drawer-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.drawer-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.drawer-close svg {
+  width: 18px;
+  height: 18px;
+  stroke: #111;
+  stroke-width: 1.5;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.drawer-link {
+  display: block;
+  padding: 14px 20px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #111;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.drawer-link:hover {
+  background: #f8f8f8;
+}
+
+.drawer-link.sale {
+  color: #c44;
+}
+
+.drawer-spacer {
+  height: 24px;
+}
+
+.drawer-section-title {
+  padding: 12px 20px 6px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #999;
+  font-weight: 600;
+}
+
+.submenu-collapse-header,
+.brands-collapse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #111;
+  cursor: pointer;
+}
+
+.submenu-collapse-header:hover,
+.brands-collapse-header:hover {
+  background: #f8f8f8;
+}
+
+.submenu-collapse-header svg,
+.brands-collapse-header svg {
+  width: 14px;
+  height: 14px;
+  stroke: #111;
+  stroke-width: 1.5;
+  transition: transform 0.3s ease;
+}
+
+.submenu-collapse.open .submenu-collapse-header svg line:first-child,
+.brands-collapse.open .brands-collapse-header svg line:first-child {
+  opacity: 0;
+}
+
+.submenu-collapse-body,
+.brands-collapse-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+.submenu-collapse.open .submenu-collapse-body,
+.brands-collapse.open .brands-collapse-body {
+  max-height: 300px;
+}
+
+.submenu-link {
+  display: block;
+  padding: 10px 20px 10px 36px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: #555;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.submenu-link:hover {
+  color: #111;
+  background: #f8f8f8;
+}
+
+/* =============================================
+   CART PANEL
+   ============================================= */
+#cart-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#cart-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#cart-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 400px;
+  max-width: 90vw;
+  background: #fff;
+  z-index: 1501;
+  transform: translateX(100%);
+  transition: transform 0.35s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+#cart-panel.open {
+  transform: translateX(0);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.panel-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.panel-close svg {
+  width: 18px;
+  height: 18px;
+  stroke: #111;
+  stroke-width: 1.5;
+}
+
+.cart-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.cart-foot {
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+/* =============================================
+   REVIEW MODAL
+   ============================================= */
+#review-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+#review-modal-backdrop.open {
+  display: flex;
+}
+
+#review-modal {
+  background: #fff;
+  padding: 32px;
+  border-radius: 4px;
+  width: 90%;
+  max-width: 480px;
+  position: relative;
+}
+
+.review-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #888;
+}
+
+.review-modal-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.review-stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.review-star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  font-size: 22px;
+  color: #ddd;
+}
+
+.review-star-btn.active {
+  color: #111;
+}
+
+.review-textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  padding: 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 100px;
+  outline: none;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.review-image-upload {
+  margin-bottom: 16px;
+}
+
+.review-image-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #888;
+}
+
+.review-image-label:hover {
+  color: #111;
+}
+
+#review-image-input {
+  display: none;
+}
+
+.review-image-preview {
+  max-width: 120px;
+  margin-top: 8px;
+  display: none;
+}
+
+.review-submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: #111;
+  color: #fff;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.review-submit-btn:hover {
+  background: #333;
+}
