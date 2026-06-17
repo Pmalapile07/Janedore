@@ -97,27 +97,16 @@
 }
 
 /* =============================================
-   TELEGRAF FONT
-   ============================================= */
-@font-face {
-  font-family: 'Telegraf';
-  src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* =============================================
-   ANNOUNCEMENT BAR - sits above header
+   ANNOUNCEMENT BAR - BLACK
    ============================================= */
 #banner {
-  background: #f4f4f4;
-  color: #111;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  background: #111;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   text-align: center;
-  padding: 8px 16px;
+  padding: 7px 16px;
   font-family: 'Manrope', sans-serif;
   font-weight: 500;
   position: fixed;
@@ -126,7 +115,7 @@
   right: 0;
   z-index: 1002;
   overflow: hidden;
-  height: 32px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,83 +137,67 @@
 }
 
 /* =============================================
-   HEADER / NAVIGATION LAYOUT
-   menu icon → search icon → Logo → wishlist icon → cart icon
+   HEADER - WHITE BACKGROUND, BLACK ICONS
+   Layout: menu icon → Logo → search icon → cart icon
    ============================================= */
 #main-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  height: 64px;
+  padding: 0 10%;
+  height: 56px;
   position: fixed;
-  top: 32px; /* sits below announcement bar */
+  top: 30px;
   left: 0;
   right: 0;
   z-index: 1001;
-  background: transparent;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-#main-nav.scrolled {
   background: #fff;
-  color: #111;
 }
 
-#main-nav.home-sticky {
-  position: fixed;
-  top: 32px; /* sits below announcement bar */
-  left: 0;
-  right: 0;
-}
-
-/* Nav left group: menu icon + search icon + desktop links */
+/* Left: menu icon only */
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex: 1;
 }
 
-/* Nav right group: desktop utility links + wishlist icon + cart icon */
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  justify-content: flex-end;
-}
-
-/* Logo centered - TEXT using Telegraf font */
+/* Center: logo */
 .nav-logo {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  padding: 0 8px;
-  font-family: 'Telegraf', 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: inherit;
-  text-transform: none;
-  text-decoration: none;
-  white-space: nowrap;
+  padding: 0 12px;
 }
 
 .nav-logo img {
-  display: none; /* hide the image logo */
+  height: 25px;
+  width: auto;
+  display: block;
 }
 
-@media (min-width: 769px) {
-  .nav-logo {
-    font-size: 24px;
-  }
+/* Right: search icon + cart icon */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* Hide desktop elements */
+.desktop-nav-links,
+.desktop-utility-links,
+.nav-wishlist-icon,
+.nav-search-icon,
+.nav-cart-icon,
+.collection-nav-controls {
+  display: none;
 }
 
 /* =============================================
-   NAV ICON BUTTONS
+   NAV ICON BUTTONS - black
    ============================================= */
 .nav-icon-btn {
   background: none;
@@ -234,133 +207,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: inherit;
+  color: #111;
   position: relative;
   transition: opacity 0.2s;
 }
 
 .nav-icon-btn:hover {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .nav-icon-btn i {
-  font-size: 22px;
-}
-
-/* =============================================
-   DESKTOP NAV LINKS (hidden on mobile)
-   ============================================= */
-.desktop-nav-links {
-  display: none;
-}
-
-.desktop-utility-links {
-  display: none;
-}
-
-@media (min-width: 769px) {
-  .desktop-nav-links {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-left: 16px;
-  }
-  
-  .desktop-utility-links {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-right: 8px;
-  }
-  
-  /* Hide individual icon buttons on desktop when utility links are shown */
-  .nav-search-icon,
-  .nav-wishlist-icon,
-  .nav-cart-icon {
-    display: none;
-  }
-}
-
-/* Desktop nav link styling */
-.desktop-nav-link {
-  font-family: 'Manrope', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: inherit;
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 500;
-  transition: opacity 0.2s;
-}
-
-.desktop-nav-link:hover {
-  opacity: 0.7;
-}
-
-.desktop-nav-link.sale {
-  color: #c44;
-}
-
-/* Utility text links */
-.utility-text-link {
-  font-family: 'Manrope', sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  background: none;
-  border: none;
-  color: #888;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s;
-}
-
-.utility-text-link:hover {
-  color: #111;
-}
-
-/* =============================================
-   DESKTOP DROPDOWN MENUS
-   ============================================= */
-.desktop-dropdown-wrap {
-  position: relative;
-}
-
-.desktop-dropdown-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #fff;
-  border: 1px solid #eee;
-  padding: 12px 0;
-  min-width: 160px;
-  z-index: 1002;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.desktop-dropdown-wrap:hover .desktop-dropdown-menu {
-  display: block;
-}
-
-.desktop-dropdown-item {
-  display: block;
-  padding: 8px 20px;
-  font-family: 'Manrope', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #111;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.desktop-dropdown-item:hover {
-  background: #f8f8f8;
+  font-size: 20px;
 }
 
 /* =============================================
@@ -372,24 +229,17 @@
   right: 2px;
   background: #111;
   color: #fff;
-  font-size: 9px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
+  font-size: 8px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
+  padding: 0 3px;
   font-family: 'Manrope', sans-serif;
   font-weight: 600;
   pointer-events: none;
-}
-
-/* =============================================
-   COLLECTION NAV CONTROLS
-   ============================================= */
-.collection-nav-controls {
-  display: none;
 }
 
 /* =============================================
