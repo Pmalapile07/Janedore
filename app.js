@@ -154,11 +154,6 @@ function updateBodyClassForCollection() {
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
-  DOM.mainNav.style.position = '';
-  DOM.mainNav.style.top = '';
-  DOM.mainNav.style.left = '';
-  DOM.mainNav.style.right = '';
-  DOM.mainNav.style.background = '';
   
   if (page === 'home') {
     DOM.mainNav.classList.add('home-sticky');
@@ -194,7 +189,6 @@ function navigateToCategory(cat) {
   setNavForPage('category');
   S.activeSortTab = cat;
   renderCollectionSortingTabs();
-  if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50); updateChatVisibility();
   updateBodyClassForCollection();
 }
@@ -246,18 +240,18 @@ function navigateToCheckout() {
   updateBodyClassForCollection();
 }
 
-function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
+function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav?.classList.add("scrolled"); return; } DOM.mainNav?.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
 
 function ensureNavScrolled() { 
-  if (S.currentPage !== 'home') {
+  if (S.currentPage !== 'home' && DOM.mainNav) {
     DOM.mainNav.classList.add("scrolled"); 
   }
 }
 
 function checkNavForHome() { 
   DOM.hero = document.getElementById("hero"); 
-  if (!DOM.hero) { 
-    DOM.mainNav.classList.add("scrolled"); 
+  if (!DOM.hero || !DOM.mainNav) { 
+    if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); 
     return; 
   } 
   const heroBottom = DOM.hero.getBoundingClientRect().bottom;
@@ -299,8 +293,8 @@ function initAnnouncements() {
   }, 4000);
 }
 
-function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
-function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
+function openMenu() { if(DOM.menuBackdrop) DOM.menuBackdrop.classList.add("open"); if(DOM.menuDrawer) DOM.menuDrawer.classList.add("open"); }
+function closeMenu() { if(DOM.menuBackdrop) DOM.menuBackdrop.classList.remove("open"); if(DOM.menuDrawer) DOM.menuDrawer.classList.remove("open"); }
 function toggleSubmenuCollapse(section) { const el = document.getElementById(section + '-collapse'); if (el) el.classList.toggle('open'); }
 function toggleBrandsCollapse() { const el = document.getElementById('brands-collapse'); if (el) el.classList.toggle('open'); }
 
