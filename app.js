@@ -57,7 +57,6 @@ async function fetchProducts() {
   ];
 }
 
-// Expose critical functions to window for onclick handlers
 window.navigateTo = navigateTo;
 window.navigateToCategory = navigateToCategory;
 window.navigateToSale = navigateToSale;
@@ -95,46 +94,35 @@ window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
 async function init() {
-  // Ensure nav starts scrolled
   if (DOM.mainNav) DOM.mainNav.classList.add("scrolled");
   
-  // Initialize nav scroll behavior
   initNavScroll();
   
-  // Load cart from storage first
   loadCartFromStorage();
   updateBadges();
   
-  // Fetch products from Firebase (with fallback)
   PRODUCTS = await fetchProducts();
   
-  // Clean cart orphans now that products are loaded
   cleanCartOrphans();
   
-  // Load wishlist (depends on PRODUCTS)
   loadWishlistFromStorage();
   updateBadges();
   
-  // Set hero image
   setHeroImage();
+  initAnnouncements();
   
-  // Build homepage content
   buildArrivals();
   
-  // Build all footers
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"];
   footerIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) buildFooter(id);
   });
   
-  // Build campaign slider
   buildCampaignSlider();
   
-  // Initialize vendors
   initVendors();
   
-  // Handle initial route
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId);
   else if (route.page === 'category') navigateToCategory(route.cat);
@@ -142,12 +130,10 @@ async function init() {
   else if (route.page === 'account') navigateToAccount();
   else navigateTo(route.page);
   
-  // Final checks
   setTimeout(checkNavForHome, 100);
   updateChatVisibility();
 }
 
-// Wait for DOM to be fully ready before initializing
 window.addEventListener('DOMContentLoaded', init);
 
 function updateHash(hash) { if (window.location.hash !== hash) history.pushState(null, null, hash || '#'); }
@@ -285,6 +271,33 @@ function checkNavForHome() {
 function isDesktop() { return window.innerWidth >= 769; }
 function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/25033E45-B542-48C1-A84B-5F259F62C6AE.jpg?v=1778515133')"; }
 window.addEventListener('resize', setHeroImage);
+
+function initAnnouncements() {
+  const announcements = [
+    "Complimentary shipping on orders over R1000",
+    "New collection: The Understated — shop now",
+    "Sign up for early access to drops"
+  ];
+  
+  const el0 = document.getElementById('announce-text-0');
+  const el1 = document.getElementById('announce-text-1');
+  if (!el0 || !el1) return;
+  
+  el0.textContent = announcements[0];
+  el1.textContent = announcements[1];
+  
+  let currentIndex = 0;
+  let activeEl = el0;
+  let inactiveEl = el1;
+  
+  setInterval(() => {
+    currentIndex = (currentIndex + 1) % announcements.length;
+    inactiveEl.textContent = announcements[currentIndex];
+    activeEl.classList.remove('active');
+    inactiveEl.classList.add('active');
+    [activeEl, inactiveEl] = [inactiveEl, activeEl];
+  }, 4000);
+}
 
 function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
 function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
