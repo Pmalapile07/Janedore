@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Index.html <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -14,6 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
+  <!-- Auth guard: hide body immediately so nothing flashes before auth resolves -->
   <style id="auth-guard-style">body { visibility: hidden; }</style>
 
   <link rel="stylesheet" href="variables.css">
@@ -43,14 +44,63 @@
 
 <nav id="main-nav">
   <div class="nav-left">
-    <button class="nav-icon-btn" onclick="openMenu()"><i class="ph-light ph-list"></i></button>
+    <button class="nav-icon-btn" onclick="openMenu()"><i class="ph-thin ph-list"></i></button>
+    <div class="desktop-nav-links">
+      <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
+      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Clothing <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('all-clothing')">All Clothing</a><a class="desktop-dropdown-item" onclick="navigateToCategory('dresses')">Dresses</a><a class="desktop-dropdown-item" onclick="navigateToCategory('tops')">Tops</a><a class="desktop-dropdown-item" onclick="navigateToCategory('bottoms')">Bottoms</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jackets')">Jackets</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sets')">Sets</a></div></div>
+      <div class="desktop-dropdown-wrap"><span class="desktop-nav-link" style="display:flex;align-items:center;gap:4px;">Accessories <i class="ph-light ph-caret-down" style="font-size:10px;"></i></span><div class="desktop-dropdown-menu"><a class="desktop-dropdown-item" onclick="navigateToCategory('bags')">Bags</a><a class="desktop-dropdown-item" onclick="navigateToCategory('jewelry')">Jewelry</a><a class="desktop-dropdown-item" onclick="navigateToCategory('sunglasses')">Sunglasses</a></div></div>
+      <a class="desktop-nav-link" onclick="navigateToCategory('parfum')">Scent</a>
+      <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
+    </div>
   </div>
-  <div class="nav-logo" onclick="navigateTo('home')">
-    <img src="Janedore.png" alt="JANEDORE">
-  </div>
+  <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
   <div class="nav-right">
-    <button class="nav-icon-btn" onclick="openSearch()" title="Search"><i class="ph-light ph-magnifying-glass"></i></button>
-    <button class="nav-icon-btn" onclick="openCart()"><i class="ph-light ph-tote-simple"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
+    <!-- Collection controls injected here on collection pages -->
+    <div class="collection-nav-controls" id="collection-nav-controls">
+      <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
+        <div class="col-grid-icon cols-2" id="col-grid-icon">
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+          <div class="col-grid-bar"></div>
+        </div>
+      </button>
+      <div class="collection-filter-dropdown">
+        <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">
+          FILTER
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collection-filter-options" id="collection-filter-options">
+          <div class="filter-group">
+            <div class="filter-group-title">Category</div>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label>
+            <label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Size</div>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label>
+            <label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label>
+          </div>
+          <div class="filter-group">
+            <div class="filter-group-title">Price</div>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label>
+            <label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label>
+          </div>
+        </div>
+      </div>
+      <button class="collection-search-btn" onclick="openSearch()">
+        <i class="ph-thin ph-magnifying-glass"></i>
+      </button>
+    </div>
+    <!-- Regular nav icons hidden on collection pages -->
+    <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph-thin ph-magnifying-glass"></i></button>
+    <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')"><i class="ph-thin ph-bookmark-simple"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
+    <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph-thin ph-shopping-bag"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
+    <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
   </div>
 </nav>
 
@@ -64,7 +114,7 @@
 
 <div id="review-modal-backdrop" onclick="closeReviewModal()"><div id="review-modal" onclick="event.stopPropagation()"><button class="review-modal-close" onclick="closeReviewModal()">✕</button><div class="review-modal-title">Write a Review</div><div class="review-stars" id="review-stars"><button class="review-star-btn" onclick="setReviewRating(1)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(2)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(3)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph-thin ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph-thin ph-star"></i></button></div><input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height:auto;margin-bottom:12px;"><textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea><div class="review-image-upload"><label class="review-image-label" for="review-image-input"><i class="ph-thin ph-image"></i> Add Image</label><input type="file" id="review-image-input" accept="image/*" onchange="handleReviewImage(event)"><img class="review-image-preview" id="review-image-preview" alt="Preview"></div><button class="review-submit-btn" onclick="submitReview()">Submit Review</button></div></div>
 
-<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-sub" onclick="navigateTo('products')">understated boldness</div><button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
+<div class="page active" id="page-home"><section id="hero"><div class="hero-bg-placeholder" id="hero-bg"></div><div class="hero-overlay"></div><div class="hero-content-wrap"><div class="hero-sub" onclick="navigateTo('products')">understated boldness</div><button class="hero-shop-btn" onclick="navigateTo('products')">Shop Now</button></div></section><section id="home-categories"><div class="home-categories-wrap"><div class="home-categories-header"><div class="home-categories-title">just in</div><div class="home-categories-subtitle">explore what's new in store</div></div><div class="home-categories-grid" id="home-categories-grid"></div><div class="home-categories-progress" id="home-categories-progress"></div></div></section><section id="home-all-products"><div class="home-categories-header"><div class="home-categories-title">ALL PRODUCTS</div><div class="home-categories-subtitle">    A curated selection of emerging labels and under-the-radar favorites designed to be discovered slowly.</div><button class="arrivals-view-all" onclick="navigateTo('products')" style="margin-top:12px;">View All</button></div><div class="product-grid" id="arrivals-grid"></div></section><section id="homepage-newsletter-section"></section><footer id="main-footer"></footer></div>
 
 <div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
@@ -97,7 +147,11 @@
 
 <script src="firebase.js"></script>
 <script>
+  // Auth guard: verify SUPER_ADMIN before revealing the page.
+  // _authResolved prevents the guard from firing more than once
+  // (onAuthStateChanged can fire multiple times on mobile/Safari).
   var _authResolved = false;
+
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
     if (!user) {
@@ -114,10 +168,14 @@
         });
         return;
       }
+      // Confirmed SUPER_ADMIN — remove the visibility lock and let the page render.
       _authResolved = true;
       var guard = document.getElementById('auth-guard-style');
       if (guard) guard.parentNode.removeChild(guard);
     }).catch(function(err) {
+      // Firestore read failed — do NOT redirect. User is authenticated so let them through.
+      // Redirecting here was causing the 1-second bounce on mobile/Safari.
+      console.warn('[AUTH GUARD] Firestore read failed, allowing through:', err.message);
       _authResolved = true;
       var guard = document.getElementById('auth-guard-style');
       if (guard) guard.parentNode.removeChild(guard);
@@ -127,7 +185,7 @@
 <script src="vendors.js"></script>
 <script src="cart.js"></script>
 <script src="wishlist.js"></script>
-
+<script src="navigation.js"></script>
 <script src="search.js"></script>
 <script src="modals.js"></script>
 <script src="product-detail.js"></script>
@@ -142,7 +200,9 @@
 <script>
   fetch('chat-widget.html')
     .then(r => r.text())
-    .then(html => { document.getElementById('chat-container').innerHTML = html; })
+    .then(html => {
+      document.getElementById('chat-container').innerHTML = html;
+    })
     .catch(err => console.error('Chat widget failed:', err));
 </script>
 
@@ -150,6 +210,7 @@
   <div id="checkout-loaded"></div>
   <footer id="checkout-footer"></footer>
 </div>
+
 <script>
   fetch('checkout.html').then(r => r.text()).then(html => {
     document.getElementById('checkout-loaded').innerHTML = html;
@@ -176,16 +237,11 @@
     document.getElementById('login-loaded').innerHTML = html;
   });
 </script>
+
 <script>
   fetch('login.html').then(r => r.text()).then(html => {
     document.getElementById('account-loaded').innerHTML = html;
   });
-</script>
-<script>
-  setTimeout(function() {
-    var guard = document.getElementById('auth-guard-style');
-    if (guard) guard.parentNode.removeChild(guard);
-  }, 3000);
 </script>
 
 </body>
