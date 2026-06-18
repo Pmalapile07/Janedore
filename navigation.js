@@ -5,7 +5,8 @@ window.addEventListener('popstate', () => { const route = getRouteFromHash(); if
 function updateBodyClassForCollection() {
   const productsPage = document.getElementById('page-products');
   const categoryPage = document.getElementById('page-category');
-  if ((productsPage && productsPage.classList.contains('active')) ||
+  
+  if ((productsPage && productsPage.classList.contains('active')) || 
       (categoryPage && categoryPage.classList.contains('active'))) {
     document.body.classList.add('on-collection-page');
   } else {
@@ -15,6 +16,13 @@ function updateBodyClassForCollection() {
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
+  // Clear any inline styles first
+  DOM.mainNav.style.position = '';
+  DOM.mainNav.style.top = '';
+  DOM.mainNav.style.left = '';
+  DOM.mainNav.style.right = '';
+  DOM.mainNav.style.background = '';
+  
   if (page === 'home') {
     DOM.mainNav.classList.add('home-sticky');
     DOM.mainNav.classList.remove('scrolled');
@@ -40,7 +48,6 @@ function navigateTo(page) {
   updateChatVisibility(); setTimeout(refreshSwipeTracks,50);
   updateBodyClassForCollection();
 }
-
 function navigateToCategory(cat) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`category-${cat}`);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -54,7 +61,6 @@ function navigateToCategory(cat) {
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50); updateChatVisibility();
   updateBodyClassForCollection();
 }
-
 function goToProduct(productId) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`product-${productId}`); closeCart();
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
@@ -66,7 +72,6 @@ function goToProduct(productId) {
   renderProductPage(product); updateChatVisibility();
   updateBodyClassForCollection();
 }
-
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
 function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); updateBodyClassForCollection(); }
@@ -74,54 +79,64 @@ function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHas
 function navigateToLogin() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-login").classList.add("active");
-  S.currentPage = "login"; updateHash('login');
+  S.currentPage = "login";
+  updateHash('login');
   window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('login'); ensureNavScrolled(); updateBodyClassForCollection();
+  setNavForPage('login');
+  ensureNavScrolled();
+  updateBodyClassForCollection();
 }
 
 function navigateToAccount() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-account").classList.add("active");
-  S.currentPage = "account"; updateHash('account');
+  S.currentPage = "account";
+  updateHash('account');
   window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('account'); ensureNavScrolled(); updateBodyClassForCollection();
+  setNavForPage('account');
+  ensureNavScrolled();
+  updateBodyClassForCollection();
 }
 
 function navigateToCheckout() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-checkout").classList.add("active");
-  S.currentPage = "checkout"; updateHash('checkout');
+  S.currentPage = "checkout";
+  updateHash('checkout');
   window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('checkout'); ensureNavScrolled(); updateBodyClassForCollection();
+  setNavForPage('checkout');
+  ensureNavScrolled();
+  updateBodyClassForCollection();
 }
 
-function initNavScroll() {
-  DOM.hero = document.getElementById("hero");
-  window.addEventListener("scroll", () => {
-    if (!DOM.hero) { if(DOM.mainNav) DOM.mainNav.classList.add("scrolled"); return; }
-    if(DOM.mainNav) DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0);
-    updateStickyBarOnScroll();
-  }, { passive: true });
+function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
+
+function ensureNavScrolled() { 
+  if (S.currentPage !== 'home') {
+    DOM.mainNav.classList.add("scrolled"); 
+  }
 }
 
-function ensureNavScrolled() {
-  if (S.currentPage !== 'home' && DOM.mainNav) DOM.mainNav.classList.add("scrolled");
-}
-
-function checkNavForHome() {
-  DOM.hero = document.getElementById("hero");
-  if (!DOM.hero || !DOM.mainNav) { if(DOM.mainNav) DOM.mainNav.classList.add("scrolled"); return; }
+function checkNavForHome() { 
+  DOM.hero = document.getElementById("hero"); 
+  if (!DOM.hero) { 
+    DOM.mainNav.classList.add("scrolled"); 
+    return; 
+  } 
   const heroBottom = DOM.hero.getBoundingClientRect().bottom;
-  if (heroBottom <= 0) { DOM.mainNav.classList.add("scrolled"); }
-  else { DOM.mainNav.classList.remove("scrolled"); }
+  if (heroBottom <= 0) {
+    DOM.mainNav.classList.add("scrolled");
+  } else {
+    DOM.mainNav.classList.remove("scrolled");
+  }
 }
 
 function isDesktop() { return window.innerWidth >= 769; }
 function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"; }
 window.addEventListener('resize', setHeroImage);
 
-function openMenu() { if(DOM.menuBackdrop) DOM.menuBackdrop.classList.add("open"); if(DOM.menuDrawer) DOM.menuDrawer.classList.add("open"); }
-function closeMenu() { if(DOM.menuBackdrop) DOM.menuBackdrop.classList.remove("open"); if(DOM.menuDrawer) DOM.menuDrawer.classList.remove("open"); }
+function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
+function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
 function toggleSubmenuCollapse(section) { const el = document.getElementById(section + '-collapse'); if (el) el.classList.toggle('open'); }
 function toggleBrandsCollapse() { const el = document.getElementById('brands-collapse'); if (el) el.classList.toggle('open'); }
 
