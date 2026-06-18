@@ -181,6 +181,12 @@
     document.getElementById('account-loaded').innerHTML = html;
   });
 </script>
+<script>
+  setTimeout(function() {
+    var guard = document.getElementById('auth-guard-style');
+    if (guard) guard.parentNode.removeChild(guard);
+  }, 3000);
+</script>
 
 </body>
 </html>
