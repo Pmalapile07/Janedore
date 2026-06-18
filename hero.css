@@ -1,22 +1,21 @@
 #hero {
   position: relative;
-  height: 75vh;
-  min-height: 520px;
-  max-height: 820px;
-  margin-top: 0;
+  height: 65vh !important;
+  min-height: 1000px;
+  max-height: none;
   overflow: hidden;
-  background: #111;
+  background: #1a1a1a;
   display: flex;
-  align-items: stretch;
-  justify-content: stretch;
-  padding-bottom: 0;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 24px;
+  margin-top: -64px;
 }
 
 @media (min-width: 769px) {
   #hero {
-    height: 85vh;
-    min-height: 600px;
-    max-height: none;
+    height: 140vh;
+    min-height: 1200px;
   }
 }
 
@@ -31,66 +30,68 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.0) 45%, rgba(0,0,0,0.55) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.18) 0%,
+    rgba(0,0,0,0.08) 40%,
+    rgba(0,0,0,0.52) 100%
+  );
 }
 
 .hero-content-wrap {
   position: relative;
   z-index: 10;
   width: 100%;
-  height: 100%;
-  padding: 32px 24px 36px;
+  padding: 0 20px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.hero-headline-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: fit-content;
-}
-
-.hero-campaign-label {
-  font-size: 9px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
-  font-family: 'Manrope', sans-serif;
-  font-weight: 500;
-}
-
-.hero-headline {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(33px, 8vw, 61px);
-  font-weight: 300;
-  color: #fff;
-  line-height: 1.1;
-  letter-spacing: 0.12em;
-  margin: 0;
-  text-align: center;
-}
-
-.hero-shop-btn {
-  font-family: 'Manrope', sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #111;
-  background: #fff;
-  border: none;
-  padding: 12px 24px;
-  cursor: pointer;
-  transition: background 0.2s;
-  display: block;
-  width: fit-content;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-.hero-shop-btn:hover { background: #f0f0f0; }
+.hero-sub {
+  font-family: 'Manrope', sans-serif;
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 0;
+  flex: 1;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hero-sub:hover {
+  color: rgba(255,255,255,0.9);
+}
+
+.hero-shop-btn {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+  padding-bottom: 2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.hero-shop-btn:hover {
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.9);
+}
+
+#page-products #hero,
+#page-category #hero,
+#page-product-detail #hero {
+  display: none;
+} hero .css
