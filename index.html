@@ -151,45 +151,44 @@
     if (guard) guard.parentNode.removeChild(guard);
   }
 
-  // If a Firebase session exists in localStorage, the user is logged in
-  // and Firebase just needs a moment to restore it. Don't redirect on null.
-  function _hasLocalSession() {
-    try {
-      for (var i = 0; i < localStorage.length; i++) {
-        if (localStorage.key(i).indexOf('firebase:authUser:') === 0) return true;
-      }
-    } catch(e) {}
-    return false;
+  function _clearAdminCookie() {
+    document.cookie = 'jd_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
+  }
+
+  function _hasAdminCookie() {
+    return document.cookie.split(';').some(function(c) {
+      return c.trim().indexOf('jd_admin=1') === 0;
+    });
   }
 
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
 
     if (!user) {
-      // A stored session exists — Firebase is still restoring it, wait for next call
-      if (_hasLocalSession()) return;
-      // No session at all — redirect immediately
+      // If the admin cookie exists, a session is being restored by Firebase — wait for next call
+      if (_hasAdminCookie()) return;
+      // No cookie, no user — redirect
       _authResolved = true;
       window.location.replace('janedore-coming-soon.html');
       return;
     }
 
-    // User is authenticated — check role
+    // User confirmed — check SUPER_ADMIN role
     firebase.firestore().collection('admins').doc(user.uid).get().then(function(doc) {
       if (_authResolved) return;
       var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
       if (role !== 'SUPER_ADMIN') {
         _authResolved = true;
+        _clearAdminCookie();
         firebase.auth().signOut().then(function() {
           window.location.replace('janedore-coming-soon.html');
         });
         return;
       }
-      // Confirmed SUPER_ADMIN — reveal the page
+      // Confirmed SUPER_ADMIN — reveal page
       _authResolved = true;
       _removeGuard();
     }).catch(function(err) {
-      // Firestore failed — user is authenticated, let them through
       console.warn('[AUTH GUARD] Firestore read failed, allowing through:', err.message);
       if (_authResolved) return;
       _authResolved = true;
