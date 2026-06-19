@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <!-- Auth guard: hide body immediately so nothing flashes before auth resolves -->
+  <!-- Auth guard: hide body until auth resolves -->
   <style id="auth-guard-style">body { visibility: hidden; }</style>
 
   <link rel="stylesheet" href="variables.css">
@@ -55,7 +55,6 @@
   </div>
   <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
   <div class="nav-right">
-    <!-- Collection controls injected here on collection pages -->
     <div class="collection-nav-controls" id="collection-nav-controls">
       <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
         <div class="col-grid-icon cols-2" id="col-grid-icon">
@@ -96,7 +95,6 @@
         <i class="ph ph-magnifying-glass"></i>
       </button>
     </div>
-    <!-- Regular nav icons hidden on collection pages -->
     <button class="nav-icon-btn nav-search-icon" onclick="openSearch()" title="Search"><i class="ph ph-magnifying-glass"></i></button>
     <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph ph-shopping-bag"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
     <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
@@ -148,37 +146,51 @@
 <script>
   var _authResolved = false;
 
-  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function() {
-    firebase.auth().onAuthStateChanged(function(user) {
+  function _removeGuard() {
+    var guard = document.getElementById('auth-guard-style');
+    if (guard) guard.parentNode.removeChild(guard);
+  }
+
+  // Safety net: never leave the page invisible longer than 4 seconds
+  var _guardTimeout = setTimeout(function() {
+    if (!_authResolved) {
+      _authResolved = true;
+      _removeGuard();
+    }
+  }, 4000);
+
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (_authResolved) return;
+    if (!user) {
+      // No user yet — wait 2.5s for Firebase to restore session from localStorage
+      setTimeout(function() {
+        if (_authResolved) return;
+        _authResolved = true;
+        clearTimeout(_guardTimeout);
+        window.location.replace('janedore-coming-soon.html');
+      }, 2500);
+      return;
+    }
+    firebase.firestore().collection('admins').doc(user.uid).get().then(function(doc) {
       if (_authResolved) return;
-      if (!user) {
-        // Wait 2 seconds for Firebase to restore session before redirecting
-        setTimeout(function() {
-          if (_authResolved) return;
-          _authResolved = true;
+      var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
+      if (role !== 'SUPER_ADMIN') {
+        _authResolved = true;
+        clearTimeout(_guardTimeout);
+        firebase.auth().signOut().then(function() {
           window.location.replace('janedore-coming-soon.html');
-        }, 2000);
+        });
         return;
       }
-      firebase.firestore().collection('admins').doc(user.uid).get().then(function(doc) {
-        var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
-        if (role !== 'SUPER_ADMIN') {
-          _authResolved = true;
-          firebase.auth().signOut().then(function() {
-            window.location.replace('janedore-coming-soon.html');
-          });
-          return;
-        }
-        // Confirmed SUPER_ADMIN — remove the visibility lock and let the page render.
-        _authResolved = true;
-        var guard = document.getElementById('auth-guard-style');
-        if (guard) guard.parentNode.removeChild(guard);
-      }).catch(function(err) {
-        console.warn('[AUTH GUARD] Firestore read failed, allowing through:', err.message);
-        _authResolved = true;
-        var guard = document.getElementById('auth-guard-style');
-        if (guard) guard.parentNode.removeChild(guard);
-      });
+      _authResolved = true;
+      clearTimeout(_guardTimeout);
+      _removeGuard();
+    }).catch(function(err) {
+      console.warn('[AUTH GUARD] Firestore read failed, allowing through:', err.message);
+      if (_authResolved) return;
+      _authResolved = true;
+      clearTimeout(_guardTimeout);
+      _removeGuard();
     });
   });
 </script>
