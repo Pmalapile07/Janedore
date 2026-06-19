@@ -104,7 +104,7 @@
 <div id="search-overlay"><div class="search-overlay-header"><div class="search-input-wrap"><i class="ph ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i><input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)"></div><button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="search-body" id="search-body"></div></div>
 
 <div id="menu-backdrop" onclick="closeMenu()"></div>
-<div id="menu-drawer"><div class="drawer-header"><div class="drawer-title">Menu</div><button class="drawer-close" onclick="closeMenu()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="drawer-body"><a class="drawer-link" onclick="navigateTo('home');closeMenu();">The Understated</a><div class="submenu-collapse" id="clothing-collapse"><div class="submenu-collapse-header" onclick="toggleSubmenuCollapse('clothing')">Clothing <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="submenu-collapse-body"><a class="submenu-link" onclick="navigateToCategory('all-clothing');closeMenu();">All Clothing</a><a class="submenu-link" onclick="navigateToCategory('dresses');closeMenu();">Dresses</a><a class="submenu-link" onclick="navigateToCategory('tops');closeMenu();">Tops</a><a class="submenu-link" onclick="navigateToCategory('bottoms');closeMenu();">Bottoms</a><a class="submenu-link" onclick="navigateToCategory('jackets');closeMenu();">Jackets</a><a class="submenu-link" onclick="navigateToCategory('sets');closeMenu();">Sets</a></div></div><div class="submenu-collapse" id="accessories-collapse"><div class="submenu-collapse-header" onclick="toggleSubmenuCollapse('accessories')">Accessories <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="submenu-collapse-body"><a class="submenu-link" onclick="navigateToCategory('bags');closeMenu();">Bags</a><a class="submenu-link" onclick="navigateToCategory('jewelry');closeMenu();">Jewelry</a><a class="submenu-link" onclick="navigateToCategory('sunglasses');closeMenu();">Sunglasses</a></div></div><a class="drawer-link" onclick="navigateToCategory('parfum');closeMenu();">Scent</a><div class="brands-collapse" id="brands-collapse"><div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="brands-collapse-body"></div></div><a class="drawer-link sale" onclick="navigateToSale();closeMenu();">Sale</a><div class="drawer-spacer"></div><div class="drawer-section-title">Account</div><a class="drawer-link" onclick="navigateTo('login');closeMenu();">Login</a><a class="drawer-link" onclick="closeMenu();">Track Order</a><a class="drawer-link" onclick="closeMenu();">Blog</a><a class="drawer-link" onclick="navigateTo('editorial');closeMenu();">Editorial</a></div></div>
+<div id="menu-drawer"><div class="drawer-header"><div class="drawer-title">Menu</div><button class="drawer-close" onclick="closeMenu()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="drawer-body"><a class="drawer-link" onclick="navigateTo('home');closeMenu();">The Understated</a><div class="submenu-collapse" id="clothing-collapse"><div class="submenu-collapse-header" onclick="toggleSubmenuCollapse('clothing')">Clothing <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="submenu-collapse-body"><a class="submenu-link" onclick="navigateToCategory('all-clothing');closeMenu();">All Clothing</a><a class="submenu-link" onclick="navigateToCategory('dresses');closeMenu();">Dresses</a><a class="submenu-link" onclick="navigateToCategory('tops');closeMenu();">Tops</a><a class="submenu-link" onclick="navigateToCategory('bottoms');closeMenu();">Bottoms</a><a class="submenu-link" onclick="navigateToCategory('jackets');closeMenu();">Jackets</a><a class="submenu-link" onclick="navigateToCategory('sets')">Sets</a></div></div><div class="submenu-collapse" id="accessories-collapse"><div class="submenu-collapse-header" onclick="toggleSubmenuCollapse('accessories')">Accessories <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="submenu-collapse-body"><a class="submenu-link" onclick="navigateToCategory('bags');closeMenu();">Bags</a><a class="submenu-link" onclick="navigateToCategory('jewelry');closeMenu();">Jewelry</a><a class="submenu-link" onclick="navigateToCategory('sunglasses');closeMenu();">Sunglasses</a></div></div><a class="drawer-link" onclick="navigateToCategory('parfum');closeMenu();">Scent</a><div class="brands-collapse" id="brands-collapse"><div class="brands-collapse-header" onclick="toggleBrandsCollapse()">Brands <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="brands-collapse-body"></div></div><a class="drawer-link sale" onclick="navigateToSale();closeMenu();">Sale</a><div class="drawer-spacer"></div><div class="drawer-section-title">Account</div><a class="drawer-link" onclick="navigateTo('login');closeMenu();">Login</a><a class="drawer-link" onclick="closeMenu();">Track Order</a><a class="drawer-link" onclick="closeMenu();">Blog</a><a class="drawer-link" onclick="navigateTo('editorial');closeMenu();">Editorial</a></div></div>
 
 <div id="cart-backdrop" onclick="closeCart()"></div>
 <div id="cart-panel"><div class="panel-header"><div><div class="panel-title">Your Bag (<span id="cart-item-count">0</span>)</div></div><button class="panel-close" onclick="closeCart()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="cart-body" id="cart-body"></div><div class="cart-foot" id="cart-foot"></div></div>
@@ -151,35 +151,20 @@
     if (guard) guard.parentNode.removeChild(guard);
   }
 
-  function _clearAdminCookie() {
-    document.cookie = 'jd_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
-  }
-
-  function _hasAdminCookie() {
-    return document.cookie.split(';').some(function(c) {
-      return c.trim().indexOf('jd_admin=1') === 0;
-    });
-  }
-
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
 
-    if (!user) {
-      // If the admin cookie exists, a session is being restored by Firebase — wait for next call
-      if (_hasAdminCookie()) return;
-      // No cookie, no user — redirect
-      _authResolved = true;
-      window.location.replace('janedore-coming-soon.html');
-      return;
-    }
+    // user === null means Firebase has not finished restoring the session yet.
+    // Do NOT redirect here. Simply wait for the next onAuthStateChanged call
+    // which will fire with the real user once IndexedDB restoration completes.
+    if (!user) return;
 
-    // User confirmed — check SUPER_ADMIN role
+    // User is confirmed — check SUPER_ADMIN role
     firebase.firestore().collection('admins').doc(user.uid).get().then(function(doc) {
       if (_authResolved) return;
       var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
       if (role !== 'SUPER_ADMIN') {
         _authResolved = true;
-        _clearAdminCookie();
         firebase.auth().signOut().then(function() {
           window.location.replace('janedore-coming-soon.html');
         });
@@ -189,6 +174,7 @@
       _authResolved = true;
       _removeGuard();
     }).catch(function(err) {
+      // Firestore failed — user is authenticated so let them through
       console.warn('[AUTH GUARD] Firestore read failed, allowing through:', err.message);
       if (_authResolved) return;
       _authResolved = true;
