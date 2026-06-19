@@ -142,10 +142,7 @@
     letter-spacing: 0.01em;
   }
 
-  .signup-wrapper {
-    width: 100%;
-    max-width: 380px;
-  }
+  .signup-wrapper { width: 100%; max-width: 380px; }
 
   .signup-row {
     display: flex;
@@ -459,6 +456,16 @@
   var auth = firebase.auth();
   var db   = firebase.firestore();
 
+  // ── Cookie helpers ─────────────────────────────────────────
+  function setAdminCookie() {
+    // Expires in 7 days; SameSite=Strict keeps it on same domain only
+    var expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = 'jd_admin=1; path=/; expires=' + expires + '; SameSite=Strict';
+  }
+  function clearAdminCookie() {
+    document.cookie = 'jd_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
+  }
+
   // Copyright
   document.getElementById('copyright').textContent =
     '\u00a9 ' + new Date().getFullYear() + ' Janedore';
@@ -638,6 +645,8 @@
             throw { friendly: 'Access denied.' };
           });
         }
+        // Set cookie so index.html knows a session exists on refresh
+        setAdminCookie();
         window.location.href = 'index.html';
       });
     }).catch(function(err) {
@@ -651,7 +660,6 @@
     });
   }
 
-  // Load chat non-blocking — page is already visible, chat loads in background
   fetch('chat-widget.html')
     .then(function(r) { return r.text(); })
     .then(function(html) {
