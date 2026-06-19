@@ -58,5 +58,5 @@ function renderCartPage() {
 function applyPromoCode(){}
 function openCart() { DOM.cartBackdrop.classList.add("open"); DOM.cartPanel.classList.add("open"); renderCart(); }
 function closeCart() { DOM.cartBackdrop.classList.remove("open"); DOM.cartPanel.classList.remove("open"); }
-function updateBadges() { const cc=S.cart.reduce((a,i)=>a+i.qty,0); DOM.cartBadge.style.display=cc>0?"flex":"none"; DOM.cartBadge.textContent=cc; DOM.wishBadge.style.display=S.wishlist.length>0?"flex":"none"; DOM.wishBadge.textContent=S.wishlist.length; }
+function updateBadges() { const cc=S.cart.reduce((a,i)=>a+i.qty,0); if(DOM.cartBadge){DOM.cartBadge.style.display=cc>0?"flex":"none";DOM.cartBadge.textContent=cc;} if(DOM.wishBadge){DOM.wishBadge.style.display=S.wishlist.length>0?"flex":"none";DOM.wishBadge.textContent=S.wishlist.length;} }
 function calculateShipping() { const postal=document.getElementById("postal-code-input")?.value.trim(); const res=document.getElementById("shipping-result"); if(!res) return; if(!postal||postal.length<3){res.textContent="Please enter a valid postal code.";return;} res.textContent=`Estimated shipping: ${formatPrice(Math.floor(Math.random()*150)+50)} (3-5 business days)`; }
