@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,7 +84,6 @@
     clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
 
-  /* ── Header ────────────────────────────────────────────────── */
   .site-header {
     display: flex;
     align-items: center;
@@ -105,7 +105,6 @@
     display: block;
   }
 
-  /* ── Main ──────────────────────────────────────────────────── */
   .main-content {
     display: flex;
     flex-direction: column;
@@ -115,7 +114,6 @@
     max-width: 720px;
   }
 
-  /* ── Stacked headline ──────────────────────────────────────── */
   .headline {
     font-family: 'The Seasons', serif;
     font-weight: 400;
@@ -130,16 +128,9 @@
     gap: 0.04em;
   }
 
-  .headline-line {
-    display: block;
-  }
-
-  .headline-line:nth-child(2) {
-    padding-left: 0.12em;
-  }
-  .headline-line:nth-child(3) {
-    padding-left: 0.04em;
-  }
+  .headline-line { display: block; }
+  .headline-line:nth-child(2) { padding-left: 0.12em; }
+  .headline-line:nth-child(3) { padding-left: 0.04em; }
 
   .subhead {
     font-family: 'Inter', sans-serif;
@@ -152,7 +143,6 @@
     letter-spacing: 0.01em;
   }
 
-  /* ── Signup ────────────────────────────────────────────────── */
   .signup-wrapper {
     width: 100%;
     max-width: 380px;
@@ -166,9 +156,7 @@
     padding-bottom: 12px;
     transition: border-color 0.3s;
   }
-  .signup-row:focus-within {
-    border-color: var(--text);
-  }
+  .signup-row:focus-within { border-color: var(--text); }
 
   .signup-input {
     flex: 1;
@@ -208,7 +196,6 @@
   }
   .signup-submit:hover { color: var(--text); }
   .signup-submit:disabled { opacity: 0.25; cursor: not-allowed; }
-  .signup-submit i { font-size: 12px; }
 
   .signup-spinner {
     display: inline-block;
@@ -232,7 +219,6 @@
   .signup-msg.success { color: #5a8a5a; }
   .signup-msg.error   { color: #c0392b; }
 
-  /* ── Footer ────────────────────────────────────────────────── */
   .site-footer {
     padding: 40px 60px;
     display: flex;
@@ -250,7 +236,6 @@
     user-select: none;
   }
 
-  /* ── Admin overlay ─────────────────────────────────────────── */
   .admin-overlay {
     position: fixed;
     inset: 0;
@@ -265,10 +250,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
-  .admin-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
+  .admin-overlay.open { opacity: 1; pointer-events: all; }
 
   .admin-box {
     width: 100%;
@@ -366,9 +348,7 @@
     transition: color 0.2s;
     line-height: 1;
   }
-  .admin-close:hover { color: var(--text); }
 
-  /* ── Chat container ────────────────────────────────────────── */
   #chat-container {
     position: fixed;
     bottom: 32px;
@@ -376,38 +356,14 @@
     z-index: 60;
   }
 
-  /* ── Responsive ────────────────────────────────────────────── */
   @media (max-width: 768px) {
-    .site-header {
-      padding: 28px 28px;
-    }
-
-    .header-logo-img {
-      width: 110px;
-    }
-
-    .main-content {
-      padding: 40px 28px;
-    }
-
-    .headline {
-      font-size: clamp(30px, 10vw, 56px);
-      margin-bottom: 36px;
-    }
-
-    .subhead {
-    font-family: 'Inter', sans-serif;
-      margin-bottom: 44px;
-    }
-
-    .site-footer {
-      padding: 28px 28px;
-    }
-
-    #chat-container {
-      bottom: 20px;
-      right: 16px;
-    }
+    .site-header { padding: 28px 28px; }
+    .header-logo-img { width: 110px; }
+    .main-content { padding: 40px 28px; }
+    .headline { font-size: clamp(30px, 10vw, 56px); margin-bottom: 36px; }
+    .subhead { font-family: 'Inter', sans-serif; margin-bottom: 44px; }
+    .site-footer { padding: 28px 28px; }
+    #chat-container { bottom: 20px; right: 16px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -429,16 +385,13 @@
 </header>
 
 <main id="main" class="main-content">
-
   <h1 class="headline">
     <span class="headline-line">You found</span>
     <span class="headline-line">us early.</span>
   </h1>
-
   <p class="subhead">
     We're taking our time. Good things usually do.<br>Sign up and you'll be first to know when we launch.
   </p>
-
   <div class="signup-wrapper">
     <div class="signup-row">
       <label for="email-input" class="sr-only">Email address</label>
@@ -451,13 +404,11 @@
              required>
       <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
         <span id="btn-text">Notify me</span>
-        
         <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
       </button>
     </div>
     <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
   </div>
-
 </main>
 
 <footer class="site-footer">
@@ -509,7 +460,7 @@
   var auth = firebase.auth();
   var db   = firebase.firestore();
 
-  // Copyright — just the year and name, nothing more
+  // Copyright
   document.getElementById('copyright').textContent =
     '\u00a9 ' + new Date().getFullYear() + ' Janedore';
 
@@ -530,7 +481,6 @@
   var emailEl   = document.getElementById('email-input');
   var signupBtn = document.getElementById('signup-btn');
   var btnText   = document.getElementById('btn-text');
-  var arrowIcon = document.getElementById('arrow-icon');
   var spinner   = document.getElementById('btn-spinner');
   var msgEl     = document.getElementById('signup-msg');
 
@@ -543,20 +493,19 @@
     msgEl.textContent = '';
   }
   function setLoading(v) {
-    signupBtn.disabled       = v;
-    btnText.style.display    = v ? 'none' : 'inline';
-    arrowIcon.style.display  = v ? 'none' : 'inline';
-    spinner.style.display    = v ? 'inline-block' : 'none';
+    signupBtn.disabled    = v;
+    btnText.style.display = v ? 'none' : 'inline';
+    spinner.style.display = v ? 'inline-block' : 'none';
   }
   function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
   var RateLimiter = {
     attempts: {},
-    check: function (key, limit, windowMs) {
+    check: function(key, limit, windowMs) {
       limit    = limit    || 5;
       windowMs = windowMs || 300000;
       var now  = Date.now();
-      this.attempts[key] = (this.attempts[key] || []).filter(function (t) { return now - t < windowMs; });
+      this.attempts[key] = (this.attempts[key] || []).filter(function(t) { return now - t < windowMs; });
       if (this.attempts[key].length >= limit) return false;
       this.attempts[key].push(now);
       return true;
@@ -579,25 +528,22 @@
     var docId  = email.replace(/[@.]/g, '_');
     var docRef = db.collection('newsletter').doc(docId);
 
-    // Check if already subscribed first
     docRef.get().then(function(snap) {
       if (snap.exists) {
         showMsg("You've already subscribed.", 'success');
         setLoading(false);
         return;
       }
-
       return docRef.set({
         email:        email,
         source:       'coming_soon_page',
         subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
         userAgent:    navigator.userAgent,
         referrer:     document.referrer || 'direct'
-      }).then(function () {
+      }).then(function() {
         showMsg("You're on the list. We'll be in touch.", 'success');
         emailEl.value = '';
         setLoading(false);
-        // Fire welcome email — non-blocking, failure is silent to user
         fetch('/api/send-welcome-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -606,7 +552,7 @@
           console.warn('[EMAIL] Welcome email failed:', e.message);
         });
       });
-    }).catch(function (err) {
+    }).catch(function(err) {
       console.error('Newsletter error:', err.code, err.message);
       if (err.code === 'unavailable') {
         showMsg('No connection. Check your internet and try again.', 'error');
@@ -618,8 +564,8 @@
   }
 
   signupBtn.addEventListener('click', handleSignup);
-  emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleSignup(); });
-  emailEl.addEventListener('input',   function ()  { if (msgEl.classList.contains('error')) clearMsg(); });
+  emailEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleSignup(); });
+  emailEl.addEventListener('input',   function()  { if (msgEl.classList.contains('error')) clearMsg(); });
 
   var overlay    = document.getElementById('admin-overlay');
   var closeBtn   = document.getElementById('admin-close-btn');
@@ -628,16 +574,14 @@
   var adminPw    = document.getElementById('admin-password');
   var adminErr   = document.getElementById('admin-error');
 
-  // Keep fields disabled on page load so Safari never sees them as fillable
   adminEmail.setAttribute('disabled', 'true');
   adminPw.setAttribute('disabled', 'true');
 
   function openAdminPanel() {
-    // Re-enable fields only when panel is deliberately opened
     adminEmail.removeAttribute('disabled');
     adminPw.removeAttribute('disabled');
     overlay.classList.add('open');
-    setTimeout(function () { adminEmail.focus(); }, 300);
+    setTimeout(function() { adminEmail.focus(); }, 300);
   }
   function closeAdminPanel() {
     overlay.classList.remove('open');
@@ -650,17 +594,17 @@
   }
 
   closeBtn.addEventListener('click', closeAdminPanel);
-  overlay.addEventListener('click', function (e) {
+  overlay.addEventListener('click', function(e) {
     if (e.target === overlay) closeAdminPanel();
   });
-  document.addEventListener('keydown', function (e) {
+  document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeAdminPanel();
   });
 
-  adminEmail.addEventListener('keydown', function (e) {
+  adminEmail.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') adminPw.focus();
   });
-  adminPw.addEventListener('keydown', function (e) {
+  adminPw.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doAdminLogin();
   });
   loginBtn.addEventListener('click', doAdminLogin);
@@ -682,22 +626,22 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function() {
       return auth.signInWithEmailAndPassword(email, password);
-    }).then(function (cred) {
-      return db.collection('admins').doc(cred.user.uid).get().then(function (doc) {
+    }).then(function(cred) {
+      return db.collection('admins').doc(cred.user.uid).get().then(function(doc) {
         if (!doc.exists) {
-          return auth.signOut().then(function () {
+          return auth.signOut().then(function() {
             throw { friendly: 'Access denied.' };
           });
         }
         var role = (doc.data().role || '').toUpperCase();
         if (role !== 'SUPER_ADMIN') {
-          return auth.signOut().then(function () {
+          return auth.signOut().then(function() {
             throw { friendly: 'Access denied.' };
           });
         }
         window.location.href = 'index.html';
       });
-    }).catch(function (err) {
+    }).catch(function(err) {
       var msg = err.friendly || 'Invalid credentials.';
       if (err.code === 'auth/too-many-requests')      msg = 'Too many attempts. Wait and try again.';
       if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
@@ -708,15 +652,16 @@
     });
   }
 
+  // Load chat non-blocking — page is already visible, chat loads in background
   fetch('chat-widget.html')
-    .then(function (r) { return r.text(); })
-    .then(function (html) {
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
       document.getElementById('chat-container').innerHTML = html;
       var script = document.createElement('script');
       script.src = 'chat.js';
       document.body.appendChild(script);
     })
-    .catch(function (err) { console.error('Chat widget failed:', err); });
+    .catch(function(err) { console.error('Chat widget failed:', err); });
 </script>
 
 </body>
