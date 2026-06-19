@@ -143,24 +143,46 @@
 <script>
   var _authResolved = false;
 
+  // Check localStorage for an existing Firebase session before auth resolves.
+  // Firebase stores session data under keys starting with "firebase:authUser:".
+  // If a key exists, a session is being restored — don't redirect on the first null.
+  function _hasLocalSession() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        if (localStorage.key(i).indexOf('firebase:authUser:') === 0) return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
-    _authResolved = true;
+
     if (!user) {
+      // If a local session exists, Firebase is still restoring it — wait for the next call
+      if (_hasLocalSession()) return;
+      // No session at all — redirect
+      _authResolved = true;
       window.location.replace('janedore-coming-soon.html');
       return;
     }
+
     firebase.firestore().collection('admins').doc(user.uid).get().then(function(doc) {
+      if (_authResolved) return;
       var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
       if (role !== 'SUPER_ADMIN') {
+        _authResolved = true;
         firebase.auth().signOut().then(function() {
           window.location.replace('janedore-coming-soon.html');
         });
+        return;
       }
-      // SUPER_ADMIN confirmed — page is already visible, nothing to do
+      // Confirmed SUPER_ADMIN
+      _authResolved = true;
     }).catch(function(err) {
-      // Firestore failed — user is authenticated so let them through
       console.warn('[AUTH GUARD] Firestore read failed, allowing through:', err.message);
+      if (_authResolved) return;
+      _authResolved = true;
     });
   });
 </script>
