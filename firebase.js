@@ -10,43 +10,42 @@ const firebaseConfig = {
   measurementId: "G-Y9NMT0ZGKZ"
 };
 
+console.log('[FIREBASE.JS] +0ms — start');
+var _fbT0 = Date.now();
+
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
+  console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — initializeApp() complete');
+} else {
+  console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — app already initialized, skipping');
 }
 
-firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(e) {
-  console.warn('Auth persistence error:', e);
-});
+// NOTE: setPersistence(LOCAL) removed — LOCAL is Firebase default.
+// Calling it explicitly on every page load was causing an unnecessary
+// async IndexedDB operation that delayed authStateReady() resolution.
 
 window.db = firebase.firestore();
 const db = window.db;
+console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — Firestore db ready');
 
 // ==================== FIREBASE FUNCTIONS ====================
 
-// Get product reviews from Firebase
 async function getProductReviews(productId) {
   try {
     const snapshot = await db.collection('reviews')
       .where('productId', '==', productId)
       .orderBy('createdAt', 'desc')
       .get();
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (e) {
     console.warn("Firebase reviews fetch failed:", e);
     return [];
   }
 }
 
-// Add a product review to Firebase
 async function addProductReview(productId, review) {
   try {
     const country = await getVisitorCountry();
-
     await db.collection('reviews').add({
       productId,
       rating: review.rating,
@@ -55,57 +54,36 @@ async function addProductReview(productId, review) {
       country: country,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-
     console.log("Review saved to Firebase");
-
   } catch (e) {
     console.warn("Firebase review save failed:", e);
-
-    const all = JSON.parse(
-      localStorage.getItem('janedore_reviews') || '{}'
-    );
-
+    const all = JSON.parse(localStorage.getItem('janedore_reviews') || '{}');
     if (!all[productId]) all[productId] = [];
-
     all[productId].push(review);
-
-    localStorage.setItem(
-      'janedore_reviews',
-      JSON.stringify(all)
-    );
+    localStorage.setItem('janedore_reviews', JSON.stringify(all));
   }
 }
 
-// Subscribe newsletter email to Firebase
 async function subscribeNewsletter(email) {
   if (!email || !email.includes('@')) return;
-
   try {
     await db.collection('newsletter').add({
       email,
       subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
       source: 'website'
     });
-
     console.log("Newsletter subscription saved to Firebase");
-
     const input = document.getElementById('newsletter-email');
-
     if (input) {
       input.value = '';
       input.placeholder = 'Subscribed!';
-
-      setTimeout(() => {
-        input.placeholder = 'Enter your email';
-      }, 2000);
+      setTimeout(() => { input.placeholder = 'Enter your email'; }, 2000);
     }
-
   } catch (e) {
     console.warn("Firebase newsletter save failed:", e);
   }
 }
 
-// Save order to Firebase
 async function saveOrder(orderData) {
   try {
     await db.collection('orders').add({
@@ -113,43 +91,29 @@ async function saveOrder(orderData) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       status: 'pending'
     });
-
     console.log("Order saved to Firebase");
-
   } catch (e) {
     console.warn("Firebase order save failed:", e);
   }
 }
 
-// Get visitor country
 async function getVisitorCountry() {
   try {
     const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
-
     return data.country_name || 'Unknown';
-
   } catch (e) {
     return 'Unknown';
   }
 }
 
-// LocalStorage fallback reviews
 function loadReviewsFromStorage() {
-  try {
-    return JSON.parse(
-      localStorage.getItem('janedore_reviews') || '{}'
-    );
-  } catch (e) {
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem('janedore_reviews') || '{}'); }
+  catch (e) { return {}; }
 }
 
 function saveReviewsToStorage(reviews) {
-  localStorage.setItem(
-    'janedore_reviews',
-    JSON.stringify(reviews)
-  );
+  localStorage.setItem('janedore_reviews', JSON.stringify(reviews));
 }
 
 // ==================== GLOBAL EXPORTS ====================
@@ -159,3 +123,5 @@ window.getProductReviews = getProductReviews;
 window.addProductReview = addProductReview;
 window.subscribeNewsletter = subscribeNewsletter;
 window.saveOrder = saveOrder;
+
+console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — firebase.js fully loaded');
