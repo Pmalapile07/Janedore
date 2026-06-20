@@ -57,7 +57,6 @@ async function fetchProducts() {
   ];
 }
 
-// Expose critical functions to window for onclick handlers
 window.navigateTo = navigateTo;
 window.navigateToCategory = navigateToCategory;
 window.navigateToSale = navigateToSale;
@@ -95,56 +94,29 @@ window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
 async function init() {
-  // Initialize nav scroll behavior
   initNavScroll();
-  
-  // Load cart from storage first
   loadCartFromStorage();
   updateBadges();
-  
-  // Fetch products from Firebase (with fallback)
   PRODUCTS = await fetchProducts();
-  
-  // Clean cart orphans now that products are loaded
   cleanCartOrphans();
-  
-  // Load wishlist (depends on PRODUCTS)
   loadWishlistFromStorage();
   updateBadges();
-  
-  // Set hero image
   setHeroImage();
-  
-  // Build homepage content
   buildArrivals();
-  
-  // Build all footers
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"];
-  footerIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) buildFooter(id);
-  });
-  
-  // Build campaign slider
+  footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
-  
-  // Initialize vendors
   initVendors();
-  
-  // Handle initial route
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId);
   else if (route.page === 'category') navigateToCategory(route.cat);
   else if (route.page === 'login') navigateToLogin();
   else if (route.page === 'account') navigateToAccount();
   else navigateTo(route.page);
-  
-  // Final checks
   setTimeout(checkNavForHome, 100);
   updateChatVisibility();
 }
 
-// Wait for DOM to be fully ready before initializing
 window.addEventListener('DOMContentLoaded', init);
 
 function updateHash(hash) { if (window.location.hash !== hash) history.pushState(null, null, hash || '#'); }
@@ -158,12 +130,8 @@ function setNavForPage(page) {
   DOM.mainNav.style.left = '';
   DOM.mainNav.style.right = '';
   DOM.mainNav.style.background = '';
-  
-  if (page === 'home') {
-    DOM.mainNav.classList.remove('scrolled');
-  } else {
-    DOM.mainNav.classList.add('scrolled');
-  }
+  if (page === 'home') { DOM.mainNav.classList.remove('scrolled'); }
+  else { DOM.mainNav.classList.add('scrolled'); }
 }
 
 function navigateTo(page) {
@@ -210,53 +178,32 @@ function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHas
 function navigateToLogin() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-login").classList.add("active");
-  S.currentPage = "login";
-  updateHash('login');
-  window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('login');
-  ensureNavScrolled();
+  S.currentPage = "login"; updateHash('login');
+  window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('login'); ensureNavScrolled();
 }
-
 function navigateToAccount() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-account").classList.add("active");
-  S.currentPage = "account";
-  updateHash('account');
-  window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('account');
-  ensureNavScrolled();
+  S.currentPage = "account"; updateHash('account');
+  window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('account'); ensureNavScrolled();
 }
-
 function navigateToCheckout() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-checkout").classList.add("active");
-  S.currentPage = "checkout";
-  updateHash('checkout');
-  window.scrollTo({top:0,behavior:"smooth"});
-  setNavForPage('checkout');
-  ensureNavScrolled();
+  S.currentPage = "checkout"; updateHash('checkout');
+  window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('checkout'); ensureNavScrolled();
 }
 
 function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
 
-function ensureNavScrolled() { 
-  if (S.currentPage !== 'home') {
-    DOM.mainNav.classList.add("scrolled"); 
-  }
-}
+function ensureNavScrolled() { if (S.currentPage !== 'home') { DOM.mainNav.classList.add("scrolled"); } }
 
 function checkNavForHome() { 
   DOM.hero = document.getElementById("hero"); 
-  if (!DOM.hero) { 
-    DOM.mainNav.classList.add("scrolled"); 
-    return; 
-  } 
+  if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } 
   const heroBottom = DOM.hero.getBoundingClientRect().bottom;
-  if (heroBottom <= 0) {
-    DOM.mainNav.classList.add("scrolled");
-  } else {
-    DOM.mainNav.classList.remove("scrolled");
-  }
+  if (heroBottom <= 0) { DOM.mainNav.classList.add("scrolled"); }
+  else { DOM.mainNav.classList.remove("scrolled"); }
 }
 
 function isDesktop() { return window.innerWidth >= 769; }
