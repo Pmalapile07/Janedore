@@ -94,7 +94,6 @@ window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
 async function init() {
-  initNavScroll();
   loadCartFromStorage();
   updateBadges();
   PRODUCTS = await fetchProducts();
@@ -124,10 +123,6 @@ window.addEventListener('popstate', () => { const route = getRouteFromHash(); if
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
-  DOM.mainNav.style.position = 'fixed';
-  DOM.mainNav.style.top = '0';
-  DOM.mainNav.style.left = '0';
-  DOM.mainNav.style.right = '0';
 }
 
 function navigateTo(page) {
@@ -187,25 +182,6 @@ function navigateToCheckout() {
   document.getElementById("page-checkout").classList.add("active");
   S.currentPage = "checkout"; updateHash('checkout');
   window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('checkout'); ensureNavScrolled();
-}
-
-function initNavScroll() { 
-  let ticking = false;
-  window.addEventListener("scroll", () => { 
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        if (!DOM.mainNav) return;
-        if (window.scrollY > 10) {
-          DOM.mainNav.classList.add("scrolled");
-        } else {
-          DOM.mainNav.classList.remove("scrolled");
-        }
-        updateStickyBarOnScroll();
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }, { passive: true }); 
 }
 
 function ensureNavScrolled() { if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); }
