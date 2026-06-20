@@ -1,6 +1,6 @@
 #main-nav {
   height: 64px; background: transparent; display: flex; align-items: center; padding: 0 12px;
-  position: sticky; top: 0; z-index: 800; justify-content: space-between;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 800; justify-content: space-between;
   transition: background 0.35s ease; border-bottom: none; max-width: 100%;
   box-shadow: none;
 }
