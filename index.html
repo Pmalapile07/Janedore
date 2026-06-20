@@ -14,7 +14,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <!-- Auth guard: keep page hidden until auth resolves -->
   <style id="auth-guard-style">body { visibility: hidden; }</style>
 
   <style>
@@ -49,6 +48,8 @@
   <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
+
+<div id="announcement-bar"><span>Free shipping on orders over R1000</span></div>
 
 <nav id="main-nav">
   <div class="nav-left">
@@ -157,11 +158,7 @@
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
 
-    if (!user) {
-      _authResolved = true;
-      window.location.replace('janedore-coming-soon.html');
-      return;
-    }
+    if (!user) return;
 
     firebase.firestore().collection('admins').doc(user.uid).get()
       .then(function(doc) {
