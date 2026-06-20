@@ -190,14 +190,21 @@ function navigateToCheckout() {
 }
 
 function initNavScroll() { 
+  let ticking = false;
   window.addEventListener("scroll", () => { 
-    if (!DOM.mainNav) return;
-    if (window.scrollY > 10) {
-      DOM.mainNav.classList.add("scrolled");
-    } else {
-      DOM.mainNav.classList.remove("scrolled");
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        if (!DOM.mainNav) return;
+        if (window.scrollY > 10) {
+          DOM.mainNav.classList.add("scrolled");
+        } else {
+          DOM.mainNav.classList.remove("scrolled");
+        }
+        updateStickyBarOnScroll();
+        ticking = false;
+      });
+      ticking = true;
     }
-    updateStickyBarOnScroll(); 
   }, { passive: true }); 
 }
 
