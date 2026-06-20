@@ -113,7 +113,7 @@ async function init() {
   else if (route.page === 'login') navigateToLogin();
   else if (route.page === 'account') navigateToAccount();
   else navigateTo(route.page);
-  setTimeout(checkNavForHome, 100);
+  setTimeout(checkNavForHome, 300);
   updateChatVisibility();
 }
 
@@ -145,9 +145,9 @@ function navigateTo(page) {
   if(page==="cart"){ renderCartPage(); ensureNavScrolled(); }
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
   if(page==="checkout"){ navigateToCheckout(); }
-  if(page==="home") setTimeout(checkNavForHome,50);
+  if(page==="home") setTimeout(checkNavForHome, 50);
   if(page==="editorial") ensureNavScrolled();
-  updateChatVisibility(); setTimeout(refreshSwipeTracks,50);
+  updateChatVisibility(); setTimeout(refreshSwipeTracks, 50);
 }
 function navigateToCategory(cat) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`category-${cat}`);
@@ -159,7 +159,7 @@ function navigateToCategory(cat) {
   S.activeSortTab = cat;
   renderCollectionSortingTabs();
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
-  renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50); updateChatVisibility();
+  renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks, 50); updateChatVisibility();
 }
 function goToProduct(productId) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`product-${productId}`); closeCart();
