@@ -128,7 +128,6 @@ function setNavForPage(page) {
   DOM.mainNav.style.top = '';
   DOM.mainNav.style.left = '';
   DOM.mainNav.style.right = '';
-  DOM.mainNav.style.background = '';
 }
 
 function navigateTo(page) {
