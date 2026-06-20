@@ -19,7 +19,6 @@
 }
 #main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link { color: #111; }
 #main-nav .badge { background: #111; color: #fff; }
-#main-nav.product-page .nav-logo, #main-nav.collection-page .nav-logo { display: none; }
 @media (min-width: 768px) { #main-nav { padding: 0 16px; } }
 
 .nav-left { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
@@ -56,8 +55,6 @@
   .nav-left .nav-icon-btn { display: none; }
   .desktop-nav-links { display: flex; }
   .desktop-utility-links { display: flex; }
-  #main-nav.product-page .nav-logo,
-  #main-nav.collection-page .nav-logo { display: none; }
   #main-nav.product-page .nav-left,
   #main-nav.collection-page .nav-left { flex: 0 1 auto; justify-content: flex-start; }
   #main-nav.product-page .nav-right,
