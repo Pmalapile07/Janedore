@@ -84,8 +84,6 @@
 .submenu-collapse.open .submenu-collapse-body { max-height: 300px; padding-bottom: 8px; }
 .submenu-link { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: 400; text-transform: uppercase; color: #555; padding: 10px 0; cursor: pointer; display: block; transition: color 0.2s; }
 .submenu-link:hover { color: #111; }
-.brand-logo-placeholder { width: 60px; height: 30px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 8px; letter-spacing: 0.1em; color: #888; text-transform: uppercase; }
-#banner { display: none; }
 .announcement-text {
   font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
   font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111;
