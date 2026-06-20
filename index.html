@@ -157,7 +157,11 @@
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
 
-    if (!user) return;
+    if (!user) {
+      _authResolved = true;
+      window.location.replace('janedore-coming-soon.html');
+      return;
+    }
 
     firebase.firestore().collection('admins').doc(user.uid).get()
       .then(function(doc) {
@@ -183,7 +187,6 @@
 <script src="vendors.js"></script>
 <script src="cart.js"></script>
 <script src="wishlist.js"></script>
-
 <script src="search.js"></script>
 <script src="modals.js"></script>
 <script src="product-detail.js"></script>
