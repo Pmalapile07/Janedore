@@ -2,7 +2,7 @@
 @media (max-width: 900px) { .product-grid, .campaign-slide { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 768px) {
   #main-nav { height: 56px; } .nav-logo img { height: 22px; }
-  #hero { height: calc(52vh + 2px); min-height: 322px; padding-bottom: 48px; margin-top: -56px; }
+  #hero { height: calc(68vh + 2px); min-height: 420px; padding-bottom: 48px; margin-top: -56px; }
   .campaign-heading { font-size: 48px; margin-bottom: 40px; }
   .search-results-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-currency-lang { gap: 16px; }
@@ -19,7 +19,7 @@
 }
 @media (max-width: 480px) {
   #main-nav { height: 52px; }
-  #hero { height: calc(50vh + 2px); min-height: 302px; padding-bottom: 40px; margin-top: -52px; }
+  #hero { height: calc(65vh + 2px); min-height: 392px; padding-bottom: 40px; margin-top: -52px; }
   .footer-currency-lang { flex-direction: row; justify-content: center; gap: 20px; }
   .collection-toolbar { top: 52px; }
   .collection-sorting-tabs { top: 90px; }
