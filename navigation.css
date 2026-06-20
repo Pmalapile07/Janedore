@@ -10,22 +10,30 @@
 }
 #main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link,
 #main-nav.scrolled .utility-text-link { color: #111; }
-#main-nav .nav-logo img { filter: brightness(0) invert(1); transition: filter 0.35s ease; }
-#main-nav.scrolled .nav-logo img { filter: brightness(0) saturate(100%); }
 #main-nav .badge { background: #fff; color: #111; transition: background 0.35s, color 0.35s; }
 #main-nav.scrolled .badge { background: #111; color: #fff; }
 #main-nav.product-page .nav-logo, #main-nav.collection-page .nav-logo { display: none; }
 @media (min-width: 768px) { #main-nav { padding: 0 16px; } }
 
-/* LEFT SECTION — menu icon + logo + desktop links */
-/* FIXED: changed flex:1 to flex:0 1 auto so it only takes needed space */
+/* LEFT SECTION */
 .nav-left { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
 
 .nav-logo { cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center; position: absolute; left: 50%; transform: translateX(-50%); }
-.nav-logo img { height: 30px; width: auto; }
 
-/* RIGHT SECTION — cart, search, wishlist */
-/* FIXED: changed flex:1 to flex:0 0 auto so it sits at the end and doesn't stretch */
+/* LOGO TEXT */
+.nav-logo-text {
+  font-family: 'Telegraf', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  transition: color 0.35s ease;
+  white-space: nowrap;
+}
+#main-nav.scrolled .nav-logo-text { color: #111; }
+
+/* RIGHT SECTION */
 .nav-right { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; justify-content: flex-end; }
 
 .nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; }
@@ -84,9 +92,3 @@
 .submenu-collapse.open .submenu-collapse-body { max-height: 300px; padding-bottom: 8px; }
 .submenu-link { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: 400; text-transform: uppercase; color: #555; padding: 10px 0; cursor: pointer; display: block; transition: color 0.2s; }
 .submenu-link:hover { color: #111; }
-.announcement-text {
-  font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111;
-  position: absolute; width: 100%; text-align: center; opacity: 0; transition: opacity 0.8s ease;
-}
-.announcement-text.active { opacity: 1; }
