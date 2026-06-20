@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>JANEDORE | Curated Fashion</title>
@@ -148,63 +145,35 @@
 <script src="firebase.js"></script>
 <script>
   var _authResolved = false;
-  var _t0 = Date.now();
 
-  function _log(msg) {
-    console.log('[AUTH GUARD] +' + (Date.now() - _t0) + 'ms — ' + msg);
-  }
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (_authResolved) return;
 
-  function _removeGuard() {
-    var guard = document.getElementById('auth-guard-style');
-    if (guard) guard.parentNode.removeChild(guard);
-  }
+    // Firebase always fires null first on refresh while restoring session
+    // from IndexedDB. Do not redirect — wait for the real user call.
+    if (!user) return;
 
-  _log('Script start. firebase.apps.length=' + firebase.apps.length);
-
-  // firebase.js runs before this — log when auth object is available
-  var _authObj = firebase.auth();
-  _log('firebase.auth() obtained');
-
-  _authObj.authStateReady().then(function() {
-    _log('authStateReady() resolved');
-    var user = _authObj.currentUser;
-    _log('currentUser=' + (user ? user.uid : 'null'));
-
-    if (!user) {
-      _log('No user — redirecting to coming-soon');
-      window.location.replace('janedore-coming-soon.html');
-      return;
-    }
-
-    _log('User found — starting Firestore admins lookup');
-    return firebase.firestore().collection('admins').doc(user.uid).get().then(function(doc) {
-      _log('Firestore lookup complete. doc.exists=' + doc.exists);
-      var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
-      _log('Role="' + role + '"');
-
-      if (role !== 'SUPER_ADMIN') {
-        _log('Not SUPER_ADMIN — signing out and redirecting');
-        _authObj.signOut().then(function() {
-          window.location.replace('janedore-coming-soon.html');
-        });
-        return;
-      }
-
-      _log('SUPER_ADMIN confirmed — removing guard and revealing page');
-      _authResolved = true;
-      _removeGuard();
-      _log('Guard removed. Total time: ' + (Date.now() - _t0) + 'ms');
-    });
-  }).catch(function(err) {
-    _log('ERROR: ' + err.message);
-    if (_authObj.currentUser) {
-      _log('Error but user exists — allowing through');
-      _authResolved = true;
-      _removeGuard();
-    } else {
-      _log('Error and no user — redirecting');
-      window.location.replace('janedore-coming-soon.html');
-    }
+    // Real user confirmed — check SUPER_ADMIN role
+    firebase.firestore().collection('admins').doc(user.uid).get()
+      .then(function(doc) {
+        if (_authResolved) return;
+        var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
+        if (role !== 'SUPER_ADMIN') {
+          _authResolved = true;
+          firebase.auth().signOut().then(function() {
+            window.location.replace('janedore-coming-soon.html');
+          });
+          return;
+        }
+        _authResolved = true;
+        document.getElementById('auth-guard-style').remove();
+      })
+      .catch(function() {
+        // Firestore failed — user is authenticated, let them through
+        if (_authResolved) return;
+        _authResolved = true;
+        document.getElementById('auth-guard-style').remove();
+      });
   });
 </script>
 <script src="vendors.js"></script>
