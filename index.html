@@ -17,6 +17,16 @@
   <!-- Auth guard: keep page hidden until auth resolves -->
   <style id="auth-guard-style">body { visibility: hidden; }</style>
 
+  <style>
+  @font-face {
+    font-family: 'Telegraf';
+    src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  </style>
+
   <link rel="stylesheet" href="variables.css">
   <link rel="stylesheet" href="utilities.css">
   <link rel="stylesheet" href="navigation.css">
@@ -51,7 +61,7 @@
       <a class="desktop-nav-link sale" onclick="navigateToSale()">Sale</a>
     </div>
   </div>
-  <div class="nav-logo" onclick="navigateTo('home')"><img src="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/janedore_logo.png?v=1777797571" alt="JANEDORE" style="height:28px;width:auto;"></div>
+  <div class="nav-logo" onclick="navigateTo('home')"><span class="nav-logo-text">JANEDORE</span></div>
   <div class="nav-right">
     <div class="collection-nav-controls" id="collection-nav-controls">
       <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
@@ -147,11 +157,8 @@
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
 
-    // Firebase always fires null first on refresh while restoring session
-    // from IndexedDB. Do not redirect — wait for the real user call.
     if (!user) return;
 
-    // Real user confirmed — check SUPER_ADMIN role
     firebase.firestore().collection('admins').doc(user.uid).get()
       .then(function(doc) {
         if (_authResolved) return;
@@ -167,7 +174,6 @@
         document.getElementById('auth-guard-style').remove();
       })
       .catch(function() {
-        // Firestore failed — user is authenticated, let them through
         if (_authResolved) return;
         _authResolved = true;
         document.getElementById('auth-guard-style').remove();
