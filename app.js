@@ -113,7 +113,6 @@ async function init() {
   else if (route.page === 'login') navigateToLogin();
   else if (route.page === 'account') navigateToAccount();
   else navigateTo(route.page);
-  setTimeout(checkNavForHome, 300);
   updateChatVisibility();
 }
 
@@ -130,8 +129,6 @@ function setNavForPage(page) {
   DOM.mainNav.style.left = '';
   DOM.mainNav.style.right = '';
   DOM.mainNav.style.background = '';
-  if (page === 'home') { DOM.mainNav.classList.remove('scrolled'); }
-  else { DOM.mainNav.classList.add('scrolled'); }
 }
 
 function navigateTo(page) {
@@ -145,7 +142,7 @@ function navigateTo(page) {
   if(page==="cart"){ renderCartPage(); ensureNavScrolled(); }
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
   if(page==="checkout"){ navigateToCheckout(); }
-  if(page==="home") setTimeout(checkNavForHome, 50);
+  if(page==="home") { DOM.mainNav?.classList.remove("scrolled"); }
   if(page==="editorial") ensureNavScrolled();
   updateChatVisibility(); setTimeout(refreshSwipeTracks, 50);
 }
@@ -194,17 +191,19 @@ function navigateToCheckout() {
   window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('checkout'); ensureNavScrolled();
 }
 
-function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
-
-function ensureNavScrolled() { if (S.currentPage !== 'home') { DOM.mainNav.classList.add("scrolled"); } }
-
-function checkNavForHome() { 
-  DOM.hero = document.getElementById("hero"); 
-  if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } 
-  const heroBottom = DOM.hero.getBoundingClientRect().bottom;
-  if (heroBottom <= 0) { DOM.mainNav.classList.add("scrolled"); }
-  else { DOM.mainNav.classList.remove("scrolled"); }
+function initNavScroll() { 
+  window.addEventListener("scroll", () => { 
+    if (!DOM.mainNav) return;
+    const hero = document.getElementById("hero");
+    if (!hero) { DOM.mainNav.classList.add("scrolled"); return; } 
+    const heroBottom = hero.getBoundingClientRect().bottom;
+    if (heroBottom <= 0) { DOM.mainNav.classList.add("scrolled"); }
+    else { DOM.mainNav.classList.remove("scrolled"); }
+    updateStickyBarOnScroll(); 
+  }, { passive: true }); 
 }
+
+function ensureNavScrolled() { if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); }
 
 function isDesktop() { return window.innerWidth >= 769; }
 function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/25033E45-B542-48C1-A84B-5F259F62C6AE.jpg?v=1778515133')"; }
