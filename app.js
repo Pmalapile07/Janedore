@@ -95,9 +95,6 @@ window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
 async function init() {
-  // Ensure nav starts scrolled
-  if (DOM.mainNav) DOM.mainNav.classList.add("scrolled");
-  
   // Initialize nav scroll behavior
   initNavScroll();
   
