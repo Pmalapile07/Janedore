@@ -124,10 +124,10 @@ window.addEventListener('popstate', () => { const route = getRouteFromHash(); if
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
-  DOM.mainNav.style.position = '';
-  DOM.mainNav.style.top = '';
-  DOM.mainNav.style.left = '';
-  DOM.mainNav.style.right = '';
+  DOM.mainNav.style.position = 'fixed';
+  DOM.mainNav.style.top = '0';
+  DOM.mainNav.style.left = '0';
+  DOM.mainNav.style.right = '0';
 }
 
 function navigateTo(page) {
@@ -141,7 +141,6 @@ function navigateTo(page) {
   if(page==="cart"){ renderCartPage(); ensureNavScrolled(); }
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
   if(page==="checkout"){ navigateToCheckout(); }
-  if(page==="home") { DOM.mainNav?.classList.remove("scrolled"); }
   if(page==="editorial") ensureNavScrolled();
   updateChatVisibility(); setTimeout(refreshSwipeTracks, 50);
 }
