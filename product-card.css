@@ -63,7 +63,6 @@
   top: 8px;
   left: 8px;
   z-index: 2;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 8px;
   font-weight: 500;
   letter-spacing: 0.14em;
@@ -85,31 +84,28 @@
 
 /* TYPOGRAPHY */
 .product-card .product-brand {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-weight: 600;
-  font-size: 10px;
-  letter-spacing: 0.15em;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #111;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .product-card .product-title {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-weight: 400;
+  font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: #555;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .product-card .product-price {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-weight: 400;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: #111;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .product-price-sale { color: #111; }
