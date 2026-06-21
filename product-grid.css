@@ -66,19 +66,19 @@
 .product-badge,
 .badge-new, .badge-sale, .badge-sold {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 0;
+  left: 0;
   z-index: 2;
   font-size: 8px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 3px 7px;
-  background: #fff;
-  color: #111;
+  padding: 4px 8px;
+  background: #111;
+  color: #fff;
 }
-.badge-sale { color: #c00; }
-.badge-sold { color: #888; }
+.badge-sale { background: #111; color: #fff; }
+.badge-sold { background: #888; color: #fff; }
 
 /* TEXT CONTAINER */
 .product-card .product-brand,
