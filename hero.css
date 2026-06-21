@@ -49,10 +49,11 @@
 
 .hero-heading {
   font-family: 'DM Sans', 'Cormorant Garamond', serif;
-  font-size: 28px;
+  font-size: 35px;
   font-style: normal;
   font-weight: 900;
   color: #fff;
+  text-transform: uppercase;
   line-height: 1.1;
   margin: 0;
 }
@@ -60,7 +61,7 @@
 .hero-shop-btn {
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-weight: 200;
-  font-size: 11px;
+  font-size: 9px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   background: #fff;
