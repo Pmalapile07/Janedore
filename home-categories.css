@@ -34,3 +34,12 @@
 .arrivals-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; }
 .arrivals-view-all { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #555; background: none; padding-bottom: 1px; transition: color 0.2s, border-color 0.2s; border: none; border-bottom: 1px solid #555; cursor: pointer; display: inline-block; }
 .arrivals-view-all:hover { color: #111; border-color: #111; }
+.home-categories-title {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #111;
+  margin-bottom: 4px;
+}
