@@ -111,7 +111,7 @@ async function init() {
   else if (route.page === 'category') navigateToCategory(route.cat);
   else if (route.page === 'login') navigateToLogin();
   else if (route.page === 'account') navigateToAccount();
-  else navigateTo(route.page);
+  else navigateTo('home');
   updateChatVisibility();
 }
 
@@ -119,19 +119,21 @@ window.addEventListener('DOMContentLoaded', init);
 
 function updateHash(hash) { if (window.location.hash !== hash) history.pushState(null, null, hash || '#'); }
 function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
-window.addEventListener('popstate', () => { const route = getRouteFromHash(); if (route.page === 'product-detail') goToProduct(route.productId); else if (route.page === 'category') navigateToCategory(route.cat); else if (route.page === 'login') navigateToLogin(); else if (route.page === 'account') navigateToAccount(); else navigateTo(route.page); });
+window.addEventListener('popstate', () => { const route = getRouteFromHash(); if (route.page === 'product-detail') goToProduct(route.productId); else if (route.page === 'category') navigateToCategory(route.cat); else if (route.page === 'login') navigateToLogin(); else if (route.page === 'account') navigateToAccount(); else navigateTo('home'); });
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
 }
 
 function navigateTo(page) {
-  S.saleMode = false; S.filter.vendor = null; updateHash(page === 'home' ? '' : page);
+  S.saleMode = false; S.filter.vendor = null;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
-  S.currentPage = page; window.scrollTo({top:0,behavior:"smooth"}); removeStickyBar();
+  S.currentPage = page; window.scrollTo({top:0,behavior:"instant"}); removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page","collection-page"); }
   setNavForPage(page);
+  if(page==="home") updateHash('');
+  else updateHash(page);
   if(page==="products"){ DOM.mainNav?.classList.add("collection-page"); S.activeSortTab = 'all'; renderCollectionSortingTabs(); renderAllProducts(); ensureNavScrolled(); S.previousCollectionPage='products'; }
   if(page==="cart"){ renderCartPage(); ensureNavScrolled(); }
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
@@ -149,7 +151,7 @@ function navigateToCategory(cat) {
   S.activeSortTab = cat;
   renderCollectionSortingTabs();
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
-  renderCategoryProducts(); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks, 50); updateChatVisibility();
+  renderCategoryProducts(); window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks, 50); updateChatVisibility();
 }
 function goToProduct(productId) {
   S.saleMode = false; S.filter.vendor = null; updateHash(`product-${productId}`); closeCart();
@@ -163,25 +165,25 @@ function goToProduct(productId) {
 }
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
-function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-login").classList.add("active");
   S.currentPage = "login"; updateHash('login');
-  window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('login'); ensureNavScrolled();
+  window.scrollTo({top:0,behavior:"instant"}); setNavForPage('login'); ensureNavScrolled();
 }
 function navigateToAccount() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-account").classList.add("active");
   S.currentPage = "account"; updateHash('account');
-  window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('account'); ensureNavScrolled();
+  window.scrollTo({top:0,behavior:"instant"}); setNavForPage('account'); ensureNavScrolled();
 }
 function navigateToCheckout() {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-checkout").classList.add("active");
   S.currentPage = "checkout"; updateHash('checkout');
-  window.scrollTo({top:0,behavior:"smooth"}); setNavForPage('checkout'); ensureNavScrolled();
+  window.scrollTo({top:0,behavior:"instant"}); setNavForPage('checkout'); ensureNavScrolled();
 }
 
 function ensureNavScrolled() { if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); }
