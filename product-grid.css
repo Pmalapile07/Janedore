@@ -81,7 +81,7 @@
    ============================================ */
 
 .product-img-wrap {
-  aspect-ratio: 310 / 469;
+  aspect-ratio: 1/1;
   overflow: hidden;
   width: 100%;
 }
@@ -100,7 +100,7 @@
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 310 / 469;
+  aspect-ratio: 1/1;
 }
 
 /* ============================================
