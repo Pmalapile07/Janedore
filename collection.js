@@ -86,6 +86,25 @@ function updateGridToggleSVG(svgId, cols) {
   updateCollectionGridIcon();
 }
 
+function productCard(p, isLarge, showDetails) {
+  const badge = p.badge ? `<span class="product-badge">${p.badge.toUpperCase()}</span>` : '';
+  const vi = S.productVariantSelections[p.id] ?? 0;
+  const imgs = p.variants?.[vi]?.images;
+  const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
+  const brand = p.brand ? `<div class="product-brand">${p.brand}</div>` : '';
+  const name = `<div class="product-title">${p.name}</div>`;
+  const price = p.salePrice 
+    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
+    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
+  return `
+    <div class="product-card" onclick="goToProduct('${p.id}')">
+      <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
+      ${brand}
+      ${name}
+      ${showDetails !== false ? price : ''}
+    </div>`;
+}
+
 function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
   let prods = merchandiseProducts(getFilteredProducts());
@@ -167,8 +186,8 @@ function productCardHome(p) {
   return `
     <div class="product-card" onclick="goToProduct('${p.id}')">
       <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
-      <div class="product-brand" style="font-family:'DM Sans','Manrope',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#111;margin-top:6px;">${p.brand || 'JANEDORE'}</div>
-      <div class="product-title" style="font-family:'DM Sans','Manrope',sans-serif;font-weight:400;font-size:11px;letter-spacing:0.04em;color:#555;">${p.name}</div>
+      <div class="product-brand">${p.brand || 'JANEDORE'}</div>
+      <div class="product-title">${p.name}</div>
     </div>`;
 }
 
