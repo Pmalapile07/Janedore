@@ -5,14 +5,15 @@
 .nav-logo-text {
   font-family: 'Telegraf', sans-serif !important;
 }
+
 html { font-size: 13.6px; scroll-behavior: smooth; }
 @media (min-width: 769px) { html { font-size: 10.88px; } }
 body {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
   background: #fff;
   color: #111;
   overflow-x: hidden;
   max-width: 100%;
+  font-weight: 400;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 button { cursor: pointer; font-family: inherit; }
@@ -25,3 +26,27 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 60px 20px; }
 .spinner { width: 24px; height: 24px; border: 2px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Typography system */
+h1, h2, h3, h4, h5, h6, .home-categories-title, .campaign-heading, .campaign-subheading {
+  font-weight: 900 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+p, span, .home-categories-subtitle, .collection-description, .product-title, .product-price, 
+.drawer-link, .desktop-nav-link, .utility-text-link, .submenu-link, button {
+  font-weight: 400 !important;
+}
+
+.product-brand, .hero-heading {
+  font-weight: 900 !important;
+}
+
+.hero-sub, .home-categories-subtitle, .newsletter-disclaimer {
+  font-weight: 300 !important;
+}
+
+.product-title {
+  font-weight: 600 !important;
+}
