@@ -45,6 +45,7 @@
   color: rgba(255,255,255,0.7);
   cursor: default;
   margin: 0;
+  display: none;
 }
 
 .hero-heading {
@@ -60,8 +61,8 @@
 
 .hero-shop-btn {
   font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-weight: 200;
-  font-size: 9px;
+  font-weight: 400
+  font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   background: #fff;
