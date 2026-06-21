@@ -156,10 +156,28 @@
 <script>
   var _authResolved = false;
 
+  function hasAdminCookie() {
+    return document.cookie.indexOf('jd_admin=1') !== -1;
+  }
+
+  if (hasAdminCookie()) {
+    _authResolved = true;
+    document.getElementById('auth-guard-style').remove();
+  }
+
   firebase.auth().onAuthStateChanged(function(user) {
     if (_authResolved) return;
 
-    if (!user) return;
+    if (!user) {
+      if (hasAdminCookie()) {
+        _authResolved = true;
+        document.getElementById('auth-guard-style').remove();
+        return;
+      }
+      _authResolved = true;
+      window.location.replace('janedore-coming-soon.html');
+      return;
+    }
 
     firebase.firestore().collection('admins').doc(user.uid).get()
       .then(function(doc) {
@@ -177,6 +195,11 @@
       })
       .catch(function() {
         if (_authResolved) return;
+        if (hasAdminCookie()) {
+          _authResolved = true;
+          document.getElementById('auth-guard-style').remove();
+          return;
+        }
         _authResolved = true;
         document.getElementById('auth-guard-style').remove();
       });
