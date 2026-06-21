@@ -1,7 +1,7 @@
 html { font-size: 13.6px; scroll-behavior: smooth; }
 @media (min-width: 769px) { html { font-size: 10.88px; } }
 body {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   background: #fff;
   color: #111;
   overflow-x: hidden;
