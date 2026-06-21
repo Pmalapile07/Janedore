@@ -1,8 +1,8 @@
 #hero {
   position: relative;
   width: 100%;
-  height: calc(100vh - 64px);
-  min-height: 500px;
+  height: 100vh;
+  min-height: 600px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -50,7 +50,7 @@
 .hero-heading {
   font-family: 'Hedvig Letters Serif', 'Cormorant Garamond', serif;
   font-size: 28px;
-  font-style: none;
+  font-style: normal;
   font-weight: 400;
   color: #fff;
   line-height: 1.1;
@@ -75,6 +75,7 @@
 .hero-shop-btn:hover { opacity: 0.85; }
 
 @media (max-width: 768px) {
+  #hero { height: 100vh; min-height: 600px; }
   .hero-content-wrap { margin-top: 55%; gap: 16px; }
   .hero-heading { font-size: 28px; }
   .hero-shop-btn { padding: 12px 32px; }
