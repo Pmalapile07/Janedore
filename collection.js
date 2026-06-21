@@ -24,7 +24,6 @@ function toggleFilterDropdown(source) {
   }
 }
 
-// Collection nav filter toggle - reuses the same source-based logic
 function toggleCollectionFilter() {
   const el = document.getElementById('collection-filter-options');
   if(el) {
@@ -38,51 +37,30 @@ function toggleCollectionFilter() {
   }
 }
 
-// Collection nav filter application
 function applyCollectionFilter(type, value) {
   const el = document.getElementById('collection-filter-options');
   if(el) el.classList.remove("open");
-  
-  if (S.currentPage === 'products') {
-    applyFilter(type, value);
-  } else if (S.currentPage === 'category') {
-    applyCatFilter(type, value);
-  }
-  
-  // Update the collection grid toggle icon to match
+  if (S.currentPage === 'products') { applyFilter(type, value); }
+  else if (S.currentPage === 'category') { applyCatFilter(type, value); }
   updateCollectionGridIcon();
 }
 
-// Collection nav grid toggle
 function toggleCollectionGrid() {
-  if (S.currentPage === 'products') {
-    toggleGrid();
-  } else if (S.currentPage === 'category') {
-    toggleGridCat();
-  }
+  if (S.currentPage === 'products') { toggleGrid(); }
+  else if (S.currentPage === 'category') { toggleGridCat(); }
   updateCollectionGridIcon();
 }
 
-// Sync the collection nav grid icon with current state
 function updateCollectionGridIcon() {
   const icon = document.getElementById('col-grid-icon');
   if (!icon) return;
-  
   let cols;
-  if (S.currentPage === 'products') {
-    cols = S.gridCols || 2;
-  } else if (S.currentPage === 'category') {
-    cols = S.gridColsCat || 2;
-  } else {
-    cols = 2;
-  }
-  
+  if (S.currentPage === 'products') { cols = S.gridCols || 2; }
+  else if (S.currentPage === 'category') { cols = S.gridColsCat || 2; }
+  else { cols = 2; }
   icon.classList.remove('cols-1', 'cols-2');
-  if (cols === 1) {
-    icon.classList.add('cols-1');
-  } else {
-    icon.classList.add('cols-2');
-  }
+  if (cols === 1) { icon.classList.add('cols-1'); }
+  else { icon.classList.add('cols-2'); }
 }
 
 function applyEditorialGrid(gridEl, cols) {
@@ -104,10 +82,7 @@ function updateGridToggleSVG(svgId, cols) {
   if (!svg) return;
   svg.classList.remove('cols-1', 'cols-2', 'cols-3');
   svg.classList.add('cols-' + cols);
-  svg.querySelectorAll('.grid-block').forEach((b, i) => {
-    b.classList.toggle('active', i < cols);
-  });
-  // Also update the collection nav icon
+  svg.querySelectorAll('.grid-block').forEach((b, i) => { b.classList.toggle('active', i < cols); });
   updateCollectionGridIcon();
 }
 
@@ -151,18 +126,7 @@ function renderCollectionSortingTabs() {
   if (existing) existing.remove();
   if (S.currentPage === 'category') return;
   const tabs = [
-    { label: 'View All', cat: 'all' },
-    { label: 'Clothing', cat: 'all-clothing' },
-    { label: 'Dresses', cat: 'dresses' },
-    { label: 'Tops', cat: 'tops' },
-    { label: 'Bottoms', cat: 'bottoms' },
-    { label: 'Jackets', cat: 'jackets' },
-    { label: 'Sets', cat: 'sets' },
-    { label: 'Bags', cat: 'bags' },
-    { label: 'Jewelry', cat: 'jewelry' },
-    { label: 'Sunglasses', cat: 'sunglasses' },
-    { label: 'Scent', cat: 'parfum' },
-    { label: 'Sale', cat: 'sale' }
+    { label: 'View All', cat: 'all' }, { label: 'Clothing', cat: 'all-clothing' }, { label: 'Dresses', cat: 'dresses' }, { label: 'Tops', cat: 'tops' }, { label: 'Bottoms', cat: 'bottoms' }, { label: 'Jackets', cat: 'jackets' }, { label: 'Sets', cat: 'sets' }, { label: 'Bags', cat: 'bags' }, { label: 'Jewelry', cat: 'jewelry' }, { label: 'Sunglasses', cat: 'sunglasses' }, { label: 'Scent', cat: 'parfum' }, { label: 'Sale', cat: 'sale' }
   ];
   const active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
   const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${t.cat}')">${t.label}</button>`).join('');
@@ -170,9 +134,7 @@ function renderCollectionSortingTabs() {
   const container = document.createElement('div');
   container.className = 'collection-sorting-tabs';
   container.innerHTML = tabsHtml;
-  if (toolbarEl) {
-    toolbarEl.insertAdjacentElement('afterend', container);
-  }
+  if (toolbarEl) { toolbarEl.insertAdjacentElement('afterend', container); }
 }
 
 function selectSortTab(cat) {
@@ -197,6 +159,19 @@ function buildCategoriesSlider() {
 
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,4).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildNewsletterSection(); }
+function productCardHome(p) {
+  const badge = p.badge ? `<span class="product-badge">${p.badge.toUpperCase()}</span>` : '';
+  const vi = S.productVariantSelections[p.id] ?? 0;
+  const imgs = p.variants?.[vi]?.images;
+  const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
+  return `
+    <div class="product-card" onclick="goToProduct('${p.id}')">
+      <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
+      <div class="product-brand" style="font-family:'DM Sans','Manrope',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#111;margin-top:6px;">${p.brand || 'JANEDORE'}</div>
+      <div class="product-title" style="font-family:'DM Sans','Manrope',sans-serif;font-weight:400;font-size:11px;letter-spacing:0.04em;color:#555;">${p.name}</div>
+    </div>`;
+}
+
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildNewsletterSection(); }
 
 function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
