@@ -1,3 +1,10 @@
+* {
+  font-family: 'DM Sans', 'Manrope', sans-serif !important;
+}
+
+.nav-logo-text {
+  font-family: 'Telegraf', sans-serif !important;
+}
 html { font-size: 13.6px; scroll-behavior: smooth; }
 @media (min-width: 769px) { html { font-size: 10.88px; } }
 body {
