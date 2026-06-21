@@ -50,7 +50,7 @@
 .hero-heading {
   font-family: 'Hedvig Letters Serif', 'Cormorant Garamond', serif;
   font-size: 28px;
-  font-style: italic;
+  font-style: none;
   font-weight: 400;
   color: #fff;
   line-height: 1.1;
