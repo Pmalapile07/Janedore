@@ -30,6 +30,38 @@
 }
 
 /* ============================================
+   HOMEPAGE HORIZONTAL SLIDER
+   ============================================ */
+
+#arrivals-grid {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 9px;
+  padding: 0 12px;
+  scrollbar-width: none;
+}
+
+#arrivals-grid::-webkit-scrollbar {
+  display: none;
+}
+
+#arrivals-grid .product-card {
+  flex: 0 0 auto;
+  width: 55vw;
+  max-width: 310px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  #arrivals-grid .product-card {
+    width: 30vw;
+    max-width: 310px;
+  }
+}
+
+/* ============================================
    PRODUCT CARD — strict equal sizing
    ============================================ */
 
@@ -45,12 +77,11 @@
 }
 
 /* ============================================
-   IMAGE WRAP — enforced 4:5 aspect ratio
-   No exceptions
+   IMAGE WRAP — enforced aspect ratio
    ============================================ */
 
 .product-img-wrap {
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 310 / 469;
   overflow: hidden;
   width: 100%;
 }
@@ -69,7 +100,7 @@
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 310 / 469;
 }
 
 /* ============================================
