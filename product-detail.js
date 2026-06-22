@@ -1,4 +1,4 @@
-function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
+ function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
 function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toFixed(2)}`; }
 function isProductSoldOut(product) { return (product?.stock??0)<=0; }
 function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; }
@@ -119,7 +119,7 @@ async function renderProductPage(product) {
       <p class="product-by-brand">${product.brand||'JANEDORE'}</p>
       <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
       ${variants.length>1?`<div class="product-variants">${variantSwatchesHtml(product,vi)}</div>`:''}
-      ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div></div>`:''}
+      ${variants.length>1?`<div class="product-variants"><div class="variants-label">Colour</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
       <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize)" ${soldOut?'disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>
   <div class="size-guide-row" onclick="alert('Size guide coming soon.')">
   <div class="size-guide-bars">
