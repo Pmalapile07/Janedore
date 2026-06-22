@@ -28,21 +28,14 @@ function selectVariant(productId, variantIndex, evt) {
   if(evt){evt.stopPropagation();evt.preventDefault();} S.productVariantSelections[productId]=variantIndex; const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   const allImages = getAllProductImages(product, variantIndex);
   document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
-  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const slidesEl=document.getElementById("product-slides"); const thumbsEl=document.getElementById("product-thumbnails"); if(slidesEl){ slidesEl.innerHTML = images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join(""); slidesEl.scrollTo({left:0}); } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="scrollToSlide(${i})"></div>`).join(""); } updateStickyBar(product); updateStickyBarExtras(); }
+  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const mainImg=document.getElementById("product-main-image"); const thumbsEl=document.getElementById("product-thumbnails"); if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join(""); } updateStickyBar(product); updateStickyBarExtras(); }
 }
 function selectStickyVariant(productId, idx) { selectVariant(productId, idx); updateStickyBarExtras(); }
 
-function scrollToSlide(index) {
-  const slides = document.getElementById('product-slides');
-  const thumbs = document.querySelectorAll('.product-thumbnail');
-  if (slides) {
-    const slideEl = slides.querySelector('.product-slide');
-    if (slideEl) {
-      const slideWidth = slideEl.offsetWidth;
-      slides.scrollTo({ left: index * slideWidth, behavior: 'smooth' });
-    }
-  }
-  thumbs.forEach((t, i) => t.classList.toggle('active', i === index));
+function switchMainImage(index, url) {
+  const mainImage = document.getElementById('product-main-image');
+  if (mainImage) { mainImage.style.backgroundImage = `url('${url}')`; }
+  document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
 }
 
 function productCard(product, compactMode=false, isCollectionPage=false) {
@@ -88,9 +81,9 @@ async function renderProductPage(product) {
   const wishIconClass=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple";
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider">
-      <div class="product-slides" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div>
+      <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');"></div>
       <div class="product-thumbnails" id="product-thumbnails">
-        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="scrollToSlide(${i})"></div>`).join("")}
+        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join("")}
       </div>
     </div>
     <div class="product-info" style="margin-top:5px;">
@@ -116,19 +109,6 @@ async function renderProductPage(product) {
     </div>
     <div class="back-btn-wrap"><button class="back-btn" onclick="goBackFromProduct()">Back</button></div>
     <footer id="product-footer"></footer>`;
-  buildFooter("product-footer"); S.currentSlide=0; window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
+  buildFooter("product-footer"); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
   createStickyBar(product); S.productInfoTab='description';
-  
-  setTimeout(() => {
-    const slidesEl = document.getElementById('product-slides');
-    if (slidesEl) {
-      slidesEl.addEventListener('scroll', function() {
-        const slideEl = slidesEl.querySelector('.product-slide');
-        if (!slideEl) return;
-        const slideWidth = slideEl.offsetWidth;
-        const index = Math.round(slidesEl.scrollLeft / slideWidth);
-        document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
-      });
-    }
-  }, 200);
 }
