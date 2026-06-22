@@ -38,6 +38,36 @@ function switchMainImage(index, url) {
   document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
 }
 
+let productImages = [];
+let currentImageIndex = 0;
+
+function initProductSwipe(images) {
+  productImages = images;
+  currentImageIndex = 0;
+  const mainImage = document.getElementById('product-main-image');
+  if (!mainImage || !images.length) return;
+  
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  mainImage.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+  }, {passive: true});
+  
+  mainImage.addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) < 40) return;
+    if (diff > 0 && currentImageIndex < productImages.length - 1) {
+      currentImageIndex++;
+    } else if (diff < 0 && currentImageIndex > 0) {
+      currentImageIndex--;
+    }
+    mainImage.style.backgroundImage = `url('${productImages[currentImageIndex]}')`;
+    document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
+  }, {passive: true});
+}
+
 function productCard(product, compactMode=false, isCollectionPage=false) {
   if(!product) return ''; if(isCollectionPage && product.id === 'janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return '';
   const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
@@ -111,4 +141,5 @@ async function renderProductPage(product) {
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer"); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
   createStickyBar(product); S.productInfoTab='description';
+  setTimeout(() => initProductSwipe(images), 100);
 }
