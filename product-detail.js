@@ -23,14 +23,12 @@ function getAllProductImages(product, variantIndex) {
 }
 
 function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
-function stickySwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.map((v,i)=>{ let cls = `sticky-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; return `<span class="${cls}" style="background:${v.swatch||'#ccc'};" onclick="event.stopPropagation();selectStickyVariant('${product.id}',${i})"></span>`; }).join(""); }
 function selectVariant(productId, variantIndex, evt) {
   if(evt){evt.stopPropagation();evt.preventDefault();} S.productVariantSelections[productId]=variantIndex; const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   const allImages = getAllProductImages(product, variantIndex);
   document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
   if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const mainImg=document.getElementById("product-main-image"); const thumbsEl=document.getElementById("product-thumbnails"); if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join(""); } }
 }
-function selectStickyVariant(productId, idx) { selectVariant(productId, idx); }
 
 function switchMainImage(index, url) {
   const mainImage = document.getElementById('product-main-image');
@@ -47,11 +45,9 @@ function initProductSwipe(images) {
   const mainImage = document.getElementById('product-main-image');
   if (!mainImage || !images.length) return;
   let touchStartX = 0;
-  let touchEndX = 0;
   mainImage.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
   mainImage.addEventListener('touchend', function(e) {
-    touchEndX = e.changedTouches[0].screenX;
-    const diff = touchStartX - touchEndX;
+    const diff = touchStartX - e.changedTouches[0].screenX;
     if (Math.abs(diff) < 40) return;
     if (diff > 0 && currentImageIndex < productImages.length - 1) { currentImageIndex++; }
     else if (diff < 0 && currentImageIndex > 0) { currentImageIndex--; }
@@ -99,26 +95,28 @@ async function renderProductPage(product) {
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   showLoading(DOM.productDetail);
-  const vi=S.productVariantSelections[product.id]??0; const images=getAllProductImages(product,vi); const isWished=S.wishlist.some(w=>w.id===product.id); const soldOut=isProductSoldOut(product);
+  const vi=S.productVariantSelections[product.id]??0; const images=getAllProductImages(product,vi); const soldOut=isProductSoldOut(product);
   const variants=product.variants||[]; const sizes=product.sizes||[];
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
+  const badgeLabel=product.badge==="sold"?"Sold Out":product.badge==="new"?"New":product.salePrice?"Sale":"";
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildSwipeSection('You May Also Like',related,`related-${product.id}`):'';
   const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildSwipeSection('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
   const reviews=await getProductReviews(product.id); const reviewsHtml=reviews.length?reviews.map(r=>`<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text||'No comment'}<br><small style="color:#aaa;">${r.name||'Anonymous'} · ${r.country||'Unknown'} · ${r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString():'Recently'}</small></div>`).join(''):'<p class="no-reviews">No reviews yet.</p>';
   const hasDesc=product.description&&product.description.length>0; const descWordCount=wordCount(product.description); const showViewMore=descWordCount>20;
-  const wishIconClass=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple";
   
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider">
-      <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');"></div>
+      <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');">
+        ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
+      </div>
       <div class="product-thumbnails" id="product-thumbnails">
         ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join("")}
       </div>
     </div>
     <div class="product-info">
       <h1 class="product-title-main">${product.name||''}</h1>
-      <p class="product-by-brand">By <span>${product.brand||'JANEDORE'}</span></p>
+      <p class="product-by-brand">${product.brand||'JANEDORE'}</p>
       <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
       ${variants.length>1?`<div class="product-variants">${variantSwatchesHtml(product,vi)}</div>`:''}
       ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div></div>`:''}
@@ -131,7 +129,7 @@ async function renderProductPage(product) {
       <div class="info-tabs-wrap">
         <button class="info-tab-btn active" data-tab="description" onclick="switchInfoTab('description')">Description</button>
         <div class="info-tab-panel active" data-tab="description">
-          ${hasDesc?`<div class="modal-desc" id="modal-desc">${product.description||''}</div>${showViewMore?`<button class="modal-desc-toggle" id="desc-toggle" onclick="toggleDescExpand()">View More</button>`:''}`:'<p style="font-size:12px;font-weight:300;color:#888;">No description available.</p>'}
+          ${hasDesc?`<div class="modal-desc" id="modal-desc">${product.description||''}</div>${showViewMore?`<button class="modal-desc-toggle" id="desc-toggle" onclick="toggleDescExpand()">View More</button>`:''}`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
         </div>
         <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
         <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
@@ -140,7 +138,6 @@ async function renderProductPage(product) {
         <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
         <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
       </div>
-      <button class="inline-wish-btn" onclick="event.stopPropagation();toggleWish('${product.id}');var t=this.querySelector('i');t.className=t.className.includes('ph-fill')?'ph-thin ph-bookmark-simple':'ph-fill ph-bookmark-simple';"><i class="${wishIconClass}"></i> Wishlist</button>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0 12px;">
       <div class="ai-disclaimer-notice"><span>*</span><p>Select imagery may include AI-assisted production.<br><strong>Product accuracy remains a priority.</strong></p></div>
