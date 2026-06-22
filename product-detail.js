@@ -15,7 +15,6 @@ function getProductThumbnail(product, variantIndex) { return safeImage(getProduc
 function getAllProductImages(product, variantIndex) {
   const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
   const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
-  const detail = (variant.images?.detail || []).filter(Boolean);
   if (product.category === 'jewelry') {
     const model = (variant.images?.model || []).filter(Boolean);
     const ghost = (variant.images?.ghost || []).filter(Boolean);
@@ -26,13 +25,6 @@ function getAllProductImages(product, variantIndex) {
   if (ghost.length) return ghost;
   const model = (variant.images?.model || []).filter(Boolean);
   return model.length ? model : [PLACEHOLDER_IMAGE];
-}
-function getSecondaryImages(product, variantIndex) {
-  const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
-  const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
-  const detail = (variant.images?.detail || []).filter(Boolean);
-  const model = (variant.images?.model || []).filter(Boolean);
-  return [...model, ...detail];
 }
 
 function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
@@ -93,7 +85,6 @@ async function renderProductPage(product) {
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   showLoading(DOM.productDetail);
   const vi=S.productVariantSelections[product.id]??0; const images=getAllProductImages(product,vi); const isWished=S.wishlist.some(w=>w.id===product.id); const soldOut=isProductSoldOut(product);
-  const secondaryImages=getSecondaryImages(product,vi); const secondaryImagesHtml=secondaryImages.length?secondaryImages.map(u=>`<img src="${u}" alt="${product.name}" />`).join(""):'';
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildSwipeSection('You May Also Like',related,`related-${product.id}`):'';
   const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildSwipeSection('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
@@ -122,7 +113,6 @@ async function renderProductPage(product) {
       <div class="info-tab-panel" data-tab="measurements"><p>${product.measurements||'No measurements available.'}</p></div>
       <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
     </div>
-    ${secondaryImagesHtml?`<div class="product-secondary-images">${secondaryImagesHtml}</div>`:''}
     <div style="max-width:720px;margin:0 auto;padding:0 12px;">
       <div class="ai-disclaimer-notice"><span>*</span><p>Select imagery may include AI-assisted production.<br><strong>Product accuracy remains a priority.</strong></p></div>
       ${ctlSection}${relatedSection}
@@ -134,7 +124,6 @@ async function renderProductPage(product) {
   buildFooter("product-footer"); S.currentSlide=0; window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
   createStickyBar(product); S.productInfoTab='description';
   
-  // Sync thumbnails on scroll
   setTimeout(() => {
     const slidesEl = document.getElementById('product-slides');
     if (slidesEl) {
