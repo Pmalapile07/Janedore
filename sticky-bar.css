@@ -386,7 +386,6 @@
   PREVENT IOS JITTER / GAP BUGS
   ========================================= */
 
-html,
 body {
  overflow-x: hidden;
 }
