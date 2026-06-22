@@ -31,7 +31,6 @@
   flex-shrink: 0;
 }
 
-/* Thumbnails row */
 .product-thumbnails {
   display: flex;
   gap: 6px;
@@ -59,4 +58,3 @@
 }
 
 .slider-bars { display: none; }
-.product-secondary-images { display: none; }
