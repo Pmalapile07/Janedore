@@ -43,12 +43,12 @@
 
 .product-price-main {
   font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   color: #111;
   margin: 0;
 }
-.price-original { color: #888; text-decoration: line-through; margin-left: 8px; font-size: 14px; }
+.price-original { color: #888; text-decoration: line-through; margin-left: 8px; font-size: 12px; }
 
 .product-variants {
   display: flex;
@@ -73,9 +73,8 @@
 .sizes-label {
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   color: #111;
   margin-bottom: 8px;
 }
@@ -110,39 +109,54 @@
 .add-to-bag-btn:disabled { background: #ccc; cursor: not-allowed; }
 
 .size-guide-row {
-  border-top: 0.8px solid #e8e8e8;
   padding-top: 14px;
   cursor: pointer;
   margin: 0;
 }
 .size-guide-label {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #111;
-  display: block;
-  margin-bottom: 8px;
+  display: none;
 }
 .size-guide-bars {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 6px;
-  font-size: 8px;
-  color: #888;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  position: relative;
+  height: 3.5px;
+  background: #111;
+  margin-bottom: 12px;
 }
-.size-guide-bars .bar { flex: 1; height: 2px; background: #e0e0e0; }
-.size-guide-bars .bar.active { background: #111; }
+.size-guide-bars .bar-track {
+  width: 100%;
+  height: 3.5px;
+  background: #111;
+  position: relative;
+}
+.size-guide-bars .bar-ball {
+  width: 12px;
+  height: 12px;
+  background: #111;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.size-guide-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 300;
+  color: #111;
+  letter-spacing: 0.02em;
+}
 .size-guide-disclaimer {
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 10px;
   font-weight: 300;
   color: #888;
   font-style: italic;
-  margin: 0;
+  margin-top: 4px;
+  text-align: center;
 }
 
 .info-tabs-wrap {
@@ -154,9 +168,9 @@
 
 .info-tab-btn {
   font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
   color: #111;
   background: none;
   cursor: pointer;
@@ -164,18 +178,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 0.8px solid #e8e8e8;
+  border-top: 0.8px solid #111;
   border-left: none;
   border-right: none;
   border-bottom: none;
   padding: 14px 0;
   text-align: left;
+  text-transform: uppercase;
 }
-.info-tab-btn:last-of-type { border-bottom: 0.8px solid #e8e8e8; }
-.info-tab-btn.active { font-weight: 600; }
+.info-tab-btn:last-of-type { border-bottom: 0.8px solid #111; }
+.info-tab-btn.active { font-weight: 500; }
 
-.info-tab-btn::after { content: '+'; font-size: 16px; font-weight: 300; }
-.info-tab-btn.active::after { content: '−'; }
+.info-tab-btn::after { content: ''; }
 
 .info-tab-panel {
   display: none;
