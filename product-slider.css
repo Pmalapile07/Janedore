@@ -59,18 +59,4 @@
 }
 
 .slider-bars { display: none; }
-
-.product-secondary-images {
-  max-width: 100%;
-  margin: 0;
-  padding: 0 12px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.product-secondary-images img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-}
+.product-secondary-images { display: none; }
