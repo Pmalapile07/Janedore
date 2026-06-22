@@ -6,7 +6,7 @@
 .home-categories-header { text-align: center; margin-bottom: 32px; }
 .home-categories-title {
   font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 8px;
+  font-weight: var(--ui-font-weight); text-transform: none; color: #111; margin-bottom: 8px;
 }
 .home-categories-subtitle {
   font-size: var(--body-font-size); font-weight: var(--body-font-weight);
