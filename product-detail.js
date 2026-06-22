@@ -41,9 +41,22 @@ function selectVariant(productId, variantIndex, evt) {
   if(evt){evt.stopPropagation();evt.preventDefault();} S.productVariantSelections[productId]=variantIndex; const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   const allImages = getAllProductImages(product, variantIndex);
   document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
-  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const slidesEl=document.getElementById("product-slides"); if(slidesEl){ slidesEl.innerHTML = images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join(""); if(isDesktop()&&images.length>=4) slidesEl.classList.remove('single-image'); else if(isDesktop()) slidesEl.classList.add('single-image'); } updateStickyBar(product); updateStickyBarExtras(); }
+  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const slidesEl=document.getElementById("product-slides"); const thumbsEl=document.getElementById("product-thumbnails"); if(slidesEl){ slidesEl.innerHTML = images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join(""); slidesEl.scrollTo({left:0}); } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="scrollToSlide(${i})"></div>`).join(""); } updateStickyBar(product); updateStickyBarExtras(); }
 }
 function selectStickyVariant(productId, idx) { selectVariant(productId, idx); updateStickyBarExtras(); }
+
+function scrollToSlide(index) {
+  const slides = document.getElementById('product-slides');
+  const thumbs = document.querySelectorAll('.product-thumbnail');
+  if (slides) {
+    const slideEl = slides.querySelector('.product-slide');
+    if (slideEl) {
+      const slideWidth = slideEl.offsetWidth;
+      slides.scrollTo({ left: index * slideWidth, behavior: 'smooth' });
+    }
+  }
+  thumbs.forEach((t, i) => t.classList.toggle('active', i === index));
+}
 
 function productCard(product, compactMode=false, isCollectionPage=false) {
   if(!product) return ''; if(isCollectionPage && product.id === 'janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return '';
@@ -85,12 +98,14 @@ async function renderProductPage(product) {
   const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildSwipeSection('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
   const reviews=await getProductReviews(product.id); const reviewsHtml=reviews.length?reviews.map(r=>`<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text||'No comment'}<br><small style="color:#aaa;">${r.name||'Anonymous'} · ${r.country||'Unknown'} · ${r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString():'Recently'}</small></div>`).join(''):'<p class="no-reviews">No reviews yet.</p>';
-  const slidesClass=(isDesktop()&&images.length>=4)?'':'single-image';
   const hasDesc=product.description&&product.description.length>0; const descWordCount=wordCount(product.description); const showViewMore=descWordCount>20;
   const wishIconClass=isWished?"ph-fill ph-bookmark-simple":"ph-thin ph-bookmark-simple";
   DOM.productDetail.innerHTML=`
-    <div class="product-slider" id="product-slider" style="position:relative;">
-      <div class="product-slides ${slidesClass}" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div>
+    <div class="product-slider" id="product-slider">
+      <div class="product-slides" id="product-slides">${images.map(u=>`<div class="product-slide" style="background-image:url('${u}');"></div>`).join("")}</div>
+      <div class="product-thumbnails" id="product-thumbnails">
+        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="scrollToSlide(${i})"></div>`).join("")}
+      </div>
     </div>
     <div class="product-info" style="margin-top:5px;">
       <div class="info-tabs-wrap">
@@ -118,4 +133,18 @@ async function renderProductPage(product) {
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer"); S.currentSlide=0; window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
   createStickyBar(product); S.productInfoTab='description';
+  
+  // Sync thumbnails on scroll
+  setTimeout(() => {
+    const slidesEl = document.getElementById('product-slides');
+    if (slidesEl) {
+      slidesEl.addEventListener('scroll', function() {
+        const slideEl = slidesEl.querySelector('.product-slide');
+        if (!slideEl) return;
+        const slideWidth = slideEl.offsetWidth;
+        const index = Math.round(slidesEl.scrollLeft / slideWidth);
+        document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
+      });
+    }
+  }, 200);
 }
