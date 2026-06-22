@@ -15,16 +15,11 @@ function getProductThumbnail(product, variantIndex) { return safeImage(getProduc
 function getAllProductImages(product, variantIndex) {
   const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
   const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
-  if (product.category === 'jewelry') {
-    const model = (variant.images?.model || []).filter(Boolean);
-    const ghost = (variant.images?.ghost || []).filter(Boolean);
-    const all = [...model, ...ghost];
-    return all.length ? all : [PLACEHOLDER_IMAGE];
-  }
-  const ghost = (variant.images?.ghost || []).filter(Boolean);
-  if (ghost.length) return ghost;
   const model = (variant.images?.model || []).filter(Boolean);
-  return model.length ? model : [PLACEHOLDER_IMAGE];
+  const ghost = (variant.images?.ghost || []).filter(Boolean);
+  const detail = (variant.images?.detail || []).filter(Boolean);
+  const all = [...model, ...ghost, ...detail];
+  return all.length ? all : [PLACEHOLDER_IMAGE];
 }
 
 function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
