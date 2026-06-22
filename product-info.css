@@ -54,9 +54,9 @@
 .variants-row { display: flex; align-items: center; gap: 10px; }
 
 .variant-swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   display: inline-block;
   cursor: pointer;
   position: relative;
@@ -163,7 +163,7 @@
 
 .info-tab-btn {
   font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 300;
   letter-spacing: 0.02em;
   color: #111;
