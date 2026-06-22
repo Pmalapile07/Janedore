@@ -50,12 +50,17 @@
 }
 .price-original { color: #888; text-decoration: line-through; margin-left: 8px; font-size: 12px; }
 
-.product-variants {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
+.product-variants { margin: 0; }
+.variants-label {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #111;
+  margin-bottom: 8px;
+  text-transform: uppercase;
 }
+.variants-row { display: flex; align-items: center; gap: 10px; }
 
 .variant-swatch {
   width: 24px;
@@ -77,6 +82,7 @@
   letter-spacing: 0.02em;
   color: #111;
   margin-bottom: 8px;
+  text-transform: uppercase;
 }
 .sizes-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .product-size-btn {
@@ -113,26 +119,24 @@
   cursor: pointer;
   margin: 0;
 }
-.size-guide-label {
-  display: none;
-}
+.size-guide-label { display: none; }
 .size-guide-bars {
   display: flex;
   align-items: center;
   position: relative;
-  height: 3.5px;
+  height: 2.5px;
   background: #111;
   margin-bottom: 12px;
 }
 .size-guide-bars .bar-track {
   width: 100%;
-  height: 3.5px;
+  height: 2.5px;
   background: #111;
   position: relative;
 }
 .size-guide-bars .bar-ball {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background: #111;
   border-radius: 50%;
   position: absolute;
@@ -178,17 +182,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 0.8px solid #111;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
+  border: none;
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
 }
-.info-tab-btn:last-of-type { border-bottom: 0.8px solid #111; }
 .info-tab-btn.active { font-weight: 500; }
-
 .info-tab-btn::after { content: ''; }
 
 .info-tab-panel {
