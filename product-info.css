@@ -10,8 +10,8 @@
 
 .product-badge-detail {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 0;
+  left: 0;
   z-index: 2;
   font-size: 8px;
   font-weight: 600;
@@ -173,15 +173,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 0.8px solid #e8e8e8;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
+  border: none;
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
 }
-.info-tab-btn:last-of-type { border-bottom: 0.8px solid #e8e8e8; }
 .info-tab-btn.active { font-weight: 500; }
 .info-tab-btn::after { content: ''; }
 
