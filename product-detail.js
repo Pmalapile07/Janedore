@@ -27,7 +27,7 @@ function selectVariant(productId, variantIndex, evt) {
   if(evt){evt.stopPropagation();evt.preventDefault();} S.productVariantSelections[productId]=variantIndex; const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   const allImages = getAllProductImages(product, variantIndex);
   document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
-  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const mainImg=document.getElementById("product-main-image"); const thumbsEl=document.getElementById("product-thumbnails"); if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,'&#39;')}')"></div>`).join(""); } }
+  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const mainImg=document.getElementById("product-main-image"); const thumbsEl=document.getElementById("product-thumbnails"); if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join(""); } }
 }
 
 function switchMainImage(index, url) {
@@ -91,11 +91,6 @@ function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").for
 function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
 function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
 
-function formatDescription(text) {
-  if (!text) return '';
-  return text.replace(/\n/g, '<br>');
-}
-
 async function renderProductPage(product) {
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
@@ -116,7 +111,7 @@ async function renderProductPage(product) {
         ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
       </div>
       <div class="product-thumbnails" id="product-thumbnails">
-        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,'&#39;')}')"></div>`).join("")}
+        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join("")}
       </div>
     </div>
     <div class="product-info">
@@ -141,7 +136,7 @@ async function renderProductPage(product) {
       <div class="info-tabs-wrap">
         <button class="info-tab-btn active" data-tab="description" onclick="switchInfoTab('description')">Description</button>
         <div class="info-tab-panel active" data-tab="description">
-          ${hasDesc?`<div class="modal-desc" id="modal-desc">${formatDescription(product.description)}</div>${showViewMore?`<button class="modal-desc-toggle" id="desc-toggle" onclick="toggleDescExpand()">View More</button>`:''}`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
+          ${hasDesc?`<div class="modal-desc" id="modal-desc">${product.description||''}</div>${showViewMore?`<button class="modal-desc-toggle" id="desc-toggle" onclick="toggleDescExpand()">View More</button>`:''}`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
         </div>
         <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
         <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
