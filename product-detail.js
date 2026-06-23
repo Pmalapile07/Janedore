@@ -93,10 +93,11 @@ function toggleDescExpand() { const desc=document.getElementById('modal-desc'); 
 
 function formatDescription(text) {
   if (!text) return '';
-  return text.split('\n').map(function(line) {
+  var escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return escaped.split('\n').map(function(line) {
     var trimmed = line.trim();
-    if (trimmed.match(/^[•\-\*]\s/)) {
-      return '&bull; ' + trimmed.replace(/^[•\-\*]\s*/, '');
+    if (trimmed.charAt(0) === '-' || trimmed.charAt(0) === '*' || trimmed.charCodeAt(0) === 8226) {
+      return '&bull; ' + trimmed.substring(1).replace(/^\s+/, '');
     }
     return trimmed;
   }).join('<br>');
