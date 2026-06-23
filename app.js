@@ -1,6 +1,3 @@
-function goToProduct(productId) {
-  console.log('goToProduct called with:', productId);
-  console.log('renderProductPage exists:', typeof renderProductPage);
 const DOM = {
   get cartBadge() { return document.getElementById("cart-badge"); },
   get wishBadge() { return document.getElementById("wish-badge"); },
@@ -166,6 +163,8 @@ function navigateToCategory(cat) {
 }
 
 function goToProduct(productId) {
+  console.log('goToProduct called with:', productId);
+  console.log('renderProductPage exists:', typeof renderProductPage);
   S.saleMode = false; S.filter.vendor = null; updateHash(`product-${productId}`); closeCart();
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
