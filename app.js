@@ -1,3 +1,6 @@
+function goToProduct(productId) {
+  console.log('goToProduct called with:', productId);
+  console.log('renderProductPage exists:', typeof renderProductPage);
 const DOM = {
   get cartBadge() { return document.getElementById("cart-badge"); },
   get wishBadge() { return document.getElementById("wish-badge"); },
