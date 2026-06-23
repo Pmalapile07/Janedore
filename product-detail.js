@@ -111,7 +111,7 @@ async function renderProductPage(product) {
         ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
       </div>
       <div class="product-thumbnails" id="product-thumbnails">
-        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join("")}
+        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"
       </div>
     </div>
     <div class="product-info">
