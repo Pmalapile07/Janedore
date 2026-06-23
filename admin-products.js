@@ -17,6 +17,34 @@
   var STATUSES   = ['active', 'draft', 'archived'];
 
   /* ─────────────────────────────────────────────────────────
+     MARKDOWN TO HTML — converts asterisk bullets & bold to HTML
+  ───────────────────────────────────────────────────────── */
+  function markdownToHtml(text) {
+    if (!text) return '';
+    // Convert **bold**
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Split into lines
+    var lines = text.split('\n');
+    var output = [];
+    var inList = false;
+    lines.forEach(function(line) {
+      var trimmed = line.trim();
+      // Bullet lines: * item or - item
+      if (/^[\*\-]\s+/.test(trimmed)) {
+        if (!inList) { output.push('<ul>'); inList = true; }
+        output.push('<li>' + trimmed.replace(/^[\*\-]\s+/, '') + '</li>');
+      } else {
+        if (inList) { output.push('</ul>'); inList = false; }
+        if (trimmed.length > 0) {
+          output.push('<p>' + trimmed + '</p>');
+        }
+      }
+    });
+    if (inList) output.push('</ul>');
+    return output.join('');
+  }
+
+  /* ─────────────────────────────────────────────────────────
      CLOUDINARY UPLOAD — device only, no external sources
   ───────────────────────────────────────────────────────── */
   window._uploadToCloudinary = function(onSuccess) {
@@ -162,7 +190,6 @@
   };
 
   function renderEmptyState() {
-    // Admin can't add products — show a different message
     if (window._currentUserRole === 'ADMIN') {
       return '<div class="orders-empty-state">' +
         '<div class="orders-empty-icon"><i class="ph-light ph-package"></i></div>' +
@@ -170,8 +197,6 @@
         '<div class="orders-empty-sub">Products from all brands will appear here once added by vendors or Super Admin.</div>' +
       '</div>';
     }
-
-    // Vendor or Super Admin — show the add button
     return '<div class="orders-empty-state">' +
       '<div class="orders-empty-icon"><i class="ph-light ph-package"></i></div>' +
       '<div class="orders-empty-title">Add your first product</div>' +
@@ -233,7 +258,6 @@
   /* ─────────────────────────────────────────────────────────
      SHARED MEDIA POOL
   ───────────────────────────────────────────────────────── */
-
   var _mediaPool = [];
 
   function _poolFromProduct(p) {
@@ -477,7 +501,7 @@
             '<input name="name" value="' + esc(p.name) + '" placeholder="e.g. Raffle Brandy Dress" required>' +
           '</div>' +
           '<div class="form-group" style="padding:0;">' +
-            '<label>Description</label>' +
+            '<label>Description <span style="font-size:10px;color:var(--muted);">— supports * bullets and **bold**</span></label>' +
             '<textarea name="description" style="min-height:80px;">' + esc(p.description||'') + '</textarea>' +
           '</div>' +
           '<div class="form-group" style="padding:0;">' +
@@ -726,7 +750,7 @@
       stock:                stock,
       status:               form.status.value,
       featured:             form.featured.value === 'true',
-      description:          form.description.value,
+      description:          markdownToHtml(form.description.value),
       productFeatures:      form.productFeatures.value,
       compositionCare:      form.compositionCare.value,
       shippingReturns:      form.shippingReturns.value,
