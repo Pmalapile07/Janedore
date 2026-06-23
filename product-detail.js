@@ -27,7 +27,7 @@ function selectVariant(productId, variantIndex, evt) {
   if(evt){evt.stopPropagation();evt.preventDefault();} S.productVariantSelections[productId]=variantIndex; const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   const allImages = getAllProductImages(product, variantIndex);
   document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
-  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const mainImg=document.getElementById("product-main-image"); const thumbsEl=document.getElementById("product-thumbnails"); if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join(""); } }
+  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const mainImg=document.getElementById("product-main-image"); const thumbsEl=document.getElementById("product-thumbnails"); if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,'&#39;')}')"></div>`).join(""); } }
 }
 
 function switchMainImage(index, url) {
@@ -116,7 +116,7 @@ async function renderProductPage(product) {
         ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
       </div>
       <div class="product-thumbnails" id="product-thumbnails">
-        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join("")}
+        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,'&#39;')}')"></div>`).join("")}
       </div>
     </div>
     <div class="product-info">
