@@ -58,8 +58,8 @@
 .product-badge,
 .badge-new, .badge-sale, .badge-sold {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 5px;
+  left: 5px;
   z-index: 2;
   font-size: 8px;
   font-weight: 500;
