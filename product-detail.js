@@ -103,7 +103,7 @@ async function renderProductPage(product) {
   const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildSwipeSection('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
   const reviews=await getProductReviews(product.id); const reviewsHtml=reviews.length?reviews.map(r=>`<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text||'No comment'}<br><small style="color:#aaa;">${r.name||'Anonymous'} · ${r.country||'Unknown'} · ${r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString():'Recently'}</small></div>`).join(''):'<p class="no-reviews">No reviews yet.</p>';
-  const hasDesc=product.description&&product.description.length>0; const descWordCount=wordCount(product.description); const showViewMore=descWordCount>20;
+  const hasDesc=product.description&&product.description.length>0;
 
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider">
@@ -136,7 +136,7 @@ async function renderProductPage(product) {
       <div class="info-tabs-wrap">
         <button class="info-tab-btn active" data-tab="description" onclick="switchInfoTab('description')">Description</button>
         <div class="info-tab-panel active" data-tab="description">
-          ${hasDesc?`<div class="modal-desc" id="modal-desc">${product.description||''}</div>${showViewMore?`<button class="modal-desc-toggle" id="desc-toggle" onclick="toggleDescExpand()">View More</button>`:''}`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
+          ${hasDesc?`<div class="modal-desc" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
         </div>
         <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
         <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
