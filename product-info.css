@@ -198,6 +198,13 @@
   line-height: 1.6;
   color: #111;
 }
+.modal-desc ul {
+  padding-left: 16px;
+  margin: 8px 0 0 0;
+}
+.modal-desc li {
+  margin-bottom: 4px;
+}
 
 .shipping-calc { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
 .shipping-calc input { flex: 1; min-width: 120px; border: 0.8px solid #ddd; padding: 10px 12px; font-size: 11px; font-family: 'DM Sans', 'Manrope', sans-serif; outline: none; color: #111; }
