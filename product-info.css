@@ -161,6 +161,7 @@
   margin: 0;
 }
 
+/* ACCORDION BUTTON — no bold on active, thin chevron, no borders */
 .info-tab-btn {
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 12px;
@@ -174,39 +175,52 @@
   align-items: center;
   justify-content: space-between;
   border: none;
-  border-top: 0.8px solid #111;
+  border-top: none;
+  border-bottom: none;
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
+  transition: none;
 }
-.info-tab-btn.active { font-weight: 500; }
+.info-tab-btn.active {
+  font-weight: 300;
+}
+
+/* Thin chevron arrow */
 .info-tab-btn::after {
   content: '';
   display: inline-block;
   width: 6px;
   height: 6px;
-  border-right: 1.5px solid #111;
-  border-bottom: 1.5px solid #111;
+  border-right: 1px solid #111;
+  border-bottom: 1px solid #111;
   transform: rotate(45deg);
   margin-bottom: 2px;
   flex-shrink: 0;
+  transition: transform 0.25s ease;
 }
 .info-tab-btn.active::after {
   transform: rotate(-135deg);
   margin-bottom: -4px;
 }
 
+/* ACCORDION PANEL — smooth open, no bottom border */
 .info-tab-panel {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 12px;
   font-weight: 300;
   line-height: 1.6;
   color: #111;
-  padding: 12px 0;
-  border-bottom: 0.8px solid #111;
+  padding: 0;
+  border-bottom: none;
+  transition: max-height 0.35s ease, padding 0.35s ease;
 }
-.info-tab-panel.active { display: block; }
+.info-tab-panel.active {
+  max-height: 600px;
+  padding: 12px 0;
+}
 
 .modal-desc {
   font-size: 12px;
