@@ -174,12 +174,27 @@
   align-items: center;
   justify-content: space-between;
   border: none;
+  border-top: 0.8px solid #111;
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
 }
 .info-tab-btn.active { font-weight: 500; }
-.info-tab-btn::after { content: ''; }
+.info-tab-btn::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid #111;
+  border-bottom: 1.5px solid #111;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+.info-tab-btn.active::after {
+  transform: rotate(-135deg);
+  margin-bottom: -4px;
+}
 
 .info-tab-panel {
   display: none;
@@ -189,6 +204,7 @@
   line-height: 1.6;
   color: #111;
   padding: 12px 0;
+  border-bottom: 0.8px solid #111;
 }
 .info-tab-panel.active { display: block; }
 
@@ -199,11 +215,25 @@
   color: #111;
 }
 .modal-desc ul {
-  padding-left: 22px;
+  padding-left: 20px;
   margin: 8px 0 0 0;
 }
 .modal-desc li {
   margin-bottom: 4px;
+}
+
+.modal-desc-toggle {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #111;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #111;
+  padding: 0;
+  display: inline-block;
 }
 
 .shipping-calc { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
