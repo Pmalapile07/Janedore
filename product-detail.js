@@ -134,8 +134,8 @@ async function renderProductPage(product) {
         <p class="size-guide-disclaimer">In between sizes? We recommend sizing up.</p>
       </div>
       <div class="info-tabs-wrap">
-        <button class="info-tab-btn active" data-tab="description" onclick="switchInfoTab('description')">Description</button>
-        <div class="info-tab-panel active" data-tab="description">
+        <button class="info-tab-btn" data-tab="description" onclick="switchInfoTab('description')">Description</button>
+        <div class="info-tab-panel" data-tab="description">
           ${hasDesc?`<div class="modal-desc" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
         </div>
         <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
