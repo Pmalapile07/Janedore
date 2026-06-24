@@ -164,9 +164,9 @@
 /* Accordion buttons — all have consistent border-top as divider */
 .info-tab-btn {
   font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 300;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   color: #111;
   background: none;
   cursor: pointer;
@@ -210,7 +210,7 @@
   max-height: 0;
   overflow: hidden;
   font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 300;
   line-height: 1.6;
   color: #111;
@@ -246,7 +246,7 @@
   cursor: pointer;
   background: none;
   border: none;
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid #555;
   padding: 0;
   display: inline-block;
 }
