@@ -161,7 +161,7 @@
   margin: 0;
 }
 
-/* Base accordion button — border-top on all, no bold on active, thin chevron */
+/* Accordion buttons — all have consistent border-top as divider */
 .info-tab-btn {
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 12px;
@@ -180,16 +180,14 @@
   text-align: left;
   text-transform: uppercase;
 }
-/* No bold when active */
 .info-tab-btn.active {
   font-weight: 300;
 }
-/* First accordion button — no top border */
 .info-tab-btn:first-child {
   border-top: none;
 }
 
-/* Thin chevron arrow */
+/* Thin chevron arrow — always 1px */
 .info-tab-btn::after {
   content: '';
   display: inline-block;
@@ -207,7 +205,7 @@
   margin-bottom: -4px;
 }
 
-/* Accordion panel — smooth open, border-bottom on all except last */
+/* Accordion panels — border-bottom moved to the button above so it's consistent */
 .info-tab-panel {
   max-height: 0;
   overflow: hidden;
@@ -217,16 +215,12 @@
   line-height: 1.6;
   color: #111;
   padding: 0;
-  border-bottom: 0.8px solid #111;
+  border: none;
   transition: max-height 0.35s ease, padding 0.35s ease;
 }
 .info-tab-panel.active {
   max-height: 600px;
   padding: 12px 0;
-}
-/* Last accordion panel — no bottom border */
-.info-tab-panel:last-child {
-  border-bottom: none;
 }
 
 .modal-desc {
