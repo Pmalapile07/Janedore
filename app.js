@@ -205,7 +205,7 @@ function navigateToCheckout() {
 function ensureNavScrolled() { if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); }
 
 function isDesktop() { return window.innerWidth >= 769; }
-function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-7737.jpg?v=1781996903')"; }
+function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-7785.png?v=1782670201')"; }
 window.addEventListener('resize', setHeroImage);
 
 function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
