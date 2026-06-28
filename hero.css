@@ -77,7 +77,7 @@
 .hero-shop-btn:hover { opacity: 0.85; }
 
 @media (max-width: 768px) {
-  #hero { height: 100vh; min-height: 600px; }
+  #hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
   .hero-content-wrap { margin-top: 60%; gap: 16px; }
   .hero-heading { font-size: 28px; }
   .hero-shop-btn { padding: 12px 32px; }
