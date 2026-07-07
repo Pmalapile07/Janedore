@@ -87,18 +87,34 @@ function updateGridToggleSVG(svgId, cols) {
   updateCollectionGridIcon();
 }
 
-function productCard(p, isLarge, showDetails) {
+// Expands products into one card per variant
+function expandProductVariants(products) {
+  const expanded = [];
+  products.forEach(p => {
+    const variants = p.variants || [];
+    if (variants.length <= 1) {
+      expanded.push({ product: p, variantIndex: 0 });
+    } else {
+      variants.forEach((v, i) => {
+        expanded.push({ product: p, variantIndex: i });
+      });
+    }
+  });
+  return expanded;
+}
+
+function productCard(p, isLarge, showDetails, variantIndex) {
+  const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const badge = p.badge ? `<span class="product-badge">${p.badge.toUpperCase()}</span>` : '';
-  const vi = S.productVariantSelections[p.id] ?? 0;
   const imgs = p.variants?.[vi]?.images;
   const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
   const brand = p.brand ? `<div class="product-brand">${p.brand}</div>` : '';
   const name = `<div class="product-title">${p.name}</div>`;
-  const price = p.salePrice 
+  const price = p.salePrice
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
   return `
-    <div class="product-card" onclick="goToProduct('${p.id}')">
+    <div class="product-card" onclick="S.productVariantSelections['${p.id}']=${vi};goToProduct('${p.id}')">
       <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
       ${brand}
       ${name}
@@ -109,8 +125,9 @@ function productCard(p, isLarge, showDetails) {
 function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
   let prods = merchandiseProducts(getFilteredProducts());
+  const expanded = expandProductVariants(prods);
   DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)";
-  DOM.allProductsGrid.innerHTML = prods.map(p=>productCard(p, S.gridCols===3, true)).join("");
+  DOM.allProductsGrid.innerHTML = expanded.map(({product, variantIndex}) => productCard(product, S.gridCols===3, true, variantIndex)).join("");
   applyEditorialGrid(DOM.allProductsGrid, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
 }
@@ -126,14 +143,15 @@ function renderCategoryProducts() {
   else if(S.currentCategoryPage==='bags') cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage&&p.id!=='janedore-leather-pouch');
   else cp=getCatFilteredProducts();
   let prods=merchandiseProducts(cp);
+  const expanded = expandProductVariants(prods);
   DOM.categoryProductsGrid.style.gridTemplateColumns=S.gridColsCat===1?"1fr":S.gridColsCat===2?"repeat(2,1fr)":"repeat(3,1fr)";
-  DOM.categoryProductsGrid.innerHTML=prods.map(p=>productCard(p,S.gridColsCat===3,true)).join("");
+  DOM.categoryProductsGrid.innerHTML=expanded.map(({product, variantIndex}) => productCard(product, S.gridColsCat===3, true, variantIndex)).join("");
   applyEditorialGrid(DOM.categoryProductsGrid, S.gridColsCat);
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
 }
 
-function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = sp.length ? sp.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
+function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); const expanded = expandProductVariants(sp); DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
 
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
 
