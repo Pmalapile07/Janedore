@@ -23,17 +23,39 @@ function getAllProductImages(product, variantIndex) {
 }
 
 function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
+
 function selectVariant(productId, variantIndex, evt) {
-  if(evt){evt.stopPropagation();evt.preventDefault();} S.productVariantSelections[productId]=variantIndex; const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
+  if(evt){evt.stopPropagation();evt.preventDefault();}
+  S.productVariantSelections[productId] = variantIndex;
+  const product = PRODUCTS.find(p=>p.id===productId);
+  if(!product) return;
   const allImages = getAllProductImages(product, variantIndex);
+
+  // Update product cards in grid
   document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
-  if(S.currentPage==="product-detail"){ const images=getAllProductImages(product, variantIndex); const mainImg=document.getElementById("product-main-image"); const thumbsEl=document.getElementById("product-thumbnails"); if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; } if(thumbsEl){ thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"\\'")}')"></div>`).join(""); } }
+
+  // Update product detail page images
+  if(S.currentPage==="product-detail"){
+    const images = getAllProductImages(product, variantIndex);
+    const mainImg = document.getElementById("product-main-image");
+    const thumbsEl = document.getElementById("product-thumbnails");
+    if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; }
+    if(thumbsEl){
+      thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join("");
+    }
+    // Update swipe init
+    productImages = images;
+    currentImageIndex = 0;
+    // Update swatch selected state
+    document.querySelectorAll('.variant-swatch').forEach((s,i) => s.classList.toggle('selected', i === variantIndex));
+  }
 }
 
 function switchMainImage(index, url) {
   const mainImage = document.getElementById('product-main-image');
   if (mainImage) { mainImage.style.backgroundImage = `url('${url}')`; }
   document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
+  currentImageIndex = index;
 }
 
 let productImages = [];
@@ -95,7 +117,13 @@ async function renderProductPage(product) {
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   showLoading(DOM.productDetail);
-  const vi=S.productVariantSelections[product.id]??0; const images=getAllProductImages(product,vi); const soldOut=isProductSoldOut(product);
+
+  // FIX: ensure variant selection is initialized before rendering
+  if(S.productVariantSelections[product.id] === undefined) {
+    S.productVariantSelections[product.id] = 0;
+  }
+
+  const vi=S.productVariantSelections[product.id]; const images=getAllProductImages(product,vi); const soldOut=isProductSoldOut(product);
   const variants=product.variants||[]; const sizes=product.sizes||[];
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
   const badgeLabel=product.badge?product.badge.toUpperCase():"";
