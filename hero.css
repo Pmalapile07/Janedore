@@ -50,13 +50,13 @@
 }
 
 .hero-heading {
-  font-family: 'DM Sans', 'Cormorant Garamond', serif;
+  font-family: 'Tenor Sans', serif;
   font-size: 35px;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 400;
   color: #fff;
-  text-transform: uppercase;
-  line-height: 1.1;
+  text-transform: none;
+  line-height: 1.15;
   margin: 0;
 }
 
