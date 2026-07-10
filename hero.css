@@ -51,13 +51,14 @@
 
 .hero-heading {
   font-family: 'Tenor Sans', serif;
-  font-size: 35px;
+  font-size: 38px;
   font-style: normal;
   font-weight: 400;
   color: #fff;
   text-transform: none;
   line-height: 1.15;
   margin: 0;
+  letter-spacing: 0.1rem;
 }
 
 .hero-shop-btn {
