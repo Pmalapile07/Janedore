@@ -43,3 +43,38 @@
   color: #111;
   margin-bottom: 4px;
 }
+
+/* ── HERO STATEMENT ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap');
+
+.home-statement {
+  padding: 40px 24px 32px;
+  text-align: left;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.home-statement-heading {
+  font-family: 'Tenor Sans', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: #111;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px 0;
+}
+
+.home-statement-sub {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .home-statement-heading { font-size: 48px; }
+  .home-statement { padding: 56px 24px 40px; }
+}
