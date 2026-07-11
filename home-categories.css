@@ -48,7 +48,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap');
 
 .home-statement {
-  padding: 40px 24px 32px;
+  padding: 40px 8px 32px;
   text-align: left;
   max-width: 1400px;
   margin: 0 auto;
@@ -75,6 +75,6 @@
 }
 
 @media (min-width: 768px) {
+  .home-statement { padding: 56px 16px 40px; }
   .home-statement-heading { font-size: 48px; }
-  .home-statement { padding: 56px 24px 40px; }
 }
