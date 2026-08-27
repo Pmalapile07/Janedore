@@ -548,7 +548,7 @@ function showSatisfactionPrompt() {
   // these here would trap the customer with no way back in.
   const input = safeEl('chat-input');
   if (input) input.placeholder = 'Conversation resolved — send a message to reopen';
-  showResolvedBanner();
+  
 
   const prompt = document.createElement('div');
   prompt.id        = 'satisfaction-prompt';
