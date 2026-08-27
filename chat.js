@@ -471,11 +471,12 @@ function showSatisfactionPrompt() {
   const el = safeEl('chat-messages');
   if (!el) return;
 
-  // Disable the input — conversation is closed.
+  // Conversation is closed, but keep the input usable — sending a new
+  // message is what reopens the chat (see sendChatMessage), so disabling
+  // these here would trap the customer with no way back in.
   const input   = safeEl('chat-input');
   const sendBtn = safeEl('chat-send-btn');
-  if (input)   { input.disabled = true; input.placeholder = 'Conversation resolved'; }
-  if (sendBtn) sendBtn.disabled = true;
+  if (input)   input.placeholder = 'Conversation resolved — send a message to reopen';
 
   const prompt = document.createElement('div');
   prompt.id        = 'satisfaction-prompt';
