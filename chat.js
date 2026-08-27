@@ -529,7 +529,7 @@ function showResolvedBanner() {
   banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
   banner.innerHTML =
     '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
-      + 'This conversation was resolved — send a message to reopen it'
+      + 'Resolved.'
     + '</span>';
   wrap.insertBefore(banner, wrap.firstChild);
 }
