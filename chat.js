@@ -154,6 +154,7 @@ function startChat() {
   detachStatusListener();
   _satisfactionShown = false;
   _resolvedActive = false;
+  removeResolvedBanner();
   loadMessages();
   listenChat();
   listenTyping();
@@ -187,6 +188,7 @@ function clearChatSession() {
   detachStatusListener();
   _satisfactionShown = false;
   _resolvedActive = false;
+  removeResolvedBanner();
   loadedMessageKeys.clear();
   showEmailScreen();
 }
@@ -298,21 +300,38 @@ async function sendChatMessage() {
   const input = safeEl('chat-input');
   if (!rtdb || !input) return;
 
-  // If input is disabled, re-enable it first before sending
-  // This handles the case where conversation was marked as resolved
-  if (input.disabled) {
-    input.disabled = false;
+  const text = input.value.trim();
+  if (!text) return;
+
+  // #5: if this send is reopening a resolved conversation, give the
+  // customer instant local feedback rather than waiting on the round
+  // trip to the server. Capture the flag first since the write below
+  // resets it.
+  const wasResolved = _resolvedActive;
+  if (wasResolved) {
     input.placeholder = 'Type your message...';
-    const sendBtn = safeEl('chat-send-btn');
-    if (sendBtn) sendBtn.disabled = false;
+    const sendBtnEarly = safeEl('chat-send-btn');
+    if (sendBtnEarly) sendBtnEarly.disabled = false;
+    input.disabled = false;
     _satisfactionShown = false;
     _resolvedActive = false;
     const prompt = document.getElementById('satisfaction-prompt');
     if (prompt) prompt.remove();
-  }
+    removeResolvedBanner();
 
-  const text = input.value.trim();
-  if (!text) return;
+    const el = safeEl('chat-messages');
+    if (el) {
+      const pill = document.createElement('div');
+      pill.id = 'chat-reopening-pill';
+      pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
+      pill.innerHTML =
+        '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
+          + 'Reopening chat…'
+        + '</span>';
+      el.appendChild(pill);
+      el.scrollTop = el.scrollHeight;
+    }
+  }
 
   const btn = safeEl('chat-send-btn');
   if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
@@ -348,6 +367,20 @@ async function sendChatMessage() {
     updates['live_chat/' + chatSessionId + '/meta/status'] = 'open';
     updates['chat_inbox/' + chatSessionId + '/status'] = 'open';
 
+    // #2: leave a visible trail in the chat log when a resolved
+    // conversation gets reopened, so admins don't miss it.
+    if (wasResolved) {
+      const reopenRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+      updates['live_chat/' + chatSessionId + '/messages/' + reopenRef.key] = {
+        text:      'Customer reopened the conversation.',
+        sender:    'system',
+        createdAt: ts,
+        read:      true,
+        delivered: true,
+        sessionId: chatSessionId
+      };
+    }
+
     // Snapshot cart at time of message so admin can see what customer had.
     try {
       const rawCart = localStorage.getItem('janedore_cart');
@@ -367,7 +400,10 @@ async function sendChatMessage() {
 
     await rtdb.ref('/').update(updates);
     input.value = '';
-    
+
+    const reopenPill = document.getElementById('chat-reopening-pill');
+    if (reopenPill) reopenPill.remove();
+
     // Ensure input stays enabled after sending
     input.disabled = false;
     input.placeholder = 'Type your message...';
@@ -376,6 +412,17 @@ async function sendChatMessage() {
   } catch(e) {
     console.error('[Chat] Send error:', e.message);
     alert('Failed to send message. Please try again.');
+
+    const reopenPill = document.getElementById('chat-reopening-pill');
+    if (reopenPill) reopenPill.remove();
+
+    // The reopen didn't actually go through — restore the resolved
+    // state so the customer isn't shown a false "active chat" UI.
+    if (wasResolved) {
+      _satisfactionShown = true;
+      _resolvedActive = true;
+      showResolvedBanner();
+    }
   } finally {
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     if (input) {
@@ -462,9 +509,34 @@ function listenStatus() {
       // Remove satisfaction prompt if it's still there
       const prompt = document.getElementById('satisfaction-prompt');
       if (prompt) prompt.remove();
+      removeResolvedBanner();
+      const reopenPill = document.getElementById('chat-reopening-pill');
+      if (reopenPill) reopenPill.remove();
     }
   };
   _statusListenerRef.on('value', _statusListenerCb);
+}
+
+// #3: a persistent banner (instead of placeholder text alone) telling the
+// customer the chat was resolved and how to bring it back. Placeholder
+// text disappears the moment the field is focused or typed into, so this
+// stays visible until the chat is actually reopened.
+function showResolvedBanner() {
+  const wrap = safeEl('chat-input-wrap');
+  if (!wrap || document.getElementById('chat-resolved-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'chat-resolved-banner';
+  banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
+  banner.innerHTML =
+    '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
+      + 'This conversation was resolved — send a message to reopen it'
+    + '</span>';
+  wrap.insertBefore(banner, wrap.firstChild);
+}
+
+function removeResolvedBanner() {
+  const banner = document.getElementById('chat-resolved-banner');
+  if (banner) banner.remove();
 }
 
 function showSatisfactionPrompt() {
@@ -474,9 +546,9 @@ function showSatisfactionPrompt() {
   // Conversation is closed, but keep the input usable — sending a new
   // message is what reopens the chat (see sendChatMessage), so disabling
   // these here would trap the customer with no way back in.
-  const input   = safeEl('chat-input');
-  const sendBtn = safeEl('chat-send-btn');
-  if (input)   input.placeholder = 'Conversation resolved — send a message to reopen';
+  const input = safeEl('chat-input');
+  if (input) input.placeholder = 'Conversation resolved — send a message to reopen';
+  showResolvedBanner();
 
   const prompt = document.createElement('div');
   prompt.id        = 'satisfaction-prompt';
