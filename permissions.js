@@ -27,6 +27,9 @@
       newsletter: [],
       vendors:    ['read'],
       customers:  []
+      // Note: 'admins' is intentionally not listed here — Admin role
+      // has no access to manage other admin/staff accounts. Only
+      // SUPER_ADMIN (the '*' wildcard above) can.
     },
 
     VENDOR: {
@@ -193,7 +196,8 @@
     newsletter: 'newsletter',
     vendors:    'vendors',
     customers:  'customers',
-    settings:   'settings'
+    settings:   'settings',
+    admins:     'admins'
   };
 
   window._applyRoleUI = function () {
@@ -222,14 +226,16 @@
     });
 
     // Super-admin-only elements — targeted by their actual HTML IDs.
-    // vendors tab and seed data buttons are hidden by default in the HTML
-    // and only shown to Super Admin.
+    // vendors tab, admins tab, and seed data buttons are hidden by
+    // default in the HTML and only shown to Super Admin.
     var isSA = window._isSuperAdmin();
     var superAdminOnlyIds = [
       'vendors-tab-btn',   // sidebar vendors tab
       'vendors-more-item', // more menu vendors item
       'settings-tab-btn',  // sidebar settings tab
       'settings-more-item',// more menu settings item
+      'admins-tab-btn',    // sidebar admins tab
+      'admins-more-item',  // more menu admins item
       'btn-seed',          // sidebar seed button
       'btn-seed-more'      // more menu seed button
     ];
