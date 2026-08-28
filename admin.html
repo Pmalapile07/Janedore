@@ -56,6 +56,7 @@
     <button class="sidebar-btn" id="vendors-tab-btn" data-tab="vendors" onclick="switchTab('vendors')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-handshake"></i></span>Vendors</button>
 
     <div class="sidebar-section-label">Platform</div>
+    <button class="sidebar-btn" id="admins-tab-btn" data-tab="admins" onclick="switchTab('admins')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-users-three"></i></span>Admins</button>
     <button class="sidebar-btn" id="settings-tab-btn" data-tab="settings" onclick="switchTab('settings')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-gear"></i></span>Settings</button>
 
     <div style="flex:1;"></div>
@@ -85,6 +86,7 @@
     <button class="more-menu-item mmi-orange" onclick="closeMoreMenu();switchTab('reviews')"><div class="more-menu-icon"><i class="ph-light ph-star"></i></div><div style="flex:1"><div class="more-menu-item-label">Reviews</div><div class="more-menu-item-desc">Moderate product reviews</div></div><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-green" onclick="closeMoreMenu();switchTab('newsletter')"><div class="more-menu-icon"><i class="ph-light ph-mailbox"></i></div><div style="flex:1"><div class="more-menu-item-label">Newsletter</div><div class="more-menu-item-desc">Subscriber management</div></div><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-purple" id="vendors-more-item" onclick="closeMoreMenu();switchTab('vendors')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-handshake"></i></div><div style="flex:1"><div class="more-menu-item-label">Vendors</div><div class="more-menu-item-desc">Manage brand partners</div></div><span class="more-menu-arrow">›</span></button>
+    <button class="more-menu-item mmi-gray" id="admins-more-item" onclick="closeMoreMenu();switchTab('admins')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-users-three"></i></div><div style="flex:1"><div class="more-menu-item-label">Admins</div><div class="more-menu-item-desc">Manage staff accounts</div></div><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-gray" id="settings-more-item" onclick="closeMoreMenu();switchTab('settings')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-gear"></i></div><div style="flex:1"><div class="more-menu-item-label">Settings</div><div class="more-menu-item-desc">Platform configuration</div></div><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-gray" id="btn-seed-more" onclick="closeMoreMenu();seedDefaultData()" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-database"></i></div><div style="flex:1"><div class="more-menu-item-label">Seed Data</div><div class="more-menu-item-desc">Load default vendors + products</div></div><span class="more-menu-arrow">›</span></button>
     <div class="more-divider"></div>
@@ -181,6 +183,7 @@ fetch('/api/cloudinary-config')
 <script src="admin-reviews.js"></script>
 <script src="admin-newsletter.js"></script>
 <script src="admin-vendors.js"></script>
+<script src="admin-admins.js"></script>
 <script src="admin-launch.js"></script>
 <script src="admin-settings.js"></script>
 
