@@ -16,6 +16,31 @@
   var ROLE_LABELS = { SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', VIEWER: 'Viewer' };
   var ROLE_BADGE_CLASS = { SUPER_ADMIN: 'badge-success', ADMIN: 'badge-processing', VIEWER: 'badge-muted' };
 
+  // Friendly labels for the permission summary — pulled from
+  // window._permissions (permissions.js), so this always reflects
+  // whatever that file currently defines rather than a copy that
+  // could drift out of sync.
+  var MODULE_LABELS = {
+    dashboard:  'Dashboard',
+    orders:     'Orders',
+    products:   'Products',
+    inbox:      'Inbox / Chat',
+    reviews:    'Reviews',
+    newsletter: 'Newsletter',
+    vendors:    'Vendors',
+    customers:  'Customers',
+    settings:   'Settings',
+    admins:     'Admins'
+  };
+  var ACTION_LABELS = {
+    read: 'View', read_own: 'View (own)',
+    create: 'Create',
+    update: 'Edit', update_own: 'Edit (own)',
+    delete: 'Delete', delete_own: 'Delete (own)',
+    reply: 'Reply', reply_own: 'Reply (own)',
+    moderate: 'Moderate'
+  };
+
   /* ─────────────────────────────────────────────────────────
      RENDER ADMINS TAB — Super Admin only
   ───────────────────────────────────────────────────────── */
@@ -72,6 +97,7 @@
       '<div class="table-wrap"><table class="data-table">' +
       '<thead><tr>' +
         '<th>Name</th>' +
+        '<th>Title</th>' +
         '<th>Email</th>' +
         '<th>Role</th>' +
         '<th>Last Login</th>' +
@@ -88,6 +114,7 @@
           '<td style="font-weight:500;">' + esc(a.name || '—') +
             (isSelf ? ' <span class="badge badge-muted" style="font-size:9px;">You</span>' : '') +
           '</td>' +
+          '<td>' + esc(a.title || '—') + '</td>' +
           '<td>' + esc(a.email || '—') + '</td>' +
           '<td><span class="badge ' + roleClass + '">' + esc(roleLabel) + '</span></td>' +
           '<td>' + (a.lastLogin ? fmtDate(a.lastLogin) : '—') + '</td>' +
@@ -102,13 +129,57 @@
   }
 
   /* ─────────────────────────────────────────────────────────
+     PERMISSION SUMMARY — read-only, generated live from
+     window._permissions so it can never drift out of sync
+     with what a role actually allows.
+  ───────────────────────────────────────────────────────── */
+  function buildPermissionSummaryHTML(role) {
+    var map = window._permissions ? window._permissions[role] : null;
+
+    if (map === '*') {
+      return '<div class="info-panel"><div class="info-row">' +
+        '<span class="label">Access</span>' +
+        '<span>Full access to everything on the platform, including managing other admin accounts.</span>' +
+      '</div></div>';
+    }
+
+    if (!map) {
+      return '<div class="info-panel"><div class="info-row">' +
+        '<span class="label" style="color:var(--danger);">No access</span>' +
+        '<span style="color:var(--danger);">This role has no permissions defined in permissions.js — accounts with this role cannot access any section right now.</span>' +
+      '</div></div>';
+    }
+
+    var rows = Object.keys(map)
+      .filter(function(m) { return map[m] && map[m].length > 0; })
+      .map(function(m) {
+        var actions = map[m].map(function(a) { return ACTION_LABELS[a] || a; }).join(', ');
+        return '<div class="info-row"><span class="label">' + esc(MODULE_LABELS[m] || m) + '</span><span>' + esc(actions) + '</span></div>';
+      }).join('');
+
+    if (!rows) {
+      return '<div class="info-panel"><div class="info-row">' +
+        '<span class="label" style="color:var(--danger);">No access</span>' +
+        '<span style="color:var(--danger);">This role currently has no permissions to any section.</span>' +
+      '</div></div>';
+    }
+
+    return '<div class="info-panel">' + rows + '</div>';
+  }
+
+  window._updateAdminRoleSummary = function(role) {
+    var el = safeEl('admin-role-summary');
+    if (el) el.innerHTML = buildPermissionSummaryHTML(role);
+  };
+
+  /* ─────────────────────────────────────────────────────────
      ADMIN MODAL — CREATE / EDIT (Super Admin only)
   ───────────────────────────────────────────────────────── */
   window._openAdminModal = function(adminId) {
     if (!window._requireSuperAdmin('manage admins')) return;
 
     var a = adminId ? (window._adminsData || []).find(function(x) { return x.id === adminId; }) : null;
-    a = a || { id: '', name: '', email: '', role: 'ADMIN' };
+    a = a || { id: '', name: '', title: '', email: '', role: 'ADMIN' };
 
     var isSelf = !!(adminId && window._currentUser && adminId === window._currentUser.uid);
 
@@ -120,6 +191,8 @@
 
         '<div class="form-group"><label>Name</label><input name="name" value="' + esc(a.name || '') + '" required placeholder="e.g. Lindiwe"></div>' +
 
+        '<div class="form-group"><label>Title / Department</label><input name="title" value="' + esc(a.title || '') + '" placeholder="e.g. Customer Care"></div>' +
+
         (adminId
           ? '<div class="form-group"><label>Email</label><input value="' + esc(a.email || '') + '" disabled style="opacity:0.6;"></div>'
           : '<div class="form-group"><label>Email</label><input name="email" type="email" required placeholder="staff@janedore.co.za"></div>') +
@@ -129,15 +202,16 @@
           : '<div class="form-group"><label>Password</label><input name="password" type="text" required minlength="6" placeholder="Set a password"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Minimum 6 characters. Share this with them securely.</div></div>') +
 
         '<div class="form-group"><label>Role</label>' +
-          '<select name="role"' + (isSelf ? ' disabled' : '') + '>' +
+          '<select name="role" onchange="window._updateAdminRoleSummary(this.value)"' + (isSelf ? ' disabled' : '') + '>' +
             '<option value="ADMIN"' + (a.role === 'ADMIN' ? ' selected' : '') + '>Admin</option>' +
             '<option value="VIEWER"' + (a.role === 'VIEWER' ? ' selected' : '') + '>Viewer</option>' +
             '<option value="SUPER_ADMIN"' + (a.role === 'SUPER_ADMIN' ? ' selected' : '') + '>Super Admin</option>' +
           '</select>' +
-          (isSelf
-            ? '<div style="font-size:10px;color:var(--muted);margin-top:4px;">You cannot change your own role.</div>'
-            : '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Super Admin has full access to everything, including managing other admins.</div>') +
+          (isSelf ? '<div style="font-size:10px;color:var(--muted);margin-top:4px;">You cannot change your own role.</div>' : '') +
         '</div>' +
+
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:14px 20px 6px;">What this role can do</div>' +
+        '<div id="admin-role-summary" style="margin:0 20px;">' + buildPermissionSummaryHTML(a.role) + '</div>' +
 
         '<div style="display:flex;gap:10px;padding:14px 20px 4px;">' +
           '<button type="submit" class="btn btn-primary">Save Admin</button>' +
@@ -154,9 +228,10 @@
     if (!window._requireSuperAdmin('manage admins')) return;
     e.preventDefault();
 
-    var form = e.target;
-    var name = form.name.value.trim();
-    var role = form.role.value;
+    var form  = e.target;
+    var name  = form.name.value.trim();
+    var title = form.title.value.trim();
+    var role  = form.role.value;
     var isSelf = !!(existingId && window._currentUser && existingId === window._currentUser.uid);
 
     // Granting owner-level access is a big deal — confirm explicitly.
@@ -168,7 +243,7 @@
     }
 
     if (existingId) {
-      var data = { name: name, updatedAt: new Date().toISOString() };
+      var data = { name: name, title: title, updatedAt: new Date().toISOString() };
       if (!isSelf) data.role = role;
 
       adminsRef.doc(existingId).update(data).then(function() {
@@ -211,6 +286,7 @@
       }).then(function() {
         return adminsRef.doc(uid).set({
           name:      name,
+          title:     title,
           email:     email,
           role:      role,
           createdAt: new Date().toISOString(),
