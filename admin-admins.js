@@ -11,6 +11,7 @@
   var mountModal   = window._mountModal;
   var closeModal   = window._closeModal;
   var adminsRef    = window._adminsRef;
+  var rtdb         = window._adminRTDB;
 
   var STAFF_ROLES = ['SUPER_ADMIN', 'ADMIN', 'VIEWER'];
   var ROLE_LABELS = { SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', VIEWER: 'Viewer' };
@@ -57,6 +58,7 @@
       '<div class="section-header" style="margin-bottom:12px;">' +
         '<div class="section-title">Admins</div>' +
         '<div style="display:flex;gap:8px;">' +
+          '<button class="btn btn-sm btn-ghost" onclick="window._syncStaffAccess()">Sync Staff Access</button>' +
           '<button class="btn btn-sm btn-primary" onclick="window._openAdminModal(null)">+ Add Admin</button>' +
         '</div>' +
       '</div>' +
@@ -71,6 +73,36 @@
       console.error('[ADMINS_TAB]', e);
       var el = safeEl('admins-list');
       if (el) el.innerHTML = '<div class="empty-state"><div class="empty-state-text">Could not load admins.</div><button class="btn btn-sm btn-ghost" style="margin-top:12px;" onclick="window._renderAdminsTab()">Retry</button></div>';
+    });
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     SYNC STAFF ACCESS (Super Admin only)
+     One-time / re-runnable backfill: mirrors every existing staff
+     account's uid into RTDB /staff_uids/, which the Realtime
+     Database rules use to grant full chat_inbox/live_chat access.
+     Run this once after deploying updated database rules, and
+     again any time staff access looks out of sync.
+  ───────────────────────────────────────────────────────── */
+  window._syncStaffAccess = function() {
+    if (!window._requireSuperAdmin('sync staff access')) return;
+    if (!rtdb) { showToast('Realtime Database not available.', 'error'); return; }
+
+    adminsRef.where('role', 'in', STAFF_ROLES).get().then(function(snap) {
+      var updates = {};
+      snap.docs.forEach(function(d) { updates['staff_uids/' + d.id] = true; });
+
+      if (Object.keys(updates).length === 0) {
+        showToast('No staff accounts found to sync.', 'info');
+        return;
+      }
+
+      return rtdb.ref('/').update(updates).then(function() {
+        showToast('Staff access synced for ' + Object.keys(updates).length + ' account(s).');
+      });
+    }).catch(function(e) {
+      console.error('[SYNC_STAFF_ACCESS]', e);
+      showToast('Error: ' + e.message, 'error');
     });
   };
 
@@ -293,6 +325,15 @@
           createdBy: window._currentUser.uid
         });
       }).then(function() {
+        // Mirror into RTDB so the Realtime Database rules recognise
+        // this account as staff and grant chat access. Best-effort —
+        // if this single write fails, Sync Staff Access will catch it.
+        if (rtdb) {
+          rtdb.ref('staff_uids/' + uid).set(true).catch(function(e) {
+            console.error('[STAFF_UIDS_MIRROR]', e);
+          });
+        }
+      }).then(function() {
         closeModal();
         showToast('Admin account created for ' + email);
 
@@ -337,9 +378,10 @@
 
   /* ─────────────────────────────────────────────────────────
      DELETE ADMIN (Super Admin only)
-     Removes their Firestore permissions record. This does NOT
-     delete their Firebase Auth login — that requires the
-     Firebase Console (client SDK can't delete other users'
+     Removes their Firestore permissions record AND their RTDB
+     staff_uids mirror entry (so they lose chat access immediately).
+     This does NOT delete their Firebase Auth login — that requires
+     the Firebase Console (client SDK can't delete other users'
      credentials), same limitation as vendor account resets.
   ───────────────────────────────────────────────────────── */
   window._deleteAdmin = function(adminId) {
@@ -356,6 +398,11 @@
     if (!confirm('Remove ' + label + '\'s access? This deletes their permissions record. Their login credentials will still exist — to remove those too, use the Firebase Console.')) return;
 
     adminsRef.doc(adminId).delete().then(function() {
+      if (rtdb) {
+        rtdb.ref('staff_uids/' + adminId).remove().catch(function(e) {
+          console.error('[STAFF_UIDS_MIRROR_REMOVE]', e);
+        });
+      }
       showToast('Admin access removed');
       closeModal();
       window._renderAdminsTab();
