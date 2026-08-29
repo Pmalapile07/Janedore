@@ -22,7 +22,7 @@
   var esc            = window._esc;
   var safeEl         = window._safeEl;
   var fmtTime        = window._fmtTime;
-  var fmtDateShort   = window._fmtDateShort;
+  var fmtDateShort    = window._fmtDateShort;
   var showToast      = window._showToast;
   var avatarClass    = window._avatarClass;
   var avatarInitials = window._avatarInitials;
@@ -145,7 +145,19 @@
       var sessionId = snap.key;
       // Only show banner if not already in this session.
       if (window._activeChatSession === sessionId) return;
-      showInviteBanner(sessionId);
+
+      // admin_assignments entries are kept forever once an invite is
+      // accepted, so this admin keeps access to the chat. But attaching
+      // a fresh 'child_added' listener replays every existing child, not
+      // just genuinely new ones — so every time the inbox reloads (tab
+      // switch, page refresh) this would otherwise re-show the banner
+      // for chats already accepted long ago. Check the real invite
+      // status first, and only show it while it's still pending.
+      rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/invites/' + uid + '/status').once('value')
+        .then(function (statusSnap) {
+          if (statusSnap.val() === 'pending') showInviteBanner(sessionId);
+        })
+        .catch(function () {});
     });
   }
 
@@ -430,7 +442,7 @@
     var _filterTab      = 'all';
     var _searchQuery    = '';
     var _isSending      = false;
-    var _subs           = { inboxAdded: null, inboxChanged: null, inboxRemoved: null, msgAdded: null, typing: null, connected: null };
+    var _subs           = { inboxAdded: null, inboxChanged: null, inboxRemoved: null, msgAdded: null, typing: null, status: null, connected: null };
     var _typingTimer    = null;
     var _readGeneration = 0;
     // Tracks which sessions this admin has already sent a "joined" message for
@@ -606,6 +618,17 @@
     subscribeTyping: function (sessionId, onChange) {
       var ref = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/customerTyping');
       var cb  = function (snap) { onChange(snap.val() === true); };
+      ref.on('value', cb);
+      return { ref: ref, cb: cb, event: 'value' };
+    },
+
+    // Mirrors subscribeTyping, but for the session's resolved/open
+    // status. Lets the open session panel react live if a customer
+    // reopens a resolved chat, instead of leaving the Resolve button
+    // stuck disabled until the admin navigates away and back.
+    subscribeStatus: function (sessionId, onChange) {
+      var ref = rtdb.ref(CHAT_ROOT + '/' + sessionId + '/meta/status');
+      var cb  = function (snap) { onChange(snap.val()); };
       ref.on('value', cb);
       return { ref: ref, cb: cb, event: 'value' };
     },
@@ -1259,7 +1282,19 @@
     setOfflineBanner:   function (offline) { var el = safeEl('chat-offline-banner'); if (el) el.style.display = offline ? 'block' : 'none'; },
     setPinButton:       function (pinned)  { var btn = safeEl('chat-pin-btn'); if (btn) { btn.textContent = pinned ? 'Unpin' : 'Pin'; btn.setAttribute('data-pinned', pinned ? '1' : '0'); } },
     setTabActive:       function (tab)     { ['all','unread','pinned','resolved'].forEach(function (t) { var b = safeEl('chat-tab-' + t); if (b) b.className = 'btn btn-sm ' + (t === tab ? 'btn-primary' : 'btn-ghost'); }); },
-    setNoteLock:        function (locked)  { var indicator = safeEl('note-lock-indicator'); var noteEl = safeEl('chat-note'); var saveBtn = safeEl('chat-save-note-btn'); if (indicator) indicator.style.display = locked ? 'inline' : 'none'; if (noteEl) noteEl.disabled = locked; if (saveBtn) saveBtn.disabled = locked; }
+    setNoteLock:        function (locked)  { var indicator = safeEl('note-lock-indicator'); var noteEl = safeEl('chat-note'); var saveBtn = safeEl('chat-save-note-btn'); if (indicator) indicator.style.display = locked ? 'inline' : 'none'; if (noteEl) noteEl.disabled = locked; if (saveBtn) saveBtn.disabled = locked; },
+    // Reflect live status on the open session panel — re-enables the
+    // Resolve button and restores the "Live Session" label if a customer
+    // reopens a conversation the admin had already resolved.
+    setResolvedState:   function (isResolved) {
+      var resolveBtn = safeEl('chat-resolve-btn');
+      var statusEl   = safeEl('session-status-label');
+      if (resolveBtn) resolveBtn.disabled = isResolved;
+      if (statusEl) {
+        statusEl.textContent = isResolved ? 'Resolved' : 'Live Session';
+        statusEl.style.color = isResolved ? 'var(--success)' : '';
+      }
+    }
   };
 
   // ── Controller ────────────────────────────────────────────────
@@ -1273,6 +1308,8 @@
       this._detachMsgSub();
       var typing = ChatState.getSub('typing');
       if (typing) { ChatDB.detach(typing, 'value'); ChatState.clearSub('typing'); }
+      var status = ChatState.getSub('status');
+      if (status) { ChatDB.detach(status, 'value'); ChatState.clearSub('status'); }
       if (sessionId) { ChatDB.setAdminTyping(sessionId, false); ChatDB.unlockNote(sessionId); }
       var t = ChatState.getTypingTimer(); if (t) { clearTimeout(t); ChatState.setTypingTimer(null); }
     },
@@ -1349,6 +1386,7 @@
       if (sessionData) {
         if (sessionData.customerName) { var nameEl = safeEl('session-name-label'); if (nameEl) nameEl.textContent = sessionData.customerName; }
         ChatRenderer.renderCustomerInfo(sessionData, sessionId);
+        ChatRenderer.setResolvedState(sessionData.status === 'resolved');
       }
       rtdb.ref(INBOX_ROOT + '/' + sessionId).once('value').then(function(snap) {
         if (ChatState.getActiveSid() !== sessionId) return;
@@ -1397,6 +1435,13 @@
       );
       ChatState.registerSub('typing', ChatDB.subscribeTyping(sessionId, function (isTyping) {
         if (ChatState.getActiveSid() === sessionId) ChatRenderer.setTypingVisible(isTyping);
+      }));
+      // Keep the Resolve button and status label in sync with the
+      // conversation's live status, so a customer reopening a resolved
+      // chat doesn't leave the admin's panel stuck in the resolved state.
+      ChatState.registerSub('status', ChatDB.subscribeStatus(sessionId, function (status) {
+        if (ChatState.getActiveSid() !== sessionId) return;
+        ChatRenderer.setResolvedState(status === 'resolved');
       }));
     },
 
@@ -1473,7 +1518,24 @@
 
     resolveSession: function (sessionId) {
       var self = this;
+
+      // Guard against double-resolve — checks the button's current
+      // disabled state (fast double-click) and the last-known session
+      // status (stale/cached view) before doing anything.
+      var resolveBtn  = safeEl('chat-resolve-btn');
+      if (resolveBtn && resolveBtn.disabled) return;
+      var sessionData = ChatState.getSession(sessionId);
+      if (sessionData && sessionData.status === 'resolved') {
+        showToast('This conversation is already resolved', 'info');
+        return;
+      }
+
       if (!confirm('Mark this conversation as resolved? The customer will be asked to rate their experience.')) return;
+
+      // Disable immediately so a second click before the write completes
+      // can't fire a second resolve.
+      if (resolveBtn) resolveBtn.disabled = true;
+
       var ts      = firebase.database.ServerValue.TIMESTAMP;
       var updates = {};
       updates[CHAT_ROOT  + '/' + sessionId + '/meta/status']     = 'resolved';
@@ -1493,18 +1555,14 @@
       rtdb.ref('/').update(updates)
         .then(function () {
           showToast('Conversation resolved');
-          // Update status label in the header.
-          var statusEl = safeEl('session-status-label');
-          if (statusEl) { statusEl.textContent = 'Resolved'; statusEl.style.color = 'var(--success)'; }
-          // Disable the reply input — conversation is closed.
-          var input   = safeEl('reply-input');
-          var sendBtn = safeEl('chat-send-btn');
-          var resolve = safeEl('chat-resolve-btn');
-          if (input)   { input.disabled = true; input.placeholder = 'Conversation resolved'; }
-          if (sendBtn) sendBtn.disabled = true;
-          if (resolve) resolve.disabled = true;
+          ChatRenderer.setResolvedState(true);
         })
-        .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+        .catch(function (e) {
+          showToast('Error: ' + e.message, 'error');
+          // The write failed, so it's not actually resolved — re-enable.
+          var btn = safeEl('chat-resolve-btn');
+          if (btn) btn.disabled = false;
+        });
     },
 
     togglePin: function (sessionId) {
