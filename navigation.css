@@ -39,12 +39,6 @@
 
 .nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; }
 .nav-icon-btn .badge { position: absolute; top: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; font-size: 7px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-
-/* Pulls the hamburger icon flush with the nav's own edge — the button's
-   own 6px padding was pushing the icon glyph in further than the
-   headings/product grid below it, breaking the left-edge alignment. */
-.nav-left .nav-icon-btn { margin-left: -6px; }
-
 .desktop-nav-links { display: none; align-items: center; gap: 24px; }
 .desktop-utility-links { display: none; align-items: center; gap: 4px; }
 
