@@ -159,7 +159,7 @@
   display: grid;
   gap: 8px;
   grid-template-columns: 1fr;
-  padding: 0 12px;
+  padding: 0 18px;
 }
 
 @media (min-width: 640px) {
@@ -177,7 +177,7 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   gap: 8px;
-  padding: 0 12px;
+  padding: 0 18px;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar { display: none; }
