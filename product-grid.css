@@ -200,11 +200,11 @@
 }
 .product-card.featured-card, .product-card.tall-card { grid-column: auto; }
 
-/* IMAGE WRAP — 4:5 portrait ratio */
+/* IMAGE WRAP — nudged toward square from 4:5 to 5:6 */
 .product-img-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 5 / 6;
   overflow: hidden;
   background: #f0ede8;
 }
@@ -277,5 +277,5 @@
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 5 / 6;
 }
