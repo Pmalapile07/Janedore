@@ -159,7 +159,7 @@
   display: grid;
   gap: 8px;
   grid-template-columns: 1fr;
-  padding: 0 18px;
+  padding: 0 8px;
 }
 
 @media (min-width: 640px) {
