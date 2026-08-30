@@ -213,8 +213,8 @@ body.on-collection-page .collection-nav-controls {
    ========================================= */
 
 .site-collection-layout {
-  padding-left: 18px;
-  padding-right: 18px;
+  padding-left: 8px;
+  padding-right: 8px;
   padding-top: 12px;
   padding-bottom: 60px;
   max-width: 1400px;
@@ -223,8 +223,8 @@ body.on-collection-page .collection-nav-controls {
 
 @media (min-width: 768px) {
   .site-collection-layout {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 8px;
+    padding-right: 8px;
     padding-top: 16px;
   }
 }
