@@ -96,14 +96,14 @@
 .initial-drop-view-all {
   display: block;
   margin: 24px auto 0;
-  padding: 12px 28px;
+  padding: 8px 28px;
   background: #111;
   color: #fff;
   border: none;
   border-radius: 0;
   font-family: 'Inter', sans-serif;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 400;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   cursor: pointer;
