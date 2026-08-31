@@ -53,9 +53,9 @@
   font-family: 'Inter', sans-serif !important;
   font-size: 35px;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 800;
   color: #fff;
-  text-transform: none;
+  text-transform: uppercase;
   line-height: 1.15;
   margin: 0;
 }
