@@ -93,6 +93,28 @@
   line-height: 1.3;
 }
 
+.initial-drop-view-all {
+  display: block;
+  margin: 24px auto 0;
+  padding: 12px 28px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
+  transition: opacity 0.2s ease;
+}
+
+.initial-drop-view-all:hover {
+  opacity: 0.85;
+}
+
 .product-card .product-price,
 .product-price-row .product-price {
   font-weight: 400;
