@@ -48,17 +48,66 @@ const S = {
   cart:[], wishlist:[], currentPage:"home", currentCategoryPage:null, selectedSize:null, productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2, filter:{cat:"all",size:"all",price:"all",vendor:null}, catFilter:{size:"all",price:"all"}, campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null, currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, productInfoTab:'description', stickyExtended:false, stickyWishHidden:false, activeSortTab:null
 };
 
+// ==================== SLUG HELPERS ====================
+
+function generateSlugBase(name) {
+  return (name || '').toString().toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'product';
+}
+
+function makeUniqueSlug(base, existingSlugs) {
+  let slug = base;
+  let n = 2;
+  while (existingSlugs.has(slug)) {
+    slug = base + '-' + n;
+    n++;
+  }
+  existingSlugs.add(slug);
+  return slug;
+}
+
+// Only writes a slug to Firestore when a product doesn't already have one —
+// existing slugs are never touched, per rule: don't change slugs on edit.
+async function backfillMissingSlugs(products) {
+  const existingSlugs = new Set(products.filter(p => p.slug).map(p => p.slug));
+  const writes = [];
+  products.forEach(p => {
+    if (!p.slug) {
+      const slug = makeUniqueSlug(generateSlugBase(p.name), existingSlugs);
+      p.slug = slug;
+      writes.push(
+        db.collection('products').doc(p.id).update({ slug }).catch(e => {
+          console.warn('Slug backfill failed for', p.id, e);
+        })
+      );
+    }
+  });
+  if (writes.length) await Promise.all(writes);
+}
+
+function findProductBySlug(slug) {
+  return PRODUCTS.find(p => p.slug === slug) || PRODUCTS.find(p => p.id === slug);
+}
+
 async function fetchProducts() {
-  try { const snapshot = await db.collection('products').where('status','==','active').get(); if(!snapshot.empty) return snapshot.docs.map(d=>({id:d.id,...d.data()})); } catch(e) {}
+  try {
+    const snapshot = await db.collection('products').where('status','==','active').get();
+    if(!snapshot.empty) {
+      const products = snapshot.docs.map(d=>({id:d.id,...d.data()}));
+      await backfillMissingSlugs(products);
+      return products;
+    }
+  } catch(e) {}
   await new Promise(r=>setTimeout(r,600));
   return [
-    { id:"nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:280, badge:"sale", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses featuring UV400 lenses and a distinctive warm brown finish.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size OS. Lens width: 52mm.", variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
-    { id:"tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings crafted from premium gold-plated stainless steel.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", measurements:"Length: 3.5cm. Weight: 12g each.", variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
-    { id:"janedore-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", measurements:"Dimensions: 18cm x 12cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail:[] } }] },
-    { id:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:380, badge:"sale", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"Fluid silhouette and quiet tension. This weighted crepe dress moves with you.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size S. Length: 98cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
-    { id:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:299, badge:"sale", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", measurements:"Volume: 50ml.", variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
-    { id:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", measurements:"Volume: 50ml.", variants:[{ color:"Pink Rain", swatch:"#F3DBD7", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail:[] } }] },
-    { id:"janedore-studded-halter-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size S. Length: 92cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
+    { id:"nova-sunglasses", slug:"janedore-logo-nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:280, badge:"sale", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses featuring UV400 lenses and a distinctive warm brown finish.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size OS. Lens width: 52mm.", variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
+    { id:"tenese-gold-earrings", slug:"stainless-steel-tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings crafted from premium gold-plated stainless steel.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", measurements:"Length: 3.5cm. Weight: 12g each.", variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
+    { id:"janedore-leather-pouch", slug:"janedore-debossed-leather-pouch", sku:"ACC-JLP-007", name:"Janedore Debossed Leather Pouch", brand:"JANEDORE", category:"bags", price:50, salePrice:null, badge:null, sizes:["OS"], stock:50, status:"active", featured:false, description:"Supple debossed leather pouch.", productFeatures:"Genuine leather.", compositionCare:"100% Leather.", shippingReturns:"Free with sunglass purchase.", measurements:"Dimensions: 18cm x 12cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703"], detail:[] } }] },
+    { id:"janedore-raffle-brandy-black-dress", slug:"janedore-raffle-brandy-black-dress", sku:"DRS-RBB-001", name:"Janedore Raffle Brandy Black Dress", brand:"JANEDORE", category:"dresses", price:450, salePrice:380, badge:"sale", sizes:["S","M","L"], stock:40, status:"active", featured:true, description:"Fluid silhouette and quiet tension. This weighted crepe dress moves with you.", productFeatures:"Weighted crepe fabric.", compositionCare:"100% Polyester.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size S. Length: 98cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/116AE49E-1C83-474E-B538-B3147C826859.png?v=1778858287"], detail:[] } }] },
+    { id:"thato-rumination-tea-parfum", slug:"thato-rumination-tea-parfum", sku:"PRF-TRT-001", name:"Thato Rumination Tea Parfum", brand:"THATO", category:"parfum", price:350, salePrice:299, badge:"sale", sizes:["OS"], stock:30, status:"active", featured:true, description:"A contemplative fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", measurements:"Volume: 50ml.", variants:[{ color:"Pale Linen", swatch:"#EBEDE0", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601"], detail:[] } }] },
+    { id:"thato-pink-rain-parfum", slug:"thato-pink-rain-parfum", sku:"PRF-TPR-002", name:"Thato Pink Rain Parfum", brand:"THATO", category:"parfum", price:350, salePrice:null, badge:"new", sizes:["OS"], stock:25, status:"active", featured:true, description:"A delicate, romantic fragrance.", productFeatures:"Long-lasting eau de parfum. 50ml.", compositionCare:"Alcohol denat., parfum.", shippingReturns:"Free shipping over R1000.", measurements:"Volume: 50ml.", variants:[{ color:"Pink Rain", swatch:"#F3DBD7", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6630.png?v=1778801279"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/FD9FBEA5-4CD8-421E-A549-F67099AD9B79.png?v=1778801677"], detail:[] } }] },
+    { id:"janedore-studded-halter-dress", slug:"janedore-studded-halter-neck-dress", sku:"DRS-SHN-001", name:"Janedore Studded Halter Neck Dress", brand:"JANEDORE", category:"dresses", price:680, salePrice:null, badge:"new", sizes:["XS","S","M","L"], stock:20, status:"active", featured:true, description:"Refined edge meets feminine structure.", productFeatures:"Structured halter neckline.", compositionCare:"95% Polyester, 5% Elastane.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size S. Length: 92cm.", variants:[{ color:"Black", swatch:"#111", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/BB8C5723-337D-4CB3-B9B8-9FC4BF36CBFE.png?v=1779001142"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/27BAAA95-3B6D-4CCE-A2D8-FFF60326A881.png?v=1779001142"], detail:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_1.png?v=1779001150","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_2.png?v=1779001160","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/studded_detail_3.png?v=1779001170"] } }] }
   ];
 }
 
@@ -109,25 +158,69 @@ async function init() {
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
   initVendors();
-  const route = getRouteFromHash();
-  if (route.page === 'product-detail') goToProduct(route.productId);
-  else if (route.page === 'category') navigateToCategory(route.cat);
-  else if (route.page === 'login') navigateToLogin();
-  else if (route.page === 'account') navigateToAccount();
-  else navigateTo('home');
+
+  // Path-based product routes (/products/slug) take priority over hash routes.
+  const pathRoute = getRouteFromPath();
+  if (pathRoute) {
+    const product = findProductBySlug(pathRoute.slug);
+    if (product) { goToProduct(product.id, true); }
+    else { navigateTo('home'); }
+  } else {
+    const route = getRouteFromHash();
+    if (route.page === 'product-detail') {
+      // Legacy link like #product-prod-1788177528434 — load the product
+      // and goToProduct() will clean the URL to /products/slug below.
+      goToProduct(route.productId, true);
+    }
+    else if (route.page === 'category') navigateToCategory(route.cat);
+    else if (route.page === 'login') navigateToLogin();
+    else if (route.page === 'account') navigateToAccount();
+    else navigateTo('home');
+  }
   updateChatVisibility();
 }
 
 window.addEventListener('DOMContentLoaded', init);
 
-function updateHash(hash) { 
+function updateHash(hash) {
   const fullHash = hash ? '#' + hash : '';
-  if (window.location.hash !== fullHash) history.pushState(null, null, fullHash || '#'); 
+  const newUrl = '/' + fullHash;
+  if (window.location.pathname !== '/' || window.location.hash !== fullHash) {
+    history.pushState(null, null, newUrl);
+  }
+}
+
+// Pushes (or replaces) the clean /products/{slug} URL for a product page.
+function updateProductUrl(product, replaceUrl) {
+  const slug = product.slug || product.id;
+  const newPath = '/products/' + encodeURIComponent(slug);
+  if (window.location.pathname === newPath) return;
+  if (replaceUrl) history.replaceState(null, null, newPath);
+  else history.pushState(null, null, newPath);
 }
 
 function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 
-window.addEventListener('popstate', () => { const route = getRouteFromHash(); if (route.page === 'product-detail') goToProduct(route.productId); else if (route.page === 'category') navigateToCategory(route.cat); else if (route.page === 'login') navigateToLogin(); else if (route.page === 'account') navigateToAccount(); else navigateTo('home'); });
+// Reads clean /products/{slug} URLs.
+function getRouteFromPath() {
+  const match = window.location.pathname.match(/^\/products\/([^\/]+)\/?$/);
+  if (match) return { page: 'product-detail', slug: decodeURIComponent(match[1]) };
+  return null;
+}
+
+window.addEventListener('popstate', () => {
+  const pathRoute = getRouteFromPath();
+  if (pathRoute) {
+    const product = findProductBySlug(pathRoute.slug);
+    if (product) { goToProduct(product.id, true); return; }
+  }
+  const route = getRouteFromHash();
+  if (route.page === 'product-detail') goToProduct(route.productId, true);
+  else if (route.page === 'category') navigateToCategory(route.cat);
+  else if (route.page === 'login') navigateToLogin();
+  else if (route.page === 'account') navigateToAccount();
+  else navigateTo('home');
+});
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
@@ -162,11 +255,10 @@ function navigateToCategory(cat) {
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks, 50); updateChatVisibility();
 }
 
-function goToProduct(productId) {
-  console.log('goToProduct called with:', productId);
-  console.log('renderProductPage exists:', typeof renderProductPage);
-  S.saleMode = false; S.filter.vendor = null; updateHash(`product-${productId}`); closeCart();
+function goToProduct(productId, replaceUrl) {
+  S.saleMode = false; S.filter.vendor = null; closeCart();
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
+  updateProductUrl(product, replaceUrl);
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
   if (S.currentPage === 'category' || S.currentPage === 'products') S.previousCollectionPage = S.currentCategoryPage || 'products';
   S.currentReviewProductId = productId;
