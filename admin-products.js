@@ -5,7 +5,7 @@
 
   var esc               = window._esc;
   var safeEl            = window._safeEl;
-  var safeUrl           = window._safeUrl;
+  var safeUrl            = window._safeUrl;
   var fmt               = window._fmt;
   var showToast         = window._showToast;
   var isSuperAdmin      = window._isSuperAdmin;
@@ -96,6 +96,26 @@
     return output.join('');
   }
 
+  // ── SLUG HELPERS ─────────────────────────────────────────────
+  // New products get a slug generated from their name. Existing products
+  // keep whatever slug they already have — it is never regenerated on edit.
+
+  function _slugify(name) {
+    return (name || '').toString().toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'product';
+  }
+
+  function _uniqueSlug(base, allProducts, excludeId) {
+    var taken = {};
+    allProducts.forEach(function(p) {
+      if (p.slug && p.id !== excludeId) taken[p.slug] = true;
+    });
+    var slug = base, n = 2;
+    while (taken[slug]) { slug = base + '-' + n; n++; }
+    return slug;
+  }
+
   window._uploadToCloudinary = function(onSuccess) {
     var cloudName    = window.CLOUDINARY_CLOUD_NAME;
     var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
@@ -141,6 +161,7 @@
     if (!p) return;
     var copy = Object.assign({}, p);
     copy.id = ''; copy.name = copy.name + ' (Copy)'; copy.sku = copy.sku + '-COPY';
+    copy.slug = _uniqueSlug(_slugify(copy.name), window._allProducts || [], null);
     copy.status = 'draft'; copy.createdAt = new Date().toISOString(); copy.updatedAt = new Date().toISOString();
     var ref = productsRef.doc(); copy.id = ref.id;
     ref.set(copy).then(function() { showToast('Product duplicated'); window._loadProducts(); }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
@@ -654,8 +675,16 @@
       return s.toLowerCase().indexOf(unit.toLowerCase()) === 0 ? s : unit + ' ' + s;
     });
 
+    // Slug: keep the existing one untouched on edit. Only generate a new
+    // one if this product genuinely has none yet (new product, or an old
+    // product that predates slugs and hasn't been backfilled).
+    var slug = (existingProduct && existingProduct.slug)
+      ? existingProduct.slug
+      : _uniqueSlug(_slugify(form.name.value), allProducts, existingId || null);
+
     var data = {
       id:                   existingId || form.sku.value || ('prod-' + Date.now()),
+      slug:                 slug,
       sku:                  form.sku.value,
       name:                 form.name.value,
       brand:                form.brand.value,
