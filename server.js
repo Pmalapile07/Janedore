@@ -1,10 +1,37 @@
 const express = require('express');
 const path = require('path');
 const https = require('https');
+const fs = require('fs');
+const admin = require('firebase-admin');
 
 const app = express();
 
 app.use(express.json());
+
+// ==================== FIREBASE ADMIN INIT ====================
+// Uses the existing FIREBASE_SERVICE_ACCOUNT env var already set on Render.
+// If it's missing or invalid, we fail gracefully — the /products/:slug
+// route below will just fall through to the normal client-rendered page.
+
+let serviceAccount = null;
+try {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} catch (e) {
+  console.error('[FIREBASE-ADMIN] Could not parse FIREBASE_SERVICE_ACCOUNT:', e.message);
+}
+
+let adminDb = null;
+if (serviceAccount) {
+  if (!admin.apps.length) {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  }
+  adminDb = admin.firestore();
+  console.log('[FIREBASE-ADMIN] Initialized');
+} else {
+  console.warn('[FIREBASE-ADMIN] Not initialized — /products/:slug will serve plain index.html');
+}
+
+const SITE_URL = 'https://janedore.co.za';
 
 // Cloudinary config endpoint — MUST be first
 app.get('/api/cloudinary-config', (req, res) => {
@@ -161,6 +188,113 @@ app.post('/api/send-welcome-email', (req, res) => {
 
   request.write(body);
   request.end();
+});
+
+// ==================== SEO HELPERS ====================
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function stripHtmlTags(str) {
+  return String(str || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function injectProductMeta(html, product, slug) {
+  const canonicalUrl = `${SITE_URL}/products/${encodeURIComponent(slug)}`;
+  const title = `${product.name || 'Product'} | JANEDORE`;
+
+  let description = stripHtmlTags(product.description || product.productFeatures || '');
+  if (description.length > 160) description = description.slice(0, 157).trim() + '...';
+
+  const firstVariant = (product.variants && product.variants[0]) || {};
+  const variantImages = firstVariant.images || {};
+  const imageUrl =
+    (variantImages.ghost && variantImages.ghost[0]) ||
+    (variantImages.model && variantImages.model[0]) ||
+    (variantImages.detail && variantImages.detail[0]) ||
+    '';
+
+  const price = product.salePrice != null ? product.salePrice : product.price;
+  const availability = (product.stock > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name || '',
+    description: description,
+    sku: product.sku || undefined,
+    brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+    image: imageUrl ? [imageUrl] : undefined,
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'ZAR',
+      price: price != null ? String(price) : undefined,
+      availability: availability
+    }
+  };
+  Object.keys(jsonLd).forEach(k => jsonLd[k] === undefined && delete jsonLd[k]);
+  Object.keys(jsonLd.offers).forEach(k => jsonLd.offers[k] === undefined && delete jsonLd.offers[k]);
+
+  const metaBlock = `
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}">
+    <link rel="canonical" href="${canonicalUrl}">
+    <meta property="og:type" content="product">
+    <meta property="og:title" content="${escapeHtml(title)}">
+    <meta property="og:description" content="${escapeHtml(description)}">
+    <meta property="og:url" content="${canonicalUrl}">
+    ${imageUrl ? `<meta property="og:image" content="${escapeHtml(imageUrl)}">` : ''}
+    <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+  </head>`;
+
+  let out = html.replace(/<title>[\s\S]*?<\/title>/i, '');
+  out = out.replace(/<meta\s+name=["']description["'][^>]*>/i, '');
+  out = out.replace(/<link\s+rel=["']canonical["'][^>]*>/i, '');
+  out = out.replace(/<meta\s+property=["']og:[^"']*["'][^>]*>/gi, '');
+  out = out.replace(/<\/head>/i, metaBlock);
+
+  return out;
+}
+
+// ==================== PRODUCT SEO ROUTE ====================
+// Must be registered before the static middleware and catch-all below.
+// Serves index.html with real per-product <title>/meta/canonical/OG/JSON-LD
+// injected server-side, so Google and link-preview bots see the right tags
+// without running JS. Falls through to the normal SPA index.html if the
+// product isn't found or Firebase Admin isn't configured — nothing breaks.
+
+app.get('/products/:slug', async (req, res, next) => {
+  if (!adminDb) return next();
+
+  try {
+    const slug = req.params.slug;
+    let product = null;
+
+    const bySlug = await adminDb.collection('products').where('slug', '==', slug).limit(1).get();
+    if (!bySlug.empty) {
+      product = { id: bySlug.docs[0].id, ...bySlug.docs[0].data() };
+    } else {
+      // Fallback: someone hit /products/prod-1788177528434 directly (old ID)
+      const byId = await adminDb.collection('products').doc(slug).get();
+      if (byId.exists) product = { id: byId.id, ...byId.data() };
+    }
+
+    if (!product) return next();
+
+    const indexPath = path.join(__dirname, 'index.html');
+    const rawHtml = fs.readFileSync(indexPath, 'utf8');
+    const finalHtml = injectProductMeta(rawHtml, product, product.slug || slug);
+    res.send(finalHtml);
+  } catch (e) {
+    console.error('[PRODUCT ROUTE] Error:', e.message);
+    return next();
+  }
 });
 
 // Serve static files (CSS, JS, images, etc.)
