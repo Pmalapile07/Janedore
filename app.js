@@ -114,8 +114,9 @@ async function fetchProducts() {
       await backfillMissingSlugs(products);
       return products;
     }
-  } catch(e) {}
-  await new Promise(r=>setTimeout(r,600));
+  } catch(e) {
+    console.error('Error fetching products:', e);
+  }
   return [
     { id:"nova-sunglasses", slug:"janedore-logo-nova-sunglasses", sku:"ACC-NSG-006", name:"Janedore Logo Nova Sunglasses", brand:"JANEDORE", category:"sunglasses", price:350, salePrice:280, badge:"sale", sizes:["OS"], stock:10, status:"active", featured:true, description:"Bold yet refined sunglasses featuring UV400 lenses and a distinctive warm brown finish.", productFeatures:"UV400 lenses.", compositionCare:"Acetate frame.", shippingReturns:"Free shipping over R1000.", measurements:"Model wears size OS. Lens width: 52mm.", variants:[{ color:"Warm Brown", swatch:"#AF3E06", images:{ model:[], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287","https://cdn.shopify.com/s/files/1/0705/5615/6145/files/C8DC66E1-BB21-4807-BC2C-C7F52A8005CE.png?v=1778858287"], detail:[] } }] },
     { id:"tenese-gold-earrings", slug:"stainless-steel-tenese-gold-earrings", sku:"JWL-TGE-005", name:"Stainless Steel Tenesè Gold Earrings", brand:"NIRIUS CO", category:"jewelry", price:380, salePrice:null, badge:"new", sizes:["Stainless Steel"], stock:10, status:"active", featured:true, description:"Sculptural gold earrings crafted from premium gold-plated stainless steel.", productFeatures:"18k gold-plated.", compositionCare:"Gold-plated stainless steel.", shippingReturns:"Free shipping over R1500.", measurements:"Length: 3.5cm. Weight: 12g each.", variants:[{ color:"Gold", swatch:"#d4af37", images:{ model:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153"], ghost:["https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6607.png?v=1778790153"], detail:[] } }] },
@@ -161,6 +162,10 @@ window.selectStickySize = selectStickySize;
 window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
+// ==================== HERO IMAGE - LOAD IMMEDIATELY ====================
+// Set hero image before any async operations to prevent grey flash
+setHeroImage();
+
 async function init() {
   loadCartFromStorage();
   updateBadges();
@@ -168,7 +173,6 @@ async function init() {
   cleanCartOrphans();
   loadWishlistFromStorage();
   updateBadges();
-  setHeroImage();
   buildArrivals();
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
@@ -197,20 +201,14 @@ async function init() {
   } else {
     const route = getRouteFromHash();
     if (route.page === 'product-detail') {
-      // Legacy link like #product-prod-1788177528434 — goToProduct() cleans
-      // the URL to /products/slug below.
       goToProduct(route.productId, true);
     }
     else if (route.page === 'category') {
-      // Legacy link like #category-dresses — navigateToCategory() cleans
-      // the URL to /collections/dresses below.
       navigateToCategory(route.cat, true);
     }
     else if (route.page === 'login') navigateToLogin(true);
     else if (route.page === 'account') navigateToAccount(true);
     else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(route.page)) {
-      // Legacy #cart / #shop(#products) / #campaign / #editorial — navigateTo()
-      // cleans the URL below.
       navigateTo(route.page, true);
     }
     else navigateTo('home');
