@@ -113,12 +113,12 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const price = p.salePrice
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
+  const metaRow = showDetails !== false ? `<div class="product-meta-row">${brand}${price}</div>` : brand;
   return `
     <div class="product-card" onclick="S.productVariantSelections['${p.id}']=${vi};goToProduct('${p.id}')">
       <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
-      ${brand}
+      ${metaRow}
       ${name}
-      ${showDetails !== false ? price : ''}
     </div>`;
 }
 
