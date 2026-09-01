@@ -103,17 +103,23 @@ function expandProductVariants(products) {
   return expanded;
 }
 
+// FIXED: Cleaned up metaRow structure to ensure perfect vertical alignment
 function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const badge = p.badge ? `<span class="product-badge">${p.badge.toUpperCase()}</span>` : '';
   const imgs = p.variants?.[vi]?.images;
   const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
+  
   const brand = p.brand ? `<div class="product-brand">${p.brand}</div>` : '';
   const name = `<div class="product-title">${p.name}</div>`;
+  
   const price = p.salePrice
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-  const metaRow = showDetails !== false ? `<div class="product-meta-row">${brand}${price}</div>` : brand;
+
+  // Brand and Price are now naturally sequential, allowing CSS to align them perfectly
+  const metaRow = showDetails !== false ? `${brand}${price}` : brand;
+
   return `
     <div class="product-card" onclick="S.productVariantSelections['${p.id}']=${vi};goToProduct('${p.id}')">
       <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
