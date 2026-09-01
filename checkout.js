@@ -48,8 +48,13 @@ function renderCheckoutSummary() {
   const total = subtotal + shipping;
   
   let itemsHTML = S.cart.map(item => {
+    const product = PRODUCTS.find(p => p.id === item.productId);
+    const thumbnail = item.thumbnail && item.thumbnail !== PLACEHOLDER_IMAGE 
+      ? item.thumbnail 
+      : (product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE);
+    
     return `<div class="checkout-item">
-      <div class="checkout-item-img" style="background-image:url('${item.thumbnail || ''}');"></div>
+      <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
       <div class="checkout-item-info">
         <div class="checkout-item-brand">${item.brand || ''}</div>
         <div class="checkout-item-name">${item.name}</div>
