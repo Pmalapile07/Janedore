@@ -204,6 +204,17 @@ function stripHtmlTags(str) {
   return String(str || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function replaceHeadTags(html, metaBlock) {
+  let out = html.replace(/<title>[\s\S]*?<\/title>/i, '');
+  out = out.replace(/<meta\s+name=["']description["'][^>]*>/i, '');
+  out = out.replace(/<link\s+rel=["']canonical["'][^>]*>/i, '');
+  out = out.replace(/<meta\s+property=["']og:[^"']*["'][^>]*>/gi, '');
+  out = out.replace(/<\/head>/i, metaBlock);
+  return out;
+}
+
+// ==================== PRODUCT SEO ====================
+
 function injectProductMeta(html, product, slug) {
   const canonicalUrl = `${SITE_URL}/products/${encodeURIComponent(slug)}`;
   const title = `${product.name || 'Product'} | JANEDORE`;
@@ -253,13 +264,45 @@ function injectProductMeta(html, product, slug) {
     <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
   </head>`;
 
-  let out = html.replace(/<title>[\s\S]*?<\/title>/i, '');
-  out = out.replace(/<meta\s+name=["']description["'][^>]*>/i, '');
-  out = out.replace(/<link\s+rel=["']canonical["'][^>]*>/i, '');
-  out = out.replace(/<meta\s+property=["']og:[^"']*["'][^>]*>/gi, '');
-  out = out.replace(/<\/head>/i, metaBlock);
+  return replaceHeadTags(html, metaBlock);
+}
 
-  return out;
+// ==================== COLLECTION SEO ====================
+// Static metadata — mirrors COLLECTION_DESCRIPTIONS in collection.js.
+// No Firestore lookup needed since categories are a fixed, known set.
+
+const CATEGORY_META = {
+  'all-clothing': { label: 'All Clothing', description: 'Our complete clothing edit — refined silhouettes for the modern wardrobe.' },
+  'dresses':      { label: 'Dresses', description: 'Effortless dresses that balance structure and fluidity.' },
+  'tops':         { label: 'Tops', description: 'Elevated essentials, from sculptural blouses to relaxed knits.' },
+  'bottoms':      { label: 'Bottoms', description: 'Tailored trousers and fluid skirts with quiet intention.' },
+  'jackets':      { label: 'Jackets', description: 'Outerwear that defines the silhouette — sharp, soft, and considered.' },
+  'sets':         { label: 'Sets', description: 'Coordinated pieces designed to be worn together or styled apart.' },
+  'bags':         { label: 'Bags', description: 'Understated accessories that complete the look without saying too much.' },
+  'jewelry':      { label: 'Jewelry', description: 'Sculptural adornments — timeless pieces with modern sensibility.' },
+  'sunglasses':   { label: 'Sunglasses', description: 'Bold yet refined eyewear for the discerning gaze.' },
+  'parfum':       { label: 'Scent', description: 'A study in scent. THATO parfums are crafted for the considered wearer.' }
+};
+
+function injectCollectionMeta(html, cat) {
+  const meta = CATEGORY_META[cat];
+  if (!meta) return null; // unknown category — caller falls through to normal SPA
+
+  const canonicalUrl = `${SITE_URL}/collections/${encodeURIComponent(cat)}`;
+  const title = `${meta.label} | JANEDORE`;
+  const description = meta.description;
+
+  const metaBlock = `
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}">
+    <link rel="canonical" href="${canonicalUrl}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="${escapeHtml(title)}">
+    <meta property="og:description" content="${escapeHtml(description)}">
+    <meta property="og:url" content="${canonicalUrl}">
+  </head>`;
+
+  return replaceHeadTags(html, metaBlock);
 }
 
 // ==================== PRODUCT SEO ROUTE ====================
@@ -293,6 +336,23 @@ app.get('/products/:slug', async (req, res, next) => {
     res.send(finalHtml);
   } catch (e) {
     console.error('[PRODUCT ROUTE] Error:', e.message);
+    return next();
+  }
+});
+
+// ==================== COLLECTION SEO ROUTE ====================
+// Also before static middleware and catch-all. No database call needed —
+// categories are a fixed set, so this is pure string injection.
+
+app.get('/collections/:cat', (req, res, next) => {
+  try {
+    const indexPath = path.join(__dirname, 'index.html');
+    const rawHtml = fs.readFileSync(indexPath, 'utf8');
+    const finalHtml = injectCollectionMeta(rawHtml, req.params.cat);
+    if (!finalHtml) return next(); // unknown category — let the normal SPA handle it
+    res.send(finalHtml);
+  } catch (e) {
+    console.error('[COLLECTION ROUTE] Error:', e.message);
     return next();
   }
 });
