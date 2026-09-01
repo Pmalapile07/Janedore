@@ -159,12 +159,18 @@ async function init() {
   buildCampaignSlider();
   initVendors();
 
-  // Path-based product routes (/products/slug) take priority over hash routes.
+  // Path-based routes (/products/slug, /collections/cat) take priority over hash routes.
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
-    const product = findProductBySlug(pathRoute.slug);
-    if (product) { goToProduct(product.id, true); }
-    else { navigateTo('home'); }
+    if (pathRoute.page === 'product-detail') {
+      const product = findProductBySlug(pathRoute.slug);
+      if (product) { goToProduct(product.id, true); }
+      else { navigateTo('home'); }
+    } else if (pathRoute.page === 'category') {
+      navigateToCategory(pathRoute.cat, true);
+    } else {
+      navigateTo('home');
+    }
   } else {
     const route = getRouteFromHash();
     if (route.page === 'product-detail') {
@@ -172,7 +178,11 @@ async function init() {
       // and goToProduct() will clean the URL to /products/slug below.
       goToProduct(route.productId, true);
     }
-    else if (route.page === 'category') navigateToCategory(route.cat);
+    else if (route.page === 'category') {
+      // Legacy link like #category-dresses — navigateToCategory() will
+      // clean the URL to /collections/dresses below.
+      navigateToCategory(route.cat, true);
+    }
     else if (route.page === 'login') navigateToLogin();
     else if (route.page === 'account') navigateToAccount();
     else navigateTo('home');
@@ -199,24 +209,40 @@ function updateProductUrl(product, replaceUrl) {
   else history.pushState(null, null, newPath);
 }
 
+// Pushes (or replaces) the clean /collections/{cat} URL for a category page.
+function updateCollectionUrl(cat, replaceUrl) {
+  const newPath = '/collections/' + encodeURIComponent(cat);
+  if (window.location.pathname === newPath) return;
+  if (replaceUrl) history.replaceState(null, null, newPath);
+  else history.pushState(null, null, newPath);
+}
+
 function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 
-// Reads clean /products/{slug} URLs.
+// Reads clean /products/{slug} and /collections/{cat} URLs.
 function getRouteFromPath() {
-  const match = window.location.pathname.match(/^\/products\/([^\/]+)\/?$/);
-  if (match) return { page: 'product-detail', slug: decodeURIComponent(match[1]) };
+  const path = window.location.pathname;
+  let m = path.match(/^\/products\/([^\/]+)\/?$/);
+  if (m) return { page: 'product-detail', slug: decodeURIComponent(m[1]) };
+  m = path.match(/^\/collections\/([^\/]+)\/?$/);
+  if (m) return { page: 'category', cat: decodeURIComponent(m[1]) };
   return null;
 }
 
 window.addEventListener('popstate', () => {
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
-    const product = findProductBySlug(pathRoute.slug);
-    if (product) { goToProduct(product.id, true); return; }
+    if (pathRoute.page === 'product-detail') {
+      const product = findProductBySlug(pathRoute.slug);
+      if (product) { goToProduct(product.id, true); return; }
+    } else if (pathRoute.page === 'category') {
+      navigateToCategory(pathRoute.cat, true);
+      return;
+    }
   }
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId, true);
-  else if (route.page === 'category') navigateToCategory(route.cat);
+  else if (route.page === 'category') navigateToCategory(route.cat, true);
   else if (route.page === 'login') navigateToLogin();
   else if (route.page === 'account') navigateToAccount();
   else navigateTo('home');
@@ -242,8 +268,8 @@ function navigateTo(page) {
   updateChatVisibility(); setTimeout(refreshSwipeTracks, 50);
 }
 
-function navigateToCategory(cat) {
-  S.saleMode = false; S.filter.vendor = null; updateHash(`category-${cat}`);
+function navigateToCategory(cat, replaceUrl) {
+  S.saleMode = false; S.filter.vendor = null; updateCollectionUrl(cat, replaceUrl);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
   S.previousCollectionPage = cat; removeStickyBar();
