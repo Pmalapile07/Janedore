@@ -247,3 +247,27 @@ body.on-collection-page .collection-nav-controls {
     padding: 0 16px;
   }
 }
+
+/* =========================================
+   PRODUCT CARD META ALIGNMENT FIX
+   ========================================= */
+
+/* Ensures the Brand and Price sit perfectly on the same text baseline, preventing the price from appearing "high" */
+.product-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.product-price-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1;
+}
+
+.product-brand {
+  line-height: 1.2;
+}
