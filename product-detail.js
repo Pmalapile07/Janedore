@@ -8,8 +8,15 @@ function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' 
 function getProductImages(product, variantIndex) {
   const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
   const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
-  if (product.category === 'jewelry') return [...(variant.images?.model||[]), ...(variant.images?.ghost||[])].filter(Boolean).length ? [...(variant.images?.model||[]), ...(variant.images?.ghost||[])].filter(Boolean) : [PLACEHOLDER_IMAGE];
-  return variant.images?.[S.imageMode] || variant.images?.ghost || variant.images?.model || [PLACEHOLDER_IMAGE];
+  
+  const model = (variant.images?.model || []).filter(Boolean);
+  const ghost = (variant.images?.ghost || []).filter(Boolean);
+  const detail = (variant.images?.detail || []).filter(Boolean);
+  
+  const combined = [...model, ...ghost, ...detail];
+  
+  if (combined.length > 0) return combined;
+  return [PLACEHOLDER_IMAGE];
 }
 function getProductThumbnail(product, variantIndex) { return safeImage(getProductImages(product, variantIndex)[0]); }
 function getAllProductImages(product, variantIndex) {
