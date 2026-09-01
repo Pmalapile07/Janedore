@@ -48,11 +48,21 @@ const S = {
   cart:[], wishlist:[], currentPage:"home", currentCategoryPage:null, selectedSize:null, productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2, filter:{cat:"all",size:"all",price:"all",vendor:null}, catFilter:{size:"all",price:"all"}, campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null, currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, productInfoTab:'description', stickyExtended:false, stickyWishHidden:false, activeSortTab:null
 };
 
-// Pages that get a clean root-level URL (/login, /cart, etc) instead of a
-// hash. These are private/utility pages with no SEO value, so they don't
-// get a server-side meta route like /products or /collections — the
-// existing catch-all already serves index.html for them.
-const CLEAN_URL_PAGES = new Set(['login', 'account', 'checkout', 'cart', 'wishlist']);
+// Every non-home, non-product, non-collection page now gets a clean
+// root-level URL instead of a hash. Maps internal page key -> URL segment
+// (most are the same string; 'products' is an exception since the URL
+// "/products" is reserved for individual items at /products/{slug}).
+const PAGE_URL_MAP = {
+  products: 'shop',
+  campaign: 'campaign',
+  editorial: 'editorial',
+  login: 'login',
+  account: 'account',
+  checkout: 'checkout',
+  cart: 'cart',
+  wishlist: 'wishlist'
+};
+const URL_TO_PAGE_MAP = Object.fromEntries(Object.entries(PAGE_URL_MAP).map(([k, v]) => [v, k]));
 
 // ==================== SLUG HELPERS ====================
 
@@ -165,7 +175,7 @@ async function init() {
   buildCampaignSlider();
   initVendors();
 
-  // Path-based routes (/products/slug, /collections/cat, /login, /cart, etc)
+  // Path-based routes (/products/slug, /collections/cat, /shop, /login, etc)
   // take priority over hash routes.
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
@@ -179,7 +189,7 @@ async function init() {
       navigateToLogin(true);
     } else if (pathRoute.page === 'account') {
       navigateToAccount(true);
-    } else if (pathRoute.page === 'cart' || pathRoute.page === 'wishlist' || pathRoute.page === 'checkout') {
+    } else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
     } else {
       navigateTo('home');
@@ -198,9 +208,9 @@ async function init() {
     }
     else if (route.page === 'login') navigateToLogin(true);
     else if (route.page === 'account') navigateToAccount(true);
-    else if (route.page === 'cart' || route.page === 'wishlist' || route.page === 'checkout') {
-      // Legacy #cart / #wishlist / #checkout — navigateTo() cleans the URL
-      // to /cart, /wishlist, /checkout below.
+    else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(route.page)) {
+      // Legacy #cart / #shop(#products) / #campaign / #editorial — navigateTo()
+      // cleans the URL below.
       navigateTo(route.page, true);
     }
     else navigateTo('home');
@@ -218,10 +228,11 @@ function updateHash(hash) {
   }
 }
 
-// Pushes (or replaces) a clean root-level URL for pages in CLEAN_URL_PAGES
-// (login, account, checkout, cart, wishlist).
+// Pushes (or replaces) a clean root-level URL for pages in PAGE_URL_MAP
+// (shop, campaign, editorial, login, account, checkout, cart, wishlist).
 function updateCleanUrl(pageKey, replaceUrl) {
-  const newPath = '/' + pageKey;
+  const segment = PAGE_URL_MAP[pageKey] || pageKey;
+  const newPath = '/' + segment;
   if (window.location.pathname === newPath) return;
   if (replaceUrl) history.replaceState(null, null, newPath);
   else history.pushState(null, null, newPath);
@@ -246,16 +257,17 @@ function updateCollectionUrl(cat, replaceUrl) {
 
 function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 
-// Reads clean /products/{slug}, /collections/{cat}, and utility page URLs
-// (/login, /account, /checkout, /cart, /wishlist).
+// Reads clean /products/{slug}, /collections/{cat}, and every mapped
+// utility/content page (/shop, /login, /account, /checkout, /cart,
+// /wishlist, /campaign, /editorial).
 function getRouteFromPath() {
   const path = window.location.pathname;
   let m = path.match(/^\/products\/([^\/]+)\/?$/);
   if (m) return { page: 'product-detail', slug: decodeURIComponent(m[1]) };
   m = path.match(/^\/collections\/([^\/]+)\/?$/);
   if (m) return { page: 'category', cat: decodeURIComponent(m[1]) };
-  m = path.match(/^\/(login|account|checkout|cart|wishlist)\/?$/);
-  if (m) return { page: m[1] };
+  m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial)\/?$/);
+  if (m) return { page: URL_TO_PAGE_MAP[m[1]] || m[1] };
   return null;
 }
 
@@ -274,7 +286,7 @@ window.addEventListener('popstate', () => {
     } else if (pathRoute.page === 'account') {
       navigateToAccount(true);
       return;
-    } else if (pathRoute.page === 'cart' || pathRoute.page === 'wishlist' || pathRoute.page === 'checkout') {
+    } else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
       return;
     }
@@ -284,7 +296,7 @@ window.addEventListener('popstate', () => {
   else if (route.page === 'category') navigateToCategory(route.cat, true);
   else if (route.page === 'login') navigateToLogin(true);
   else if (route.page === 'account') navigateToAccount(true);
-  else if (route.page === 'cart' || route.page === 'wishlist' || route.page === 'checkout') navigateTo(route.page, true);
+  else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(route.page)) navigateTo(route.page, true);
   else navigateTo('home');
 });
 
@@ -300,7 +312,7 @@ function navigateTo(page, replaceUrl) {
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page","collection-page"); }
   setNavForPage(page);
   if (page === 'home') updateHash('');
-  else if (CLEAN_URL_PAGES.has(page)) updateCleanUrl(page, replaceUrl);
+  else if (PAGE_URL_MAP.hasOwnProperty(page)) updateCleanUrl(page, replaceUrl);
   else updateHash(page);
   if(page==="products"){ DOM.mainNav?.classList.add("collection-page"); S.activeSortTab = 'all'; renderCollectionSortingTabs(); renderAllProducts(); ensureNavScrolled(); S.previousCollectionPage='products'; }
   if(page==="cart"){ renderCartPage(); ensureNavScrolled(); }
@@ -339,7 +351,7 @@ function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.cl
 
 function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
 
-function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
