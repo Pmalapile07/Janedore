@@ -161,3 +161,37 @@
 .product-grid.editorial-3col .product-card .product-img-wrap {
   aspect-ratio: 310 / 469;
 }
+/* Prevent image saving on product cards */
+.product-img-wrap,
+.product-card-slides,
+.product-card-slide,
+.product-main-image,
+.product-thumbnail {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* Add invisible overlay to block long-press on product images */
+.product-img-wrap::after,
+.product-main-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  pointer-events: auto;
+  background: transparent;
+}
+
+/* Ensure parent elements are positioned for the overlay */
+.product-img-wrap,
+.product-main-image {
+  position: relative;
+}
