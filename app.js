@@ -388,3 +388,52 @@ function updateChatVisibility() {
   const hiddenPages = ['product-detail', 'products', 'category', 'wishlist', 'cart'];
   DOM.chatBubble.style.display = hiddenPages.includes(S.currentPage) ? 'none' : 'flex';
 }
+// ==================== IMAGE PROTECTION ====================
+// Prevent long-press/right-click saving of product images
+
+// Block context menu on product images
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.closest('.product-img-wrap') || 
+      e.target.closest('.product-main-image') || 
+      e.target.closest('.product-thumbnail') ||
+      e.target.closest('[style*="background-image"]')) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+// Block long-press on mobile for product images
+document.addEventListener('touchstart', function(e) {
+  if (e.target.closest('.product-img-wrap') || 
+      e.target.closest('.product-main-image') || 
+      e.target.closest('.product-thumbnail')) {
+    // Only prevent if it's a long press (not a swipe)
+    const touch = e.touches[0];
+    const target = e.target;
+    
+    // Set a timeout to detect long press
+    const longPressTimer = setTimeout(() => {
+      e.preventDefault();
+      // Show a subtle feedback that saving is disabled
+      if (target.style) {
+        target.style.opacity = '0.8';
+        setTimeout(() => { target.style.opacity = ''; }, 200);
+      }
+    }, 500);
+    
+    // Clear timeout on touch end or move
+    target.addEventListener('touchend', () => clearTimeout(longPressTimer), { once: true });
+    target.addEventListener('touchmove', () => clearTimeout(longPressTimer), { once: true });
+  }
+}, { passive: false });
+
+// Prevent dragging of any background-image divs
+document.addEventListener('dragstart', function(e) {
+  if (e.target.closest('.product-img-wrap') || 
+      e.target.closest('.product-main-image') || 
+      e.target.closest('.product-thumbnail') ||
+      e.target.style.backgroundImage) {
+    e.preventDefault();
+    return false;
+  }
+});
