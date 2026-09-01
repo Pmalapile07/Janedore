@@ -114,16 +114,13 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 0;
-  margin-top: 6px;
+  width: 100%;
+  margin-top: 8px;
 }
 
-/* Brand and price sit side by side in .product-meta-row — their own
-   margin-top would otherwise misalign them vertically, so it's neutralized
-   here and the row's own margin-top above handles the spacing instead. */
 .product-meta-row .product-brand,
 .product-meta-row .product-brand-tag,
+.product-meta-row .product-price,
 .product-meta-row .product-price-row {
   margin-top: 0;
 }
