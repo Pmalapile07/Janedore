@@ -422,6 +422,14 @@
     height: 10px;
     border-radius: 3px;
     background: #111;
+    animation: chat-footer-spin 4s ease-in-out infinite alternate;
+  }
+  @keyframes chat-footer-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(180deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chat-footer-mark { animation: none; }
   }
   @media (max-width: 480px) {
     #chat-window {
