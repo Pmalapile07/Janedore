@@ -111,7 +111,7 @@
   cursor: pointer;
   text-align: center;
   transition: opacity 0.2s ease;
-  padding: 0px 28px;
+  padding: 10px 28px;
 }
 
 .initial-drop-view-all:hover {
