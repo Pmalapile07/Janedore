@@ -96,7 +96,9 @@
 .initial-drop-view-all {
   display: block;
   margin: 18px auto 0;
-  padding: 8px 28px;
+  width: 100%;
+  max-width: 400px;
+  height: 48px;
   background: #111;
   color: #fff;
   border: none;
@@ -109,6 +111,7 @@
   cursor: pointer;
   text-align: center;
   transition: opacity 0.2s ease;
+  padding: 0;
 }
 
 .initial-drop-view-all:hover {
