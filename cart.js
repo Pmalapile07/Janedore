@@ -5,7 +5,76 @@ function cartHasMultipleTypes() { const types = new Set(S.cart.map(i=>PRODUCTS.f
 function addPouchToCart() { const pouch=PRODUCTS.find(p=>p.id==='janedore-leather-pouch'); if(pouch){addToCart('janedore-leather-pouch','OS');renderCart();} }
 function hasSunglassesInCart() { return S.cart.some(item=>PRODUCTS.find(p=>p.id===item.productId)?.category==='sunglasses'); }
 function pouchAlreadyInCart() { return S.cart.some(item=>item.productId==='janedore-leather-pouch'); }
-function addToCart(productId,size,qty) { const q=(qty&&qty>0)?qty:1; const product=PRODUCTS.find(p=>p.id===productId); if(!product||isProductSoldOut(product))return; const vi=S.productVariantSelections[productId]??0; const variant=(product.variants||[])[vi]??{}; const existing=S.cart.find(i=>i.productId===productId&&i.size===(size||product.sizes[0])&&i.variantIndex===vi); if(existing)existing.qty+=q; else S.cart.push({productId,variantIndex:vi,size:size||product.sizes[0]||'OS',qty:q,name:product.name,brand:product.brand,price:product.price,salePrice:product.salePrice,color:variant.color||'Default',thumbnail:getProductThumbnail(product,vi)}); updateBadges();renderCart();saveCartToStorage(); }
+
+function showAddToCartToast(productName) {
+  // Remove existing toast if any
+  const existingToast = document.getElementById('add-to-cart-toast');
+  if (existingToast) existingToast.remove();
+  
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.id = 'add-to-cart-toast';
+  toast.innerHTML = `
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span>Added to bag: ${productName || 'Item'}</span>
+  `;
+  
+  // Style the toast
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111;
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 2px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Animate in
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(-10px)';
+  }, 10);
+  
+  // Animate out and remove
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+function addToCart(productId,size,qty) { 
+  const q=(qty&&qty>0)?qty:1; 
+  const product=PRODUCTS.find(p=>p.id===productId); 
+  if(!product||isProductSoldOut(product))return; 
+  const vi=S.productVariantSelections[productId]??0; 
+  const variant=(product.variants||[])[vi]??{}; 
+  const existing=S.cart.find(i=>i.productId===productId&&i.size===(size||product.sizes[0])&&i.variantIndex===vi); 
+  if(existing)existing.qty+=q; 
+  else S.cart.push({productId,variantIndex:vi,size:size||product.sizes[0]||'OS',qty:q,name:product.name,brand:product.brand,price:product.price,salePrice:product.salePrice,color:variant.color||'Default',thumbnail:getProductThumbnail(product,vi)}); 
+  updateBadges();renderCart();saveCartToStorage();
+  showAddToCartToast(product.name);
+}
+
 function removeFromCart(productId,size,vi) { S.cart=S.cart.filter(i=>!(i.productId===productId&&i.size===size&&i.variantIndex===vi)); updateBadges();renderCart();saveCartToStorage(); }
 function changeQty(productId,size,delta,vi) { const item=S.cart.find(i=>i.productId===productId&&i.size===size&&i.variantIndex===vi); if(!item)return; const nq=item.qty+delta; if(nq<=0){removeFromCart(productId,size,vi);}else{item.qty=nq;renderCart();saveCartToStorage();} }
 function renderCart() {
