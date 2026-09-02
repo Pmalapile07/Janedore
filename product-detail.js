@@ -91,6 +91,12 @@ function selectProductSize(btn, size) {
   S.selectedSize = size;
 }
 
+function changeQuantity(delta) {
+  S.productQuantity = Math.max(1, (S.productQuantity || 1) + delta);
+  const el = document.getElementById('product-qty-value');
+  if (el) el.textContent = S.productQuantity;
+}
+
 function productCard(product, compactMode=false, isCollectionPage=false) {
   if(!product) return ''; if(isCollectionPage && product.id === 'janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return '';
   const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
@@ -134,7 +140,7 @@ function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.
 function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
 
 async function renderProductPage(product) {
-  document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null;
+  document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null; S.productQuantity=1;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   showLoading(DOM.productDetail);
 
@@ -163,17 +169,15 @@ async function renderProductPage(product) {
       </div>
     </div>
     <div class="product-info">
-      <h1 class="product-title-main">${product.name||''}</h1>
       <p class="product-by-brand">${product.brand||'JANEDORE'}</p>
+      <h1 class="product-title-main">${product.name||''}</h1>
       <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+      ${hasDesc?`<div class="modal-desc expanded" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
       ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Colour</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
       ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div></div>`:''}
-      <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize)" ${soldOut?'disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>
+      <div class="product-sizes"><div class="sizes-label">Quantity</div><div class="sizes-row"><button class="cart-page-qty-btn" onclick="changeQuantity(-1)">−</button><span class="cart-page-qty-num" id="product-qty-value">1</span><button class="cart-page-qty-btn" onclick="changeQuantity(1)">+</button></div></div>
+      <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${soldOut?'disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>
       <div class="info-tabs-wrap">
-        <button class="info-tab-btn" data-tab="description" onclick="switchInfoTab('description')">Description</button>
-        <div class="info-tab-panel" data-tab="description">
-          ${hasDesc?`<div class="modal-desc" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
-        </div>
         <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
         <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
         <button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Measurements</button>
