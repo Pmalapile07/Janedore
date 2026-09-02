@@ -399,6 +399,30 @@
     background: #fafaf9;
     display: none;
   }
+  /* Bottom-of-widget branding — always visible, sits under whichever screen is active */
+  .chat-footer-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 0;
+    border-top: 0.5px solid #e5e5e5;
+    background: #fff;
+    font-family: 'Manrope', sans-serif;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: #888;
+    flex-shrink: 0;
+  }
+  .chat-footer-mark {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: #888;
+  }
   @media (max-width: 480px) {
     #chat-window {
       width: calc(100vw - 32px);
@@ -481,5 +505,10 @@
            onkeypress="if(event.key==='Enter')sendChatMessage()"
            oninput="handleCustomerTyping()">
     <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">Send</button>
+  </div>
+
+  <!-- builtbypearl branding -->
+  <div class="chat-footer-brand">
+    <span class="chat-footer-mark"></span>builtbypearl
   </div>
 </div>
