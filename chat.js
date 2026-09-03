@@ -57,6 +57,22 @@ function detachTypingListener() {
   }
 }
 
+// ==================== FAQ TOGGLE ====================
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = answer.classList.contains('open');
+  
+  // Close all FAQs
+  document.querySelectorAll('.chat-faq-answer').forEach(a => a.classList.remove('open'));
+  document.querySelectorAll('.chat-faq-question').forEach(q => q.classList.remove('active'));
+  
+  // Open clicked one if it was closed
+  if (!isOpen) {
+    answer.classList.add('open');
+    btn.classList.add('active');
+  }
+}
+
 // ==================== SCREEN CONTROL ====================
 function toggleChat() {
   chatOpen = !chatOpen;
@@ -82,10 +98,8 @@ function toggleChat() {
         listenTyping();
         listenStatus();
       }
-    } else if (customerEmail) {
-      showOptionsScreen();
     } else {
-      showEmailScreen();
+      showWelcomeScreen();
     }
     ensureAuth();
   } else {
@@ -97,7 +111,7 @@ function toggleChat() {
 }
 
 function showScreen(id) {
-  ['chat-email-screen','chat-options','chat-messages','chat-input-wrap',
+  ['chat-welcome-screen','chat-email-screen','chat-options','chat-messages','chat-input-wrap',
    'chat-customer-info','chat-typing-indicator','order-lookup'].forEach(s => {
     const el = safeEl(s);
     if (el) el.style.display = 'none';
@@ -105,10 +119,12 @@ function showScreen(id) {
   const el = safeEl(id);
   if (el) el.style.display =
     (id === 'chat-messages' || id === 'order-lookup' ||
-     id === 'chat-email-screen' || id === 'chat-options') ? 'flex' : 'block';
+     id === 'chat-email-screen' || id === 'chat-options' ||
+     id === 'chat-welcome-screen') ? 'flex' : 'block';
 }
 
-function showEmailScreen()   { showScreen('chat-email-screen'); }
+function showWelcomeScreen() { showScreen('chat-welcome-screen'); }
+function showEmailScreen() { showScreen('chat-email-screen'); }
 function showOptionsScreen() { showScreen('chat-options'); }
 
 function submitEmail() {
@@ -172,7 +188,8 @@ function showOrderLookup() {
   if (input) setTimeout(() => input.focus(), 100);
 }
 
-function backToChatOptions() { showOptionsScreen(); }
+function backToWelcome() { showWelcomeScreen(); }
+function backToChatOptions() { showWelcomeScreen(); }
 
 function clearChatSession() {
   firebase.auth().signOut().catch(() => {});
@@ -190,7 +207,7 @@ function clearChatSession() {
   _resolvedActive = false;
   removeResolvedBanner();
   loadedMessageKeys.clear();
-  showEmailScreen();
+  showWelcomeScreen();
 }
 
 // ==================== MESSAGES ====================
