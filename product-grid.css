@@ -14,8 +14,15 @@
 }
 
 @media (min-width: 1024px) {
-  .product-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 12px; }
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 0 12px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
 }
+
 
 .product-grid.col-1 { grid-template-columns: 1fr; }
 @media (min-width: 768px) {
