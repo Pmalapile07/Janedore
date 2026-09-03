@@ -23,7 +23,6 @@
   }
 }
 
-
 .product-grid.col-1 { grid-template-columns: 1fr; }
 @media (min-width: 768px) {
   .product-grid.col-2 { grid-template-columns: repeat(2, 1fr); }
@@ -49,6 +48,13 @@
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card { width: 28vw; max-width: 300px; }
+}
+@media (min-width: 1024px) {
+  #arrivals-grid {
+    justify-content: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
 }
 
 /* PRODUCT CARD */
