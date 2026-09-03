@@ -79,3 +79,63 @@
   .home-statement { padding: 24px 16px 20px; }
   .home-statement-heading { font-size: 48px; }
 }
+
+/* ── FEATURED BRAND ─────────────────────────────────────── */
+#featured-brand-section {
+  padding: 32px 18px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.featured-brand-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.featured-brand-content {
+  position: relative;
+  z-index: 2;
+  padding: 24px;
+  color: #fff;
+}
+
+.featured-brand-sub {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0 0 8px 0;
+}
+
+.featured-brand-heading {
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 14px 0;
+}
+
+.featured-brand-btn {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: transparent;
+  color: #fff;
+  border: none;
+  border-bottom: 1px solid #fff;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.featured-brand-btn:hover { opacity: 0.85; }
