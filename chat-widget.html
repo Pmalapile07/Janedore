@@ -85,6 +85,132 @@
     display: flex;
     flex-direction: column;
   }
+  
+  /* Welcome screen */
+  .chat-welcome-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    flex: 1;
+  }
+  .chat-welcome-title {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    font-weight: 300;
+    text-transform: none;
+    color: #111;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .chat-welcome-subtitle {
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    margin-bottom: 40px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  
+  /* FAQ section */
+  .chat-faq-section {
+    width: 100%;
+    margin-bottom: 32px;
+  }
+  .chat-faq-title {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .chat-faq-item {
+    border-top: 1px solid #e0e0e0;
+  }
+  .chat-faq-item:last-child {
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .chat-faq-question {
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 12px 0;
+    text-align: left;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: #111;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: color 0.2s;
+  }
+  .chat-faq-question:hover {
+    color: #555;
+  }
+  .chat-faq-question::after {
+    content: '+';
+    font-size: 16px;
+    font-weight: 300;
+    color: #888;
+    transition: transform 0.2s;
+  }
+  .chat-faq-question.active::after {
+    content: '−';
+    transform: rotate(180deg);
+  }
+  .chat-faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: #888;
+  }
+  .chat-faq-answer.open {
+    max-height: 200px;
+    padding-bottom: 12px;
+  }
+  
+  /* Action buttons */
+  .chat-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .chat-action-btn {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 14px 4px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    border-radius: 2px;
+  }
+  .chat-action-btn:hover { background: #333; transform: translateY(-1px); }
+  .chat-action-btn.secondary {
+    background: #fff;
+    color: #111;
+    border: 1px solid #111;
+  }
+  .chat-action-btn.secondary:hover { background: #f5f5f5; }
+  
+  /* Email screen (hidden initially) */
   .chat-email-screen {
     display: flex;
     flex-direction: column;
@@ -150,6 +276,8 @@
     margin-top: 12px;
     display: none;
   }
+  
+  /* Options screen */
   .chat-options {
     display: flex;
     gap: 0;
@@ -454,6 +582,7 @@
       border-radius: 8px;
     }
     #live-chat-bubble { right: 16px; bottom: 16px; }
+    .chat-welcome-screen { padding: 28px 20px; }
     .chat-email-screen { padding: 28px 20px; }
     .chat-options { padding: 24px 20px; }
     .chat-option-btn { margin-bottom: 16px; }
@@ -472,9 +601,36 @@
     <button class="chat-header-close" onclick="toggleChat()">✕</button>
   </div>
 
-  <!-- Email entry screen -->
-  <div class="chat-email-screen" id="chat-email-screen">
-    <div class="chat-email-title">Welcome</div>
+  <!-- Welcome screen with FAQs and action buttons -->
+  <div class="chat-welcome-screen" id="chat-welcome-screen">
+    <div class="chat-welcome-title">How can we help?</div>
+    <div class="chat-welcome-subtitle">We're here to assist you</div>
+    
+    <div class="chat-faq-section">
+      <div class="chat-faq-title">Frequently Asked</div>
+      <div class="chat-faq-item">
+        <button class="chat-faq-question" onclick="toggleFaq(this)">Shipping & Delivery</button>
+        <div class="chat-faq-answer">Free shipping on orders over R1000. Delivery takes 3-5 business days.</div>
+      </div>
+      <div class="chat-faq-item">
+        <button class="chat-faq-question" onclick="toggleFaq(this)">Returns & Exchanges</button>
+        <div class="chat-faq-answer">We accept returns within 14 days of delivery. Items must be unworn with tags attached.</div>
+      </div>
+      <div class="chat-faq-item">
+        <button class="chat-faq-question" onclick="toggleFaq(this)">Sizing Guide</button>
+        <div class="chat-faq-answer">Our sizes run true to size. Check the measurements tab on each product page for details.</div>
+      </div>
+    </div>
+    
+    <div class="chat-action-buttons">
+      <button class="chat-action-btn" onclick="showEmailScreen()">Chat with Us</button>
+      <button class="chat-action-btn secondary" onclick="showOrderLookup()">Track Order</button>
+    </div>
+  </div>
+
+  <!-- Email entry screen (hidden initially) -->
+  <div class="chat-email-screen" id="chat-email-screen" style="display:none;">
+    <div class="chat-email-title">Chat with Us</div>
     <div class="chat-email-subtitle">Enter your details so we can assist you better</div>
     <input class="chat-email-input" id="chat-name-input" type="text" placeholder="Your name"
            onkeypress="if(event.key==='Enter')document.getElementById('chat-email-input').focus()">
@@ -535,3 +691,25 @@
     <span class="chat-footer-mark"></span>builtbypearl
   </div>
 </div>
+
+<script>
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = answer.classList.contains('open');
+  
+  // Close all FAQs
+  document.querySelectorAll('.chat-faq-answer').forEach(a => a.classList.remove('open'));
+  document.querySelectorAll('.chat-faq-question').forEach(q => q.classList.remove('active'));
+  
+  // Open clicked one if it was closed
+  if (!isOpen) {
+    answer.classList.add('open');
+    btn.classList.add('active');
+  }
+}
+
+function showEmailScreen() {
+  document.getElementById('chat-welcome-screen').style.display = 'none';
+  document.getElementById('chat-email-screen').style.display = 'flex';
+}
+</script>
