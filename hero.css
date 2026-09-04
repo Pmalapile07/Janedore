@@ -34,7 +34,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 16px; /* This gap creates space between your heading and the button */
 }
 
 .hero-sub {
@@ -49,11 +49,12 @@
   display: none;
 }
 
+/* UPDATED: Removed absolute positioning and top/left/transform */
 .hero-heading {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Removed position: absolute; */
+  /* Removed top: 20px; */
+  /* Removed left: 50%; */
+  /* Removed transform: translateX(-50%); */
   z-index: 2;
   font-family: 'Inter', sans-serif !important;
   font-size: 14px;
@@ -65,7 +66,7 @@
   letter-spacing: 0.01em;
   max-width: 480px;
   text-align: center;
-  margin: 0;
+  margin: 0; 
 }
 
 .hero-shop-btn {
@@ -89,5 +90,5 @@
 @media (max-width: 768px) {
   #hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
   .hero-content-wrap { padding: 0 20px 32px; gap: 12px; }
-  .hero-heading { font-size: 12px; max-width: 320px; top: 16px; }
+  .hero-heading { font-size: 12px; max-width: 320px; /* Removed top: 16px; */ }
 }
