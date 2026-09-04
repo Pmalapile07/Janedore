@@ -6,7 +6,7 @@ const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6
 
 function merchandiseProducts(products) { if (!products || !products.length) return []; const filtered = products.filter(p => p.id !== 'janedore-leather-pouch'); const sorted = [...filtered].sort((a, b) => { const oA = CATEGORY_ORDER[a.category] ?? 99; const oB = CATEGORY_ORDER[b.category] ?? 99; if (oA !== oB) return oA - oB; const pA = a.salePrice ?? a.price ?? 0; const pB = b.salePrice ?? b.price ?? 0; return pA - pB; }); return sorted; }
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
-function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false; if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false; const price = p.salePrice ?? p.price; if(S.filter.price==='low' && price >= 500) return false; if(S.filter.price==='high' && price < 500) return false; return true; }); }
+function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false; if(S.filter.vendor && p.brand!==S.filter.vendor) return false; if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false; const price = p.salePrice ?? p.price; if(S.filter.price==='low' && price >= 500) return false; if(S.filter.price==='high' && price < 500) return false; return true; }); }
 function getCatFilteredProducts() { const isAllClothing = S.currentCategoryPage === 'all-clothing'; const clothingCats = ['dresses','tops','bottoms','jackets','sets']; return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(p.id==='janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return false; if(isAllClothing) { if(!clothingCats.includes(p.category)) return false; } else if(S.currentCategoryPage && p.category !== S.currentCategoryPage) return false; if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= 500) return false; if(S.catFilter.price==='high' && price < 500) return false; return true; }); }
 function applyFilter(type, value) { S.filter[type] = value; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); }
 function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
@@ -219,3 +219,57 @@ function productCardHome(p) {
 function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildNewsletterSection(); }
 
 function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
+
+// ==================== VENDOR / BRAND PAGE ====================
+
+async function navigateToVendor(vendorId, replaceUrl) {
+  S.saleMode = false;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-vendor").classList.add("active");
+  S.currentPage = "vendor";
+  S.currentVendorId = vendorId;
+  removeStickyBar();
+  if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page"); DOM.mainNav.classList.add("collection-page"); }
+  const newPath = '/brands/' + encodeURIComponent(vendorId);
+  if (window.location.pathname !== newPath) {
+    replaceUrl ? history.replaceState(null, null, newPath) : history.pushState(null, null, newPath);
+  }
+  const el = document.getElementById('vendor-page-content');
+  if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  try {
+    const doc = await db.collection('vendors').doc(vendorId).get();
+    renderVendorPage(doc.exists ? Object.assign({id:doc.id}, doc.data()) : null);
+  } catch(e) {
+    console.error('Error fetching vendor:', e);
+    renderVendorPage(null);
+  }
+  window.scrollTo({top:0,behavior:"instant"});
+  ensureNavScrolled();
+  updateChatVisibility();
+}
+
+function renderVendorPage(vendor) {
+  const el = document.getElementById('vendor-page-content');
+  if (!el) return;
+  const heroImg = vendor?.heroImageUrl || vendor?.logoUrl || '';
+  const brandName = vendor?.brand || vendor?.name || '';
+  const desc = vendor?.description || '';
+  const products = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.brand === brandName));
+  const expanded = expandProductVariants(products);
+
+  el.innerHTML = `
+    <section class="vendor-hero-section">
+      <div class="vendor-hero-img" style="background-image:url('${heroImg}');">
+        <div class="vendor-hero-content">
+          <div class="vendor-hero-name">${brandName}</div>
+          <p class="vendor-hero-desc">${desc}</p>
+        </div>
+      </div>
+    </section>
+    <div class="product-grid" style="padding: 0 18px 32px; max-width:1400px; margin:0 auto;">
+      ${expanded.map(({product, variantIndex}) => productCard(product, false, true, variantIndex)).join('')}
+    </div>
+  `;
+}
+
+window.navigateToVendor = navigateToVendor;
