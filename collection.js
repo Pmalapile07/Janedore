@@ -237,7 +237,7 @@ async function navigateToVendor(vendorId, replaceUrl) {
   const el = document.getElementById('vendor-page-content');
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
   try {
-    const doc = await db.collection('vendors').doc(vendorId).get();
+    const doc = await db.collection('brands').doc(vendorId).get();
     renderVendorPage(doc.exists ? Object.assign({id:doc.id}, doc.data()) : null);
   } catch(e) {
     console.error('Error fetching vendor:', e);
