@@ -271,3 +271,61 @@ body.on-collection-page .collection-nav-controls {
 .product-brand {
   line-height: 1.2;
 }
+/* Vendor/Brand Page */
+.vendor-hero-section {
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.vendor-hero-img {
+  width: 100%;
+  height: 50vh;
+  min-height: 300px;
+  max-height: 500px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.vendor-hero-content {
+  padding: 30px 20px;
+  text-align: center;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+  width: 100%;
+}
+
+.vendor-hero-name {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  color: #fff;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.vendor-hero-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .vendor-hero-img {
+    height: 40vh;
+    min-height: 250px;
+  }
+  
+  .vendor-hero-name {
+    font-size: 22px;
+  }
+  
+  .vendor-hero-desc {
+    font-size: 11px;
+  }
+}
