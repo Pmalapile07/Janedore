@@ -12,7 +12,7 @@
   var isSuperAdmin = window._isSuperAdmin;
   var mountModal   = window._mountModal;
   var closeModal   = window._closeModal;
-  var vendorsRef   = window._vendorsRef;
+  var brandsRef    = window._adminDB.collection('brands');
   var ordersRef    = window._ordersRef;
   var productsRef  = window._productsRef;
   var adminsRef    = window._adminsRef;
@@ -38,24 +38,24 @@
 
     mc.innerHTML =
       '<div class="section-header" style="margin-bottom:12px;">' +
-        '<div class="section-title">Vendors</div>' +
+        '<div class="section-title">Brands</div>' +
         '<div style="display:flex;gap:8px;">' +
           (canEdit
-            ? '<button class="btn btn-sm btn-ghost" id="seed-vendors-btn" onclick="window._seedDefaultVendors()">Seed Default Vendors</button>' +
-              '<button class="btn btn-sm btn-primary" onclick="window._openVendorModal(null)">+ Add Vendor</button>'
+            ? '<button class="btn btn-sm btn-ghost" id="seed-vendors-btn" onclick="window._seedDefaultVendors()">Seed Default Brands</button>' +
+              '<button class="btn btn-sm btn-primary" onclick="window._openVendorModal(null)">+ Add Brand</button>'
             : '<span class="ui-label">Read-only view</span>') +
         '</div>' +
       '</div>' +
       '<div id="vendors-list"><div class="empty-state"><div class="empty-state-text">Loading...</div></div></div>';
 
     Promise.all([
-      vendorsRef.get(),
+      brandsRef.get(),
       ordersRef.orderBy('createdAt', 'desc').limit(200).get()
     ]).then(function(results) {
-      var vendorsSnap = results[0];
+      var brandsSnap = results[0];
       var ordersSnap  = results[1];
 
-      window._vendorsData = vendorsSnap.docs.map(function(d) {
+      window._vendorsData = brandsSnap.docs.map(function(d) {
         return Object.assign({ id: d.id }, d.data());
       });
 
@@ -79,7 +79,7 @@
     }).catch(function(e) {
       console.error('[VENDORS_TAB]', e);
       var el = safeEl('vendors-list');
-      if (el) el.innerHTML = '<div class="empty-state"><div class="empty-state-text">Could not load vendors.</div><button class="btn btn-sm btn-ghost" style="margin-top:12px;" onclick="window._renderVendorsTab()">Retry</button></div>';
+      if (el) el.innerHTML = '<div class="empty-state"><div class="empty-state-text">Could not load brands.</div><button class="btn btn-sm btn-ghost" style="margin-top:12px;" onclick="window._renderVendorsTab()">Retry</button></div>';
     });
   };
 
@@ -93,9 +93,9 @@
     if (vendors.length === 0) {
       el.innerHTML = '<div class="orders-empty-state">' +
         '<div class="orders-empty-icon"><i class="ph-light ph-handshake"></i></div>' +
-        '<div class="orders-empty-title">No vendors yet</div>' +
+        '<div class="orders-empty-title">No brands yet</div>' +
         '<div class="orders-empty-sub">Brand partners will appear here once added.</div>' +
-        (canEdit ? '<button class="orders-empty-btn" onclick="window._openVendorModal(null)">Add your first vendor</button>' : '') +
+        (canEdit ? '<button class="orders-empty-btn" onclick="window._openVendorModal(null)">Add your first brand</button>' : '') +
       '</div>';
       return;
     }
@@ -105,8 +105,8 @@
     el.innerHTML =
       '<div class="table-wrap"><table class="data-table">' +
       '<thead><tr>' +
-        '<th>Vendor</th>' +
         '<th>Brand</th>' +
+        '<th>Display Name</th>' +
         '<th>Products</th>' +
         '<th>Orders</th>' +
         '<th>Revenue</th>' +
@@ -161,7 +161,7 @@
     var panelHTML =
       '<div class="slide-panel">' +
         '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
-        '<div class="ui-label" style="margin-bottom:4px;">Vendor</div>' +
+        '<div class="ui-label" style="margin-bottom:4px;">Brand</div>' +
         '<div style="font-size:21px;font-weight:300;margin-bottom:18px;">' + esc(v.name || v.id) + '</div>' +
 
         '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;">' +
@@ -172,7 +172,7 @@
 
         (canEdit
           ? '<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap;">' +
-              '<button class="btn btn-sm btn-ghost" onclick="window._openVendorModal(\'' + esc(vendorId) + '\')">Edit Vendor</button>' +
+              '<button class="btn btn-sm btn-ghost" onclick="window._openVendorModal(\'' + esc(vendorId) + '\')">Edit Brand</button>' +
               (v.accountEmail
                 ? '<button class="btn btn-sm btn-ghost" onclick="window._resetVendorPassword(\'' + esc(vendorId) + '\')">Reset Password</button>'
                 : '<button class="btn btn-sm btn-primary" onclick="window._createVendorAccount(\'' + esc(vendorId) + '\')">Create Login Account</button>') +
@@ -184,6 +184,7 @@
           '<div class="info-row"><span class="label">Name</span><span>' + esc(v.name || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">Brand</span><span>' + esc(v.brand || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">Email</span><span>' + esc(v.email || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Description</span><span>' + esc(v.description || '—') + '</span></div>' +
           (v.accountEmail ? '<div class="info-row"><span class="label">Login Email</span><span>' + esc(v.accountEmail) + '</span></div>' : '') +
           '<div class="info-row"><span class="label">Created</span><span>' + fmtDate(v.createdAt) + '</span></div>' +
           (v.notes ? '<div class="info-row"><span class="label">Notes</span><span>' + esc(v.notes) + '</span></div>' : '') +
@@ -215,8 +216,8 @@
     if (!isSuperAdmin()) return;
 
     var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
-    if (!v) { showToast('Vendor not found', 'error'); return; }
-    if (!v.email) { showToast('Vendor must have a contact email first. Edit the vendor and add an email.', 'error'); return; }
+    if (!v) { showToast('Brand not found', 'error'); return; }
+    if (!v.email) { showToast('Brand must have a contact email first. Edit the brand and add an email.', 'error'); return; }
 
     var modalHTML = '<div class="modal modal-sm">' +
       '<div class="modal-handle"></div>' +
@@ -256,8 +257,6 @@
     if (!email || !password) { showToast('Email and password are required.', 'error'); return; }
     if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
 
-    // Use a secondary Firebase app to create the account
-    // This prevents logging out the current Super Admin
     var secondaryAppName = 'vendor-creator-' + Date.now();
     var secondaryApp = firebase.initializeApp({
       apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
@@ -273,12 +272,9 @@
     secondaryAuth.createUserWithEmailAndPassword(email, password).then(function(userCredential) {
       var uid = userCredential.user.uid;
 
-      // Sign out the secondary instance immediately
       return secondaryAuth.signOut().then(function() {
-        // Clean up the secondary app
         return secondaryApp.delete();
       }).then(function() {
-        // Add to admins collection with VENDOR role
         return adminsRef.doc(uid).set({
           email: email,
           role: 'VENDOR',
@@ -287,21 +283,18 @@
           createdBy: window._currentUser.uid
         });
       }).then(function() {
-        // Update vendor doc with accountEmail
-        return vendorsRef.doc(vendorId).update({
+        return brandsRef.doc(vendorId).update({
           accountEmail: email,
           accountUid: uid,
           updatedAt: new Date().toISOString()
         });
       }).then(function() {
-        // Update local data
         var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
         if (v) { v.accountEmail = email; v.accountUid = uid; }
 
         closeModal();
         showToast('Account created! Vendor can now log in with ' + email);
 
-        // Show credentials modal
         setTimeout(function() {
           var credHTML = '<div class="modal modal-sm">' +
             '<div class="modal-handle"></div>' +
@@ -328,7 +321,6 @@
     }).catch(function(e) {
       console.error('[CREATE_VENDOR_ACCOUNT]', e);
 
-      // Clean up the secondary app on error too
       secondaryAuth.signOut().catch(function() {});
       secondaryApp.delete().catch(function() {});
 
@@ -356,7 +348,7 @@
     if (!isSuperAdmin()) return;
 
     var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
-    if (!v || !v.accountEmail) { showToast('Vendor has no login account.', 'error'); return; }
+    if (!v || !v.accountEmail) { showToast('Brand has no login account.', 'error'); return; }
 
     showToast('Ask the vendor to use "Forgot Password" on the login page, or reset via Firebase Console for ' + v.accountEmail, 'info');
   };
@@ -368,21 +360,20 @@
   function renderVendorProfile(mc) {
     var vendorId = window._currentVendorId;
     if (!vendorId) {
-      mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">No vendor profile linked to your account. Contact Super Admin.</div></div>';
+      mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">No brand profile linked to your account. Contact Super Admin.</div></div>';
       return;
     }
 
     mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Loading your brand profile...</div></div>';
 
-    vendorsRef.doc(vendorId).get().then(function(doc) {
+    brandsRef.doc(vendorId).get().then(function(doc) {
       if (!doc.exists) {
-        mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Vendor profile not found.</div></div>';
+        mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Brand profile not found.</div></div>';
         return;
       }
 
       var v = Object.assign({ id: doc.id }, doc.data());
 
-      // Check if this is first login (no products yet = new vendor)
       var allProducts = window._allProducts || [];
       var vendorProducts = allProducts.filter(function(p) { return p.vendorId === vendorId; });
       var isNewVendor = vendorProducts.length === 0;
@@ -392,7 +383,6 @@
           '<div class="section-title">Your Brand</div>' +
         '</div>' +
 
-        // Welcome banner for new vendors
         (isNewVendor
           ? '<div class="vendor-scope-bar" style="margin-bottom:16px;background:var(--success-soft);border-color:rgba(26,135,66,0.2);color:var(--success);">' +
               '<i class="ph-light ph-confetti" style="font-size:16px;margin-right:6px;"></i>' +
@@ -430,6 +420,11 @@
                 '<input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://...">' +
               '</div>' +
 
+              '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
+                '<label>Hero Image URL</label>' +
+                '<input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://...">' +
+              '</div>' +
+
             '</form>' +
           '</div>' +
         '</div>' +
@@ -455,7 +450,6 @@
           '</div>' +
         '</div>' +
 
-        // Quick actions for new vendors
         (isNewVendor
           ? '<div class="card" style="margin-bottom:12px;">' +
               '<div class="card-header"><span class="card-title">Get Started</span></div>' +
@@ -484,15 +478,16 @@
     var form = e.target;
 
     var data = {
-      name:        form.name.value.trim(),
-      brand:       form.brand.value.trim(),
-      email:       form.email.value.trim(),
-      description: form.description.value.trim(),
-      logoUrl:     form.logoUrl.value.trim(),
-      updatedAt:   new Date().toISOString()
+      name:          form.name.value.trim(),
+      brand:         form.brand.value.trim(),
+      email:         form.email.value.trim(),
+      description:   form.description.value.trim(),
+      logoUrl:       form.logoUrl.value.trim(),
+      heroImageUrl:  form.heroImageUrl.value.trim(),
+      updatedAt:     new Date().toISOString()
     };
 
-    vendorsRef.doc(vendorId).update(data).then(function() {
+    brandsRef.doc(vendorId).update(data).then(function() {
       showToast('Brand profile updated');
     }).catch(function(e) {
       console.error('[VENDOR_PROFILE_UPDATE]', e);
@@ -505,24 +500,25 @@
   ───────────────────────────────────────────────────────── */
   window._openVendorModal = function(vendorId) {
     if (!isSuperAdmin()) {
-      showToast('Only Super Admin can manage vendors.', 'error');
+      showToast('Only Super Admin can manage brands.', 'error');
       return;
     }
 
     var v = vendorId ? (window._vendorsData || []).find(function(x) { return x.id === vendorId; }) : null;
-    v = v || { id:'', name:'', brand:'', email:'', description:'', logoUrl:'', commissionRate:15, status:'active', notes:'', accountEmail:'' };
+    v = v || { id:'', name:'', brand:'', email:'', description:'', logoUrl:'', heroImageUrl:'', commissionRate:15, status:'active', notes:'', accountEmail:'' };
 
     var modalHTML = '<div class="modal modal-sm">' +
       '<div class="modal-handle"></div>' +
       '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
-      '<div class="modal-title">' + (vendorId ? 'Edit' : 'New') + ' Vendor</div>' +
+      '<div class="modal-title">' + (vendorId ? 'Edit' : 'New') + ' Brand</div>' +
       '<form id="vendor-form" onsubmit="window._handleVendorSubmit(event, \'' + esc(v.id) + '\')">' +
 
-        '<div class="form-group"><label>Vendor Name</label><input name="name" value="' + esc(v.name) + '" required placeholder="e.g. Thato"></div>' +
-        '<div class="form-group"><label>Brand Display Name</label><input name="brand" value="' + esc(v.brand) + '" placeholder="e.g. THATO"></div>' +
+        '<div class="form-group"><label>Brand Name</label><input name="name" value="' + esc(v.name) + '" required placeholder="e.g. NIRIUS CO"></div>' +
+        '<div class="form-group"><label>Display Name</label><input name="brand" value="' + esc(v.brand) + '" placeholder="e.g. NIRIUS CO"></div>' +
         '<div class="form-group"><label>Contact Email</label><input name="email" type="email" value="' + esc(v.email) + '" placeholder="vendor@brand.com"></div>' +
         '<div class="form-group"><label>Description</label><textarea name="description">' + esc(v.description || '') + '</textarea></div>' +
         '<div class="form-group"><label>Logo URL</label><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..."></div>' +
+        '<div class="form-group"><label>Hero Image URL</label><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..."></div>' +
 
         '<div class="form-row">' +
           '<div class="form-group"><label>Commission %</label><input name="commissionRate" type="number" value="' + esc(String(v.commissionRate || 15)) + '" min="0" max="100"></div>' +
@@ -531,13 +527,12 @@
 
         '<div class="form-group"><label>Internal Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
 
-        // Account info (read-only if exists)
         (v.accountEmail
           ? '<div class="form-group"><label>Login Account</label><input value="' + esc(v.accountEmail) + '" disabled style="opacity:0.6;"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Account exists. Create a new one or use Reset Password.</div></div>'
           : '') +
 
         '<div style="display:flex;gap:10px;padding:14px 20px 4px;">' +
-          '<button type="submit" class="btn btn-primary">Save Vendor</button>' +
+          '<button type="submit" class="btn btn-primary">Save Brand</button>' +
           (vendorId ? '<button type="button" class="btn btn-danger" onclick="window._deleteVendor(\'' + esc(vendorId) + '\')">Delete</button>' : '') +
         '</div>' +
 
@@ -551,18 +546,19 @@
     if (!isSuperAdmin()) return;
     e.preventDefault();
     var form     = e.target;
-    var vendorId = existingId || ('vendor-' + Date.now());
+    var brandId  = existingId || ('brand-' + Date.now());
 
     var commission = parseFloat(form.commissionRate.value) || 15;
     commission = Math.min(100, Math.max(0, commission));
 
     var data = {
-      id:             vendorId,
+      id:             brandId,
       name:           form.name.value.trim(),
       brand:          form.brand.value.trim(),
       email:          form.email.value.trim(),
       description:    form.description.value.trim(),
       logoUrl:        form.logoUrl.value.trim(),
+      heroImageUrl:   form.heroImageUrl.value.trim(),
       commissionRate: commission,
       status:         form.status.value,
       notes:          form.notes.value.trim(),
@@ -572,8 +568,8 @@
       data.createdAt = new Date().toISOString();
     }
 
-    vendorsRef.doc(vendorId).set(data, { merge: true }).then(function() {
-      showToast('Vendor saved');
+    brandsRef.doc(brandId).set(data, { merge: true }).then(function() {
+      showToast('Brand saved');
       closeModal();
       window._renderVendorsTab();
     }).catch(function(e) {
@@ -584,9 +580,9 @@
 
   window._deleteVendor = function(vendorId) {
     if (!isSuperAdmin()) return;
-    if (!confirm('Delete this vendor? This cannot be undone.')) return;
-    vendorsRef.doc(vendorId).delete().then(function() {
-      showToast('Vendor deleted');
+    if (!confirm('Delete this brand? This cannot be undone.')) return;
+    brandsRef.doc(vendorId).delete().then(function() {
+      showToast('Brand deleted');
       closeModal();
       window._renderVendorsTab();
     }).catch(function(e) {
@@ -596,7 +592,7 @@
   };
 
   /* ─────────────────────────────────────────────────────────
-     SEED DEFAULT VENDORS
+     SEED DEFAULT BRANDS
   ───────────────────────────────────────────────────────── */
   window._seedDefaultVendors = function() {
     if (!isSuperAdmin()) return;
@@ -604,23 +600,23 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Seeding...'; }
 
     var defaults = [
-      { id: 'vendor-janedore', name: 'JANEDORE', brand: 'JANEDORE', email: '', commissionRate: 0, status: 'active', description: 'House label — Janedore original pieces.', logoUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: 'House brand — 0% commission' },
-      { id: 'vendor-nirius',   name: 'NIRIUS CO', brand: 'NIRIUS CO', email: '', commissionRate: 15, status: 'active', description: 'Contemporary jewelry and accessories.', logoUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: '' },
-      { id: 'vendor-thato',    name: 'THATO', brand: 'THATO', email: '', commissionRate: 15, status: 'active', description: 'Curated parfum collection.', logoUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: '' }
+      { id: 'vendor-janedore', name: 'JANEDORE', brand: 'JANEDORE', email: '', commissionRate: 0, status: 'active', description: 'House label — Janedore original pieces.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: 'House brand — 0% commission' },
+      { id: 'uf1c4uBKwmCAVafjEdRL', name: 'NIRIUS CO', brand: 'NIRIUS CO', email: '', commissionRate: 15, status: 'active', description: 'Contemporary jewelry and accessories.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: '' },
+      { id: 'vendor-thato', name: 'THATO', brand: 'THATO', email: '', commissionRate: 15, status: 'active', description: 'Curated parfum collection.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: '' }
     ];
 
     var promises = defaults.map(function(v) {
-      return vendorsRef.doc(v.id).set(v, { merge: true });
+      return brandsRef.doc(v.id).set(v, { merge: true });
     });
 
     Promise.all(promises).then(function() {
-      showToast('Default vendors seeded!');
-      if (btn) { btn.disabled = false; btn.textContent = 'Seed Default Vendors'; }
+      showToast('Default brands seeded!');
+      if (btn) { btn.disabled = false; btn.textContent = 'Seed Default Brands'; }
       window._renderVendorsTab();
     }).catch(function(e) {
       console.error('[SEED_VENDORS]', e);
       showToast('Error: ' + e.message, 'error');
-      if (btn) { btn.disabled = false; btn.textContent = 'Seed Default Vendors'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Seed Default Brands'; }
     });
   };
 
