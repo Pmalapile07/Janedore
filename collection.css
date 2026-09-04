@@ -329,3 +329,6 @@ body.on-collection-page .collection-nav-controls {
     font-size: 11px;
   }
 }
+.badge-sale { background: #111; color: #fff; padding: 4px 8px; }
+.badge-sold { background: #888; color: #fff; padding: 4px 8px; }
+.badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
