@@ -254,7 +254,24 @@ function renderVendorPage(vendor) {
   const heroImg = vendor?.heroImageUrl || vendor?.logoUrl || '';
   const brandName = vendor?.brand || vendor?.name || '';
   const desc = vendor?.description || '';
-  const products = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.brand === brandName));
+  
+  // Match products by vendorId OR brand name (case-insensitive)
+  const products = merchandiseProducts(PRODUCTS.filter(p => {
+    if (p.status !== 'active') return false;
+    
+    // Match by vendorId
+    if (vendor?.id && p.vendorId === vendor.id) return true;
+    
+    // Match by brand name (case-insensitive)
+    if (p.brand && brandName && p.brand.toLowerCase() === brandName.toLowerCase()) return true;
+    
+    // Special case for spelling variations
+    if (brandName === 'NIRIUS CO' && p.brand === 'NIRIOUS CO') return true;
+    if (brandName === 'NIRIOUS CO' && p.brand === 'NIRIUS CO') return true;
+    
+    return false;
+  }));
+  
   const expanded = expandProductVariants(products);
 
   el.innerHTML = `
@@ -270,6 +287,10 @@ function renderVendorPage(vendor) {
       ${expanded.map(({product, variantIndex}) => productCard(product, false, true, variantIndex)).join('')}
     </div>
   `;
+  
+  // Build footer for vendor page
+  const footerEl = document.getElementById('vendor-footer');
+  if (footerEl && typeof buildFooter === 'function') buildFooter('vendor-footer');
 }
 
 window.navigateToVendor = navigateToVendor;
