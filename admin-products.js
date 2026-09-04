@@ -76,6 +76,13 @@
   var BRANDS   = ['JANEDORE','NIRIUS CO','THATO'];
   var STATUSES = ['active', 'draft', 'archived'];
 
+  // FIX: Map brand names to vendor IDs
+  var VENDOR_ID_MAP = {
+    'JANEDORE': 'vendor-janedore',
+    'NIRIUS CO': 'uf1c4uBKwmCAVafjEdRL',
+    'THATO': 'vendor-thato'
+  };
+
   function markdownToHtml(text) {
     if (!text) return '';
     text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -417,7 +424,7 @@
     } else { p = productOrId; }
 
     p = p || {
-      id:'', sku:'', name:'', brand:'JANEDORE', vendorId:'janedore',
+      id:'', sku:'', name:'', brand:'JANEDORE', vendorId:'vendor-janedore',
       category:'dresses', price:0, salePrice:null, badge:'', sizes:[], sizeUnit:'XS–XXL', stock:0,
       status:'draft', featured:false, description:'', productFeatures:'',
       compositionCare:'', shippingReturns:'', measurements:'', tags:[], shippingWeight:'', internationalShipping:false,
@@ -688,7 +695,7 @@
       sku:                  form.sku.value,
       name:                 form.name.value,
       brand:                form.brand.value,
-      vendorId:             existingProduct ? existingProduct.vendorId : (window._currentVendorId || 'janedore'),
+      vendorId:             existingProduct ? existingProduct.vendorId : (window._currentVendorId || VENDOR_ID_MAP[form.brand.value] || 'janedore'),
       category:             form.category.value,
       price:                price,
       salePrice:            salePrice,
