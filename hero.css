@@ -5,7 +5,7 @@
   min-height: 900px;
   overflow: hidden;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
   margin-top: 0;
   margin-bottom: 0;
@@ -29,7 +29,7 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  padding: 24px 24px 0;
+  padding: 0 24px 40px;
   margin-top: 0;
   display: flex;
   flex-direction: column;
@@ -50,6 +50,11 @@
 }
 
 .hero-heading {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
   font-family: 'Inter', sans-serif !important;
   font-size: 14px;
   font-style: normal;
@@ -59,6 +64,7 @@
   line-height: 1.5;
   letter-spacing: 0.01em;
   max-width: 480px;
+  text-align: center;
   margin: 0;
 }
 
@@ -82,6 +88,6 @@
 
 @media (max-width: 768px) {
   #hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
-  .hero-content-wrap { padding: 20px 20px 0; gap: 12px; }
-  .hero-heading { font-size: 12px; max-width: 320px; }
+  .hero-content-wrap { padding: 0 20px 32px; gap: 12px; }
+  .hero-heading { font-size: 12px; max-width: 320px; top: 16px; }
 }
