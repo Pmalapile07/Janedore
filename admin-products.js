@@ -123,19 +123,61 @@
     return slug;
   }
 
+  // ── DIRECT CLOUDINARY UPLOAD ──────────────────────────────────
+  // Skips Cloudinary's upload widget (its own popup UI on top of the
+  // device file picker) and instead opens the native file picker
+  // directly, then uploads each file straight to Cloudinary's REST
+  // endpoint. onSuccess fires once per file, as soon as that file is done,
+  // so images appear one by one instead of waiting for a batch to finish.
   window._uploadToCloudinary = function(onSuccess) {
     var cloudName    = window.CLOUDINARY_CLOUD_NAME;
     var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
     if (!cloudName)    { showToast('Cloudinary cloud name not configured.', 'error'); return; }
     if (!uploadPreset) { showToast('Cloudinary upload preset not configured.', 'error'); return; }
-    var widget = window.cloudinary.createUploadWidget(
-      { cloudName: cloudName, uploadPreset: uploadPreset, sources: ['local'], multiple: true, clientAllowedFormats: ['png','jpg','jpeg','webp'], maxFileSize: 20000000, showUploadMoreButton: true },
-      function(error, result) {
-        if (error) { showToast('Upload failed: ' + (error.message || 'Unknown error'), 'error'); return; }
-        if (result && result.event === 'success') { onSuccess(result.info.secure_url); }
-      }
-    );
-    widget.open();
+
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp';
+    input.multiple = true;
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    input.onchange = function() {
+      var files = Array.prototype.slice.call(input.files || []);
+      if (input.parentNode) input.parentNode.removeChild(input);
+      if (files.length === 0) return;
+
+      files.forEach(function(file) {
+        if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) {
+          showToast(file.name + ' is not a supported image type', 'error');
+          return;
+        }
+        if (file.size > 20000000) {
+          showToast(file.name + ' is too large (max 20MB)', 'error');
+          return;
+        }
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+        fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload', {
+          method: 'POST',
+          body: formData
+        })
+          .then(function(res) { return res.json(); })
+          .then(function(result) {
+            if (result && result.secure_url) {
+              onSuccess(result.secure_url);
+            } else {
+              showToast('Upload failed: ' + (result && result.error ? result.error.message : 'Unknown error'), 'error');
+            }
+          })
+          .catch(function(err) {
+            showToast('Upload failed: ' + err.message, 'error');
+          });
+      });
+    };
+
+    input.click();
   };
 
   function saveProduct(productData) {
