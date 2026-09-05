@@ -157,7 +157,7 @@
   height: 38px;
   background: #111;
   color: #fff;
-  border: none;
+  border: 1px solid #111;
   border-radius: 0;
   font-family: 'Inter', sans-serif;
   font-size: 10px;
@@ -166,10 +166,11 @@
   text-transform: uppercase;
   cursor: pointer;
   text-align: center;
-  transition: opacity 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-
 .initial-drop-view-all:hover {
-  opacity: 0.85;
+  background: #fff;
+  color: #111;
+  border: 1px solid #111;
 }
