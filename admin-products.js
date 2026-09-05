@@ -410,6 +410,24 @@
     }).join('');
   };
 
+  // ── SEO PREVIEW HELPER ───────────────────────────────────────
+
+  window._updateSeoPreview = function() {
+    var preview = safeEl('pf-seo-preview');
+    if (!preview) return;
+    var titleEl = document.querySelector('[name="seoTitle"]');
+    var descEl  = document.querySelector('[name="metaDescription"]');
+    var nameEl  = document.querySelector('[name="name"]');
+    var handleEl = safeEl('pf-url-handle');
+    var title = (titleEl && titleEl.value) || (nameEl && nameEl.value) || 'Untitled product';
+    var desc  = (descEl && descEl.value) || '';
+    var handle = (handleEl && handleEl.textContent) || 'product';
+    preview.innerHTML =
+      '<div style="font-size:13px;color:#1a0dab;line-height:1.3;">' + esc(title) + '</div>' +
+      '<div style="font-size:11px;color:#006621;margin:2px 0;">janedore.com › products › ' + esc(handle) + '</div>' +
+      '<div style="font-size:11.5px;color:var(--muted);line-height:1.4;">' + esc(desc || 'Add a meta description to control how this product appears in search results.') + '</div>';
+  };
+
   // ── OPEN PRODUCT FORM ────────────────────────────────────────
 
   window._openNewProductModal = function() { window._openProductForm(null); };
@@ -427,7 +445,8 @@
       id:'', sku:'', name:'', brand:'JANEDORE', vendorId:'vendor-janedore',
       category:'dresses', price:0, salePrice:null, badge:'', sizes:[], sizeUnit:'XS–XXL', stock:0,
       status:'draft', featured:false, description:'', productFeatures:'',
-      compositionCare:'', shippingReturns:'', measurements:'', tags:[], shippingWeight:'', internationalShipping:false,
+      compositionCare:'', shippingReturns:'', measurements:'', tags:[], collections:[],
+      shippingWeight:'', internationalShipping:false, onlineStore:true, seoTitle:'', metaDescription:'',
       variants:[{ color:'', swatch:'#111', images:{ model:[], ghost:[], detail:[] } }]
     };
 
@@ -457,6 +476,11 @@
     var currentSizes = (p.sizes || []).join(', ');
     var currentUnit  = p.sizeUnit || 'XS–XXL';
 
+    // The URL handle is always the existing slug for saved products, or the
+    // slug that will be generated on save for a brand-new product. It is
+    // display-only here — slug generation/preservation logic is untouched.
+    var displaySlug = p.slug || (p.name ? _uniqueSlug(_slugify(p.name), allProducts, p.id || null) : 'product');
+
     mc.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
         '<button type="button" class="btn btn-ghost" onclick="window._renderProductsTab()"><i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Cancel</button>' +
@@ -466,17 +490,13 @@
 
       '<form id="product-form" onsubmit="window._handleProductSubmit(event,\'' + esc(p.id) + '\')">' +
 
-      // 1. TITLE & DESCRIPTION
+      // 1. PRODUCT STATUS
       '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Product info</span></div>' +
+        '<div class="card-header"><span class="card-title">Status &amp; visibility</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Title</label><input name="name" value="' + esc(p.name) + '" placeholder="e.g. Raffle Brandy Dress" required></div>' +
-          '<div class="form-group" style="padding:0;"><label>Description <span style="font-size:10px;color:var(--muted);">— supports * bullets and **bold**</span></label><textarea name="description" style="min-height:80px;">' + esc(p.description||'') + '</textarea></div>' +
-          '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;" onchange="window._applySizePreset()">' + catOptions + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Product features</label><textarea name="productFeatures" style="min-height:60px;">' + esc(p.productFeatures||'') + '</textarea></div>' +
-          '<div class="form-group" style="padding:0;"><label>Composition &amp; care</label><textarea name="compositionCare" style="min-height:60px;">' + esc(p.compositionCare||'') + '</textarea></div>' +
-          '<div class="form-group" style="padding:0;"><label>Measurements</label><input name="measurements" value="' + esc(p.measurements||'') + '" placeholder="e.g. Model wears size S. Length: 98cm."></div>' +
+          '<div class="form-group" style="padding:0;"><label>Product status</label><select name="status" style="width:100%;">' + STATUSES.map(function(s){ return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Badge</label><select name="badge" style="width:100%;"><option value="">None</option>' + ['new','sale','sold','pre-order'].map(function(b){ return '<option value="'+b+'"'+(p.badge===b?' selected':'')+'>'+b.charAt(0).toUpperCase()+b.slice(1)+'</option>'; }).join('') + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Featured on homepage</label><select name="featured" style="width:100%;"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div>' +
         '</div>' +
       '</div>' +
 
@@ -486,7 +506,19 @@
         '<div style="padding:12px 16px;"><div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Upload all product images here first, then assign them to each variant below.</div><div id="media-pool-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;"></div></div>' +
       '</div>' +
 
-      // 3. PRICING
+      // 3. PRODUCT
+      '<div class="card" style="margin-bottom:12px;">' +
+        '<div class="card-header"><span class="card-title">Product</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div class="form-group" style="padding:0;"><label>Title</label><input name="name" value="' + esc(p.name) + '" placeholder="e.g. Raffle Brandy Dress" required oninput="window._updateSeoPreview()"></div>' +
+          '<div class="form-group" style="padding:0;"><label>Description <span style="font-size:10px;color:var(--muted);">— supports * bullets and **bold**</span></label><textarea name="description" style="min-height:80px;">' + esc(p.description||'') + '</textarea></div>' +
+          '<div class="form-group" style="padding:0;"><label>Product features</label><textarea name="productFeatures" style="min-height:60px;">' + esc(p.productFeatures||'') + '</textarea></div>' +
+          '<div class="form-group" style="padding:0;"><label>Composition &amp; care</label><textarea name="compositionCare" style="min-height:60px;">' + esc(p.compositionCare||'') + '</textarea></div>' +
+          '<div class="form-group" style="padding:0;"><label>Measurements</label><input name="measurements" value="' + esc(p.measurements||'') + '" placeholder="e.g. Model wears size S. Length: 98cm."></div>' +
+        '</div>' +
+      '</div>' +
+
+      // 4. PRICING
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Pricing</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
@@ -496,16 +528,7 @@
         '</div>' +
       '</div>' +
 
-      // 4. INVENTORY
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Inventory</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>SKU</label><input name="sku" value="' + esc(p.sku||'') + '" placeholder="e.g. DRS-RBB-001"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Stock quantity</label><div style="display:flex;align-items:center;gap:10px;"><button type="button" class="no-qty-btn" onclick="window._pfChangeStock(-1)"><i class="ph-light ph-minus"></i></button><input name="stock" id="pf-stock" type="number" min="0" value="' + esc(String(p.stock||0)) + '" style="width:80px;text-align:center;" oninput="window._pfUpdateStockLabel()"><button type="button" class="no-qty-btn" onclick="window._pfChangeStock(1)"><i class="ph-light ph-plus"></i></button><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
-        '</div>' +
-      '</div>' +
-
-      // 5. SIZES
+      // 5. VARIANTS (sizes shown first as the other product option, then color/media variants)
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header" style="justify-content:space-between;"><span class="card-title">Sizes</span><button type="button" class="btn btn-xs btn-ghost" onclick="window._applySizePreset()">Auto-fill from category</button></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
@@ -524,13 +547,20 @@
             '<div id="pf-size-preview" style="padding:8px 0;min-height:36px;"></div>' +
           '</div>' +
         '</div>' +
+        '<div style="padding:0 16px 12px;border-top:0.5px solid var(--border);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;"><span class="card-title" style="font-size:12px;">Variants</span><button type="button" class="btn btn-xs btn-ghost" onclick="window._addVariant()"><i class="ph-light ph-plus"></i> Add variant</button></div>' +
+          '<div id="variants-container">' +
+            (p.variants||[]).map(function(v, i){ return buildVariantBlock(v, i, p.category); }).join('') +
+          '</div>' +
+        '</div>' +
       '</div>' +
 
-      // 6. VARIANTS
+      // 6. INVENTORY
       '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header" style="justify-content:space-between;"><span class="card-title">Variants</span><button type="button" class="btn btn-xs btn-ghost" onclick="window._addVariant()"><i class="ph-light ph-plus"></i> Add variant</button></div>' +
-        '<div id="variants-container" style="padding:0 16px 12px;">' +
-          (p.variants||[]).map(function(v, i){ return buildVariantBlock(v, i, p.category); }).join('') +
+        '<div class="card-header"><span class="card-title">Inventory</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div class="form-group" style="padding:0;"><label>SKU</label><input name="sku" value="' + esc(p.sku||'') + '" placeholder="e.g. DRS-RBB-001"></div>' +
+          '<div class="form-group" style="padding:0;"><label>Stock quantity</label><div style="display:flex;align-items:center;gap:10px;"><button type="button" class="no-qty-btn" onclick="window._pfChangeStock(-1)"><i class="ph-light ph-minus"></i></button><input name="stock" id="pf-stock" type="number" min="0" value="' + esc(String(p.stock||0)) + '" style="width:80px;text-align:center;" oninput="window._pfUpdateStockLabel()"><button type="button" class="no-qty-btn" onclick="window._pfChangeStock(1)"><i class="ph-light ph-plus"></i></button><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
         '</div>' +
       '</div>' +
 
@@ -544,20 +574,34 @@
         '</div>' +
       '</div>' +
 
-      // 8. STATUS & VISIBILITY
+      // 8. ORGANIZATION
       '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Status &amp; visibility</span></div>' +
+        '<div class="card-header"><span class="card-title">Organization</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Product status</label><select name="status" style="width:100%;">' + STATUSES.map(function(s){ return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Badge</label><select name="badge" style="width:100%;"><option value="">None</option>' + ['new','sale','sold','pre-order'].map(function(b){ return '<option value="'+b+'"'+(p.badge===b?' selected':'')+'>'+b.charAt(0).toUpperCase()+b.slice(1)+'</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Featured on homepage</label><select name="featured" style="width:100%;"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;" onchange="window._applySizePreset()">' + catOptions + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Collections <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="collections" value="' + esc((p.collections||[]).join(', ')) + '" placeholder="e.g. Summer 2026, New arrivals"></div>' +
+          '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
         '</div>' +
       '</div>' +
 
-      // 9. TAGS
+      // 9. SALES CHANNELS
+      '<div class="card" style="margin-bottom:12px;">' +
+        '<div class="card-header"><span class="card-title">Sales channels</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div class="form-group" style="padding:0;"><label>Online Store</label><select name="onlineStore" style="width:100%;"><option value="true"'+(p.onlineStore===false?'':' selected')+'>Enabled</option><option value="false"'+(p.onlineStore===false?' selected':'')+'>Disabled</option></select></div>' +
+        '</div>' +
+      '</div>' +
+
+      // 10. SEO
       '<div class="card" style="margin-bottom:24px;">' +
-        '<div class="card-header"><span class="card-title">Tags</span></div>' +
-        '<div style="padding:12px 16px;"><div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div></div>' +
+        '<div class="card-header"><span class="card-title">Search engine listing</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div class="form-group" style="padding:0;"><label>SEO title</label><input name="seoTitle" value="' + esc(p.seoTitle||'') + '" placeholder="Defaults to product title" oninput="window._updateSeoPreview()"></div>' +
+          '<div class="form-group" style="padding:0;"><label>Meta description</label><textarea name="metaDescription" style="min-height:60px;" oninput="window._updateSeoPreview()">' + esc(p.metaDescription||'') + '</textarea></div>' +
+          '<div class="form-group" style="padding:0;"><label>URL handle</label><div id="pf-url-handle" style="font-size:12px;color:var(--muted);background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:8px 10px;">' + esc(displaySlug) + '</div></div>' +
+          '<div class="form-group" style="padding:0;"><label>Preview</label><div id="pf-seo-preview" style="padding:10px 12px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-sm);"></div></div>' +
+        '</div>' +
       '</div>' +
 
       '</form>';
@@ -566,6 +610,7 @@
     window._pfUpdateMargin();
     window._pfUpdateStockLabel();
     window._updateSizePreview();
+    window._updateSeoPreview();
   };
 
   // ── VARIANT BLOCK ─────────────────────────────────────────────
@@ -712,6 +757,10 @@
       shippingReturns:      form.shippingReturns.value,
       shippingWeight:       parseFloat(form.shippingWeight.value) || 0,
       internationalShipping: form.internationalShipping.value === 'true',
+      onlineStore:          form.onlineStore ? form.onlineStore.value === 'true' : true,
+      seoTitle:             form.seoTitle ? form.seoTitle.value : '',
+      metaDescription:      form.metaDescription ? form.metaDescription.value : '',
+      collections:          form.collections ? form.collections.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [],
       tags:                 form.tags.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean),
       createdAt:            existingProduct ? (existingProduct.createdAt || new Date().toISOString()) : new Date().toISOString(),
       updatedAt:            new Date().toISOString(),
