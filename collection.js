@@ -288,9 +288,13 @@ function renderVendorPage(vendor) {
     </div>
   `;
   
-  // Build footer for vendor page
+  // Build footer for vendor page, then re-populate its brands list
+  // (buildFooter always resets brands to empty — renderVendorsFooter fills it back in)
   const footerEl = document.getElementById('vendor-footer');
-  if (footerEl && typeof buildFooter === 'function') buildFooter('vendor-footer');
+  if (footerEl && typeof buildFooter === 'function') {
+    buildFooter('vendor-footer');
+    if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
+  }
 }
 
 window.navigateToVendor = navigateToVendor;
