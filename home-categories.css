@@ -139,3 +139,6 @@
 }
 
 .featured-brand-btn:hover { opacity: 0.85; }
+.featured-brand-section + .featured-brand-section {
+  padding-top: 0;
+}
