@@ -46,9 +46,13 @@ function selectVariant(productId, variantIndex, evt) {
     const images = getAllProductImages(product, variantIndex);
     const mainImg = document.getElementById("product-main-image");
     const thumbsEl = document.getElementById("product-thumbnails");
+    const barsEl = document.getElementById("product-image-bars");
     if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; }
     if(thumbsEl){
-      thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join("");
+      thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('');
+    }
+    if(barsEl){
+      barsEl.innerHTML = images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('');
     }
     // Update swipe init
     productImages = images;
@@ -62,6 +66,7 @@ function switchMainImage(index, url) {
   const mainImage = document.getElementById('product-main-image');
   if (mainImage) { mainImage.style.backgroundImage = `url('${url}')`; }
   document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
+  document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === index));
   currentImageIndex = index;
 }
 
@@ -82,6 +87,7 @@ function initProductSwipe(images) {
     else if (diff < 0 && currentImageIndex > 0) { currentImageIndex--; }
     mainImage.style.backgroundImage = `url('${productImages[currentImageIndex]}')`;
     document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
+    document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === currentImageIndex));
   }, {passive: true});
 }
 
@@ -159,11 +165,18 @@ async function renderProductPage(product) {
   const reviews=await getProductReviews(product.id); const reviewsHtml=reviews.length?reviews.map(r=>`<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text||'No comment'}<br><small style="color:#aaa;">${r.name||'Anonymous'} · ${r.country||'Unknown'} · ${r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString():'Recently'}</small></div>`).join(''):'<p class="no-reviews">No reviews yet.</p>';
   const hasDesc=product.description&&product.description.length>0;
 
+  // Progress bars for the main image slider, mirroring the swipe-bar
+  // dots used in Recently Viewed / You May Also Like / Complete the Look
+  const imageBarsHtml = images.length > 1
+    ? `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`
+    : '';
+
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider">
       <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');">
         ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
       </div>
+      ${imageBarsHtml}
       <div class="product-thumbnails" id="product-thumbnails">
         ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}
       </div>
