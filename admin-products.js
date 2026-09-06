@@ -76,6 +76,11 @@
   var BRANDS   = ['JANEDORE','NIRIUS CO','THATO'];
   var STATUSES = ['active', 'draft', 'archived'];
 
+  // Badge presets shown in the dropdown. "sold out" is stored exactly as
+  // written here so the storefront can just uppercase it — no special-casing
+  // needed elsewhere.
+  var BADGE_PRESETS = ['new','sale','sold out','pre-order'];
+
   // FIX: Map brand names to vendor IDs
   var VENDOR_ID_MAP = {
     'JANEDORE': 'vendor-janedore',
@@ -523,6 +528,12 @@
     // display-only here — slug generation/preservation logic is untouched.
     var displaySlug = p.slug || (p.name ? _uniqueSlug(_slugify(p.name), allProducts, p.id || null) : 'product');
 
+    // Badge: figure out whether the saved value matches one of the presets,
+    // or whether it's a custom typed value that needs the free-text field.
+    var isPresetBadge = p.badge && BADGE_PRESETS.indexOf(p.badge) !== -1;
+    var badgeSelectValue = isPresetBadge ? p.badge : (p.badge ? '__custom__' : '');
+    var badgeCustomValue = isPresetBadge ? '' : (p.badge || '');
+
     mc.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
         '<button type="button" class="btn btn-ghost" onclick="window._renderProductsTab()"><i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Cancel</button>' +
@@ -537,7 +548,15 @@
         '<div class="card-header"><span class="card-title">Status &amp; visibility</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>Product status</label><select name="status" style="width:100%;">' + STATUSES.map(function(s){ return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Badge</label><select name="badge" style="width:100%;"><option value="">None</option>' + ['new','sale','sold','pre-order'].map(function(b){ return '<option value="'+b+'"'+(p.badge===b?' selected':'')+'>'+b.charAt(0).toUpperCase()+b.slice(1)+'</option>'; }).join('') + '</select></div>' +
+          '<div class="form-group" style="padding:0;">' +
+            '<label>Badge</label>' +
+            '<select name="badge" id="pf-badge-select" style="width:100%;" onchange="window._pfToggleCustomBadge()">' +
+              '<option value=""' + (badgeSelectValue === '' ? ' selected' : '') + '>None</option>' +
+              BADGE_PRESETS.map(function(b){ var label = b.replace(/\b\w/g,function(l){return l.toUpperCase();}); return '<option value="'+esc(b)+'"'+(badgeSelectValue===b?' selected':'')+'>'+label+'</option>'; }).join('') +
+              '<option value="__custom__"' + (badgeSelectValue === '__custom__' ? ' selected' : '') + '>Custom...</option>' +
+            '</select>' +
+            '<input name="badgeCustom" id="pf-badge-custom" value="' + esc(badgeCustomValue) + '" placeholder="Type your own badge text" style="width:100%;margin-top:6px;display:' + (badgeSelectValue === '__custom__' ? 'block' : 'none') + ';">' +
+          '</div>' +
           '<div class="form-group" style="padding:0;"><label>Featured on homepage</label><select name="featured" style="width:100%;"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div>' +
         '</div>' +
       '</div>' +
@@ -653,6 +672,15 @@
     window._pfUpdateStockLabel();
     window._updateSizePreview();
     window._updateSeoPreview();
+  };
+
+  // ── BADGE HELPER ─────────────────────────────────────────────
+
+  window._pfToggleCustomBadge = function() {
+    var sel = safeEl('pf-badge-select');
+    var custom = safeEl('pf-badge-custom');
+    if (!sel || !custom) return;
+    custom.style.display = sel.value === '__custom__' ? 'block' : 'none';
   };
 
   // ── VARIANT BLOCK ─────────────────────────────────────────────
@@ -776,6 +804,14 @@
       ? existingProduct.slug
       : _uniqueSlug(_slugify(form.name.value), allProducts, existingId || null);
 
+    // Badge: if "Custom..." was selected, use the typed text; otherwise
+    // use the preset value directly (already stored exactly as it should
+    // display, e.g. "sold out").
+    var badgeSelectVal = form.badge.value;
+    var badgeValue = badgeSelectVal === '__custom__'
+      ? (form.badgeCustom ? form.badgeCustom.value.trim() : '')
+      : badgeSelectVal;
+
     var data = {
       id:                   existingId || form.sku.value || ('prod-' + Date.now()),
       slug:                 slug,
@@ -786,7 +822,7 @@
       category:             form.category.value,
       price:                price,
       salePrice:            salePrice,
-      badge:                form.badge.value || null,
+      badge:                badgeValue || null,
       sizes:                sizes,
       sizeUnit:             unit,
       stock:                stock,
