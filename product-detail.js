@@ -161,6 +161,7 @@ async function renderProductPage(product) {
   }
 
   const vi=S.productVariantSelections[product.id]; const images=getAllProductImages(product,vi); const soldOut=isProductSoldOut(product);
+  const isPreorder=product.badge==='pre-order';
   const variants=product.variants||[]; const sizes=product.sizes||[];
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
   const badgeLabel=getBadgeLabel(product);
@@ -202,7 +203,7 @@ async function renderProductPage(product) {
         <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
         <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
       </div>
-      <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${soldOut?'disabled':''}>${soldOut?'Sold Out':'Add to Bag'}</button>
+      <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Preorder Please':(soldOut?'Sold Out':'Add to Bag')}</button>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0 12px;">
       <div class="ai-disclaimer-notice"><span>*</span><p>Select imagery may include AI-assisted production.<br><strong>Product accuracy remains a priority.</strong></p></div>
