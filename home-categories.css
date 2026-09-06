@@ -81,7 +81,7 @@
 }
 
 /* ── FEATURED BRAND ─────────────────────────────────────── */
-#featured-brand-section {
+.featured-brand-section {
   padding: 32px 18px;
   max-width: 1400px;
   margin: 0 auto;
