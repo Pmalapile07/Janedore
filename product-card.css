@@ -75,7 +75,7 @@
   color: #fff;
 }
 .badge-sale { background: #111; color: #fff; }
-.badge-sold { background: #888; color: #fff; }
+.badge-sold { background: #111; color: #fff; }
 .badge-preorder { background: #111; color: #fff; }
 /* TYPOGRAPHY — support both old and new classes */
 .product-card .product-brand,
@@ -212,8 +212,8 @@
 /* SOLD OUT STATE */
 .product-card.sold-out .product-img-wrap img,
 .product-card.sold-out .product-card-slide {
-  opacity: 0.4;
-  filter: grayscale(60%);
+  opacity: 0.75;
+  filter: grayscale(35%);
 }
 .product-card.sold-out .product-brand,
 .product-card.sold-out .product-brand-tag,
