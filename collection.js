@@ -104,8 +104,10 @@ function expandProductVariants(products) {
 }
 
 // FIXED: Cleaned up metaRow structure to ensure perfect vertical alignment
+// UPDATED: now flags sold-out products with a .sold-out class for CSS styling
 function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
+  const soldOut = (p.stock ?? 0) <= 0;
   const badge = p.badge ? `<span class="product-badge">${p.badge.toUpperCase()}</span>` : '';
   const imgs = p.variants?.[vi]?.images;
   const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
@@ -121,7 +123,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const metaRow = showDetails !== false ? `${brand}${price}` : brand;
 
   return `
-    <div class="product-card" onclick="S.productVariantSelections['${p.id}']=${vi};goToProduct('${p.id}')">
+    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${p.id}']=${vi};goToProduct('${p.id}')">
       <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
       ${metaRow}
       ${name}
@@ -203,13 +205,15 @@ function buildCategoriesSlider() {
 
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
+// UPDATED: now flags sold-out products with a .sold-out class for CSS styling
 function productCardHome(p) {
   const badge = p.badge ? `<span class="product-badge">${p.badge.toUpperCase()}</span>` : '';
+  const soldOut = (p.stock ?? 0) <= 0;
   const vi = S.productVariantSelections[p.id] ?? 0;
   const imgs = p.variants?.[vi]?.images;
   const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
   return `
-    <div class="product-card" onclick="goToProduct('${p.id}')">
+    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${p.id}')">
       <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
       <div class="product-brand">${p.brand || 'JANEDORE'}</div>
       <div class="product-title">${p.name}</div>
