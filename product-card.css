@@ -209,3 +209,17 @@
   background-position: center;
 }
 
+/* SOLD OUT STATE */
+.product-card.sold-out .product-img-wrap img,
+.product-card.sold-out .product-card-slide {
+  opacity: 0.4;
+  filter: grayscale(60%);
+}
+.product-card.sold-out .product-brand,
+.product-card.sold-out .product-brand-tag,
+.product-card.sold-out .product-title,
+.product-card.sold-out .product-name,
+.product-card.sold-out .product-price,
+.product-card.sold-out .product-price-row .product-price {
+  opacity: 0.5;
+}
