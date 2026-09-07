@@ -271,7 +271,11 @@ body.on-collection-page .collection-nav-controls {
 .product-brand {
   line-height: 1.2;
 }
-/* Vendor/Brand Page */
+
+/* =========================================
+   VENDOR/BRAND PAGE
+   ========================================= */
+
 .vendor-hero-section {
   width: 100%;
   margin-bottom: 30px;
@@ -329,6 +333,51 @@ body.on-collection-page .collection-nav-controls {
     font-size: 11px;
   }
 }
+
+/* =========================================
+   BADGES
+   ========================================= */
+
 .badge-sale { background: #111; color: #fff; padding: 4px 8px; }
 .badge-sold { background: #888; color: #fff; padding: 4px 8px; }
 .badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
+
+/* =========================================
+   FEATURED BRAND SECTIONS - FIXES
+   ========================================= */
+
+/* Remove space between featured brand sections */
+.featured-brand-section {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.featured-brand-section + .featured-brand-section {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Ensure positioning context for absolute children */
+.featured-brand-img {
+  position: relative;
+}
+
+/* Remove "Introducing" */
+.featured-brand-sub {
+  display: none !important;
+}
+
+/* Move brand name + button to top left */
+.featured-brand-content {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  text-align: left;
+  align-items: flex-start;
+  padding: 0;
+  justify-content: flex-start;
+}
+
+.featured-brand-heading {
+  margin-bottom: 12px;
+}
