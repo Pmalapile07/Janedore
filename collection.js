@@ -4,10 +4,25 @@ const COLLECTION_DESCRIPTIONS = {
 };
 const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
 
-function merchandiseProducts(products) { if (!products || !products.length) return []; const filtered = products.filter(p => p.id !== 'janedore-leather-pouch'); const sorted = [...filtered].sort((a, b) => { const oA = CATEGORY_ORDER[a.category] ?? 99; const oB = CATEGORY_ORDER[b.category] ?? 99; if (oA !== oB) return oA - oB; const pA = a.salePrice ?? a.price ?? 0; const pB = b.salePrice ?? b.price ?? 0; return pA - pB; }); return sorted; }
+// Shared constants (previously duplicated across multiple functions)
+const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
+const PRICE_FILTER_THRESHOLD = 500;
+const LEATHER_POUCH_ID = 'janedore-leather-pouch';
+
+function gridTemplateFor(cols) {
+  return cols === 1 ? "1fr" : cols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)";
+}
+
+// Centralizes the leather-pouch exception: it's excluded from general listings
+// unless the context is sunglasses or the vendor page it actually belongs to.
+function isLeatherPouchAllowed(context) {
+  return context === 'sunglasses' || context === 'vendor';
+}
+
+function merchandiseProducts(products, context) { if (!products || !products.length) return []; const filtered = products.filter(p => p.id !== LEATHER_POUCH_ID || isLeatherPouchAllowed(context)); const sorted = [...filtered].sort((a, b) => { const oA = CATEGORY_ORDER[a.category] ?? 99; const oB = CATEGORY_ORDER[b.category] ?? 99; if (oA !== oB) return oA - oB; const pA = a.salePrice ?? a.price ?? 0; const pB = b.salePrice ?? b.price ?? 0; return pA - pB; }); return sorted; }
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
-function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false; if(S.filter.vendor && p.brand!==S.filter.vendor) return false; if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false; const price = p.salePrice ?? p.price; if(S.filter.price==='low' && price >= 500) return false; if(S.filter.price==='high' && price < 500) return false; return true; }); }
-function getCatFilteredProducts() { const isAllClothing = S.currentCategoryPage === 'all-clothing'; const clothingCats = ['dresses','tops','bottoms','jackets','sets']; return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(p.id==='janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return false; if(isAllClothing) { if(!clothingCats.includes(p.category)) return false; } else if(S.currentCategoryPage && p.category !== S.currentCategoryPage) return false; if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= 500) return false; if(S.catFilter.price==='high' && price < 500) return false; return true; }); }
+function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false; if(S.filter.vendor && p.brand!==S.filter.vendor) return false; if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false; const price = p.salePrice ?? p.price; if(S.filter.price==='low' && price >= PRICE_FILTER_THRESHOLD) return false; if(S.filter.price==='high' && price < PRICE_FILTER_THRESHOLD) return false; return true; }); }
+function getCatFilteredProducts() { const isAllClothing = S.currentCategoryPage === 'all-clothing'; return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(p.id===LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false; if(isAllClothing) { if(!CLOTHING_CATEGORIES.includes(p.category)) return false; } else if(S.currentCategoryPage && p.category !== S.currentCategoryPage) return false; if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= PRICE_FILTER_THRESHOLD) return false; if(S.catFilter.price==='high' && price < PRICE_FILTER_THRESHOLD) return false; return true; }); }
 function applyFilter(type, value) { S.filter[type] = value; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); }
 function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
 
@@ -135,7 +150,7 @@ function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
   let prods = merchandiseProducts(getFilteredProducts());
   const expanded = expandProductVariants(prods);
-  DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)";
+  DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
   DOM.allProductsGrid.innerHTML = expanded.map(({product, variantIndex}) => productCard(product, S.gridCols===3, true, variantIndex)).join("");
   applyEditorialGrid(DOM.allProductsGrid, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
@@ -146,21 +161,21 @@ function renderCategoryProducts() {
   let cp;
   if(S.currentCategoryPage==='parfum') cp=getCatFilteredProducts().filter(p=>p.category==='parfum');
   else if(S.currentCategoryPage==='jewelry') cp=getCatFilteredProducts().filter(p=>p.category==='jewelry');
-  else if(S.currentCategoryPage==='sunglasses') cp=getCatFilteredProducts().filter(p=>p.category==='sunglasses'||p.id==='janedore-leather-pouch');
-  else if(S.currentCategoryPage==='all-clothing') cp=getCatFilteredProducts().filter(p=>['dresses','tops','bottoms','jackets','sets'].includes(p.category));
-  else if(['dresses','tops','bottoms','jackets','sets'].includes(S.currentCategoryPage)) cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage);
-  else if(S.currentCategoryPage==='bags') cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage&&p.id!=='janedore-leather-pouch');
+  else if(S.currentCategoryPage==='sunglasses') cp=getCatFilteredProducts().filter(p=>p.category==='sunglasses'||p.id===LEATHER_POUCH_ID);
+  else if(S.currentCategoryPage==='all-clothing') cp=getCatFilteredProducts().filter(p=>CLOTHING_CATEGORIES.includes(p.category));
+  else if(CLOTHING_CATEGORIES.includes(S.currentCategoryPage)) cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage);
+  else if(S.currentCategoryPage==='bags') cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage&&p.id!==LEATHER_POUCH_ID);
   else cp=getCatFilteredProducts();
-  let prods=merchandiseProducts(cp);
+  let prods=merchandiseProducts(cp, S.currentCategoryPage);
   const expanded = expandProductVariants(prods);
-  DOM.categoryProductsGrid.style.gridTemplateColumns=S.gridColsCat===1?"1fr":S.gridColsCat===2?"repeat(2,1fr)":"repeat(3,1fr)";
+  DOM.categoryProductsGrid.style.gridTemplateColumns=gridTemplateFor(S.gridColsCat);
   DOM.categoryProductsGrid.innerHTML=expanded.map(({product, variantIndex}) => productCard(product, S.gridColsCat===3, true, variantIndex)).join("");
   applyEditorialGrid(DOM.categoryProductsGrid, S.gridColsCat);
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
 }
 
-function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); const expanded = expandProductVariants(sp); DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
+function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); const expanded = expandProductVariants(sp); DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols); DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
 
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
 
@@ -201,7 +216,14 @@ function buildCategoriesSlider() {
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${c.cat}')"><div class="home-category-img" style="background-image:url('${c.img}');background-size:cover;background-position:center;"></div><div class="home-category-label">${c.label}</div></div>`).join('');
   const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
   progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
-  grid.addEventListener('scroll', () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = window.innerWidth>=900?5:window.innerWidth>=640?3:2; const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); }, {passive:true});
+  // FIXED: grid.innerHTML only clears children, not the grid element itself — attaching a
+  // fresh scroll listener on every call stacked duplicates. Remove any prior listener first.
+  if (grid._categoriesScrollHandler) {
+    grid.removeEventListener('scroll', grid._categoriesScrollHandler);
+  }
+  const scrollHandler = () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = window.innerWidth>=900?5:window.innerWidth>=640?3:2; const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); };
+  grid._categoriesScrollHandler = scrollHandler;
+  grid.addEventListener('scroll', scrollHandler, {passive:true});
 }
 
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
@@ -254,29 +276,33 @@ async function navigateToVendor(vendorId, replaceUrl) {
   updateChatVisibility();
 }
 
+// Normalizes a brand name for comparison (trim + lowercase + collapse spelling
+// variants) so a typo in Firestore data doesn't need a new hardcoded pair here.
+function normalizeBrandName(name) {
+  if (!name) return '';
+  return name.trim().toLowerCase().replace(/nirious co/g, 'nirius co');
+}
+
 function renderVendorPage(vendor) {
   const el = document.getElementById('vendor-page-content');
   if (!el) return;
   const heroImg = vendor?.heroImageUrl || vendor?.logoUrl || '';
   const brandName = vendor?.brand || vendor?.name || '';
   const desc = vendor?.description || '';
+  const normalizedBrandName = normalizeBrandName(brandName);
   
-  // Match products by vendorId OR brand name (case-insensitive)
+  // Match products by vendorId OR brand name (normalized, case/spelling-insensitive)
   const products = merchandiseProducts(PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
     
     // Match by vendorId
     if (vendor?.id && p.vendorId === vendor.id) return true;
     
-    // Match by brand name (case-insensitive)
-    if (p.brand && brandName && p.brand.toLowerCase() === brandName.toLowerCase()) return true;
-    
-    // Special case for spelling variations
-    if (brandName === 'NIRIUS CO' && p.brand === 'NIRIOUS CO') return true;
-    if (brandName === 'NIRIOUS CO' && p.brand === 'NIRIUS CO') return true;
+    // Match by brand name (normalized comparison covers case and known spelling variants)
+    if (p.brand && brandName && normalizeBrandName(p.brand) === normalizedBrandName) return true;
     
     return false;
-  }));
+  }), 'vendor');
   
   const expanded = expandProductVariants(products);
 
