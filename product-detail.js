@@ -212,6 +212,8 @@ async function renderProductPage(product) {
       ${rvSection}
     </div>
     <footer id="product-footer"></footer>`;
-  buildFooter("product-footer"); window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
+  buildFooter("product-footer");
+  if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
+  window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
   setTimeout(() => initProductSwipe(images), 100);
 }
