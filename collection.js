@@ -42,20 +42,18 @@ function toggleFilterDropdown(source) {
 
 function toggleCollectionFilter() {
   const el = document.getElementById('collection-filter-options');
+  const backdrop = document.getElementById('collection-filter-backdrop');
   if(el) {
     el.classList.toggle("open");
-    if(el.classList.contains("open")) setTimeout(() => document.addEventListener("click", function cf(e) {
-      if(!el.contains(e.target) && !e.target.classList.contains("collection-filter-trigger")) {
-        el.classList.remove("open");
-        document.removeEventListener("click", cf);
-      }
-    }), 10);
+    if(backdrop) backdrop.classList.toggle("open");
   }
 }
 
 function applyCollectionFilter(type, value) {
   const el = document.getElementById('collection-filter-options');
+  const backdrop = document.getElementById('collection-filter-backdrop');
   if(el) el.classList.remove("open");
+  if(backdrop) backdrop.classList.remove("open");
   if (S.currentPage === 'products') { applyFilter(type, value); }
   else if (S.currentPage === 'category') { applyCatFilter(type, value); }
   updateCollectionGridIcon();
