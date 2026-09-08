@@ -197,11 +197,21 @@ function renderCollectionSortingTabs() {
     active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
   }
   const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${t.cat}')">${t.label}</button>`).join('');
-  const toolbarEl = page.querySelector('.collection-toolbar');
   const container = document.createElement('div');
   container.className = 'collection-sorting-tabs';
   container.innerHTML = tabsHtml;
-  if (toolbarEl) { toolbarEl.insertAdjacentElement('afterend', container); }
+
+  const toolbarEl = page.querySelector('.collection-toolbar');
+  if (toolbarEl) {
+    toolbarEl.insertAdjacentElement('afterend', container);
+    return;
+  }
+  const layoutEl = page.querySelector('.site-collection-layout');
+  if (layoutEl) {
+    layoutEl.insertAdjacentElement('beforebegin', container);
+    return;
+  }
+  page.insertAdjacentElement('afterbegin', container);
 }
 
 function selectSortTab(cat) {
