@@ -77,6 +77,38 @@ function updateCollectionGridIcon() {
   else { icon.classList.add('cols-2'); }
 }
 
+function updateCollectionTitle() {
+  const titleEl = document.getElementById('collection-filter-title-display');
+  if (!titleEl) return;
+  
+  let title = 'ALL PRODUCTS';
+  
+  if (S.currentPage === 'products') {
+    if (S.saleMode) {
+      title = 'SALE';
+    } else {
+      title = 'ALL PRODUCTS';
+    }
+  } else if (S.currentPage === 'category' && S.currentCategoryPage) {
+    const catTitles = {
+      'all': 'ALL PRODUCTS',
+      'all-clothing': 'CLOTHING',
+      'dresses': 'DRESSES',
+      'tops': 'TOPS',
+      'bottoms': 'BOTTOMS',
+      'jackets': 'JACKETS',
+      'sets': 'SETS',
+      'bags': 'BAGS',
+      'jewelry': 'JEWELRY',
+      'sunglasses': 'SUNGLASSES',
+      'parfum': 'SCENT'
+    };
+    title = catTitles[S.currentCategoryPage] || S.currentCategoryPage.toUpperCase();
+  }
+  
+  titleEl.textContent = title;
+}
+
 function applyEditorialGrid(gridEl, cols) {
   if (!gridEl) return;
   gridEl.classList.remove('editorial-1col', 'editorial-2col', 'editorial-3col');
@@ -152,6 +184,7 @@ function renderAllProducts() {
   DOM.allProductsGrid.innerHTML = expanded.map(({product, variantIndex}) => productCard(product, S.gridCols===3, true, variantIndex)).join("");
   applyEditorialGrid(DOM.allProductsGrid, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
+  updateCollectionTitle();
 }
 
 function renderCategoryProducts() {
@@ -172,9 +205,19 @@ function renderCategoryProducts() {
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
   renderCollectionSortingTabs();
+  updateCollectionTitle();
 }
 
-function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); const expanded = expandProductVariants(sp); DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols); DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
+function renderSaleProducts() { 
+  if(!DOM.allProductsGrid) return; 
+  const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); 
+  const expanded = expandProductVariants(sp); 
+  DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols); 
+  DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; 
+  applyEditorialGrid(DOM.allProductsGrid, S.gridCols); 
+  updateGridToggleSVG("grid-toggle-svg", S.gridCols); 
+  updateCollectionTitle();
+}
 
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
 
