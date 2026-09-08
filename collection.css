@@ -15,20 +15,19 @@
 }
 
 /* =========================================
-   FILTER BAR - SEPARATE BAR BELOW HEADER
+   FILTER BAR - STICKY BAR BELOW HEADER
    ========================================= */
 
 .collection-filter-bar {
   display: none;
   background: #fff;
   border-bottom: 1px solid #f0f0f0;
-  padding: 12px 20px;
+  padding: 10px 20px;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   position: sticky;
-  top: var(--nav-height, 60px);
-  z-index: 99;
+  top: 0;
+  z-index: 100;
 }
 
 body.on-collection-page .collection-filter-bar {
@@ -36,7 +35,73 @@ body.on-collection-page .collection-filter-bar {
 }
 
 /* =========================================
-   FILTER DROPDOWN
+   GRID TOGGLE - BLACK BLOCKS, THICKER, FIXED
+   ========================================= */
+
+.col-grid-toggle-btn {
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.25s ease;
+}
+
+.col-grid-toggle-btn:hover {
+  opacity: 0.6;
+}
+
+.col-grid-icon {
+  width: 20px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.col-grid-bar {
+  width: 100%;
+  background: #111;
+  border: none;
+  box-sizing: border-box;
+  transition: height 0.3s ease;
+}
+
+/* 2-col state (default) - TWO black blocks, NO third */
+.col-grid-icon.cols-2 .col-grid-bar:nth-child(1) { 
+  height: 100%; 
+  display: block;
+}
+
+.col-grid-icon.cols-2 .col-grid-bar:nth-child(2) { 
+  height: 100%; 
+  display: block;
+}
+
+.col-grid-icon.cols-2 .col-grid-bar:nth-child(3) { 
+  display: none !important; 
+  width: 0 !important;
+}
+
+/* 1-col state - ONE full black block, NO others */
+.col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { 
+  height: 100%; 
+  display: block;
+}
+
+.col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { 
+  display: none !important; 
+  width: 0 !important;
+}
+
+.col-grid-icon.cols-1 .col-grid-bar:nth-child(3) { 
+  display: none !important; 
+  width: 0 !important;
+}
+
+/* =========================================
+   FILTER TRIGGER
    ========================================= */
 
 .collection-filter-dropdown {
@@ -64,87 +129,79 @@ body.on-collection-page .collection-filter-bar {
   opacity: 0.6;
 }
 
+/* =========================================
+   FILTER PANEL - FIXED POSITION, SLIDES FROM RIGHT
+   ========================================= */
+
+.collection-filter-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 950;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.collection-filter-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
 .collection-filter-options {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
   background: #fff;
-  border: 0.8px solid #e5e5e5;
-  padding: 14px 16px;
-  min-width: 200px;
-  display: none;
-  z-index: 200;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  z-index: 951;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+  padding: 24px;
+  overflow-y: auto;
+  visibility: hidden;
 }
 
 .collection-filter-options.open {
-  display: block;
+  transform: translateX(0);
+  visibility: visible;
 }
 
-/* =========================================
-   GRID TOGGLE
-   ========================================= */
-
-.col-grid-toggle-btn {
-  background: none;
-  border: none;
-  padding: 4px 2px;
-  cursor: pointer;
+/* Filter panel header */
+.collection-filter-header {
   display: flex;
   align-items: center;
-  transition: opacity 0.25s ease;
+  justify-content: space-between;
+  margin-bottom: 24px;
 }
 
-.col-grid-toggle-btn:hover {
-  opacity: 0.6;
+.collection-filter-title {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #111;
+  letter-spacing: 0.02em;
 }
 
-.col-grid-icon {
-  width: 14px;
-  height: 12px;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-}
-
-.col-grid-bar {
-  width: 100%;
-  background: transparent;
-  border: 0.8px solid #111;
-  box-sizing: border-box;
-}
-
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(1),
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(2) { 
-  height: 100%; 
-}
-
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { 
-  height: 100%; 
-}
-
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { 
-  height: 60%; 
-}
-
-/* =========================================
-   SEARCH ICON IN FILTER BAR
-   ========================================= */
-
-.collection-search-btn {
+.collection-filter-close {
   background: none;
   border: none;
   padding: 4px;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  font-size: 18px;
-  color: #111;
-  transition: opacity 0.2s;
+  cursor: pointer;
 }
 
-.collection-search-btn:hover {
-  opacity: 0.6;
+.collection-filter-close svg {
+  width: 18px;
+  height: 18px;
+  stroke: #111;
+  fill: none;
+  stroke-width: 1.5;
 }
 
 /* =========================================
@@ -152,7 +209,7 @@ body.on-collection-page .collection-filter-bar {
    ========================================= */
 
 .filter-group {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .filter-group:last-child {
@@ -160,33 +217,46 @@ body.on-collection-page .collection-filter-bar {
 }
 
 .filter-group-title {
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 10px;
   font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #111;
-  margin-bottom: 8px;
+  color: #888;
+  margin-bottom: 12px;
 }
 
 .filter-option {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
-  font-weight: 400;
-  color: #777;
-  padding: 5px 0;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: #111;
+  padding: 8px 0;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: opacity 0.2s;
+  letter-spacing: 0.02em;
 }
 
 .filter-option:hover {
-  color: #111;
+  opacity: 0.6;
 }
 
 .filter-option input {
   margin: 0;
   accent-color: #111;
+}
+
+/* =========================================
+   3-COLUMN GRID - HIDE PRODUCT INFO
+   ========================================= */
+
+.product-grid[style*="repeat(3"] .product-brand,
+.product-grid[style*="repeat(3"] .product-title,
+.product-grid[style*="repeat(3"] .product-price-row {
+  display: none !important;
 }
 
 /* =========================================
