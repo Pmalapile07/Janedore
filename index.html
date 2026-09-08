@@ -382,5 +382,11 @@
   });
 </script>
 
+<script>
+  fetch('category.html').then(r => r.text()).then(html => {
+    document.getElementById('category-loaded').innerHTML = html;
+  });
+</script>
+
 </body>
 </html>
