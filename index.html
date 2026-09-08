@@ -139,32 +139,40 @@
       FILTER
       <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
-    <div class="collection-filter-options" id="collection-filter-options">
-      <div class="filter-group">
-        <div class="filter-group-title">Category</div>
-        <label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label>
-        <label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label>
-        <label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label>
-        <label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label>
-        <label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-title">Size</div>
-        <label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label>
-        <label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label>
-        <label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-title">Price</div>
-        <label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label>
-        <label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label>
-        <label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label>
-      </div>
-    </div>
   </div>
-  <button class="collection-search-btn" onclick="openSearch()">
-    <i class="ph ph-magnifying-glass"></i>
-  </button>
+</div>
+
+<!-- Filter Backdrop -->
+<div class="collection-filter-backdrop" id="collection-filter-backdrop" onclick="toggleCollectionFilter()"></div>
+
+<!-- Filter Panel - Slides in from right -->
+<div class="collection-filter-options" id="collection-filter-options">
+  <div class="collection-filter-header">
+    <div class="collection-filter-title">Filter</div>
+    <button class="collection-filter-close" onclick="toggleCollectionFilter()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-title">Category</div>
+    <label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter('cat','all')"> All</label>
+    <label class="filter-option"><input type="radio" name="filter-cat-collection" value="sunglasses" onchange="applyCollectionFilter('cat','sunglasses')"> Sunglasses</label>
+    <label class="filter-option"><input type="radio" name="filter-cat-collection" value="jewelry" onchange="applyCollectionFilter('cat','jewelry')"> Jewelry</label>
+    <label class="filter-option"><input type="radio" name="filter-cat-collection" value="bags" onchange="applyCollectionFilter('cat','bags')"> Bags</label>
+    <label class="filter-option"><input type="radio" name="filter-cat-collection" value="parfum" onchange="applyCollectionFilter('cat','parfum')"> Scent</label>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-title">Size</div>
+    <label class="filter-option"><input type="radio" name="filter-size-collection" value="all" checked onchange="applyCollectionFilter('size','all')"> All</label>
+    <label class="filter-option"><input type="radio" name="filter-size-collection" value="OS" onchange="applyCollectionFilter('size','OS')"> OS</label>
+    <label class="filter-option"><input type="radio" name="filter-size-collection" value="Stainless Steel" onchange="applyCollectionFilter('size','Stainless Steel')"> Stainless Steel</label>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-title">Price</div>
+    <label class="filter-option"><input type="radio" name="filter-price-collection" value="all" checked onchange="applyCollectionFilter('price','all')"> All</label>
+    <label class="filter-option"><input type="radio" name="filter-price-collection" value="low" onchange="applyCollectionFilter('price','low')"> Under R500</label>
+    <label class="filter-option"><input type="radio" name="filter-price-collection" value="high" onchange="applyCollectionFilter('price','high')"> R500+</label>
+  </div>
 </div>
 
 <div id="search-overlay"><div class="search-overlay-header"><div class="search-input-wrap"><i class="ph ph-magnifying-glass" style="font-size:18px;color:#aaa;"></i><input id="search-input" type="text" placeholder="Search for pieces, brands..." autocomplete="off" oninput="handleSearch(this.value)"></div><button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="search-body" id="search-body"></div></div>
