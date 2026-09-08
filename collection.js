@@ -173,6 +173,7 @@ function renderCategoryProducts() {
   applyEditorialGrid(DOM.categoryProductsGrid, S.gridColsCat);
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
+  renderCollectionSortingTabs();
 }
 
 function renderSaleProducts() { if(!DOM.allProductsGrid) return; const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); const expanded = expandProductVariants(sp); DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols); DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); }
@@ -186,11 +187,15 @@ function renderCollectionSortingTabs() {
   if (!page) return;
   let existing = page.querySelector('.collection-sorting-tabs');
   if (existing) existing.remove();
-  if (S.currentPage === 'category') return;
   const tabs = [
-    { label: 'View All', cat: 'all' }, { label: 'Clothing', cat: 'all-clothing' }, { label: 'Dresses', cat: 'dresses' }, { label: 'Tops', cat: 'tops' }, { label: 'Bottoms', cat: 'bottoms' }, { label: 'Jackets', cat: 'jackets' }, { label: 'Sets', cat: 'sets' }, { label: 'Bags', cat: 'bags' }, { label: 'Jewelry', cat: 'jewelry' }, { label: 'Sunglasses', cat: 'sunglasses' }, { label: 'Scent', cat: 'parfum' }, { label: 'Sale', cat: 'sale' }
+    { label: 'View All', cat: 'all' }, { label: 'Clothing', cat: 'all-clothing' }, { label: 'Bags', cat: 'bags' }, { label: 'Jewelry', cat: 'jewelry' }, { label: 'Sunglasses', cat: 'sunglasses' }, { label: 'Scent', cat: 'parfum' }
   ];
-  const active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
+  let active;
+  if (S.currentPage === 'category') {
+    active = CLOTHING_CATEGORIES.includes(S.currentCategoryPage) ? 'all-clothing' : S.currentCategoryPage;
+  } else {
+    active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
+  }
   const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${t.cat}')">${t.label}</button>`).join('');
   const toolbarEl = page.querySelector('.collection-toolbar');
   const container = document.createElement('div');
