@@ -72,8 +72,9 @@ function updateCollectionGridIcon() {
   if (S.currentPage === 'products') { cols = S.gridCols || 2; }
   else if (S.currentPage === 'category') { cols = S.gridColsCat || 2; }
   else { cols = 2; }
-  icon.classList.remove('cols-1', 'cols-2');
+  icon.classList.remove('cols-1', 'cols-2', 'cols-3');
   if (cols === 1) { icon.classList.add('cols-1'); }
+  else if (cols === 3) { icon.classList.add('cols-3'); }
   else { icon.classList.add('cols-2'); }
 }
 
@@ -83,7 +84,9 @@ function updateCollectionTitle() {
   
   let title = 'ALL PRODUCTS';
   
-  if (S.currentPage === 'products') {
+  if (S.currentPage === 'vendor' && S.currentVendorId) {
+    title = 'BRAND';
+  } else if (S.currentPage === 'products') {
     if (S.saleMode) {
       title = 'SALE';
     } else {
@@ -104,9 +107,16 @@ function updateCollectionTitle() {
       'parfum': 'SCENT'
     };
     title = catTitles[S.currentCategoryPage] || S.currentCategoryPage.toUpperCase();
+  } else {
+    // Hide the title for non-collection pages
+    if (titleEl) titleEl.style.display = 'none';
+    return;
   }
   
-  titleEl.textContent = title;
+  if (titleEl) {
+    titleEl.style.display = 'block';
+    titleEl.textContent = title;
+  }
 }
 
 function applyEditorialGrid(gridEl, cols) {
@@ -330,6 +340,7 @@ async function navigateToVendor(vendorId, replaceUrl) {
   window.scrollTo({top:0,behavior:"instant"});
   ensureNavScrolled();
   updateChatVisibility();
+  updateCollectionTitle();
 }
 
 // Normalizes a brand name for comparison (trim + lowercase + collapse spelling
