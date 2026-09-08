@@ -166,6 +166,14 @@ window.subscribeNewsletter = subscribeNewsletter;
 // Set hero image before any async operations to prevent grey flash
 setHeroImage();
 
+// ==================== CLOSE FILTER PANEL HELPER ====================
+function closeFilterPanel() {
+  const filterPanel = document.getElementById('collection-filter-options');
+  const filterBackdrop = document.getElementById('collection-filter-backdrop');
+  if (filterPanel) filterPanel.classList.remove('open');
+  if (filterBackdrop) filterBackdrop.classList.remove('open');
+}
+
 async function init() {
   loadCartFromStorage();
   updateBadges();
@@ -270,6 +278,7 @@ function getRouteFromPath() {
 }
 
 window.addEventListener('popstate', () => {
+  closeFilterPanel();
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
     if (pathRoute.page === 'product-detail') {
@@ -310,6 +319,7 @@ function setNavForPage(page) {
 }
 
 function navigateTo(page, replaceUrl) {
+  closeFilterPanel();
   S.saleMode = false; S.filter.vendor = null;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
@@ -328,6 +338,7 @@ function navigateTo(page, replaceUrl) {
 }
 
 function navigateToCategory(cat, replaceUrl) {
+  closeFilterPanel();
   S.saleMode = false; S.filter.vendor = null; updateCollectionUrl(cat, replaceUrl);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
@@ -341,6 +352,7 @@ function navigateToCategory(cat, replaceUrl) {
 }
 
 function goToProduct(productId, replaceUrl) {
+  closeFilterPanel();
   S.saleMode = false; S.filter.vendor = null; closeCart();
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   updateProductUrl(product, replaceUrl);
@@ -353,13 +365,14 @@ function goToProduct(productId, replaceUrl) {
   renderProductPage(product); updateChatVisibility();
 }
 
-function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
+function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 
-function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
+function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
-function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { closeFilterPanel(); S.saleMode = true; S.filter.vendor = null; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
+  closeFilterPanel();
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-login").classList.add("active");
   S.currentPage = "login"; updateCleanUrl('login', replaceUrl);
@@ -367,6 +380,7 @@ function navigateToLogin(replaceUrl) {
 }
 
 function navigateToAccount(replaceUrl) {
+  closeFilterPanel();
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-account").classList.add("active");
   S.currentPage = "account"; updateCleanUrl('account', replaceUrl);
@@ -374,6 +388,7 @@ function navigateToAccount(replaceUrl) {
 }
 
 function navigateToCheckout(replaceUrl) {
+  closeFilterPanel();
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-checkout").classList.add("active");
   S.currentPage = "checkout"; updateCleanUrl('checkout', replaceUrl);
@@ -390,7 +405,7 @@ function setHeroImage() {
 }
 window.addEventListener('resize', setHeroImage);
 
-function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
+function openMenu() { closeFilterPanel(); DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
 function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
 function toggleSubmenuCollapse(section) { const el = document.getElementById(section + '-collapse'); if (el) el.classList.toggle('open'); }
 function toggleBrandsCollapse() { const el = document.getElementById('brands-collapse'); if (el) el.classList.toggle('open'); }
