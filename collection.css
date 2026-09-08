@@ -15,46 +15,38 @@
 }
 
 /* =========================================
-   COLLECTION PAGES - NAV TRANSFORMATION
+   COLLECTION PAGES - NAV ENHANCEMENT
    ========================================= */
 
-/* Hide standard nav elements on collection pages */
-body.on-collection-page #main-nav .nav-logo {
-  display: none !important;
-}
-
-body.on-collection-page #main-nav .desktop-nav-links {
-  display: none !important;
-}
-
-body.on-collection-page #main-nav .desktop-utility-links {
-  display: none !important;
-}
-
-/* Hide cart and wishlist using stable onclick selectors */
-body.on-collection-page button[onclick*="openCart"] {
-  display: none !important;
-}
-
-body.on-collection-page button[onclick*="navigateTo('wishlist')"] {
-  display: none !important;
-}
-
-/* Hide original search icon */
-body.on-collection-page .nav-search-icon {
-  display: none !important;
-}
-
-/* Show collection controls */
+/* Keep the original header intact, just enhance it */
 .collection-nav-controls {
   display: none;
 }
 
+/* Show collection controls alongside existing nav elements */
 body.on-collection-page .collection-nav-controls {
   display: flex;
   align-items: center;
   gap: 14px;
   margin-left: auto;
+}
+
+/* Hide some redundant elements on mobile only to make room */
+@media (max-width: 768px) {
+  body.on-collection-page #main-nav .nav-search-icon {
+    display: none !important;
+  }
+  
+  body.on-collection-page .desktop-utility-links {
+    display: none !important;
+  }
+}
+
+/* On desktop, keep everything visible and let controls sit naturally */
+@media (min-width: 769px) {
+  body.on-collection-page .collection-nav-controls {
+    margin-left: 20px;
+  }
 }
 
 /* =========================================
