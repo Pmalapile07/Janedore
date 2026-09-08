@@ -15,52 +15,30 @@
 }
 
 /* =========================================
-   COLLECTION CONTROLS - STANDALONE BAR
+   FILTER BAR - SEPARATE BAR BELOW HEADER
    ========================================= */
 
-/* Hide from header completely */
-.collection-nav-controls {
-  display: none !important;
-}
-
-/* Remove any header transformations */
-body.on-collection-page #main-nav .nav-logo,
-body.on-collection-page #main-nav .desktop-nav-links,
-body.on-collection-page #main-nav .desktop-utility-links,
-body.on-collection-page .nav-search-icon,
-body.on-collection-page .nav-cart-icon {
-  display: flex !important; /* Restore original header */
-}
-
-/* Remove collection-page class effects on nav */
-body.on-collection-page #main-nav .nav-logo {
-  display: block !important;
-}
-
-/* =========================================
-   FILTER BAR - BELOW HEADER
-   ========================================= */
-
-/* This will be the new filter bar positioned below the header */
 .collection-filter-bar {
   display: none;
-  position: sticky;
-  top: var(--nav-height, 60px);
-  z-index: 99;
   background: #fff;
-  border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
   padding: 12px 20px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  position: sticky;
+  top: var(--nav-height, 60px);
+  z-index: 99;
 }
 
 body.on-collection-page .collection-filter-bar {
   display: flex;
 }
 
-/* Filter dropdown container */
+/* =========================================
+   FILTER DROPDOWN
+   ========================================= */
+
 .collection-filter-dropdown {
   position: relative;
 }
@@ -103,7 +81,10 @@ body.on-collection-page .collection-filter-bar {
   display: block;
 }
 
-/* Grid toggle in filter bar */
+/* =========================================
+   GRID TOGGLE
+   ========================================= */
+
 .col-grid-toggle-btn {
   background: none;
   border: none;
@@ -124,7 +105,6 @@ body.on-collection-page .collection-filter-bar {
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  background: none;
 }
 
 .col-grid-bar {
@@ -147,7 +127,10 @@ body.on-collection-page .collection-filter-bar {
   height: 60%; 
 }
 
-/* Search in filter bar */
+/* =========================================
+   SEARCH ICON IN FILTER BAR
+   ========================================= */
+
 .collection-search-btn {
   background: none;
   border: none;
@@ -165,7 +148,7 @@ body.on-collection-page .collection-filter-bar {
 }
 
 /* =========================================
-   FILTER GROUP STYLES (shared)
+   FILTER GROUP STYLES
    ========================================= */
 
 .filter-group {
