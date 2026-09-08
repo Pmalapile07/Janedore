@@ -15,19 +15,26 @@
 }
 
 /* =========================================
-   COLLECTION PAGES - NAV ENHANCEMENT
+   COLLECTION PAGES - NAV TRANSFORMATION
    ========================================= */
 
 /* Hide collection controls by default */
 .collection-nav-controls {
-  display: none;
+  display: none !important;
 }
 
-/* Show collection controls only on collection pages */
+/* On collection pages, hide redundant nav elements */
+body.on-collection-page .nav-search-icon,
+body.on-collection-page .nav-cart-icon,
+body.on-collection-page .desktop-utility-links {
+  display: none !important;
+}
+
+/* Show collection controls on collection pages */
 body.on-collection-page .collection-nav-controls {
-  display: flex;
+  display: flex !important;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* =========================================
@@ -138,29 +145,6 @@ body.on-collection-page .collection-nav-controls {
 
 .collection-search-btn:hover {
   opacity: 0.6;
-}
-
-/* =========================================
-   RESPONSIVE ADJUSTMENTS
-   ========================================= */
-
-/* Mobile: Hide redundant nav elements to make room for collection controls */
-@media (max-width: 768px) {
-  body.on-collection-page .nav-search-icon {
-    display: none !important;
-  }
-  
-  body.on-collection-page .desktop-utility-links {
-    display: none !important;
-  }
-  
-  body.on-collection-page .collection-nav-controls {
-    gap: 8px;
-  }
-  
-  .collection-filter-trigger {
-    font-size: 10px;
-  }
 }
 
 /* =========================================
