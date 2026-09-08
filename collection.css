@@ -18,35 +18,16 @@
    COLLECTION PAGES - NAV ENHANCEMENT
    ========================================= */
 
-/* Keep the original header intact, just enhance it */
+/* Hide collection controls by default */
 .collection-nav-controls {
   display: none;
 }
 
-/* Show collection controls alongside existing nav elements */
+/* Show collection controls only on collection pages */
 body.on-collection-page .collection-nav-controls {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-left: auto;
-}
-
-/* Hide some redundant elements on mobile only to make room */
-@media (max-width: 768px) {
-  body.on-collection-page #main-nav .nav-search-icon {
-    display: none !important;
-  }
-  
-  body.on-collection-page .desktop-utility-links {
-    display: none !important;
-  }
-}
-
-/* On desktop, keep everything visible and let controls sit naturally */
-@media (min-width: 769px) {
-  body.on-collection-page .collection-nav-controls {
-    margin-left: 20px;
-  }
+  gap: 12px;
 }
 
 /* =========================================
@@ -60,9 +41,9 @@ body.on-collection-page .collection-nav-controls {
 .collection-filter-trigger {
   background: none;
   border: none;
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
   text-transform: uppercase;
   color: #111;
   display: flex;
@@ -71,6 +52,7 @@ body.on-collection-page .collection-nav-controls {
   padding: 4px 0;
   cursor: pointer;
   transition: opacity 0.2s;
+  white-space: nowrap;
 }
 
 .collection-filter-trigger:hover {
@@ -106,7 +88,7 @@ body.on-collection-page .collection-nav-controls {
   display: flex;
   align-items: center;
   transition: opacity 0.25s ease;
-  margin-right: 6px;
+  margin-right: 4px;
 }
 
 .col-grid-toggle-btn:hover {
@@ -138,7 +120,7 @@ body.on-collection-page .collection-nav-controls {
 .col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { height: 60%; }
 
 /* =========================================
-   SEARCH ICON
+   SEARCH ICON IN COLLECTION CONTROLS
    ========================================= */
 
 .collection-search-btn {
@@ -148,7 +130,7 @@ body.on-collection-page .collection-nav-controls {
   cursor: pointer;
   display: flex;
   align-items: center;
-  font-size: 20px;
+  font-size: 18px;
   color: #111;
   transition: opacity 0.2s;
   margin-left: -2px;
@@ -156,6 +138,29 @@ body.on-collection-page .collection-nav-controls {
 
 .collection-search-btn:hover {
   opacity: 0.6;
+}
+
+/* =========================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================= */
+
+/* Mobile: Hide redundant nav elements to make room for collection controls */
+@media (max-width: 768px) {
+  body.on-collection-page .nav-search-icon {
+    display: none !important;
+  }
+  
+  body.on-collection-page .desktop-utility-links {
+    display: none !important;
+  }
+  
+  body.on-collection-page .collection-nav-controls {
+    gap: 8px;
+  }
+  
+  .collection-filter-trigger {
+    font-size: 10px;
+  }
 }
 
 /* =========================================
@@ -171,9 +176,9 @@ body.on-collection-page .collection-nav-controls {
 }
 
 .filter-group-title {
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
   text-transform: uppercase;
   color: #111;
   margin-bottom: 8px;
@@ -184,7 +189,7 @@ body.on-collection-page .collection-nav-controls {
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  font-weight: var(--body-font-weight);
+  font-weight: 400;
   color: #777;
   padding: 5px 0;
   cursor: pointer;
@@ -223,10 +228,10 @@ body.on-collection-page .collection-nav-controls {
 
 /* Collection description */
 .collection-description {
-  font-size: var(--body-font-size);
-  font-weight: var(--body-font-weight);
-  line-height: var(--body-line-height);
-  letter-spacing: var(--body-letter-spacing);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
   color: #777;
   max-width: 480px;
   margin: 0 auto 32px;
