@@ -300,6 +300,13 @@ window.addEventListener('popstate', () => {
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
+  
+  // Toggle body class for collection pages
+  if (page === 'products' || page === 'category') {
+    document.body.classList.add('on-collection-page');
+  } else {
+    document.body.classList.remove('on-collection-page');
+  }
 }
 
 function navigateTo(page, replaceUrl) {
@@ -342,12 +349,13 @@ function goToProduct(productId, replaceUrl) {
   S.currentReviewProductId = productId;
   S.stickyWishHidden = false;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
+  document.body.classList.remove('on-collection-page');
   renderProductPage(product); updateChatVisibility();
 }
 
 function goBackFromProduct() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
 
-function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); navigateTo('home'); }
+function goBackHome() { removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
 function navigateToSale() { S.saleMode = true; S.filter.vendor = null; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
