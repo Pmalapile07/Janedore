@@ -50,7 +50,7 @@ body.on-collection-page .collection-filter-bar {
 }
 
 /* =========================================
-   GRID TOGGLE - SAME SIZE AS FILTER TEXT
+   GRID TOGGLE - BLACK BLOCKS, THICKER, FIXED
    ========================================= */
 
 .col-grid-toggle-btn {
@@ -68,8 +68,8 @@ body.on-collection-page .collection-filter-bar {
 }
 
 .col-grid-icon {
-  width: 18px;
-  height: 14px;
+  width: 20px;
+  height: 16px;
   display: flex;
   align-items: center;
   gap: 3px;
@@ -83,7 +83,7 @@ body.on-collection-page .collection-filter-bar {
   transition: height 0.3s ease;
 }
 
-/* 2-col state (default) - TWO black blocks, NO third */
+/* 2-col state (default) - TWO black blocks */
 .col-grid-icon.cols-2 .col-grid-bar:nth-child(1) { 
   height: 100%; 
   display: block;
@@ -99,7 +99,23 @@ body.on-collection-page .collection-filter-bar {
   width: 0 !important;
 }
 
-/* 1-col state - ONE full black block, NO others */
+/* 3-col state - THREE black blocks */
+.col-grid-icon.cols-3 .col-grid-bar:nth-child(1) { 
+  height: 100%; 
+  display: block;
+}
+
+.col-grid-icon.cols-3 .col-grid-bar:nth-child(2) { 
+  height: 100%; 
+  display: block;
+}
+
+.col-grid-icon.cols-3 .col-grid-bar:nth-child(3) { 
+  height: 100%; 
+  display: block;
+}
+
+/* 1-col state - ONE full black block */
 .col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { 
   height: 100%; 
   display: block;
@@ -405,7 +421,7 @@ body.on-collection-page .collection-filter-bar {
 
 .badge-sale { background: #111; color: #fff; padding: 4px 8px; }
 .badge-sold { background: #888; color: #fff; padding: 4px 8px; }
-.badge-preorder { background: #111; color: #111; padding: 4px 8px; }
+.badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
 
 /* =========================================
    FEATURED BRAND SECTIONS - FIXES
