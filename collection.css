@@ -15,32 +15,52 @@
 }
 
 /* =========================================
-   COLLECTION PAGES - NAV TRANSFORMATION
+   COLLECTION CONTROLS - STANDALONE BAR
    ========================================= */
 
-/* Hide collection controls by default */
+/* Hide from header completely */
 .collection-nav-controls {
   display: none !important;
 }
 
-/* On collection pages, hide redundant nav elements */
+/* Remove any header transformations */
+body.on-collection-page #main-nav .nav-logo,
+body.on-collection-page #main-nav .desktop-nav-links,
+body.on-collection-page #main-nav .desktop-utility-links,
 body.on-collection-page .nav-search-icon,
-body.on-collection-page .nav-cart-icon,
-body.on-collection-page .desktop-utility-links {
-  display: none !important;
+body.on-collection-page .nav-cart-icon {
+  display: flex !important; /* Restore original header */
 }
 
-/* Show collection controls on collection pages */
-body.on-collection-page .collection-nav-controls {
-  display: flex !important;
-  align-items: center;
-  gap: 14px;
+/* Remove collection-page class effects on nav */
+body.on-collection-page #main-nav .nav-logo {
+  display: block !important;
 }
 
 /* =========================================
-   FILTER DROPDOWN
+   FILTER BAR - BELOW HEADER
    ========================================= */
 
+/* This will be the new filter bar positioned below the header */
+.collection-filter-bar {
+  display: none;
+  position: sticky;
+  top: var(--nav-height, 60px);
+  z-index: 99;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+body.on-collection-page .collection-filter-bar {
+  display: flex;
+}
+
+/* Filter dropdown container */
 .collection-filter-dropdown {
   position: relative;
 }
@@ -56,7 +76,7 @@ body.on-collection-page .collection-nav-controls {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 0;
+  padding: 6px 0;
   cursor: pointer;
   transition: opacity 0.2s;
   white-space: nowrap;
@@ -69,7 +89,7 @@ body.on-collection-page .collection-nav-controls {
 .collection-filter-options {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  left: 0;
   background: #fff;
   border: 0.8px solid #e5e5e5;
   padding: 14px 16px;
@@ -83,10 +103,7 @@ body.on-collection-page .collection-nav-controls {
   display: block;
 }
 
-/* =========================================
-   GRID TOGGLE - Minimal luxury style
-   ========================================= */
-
+/* Grid toggle in filter bar */
 .col-grid-toggle-btn {
   background: none;
   border: none;
@@ -95,7 +112,6 @@ body.on-collection-page .collection-nav-controls {
   display: flex;
   align-items: center;
   transition: opacity 0.25s ease;
-  margin-right: 4px;
 }
 
 .col-grid-toggle-btn:hover {
@@ -118,18 +134,20 @@ body.on-collection-page .collection-nav-controls {
   box-sizing: border-box;
 }
 
-/* 2-col state (default) - two full-height bars */
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-2 .col-grid-bar:nth-child(2) { height: 100%; }
+.col-grid-icon.cols-2 .col-grid-bar:nth-child(1),
+.col-grid-icon.cols-2 .col-grid-bar:nth-child(2) { 
+  height: 100%; 
+}
 
-/* 1-col state - one full bar, one shorter */
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { height: 100%; }
-.col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { height: 60%; }
+.col-grid-icon.cols-1 .col-grid-bar:nth-child(1) { 
+  height: 100%; 
+}
 
-/* =========================================
-   SEARCH ICON IN COLLECTION CONTROLS
-   ========================================= */
+.col-grid-icon.cols-1 .col-grid-bar:nth-child(2) { 
+  height: 60%; 
+}
 
+/* Search in filter bar */
 .collection-search-btn {
   background: none;
   border: none;
@@ -140,7 +158,6 @@ body.on-collection-page .collection-nav-controls {
   font-size: 18px;
   color: #111;
   transition: opacity 0.2s;
-  margin-left: -2px;
 }
 
 .collection-search-btn:hover {
@@ -212,10 +229,10 @@ body.on-collection-page .collection-nav-controls {
 
 /* Collection description */
 .collection-description {
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.6;
-  letter-spacing: 0.02em;
+  font-size: var(--body-font-size);
+  font-weight: var(--body-font-weight);
+  line-height: var(--body-line-height);
+  letter-spacing: var(--body-letter-spacing);
   color: #777;
   max-width: 480px;
   margin: 0 auto 32px;
@@ -233,7 +250,6 @@ body.on-collection-page .collection-nav-controls {
    PRODUCT CARD META ALIGNMENT FIX
    ========================================= */
 
-/* Ensures the Brand and Price sit perfectly on the same text baseline, preventing the price from appearing "high" */
 .product-meta-row {
   display: flex;
   justify-content: space-between;
@@ -299,7 +315,6 @@ body.on-collection-page .collection-nav-controls {
   line-height: 1.6;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .vendor-hero-img {
     height: 40vh;
@@ -327,7 +342,6 @@ body.on-collection-page .collection-nav-controls {
    FEATURED BRAND SECTIONS - FIXES
    ========================================= */
 
-/* Tiny gap between featured brand sections */
 .featured-brand-section {
   margin-bottom: 8px !important;
   padding-bottom: 0 !important;
@@ -338,17 +352,14 @@ body.on-collection-page .collection-nav-controls {
   padding-top: 0 !important;
 }
 
-/* Ensure positioning context for absolute children */
 .featured-brand-img {
   position: relative;
 }
 
-/* Remove "Introducing" */
 .featured-brand-sub {
   display: none !important;
 }
 
-/* Move brand name + button to bottom left */
 .featured-brand-content {
   position: absolute;
   bottom: 30px;
