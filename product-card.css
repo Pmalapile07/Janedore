@@ -91,7 +91,7 @@
 .product-card .product-title,
 .product-card .product-name {
   font-weight: 600;
-  font-size: 11px;
+  font-size: 9px;
   letter-spacing: 0.04em;
   color: #555;
   margin-top: 3px;
@@ -100,7 +100,7 @@
 
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 400;
+  font-weight: 800;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: #111;
