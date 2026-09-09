@@ -14,7 +14,6 @@
   .product-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* HOMEPAGE HORIZONTAL SLIDER */
 #arrivals-grid {
   display: flex;
   overflow-x: auto;
@@ -35,7 +34,6 @@
   #arrivals-grid .product-card { width: 30vw; max-width: 310px; }
 }
 
-/* PRODUCT CARD */
 .product-card {
   cursor: pointer;
   display: flex;
@@ -44,7 +42,6 @@
 }
 .product-card.featured-card, .product-card.tall-card { grid-column: auto; }
 
-/* IMAGE WRAP */
 .product-img-wrap {
   position: relative;
   aspect-ratio: 310 / 469;
@@ -59,7 +56,6 @@
   display: block;
 }
 
-/* BADGES — support both old and new */
 .product-badge,
 .badge-new, .badge-sale, .badge-sold, .badge-preorder {
   position: absolute;
@@ -77,7 +73,7 @@
 .badge-sale { background: #111; color: #fff; }
 .badge-sold { background: #111; color: #fff; }
 .badge-preorder { background: #111; color: #fff; }
-/* TYPOGRAPHY — support both old and new classes */
+
 .product-card .product-brand,
 .product-card .product-brand-tag {
   font-weight: 900;
@@ -91,7 +87,7 @@
 .product-card .product-title,
 .product-card .product-name {
   font-weight: 600;
-  font-size: 9px;
+  font-size: 9px;   /* ★★★ CHANGED — was 11px, now -2px ★★★ */
   letter-spacing: 0.04em;
   color: #555;
   margin-top: 3px;
@@ -100,7 +96,7 @@
 
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 800;
+  font-weight: 800;   /* ★★★ CHANGED — was 400, now 800 ★★★ */
   font-size: 11px;
   letter-spacing: 0.04em;
   color: #111;
@@ -152,7 +148,6 @@
   background: #111;
 }
 
-/* Remove editorial overrides */
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
@@ -161,7 +156,7 @@
 .product-grid.editorial-3col .product-card .product-img-wrap {
   aspect-ratio: 310 / 469;
 }
-/* Prevent image saving on product cards */
+
 .product-img-wrap,
 .product-card-slides,
 .product-card-slide,
@@ -176,7 +171,6 @@
   user-drag: none;
 }
 
-/* Add invisible overlay to block long-press on product images */
 .product-img-wrap::after,
 .product-main-image::after {
   content: '';
@@ -190,7 +184,6 @@
   background: transparent;
 }
 
-/* Ensure parent elements are positioned for the overlay */
 .product-img-wrap,
 .product-main-image {
   position: relative;
@@ -209,7 +202,6 @@
   background-position: center;
 }
 
-/* SOLD OUT STATE */
 .product-card.sold-out .product-img-wrap img,
 .product-card.sold-out .product-card-slide {
   opacity: 0.75;
