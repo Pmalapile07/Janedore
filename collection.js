@@ -119,6 +119,28 @@ function updateCollectionTitle() {
   }
 }
 
+// DYNAMICALLY BUILD CATEGORY FILTER FROM PRODUCTS
+function buildCategoryFilterOptions() {
+  const filterContainer = document.getElementById('collection-filter-categories');
+  if (!filterContainer) return;
+  
+  // Get unique categories from active products
+  const categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
+  
+  // Sort alphabetically
+  categories.sort();
+  
+  // Build HTML
+  let html = '<label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter(\'cat\',\'all\')"> All</label>';
+  
+  categories.forEach(cat => {
+    const label = cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    html += `<label class="filter-option"><input type="radio" name="filter-cat-collection" value="${cat}" onchange="applyCollectionFilter('cat','${cat}')"> ${label}</label>`;
+  });
+  
+  filterContainer.innerHTML = html;
+}
+
 function applyEditorialGrid(gridEl, cols) {
   if (!gridEl) return;
   gridEl.classList.remove('editorial-1col', 'editorial-2col', 'editorial-3col');
@@ -195,6 +217,7 @@ function renderAllProducts() {
   applyEditorialGrid(DOM.allProductsGrid, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
+  buildCategoryFilterOptions();
 }
 
 function renderCategoryProducts() {
@@ -216,6 +239,7 @@ function renderCategoryProducts() {
   if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
   renderCollectionSortingTabs();
   updateCollectionTitle();
+  buildCategoryFilterOptions();
 }
 
 function renderSaleProducts() { 
@@ -227,6 +251,7 @@ function renderSaleProducts() {
   applyEditorialGrid(DOM.allProductsGrid, S.gridCols); 
   updateGridToggleSVG("grid-toggle-svg", S.gridCols); 
   updateCollectionTitle();
+  buildCategoryFilterOptions();
 }
 
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
@@ -282,8 +307,6 @@ function buildCategoriesSlider() {
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${c.cat}')"><div class="home-category-img" style="background-image:url('${c.img}');background-size:cover;background-position:center;"></div><div class="home-category-label">${c.label}</div></div>`).join('');
   const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
   progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
-  // FIXED: grid.innerHTML only clears children, not the grid element itself — attaching a
-  // fresh scroll listener on every call stacked duplicates. Remove any prior listener first.
   if (grid._categoriesScrollHandler) {
     grid.removeEventListener('scroll', grid._categoriesScrollHandler);
   }
@@ -294,7 +317,6 @@ function buildCategoriesSlider() {
 
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
-// UPDATED: sold-out flagging + badge text now says "SOLD OUT" instead of "SOLD"
 function productCardHome(p) {
   const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : p.badge.toUpperCase()) : '';
   const badge = badgeLabel ? `<span class="product-badge">${badgeLabel}</span>` : '';
@@ -343,8 +365,6 @@ async function navigateToVendor(vendorId, replaceUrl) {
   updateCollectionTitle();
 }
 
-// Normalizes a brand name for comparison (trim + lowercase + collapse spelling
-// variants) so a typo in Firestore data doesn't need a new hardcoded pair here.
 function normalizeBrandName(name) {
   if (!name) return '';
   return name.trim().toLowerCase().replace(/nirious co/g, 'nirius co');
@@ -358,16 +378,10 @@ function renderVendorPage(vendor) {
   const desc = vendor?.description || '';
   const normalizedBrandName = normalizeBrandName(brandName);
   
-  // Match products by vendorId OR brand name (normalized, case/spelling-insensitive)
   const products = merchandiseProducts(PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
-    
-    // Match by vendorId
     if (vendor?.id && p.vendorId === vendor.id) return true;
-    
-    // Match by brand name (normalized comparison covers case and known spelling variants)
     if (p.brand && brandName && normalizeBrandName(p.brand) === normalizedBrandName) return true;
-    
     return false;
   }), 'vendor');
   
@@ -387,8 +401,6 @@ function renderVendorPage(vendor) {
     </div>
   `;
   
-  // Build footer for vendor page, then re-populate its brands list
-  // (buildFooter always resets brands to empty — renderVendorsFooter fills it back in)
   const footerEl = document.getElementById('vendor-footer');
   if (footerEl && typeof buildFooter === 'function') {
     buildFooter('vendor-footer');
