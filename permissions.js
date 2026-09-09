@@ -26,7 +26,8 @@
       reviews:    ['read', 'moderate'],
       newsletter: [],
       vendors:    ['read'],
-      customers:  []
+      customers:  [],
+      discounts:  ['read', 'create', 'update', 'delete']
       // Note: 'admins' is intentionally not listed here — Admin role
       // has no access to manage other admin/staff accounts. Only
       // SUPER_ADMIN (the '*' wildcard above) can.
@@ -40,7 +41,8 @@
       reviews:    ['read_own', 'reply_own'],
       newsletter: [],
       vendors:    ['read_own', 'update_own'],
-      customers:  []
+      customers:  [],
+      discounts:  ['read']
     }
 
   };
@@ -197,7 +199,8 @@
     vendors:    'vendors',
     customers:  'customers',
     settings:   'settings',
-    admins:     'admins'
+    admins:     'admins',
+    discounts:  'discounts'
   };
 
   window._applyRoleUI = function () {
