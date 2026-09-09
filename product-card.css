@@ -87,7 +87,7 @@
 .product-card .product-title,
 .product-card .product-name {
   font-weight: 600;
-  font-size: 9px;   /* ★★★ CHANGED — was 11px, now -2px ★★★ */
+  font-size: 11px;   /* ★★★ CHANGED — was 11px, now -2px ★★★ */
   letter-spacing: 0.04em;
   color: #555;
   margin-top: 3px;
