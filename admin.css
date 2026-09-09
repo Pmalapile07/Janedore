@@ -9,6 +9,7 @@
   --warning:#c07000;--warning-soft:rgba(192,112,0,0.1);
   --danger:#c0392b;--danger-soft:rgba(192,57,43,0.1);
   --purple:#6e40c9;--purple-soft:rgba(110,64,201,0.1);
+  --teal:#0d9488;--teal-soft:rgba(13,148,136,0.08);
   --shadow-xs:0 1px 2px rgba(0,0,0,0.05);
   --shadow-sm:0 1px 4px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:0 4px 16px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.06);
@@ -106,6 +107,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .more-menu-item-label{font-size:var(--font-scale-md);font-weight:400;color:var(--text);}
 .more-menu-item-desc{font-size:var(--font-scale-sm);color:var(--muted);margin-top:var(--space-1);}
 .more-menu-arrow{margin-left:auto;color:var(--muted2);font-size:var(--font-scale-lg);font-weight:300;}
+.mmi-teal .more-menu-icon{background:var(--teal-soft);color:var(--teal);}
 .mmi-green .more-menu-icon{background:var(--success-soft);color:var(--success);}
 .mmi-blue .more-menu-icon{background:var(--accent-soft);color:var(--accent);}
 .mmi-orange .more-menu-icon{background:var(--warning-soft);color:var(--warning);}
@@ -186,6 +188,26 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .data-table tbody tr:hover{background:var(--surface2);}
 .data-table tbody tr:active{background:var(--surface3);}
 .cell-muted{color:var(--muted);font-size:var(--font-scale-xs);}
+
+/* ── DISCOUNT LIST (Mobile-First) ─────────────────────────────────────────── */
+.discount-list{display:flex;flex-direction:column;gap:var(--space-2);}
+.discount-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:var(--space-4);box-shadow:var(--shadow-xs);transition:background var(--duration-fast);}
+.discount-card:active{background:var(--surface2);}
+.discount-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-3);}
+.discount-code{font-size:var(--font-scale-lg);font-weight:600;color:var(--text);letter-spacing:.03em;text-transform:uppercase;}
+.discount-type-badge{display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);border-radius:var(--r-xs);font-size:var(--font-scale-xs);font-weight:600;background:var(--teal-soft);color:var(--teal);white-space:nowrap;}
+.discount-card-body{display:flex;flex-direction:column;gap:var(--space-2);}
+.discount-info-row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);font-size:var(--font-scale-sm);}
+.discount-info-label{color:var(--muted);font-weight:400;}
+.discount-info-value{color:var(--text);font-weight:500;}
+.discount-card-actions{display:flex;gap:var(--space-2);margin-top:var(--space-3);padding-top:var(--space-3);border-top:0.5px solid var(--border-light);}
+.discount-action-btn{flex:1;padding:var(--space-2);border-radius:var(--r-xs);font-family:var(--font);font-size:var(--font-scale-sm);font-weight:500;cursor:pointer;border:0.5px solid var(--border-med);background:var(--surface);color:var(--text2);transition:all var(--duration-fast);}
+.discount-action-btn:active{opacity:.7;transform:scale(0.98);}
+.discount-action-btn.toggle-btn{color:var(--accent);border-color:var(--accent-soft);}
+.discount-action-btn.delete-btn{color:var(--danger);border-color:var(--danger-soft);}
+.discount-empty{text-align:center;padding:40px var(--space-5);display:flex;flex-direction:column;align-items:center;gap:var(--space-2);}
+.discount-empty-icon{font-size:32px;opacity:.2;line-height:1;}
+.discount-empty-text{font-size:var(--font-scale-md);color:var(--muted);font-weight:300;}
 
 /* ── PRODUCT LIST ──────────────────────────────────────────────────────────── */
 .product-list{background:var(--surface);border-radius:var(--r);border:0.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow-xs);}
@@ -452,6 +474,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
   .chat-view-sidebar{flex-direction:row;}
   .chat-view-sidebar .info-panel{flex:1;}
   .inbox-customer-info-panel{flex-direction:row;}
+  .discount-list{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);}
 }
 @media(min-width:1024px){
   #desktop-sidebar{display:flex;}
@@ -460,6 +483,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
   #main-content{max-width:820px;}
   .dash-stat-grid{grid-template-columns:repeat(4,1fr);}
   .no-action-bar{bottom:0;}
+  .discount-list{grid-template-columns:repeat(3,1fr);}
 }
 /* ── DARK MODE ───────────────────────────────────────────────── */
 /* System preference */
@@ -483,6 +507,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
     --warning-soft: rgba(251,191,36,0.12);
     --danger-soft: rgba(248,113,113,0.12);
     --purple-soft: rgba(167,139,250,0.12);
+    --teal-soft: rgba(45,212,191,0.12);
   }
   :root:not(.light-mode) .chat-messages-panel {
     background: #141418;
@@ -517,6 +542,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
   --warning-soft: rgba(251,191,36,0.12);
   --danger-soft: rgba(248,113,113,0.12);
   --purple-soft: rgba(167,139,250,0.12);
+  --teal-soft: rgba(45,212,191,0.12);
 }
 :root.dark-mode .chat-messages-panel {
   background: #141418;
@@ -550,6 +576,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
   --warning-soft: rgba(192,112,0,0.1);
   --danger-soft: rgba(192,57,43,0.1);
   --purple-soft: rgba(110,64,201,0.1);
+  --teal-soft: rgba(13,148,136,0.08);
 }
 :root.light-mode .chat-messages-panel {
   background: #f0f2f5;
