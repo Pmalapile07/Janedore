@@ -117,7 +117,7 @@
 .product-card .product-name {
   font-weight: 400;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   color: #000;
   padding-top: 2px;
@@ -126,7 +126,7 @@
 
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 400;
+  font-weight: 800;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: #111;
