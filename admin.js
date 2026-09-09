@@ -94,29 +94,6 @@
 
   var ALLOWED_ROLES = { SUPER_ADMIN: true, ADMIN: true, VENDOR: true, VIEWER: true };
 
-  // ─── DISCOUNT TYPES (Shopify-style) ─────────────────────────
-  window._DISCOUNT_TYPES = {
-    PERCENTAGE: 'percentage',
-    FIXED_AMOUNT: 'fixed_amount',
-    FREE_SHIPPING: 'free_shipping',
-    BUY_X_GET_Y: 'buy_x_get_y'
-  };
-
-  window._DISCOUNT_APPLIES_TO = {
-    ALL_PRODUCTS: 'all_products',
-    SPECIFIC_PRODUCTS: 'specific_products',
-    SPECIFIC_COLLECTIONS: 'specific_collections'
-  };
-
-  window._DISCOUNT_LIMITS = {
-    MAX_PERCENTAGE: 100,
-    MIN_PERCENTAGE: 0,
-    MAX_FIXED_AMOUNT: 1000000,
-    MIN_FIXED_AMOUNT: 0,
-    MAX_USAGE_LIMIT: 1000000,
-    MAX_MINIMUM_PURCHASE: 1000000
-  };
-
   // ─── UTILITY FUNCTIONS ───────────────────────────────────────
 
   function esc(str) {
@@ -194,49 +171,6 @@
     return '<span class="badge badge-' + esc(status) + '">' + esc(status) + '</span>';
   }
   window._statusBadge = statusBadge;
-
-  // ─── DISCOUNT VALIDATION (Shopify-style limits) ──────────────
-  function validateDiscountRate(type, value) {
-    var limits = window._DISCOUNT_LIMITS;
-    value = Number(value || 0);
-
-    switch(type) {
-      case window._DISCOUNT_TYPES.PERCENTAGE:
-        if (value < limits.MIN_PERCENTAGE || value > limits.MAX_PERCENTAGE) {
-          return { valid: false, message: 'Percentage discount must be between ' + limits.MIN_PERCENTAGE + '% and ' + limits.MAX_PERCENTAGE + '%' };
-        }
-        break;
-      case window._DISCOUNT_TYPES.FIXED_AMOUNT:
-        if (value < limits.MIN_FIXED_AMOUNT || value > limits.MAX_FIXED_AMOUNT) {
-          return { valid: false, message: 'Fixed amount must be between R' + limits.MIN_FIXED_AMOUNT + ' and R' + limits.MAX_FIXED_AMOUNT.toLocaleString() };
-        }
-        break;
-      default:
-        return { valid: false, message: 'Invalid discount type' };
-    }
-    return { valid: true, value: value };
-  }
-  window._validateDiscountRate = validateDiscountRate;
-
-  function validateDiscountUsageLimit(limit) {
-    if (limit === null || limit === undefined || limit === '') return { valid: true, value: null };
-    limit = Number(limit);
-    if (limit < 0 || limit > window._DISCOUNT_LIMITS.MAX_USAGE_LIMIT) {
-      return { valid: false, message: 'Usage limit must be between 0 and ' + window._DISCOUNT_LIMITS.MAX_USAGE_LIMIT.toLocaleString() };
-    }
-    return { valid: true, value: limit };
-  }
-  window._validateDiscountUsageLimit = validateDiscountUsageLimit;
-
-  function validateMinimumPurchase(amount) {
-    if (amount === null || amount === undefined || amount === '') return { valid: true, value: null };
-    amount = Number(amount);
-    if (amount < 0 || amount > window._DISCOUNT_LIMITS.MAX_MINIMUM_PURCHASE) {
-      return { valid: false, message: 'Minimum purchase must be between R0 and R' + window._DISCOUNT_LIMITS.MAX_MINIMUM_PURCHASE.toLocaleString() };
-    }
-    return { valid: true, value: amount };
-  }
-  window._validateMinimumPurchase = validateMinimumPurchase;
 
   // ─── MODAL / PANEL ───────────────────────────────────────────
 
@@ -592,18 +526,21 @@
     } else if (type === 'buy_x_get_y') {
       valueGroup.style.display = 'block';
       valueInput.setAttribute('max', '100');
+      valueInput.setAttribute('min', '1');
       valueInput.setAttribute('step', '1');
       valueHint.textContent = 'Number of items customer buys (X)';
       valueInput.setAttribute('required', 'required');
     } else if (type === 'percentage') {
       valueGroup.style.display = 'block';
       valueInput.setAttribute('max', '100');
+      valueInput.setAttribute('min', '0');
       valueInput.setAttribute('step', '0.01');
       valueHint.textContent = 'Percentage discount (0-100%)';
       valueInput.setAttribute('required', 'required');
     } else if (type === 'fixed_amount') {
       valueGroup.style.display = 'block';
       valueInput.removeAttribute('max');
+      valueInput.setAttribute('min', '0');
       valueInput.setAttribute('step', '0.01');
       valueHint.textContent = 'Fixed amount discount (R)';
       valueInput.setAttribute('required', 'required');
@@ -792,6 +729,57 @@
       showToast('Failed to delete discount: ' + err.message, 'error');
     });
   };
+
+  // Discount validation functions
+  function validateDiscountRate(type, value) {
+    var limits = {
+      MAX_PERCENTAGE: 100,
+      MIN_PERCENTAGE: 0,
+      MAX_FIXED_AMOUNT: 1000000,
+      MIN_FIXED_AMOUNT: 0
+    };
+    
+    value = Number(value || 0);
+
+    switch(type) {
+      case 'percentage':
+        if (value < limits.MIN_PERCENTAGE || value > limits.MAX_PERCENTAGE) {
+          return { valid: false, message: 'Percentage discount must be between ' + limits.MIN_PERCENTAGE + '% and ' + limits.MAX_PERCENTAGE + '%' };
+        }
+        break;
+      case 'fixed_amount':
+        if (value < limits.MIN_FIXED_AMOUNT || value > limits.MAX_FIXED_AMOUNT) {
+          return { valid: false, message: 'Fixed amount must be between R' + limits.MIN_FIXED_AMOUNT + ' and R' + limits.MAX_FIXED_AMOUNT.toLocaleString() };
+        }
+        break;
+      case 'buy_x_get_y':
+        if (value < 1 || value > 100) {
+          return { valid: false, message: 'Buy X Get Y requires X to be between 1 and 100' };
+        }
+        break;
+      default:
+        return { valid: false, message: 'Invalid discount type' };
+    }
+    return { valid: true, value: value };
+  }
+
+  function validateDiscountUsageLimit(limit) {
+    if (limit === null || limit === undefined || limit === '') return { valid: true, value: null };
+    limit = Number(limit);
+    if (limit < 0 || limit > 1000000) {
+      return { valid: false, message: 'Usage limit must be between 0 and 1,000,000' };
+    }
+    return { valid: true, value: limit };
+  }
+
+  function validateMinimumPurchase(amount) {
+    if (amount === null || amount === undefined || amount === '') return { valid: true, value: null };
+    amount = Number(amount);
+    if (amount < 0 || amount > 1000000) {
+      return { valid: false, message: 'Minimum purchase must be between R0 and R1,000,000' };
+    }
+    return { valid: true, value: amount };
+  }
 
   // ─── CHAT MONITORING ─────────────────────────────────────────
 
