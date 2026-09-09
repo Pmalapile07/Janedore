@@ -1,451 +1,572 @@
 (function () {
   'use strict';
 
-  if (!window._adminDB) return;
+  var _isAdminPage = !!(
+    document.getElementById('admin-panel') &&
+    document.getElementById('login-screen')
+  );
 
-  var esc        = window._esc;
-  var safeEl     = window._safeEl;
-  var fmt        = window._fmt;
-  var fmtDate    = window._fmtDate;
-  var showToast  = window._showToast;
-  var statusBadge = window._statusBadge;
-  var mountModal = window._mountModal;
-  var closeModal = window._closeModal;
-  
-  var discountsRef = window._discountsRef || window._adminDB.collection('discounts');
+  if (!_isAdminPage) { return; }
 
-  /* ─────────────────────────────────────────────────────────
-     RENDER DISCOUNTS TAB — role-based
-  ───────────────────────────────────────────────────────── */
-  window._renderDiscountsTab = function() {
-    var mc = safeEl('main-content');
-    if (!mc) return;
-
-    var role = window._currentUserRole;
-    var canManage = (role === 'SUPER_ADMIN' || role === 'ADMIN');
-
-    mc.innerHTML =
-      '<div class="section-header" style="margin-bottom:12px;">' +
-        '<div class="section-title">Discounts</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          (canManage
-            ? '<button class="btn btn-sm btn-primary" onclick="window._openNewDiscountModal()">+ Create Discount</button>'
-            : '<span class="ui-label">Read-only view</span>') +
-        '</div>' +
-      '</div>' +
-      '<div id="discounts-list"><div class="empty-state"><div class="empty-state-text">Loading...</div></div></div>';
-
-    discountsRef.orderBy('createdAt', 'desc').get().then(function(snapshot) {
-      window._allDiscounts = snapshot.docs.map(function(d) {
-        return Object.assign({ id: d.id }, d.data());
-      });
-
-      renderDiscountsList(window._allDiscounts, canManage);
-    }).catch(function(e) {
-      console.error('[DISCOUNTS_TAB]', e);
-      var el = safeEl('discounts-list');
-      if (el) el.innerHTML = '<div class="empty-state"><div class="empty-state-text">Could not load discounts.</div><button class="btn btn-sm btn-ghost" style="margin-top:12px;" onclick="window._renderDiscountsTab()">Retry</button></div>';
-    });
-  };
-
-  /* ─────────────────────────────────────────────────────────
-     DISCOUNTS LIST (Mobile-First Card Layout)
-  ───────────────────────────────────────────────────────── */
-  function renderDiscountsList(discounts, canManage) {
-    var el = safeEl('discounts-list');
-    if (!el) return;
-
-    if (discounts.length === 0) {
-      el.innerHTML = '<div class="orders-empty-state">' +
-        '<div class="orders-empty-icon"><i class="ph-light ph-tag"></i></div>' +
-        '<div class="orders-empty-title">No discounts yet</div>' +
-        '<div class="orders-empty-sub">Create discount codes to offer promotions to your customers.</div>' +
-        (canManage ? '<button class="orders-empty-btn" onclick="window._openNewDiscountModal()">Create your first discount</button>' : '') +
-      '</div>';
-      return;
-    }
-
-    var discountTypeLabels = {
-      percentage: 'Percentage',
-      fixed_amount: 'Fixed Amount',
-      free_shipping: 'Free Shipping',
-      buy_x_get_y: 'Buy X Get Y'
-    };
-
-    var discountTypeIcons = {
-      percentage: 'ph-percent',
-      fixed_amount: 'ph-currency-zar',
-      free_shipping: 'ph-truck',
-      buy_x_get_y: 'ph-gift'
-    };
-
-    el.innerHTML =
-      '<div style="display:flex;flex-direction:column;gap:12px;">' +
-      discounts.map(function(d) {
-        var typeLabel = discountTypeLabels[d.type] || d.type;
-        var typeIcon = discountTypeIcons[d.type] || 'ph-tag';
-        
-        var valueDisplay = '—';
-        if (d.type === 'percentage') valueDisplay = d.value + '% off';
-        else if (d.type === 'fixed_amount') valueDisplay = fmt(d.value) + ' off';
-        else if (d.type === 'buy_x_get_y') valueDisplay = 'Buy ' + d.value + ' Get 1';
-        else if (d.type === 'free_shipping') valueDisplay = 'Free Shipping';
-
-        var usageDisplay = (d.usageCount || 0).toString();
-        if (d.usageLimit) usageDisplay += ' / ' + d.usageLimit;
-        else usageDisplay += ' uses';
-
-        var statusBadgeHtml = d.active ? 
-          '<span class="badge badge-active" style="background:var(--success-soft);color:var(--success);">Active</span>' : 
-          '<span class="badge badge-inactive" style="background:var(--surface3);color:var(--muted);">Inactive</span>';
-
-        var datesDisplay = '—';
-        if (d.startDate && d.endDate) {
-          datesDisplay = fmtDate(d.startDate) + ' - ' + fmtDate(d.endDate);
-        } else if (d.startDate) {
-          datesDisplay = 'From ' + fmtDate(d.startDate);
-        } else if (d.endDate) {
-          datesDisplay = 'Until ' + fmtDate(d.endDate);
-        }
-
-        var minPurchaseDisplay = d.minimumPurchase ? 'Min. ' + fmt(d.minimumPurchase) : 'No minimum';
-
-        return '<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:16px;box-shadow:var(--shadow-xs);">' +
-          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px;">' +
-            '<div style="flex:1;min-width:0;">' +
-              '<div style="font-size:16px;font-weight:600;color:var(--text);letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px;">' + esc(d.code) + '</div>' +
-              '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-                '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:var(--r-xs);font-size:11px;font-weight:600;background:var(--teal-soft, rgba(13,148,136,0.08));color:var(--teal, #0d9488);">' +
-                  '<i class="ph-light ' + esc(typeIcon) + '" style="font-size:13px;"></i> ' + esc(typeLabel) +
-                '</span>' +
-                statusBadgeHtml +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-
-          '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;">' +
-              '<span style="color:var(--muted);">Value</span>' +
-              '<span style="color:var(--text);font-weight:500;">' + esc(valueDisplay) + '</span>' +
-            '</div>' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;">' +
-              '<span style="color:var(--muted);">Usage</span>' +
-              '<span style="color:var(--text);font-weight:500;">' + esc(usageDisplay) + '</span>' +
-            '</div>' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;">' +
-              '<span style="color:var(--muted);">Requirements</span>' +
-              '<span style="color:var(--text);font-weight:500;">' + esc(minPurchaseDisplay) + '</span>' +
-            '</div>' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;">' +
-              '<span style="color:var(--muted);">Validity</span>' +
-              '<span style="color:var(--text);font-weight:500;">' + esc(datesDisplay) + '</span>' +
-            '</div>' +
-          '</div>' +
-
-          (canManage
-            ? '<div style="display:flex;gap:8px;padding-top:12px;border-top:0.5px solid var(--border-light);">' +
-                '<button class="btn btn-xs btn-ghost" style="flex:1;justify-content:center;" onclick="window._toggleDiscountStatus(\'' + esc(d.id) + '\')">' +
-                  (d.active ? 'Deactivate' : 'Activate') +
-                '</button>' +
-                '<button class="btn btn-xs btn-ghost" style="flex:1;justify-content:center;color:var(--danger);" onclick="window._deleteDiscount(\'' + esc(d.id) + '\')">' +
-                  'Delete' +
-                '</button>' +
-              '</div>'
-            : '') +
-        '</div>';
-      }).join('') +
-      '</div>';
+  function logError(context, err) {
+    var msg = err && (err.message || String(err));
+    console.error('[JANEDORE ADMIN][' + context + ']', msg);
   }
 
-  /* ─────────────────────────────────────────────────────────
-     OPEN NEW DISCOUNT MODAL
-  ───────────────────────────────────────────────────────── */
-  window._openNewDiscountModal = function() {
-    var role = window._currentUserRole;
-    if (role !== 'SUPER_ADMIN' && role !== 'ADMIN') {
-      showToast('You do not have permission to create discounts.', 'error');
+  var firebaseConfig = {
+    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+    authDomain: "janedore-9f035.firebaseapp.com",
+    projectId: "janedore-9f035",
+    storageBucket: "janedore-9f035.firebasestorage.app",
+    messagingSenderId: "571299748651",
+    appId: "1:571299748651:web:01463a772d47b39cc4036e",
+    measurementId: "G-Y9NMT0ZGKZ",
+    databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
+  };
+
+  if (typeof firebase === 'undefined') {
+    logError('INIT', new Error('Firebase SDK not loaded'));
+    alert('Firebase SDK not loaded. Please check your internet connection and reload.');
+    return;
+  }
+
+  if (!firebase.apps.length) {
+    try { firebase.initializeApp(firebaseConfig); }
+    catch (e) { logError('INIT', e); return; }
+  }
+
+  var db   = firebase.firestore();
+  var rtdb = firebase.database();
+  var auth = firebase.auth();
+
+  window._adminDB   = db;
+  window._adminRTDB = rtdb;
+  window._adminAuth = auth;
+
+  var productsRef    = db.collection('products');
+  var reviewsRef     = db.collection('reviews');
+  var newsletterRef  = db.collection('newsletter');
+  var ordersRef      = db.collection('orders');
+  var customersRef   = db.collection('customers');
+  var vendorsRef     = db.collection('vendors');
+  var adminsRef      = db.collection('admins');
+
+  window._productsRef   = productsRef;
+  window._reviewsRef    = reviewsRef;
+  window._newsletterRef = newsletterRef;
+  window._ordersRef     = ordersRef;
+  window._customersRef  = customersRef;
+  window._vendorsRef    = vendorsRef;
+  window._adminsRef     = adminsRef;
+
+  window._currentTab       = 'dashboard';
+  window._allProducts      = [];
+  window._currentUser      = null;
+  window._currentUserRole  = null;
+  window._currentVendorId  = null;
+  window._roleResolved     = false;
+
+  window._totalUnreadMessages = 0;
+
+  var modalState = {
+    isOpen: false, type: null,
+    overlayElement: null, contentElement: null, escapeHandler: null
+  };
+  window._modalState = modalState;
+
+  var CHAT_ROOT = 'live_chat';
+  window._CHAT_ROOT = CHAT_ROOT;
+
+  window._ORDER_STATUSES  = ['pending','paid','processing','packed','shipped','delivered','cancelled','refunded'];
+  window._QUICK_REPLIES   = [
+    'Hi! How can I help you today?',
+    'Your order is being processed.',
+    'Your order has been shipped!',
+    'We will get back to you shortly.',
+    'Thank you for your patience.',
+    'Could you share your order number?'
+  ];
+
+  var ALLOWED_ROLES = { SUPER_ADMIN: true, ADMIN: true, VENDOR: true, VIEWER: true };
+
+  // ─── UTILITY FUNCTIONS ───────────────────────────────────────
+
+  function esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#039;').replace(/`/g,'&#096;');
+  }
+  window._esc = esc;
+
+  function safeUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    var t = url.trim();
+    if (/^https:\/\//i.test(t) || /^data:image\//i.test(t)) return t;
+    return '';
+  }
+  window._safeUrl = safeUrl;
+
+  function safeEl(id) { return document.getElementById(id) || null; }
+  window._safeEl = safeEl;
+
+  function fmt(n) { return 'R' + Number(n||0).toLocaleString('en-ZA'); }
+  window._fmt = fmt;
+
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    var d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('en-ZA', {day:'2-digit',month:'short',year:'numeric'});
+  }
+  window._fmtDate = fmtDate;
+
+  function fmtDateShort(ts) {
+    if (!ts) return '—';
+    var d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('en-ZA', {day:'2-digit',month:'short'});
+  }
+  window._fmtDateShort = fmtDateShort;
+
+  function fmtTime(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }
+  window._fmtTime = fmtTime;
+
+  function avatarClass(str) {
+    var idx = 0;
+    if (str) for (var i=0;i<str.length;i++) idx = (idx + str.charCodeAt(i)) % 8;
+    return 'ca-' + idx;
+  }
+  window._avatarClass = avatarClass;
+
+  function avatarInitials(str) {
+    if (!str) return '?';
+    return str.replace(/[^a-zA-Z0-9]/g,'').substring(0,2).toUpperCase() || '?';
+  }
+  window._avatarInitials = avatarInitials;
+
+  function showToast(msg, type) {
+    type = type || 'success';
+    var toast = document.createElement('div');
+    toast.className  = 'toast toast-' + type;
+    toast.textContent = msg;
+    var tc = safeEl('toast-container');
+    if (tc) tc.appendChild(toast);
+    setTimeout(function(){ if (toast && toast.parentNode) toast.parentNode.removeChild(toast); }, 3200);
+  }
+  window._showToast = showToast;
+
+  function safeSetDisplay(id, display) { var el = safeEl(id); if (el) el.style.display = display; }
+  window._safeSetDisplay = safeSetDisplay;
+
+  function statusBadge(status) {
+    status = (status || 'pending').toLowerCase();
+    return '<span class="badge badge-' + esc(status) + '">' + esc(status) + '</span>';
+  }
+  window._statusBadge = statusBadge;
+
+  // ─── MODAL / PANEL ───────────────────────────────────────────
+
+  function createOverlay(type) {
+    var overlay = document.createElement('div');
+    overlay.className = type === 'modal' ? 'modal-overlay' : 'slide-panel-overlay';
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) { type === 'modal' ? closeModal() : closePanel(); }
+    });
+    return overlay;
+  }
+
+  function mountModal(htmlContent) {
+    cleanupModalState();
+    var container = safeEl('modal-container');
+    if (!container) return;
+    var overlay = createOverlay('modal');
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = htmlContent;
+    var el = wrapper.firstElementChild;
+    if (el) el.addEventListener('click', function(e){ e.stopPropagation(); });
+    overlay.appendChild(el);
+    container.innerHTML = '';
+    container.appendChild(overlay);
+    modalState.isOpen = true; modalState.type = 'modal';
+    modalState.overlayElement = overlay; modalState.contentElement = el;
+    setupEscapeHandler();
+  }
+  window._mountModal = mountModal;
+
+  function mountPanel(htmlContent) {
+    cleanupModalState();
+    var container = safeEl('panel-container');
+    if (!container) return;
+    var overlay = createOverlay('panel');
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = htmlContent;
+    var el = wrapper.firstElementChild;
+    if (el) el.addEventListener('click', function(e){ e.stopPropagation(); });
+    overlay.appendChild(el);
+    container.innerHTML = '';
+    container.appendChild(overlay);
+    modalState.isOpen = true; modalState.type = 'panel';
+    modalState.overlayElement = overlay; modalState.contentElement = el;
+  }
+  window._mountPanel = mountPanel;
+
+  function setupEscapeHandler() {
+    if (modalState.escapeHandler) document.removeEventListener('keydown', modalState.escapeHandler);
+    modalState.escapeHandler = function(e) {
+      if (e.key === 'Escape') { modalState.type === 'panel' ? closePanel() : closeModal(); }
+    };
+    document.addEventListener('keydown', modalState.escapeHandler);
+  }
+
+  function cleanupModalState() {
+    if (modalState.escapeHandler) { document.removeEventListener('keydown', modalState.escapeHandler); modalState.escapeHandler = null; }
+    var mc = safeEl('modal-container'); var pc = safeEl('panel-container');
+    if (mc) mc.innerHTML = ''; if (pc) pc.innerHTML = '';
+    modalState.isOpen = false; modalState.type = null;
+    modalState.overlayElement = null; modalState.contentElement = null;
+  }
+
+  function closeModal() { cleanupModalState(); }
+  window._closeModal = closeModal;
+
+  function closePanel() { cleanupModalState(); }
+  window._closePanel = closePanel;
+
+  // ─── AUTH LOADING OVERLAY ────────────────────────────────────
+
+  function showAuthLoading() {
+    var loader = safeEl('auth-loading');
+    if (!loader) {
+      loader = document.createElement('div');
+      loader.id = 'auth-loading';
+      loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.97);display:flex;align-items:center;justify-content:center;z-index:9999;';
+      loader.innerHTML = '<div style="text-align:center;font-family:Manrope,sans-serif;"><div style="font-size:14px;color:#666;">Verifying access...</div></div>';
+      document.body.appendChild(loader);
+    }
+    loader.style.display = 'flex';
+  }
+
+  function hideAuthLoading() { var loader = safeEl('auth-loading'); if (loader) loader.style.display = 'none'; }
+
+  // ─── INITIAL UI STATE ────────────────────────────────────────
+
+  function initUIState() { safeSetDisplay('login-screen', 'flex'); safeSetDisplay('admin-panel', 'none'); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initUIState); } else { initUIState(); }
+
+  // ─── AUTH STATE ──────────────────────────────────────────────
+
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      console.log('[JANEDORE AUTH] onAuthStateChanged: user present —', user.email, '| uid:', user.uid);
+      window._currentUser = user;
+      safeSetDisplay('login-screen', 'none');
+      safeSetDisplay('admin-panel', 'none');
+      showAuthLoading();
+
+      var initials = (user.email || 'A').substring(0,1).toUpperCase();
+      var iniEl = safeEl('admin-initials'); if (iniEl) iniEl.textContent = initials;
+      [safeEl('admin-email'), safeEl('admin-email-more')].forEach(function(el) { if (el) el.textContent = user.email; });
+
+      loadUserRole(user).then(function() {
+        window._roleResolved = true;
+        hideAuthLoading();
+        safeSetDisplay('admin-panel', 'block');
+        window._applyRoleUI();
+        loadProducts();
+        startChatMonitoring();
+      }).catch(function(err) {
+        logError('AUTH/ROLE', err);
+        hideAuthLoading();
+        window._currentUserRole = 'VIEWER';
+        window._roleResolved = true;
+        safeSetDisplay('admin-panel', 'block');
+        showToast('Could not verify your role — limited access. Reload to retry.', 'error');
+        window._applyRoleUI();
+        loadProducts();
+      });
+    } else {
+      console.warn('[JANEDORE AUTH] onAuthStateChanged: null — no session.');
+      window._currentUser     = null;
+      window._currentUserRole = null;
+      window._roleResolved    = false;
+      window._currentVendorId = null;
+      hideAuthLoading();
+      safeSetDisplay('login-screen', 'flex');
+      safeSetDisplay('admin-panel', 'none');
+      stopChatMonitoring();
+    }
+  });
+
+  auth.onIdTokenChanged(function(user) {
+    if (user) {
+      console.log('[JANEDORE AUTH] onIdTokenChanged: token present or refreshed —', user.email);
+    } else {
+      console.warn('[JANEDORE AUTH] onIdTokenChanged: null — token gone.');
+    }
+  });
+
+  // ─── ROLE LOADING ────────────────────────────────────────────
+
+  function loadUserRole(user) {
+    return adminsRef.doc(user.uid).get().then(function(doc) {
+      if (doc.exists) {
+        var data    = doc.data();
+        var rawRole = (data.role || 'VIEWER').toUpperCase();
+        window._currentUserRole = ALLOWED_ROLES[rawRole] ? rawRole : 'VIEWER';
+        window._currentVendorId = (window._currentUserRole === 'VENDOR')
+          ? (data.vendorId || null)
+          : null;
+        console.log('[JANEDORE AUTH] Role resolved:', window._currentUserRole);
+      } else {
+        window._currentUserRole = 'VIEWER';
+        window._currentVendorId = null;
+        showToast('Your account is not authorised. Contact a Super Admin.', 'error');
+      }
+    }).catch(function(err) {
+      logError('ROLE_FETCH', err);
+      window._currentUserRole = 'VIEWER';
+      window._currentVendorId = null;
+      showToast('Could not verify your role. Limited access granted.', 'error');
+    });
+  }
+
+  // ─── TAB NAVIGATION ──────────────────────────────────────────
+
+  window.switchTab = function(tab) {
+    var TAB_MODULE_MAP = {
+      dashboard: 'dashboard', products: 'products', orders: 'orders',
+      messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
+      vendors: 'vendors', customers: 'customers', settings: 'settings',
+      admins: 'admins'
+    };
+    var module = TAB_MODULE_MAP[tab];
+    if (module && !window._can(module, 'read')) {
+      showToast('You do not have access to this section.', 'error');
       return;
     }
 
-    var modalHTML = '<div class="modal modal-sm">' +
-      '<div class="modal-handle"></div>' +
-      '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
-      '<div class="modal-title">Create Discount</div>' +
-      '<form id="discount-form" onsubmit="window._handleDiscountSubmit(event)">' +
-
-        '<div class="form-group">' +
-          '<label>Discount Code</label>' +
-          '<input name="code" required placeholder="e.g. SUMMER20" style="text-transform:uppercase;" pattern="[A-Za-z0-9_-]{3,20}" title="3-20 characters (letters, numbers, underscores, hyphens)">' +
-          '<div style="font-size:10px;color:var(--muted);margin-top:4px;">3-20 characters: letters, numbers, underscores, hyphens</div>' +
-        '</div>' +
-
-        '<div class="form-group">' +
-          '<label>Discount Type</label>' +
-          '<select name="type" id="discount-type-select" onchange="window._toggleDiscountTypeFields()">' +
-            '<option value="percentage">Percentage</option>' +
-            '<option value="fixed_amount">Fixed Amount</option>' +
-            '<option value="free_shipping">Free Shipping</option>' +
-            '<option value="buy_x_get_y">Buy X Get Y</option>' +
-          '</select>' +
-        '</div>' +
-
-        '<div class="form-group" id="discount-value-group">' +
-          '<label>Discount Value</label>' +
-          '<input name="value" type="number" min="0" max="100" step="0.01" required placeholder="Enter discount value">' +
-          '<div id="discount-value-hint" style="font-size:10px;color:var(--muted);margin-top:4px;">Percentage discount (0-100%)</div>' +
-        '</div>' +
-
-        '<div class="form-group">' +
-          '<label>Applies To</label>' +
-          '<select name="appliesTo">' +
-            '<option value="all_products">All Products</option>' +
-            '<option value="specific_products">Specific Products</option>' +
-            '<option value="specific_collections">Specific Collections</option>' +
-          '</select>' +
-        '</div>' +
-
-        '<div class="form-group">' +
-          '<label>Minimum Purchase Amount (R)</label>' +
-          '<input name="minimumPurchase" type="number" min="0" step="0.01" placeholder="No minimum">' +
-        '</div>' +
-
-        '<div class="form-group">' +
-          '<label>Usage Limit</label>' +
-          '<input name="usageLimit" type="number" min="0" step="1" placeholder="Unlimited">' +
-        '</div>' +
-
-        '<div class="form-row">' +
-          '<div class="form-group"><label>Start Date</label><input name="startDate" type="date"></div>' +
-          '<div class="form-group"><label>End Date</label><input name="endDate" type="date"></div>' +
-        '</div>' +
-
-        '<div style="display:flex;gap:10px;padding:14px 20px 4px;">' +
-          '<button type="button" class="btn btn-ghost" onclick="window._closeModal()">Cancel</button>' +
-          '<button type="submit" class="btn btn-primary">Create Discount</button>' +
-        '</div>' +
-
-      '</form>' +
-    '</div>';
-
-    mountModal(modalHTML);
-  };
-
-  /* ─────────────────────────────────────────────────────────
-     TOGGLE DISCOUNT TYPE FIELDS
-  ───────────────────────────────────────────────────────── */
-  window._toggleDiscountTypeFields = function() {
-    var typeSelect = safeEl('discount-type-select');
-    var valueGroup = safeEl('discount-value-group');
-    var valueInput = valueGroup ? valueGroup.querySelector('input[name="value"]') : null;
-    var valueHint = safeEl('discount-value-hint');
-
-    if (!typeSelect || !valueGroup || !valueInput || !valueHint) return;
-
-    var type = typeSelect.value;
-
-    if (type === 'free_shipping') {
-      valueGroup.style.display = 'none';
-      valueInput.removeAttribute('required');
-    } else if (type === 'buy_x_get_y') {
-      valueGroup.style.display = 'block';
-      valueInput.setAttribute('max', '100');
-      valueInput.setAttribute('min', '1');
-      valueInput.setAttribute('step', '1');
-      valueInput.setAttribute('placeholder', 'Enter number of items');
-      valueHint.textContent = 'Number of items customer buys (X)';
-      valueInput.setAttribute('required', 'required');
-    } else if (type === 'percentage') {
-      valueGroup.style.display = 'block';
-      valueInput.setAttribute('max', '100');
-      valueInput.setAttribute('min', '0');
-      valueInput.setAttribute('step', '0.01');
-      valueInput.setAttribute('placeholder', 'Enter discount value');
-      valueHint.textContent = 'Percentage discount (0-100%)';
-      valueInput.setAttribute('required', 'required');
-    } else if (type === 'fixed_amount') {
-      valueGroup.style.display = 'block';
-      valueInput.removeAttribute('max');
-      valueInput.setAttribute('min', '0');
-      valueInput.setAttribute('step', '0.01');
-      valueInput.setAttribute('placeholder', 'Enter discount amount');
-      valueHint.textContent = 'Fixed amount discount in Rands';
-      valueInput.setAttribute('required', 'required');
+    window._currentTab = tab;
+    if (tab !== 'messages') {
+      window._activeChatSession = null;
+      if (window._detachActiveChatListeners) window._detachActiveChatListeners();
     }
-  };
-
-  /* ─────────────────────────────────────────────────────────
-     HANDLE DISCOUNT SUBMIT
-  ───────────────────────────────────────────────────────── */
-  window._handleDiscountSubmit = function(e) {
-    e.preventDefault();
-    
-    var form = e.target;
-    var code = form.code.value.trim().toUpperCase();
-    var type = form.type.value;
-    var value = form.value.value;
-    var appliesTo = form.appliesTo.value;
-    var minPurchase = form.minimumPurchase.value;
-    var usageLimit = form.usageLimit.value;
-    var startDate = form.startDate.value;
-    var endDate = form.endDate.value;
-
-    // Validate code format
-    if (!/^[A-Z0-9_-]{3,20}$/.test(code)) {
-      showToast('Discount code must be 3-20 characters (letters, numbers, underscores, hyphens)', 'error');
-      return false;
-    }
-
-    // Validate discount rate based on type
-    if (type !== 'free_shipping') {
-      var rateValidation = validateDiscountRate(type, value);
-      if (!rateValidation.valid) {
-        showToast(rateValidation.message, 'error');
-        return false;
-      }
-    }
-
-    // Validate usage limit
-    var usageValidation = validateDiscountUsageLimit(usageLimit);
-    if (!usageValidation.valid) {
-      showToast(usageValidation.message, 'error');
-      return false;
-    }
-
-    // Validate minimum purchase
-    var minPurchaseValidation = validateMinimumPurchase(minPurchase);
-    if (!minPurchaseValidation.valid) {
-      showToast(minPurchaseValidation.message, 'error');
-      return false;
-    }
-
-    // Validate dates
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      showToast('Start date must be before end date', 'error');
-      return false;
-    }
-
-    var discountData = {
-      code: code,
-      type: type,
-      value: type === 'free_shipping' ? null : Number(value),
-      appliesTo: appliesTo,
-      minimumPurchase: minPurchaseValidation.value,
-      usageLimit: usageValidation.value,
-      usageCount: 0,
-      startDate: startDate || null,
-      endDate: endDate || null,
-      active: true,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      createdBy: window._currentUser ? window._currentUser.uid : null
-    };
-
-    // Check if code already exists
-    discountsRef.where('code', '==', code).get().then(function(snapshot) {
-      if (!snapshot.empty) {
-        showToast('Discount code already exists', 'error');
-        return;
-      }
-
-      discountsRef.add(discountData).then(function(docRef) {
-        showToast('Discount created successfully!');
-        closeModal();
-        window._renderDiscountsTab();
-      }).catch(function(err) {
-        console.error('[CREATE_DISCOUNT]', err);
-        showToast('Failed to create discount: ' + err.message, 'error');
-      });
-    }).catch(function(err) {
-      console.error('[CHECK_DISCOUNT_CODE]', err);
-      showToast('Failed to check discount code: ' + err.message, 'error');
+    document.querySelectorAll('.sidebar-btn[data-tab]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.tab === tab);
     });
+    document.querySelectorAll('.bnav-btn[data-tab]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    cleanupModalState();
+    renderCurrentTab();
+  };
 
+  function renderCurrentTab() {
+    var mc = safeEl('main-content');
+    if (!mc) return;
+    destroyCharts();
+    switch (window._currentTab) {
+      case 'dashboard':   if (window._renderDashboardTab)   window._renderDashboardTab();   break;
+      case 'products':    if (window._renderProductsTab)    window._renderProductsTab();    break;
+      case 'messages':    if (window._renderMessagesTab)    window._renderMessagesTab();    break;
+      case 'reviews':     if (window._renderReviewsTab)     window._renderReviewsTab();     break;
+      case 'newsletter':  if (window._renderNewsletterTab)  window._renderNewsletterTab();  break;
+      case 'orders':      if (window._renderOrdersTab)      window._renderOrdersTab();      break;
+      case 'customers':   if (window._renderCustomersTab)   window._renderCustomersTab();   break;
+      case 'vendors':     if (window._renderVendorsTab)     window._renderVendorsTab();     break;
+      case 'settings':    if (window._renderSettingsTab)    window._renderSettingsTab();    break;
+      case 'admins':      if (window._renderAdminsTab)      window._renderAdminsTab();      break;
+      case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;
+    }
+  }
+
+  function destroyCharts() {
+    if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; }
+    if (window._revenueChart)   { window._revenueChart.destroy();   window._revenueChart   = null; }
+  }
+  window._destroyCharts = destroyCharts;
+
+  // ─── PRODUCT LOADING ─────────────────────────────────────────
+
+  function loadProducts() {
+    if (!window._currentUser || !window._roleResolved) return;
+
+    window._scopedQuery(productsRef).get().then(function(snapshot) {
+      window._allProducts = snapshot.docs.map(function(d) {
+        var product = Object.assign({ id: d.id }, d.data());
+        if (product.variants && Array.isArray(product.variants)) {
+          product.variants = product.variants.map(function(variant) {
+            if (!variant.images) {
+              variant.images = { model: [], ghost: [], detail: [] };
+            } else {
+              variant.images.model  = Array.isArray(variant.images.model)  ? variant.images.model  : [];
+              variant.images.ghost  = Array.isArray(variant.images.ghost)  ? variant.images.ghost  : [];
+              variant.images.detail = Array.isArray(variant.images.detail) ? variant.images.detail : [];
+            }
+            return variant;
+          });
+        }
+        return product;
+      });
+
+      var el = safeEl('product-count');
+      if (el) el.textContent = window._allProducts.length + ' products';
+      var dot = safeEl('status-dot');
+      if (dot) dot.className = 'status-dot online';
+      renderCurrentTab();
+    }).catch(function(e) {
+      logError('LOAD_PRODUCTS', e);
+      var dot = safeEl('status-dot');
+      if (dot) dot.className = 'status-dot offline';
+      showToast('Firebase: ' + e.message, 'error');
+    });
+  }
+  window._loadProducts = loadProducts;
+
+  // ─── CHAT MONITORING ─────────────────────────────────────────
+
+  var chatsMonitorRef      = null;
+  var chatsMonitorCallback = null;
+  var CHAT_MONITOR_LIMIT   = 100;
+
+  function startChatMonitoring() {
+    stopChatMonitoring();
+    chatsMonitorRef = rtdb.ref(CHAT_ROOT).limitToLast(CHAT_MONITOR_LIMIT);
+    chatsMonitorCallback = function(snapshot) {
+      var unread  = 0;
+      var vid     = window._currentVendorId;
+      var isVendor = window._currentUserRole === 'VENDOR';
+
+      snapshot.forEach(function(sessionSnap) {
+        if (isVendor) {
+          var sessionData = sessionSnap.val() || {};
+          if (sessionData.vendorId && sessionData.vendorId !== vid) return;
+        }
+        var messages = sessionSnap.child('messages');
+        if (messages.exists()) {
+          messages.forEach(function(msgSnap) {
+            var msg = msgSnap.val();
+            if (msg && msg.sender === 'customer' && msg.read === false) unread++;
+          });
+        }
+      });
+
+      window._totalUnreadMessages = unread;
+      updateUnreadBadge();
+    };
+    chatsMonitorRef.on('value', chatsMonitorCallback, function(err) { logError('CHAT_MONITOR', err); });
+  }
+  window._startChatMonitoring = startChatMonitoring;
+
+  function stopChatMonitoring() {
+    if (chatsMonitorRef && chatsMonitorCallback) {
+      chatsMonitorRef.off('value', chatsMonitorCallback);
+      chatsMonitorRef = null; chatsMonitorCallback = null;
+    }
+    if (window._detachActiveChatListeners) window._detachActiveChatListeners();
+  }
+  window._stopChatMonitoring = stopChatMonitoring;
+
+  function updateUnreadBadge() {
+    ['messages-unread-badge','bnav-msg-badge'].forEach(function(id) {
+      var badge = safeEl(id);
+      if (badge) {
+        badge.textContent    = window._totalUnreadMessages;
+        badge.style.display  = window._totalUnreadMessages > 0 ? 'inline-flex' : 'none';
+      }
+    });
+  }
+
+  // ─── LOGIN / LOGOUT ──────────────────────────────────────────
+
+  window.handleLogin = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var emailEl    = safeEl('login-email');
+    var passwordEl = safeEl('login-password');
+    var errorEl    = safeEl('login-error');
+    if (!emailEl || !passwordEl) {
+      logError('LOGIN', new Error('Login form elements not found'));
+      alert('Login form error. Please reload the page.');
+      return false;
+    }
+    var email    = emailEl.value.trim();
+    var password = passwordEl.value;
+    if (errorEl) errorEl.style.display = 'none';
+    if (!email || !password) {
+      if (errorEl) { errorEl.textContent = 'Please enter email and password.'; errorEl.style.display = 'block'; }
+      return false;
+    }
+    var loginBtn = safeEl('login-btn');
+    if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Signing in...'; }
+    auth.signInWithEmailAndPassword(email, password).catch(function(err) {
+      logError('LOGIN', err);
+      if (errorEl) {
+        var msg = 'Invalid credentials. Please try again.';
+        if (err.code === 'auth/too-many-requests') msg = 'Too many failed attempts. Please wait and try again.';
+        errorEl.textContent = msg; errorEl.style.display = 'block';
+      }
+      if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Sign In'; }
+    });
     return false;
   };
 
-  /* ─────────────────────────────────────────────────────────
-     TOGGLE DISCOUNT STATUS
-  ───────────────────────────────────────────────────────── */
-  window._toggleDiscountStatus = function(discountId) {
-    var discount = (window._allDiscounts || []).find(function(d) { return d.id === discountId; });
-    if (!discount) return;
+  window.handleLogout = function() { auth.signOut().catch(function(err){ logError('LOGOUT', err); }); };
 
-    discountsRef.doc(discountId).update({
-      active: !discount.active
-    }).then(function() {
-      showToast('Discount ' + (discount.active ? 'deactivated' : 'activated') + ' successfully');
-      window._renderDiscountsTab();
-    }).catch(function(err) {
-      console.error('[TOGGLE_DISCOUNT]', err);
-      showToast('Failed to toggle discount: ' + err.message, 'error');
-    });
+  // ─── CLOUDINARY UPLOAD ───────────────────────────────────────
+
+  window.uploadToCloudinary = function(inputElement, variantIndex) {
+    var cloudName    = window.CLOUDINARY_CLOUD_NAME;
+    var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName)    { showToast('Cloudinary still loading, try again...', 'error'); return; }
+    if (!uploadPreset) { showToast('Cloudinary upload preset not configured.', 'error'); return; }
+    var widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: cloudName, uploadPreset: uploadPreset,
+        sources: ['local','url','camera'], multiple: false, maxFiles: 1,
+        clientAllowedFormats: ['png','jpg','jpeg','gif','webp','svg','bmp'],
+        maxFileSize: 20000000
+      },
+      function(error, result) {
+        if (error) { logError('CLOUDINARY_UPLOAD', error); showToast('Upload failed.', 'error'); return; }
+        if (result && result.event === 'success') {
+          var secureUrl = result.info.secure_url;
+          if (inputElement) {
+            inputElement.value = secureUrl;
+            inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+            if (window._updateImagePreview) window._updateImagePreview(inputElement);
+            if (variantIndex !== undefined && window._updateVariantPreview) window._updateVariantPreview(variantIndex);
+          }
+          showToast('Image uploaded!');
+        }
+      }
+    );
+    widget.open();
   };
 
-  /* ─────────────────────────────────────────────────────────
-     DELETE DISCOUNT
-  ───────────────────────────────────────────────────────── */
-  window._deleteDiscount = function(discountId) {
-    if (!confirm('Are you sure you want to delete this discount?')) return;
+  // ─── CLEANUP ─────────────────────────────────────────────────
 
-    discountsRef.doc(discountId).delete().then(function() {
-      showToast('Discount deleted successfully');
-      window._renderDiscountsTab();
-    }).catch(function(err) {
-      console.error('[DELETE_DISCOUNT]', err);
-      showToast('Failed to delete discount: ' + err.message, 'error');
-    });
-  };
+  window.addEventListener('beforeunload', function() { stopChatMonitoring(); destroyCharts(); });
 
-  /* ─────────────────────────────────────────────────────────
-     VALIDATION FUNCTIONS
-  ───────────────────────────────────────────────────────── */
-  function validateDiscountRate(type, value) {
-    var limits = {
-      MAX_PERCENTAGE: 100,
-      MIN_PERCENTAGE: 0,
-      MAX_FIXED_AMOUNT: 1000000,
-      MIN_FIXED_AMOUNT: 0
-    };
-    
-    value = Number(value || 0);
+  // ─── PUBLIC API ALIASES ──────────────────────────────────────
 
-    switch(type) {
-      case 'percentage':
-        if (value < limits.MIN_PERCENTAGE || value > limits.MAX_PERCENTAGE) {
-          return { valid: false, message: 'Percentage discount must be between ' + limits.MIN_PERCENTAGE + '% and ' + limits.MAX_PERCENTAGE + '%' };
-        }
-        break;
-      case 'fixed_amount':
-        if (value < limits.MIN_FIXED_AMOUNT || value > limits.MAX_FIXED_AMOUNT) {
-          return { valid: false, message: 'Fixed amount must be between R' + limits.MIN_FIXED_AMOUNT + ' and R' + limits.MAX_FIXED_AMOUNT.toLocaleString() };
-        }
-        break;
-      case 'buy_x_get_y':
-        if (value < 1 || value > 100) {
-          return { valid: false, message: 'Buy X Get Y requires X to be between 1 and 100' };
-        }
-        break;
-      default:
-        return { valid: false, message: 'Invalid discount type' };
-    }
-    return { valid: true, value: value };
-  }
-
-  function validateDiscountUsageLimit(limit) {
-    if (limit === null || limit === undefined || limit === '') return { valid: true, value: null };
-    limit = Number(limit);
-    if (limit < 0 || limit > 1000000) {
-      return { valid: false, message: 'Usage limit must be between 0 and 1,000,000' };
-    }
-    return { valid: true, value: limit };
-  }
-
-  function validateMinimumPurchase(amount) {
-    if (amount === null || amount === undefined || amount === '') return { valid: true, value: null };
-    amount = Number(amount);
-    if (amount < 0 || amount > 1000000) {
-      return { valid: false, message: 'Minimum purchase must be between R0 and R1,000,000' };
-    }
-    return { valid: true, value: amount };
-  }
+  window.loadProducts        = loadProducts;
+  window.seedDefaultData     = window._seedDefaultData;
+  window.openNewProductModal = window._openNewProductModal;
+  window.openProductModal    = window._openProductModal;
+  window.filterProducts      = window._filterProducts;
+  window.addVariant          = window._addVariant;
+  window.removeVariant       = window._removeVariant;
+  window.addImageUrl         = window._addImageUrl;
+  window.removeImageUrl      = window._removeImageUrl;
+  window.updateImagePreview  = window._updateImagePreview;
+  window.updateVariantPreview = window._updateVariantPreview;
+  window.closeModal          = closeModal;
+  window.closePanel          = closePanel;
+  window.handleProductSubmit = window._handleProductSubmit;
 
 })();
