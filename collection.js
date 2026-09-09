@@ -182,6 +182,7 @@ function expandProductVariants(products) {
 
 // FIXED: Cleaned up metaRow structure to ensure perfect vertical alignment
 // UPDATED: sold-out flagging + badge text now says "SOLD OUT" instead of "SOLD"
+// UPDATED: metaRow now renders brand -> title -> price in that order
 function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
@@ -197,14 +198,13 @@ function productCard(p, isLarge, showDetails, variantIndex) {
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
 
-  // Brand and Price are now naturally sequential, allowing CSS to align them perfectly
-  const metaRow = showDetails !== false ? `${brand}${price}` : brand;
+  // Brand, title, and price now render in that exact order
+  const metaRow = showDetails !== false ? `${brand}${name}${price}` : brand;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${p.id}']=${vi};goToProduct('${p.id}')">
       <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
       ${metaRow}
-      ${name}
     </div>`;
 }
 
