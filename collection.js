@@ -1,4 +1,47 @@
-function formatPrice(price) { return 'R' + (price || 0).toLocaleString(); }
+function formatPrice(price) {
+  const n = Number(price);
+  const safe = Number.isFinite(n) ? n : 0;
+  return 'R' + safe.toLocaleString('en-US');
+}
+
+function hasSalePrice(p) {
+  if (!p || p.salePrice === null || p.salePrice === undefined || p.salePrice === '') {
+    return false;
+  }
+  return Number.isFinite(Number(p.salePrice));
+}
+
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeJSString(value) {
+  return String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/</g, '\\x3C');
+}
+
+function safeImageURL(url) {
+  if (!url || typeof url !== 'string') return PLACEHOLDER_IMAGE;
+  const trimmed = url.trim();
+  if (/^https:\/\//i.test(trimmed)) return trimmed;
+  if (/^\/\//.test(trimmed)) return trimmed;
+  return PLACEHOLDER_IMAGE;
+}
+
+function escapeForCssUrl(url) {
+  const safe = safeImageURL(url);
+  return String(safe).replace(/['"\\\n\r]/g, '');
+}
+
 const COLLECTION_DESCRIPTIONS = {
   'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.', 'dresses': 'Effortless dresses that balance structure and fluidity.', 'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.', 'bottoms': 'Tailored trousers and fluid skirts with quiet intention.', 'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.', 'sets': 'Coordinated pieces designed to be worn together or styled apart.', 'bags': 'Understated accessories that complete the look without saying too much.', 'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.', 'sunglasses': 'Bold yet refined eyewear for the discerning gaze.', 'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.', 'all': 'Explore the complete edit of considered pieces, distinctive designs, and understated essentials.'
 };
@@ -19,34 +62,89 @@ function isLeatherPouchAllowed(context) {
   return context === 'sunglasses' || context === 'vendor';
 }
 
-function merchandiseProducts(products, context) { if (!products || !products.length) return []; const filtered = products.filter(p => p.id !== LEATHER_POUCH_ID || isLeatherPouchAllowed(context)); const sorted = [...filtered].sort((a, b) => { const oA = CATEGORY_ORDER[a.category] ?? 99; const oB = CATEGORY_ORDER[b.category] ?? 99; if (oA !== oB) return oA - oB; const pA = a.salePrice ?? a.price ?? 0; const pB = b.salePrice ?? b.price ?? 0; return pA - pB; }); return sorted; }
+function merchandiseProducts(products, context) {
+  if (!products || !products.length) return [];
+  const filtered = products.filter(p => p.id !== LEATHER_POUCH_ID || isLeatherPouchAllowed(context));
+  const sorted = [...filtered].sort((a, b) => {
+    const oA = CATEGORY_ORDER[a.category] ?? 99;
+    const oB = CATEGORY_ORDER[b.category] ?? 99;
+    if (oA !== oB) return oA - oB;
+    const pA = Number(hasSalePrice(a) ? a.salePrice : a.price);
+    const pB = Number(hasSalePrice(b) ? b.salePrice : b.price);
+    const sA = Number.isFinite(pA) ? pA : 0;
+    const sB = Number.isFinite(pB) ? pB : 0;
+    return sA - sB;
+  });
+  return sorted;
+}
+
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
-function getFilteredProducts() { return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false; if(S.filter.vendor && p.brand!==S.filter.vendor) return false; if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false; const price = p.salePrice ?? p.price; if(S.filter.price==='low' && price >= PRICE_FILTER_THRESHOLD) return false; if(S.filter.price==='high' && price < PRICE_FILTER_THRESHOLD) return false; return true; }); }
-function getCatFilteredProducts() { const isAllClothing = S.currentCategoryPage === 'all-clothing'; return PRODUCTS.filter(p=>{ if(p.status!=='active') return false; if(p.id===LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false; if(isAllClothing) { if(!CLOTHING_CATEGORIES.includes(p.category)) return false; } else if(S.currentCategoryPage && p.category !== S.currentCategoryPage) return false; if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false; const price = p.salePrice ?? p.price; if(S.catFilter.price==='low' && price >= PRICE_FILTER_THRESHOLD) return false; if(S.catFilter.price==='high' && price < PRICE_FILTER_THRESHOLD) return false; return true; }); }
+
+function getFilteredProducts() {
+  return PRODUCTS.filter(p=>{
+    if(p.status!=='active') return false;
+    if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false;
+    if(S.filter.vendor && p.brand!==S.filter.vendor) return false;
+    if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false;
+    const priceNum = Number(hasSalePrice(p) ? p.salePrice : p.price);
+    if(S.filter.price==='low' && priceNum >= PRICE_FILTER_THRESHOLD) return false;
+    if(S.filter.price==='high' && priceNum < PRICE_FILTER_THRESHOLD) return false;
+    return true;
+  });
+}
+
+function getCatFilteredProducts() {
+  const isAllClothing = S.currentCategoryPage === 'all-clothing';
+  const isAll = S.currentCategoryPage === 'all';
+  return PRODUCTS.filter(p=>{
+    if(p.status!=='active') return false;
+    if(p.id===LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
+    if(isAllClothing) {
+      if(!CLOTHING_CATEGORIES.includes(p.category)) return false;
+    } else if(!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
+      return false;
+    }
+    if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false;
+    const priceNum = Number(hasSalePrice(p) ? p.salePrice : p.price);
+    if(S.catFilter.price==='low' && priceNum >= PRICE_FILTER_THRESHOLD) return false;
+    if(S.catFilter.price==='high' && priceNum < PRICE_FILTER_THRESHOLD) return false;
+    return true;
+  });
+}
+
 function applyFilter(type, value) { S.filter[type] = value; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); }
 function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
 
 function toggleFilterDropdown(source) {
   const id = source === 'category' ? 'filter-options-category' : 'filter-options-products';
   const el = document.getElementById(id);
-  if(el) {
-    el.classList.toggle("open");
-    if(el.classList.contains("open")) setTimeout(() => document.addEventListener("click", function cf(e) {
-      if(!el.contains(e.target) && !e.target.classList.contains("filter-trigger")) {
-        el.classList.remove("open");
-        document.removeEventListener("click", cf);
-      }
-    }), 10);
+  if(!el) return;
+
+  if (el._outsideClickHandler) {
+    document.removeEventListener("click", el._outsideClickHandler);
+    el._outsideClickHandler = null;
   }
+
+  const isOpen = el.classList.toggle("open");
+  if (!isOpen) return;
+
+  const handler = function(e) {
+    if(!el.contains(e.target) && !e.target.classList.contains("filter-trigger")) {
+      el.classList.remove("open");
+      document.removeEventListener("click", handler);
+      el._outsideClickHandler = null;
+    }
+  };
+  el._outsideClickHandler = handler;
+  setTimeout(() => document.addEventListener("click", handler), 10);
 }
 
 function toggleCollectionFilter() {
   const el = document.getElementById('collection-filter-options');
   const backdrop = document.getElementById('collection-filter-backdrop');
-  if(el) {
-    el.classList.toggle("open");
-    if(backdrop) backdrop.classList.toggle("open");
-  }
+  if(!el) return;
+  const isOpen = el.classList.toggle("open");
+  if(backdrop) backdrop.classList.toggle("open", isOpen);
 }
 
 function applyCollectionFilter(type, value) {
@@ -138,13 +236,24 @@ function buildCategoryFilterOptions() {
   if (!filterContainer) return;
   
   const categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
-  categories.sort();
   
-  let html = '<label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter(\'cat\',\'all\')"> All</label>';
+  categories.sort((a, b) => {
+    const oA = CATEGORY_ORDER[a] ?? 99;
+    const oB = CATEGORY_ORDER[b] ?? 99;
+    if (oA !== oB) return oA - oB;
+    return String(a).localeCompare(String(b));
+  });
+
+  const activeCat = (S.currentPage === 'category')
+    ? (S.catFilter?.cat || 'all')
+    : (S.filter?.cat || 'all');
+  
+  let html = `<label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" ${activeCat === 'all' ? 'checked' : ''} onchange="applyCollectionFilter('cat','all')"> All</label>`;
   
   categories.forEach(cat => {
-    const label = cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    html += `<label class="filter-option"><input type="radio" name="filter-cat-collection" value="${cat}" onchange="applyCollectionFilter('cat','${cat}')"> ${label}</label>`;
+    const label = String(cat).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const checked = activeCat === cat ? 'checked' : '';
+    html += `<label class="filter-option"><input type="radio" name="filter-cat-collection" value="${escapeHTML(cat)}" ${checked} onchange="applyCollectionFilter('cat','${escapeJSString(cat)}')"> ${escapeHTML(label)}</label>`;
   });
   
   filterContainer.innerHTML = html;
@@ -195,24 +304,25 @@ function expandProductVariants(products) {
 function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
-  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : p.badge.toUpperCase()) : '';
-  const badge = badgeLabel ? `<span class="product-badge">${badgeLabel}</span>` : '';
+  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : String(p.badge).toUpperCase()) : '';
+  const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
   const imgs = p.variants?.[vi]?.images;
-  const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
+  const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   
-  const brand = p.brand ? `<div class="product-brand">${p.brand}</div>` : '';
-  const name = `<div class="product-title">${p.name}</div>`;
+  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '';
+  const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   
-  const price = p.salePrice
+  const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
 
   // Brand, title, and price now render in that exact order
   const metaRow = showDetails !== false ? `${brand}${name}${price}` : brand;
+  const pid = escapeJSString(p.id);
 
   return `
-    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${p.id}']=${vi};goToProduct('${p.id}')">
-      <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
+    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
       ${metaRow}
     </div>`;
 }
@@ -252,8 +362,27 @@ function renderCategoryProducts() {
 }
 
 function renderSaleProducts() { 
-  if(!DOM.allProductsGrid) return; 
-  const sp = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && p.salePrice)); 
+  if(!DOM.allProductsGrid) return;
+
+  let filtered = PRODUCTS.filter(p => p.status === 'active' && hasSalePrice(p));
+
+  if (S.filter.cat !== 'all') {
+    filtered = filtered.filter(p => p.category === S.filter.cat);
+  }
+  if (S.filter.vendor) {
+    filtered = filtered.filter(p => p.brand === S.filter.vendor);
+  }
+  if (S.filter.size !== 'all') {
+    filtered = filtered.filter(p => (p.sizes || []).includes(S.filter.size));
+  }
+  const priceNum = (p) => Number(hasSalePrice(p) ? p.salePrice : p.price);
+  if (S.filter.price === 'low') {
+    filtered = filtered.filter(p => priceNum(p) < PRICE_FILTER_THRESHOLD);
+  } else if (S.filter.price === 'high') {
+    filtered = filtered.filter(p => priceNum(p) >= PRICE_FILTER_THRESHOLD);
+  }
+
+  const sp = merchandiseProducts(filtered);
   const expanded = expandProductVariants(sp); 
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols); 
   DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; 
@@ -281,7 +410,7 @@ function renderCollectionSortingTabs() {
   } else {
     active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
   }
-  const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${t.cat}')">${t.label}</button>`).join('');
+  const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${escapeJSString(t.cat)}')">${escapeHTML(t.label)}</button>`).join('');
   const container = document.createElement('div');
   container.className = 'collection-sorting-tabs';
   container.innerHTML = tabsHtml;
@@ -313,7 +442,7 @@ function selectSortTab(cat) {
 function buildCategoriesSlider() {
   const grid = document.getElementById('home-categories-grid'); const progress = document.getElementById('home-categories-progress'); if (!grid || !progress) return;
   const categories = [{ label:'Clothing',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287',cat:'all-clothing'},{ label:'Jewellery',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153',cat:'jewelry'},{ label:'Sunglasses',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287',cat:'sunglasses'},{ label:'Scent',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601',cat:'parfum'},{ label:'Bags',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703',cat:'bags'}];
-  grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${c.cat}')"><div class="home-category-img" style="background-image:url('${c.img}');background-size:cover;background-position:center;"></div><div class="home-category-label">${c.label}</div></div>`).join('');
+  grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
   const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
   progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
   if (grid._categoriesScrollHandler) {
@@ -327,17 +456,18 @@ function buildCategoriesSlider() {
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
 function productCardHome(p) {
-  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : p.badge.toUpperCase()) : '';
-  const badge = badgeLabel ? `<span class="product-badge">${badgeLabel}</span>` : '';
+  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : String(p.badge).toUpperCase()) : '';
+  const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
   const soldOut = (p.stock ?? 0) <= 0;
   const vi = S.productVariantSelections[p.id] ?? 0;
   const imgs = p.variants?.[vi]?.images;
-  const ghost = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
+  const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+  const pid = escapeJSString(p.id);
   return `
-    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${p.id}')">
-      <div class="product-img-wrap">${badge}<img src="${ghost}" alt="${p.name}" loading="lazy"></div>
-      <div class="product-brand">${p.brand || 'JANEDORE'}</div>
-      <div class="product-title">${p.name}</div>
+    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
+      <div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>
+      <div class="product-title">${escapeHTML(p.name)}</div>
     </div>`;
 }
 
@@ -382,7 +512,7 @@ function normalizeBrandName(name) {
 function renderVendorPage(vendor) {
   const el = document.getElementById('vendor-page-content');
   if (!el) return;
-  const heroImg = vendor?.heroImageUrl || vendor?.logoUrl || '';
+  const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
   const brandName = vendor?.brand || vendor?.name || '';
   const desc = vendor?.description || '';
   const normalizedBrandName = normalizeBrandName(brandName);
@@ -398,10 +528,10 @@ function renderVendorPage(vendor) {
 
   el.innerHTML = `
     <section class="vendor-hero-section">
-      <div class="vendor-hero-img" style="background-image:url('${heroImg}');">
+      <div class="vendor-hero-img" style="background-image:url('${escapeForCssUrl(heroImg)}');">
         <div class="vendor-hero-content">
-          <div class="vendor-hero-name">${brandName}</div>
-          <p class="vendor-hero-desc">${desc}</p>
+          <div class="vendor-hero-name">${escapeHTML(brandName)}</div>
+          <p class="vendor-hero-desc">${escapeHTML(desc)}</p>
         </div>
       </div>
     </section>
