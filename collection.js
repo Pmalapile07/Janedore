@@ -47,22 +47,52 @@ const COLLECTION_DESCRIPTIONS = {
 };
 const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
 
-// Shared constants (previously duplicated across multiple functions)
 const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
-const PRICE_FILTER_THRESHOLD = 500;
 const LEATHER_POUCH_ID = 'janedore-leather-pouch';
 
 function gridTemplateFor(cols) {
   return cols === 1 ? "1fr" : cols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)";
 }
 
-// Centralizes the leather-pouch exception: it's excluded from general listings
-// unless the context is sunglasses or the vendor page it actually belongs to.
 function isLeatherPouchAllowed(context) {
   return context === 'sunglasses' || context === 'vendor';
 }
 
-function merchandiseProducts(products, context) {
+// ── SORT ─────────────────────────────────────────────────────
+// Sorting never disables the editorial grid — the featured/tall card layout
+// still applies. Sort only reorders which products land in which position.
+
+function applySort(products, sortBy) {
+  if (!sortBy || sortBy === 'featured') return products;
+  const arr = [...products];
+  const priceOf = (p) => Number(hasSalePrice(p) ? p.salePrice : p.price);
+  const safePrice = (p) => {
+    const n = priceOf(p);
+    return Number.isFinite(n) ? n : 0;
+  };
+  switch (sortBy) {
+    case 'price-asc':  return arr.sort((a, b) => safePrice(a) - safePrice(b));
+    case 'price-desc': return arr.sort((a, b) => safePrice(b) - safePrice(a));
+    case 'newest':     return arr.sort((a, b) => {
+      const ta = new Date(a.createdAt || a.updatedAt || 0).getTime() || 0;
+      const tb = new Date(b.createdAt || b.updatedAt || 0).getTime() || 0;
+      return tb - ta;
+    });
+    case 'name-asc':   return arr.sort((a, b) =>
+      String(a.name || '').localeCompare(String(b.name || ''))
+    );
+    default: return products;
+  }
+}
+
+function setSortBy(value) {
+  S.sortBy = value;
+  if (S.saleMode) renderSaleProducts();
+  else if (S.currentPage === 'category') renderCategoryProducts();
+  else renderAllProducts();
+}
+
+function merchandiseProducts(products, context, sortBy) {
   if (!products || !products.length) return [];
   const filtered = products.filter(p => p.id !== LEATHER_POUCH_ID || isLeatherPouchAllowed(context));
   const sorted = [...filtered].sort((a, b) => {
@@ -75,45 +105,59 @@ function merchandiseProducts(products, context) {
     const sB = Number.isFinite(pB) ? pB : 0;
     return sA - sB;
   });
-  return sorted;
+  return applySort(sorted, sortBy);
 }
 
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
 
+// ── FILTERS ──────────────────────────────────────────────────
+// Filters available: category, size, on-sale, in-stock.
+// The old R500 price band filter is removed entirely.
+
+function passesCommonFilters(p, f) {
+  if (f.size && f.size !== 'all' && !(p.sizes || []).includes(f.size)) return false;
+  if (f.onSale && !hasSalePrice(p)) return false;
+  if (f.inStock && (Number(p.stock) || 0) <= 0) return false;
+  return true;
+}
+
 function getFilteredProducts() {
-  return PRODUCTS.filter(p=>{
-    if(p.status!=='active') return false;
-    if(S.filter.cat!=='all' && p.category!==S.filter.cat) return false;
-    if(S.filter.vendor && p.brand!==S.filter.vendor) return false;
-    if(S.filter.size!=='all' && !(p.sizes||[]).includes(S.filter.size)) return false;
-    const priceNum = Number(hasSalePrice(p) ? p.salePrice : p.price);
-    if(S.filter.price==='low' && priceNum >= PRICE_FILTER_THRESHOLD) return false;
-    if(S.filter.price==='high' && priceNum < PRICE_FILTER_THRESHOLD) return false;
-    return true;
+  return PRODUCTS.filter(p => {
+    if (p.status !== 'active') return false;
+    if (S.filter.cat !== 'all' && p.category !== S.filter.cat) return false;
+    if (S.filter.vendor && p.brand !== S.filter.vendor) return false;
+    return passesCommonFilters(p, S.filter);
   });
 }
 
 function getCatFilteredProducts() {
   const isAllClothing = S.currentCategoryPage === 'all-clothing';
   const isAll = S.currentCategoryPage === 'all';
-  return PRODUCTS.filter(p=>{
-    if(p.status!=='active') return false;
-    if(p.id===LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
-    if(isAllClothing) {
-      if(!CLOTHING_CATEGORIES.includes(p.category)) return false;
-    } else if(!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
+
+  return PRODUCTS.filter(p => {
+    if (p.status !== 'active') return false;
+    if (p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
+
+    if (isAllClothing) {
+      if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
+    } else if (!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
       return false;
     }
-    if(S.catFilter.size!=='all' && !(p.sizes||[]).includes(S.catFilter.size)) return false;
-    const priceNum = Number(hasSalePrice(p) ? p.salePrice : p.price);
-    if(S.catFilter.price==='low' && priceNum >= PRICE_FILTER_THRESHOLD) return false;
-    if(S.catFilter.price==='high' && priceNum < PRICE_FILTER_THRESHOLD) return false;
-    return true;
+
+    return passesCommonFilters(p, S.catFilter);
   });
 }
 
-function applyFilter(type, value) { S.filter[type] = value; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); }
-function applyCatFilter(type, value) { S.catFilter[type] = value; renderCategoryProducts(); }
+function applyFilter(type, value) {
+  S.filter[type] = value;
+  if (S.saleMode) renderSaleProducts();
+  else renderAllProducts();
+}
+
+function applyCatFilter(type, value) {
+  S.catFilter[type] = value;
+  renderCategoryProducts();
+}
 
 function toggleFilterDropdown(source) {
   const id = source === 'category' ? 'filter-options-category' : 'filter-options-products';
@@ -230,7 +274,6 @@ function updateCollectionTitle() {
   }
 }
 
-// DYNAMICALLY BUILD CATEGORY FILTER FROM PRODUCTS
 function buildCategoryFilterOptions() {
   const filterContainer = document.getElementById('collection-filter-categories');
   if (!filterContainer) return;
@@ -282,7 +325,6 @@ function updateGridToggleSVG(svgId, cols) {
   updateCollectionGridIcon();
 }
 
-// Expands products into one card per variant
 function expandProductVariants(products) {
   const expanded = [];
   products.forEach(p => {
@@ -298,9 +340,6 @@ function expandProductVariants(products) {
   return expanded;
 }
 
-// FIXED: Cleaned up metaRow structure to ensure perfect vertical alignment
-// UPDATED: sold-out flagging + badge text now says "SOLD OUT" instead of "SOLD"
-// UPDATED: metaRow now renders brand -> title -> price in that order
 function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
@@ -316,7 +355,6 @@ function productCard(p, isLarge, showDetails, variantIndex) {
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
 
-  // Brand, title, and price now render in that exact order
   const metaRow = showDetails !== false ? `${brand}${name}${price}` : brand;
   const pid = escapeJSString(p.id);
 
@@ -327,9 +365,43 @@ function productCard(p, isLarge, showDetails, variantIndex) {
     </div>`;
 }
 
+// ── TOOLBAR HELPERS ──────────────────────────────────────────
+// Sort dropdown + on-sale + in-stock checkboxes are injected into the existing
+// toolbar. The filter-panel HTML is built here so all three render functions
+// stay consistent.
+
+function buildSortControl() {
+  const current = S.sortBy || 'featured';
+  const options = [
+    { v: 'featured',   l: 'Featured' },
+    { v: 'price-asc',  l: 'Price: Low to High' },
+    { v: 'price-desc', l: 'Price: High to Low' },
+    { v: 'newest',     l: 'Newest first' },
+    { v: 'name-asc',   l: 'Name: A → Z' }
+  ];
+  return `<select id="sort-by" class="filter-select sort-by-select" onchange="setSortBy(this.value)">` +
+    options.map(o => `<option value="${o.v}"${current === o.v ? ' selected' : ''}>${escapeHTML(o.l)}</option>`).join('') +
+  `</select>`;
+}
+
+function buildFilterExtras() {
+  const f = (S.currentPage === 'category') ? S.catFilter : S.filter;
+  const onSale = f.onSale ? 'checked' : '';
+  const inStock = f.inStock ? 'checked' : '';
+  return `
+    <div class="filter-group">
+      <div class="filter-group-title">Availability</div>
+      <label class="filter-option"><input type="checkbox" ${onSale} onchange="applyCollectionFilter('onSale', this.checked)"> On sale only</label>
+      <label class="filter-option"><input type="checkbox" ${inStock} onchange="applyCollectionFilter('inStock', this.checked)"> In stock only</label>
+    </div>
+  `;
+}
+
+// ── RENDERERS ────────────────────────────────────────────────
+
 function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
-  let prods = merchandiseProducts(getFilteredProducts());
+  let prods = merchandiseProducts(getFilteredProducts(), undefined, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
   DOM.allProductsGrid.innerHTML = expanded.map(({product, variantIndex}) => productCard(product, S.gridCols===3, true, variantIndex)).join("");
@@ -337,6 +409,7 @@ function renderAllProducts() {
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
   buildCategoryFilterOptions();
+  injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
 
 function renderCategoryProducts() {
@@ -349,7 +422,7 @@ function renderCategoryProducts() {
   else if(CLOTHING_CATEGORIES.includes(S.currentCategoryPage)) cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage);
   else if(S.currentCategoryPage==='bags') cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage&&p.id!==LEATHER_POUCH_ID);
   else cp=getCatFilteredProducts();
-  let prods=merchandiseProducts(cp, S.currentCategoryPage);
+  let prods=merchandiseProducts(cp, S.currentCategoryPage, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.categoryProductsGrid.style.gridTemplateColumns=gridTemplateFor(S.gridColsCat);
   DOM.categoryProductsGrid.innerHTML=expanded.map(({product, variantIndex}) => productCard(product, S.gridColsCat===3, true, variantIndex)).join("");
@@ -359,6 +432,7 @@ function renderCategoryProducts() {
   renderCollectionSortingTabs();
   updateCollectionTitle();
   buildCategoryFilterOptions();
+  injectToolbarExtras('page-category', 'cat-grid-toggle-svg');
 }
 
 function renderSaleProducts() { 
@@ -372,17 +446,15 @@ function renderSaleProducts() {
   if (S.filter.vendor) {
     filtered = filtered.filter(p => p.brand === S.filter.vendor);
   }
-  if (S.filter.size !== 'all') {
+  if (S.filter.size && S.filter.size !== 'all') {
     filtered = filtered.filter(p => (p.sizes || []).includes(S.filter.size));
   }
-  const priceNum = (p) => Number(hasSalePrice(p) ? p.salePrice : p.price);
-  if (S.filter.price === 'low') {
-    filtered = filtered.filter(p => priceNum(p) < PRICE_FILTER_THRESHOLD);
-  } else if (S.filter.price === 'high') {
-    filtered = filtered.filter(p => priceNum(p) >= PRICE_FILTER_THRESHOLD);
+  if (S.filter.inStock) {
+    filtered = filtered.filter(p => (Number(p.stock) || 0) > 0);
   }
+  // On-sale toggle is inherently true on this page; no need to re-check.
 
-  const sp = merchandiseProducts(filtered);
+  const sp = merchandiseProducts(filtered, undefined, S.sortBy);
   const expanded = expandProductVariants(sp); 
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols); 
   DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; 
@@ -390,6 +462,47 @@ function renderSaleProducts() {
   updateGridToggleSVG("grid-toggle-svg", S.gridCols); 
   updateCollectionTitle();
   buildCategoryFilterOptions();
+  injectToolbarExtras('page-products', 'grid-toggle-svg');
+}
+
+// Injects the Sort dropdown into the toolbar and the On-sale/In-stock
+// checkboxes into the filter panel. Idempotent — safe to call repeatedly.
+function injectToolbarExtras(pageId, gridSvgId) {
+  const page = document.getElementById(pageId);
+  if (!page) return;
+
+  // Remove any previous injection to avoid duplicates.
+  const oldSort = page.querySelector('.sort-by-select');
+  if (oldSort) oldSort.remove();
+  const oldExtras = page.querySelector('.filter-extras-injected');
+  if (oldExtras) oldExtras.remove();
+
+  // Insert sort dropdown into the toolbar (before the grid toggle if present).
+  const toolbar = page.querySelector('.collection-toolbar');
+  if (toolbar) {
+    const svg = toolbar.querySelector('#' + gridSvgId);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'sort-by-wrapper';
+    wrapper.style.display = 'inline-flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '8px';
+    wrapper.style.marginRight = '12px';
+    wrapper.innerHTML = buildSortControl();
+    if (svg && svg.parentElement) {
+      svg.parentElement.insertBefore(wrapper, svg);
+    } else {
+      toolbar.appendChild(wrapper);
+    }
+  }
+
+  // Insert filter extras into the filter panel.
+  const panel = page.querySelector('#collection-filter-options');
+  if (panel) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'filter-extras-injected';
+    wrapper.innerHTML = buildFilterExtras();
+    panel.appendChild(wrapper);
+  }
 }
 
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
