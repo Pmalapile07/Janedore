@@ -10,7 +10,7 @@
 .cart-item-row { display: flex; gap: 14px; padding: 16px 0; align-items: flex-start; cursor: pointer; position: relative; }
 .cart-item-img-placeholder { width: 72px; height: 88px; flex-shrink: 0; background-size: cover; background-position: center; background-color: #f0ede8; }
 .ci-brand { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 4px; }
-.ci-name { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 400; color: #111; margin-bottom: 4px; line-height: 1.3; text-transform: uppercase; }
+.ci-name { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 400; color: #111; margin-bottom: 4px; line-height: 1.3; text-transform: none; }
 .ci-meta { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #111; margin-bottom: 8px; }
 .ci-qty { display: inline-flex; align-items: center; border: 0.8px solid #ddd; background: #fff; overflow: hidden; }
 .ci-qty-btn { width: 28px; height: 28px; border: none; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #111; cursor: pointer; padding: 0; transition: background 0.2s; }
@@ -52,7 +52,7 @@
 .cart-page-img { width: 120px; height: 150px; background-size: cover; background-position: center; flex-shrink: 0; background-color: #f0ede8; }
 .cart-page-details { flex: 1; }
 .cart-page-brand { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 6px; font-family: 'Manrope', sans-serif; }
-.cart-page-name { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 400; color: #111; margin-bottom: 6px; line-height: 1.3; text-transform: uppercase; }
+.cart-page-name { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 400; color: #111; margin-bottom: 6px; line-height: 1.3; text-transform: none; }
 .cart-page-meta { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #111; margin-bottom: 10px; font-family: 'Manrope', sans-serif; }
 .cart-page-qty-wrap { display: inline-flex; align-items: center; border: 0.8px solid #ddd; background: #fff; overflow: hidden; }
 .cart-page-qty-btn { width: 32px; height: 32px; border: none; background: #fff; font-size: 16px; color: #111; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
@@ -74,7 +74,7 @@
 .cart-page-btn.secondary:hover { background: #f5f5f5; }
 .cart-page-empty { text-align: center; padding: 60px 0; }
 .cart-page-empty-title { font-family: 'Manrope', sans-serif; font-size: var(--body-font-size); font-weight: 500; color: #111; letter-spacing: var(--body-letter-spacing); margin-bottom: 24px; }
-.cart-page-promo { display: flex; gap: 8px; margin-top: 20px; }
+.cart-page-promo { display: flex; gap: 8px; margin-top: 20px; width: 100%; }
 .cart-page-promo-input { flex: 1; border: 0.8px solid #ddd; padding: 14px; font-size: var(--ui-font-size); font-family: 'Manrope', sans-serif; font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; outline: none; color: #111; }
 .cart-page-promo-input::placeholder { text-transform: uppercase; letter-spacing: var(--ui-letter-spacing); color: #aaa; }
 .cart-page-promo-input:focus { border-color: #aaa; }
