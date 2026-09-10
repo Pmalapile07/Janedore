@@ -1,6 +1,6 @@
 function formatPrice(price) { return 'R' + (price || 0).toLocaleString(); }
 const COLLECTION_DESCRIPTIONS = {
-  'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.', 'dresses': 'Effortless dresses that balance structure and fluidity.', 'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.', 'bottoms': 'Tailored trousers and fluid skirts with quiet intention.', 'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.', 'sets': 'Coordinated pieces designed to be worn together or styled apart.', 'bags': 'Understated accessories that complete the look without saying too much.', 'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.', 'sunglasses': 'Bold yet refined eyewear for the discerning gaze.', 'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.', 'all': 'All pieces — a curated view of everything in store.'
+  'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.', 'dresses': 'Effortless dresses that balance structure and fluidity.', 'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.', 'bottoms': 'Tailored trousers and fluid skirts with quiet intention.', 'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.', 'sets': 'Coordinated pieces designed to be worn together or styled apart.', 'bags': 'Understated accessories that complete the look without saying too much.', 'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.', 'sunglasses': 'Bold yet refined eyewear for the discerning gaze.', 'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.', 'all': 'Explore the complete edit of considered pieces, distinctive designs, and understated essentials.'
 };
 const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
 
@@ -80,18 +80,20 @@ function updateCollectionGridIcon() {
 
 function updateCollectionTitle() {
   const titleEl = document.getElementById('collection-filter-title-display');
+  const descEl = document.getElementById('collection-top-description');
   if (!titleEl) return;
   
   let title = 'ALL PRODUCTS';
+  let description = '';
+  let showDesc = false;
   
   if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = 'BRAND';
+    showDesc = false;
   } else if (S.currentPage === 'products') {
-    if (S.saleMode) {
-      title = 'SALE';
-    } else {
-      title = 'ALL PRODUCTS';
-    }
+    title = S.saleMode ? 'SALE' : 'ALL PRODUCTS';
+    description = COLLECTION_DESCRIPTIONS['all'];
+    showDesc = true;
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
     const catTitles = {
       'all': 'ALL PRODUCTS',
@@ -107,15 +109,26 @@ function updateCollectionTitle() {
       'parfum': 'SCENT'
     };
     title = catTitles[S.currentCategoryPage] || S.currentCategoryPage.toUpperCase();
+    description = COLLECTION_DESCRIPTIONS[S.currentCategoryPage] || '';
+    showDesc = true;
   } else {
-    // Hide the title for non-collection pages
     if (titleEl) titleEl.style.display = 'none';
+    if (descEl) descEl.style.display = 'none';
     return;
   }
   
   if (titleEl) {
     titleEl.style.display = 'block';
     titleEl.textContent = title;
+  }
+  
+  if (descEl) {
+    if (showDesc && description) {
+      descEl.innerHTML = `<p>${description}</p>`;
+      descEl.style.display = 'block';
+    } else {
+      descEl.style.display = 'none';
+    }
   }
 }
 
@@ -124,13 +137,9 @@ function buildCategoryFilterOptions() {
   const filterContainer = document.getElementById('collection-filter-categories');
   if (!filterContainer) return;
   
-  // Get unique categories from active products
   const categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
-  
-  // Sort alphabetically
   categories.sort();
   
-  // Build HTML
   let html = '<label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" checked onchange="applyCollectionFilter(\'cat\',\'all\')"> All</label>';
   
   categories.forEach(cat => {
