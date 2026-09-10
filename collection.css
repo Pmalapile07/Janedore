@@ -31,7 +31,7 @@ body.on-collection-page .collection-top-description {
 }
 
 .collection-top-description p {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'inter', 'Manrope', sans-serif;
   font-size: 13px;
   font-weight: 300;
   line-height: 1.6;
@@ -47,7 +47,7 @@ body.on-collection-page .collection-top-description {
 .collection-filter-bar {
   display: none !important;
   background: #fff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid white;
   padding: 12px 20px;
   align-items: center;
   justify-content: space-between;
