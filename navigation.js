@@ -115,8 +115,8 @@ function isDesktop() { return window.innerWidth >= 769; }
 function setHeroImage() { if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"; }
 window.addEventListener('resize', setHeroImage);
 
-function openMenu() { DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
-function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
+function openMenu() { document.body.style.overflow = 'hidden'; document.body.style.position = 'fixed'; document.body.style.width = '100%'; document.body.style.top = `-${window.scrollY}px`; DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
+function closeMenu() { const scrollY = document.body.style.top; document.body.style.overflow = ''; document.body.style.position = ''; document.body.style.width = ''; document.body.style.top = ''; window.scrollTo(0, parseInt(scrollY || '0') * -1); DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
 function toggleSubmenuCollapse(section) { const el = document.getElementById(section + '-collapse'); if (el) el.classList.toggle('open'); }
 function toggleBrandsCollapse() { const el = document.getElementById('brands-collapse'); if (el) el.classList.toggle('open'); }
 
