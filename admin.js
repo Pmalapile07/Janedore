@@ -336,16 +336,15 @@
   // ─── TAB NAVIGATION ──────────────────────────────────────────
 
   window.switchTab = function(tab) {
-        var TAB_MODULE_MAP = {
+    var TAB_MODULE_MAP = {
       dashboard: 'dashboard', products: 'products', orders: 'orders',
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
       vendors: 'vendors', customers: 'customers', settings: 'settings',
-      admins: 'admins', pages: 'pages'
+      admins: 'admins', pages: 'pages', discounts: 'discounts'
     };
 
-    };
     var module = TAB_MODULE_MAP[tab];
-    if (module && !window._can(module, 'read')) {
+    if (module && window._can && !window._can(module, 'read')) {
       showToast('You do not have access to this section.', 'error');
       return;
     }
@@ -383,7 +382,7 @@
       case 'vendors':     if (window._renderVendorsTab)     window._renderVendorsTab();     break;
       case 'settings':    if (window._renderSettingsTab)    window._renderSettingsTab();    break;
       case 'admins':      if (window._renderAdminsTab)      window._renderAdminsTab();      break;
-        case 'pages':     if (window._renderPagesTab)     window._renderPagesTab();     break;
+      case 'pages':       if (window._renderPagesTab)       window._renderPagesTab();       break;
       case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;
     }
   }
