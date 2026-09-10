@@ -71,12 +71,18 @@ function applySort(products, sortBy) {
     return Number.isFinite(n) ? n : 0;
   };
   switch (sortBy) {
+    case 'best-selling': return arr.sort((a, b) => (Number(b.soldCount) || 0) - (Number(a.soldCount) || 0));
     case 'price-asc':  return arr.sort((a, b) => safePrice(a) - safePrice(b));
     case 'price-desc': return arr.sort((a, b) => safePrice(b) - safePrice(a));
     case 'newest':     return arr.sort((a, b) => {
       const ta = new Date(a.createdAt || a.updatedAt || 0).getTime() || 0;
       const tb = new Date(b.createdAt || b.updatedAt || 0).getTime() || 0;
       return tb - ta;
+    });
+    case 'oldest':     return arr.sort((a, b) => {
+      const ta = new Date(a.createdAt || a.updatedAt || 0).getTime() || 0;
+      const tb = new Date(b.createdAt || b.updatedAt || 0).getTime() || 0;
+      return ta - tb;
     });
     case 'name-asc':   return arr.sort((a, b) =>
       String(a.name || '').localeCompare(String(b.name || ''))
@@ -111,7 +117,7 @@ function merchandiseProducts(products, context, sortBy) {
 function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
 
 // ── FILTERS ──────────────────────────────────────────────────
-// Filters available: category, size, on-sale, in-stock.
+// Filters available: category, brand, size, on-sale, in-stock.
 // The old R500 price band filter is removed entirely.
 
 function passesCommonFilters(p, f) {
@@ -137,6 +143,7 @@ function getCatFilteredProducts() {
   return PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
     if (p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
+    if (S.catFilter.vendor && p.brand !== S.catFilter.vendor) return false;
 
     if (isAllClothing) {
       if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
@@ -302,6 +309,26 @@ function buildCategoryFilterOptions() {
   filterContainer.innerHTML = html;
 }
 
+function buildBrandFilterOptions() {
+  const filterContainer = document.getElementById('collection-filter-brands');
+  if (!filterContainer) return;
+
+  const brands = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.brand).filter(Boolean))].sort();
+
+  const activeBrand = (S.currentPage === 'category')
+    ? (S.catFilter?.vendor || 'all')
+    : (S.filter?.vendor || 'all');
+
+  let html = `<label class="filter-option"><input type="radio" name="filter-brand-collection" value="all" ${activeBrand === 'all' ? 'checked' : ''} onchange="applyCollectionFilter('vendor', null)"> All</label>`;
+
+  brands.forEach(brand => {
+    const checked = activeBrand === brand ? 'checked' : '';
+    html += `<label class="filter-option"><input type="radio" name="filter-brand-collection" value="${escapeHTML(brand)}" ${checked} onchange="applyCollectionFilter('vendor','${escapeJSString(brand)}')"> ${escapeHTML(brand)}</label>`;
+  });
+
+  filterContainer.innerHTML = html;
+}
+
 function applyEditorialGrid(gridEl, cols) {
   if (!gridEl) return;
   gridEl.classList.remove('editorial-1col', 'editorial-2col', 'editorial-3col');
@@ -373,11 +400,13 @@ function productCard(p, isLarge, showDetails, variantIndex) {
 function buildSortControl() {
   const current = S.sortBy || 'featured';
   const options = [
-    { v: 'featured',   l: 'Featured' },
-    { v: 'price-asc',  l: 'Price: Low to High' },
-    { v: 'price-desc', l: 'Price: High to Low' },
-    { v: 'newest',     l: 'Newest first' },
-    { v: 'name-asc',   l: 'Name: A → Z' }
+    { v: 'featured',     l: 'Featured' },
+    { v: 'best-selling', l: 'Best Selling' },
+    { v: 'price-asc',    l: 'Price: Low to High' },
+    { v: 'price-desc',   l: 'Price: High to Low' },
+    { v: 'newest',       l: 'Newest first' },
+    { v: 'oldest',       l: 'Oldest first' },
+    { v: 'name-asc',     l: 'Name: A → Z' }
   ];
   return `<select id="sort-by" class="filter-select sort-by-select" onchange="setSortBy(this.value)">` +
     options.map(o => `<option value="${o.v}"${current === o.v ? ' selected' : ''}>${escapeHTML(o.l)}</option>`).join('') +
@@ -409,6 +438,7 @@ function renderAllProducts() {
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
   buildCategoryFilterOptions();
+  buildBrandFilterOptions();
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
 
@@ -432,6 +462,7 @@ function renderCategoryProducts() {
   renderCollectionSortingTabs();
   updateCollectionTitle();
   buildCategoryFilterOptions();
+  buildBrandFilterOptions();
   injectToolbarExtras('page-category', 'cat-grid-toggle-svg');
 }
 
@@ -462,6 +493,7 @@ function renderSaleProducts() {
   updateGridToggleSVG("grid-toggle-svg", S.gridCols); 
   updateCollectionTitle();
   buildCategoryFilterOptions();
+  buildBrandFilterOptions();
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
 
