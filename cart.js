@@ -409,43 +409,9 @@ function renderCartPage() {
   });
 
   const sub = getCartSubtotal();
-  const discountAmount = getDiscountAmount();
-  const finalTotal = getCartTotalAfterDiscount();
-  const shipping = getCartShippingStatus(finalTotal);
-  
-  let discountHtml = '';
-  if (appliedDiscount) {
-    const safeCode = sanitizeHTML(appliedDiscount.code);
-    discountHtml = `<div class="cart-page-discount-row">
-      <span>Discount (${safeCode})</span>
-      <strong>-${formatPrice(discountAmount)}</strong>
-    </div>`;
-  }
-  
-  let promoHtml = '';
-  if (appliedDiscount) {
-    const safeCode = sanitizeHTML(appliedDiscount.code);
-    const safeDesc = sanitizeHTML(appliedDiscount.description);
-    promoHtml = `<div class="cart-page-promo">
-      <div class="cart-page-promo-applied">
-        <span>${safeCode}: ${safeDesc}</span>
-        <button onclick="removePromoCode()">Remove</button>
-      </div>
-    </div>`;
-  } else {
-    promoHtml = `<div class="cart-page-promo">
-      <input class="cart-page-promo-input" type="text" placeholder="Promo code" id="cart-promo-input" maxlength="20" oninput="this.value = this.value.replace(/[^A-Za-z0-9_-]/g, '')">
-      <button class="cart-page-promo-btn" onclick="applyPromoCode()">Apply</button>
-    </div>`;
-  }
-  
+
   html += `<div class="cart-page-summary">
     <div class="cart-page-subtotal">Subtotal <strong>${formatPrice(sub)}</strong></div>
-    ${discountHtml}
-    <div class="cart-page-total">Total <strong>${formatPrice(finalTotal)}</strong></div>
-    <div class="cart-page-ship-note">${shipping.message}</div>
-    ${cartHasMultipleTypes() ? '<div class="cart-page-multi-package-note">contents may arrive in multiple packages</div>' : ''}
-    ${promoHtml}
     <div class="cart-page-actions">
       <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
       <button class="cart-page-btn primary" onclick="navigateTo('checkout')">Checkout</button>
