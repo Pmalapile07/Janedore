@@ -7,34 +7,34 @@ function buildFooter(id) {
   const collapseHTML = sections.map(sec => {
     const links = {
       shop: [
-        "New In",
-        "Dresses",
-        "Tops",
-        "Bottoms",
-        "Jackets",
-        "Sets",
-        "Bags",
-        "Jewelry",
-        "Scent",
-        "Sale"
+        { label: "New In" },
+        { label: "Dresses" },
+        { label: "Tops" },
+        { label: "Bottoms" },
+        { label: "Jackets" },
+        { label: "Sets" },
+        { label: "Bags" },
+        { label: "Jewelry" },
+        { label: "Scent" },
+        { label: "Sale" }
       ],
 
       brands: [],
 
       policies: [
-        "About",
-        "Shipping Policy",
-        "Return Policy",
-        "Privacy Policy",
-        "Terms & Conditions"
+        { label: "About", slug: "about" },
+        { label: "Shipping Policy", slug: "shipping-policy" },
+        { label: "Return Policy", slug: "return-policy" },
+        { label: "Privacy Policy", slug: "privacy-policy" },
+        { label: "Terms & Conditions", slug: "terms-conditions" }
       ],
 
       help: [
-        "FAQ",
-        "Size Guide",
-        "Shipping",
-        "Returns",
-        "Contact"
+        { label: "FAQ", slug: "faq" },
+        { label: "Size Guide", slug: "size-guide" },
+        { label: "Shipping", slug: "shipping" },
+        { label: "Returns", slug: "returns" },
+        { label: "Contact", slug: "contact" }
       ]
     }[sec];
 
@@ -56,7 +56,7 @@ function buildFooter(id) {
           <ul class="footer-links">
             ${links.map(l => `
               <li>
-                <a>${l}</a>
+                <a${l.slug ? ` onclick="navigateToContentPage('${l.slug}')"` : ''}>${l.label}</a>
               </li>
             `).join("")}
           </ul>
