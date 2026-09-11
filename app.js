@@ -180,12 +180,12 @@ async function init() {
   loadWishlistFromStorage();
   updateBadges();
   buildArrivals();
-  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer","vendor-footer"];
+  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
   initVendors();
 
-  // Path-based routes (/products/slug, /collections/cat, /shop, /login, etc)
+  // Path-based routes (/products/slug, /collections/cat, /pages/slug, /shop, /login, etc)
   // take priority over hash routes.
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
@@ -195,6 +195,8 @@ async function init() {
       else { navigateTo('home'); }
     } else if (pathRoute.page === 'category') {
       navigateToCategory(pathRoute.cat, true);
+    } else if (pathRoute.page === 'content') {
+      navigateToContentPage(pathRoute.slug, true);
     } else if (pathRoute.page === 'login') {
       navigateToLogin(true);
     } else if (pathRoute.page === 'account') {
@@ -261,8 +263,8 @@ function updateCollectionUrl(cat, replaceUrl) {
 
 function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 
-// Reads clean /products/{slug}, /collections/{cat}, and every mapped
-// utility/content page (/shop, /login, /account, /checkout, /cart,
+// Reads clean /products/{slug}, /collections/{cat}, /pages/{slug}, and every
+// mapped utility/content page (/shop, /login, /account, /checkout, /cart,
 // /wishlist, /campaign, /editorial).
 function getRouteFromPath() {
   const path = window.location.pathname;
@@ -270,6 +272,8 @@ function getRouteFromPath() {
   if (m) return { page: 'product-detail', slug: decodeURIComponent(m[1]) };
   m = path.match(/^\/collections\/([^\/]+)\/?$/);
   if (m) return { page: 'category', cat: decodeURIComponent(m[1]) };
+  m = path.match(/^\/pages\/([^\/]+)\/?$/);
+  if (m) return { page: 'content', slug: decodeURIComponent(m[1]) };
   m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial)\/?$/);
   if (m) return { page: URL_TO_PAGE_MAP[m[1]] || m[1] };
   return null;
@@ -284,6 +288,9 @@ window.addEventListener('popstate', () => {
       if (product) { goToProduct(product.id, true); return; }
     } else if (pathRoute.page === 'category') {
       navigateToCategory(pathRoute.cat, true);
+      return;
+    } else if (pathRoute.page === 'content') {
+      navigateToContentPage(pathRoute.slug, true);
       return;
     } else if (pathRoute.page === 'login') {
       navigateToLogin(true);
