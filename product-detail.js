@@ -188,13 +188,17 @@ async function renderProductPage(product) {
       </div>
     </div>
     <div class="product-info">
-      <p class="product-by-brand">${product.brand||'JANEDORE'}</p>
       <h1 class="product-title-main">${product.name||''}</h1>
-      <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+      <p class="product-by-brand">By ${product.brand||'JANEDORE'}</p>
       ${hasDesc?`<div class="modal-desc expanded" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
+      <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
       ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div></div>`:''}
-      <div class="product-sizes"><div class="sizes-label">Quantity</div><div class="sizes-row"><div class="quantity-selector-unified"><button class="quantity-selector-btn" onclick="changeQuantity(-1)">−</button><span class="quantity-selector-value" id="product-qty-value">1</span><button class="quantity-selector-btn" onclick="changeQuantity(1)">+</button></div></div></div>
-      ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Colour</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
+      ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
+      <div class="qty-cart-row">
+        <div class="quantity-selector-unified"><button class="quantity-selector-btn" onclick="changeQuantity(-1)">−</button><span class="quantity-selector-value" id="product-qty-value">1</span><button class="quantity-selector-btn" onclick="changeQuantity(1)">+</button></div>
+        <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Bag')}</button>
+      </div>
+      <button class="add-to-wishlist-btn" onclick="addToWishlist('${product.id}')">Add to Wishlist</button>
       <div class="info-tabs-wrap">
         <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
         <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
@@ -203,7 +207,6 @@ async function renderProductPage(product) {
         <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
         <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
       </div>
-      <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Bag')}</button>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0 12px;">
       <div class="ai-disclaimer-notice"><span>*</span><p>Select imagery may include AI-assisted production.<br><strong>Product accuracy remains a priority.</strong></p></div>
