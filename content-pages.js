@@ -41,9 +41,8 @@ function renderContentPage(data, slug) {
   if (!data) {
     el.innerHTML = `
       <section style="padding:60px 18px;max-width:800px;margin:0 auto;">
-        <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:14px;">Janedore</div>
-        <div style="font-size:28px;font-weight:600;margin-bottom:20px;">Page not found</div>
-        <p style="font-size:14px;color:#666;line-height:1.7;">This page hasn't been added yet.</p>
+        <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:600;margin-bottom:20px;">Page not found</div>
+        <p style="font-family:'Inter',sans-serif;font-size:12px;line-height:var(--body-line-height);letter-spacing:var(--body-letter-spacing);color:#666;">This page hasn't been added yet.</p>
       </section>
     `;
     return;
@@ -54,9 +53,8 @@ function renderContentPage(data, slug) {
 
   el.innerHTML = `
     <section style="padding:60px 18px;max-width:800px;margin:0 auto;">
-      <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:14px;">Janedore</div>
-      <div style="font-size:28px;font-weight:600;margin-bottom:24px;">${escapeHTML(title)}</div>
-      <div style="font-size:14px;color:#333;line-height:1.8;">${content}</div>
+      <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:600;margin-bottom:24px;">${escapeHTML(title)}</div>
+      <div style="font-family:'Inter',sans-serif;font-size:12px;line-height:var(--body-line-height);letter-spacing:var(--body-letter-spacing);color:#333;">${content}</div>
     </section>
   `;
 }
