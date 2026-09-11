@@ -4,7 +4,7 @@
 .swipe-track-wrap:active { cursor: grabbing; }
 .swipe-track { display: flex; gap: 8px; transition: transform 0.4s ease; will-change: transform; }
 .swipe-track .product-card { flex: 0 0 calc(50% - 4px); }
-.swipe-track .product-card .product-img-wrap { aspect-ratio: 310 / 469; }
+.swipe-track .product-card .product-img-wrap { aspect-ratio: 4 / 5; }
 @media (min-width: 640px) { .swipe-track .product-card { flex: 0 0 calc(33.333% - 6px); } }
 @media (min-width: 1024px) { .swipe-track .product-card { flex: 0 0 calc(25% - 6px); } }
 .swipe-bars { display: flex; justify-content: flex-start; gap: 6px; margin-top: 14px; }
