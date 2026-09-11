@@ -189,7 +189,7 @@ async function renderProductPage(product) {
     </div>
     <div class="product-info">
       <h1 class="product-title-main">${product.name||''}</h1>
-      <p class="product-by-brand">By ${product.brand||'JANEDORE'}</p>
+      <p class="product-by-brand">By <span class="product-by-brand-name">${product.brand||'JANEDORE'}</span></p>
       ${hasDesc?`<div class="modal-desc expanded" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
       <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
       ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div></div>`:''}
