@@ -227,7 +227,7 @@ function buildSwipeCardInner(product) {
 }
 
 function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
-function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn ?').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
+function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
 function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
 
 async function renderProductPage(product) {
@@ -254,7 +254,7 @@ async function renderProductPage(product) {
   // Progress bars for the main image slider, mirroring the swipe-bar
   // dots used in Recently Viewed / You May Also Like / Complete the Look
   const imageBarsHtml = images.length > 1
-    `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`
+    ? `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`
     : '';
 
   DOM.productDetail.innerHTML=`
