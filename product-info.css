@@ -5,7 +5,7 @@
   padding-bottom: 40px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 }
 
 .product-badge-detail {
@@ -263,6 +263,15 @@
   text-align: center;
 }
 
+/* ============================================================
+   INFO TABS — converted from an accordion to an underlined tab
+   bar (SSENSE/COS-style): the three labels sit in one row with
+   a border under the whole row, and the active label gets a
+   dark underline instead of an expanding panel below it.
+   Only the active tab's panel is shown; switching is instant,
+   nothing stacks or grows in height.
+   ============================================================ */
+
 .info-tabs-wrap {
   display: flex;
   flex-direction: column;
@@ -270,71 +279,61 @@
   margin: 0;
 }
 
-/* Accordion buttons — all have consistent border-top as divider */
+.info-tabs-row {
+  display: flex;
+  border-bottom: 1px solid #111;
+}
+
 .info-tab-btn {
-  font-family: 'inter', 'Manrope', sans-serif;
-  font-size: 11px;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 10px;
   font-weight: 400;
-  letter-spacing: 0.01em;
-  color: #111;
+  letter-spacing: 0.03em;
+  color: #888;
   background: none;
   cursor: pointer;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   border: none;
-  border-top: 1px solid #111;
   padding: 14px 0;
+  margin-right: 24px;
   text-align: left;
   text-transform: uppercase;
+  position: relative;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
+.info-tab-btn:last-child {
+  margin-right: 0;
+}
+
 .info-tab-btn.active {
-  font-weight: 300;
-}
-.info-tab-btn:first-child {
-  border-top: none;
+  color: #111;
+  font-weight: 500;
 }
 
-/* Thin chevron arrow — always 1px */
-.info-tab-btn::after {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-right: 1px solid #111;
-  border-bottom: 1px solid #111;
-  transform: rotate(45deg);
-  margin-bottom: 2px;
-  flex-shrink: 0;
-  transition: transform 0.25s ease;
-}
 .info-tab-btn.active::after {
-  transform: rotate(-135deg);
-  margin-bottom: -4px;
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1.5px;
+  background: #111;
 }
 
-/* Accordion panels — border-bottom moved to the button above so it's consistent */
 .info-tab-panel {
-  max-height: 0;
-  overflow: hidden;
+  display: none;
   font-family: 'inter', 'Manrope', sans-serif;
   font-size: 13px;
   font-weight: 300;
   line-height: 1.6;
   letter-spacing: 0.02em;
   color: #777;
-  padding: 0;
-  border: none;
-  transition: max-height 0.35s ease, padding 0.35s ease;
+  padding: 16px 0 0;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 .info-tab-panel.active {
-  max-height: 600px;
-  padding: 12px 0;
+  display: block;
 }
 
 .modal-desc {
