@@ -164,7 +164,10 @@ function getCompleteLookProducts(currentProduct) {
 
 /* ============================================================
    SWIPE SECTION — Recently Viewed / You May Also Like / Complete the Look
-   Cards are identical in structure to productCardHome (New Arrivals)
+   Cards now use the exact same renderer as New Arrivals / Bestsellers
+   (productCardHome) so ratio, size, and behavior are identical:
+   single static image, brand + title only, no variant swatches,
+   no per-card image swipe, no price shown.
    ============================================================ */
 
 function buildSwipeSection(title, products, containerId) {
@@ -188,42 +191,11 @@ function buildSwipeSection(title, products, containerId) {
   </div>`;
 }
 
-/* Returns the FULL product-card element — same structure as productCardHome */
+/* Now simply delegates to productCardHome — the same single-image,
+   no-swatch, no-swipe card used by New Arrivals / Bestsellers. */
 function buildSwipeCardInner(product) {
   if (!product) return '';
-  const vi = S.productVariantSelections[product.id] ?? 0;
-  const allImages = getAllProductImages(product, vi);
-
-  const priceHtml = product.salePrice
-    ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>`
-    : formatPrice(product.price);
-
-  const badgeLabel = getBadgeLabel(product);
-  const badgeHtml = badgeLabel
-    ? `<div class="product-badge-wrap"><span class="badge-${product.badge === 'sold' ? 'sold' : product.salePrice ? 'sale' : 'new'}">${badgeLabel}</span></div>`
-    : "";
-
-  const slidesHtml = allImages.map(u =>
-    `<div class="product-card-slide" style="background-image:url('${u}');"></div>`
-  ).join("");
-
-  const barsHtml = allImages.length > 1
-    ? `<div class="card-slider-bars">${allImages.map((_, i) =>
-        `<div class="card-slider-bar${i === 0 ? ' active' : ''}"></div>`
-      ).join("")}</div>`
-    : '';
-
-  return `<div class="product-card${isProductSoldOut(product) ? ' sold-out' : ''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
-    <div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
-      <div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>
-      ${barsHtml}${badgeHtml}
-    </div>
-    <div class="product-meta-row">
-      <div class="product-brand-tag">${product.brand || ''}</div>
-      <div class="product-price-row"><div class="product-price">${priceHtml}</div></div>
-    </div>
-    <div class="product-name collection-name">${truncateName(product.name)}</div>
-  </div>`;
+  return productCardHome(product);
 }
 
 function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
