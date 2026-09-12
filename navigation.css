@@ -14,7 +14,7 @@
 
 #main-nav {
   height: 64px; background: #fff; display: flex; align-items: center; padding: 0 12px;
-  position: relative; z-index: 800; justify-content: space-between;
+  position: sticky; top: 0; z-index: 800; justify-content: space-between;
   border-bottom: none; max-width: 100%; box-shadow: none;
 }
 #main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link { color: #111; }
