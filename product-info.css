@@ -118,7 +118,7 @@
 .quantity-selector-unified {
   display: inline-flex;
   align-items: center;
-  border: 0.8px solid #ddd;
+  border: 1px solid #ddd;
   background: #fff;
   height: 48px;
   overflow: hidden;
@@ -156,8 +156,8 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  border-left: 0.8px solid #eee;
-  border-right: 0.8px solid #eee;
+  border-left: 0.9px solid #eee;
+  border-right: 0.9px solid #eee;
 }
 
 .add-to-bag-btn {
@@ -181,7 +181,7 @@
   height: 48px;
   background: #fff;
   color: #111;
-  border: 0.9px solid #111;
+  border: 1px solid #111;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 12px;
   font-weight: 600;
@@ -266,7 +266,7 @@
   align-items: center;
   justify-content: space-between;
   border: none;
-  border-top: 0.9px solid #111;
+  border-top: 1px solid #111;
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
