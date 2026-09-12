@@ -5,7 +5,7 @@
   padding-bottom: 40px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 3px;
 }
 
 .product-badge-detail {
@@ -20,6 +20,12 @@
   padding: 4px 8px;
   background: #111;
   color: #fff;
+}
+
+.product-name-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .product-title-main {
@@ -59,6 +65,12 @@
 }
 .price-original { color: #888; text-decoration: line-through; margin-left: 8px; font-size: 12px; }
 
+.product-size-color-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .product-variants { margin: 0; }
 .variants-row { display: flex; align-items: center; gap: 10px; }
 
@@ -97,6 +109,12 @@
   cursor: pointer;
 }
 .product-size-btn.sel { border-color: #111; border-width: 1.5px; }
+
+.product-action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
 
 /* Quantity + Add to Bag inline row */
 .qty-cart-row {
