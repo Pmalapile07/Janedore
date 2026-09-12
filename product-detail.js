@@ -1,145 +1,132 @@
-/* ============================================================
-   PRODUCT CARD BUILDERS — unified structure
-   ============================================================ */
+function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
+function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toFixed(2)}`; }
+function isProductSoldOut(product) { return (product?.stock??0)<=0; }
+function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; }
+function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
+function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'…'; }
 
-function productCard(product, compactMode = false, isCollectionPage = false) {
-  if (!product) return '';
-  if (isCollectionPage && product.id === 'janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return '';
+function getBadgeLabel(product) {
+  if (!product.badge) return '';
+  return product.badge === 'sold' ? 'SOLD OUT' : product.badge.toUpperCase();
+}
 
-  const vi = S.productVariantSelections[product.id] ?? 0;
-  const allImages = getAllProductImages(product, vi);
+function getProductImages(product, variantIndex) {
+  const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
+  const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
+  
+  const model = (variant.images?.model || []).filter(Boolean);
+  const ghost = (variant.images?.ghost || []).filter(Boolean);
+  const detail = (variant.images?.detail || []).filter(Boolean);
+  
+  const combined = [...model, ...ghost, ...detail];
+  
+  if (combined.length > 0) return combined;
+  return [PLACEHOLDER_IMAGE];
+}
+function getProductThumbnail(product, variantIndex) { return safeImage(getProductImages(product, variantIndex)[0]); }
+function getAllProductImages(product, variantIndex) {
+  const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
+  const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
+  const model = (variant.images?.model || []).filter(Boolean);
+  const ghost = (variant.images?.ghost || []).filter(Boolean);
+  const detail = (variant.images?.detail || []).filter(Boolean);
+  const all = [...model, ...ghost, ...detail];
+  return all.length ? all : [PLACEHOLDER_IMAGE];
+}
 
-  const priceHtml = product.salePrice
-    ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>`
-    : formatPrice(product.price);
+function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
 
-  const badgeLabel = getBadgeLabel(product);
-  const badgeHtml = badgeLabel
-    ? `<div class="product-badge-wrap"><span class="badge-${product.badge === 'sold' ? 'sold' : product.salePrice ? 'sale' : 'new'}">${badgeLabel}</span></div>`
-    : "";
+function selectVariant(productId, variantIndex, evt) {
+  if(evt){evt.stopPropagation();evt.preventDefault();}
+  S.productVariantSelections[productId] = variantIndex;
+  const product = PRODUCTS.find(p=>p.id===productId);
+  if(!product) return;
+  const allImages = getAllProductImages(product, variantIndex);
 
-  const slidesHtml = allImages.map(u => `<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
-  const barsHtml = allImages.length > 1
-    ? `<div class="card-slider-bars">${allImages.map((_, i) => `<div class="card-slider-bar${i === 0 ? ' active' : ''}"></div>`).join("")}</div>`
-    : '';
+  // Update product cards in grid
+  document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
 
-  const soldOutClass = isProductSoldOut(product) ? ' sold-out' : '';
-  const nameClass = isCollectionPage ? ' collection-name' : '';
-  const displayName = isCollectionPage ? truncateName(product.name) : (product.name || '');
+  // Update product detail page images
+  if(S.currentPage==="product-detail"){
+    const images = getAllProductImages(product, variantIndex);
+    const mainImg = document.getElementById("product-main-image");
+    const thumbsEl = document.getElementById("product-thumbnails");
+    const barsEl = document.getElementById("product-image-bars");
+    if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; }
+    if(thumbsEl){
+      thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('');
+    }
+    if(barsEl){
+      barsEl.innerHTML = images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('');
+    }
+    // Update swipe init
+    productImages = images;
+    currentImageIndex = 0;
+    // Update swatch selected state
+    document.querySelectorAll('.variant-swatch').forEach((s,i) => s.classList.toggle('selected', i === variantIndex));
+  }
+}
 
-  return `<div class="product-card${soldOutClass}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
-    <div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
-      <div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>
-      ${barsHtml}${badgeHtml}
-    </div>
-    ${compactMode ? '' : `
-      <div class="product-meta-row">
-        <div class="product-brand-tag">${product.brand || ''}</div>
-        <div class="product-price-row"><div class="product-price">${priceHtml}</div></div>
-      </div>
-      <div class="product-name${nameClass}">${displayName}</div>
-    `}
-  </div>`;
+function switchMainImage(index, url) {
+  const mainImage = document.getElementById('product-main-image');
+  if (mainImage) { mainImage.style.backgroundImage = `url('${url}')`; }
+  document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
+  document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === index));
+  currentImageIndex = index;
+}
+
+let productImages = [];
+let currentImageIndex = 0;
+
+function initProductSwipe(images) {
+  productImages = images;
+  currentImageIndex = 0;
+  const mainImage = document.getElementById('product-main-image');
+  if (!mainImage || !images.length) return;
+  let touchStartX = 0;
+  mainImage.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+  mainImage.addEventListener('touchend', function(e) {
+    const diff = touchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) < 40) return;
+    if (diff > 0 && currentImageIndex < productImages.length - 1) { currentImageIndex++; }
+    else if (diff < 0 && currentImageIndex > 0) { currentImageIndex--; }
+    mainImage.style.backgroundImage = `url('${productImages[currentImageIndex]}')`;
+    document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
+    document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === currentImageIndex));
+  }, {passive: true});
+}
+
+function selectProductSize(btn, size) {
+  document.querySelectorAll('.product-size-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  S.selectedSize = size;
+}
+
+function changeQuantity(delta) {
+  S.productQuantity = Math.max(1, (S.productQuantity || 1) + delta);
+  const el = document.getElementById('product-qty-value');
+  if (el) el.textContent = S.productQuantity;
+}
+
+function productCard(product, compactMode=false, isCollectionPage=false) {
+  if(!product) return ''; if(isCollectionPage && product.id === 'janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return '';
+  const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
+  const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
+  const badgeLabel = getBadgeLabel(product); const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
+  const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+  const soldOutClass = isProductSoldOut(product) ? ' sold-out' : ''; const nameClass = isCollectionPage ? ' collection-name' : ''; const displayName = isCollectionPage ? truncateName(product.name) : (product.name || '');
+  return `<div class="product-card${soldOutClass}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')"><div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')"><div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>${barsHtml}${badgeHtml}</div>${compactMode ? '' : `<div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div></div></div><div class="product-name${nameClass}">${displayName}</div>`}</div>`;
 }
 
 function productCardHome(product) {
-  if (!product) return '';
-  const vi = S.productVariantSelections[product.id] ?? 0;
-  const allImages = getAllProductImages(product, vi);
-
-  const priceHtml = product.salePrice
-    ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>`
-    : formatPrice(product.price);
-
-  const badgeLabel = getBadgeLabel(product);
-  const badgeHtml = badgeLabel
-    ? `<div class="product-badge-wrap"><span class="badge-${product.badge === 'sold' ? 'sold' : product.salePrice ? 'sale' : 'new'}">${badgeLabel}</span></div>`
-    : "";
-
-  const slidesHtml = allImages.map(u => `<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
-  const barsHtml = allImages.length > 1
-    ? `<div class="card-slider-bars">${allImages.map((_, i) => `<div class="card-slider-bar${i === 0 ? ' active' : ''}"></div>`).join("")}</div>`
-    : '';
-
-  return `<div class="product-card${isProductSoldOut(product) ? ' sold-out' : ''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
-    <div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
-      <div class="product-card-slides" id="card-slides-home-${product.id}">${slidesHtml}</div>
-      ${barsHtml}${badgeHtml}
-    </div>
-    <div class="product-meta-row">
-      <div class="product-brand-tag">${product.brand || ''}</div>
-      <div class="product-price-row"><div class="product-price">${priceHtml}</div></div>
-    </div>
-    <div class="product-name collection-name">${truncateName(product.name)}</div>
-  </div>`;
+  if(!product) return ''; const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
+  const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
+  const badgeLabel = getBadgeLabel(product); const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
+  const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+  return `<div class="product-card${isProductSoldOut(product)?' sold-out':''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')"><div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')"><div class="product-card-slides" id="card-slides-home-${product.id}">${slidesHtml}</div>${barsHtml}${badgeHtml}</div><div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div></div></div><div class="product-name collection-name">${truncateName(product.name)}</div></div>`;
 }
 
-/* ============================================================
-   SWIPE SECTION (used by Recently Viewed, You May Also Like, etc.)
-   ============================================================ */
-
-function buildSwipeSection(title, products, containerId) {
-  const id = containerId || `swipe-${Date.now()}`;
-  const cards = products.map(p => buildSwipeCardInner(p)).join('');
-  const perView = window.innerWidth >= 1024 ? 4 : window.innerWidth >= 640 ? 3 : 2;
-  const maxIdx = Math.max(0, products.length - perView);
-  const bars = Array.from({ length: maxIdx + 1 }, (_, i) =>
-    `<div class="swipe-bar${i === 0 ? ' active' : ''}" onclick="goSwipe('${id}',${i})"></div>`
-  ).join('');
-
-  return `<div class="swipe-section">
-    <div class="swipe-section-title">${title}</div>
-    <div class="swipe-track-wrap" id="wrap-${id}"
-         ontouchstart="swipeTouchStart(event,'${id}')"
-         ontouchend="swipeTouchEnd(event,'${id}')"
-         onmousedown="swipeMouseDown(event,'${id}')">
-      <div class="swipe-track" id="track-${id}">${cards}</div>
-    </div>
-    <div class="swipe-bars" id="bars-${id}">${bars}</div>
-  </div>`;
-}
-
-/* Returns the FULL card markup (not just inner) so it matches productCardHome */
-function buildSwipeCardInner(product) {
-  if (!product) return '';
-  const vi = S.productVariantSelections[product.id] ?? 0;
-  const allImages = getAllProductImages(product, vi);
-
-  const priceHtml = product.salePrice
-    ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>`
-    : formatPrice(product.price);
-
-  const badgeLabel = getBadgeLabel(product);
-  const badgeHtml = badgeLabel
-    ? `<div class="product-badge-wrap"><span class="badge-${product.badge === 'sold' ? 'sold' : product.salePrice ? 'sale' : 'new'}">${badgeLabel}</span></div>`
-    : "";
-
-  const slidesHtml = allImages.map(u => `<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
-  const barsHtml = allImages.length > 1
-    ? `<div class="card-slider-bars">${allImages.map((_, i) => `<div class="card-slider-bar${i === 0 ? ' active' : ''}"></div>`).join("")}</div>`
-    : '';
-
-  return `<div class="product-card${isProductSoldOut(product) ? ' sold-out' : ''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
-    <div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
-      <div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>
-      ${barsHtml}${badgeHtml}
-    </div>
-    <div class="product-meta-row">
-      <div class="product-brand-tag">${product.brand || ''}</div>
-      <div class="product-price-row"><div class="product-price">${priceHtml}</div></div>
-    </div>
-    <div class="product-name collection-name">${truncateName(product.name)}</div>
-  </div>`;
-}
-
-/* ============================================================
-   CARD SWIPE (image swipe within a single card)
-   ============================================================ */
-
-function cardTouchStart(e, productId) {
-  S.cardTouchStartX[productId] = e.touches[0].clientX;
-}
-
+function cardTouchStart(e, productId) { S.cardTouchStartX[productId] = e.touches[0].clientX; }
 function cardTouchEnd(e, productId) {
   const startX = S.cardTouchStartX[productId];
   if (!startX) return;
@@ -165,59 +152,151 @@ function cardTouchEnd(e, productId) {
   });
 
   const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
-  if (card) card.querySelectorAll(".card-slider-bar").forEach((d, i) => d.classList.toggle("active", i === nxt));
+  if (card) card.querySelectorAll(".card-slider-bar").forEach((d, i) =>
+    d.classList.toggle("active", i === nxt));
+}
+
+function getCompleteLookProducts(currentProduct) {
+  if (!currentProduct) return []; const active = PRODUCTS.filter(p => p.status === 'active' && p.id !== currentProduct.id); const pouch = active.find(p => p.id === 'janedore-leather-pouch'); const clothing = active.filter(p => ['dresses','tops','bottoms','jackets','sets'].includes(p.category)); const tops = clothing.filter(p => p.category === 'tops'), bottoms = clothing.filter(p => p.category === 'bottoms'); const dresses = clothing.filter(p => p.category === 'dresses'), jewelry = active.filter(p => p.category === 'jewelry'); const bags = active.filter(p => p.category === 'bags' && p.id !== 'janedore-leather-pouch'); const sunglasses = active.filter(p => p.category === 'sunglasses'), parfum = active.filter(p => p.category === 'parfum'); let s = []; const cat = currentProduct.category;
+  if (cat === 'sunglasses') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); if (s.length < 3) s = s.concat(bottoms.slice(0,1)); } else if (['tops','bottoms','dresses','jackets','sets'].includes(cat)) { if (cat === 'tops') { s = s.concat(bottoms.slice(0,1)); s = s.concat(jewelry.slice(0,1)); if (pouch) s.push(pouch); } else if (cat === 'bottoms') { s = s.concat(tops.slice(0,2)); s = s.concat(jewelry.slice(0,1)); } else if (cat === 'dresses') { s = s.concat(jewelry.slice(0,2)); } else { s = s.concat(tops.slice(0,1)); s = s.concat(bottoms.slice(0,1)); } if (s.length < 4) s = s.concat(bags.slice(0,1)); } else if (cat === 'parfum') { s = s.concat(clothing.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); } else if (cat === 'bags') { s = s.concat(jewelry.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); if (pouch && currentProduct.id !== 'janedore-leather-pouch') s.push(pouch); } else if (cat === 'jewelry') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); }
+  return [...new Set(s)].slice(0,6);
 }
 
 /* ============================================================
-   VARIANT SELECT (updates all card instances, incl. swipe sections)
+   SWIPE SECTION — Recently Viewed / You May Also Like / Complete the Look
+   Cards are identical in structure to productCardHome (New Arrivals)
    ============================================================ */
 
-function selectVariant(productId, variantIndex, evt) {
-  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
-  S.productVariantSelections[productId] = variantIndex;
+function buildSwipeSection(title, products, containerId) {
+  const id = containerId || `swipe-${Date.now()}`;
+  const cards = products.map(p => buildSwipeCardInner(p)).join('');
+  const perView = window.innerWidth >= 1024 ? 4 : window.innerWidth >= 640 ? 3 : 2;
+  const maxIdx = Math.max(0, products.length - perView);
+  const bars = Array.from({ length: maxIdx + 1 }, (_, i) =>
+    `<div class="swipe-bar${i === 0 ? ' active' : ''}" onclick="goSwipe('${id}',${i})"></div>`
+  ).join('');
 
-  const product = PRODUCTS.find(p => p.id === productId);
-  if (!product) return;
-  const allImages = getAllProductImages(product, variantIndex);
+  return `<div class="swipe-section">
+    <div class="swipe-section-title">${title}</div>
+    <div class="swipe-track-wrap" id="wrap-${id}"
+         ontouchstart="swipeTouchStart(event,'${id}')"
+         ontouchend="swipeTouchEnd(event,'${id}')"
+         onmousedown="swipeMouseDown(event,'${id}')">
+      <div class="swipe-track" id="track-${id}">${cards}</div>
+    </div>
+    <div class="swipe-bars" id="bars-${id}">${bars}</div>
+  </div>`;
+}
 
-  // Update product cards (grid + home + swipe sections)
-  document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card => {
-    const slidesEl = card.querySelector(".product-card-slides");
-    if (slidesEl) {
-      slidesEl.innerHTML = allImages.map(u => `<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join("");
-      slidesEl.style.transform = "translateX(0)";
-    }
-    const barsEl = card.querySelector(".card-slider-bars");
-    if (barsEl) {
-      barsEl.innerHTML = allImages.map((_, i) => `<div class="card-slider-bar${i === 0 ? ' active' : ''}"></div>`).join("");
-    }
-    S.cardSlideIndex[productId] = 0;
-  });
+/* Returns the FULL product-card element — same structure as productCardHome */
+function buildSwipeCardInner(product) {
+  if (!product) return '';
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const allImages = getAllProductImages(product, vi);
 
-  // Update product detail page images
-  if (S.currentPage === "product-detail") {
-    const images = getAllProductImages(product, variantIndex);
-    const mainImg = document.getElementById("product-main-image");
-    const thumbsEl = document.getElementById("product-thumbnails");
-    const barsEl = document.getElementById("product-image-bars");
+  const priceHtml = product.salePrice
+    ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>`
+    : formatPrice(product.price);
 
-    if (mainImg) { mainImg.style.backgroundImage = `url('${images[0]}')`; }
+  const badgeLabel = getBadgeLabel(product);
+  const badgeHtml = badgeLabel
+    ? `<div class="product-badge-wrap"><span class="badge-${product.badge === 'sold' ? 'sold' : product.salePrice ? 'sale' : 'new'}">${badgeLabel}</span></div>`
+    : "";
 
-    if (thumbsEl) {
-      thumbsEl.innerHTML = images.map((u, i) =>
-        `<div class="product-thumbnail${i === 0 ? ' active' : ''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g, "&#39;")}')"></div>`
-      ).join('');
-    }
+  const slidesHtml = allImages.map(u =>
+    `<div class="product-card-slide" style="background-image:url('${u}');"></div>`
+  ).join("");
 
-    if (barsEl) {
-      barsEl.innerHTML = images.map((u, i) =>
-        `<div class="swipe-bar${i === 0 ? ' active' : ''}" onclick="switchMainImage(${i},'${u.replace(/'/g, "&#39;")}')"></div>`
-      ).join('');
-    }
+  const barsHtml = allImages.length > 1
+    ? `<div class="card-slider-bars">${allImages.map((_, i) =>
+        `<div class="card-slider-bar${i === 0 ? ' active' : ''}"></div>`
+      ).join("")}</div>`
+    : '';
 
-    productImages = images;
-    currentImageIndex = 0;
+  return `<div class="product-card${isProductSoldOut(product) ? ' sold-out' : ''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')">
+    <div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')">
+      <div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>
+      ${barsHtml}${badgeHtml}
+    </div>
+    <div class="product-meta-row">
+      <div class="product-brand-tag">${product.brand || ''}</div>
+      <div class="product-price-row"><div class="product-price">${priceHtml}</div></div>
+    </div>
+    <div class="product-name collection-name">${truncateName(product.name)}</div>
+  </div>`;
+}
 
-    document.querySelectorAll('.variant-swatch').forEach((s, i) => s.classList.toggle('selected', i === variantIndex));
+function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
+function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn ?').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
+function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
+
+async function renderProductPage(product) {
+  document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null; S.productQuantity=1;
+  if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
+  showLoading(DOM.productDetail);
+
+  // FIX: ensure variant selection is initialized before rendering
+  if(S.productVariantSelections[product.id] === undefined) {
+    S.productVariantSelections[product.id] = 0;
   }
+
+  const vi=S.productVariantSelections[product.id]; const images=getAllProductImages(product,vi); const soldOut=isProductSoldOut(product);
+  const isPreorder=product.badge==='pre-order';
+  const variants=product.variants||[]; const sizes=product.sizes||[];
+  const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
+  const badgeLabel=getBadgeLabel(product);
+  const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildSwipeSection('You May Also Like',related,`related-${product.id}`):'';
+  const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildSwipeSection('Complete the Look',ctl,`ctl-${product.id}`):'';
+  const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
+  const reviews=await getProductReviews(product.id); const reviewsHtml=reviews.length?reviews.map(r=>`<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text||'No comment'}<br><small style="color:#aaa;">${r.name||'Anonymous'} · ${r.country||'Unknown'} · ${r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString():'Recently'}</small></div>`).join(''):'<p class="no-reviews">No reviews yet.</p>';
+  const hasDesc=product.description&&product.description.length>0;
+
+  // Progress bars for the main image slider, mirroring the swipe-bar
+  // dots used in Recently Viewed / You May Also Like / Complete the Look
+  const imageBarsHtml = images.length > 1
+    `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`
+    : '';
+
+  DOM.productDetail.innerHTML=`
+    <div class="product-slider" id="product-slider">
+      <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');">
+        ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
+      </div>
+      ${imageBarsHtml}
+      <div class="product-thumbnails" id="product-thumbnails">
+        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}
+      </div>
+    </div>
+    <div class="product-info">
+      <h1 class="product-title-main">${product.name||''}</h1>
+      <p class="product-by-brand">By <span class="product-by-brand-name">${product.brand||'JANEDORE'}</span></p>
+      ${hasDesc?`<div class="modal-desc expanded" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
+      <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+      ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div></div>`:''}
+      ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
+      <div class="qty-cart-row">
+        <div class="quantity-selector-unified"><button class="quantity-selector-btn" onclick="changeQuantity(-1)">−</button><span class="quantity-selector-value" id="product-qty-value">1</span><button class="quantity-selector-btn" onclick="changeQuantity(1)">+</button></div>
+        <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Bag')}</button>
+      </div>
+      <button class="add-to-wishlist-btn" onclick="addToWishlist('${product.id}')">Add to Wishlist</button>
+      <div class="info-tabs-wrap">
+        <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
+        <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
+        <button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Measurements</button>
+        <div class="info-tab-panel" data-tab="measurements"><p>${product.measurements||'No measurements available.'}</p></div>
+        <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
+        <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
+      </div>
+    </div>
+    <div style="max-width:720px;margin:0 auto;padding:0 12px;">
+      <div class="ai-disclaimer-notice"><span>*</span><p>Select imagery may include AI-assisted production.<br><strong>Product accuracy remains a priority.</strong></p></div>
+      ${ctlSection}${relatedSection}
+      <div class="reviews-section"><div class="reviews-title">Reviews</div>${reviewsHtml}<button class="write-review-btn" onclick="openReviewModal()">Write a Review</button></div>
+      ${rvSection}
+    </div>
+    <footer id="product-footer"></footer>`;
+  buildFooter("product-footer");
+  if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
+  window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
+  setTimeout(() => initProductSwipe(images), 100);
 }
