@@ -270,6 +270,8 @@
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 .info-tab-btn.active {
   font-weight: 300;
@@ -309,6 +311,8 @@
   padding: 0;
   border: none;
   transition: max-height 0.35s ease, padding 0.35s ease;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 .info-tab-panel.active {
   max-height: 600px;
