@@ -173,21 +173,18 @@ function getCompleteLookProducts(currentProduct) {
 function buildSwipeSection(title, products, containerId) {
   const id = containerId || `swipe-${Date.now()}`;
   const cards = products.map(p => buildSwipeCardInner(p)).join('');
-  const perView = window.innerWidth >= 1024 ? 4 : window.innerWidth >= 640 ? 3 : 2;
-  const maxIdx = Math.max(0, products.length - perView);
-  const bars = Array.from({ length: maxIdx + 1 }, (_, i) =>
-    `<div class="swipe-bar${i === 0 ? ' active' : ''}" onclick="goSwipe('${id}',${i})"></div>`
-  ).join('');
 
+  // Uses native browser scroll + scroll-snap — the same mechanism
+  // #arrivals-grid (New Arrivals / Bestsellers) already uses. The old
+  // custom drag system (swipeTouchStart/swipeTouchEnd/swipeMouseDown/
+  // goSwipe) called functions that were never defined anywhere in the
+  // codebase, which is why swiping felt stuck. Native scroll needs no
+  // JS at all, so there's nothing left to break.
   return `<div class="swipe-section">
     <div class="swipe-section-title">${title}</div>
-    <div class="swipe-track-wrap" id="wrap-${id}"
-         ontouchstart="swipeTouchStart(event,'${id}')"
-         ontouchend="swipeTouchEnd(event,'${id}')"
-         onmousedown="swipeMouseDown(event,'${id}')">
+    <div class="swipe-track-wrap" id="wrap-${id}">
       <div class="swipe-track" id="track-${id}">${cards}</div>
     </div>
-    <div class="swipe-bars" id="bars-${id}">${bars}</div>
   </div>`;
 }
 
@@ -269,6 +266,6 @@ async function renderProductPage(product) {
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer");
   if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
-  window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks,50);
+  window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled();
   setTimeout(() => initProductSwipe(images), 100);
 }
