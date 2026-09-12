@@ -5,7 +5,7 @@
   padding-bottom: 40px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 32px;
 }
 
 .product-badge-detail {
