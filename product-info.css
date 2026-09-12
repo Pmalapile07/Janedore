@@ -23,7 +23,7 @@
 }
 
 .product-title-main {
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 400;
   color: #111;
@@ -34,7 +34,7 @@
 }
 
 .product-by-brand {
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 13px;
   font-weight: 400;
   color: #111;
@@ -42,13 +42,16 @@
 }
 
 .product-by-brand-name {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: #111;
 }
 
 .product-price-main {
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 14px;
   font-weight: 400;
   color: #111;
@@ -66,14 +69,14 @@
   display: inline-block;
   cursor: pointer;
   position: relative;
-  border: 1px solid #ddd;
+  border: 2px solid #ddd;
 }
 .variant-swatch.selected { border-color: #111; border-width: 2px; }
 .variant-plus { font-size: 10px; color: #888; margin-left: 4px; }
 
 .product-sizes { margin: 0; }
 .sizes-label {
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.02em;
@@ -87,7 +90,7 @@
   height: 40px;
   border: 0.8px solid #ddd;
   background: #fff;
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 500;
   color: #111;
@@ -144,7 +147,7 @@
 .quantity-selector-value {
   min-width: 40px;
   text-align: center;
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -163,7 +166,7 @@
   background: #111;
   color: #fff;
   border: none;
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -178,7 +181,7 @@
   height: 48px;
   background: #fff;
   color: #111;
-  border: 1px solid #111;
+  border: 2px solid #111;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 12px;
   font-weight: 600;
@@ -226,14 +229,14 @@
 .size-guide-labels {
   display: flex;
   justify-content: space-between;
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 10px;
   font-weight: 300;
   color: #111;
   letter-spacing: 0.02em;
 }
 .size-guide-disclaimer {
-  font-family: 'Inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 10px;
   font-weight: 300;
   color: #888;
@@ -251,8 +254,8 @@
 
 /* Accordion buttons — all have consistent border-top as divider */
 .info-tab-btn {
-  font-family: 'Inter', 'Manrope', sans-serif;
-  font-size: 12px;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 10px;
   font-weight: 300;
   letter-spacing: 0.03em;
   color: #111;
@@ -263,7 +266,7 @@
   align-items: center;
   justify-content: space-between;
   border: none;
-  border-top: 1px solid #111;
+  border-top: 2px solid #111;
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
@@ -297,11 +300,12 @@
 .info-tab-panel {
   max-height: 0;
   overflow: hidden;
-  font-family: 'Inter', 'Manrope', sans-serif;
-  font-size: 10px;
+  font-family: 'inter', 'Manrope', sans-serif;
+  font-size: 13px;
   font-weight: 300;
   line-height: 1.6;
-  color: #111;
+  letter-spacing: 0.02em;
+  color: #777;
   padding: 0;
   border: none;
   transition: max-height 0.35s ease, padding 0.35s ease;
