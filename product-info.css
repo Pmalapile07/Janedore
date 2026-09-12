@@ -69,9 +69,9 @@
   display: inline-block;
   cursor: pointer;
   position: relative;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
 }
-.variant-swatch.selected { border-color: #111; border-width: 2px; }
+.variant-swatch.selected { border-color: #111; border-width: 1px; }
 .variant-plus { font-size: 10px; color: #888; margin-left: 4px; }
 
 .product-sizes { margin: 0; }
@@ -181,7 +181,7 @@
   height: 48px;
   background: #fff;
   color: #111;
-  border: 2px solid #111;
+  border: 1px solid #111;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 12px;
   font-weight: 600;
@@ -266,7 +266,7 @@
   align-items: center;
   justify-content: space-between;
   border: none;
-  border-top: 2px solid #111;
+  border-top: 1px solid #111;
   padding: 14px 0;
   text-align: left;
   text-transform: uppercase;
