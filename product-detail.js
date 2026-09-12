@@ -217,7 +217,6 @@ async function renderProductPage(product) {
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildSwipeSection('You May Also Like',related,`related-${product.id}`):'';
   const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildSwipeSection('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
-  const reviews=await getProductReviews(product.id); const reviewsHtml=reviews.length?reviews.map(r=>`<div style="font-size:12px;font-weight:300;color:#555;margin-bottom:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} — ${r.text||'No comment'}<br><small style="color:#aaa;">${r.name||'Anonymous'} · ${r.country||'Unknown'} · ${r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString():'Recently'}</small></div>`).join(''):'<p class="no-reviews">No reviews yet.</p>';
   const hasDesc=product.description&&product.description.length>0;
 
   // Progress bars for the main image slider, mirroring the swipe-bar
@@ -258,9 +257,7 @@ async function renderProductPage(product) {
       </div>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0 12px;">
-      <div class="ai-disclaimer-notice"><span>*</span><p>Select imagery may include AI-assisted production.<br><strong>Product accuracy remains a priority.</strong></p></div>
       ${ctlSection}${relatedSection}
-      <div class="reviews-section"><div class="reviews-title">Reviews</div>${reviewsHtml}<button class="write-review-btn" onclick="openReviewModal()">Write a Review</button></div>
       ${rvSection}
     </div>
     <footer id="product-footer"></footer>`;
