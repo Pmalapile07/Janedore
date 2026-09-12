@@ -15,27 +15,23 @@
 }
 
 .swipe-track-wrap {
-  overflow: hidden;
-  touch-action: pan-y pinch-zoom;
-  cursor: grab;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
-
-.swipe-track-wrap:active {
-  cursor: grabbing;
-}
+.swipe-track-wrap::-webkit-scrollbar { display: none; }
 
 .swipe-track {
   display: flex;
   gap: 9px;
-  transition: transform 0.4s ease;
-  will-change: transform;
 }
 
 .swipe-track .product-card {
   flex: 0 0 auto;
   width: 55vw;
   max-width: 310px;
-  min-width: 0;
+  scroll-snap-align: start;
 }
 
 @media (min-width: 768px) {
