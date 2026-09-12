@@ -33,6 +33,7 @@
 
 .swipe-track .product-card {
   flex: 0 0 calc(46% - 5px);
+  min-width: 0;
 }
 
 .swipe-track .product-card .product-img-wrap {
@@ -40,10 +41,19 @@
   overflow: hidden;
 }
 
-.swipe-track .product-card .product-img-wrap img {
+.swipe-track .product-card .product-card-slides {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  display: flex;
+}
+
+.swipe-track .product-card .product-card-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
 }
 
 @media (min-width: 640px) {
