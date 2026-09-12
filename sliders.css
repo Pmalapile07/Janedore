@@ -26,18 +26,20 @@
 
 .swipe-track {
   display: flex;
-  gap: 8px;
+  gap: 9px;
   transition: transform 0.4s ease;
   will-change: transform;
 }
 
 .swipe-track .product-card {
-  flex: 0 0 calc(44% - 4px);
+  flex: 0 0 auto;
+  width: 55vw;
+  max-width: 310px;
   min-width: 0;
 }
 
 .swipe-track .product-card .product-img-wrap {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 310 / 469;
   overflow: hidden;
 }
 
@@ -54,15 +56,10 @@
   background-size: cover;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .swipe-track .product-card {
-    flex: 0 0 calc(33.333% - 6px);
-  }
-}
-
-@media (min-width: 1024px) {
-  .swipe-track .product-card {
-    flex: 0 0 calc(25% - 6px);
+    width: 30vw;
+    max-width: 310px;
   }
 }
 
