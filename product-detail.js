@@ -254,11 +254,13 @@ async function renderProductPage(product) {
         <button class="add-to-wishlist-btn" onclick="addToWishlist('${product.id}')">Add to Wishlist</button>
       </div>
       <div class="info-tabs-wrap">
-        <button class="info-tab-btn" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
-        <div class="info-tab-panel" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
-        <button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Measurements</button>
+        <div class="info-tabs-row">
+          <button class="info-tab-btn active" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
+          <button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Measurements</button>
+          <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
+        </div>
+        <div class="info-tab-panel active" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
         <div class="info-tab-panel" data-tab="measurements"><p>${product.measurements||'No measurements available.'}</p></div>
-        <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
         <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
       </div>
     </div>
