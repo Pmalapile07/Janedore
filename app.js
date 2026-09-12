@@ -46,6 +46,30 @@ const S = {
   cart:[], wishlist:[], currentPage:"home", currentCategoryPage:null, selectedSize:null, productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2, filter:{cat:"all",size:"all",vendor:null,onSale:false,inStock:false}, catFilter:{cat:"all",size:"all",vendor:null,onSale:false,inStock:false}, sortBy:"featured", campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null, currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, productInfoTab:'description', stickyExtended:false, stickyWishHidden:false, activeSortTab:null
 };
 
+/* ============================================================
+   RECENTLY VIEWED PERSISTENCE — same pattern as cart's
+   loadCartFromStorage/saveCartToStorage (see cart.js). Only
+   product IDs are persisted; the full product objects are
+   rehydrated from PRODUCTS on load so stale prices/images/stock
+   never leak in and deleted products are dropped silently.
+   ============================================================ */
+
+function loadRecentlyViewedFromStorage() {
+  try {
+    const saved = localStorage.getItem('janedore_recently_viewed');
+    if (saved) {
+      const ids = JSON.parse(saved);
+      S.recentlyViewed = ids.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+    }
+  } catch(e) { S.recentlyViewed = []; }
+}
+
+function saveRecentlyViewedToStorage() {
+  try {
+    localStorage.setItem('janedore_recently_viewed', JSON.stringify(S.recentlyViewed.map(p => p.id)));
+  } catch(e) {}
+}
+
 // Every non-home, non-product, non-collection page now gets a clean
 // root-level URL instead of a hash. Maps internal page key -> URL segment
 // (most are the same string; 'products' is an exception since the URL
@@ -177,6 +201,7 @@ async function init() {
   updateBadges();
   PRODUCTS = await fetchProducts();
   cleanCartOrphans();
+  loadRecentlyViewedFromStorage();
   loadWishlistFromStorage();
   updateBadges();
   buildArrivals();
@@ -339,7 +364,7 @@ function navigateTo(page, replaceUrl) {
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
   if(page==="checkout"){ navigateToCheckout(replaceUrl); }
   if(page==="editorial") ensureNavScrolled();
-  updateChatVisibility(); setTimeout(refreshSwipeTracks, 50);
+  updateChatVisibility();
 }
 
 function navigateToCategory(cat, replaceUrl) {
@@ -353,7 +378,7 @@ function navigateToCategory(cat, replaceUrl) {
   S.activeSortTab = cat;
   renderCollectionSortingTabs();
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
-  renderCategoryProducts(); window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled(); setTimeout(refreshSwipeTracks, 50); updateChatVisibility();
+  renderCategoryProducts(); window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled(); updateChatVisibility();
 }
 
 function goToProduct(productId, replaceUrl) {
@@ -362,6 +387,7 @@ function goToProduct(productId, replaceUrl) {
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   updateProductUrl(product, replaceUrl);
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
+  saveRecentlyViewedToStorage();
   if (S.currentPage === 'category' || S.currentPage === 'products') S.previousCollectionPage = S.currentCategoryPage || 'products';
   S.currentReviewProductId = productId;
   S.stickyWishHidden = false;
