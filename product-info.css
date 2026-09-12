@@ -5,7 +5,7 @@
   padding-bottom: 40px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 14px;
 }
 
 .product-badge-detail {
@@ -25,7 +25,7 @@
 .product-name-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .product-title-main {
@@ -68,7 +68,7 @@
 .product-size-color-group {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 10px;
 }
 
 .product-variants { margin: 0; }
@@ -113,7 +113,7 @@
 .product-action-group {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 10px;
 }
 
 /* Quantity + Add to Bag inline row */
