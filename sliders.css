@@ -1,3 +1,7 @@
+/* ============================================================
+   SWIPE SECTION (Recently Viewed, You May Also Like, Complete the Look)
+   ============================================================ */
+
 .swipe-section {
   position: relative;
   padding: 32px 0;
@@ -35,17 +39,24 @@
   flex: 0 0 auto;
   width: 55vw;
   max-width: 310px;
+  position: relative;
+  cursor: pointer;
 }
 
 .swipe-track .product-card .product-img-wrap {
+  position: relative;
   aspect-ratio: 310 / 469;
   width: 100%;
+  overflow: hidden;
+  background: #f5f5f5;
 }
 
 .swipe-track .product-card .product-card-slides {
   display: flex;
   width: 100%;
   height: 100%;
+  transition: transform 0.4s ease;
+  will-change: transform;
 }
 
 .swipe-track .product-card .product-card-slide {
@@ -54,7 +65,105 @@
   height: 100%;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 }
+
+/* Meta row: brand + price */
+.swipe-track .product-card .product-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.swipe-track .product-card .product-brand-tag {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  text-transform: uppercase;
+  color: #111;
+}
+
+.swipe-track .product-card .product-price {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  color: #111;
+}
+
+.swipe-track .product-card .product-price-sale {
+  color: #c00;
+  margin-right: 6px;
+}
+
+.swipe-track .product-card .product-price-original {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.swipe-track .product-card .product-name {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+  color: #555;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* Badges */
+.swipe-track .product-card .product-badge-wrap {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+.swipe-track .product-card .badge-new,
+.swipe-track .product-card .badge-sale,
+.swipe-track .product-card .badge-sold {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  background: #111;
+  color: #fff;
+  display: inline-block;
+}
+
+.swipe-track .product-card .badge-sale { background: #c00; }
+.swipe-track .product-card .badge-sold { background: #888; }
+
+/* Sold out treatment */
+.swipe-track .product-card.sold-out .product-img-wrap { opacity: 0.6; }
+
+/* Per-card image progress bars */
+.swipe-track .product-card .card-slider-bars {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.swipe-track .product-card .card-slider-bar {
+  width: 18px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: background 0.2s;
+}
+
+.swipe-track .product-card .card-slider-bar.active {
+  background: #fff;
+}
+
+/* ============================================================
+   SECTION-LEVEL BARS (below the swipe track)
+   ============================================================ */
 
 .swipe-bars {
   display: flex;
@@ -77,51 +186,110 @@
   background: #111;
 }
 
-.reviews-section,
-.recently-viewed-section {
-  padding: 32px 0;
-}
-
-.reviews-title,
-.recently-viewed-title {
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
-  text-transform: uppercase;
-  color: #111;
-  margin-bottom: 12px;
-}
-
-.recently-viewed-title {
-  margin-bottom: 16px;
-}
-
-.no-reviews {
-  font-size: var(--body-font-size);
-  font-weight: var(--body-font-weight);
-  color: #888;
-  margin-bottom: 12px;
-}
-
-.write-review-btn {
-  font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
-  text-transform: uppercase;
-  color: #555;
-  background: none;
-  padding-bottom: 2px;
-  transition: color 0.2s, border-color 0.2s;
-  cursor: pointer;
-  border: none;
-  border-bottom: 1px solid #555;
-}
-
-.write-review-btn:hover {
-  color: #111;
-  border-color: #111;
-}
-
+/* Center the product detail page bars */
 #product-image-bars {
   justify-content: center;
+}
+
+/* ============================================================
+   HOME GRID CARDS (must match swipe section aesthetic)
+   ============================================================ */
+
+.product-card .product-img-wrap {
+  position: relative;
+  aspect-ratio: 310 / 469;
+  width: 100%;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.product-card .product-card-slides {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+
+.product-card .product-card-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.product-card .product-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.product-card .product-brand-tag,
+.product-card .product-price,
+.product-card .product-name {
+  font-size: var(--ui-font-size);
+  letter-spacing: var(--ui-letter-spacing);
+  font-weight: var(--ui-font-weight);
+}
+
+.product-card .product-brand-tag,
+.product-card .product-price { color: #111; text-transform: uppercase; }
+
+.product-card .product-price-sale { color: #c00; margin-right: 6px; }
+.product-card .product-price-original { text-decoration: line-through; color: #888; }
+
+.product-card .product-name {
+  color: #555;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.product-card .product-badge-wrap {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+.product-card .badge-new,
+.product-card .badge-sale,
+.product-card .badge-sold {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  background: #111;
+  color: #fff;
+  display: inline-block;
+}
+
+.product-card .badge-sale { background: #c00; }
+.product-card .badge-sold { background: #888; }
+.product-card.sold-out .product-img-wrap { opacity: 0.6; }
+
+.product-card .card-slider-bars {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.product-card .card-slider-bar {
+  width: 18px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: background 0.2s;
+}
+
+.product-card .card-slider-bar.active {
+  background: #fff;
 }
