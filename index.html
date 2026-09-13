@@ -102,6 +102,17 @@
     .featured-brand-heading {
       margin-bottom: 14px;
     }
+
+    /* ============ HOME BRAND SPOTLIGHT ============ */
+    /* Scoped override to keep the single dynamic spotlight
+       noticeably smaller than the old hardcoded sections used
+       to be, without touching the shared .featured-brand-img
+       class other pages may still rely on. */
+    #home-brand-spotlight .featured-brand-img {
+      height: 220px;
+      background-size: cover;
+      background-position: center;
+    }
   </style>
 </head>
 <body>
@@ -222,25 +233,11 @@
     VIEW ALL
   </button>
 
-  <section class="featured-brand-section">
-    <div class="featured-brand-img" style="background-image:url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/NIRIOUS.jpeg'); background-color:#e8e4dd;">
-      <div class="featured-brand-content">
-        <div class="featured-brand-sub">Introducing</div>
-        <div class="featured-brand-heading">NIRIUS CO</div>
-        <button class="featured-brand-btn" onclick="navigateToVendor('uf1c4uBKwmCAVafjEdRL')">SHOP NOW</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="featured-brand-section">
-    <div class="featured-brand-img" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/20BB8A0D-2BBF-493E-A98C-1B00B46C74FD.png?v=1788688347'); background-color:#e8e4dd;">
-      <div class="featured-brand-content">
-        <div class="featured-brand-sub">Introducing</div>
-        <div class="featured-brand-heading">THATO</div>
-        <button class="featured-brand-btn" onclick="navigateToVendor('vendor-thato')">SHOP NOW</button>
-      </div>
-    </div>
-  </section>
+  <!-- Single dynamic brand spotlight (replaces the two hardcoded
+       featured-brand-section blocks). Filled in by
+       renderHomeBrandSpotlight() in vendors.js, which rotates
+       through your active vendors automatically. -->
+  <section id="home-brand-spotlight" class="featured-brand-section"></section>
 
   <section id="homepage-newsletter-section"></section>
   <footer id="main-footer"></footer>
