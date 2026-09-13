@@ -20,48 +20,64 @@ function renderVendorsFooter(vendors) {
 function navigateToBrandProducts(brandName) { S.saleMode = false; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; const toolbarCenter = document.getElementById("page-products").querySelector(".toolbar-center"); if(toolbarCenter) toolbarCenter.textContent = brandName.toUpperCase(); const filtered = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName); const prods = merchandiseProducts(filtered); if(DOM.allProductsGrid) { DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = prods.length ? prods.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products from this brand yet.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); } window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); updateChatVisibility(); }
 
 /* ============================================================
-   HOME BRAND SPOTLIGHT — replaces the two hardcoded
-   featured-brand-section blocks that used to live in index.html.
-   Picks one active vendor from Firestore and renders it into a
-   single #home-brand-spotlight container using the SAME existing
-   classes (.featured-brand-img / .featured-brand-content / etc.)
-   the old hardcoded sections used — no new CSS system.
+   HOME FEATURED BRANDS — SLIDER
+   Replaces the old single-spotlight renderer. Now renders EVERY
+   active vendor (excluding JANEDORE, the house's own brand) as
+   its own slide in a horizontally scrolling slider, with swipe
+   bars beneath. Clicking a slide routes to that vendor's page
+   via navigateToVendor(vendor.id).
 
-   Rotation: deterministic by day (days-since-epoch % vendor count),
-   so the spotlight changes once a day without needing any extra
-   storage or admin control, and automatically includes any new
-   vendor added to Firestore.
+   DOM contract (must exist in index.html):
+     #home-brands-slider   → slides container
+     #home-brands-progress → swipe-bar indicators
+
+   Each slide uses the same .featured-brand-* classes the old
+   hardcoded sections used, so no new CSS system is required.
+   Brand name typography is set inline to match the hero heading
+   aesthetic (Inter, weight 600, 11px, uppercase, wide tracking).
    ============================================================ */
 
-function pickSpotlightVendor(vendors) {
-  if (!vendors || !vendors.length) return null;
-  // JANEDORE is the house's own main brand, not a guest — it never
-  // belongs in the "other brands" spotlight rotation.
-  const eligible = vendors.filter(v => {
-    const name = (v.name || v.brandName || v.brand || '').toLowerCase();
+function getFeaturedBrands(vendors) {
+  if (!vendors || !vendors.length) return [];
+  // JANEDORE is the house's own main brand, not a guest.
+  return vendors.filter(v => {
+    const name = (v.name || v.brandName || v.brand || '').toLowerCase().trim();
     return name !== 'janedore';
   });
-  if (!eligible.length) return null;
-  const dayIndex = Math.floor(Date.now() / 86400000);
-  return eligible[dayIndex % eligible.length];
 }
 
 function renderHomeBrandSpotlight(vendors) {
-  const el = document.getElementById('home-brand-spotlight');
-  if (!el) return;
-  const vendor = pickSpotlightVendor(vendors);
-  if (!vendor) { el.innerHTML = ''; return; }
-  const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
-  const img = vendor.heroImageUrl || vendor.logoUrl || '';
-  const escapedName = String(name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-  el.innerHTML = `
-    <div class="featured-brand-img" style="background-image:url('${img}'); background-color:#e8e4dd;">
-      <div class="featured-brand-content">
-        <div class="featured-brand-sub">Introducing</div>
-        <div class="featured-brand-heading">${escapedName}</div>
-        <button class="featured-brand-btn" onclick="navigateToVendor('${vendor.id}')">DISCOVER BRAND</button>
-      </div>
-    </div>`;
+  const sliderEl = document.getElementById('home-brands-slider');
+  const progressEl = document.getElementById('home-brands-progress');
+  if (!sliderEl) return;
+
+  const brands = getFeaturedBrands(vendors);
+
+  if (!brands.length) {
+    sliderEl.innerHTML = '';
+    if (progressEl) progressEl.innerHTML = '';
+    return;
+  }
+
+  sliderEl.innerHTML = brands.map(vendor => {
+    const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
+    const img = vendor.heroImageUrl || vendor.logoUrl || '';
+    const escapedName = String(name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
+      <div class="featured-brand-slide" onclick="navigateToVendor('${vendor.id}')">
+        <div class="featured-brand-img" style="background-image:url('${img}'); background-color:#e8e4dd;">
+          <div class="featured-brand-content">
+            <div class="featured-brand-heading" style="font-family:'Inter',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#fff;">${escapedName}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  if (progressEl) {
+    progressEl.innerHTML = brands.map((_, i) =>
+      `<div class="swipe-bar${i === 0 ? ' active' : ''}"></div>`
+    ).join('');
+  }
 }
 
 async function initVendors() {
