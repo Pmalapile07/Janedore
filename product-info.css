@@ -265,26 +265,28 @@
 
 /* ============================================================
    INFO TABS — converted from an accordion to an underlined tab
-   bar (SSENSE/COS-style). Scoped under #page-product-detail so
-   these rules win over any same-specificity duplicate elsewhere
-   in the stylesheet load order, without using !important.
+   bar (SSENSE/COS-style): the three labels sit in one row with
+   a border under the whole row, and the active label gets a
+   dark underline instead of an expanding panel below it.
+   Only the active tab's panel is shown; switching is instant,
+   nothing stacks or grows in height.
    ============================================================ */
 
-#page-product-detail .info-tabs-wrap {
+.info-tabs-wrap {
   display: flex;
   flex-direction: column;
   width: 100%;
   margin: 0;
 }
 
-#page-product-detail .info-tabs-row {
+.info-tabs-row {
   display: flex;
   justify-content: center;
   gap: 24px;
   border-bottom: 1px solid #111;
 }
 
-#page-product-detail .info-tab-btn {
+.info-tab-btn {
   font-family: 'inter', 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 400;
@@ -294,7 +296,6 @@
   cursor: pointer;
   border: none;
   padding: 14px 0;
-  margin: 0;
   text-align: center;
   text-transform: uppercase;
   position: relative;
@@ -302,12 +303,12 @@
   text-size-adjust: 100%;
 }
 
-#page-product-detail .info-tab-btn.active {
+.info-tab-btn.active {
   color: #111;
   font-weight: 500;
 }
 
-#page-product-detail .info-tab-btn.active::after {
+.info-tab-btn.active::after {
   content: '';
   position: absolute;
   left: 0;
@@ -317,7 +318,7 @@
   background: #111;
 }
 
-#page-product-detail .info-tab-panel {
+.info-tab-panel {
   display: none;
   font-family: 'inter', 'Manrope', sans-serif;
   font-size: 13px;
@@ -329,7 +330,7 @@
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
-#page-product-detail .info-tab-panel.active {
+.info-tab-panel.active {
   display: block;
 }
 
