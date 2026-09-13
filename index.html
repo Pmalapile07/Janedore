@@ -87,9 +87,10 @@
     .featured-brand-content {
       position: absolute;
       bottom: 30px;
-      left: 30px;
-      text-align: left;
-      align-items: flex-start;
+      left: 0;
+      right: 0;
+      text-align: center;
+      align-items: center;
       padding: 0;
       justify-content: flex-end;
     }
@@ -216,21 +217,17 @@
 
   <section id="home-all-products" style="padding:24px 18px;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:500;font-size:22px;letter-spacing:0.1em;color:#111;padding:8px 0;">BESTSELLERS</div>
+      <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">BESTSELLERS</div>
       <button onclick="navigateTo('products')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
     </div>
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
-  <!-- "Who We Are" statement. Uses the same header structure, classes,
-       and spacing as the BESTSELLERS section above, left-aligned to
-       match. The paragraph is styled inline (not via .hero-subheading)
-       so it is not affected by the hero's mobile max-width override.
-       Its left and right edges line up with the heading above it. -->
-  <section id="home-manifesto" style="padding:24px 18px;">
-    <div class="home-categories-header" style="text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:500;font-size:22px;letter-spacing:0.1em;color:#111;padding:8px 0;">WHO WE ARE</div>
-    </div>
+  <!-- "Who We Are" statement — heading removed per request, paragraph
+       kept and centered. Section padding (24px 18px) is unchanged,
+       so the centered text still sits within the same left/right
+       bounds as before. -->
+  <section id="home-manifesto" style="padding:24px 18px;text-align:center;">
     <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house for independent brands with a point of view. Every label here has been chosen for how it is made, how it looks, and how long it lasts, not for how loudly it announces itself. These are pieces made to hold their own in a wardrobe built over years, not seasons. If it is on this site, it earned its place.</p>
   </section>
 
@@ -240,7 +237,7 @@
        DOM, that function returns early and nothing renders. -->
   <section id="home-categories" style="padding:24px 18px;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:500;font-size:22px;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
+      <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
     </div>
     <div class="home-categories-grid" id="home-categories-grid"></div>
     <div class="home-categories-progress" id="home-categories-progress"></div>
