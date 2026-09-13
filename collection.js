@@ -43,11 +43,15 @@ function escapeForCssUrl(url) {
 }
 
 const COLLECTION_DESCRIPTIONS = {
-  'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.', 'dresses': 'Effortless dresses that balance structure and fluidity.', 'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.', 'bottoms': 'Tailored trousers and fluid skirts with quiet intention.', 'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.', 'sets': 'Coordinated pieces designed to be worn together or styled apart.', 'bags': 'Understated accessories that complete the look without saying too much.', 'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.', 'sunglasses': 'Bold yet refined eyewear for the discerning gaze.', 'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.', 'all': 'Explore the complete edit of considered pieces, distinctive designs, and understated essentials.'
+  'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.', 'dresses': 'Effortless dresses that balance structure and fluidity.', 'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.', 'bottoms': 'Tailored trousers and fluid skirts with quiet intention.', 'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.', 'sets': 'Coordinated pieces designed to be worn together or styled apart.', 'bags': 'Understated accessories that complete the look without saying too much.', 'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.', 'sunglasses': 'Bold yet refined eyewear for the discerning gaze.', 'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.', 'all-accessories': 'Bags, jewelry, and eyewear — the details that finish the look.', 'homeware': 'Considered pieces for the home. New arrivals coming soon.', 'all': 'Explore the complete edit of considered pieces, distinctive designs, and understated essentials.'
 };
 const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
 
 const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
+// Accessories bundles bags, jewelry, and sunglasses into one browsable
+// category — mirrors the exact same grouping technique CLOTHING_CATEGORIES
+// already uses below, just for a different set of categories.
+const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses'];
 const LEATHER_POUCH_ID = 'janedore-leather-pouch';
 
 function gridTemplateFor(cols) {
@@ -138,6 +142,7 @@ function getFilteredProducts() {
 
 function getCatFilteredProducts() {
   const isAllClothing = S.currentCategoryPage === 'all-clothing';
+  const isAllAccessories = S.currentCategoryPage === 'all-accessories';
   const isAll = S.currentCategoryPage === 'all';
 
   return PRODUCTS.filter(p => {
@@ -147,6 +152,8 @@ function getCatFilteredProducts() {
 
     if (isAllClothing) {
       if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
+    } else if (isAllAccessories) {
+      if (!ACCESSORY_CATEGORIES.includes(p.category)) return false;
     } else if (!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
       return false;
     }
@@ -247,6 +254,8 @@ function updateCollectionTitle() {
     const catTitles = {
       'all': 'ALL PRODUCTS',
       'all-clothing': 'CLOTHING',
+      'all-accessories': 'ACCESSORIES',
+      'homeware': 'HOMEWARE',
       'dresses': 'DRESSES',
       'tops': 'TOPS',
       'bottoms': 'BOTTOMS',
@@ -449,13 +458,17 @@ function renderCategoryProducts() {
   else if(S.currentCategoryPage==='jewelry') cp=getCatFilteredProducts().filter(p=>p.category==='jewelry');
   else if(S.currentCategoryPage==='sunglasses') cp=getCatFilteredProducts().filter(p=>p.category==='sunglasses'||p.id===LEATHER_POUCH_ID);
   else if(S.currentCategoryPage==='all-clothing') cp=getCatFilteredProducts().filter(p=>CLOTHING_CATEGORIES.includes(p.category));
+  else if(S.currentCategoryPage==='all-accessories') cp=getCatFilteredProducts().filter(p=>ACCESSORY_CATEGORIES.includes(p.category));
+  else if(S.currentCategoryPage==='homeware') cp=getCatFilteredProducts().filter(p=>p.category==='homeware');
   else if(CLOTHING_CATEGORIES.includes(S.currentCategoryPage)) cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage);
   else if(S.currentCategoryPage==='bags') cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage&&p.id!==LEATHER_POUCH_ID);
   else cp=getCatFilteredProducts();
   let prods=merchandiseProducts(cp, S.currentCategoryPage, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.categoryProductsGrid.style.gridTemplateColumns=gridTemplateFor(S.gridColsCat);
-  DOM.categoryProductsGrid.innerHTML=expanded.map(({product, variantIndex}) => productCard(product, S.gridColsCat===3, true, variantIndex)).join("");
+  DOM.categoryProductsGrid.innerHTML = expanded.length
+    ? expanded.map(({product, variantIndex}) => productCard(product, S.gridColsCat===3, true, variantIndex)).join("")
+    : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products in this category yet.</div>';
   applyEditorialGrid(DOM.categoryProductsGrid, S.gridColsCat);
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
@@ -547,11 +560,13 @@ function renderCollectionSortingTabs() {
   let existing = page.querySelector('.collection-sorting-tabs');
   if (existing) existing.remove();
   const tabs = [
-    { label: 'View All', cat: 'all' }, { label: 'Clothing', cat: 'all-clothing' }, { label: 'Bags', cat: 'bags' }, { label: 'Jewelry', cat: 'jewelry' }, { label: 'Sunglasses', cat: 'sunglasses' }, { label: 'Scent', cat: 'parfum' }
+    { label: 'View All', cat: 'all' }, { label: 'Clothing', cat: 'all-clothing' }, { label: 'Accessories', cat: 'all-accessories' }, { label: 'Homeware', cat: 'homeware' }, { label: 'Scent', cat: 'parfum' }
   ];
   let active;
   if (S.currentPage === 'category') {
-    active = CLOTHING_CATEGORIES.includes(S.currentCategoryPage) ? 'all-clothing' : S.currentCategoryPage;
+    if (CLOTHING_CATEGORIES.includes(S.currentCategoryPage)) active = 'all-clothing';
+    else if (ACCESSORY_CATEGORIES.includes(S.currentCategoryPage)) active = 'all-accessories';
+    else active = S.currentCategoryPage;
   } else {
     active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
   }
@@ -586,7 +601,16 @@ function selectSortTab(cat) {
 
 function buildCategoriesSlider() {
   const grid = document.getElementById('home-categories-grid'); const progress = document.getElementById('home-categories-progress'); if (!grid || !progress) return;
-  const categories = [{ label:'Clothing',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287',cat:'all-clothing'},{ label:'Jewellery',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6608.png?v=1778790153',cat:'jewelry'},{ label:'Sunglasses',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/A4D53938-5246-4271-86A3-4980004734AA.png?v=1778858287',cat:'sunglasses'},{ label:'Scent',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601',cat:'parfum'},{ label:'Bags',img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703',cat:'bags'}];
+  // Reframed around universal categories (not brand-owned categories),
+  // since a single brand can sell across multiple of these. Accessories
+  // and Homeware use the same grouping this file already relies on for
+  // filtering (see ACCESSORY_CATEGORIES / CLOTHING_CATEGORIES above).
+  const categories = [
+    { label:'Clothing', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat:'all-clothing' },
+    { label:'Accessories', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat:'all-accessories' },
+    { label:'Homeware', img: PLACEHOLDER_IMAGE, cat:'homeware' },
+    { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
+  ];
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
   const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
   progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
