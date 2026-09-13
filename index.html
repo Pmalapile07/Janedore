@@ -143,8 +143,8 @@
   </div>
 </nav>
 
-<!-- COLLECTION DESCRIPTION - Shows above filter bar on collection pages -->
-
+<!-- COLLECTION DESCRIPTION - Populated dynamically by updateCollectionTitle() in collection.js -->
+<div class="collection-top-description" id="collection-top-description"></div>
 
 <!-- FILTER BAR - Separate bar below header, only shows on collection pages -->
 <div id="collection-filter-bar" class="collection-filter-bar">
@@ -235,6 +235,18 @@
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
+  <!-- "Who We Are" statement. Uses the same header structure, classes,
+       and spacing as the BESTSELLERS section above, left-aligned to
+       match. The paragraph is styled inline (not via .hero-subheading)
+       so it is not affected by the hero's mobile max-width override.
+       Its left and right edges line up with the heading above it. -->
+  <section id="home-manifesto" style="padding:24px 18px;">
+    <div class="home-categories-header" style="text-align:left;padding:0;">
+      <div class="home-categories-title" style="font-weight:900;font-size:24px;letter-spacing:0.1em;color:#111;padding:8px 0;">WHO WE ARE</div>
+    </div>
+    <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house for independent brands with a point of view. Every label here has been chosen for how it is made, how it looks, and how long it lasts, not for how loudly it announces itself. These are pieces made to hold their own in a wardrobe built over years, not seasons. If it is on this site, it earned its place.</p>
+  </section>
+
   <!-- HOME CATEGORIES SLIDER
        Containers required by buildCategoriesSlider() in collection.js.
        Without #home-categories-grid and #home-categories-progress in the
@@ -253,25 +265,11 @@
        through your active vendors automatically. -->
   <section id="home-brand-spotlight" class="featured-brand-section"></section>
 
-  <!-- "Who We Are" statement — reuses the exact same header
-       structure, classes, and spacing as the BESTSELLERS section
-       above (.home-categories-header / .home-categories-title,
-       same 24px 18px outer padding), left-aligned to match. The
-       paragraph is styled inline (not via .hero-subheading) so it
-       isn't affected by the hero's mobile max-width override. Its
-       left/right edge lines up with the heading above it exactly. -->
-  <section id="home-manifesto" style="padding:24px 18px;">
-    <div class="home-categories-header" style="text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:900;font-size:24px;letter-spacing:0.1em;color:#111;padding:8px 0;">WHO WE ARE</div>
-    </div>
-    <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">We don't care about the label on the box. We care about whether it's made well, looks distinct, and will actually last. From shoes to bedside lamps, every brand on this site has been vetted for quality and a strong identity. If it's here, it's because it passed the test.</p>
-  </section>
-
   <section id="homepage-newsletter-section"></section>
   <footer id="main-footer"></footer>
 </div>
 
-<div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic — it is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
+<div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic. It is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
 <div class="page" id="page-products">
   <div id="products-loaded"></div>
