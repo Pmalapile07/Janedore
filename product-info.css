@@ -75,8 +75,8 @@
 .variants-row { display: flex; align-items: center; gap: 10px; }
 
 .variant-swatch {
-  width: 34px;
-  height: 34px;
+  width: 24px;
+  height: 24px;
   border-radius: 0%;
   display: inline-block;
   cursor: pointer;
@@ -100,7 +100,7 @@
 .product-size-btn {
   min-width: 48px;
   height: 40px;
-  border: 0.8px solid #ddd;
+  border: none;
   background: #fff;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 11px;
@@ -108,7 +108,7 @@
   color: #111;
   cursor: pointer;
 }
-.product-size-btn.sel { border-color: #111; border-width: 1.5px; }
+.product-size-btn.sel { font-weight: 600; }
 
 .product-action-group {
   display: flex;
@@ -272,21 +272,21 @@
    nothing stacks or grows in height.
    ============================================================ */
 
-.info-tabs-wrap {
+#page-product-detail .info-tabs-wrap {
   display: flex;
   flex-direction: column;
   width: 100%;
   margin: 0;
 }
 
-.info-tabs-row {
+#page-product-detail .info-tabs-row {
   display: flex;
   justify-content: center;
   gap: 24px;
   border-bottom: 1px solid #111;
 }
 
-.info-tab-btn {
+#page-product-detail .info-tab-btn {
   font-family: 'inter', 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 400;
@@ -296,6 +296,7 @@
   cursor: pointer;
   border: none;
   padding: 14px 0;
+  margin: 0;
   text-align: center;
   text-transform: uppercase;
   position: relative;
@@ -303,22 +304,12 @@
   text-size-adjust: 100%;
 }
 
-.info-tab-btn.active {
+#page-product-detail .info-tab-btn.active {
   color: #111;
   font-weight: 500;
 }
 
-.info-tab-btn.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1.5px;
-  background: #111;
-}
-
-.info-tab-panel {
+#page-product-detail .info-tab-panel {
   display: none;
   font-family: 'inter', 'Manrope', sans-serif;
   font-size: 13px;
@@ -330,11 +321,12 @@
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
-.info-tab-panel.active {
+#page-product-detail .info-tab-panel.active {
   display: block;
 }
 
 .modal-desc {
+  font-family: 'inter', 'Manrope', sans-serif;
   font-size: 12px;
   font-weight: 300;
   line-height: 1.6;
