@@ -35,8 +35,15 @@ function navigateToBrandProducts(brandName) { S.saleMode = false; updateHash('pr
 
 function pickSpotlightVendor(vendors) {
   if (!vendors || !vendors.length) return null;
+  // JANEDORE is the house's own main brand, not a guest — it never
+  // belongs in the "other brands" spotlight rotation.
+  const eligible = vendors.filter(v => {
+    const name = (v.name || v.brandName || v.brand || '').toLowerCase();
+    return name !== 'janedore';
+  });
+  if (!eligible.length) return null;
   const dayIndex = Math.floor(Date.now() / 86400000);
-  return vendors[dayIndex % vendors.length];
+  return eligible[dayIndex % eligible.length];
 }
 
 function renderHomeBrandSpotlight(vendors) {
