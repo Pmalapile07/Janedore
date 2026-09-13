@@ -59,7 +59,7 @@ function renderHomeBrandSpotlight(vendors) {
       <div class="featured-brand-content">
         <div class="featured-brand-sub">Introducing</div>
         <div class="featured-brand-heading">${escapedName}</div>
-        <button class="featured-brand-btn" onclick="navigateToVendor('${vendor.id}')">SHOP NOW</button>
+        <button class="featured-brand-btn" onclick="navigateToVendor('${vendor.id}')">DISCOVER BRAND</button>
       </div>
     </div>`;
 }
