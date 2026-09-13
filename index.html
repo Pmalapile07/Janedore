@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>JANEDORE | Curated Fashion</title>
   <link rel="icon" type="image/png" href="Janedore.png">
-  <link rel="shortcut icon" href="Janedore.png">
+  <link rel="shortcut icon" type="image/png" href="Janedore.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
@@ -67,6 +67,13 @@
       .hero-subheading {
         font-size: 12px !important;
         max-width: 320px !important;
+      }
+
+      /* Same 12px mobile size as the hero subheading, but scoped
+         by id (not the shared .hero-subheading class) so it never
+         inherits that class's max-width:320px override. */
+      #home-manifesto-text {
+        font-size: 12px !important;
       }
     }
 
@@ -230,6 +237,18 @@
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
+  <!-- HOME CATEGORIES SLIDER
+       Containers required by buildCategoriesSlider() in collection.js.
+       Without #home-categories-grid and #home-categories-progress in the
+       DOM, that function returns early and nothing renders. -->
+  <section id="home-categories" style="padding:24px 18px;">
+    <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
+      <div class="home-categories-title" style="font-weight:900;font-size:24px;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
+    </div>
+    <div class="home-categories-grid" id="home-categories-grid"></div>
+    <div class="home-categories-progress" id="home-categories-progress"></div>
+  </section>
+
   <!-- Single dynamic brand spotlight (replaces the two hardcoded
        featured-brand-section blocks). Filled in by
        renderHomeBrandSpotlight() in vendors.js, which rotates
@@ -247,7 +266,7 @@
     <div class="home-categories-header" style="text-align:left;padding:0;">
       <div class="home-categories-title" style="font-weight:900;font-size:24px;letter-spacing:0.1em;color:#111;padding:8px 0;">WHO WE ARE</div>
     </div>
-    <p style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">We don't care about the label on the box. We care about whether it's made well, looks distinct, and will actually last. From shoes to bedside lamps, every brand on this site has been vetted for quality and a strong identity. If it's here, it's because it passed the test.</p>
+    <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">We don't care about the label on the box. We care about whether it's made well, looks distinct, and will actually last. From shoes to bedside lamps, every brand on this site has been vetted for quality and a strong identity. If it's here, it's because it passed the test.</p>
   </section>
 
   <section id="homepage-newsletter-section"></section>
