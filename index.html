@@ -61,19 +61,7 @@
     /* ============ HERO RESPONSIVE ============ */
     @media (max-width: 768px) {
       .hero-heading {
-        font-size: 24px !important;
-      }
-      
-      .hero-subheading {
-        font-size: 12px !important;
-        max-width: 320px !important;
-      }
-
-      /* Same 12px mobile size as the hero subheading, but scoped
-         by id (not the shared .hero-subheading class) so it never
-         inherits that class's max-width:320px override. */
-      #home-manifesto-text {
-        font-size: 12px !important;
+        font-size: 22px !important;
       }
     }
 
@@ -221,15 +209,14 @@
   <div class="hero-bg-placeholder" id="hero-bg"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content-wrap">
-    <h1 class="hero-heading" style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 32px; letter-spacing: 0.02em; color: #fff; margin-bottom: 8px; text-transform: uppercase; line-height: 1.2;">The Independent Collective.</h1>
-    <p class="hero-subheading" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: rgba(255, 255, 255, 0.85); margin-bottom: 20px; max-width: 420px; line-height: 1.6;">A destination for clothing, beauty, and homeware. We stock independent brands that actually deliver.</p>
+    <h1 class="hero-heading" style="font-family: 'Inter', sans-serif; font-weight: 500; font-size: 30px; letter-spacing: 0.02em; color: #fff; margin-bottom: 8px; text-transform: uppercase; line-height: 1.2;">The Independent Collective.</h1>
     <button class="hero-shop-btn" onclick="navigateTo('products')">SHOP NOW</button>
   </div>
 </section>
 
   <section id="home-all-products" style="padding:24px 18px;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:900;font-size:24px;letter-spacing:0.1em;color:#111;padding:8px 0;">BESTSELLERS</div>
+      <div class="home-categories-title" style="font-weight:500;font-size:22px;letter-spacing:0.1em;color:#111;padding:8px 0;">BESTSELLERS</div>
       <button onclick="navigateTo('products')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
     </div>
     <div class="product-grid" id="arrivals-grid"></div>
@@ -242,7 +229,7 @@
        Its left and right edges line up with the heading above it. -->
   <section id="home-manifesto" style="padding:24px 18px;">
     <div class="home-categories-header" style="text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:900;font-size:24px;letter-spacing:0.1em;color:#111;padding:8px 0;">WHO WE ARE</div>
+      <div class="home-categories-title" style="font-weight:500;font-size:22px;letter-spacing:0.1em;color:#111;padding:8px 0;">WHO WE ARE</div>
     </div>
     <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house for independent brands with a point of view. Every label here has been chosen for how it is made, how it looks, and how long it lasts, not for how loudly it announces itself. These are pieces made to hold their own in a wardrobe built over years, not seasons. If it is on this site, it earned its place.</p>
   </section>
@@ -253,7 +240,7 @@
        DOM, that function returns early and nothing renders. -->
   <section id="home-categories" style="padding:24px 18px;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:900;font-size:24px;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
+      <div class="home-categories-title" style="font-weight:500;font-size:22px;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
     </div>
     <div class="home-categories-grid" id="home-categories-grid"></div>
     <div class="home-categories-progress" id="home-categories-progress"></div>
