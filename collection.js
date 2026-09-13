@@ -267,8 +267,9 @@ function updateCollectionTitle() {
       'parfum': 'SCENT'
     };
     title = catTitles[S.currentCategoryPage] || S.currentCategoryPage.toUpperCase();
-    description = COLLECTION_DESCRIPTIONS[S.currentCategoryPage] || '';
-    showDesc = true;
+    // Hardcoded category description text is intentionally not shown
+    // on category pages anymore — title only.
+    showDesc = false;
   } else {
     if (titleEl) titleEl.style.display = 'none';
     if (descEl) descEl.style.display = 'none';
@@ -471,7 +472,7 @@ function renderCategoryProducts() {
     : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products in this category yet.</div>';
   applyEditorialGrid(DOM.categoryProductsGrid, S.gridColsCat);
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
-  if(DOM.categoryDescriptionWrap){const desc=COLLECTION_DESCRIPTIONS[S.currentCategoryPage]||COLLECTION_DESCRIPTIONS['all']||'';DOM.categoryDescriptionWrap.innerHTML=desc?`<p class="collection-description">${desc}</p>`:'';}
+  if(DOM.categoryDescriptionWrap){DOM.categoryDescriptionWrap.innerHTML='';}
   renderCollectionSortingTabs();
   updateCollectionTitle();
   buildCategoryFilterOptions();
