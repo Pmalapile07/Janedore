@@ -103,27 +103,6 @@
       margin-bottom: 14px;
     }
 
-    /* ============ HOME BRAND SPOTLIGHT (now a slider) ============ */
-    #home-brand-spotlight .featured-brand-img {
-      height: 220px;
-      background-size: cover;
-      background-position: center;
-    }
-
-    /* Brand name on spotlight cards: matches the "The Independent
-       Collective" heading aesthetic (Inter, weight 600, 11px, uppercase,
-       wide tracking, white text). */
-    #home-brand-spotlight .featured-brand-heading,
-    #home-brand-spotlight .featured-brand-name {
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #fff;
-      margin: 0;
-    }
-
     /* ============ SHOP BY CATEGORY 2x2 GRID ============ */
     /* Overrides the horizontal slider behaviour that
        buildCategoriesSlider() would otherwise produce. The cards
@@ -137,9 +116,81 @@
       overflow: visible !important;
       scroll-snap-type: none !important;
     }
+    #home-categories .home-category-card {
+      flex: none !important;
+      width: 100% !important;
+    }
     /* Hide the swipe progress bars since this is no longer a slider. */
     #home-categories .home-categories-progress {
       display: none !important;
+    }
+
+    /* ============ FEATURED BRANDS SLIDER ============ */
+    /* Container-level override: no fixed height, uses the same
+       4:5 aspect ratio as the original featured-brand-img CSS so
+       every slide is a proper portrait card. */
+    #home-brand-spotlight {
+      padding: 32px 18px !important;
+    }
+    #home-brand-spotlight .featured-brands-slider {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 0;
+    }
+    #home-brand-spotlight .featured-brands-slider::-webkit-scrollbar {
+      display: none;
+    }
+    #home-brand-spotlight .featured-brand-slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      cursor: pointer;
+    }
+    @media (min-width: 640px) {
+      #home-brand-spotlight .featured-brand-slide {
+        flex: 0 0 calc(50% - 4px);
+      }
+    }
+    @media (min-width: 900px) {
+      #home-brand-spotlight .featured-brand-slide {
+        flex: 0 0 calc(33.333% - 6px);
+      }
+    }
+
+    /* Brand name typography on each slide — matches the
+       Independent Collective hero aesthetic (Inter 600, 11px,
+       uppercase, wide tracking, white on image). */
+    #home-brand-spotlight .featured-brand-heading {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      margin: 0;
+    }
+
+    /* Swipe bars under the slider */
+    #home-brands-progress {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    #home-brands-progress .swipe-bar {
+      width: 24px;
+      height: 1px;
+      background: #ccc;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #home-brands-progress .swipe-bar.active {
+      background: #111;
     }
   </style>
 </head>
@@ -264,8 +315,7 @@
        buildCategoriesSlider() still runs and still populates
        #home-categories-grid with the same four .home-category-card
        elements — but the <style> block above overrides that grid's
-       display to a 2-column grid and hides the swipe progress bars.
-       The result is a 2x2 tile layout instead of a horizontal scroll. -->
+       display to a 2-column grid and hides the swipe progress bars. -->
   <section id="home-categories" style="padding:24px 18px;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
       <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
@@ -275,17 +325,14 @@
   </section>
 
   <!-- FEATURED BRANDS — now a SLIDER.
-       IMPORTANT: the function that currently fills #home-brand-spotlight
-       lives in vendors.js (renderHomeBrandSpotlight). You will need to
-       update that function to:
-         1. Filter out JANEDORE from the vendor list
-         2. Render ALL remaining vendors, one card per slide
-         3. Emit each slide using the .featured-brand-slide class below
-         4. Append swipe bars into #home-brands-progress
-       The HTML here is ready; the JS just needs to target these IDs. -->
-  <section id="home-brand-spotlight" class="featured-brand-section" style="padding:24px 18px;">
+       renderHomeBrandSpotlight() in vendors.js populates
+       #home-brands-slider with one slide per active vendor,
+       excluding JANEDORE. Each slide uses .featured-brand-slide
+       and the existing .featured-brand-img / .featured-brand-content
+       classes. Swipe bars are rendered into #home-brands-progress. -->
+  <section id="home-brand-spotlight" class="featured-brand-section">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0-gradient.1em;color:#111;padding:8px 0;">FEATURED BRANDS</div>
+      <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">FEATURED BRANDS</div>
     </div>
     <div class="featured-brands-slider" id="home-brands-slider">
       <!-- Slides injected by renderHomeBrandSpotlight() in vendors.js -->
@@ -297,7 +344,7 @@
   <footer id="main-footer"></footer>
 </div>
 
-<div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic. It is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
+<div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic. It is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
 <div class="page" id="page-products">
   <div id="products-loaded"></div>
