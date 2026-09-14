@@ -1,1113 +1,719 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JANEDORE — Chat Widget</title>
-
-<!-- ============================================================
-     FONTS + ICONS (already loaded on your main page, safe to repeat)
-     ============================================================ -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
-
 <style>
-/* ================================================================
-   JANEDORE — CHAT WIDGET STYLES
-   ================================================================ */
-
-/* Floating launcher button */
-#chat-launcher {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #111;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  z-index: 9998;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-  transition: transform 0.2s ease;
-}
-#chat-launcher:hover { transform: scale(1.06); }
-#chat-launcher i { font-size: 26px; }
-
-#chat-unread-dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 10px;
-  height: 10px;
-  background: #ef4444;
-  border-radius: 50%;
-  border: 2px solid #fff;
-}
-
-/* Chat window */
-#chat-window {
-  position: fixed;
-  bottom: 96px;
-  right: 24px;
-  width: 380px;
-  max-width: calc(100vw - 32px);
-  height: 600px;
-  max-height: calc(100vh - 120px);
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.16);
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 9999;
-  font-family: 'Manrope', sans-serif;
-}
-#chat-window.open { display: flex; }
-
-/* Header */
-.chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px;
-  border-bottom: 0.5px solid #eaeaea;
-  flex-shrink: 0;
-  gap: 10px;
-}
-.chat-header-title {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: #111;
-}
-.chat-header-sub {
-  font-size: 10.5px;
-  color: #888;
-  margin-top: 2px;
-  font-weight: 300;
-}
-.chat-close-btn,
-.chat-back-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: #666;
-  padding: 4px;
-  line-height: 1;
-}
-.chat-close-btn:hover,
-.chat-back-btn:hover { color: #111; }
-
-/* Body */
-.chat-body {
-  flex: 1;
-  padding: 20px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-}
-.chat-welcome-msg {
-  font-size: 13px;
-  font-weight: 300;
-  color: #333;
-  line-height: 1.6;
-  margin-bottom: 8px;
-}
-
-/* Welcome buttons */
-.chat-welcome-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: #fafafa;
-  border: 0.5px solid #e5e5e5;
-  border-radius: 10px;
-  cursor: pointer;
-  font-family: 'Manrope', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  color: #111;
-  text-align: left;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  width: 100%;
-}
-.chat-welcome-btn:hover { background: #f0f0f0; border-color: #ccc; }
-.chat-welcome-btn i { font-size: 20px; color: #111; flex-shrink: 0; }
-.chat-welcome-btn span { flex: 1; }
-.chat-welcome-btn strong { font-weight: 500; display: block; }
-.chat-welcome-btn small {
-  display: block;
-  font-size: 10.5px;
-  color: #888;
-  margin-top: 3px;
-  font-weight: 300;
-}
-
-/* Form fields */
-.chat-field { display: flex; flex-direction: column; gap: 6px; }
-.chat-field label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #888;
-}
-.chat-field input {
-  padding: 12px 14px;
-  border: 0.5px solid #ddd;
-  border-radius: 8px;
-  font-family: 'Manrope', sans-serif;
-  font-size: 13px;
-  background: #fafafa;
-  outline: none;
-}
-.chat-field input:focus { border-color: #111; background: #fff; }
-
-.chat-primary-btn {
-  padding: 13px 18px;
-  background: #111;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-family: 'Manrope', sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  font-weight: 500;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-.chat-primary-btn:hover { background: #333; }
-
-.chat-error { font-size: 11px; color: #ef4444; margin-top: -4px; }
-
-/* Messages panel */
-#chat-messages {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: #fbfbfb;
-}
-.chat-msg {
-  max-width: 78%;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 12.5px;
-  line-height: 1.55;
-  font-weight: 300;
-  word-wrap: break-word;
-  position: relative;
-}
-.chat-msg.customer {
-  background: #111;
-  color: #fff;
-  align-self: flex-end;
-  border-bottom-right-radius: 4px;
-}
-.chat-msg.admin {
-  background: #f0f0f0;
-  color: #111;
-  align-self: flex-start;
-  border-bottom-left-radius: 4px;
-}
-.chat-msg-time { font-size: 9px; opacity: 0.55; margin-top: 4px; }
-
-.chat-welcome {
-  text-align: center;
-  font-size: 12px;
-  color: #666;
-  line-height: 1.7;
-  padding: 30px 12px;
-  font-weight: 300;
-}
-.chat-welcome strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  color: #111;
-  margin-bottom: 6px;
-  letter-spacing: 0.03em;
-}
-
-/* Customer info bar */
-#chat-customer-info {
-  padding: 8px 16px;
-  border-top: 0.5px solid #eaeaea;
-  background: #fafafa;
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  color: #888;
-  flex-shrink: 0;
-}
-
-/* Typing indicator */
-#chat-typing-indicator {
-  padding: 6px 18px;
-  font-size: 10.5px;
-  color: #888;
-  font-style: italic;
-  flex-shrink: 0;
-}
-
-/* Input bar */
-#chat-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border-top: 0.5px solid #eaeaea;
-  background: #fff;
-  flex-shrink: 0;
-}
-#chat-input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 0.5px solid #ddd;
-  border-radius: 20px;
-  font-family: 'Manrope', sans-serif;
-  font-size: 12.5px;
-  background: #fafafa;
-  outline: none;
-}
-#chat-input:focus { border-color: #111; background: #fff; }
-#chat-send-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #111;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-#chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-#chat-send-btn i { font-size: 16px; }
-
-/* Order lookup */
-#order-result { font-size: 12px; line-height: 1.6; }
-
-/* Mobile */
-@media (max-width: 480px) {
-  #chat-window {
-    bottom: 0; right: 0; left: 0;
-    width: 100%; max-width: 100%;
-    height: 100%; max-height: 100%;
-    border-radius: 0;
+  #live-chat-bubble {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #111;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
   }
-  #chat-launcher { bottom: 88px; right: 18px; width: 52px; height: 52px; }
-}
+  #live-chat-bubble:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .chat-unread-dot {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #c00;
+    border: 2px solid #fff;
+    display: none;
+  }
+  #chat-window {
+    position: fixed;
+    bottom: 88px;
+    right: 24px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 520px;
+    max-height: calc(100vh - 140px);
+    background: #fff;
+    border: none;
+    border-radius: 12px;
+    z-index: 998;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  #chat-window.open { display: flex; }
+  .chat-header {
+    background: #111;
+    color: #fff;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .chat-header-title {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .chat-header-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .chat-header-close:hover { color: #fff; }
+  .chat-body {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Welcome screen */
+  .chat-welcome-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 28px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .chat-welcome-title {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    font-weight: 300;
+    text-transform: none;
+    color: #111;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .chat-welcome-subtitle {
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    margin-bottom: 40px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  
+  /* FAQ section */
+  .chat-faq-section {
+    width: 100%;
+    margin-bottom: 32px;
+  }
+  .chat-faq-title {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .chat-faq-item {
+    border-top: 1px solid #e0e0e0;
+  }
+  .chat-faq-item:last-child {
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .chat-faq-question {
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 12px 0;
+    text-align: left;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: #111;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: color 0.2s;
+  }
+  .chat-faq-question:hover {
+    color: #555;
+  }
+  .chat-faq-question::after {
+    content: '+';
+    font-size: 16px;
+    font-weight: 300;
+    color: #888;
+    transition: transform 0.2s;
+  }
+  .chat-faq-question.active::after {
+    content: '−';
+    transform: rotate(180deg);
+  }
+  .chat-faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: #888;
+  }
+  .chat-faq-answer.open {
+    max-height: 200px;
+    padding-bottom: 12px;
+  }
+  
+  /* Action buttons */
+  .chat-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .chat-action-btn {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 14px 4px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    border-radius: 2px;
+  }
+  .chat-action-btn:hover { background: #333; transform: translateY(-1px); }
+  .chat-action-btn.secondary {
+    background: #fff;
+    color: #111;
+    border: 1px solid #111;
+  }
+  .chat-action-btn.secondary:hover { background: #f5f5f5; }
+  
+  /* Email screen (hidden initially) */
+  .chat-email-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .chat-email-title {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    font-weight: 300;
+    text-transform: none;
+    color: #111;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .chat-email-subtitle {
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    margin-bottom: 32px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .chat-email-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 0;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    outline: none;
+    margin-bottom: 20px;
+    color: #111;
+    background: transparent;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .chat-email-input:focus { border-color: #111; }
+  .chat-email-input::placeholder { color: #bbb; }
+  .chat-email-btn {
+    background: #111;
+    border: none;
+    padding: 12px 32px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #fff;
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+  .chat-email-btn:hover { background: #333; transform: translateY(-1px); }
+  .chat-email-error {
+    color: #c00;
+    font-size: 10px;
+    margin-top: 12px;
+    display: none;
+  }
+  
+  /* Options screen */
+  .chat-options {
+    display: flex;
+    gap: 0;
+    padding: 32px 28px;
+    background: #fff;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .chat-option-btn {
+    background: #111;
+    color: #fff;
+    border: none;
+    width: 100%;
+    padding: 14px 4px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    margin-bottom: 14px;
+    border-radius: 2px;
+  }
+  .chat-option-btn:hover { background: #333; transform: translateY(-1px); }
+  .chat-option-btn.secondary {
+    background: #fff;
+    color: #111;
+    border: 1px solid #111;
+  }
+  .chat-option-btn.secondary:hover { background: #f5f5f5; }
+  .chat-switch-btn {
+    background: none;
+    border: none;
+    border-bottom: 0.5px solid #ccc;
+    color: #999;
+    padding: 6px 2px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    font-weight: 400;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+  }
+  .chat-switch-btn:hover { color: #111; border-color: #111; }
+  .chat-messages {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fafaf9;
+  }
+  .chat-msg {
+    max-width: 80%;
+    padding: 12px 16px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    line-height: 1.6;
+    letter-spacing: 0.03em;
+    animation: chatFadeIn 0.3s ease;
+    border-radius: 8px;
+  }
+  @keyframes chatFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .chat-msg.customer { align-self: flex-end; background: #111; color: #fff; border-bottom-right-radius: 2px; }
+  .chat-msg.admin { align-self: flex-start; background: #fff; color: #111; border: 1px solid #e0e0e0; border-bottom-left-radius: 2px; }
+  .chat-msg-time {
+    font-size: 7px;
+    opacity: 0.5;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+  }
+  .chat-welcome {
+    text-align: center;
+    padding: 32px 16px;
+    color: #888;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+  }
+  .chat-welcome strong { display: block; color: #111; font-size: 18px; margin-bottom: 12px; font-weight: 300; }
+  .chat-input-wrap {
+    display: flex;
+    border-top: 1px solid #e0e0e0;
+    padding: 14px 16px;
+    gap: 10px;
+    flex-shrink: 0;
+    background: #fff;
+  }
+  .chat-input {
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 0;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    outline: none;
+    background: transparent;
+    color: #111;
+    transition: border-color 0.2s;
+  }
+  .chat-input::placeholder { color: #bbb; }
+  .chat-input:focus { border-color: #111; }
+  .chat-send-btn {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .chat-send-btn:hover { background: #333; }
+  .order-lookup {
+    padding: 32px 28px;
+    background: #fff;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .order-lookup-title {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    font-weight: 300;
+    text-transform: none;
+    color: #111;
+    margin-bottom: 12px;
+  }
+  .order-lookup-subtitle {
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .order-lookup-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 0;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    outline: none;
+    margin-bottom: 24px;
+    color: #111;
+    background: transparent;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .order-lookup-input::placeholder { color: #bbb; }
+  .order-lookup-input:focus { border-color: #111; }
+  .order-lookup-btn {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .order-lookup-btn:hover { background: #333; transform: translateY(-1px); }
+  .order-result {
+    margin-top: 24px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    color: #888;
+    text-align: center;
+    letter-spacing: 0.03em;
+    line-height: 1.6;
+    width: 100%;
+  }
+  .back-to-chat-btn {
+    background: none;
+    border: none;
+    border-bottom: 0.5px solid #ccc;
+    color: #999;
+    padding: 6px 2px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    font-weight: 400;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: auto;
+    margin-top: 28px;
+    transition: all 0.2s;
+  }
+  .back-to-chat-btn:hover { color: #111; border-color: #111; }
+  .chat-customer-info {
+    padding: 10px 20px;
+    background: #fafaf9;
+    border-bottom: 1px solid #e0e0e0;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .chat-customer-info-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .chat-switch-inline {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+  .chat-switch-inline:hover { color: #888; }
+  .chat-typing-indicator {
+    padding: 6px 20px;
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-size: 8px;
+    color: #888;
+    font-style: italic;
+    background: #fafaf9;
+    display: none;
+  }
+  .chat-footer-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 0;
+    background: #fff;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+    text-transform: none;
+    color: #111;
+    flex-shrink: 0;
+  }
+  .chat-footer-mark {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: #111;
+    animation: chat-footer-spin 4s ease-in-out infinite alternate;
+  }
+  @keyframes chat-footer-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(180deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chat-footer-mark { animation: none; }
+  }
+  @media (max-width: 480px) {
+    #chat-window {
+      width: calc(100vw - 32px);
+      right: 16px;
+      left: 16px;
+      height: 480px;
+      border-radius: 8px;
+    }
+    #live-chat-bubble { right: 16px; bottom: 16px; }
+    .chat-welcome-screen { padding: 28px 20px; }
+    .chat-email-screen { padding: 28px 20px; }
+    .chat-options { padding: 24px 20px; }
+    .chat-option-btn { margin-bottom: 16px; }
+    .order-lookup { padding: 24px 20px; }
+  }
 </style>
-</head>
-<body>
 
-<!-- ============================================================
-     CHAT WIDGET MARKUP
-     ============================================================ -->
-
-<!-- Launcher -->
-<button id="chat-launcher" onclick="toggleChat()" aria-label="Open chat">
-  <i class="ph-light ph-chat-circle-dots"></i>
-  <span id="chat-unread-dot" style="display:none;"></span>
+<button id="live-chat-bubble" onclick="toggleChat()">
+  <i class="ph-thin ph-chat"></i>
+  <span class="chat-unread-dot" id="chat-unread-dot"></span>
 </button>
 
-<!-- Chat window -->
-<div id="chat-window" role="dialog" aria-label="Chat with Janedore">
+<div id="chat-window">
+  <div class="chat-header">
+    <span class="chat-header-title">JANEDORE Support</span>
+    <button class="chat-header-close" onclick="toggleChat()">✕</button>
+  </div>
 
-  <!-- Welcome screen -->
-  <div id="chat-welcome-screen" style="display:flex; flex-direction:column; height:100%;">
-    <div class="chat-header">
-      <div>
-        <div class="chat-header-title">JANEDORE</div>
-        <div class="chat-header-sub">We're here to help</div>
+  <!-- Welcome screen with FAQs and action buttons -->
+  <div class="chat-welcome-screen" id="chat-welcome-screen">
+    <div class="chat-faq-section">
+      <div class="chat-faq-title">Frequently Asked</div>
+      <div class="chat-faq-item">
+        <button class="chat-faq-question" onclick="toggleFaq(this)">Shipping & Delivery</button>
+        <div class="chat-faq-answer">Free shipping on orders over R1000. Delivery takes 3-5 business days.</div>
       </div>
-      <button class="chat-close-btn" onclick="toggleChat()" aria-label="Close">
-        <i class="ph-light ph-x"></i>
-      </button>
+      <div class="chat-faq-item">
+        <button class="chat-faq-question" onclick="toggleFaq(this)">Returns & Exchanges</button>
+        <div class="chat-faq-answer">We accept returns within 14 days of delivery. Items must be unworn with tags attached.</div>
+      </div>
+      <div class="chat-faq-item">
+        <button class="chat-faq-question" onclick="toggleFaq(this)">Sizing Guide</button>
+        <div class="chat-faq-answer">Our sizes run true to size. Check the measurements tab on each product page for details.</div>
+      </div>
     </div>
-    <div class="chat-body">
-      <div class="chat-welcome-msg">
-        Welcome to <strong>JANEDORE</strong>.<br>How would you like to reach us?
-      </div>
-      <button class="chat-welcome-btn" onclick="showEmailScreen()">
-        <i class="ph-light ph-chat-circle-dots"></i>
-        <span>Start a conversation</span>
-      </button>
-      <button class="chat-welcome-btn" onclick="showOrderLookup()">
-        <i class="ph-light ph-package"></i>
-        <span>Track my order</span>
-      </button>
+    
+    <div class="chat-action-buttons">
+      <button class="chat-action-btn" onclick="showEmailScreen()">Chat with Us</button>
+      <button class="chat-action-btn secondary" onclick="showOrderLookup()">Track Order</button>
     </div>
   </div>
 
-  <!-- Email screen -->
-  <div id="chat-email-screen" style="display:none; flex-direction:column; height:100%;">
-    <div class="chat-header">
-      <button class="chat-back-btn" onclick="backToWelcome()" aria-label="Back">
-        <i class="ph-light ph-arrow-left"></i>
-      </button>
-      <div>
-        <div class="chat-header-title">Your details</div>
-        <div class="chat-header-sub">So we can follow up</div>
-      </div>
-      <button class="chat-close-btn" onclick="toggleChat()" aria-label="Close">
-        <i class="ph-light ph-x"></i>
-      </button>
-    </div>
-    <div class="chat-body">
-      <div class="chat-field">
-        <label>Name</label>
-        <input id="chat-name-input" type="text" placeholder="Your name" autocomplete="name">
-      </div>
-      <div class="chat-field">
-        <label>Email</label>
-        <input id="chat-email-input" type="email" placeholder="you@example.com" autocomplete="email">
-      </div>
-      <div id="chat-email-error" class="chat-error" style="display:none;">
-        Please enter a valid email address.
-      </div>
-      <button class="chat-primary-btn" onclick="submitEmail()">Continue</button>
-    </div>
+  <!-- Email entry screen (hidden initially) -->
+  <div class="chat-email-screen" id="chat-email-screen" style="display:none;">
+    <div class="chat-email-title">Chat with Us</div>
+    <div class="chat-email-subtitle">Enter your details so we can assist you better</div>
+    <input class="chat-email-input" id="chat-name-input" type="text" placeholder="Your name"
+           onkeypress="if(event.key==='Enter')document.getElementById('chat-email-input').focus()">
+    <input class="chat-email-input" id="chat-email-input" type="email" placeholder="your@email.com"
+           onkeypress="if(event.key==='Enter')submitEmail()">
+    <button class="chat-email-btn" onclick="submitEmail()">Continue</button>
+    <div class="chat-email-error" id="chat-email-error">Please enter a valid email</div>
   </div>
 
-  <!-- Options screen (AI vs Human) -->
-  <div id="chat-options" style="display:none; flex-direction:column; height:100%;">
-    <div class="chat-header">
-      <div>
-        <div class="chat-header-title">How can we help?</div>
-        <div class="chat-header-sub">Choose an option</div>
-      </div>
-      <button class="chat-close-btn" onclick="toggleChat()" aria-label="Close">
-        <i class="ph-light ph-x"></i>
-      </button>
-    </div>
-    <div class="chat-body">
-      <button class="chat-welcome-btn" onclick="startAIChat()">
-        <i class="ph-light ph-sparkle"></i>
-        <span>
-          <strong>Chat with our assistant</strong>
-          <small>Instant answers — orders, sizing, styling</small>
-        </span>
-      </button>
-      <button class="chat-welcome-btn" onclick="startHumanChat()">
-        <i class="ph-light ph-headset"></i>
-        <span>
-          <strong>Speak to a human</strong>
-          <small>Our team replies personally</small>
-        </span>
-      </button>
-    </div>
+  <!-- Options screen -->
+  <div class="chat-options" id="chat-options" style="display:none;">
+    <button class="chat-option-btn" onclick="startChat()">Chat with Us</button>
+    <button class="chat-option-btn secondary" onclick="showOrderLookup()">Track Order</button>
+    <button class="chat-switch-btn" onclick="clearChatSession()">Switch Account</button>
   </div>
 
-  <!-- Live chat screen -->
-  <div id="chat-messages" style="display:none;"></div>
-  <div id="chat-customer-info" style="display:none;">
-    <span id="chat-customer-name"></span>
-    <span id="chat-customer-email"></span>
+  <!-- Customer info bar (shown during active chat) -->
+  <div class="chat-customer-info" id="chat-customer-info" style="display:none;">
+    <div class="chat-customer-info-left">
+      <span id="chat-customer-name"></span>
+      <span id="chat-customer-email"></span>
+    </div>
+    <button class="chat-switch-inline" onclick="clearChatSession()" title="Switch account">Switch</button>
   </div>
-  <div id="chat-typing-indicator" style="display:none;">JANEDORE is typing...</div>
-  <div id="chat-input-wrap" style="display:none;">
-    <input id="chat-input" type="text" placeholder="Type your message..." autocomplete="off"
-           oninput="handleCustomerTyping()"
-           onkeydown="if(event.key==='Enter'){event.preventDefault();sendChatMessage();}">
-    <button id="chat-send-btn" onclick="sendChatMessage()" aria-label="Send">
-      <i class="ph-light ph-paper-plane-tilt"></i>
-    </button>
+
+  <!-- Typing indicator -->
+  <div class="chat-typing-indicator" id="chat-typing-indicator">JANEDORE is typing...</div>
+
+  <!-- Messages -->
+  <div class="chat-messages" id="chat-messages" style="display:none;">
+    <div class="chat-welcome">
+      <strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.
+    </div>
   </div>
 
   <!-- Order lookup screen -->
-  <div id="order-lookup" style="display:none; flex-direction:column; height:100%;">
-    <div class="chat-header">
-      <button class="chat-back-btn" onclick="backToWelcome()" aria-label="Back">
-        <i class="ph-light ph-arrow-left"></i>
-      </button>
-      <div>
-        <div class="chat-header-title">Track your order</div>
-        <div class="chat-header-sub">Enter your order number</div>
-      </div>
-      <button class="chat-close-btn" onclick="toggleChat()" aria-label="Close">
-        <i class="ph-light ph-x"></i>
-      </button>
-    </div>
-    <div class="chat-body">
-      <div class="chat-field">
-        <input id="order-lookup-input" type="text" placeholder="e.g. JD-10234" autocomplete="off">
-      </div>
-      <button class="chat-primary-btn" onclick="lookupOrder()">Look up order</button>
-      <div id="order-result"></div>
-    </div>
+  <div class="order-lookup" id="order-lookup" style="display:none;">
+    <div class="order-lookup-title">Track Your Order</div>
+    <div class="order-lookup-subtitle">Enter your order number to check its status</div>
+    <input class="order-lookup-input" id="order-lookup-input"
+           placeholder="Order number (e.g. ORD-12345)"
+           onkeypress="if(event.key==='Enter')lookupOrder()">
+    <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
+    <div class="order-result" id="order-result"></div>
+    <button class="back-to-chat-btn" onclick="backToChatOptions()">← Back</button>
   </div>
 
+  <!-- Message input -->
+  <div class="chat-input-wrap" id="chat-input-wrap" style="display:none;">
+    <input class="chat-input" id="chat-input" placeholder="Type your message…"
+           onkeypress="if(event.key==='Enter')sendChatMessage()"
+           oninput="handleCustomerTyping()">
+    <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">Send</button>
+  </div>
+
+  <!-- builtbypearl branding -->
+  <div class="chat-footer-brand">
+    <span class="chat-footer-mark"></span>builtbypearl
+  </div>
 </div>
 
-<!-- ============================================================
-     JAVASCRIPT (Firebase already loaded by your main page)
-     ============================================================ -->
 <script>
-/* ================================================================
-   JANEDORE — CUSTOMER CHAT WIDGET
-   ================================================================ */
-
-let chatSessionId    = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
-localStorage.setItem('janedore_chat_session', chatSessionId);
-let customerEmail    = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
-let customerName     = localStorage.getItem('janedore_chat_name') || '';
-let chatOpen         = false;
-let chatMode         = null;
-let typingTimeout    = null;
-let loadedMessageKeys = new Set();
-
-let _chatListenerRef   = null, _chatListenerCb   = null;
-let _typingListenerRef = null, _typingListenerCb = null;
-let _statusListenerRef = null, _statusListenerCb = null;
-let _satisfactionShown = false;
-let _resolvedActive    = false;
-
-let _aiConfigCache     = null;
-let _aiConfigFetchedAt = 0;
-let _aiModel           = null;
-let _aiModelName       = null;
-let _aiGreetedSessions = new Set();
-
-function getRTDB()       { try { return firebase.database(); }  catch(e) { console.error('[Chat] RTDB:', e.message);      return null; } }
-function getFirestore()  { try { return firebase.firestore(); } catch(e) { console.error('[Chat] Firestore:', e.message); return null; } }
-function safeEl(id)      { return document.getElementById(id) || null; }
-
-async function ensureAuth() {
-  try {
-    if (firebase.auth().currentUser) return firebase.auth().currentUser;
-    const r = await firebase.auth().signInAnonymously();
-    return r.user;
-  } catch(e) { console.warn('[Chat] Auth:', e.message); return null; }
-}
-
-function detachChatListener() {
-  if (_chatListenerRef && _chatListenerCb) {
-    _chatListenerRef.off('child_added', _chatListenerCb);
-    _chatListenerRef = null; _chatListenerCb = null;
-  }
-}
-function detachTypingListener() {
-  if (_typingListenerRef && _typingListenerCb) {
-    _typingListenerRef.off('value', _typingListenerCb);
-    _typingListenerRef = null; _typingListenerCb = null;
-  }
-}
-function detachStatusListener() {
-  if (_statusListenerRef && _statusListenerCb) {
-    _statusListenerRef.off('value', _statusListenerCb);
-    _statusListenerRef = null; _statusListenerCb = null;
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = answer.classList.contains('open');
+  
+  // Close all FAQs
+  document.querySelectorAll('.chat-faq-answer').forEach(a => a.classList.remove('open'));
+  document.querySelectorAll('.chat-faq-question').forEach(q => q.classList.remove('active'));
+  
+  // Open clicked one if it was closed
+  if (!isOpen) {
+    answer.classList.add('open');
+    btn.classList.add('active');
   }
 }
 
-async function loadAIConfig() {
-  const now = Date.now();
-  if (_aiConfigCache && (now - _aiConfigFetchedAt) < 30000) return _aiConfigCache;
-  try {
-    const db   = getFirestore();
-    if (!db) throw new Error('Firestore unavailable');
-    const snap = await db.collection('settings').doc('ai_config').get();
-    _aiConfigCache     = snap.exists ? snap.data() : { enabled: false };
-    _aiConfigFetchedAt = now;
-  } catch (e) {
-    console.warn('[Chat] AI config load failed:', e.message);
-    _aiConfigCache     = { enabled: false };
-    _aiConfigFetchedAt = now;
-  }
-  return _aiConfigCache;
+function showEmailScreen() {
+  document.getElementById('chat-welcome-screen').style.display = 'none';
+  document.getElementById('chat-email-screen').style.display = 'flex';
 }
-
-function wantsHuman(text, handoffPhrase) {
-  const t = (text || '').toLowerCase();
-  const phrase = (handoffPhrase || 'speak to human').toLowerCase();
-  return t.includes(phrase)
-      || /(talk|speak)\s*to\s*(a\s*)?(human|person|agent|someone)/.test(t)
-      || /real\s*person/.test(t)
-      || /\bhuman\b/.test(t);
-}
-
-async function getAIModel(cfg) {
-  const modelName = cfg.model || 'gemini-2.5-flash';
-  if (_aiModel && _aiModelName === modelName) return _aiModel;
-  const lib  = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-ai.js');
-  const app  = firebase.app();
-  const ai   = lib.getAI(app, { backend: new lib.GoogleAIBackend() });
-  _aiModel = lib.getGenerativeModel(ai, {
-    model: modelName,
-    systemInstruction: cfg.systemPrompt || 'You are a helpful assistant for JANEDORE.'
-  });
-  _aiModelName = modelName;
-  return _aiModel;
-}
-
-async function askAI(customerText) {
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-  const cfg = await loadAIConfig();
-  if (!cfg.enabled) { await escalateToHuman(); return; }
-
-  let model;
-  try { model = await getAIModel(cfg); }
-  catch (e) { console.error('[Chat] AI model init failed:', e.message); await escalateToHuman(); return; }
-
-  let history = [];
-  try {
-    const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages')
-      .orderByChild('createdAt').limitToLast(8).once('value');
-    snap.forEach(c => {
-      const m = c.val();
-      if (!m || m.type === 'auth' || m.type === 'resolved' || m.sender === 'system') return;
-      history.push({
-        role: m.sender === 'customer' ? 'user' : 'model',
-        parts: [{ text: m.text || '' }]
-      });
-    });
-  } catch(_) {}
-
-  let reply = '';
-  try {
-    const r = await model.generateContent({ contents: history });
-    reply = (r.response.text() || '').trim();
-  } catch (e) {
-    console.error('[Chat] AI generate failed:', e.message);
-    await escalateToHuman();
-    return;
-  }
-
-  if (/^HANDOFF\b/i.test(reply) || reply.toUpperCase() === 'HANDOFF') {
-    await escalateToHuman();
-    return;
-  }
-
-  const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-  const ts     = firebase.database.ServerValue.TIMESTAMP;
-  await rtdb.ref('/').update({
-    ['live_chat/' + chatSessionId + '/messages/' + msgRef.key]: {
-      sessionId: chatSessionId, customerEmail, customerName,
-      text: reply, sender: 'admin', senderName: 'Janedore Assistant',
-      isAI: true, createdAt: ts, read: true, delivered: true
-    },
-    ['chat_inbox/' + chatSessionId + '/lastMessage']:   reply,
-    ['chat_inbox/' + chatSessionId + '/lastMessageAt']: ts
-  });
-}
-
-async function escalateToHuman() {
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-  const ts     = firebase.database.ServerValue.TIMESTAMP;
-  const sysRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-  await rtdb.ref('/').update({
-    ['live_chat/' + chatSessionId + '/messages/' + sysRef.key]: {
-      sessionId: chatSessionId,
-      text: 'Connecting you to a team member. One moment...',
-      sender: 'system', createdAt: ts, read: true, delivered: true
-    },
-    ['live_chat/' + chatSessionId + '/meta/status']: 'escalated',
-    ['chat_inbox/' + chatSessionId + '/status']:     'escalated',
-    ['chat_inbox/' + chatSessionId + '/needsHuman']: true,
-    ['chat_inbox/' + chatSessionId + '/unreadCount']:
-      firebase.database.ServerValue.increment(1),
-    ['chat_inbox/' + chatSessionId + '/lastMessage']:   'Customer requested a human.',
-    ['chat_inbox/' + chatSessionId + '/lastMessageAt']: ts
-  });
-}
-
-async function maybeSendAIGreeting() {
-  if (_aiGreetedSessions.has(chatSessionId)) return;
-  const cfg = await loadAIConfig();
-  if (!cfg.enabled || !cfg.greeting) return;
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-
-  const flagRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/greeted');
-  const snap    = await flagRef.once('value');
-  if (snap.val()) { _aiGreetedSessions.add(chatSessionId); return; }
-  await flagRef.set(true);
-  _aiGreetedSessions.add(chatSessionId);
-
-  const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-  const ts     = firebase.database.ServerValue.TIMESTAMP;
-  await rtdb.ref('/').update({
-    ['live_chat/' + chatSessionId + '/messages/' + msgRef.key]: {
-      sessionId: chatSessionId, customerEmail, customerName,
-      text: cfg.greeting, sender: 'admin', senderName: 'Janedore Assistant',
-      isAI: true, createdAt: ts, read: true, delivered: true
-    },
-    ['chat_inbox/' + chatSessionId + '/lastMessage']:   cfg.greeting,
-    ['chat_inbox/' + chatSessionId + '/lastMessageAt']: ts
-  });
-}
-
-function toggleChat() {
-  chatOpen = !chatOpen;
-  const win = safeEl('chat-window');
-  if (!win) return;
-
-  if (chatOpen) {
-    win.classList.add('open');
-    const dot = safeEl('chat-unread-dot');
-    if (dot) dot.style.display = 'none';
-
-    if (chatMode === 'ai' || chatMode === 'human' || chatMode === 'chat') {
-      showScreen('chat-messages');
-      const inputWrap = safeEl('chat-input-wrap');
-      const infoBar   = safeEl('chat-customer-info');
-      if (inputWrap) inputWrap.style.display = 'flex';
-      if (infoBar)   infoBar.style.display   = 'flex';
-      if (!_chatListenerRef) {
-        detachChatListener(); detachTypingListener(); detachStatusListener();
-        listenChat(); listenTyping(); listenStatus();
-      }
-    } else {
-      showWelcomeScreen();
-    }
-    ensureAuth();
-  } else {
-    win.classList.remove('open');
-    detachChatListener(); detachTypingListener(); detachStatusListener();
-  }
-}
-
-function showScreen(id) {
-  ['chat-welcome-screen','chat-email-screen','chat-options','chat-messages','chat-input-wrap',
-   'chat-customer-info','chat-typing-indicator','order-lookup'].forEach(s => {
-    const el = safeEl(s);
-    if (el) el.style.display = 'none';
-  });
-  const el = safeEl(id);
-  if (el) el.style.display =
-    (id === 'chat-messages' || id === 'order-lookup' ||
-     id === 'chat-email-screen' || id === 'chat-options' ||
-     id === 'chat-welcome-screen') ? 'flex' : 'block';
-}
-
-function showWelcomeScreen() { showScreen('chat-welcome-screen'); }
-function showEmailScreen()   { showScreen('chat-email-screen'); }
-function showOptionsScreen() { showScreen('chat-options'); }
-
-function submitEmail() {
-  const nameEl  = safeEl('chat-name-input');
-  const emailEl = safeEl('chat-email-input');
-  const errorEl = safeEl('chat-email-error');
-  const name    = (nameEl?.value || '').trim();
-  const email   = (emailEl?.value || '').trim().toLowerCase();
-
-  if (!email || !email.includes('@') || !email.includes('.')) {
-    if (errorEl) errorEl.style.display = 'block';
-    return;
-  }
-  if (errorEl) errorEl.style.display = 'none';
-
-  customerName  = name;
-  customerEmail = email;
-  localStorage.setItem('janedore_chat_name',  name);
-  localStorage.setItem('janedore_chat_email', email);
-  chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
-  localStorage.setItem('janedore_chat_session', chatSessionId);
-
-  showOptionsScreen();
-}
-
-function startAIChat() {
-  chatMode = 'ai';
-  startChat();
-  maybeSendAIGreeting();
-}
-
-async function startHumanChat() {
-  chatMode = 'human';
-  startChat();
-  await escalateToHuman();
-}
-
-function startChat() {
-  showScreen('chat-messages');
-  const inputWrap = safeEl('chat-input-wrap');
-  const infoBar   = safeEl('chat-customer-info');
-  if (inputWrap) inputWrap.style.display = 'flex';
-  if (infoBar)   infoBar.style.display   = 'flex';
-
-  const nameEl  = safeEl('chat-customer-name');
-  const emailEl = safeEl('chat-customer-email');
-  if (nameEl)  nameEl.textContent  = customerName  || 'Guest';
-  if (emailEl) emailEl.textContent = customerEmail || '';
-
-  loadedMessageKeys.clear();
-  detachChatListener(); detachTypingListener(); detachStatusListener();
-  _satisfactionShown = false; _resolvedActive = false;
-  removeResolvedBanner();
-  loadMessages();
-  listenChat(); listenTyping(); listenStatus();
-
-  const input = safeEl('chat-input');
-  if (input) setTimeout(() => input.focus(), 100);
-}
-
-function showOrderLookup() {
-  showScreen('order-lookup');
-  const resultEl = safeEl('order-result');
-  if (resultEl) resultEl.innerHTML = '';
-  const input = safeEl('order-lookup-input');
-  if (input) setTimeout(() => input.focus(), 100);
-}
-
-function backToWelcome()     { showWelcomeScreen(); }
-function backToChatOptions() { showWelcomeScreen(); }
-
-async function loadMessages() {
-  const rtdb = getRTDB();
-  const el   = safeEl('chat-messages');
-  if (!rtdb || !el) return;
-
-  el.innerHTML = '<div class="chat-welcome"><strong>Loading...</strong></div>';
-
-  try {
-    const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages')
-      .orderByChild('createdAt').once('value');
-    el.innerHTML = '';
-
-    if (!snap.exists()) {
-      el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything - sizing, styling, shipping.</div>';
-      return;
-    }
-    const messages = [];
-    snap.forEach(child => {
-      const key = child.key;
-      loadedMessageKeys.add(key);
-      messages.push({ _key: key, ...child.val() });
-    });
-    messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
-    el.scrollTop = el.scrollHeight;
-  } catch(e) {
-    console.error('[Chat] Load messages error:', e.message);
-    el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything.</div>';
-  }
-}
-
-function appendMessage(m) {
-  const el = safeEl('chat-messages');
-  if (!el) return;
-
-  if (m.sender === 'system') {
-    if (m.type === 'resolved') return;
-    const pill = document.createElement('div');
-    pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
-    pill.innerHTML =
-      '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
-        + (m.text || '') + '</span>';
-    el.appendChild(pill);
-    return;
-  }
-
-  const time = m.createdAt
-    ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : '';
-  const isCustomer = m.sender === 'customer';
-
-  const div = document.createElement('div');
-  div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin');
-
-  var rawName  = (!isCustomer && m.senderName) ? m.senderName : '';
-  var safeName = (rawName && rawName.indexOf('@') === -1) ? rawName : 'Janedore';
-  var showName = !isCustomer && rawName;
-  const nameHtml = showName
-    ? '<div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:400;">' + safeName + '</div>'
-    : '';
-
-  div.innerHTML = nameHtml + (m.text || '') + '<div class="chat-msg-time">' + time + '</div>';
-  el.appendChild(div);
-}
-
-function listenChat() {
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-
-  _chatListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
-  _chatListenerCb  = snap => {
-    const key = snap.key;
-    const m   = snap.val();
-    if (loadedMessageKeys.has(key)) return;
-    loadedMessageKeys.add(key);
-    if (!m || m.type === 'auth') return;
-
-    appendMessage(m);
-    const el = safeEl('chat-messages');
-    if (el) el.scrollTop = el.scrollHeight;
-
-    if (!chatOpen && m.sender === 'admin') {
-      const dot = safeEl('chat-unread-dot');
-      if (dot) dot.style.display = 'block';
-    }
-  };
-  _chatListenerRef.on('child_added', _chatListenerCb);
-}
-
-async function sendChatMessage() {
-  const rtdb  = getRTDB();
-  const input = safeEl('chat-input');
-  if (!rtdb || !input) return;
-
-  const text = input.value.trim();
-  if (!text) return;
-
-  const wasResolved = _resolvedActive;
-  if (wasResolved) {
-    input.placeholder = 'Type your message...';
-    const sendBtnEarly = safeEl('chat-send-btn');
-    if (sendBtnEarly) sendBtnEarly.disabled = false;
-    input.disabled = false;
-    _satisfactionShown = false;
-    _resolvedActive = false;
-    const prompt = document.getElementById('satisfaction-prompt');
-    if (prompt) prompt.remove();
-    removeResolvedBanner();
-  }
-
-  const btn = safeEl('chat-send-btn');
-  if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
-
-  try {
-    await ensureAuth();
-    const user = firebase.auth().currentUser;
-
-    const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-    const ts     = firebase.database.ServerValue.TIMESTAMP;
-
-    const updates = {};
-    updates['live_chat/' + chatSessionId + '/messages/' + msgRef.key] = {
-      sessionId: chatSessionId,
-      customerEmail: customerEmail,
-      customerName:  customerName,
-      text: text,
-      sender: 'customer',
-      createdAt: ts,
-      read: false, delivered: false,
-      userId: user ? user.uid : 'anonymous'
-    };
-
-    updates['chat_inbox/' + chatSessionId + '/lastMessage']    = text;
-    updates['chat_inbox/' + chatSessionId + '/lastMessageAt']  = ts;
-    updates['chat_inbox/' + chatSessionId + '/customerEmail']  = customerEmail;
-    updates['chat_inbox/' + chatSessionId + '/customerName']   = customerName || 'Guest';
-    updates['chat_inbox/' + chatSessionId + '/unreadCount']    = firebase.database.ServerValue.increment(1);
-    updates['live_chat/' + chatSessionId + '/meta/status']     = 'open';
-    updates['chat_inbox/' + chatSessionId + '/status']         = 'open';
-
-    try {
-      const rawCart = localStorage.getItem('janedore_cart');
-      const cart    = rawCart ? JSON.parse(rawCart) : [];
-      updates['chat_inbox/' + chatSessionId + '/cart'] = cart.length > 0
-        ? cart.map(i => ({
-            name: i.name || '', brand: i.brand || '', color: i.color || '',
-            size: i.size || '', qty: i.qty || 1,
-            price: i.salePrice != null ? i.salePrice : (i.price || 0),
-            productId: i.productId || ''
-          }))
-        : [];
-    } catch(_) {}
-
-    await rtdb.ref('/').update(updates);
-    input.value = '';
-    input.disabled = false;
-    input.placeholder = 'Type your message...';
-    _satisfactionShown = false;
-    _resolvedActive = false;
-
-    const cfg = await loadAIConfig();
-    if (cfg.enabled && chatMode === 'ai') {
-      if (wantsHuman(text, cfg.handoffPhrase)) {
-        await escalateToHuman();
-      } else {
-        askAI(text);
-      }
-    }
-
-  } catch(e) {
-    console.error('[Chat] Send error:', e.message);
-    alert('Failed to send message. Please try again.');
-  } finally {
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    if (input) { input.disabled = false; input.focus(); }
-  }
-}
-
-function handleCustomerTyping() {
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-  clearTimeout(typingTimeout);
-  rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(true).catch(() => {});
-  typingTimeout = setTimeout(() => {
-    rtdb.ref('live_chat/' + chatSessionId + '/meta/customerTyping').set(false).catch(() => {});
-  }, 3000);
-}
-
-function listenTyping() {
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-
-  _typingListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/adminTyping');
-  _typingListenerCb  = snap => {
-    const val      = snap.val();
-    const isTyping = val !== null && typeof val === 'object'
-      ? Object.values(val).some(v => v === true)
-      : val === true;
-    const indicator = safeEl('chat-typing-indicator');
-    if (indicator) indicator.style.display = isTyping ? 'block' : 'none';
-    if (indicator && isTyping && val && typeof val === 'object') {
-      const names = Object.keys(val).filter(k => val[k] === true);
-      indicator.textContent = names.length > 0 ? names[0] + ' is typing...' : 'JANEDORE is typing...';
-    } else if (indicator && isTyping) {
-      indicator.textContent = 'JANEDORE is typing...';
-    }
-  };
-  _typingListenerRef.on('value', _typingListenerCb);
-}
-
-function listenStatus() {
-  const rtdb = getRTDB();
-  if (!rtdb) return;
-  _statusListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/status');
-  _statusListenerCb  = snap => {
-    const status = snap.val();
-    if (status === 'resolved' && !_satisfactionShown) {
-      _satisfactionShown = true; _resolvedActive = true;
-      showSatisfactionPrompt();
-    }
-    if (status !== 'resolved') {
-      _satisfactionShown = false; _resolvedActive = false;
-      const input   = safeEl('chat-input');
-      const sendBtn = safeEl('chat-send-btn');
-      if (input)   { input.disabled = false; input.placeholder = 'Type your message...'; }
-      if (sendBtn) sendBtn.disabled = false;
-      const prompt = document.getElementById('satisfaction-prompt');
-      if (prompt) prompt.remove();
-      removeResolvedBanner();
-    }
-  };
-  _statusListenerRef.on('value', _statusListenerCb);
-}
-
-function showResolvedBanner() {
-  const wrap = safeEl('chat-input-wrap');
-  if (!wrap || document.getElementById('chat-resolved-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'chat-resolved-banner';
-  banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
-  banner.innerHTML =
-    '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">Resolved.</span>';
-  wrap.insertBefore(banner, wrap.firstChild);
-}
-
-function removeResolvedBanner() {
-  const banner = document.getElementById('chat-resolved-banner');
-  if (banner) banner.remove();
-}
-
-function showSatisfactionPrompt() {
-  const el = safeEl('chat-messages');
-  if (!el) return;
-  const prompt = document.createElement('div');
-  prompt.id = 'satisfaction-prompt';
-  prompt.className = 'chat-msg admin';
-  prompt.innerHTML =
-    '<div style="font-size:11px;font-weight:400;margin-bottom:10px;line-height:1.6;">We\'re glad we could help. Was your issue resolved?</div>'
-    + '<div style="display:flex;gap:8px;justify-content:center;">'
-      + '<button id="sat-yes" style="background:none;border:0.5px solid currentColor;padding:6px 18px;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;">Yes</button>'
-      + '<button id="sat-no"  style="background:none;border:0.5px solid currentColor;padding:6px 18px;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;">Not really</button>'
-    + '</div>';
-  el.appendChild(prompt);
-  el.scrollTop = el.scrollHeight;
-
-  const yesBtn = document.getElementById('sat-yes');
-  const noBtn  = document.getElementById('sat-no');
-  if (yesBtn) yesBtn.addEventListener('click', function () { submitSatisfaction(true);  });
-  if (noBtn)  noBtn .addEventListener('click', function () { submitSatisfaction(false); });
-}
-
-async function submitSatisfaction(satisfied) {
-  const rtdb   = getRTDB();
-  const prompt = document.getElementById('satisfaction-prompt');
-  const el     = safeEl('chat-messages');
-  if (!el) return;
-  if (prompt) prompt.remove();
-
-  try {
-    if (rtdb) {
-      await rtdb.ref('live_chat/' + chatSessionId + '/meta/satisfaction').set({
-        satisfied: satisfied,
-        respondedAt: firebase.database.ServerValue.TIMESTAMP
-      });
-    }
-  } catch(e) { console.warn('[Chat] Satisfaction write failed:', e.message); }
-
-  const thanks = document.createElement('div');
-  thanks.className = 'chat-msg admin';
-  thanks.innerHTML =
-    '<div style="font-size:11px;font-weight:300;line-height:1.6;">'
-      + (satisfied
-          ? 'Thank you for letting us know. We hope to see you again soon.'
-          : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.')
-    + '</div>';
-  el.appendChild(thanks);
-  el.scrollTop = el.scrollHeight;
-}
-
-async function lookupOrder() {
-  const db       = getFirestore();
-  const input    = safeEl('order-lookup-input');
-  const resultEl = safeEl('order-result');
-  if (!db || !input || !resultEl) return;
-
-  const orderNum = input.value.trim().toUpperCase();
-  if (!orderNum) {
-    resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Please enter an order number</div>';
-    return;
-  }
-  resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Searching...</div>';
-
-  try {
-    const snap = await db.collection('orders').where('orderNumber', '==', orderNum).limit(1).get();
-    if (snap.empty) {
-      resultEl.innerHTML = '<div style="margin-top:16px;color:#888;">No order found. Please check your order number.</div>';
-      return;
-    }
-    const o = snap.docs[0].data();
-    const status = (o.status || 'pending');
-    resultEl.innerHTML =
-      '<div style="margin-top:16px;line-height:1.8;">'
-      + '<div><strong>Order:</strong> #' + (o.orderNumber || snap.docs[0].id) + '</div>'
-      + '<div><strong>Status:</strong> ' + status + '</div>'
-      + '<div><strong>Total:</strong> R' + Number(o.subtotal || o.total || 0).toLocaleString() + '</div>'
-      + '</div>';
-  } catch(e) {
-    console.error('[Chat] Order lookup error:', e.message);
-    resultEl.innerHTML = '<div style="color:#c00;margin-top:16px;">Unable to look up order. Please try again.</div>';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const nameInput  = safeEl('chat-name-input');
-  const emailInput = safeEl('chat-email-input');
-  if (nameInput  && customerName)  nameInput.value  = customerName;
-  if (emailInput && customerEmail) emailInput.value = customerEmail;
-  ensureAuth();
-});
 </script>
-
-</body>
-</html>
