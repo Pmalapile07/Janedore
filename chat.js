@@ -671,10 +671,8 @@ function showSatisfactionPrompt() {
 }
 
 async function submitSatisfaction(satisfied) {
-  const rtdb   =---
-
- getRTDB();
-  const prompt = document.getElementById#('satisfaction-prompt');
+  const rtdb   = getRTDB();
+  const prompt = document.getElementById('satisfaction-prompt');
   const el     = safeEl('chat-messages');
   if (!el) return;
   if (prompt) prompt.remove();
