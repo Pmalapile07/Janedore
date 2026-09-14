@@ -609,7 +609,7 @@ function buildCategoriesSlider() {
   const categories = [
     { label:'Clothing', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat:'all-clothing' },
     { label:'Accessories', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat:'all-accessories' },
-    { label:'Homeware', img: PLACEHOLDER_IMAGE, cat:'homeware' },
+    { label:'Homeware', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-8985.png?v=1789390405', cat:'homeware' },
     { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
   ];
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
