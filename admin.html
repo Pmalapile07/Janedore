@@ -68,14 +68,14 @@
     <button class="sidebar-btn btn-sm" id="btn-seed" onclick="seedDefaultData()" style="display:none;font-size:11px;color:var(--muted);"><span class="sidebar-icon"><i class="ph-light ph-database"></i></span>Seed Data</button>
   </nav>
 
-  <phdiv id="app-body"><main id="main-content"></main></div>
+  <div id="app-body"><main id="main-content"></main></div>
 
   <div id="bottom-nav">
     <div class="bottom-nav-pill">
       <button class="bnav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="bnav-icon"><i class="ph-light ph-chart-line"></i></span><span class="bnav-label">Home</span></button>
       <button class="bnav-btn" data-tab="orders" onclick="switchTab('orders')"><span class="bnav-icon"><i class="ph-light ph-folders"></i></span><span class="bnav-label">Orders</span></button>
       <button class="bnav-btn" data-tab="products" onclick="switchTab('products')"><span class="bnav-icon"><i class="ph-light ph-barcode"></i></span><span class="bnav-label">Products</span></button>
-      <button class="bnav-btn" data-tab="messages" onclick="switchTab('messages')"><span class="bnav-icon"><i class="-light ph-chat"></i></span><span class="bnav-label">Inbox</span><span class="bnav-badge" id="bnav-msg-badge"></span></button>
+      <button class="bnav-btn" data-tab="messages" onclick="switchTab('messages')"><span class="bnav-icon"><i class="ph-light ph-chat"></i></span><span class="bnav-label">Inbox</span><span class="bnav-badge" id="bnav-msg-badge"></span></button>
       <button class="bnav-btn" onclick="openMoreMenu()"><span class="bnav-icon"><i class="ph-light ph-dots-three-outline"></i></span><span class="bnav-label">More</span></button>
     </div>
   </div>
@@ -114,17 +114,20 @@ function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.
 function toggleTheme() {
   var root = document.documentElement;
   var icon = document.getElementById('theme-icon');
-
+  
   if (root.classList.contains('dark-mode')) {
+    // Switch to light
     root.classList.remove('dark-mode');
     root.classList.add('light-mode');
     localStorage.setItem('jd_theme', 'light');
     if (icon) { icon.className = 'ph-light ph-sun'; }
   } else if (root.classList.contains('light-mode')) {
+    // Switch to system default
     root.classList.remove('light-mode');
     localStorage.removeItem('jd_theme');
     updateThemeIcon();
   } else {
+    // Switch to dark
     root.classList.add('dark-mode');
     localStorage.setItem('jd_theme', 'dark');
     if (icon) { icon.className = 'ph-light ph-sun'; }
@@ -144,15 +147,15 @@ function updateThemeIcon() {
 (function initTheme() {
   var saved = localStorage.getItem('jd_theme');
   var root = document.documentElement;
-
+  
   if (saved === 'dark') {
     root.classList.add('dark-mode');
   } else if (saved === 'light') {
     root.classList.add('light-mode');
   }
-
+  
   setTimeout(updateThemeIcon, 100);
-
+  
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
     if (!localStorage.getItem('jd_theme')) {
       updateThemeIcon();
@@ -172,11 +175,10 @@ fetch('/api/cloudinary-config')
     console.error('Cloudinary config failed to load', err);
   });
 </script>
-
+  
 <script src="permissions.js"></script>
 <script src="admin.js"></script>
 <script src="admin-inbox.js"></script>
-<script src="ai-settings-panel.js"></script>
 
 <script src="admin-dashboard.js"></script>
 <script src="admin-products.js"></script>
@@ -190,89 +192,6 @@ fetch('/api/cloudinary-config')
 <script src="admin-launch.js"></script>
 <script src="admin-settings.js"></script>
 <script src="admin-discounts.js"></script>
-
-<!-- ─── AI SETTINGS PANEL MOUNT POINT ─────────────────────────
-     The panel script (ai-settings-panel.js) looks for this ID and
-     renders itself inside. It hides itself when the Settings tab
-     is not active, and re-shows when Settings is opened. -->
-<div id="ai-settings-container" style="display:none;"></div>
-
-<script>
-/* ============================================================
-   AI SETTINGS MOUNT WATCHER
-   Moves the ai-settings-container into the Settings tab view
-   each time the user opens Settings, so the panel appears
-   in-context rather than floating at the bottom of every page.
-   ============================================================ */
-(function () {
-  'use strict';
-
-  var _lastTab = null;
-
-  function findSettingsView() {
-    // admin-settings.js renders its own content into #main-content
-    // when the Settings tab is active. We look for a stable anchor
-    // inside it — if none exists, we append to #main-content itself.
-    var mc = document.getElementById('main-content');
-    if (!mc) return null;
-    // Only attach when Settings tab is showing.
-    // admin-settings.js typically sets a heading or a wrapper class.
-    // We accept any of these common selectors as "Settings is open":
-    return mc;
-  }
-
-  function mountPanel() {
-    var host = document.getElementById('ai-settings-container');
-    var target = findSettingsView();
-    if (!host || !target) return;
-
-    // If panel is already inside the target, nothing to do.
-    if (host.parentNode === target) {
-      host.style.display = 'block';
-      return;
-    }
-    // Otherwise move it into the settings view.
-    target.appendChild(host);
-    host.style.display = 'block';
-
-    // If the panel script hasn't rendered yet (module loaded later),
-    // it will pick up the container on its next ready() tick.
-  }
-
-  function unmountPanel() {
-    var host = document.getElementById('ai-settings-container');
-    if (host) host.style.display = 'none';
-  }
-
-  // Observe tab changes by watching the sidebar's active button.
-  function checkTab() {
-    var active = document.querySelector('.sidebar-btn.active[data-tab], .bnav-btn.active[data-tab]');
-    var tab = active ? active.getAttribute('data-tab') : null;
-    if (tab === _lastTab) return;
-    _lastTab = tab;
-
-    if (tab === 'settings') {
-      // Give admin-settings.js a moment to render, then mount.
-      setTimeout(mountPanel, 150);
-      setTimeout(mountPanel, 500); // second pass in case render is slow
-    } else {
-      unmountPanel();
-    }
-  }
-
-  // Poll + MutationObserver for robustness across tabs.
-  setInterval(checkTab, 400);
-  document.addEventListener('click', function (e) {
-    if (e.target.closest('[data-tab]')) setTimeout(checkTab, 50);
-  });
-  document.addEventListener('DOMContentLoaded', function () {
-    var mo = new MutationObserver(checkTab);
-    var mc = document.getElementById('main-content');
-    if (mc) mo.observe(mc, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-    checkTab();
-  });
-})();
-</script>
 
 </body>
 </html>
