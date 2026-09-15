@@ -3,6 +3,7 @@ const path = require('path');
 const https = require('https');
 const fs = require('fs');
 const admin = require('firebase-admin');
+const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 
@@ -188,6 +189,54 @@ app.post('/api/send-welcome-email', (req, res) => {
 
   request.write(body);
   request.end();
+});
+
+// ==================== CHAT AI REPLY ====================
+// Called by chat.js (customer-facing widget) whenever a customer sends
+// a message and hasn't explicitly asked for a human. Uses the official
+// @google/genai SDK (server-side only — the API key never reaches the
+// browser). Needs a GEMINI_API_KEY env var set on Render, alongside the
+// existing RESEND_API_KEY / CLOUDINARY_* vars.
+
+let genAI = null;
+if (process.env.GEMINI_API_KEY) {
+  genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  console.log('[GEMINI] Initialized');
+} else {
+  console.warn('[GEMINI] GEMINI_API_KEY not set — /api/chat-ai-reply will return an error until it is');
+}
+
+const CHAT_SYSTEM_PROMPT = `You are the JANEDORE customer support assistant. JANEDORE is a multi-brand store — every brand it stocks has been vetted for quality and a strong identity. You help customers with sizing, shipping, returns, and finding the right piece. Keep replies short (2-4 sentences), warm, and direct — this is a small chat bubble, not an email. If you don't know the answer, or the question needs a human (an order-specific issue, a complaint, anything you're not confident about), say so plainly and suggest they ask to speak with a person.`;
+
+app.post('/api/chat-ai-reply', async (req, res) => {
+  const message = req.body && req.body.message;
+
+  if (!message || typeof message !== 'string' || !message.trim()) {
+    return res.status(400).json({ error: 'Missing message' });
+  }
+
+  if (!genAI) {
+    console.error('[GEMINI] GEMINI_API_KEY not set');
+    return res.status(500).json({ error: 'AI reply service not configured' });
+  }
+
+  try {
+    const result = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: message,
+      config: {
+        systemInstruction: CHAT_SYSTEM_PROMPT
+      }
+    });
+    const reply = result.text;
+    if (!reply) {
+      return res.status(500).json({ error: 'Empty response from AI' });
+    }
+    res.json({ reply: reply.trim() });
+  } catch (e) {
+    console.error('[GEMINI] Generate error:', e.message);
+    res.status(500).json({ error: 'Failed to generate reply' });
+  }
 });
 
 // ==================== SEO HELPERS ====================
