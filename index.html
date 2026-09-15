@@ -23,6 +23,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
 
   <style id="auth-guard-style">body { visibility: hidden; }</style>
 
@@ -457,26 +458,22 @@
     console.warn('[AI Bridge] window._firebaseConfig not found — bridge not initialized.');
   } else {
     try {
-      // Reuse an existing modular app if one was already created, otherwise create one.
       const existing = getApps().find(a => a.name === 'ai-logic');
       const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
 
-      // App Check — needed for Firebase AI Logic to accept requests.
-      // Reuses the existing reCAPTCHA v3 site key already present on the page.
       try {
         initializeAppCheck(aiApp, {
           provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'),
           isTokenAutoRefreshEnabled: true
         });
+        console.log('[AI Bridge] App Check initialized (manual, before getAI)');
       } catch (acErr) {
-        console.warn('[AI Bridge] App Check init warning:', acErr && acErr.message);
+        console.log('[AI Bridge] App Check already initialized:', acErr && acErr.message);
       }
 
-      // Set up the AI backend + template model
       const ai = getAI(aiApp, { backend: new GoogleAIBackend() });
       const templateModel = getTemplateGenerativeModel(ai);
 
-      // Expose the bridge chat.js already expects
       window._aiBridge = {
         async getReply(templateId, variables) {
           const result = await templateModel.generateContent(
@@ -485,7 +482,6 @@
           );
           const response = result && result.response;
           if (!response) return null;
-          // response.text() returns the raw text
           const text = typeof response.text === 'function' ? response.text() : response.text;
           return text || null;
         }
