@@ -28,6 +28,41 @@ window.db = firebase.firestore();
 const db = window.db;
 console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — Firestore db ready');
 
+// ==================== APP CHECK ====================
+// Required for Firebase AI Logic to accept requests from this app.
+// Uses the existing reCAPTCHA v3 site key.
+// The AI bridge module's getAI() will detect and reuse this instance.
+
+if (typeof firebase.appCheck === 'function') {
+  try {
+    firebase.appCheck().activate('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf', true);
+    console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — App Check activated');
+  } catch (e) {
+    console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — App Check already active:', e.message);
+  }
+} else {
+  console.warn('[FIREBASE.JS] App Check SDK not loaded — ensure firebase-app-check-compat.js is included in <head>');
+}
+
+// ==================== ANONYMOUS AUTH ====================
+// Required for RTDB reads on live_chat/ when rules require auth != null.
+// On the main site, an admin user is already signed in, so this is a no-op.
+// On the Coming Soon page, this establishes a session so chat RTDB reads succeed.
+
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) {
+    firebase.auth().signInAnonymously()
+      .then(function(result) {
+        console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — Anonymous auth established:', result.user.uid.slice(0, 12));
+      })
+      .catch(function(e) {
+        console.warn('[FIREBASE.JS] Anonymous auth failed:', e.message);
+      });
+  } else {
+    console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — Auth user present:', user.uid.slice(0, 12));
+  }
+});
+
 // ==================== FIREBASE FUNCTIONS ====================
 
 async function getProductReviews(productId) {
