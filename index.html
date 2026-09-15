@@ -438,6 +438,69 @@
 <script src="content-pages.js"></script>
 <script src="sliders.js"></script>
 <script src="footer.js"></script>
+
+<!-- ==================== FIREBASE AI LOGIC BRIDGE ====================
+     Defines window._aiBridge.getReply(templateId, variables) so
+     chat.js can call Firebase AI Logic server-side prompt templates.
+     Uses a SEPARATE modular Firebase app + App Check so it does not
+     interfere with the compat SDK used by the rest of the site.
+     ================================================================= -->
+<script type="module">
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js';
+  import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-ai.js';
+
+  // Pull the same config the compat SDK already uses on the page.
+  // window.firebase.app().options returns the config the compat app was init'd with in firebase.js.
+  const firebaseConfig = (window.firebase && window.firebase.app && window.firebase.app().options) || null;
+
+  if (!firebaseConfig) {
+    console.warn('[AI Bridge] Firebase config not found on window.firebase.app().options — bridge not initialized.');
+  } else {
+    try {
+      // Reuse an existing modular app if one was already created, otherwise create one.
+      const existing = getApps().find(a => a.name === 'ai-logic');
+      const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
+
+      // App Check — needed for Firebase AI Logic to accept requests.
+      // Reuses the same reCAPTCHA v3 site key format Firebase expects.
+      // If you already have a reCAPTCHA Enterprise site key registered for
+      // AI Logic, replace this string with it.
+      try {
+        initializeAppCheck(aiApp, {
+          provider: new ReCaptchaV3Provider('6Lc8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8'), // placeholder — replace with your real site key
+          isTokenAutoRefreshEnabled: true
+        });
+      } catch (acErr) {
+        console.warn('[AI Bridge] App Check init warning:', acErr && acErr.message);
+      }
+
+      // Set up the AI backend + template model
+      const ai = getAI(aiApp, { backend: new GoogleAIBackend() });
+      const templateModel = getTemplateGenerativeModel(ai);
+
+      // Expose the bridge chat.js already expects
+      window._aiBridge = {
+        async getReply(templateId, variables) {
+          const result = await templateModel.generateContent({
+            templateId: templateId,
+            variables: variables || {}
+          });
+          const response = result && result.response;
+          if (!response) return null;
+          // response.text() returns the raw text
+          const text = typeof response.text === 'function' ? response.text() : response.text;
+          return text || null;
+        }
+      };
+
+      console.log('[AI Bridge] _aiBridge ready.');
+    } catch (e) {
+      console.error('[AI Bridge] Failed to initialize:', e && e.message, e);
+    }
+  }
+</script>
+
 <script src="chat.js"></script>
 <script src="app.js"></script>
 
