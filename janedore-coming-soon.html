@@ -44,6 +44,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
 
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -663,20 +664,38 @@
   var auth = firebase.auth();
   var db   = firebase.firestore();
 
-  // Force Firestore to use long-polling instead of WebChannel.
-  // Fixes the intermittent "WebChannelConnection RPC 'Listen' stream
-  // transport errored" warnings on flaky networks / proxies.
-  try {
-    db.settings({ experimentalForceLongPolling: true });
-  } catch (e) {
-    // settings() can only be called before any other Firestore call.
-    // If it fails, Firestore is already in use — safe to ignore.
-    console.warn('[Firestore] settings() ignored:', e.message);
+  // ==================== APP CHECK ====================
+  // Required for Firebase AI Logic to accept requests.
+  // Uses the existing reCAPTCHA v3 site key.
+  if (typeof firebase.appCheck === 'function') {
+    try {
+      firebase.appCheck().activate('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf', true);
+      console.log('[ComingSoon] App Check activated');
+    } catch (e) {
+      console.log('[ComingSoon] App Check already active:', e.message);
+    }
+  } else {
+    console.warn('[ComingSoon] App Check SDK not loaded');
   }
+
+  // ==================== ANONYMOUS AUTH ====================
+  // Required for RTDB reads on live_chat/ when rules say auth != null.
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) {
+      firebase.auth().signInAnonymously()
+        .then(function(result) {
+          console.log('[ComingSoon] Anonymous auth established:', result.user.uid.slice(0, 12));
+        })
+        .catch(function(e) {
+          console.warn('[ComingSoon] Anonymous auth failed:', e.message);
+        });
+    } else {
+      console.log('[ComingSoon] Auth user present:', user.uid.slice(0, 12));
+    }
+  });
 
   // ── Cookie helpers ─────────────────────────────────────────
   function setAdminCookie() {
-    // Expires in 7 days; SameSite=Strict keeps it on same domain only
     var expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
     document.cookie = 'jd_admin=1; path=/; expires=' + expires + '; SameSite=Strict';
   }
@@ -863,7 +882,6 @@
             throw { friendly: 'Access denied.' };
           });
         }
-        // Set cookie so index.html knows a session exists on refresh
         setAdminCookie();
         window.location.href = 'index.html';
       });
@@ -902,7 +920,6 @@
   import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js';
   import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js';
 
-  // Reuse the same config the compat SDK already initialized on this page.
   const firebaseConfig = window.firebaseConfig || null;
 
   if (!firebaseConfig) {
@@ -912,11 +929,6 @@
       const existing = getApps().find(a => a.name === 'ai-logic');
       const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
 
-      // Initialize App Check BEFORE getAI().
-      // getAI() checks for an existing App Check instance and reuses it,
-      // so pre-initializing here avoids the SDK's auto-init path, which
-      // can throw and silently kill this whole module (which is what was
-      // happening before: _aiBridge never got assigned).
       try {
         initializeAppCheck(aiApp, {
           provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'),
@@ -924,7 +936,6 @@
         });
         console.log('[AI Bridge] App Check initialized (manual, before getAI)');
       } catch (acErr) {
-        // "already initialized" is fine — continue to getAI().
         console.log('[AI Bridge] App Check already initialized:', acErr && acErr.message);
       }
 
@@ -952,8 +963,6 @@
 </script>
 
 <script>
-  // Independent of the signup/Firebase logic above: once the person engages with
-  // the email field, stop the envelope's open/close loop and keep it open.
   (function () {
     var emailField = document.getElementById('email-input');
     if (!emailField) return;
