@@ -663,6 +663,17 @@
   var auth = firebase.auth();
   var db   = firebase.firestore();
 
+  // Force Firestore to use long-polling instead of WebChannel.
+  // Fixes the intermittent "WebChannelConnection RPC 'Listen' stream
+  // transport errored" warnings on flaky networks / proxies.
+  try {
+    db.settings({ experimentalForceLongPolling: true });
+  } catch (e) {
+    // settings() can only be called before any other Firestore call.
+    // If it fails, Firestore is already in use — safe to ignore.
+    console.warn('[Firestore] settings() ignored:', e.message);
+  }
+
   // ── Cookie helpers ─────────────────────────────────────────
   function setAdminCookie() {
     // Expires in 7 days; SameSite=Strict keeps it on same domain only
@@ -867,11 +878,6 @@
     });
   }
 
-  // ── Firebase AI Logic bridge (modular, separate app) ──────
-  // Provides window._aiBridge.getReply(templateId, variables) for chat.js.
-  // Runs as a module below, before chat.js is dynamically injected.
-  // ──────────────────────────────────────────────────────────
-
   fetch('chat-widget.html')
     .then(function(r) { return r.text(); })
     .then(function(html) {
@@ -906,13 +912,20 @@
       const existing = getApps().find(a => a.name === 'ai-logic');
       const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
 
+      // Initialize App Check BEFORE getAI().
+      // getAI() checks for an existing App Check instance and reuses it,
+      // so pre-initializing here avoids the SDK's auto-init path, which
+      // can throw and silently kill this whole module (which is what was
+      // happening before: _aiBridge never got assigned).
       try {
         initializeAppCheck(aiApp, {
           provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'),
           isTokenAutoRefreshEnabled: true
         });
+        console.log('[AI Bridge] App Check initialized (manual, before getAI)');
       } catch (acErr) {
-        console.warn('[AI Bridge] App Check init warning:', acErr && acErr.message);
+        // "already initialized" is fine — continue to getAI().
+        console.log('[AI Bridge] App Check already initialized:', acErr && acErr.message);
       }
 
       const ai = getAI(aiApp, { backend: new GoogleAIBackend() });
