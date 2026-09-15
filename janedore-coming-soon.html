@@ -867,6 +867,11 @@
     });
   }
 
+  // ── Firebase AI Logic bridge (modular, separate app) ──────
+  // Provides window._aiBridge.getReply(templateId, variables) for chat.js.
+  // Runs as a module below, before chat.js is dynamically injected.
+  // ──────────────────────────────────────────────────────────
+
   fetch('chat-widget.html')
     .then(function(r) { return r.text(); })
     .then(function(html) {
@@ -876,6 +881,61 @@
       document.body.appendChild(script);
     })
     .catch(function(err) { console.error('Chat widget failed:', err); });
+</script>
+
+<!-- ==================== FIREBASE AI LOGIC BRIDGE ====================
+     Defines window._aiBridge.getReply(templateId, variables) so
+     chat.js can call Firebase AI Logic server-side prompt templates.
+     Uses a SEPARATE modular Firebase app + App Check so it does not
+     interfere with the compat SDK used by the rest of the page.
+     Placed BEFORE the block that injects chat.js so the bridge
+     exists on window by the time chat.js starts.
+     ================================================================= -->
+<script type="module">
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+  import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js';
+  import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js';
+
+  // Reuse the same config the compat SDK already initialized on this page.
+  const firebaseConfig = window.firebaseConfig || null;
+
+  if (!firebaseConfig) {
+    console.warn('[AI Bridge] firebaseConfig not found — bridge not initialized.');
+  } else {
+    try {
+      const existing = getApps().find(a => a.name === 'ai-logic');
+      const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
+
+      try {
+        initializeAppCheck(aiApp, {
+          provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'),
+          isTokenAutoRefreshEnabled: true
+        });
+      } catch (acErr) {
+        console.warn('[AI Bridge] App Check init warning:', acErr && acErr.message);
+      }
+
+      const ai = getAI(aiApp, { backend: new GoogleAIBackend() });
+      const templateModel = getTemplateGenerativeModel(ai);
+
+      window._aiBridge = {
+        async getReply(templateId, variables) {
+          const result = await templateModel.generateContent(
+            templateId || 'customer-support-chat',
+            variables || {}
+          );
+          const response = result && result.response;
+          if (!response) return null;
+          const text = typeof response.text === 'function' ? response.text() : response.text;
+          return text || null;
+        }
+      };
+
+      console.log('[AI Bridge] _aiBridge ready.');
+    } catch (e) {
+      console.error('[AI Bridge] Failed to initialize:', e && e.message, e);
+    }
+  }
 </script>
 
 <script>
