@@ -44,7 +44,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
 
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -79,7 +78,6 @@
     clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
 
-  /* ── Header ───────────────────────────────────────────── */
   .site-header {
     display: flex;
     align-items: center;
@@ -105,7 +103,6 @@
     display: block;
   }
 
-  /* ── Main ─────────────────────────────────────────────── */
   .main-content {
     display: flex;
     flex-direction: column;
@@ -167,7 +164,6 @@
     100% { transform: translateY(26px); }
   }
 
-  /* ── Envelope signup: wide black envelope, white paper inside ── */
   .signup-wrapper { width: 100%; max-width: 480px; }
 
   .envelope {
@@ -178,7 +174,6 @@
     perspective: 1000px;
   }
 
-  /* Layer 1: back panel — the envelope wall behind everything */
   .envelope-back {
     position: absolute;
     left: 0; right: 0;
@@ -208,7 +203,6 @@
     100% { opacity: 0; }
   }
 
-  /* Layer 1b: the top opening flap — flat/hidden while closed, rises up as the lid opens */
   .envelope-flap-top {
     position: absolute;
     left: 0; right: 0;
@@ -234,7 +228,6 @@
     100% { transform: scaleY(0); opacity: 0; }
   }
 
-  /* Layer 2: the paper, tucked between the back panel and the front pocket */
   .envelope-paper {
     position: absolute;
     left: 4%;
@@ -252,9 +245,6 @@
   }
   .envelope-paper .signup-row { width: 100%; }
 
-  /* Layer 3: left & right folded side panels — tucked in first, mostly hidden
-     beneath the front pocket flap. They stop underneath it; they never meet each other.
-     Sized to only cover the lower half of the paper, so the top half stays visible. */
   .envelope-fold-left {
     position: absolute;
     left: 0; right: 0;
@@ -274,9 +264,6 @@
     clip-path: polygon(100% 0%, 38% 0%, 76% 100%, 100% 100%);
   }
 
-  /* Layer 4 (same stacking group as the folds): the front pocket flap — sits above
-     both folds, its point is what actually reads as "an envelope" on the closed front
-     face. Same reduced height as the folds, so it only covers the paper's lower half. */
   .envelope-front-flap {
     position: absolute;
     left: 0; right: 0;
@@ -287,10 +274,6 @@
     clip-path: polygon(0% 100%, 50% 20%, 100% 100%);
   }
 
-  /* Layer 5: closed top flap — folds down low, overlapping the front pocket flap's point.
-     Same lid-open animation/timing as before; only the shape is a real folded-flap silhouette. */
-  /* Locked-open state: once the person interacts with the email field, the envelope
-     stays open and doesn't cycle closed again. Toggled by a small script below. */
   body.env-locked .envelope-lid       { animation: none; opacity: 0; pointer-events: none; }
   body.env-locked .envelope-flap-top  { animation: none; transform: scaleY(1); opacity: 1; }
   body.env-locked .envelope-paper     { animation: none; transform: translateY(-16px) scale(1); opacity: 1; }
@@ -413,7 +396,6 @@
     .headline { animation: none; transform: translateY(0); }
   }
 
-  /* ── Footer ───────────────────────────────────────────── */
   .site-footer {
     padding: 40px 60px;
     display: flex;
@@ -431,7 +413,6 @@
     user-select: none;
   }
 
-  /* ── Admin overlay (kept functionally & visually consistent) ── */
   .admin-overlay {
     position: fixed;
     inset: 0;
@@ -545,13 +526,6 @@
     line-height: 1;
   }
 
-  #chat-container {
-    position: fixed;
-    bottom: 32px;
-    right: 32px;
-    z-index: 60;
-  }
-
   @media (max-width: 768px) {
     .site-header { padding: 28px 24px; }
     .header-logo-text { font-size: 1.1rem; }
@@ -560,7 +534,6 @@
     .subhead { margin-bottom: 40px; }
     .envelope-paper { padding: 18px 18px 0; }
     .site-footer { padding: 24px 24px; }
-    #chat-container { bottom: 20px; right: 16px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -646,8 +619,6 @@
   </div>
 </div>
 
-<div id="chat-container"></div>
-
 <script>
   var firebaseConfig = {
     apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
@@ -663,36 +634,6 @@
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   var auth = firebase.auth();
   var db   = firebase.firestore();
-
-  // ==================== APP CHECK ====================
-  // Required for Firebase AI Logic to accept requests.
-  // Uses the existing reCAPTCHA v3 site key.
-  if (typeof firebase.appCheck === 'function') {
-    try {
-      firebase.appCheck().activate('6Lcws70tAAAAAHkOHW258mogHkJ0RvHXqslHzAL6', true);
-      console.log('[ComingSoon] App Check activated');
-    } catch (e) {
-      console.log('[ComingSoon] App Check already active:', e.message);
-    }
-  } else {
-    console.warn('[ComingSoon] App Check SDK not loaded');
-  }
-
-  // ==================== ANONYMOUS AUTH ====================
-  // Required for RTDB reads on live_chat/ when rules say auth != null.
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (!user) {
-      firebase.auth().signInAnonymously()
-        .then(function(result) {
-          console.log('[ComingSoon] Anonymous auth established:', result.user.uid.slice(0, 12));
-        })
-        .catch(function(e) {
-          console.warn('[ComingSoon] Anonymous auth failed:', e.message);
-        });
-    } else {
-      console.log('[ComingSoon] Auth user present:', user.uid.slice(0, 12));
-    }
-  });
 
   // ── Cookie helpers ─────────────────────────────────────────
   function setAdminCookie() {
@@ -894,71 +835,6 @@
       loginBtn.disabled    = false;
       loginBtn.textContent = 'Sign In';
     });
-  }
-
-  fetch('chat-widget.html')
-    .then(function(r) { return r.text(); })
-    .then(function(html) {
-      document.getElementById('chat-container').innerHTML = html;
-      var script = document.createElement('script');
-      script.src = 'chat.js';
-      document.body.appendChild(script);
-    })
-    .catch(function(err) { console.error('Chat widget failed:', err); });
-</script>
-
-<!-- ==================== FIREBASE AI LOGIC BRIDGE ====================
-     Defines window._aiBridge.getReply(templateId, variables) so
-     chat.js can call Firebase AI Logic server-side prompt templates.
-     Uses a SEPARATE modular Firebase app + App Check so it does not
-     interfere with the compat SDK used by the rest of the page.
-     Placed BEFORE the block that injects chat.js so the bridge
-     exists on window by the time chat.js starts.
-     ================================================================= -->
-<script type="module">
-  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-  import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js';
-  import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js';
-
-  const firebaseConfig = window.firebaseConfig || null;
-
-  if (!firebaseConfig) {
-    console.warn('[AI Bridge] firebaseConfig not found — bridge not initialized.');
-  } else {
-    try {
-      const existing = getApps().find(a => a.name === 'ai-logic');
-      const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
-
-      try {
-        initializeAppCheck(aiApp, {
-          provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'),
-          isTokenAutoRefreshEnabled: true
-        });
-        console.log('[AI Bridge] App Check initialized (manual, before getAI)');
-      } catch (acErr) {
-        console.log('[AI Bridge] App Check already initialized:', acErr && acErr.message);
-      }
-
-      const ai = getAI(aiApp, { backend: new GoogleAIBackend() });
-      const templateModel = getTemplateGenerativeModel(ai);
-
-      window._aiBridge = {
-        async getReply(templateId, variables) {
-          const result = await templateModel.generateContent(
-            templateId || 'customer-support-chat',
-            variables || {}
-          );
-          const response = result && result.response;
-          if (!response) return null;
-          const text = typeof response.text === 'function' ? response.text() : response.text;
-          return text || null;
-        }
-      };
-
-      console.log('[AI Bridge] _aiBridge ready.');
-    } catch (e) {
-      console.error('[AI Bridge] Failed to initialize:', e && e.message, e);
-    }
   }
 </script>
 
