@@ -2,64 +2,124 @@
 // Chats & live messages → Firebase Realtime Database (RTDB)
 // Order lookups → Firestore
 
+// ==================== DEBUG CONSOLE ====================
+const _ChatDebug = {
+  enabled: true,
+  log(area, msg, data) {
+    if (!this.enabled) return;
+    const ts = new Date().toISOString().slice(11, 23);
+    if (data !== undefined) console.log(`[Chat/${area}] ${ts} ${msg}`, data);
+    else console.log(`[Chat/${area}] ${ts} ${msg}`);
+  },
+  warn(area, msg, data) {
+    if (!this.enabled) return;
+    console.warn(`[Chat/${area}] ${msg}`, data ?? '');
+  },
+  error(area, msg, data) {
+    console.error(`[Chat/${area}] ${msg}`, data ?? '');
+  }
+};
+
 let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
 localStorage.setItem('janedore_chat_session', chatSessionId);
 let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
-let customerName  = localStorage.getItem('janedore_chat_name') || '';
+let customerName = localStorage.getItem('janedore_chat_name') || '';
 let chatOpen = false;
 let currentUser = null;
 let typingTimeout = null;
 let loadedMessageKeys = new Set();
 let hasLoadedOnce = false;
+let _aiBridgeReady = false;
+let _aiFailCount = 0;
+let _aiDisabledUntil = 0;
 
-// FIX #6: store both the ref and callback so we can properly detach
 let _chatListenerRef = null;
-let _chatListenerCb  = null;
+let _chatListenerCb = null;
 let _typingListenerRef = null;
-let _typingListenerCb  = null;
+let _typingListenerCb = null;
+let _statusListenerRef = null;
+let _statusListenerCb = null;
+let _satisfactionShown = false;
+let _resolvedActive = false;
 
 function getRTDB() {
   try { return firebase.database(); }
-  catch(e) { console.error('[Chat] RTDB not available:', e.message); return null; }
+  catch (e) { _ChatDebug.error('RTDB', 'Not available', e.message); return null; }
 }
 function getFirestore() {
   try { return firebase.firestore(); }
-  catch(e) { console.error('[Chat] Firestore not available:', e.message); return null; }
+  catch (e) { _ChatDebug.error('Firestore', 'Not available', e.message); return null; }
 }
 function safeEl(id) { return document.getElementById(id) || null; }
+
+// ==================== AI BRIDGE READINESS ====================
+// The bridge is created by the module script. Poll until window._aiBridge exists.
+// AI Logic requires App Check tokens which may take a moment to issue[citation:14].
+function checkAIBridge() {
+  if (window._aiBridge) {
+    _aiBridgeReady = true;
+    _ChatDebug.log('AI', 'Bridge detected and ready');
+    return true;
+  }
+  _aiBridgeReady = false;
+  return false;
+}
+
+// Poll for bridge readiness (max 5s)
+function waitForAIBridge(maxWaitMs = 5000) {
+  return new Promise((resolve) => {
+    if (checkAIBridge()) { resolve(true); return; }
+    const start = Date.now();
+    const interval = setInterval(() => {
+      if (checkAIBridge()) {
+        clearInterval(interval);
+        resolve(true);
+      } else if (Date.now() - start > maxWaitMs) {
+        clearInterval(interval);
+        _ChatDebug.warn('AI', 'Bridge not detected within timeout — AI replies disabled');
+        resolve(false);
+      }
+    }, 200);
+  });
+}
 
 // ==================== AUTH ====================
 async function ensureAuth() {
   try {
     if (firebase.auth().currentUser) return firebase.auth().currentUser;
     const result = await firebase.auth().signInAnonymously();
+    _ChatDebug.log('Auth', 'Anonymous sign-in OK', result.user.uid);
     return result.user;
-  } catch(e) {
-    console.warn('[Chat] Auth failed:', e.message);
+  } catch (e) {
+    _ChatDebug.warn('Auth', 'Auth failed', e.message);
     return null;
   }
 }
 
 // ==================== DETACH LISTENERS ====================
-// FIX #6: proper detach — ref.off(event, callback)
 function detachChatListener() {
   if (_chatListenerRef && _chatListenerCb) {
     _chatListenerRef.off('child_added', _chatListenerCb);
     _chatListenerRef = null;
-    _chatListenerCb  = null;
+    _chatListenerCb = null;
   }
 }
 function detachTypingListener() {
   if (_typingListenerRef && _typingListenerCb) {
     _typingListenerRef.off('value', _typingListenerCb);
     _typingListenerRef = null;
-    _typingListenerCb  = null;
+    _typingListenerCb = null;
+  }
+}
+function detachStatusListener() {
+  if (_statusListenerRef && _statusListenerCb) {
+    _statusListenerRef.off('value', _statusListenerCb);
+    _statusListenerRef = null;
+    _statusListenerCb = null;
   }
 }
 
 // ==================== SCREEN CONTROL ====================
-// The widget no longer has separate welcome/email/options screens.
-// Opening the chat always shows the messages panel + input directly.
 function toggleChat() {
   chatOpen = !chatOpen;
   const win = safeEl('chat-window');
@@ -88,7 +148,6 @@ function toggleChat() {
       listenTyping();
       listenStatus();
     } else if (!_chatListenerRef) {
-      // Re-attach listeners if they were detached on close.
       detachChatListener();
       detachTypingListener();
       listenChat();
@@ -117,15 +176,13 @@ function showScreen(id) {
   if (el) el.style.display = 'flex';
 }
 
-// Only shown once a name/email is actually known (e.g. supplied
-// during a human handoff) — no longer a gate before chatting.
 function updateCustomerInfoBar() {
   const infoBar = safeEl('chat-customer-info');
-  const nameEl  = safeEl('chat-customer-name');
+  const nameEl = safeEl('chat-customer-name');
   const emailEl = safeEl('chat-customer-email');
   if (!infoBar) return;
   if (customerName || customerEmail) {
-    if (nameEl)  nameEl.textContent  = customerName  || 'Guest';
+    if (nameEl) nameEl.textContent = customerName || 'Guest';
     if (emailEl) emailEl.textContent = customerEmail || '';
     infoBar.style.display = 'flex';
   } else {
@@ -141,7 +198,6 @@ function showOrderLookup() {
   if (input) setTimeout(() => input.focus(), 100);
 }
 
-// Returns from the order-lookup screen back to the message view.
 function backToChat() {
   showScreen('chat-messages');
   const inputWrap = safeEl('chat-input-wrap');
@@ -154,7 +210,7 @@ function clearChatSession() {
   localStorage.removeItem('janedore_chat_name');
   localStorage.removeItem('janedore_chat_session');
   customerEmail = '';
-  customerName  = '';
+  customerName = '';
   chatSessionId = 'chat-' + Date.now();
   detachChatListener();
   detachTypingListener();
@@ -175,10 +231,6 @@ function clearChatSession() {
 }
 
 // ==================== AI GREETING ====================
-// Rendered client-side only (not written to RTDB) the first time a
-// session has no message history, so it doesn't create a false
-// "unread" notification in the admin inbox every time someone opens
-// the widget for the first time.
 function renderAIGreeting() {
   const el = safeEl('chat-messages');
   if (!el) return;
@@ -186,8 +238,8 @@ function renderAIGreeting() {
   greeting.className = 'chat-msg admin';
   greeting.innerHTML =
     '<div style="margin-bottom:10px;">'
-      + 'Hi, I\'m the JANEDORE assistant. I can help with sizing, shipping, returns, or finding the right piece — just ask. '
-      + 'You can also track an existing order below.'
+    + 'Hi, I\'m the JANEDORE assistant. I can help with sizing, shipping, returns, or finding the right piece — just ask. '
+    + 'You can also track an existing order below.'
     + '</div>'
     + '<button class="chat-pill-btn" id="ai-greeting-track-btn">Track Order</button>';
   el.appendChild(greeting);
@@ -196,31 +248,59 @@ function renderAIGreeting() {
 }
 
 // ==================== AI REPLY ====================
-// Calls the Firebase AI Logic server-side prompt template via the global _aiBridge.
-// Returns null on any failure so sendChatMessage() just leaves the conversation
-// for a human, preserving your existing fallback behavior.
-async function getAIReply(customerText) {
-  try {
-    if (!window._aiBridge) {
-      console.warn('[Chat] AI Bridge is not yet initialized.');
-      return null;
-    }
+// Uses the server-side template "customer-support-chat".
+// Includes retry with backoff for App Check token propagation.
+async function getAIReply(customerText, attempt = 1) {
+  const MAX_ATTEMPTS = 3;
 
-    // Call the server-side template by its Template ID
+  // Circuit breaker: if AI failed recently, don't hammer it
+  if (Date.now() < _aiDisabledUntil) {
+    _ChatDebug.warn('AI', 'Circuit breaker active — skipping AI reply');
+    return null;
+  }
+
+  if (!window._aiBridge) {
+    _ChatDebug.warn('AI', 'Bridge not available');
+    return null;
+  }
+
+  try {
+    _ChatDebug.log('AI', `Calling template (attempt ${attempt})`, { text: customerText.slice(0, 50) });
+
     const reply = await window._aiBridge.getReply('customer-support-chat', {
       customerText: customerText
     });
 
-    return reply || null;
+    if (!reply) {
+      _ChatDebug.warn('AI', 'Empty reply from bridge');
+      return null;
+    }
+
+    _ChatDebug.log('AI', 'Reply received', reply.slice(0, 80));
+    _aiFailCount = 0; // reset on success
+    return reply;
+
   } catch (e) {
-    console.warn('[Chat] AI template reply failed:', e.message);
+    _ChatDebug.error('AI', `Template reply failed (attempt ${attempt})`, e.message);
+
+    // Retry on transient errors (App Check token not yet valid, network)
+    if (attempt < MAX_ATTEMPTS) {
+      const backoff = 800 * attempt;
+      _ChatDebug.log('AI', `Retrying in ${backoff}ms...`);
+      await new Promise(r => setTimeout(r, backoff));
+      return getAIReply(customerText, attempt + 1);
+    }
+
+    // All retries exhausted — trip circuit breaker for 60s
+    _aiFailCount++;
+    if (_aiFailCount >= 2) {
+      _aiDisabledUntil = Date.now() + 60000;
+      _ChatDebug.warn('AI', 'Circuit breaker tripped — AI disabled for 60s');
+    }
     return null;
   }
 }
 
-// Simple keyword check for an explicit human handoff request. This
-// does not require the AI to be wired up — it's a plain text check
-// so "talk to a human" always works even before AI replies exist.
 function customerWantsHuman(text) {
   const t = (text || '').toLowerCase();
   return t.includes('human') || t.includes('agent') || t.includes('real person') || t.includes('speak to someone');
@@ -229,7 +309,7 @@ function customerWantsHuman(text) {
 // ==================== MESSAGES ====================
 async function loadMessages() {
   const rtdb = getRTDB();
-  const el   = safeEl('chat-messages');
+  const el = safeEl('chat-messages');
   if (!rtdb || !el) return;
 
   el.innerHTML = '<div class="chat-welcome"><strong>Loading...</strong></div>';
@@ -254,8 +334,8 @@ async function loadMessages() {
     messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
 
     el.scrollTop = el.scrollHeight;
-  } catch(e) {
-    console.error('[Chat] Load messages error:', e.message);
+  } catch (e) {
+    _ChatDebug.error('Messages', 'Load error', e.message);
     renderAIGreeting();
   }
 }
@@ -264,16 +344,13 @@ function appendMessage(m) {
   const el = safeEl('chat-messages');
   if (!el) return;
 
-  // System messages — centred pill, no bubble.
   if (m.sender === 'system') {
-    // The 'resolved' type triggers the satisfaction prompt via the
-    // status listener — no need to render it as a visible bubble.
     if (m.type === 'resolved') return;
     const pill = document.createElement('div');
     pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
     pill.innerHTML =
       '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
-        + (m.text || '')
+      + (m.text || '')
       + '</span>';
     el.appendChild(pill);
     return;
@@ -287,13 +364,9 @@ function appendMessage(m) {
   const div = document.createElement('div');
   div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin');
 
-  // Show sender name on admin messages if stored — so customer knows
-  // whether they are speaking to Janedore or a named team member.
-  // Never render email addresses — if senderName looks like an email,
-  // fall back to Janedore so internal addresses are never exposed.
-  var rawName    = (!isCustomer && m.senderName) ? m.senderName : '';
-  var safeName   = (rawName && rawName.indexOf('@') === -1) ? rawName : 'Janedore';
-  var showName   = !isCustomer && rawName;
+  var rawName = (!isCustomer && m.senderName) ? m.senderName : '';
+  var safeName = (rawName && rawName.indexOf('@') === -1) ? rawName : 'Janedore';
+  var showName = !isCustomer && rawName;
   const nameHtml = showName
     ? '<div style="font-size:9px;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:500;">' + safeName + '</div>'
     : '';
@@ -307,9 +380,9 @@ function listenChat() {
   if (!rtdb) return;
 
   _chatListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/messages');
-  _chatListenerCb  = snap => {
+  _chatListenerCb = snap => {
     const key = snap.key;
-    const m   = snap.val();
+    const m = snap.val();
     if (loadedMessageKeys.has(key)) return;
     loadedMessageKeys.add(key);
     if (!m || m.type === 'auth') return;
@@ -329,17 +402,13 @@ function listenChat() {
 
 // ==================== SEND MESSAGE ====================
 async function sendChatMessage() {
-  const rtdb  = getRTDB();
+  const rtdb = getRTDB();
   const input = safeEl('chat-input');
   if (!rtdb || !input) return;
 
   const text = input.value.trim();
   if (!text) return;
 
-  // #5: if this send is reopening a resolved conversation, give the
-  // customer instant local feedback rather than waiting on the round
-  // trip to the server. Capture the flag first since the write below
-  // resets it.
   const wasResolved = _resolvedActive;
   if (wasResolved) {
     input.placeholder = 'Type your message...';
@@ -359,7 +428,7 @@ async function sendChatMessage() {
       pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
       pill.innerHTML =
         '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
-          + 'Reopening chat…'
+        + 'Reopening chat…'
         + '</span>';
       el.appendChild(pill);
       el.scrollTop = el.scrollHeight;
@@ -374,62 +443,57 @@ async function sendChatMessage() {
     const user = firebase.auth().currentUser;
 
     const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-    const ts     = firebase.database.ServerValue.TIMESTAMP;
+    const ts = firebase.database.ServerValue.TIMESTAMP;
 
     const updates = {};
     updates['live_chat/' + chatSessionId + '/messages/' + msgRef.key] = {
-      sessionId:     chatSessionId,
+      sessionId: chatSessionId,
       customerEmail: customerEmail,
-      customerName:  customerName,
-      text:          text,
-      sender:        'customer',
-      createdAt:     ts,
-      read:          false,
-      delivered:     false,
-      userId:        user ? user.uid : 'anonymous'
+      customerName: customerName,
+      text: text,
+      sender: 'customer',
+      createdAt: ts,
+      read: false,
+      delivered: false,
+      userId: user ? user.uid : 'anonymous'
     };
 
-    updates['chat_inbox/' + chatSessionId + '/lastMessage']    = text;
-    updates['chat_inbox/' + chatSessionId + '/lastMessageAt']  = ts;
-    updates['chat_inbox/' + chatSessionId + '/customerEmail']  = customerEmail;
-    updates['chat_inbox/' + chatSessionId + '/customerName']   = customerName || 'Guest';
-    updates['chat_inbox/' + chatSessionId + '/unreadCount']    = firebase.database.ServerValue.increment(1);
+    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = text;
+    updates['chat_inbox/' + chatSessionId + '/lastMessageAt'] = ts;
+    updates['chat_inbox/' + chatSessionId + '/customerEmail'] = customerEmail;
+    updates['chat_inbox/' + chatSessionId + '/customerName'] = customerName || 'Guest';
+    updates['chat_inbox/' + chatSessionId + '/unreadCount'] = firebase.database.ServerValue.increment(1);
 
-    // FIX: If the conversation was resolved, change status back to open
-    // when the customer sends a new message
     updates['live_chat/' + chatSessionId + '/meta/status'] = 'open';
     updates['chat_inbox/' + chatSessionId + '/status'] = 'open';
 
-    // #2: leave a visible trail in the chat log when a resolved
-    // conversation gets reopened, so admins don't miss it.
     if (wasResolved) {
       const reopenRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
       updates['live_chat/' + chatSessionId + '/messages/' + reopenRef.key] = {
-        text:      'Customer reopened the conversation.',
-        sender:    'system',
+        text: 'Customer reopened the conversation.',
+        sender: 'system',
         createdAt: ts,
-        read:      true,
+        read: true,
         delivered: true,
         sessionId: chatSessionId
       };
     }
 
-    // Snapshot cart at time of message so admin can see what customer had.
     try {
       const rawCart = localStorage.getItem('janedore_cart');
-      const cart    = rawCart ? JSON.parse(rawCart) : [];
+      const cart = rawCart ? JSON.parse(rawCart) : [];
       updates['chat_inbox/' + chatSessionId + '/cart'] = cart.length > 0
         ? cart.map(i => ({
-            name:      i.name      || '',
-            brand:     i.brand     || '',
-            color:     i.color     || '',
-            size:      i.size      || '',
-            qty:       i.qty       || 1,
-            price:     i.salePrice != null ? i.salePrice : (i.price || 0),
-            productId: i.productId || ''
-          }))
+          name: i.name || '',
+          brand: i.brand || '',
+          color: i.color || '',
+          size: i.size || '',
+          qty: i.qty || 1,
+          price: i.salePrice != null ? i.salePrice : (i.price || 0),
+          productId: i.productId || ''
+        }))
         : [];
-    } catch(_) {}
+    } catch (_) {}
 
     await rtdb.ref('/').update(updates);
     input.value = '';
@@ -437,44 +501,59 @@ async function sendChatMessage() {
     const reopenPill = document.getElementById('chat-reopening-pill');
     if (reopenPill) reopenPill.remove();
 
-    // Ensure input stays enabled after sending
     input.disabled = false;
     input.placeholder = 'Type your message...';
     _satisfactionShown = false;
     _resolvedActive = false;
 
-    // AI reply attempt. If the customer explicitly asks for a human,
-    // skip straight to leaving it for admin — same as today's
-    // existing behavior, no change needed there.
+    // AI reply — check human handoff first, then try AI
     if (!customerWantsHuman(text)) {
+      _ChatDebug.log('Send', 'Attempting AI reply...');
       const aiText = await getAIReply(text);
+
       if (aiText) {
+        _ChatDebug.log('Send', 'Writing AI reply to RTDB');
+
+        // FIX: Write AI reply in a separate update after a microtask,
+        // so the local child_added listener has already processed the
+        // customer's message and won't double-render.
+        await new Promise(r => setTimeout(r, 0));
+
         const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-        const aiTs  = firebase.database.ServerValue.TIMESTAMP;
+        const aiTs = firebase.database.ServerValue.TIMESTAMP;
+
+        // Mark this key as already loaded locally to prevent
+        // the child_added listener from rendering it a second time.
+        loadedMessageKeys.add(aiRef.key);
+
         await rtdb.ref('/').update({
           ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: {
-            text:       aiText,
-            sender:     'admin',
+            text: aiText,
+            sender: 'admin',
             senderName: 'JANEDORE AI',
-            createdAt:  aiTs,
-            read:       true,
-            delivered:  true,
-            sessionId:  chatSessionId
+            createdAt: aiTs,
+            read: true,
+            delivered: true,
+            sessionId: chatSessionId
           },
-          ['chat_inbox/' + chatSessionId + '/lastMessage']:   aiText,
+          ['chat_inbox/' + chatSessionId + '/lastMessage']: aiText,
           ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
         });
+
+        _ChatDebug.log('Send', 'AI reply written');
+      } else {
+        _ChatDebug.warn('Send', 'AI reply unavailable — leaving for admin');
       }
+    } else {
+      _ChatDebug.log('Send', 'Customer requested human — skipping AI');
     }
-  } catch(e) {
-    console.error('[Chat] Send error:', e.message);
+  } catch (e) {
+    _ChatDebug.error('Send', 'Send error', e.message);
     alert('Failed to send message. Please try again.');
 
     const reopenPill = document.getElementById('chat-reopening-pill');
     if (reopenPill) reopenPill.remove();
 
-    // The reopen didn't actually go through — restore the resolved
-    // state so the customer isn't shown a false "active chat" UI.
     if (wasResolved) {
       _satisfactionShown = true;
       _resolvedActive = true;
@@ -505,15 +584,13 @@ function listenTyping() {
   if (!rtdb) return;
 
   _typingListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/adminTyping');
-  _typingListenerCb  = snap => {
-    const val      = snap.val();
+  _typingListenerCb = snap => {
+    const val = snap.val();
     const isTyping = val !== null && typeof val === 'object'
       ? Object.values(val).some(v => v === true)
       : val === true;
     const indicator = safeEl('chat-typing-indicator');
     if (indicator) indicator.style.display = isTyping ? 'block' : 'none';
-    // Show the name of who is typing if stored under the typing node.
-    // Falls back to JANEDORE for Super Admin who is anonymous.
     if (indicator && isTyping && val && typeof val === 'object') {
       const names = Object.keys(val).filter(k => val[k] === true);
       indicator.textContent = names.length > 0
@@ -527,43 +604,26 @@ function listenTyping() {
 }
 
 // ==================== RESOLVE / SATISFACTION ====================
-
-let _statusListenerRef = null;
-let _statusListenerCb  = null;
-let _satisfactionShown = false;
-let _resolvedActive = false;
-
-function detachStatusListener() {
-  if (_statusListenerRef && _statusListenerCb) {
-    _statusListenerRef.off('value', _statusListenerCb);
-    _statusListenerRef = null;
-    _statusListenerCb  = null;
-  }
-}
-
 function listenStatus() {
   const rtdb = getRTDB();
   if (!rtdb) return;
   _statusListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/status');
-  _statusListenerCb  = snap => {
+  _statusListenerCb = snap => {
     const status = snap.val();
 
-    // If status is resolved and we haven't shown satisfaction yet
     if (status === 'resolved' && !_satisfactionShown) {
       _satisfactionShown = true;
       _resolvedActive = true;
       showSatisfactionPrompt();
     }
 
-    // If status changes to something other than resolved, re-enable chat
     if (status !== 'resolved') {
       _satisfactionShown = false;
       _resolvedActive = false;
-      const input   = safeEl('chat-input');
+      const input = safeEl('chat-input');
       const sendBtn = safeEl('chat-send-btn');
-      if (input)   { input.disabled = false; input.placeholder = 'Type your message...'; }
+      if (input) { input.disabled = false; input.placeholder = 'Type your message...'; }
       if (sendBtn) sendBtn.disabled = false;
-      // Remove satisfaction prompt if it's still there
       const prompt = document.getElementById('satisfaction-prompt');
       if (prompt) prompt.remove();
       removeResolvedBanner();
@@ -574,10 +634,6 @@ function listenStatus() {
   _statusListenerRef.on('value', _statusListenerCb);
 }
 
-// #3: a persistent banner (instead of placeholder text alone) telling the
-// customer the chat was resolved and how to bring it back. Placeholder
-// text disappears the moment the field is focused or typed into, so this
-// stays visible until the chat is actually reopened.
 function showResolvedBanner() {
   const wrap = safeEl('chat-input-wrap');
   if (!wrap || document.getElementById('chat-resolved-banner')) return;
@@ -586,7 +642,7 @@ function showResolvedBanner() {
   banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
   banner.innerHTML =
     '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
-      + 'Resolved.'
+    + 'Resolved.'
     + '</span>';
   wrap.insertBefore(banner, wrap.firstChild);
 }
@@ -600,37 +656,34 @@ function showSatisfactionPrompt() {
   const el = safeEl('chat-messages');
   if (!el) return;
 
-  // Conversation is closed, but keep the input usable — sending a new
-  // message is what reopens the chat (see sendChatMessage), so disabling
-  // these here would trap the customer with no way back in.
   const input = safeEl('chat-input');
   if (input) input.placeholder = 'Conversation resolved — send a message to reopen';
 
   const prompt = document.createElement('div');
-  prompt.id        = 'satisfaction-prompt';
+  prompt.id = 'satisfaction-prompt';
   prompt.className = 'chat-msg admin';
   prompt.innerHTML =
     '<div style="margin-bottom:10px;">'
-      + 'We\'re glad we could help. Was your issue resolved?'
+    + 'We\'re glad we could help. Was your issue resolved?'
     + '</div>'
     + '<div style="display:flex;gap:8px;">'
-      + '<button class="chat-pill-btn" id="sat-yes">Yes</button>'
-      + '<button class="chat-pill-btn" id="sat-no">Not really</button>'
+    + '<button class="chat-pill-btn" id="sat-yes">Yes</button>'
+    + '<button class="chat-pill-btn" id="sat-no">Not really</button>'
     + '</div>';
 
   el.appendChild(prompt);
   el.scrollTop = el.scrollHeight;
 
   const yesBtn = document.getElementById('sat-yes');
-  const noBtn  = document.getElementById('sat-no');
+  const noBtn = document.getElementById('sat-no');
   if (yesBtn) yesBtn.addEventListener('click', function () { submitSatisfaction(true); });
-  if (noBtn)  noBtn.addEventListener('click',  function () { submitSatisfaction(false); });
+  if (noBtn) noBtn.addEventListener('click', function () { submitSatisfaction(false); });
 }
 
 async function submitSatisfaction(satisfied) {
-  const rtdb   = getRTDB();
+  const rtdb = getRTDB();
   const prompt = document.getElementById('satisfaction-prompt');
-  const el     = safeEl('chat-messages');
+  const el = safeEl('chat-messages');
   if (!el) return;
 
   if (prompt) prompt.remove();
@@ -638,21 +691,21 @@ async function submitSatisfaction(satisfied) {
   try {
     if (rtdb) {
       await rtdb.ref('live_chat/' + chatSessionId + '/meta/satisfaction').set({
-        satisfied:   satisfied,
+        satisfied: satisfied,
         respondedAt: firebase.database.ServerValue.TIMESTAMP
       });
     }
-  } catch(e) {
-    console.warn('[Chat] Satisfaction write failed:', e.message);
+  } catch (e) {
+    _ChatDebug.warn('Satisfaction', 'Write failed', e.message);
   }
 
   const thanks = document.createElement('div');
   thanks.className = 'chat-msg admin';
   thanks.innerHTML =
     '<div>'
-      + (satisfied
-          ? 'Thank you for letting us know. We hope to see you again soon.'
-          : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.')
+    + (satisfied
+      ? 'Thank you for letting us know. We hope to see you again soon.'
+      : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.')
     + '</div>';
   el.appendChild(thanks);
   el.scrollTop = el.scrollHeight;
@@ -660,8 +713,8 @@ async function submitSatisfaction(satisfied) {
 
 // ==================== ORDER LOOKUP ====================
 async function lookupOrder() {
-  const db       = getFirestore();
-  const input    = safeEl('order-lookup-input');
+  const db = getFirestore();
+  const input = safeEl('order-lookup-input');
   const resultEl = safeEl('order-result');
   if (!db || !input || !resultEl) return;
 
@@ -686,7 +739,7 @@ async function lookupOrder() {
       return;
     }
 
-    const o    = snap.docs[0].data();
+    const o = snap.docs[0].data();
     const date = o.createdAt
       ? new Date(o.createdAt.seconds * 1000).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
       : '—';
@@ -711,14 +764,21 @@ async function lookupOrder() {
           <span style="color:#888;">Date</span><span style="color:#111;">${date}</span>
         </div>
       </div>`;
-  } catch(e) {
-    console.error('[Chat] Order lookup error:', e.message);
+  } catch (e) {
+    _ChatDebug.error('Order', 'Lookup error', e.message);
     resultEl.innerHTML = '<div style="color:#c00;font-size:11px;font-weight:400;margin-top:16px;">Unable to look up order. Please try again.</div>';
   }
 }
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
+  _ChatDebug.log('Init', 'Chat module loaded');
+
   updateCustomerInfoBar();
   ensureAuth();
+
+  // Wait for AI bridge to be ready, then log status
+  waitForAIBridge().then(ready => {
+    _ChatDebug.log('Init', ready ? 'AI bridge ready' : 'AI bridge NOT ready');
+  });
 });
