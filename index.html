@@ -446,16 +446,15 @@
      interfere with the compat SDK used by the rest of the site.
      ================================================================= -->
 <script type="module">
-  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js';
-  import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-ai.js';
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+  import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js';
+  import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js';
 
   // Pull the same config the compat SDK already uses on the page.
-  // window.firebase.app().options returns the config the compat app was init'd with in firebase.js.
-  const firebaseConfig = (window.firebase && window.firebase.app && window.firebase.app().options) || null;
+  const firebaseConfig = window._firebaseConfig || null;
 
   if (!firebaseConfig) {
-    console.warn('[AI Bridge] Firebase config not found on window.firebase.app().options — bridge not initialized.');
+    console.warn('[AI Bridge] window._firebaseConfig not found — bridge not initialized.');
   } else {
     try {
       // Reuse an existing modular app if one was already created, otherwise create one.
@@ -463,12 +462,10 @@
       const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
 
       // App Check — needed for Firebase AI Logic to accept requests.
-      // Reuses the same reCAPTCHA v3 site key format Firebase expects.
-      // If you already have a reCAPTCHA Enterprise site key registered for
-      // AI Logic, replace this string with it.
+      // Reuses the existing reCAPTCHA v3 site key already present on the page.
       try {
         initializeAppCheck(aiApp, {
-          provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'), // placeholder — replace with your real site key
+          provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'),
           isTokenAutoRefreshEnabled: true
         });
       } catch (acErr) {
@@ -482,10 +479,10 @@
       // Expose the bridge chat.js already expects
       window._aiBridge = {
         async getReply(templateId, variables) {
-          const result = await templateModel.generateContent({
-            templateId: templateId,
-            variables: variables || {}
-          });
+          const result = await templateModel.generateContent(
+            templateId || 'customer-support-chat',
+            variables || {}
+          );
           const response = result && result.response;
           if (!response) return null;
           // response.text() returns the raw text
