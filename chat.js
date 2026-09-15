@@ -196,23 +196,24 @@ function renderAIGreeting() {
 }
 
 // ==================== AI REPLY ====================
-// Calls the /api/chat-ai-reply route on your Render server, which
-// holds the Gemini API key server-side (see server.js) — the browser
-// never sees it. Returns null on any failure so sendChatMessage()
-// just leaves the conversation for a human, same as before this
-// existed.
+// Calls the Firebase AI Logic server-side prompt template via the global _aiBridge.
+// Returns null on any failure so sendChatMessage() just leaves the conversation
+// for a human, preserving your existing fallback behavior.
 async function getAIReply(customerText) {
   try {
-    const res = await fetch('/api/chat-ai-reply', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: customerText })
+    if (!window._aiBridge) {
+      console.warn('[Chat] AI Bridge is not yet initialized.');
+      return null;
+    }
+
+    // Call the server-side template by its Template ID
+    const reply = await window._aiBridge.getReply('customer-support-chat', {
+      customerText: customerText
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data && data.reply ? data.reply : null;
+
+    return reply || null;
   } catch (e) {
-    console.warn('[Chat] AI reply failed:', e.message);
+    console.warn('[Chat] AI template reply failed:', e.message);
     return null;
   }
 }
