@@ -10,7 +10,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- HERO IMAGE PRELOAD - Start downloading hero images immediately -->
   <link rel="preload" as="image" 
         href="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159" 
         media="(min-width: 769px)">
@@ -59,7 +58,6 @@
   <link rel="stylesheet" href="responsive.css">
 
   <style>
-    /* ============ HERO RESPONSIVE ============ */
     @media (max-width: 768px) {
       .hero-heading {
         font-size: 22px !important;
@@ -70,7 +68,6 @@
       }
     }
 
-    /* ============ FEATURED BRAND SECTIONS ============ */
     .featured-brand-section {
       margin-bottom: 8px !important;
       padding-bottom: 0 !important;
@@ -104,12 +101,6 @@
       margin-bottom: 14px;
     }
 
-    /* ============ SHOP BY CATEGORY 2x2 GRID ============ */
-    /* Overrides the horizontal slider behaviour that
-       buildCategoriesSlider() would otherwise produce. The cards
-       themselves are still .home-category-card so nothing in
-       collection.js needs to change structurally — this just
-       forces them into a 2x2 layout instead of a scroll row. */
     #home-categories .home-categories-grid {
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
@@ -121,15 +112,10 @@
       flex: none !important;
       width: 100% !important;
     }
-    /* Hide the swipe progress bars since this is no longer a slider. */
     #home-categories .home-categories-progress {
       display: none !important;
     }
 
-    /* ============ FEATURED BRANDS SLIDER ============ */
-    /* Container-level override: no fixed height, uses the same
-       4:5 aspect ratio as the original featured-brand-img CSS so
-       every slide is a proper portrait card. */
     #home-brand-spotlight {
       padding: 32px 18px !important;
     }
@@ -161,9 +147,6 @@
       }
     }
 
-    /* Brand name typography on each slide — matches the
-       Independent Collective hero aesthetic (Inter 600, 11px,
-       uppercase, wide tracking, white on image). */
     #home-brand-spotlight .featured-brand-heading {
       font-family: 'Inter', sans-serif;
       font-weight: 600;
@@ -174,7 +157,6 @@
       margin: 0;
     }
 
-    /* Swipe bars under the slider */
     #home-brands-progress {
       display: flex;
       justify-content: center;
@@ -216,10 +198,8 @@
   </div>
 </nav>
 
-<!-- COLLECTION DESCRIPTION - Populated dynamically by updateCollectionTitle() in collection.js -->
 <div class="collection-top-description" id="collection-top-description"></div>
 
-<!-- FILTER BAR - Separate bar below header, only shows on collection pages -->
 <div id="collection-filter-bar" class="collection-filter-bar">
   <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn">
     <div class="col-grid-icon cols-2" id="col-grid-icon">
@@ -237,10 +217,8 @@
   </div>
 </div>
 
-<!-- Filter Backdrop -->
 <div class="collection-filter-backdrop" id="collection-filter-backdrop" onclick="toggleCollectionFilter()"></div>
 
-<!-- Filter Panel - Slides in from right -->
 <div class="collection-filter-options" id="collection-filter-options">
   <div class="collection-filter-header">
     <div class="collection-filter-title">Filter</div>
@@ -251,16 +229,12 @@
   
   <div class="filter-group">
     <div class="filter-group-title">Category</div>
-    <div id="collection-filter-categories">
-      <!-- Categories will be populated dynamically from products -->
-    </div>
+    <div id="collection-filter-categories"></div>
   </div>
 
   <div class="filter-group">
     <div class="filter-group-title">Brand</div>
-    <div id="collection-filter-brands">
-      <!-- Brands will be populated dynamically from products -->
-    </div>
+    <div id="collection-filter-brands"></div>
   </div>
 </div>
 
@@ -307,16 +281,10 @@
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
-  <!-- "Who We Are" statement — heading removed, paragraph centered. -->
   <section id="home-manifesto" style="padding:24px 18px;text-align:center;">
     <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house for independent brands with a point of view. Every label here has been chosen for how it is made, how it looks, and how long it lasts, not for how loudly it announces itself. These are pieces made to hold their own in a wardrobe built over years, not seasons. If it is on this site, it earned its place.</p>
   </section>
 
-  <!-- HOME CATEGORIES — 2x2 GRID (was a slider).
-       buildCategoriesSlider() still runs and still populates
-       #home-categories-grid with the same four .home-category-card
-       elements — but the <style> block above overrides that grid's
-       display to a 2-column grid and hides the swipe progress bars. -->
   <section id="home-categories" style="padding:24px 18px;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
       <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
@@ -325,19 +293,11 @@
     <div class="home-categories-progress" id="home-categories-progress"></div>
   </section>
 
-  <!-- FEATURED BRANDS — now a SLIDER.
-       renderHomeBrandSpotlight() in vendors.js populates
-       #home-brands-slider with one slide per active vendor,
-       excluding JANEDORE. Each slide uses .featured-brand-slide
-       and the existing .featured-brand-img / .featured-brand-content
-       classes. Swipe bars are rendered into #home-brands-progress. -->
   <section id="home-brand-spotlight" class="featured-brand-section">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
       <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">FEATURED BRANDS</div>
     </div>
-    <div class="featured-brands-slider" id="home-brands-slider">
-      <!-- Slides injected by renderHomeBrandSpotlight() in vendors.js -->
-    </div>
+    <div class="featured-brands-slider" id="home-brands-slider"></div>
     <div class="home-categories-progress" id="home-brands-progress"></div>
   </section>
 
@@ -440,18 +400,11 @@
 <script src="sliders.js"></script>
 <script src="footer.js"></script>
 
-<!-- ==================== FIREBASE AI LOGIC BRIDGE ====================
-     Defines window._aiBridge.getReply(templateId, variables) so
-     chat.js can call Firebase AI Logic server-side prompt templates.
-     Uses a SEPARATE modular Firebase app + App Check so it does not
-     interfere with the compat SDK used by the rest of the site.
-     ================================================================= -->
 <script type="module">
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
   import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js';
   import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js';
 
-  // Pull the same config the compat SDK already uses on the page.
   const firebaseConfig = window._firebaseConfig || null;
 
   if (!firebaseConfig) {
@@ -463,8 +416,7 @@
 
       try {
         initializeAppCheck(aiApp, {
-          provider: new ReCaptchaV3Provider('6Lcws70tAAAAAHkOHW258mogHkJ0RvHXqslHzAL6 
-                                            '),
+          provider: new ReCaptchaV3Provider('6Lcws70tAAAAAHkOHW258mogHkJ0RvHXqslHzAL6'),
           isTokenAutoRefreshEnabled: true
         });
         console.log('[AI Bridge] App Check initialized (manual, before getAI)');
