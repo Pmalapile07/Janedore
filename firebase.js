@@ -35,7 +35,7 @@ console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — Firestore db read
 
 if (typeof firebase.appCheck === 'function') {
   try {
-    firebase.appCheck().activate('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf', true);
+    firebase.appCheck().activate('6Lcws70tAAAAAHkOHW258mogHkJ0RvHXqslHzAL6', true);
     console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — App Check activated');
   } catch (e) {
     console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — App Check already active:', e.message);
