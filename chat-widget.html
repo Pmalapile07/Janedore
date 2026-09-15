@@ -43,7 +43,7 @@
     max-height: calc(100vh - 140px);
     background: #fff;
     border: none;
-    border-radius: 12px;
+    border-radius: 16px;
     z-index: 998;
     display: none;
     flex-direction: column;
@@ -61,11 +61,11 @@
     flex-shrink: 0;
   }
   .chat-header-title {
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.15em;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.02em;
     font-weight: 600;
-    text-transform: uppercase;
+    text-transform: none;
     color: #fff;
   }
   .chat-header-close {
@@ -85,255 +85,7 @@
     display: flex;
     flex-direction: column;
   }
-  
-  /* Welcome screen */
-  .chat-welcome-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 40px 28px;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
-  .chat-welcome-title {
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    font-weight: 300;
-    text-transform: none;
-    color: #111;
-    margin-bottom: 12px;
-    text-align: center;
-  }
-  .chat-welcome-subtitle {
-    font-size: 11px;
-    font-weight: 300;
-    color: #888;
-    margin-bottom: 40px;
-    text-align: center;
-    line-height: 1.5;
-  }
-  
-  /* FAQ section */
-  .chat-faq-section {
-    width: 100%;
-    margin-bottom: 32px;
-  }
-  .chat-faq-title {
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-  .chat-faq-item {
-    border-top: 1px solid #e0e0e0;
-  }
-  .chat-faq-item:last-child {
-    border-bottom: 1px solid #e0e0e0;
-  }
-  .chat-faq-question {
-    background: none;
-    border: none;
-    width: 100%;
-    padding: 12px 0;
-    text-align: left;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 400;
-    color: #111;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: color 0.2s;
-  }
-  .chat-faq-question:hover {
-    color: #555;
-  }
-  .chat-faq-question::after {
-    content: '+';
-    font-size: 16px;
-    font-weight: 300;
-    color: #888;
-    transition: transform 0.2s;
-  }
-  .chat-faq-question.active::after {
-    content: '−';
-    transform: rotate(180deg);
-  }
-  .chat-faq-answer {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 300;
-    line-height: 1.6;
-    color: #888;
-  }
-  .chat-faq-answer.open {
-    max-height: 200px;
-    padding-bottom: 12px;
-  }
-  
-  /* Action buttons */
-  .chat-action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-  .chat-action-btn {
-    background: #111;
-    color: #fff;
-    border: none;
-    padding: 14px 4px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    font-weight: 600;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-    border-radius: 2px;
-  }
-  .chat-action-btn:hover { background: #333; transform: translateY(-1px); }
-  .chat-action-btn.secondary {
-    background: #fff;
-    color: #111;
-    border: 1px solid #111;
-  }
-  .chat-action-btn.secondary:hover { background: #f5f5f5; }
-  
-  /* Email screen (hidden initially) */
-  .chat-email-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 28px;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
-  .chat-email-title {
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    font-weight: 300;
-    text-transform: none;
-    color: #111;
-    margin-bottom: 12px;
-    text-align: center;
-  }
-  .chat-email-subtitle {
-    font-size: 11px;
-    font-weight: 300;
-    color: #888;
-    margin-bottom: 32px;
-    text-align: center;
-    line-height: 1.5;
-  }
-  .chat-email-input {
-    width: 100%;
-    border: none;
-    border-bottom: 1px solid #e0e0e0;
-    padding: 12px 0;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 12px;
-    font-weight: 300;
-    outline: none;
-    margin-bottom: 20px;
-    color: #111;
-    background: transparent;
-    text-align: center;
-    transition: border-color 0.2s;
-  }
-  .chat-email-input:focus { border-color: #111; }
-  .chat-email-input::placeholder { color: #bbb; }
-  .chat-email-btn {
-    background: #111;
-    border: none;
-    padding: 12px 32px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    font-weight: 600;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #fff;
-    border-radius: 2px;
-    margin-top: 8px;
-  }
-  .chat-email-btn:hover { background: #333; transform: translateY(-1px); }
-  .chat-email-error {
-    color: #c00;
-    font-size: 10px;
-    margin-top: 12px;
-    display: none;
-  }
-  
-  /* Options screen */
-  .chat-options {
-    display: flex;
-    gap: 0;
-    padding: 32px 28px;
-    background: #fff;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
-  .chat-option-btn {
-    background: #111;
-    color: #fff;
-    border: none;
-    width: 100%;
-    padding: 14px 4px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    font-weight: 600;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-    margin-bottom: 14px;
-    border-radius: 2px;
-  }
-  .chat-option-btn:hover { background: #333; transform: translateY(-1px); }
-  .chat-option-btn.secondary {
-    background: #fff;
-    color: #111;
-    border: 1px solid #111;
-  }
-  .chat-option-btn.secondary:hover { background: #f5f5f5; }
-  .chat-switch-btn {
-    background: none;
-    border: none;
-    border-bottom: 0.5px solid #ccc;
-    color: #999;
-    padding: 6px 2px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 8px;
-    letter-spacing: 0.12em;
-    font-weight: 400;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin-top: 12px;
-    transition: all 0.2s;
-  }
-  .chat-switch-btn:hover { color: #111; border-color: #111; }
+
   .chat-messages {
     flex: 1;
     min-height: 0;
@@ -347,38 +99,59 @@
   .chat-msg {
     max-width: 80%;
     padding: 12px 16px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 300;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
     line-height: 1.6;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.01em;
     animation: chatFadeIn 0.3s ease;
-    border-radius: 8px;
+    border-radius: 16px;
   }
   @keyframes chatFadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .chat-msg.customer { align-self: flex-end; background: #111; color: #fff; border-bottom-right-radius: 2px; }
-  .chat-msg.admin { align-self: flex-start; background: #fff; color: #111; border: 1px solid #e0e0e0; border-bottom-left-radius: 2px; }
+  .chat-msg.customer { align-self: flex-end; background: #111; color: #fff; border-bottom-right-radius: 4px; }
+  .chat-msg.admin { align-self: flex-start; background: #fff; color: #111; border: 1px solid #e0e0e0; border-bottom-left-radius: 4px; }
   .chat-msg-time {
-    font-size: 7px;
+    font-size: 9px;
     opacity: 0.5;
     margin-top: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
+    font-family: 'Manrope', sans-serif;
   }
+
+  /* Soft-rounded pill button — used for Track Order, satisfaction
+     replies, and any other in-chat action button. Matches the
+     satisfaction-prompt buttons that already existed in chat.js. */
+  .chat-pill-btn {
+    background: none;
+    border: 0.5px solid currentColor;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chat-pill-btn:hover { background: #111; color: #fff; }
+  .chat-pill-btn.filled {
+    background: #111;
+    color: #fff;
+    border: none;
+  }
+  .chat-pill-btn.filled:hover { background: #333; }
+
   .chat-welcome {
     text-align: center;
     padding: 32px 16px;
     color: #888;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 300;
-    letter-spacing: 0.03em;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
   }
-  .chat-welcome strong { display: block; color: #111; font-size: 18px; margin-bottom: 12px; font-weight: 300; }
+  .chat-welcome strong { display: block; color: #111; font-size: 16px; margin-bottom: 12px; font-weight: 600; }
   .chat-input-wrap {
     display: flex;
     border-top: 1px solid #e0e0e0;
@@ -392,10 +165,9 @@
     border: none;
     border-bottom: 1px solid #e0e0e0;
     padding: 10px 0;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 300;
-    letter-spacing: 0.03em;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
     outline: none;
     background: transparent;
     color: #111;
@@ -409,15 +181,15 @@
     border: none;
     padding: 10px 20px;
     cursor: pointer;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.15em;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     transition: all 0.2s;
-    border-radius: 2px;
+    border-radius: 20px;
   }
   .chat-send-btn:hover { background: #333; }
+
   .order-lookup {
     padding: 32px 28px;
     background: #fff;
@@ -430,30 +202,28 @@
     justify-content: center;
   }
   .order-lookup-title {
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    font-weight: 300;
-    text-transform: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
     color: #111;
     margin-bottom: 12px;
   }
   .order-lookup-subtitle {
-    font-size: 11px;
-    font-weight: 300;
+    font-size: 12px;
+    font-weight: 400;
     color: #888;
     margin-bottom: 28px;
     text-align: center;
+    font-family: 'Manrope', sans-serif;
   }
   .order-lookup-input {
     width: 100%;
     border: none;
     border-bottom: 1px solid #e0e0e0;
     padding: 12px 0;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 300;
-    letter-spacing: 0.03em;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
     outline: none;
     margin-bottom: 24px;
     color: #111;
@@ -468,24 +238,22 @@
     color: #fff;
     border: none;
     padding: 12px 32px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.15em;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     cursor: pointer;
     transition: all 0.2s;
-    border-radius: 2px;
+    border-radius: 20px;
   }
   .order-lookup-btn:hover { background: #333; transform: translateY(-1px); }
   .order-result {
     margin-top: 24px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 300;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
     color: #888;
     text-align: center;
-    letter-spacing: 0.03em;
     line-height: 1.6;
     width: 100%;
   }
@@ -495,25 +263,22 @@
     border-bottom: 0.5px solid #ccc;
     color: #999;
     padding: 6px 2px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    font-weight: 400;
-    text-transform: uppercase;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
     cursor: pointer;
     width: auto;
     margin-top: 28px;
     transition: all 0.2s;
   }
   .back-to-chat-btn:hover { color: #111; border-color: #111; }
+
   .chat-customer-info {
     padding: 10px 20px;
     background: #fafaf9;
     border-bottom: 1px solid #e0e0e0;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-family: 'Manrope', sans-serif;
+    font-size: 9px;
     color: #888;
     display: flex;
     justify-content: space-between;
@@ -529,10 +294,8 @@
     background: none;
     border: none;
     color: #ccc;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 7px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-family: 'Manrope', sans-serif;
+    font-size: 8px;
     cursor: pointer;
     padding: 0;
     text-decoration: underline;
@@ -543,8 +306,8 @@
   .chat-switch-inline:hover { color: #888; }
   .chat-typing-indicator {
     padding: 6px 20px;
-    font-family: 'DM Sans', 'Manrope', sans-serif;
-    font-size: 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
     color: #888;
     font-style: italic;
     background: #fafaf9;
@@ -561,7 +324,6 @@
     font-size: 12px;
     letter-spacing: -0.01em;
     font-weight: 700;
-    text-transform: none;
     color: #111;
     flex-shrink: 0;
   }
@@ -586,13 +348,9 @@
       right: 16px;
       left: 16px;
       height: 480px;
-      border-radius: 8px;
+      border-radius: 14px;
     }
     #live-chat-bubble { right: 16px; bottom: 16px; }
-    .chat-welcome-screen { padding: 28px 20px; }
-    .chat-email-screen { padding: 28px 20px; }
-    .chat-options { padding: 24px 20px; }
-    .chat-option-btn { margin-bottom: 16px; }
     .order-lookup { padding: 24px 20px; }
   }
 </style>
@@ -608,50 +366,9 @@
     <button class="chat-header-close" onclick="toggleChat()">✕</button>
   </div>
 
-  <!-- Welcome screen with FAQs and action buttons -->
-  <div class="chat-welcome-screen" id="chat-welcome-screen">
-    <div class="chat-faq-section">
-      <div class="chat-faq-title">Frequently Asked</div>
-      <div class="chat-faq-item">
-        <button class="chat-faq-question" onclick="toggleFaq(this)">Shipping & Delivery</button>
-        <div class="chat-faq-answer">Free shipping on orders over R1000. Delivery takes 3-5 business days.</div>
-      </div>
-      <div class="chat-faq-item">
-        <button class="chat-faq-question" onclick="toggleFaq(this)">Returns & Exchanges</button>
-        <div class="chat-faq-answer">We accept returns within 14 days of delivery. Items must be unworn with tags attached.</div>
-      </div>
-      <div class="chat-faq-item">
-        <button class="chat-faq-question" onclick="toggleFaq(this)">Sizing Guide</button>
-        <div class="chat-faq-answer">Our sizes run true to size. Check the measurements tab on each product page for details.</div>
-      </div>
-    </div>
-    
-    <div class="chat-action-buttons">
-      <button class="chat-action-btn" onclick="showEmailScreen()">Chat with Us</button>
-      <button class="chat-action-btn secondary" onclick="showOrderLookup()">Track Order</button>
-    </div>
-  </div>
-
-  <!-- Email entry screen (hidden initially) -->
-  <div class="chat-email-screen" id="chat-email-screen" style="display:none;">
-    <div class="chat-email-title">Chat with Us</div>
-    <div class="chat-email-subtitle">Enter your details so we can assist you better</div>
-    <input class="chat-email-input" id="chat-name-input" type="text" placeholder="Your name"
-           onkeypress="if(event.key==='Enter')document.getElementById('chat-email-input').focus()">
-    <input class="chat-email-input" id="chat-email-input" type="email" placeholder="your@email.com"
-           onkeypress="if(event.key==='Enter')submitEmail()">
-    <button class="chat-email-btn" onclick="submitEmail()">Continue</button>
-    <div class="chat-email-error" id="chat-email-error">Please enter a valid email</div>
-  </div>
-
-  <!-- Options screen -->
-  <div class="chat-options" id="chat-options" style="display:none;">
-    <button class="chat-option-btn" onclick="startChat()">Chat with Us</button>
-    <button class="chat-option-btn secondary" onclick="showOrderLookup()">Track Order</button>
-    <button class="chat-switch-btn" onclick="clearChatSession()">Switch Account</button>
-  </div>
-
-  <!-- Customer info bar (shown during active chat) -->
+  <!-- Customer info bar (only shown once a name/email is known,
+       e.g. after a human handoff asks for it — no longer a gate
+       before chatting at all). -->
   <div class="chat-customer-info" id="chat-customer-info" style="display:none;">
     <div class="chat-customer-info-left">
       <span id="chat-customer-name"></span>
@@ -663,12 +380,10 @@
   <!-- Typing indicator -->
   <div class="chat-typing-indicator" id="chat-typing-indicator">JANEDORE is typing...</div>
 
-  <!-- Messages -->
-  <div class="chat-messages" id="chat-messages" style="display:none;">
-    <div class="chat-welcome">
-      <strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.
-    </div>
-  </div>
+  <!-- Messages — this is now the default view on open. The AI
+       greeting + Track Order button are injected here as the
+       first message when there's no history yet (see chat.js). -->
+  <div class="chat-messages" id="chat-messages"></div>
 
   <!-- Order lookup screen -->
   <div class="order-lookup" id="order-lookup" style="display:none;">
@@ -679,11 +394,11 @@
            onkeypress="if(event.key==='Enter')lookupOrder()">
     <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
     <div class="order-result" id="order-result"></div>
-    <button class="back-to-chat-btn" onclick="backToChatOptions()">← Back</button>
+    <button class="back-to-chat-btn" onclick="backToChat()">← Back to chat</button>
   </div>
 
-  <!-- Message input -->
-  <div class="chat-input-wrap" id="chat-input-wrap" style="display:none;">
+  <!-- Message input — always visible once the chat window is open. -->
+  <div class="chat-input-wrap" id="chat-input-wrap">
     <input class="chat-input" id="chat-input" placeholder="Type your message…"
            onkeypress="if(event.key==='Enter')sendChatMessage()"
            oninput="handleCustomerTyping()">
@@ -695,25 +410,3 @@
     <span class="chat-footer-mark"></span>builtbypearl
   </div>
 </div>
-
-<script>
-function toggleFaq(btn) {
-  const answer = btn.nextElementSibling;
-  const isOpen = answer.classList.contains('open');
-  
-  // Close all FAQs
-  document.querySelectorAll('.chat-faq-answer').forEach(a => a.classList.remove('open'));
-  document.querySelectorAll('.chat-faq-question').forEach(q => q.classList.remove('active'));
-  
-  // Open clicked one if it was closed
-  if (!isOpen) {
-    answer.classList.add('open');
-    btn.classList.add('active');
-  }
-}
-
-function showEmailScreen() {
-  document.getElementById('chat-welcome-screen').style.display = 'none';
-  document.getElementById('chat-email-screen').style.display = 'flex';
-}
-</script>
