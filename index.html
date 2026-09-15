@@ -439,90 +439,57 @@
 <script src="sliders.js"></script>
 <script src="footer.js"></script>
 
-<!-- ==================== FIREBASE AI LOGIC BRIDGE (DIAGNOSTIC) ====================
-     Every step logs so we can see exactly where it fails. Once the
-     bridge is confirmed working, the extra console.log lines can be
-     stripped out. Functionality is identical to the non-diagnostic
-     version: defines window._aiBridge.getReply(templateId, variables).
-     ============================================================================ -->
+<!-- ==================== FIREBASE AI LOGIC BRIDGE ====================
+     Defines window._aiBridge.getReply(templateId, variables) so
+     chat.js can call Firebase AI Logic server-side prompt templates.
+     Uses a SEPARATE modular Firebase app + App Check so it does not
+     interfere with the compat SDK used by the rest of the site.
+     ================================================================= -->
 <script type="module">
-  console.log('[AI Bridge] module script started');
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js';
+  import { getAI, getTemplateGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-ai.js';
 
-  let initializeApp, getApps, initializeAppCheck, ReCaptchaV3Provider,
-      getAI, getTemplateGenerativeModel, GoogleAIBackend;
-
-  try {
-    console.log('[AI Bridge] importing firebase-app.js...');
-    const appMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    initializeApp = appMod.initializeApp;
-    getApps       = appMod.getApps;
-    console.log('[AI Bridge] firebase-app.js OK');
-
-    console.log('[AI Bridge] importing firebase-app-check.js...');
-    const acMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js');
-    initializeAppCheck    = acMod.initializeAppCheck;
-    ReCaptchaV3Provider   = acMod.ReCaptchaV3Provider;
-    console.log('[AI Bridge] firebase-app-check.js OK');
-
-    console.log('[AI Bridge] importing firebase-ai.js...');
-    const aiMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-ai.js');
-    getAI                     = aiMod.getAI;
-    getTemplateGenerativeModel= aiMod.getTemplateGenerativeModel;
-    GoogleAIBackend           = aiMod.GoogleAIBackend;
-    console.log('[AI Bridge] firebase-ai.js OK');
-
-  } catch (importErr) {
-    console.error('[AI Bridge] IMPORT FAILED:', importErr && importErr.message, importErr);
-    throw importErr;
-  }
-
-  // ---- Read firebase config from the compat app ----
-  let firebaseConfig = null;
-  try {
-    firebaseConfig = (window.firebase && window.firebase.app && window.firebase.app().options) || null;
-    console.log('[AI Bridge] firebaseConfig present:', !!firebaseConfig);
-  } catch (cfgErr) {
-    console.error('[AI Bridge] failed to read firebase.app().options:', cfgErr && cfgErr.message, cfgErr);
-  }
+  // Pull the same config the compat SDK already uses on the page.
+  // window.firebase.app().options returns the config the compat app was init'd with in firebase.js.
+  const firebaseConfig = (window.firebase && window.firebase.app && window.firebase.app().options) || null;
 
   if (!firebaseConfig) {
-    console.warn('[AI Bridge] Firebase config missing — bridge not initialized.');
+    console.warn('[AI Bridge] Firebase config not found on window.firebase.app().options — bridge not initialized.');
   } else {
     try {
+      // Reuse an existing modular app if one was already created, otherwise create one.
       const existing = getApps().find(a => a.name === 'ai-logic');
       const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
-      console.log('[AI Bridge] modular ai-logic app ready');
 
+      // App Check — needed for Firebase AI Logic to accept requests.
+      // Reuses the same reCAPTCHA v3 site key format Firebase expects.
+      // If you already have a reCAPTCHA Enterprise site key registered for
+      // AI Logic, replace this string with it.
       try {
         initializeAppCheck(aiApp, {
-          provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'),
+          provider: new ReCaptchaV3Provider('6LeZz7wsAAAAALxA7WIpLOCP3gxJaQwEIDxLmSmf'), // placeholder — replace with your real site key
           isTokenAutoRefreshEnabled: true
         });
-        console.log('[AI Bridge] App Check initialized');
       } catch (acErr) {
-        console.warn('[AI Bridge] App Check init warning:', acErr && acErr.message, acErr);
+        console.warn('[AI Bridge] App Check init warning:', acErr && acErr.message);
       }
 
+      // Set up the AI backend + template model
       const ai = getAI(aiApp, { backend: new GoogleAIBackend() });
-      console.log('[AI Bridge] getAI OK');
-
       const templateModel = getTemplateGenerativeModel(ai);
-      console.log('[AI Bridge] getTemplateGenerativeModel OK');
 
+      // Expose the bridge chat.js already expects
       window._aiBridge = {
         async getReply(templateId, variables) {
-          console.log('[AI Bridge] getReply called:', templateId, variables);
           const result = await templateModel.generateContent({
             templateId: templateId,
             variables: variables || {}
           });
           const response = result && result.response;
-          if (!response) {
-            console.warn('[AI Bridge] no response object');
-            return null;
-          }
+          if (!response) return null;
+          // response.text() returns the raw text
           const text = typeof response.text === 'function' ? response.text() : response.text;
-          console.log('[AI Bridge] reply text:', text);
           return text || null;
         }
       };
