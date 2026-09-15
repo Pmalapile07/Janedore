@@ -7,10 +7,10 @@ localStorage.setItem('janedore_chat_session', chatSessionId);
 let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
 let customerName  = localStorage.getItem('janedore_chat_name') || '';
 let chatOpen = false;
-let chatMode = null;
 let currentUser = null;
 let typingTimeout = null;
 let loadedMessageKeys = new Set();
+let hasLoadedOnce = false;
 
 // FIX #6: store both the ref and callback so we can properly detach
 let _chatListenerRef = null;
@@ -57,23 +57,9 @@ function detachTypingListener() {
   }
 }
 
-// ==================== FAQ TOGGLE ====================
-function toggleFaq(btn) {
-  const answer = btn.nextElementSibling;
-  const isOpen = answer.classList.contains('open');
-  
-  // Close all FAQs
-  document.querySelectorAll('.chat-faq-answer').forEach(a => a.classList.remove('open'));
-  document.querySelectorAll('.chat-faq-question').forEach(q => q.classList.remove('active'));
-  
-  // Open clicked one if it was closed
-  if (!isOpen) {
-    answer.classList.add('open');
-    btn.classList.add('active');
-  }
-}
-
 // ==================== SCREEN CONTROL ====================
+// The widget no longer has separate welcome/email/options screens.
+// Opening the chat always shows the messages panel + input directly.
 function toggleChat() {
   chatOpen = !chatOpen;
   const win = safeEl('chat-window');
@@ -83,25 +69,37 @@ function toggleChat() {
     win.classList.add('open');
     const dot = safeEl('chat-unread-dot');
     if (dot) dot.style.display = 'none';
-    // If customer was mid-chat, resume it directly instead of showing options.
-    if (chatMode === 'chat') {
-      showScreen('chat-messages');
-      const inputWrap = safeEl('chat-input-wrap');
-      const infoBar   = safeEl('chat-customer-info');
-      if (inputWrap) inputWrap.style.display = 'flex';
-      if (infoBar)   infoBar.style.display   = 'flex';
+
+    showScreen('chat-messages');
+    const inputWrap = safeEl('chat-input-wrap');
+    if (inputWrap) inputWrap.style.display = 'flex';
+
+    if (!hasLoadedOnce) {
+      hasLoadedOnce = true;
+      loadedMessageKeys.clear();
+      detachChatListener();
+      detachTypingListener();
+      detachStatusListener();
+      _satisfactionShown = false;
+      _resolvedActive = false;
+      removeResolvedBanner();
+      loadMessages();
+      listenChat();
+      listenTyping();
+      listenStatus();
+    } else if (!_chatListenerRef) {
       // Re-attach listeners if they were detached on close.
-      if (!_chatListenerRef) {
-        detachChatListener();
-        detachTypingListener();
-        listenChat();
-        listenTyping();
-        listenStatus();
-      }
-    } else {
-      showWelcomeScreen();
+      detachChatListener();
+      detachTypingListener();
+      listenChat();
+      listenTyping();
+      listenStatus();
     }
+
+    updateCustomerInfoBar();
     ensureAuth();
+    const input = safeEl('chat-input');
+    if (input) setTimeout(() => input.focus(), 100);
   } else {
     win.classList.remove('open');
     detachChatListener();
@@ -111,73 +109,28 @@ function toggleChat() {
 }
 
 function showScreen(id) {
-  ['chat-welcome-screen','chat-email-screen','chat-options','chat-messages','chat-input-wrap',
-   'chat-customer-info','chat-typing-indicator','order-lookup'].forEach(s => {
+  ['chat-messages', 'order-lookup'].forEach(s => {
     const el = safeEl(s);
     if (el) el.style.display = 'none';
   });
   const el = safeEl(id);
-  if (el) el.style.display =
-    (id === 'chat-messages' || id === 'order-lookup' ||
-     id === 'chat-email-screen' || id === 'chat-options' ||
-     id === 'chat-welcome-screen') ? 'flex' : 'block';
+  if (el) el.style.display = 'flex';
 }
 
-function showWelcomeScreen() { showScreen('chat-welcome-screen'); }
-function showEmailScreen() { showScreen('chat-email-screen'); }
-function showOptionsScreen() { showScreen('chat-options'); }
-
-function submitEmail() {
-  const nameEl  = safeEl('chat-name-input');
-  const emailEl = safeEl('chat-email-input');
-  const errorEl = safeEl('chat-email-error');
-
-  const name  = (nameEl?.value || '').trim();
-  const email = (emailEl?.value || '').trim().toLowerCase();
-
-  if (!email || !email.includes('@') || !email.includes('.')) {
-    if (errorEl) errorEl.style.display = 'block';
-    return;
-  }
-  if (errorEl) errorEl.style.display = 'none';
-
-  customerName  = name;
-  customerEmail = email;
-  localStorage.setItem('janedore_chat_name',  name);
-  localStorage.setItem('janedore_chat_email', email);
-  chatSessionId = 'chat-' + email.replace(/[^a-zA-Z0-9]/g, '-');
-  localStorage.setItem('janedore_chat_session', chatSessionId);
-
-  showOptionsScreen();
-}
-
-function startChat() {
-  showScreen('chat-messages');
-  const inputWrap = safeEl('chat-input-wrap');
-  const infoBar   = safeEl('chat-customer-info');
-  if (inputWrap) inputWrap.style.display = 'flex';
-  if (infoBar)   infoBar.style.display   = 'flex';
-
+// Only shown once a name/email is actually known (e.g. supplied
+// during a human handoff) — no longer a gate before chatting.
+function updateCustomerInfoBar() {
+  const infoBar = safeEl('chat-customer-info');
   const nameEl  = safeEl('chat-customer-name');
   const emailEl = safeEl('chat-customer-email');
-  if (nameEl)  nameEl.textContent  = customerName  || 'Guest';
-  if (emailEl) emailEl.textContent = customerEmail || '';
-
-  chatMode = 'chat';
-  loadedMessageKeys.clear();
-  detachChatListener();
-  detachTypingListener();
-  detachStatusListener();
-  _satisfactionShown = false;
-  _resolvedActive = false;
-  removeResolvedBanner();
-  loadMessages();
-  listenChat();
-  listenTyping();
-  listenStatus();
-
-  const input = safeEl('chat-input');
-  if (input) setTimeout(() => input.focus(), 100);
+  if (!infoBar) return;
+  if (customerName || customerEmail) {
+    if (nameEl)  nameEl.textContent  = customerName  || 'Guest';
+    if (emailEl) emailEl.textContent = customerEmail || '';
+    infoBar.style.display = 'flex';
+  } else {
+    infoBar.style.display = 'none';
+  }
 }
 
 function showOrderLookup() {
@@ -188,8 +141,12 @@ function showOrderLookup() {
   if (input) setTimeout(() => input.focus(), 100);
 }
 
-function backToWelcome() { showWelcomeScreen(); }
-function backToChatOptions() { showWelcomeScreen(); }
+// Returns from the order-lookup screen back to the message view.
+function backToChat() {
+  showScreen('chat-messages');
+  const inputWrap = safeEl('chat-input-wrap');
+  if (inputWrap) inputWrap.style.display = 'flex';
+}
 
 function clearChatSession() {
   firebase.auth().signOut().catch(() => {});
@@ -199,7 +156,6 @@ function clearChatSession() {
   customerEmail = '';
   customerName  = '';
   chatSessionId = 'chat-' + Date.now();
-  chatMode      = null;
   detachChatListener();
   detachTypingListener();
   detachStatusListener();
@@ -207,7 +163,66 @@ function clearChatSession() {
   _resolvedActive = false;
   removeResolvedBanner();
   loadedMessageKeys.clear();
-  showWelcomeScreen();
+  hasLoadedOnce = false;
+  updateCustomerInfoBar();
+  if (chatOpen) {
+    hasLoadedOnce = true;
+    loadMessages();
+    listenChat();
+    listenTyping();
+    listenStatus();
+  }
+}
+
+// ==================== AI GREETING ====================
+// Rendered client-side only (not written to RTDB) the first time a
+// session has no message history, so it doesn't create a false
+// "unread" notification in the admin inbox every time someone opens
+// the widget for the first time.
+function renderAIGreeting() {
+  const el = safeEl('chat-messages');
+  if (!el) return;
+  const greeting = document.createElement('div');
+  greeting.className = 'chat-msg admin';
+  greeting.innerHTML =
+    '<div style="margin-bottom:10px;">'
+      + 'Hi, I\'m the JANEDORE assistant. I can help with sizing, shipping, returns, or finding the right piece — just ask. '
+      + 'You can also track an existing order below.'
+    + '</div>'
+    + '<button class="chat-pill-btn" id="ai-greeting-track-btn">Track Order</button>';
+  el.appendChild(greeting);
+  const trackBtn = document.getElementById('ai-greeting-track-btn');
+  if (trackBtn) trackBtn.addEventListener('click', showOrderLookup);
+}
+
+// ==================== AI REPLY ====================
+// Calls the /api/chat-ai-reply route on your Render server, which
+// holds the Gemini API key server-side (see server.js) — the browser
+// never sees it. Returns null on any failure so sendChatMessage()
+// just leaves the conversation for a human, same as before this
+// existed.
+async function getAIReply(customerText) {
+  try {
+    const res = await fetch('/api/chat-ai-reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: customerText })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data && data.reply ? data.reply : null;
+  } catch (e) {
+    console.warn('[Chat] AI reply failed:', e.message);
+    return null;
+  }
+}
+
+// Simple keyword check for an explicit human handoff request. This
+// does not require the AI to be wired up — it's a plain text check
+// so "talk to a human" always works even before AI replies exist.
+function customerWantsHuman(text) {
+  const t = (text || '').toLowerCase();
+  return t.includes('human') || t.includes('agent') || t.includes('real person') || t.includes('speak to someone');
 }
 
 // ==================== MESSAGES ====================
@@ -224,7 +239,7 @@ async function loadMessages() {
     el.innerHTML = '';
 
     if (!snap.exists()) {
-      el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything — sizing, styling, shipping.</div>';
+      renderAIGreeting();
       return;
     }
 
@@ -240,7 +255,7 @@ async function loadMessages() {
     el.scrollTop = el.scrollHeight;
   } catch(e) {
     console.error('[Chat] Load messages error:', e.message);
-    el.innerHTML = '<div class="chat-welcome"><strong>Welcome to JANEDORE</strong>Ask us anything.</div>';
+    renderAIGreeting();
   }
 }
 
@@ -256,7 +271,7 @@ function appendMessage(m) {
     const pill = document.createElement('div');
     pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
     pill.innerHTML =
-      '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
+      '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
         + (m.text || '')
       + '</span>';
     el.appendChild(pill);
@@ -279,7 +294,7 @@ function appendMessage(m) {
   var safeName   = (rawName && rawName.indexOf('@') === -1) ? rawName : 'Janedore';
   var showName   = !isCustomer && rawName;
   const nameHtml = showName
-    ? '<div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:400;">' + safeName + '</div>'
+    ? '<div style="font-size:9px;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:500;">' + safeName + '</div>'
     : '';
 
   div.innerHTML = nameHtml + m.text + '<div class="chat-msg-time">' + time + '</div>';
@@ -342,7 +357,7 @@ async function sendChatMessage() {
       pill.id = 'chat-reopening-pill';
       pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
       pill.innerHTML =
-        '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
+        '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
           + 'Reopening chat…'
         + '</span>';
       el.appendChild(pill);
@@ -378,7 +393,7 @@ async function sendChatMessage() {
     updates['chat_inbox/' + chatSessionId + '/customerEmail']  = customerEmail;
     updates['chat_inbox/' + chatSessionId + '/customerName']   = customerName || 'Guest';
     updates['chat_inbox/' + chatSessionId + '/unreadCount']    = firebase.database.ServerValue.increment(1);
-    
+
     // FIX: If the conversation was resolved, change status back to open
     // when the customer sends a new message
     updates['live_chat/' + chatSessionId + '/meta/status'] = 'open';
@@ -426,6 +441,30 @@ async function sendChatMessage() {
     input.placeholder = 'Type your message...';
     _satisfactionShown = false;
     _resolvedActive = false;
+
+    // AI reply attempt. If the customer explicitly asks for a human,
+    // skip straight to leaving it for admin — same as today's
+    // existing behavior, no change needed there.
+    if (!customerWantsHuman(text)) {
+      const aiText = await getAIReply(text);
+      if (aiText) {
+        const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+        const aiTs  = firebase.database.ServerValue.TIMESTAMP;
+        await rtdb.ref('/').update({
+          ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: {
+            text:       aiText,
+            sender:     'admin',
+            senderName: 'JANEDORE AI',
+            createdAt:  aiTs,
+            read:       true,
+            delivered:  true,
+            sessionId:  chatSessionId
+          },
+          ['chat_inbox/' + chatSessionId + '/lastMessage']:   aiText,
+          ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
+        });
+      }
+    }
   } catch(e) {
     console.error('[Chat] Send error:', e.message);
     alert('Failed to send message. Please try again.');
@@ -507,14 +546,14 @@ function listenStatus() {
   _statusListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/status');
   _statusListenerCb  = snap => {
     const status = snap.val();
-    
+
     // If status is resolved and we haven't shown satisfaction yet
     if (status === 'resolved' && !_satisfactionShown) {
       _satisfactionShown = true;
       _resolvedActive = true;
       showSatisfactionPrompt();
     }
-    
+
     // If status changes to something other than resolved, re-enable chat
     if (status !== 'resolved') {
       _satisfactionShown = false;
@@ -545,7 +584,7 @@ function showResolvedBanner() {
   banner.id = 'chat-resolved-banner';
   banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
   banner.innerHTML =
-    '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:300;letter-spacing:0.03em;">'
+    '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
       + 'Resolved.'
     + '</span>';
   wrap.insertBefore(banner, wrap.firstChild);
@@ -565,22 +604,17 @@ function showSatisfactionPrompt() {
   // these here would trap the customer with no way back in.
   const input = safeEl('chat-input');
   if (input) input.placeholder = 'Conversation resolved — send a message to reopen';
-  
 
   const prompt = document.createElement('div');
   prompt.id        = 'satisfaction-prompt';
   prompt.className = 'chat-msg admin';
   prompt.innerHTML =
-    '<div style="font-size:11px;font-weight:400;margin-bottom:10px;line-height:1.6;">'
+    '<div style="margin-bottom:10px;">'
       + 'We\'re glad we could help. Was your issue resolved?'
     + '</div>'
-    + '<div style="display:flex;gap:8px;justify-content:center;">'
-      + '<button id="sat-yes" style="background:none;border:0.5px solid currentColor;padding:6px 18px;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;">'
-        + 'Yes'
-      + '</button>'
-      + '<button id="sat-no" style="background:none;border:0.5px solid currentColor;padding:6px 18px;border-radius:20px;font-family:Manrope,sans-serif;font-size:11px;font-weight:400;cursor:pointer;letter-spacing:0.04em;">'
-        + 'Not really'
-      + '</button>'
+    + '<div style="display:flex;gap:8px;">'
+      + '<button class="chat-pill-btn" id="sat-yes">Yes</button>'
+      + '<button class="chat-pill-btn" id="sat-no">Not really</button>'
     + '</div>';
 
   el.appendChild(prompt);
@@ -614,7 +648,7 @@ async function submitSatisfaction(satisfied) {
   const thanks = document.createElement('div');
   thanks.className = 'chat-msg admin';
   thanks.innerHTML =
-    '<div style="font-size:11px;font-weight:300;line-height:1.6;">'
+    '<div>'
       + (satisfied
           ? 'Thank you for letting us know. We hope to see you again soon.'
           : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.')
@@ -645,8 +679,8 @@ async function lookupOrder() {
     if (snap.empty) {
       resultEl.innerHTML = `
         <div style="margin-top:16px;color:#888;line-height:1.8;">
-          <div style="font-family:'Manrope',sans-serif;font-size:11px;font-weight:300;letter-spacing:0.03em;">No order found</div>
-          <div style="font-family:'Manrope',sans-serif;font-size:9px;font-weight:300;letter-spacing:0.03em;margin-top:4px;opacity:0.7;">Check your order number and try again</div>
+          <div style="font-family:'Manrope',sans-serif;font-size:12px;font-weight:400;">No order found</div>
+          <div style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;">Check your order number and try again</div>
         </div>`;
       return;
     }
@@ -659,34 +693,31 @@ async function lookupOrder() {
 
     resultEl.innerHTML = `
       <div style="margin-top:20px;width:100%;text-align:left;font-family:'Manrope',sans-serif;line-height:1.8;">
-        <div style="font-size:8px;text-transform:uppercase;letter-spacing:0.15em;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;">Order Details</div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+        <div style="font-size:9px;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;font-weight:600;">Order Details</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
           <span style="color:#888;">Order</span><span style="color:#111;">#${o.orderNumber || snap.docs[0].id}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
           <span style="color:#888;">Status</span><span style="color:#111;">${status}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
           <span style="color:#888;">Items</span><span style="color:#111;">${o.items?.length || o.itemCount || 0}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
           <span style="color:#888;">Total</span><span style="color:#111;">R${(o.subtotal || o.total || 0).toLocaleString()}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:300;letter-spacing:0.03em;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;">
           <span style="color:#888;">Date</span><span style="color:#111;">${date}</span>
         </div>
       </div>`;
   } catch(e) {
     console.error('[Chat] Order lookup error:', e.message);
-    resultEl.innerHTML = '<div style="color:#c00;font-size:10px;font-weight:300;margin-top:16px;">Unable to look up order. Please try again.</div>';
+    resultEl.innerHTML = '<div style="color:#c00;font-size:11px;font-weight:400;margin-top:16px;">Unable to look up order. Please try again.</div>';
   }
 }
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  const nameInput  = safeEl('chat-name-input');
-  const emailInput = safeEl('chat-email-input');
-  if (nameInput  && customerName)  nameInput.value  = customerName;
-  if (emailInput && customerEmail) emailInput.value = customerEmail;
+  updateCustomerInfoBar();
   ensureAuth();
 });
