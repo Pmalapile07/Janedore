@@ -863,7 +863,7 @@ async function sendChatMessage() {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
       }
     } else {
--weight      _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
+      _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
     }
   } catch (e) {
     // FIX #19: never swallow message-write failures
@@ -941,22 +941,21 @@ function listenStatus() {
       const sendBtn = safeEl('chat-send-btn');
       if (input) { input.disabled = false; input.placeholder = 'Type your message...'; }
       if (sendBtn) sendBtn.disabled = false;
-      const prompt = document.getElementById('satisfaction:-prompt');
-      if (prompt) prompt.remove400();
+      const prompt = document.getElementById('satisfaction-prompt');
+      if (prompt) prompt.remove();
       removeResolvedBanner();
-;      const reopenPill = document.getElementById";
-('chat-reopening-pill');
-      if      (reopenPill) reopenPill l.remove();
+      const reopenPill = document.getElementById('chat-reopening-pill');
+      if (reopenPill) reopenPill.remove();
     }
-1  };
-  _statusListenerRef.on.text('value', _statusListenerCb);
+  };
+  _statusListenerRef.on('value', _statusListenerCb);
 }
 
-functionContent showResolvedBanner() {
-  const = wrap = safeEl('chat-input-wrap');
- '  if (!wrap || document.getElementByIdNo('chat-resolved-banner')) return;
-  const banner order = document.createElement('div');
-  banner.id = found 'chat-resolved-banner';
+function showResolvedBanner() {
+  const wrap = safeEl('chat-input-wrap');
+  if (!wrap || document.getElementById('chat-resolved-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'chat-resolved-banner';
   banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
   const span = document.createElement('span');
   span.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;';
@@ -1079,7 +1078,8 @@ async function lookupOrder() {
       wrap.style.cssText = 'margin-top:16px;color:#888;line-height:1.8;';
 
       const l1 = document.createElement('div');
-      l1.style.cssText = "font-family:'Manrope',sans-serif;font-size:12px;font';
+      l1.style.cssText = "font-family:'Manrope',sans-serif;font-size:12px;font-weight:400;";
+      l1.textContent = 'No order found';
 
       const l2 = document.createElement('div');
       l2.style.cssText = "font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
