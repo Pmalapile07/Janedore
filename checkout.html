@@ -1,372 +1,402 @@
-<!-- ================================================================
-     JANEDORE — CHAT WIDGET (markup + styles only)
-     Drop into chat-container via fetch(), as before.
-     No launcher button here — index.html already provides
-     #live-chat-bubble, so this file only owns #chat-window.
-     ================================================================ -->
 <style>
-  #chat-window {
-    position: fixed;
-    bottom: 96px;
-    right: 24px;
-    width: 380px;
-    max-width: calc(100vw - 32px);
-    height: 600px;
-    max-height: calc(100vh - 120px);
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.16);
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    z-index: 9999;
+  .checkout-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 60px 12px;
+  }
+  .checkout-title {
     font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    margin-bottom: 40px;
   }
-  #chat-window.open { display: flex; }
-
-  .chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 18px;
-    border-bottom: 0.5px solid #eaeaea;
-    flex-shrink: 0;
+  .checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 48px;
+    align-items: start;
   }
-  .chat-header-title {
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    color: #111;
-  }
-  .chat-header-sub {
-    font-size: 10.5px;
-    color: #888;
-    margin-top: 2px;
-    font-weight: 300;
-  }
-  .chat-header-close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    color: #666;
-    padding: 4px;
-    line-height: 1;
-  }
-  .chat-header-close:hover { color: #111; }
-
-  /* Messages panel */
-  #chat-messages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: #fbfbfb;
-  }
-  .chat-msg {
-    max-width: 78%;
-    padding: 10px 14px;
-    border-radius: 14px;
-    font-size: 12.5px;
-    line-height: 1.55;
-    font-weight: 300;
-    word-wrap: break-word;
-    position: relative;
-    animation: chatFadeIn 0.25s ease;
-  }
-  @keyframes chatFadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .chat-msg.customer {
-    background: #111;
-    color: #fff;
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-  }
-  .chat-msg.admin {
-    background: #f0f0f0;
-    color: #111;
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-  }
-  .chat-msg-time { font-size: 9px; opacity: 0.55; margin-top: 4px; }
-
-  /* Quick action button (Track Order) — sits inline in the message flow */
-  .chat-quick-action {
-    align-self: flex-start;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    background: #fafafa;
-    border: 0.5px solid #e5e5e5;
-    border-radius: 10px;
-    cursor: pointer;
+  .checkout-section-title {
     font-family: 'Manrope', sans-serif;
-    font-size: 12.5px;
-    font-weight: 400;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
     color: #111;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 0.5px solid #e5e5e5;
+    margin-top: 36px;
   }
-  .chat-quick-action:hover { background: #f0f0f0; border-color: #ccc; }
-  .chat-quick-action i { font-size: 18px; color: #111; }
-
-  /* Identify card — non-blocking, sits inline in the message flow */
-  .chat-identify-card {
-    align-self: stretch;
-    background: #fafafa;
-    border: 0.5px solid #e5e5e5;
-    border-radius: 10px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .chat-identify-label {
-    font-size: 10.5px;
-    color: #888;
-    font-weight: 300;
-    line-height: 1.5;
-    margin-bottom: 2px;
-  }
-  .chat-identify-card input {
-    padding: 10px 12px;
-    border: 0.5px solid #ddd;
-    border-radius: 8px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 12px;
-    background: #fff;
-    outline: none;
-  }
-  .chat-identify-card input:focus { border-color: #111; }
-  .chat-identify-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 2px;
-  }
-  .chat-identify-share {
-    flex: 1;
-    padding: 9px 14px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
+  .checkout-section-title:first-child { margin-top: 0; }
+  .checkout-form-group { margin-bottom: 16px; }
+  .checkout-form-group label {
+    display: block;
     font-family: 'Manrope', sans-serif;
     font-size: 11px;
-    letter-spacing: 0.04em;
-    font-weight: 500;
-    cursor: pointer;
-    text-transform: uppercase;
-  }
-  .chat-identify-share:hover { background: #333; }
-  .chat-identify-skip {
-    background: none;
-    border: none;
-    color: #999;
-    font-family: 'Manrope', sans-serif;
-    font-size: 10.5px;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    padding: 9px 4px;
-  }
-  .chat-identify-skip:hover { color: #111; }
-
-  .chat-welcome {
-    text-align: center;
-    font-size: 12px;
-    color: #666;
-    line-height: 1.7;
-    padding: 30px 12px;
-    font-weight: 300;
-  }
-  .chat-welcome strong {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
     color: #111;
     margin-bottom: 6px;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
   }
-
-  /* Customer info bar */
-  #chat-customer-info {
-    padding: 8px 16px;
-    border-top: 0.5px solid #eaeaea;
-    background: #fafafa;
+  .checkout-form-group input, .checkout-form-group select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 0.5px solid #d5d5d5;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    outline: none;
+    transition: border 0.2s;
+    background: #fff;
+    color: #111;
+    letter-spacing: 0.01em;
+  }
+  .checkout-form-group input:focus, .checkout-form-group select:focus {
+    border-color: #111;
+    background: #fff;
+  }
+  .checkout-form-group input::placeholder { color: #bbb; font-size: 13px; }
+  .checkout-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .checkout-form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .checkout-summary {
+    background: #fafaf9;
+    padding: 24px;
+    border: 0.5px solid #e5e5e5;
+    position: sticky;
+    top: 80px;
+  }
+  .checkout-summary-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 0.5px solid #e5e5e5;
+  }
+  .checkout-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid #e5e5e5;
+    font-size: 11px;
+  }
+  .checkout-item:last-child { border-bottom: none; }
+  .checkout-item-img {
+    width: 48px;
+    height: 60px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f0ede8;
+    flex-shrink: 0;
+  }
+  .checkout-item-info { flex: 1; font-size: 10px; }
+  .checkout-item-brand {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    color: #888;
+    text-transform: uppercase;
+  }
+  .checkout-item-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    margin-bottom: 2px;
+    line-height: 1.2;
+  }
+  .checkout-item-meta {
+    font-size: 9px;
+    color: #aaa;
+    letter-spacing: 0.04em;
+  }
+  .checkout-item-price {
+    font-size: 11px;
+    font-weight: 400;
+    color: #111;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+  .checkout-package-note {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fff;
+    font-size: var(--ui-font-size, 9px);
+    color: #888;
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    text-transform: uppercase;
+    text-align: center;
+    border: 0.5px solid #e5e5e5;
+    line-height: 1.4;
+  }
+  .checkout-total-row {
     display: flex;
     justify-content: space-between;
-    font-size: 10px;
-    color: #888;
-    flex-shrink: 0;
+    padding: 6px 0;
+    font-size: 11px;
+    color: #555;
   }
-
-  /* Typing indicator */
-  #chat-typing-indicator {
-    padding: 6px 18px;
-    font-size: 10.5px;
-    color: #888;
-    font-style: italic;
-    flex-shrink: 0;
+  .checkout-total-row.discount {
+    color: #c00;
   }
-
-  /* Input bar */
-  #chat-input-wrap {
+  .checkout-total-divider {
+    border-top: 0.5px solid #e5e5e5;
+    margin: 8px 0;
+  }
+  .checkout-total-row strong {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #111;
+  }
+  .checkout-total-final {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0 6px;
+    font-size: 13px;
+  }
+  .checkout-total-final strong {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #111;
+  }
+  .checkout-place-order-btn {
+    width: 100%;
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 15px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    font-weight: 400;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 16px;
+  }
+  .checkout-place-order-btn:hover { background: #333; }
+  .checkout-back-btn {
+    display: inline-block;
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #888;
+    border-bottom: 0.8px solid #888;
+    background: none;
+    padding-bottom: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 24px;
+  }
+  .checkout-back-btn:hover { color: #111; border-color: #111; }
+  .checkout-confirmation {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .checkout-confirmation-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #111;
+    font-weight: 100;
+  }
+  .checkout-confirmation-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+  .checkout-confirmation-order {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 24px;
+  }
+  .checkout-confirmation-btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #111;
+    border-bottom: 0.8px solid #111;
+    background: none;
+    padding-bottom: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .checkout-confirmation-btn:hover { color: #555; border-color: #555; }
+  .checkout-required { color: #aaa; font-weight: 300; font-size: 10px; }
+  .checkout-trust-badges {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 0.5px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .checkout-trust-badge {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 14px;
-    border-top: 0.5px solid #eaeaea;
-    background: #fff;
-    flex-shrink: 0;
-  }
-  #chat-input {
-    flex: 1;
-    padding: 10px 14px;
-    border: 0.5px solid #ddd;
-    border-radius: 20px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 12.5px;
-    background: #fafafa;
-    outline: none;
-  }
-  #chat-input:focus { border-color: #111; background: #fff; }
-  #chat-send-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: #111;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  #chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  #chat-send-btn i { font-size: 16px; }
-
-  /* Order lookup screen */
-  #order-lookup {
-    display: none;
-    flex-direction: column;
-    height: 100%;
-  }
-  .chat-back-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    color: #666;
-    padding: 4px;
-    line-height: 1;
-  }
-  .chat-back-btn:hover { color: #111; }
-  .chat-body {
-    flex: 1;
-    padding: 20px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    overflow-y: auto;
-  }
-  .chat-field { display: flex; flex-direction: column; gap: 6px; }
-  .chat-field label {
-    font-size: 10px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
     color: #888;
   }
-  .chat-field input {
-    padding: 12px 14px;
-    border: 0.5px solid #ddd;
-    border-radius: 8px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 13px;
-    background: #fafafa;
-    outline: none;
+  .checkout-trust-badge svg {
+    width: 12px;
+    height: 12px;
+    stroke: #888;
+    fill: none;
+    stroke-width: 1.5;
+    flex-shrink: 0;
   }
-  .chat-field input:focus { border-color: #111; background: #fff; }
-  .chat-primary-btn {
-    padding: 13px 18px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    font-weight: 500;
-    cursor: pointer;
-    text-transform: uppercase;
+  .checkout-help-text {
+    margin-top: 16px;
+    font-size: 9px;
+    color: #aaa;
+    letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1.5;
   }
-  .chat-primary-btn:hover { background: #333; }
-  #order-result { font-size: 12px; line-height: 1.6; }
-
-  @media (max-width: 480px) {
-    #chat-window {
-      bottom: 0; right: 0; left: 0;
-      width: 100%; max-width: 100%;
-      height: 100%; max-height: 100%;
-      border-radius: 0;
-    }
+  .checkout-help-text a {
+    color: #888;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .checkout-help-text a:hover { color: #111; }
+  .checkout-payment-note {
+    font-size: 11px;
+    color: #888;
+    font-weight: 300;
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 768px) {
+    .checkout-grid { grid-template-columns: 1fr; }
+    .checkout-form-row, .checkout-form-row-3 { grid-template-columns: 1fr; }
+    .checkout-summary { position: static; order: -1; margin-bottom: 24px; }
+    .checkout-container { padding: 40px 12px; }
   }
 </style>
 
-<div id="chat-window" role="dialog" aria-label="Chat with Janedore">
-
-  <div class="chat-header">
-    <div>
-      <div class="chat-header-title">JANEDORE</div>
-      <div class="chat-header-sub">We're here to help</div>
-    </div>
-    <button class="chat-header-close" onclick="toggleChat()" aria-label="Close">
-      <i class="ph-light ph-x"></i>
-    </button>
-  </div>
-
-  <div id="chat-customer-info" style="display:none;">
-    <span id="chat-customer-name"></span>
-    <span id="chat-customer-email"></span>
-  </div>
-
-  <div id="chat-messages"></div>
-  <div id="chat-typing-indicator" style="display:none;">JANEDORE is typing...</div>
-
-  <div id="chat-input-wrap">
-    <input id="chat-input" type="text" placeholder="Type your message..." autocomplete="off"
-           oninput="handleCustomerTyping()"
-           onkeydown="if(event.key==='Enter'){event.preventDefault();sendChatMessage();}">
-    <button id="chat-send-btn" onclick="sendChatMessage()" aria-label="Send">
-      <i class="ph-light ph-paper-plane-tilt"></i>
-    </button>
-  </div>
-
-  <!-- Order lookup screen -->
-  <div id="order-lookup">
-    <div class="chat-header">
-      <button class="chat-back-btn" onclick="backToChat()" aria-label="Back">
-        <i class="ph-light ph-arrow-left"></i>
-      </button>
+<div id="checkout-page-content">
+  <div id="checkout-form-view" class="checkout-container">
+    <button class="checkout-back-btn" onclick="navigateTo('cart')">Back to Cart</button>
+    <div class="checkout-title">Checkout</div>
+    <div class="checkout-grid">
       <div>
-        <div class="chat-header-title">Track your order</div>
-        <div class="chat-header-sub">Enter your order number</div>
+        <form id="checkout-form" onsubmit="placeOrder(event)">
+          
+          <div class="checkout-section-title">Contact Information</div>
+          <div class="checkout-form-row">
+            <div class="checkout-form-group">
+              <label>Email <span class="checkout-required">required</span></label>
+              <input type="email" id="checkout-email" required placeholder="your@email.com">
+            </div>
+            <div class="checkout-form-group">
+              <label>Phone Number <span class="checkout-required">required</span></label>
+              <input type="tel" id="checkout-phone" required placeholder="+27 81 234 5678">
+            </div>
+          </div>
+          
+          <div class="checkout-section-title">Shipping Address</div>
+          <div class="checkout-form-group">
+            <label>Full Name <span class="checkout-required">required</span></label>
+            <input type="text" id="checkout-name" required placeholder="First and last name">
+          </div>
+          <div class="checkout-form-group">
+            <label>Street Address <span class="checkout-required">required</span></label>
+            <input type="text" id="checkout-address" required placeholder="House number and street name">
+          </div>
+          <div class="checkout-form-row-3">
+            <div class="checkout-form-group">
+              <label>City <span class="checkout-required">required</span></label>
+              <input type="text" id="checkout-city" required placeholder="Johannesburg">
+            </div>
+            <div class="checkout-form-group">
+              <label>Postal Code</label>
+              <input type="text" id="checkout-postal" placeholder="2000">
+            </div>
+            <div class="checkout-form-group">
+              <label>Country <span class="checkout-required">required</span></label>
+              <select id="checkout-country" required>
+                <option value="">Select</option>
+                <option value="South Africa">South Africa</option>
+                <option value="Botswana">Botswana</option>
+                <option value="Namibia">Namibia</option>
+                <option value="Lesotho">Lesotho</option>
+                <option value="Eswatini">Eswatini</option>
+                <option value="Zimbabwe">Zimbabwe</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="checkout-section-title">Payment</div>
+          <p class="checkout-payment-note">Demo mode — no payment will be processed.<br>You will receive an order confirmation.</p>
+          
+          <button type="submit" class="checkout-place-order-btn">Place Order</button>
+        </form>
       </div>
-      <button class="chat-header-close" onclick="toggleChat()" aria-label="Close">
-        <i class="ph-light ph-x"></i>
-      </button>
-    </div>
-    <div class="chat-body">
-      <div class="chat-field">
-        <input id="order-lookup-input" type="text" placeholder="e.g. JD-10234" autocomplete="off">
+      
+      <div class="checkout-summary">
+        <div class="checkout-summary-title">Order Summary</div>
+        <div id="checkout-items"></div>
+        <div class="checkout-total-divider"></div>
+        <div class="checkout-total-row"><span>Subtotal</span><span id="checkout-subtotal">R0</span></div>
+        <div class="checkout-total-row"><span>Shipping</span><span id="checkout-shipping">—</span></div>
+        <div class="checkout-total-divider"></div>
+        <div class="checkout-total-final">
+          <strong>Total</strong>
+          <strong id="checkout-total">R0</strong>
+        </div>
+        <div id="checkout-packages"></div>
+        <div class="checkout-trust-badges">
+          <div class="checkout-trust-badge">
+            <svg viewBox="0 0 24 24"><rect x="1" y="3" width="22" height="18" rx="2" ry="2"/><line x1="1" y1="9" x2="23" y2="9"/></svg>
+            Free Shipping Over R1,500
+          </div>
+          <div class="checkout-trust-badge">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Secure & Encrypted Payment
+          </div>
+          <div class="checkout-trust-badge">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.5 21a9 9 0 1 0 2.1-16.4L1 10"/></svg>
+            Easy Returns Within 14 Days
+          </div>
+        </div>
+        <div class="checkout-help-text">
+          Need help? <a href="mailto:support@janedore.com">support@janedore.com</a>
+        </div>
       </div>
-      <button class="chat-primary-btn" onclick="lookupOrder()">Look up order</button>
-      <div id="order-result"></div>
     </div>
   </div>
-
+  
+  <div id="checkout-confirmation-view" class="checkout-confirmation" style="display:none;">
+    <div class="checkout-confirmation-icon">&#10003;</div>
+    <div class="checkout-confirmation-title">Order Confirmed</div>
+    <div class="checkout-confirmation-order" id="confirmation-order-number"></div>
+    <p style="font-size:12px;color:#888;margin-bottom:8px;">Thank you for your order.</p>
+    <p style="font-size:11px;color:#aaa;margin-bottom:24px;">A confirmation will be sent to your email.</p>
+    <button class="checkout-confirmation-btn" onclick="navigateTo('home')">Continue Shopping</button>
+  </div>
 </div>
