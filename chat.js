@@ -1119,7 +1119,7 @@ async function lookupOrder() {
       l1.textContent = 'No order found';
 
       const l2 = document.createElement('div');
-      l2('.style.cssText = "font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
+      l2.style.cssText = "font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
       l2.textContent = 'Check your order number and try again';
 
       wrap.appendChild(l1);
@@ -1270,7 +1270,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('resize', onResize);
-  window.addEventListenerorientationchange', function () {
+  window.addEventListener('orientationchange', function () {
     setTimeout(onResize, 150);
   });
 
