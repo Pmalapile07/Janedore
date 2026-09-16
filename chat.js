@@ -388,6 +388,7 @@ function toggleChat() {
     if (dot) dot.style.display = 'none';
 
     showScreen('chat-messages');
+    setHeaderIcon('ph-light ph-x');
     const inputWrap = safeEl('chat-input-wrap');
     if (inputWrap) inputWrap.style.display = 'flex';
 
@@ -455,10 +456,27 @@ function updateCustomerInfoBar() {
 function showOrderLookup() {
   _ScreenDebug.info('UI', 'Order lookup screen');
   showScreen('order-lookup');
+  const inputWrap = safeEl('chat-input-wrap');
+  if (inputWrap) inputWrap.style.display = 'none';
+  setHeaderIcon('ph-light ph-arrow-up-left');
   const resultEl = safeEl('order-result');
   if (resultEl) resultEl.innerHTML = '';
   const input = safeEl('order-lookup-input');
   if (input) setTimeout(() => input.focus(), 100);
+}
+
+function setHeaderIcon(iconClass) {
+  const icon = safeEl('chat-header-icon');
+  if (icon) icon.className = iconClass;
+}
+
+function handleHeaderButtonClick() {
+  const orderLookup = safeEl('order-lookup');
+  if (orderLookup && orderLookup.style.display !== 'none') {
+    backToChat();
+  } else {
+    toggleChat();
+  }
 }
 
 function backToChat() {
@@ -466,6 +484,7 @@ function backToChat() {
   showScreen('chat-messages');
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'flex';
+  setHeaderIcon('ph-light ph-x');
 }
 
 function clearChatSession() {
