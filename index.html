@@ -416,12 +416,11 @@
 
       try {
         // TEMPORARY — App Check debug mode, for testing only.
-        // Bypasses the reCAPTCHA flow entirely (and the 24h throttle
-        // tied to it), using a registered debug token instead.
-        // REMOVE this line before shipping to real customers — if
-        // left in, every visitor's browser generates its own debug
-        // token attempt instead of doing real reCAPTCHA verification.
-        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        // Uses a fixed, pre-chosen token (registered manually in
+        // Firebase Console) instead of an auto-generated one — this
+        // avoids needing to read the console (no devtools access
+        // needed on iPhone). REMOVE before shipping to real customers.
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = 'fee1928e-81c4-4019-b18c-409aaac32686';
 
         initializeAppCheck(aiApp, {
           provider: new ReCaptchaV3Provider('6Lcws70tAAAAAHkOHW258mogHkJ0RvHXqslHzAL6'),
