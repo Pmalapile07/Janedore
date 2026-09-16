@@ -10,6 +10,13 @@ const firebaseConfig = {
   measurementId: "G-Y9NMT0ZGKZ"
 };
 
+// ==================== EXPOSE CONFIG GLOBALLY ====================
+// Required by the AI Bridge module in index.html / coming-soon, which
+// runs in its own <script type="module"> scope and cannot see this
+// const directly. Without this line, window._firebaseConfig is null,
+// and the AI Bridge silently never initializes.
+window._firebaseConfig = firebaseConfig;
+
 console.log('[FIREBASE.JS] +0ms — start');
 var _fbT0 = Date.now();
 
