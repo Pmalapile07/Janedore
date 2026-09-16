@@ -7,6 +7,14 @@
 // meant for development — disable _ScreenDebug.enabled = false before
 // shipping to real customers.
 
+// ==================== CONSTANTS ====================
+const MAX_CUSTOMER_MSG_LENGTH = 1000;   // RTDB + AI input
+const MAX_AI_INPUT_LENGTH     = 1000;   // AI input hard cap
+const MAX_NAME_LENGTH         = 60;
+const MAX_EMAIL_LENGTH        = 120;
+const MAX_SESSION_ID_LENGTH   = 80;
+const SESSION_ID_REGEX        = /^chat-\d{10,16}$/;
+
 // ==================== ON-SCREEN DEBUG PANEL ====================
 const _ScreenDebug = {
   enabled: true,
@@ -65,7 +73,6 @@ const _ScreenDebug = {
     ].join(';');
     panel.appendChild(logEl);
 
-    // Insert at top of window (below header)
     const headerEl = win.querySelector('.chat-header');
     if (headerEl && headerEl.nextSibling) {
       win.insertBefore(panel, headerEl.nextSibling);
@@ -86,6 +93,7 @@ const _ScreenDebug = {
     }
   },
 
+  // FIX #10: build rows with textContent, not innerHTML
   row(area, msg, level) {
     if (!this.enabled) return;
     this.ensurePanel();
@@ -102,11 +110,25 @@ const _ScreenDebug = {
     const ts = new Date().toTimeString().slice(0, 8);
 
     const el = document.createElement('div');
-    el.style.cssText = 'padding:1px 0;border-bottom:1px solid #1e1e1e;';
-    el.innerHTML =
-      '<span style="color:#555;">' + ts + '</span> ' +
-      '<span style="color:' + c.area + ';font-weight:700;">[' + area + ']</span> ' +
-      '<span style="color:' + c.msg + ';">' + msg + '</span>';
+    el.style.cssText = 'padding:1px 0;border-bottom:1px solid #1e1e1e;word-break:break-word;';
+
+    const tsSpan = document.createElement('span');
+    tsSpan.style.color = '#555';
+    tsSpan.textContent = ts;
+
+    const areaSpan = document.createElement('span');
+    areaSpan.style.color = c.area;
+    areaSpan.style.fontWeight = '700';
+    areaSpan.textContent = '[' + area + '] ';
+
+    const msgSpan = document.createElement('span');
+    msgSpan.style.color = c.msg;
+    msgSpan.textContent = msg;
+
+    el.appendChild(tsSpan);
+    el.appendChild(document.createTextNode(' '));
+    el.appendChild(areaSpan);
+    el.appendChild(msgSpan);
 
     this.logEl.appendChild(el);
     while (this.logEl.children.length > this.maxRows) {
@@ -114,7 +136,6 @@ const _ScreenDebug = {
     }
     this.logEl.scrollTop = this.logEl.scrollHeight;
 
-    // Mirror to browser console too
     const tag = '[Chat/' + area + ']';
     if (level === 'err') console.error(tag, msg);
     else if (level === 'warn') console.warn(tag, msg);
@@ -129,17 +150,21 @@ const _ScreenDebug = {
 };
 
 // ==================== STATE ====================
-let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
+let chatSessionId = sanitizeSessionId(localStorage.getItem('janedore_chat_session'));
 localStorage.setItem('janedore_chat_session', chatSessionId);
-let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
-let customerName  = localStorage.getItem('janedore_chat_name') || '';
+
+let customerEmail = sanitizeEmail(localStorage.getItem('janedore_chat_email') || '');
+let customerName  = sanitizeName(localStorage.getItem('janedore_chat_name') || '');
 let chatOpen = false;
 let typingTimeout = null;
 let loadedMessageKeys = new Set();
 let hasLoadedOnce = false;
 let _aiBridgeReady = false;
-let _aiFailCount = 0;
 let _aiDisabledUntil = 0;
+let _aiDisabledReason = '';
+let _aiInFlight = false;              // FIX #3: concurrency guard
+let _currentAIRequestId = null;       // FIX #4: dedup guard
+let _currentAIAbort = null;           // FIX #15: abort controller
 let _chatListenerRef = null;
 let _chatListenerCb  = null;
 let _typingListenerRef = null;
@@ -148,6 +173,72 @@ let _statusListenerRef = null;
 let _statusListenerCb  = null;
 let _satisfactionShown = false;
 let _resolvedActive = false;
+
+// ==================== VALIDATORS / SANITIZERS ====================
+
+// FIX #11: validate session id — must match "chat-<digits>"
+function sanitizeSessionId(raw) {
+  if (!raw || typeof raw !== 'string') return 'chat-' + Date.now();
+  if (raw.length > MAX_SESSION_ID_LENGTH) return 'chat-' + Date.now();
+  if (!SESSION_ID_REGEX.test(raw)) return 'chat-' + Date.now();
+  return raw;
+}
+
+// FIX #11: email — trim, lowercase, enforce length + shape
+function sanitizeEmail(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const trimmed = raw.trim().toLowerCase().slice(0, MAX_EMAIL_LENGTH);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return '';
+  return trimmed;
+}
+
+// FIX #11: name — trim, strip control chars, enforce length
+function sanitizeName(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw.replace(/[\x00-\x1F\x7F]/g, '').trim().slice(0, MAX_NAME_LENGTH);
+}
+
+// FIX #1: precise quota classifier — inspect actual message
+function classifyAIError(e) {
+  const msg  = ((e && e.message) || String(e) || '').toLowerCase();
+  const code = ((e && e.code) || '').toString().toUpperCase();
+
+  // Daily quota — SPECIFIC indicators only
+  const hasDailyQuota =
+    msg.includes('generaterequestsperday') ||
+    msg.includes('generaterequestsperdayperprojectpermodel') ||
+    msg.includes('generate_content_free_tier_requests') ||
+    msg.includes('perday') ||
+    msg.includes('per day') ||
+    (code === 'RESOURCE_EXHAUSTED' && msg.includes('daily')) ||
+    (code === 'RESOURCE_EXHAUSTED' && msg.includes('quota') && msg.includes('day'));
+
+  if (hasDailyQuota) return 'daily-quota';
+
+  // Bridge-imposed timeout
+  if (msg.includes('ai bridge timeout')) return 'timeout';
+
+  // Transient server errors — one retry allowed
+  if (
+    msg.includes('high demand') ||
+    msg.includes('internal') ||
+    msg.includes(' 500 ') ||
+    msg.includes('status 500') ||
+    code === 'INTERNAL'
+  ) {
+    return 'transient';
+  }
+
+  // Temporary 429 / rate-limit that is NOT daily quota — one retry allowed
+  if (code === 'RESOURCE_EXHAUSTED' || msg.includes('resource_exhausted')) return 'temporary-rate';
+
+  return 'unknown';
+}
+
+// FIX #16: which categories are retryable
+function isRetryable(kind) {
+  return kind === 'transient' || kind === 'timeout' || kind === 'temporary-rate' || kind === 'unknown';
+}
 
 function getRTDB() {
   try { return firebase.database(); }
@@ -315,7 +406,8 @@ function updateCustomerInfoBar() {
   const emailEl = safeEl('chat-customer-email');
   if (!infoBar) return;
   if (customerName || customerEmail) {
-    if (nameEl) nameEl.textContent = customerName || 'Guest';
+    // FIX #5: use textContent, not innerHTML/textContent on untrusted values
+    if (nameEl)  nameEl.textContent  = customerName  || 'Guest';
     if (emailEl) emailEl.textContent = customerEmail || '';
     infoBar.style.display = 'flex';
   } else {
@@ -382,13 +474,13 @@ function renderAIGreeting() {
   if (trackBtn) trackBtn.addEventListener('click', showOrderLookup);
 }
 
-// ==================== AI REPLY ====================
-async function getAIReply(customerText, attempt = 1) {
-  const MAX_ATTEMPTS = 3;
+// ==================== AI REPLY (STRICT RETRY + LOCKING) ====================
+async function getAIReply(customerText) {
+  const MAX_ATTEMPTS = 2;
 
   if (Date.now() < _aiDisabledUntil) {
     const secs = Math.ceil((_aiDisabledUntil - Date.now()) / 1000);
-    _ScreenDebug.warn('AI', 'Circuit breaker active — skipping (retry in ' + secs + 's)');
+    _ScreenDebug.warn('AI', 'AI temporarily disabled — ' + _aiDisabledReason + ' (local cooldown, retry in ' + secs + 's)');
     return null;
   }
 
@@ -397,41 +489,108 @@ async function getAIReply(customerText, attempt = 1) {
     return null;
   }
 
+  // FIX #3: in-flight lock
+  if (_aiInFlight) {
+    _ScreenDebug.warn('AI', 'Concurrent AI request blocked — previous request still in flight');
+    return null;
+  }
+
+  // FIX #8: truncate input length
+  const safeText = (customerText || '').slice(0, MAX_AI_INPUT_LENGTH);
+  if (safeText.length < (customerText || '').length) {
+    _ScreenDebug.warn('AI', 'AI input truncated to ' + MAX_AI_INPUT_LENGTH + ' chars');
+  }
+
+  // FIX #4: request id for dedup
+  const requestId = 'ai-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  _currentAIRequestId = requestId;
+  _aiInFlight = true;
+
+  // FIX #15: AbortController for cancellation
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  _currentAIAbort = controller;
+
   try {
-    _ScreenDebug.ai('AI', 'Calling getReply attempt ' + attempt + '/' + MAX_ATTEMPTS + ' — text: "' + customerText.slice(0, 40) + '"');
-    const t0 = Date.now();
-    const reply = await window._aiBridge.getReply('customer-support-chat', {
-      customerText: customerText
-    });
-    const dt = Date.now() - t0;
+    let attempt = 1;
+    while (attempt <= MAX_ATTEMPTS) {
+      // FIX #15: if a newer request started or aborted, bail
+      if (_currentAIRequestId !== requestId) {
+        _ScreenDebug.warn('AI', 'Request ' + requestId + ' superseded — bailing');
+        return null;
+      }
+      if (controller && controller.signal.aborted) {
+        _ScreenDebug.warn('AI', 'Request ' + requestId + ' aborted');
+        return null;
+      }
 
-    if (!reply) {
-      _ScreenDebug.warn('AI', 'Bridge returned null/empty after ' + dt + 'ms');
-      return null;
-    }
+      try {
+        _ScreenDebug.ai('AI', 'Calling getReply attempt ' + attempt + '/' + MAX_ATTEMPTS + ' — textLength=' + safeText.length);
+        const t0 = Date.now();
+        const reply = await window._aiBridge.getReply('customer-support-chat', {
+          customerText: safeText
+        });
+        const dt = Date.now() - t0;
 
-    _ScreenDebug.ok('AI', 'Reply in ' + dt + 'ms (' + reply.length + ' chars): "' + reply.slice(0, 60) + '"');
-    _aiFailCount = 0;
-    return reply;
+        // FIX #15: check superseded before returning
+        if (_currentAIRequestId !== requestId) {
+          _ScreenDebug.warn('AI', 'Late reply discarded — request superseded');
+          return null;
+        }
+        if (controller && controller.signal.aborted) {
+          _ScreenDebug.warn('AI', 'Late reply discarded — aborted');
+          return null;
+        }
 
-  } catch (e) {
-    const msg = (e && e.message) || String(e);
-    const code = (e && e.code) || '';
-    _ScreenDebug.err('AI', 'Attempt ' + attempt + ' threw [' + code + ']: ' + msg);
+        if (!reply) {
+          _ScreenDebug.warn('AI', 'Bridge returned null/empty after ' + dt + 'ms');
+          return null;
+        }
 
-    if (attempt < MAX_ATTEMPTS) {
-      const backoff = 800 * attempt;
-      _ScreenDebug.warn('AI', 'Retrying in ' + backoff + 'ms…');
-      await new Promise(r => setTimeout(r, backoff));
-      return getAIReply(customerText, attempt + 1);
-    }
+        _ScreenDebug.ok('AI', 'Reply in ' + dt + 'ms (' + reply.length + ' chars)');
+        return reply;
 
-    _aiFailCount++;
-    if (_aiFailCount >= 2) {
-      _aiDisabledUntil = Date.now() + 60000;
-      _ScreenDebug.err('AI', 'Circuit breaker tripped — AI disabled for 60s');
+      } catch (e) {
+        const msg  = (e && e.message) || String(e);
+        const code = (e && e.code) || '';
+        const kind = classifyAIError(e);
+
+        // FIX #9: don't log full message text — just length + classification
+        _ScreenDebug.err('AI', 'Attempt ' + attempt + ' threw [' + code + ']: ' + msg);
+        _ScreenDebug.info('AI', 'Classified as: ' + kind);
+
+        if (kind === 'daily-quota') {
+          _aiDisabledUntil  = Date.now() + (24 * 60 * 60 * 1000);
+          _aiDisabledReason = 'daily free-tier quota exhausted';
+          _ScreenDebug.err('AI', 'Daily quota exhausted — AI DISABLED for this session. No further retries. Local cooldown: 24h. Actual reset is controlled by Google.');
+          _ScreenDebug.setStatus('AI quota hit', '#f66');
+          return null;
+        }
+
+        if (!isRetryable(kind)) {
+          _ScreenDebug.err('AI', 'Non-retryable error (' + kind + ') — stopping immediately.');
+          return null;
+        }
+
+        if (attempt < MAX_ATTEMPTS) {
+          const backoff = 1200;
+          _ScreenDebug.warn('AI', 'Retrying once in ' + backoff + 'ms…');
+          await new Promise(r => setTimeout(r, backoff));
+          attempt++;
+          continue;
+        }
+
+        _ScreenDebug.err('AI', 'Retry limit reached — no AI reply for this message. Leaving for admin.');
+        return null;
+      }
     }
     return null;
+  } finally {
+    // FIX #3: release lock only if this request owns it
+    if (_currentAIRequestId === requestId) {
+      _aiInFlight = false;
+      _currentAIAbort = null;
+      _currentAIRequestId = null;
+    }
   }
 }
 
@@ -447,7 +606,7 @@ async function loadMessages() {
   if (!rtdb || !el) { _ScreenDebug.err('RTDB', 'Cannot load — rtdb or el missing'); return; }
 
   el.innerHTML = '<div class="chat-welcome"><strong>Loading...</strong></div>';
-  _ScreenDebug.info('RTDB', 'Loading history for ' + chatSessionId);
+  _ScreenDebug.info('RTDB', 'Loading history for session ' + chatSessionId.slice(0, 20));
 
   try {
     const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages')
@@ -477,18 +636,20 @@ async function loadMessages() {
   }
 }
 
+// FIX #5: sanitize all message rendering — no innerHTML with untrusted values
 function appendMessage(m) {
   const el = safeEl('chat-messages');
   if (!el) return;
 
+  // System messages — still use a pill, but textContent for text
   if (m.sender === 'system') {
     if (m.type === 'resolved') return;
     const pill = document.createElement('div');
     pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
-    pill.innerHTML =
-      '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
-      + (m.text || '')
-      + '</span>';
+    const pillSpan = document.createElement('span');
+    pillSpan.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;';
+    pillSpan.textContent = String(m.text || '');
+    pill.appendChild(pillSpan);
     el.appendChild(pill);
     return;
   }
@@ -501,14 +662,29 @@ function appendMessage(m) {
   const div = document.createElement('div');
   div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin');
 
-  var rawName = (!isCustomer && m.senderName) ? m.senderName : '';
-  var safeName = (rawName && rawName.indexOf('@') === -1) ? rawName : 'Janedore';
-  var showName = !isCustomer && rawName;
-  const nameHtml = showName
-    ? '<div style="font-size:9px;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:500;">' + safeName + '</div>'
-    : '';
+  // Sender name — sanitized, no @
+  const rawName = (!isCustomer && m.senderName) ? String(m.senderName) : '';
+  const safeName = (rawName && rawName.indexOf('@') === -1) ? rawName.slice(0, MAX_NAME_LENGTH) : 'Janedore';
+  const showName = !isCustomer && rawName;
 
-  div.innerHTML = nameHtml + m.text + '<div class="chat-msg-time">' + time + '</div>';
+  if (showName) {
+    const nameDiv = document.createElement('div');
+    nameDiv.style.cssText = 'font-size:9px;text-transform:uppercase;opacity:0.6;margin-bottom:3px;font-weight:500;';
+    nameDiv.textContent = safeName;
+    div.appendChild(nameDiv);
+  }
+
+  // Message text — textContent, never innerHTML
+  const textNode = document.createElement('span');
+  textNode.textContent = String(m.text || '');
+  div.appendChild(textNode);
+
+  // Timestamp
+  const timeDiv = document.createElement('div');
+  timeDiv.className = 'chat-msg-time';
+  timeDiv.textContent = time;
+  div.appendChild(timeDiv);
+
   el.appendChild(div);
 }
 
@@ -545,10 +721,22 @@ async function sendChatMessage() {
   const input = safeEl('chat-input');
   if (!rtdb || !input) return;
 
-  const text = input.value.trim();
+  // FIX #7: enforce customer message length
+  let text = input.value.trim();
+  if (text.length > MAX_CUSTOMER_MSG_LENGTH) {
+    _ScreenDebug.warn('SEND', 'Message too long (' + text.length + ' chars). Truncating to ' + MAX_CUSTOMER_MSG_LENGTH);
+    text = text.slice(0, MAX_CUSTOMER_MSG_LENGTH);
+  }
   if (!text) return;
 
-  _ScreenDebug.info('SEND', 'User sent: "' + text.slice(0, 50) + '"');
+  // FIX #9: don't log full text — log length only
+  _ScreenDebug.info('SEND', 'User sent message (length=' + text.length + ')');
+
+  // FIX #3: block concurrent sends
+  if (_aiInFlight) {
+    _ScreenDebug.warn('SEND', 'Message blocked — AI request already in flight');
+    return;
+  }
 
   const wasResolved = _resolvedActive;
   if (wasResolved) {
@@ -567,10 +755,10 @@ async function sendChatMessage() {
       const pill = document.createElement('div');
       pill.id = 'chat-reopening-pill';
       pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
-      pill.innerHTML =
-        '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
-        + 'Reopening chat…'
-        + '</span>';
+      const pillSpan = document.createElement('span');
+      pillSpan.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;';
+      pillSpan.textContent = 'Reopening chat…';
+      pill.appendChild(pillSpan);
       el.appendChild(pill);
       el.scrollTop = el.scrollHeight;
     }
@@ -631,7 +819,7 @@ async function sendChatMessage() {
           productId: i.productId || ''
         }))
         : [];
-    } catch (_) {}
+    } catch (_) {} // FIX #19: cart parsing silent catch is fine — optional data
 
     await rtdb.ref('/').update(updates);
     _ScreenDebug.ok('SEND', 'Customer message saved to RTDB');
@@ -645,13 +833,13 @@ async function sendChatMessage() {
     _satisfactionShown = false;
     _resolvedActive = false;
 
+    // FIX #14: customer message is already saved — AI failure never blocks it
     if (!customerWantsHuman(text)) {
       _ScreenDebug.ai('AI', 'Attempting AI reply…');
       const aiText = await getAIReply(text);
 
       if (aiText) {
         _ScreenDebug.info('SEND', 'Writing AI reply to RTDB');
-        await new Promise(r => setTimeout(r, 0));
 
         const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
         const aiTs = firebase.database.ServerValue.TIMESTAMP;
@@ -672,12 +860,13 @@ async function sendChatMessage() {
         });
         _ScreenDebug.ok('SEND', 'AI reply written to RTDB');
       } else {
-        _ScreenDebug.warn('SEND', 'No AI reply — leaving message for admin');
+        _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
       }
     } else {
-      _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
+-weight      _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
     }
   } catch (e) {
+    // FIX #19: never swallow message-write failures
     _ScreenDebug.err('SEND', 'Failed: ' + (e.code || '') + ' ' + e.message);
     alert('Failed to send message. Please try again.');
 
@@ -752,26 +941,27 @@ function listenStatus() {
       const sendBtn = safeEl('chat-send-btn');
       if (input) { input.disabled = false; input.placeholder = 'Type your message...'; }
       if (sendBtn) sendBtn.disabled = false;
-      const prompt = document.getElementById('satisfaction-prompt');
-      if (prompt) prompt.remove();
+      const prompt = document.getElementById('satisfaction:-prompt');
+      if (prompt) prompt.remove400();
       removeResolvedBanner();
-      const reopenPill = document.getElementById('chat-reopening-pill');
-      if (reopenPill) reopenPill.remove();
+;      const reopenPill = document.getElementById";
+('chat-reopening-pill');
+      if      (reopenPill) reopenPill l.remove();
     }
-  };
-  _statusListenerRef.on('value', _statusListenerCb);
+1  };
+  _statusListenerRef.on.text('value', _statusListenerCb);
 }
 
-function showResolvedBanner() {
-  const wrap = safeEl('chat-input-wrap');
-  if (!wrap || document.getElementById('chat-resolved-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'chat-resolved-banner';
+functionContent showResolvedBanner() {
+  const = wrap = safeEl('chat-input-wrap');
+ '  if (!wrap || document.getElementByIdNo('chat-resolved-banner')) return;
+  const banner order = document.createElement('div');
+  banner.id = found 'chat-resolved-banner';
   banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
-  banner.innerHTML =
-    '<span style="font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;">'
-    + 'Resolved.'
-    + '</span>';
+  const span = document.createElement('span');
+  span.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;';
+  span.textContent = 'Resolved.';
+  banner.appendChild(span);
   wrap.insertBefore(banner, wrap.firstChild);
 }
 
@@ -790,22 +980,34 @@ function showSatisfactionPrompt() {
   const prompt = document.createElement('div');
   prompt.id = 'satisfaction-prompt';
   prompt.className = 'chat-msg admin';
-  prompt.innerHTML =
-    '<div style="margin-bottom:10px;">'
-    + 'We\'re glad we could help. Was your issue resolved?'
-    + '</div>'
-    + '<div style="display:flex;gap:8px;">'
-    + '<button class="chat-pill-btn" id="sat-yes">Yes</button>'
-    + '<button class="chat-pill-btn" id="sat-no">Not really</button>'
-    + '</div>';
+
+  const msgDiv = document.createElement('div');
+  msgDiv.style.marginBottom = '10px';
+  msgDiv.textContent = 'We\'re glad we could help. Was your issue resolved?';
+  prompt.appendChild(msgDiv);
+
+  const btnRow = document.createElement('div');
+  btnRow.style.display = 'flex';
+  btnRow.style.gap = '8px';
+
+  const yesBtn = document.createElement('button');
+  yesBtn.className = 'chat-pill-btn';
+  yesBtn.id = 'sat-yes';
+  yesBtn.textContent = 'Yes';
+  yesBtn.addEventListener('click', function () { submitSatisfaction(true); });
+
+  const noBtn = document.createElement('button');
+  noBtn.className = 'chat-pill-btn';
+  noBtn.id = 'sat-no';
+  noBtn.textContent = 'Not really';
+  noBtn.addEventListener('click', function () { submitSatisfaction(false); });
+
+  btnRow.appendChild(yesBtn);
+  btnRow.appendChild(noBtn);
+  prompt.appendChild(btnRow);
 
   el.appendChild(prompt);
   el.scrollTop = el.scrollHeight;
-
-  const yesBtn = document.getElementById('sat-yes');
-  const noBtn  = document.getElementById('sat-no');
-  if (yesBtn) yesBtn.addEventListener('click', function () { submitSatisfaction(true); });
-  if (noBtn)  noBtn.addEventListener('click',  function () { submitSatisfaction(false); });
 }
 
 async function submitSatisfaction(satisfied) {
@@ -830,17 +1032,17 @@ async function submitSatisfaction(satisfied) {
 
   const thanks = document.createElement('div');
   thanks.className = 'chat-msg admin';
-  thanks.innerHTML =
-    '<div>'
-    + (satisfied
-      ? 'Thank you for letting us know. We hope to see you again soon.'
-      : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.')
-    + '</div>';
+  const thanksText = document.createElement('div');
+  thanksText.textContent = satisfied
+    ? 'Thank you for letting us know. We hope to see you again soon.'
+    : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.';
+  thanks.appendChild(thanksText);
   el.appendChild(thanks);
   el.scrollTop = el.scrollHeight;
 }
 
 // ==================== ORDER LOOKUP ====================
+// FIX #6: build result with textContent, not innerHTML
 async function lookupOrder() {
   const db = getFirestore();
   const input = safeEl('order-lookup-input');
@@ -849,56 +1051,95 @@ async function lookupOrder() {
 
   const orderNum = input.value.trim().toUpperCase();
   if (!orderNum) {
-    resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Please enter an order number</div>';
+    resultEl.innerHTML = '';
+    const msg = document.createElement('div');
+    msg.style.cssText = 'color:#888;margin-top:12px;';
+    msg.textContent = 'Please enter an order number';
+    resultEl.appendChild(msg);
     return;
   }
 
-  resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Searching...</div>';
-  _ScreenDebug.info('FS', 'Order lookup: ' + orderNum);
+  resultEl.innerHTML = '';
+  const searching = document.createElement('div');
+  searching.style.cssText = 'color:#888;margin-top:12px;';
+  searching.textContent = 'Searching...';
+  resultEl.appendChild(searching);
+
+  _ScreenDebug.info('FS', 'Order lookup requested');
 
   try {
     const snap = await db.collection('orders')
       .where('orderNumber', '==', orderNum).limit(1).get();
 
+    resultEl.innerHTML = '';
+
     if (snap.empty) {
-      _ScreenDebug.warn('FS', 'No order for ' + orderNum);
-      resultEl.innerHTML = `
-        <div style="margin-top:16px;color:#888;line-height:1.8;">
-          <div style="font-family:'Manrope',sans-serif;font-size:12px;font-weight:400;">No order found</div>
-          <div style="font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;">Check your order number and try again</div>
-        </div>`;
+      _ScreenDebug.warn('FS', 'No matching order');
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'margin-top:16px;color:#888;line-height:1.8;';
+
+      const l1 = document.createElement('div');
+      l1.style.cssText = "font-family:'Manrope',sans-serif;font-size:12px;font';
+
+      const l2 = document.createElement('div');
+      l2.style.cssText = "font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
+      l2.textContent = 'Check your order number and try again';
+
+      wrap.appendChild(l1);
+      wrap.appendChild(l2);
+      resultEl.appendChild(wrap);
       return;
     }
 
-    _ScreenDebug.ok('FS', 'Order found: ' + orderNum);
+    _ScreenDebug.ok('FS', 'Order found');
     const o = snap.docs[0].data();
     const date = o.createdAt
       ? new Date(o.createdAt.seconds * 1000).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
       : '—';
     const status = (o.status || 'pending').charAt(0).toUpperCase() + (o.status || 'pending').slice(1);
 
-    resultEl.innerHTML = `
-      <div style="margin-top:20px;width:100%;text-align:left;font-family:'Manrope',sans-serif;line-height:1.8;">
-        <div style="font-size:9px;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;font-weight:600;">Order Details</div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
-          <span style="color:#888;">Order</span><span style="color:#111;">#${o.orderNumber || snap.docs[0].id}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
-          <span style="color:#888;">Status</span><span style="color:#111;">${status}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
-          <span style="color:#888;">Items</span><span style="color:#111;">${o.items?.length || o.itemCount || 0}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;">
-          <span style="color:#888;">Total</span><span style="color:#111;">R${(o.subtotal || o.total || 0).toLocaleString()}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:400;">
-          <span style="color:#888;">Date</span><span style="color:#111;">${date}</span>
-        </div>
-      </div>`;
+    // FIX #6: build each row with textContent for Firestore-controlled values
+    const container = document.createElement('div');
+    container.style.cssText = "margin-top:20px;width:100%;text-align:left;font-family:'Manrope',sans-serif;line-height:1.8;";
+
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:9px;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;font-weight:600;';
+    header.textContent = 'Order Details';
+    container.appendChild(header);
+
+    const rows = [
+      ['Order',  '#' + String(o.orderNumber || snap.docs[0].id || '')],
+      ['Status', String(status)],
+      ['Items',  String(o.items?.length || o.itemCount || 0)],
+      ['Total',  'R' + Number(o.subtotal || o.total || 0).toLocaleString()],
+      ['Date',   String(date)]
+    ];
+
+    rows.forEach(([label, value]) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;';
+
+      const labelEl = document.createElement('span');
+      labelEl.style.color = '#888';
+      labelEl.textContent = label;
+
+      const valueEl = document.createElement('span');
+      valueEl.style.color = '#111';
+      valueEl.textContent = value;
+
+      row.appendChild(labelEl);
+      row.appendChild(valueEl);
+      container.appendChild(row);
+    });
+
+    resultEl.appendChild(container);
   } catch (e) {
     _ScreenDebug.err('FS', 'Lookup failed: ' + (e.code || '') + ' ' + e.message);
-    resultEl.innerHTML = '<div style="color:#c00;font-size:11px;font-weight:400;margin-top:16px;">Unable to look up order. Please try again.</div>';
+    resultEl.innerHTML = '';
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'color:#c00;font-size:11px;font-weight:400;margin-top:16px;';
+    errDiv.textContent = 'Unable to look up order. Please try again.';
+    resultEl.appendChild(errDiv);
   }
 }
 
