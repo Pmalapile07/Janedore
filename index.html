@@ -334,6 +334,11 @@
   <span class="chat-unread-dot" id="chat-unread-dot"></span>
 </button>
 
+<script>
+  // TEMPORARY — App Check debug mode. REMOVE BEFORE PRODUCTION LAUNCH.
+  // Must be set BEFORE firebase.js activates App Check.
+  self.FIREBASE_APPCHECK_DEBUG_TOKEN = 'fee1928e-81c4-4019-b18c-409aaac32686';
+</script>
 <script src="firebase.js"></script>
 <script>
   var _authResolved = false;
@@ -415,13 +420,6 @@
       const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
 
       try {
-        // TEMPORARY — App Check debug mode, for testing only.
-        // Uses a fixed, pre-chosen token (registered manually in
-        // Firebase Console) instead of an auto-generated one — this
-        // avoids needing to read the console (no devtools access
-        // needed on iPhone). REMOVE before shipping to real customers.
-        self.FIREBASE_APPCHECK_DEBUG_TOKEN = 'fee1928e-81c4-4019-b18c-409aaac32686';
-
         initializeAppCheck(aiApp, {
           provider: new ReCaptchaV3Provider('6Lcws70tAAAAAHkOHW258mogHkJ0RvHXqslHzAL6'),
           isTokenAutoRefreshEnabled: true
