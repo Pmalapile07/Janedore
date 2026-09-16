@@ -173,6 +173,7 @@ let _statusListenerRef = null;
 let _statusListenerCb  = null;
 let _satisfactionShown = false;
 let _resolvedActive = false;
+let _pageScrollLockY = 0;             // page scroll lock: saved Y position
 
 // ==================== VALIDATORS / SANITIZERS ====================
 
@@ -340,6 +341,31 @@ function detachStatusListener() {
   }
 }
 
+// ==================== PAGE SCROLL LOCK ====================
+// Freezes the page behind the widget without losing scroll position.
+// Uses position:fixed + saved Y so iOS/Android URL bars behave too.
+function lockPageScroll() {
+  _pageScrollLockY = window.scrollY || window.pageYOffset || 0;
+  document.body.style.setProperty('position', 'fixed', 'important');
+  document.body.style.setProperty('top', -_pageScrollLockY + 'px', 'important');
+  document.body.style.setProperty('left', '0', 'important');
+  document.body.style.setProperty('right', '0', 'important');
+  document.body.style.setProperty('width', '100%', 'important');
+  document.body.style.setProperty('overflow', 'hidden', 'important');
+  document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+}
+
+function unlockPageScroll() {
+  document.body.style.removeProperty('position');
+  document.body.style.removeProperty('top');
+  document.body.style.removeProperty('left');
+  document.body.style.removeProperty('right');
+  document.body.style.removeProperty('width');
+  document.body.style.removeProperty('overflow');
+  document.documentElement.style.removeProperty('overflow');
+  window.scrollTo(0, _pageScrollLockY);
+}
+
 // ==================== SCREEN CONTROL ====================
 function toggleChat() {
   _ScreenDebug.ensurePanel();
@@ -350,6 +376,7 @@ function toggleChat() {
   if (chatOpen) {
     win.classList.add('open');
     document.body.classList.add('chat-is-open');   // hides launcher via CSS
+    lockPageScroll();                              // freeze page behind widget
 
     // Re-apply true full-screen sizing every time we open
     if (typeof window._forceChatFullScreen === 'function') {
@@ -392,6 +419,8 @@ function toggleChat() {
   } else {
     win.classList.remove('open');
     document.body.classList.remove('chat-is-open'); // launcher reappears
+    unlockPageScroll();                             // restore page scroll
+
     _ScreenDebug.info('UI', 'Chat closed');
     detachChatListener();
     detachTypingListener();
@@ -1090,7 +1119,7 @@ async function lookupOrder() {
       l1.textContent = 'No order found';
 
       const l2 = document.createElement('div');
-      l2.style.cssText = "font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
+      l2('.style.cssText = "font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
       l2.textContent = 'Check your order number and try again';
 
       wrap.appendChild(l1);
@@ -1241,7 +1270,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', function () {
+  window.addEventListenerorientationchange', function () {
     setTimeout(onResize, 150);
   });
 
