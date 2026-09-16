@@ -231,7 +231,7 @@
   #chat-window .chat-input::placeholder { color: #aaa !important; }
 
   /* Send button — wider, arrow icon, inside pill, far right */
-  #chat-window #chat-send-btn {
+  #chat-window .chat-send-btn {
     position: static !important;
     top: auto !important;
     right: auto !important;
@@ -254,12 +254,21 @@
     font-size: 16px !important;
     transition: background 0.2s, transform 0.2s !important;
   }
-  #chat-window #chat-send-btn i {
+  #chat-window .chat-send-btn i {
     font-size: 16px !important;
     line-height: 1 !important;
   }
-  #chat-window #chat-send-btn:hover { background: #333 !important; }
-  #chat-window #chat-send-btn:active { transform: scale(0.96) !important; }
+  #chat-window .chat-send-btn:hover { background: #333 !important; }
+  #chat-window .chat-send-btn:active { transform: scale(0.96) !important; }
+  #chat-window .chat-send-btn.wide {
+    width: auto !important;
+    min-width: auto !important;
+    padding: 0 18px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 300 !important;
+    letter-spacing: 0.02em !important;
+  }
 
   /* ---------- ORDER LOOKUP ---------- */
   #chat-window .order-lookup {
@@ -290,23 +299,6 @@
     text-align: center !important;
   }
 
-  #chat-window .order-lookup-btn {
-    background: #111 !important;
-    color: #fff !important;
-    border: none !important;
-    padding: 12px 32px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 300 !important;
-    letter-spacing: 0.02em !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-    border-radius: 0 !important;
-  }
-  #chat-window .order-lookup-btn:hover {
-    background: #333 !important;
-    transform: translateY(-1px) !important;
-  }
   #chat-window .order-result {
     margin-top: 24px !important;
     font-family: 'Inter', sans-serif !important;
@@ -389,12 +381,12 @@
   <div class="order-lookup" id="order-lookup" style="display:none;">
     <div class="order-lookup-title">Track your order</div>
     <div class="order-lookup-subtitle">Enter your order number to check its status</div>
-    <div class="chat-input-pill" style="margin-bottom:24px;">
+    <div class="chat-input-pill">
       <input class="chat-input" id="order-lookup-input"
              placeholder="Order number (e.g. ORD-12345)"
              onkeypress="if(event.key==='Enter')lookupOrder()">
+      <button class="chat-send-btn wide" id="order-track-btn" onclick="lookupOrder()">Track</button>
     </div>
-    <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
     <div class="order-result" id="order-result"></div>
   </div>
 
