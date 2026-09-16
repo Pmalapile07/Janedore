@@ -349,6 +349,13 @@ function toggleChat() {
 
   if (chatOpen) {
     win.classList.add('open');
+    document.body.classList.add('chat-is-open');   // hides launcher via CSS
+
+    // Re-apply true full-screen sizing every time we open
+    if (typeof window._forceChatFullScreen === 'function') {
+      window._forceChatFullScreen();
+    }
+
     _ScreenDebug.info('UI', 'Chat opened');
     const dot = safeEl('chat-unread-dot');
     if (dot) dot.style.display = 'none';
@@ -384,6 +391,7 @@ function toggleChat() {
     if (input) setTimeout(() => input.focus(), 100);
   } else {
     win.classList.remove('open');
+    document.body.classList.remove('chat-is-open'); // launcher reappears
     _ScreenDebug.info('UI', 'Chat closed');
     detachChatListener();
     detachTypingListener();
@@ -1160,3 +1168,83 @@ document.addEventListener('DOMContentLoaded', () => {
     _ScreenDebug.setStatus(ready ? 'AI ready' : 'AI offline', ready ? '#7f7' : '#f66');
   });
 });
+
+// ============================================================
+// CHAT WIDGET — TRUE FULL SCREEN FIX
+// Neutralizes ancestor CSS that traps position:fixed, and
+// forces #chat-window to cover the exact viewport on open,
+// resize, and orientation change. Self-contained — no other
+// file needs to change.
+// ============================================================
+(function () {
+  'use strict';
+
+  function stripTraps(el) {
+    if (!el || !el.style) return;
+    el.style.setProperty('position', 'static', 'important');
+    el.style.setProperty('transform', 'none', 'important');
+    el.style.setProperty('filter', 'none', 'important');
+    el.style.setProperty('perspective', 'none', 'important');
+    el.style.setProperty('contain', 'none', 'important');
+    el.style.setProperty('will-change', 'auto', 'important');
+  }
+
+  function fixAncestors(startEl) {
+    let el = startEl;
+    while (el && el !== document.documentElement) {
+      stripTraps(el);
+      el = el.parentElement;
+    }
+  }
+
+  function forceFullScreen() {
+    const win = document.getElementById('chat-window');
+    if (!win) return;
+
+    fixAncestors(win.parentElement);
+
+    const vw = window.innerWidth  || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    win.style.setProperty('position', 'fixed', 'important');
+    win.style.setProperty('top', '0', 'important');
+    win.style.setProperty('left', '0', 'important');
+    win.style.setProperty('right', '0', 'important');
+    win.style.setProperty('bottom', '0', 'important');
+    win.style.setProperty('width', vw + 'px', 'important');
+    win.style.setProperty('height', vh + 'px', 'important');
+    win.style.setProperty('max-width', vw + 'px', 'important');
+    win.style.setProperty('max-height', vh + 'px', 'important');
+    win.style.setProperty('margin', '0', 'important');
+    win.style.setProperty('border-radius', '0', 'important');
+  }
+
+  function onResize() {
+    const win = document.getElementById('chat-window');
+    if (win && win.classList.contains('open')) {
+      forceFullScreen();
+    }
+  }
+
+  // Widget HTML is injected asynchronously — watch for it to appear.
+  const observer = new MutationObserver(function () {
+    if (document.getElementById('chat-window')) {
+      forceFullScreen();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', forceFullScreen);
+  } else {
+    forceFullScreen();
+  }
+
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', function () {
+    setTimeout(onResize, 150);
+  });
+
+  // Expose so toggleChat() can re-apply on every open
+  window._forceChatFullScreen = forceFullScreen;
+})();
