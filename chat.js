@@ -506,7 +506,7 @@ function renderAIGreeting() {
     + '<br><br>'
     + 'Looking for an existing order? Track it below.'
     + '</div>'
-    + '<button class="chat-pill-btn" id="ai-greeting-track-btn">Track Order</button>';
+    + '<button class="chat-pill-btn filled" id="ai-greeting-track-btn">Track Order</button>';
   el.appendChild(greeting);
   const trackBtn = document.getElementById('ai-greeting-track-btn');
   if (trackBtn) trackBtn.addEventListener('click', showOrderLookup);
