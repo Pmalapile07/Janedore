@@ -291,30 +291,23 @@
   }
   #chat-window .order-lookup-input {
     width: 100% !important;
-    max-width: 200px !important;
+    max-width: 220px !important;
     margin: 0 auto 24px auto !important;
+    background: #f4f4f2 !important;
     border: none !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-    padding: 12px 0 !important;
+    border-radius: 24px !important;
+    padding: 12px 18px !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 11px !important;
     font-weight: 300 !important;
     letter-spacing: 0.02em !important;
     outline: none !important;
     color: #111 !important;
-    background: transparent !important;
     text-align: center !important;
-    transition: border-color 0.2s !important;
+    transition: background 0.2s !important;
   }
-  #chat-window .order-lookup-input::placeholder { color: #bbb !important; }
-  #chat-window .order-lookup-input:focus { border-color: #111 !important; }
-  #chat-window .order-actions-row {
-    display: flex !important;
-    width: 100% !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 12px !important;
-  }
+  #chat-window .order-lookup-input::placeholder { color: #aaa !important; }
+  #chat-window .order-lookup-input:focus { background: #eeeeec !important; }
   #chat-window .order-lookup-btn {
     background: #111 !important;
     color: #fff !important;
@@ -343,26 +336,6 @@
     line-height: 1.6 !important;
     width: 100% !important;
   }
-  #chat-window .back-to-chat-btn {
-    background: #fff !important;
-    border: 1px solid #111 !important;
-    color: #111 !important;
-    padding: 12px 24px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 300 !important;
-    letter-spacing: 0.02em !important;
-    cursor: pointer !important;
-    width: auto !important;
-    margin-top: 0 !important;
-    border-radius: 0 !important;
-    transition: all 0.2s !important;
-  }
-  #chat-window .back-to-chat-btn:hover {
-    background: #111 !important;
-    color: #fff !important;
-  }
-
   /* ---------- TYPING INDICATOR ---------- */
   #chat-window .chat-typing-indicator {
     padding: 6px 20px !important;
@@ -422,7 +395,9 @@
 
 <div id="chat-window">
   <div class="chat-header">
-    <button class="chat-header-close" onclick="toggleChat()">✕</button>
+    <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()">
+      <i class="ph-light ph-x" id="chat-header-icon"></i>
+    </button>
   </div>
 
   <div class="chat-typing-indicator" id="chat-typing-indicator">JANEDORE is typing...</div>
@@ -435,10 +410,7 @@
     <input class="order-lookup-input" id="order-lookup-input"
            placeholder="Order number (e.g. ORD-12345)"
            onkeypress="if(event.key==='Enter')lookupOrder()">
-    <div class="order-actions-row">
-      <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
-      <button class="back-to-chat-btn" onclick="backToChat()">Back to chat</button>
-    </div>
+    <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
     <div class="order-result" id="order-result"></div>
   </div>
 
