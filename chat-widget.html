@@ -274,7 +274,7 @@
   }
   #chat-window .order-lookup-title {
     font-family: 'Inter', sans-serif !important;
-    font-size: 20px !important;
+    font-size: 12px !important;
     font-weight: 400 !important;
     letter-spacing: 0.02em !important;
     color: #111 !important;
@@ -282,7 +282,7 @@
   }
   #chat-window .order-lookup-subtitle {
     font-family: 'Inter', sans-serif !important;
-    font-size: 14px !important;
+    font-size: 11px !important;
     font-weight: 300 !important;
     letter-spacing: 0.02em !important;
     color: #888 !important;
@@ -291,15 +291,16 @@
   }
   #chat-window .order-lookup-input {
     width: 100% !important;
+    max-width: 200px !important;
+    margin: 0 auto 24px auto !important;
     border: none !important;
     border-bottom: 1px solid #e0e0e0 !important;
     padding: 12px 0 !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 14px !important;
+    font-size: 11px !important;
     font-weight: 300 !important;
     letter-spacing: 0.02em !important;
     outline: none !important;
-    margin-bottom: 24px !important;
     color: #111 !important;
     background: transparent !important;
     text-align: center !important;
@@ -307,6 +308,12 @@
   }
   #chat-window .order-lookup-input::placeholder { color: #bbb !important; }
   #chat-window .order-lookup-input:focus { border-color: #111 !important; }
+  #chat-window .order-actions-row {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
   #chat-window .order-lookup-btn {
     background: #111 !important;
     color: #fff !important;
@@ -318,7 +325,7 @@
     letter-spacing: 0.02em !important;
     cursor: pointer !important;
     transition: all 0.2s !important;
-    border-radius: 20px !important;
+    border-radius: 0 !important;
   }
   #chat-window .order-lookup-btn:hover {
     background: #333 !important;
@@ -336,23 +343,23 @@
     width: 100% !important;
   }
   #chat-window .back-to-chat-btn {
-    background: none !important;
-    border: none !important;
-    border-bottom: 0.5px solid #ccc !important;
-    color: #999 !important;
-    padding: 6px 2px !important;
+    background: #fff !important;
+    border: 1px solid #111 !important;
+    color: #111 !important;
+    padding: 12px 24px !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 12px !important;
     font-weight: 300 !important;
     letter-spacing: 0.02em !important;
     cursor: pointer !important;
     width: auto !important;
-    margin-top: 28px !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
     transition: all 0.2s !important;
   }
   #chat-window .back-to-chat-btn:hover {
-    color: #111 !important;
-    border-color: #111 !important;
+    background: #111 !important;
+    color: #fff !important;
   }
 
   /* ---------- TYPING INDICATOR ---------- */
@@ -382,6 +389,10 @@
     font-weight: 700 !important;
     color: #111 !important;
     flex-shrink: 0 !important;
+  }
+  #chat-window .chat-footer-brand a {
+    color: inherit !important;
+    text-decoration: none !important;
   }
   #chat-window .chat-footer-mark {
     display: inline-block !important;
@@ -418,14 +429,16 @@
   <div class="chat-messages" id="chat-messages"></div>
 
   <div class="order-lookup" id="order-lookup" style="display:none;">
-    <div class="order-lookup-title">Track Your Order</div>
+    <div class="order-lookup-title">Track your order</div>
     <div class="order-lookup-subtitle">Enter your order number to check its status</div>
     <input class="order-lookup-input" id="order-lookup-input"
            placeholder="Order number (e.g. ORD-12345)"
            onkeypress="if(event.key==='Enter')lookupOrder()">
-    <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
+    <div class="order-actions-row">
+      <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
+      <button class="back-to-chat-btn" onclick="backToChat()">Back to chat</button>
+    </div>
     <div class="order-result" id="order-result"></div>
-    <button class="back-to-chat-btn" onclick="backToChat()">← Back to chat</button>
   </div>
 
   <div class="chat-input-wrap" id="chat-input-wrap" style="display:flex;">
@@ -440,6 +453,6 @@
   </div>
 
   <div class="chat-footer-brand">
-    <span class="chat-footer-mark"></span>builtbypearl
+    <span class="chat-footer-mark"></span><a href="https://builtbypearl.netlify.app" target="_blank" rel="noopener">builtbypearl</a>
   </div>
 </div>
