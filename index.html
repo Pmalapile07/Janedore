@@ -21,17 +21,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-dOVEatabase-compat.js"></script>
-  < THISscript src="https://www.gstatic.com/f ENirebasejs/10.12.0/firebase-app-check-compat.js"></script>
-
-  <!-- ==================== APP CHECK DEBUG MODE (TEMPORARY) ====================
-       REMTIRE <script> BLOCK BEFORE PRODUCTION LAUNCH.
-       Bypasses reCAPTCHA and the 24h throttle using a registered debug token.
-       Must run BEFORE firebase.js activates App Check.
-       ========================================================================= -->
-  <script>
-    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
- : </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
 
   <style id="auth-guard-style">body { visibility: hidden; }</style>
 
@@ -84,7 +75,7 @@
 
     .featured-brand-section + .featured-brand-section {
       margin-top: 8px !important;
-      padding-top 0 !important;
+      padding-top: 0 !important;
     }
 
     .featured-brand-img {
@@ -424,6 +415,14 @@
       const aiApp = existing || initializeApp(firebaseConfig, 'ai-logic');
 
       try {
+        // TEMPORARY — App Check debug mode, for testing only.
+        // Bypasses the reCAPTCHA flow entirely (and the 24h throttle
+        // tied to it), using a registered debug token instead.
+        // REMOVE this line before shipping to real customers — if
+        // left in, every visitor's browser generates its own debug
+        // token attempt instead of doing real reCAPTCHA verification.
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+
         initializeAppCheck(aiApp, {
           provider: new ReCaptchaV3Provider('6Lcws70tAAAAAHkOHW258mogHkJ0RvHXqslHzAL6'),
           isTokenAutoRefreshEnabled: true
