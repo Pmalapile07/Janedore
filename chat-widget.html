@@ -289,25 +289,7 @@
     margin-bottom: 28px !important;
     text-align: center !important;
   }
-  #chat-window .order-lookup-input {
-    width: 100% !important;
-    max-width: 220px !important;
-    margin: 0 auto 24px auto !important;
-    background: #f4f4f2 !important;
-    border: none !important;
-    border-radius: 24px !important;
-    padding: 12px 18px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 300 !important;
-    letter-spacing: 0.02em !important;
-    outline: none !important;
-    color: #111 !important;
-    text-align: center !important;
-    transition: background 0.2s !important;
-  }
-  #chat-window .order-lookup-input::placeholder { color: #aaa !important; }
-  #chat-window .order-lookup-input:focus { background: #eeeeec !important; }
+
   #chat-window .order-lookup-btn {
     background: #111 !important;
     color: #fff !important;
@@ -407,9 +389,11 @@
   <div class="order-lookup" id="order-lookup" style="display:none;">
     <div class="order-lookup-title">Track your order</div>
     <div class="order-lookup-subtitle">Enter your order number to check its status</div>
-    <input class="order-lookup-input" id="order-lookup-input"
-           placeholder="Order number (e.g. ORD-12345)"
-           onkeypress="if(event.key==='Enter')lookupOrder()">
+    <div class="chat-input-pill" style="margin-bottom:24px;">
+      <input class="chat-input" id="order-lookup-input"
+             placeholder="Order number (e.g. ORD-12345)"
+             onkeypress="if(event.key==='Enter')lookupOrder()">
+    </div>
     <button class="order-lookup-btn" onclick="lookupOrder()">Track</button>
     <div class="order-result" id="order-result"></div>
   </div>
