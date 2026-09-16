@@ -1,72 +1,198 @@
 // ==================== CHAT LOGIC ====================
 // Chats & live messages → Firebase Realtime Database (RTDB)
 // Order lookups → Firestore
+//
+// NOTE: This file renders a live on-screen diagnostic panel INSIDE
+// the chat window. It is collapsible (tap the "DEBUG" bar). It is
+// meant for development — disable _ScreenDebug.enabled = false before
+// shipping to real customers.
 
-// ==================== DEBUG CONSOLE ====================
-const _ChatDebug = {
+// ==================== ON-SCREEN DEBUG PANEL ====================
+const _ScreenDebug = {
   enabled: true,
-  log(area, msg, data) {
-    if (!this.enabled) return;
-    const ts = new Date().toISOString().slice(11, 23);
-    if (data !== undefined) console.log(`[Chat/${area}] ${ts} ${msg}`, data);
-    else console.log(`[Chat/${area}] ${ts} ${msg}`);
+  maxRows: 60,
+  panel: null,
+  logEl: null,
+  statusEl: null,
+  collapsed: false,
+
+  ensurePanel() {
+    if (this.panel) return;
+    const win = document.getElementById('chat-window');
+    if (!win) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'chat-debug-panel';
+    panel.style.cssText = [
+      'border-bottom:1px solid #e0e0e0',
+      'background:#0d0d0d',
+      'color:#e6e6e6',
+      'font-family: ui-monospace, SFMono-Regular, Menlo, monospace',
+      'font-size:10px',
+      'line-height:1.5',
+      'flex-shrink:0',
+      'max-height:180px',
+      'display:flex',
+      'flex-direction:column'
+    ].join(';');
+
+    const header = document.createElement('div');
+    header.style.cssText = [
+      'display:flex',
+      'justify-content:space-between',
+      'align-items:center',
+      'padding:6px 10px',
+      'background:#1a1a1a',
+      'border-bottom:1px solid #333',
+      'cursor:pointer',
+      'user-select:none',
+      'color:#8ff'
+    ].join(';');
+    header.innerHTML = '<span style="font-weight:700;letter-spacing:0.05em;">DEBUG · tap to toggle</span><span id="chat-debug-status" style="color:#888;">…</span>';
+    header.addEventListener('click', () => {
+      this.collapsed = !this.collapsed;
+      this.logEl.style.display = this.collapsed ? 'none' : 'block';
+    });
+    panel.appendChild(header);
+
+    const logEl = document.createElement('div');
+    logEl.id = 'chat-debug-log';
+    logEl.style.cssText = [
+      'padding:6px 10px',
+      'overflow-y:auto',
+      'flex:1',
+      'min-height:0'
+    ].join(';');
+    panel.appendChild(logEl);
+
+    // Insert at top of window (below header)
+    const headerEl = win.querySelector('.chat-header');
+    if (headerEl && headerEl.nextSibling) {
+      win.insertBefore(panel, headerEl.nextSibling);
+    } else {
+      win.insertBefore(panel, win.firstChild);
+    }
+
+    this.panel = panel;
+    this.logEl = logEl;
+    this.statusEl = panel.querySelector('#chat-debug-status');
   },
-  warn(area, msg, data) {
-    if (!this.enabled) return;
-    console.warn(`[Chat/${area}] ${msg}`, data ?? '');
+
+  setStatus(text, color) {
+    this.ensurePanel();
+    if (this.statusEl) {
+      this.statusEl.textContent = text;
+      this.statusEl.style.color = color || '#888';
+    }
   },
-  error(area, msg, data) {
-    console.error(`[Chat/${area}] ${msg}`, data ?? '');
-  }
+
+  row(area, msg, level) {
+    if (!this.enabled) return;
+    this.ensurePanel();
+    if (!this.logEl) return;
+
+    const colors = {
+      ok:    { area:'#7f7', msg:'#cfc' },
+      warn:  { area:'#fd0', msg:'#ffd' },
+      err:   { area:'#f66', msg:'#fbb' },
+      ai:    { area:'#4af', msg:'#bdf' },
+      info:  { area:'#8af', msg:'#def' }
+    };
+    const c = colors[level] || colors.info;
+    const ts = new Date().toTimeString().slice(0, 8);
+
+    const el = document.createElement('div');
+    el.style.cssText = 'padding:1px 0;border-bottom:1px solid #1e1e1e;';
+    el.innerHTML =
+      '<span style="color:#555;">' + ts + '</span> ' +
+      '<span style="color:' + c.area + ';font-weight:700;">[' + area + ']</span> ' +
+      '<span style="color:' + c.msg + ';">' + msg + '</span>';
+
+    this.logEl.appendChild(el);
+    while (this.logEl.children.length > this.maxRows) {
+      this.logEl.removeChild(this.logEl.firstChild);
+    }
+    this.logEl.scrollTop = this.logEl.scrollHeight;
+
+    // Mirror to browser console too
+    const tag = '[Chat/' + area + ']';
+    if (level === 'err') console.error(tag, msg);
+    else if (level === 'warn') console.warn(tag, msg);
+    else console.log(tag, msg);
+  },
+
+  ok(area, msg)   { this.row(area, msg, 'ok'); },
+  warn(area, msg) { this.row(area, msg, 'warn'); },
+  err(area, msg)  { this.row(area, msg, 'err'); },
+  ai(area, msg)   { this.row(area, msg, 'ai'); },
+  info(area, msg) { this.row(area, msg, 'info'); }
 };
 
+// ==================== STATE ====================
 let chatSessionId = localStorage.getItem('janedore_chat_session') || ('chat-' + Date.now());
 localStorage.setItem('janedore_chat_session', chatSessionId);
 let customerEmail = (localStorage.getItem('janedore_chat_email') || '').toLowerCase();
-let customerName = localStorage.getItem('janedore_chat_name') || '';
+let customerName  = localStorage.getItem('janedore_chat_name') || '';
 let chatOpen = false;
-let currentUser = null;
 let typingTimeout = null;
 let loadedMessageKeys = new Set();
 let hasLoadedOnce = false;
 let _aiBridgeReady = false;
 let _aiFailCount = 0;
 let _aiDisabledUntil = 0;
-
 let _chatListenerRef = null;
-let _chatListenerCb = null;
+let _chatListenerCb  = null;
 let _typingListenerRef = null;
-let _typingListenerCb = null;
+let _typingListenerCb  = null;
 let _statusListenerRef = null;
-let _statusListenerCb = null;
+let _statusListenerCb  = null;
 let _satisfactionShown = false;
 let _resolvedActive = false;
 
 function getRTDB() {
   try { return firebase.database(); }
-  catch (e) { _ChatDebug.error('RTDB', 'Not available', e.message); return null; }
+  catch (e) { _ScreenDebug.err('RTDB', 'Not available: ' + e.message); return null; }
 }
 function getFirestore() {
   try { return firebase.firestore(); }
-  catch (e) { _ChatDebug.error('Firestore', 'Not available', e.message); return null; }
+  catch (e) { _ScreenDebug.err('FS', 'Not available: ' + e.message); return null; }
 }
 function safeEl(id) { return document.getElementById(id) || null; }
 
+// ==================== ENV SNAPSHOT ====================
+function logEnvironmentSnapshot() {
+  const snap = {
+    firebase:  typeof firebase !== 'undefined',
+    compatApp: typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0,
+    _firebaseConfig: typeof window._firebaseConfig === 'object' && window._firebaseConfig !== null,
+    _aiBridge: !!window._aiBridge,
+    auth:      typeof firebase !== 'undefined' && !!firebase.auth,
+    database:  typeof firebase !== 'undefined' && !!firebase.database,
+    firestore: typeof firebase !== 'undefined' && !!firebase.firestore,
+    appCheck:  typeof firebase !== 'undefined' && !!firebase.appCheck
+  };
+  _ScreenDebug.info('ENV', 'firebase=' + snap.firebase + ' compatApp=' + snap.compatApp + ' _firebaseConfig=' + snap._firebaseConfig);
+  _ScreenDebug.info('ENV', '_aiBridge=' + snap._aiBridge + ' auth=' + snap.auth + ' database=' + snap.database + ' firestore=' + snap.firestore + ' appCheck=' + snap.appCheck);
+  if (!snap._firebaseConfig) {
+    _ScreenDebug.err('ENV', 'window._firebaseConfig is MISSING. AI Bridge cannot initialize. Add "window._firebaseConfig = firebaseConfig;" to firebase.js');
+  }
+  return snap;
+}
+
 // ==================== AI BRIDGE READINESS ====================
-// The bridge is created by the module script. Poll until window._aiBridge exists.
-// AI Logic requires App Check tokens which may take a moment to issue[citation:14].
 function checkAIBridge() {
   if (window._aiBridge) {
-    _aiBridgeReady = true;
-    _ChatDebug.log('AI', 'Bridge detected and ready');
+    if (!_aiBridgeReady) {
+      _aiBridgeReady = true;
+      _ScreenDebug.ok('AI', 'Bridge is live (window._aiBridge present)');
+      _ScreenDebug.setStatus('AI ready', '#7f7');
+    }
     return true;
   }
-  _aiBridgeReady = false;
   return false;
 }
 
-// Poll for bridge readiness (max 5s)
-function waitForAIBridge(maxWaitMs = 5000) {
+function waitForAIBridge(maxWaitMs = 8000) {
   return new Promise((resolve) => {
     if (checkAIBridge()) { resolve(true); return; }
     const start = Date.now();
@@ -76,22 +202,29 @@ function waitForAIBridge(maxWaitMs = 5000) {
         resolve(true);
       } else if (Date.now() - start > maxWaitMs) {
         clearInterval(interval);
-        _ChatDebug.warn('AI', 'Bridge not detected within timeout — AI replies disabled');
+        const reason = window._firebaseConfig
+          ? 'module failed to load (check Network tab for gstatic)'
+          : 'window._firebaseConfig missing (fix firebase.js first)';
+        _ScreenDebug.err('AI', 'Bridge not ready after ' + maxWaitMs + 'ms — ' + reason);
+        _ScreenDebug.setStatus('AI offline', '#f66');
         resolve(false);
       }
-    }, 200);
+    }, 250);
   });
 }
 
 // ==================== AUTH ====================
 async function ensureAuth() {
   try {
-    if (firebase.auth().currentUser) return firebase.auth().currentUser;
+    if (firebase.auth().currentUser) {
+      _ScreenDebug.ok('AUTH', 'Already signed in: ' + firebase.auth().currentUser.uid.slice(0, 12));
+      return firebase.auth().currentUser;
+    }
     const result = await firebase.auth().signInAnonymously();
-    _ChatDebug.log('Auth', 'Anonymous sign-in OK', result.user.uid);
+    _ScreenDebug.ok('AUTH', 'Anonymous sign-in OK: ' + result.user.uid.slice(0, 12));
     return result.user;
   } catch (e) {
-    _ChatDebug.warn('Auth', 'Auth failed', e.message);
+    _ScreenDebug.err('AUTH', 'Sign-in FAILED: ' + (e.code || '') + ' ' + e.message);
     return null;
   }
 }
@@ -100,33 +233,32 @@ async function ensureAuth() {
 function detachChatListener() {
   if (_chatListenerRef && _chatListenerCb) {
     _chatListenerRef.off('child_added', _chatListenerCb);
-    _chatListenerRef = null;
-    _chatListenerCb = null;
+    _chatListenerRef = null; _chatListenerCb = null;
   }
 }
 function detachTypingListener() {
   if (_typingListenerRef && _typingListenerCb) {
     _typingListenerRef.off('value', _typingListenerCb);
-    _typingListenerRef = null;
-    _typingListenerCb = null;
+    _typingListenerRef = null; _typingListenerCb = null;
   }
 }
 function detachStatusListener() {
   if (_statusListenerRef && _statusListenerCb) {
     _statusListenerRef.off('value', _statusListenerCb);
-    _statusListenerRef = null;
-    _statusListenerCb = null;
+    _statusListenerRef = null; _statusListenerCb = null;
   }
 }
 
 // ==================== SCREEN CONTROL ====================
 function toggleChat() {
+  _ScreenDebug.ensurePanel();
   chatOpen = !chatOpen;
   const win = safeEl('chat-window');
-  if (!win) return;
+  if (!win) { _ScreenDebug.err('UI', 'chat-window element not found'); return; }
 
   if (chatOpen) {
     win.classList.add('open');
+    _ScreenDebug.info('UI', 'Chat opened');
     const dot = safeEl('chat-unread-dot');
     if (dot) dot.style.display = 'none';
 
@@ -161,6 +293,7 @@ function toggleChat() {
     if (input) setTimeout(() => input.focus(), 100);
   } else {
     win.classList.remove('open');
+    _ScreenDebug.info('UI', 'Chat closed');
     detachChatListener();
     detachTypingListener();
     detachStatusListener();
@@ -191,6 +324,7 @@ function updateCustomerInfoBar() {
 }
 
 function showOrderLookup() {
+  _ScreenDebug.info('UI', 'Order lookup screen');
   showScreen('order-lookup');
   const resultEl = safeEl('order-result');
   if (resultEl) resultEl.innerHTML = '';
@@ -199,6 +333,7 @@ function showOrderLookup() {
 }
 
 function backToChat() {
+  _ScreenDebug.info('UI', 'Back to chat');
   showScreen('chat-messages');
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'flex';
@@ -209,8 +344,7 @@ function clearChatSession() {
   localStorage.removeItem('janedore_chat_email');
   localStorage.removeItem('janedore_chat_name');
   localStorage.removeItem('janedore_chat_session');
-  customerEmail = '';
-  customerName = '';
+  customerEmail = ''; customerName = '';
   chatSessionId = 'chat-' + Date.now();
   detachChatListener();
   detachTypingListener();
@@ -221,6 +355,7 @@ function clearChatSession() {
   loadedMessageKeys.clear();
   hasLoadedOnce = false;
   updateCustomerInfoBar();
+  _ScreenDebug.info('UI', 'Session cleared — new sessionId: ' + chatSessionId);
   if (chatOpen) {
     hasLoadedOnce = true;
     loadMessages();
@@ -248,54 +383,53 @@ function renderAIGreeting() {
 }
 
 // ==================== AI REPLY ====================
-// Uses the server-side template "customer-support-chat".
-// Includes retry with backoff for App Check token propagation.
 async function getAIReply(customerText, attempt = 1) {
   const MAX_ATTEMPTS = 3;
 
-  // Circuit breaker: if AI failed recently, don't hammer it
   if (Date.now() < _aiDisabledUntil) {
-    _ChatDebug.warn('AI', 'Circuit breaker active — skipping AI reply');
+    const secs = Math.ceil((_aiDisabledUntil - Date.now()) / 1000);
+    _ScreenDebug.warn('AI', 'Circuit breaker active — skipping (retry in ' + secs + 's)');
     return null;
   }
 
   if (!window._aiBridge) {
-    _ChatDebug.warn('AI', 'Bridge not available');
+    _ScreenDebug.err('AI', 'Bridge not available on window._aiBridge');
     return null;
   }
 
   try {
-    _ChatDebug.log('AI', `Calling template (attempt ${attempt})`, { text: customerText.slice(0, 50) });
-
+    _ScreenDebug.ai('AI', 'Calling getReply attempt ' + attempt + '/' + MAX_ATTEMPTS + ' — text: "' + customerText.slice(0, 40) + '"');
+    const t0 = Date.now();
     const reply = await window._aiBridge.getReply('customer-support-chat', {
       customerText: customerText
     });
+    const dt = Date.now() - t0;
 
     if (!reply) {
-      _ChatDebug.warn('AI', 'Empty reply from bridge');
+      _ScreenDebug.warn('AI', 'Bridge returned null/empty after ' + dt + 'ms');
       return null;
     }
 
-    _ChatDebug.log('AI', 'Reply received', reply.slice(0, 80));
-    _aiFailCount = 0; // reset on success
+    _ScreenDebug.ok('AI', 'Reply in ' + dt + 'ms (' + reply.length + ' chars): "' + reply.slice(0, 60) + '"');
+    _aiFailCount = 0;
     return reply;
 
   } catch (e) {
-    _ChatDebug.error('AI', `Template reply failed (attempt ${attempt})`, e.message);
+    const msg = (e && e.message) || String(e);
+    const code = (e && e.code) || '';
+    _ScreenDebug.err('AI', 'Attempt ' + attempt + ' threw [' + code + ']: ' + msg);
 
-    // Retry on transient errors (App Check token not yet valid, network)
     if (attempt < MAX_ATTEMPTS) {
       const backoff = 800 * attempt;
-      _ChatDebug.log('AI', `Retrying in ${backoff}ms...`);
+      _ScreenDebug.warn('AI', 'Retrying in ' + backoff + 'ms…');
       await new Promise(r => setTimeout(r, backoff));
       return getAIReply(customerText, attempt + 1);
     }
 
-    // All retries exhausted — trip circuit breaker for 60s
     _aiFailCount++;
     if (_aiFailCount >= 2) {
       _aiDisabledUntil = Date.now() + 60000;
-      _ChatDebug.warn('AI', 'Circuit breaker tripped — AI disabled for 60s');
+      _ScreenDebug.err('AI', 'Circuit breaker tripped — AI disabled for 60s');
     }
     return null;
   }
@@ -310,14 +444,16 @@ function customerWantsHuman(text) {
 async function loadMessages() {
   const rtdb = getRTDB();
   const el = safeEl('chat-messages');
-  if (!rtdb || !el) return;
+  if (!rtdb || !el) { _ScreenDebug.err('RTDB', 'Cannot load — rtdb or el missing'); return; }
 
   el.innerHTML = '<div class="chat-welcome"><strong>Loading...</strong></div>';
+  _ScreenDebug.info('RTDB', 'Loading history for ' + chatSessionId);
 
   try {
     const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages')
       .orderByChild('createdAt').once('value');
     el.innerHTML = '';
+    _ScreenDebug.ok('RTDB', 'History read OK — exists=' + snap.exists());
 
     if (!snap.exists()) {
       renderAIGreeting();
@@ -332,10 +468,11 @@ async function loadMessages() {
     });
     messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
+    _ScreenDebug.info('RTDB', 'Rendered ' + messages.length + ' stored messages');
 
     el.scrollTop = el.scrollHeight;
   } catch (e) {
-    _ChatDebug.error('Messages', 'Load error', e.message);
+    _ScreenDebug.err('RTDB', 'Load failed: ' + (e.code || '') + ' ' + e.message);
     renderAIGreeting();
   }
 }
@@ -387,6 +524,7 @@ function listenChat() {
     loadedMessageKeys.add(key);
     if (!m || m.type === 'auth') return;
 
+    _ScreenDebug.info('RTDB', 'New message from ' + (m.sender || 'unknown'));
     appendMessage(m);
 
     const el = safeEl('chat-messages');
@@ -398,6 +536,7 @@ function listenChat() {
     }
   };
   _chatListenerRef.on('child_added', _chatListenerCb);
+  _ScreenDebug.info('RTDB', 'Listening for new messages');
 }
 
 // ==================== SEND MESSAGE ====================
@@ -408,6 +547,8 @@ async function sendChatMessage() {
 
   const text = input.value.trim();
   if (!text) return;
+
+  _ScreenDebug.info('SEND', 'User sent: "' + text.slice(0, 50) + '"');
 
   const wasResolved = _resolvedActive;
   if (wasResolved) {
@@ -484,11 +625,8 @@ async function sendChatMessage() {
       const cart = rawCart ? JSON.parse(rawCart) : [];
       updates['chat_inbox/' + chatSessionId + '/cart'] = cart.length > 0
         ? cart.map(i => ({
-          name: i.name || '',
-          brand: i.brand || '',
-          color: i.color || '',
-          size: i.size || '',
-          qty: i.qty || 1,
+          name: i.name || '', brand: i.brand || '', color: i.color || '',
+          size: i.size || '', qty: i.qty || 1,
           price: i.salePrice != null ? i.salePrice : (i.price || 0),
           productId: i.productId || ''
         }))
@@ -496,6 +634,7 @@ async function sendChatMessage() {
     } catch (_) {}
 
     await rtdb.ref('/').update(updates);
+    _ScreenDebug.ok('SEND', 'Customer message saved to RTDB');
     input.value = '';
 
     const reopenPill = document.getElementById('chat-reopening-pill');
@@ -506,24 +645,16 @@ async function sendChatMessage() {
     _satisfactionShown = false;
     _resolvedActive = false;
 
-    // AI reply — check human handoff first, then try AI
     if (!customerWantsHuman(text)) {
-      _ChatDebug.log('Send', 'Attempting AI reply...');
+      _ScreenDebug.ai('AI', 'Attempting AI reply…');
       const aiText = await getAIReply(text);
 
       if (aiText) {
-        _ChatDebug.log('Send', 'Writing AI reply to RTDB');
-
-        // FIX: Write AI reply in a separate update after a microtask,
-        // so the local child_added listener has already processed the
-        // customer's message and won't double-render.
+        _ScreenDebug.info('SEND', 'Writing AI reply to RTDB');
         await new Promise(r => setTimeout(r, 0));
 
         const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
         const aiTs = firebase.database.ServerValue.TIMESTAMP;
-
-        // Mark this key as already loaded locally to prevent
-        // the child_added listener from rendering it a second time.
         loadedMessageKeys.add(aiRef.key);
 
         await rtdb.ref('/').update({
@@ -539,16 +670,15 @@ async function sendChatMessage() {
           ['chat_inbox/' + chatSessionId + '/lastMessage']: aiText,
           ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
         });
-
-        _ChatDebug.log('Send', 'AI reply written');
+        _ScreenDebug.ok('SEND', 'AI reply written to RTDB');
       } else {
-        _ChatDebug.warn('Send', 'AI reply unavailable — leaving for admin');
+        _ScreenDebug.warn('SEND', 'No AI reply — leaving message for admin');
       }
     } else {
-      _ChatDebug.log('Send', 'Customer requested human — skipping AI');
+      _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
     }
   } catch (e) {
-    _ChatDebug.error('Send', 'Send error', e.message);
+    _ScreenDebug.err('SEND', 'Failed: ' + (e.code || '') + ' ' + e.message);
     alert('Failed to send message. Please try again.');
 
     const reopenPill = document.getElementById('chat-reopening-pill');
@@ -561,10 +691,7 @@ async function sendChatMessage() {
     }
   } finally {
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    if (input) {
-      input.disabled = false;
-      input.focus();
-    }
+    if (input) { input.disabled = false; input.focus(); }
   }
 }
 
@@ -610,6 +737,7 @@ function listenStatus() {
   _statusListenerRef = rtdb.ref('live_chat/' + chatSessionId + '/meta/status');
   _statusListenerCb = snap => {
     const status = snap.val();
+    _ScreenDebug.info('RTDB', 'Status changed: ' + status);
 
     if (status === 'resolved' && !_satisfactionShown) {
       _satisfactionShown = true;
@@ -675,9 +803,9 @@ function showSatisfactionPrompt() {
   el.scrollTop = el.scrollHeight;
 
   const yesBtn = document.getElementById('sat-yes');
-  const noBtn = document.getElementById('sat-no');
+  const noBtn  = document.getElementById('sat-no');
   if (yesBtn) yesBtn.addEventListener('click', function () { submitSatisfaction(true); });
-  if (noBtn) noBtn.addEventListener('click', function () { submitSatisfaction(false); });
+  if (noBtn)  noBtn.addEventListener('click',  function () { submitSatisfaction(false); });
 }
 
 async function submitSatisfaction(satisfied) {
@@ -695,8 +823,9 @@ async function submitSatisfaction(satisfied) {
         respondedAt: firebase.database.ServerValue.TIMESTAMP
       });
     }
+    _ScreenDebug.ok('RTDB', 'Satisfaction saved: ' + satisfied);
   } catch (e) {
-    _ChatDebug.warn('Satisfaction', 'Write failed', e.message);
+    _ScreenDebug.warn('RTDB', 'Satisfaction write failed: ' + e.message);
   }
 
   const thanks = document.createElement('div');
@@ -725,12 +854,14 @@ async function lookupOrder() {
   }
 
   resultEl.innerHTML = '<div style="color:#888;margin-top:12px;">Searching...</div>';
+  _ScreenDebug.info('FS', 'Order lookup: ' + orderNum);
 
   try {
     const snap = await db.collection('orders')
       .where('orderNumber', '==', orderNum).limit(1).get();
 
     if (snap.empty) {
+      _ScreenDebug.warn('FS', 'No order for ' + orderNum);
       resultEl.innerHTML = `
         <div style="margin-top:16px;color:#888;line-height:1.8;">
           <div style="font-family:'Manrope',sans-serif;font-size:12px;font-weight:400;">No order found</div>
@@ -739,6 +870,7 @@ async function lookupOrder() {
       return;
     }
 
+    _ScreenDebug.ok('FS', 'Order found: ' + orderNum);
     const o = snap.docs[0].data();
     const date = o.createdAt
       ? new Date(o.createdAt.seconds * 1000).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -765,20 +897,25 @@ async function lookupOrder() {
         </div>
       </div>`;
   } catch (e) {
-    _ChatDebug.error('Order', 'Lookup error', e.message);
+    _ScreenDebug.err('FS', 'Lookup failed: ' + (e.code || '') + ' ' + e.message);
     resultEl.innerHTML = '<div style="color:#c00;font-size:11px;font-weight:400;margin-top:16px;">Unable to look up order. Please try again.</div>';
   }
 }
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  _ChatDebug.log('Init', 'Chat module loaded');
+  _ScreenDebug.ensurePanel();
+  _ScreenDebug.info('INIT', 'Chat module loaded at ' + new Date().toTimeString().slice(0,8));
 
+  const env = logEnvironmentSnapshot();
   updateCustomerInfoBar();
   ensureAuth();
 
-  // Wait for AI bridge to be ready, then log status
+  if (!env._aiBridge) {
+    _ScreenDebug.info('AI', 'Waiting for AI Bridge (max 8s)…');
+  }
+
   waitForAIBridge().then(ready => {
-    _ChatDebug.log('Init', ready ? 'AI bridge ready' : 'AI bridge NOT ready');
+    _ScreenDebug.setStatus(ready ? 'AI ready' : 'AI offline', ready ? '#7f7' : '#f66');
   });
 });
