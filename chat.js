@@ -501,9 +501,10 @@ function renderAIGreeting() {
   const greeting = document.createElement('div');
   greeting.className = 'chat-msg admin';
   greeting.innerHTML =
-    '<div style="margin-bottom:10px;">'
-    + 'Hi, I\'m the JANEDORE assistant. I can help with sizing, shipping, returns, or finding the right piece — just ask. '
-    + 'You can also track an existing order below.'
+    '<div style="margin-bottom:10px;font-weight:500;">'
+    + 'Hi, I\'m the janedore Assistant. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
+    + '<br><br>'
+    + 'Looking for an existing order? Track it below.'
     + '</div>'
     + '<button class="chat-pill-btn" id="ai-greeting-track-btn">Track Order</button>';
   el.appendChild(greeting);
