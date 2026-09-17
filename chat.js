@@ -173,6 +173,7 @@ let _statusListenerRef = null;
 let _statusListenerCb  = null;
 let _satisfactionShown = false;
 let _resolvedActive = false;
+let _aiLockedUntil = 0;               // epoch ms — AI stays off until this time after a failure; 0 = not locked
 let _pageScrollLockY = 0;             // page scroll lock: saved Y position
 
 // ==================== VALIDATORS / SANITIZERS ====================
@@ -499,6 +500,7 @@ function clearChatSession() {
   detachStatusListener();
   _satisfactionShown = false;
   _resolvedActive = false;
+  _aiLockedUntil = 0;
   removeResolvedBanner();
   loadedMessageKeys.clear();
   hasLoadedOnce = false;
@@ -666,10 +668,21 @@ async function loadMessages() {
   _ScreenDebug.info('RTDB', 'Loading history for session ' + chatSessionId.slice(0, 20));
 
   try {
-    const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages')
-      .orderByChild('createdAt').once('value');
+    const [snap, lockSnap] = await Promise.all([
+      rtdb.ref('live_chat/' + chatSessionId + '/messages').orderByChild('createdAt').once('value'),
+      rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').once('value')
+    ]);
     el.innerHTML = '';
     _ScreenDebug.ok('RTDB', 'History read OK — exists=' + snap.exists());
+
+    _aiLockedUntil = Number(lockSnap.val()) || 0;
+    if (_aiLockedUntil && Date.now() < _aiLockedUntil) {
+      const hoursLeft = ((_aiLockedUntil - Date.now()) / 3600000).toFixed(1);
+      _ScreenDebug.info('AI', 'AI still cooling down from a prior failure — ~' + hoursLeft + 'h remaining');
+    } else if (_aiLockedUntil) {
+      _ScreenDebug.info('AI', 'AI cooldown has expired — AI is eligible to try again');
+      _aiLockedUntil = 0;
+    }
 
     if (!snap.exists()) {
       renderAIGreeting();
@@ -891,12 +904,27 @@ async function sendChatMessage() {
     _resolvedActive = false;
 
     // FIX #14: customer message is already saved — AI failure never blocks it
-    if (!customerWantsHuman(text)) {
+    const AI_COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+    if (customerWantsHuman(text)) {
+      _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
+    } else if (_aiLockedUntil && Date.now() < _aiLockedUntil) {
+      const hoursLeft = ((_aiLockedUntil - Date.now()) / 3600000).toFixed(1);
+      _ScreenDebug.info('SEND', 'AI cooling down after a prior failure (~' + hoursLeft + 'h left) — skipping, leaving for admin');
+    } else {
+      if (_aiLockedUntil) {
+        _ScreenDebug.info('AI', 'Cooldown expired — AI is trying again');
+        _aiLockedUntil = 0;
+      }
       _ScreenDebug.ai('AI', 'Attempting AI reply…');
       const aiText = await getAIReply(text);
 
       if (aiText) {
         _ScreenDebug.info('SEND', 'Writing AI reply to RTDB');
+
+        // Success — clear any prior cooldown so AI keeps responding normally
+        _aiLockedUntil = 0;
+        rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').remove().catch(() => {});
 
         const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
         const aiTs = firebase.database.ServerValue.TIMESTAMP;
@@ -919,6 +947,11 @@ async function sendChatMessage() {
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
 
+        // Failure — lock AI out for a 12h cooldown, then it's free to try again automatically
+        _aiLockedUntil = Date.now() + AI_COOLDOWN_MS;
+        rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').set(_aiLockedUntil).catch(() => {});
+        _ScreenDebug.info('AI', 'AI locked for 12h cooldown after failure');
+
         const fallbackText = 'Thanks for reaching out — our customer care team will get back to you shortly.';
         const fallbackRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
         loadedMessageKeys.add(fallbackRef.key);
@@ -940,8 +973,6 @@ async function sendChatMessage() {
         const el = safeEl('chat-messages');
         if (el) el.scrollTop = el.scrollHeight;
       }
-    } else {
-      _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
     }
   } catch (e) {
     // FIX #19: never swallow message-write failures
@@ -1286,7 +1317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     win.style.setProperty('max-width', vw + 'px', 'important');
     win.style.setProperty('max-height', vh + 'px', 'important');
     win.style.setProperty('margin', '0', 'important');
-    win.style.setProperty('border-radius', '20px', 'important');
+    win.style.setProperty('border-radius', '0', 'important');
   }
 
   function onResize() {
