@@ -40,7 +40,7 @@ const _ScreenDebug = {
       'line-height:1.5',
       'flex-shrink:0',
       'max-height:180px',
-      'display:flex',
+      'display:none',
       'flex-direction:column'
     ].join(';');
 
@@ -918,6 +918,27 @@ async function sendChatMessage() {
         _ScreenDebug.ok('SEND', 'AI reply written to RTDB');
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
+
+        const fallbackText = 'Thanks for reaching out — our customer care team will get back to you shortly.';
+        const fallbackRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+        loadedMessageKeys.add(fallbackRef.key);
+
+        await rtdb.ref('/').update({
+          ['live_chat/' + chatSessionId + '/messages/' + fallbackRef.key]: {
+            text: fallbackText,
+            sender: 'system',
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            read: true,
+            delivered: true,
+            sessionId: chatSessionId
+          },
+          ['chat_inbox/' + chatSessionId + '/lastMessage']: fallbackText,
+          ['chat_inbox/' + chatSessionId + '/lastMessageAt']: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        appendMessage({ text: fallbackText, sender: 'system', createdAt: Date.now() });
+        const el = safeEl('chat-messages');
+        if (el) el.scrollTop = el.scrollHeight;
       }
     } else {
       _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
@@ -1265,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     win.style.setProperty('max-width', vw + 'px', 'important');
     win.style.setProperty('max-height', vh + 'px', 'important');
     win.style.setProperty('margin', '0', 'important');
-    win.style.setProperty('border-radius', '0', 'important');
+    win.style.setProperty('border-radius', '20px', 'important');
   }
 
   function onResize() {
