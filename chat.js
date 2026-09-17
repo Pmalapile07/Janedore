@@ -535,7 +535,7 @@ function renderAIGreeting() {
 
 // ==================== AI REPLY (STRICT RETRY + LOCKING) ====================
 async function getAIReply(customerText) {
-  const MAX_ATTEMPTS = 2;
+  const MAX_ATTEMPTS = 1;
 
   if (Date.now() < _aiDisabledUntil) {
     const secs = Math.ceil((_aiDisabledUntil - Date.now()) / 1000);
