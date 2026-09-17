@@ -17,7 +17,7 @@ const SESSION_ID_REGEX        = /^chat-\d{10,16}$/;
 
 // ==================== ON-SCREEN DEBUG PANEL ====================
 const _ScreenDebug = {
-  enabled: false,
+  enabled: true,
   maxRows: 60,
   panel: null,
   logEl: null,
