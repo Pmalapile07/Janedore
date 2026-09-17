@@ -944,6 +944,13 @@ async function sendChatMessage() {
           ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
         });
         _ScreenDebug.ok('SEND', 'AI reply written to RTDB');
+
+        // The key was pre-added above to avoid a duplicate render from the
+        // live listener, but that means nothing else ever displays it —
+        // render it locally now, right after the write confirms.
+        appendMessage({ text: aiText, sender: 'admin', senderName: 'JANEDORE AI', createdAt: Date.now() });
+        const aiEl = safeEl('chat-messages');
+        if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
 
