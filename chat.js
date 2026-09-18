@@ -924,6 +924,29 @@ async function sendChatMessage() {
 
     if (customerWantsHuman(text)) {
       _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
+
+      const handoffText = 'Got it. Connecting you with our team, they will be with you shortly.';
+      const handoffRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+      const handoffTs = firebase.database.ServerValue.TIMESTAMP;
+      loadedMessageKeys.add(handoffRef.key);
+
+      await rtdb.ref('/').update({
+        ['live_chat/' + chatSessionId + '/messages/' + handoffRef.key]: {
+          text: handoffText,
+          sender: 'admin',
+          senderName: 'JANEDORE',
+          createdAt: handoffTs,
+          read: true,
+          delivered: true,
+          sessionId: chatSessionId
+        },
+        ['chat_inbox/' + chatSessionId + '/lastMessage']: handoffText,
+        ['chat_inbox/' + chatSessionId + '/lastMessageAt']: handoffTs
+      });
+
+      appendMessage({ text: handoffText, sender: 'admin', senderName: 'JANEDORE', createdAt: Date.now() });
+      const handoffEl = safeEl('chat-messages');
+      if (handoffEl) handoffEl.scrollTop = handoffEl.scrollHeight;
     } else if (_aiLockedUntil && Date.now() < _aiLockedUntil) {
       const hoursLeft = ((_aiLockedUntil - Date.now()) / 3600000).toFixed(1);
       _ScreenDebug.info('SEND', 'AI cooling down after a prior failure (~' + hoursLeft + 'h left) — skipping, leaving for admin');
@@ -975,7 +998,7 @@ async function sendChatMessage() {
         rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').set(_aiLockedUntil).catch(() => {});
         _ScreenDebug.info('AI', 'AI locked for 12h cooldown after failure');
 
-        const fallbackText = 'Thanks for reaching out — our customer care team will get back to you shortly.';
+        const fallbackText = 'Thanks for reaching out. Our customer care team will get back to you shortly.';
         const fallbackRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
         loadedMessageKeys.add(fallbackRef.key);
 
@@ -1106,7 +1129,7 @@ function showSatisfactionPrompt() {
   if (!el) return;
 
   const input = safeEl('chat-input');
-  if (input) input.placeholder = 'Conversation resolved — send a message to reopen';
+  if (input) input.placeholder = 'Conversation resolved, send a message to reopen';
 
   const prompt = document.createElement('div');
   prompt.id = 'satisfaction-prompt';
@@ -1227,7 +1250,7 @@ async function lookupOrder() {
     const o = snap.docs[0].data();
     const date = o.createdAt
       ? new Date(o.createdAt.seconds * 1000).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
-      : '—';
+      : '-';
     const status = (o.status || 'pending').charAt(0).toUpperCase() + (o.status || 'pending').slice(1);
 
     // FIX #6: build each row with textContent for Firestore-controlled values
