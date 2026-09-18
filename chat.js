@@ -717,6 +717,9 @@ async function loadMessages() {
     return true;
   } catch (e) {
     _ScreenDebug.err('RTDB', 'Load failed: ' + (e.code || '') + ' ' + e.message);
+    // FIX #2: clear the "Loading..." placeholder before rendering the greeting,
+    // otherwise the original loading element remains stuck on screen.
+    el.innerHTML = '';
     renderAIGreeting();
     return false;
   }
