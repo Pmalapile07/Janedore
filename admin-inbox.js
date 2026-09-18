@@ -275,6 +275,28 @@
     }
   }
 
+  // ── Human handoff alert (Super Admin) ───────────────────────────
+  // When a customer asks for a human, chat-logic.js writes
+  // chat_inbox/{sid}/needsHuman = true and needsHumanAt = <server ts>.
+  // Super Admin already sees every inbox entry live, but that alone
+  // is silent — this plays the notification sound and shows a toast
+  // the moment a genuinely NEW handoff request comes in, so it can't
+  // go unnoticed just because the admin isn't looking at that card.
+  // Tracks the last-notified timestamp per session so a re-render of
+  // the same inbox entry (new message, unread count, etc.) doesn't
+  // re-trigger the alert for a request already seen.
+  var _humanRequestNotified = {};
+
+  function checkHumanRequest(sid, data) {
+    if (!(window._isSuperAdmin && window._isSuperAdmin())) return;
+    if (!data || !data.needsHuman) return;
+    var ts = data.needsHumanAt || 0;
+    if (_humanRequestNotified[sid] === ts) return;
+    _humanRequestNotified[sid] = ts;
+    _playNotifSound();
+    if (showToast) showToast('A customer is asking to speak with your team.', 'info');
+  }
+
   // ── Notification sound ────────────────────────────────────────
   var _audioCtx = null;
 
@@ -1354,8 +1376,8 @@
       var self = this;
       self._detachInbox();
       var subs = ChatDB.subscribeInbox(
-        function (sid, data) { var entry = ChatState.upsertSession(sid, data); ChatRenderer.updateCard(sid, entry, ChatState.getSessions()); U.lsSet(Cfg.LS_KEY, ChatState.getSessions()); },
-        function (sid, data) { var entry = ChatState.upsertSession(sid, data); ChatRenderer.updateCard(sid, entry, ChatState.getSessions()); U.lsSet(Cfg.LS_KEY, ChatState.getSessions()); },
+        function (sid, data) { checkHumanRequest(sid, data); var entry = ChatState.upsertSession(sid, data); ChatRenderer.updateCard(sid, entry, ChatState.getSessions()); U.lsSet(Cfg.LS_KEY, ChatState.getSessions()); },
+        function (sid, data) { checkHumanRequest(sid, data); var entry = ChatState.upsertSession(sid, data); ChatRenderer.updateCard(sid, entry, ChatState.getSessions()); U.lsSet(Cfg.LS_KEY, ChatState.getSessions()); },
         function (sid)       { ChatState.removeSession(sid); ChatRenderer.removeCard(sid); U.lsSet(Cfg.LS_KEY, ChatState.getSessions()); },
         function ()          { self._retryInbox(0); }
       );
