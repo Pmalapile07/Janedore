@@ -101,19 +101,60 @@
       margin-bottom: 14px;
     }
 
+    /* ===== HOME CATEGORIES: MOBILE HORIZONTAL SWIPE (5 CARDS) ===== */
     #home-categories .home-categories-grid {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      scroll-snap-type: x mandatory !important;
+      -webkit-overflow-scrolling: touch;
       gap: 8px !important;
-      overflow: visible !important;
-      scroll-snap-type: none !important;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    #home-categories .home-categories-grid::-webkit-scrollbar {
+      display: none;
     }
     #home-categories .home-category-card {
-      flex: none !important;
-      width: 100% !important;
+      flex: 0 0 calc(50% - 4px) !important;
+      scroll-snap-align: start !important;
+      width: auto !important;
     }
     #home-categories .home-categories-progress {
-      display: none !important;
+      display: flex !important;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    #home-categories .home-categories-progress .swipe-bar {
+      width: 24px;
+      height: 1px;
+      background: #ccc;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #home-categories .home-categories-progress .swipe-bar.active {
+      background: #111;
+    }
+
+    /* Desktop fallback for categories (if not overridden by responsive.css) */
+    @media (min-width: 769px) {
+      #home-categories .home-categories-grid {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 8px !important;
+        overflow: visible !important;
+        scroll-snap-type: none !important;
+      }
+      #home-categories .home-category-card {
+        flex: none !important;
+        width: 100% !important;
+      }
+      #home-categories .home-categories-progress {
+        display: none !important;
+      }
     }
 
     #home-brand-spotlight {
@@ -275,14 +316,14 @@
 
   <section id="home-all-products" style="padding:24px 18px;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">BESTSELLERS</div>
+      <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">NEW ARRIVALS</div>
       <button onclick="navigateTo('products')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
     </div>
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
   <section id="home-manifesto" style="padding:24px 18px;text-align:center;">
-    <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house for independent brands with a point of view. Every label here has been chosen for how it is made, how it looks, and how long it lasts, not for how loudly it announces itself. These are pieces made to hold their own in a wardrobe built over years, not seasons. If it is on this site, it earned its place.</p>
+    <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house of independent South African brands worth knowing. We look beyond what’s already everywhere to find labels with a distinct point of view, thoughtful design and something of their own to say. If it is on Janedore, it earned its place.</p>
   </section>
 
   <section id="home-categories" style="padding:24px 18px;">
