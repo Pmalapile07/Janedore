@@ -394,7 +394,6 @@ function toggleChat() {
     if (inputWrap) inputWrap.style.display = 'flex';
 
     if (!hasLoadedOnce) {
-      hasLoadedOnce = true;
       loadedMessageKeys.clear();
       detachChatListener();
       detachTypingListener();
@@ -402,7 +401,7 @@ function toggleChat() {
       _satisfactionShown = false;
       _resolvedActive = false;
       removeResolvedBanner();
-      loadMessages();
+      loadMessages().then(success => { if (success) hasLoadedOnce = true; });
       listenChat();
       listenTyping();
       listenStatus();
@@ -662,16 +661,31 @@ function customerWantsHuman(text) {
 async function loadMessages() {
   const rtdb = getRTDB();
   const el = safeEl('chat-messages');
-  if (!rtdb || !el) { _ScreenDebug.err('RTDB', 'Cannot load — rtdb or el missing'); return; }
+  if (!rtdb || !el) { _ScreenDebug.err('RTDB', 'Cannot load — rtdb or el missing'); return false; }
 
   el.innerHTML = '<div class="chat-welcome"><strong>Loading...</strong></div>';
   _ScreenDebug.info('RTDB', 'Loading history for session ' + chatSessionId.slice(0, 20));
 
+  const LOAD_TIMEOUT_MS = 10000;
+  const timeout = new Promise(resolve => setTimeout(() => resolve('__timeout__'), LOAD_TIMEOUT_MS));
+
   try {
-    const [snap, lockSnap] = await Promise.all([
-      rtdb.ref('live_chat/' + chatSessionId + '/messages').orderByChild('createdAt').once('value'),
-      rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').once('value')
+    const raced = await Promise.race([
+      Promise.all([
+        rtdb.ref('live_chat/' + chatSessionId + '/messages').orderByChild('createdAt').once('value'),
+        rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').once('value')
+      ]),
+      timeout
     ]);
+
+    if (raced === '__timeout__') {
+      _ScreenDebug.warn('RTDB', 'History load timed out after ' + LOAD_TIMEOUT_MS + 'ms — showing greeting, will retry next time chat opens');
+      el.innerHTML = '';
+      renderAIGreeting();
+      return false;
+    }
+
+    const [snap, lockSnap] = raced;
     el.innerHTML = '';
     _ScreenDebug.ok('RTDB', 'History read OK — exists=' + snap.exists());
 
@@ -686,7 +700,7 @@ async function loadMessages() {
 
     if (!snap.exists()) {
       renderAIGreeting();
-      return;
+      return true;
     }
 
     const messages = [];
@@ -700,9 +714,11 @@ async function loadMessages() {
     _ScreenDebug.info('RTDB', 'Rendered ' + messages.length + ' stored messages');
 
     el.scrollTop = el.scrollHeight;
+    return true;
   } catch (e) {
     _ScreenDebug.err('RTDB', 'Load failed: ' + (e.code || '') + ' ' + e.message);
     renderAIGreeting();
+    return false;
   }
 }
 
