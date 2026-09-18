@@ -880,6 +880,7 @@ async function sendChatMessage() {
     updates['chat_inbox/' + chatSessionId + '/unreadCount'] = firebase.database.ServerValue.increment(1);
 
     updates['live_chat/' + chatSessionId + '/meta/status'] = 'open';
+    updates['live_chat/' + chatSessionId + '/meta/ownerId'] = user ? user.uid : 'anonymous';
     updates['chat_inbox/' + chatSessionId + '/status'] = 'open';
 
     if (wasResolved) {
@@ -941,7 +942,9 @@ async function sendChatMessage() {
           sessionId: chatSessionId
         },
         ['chat_inbox/' + chatSessionId + '/lastMessage']: handoffText,
-        ['chat_inbox/' + chatSessionId + '/lastMessageAt']: handoffTs
+        ['chat_inbox/' + chatSessionId + '/lastMessageAt']: handoffTs,
+        ['chat_inbox/' + chatSessionId + '/needsHuman']: true,
+        ['chat_inbox/' + chatSessionId + '/needsHumanAt']: handoffTs
       });
 
       appendMessage({ text: handoffText, sender: 'admin', senderName: 'JANEDORE', createdAt: Date.now() });
