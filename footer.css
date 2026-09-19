@@ -41,3 +41,21 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   text-align: center; margin-top: 10px; font-family: 'Manrope', sans-serif;
   letter-spacing: var(--body-letter-spacing);
 }
+
+/* HOMEPAGE NEWSLETTER — scoped to #homepage-newsletter-section only, so
+   footer.js's own use of .newsletter-section/.newsletter-title (if any)
+   elsewhere on the site is untouched. Brings the homepage instance's
+   padding and heading typography in line with the rest of the homepage
+   sections (NEW ARRIVALS / SHOP BY CATEGORY / SHOP BY ACCESSORIES), which
+   all use a flat 24px 18px and the same explicit 11px/500/0.1em heading
+   style set inline in index.html rather than the --ui-* variables this
+   file otherwise relies on. */
+#homepage-newsletter-section .newsletter-section {
+  padding: 24px 18px;
+}
+#homepage-newsletter-section .newsletter-title {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
