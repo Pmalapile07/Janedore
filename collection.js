@@ -600,27 +600,71 @@ function selectSortTab(cat) {
   updateCollectionGridIcon();
 }
 
+// Renders the "Shop by Category" grid. The grid is locked to a static
+// 2x2 layout (4 cells, always visible) by the !important CSS overrides
+// in index.html — that structure is never touched here. Clothing,
+// Accessories and Homeware occupy three fixed cells. The fourth cell
+// hosts Scent and Beauty together as a two-slide internal swipe
+// carousel, so a 5th category exists without adding a 5th cell.
 function buildCategoriesSlider() {
-  const grid = document.getElementById('home-categories-grid'); const progress = document.getElementById('home-categories-progress'); if (!grid || !progress) return;
-  // Reframed around universal categories (not brand-owned categories),
-  // since a single brand can sell across multiple of these. Accessories
-  // and Homeware use the same grouping this file already relies on for
-  // filtering (see ACCESSORY_CATEGORIES / CLOTHING_CATEGORIES above).
+  const grid = document.getElementById('home-categories-grid');
+  const progress = document.getElementById('home-categories-progress');
+  if (!grid || !progress) return;
+
   const categories = [
     { label:'Clothing', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat:'all-clothing' },
     { label:'Accessories', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat:'all-accessories' },
-    { label:'Homeware', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-8985.png?v=1789390405', cat:'homeware' },
-    { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
+    { label:'Homeware', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-8985.png?v=1789390405', cat:'homeware' }
   ];
-  grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
-  const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
-  progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
-  if (grid._categoriesScrollHandler) {
-    grid.removeEventListener('scroll', grid._categoriesScrollHandler);
+
+  // NOTE: no dedicated Beauty product image exists yet in this codebase —
+  // the URL below is a placeholder reusing the Scent image so nothing
+  // renders broken. Swap PLACEHOLDER_BEAUTY_IMG for a real Beauty image
+  // before launch.
+  const PLACEHOLDER_BEAUTY_IMG = 'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601';
+  const swipeCategories = [
+    { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' },
+    { label:'Beauty', img:PLACEHOLDER_BEAUTY_IMG, cat:'beauty' }
+  ];
+
+  const staticCardsHtml = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
+
+  const swipeSlidesHtml = swipeCategories.map(c => `<div class="home-category-swipe-slide" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
+
+  const swipeDotsHtml = swipeCategories.map((_, i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategorySwipeSlide(${i})"></div>`).join('');
+
+  const swipeCardHtml = `<div class="home-category-card home-category-swipe-wrap"><div class="home-category-swipe-track" id="home-category-swipe-track">${swipeSlidesHtml}</div><div class="home-category-swipe-dots" id="home-category-swipe-dots">${swipeDotsHtml}</div></div>`;
+
+  grid.innerHTML = staticCardsHtml + swipeCardHtml;
+  // The outer 2x2 grid never scrolls (forced by CSS), so its own
+  // progress row stays empty — the swipe indicator lives on the
+  // fourth cell only, via #home-category-swipe-dots above.
+  progress.innerHTML = '';
+
+  const track = document.getElementById('home-category-swipe-track');
+  const dots = document.getElementById('home-category-swipe-dots');
+  if (track && dots) {
+    if (track._swipeScrollHandler) {
+      track.removeEventListener('scroll', track._swipeScrollHandler);
+    }
+    const scrollHandler = () => {
+      const idx = Math.round(track.scrollLeft / track.offsetWidth);
+      dots.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active', i===idx));
+    };
+    track._swipeScrollHandler = scrollHandler;
+    track.addEventListener('scroll', scrollHandler, {passive:true});
   }
-  const scrollHandler = () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = window.innerWidth>=900?5:window.innerWidth>=640?3:2; const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); };
-  grid._categoriesScrollHandler = scrollHandler;
-  grid.addEventListener('scroll', scrollHandler, {passive:true});
+}
+
+// Lets the two small dots under the Scent/Beauty cell jump directly
+// to a slide, same pattern as goCategoriesSlide below but scoped to
+// the single swipe-track element instead of the whole grid.
+function goCategorySwipeSlide(idx) {
+  const track = document.getElementById('home-category-swipe-track');
+  const dots = document.getElementById('home-category-swipe-dots');
+  if (!track) return;
+  track.scrollTo({ left: idx * track.offsetWidth, behavior: 'smooth' });
+  if (dots) dots.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active', i===idx));
 }
 
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
@@ -718,3 +762,4 @@ function renderVendorPage(vendor) {
 }
 
 window.navigateToVendor = navigateToVendor;
+window.goCategorySwipeSlide = goCategorySwipeSlide;
