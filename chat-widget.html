@@ -274,6 +274,35 @@
     letter-spacing: 0.02em !important;
   }
 
+  /* ---------- JAI AVATAR IN CONVERSATION ----------
+     WhatsApp-style: JAI's own replies show its face next to the bubble;
+     a human admin's replies (and the "connecting you to our team"
+     handoff message) never do, so customers can tell which one they're
+     talking to at a glance. Reuses the same .jai-face/.jai-eye/.jai-mouth
+     shapes as the launcher mascot, just with its own fixed colors — this
+     context is always the light chat panel (#fafaf9), never the dark
+     footer, so it doesn't need the launcher's color-flip logic. */
+  #chat-window .jai-msg-row {
+    display: flex !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
+    align-self: flex-start !important;
+    max-width: 85% !important;
+  }
+  #chat-window .chat-msg.jai-msg {
+    max-width: none !important;
+    flex: 1 !important;
+  }
+  .jai-msg-avatar {
+    width: 22px !important;
+    height: 22px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    margin-bottom: 2px !important;
+    --jai-bg: #111;
+    --jai-fg: #fff;
+  }
+
   /* ---------- PILL BUTTONS ---------- */
   #chat-window .chat-pill-btn {
     background: none !important;
