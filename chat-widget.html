@@ -219,6 +219,7 @@
     flex-direction: column !important;
     box-shadow: none !important;
     overflow: hidden !important;
+    overscroll-behavior: none !important;
   }
   #chat-window.open { display: flex !important; }
 
@@ -250,6 +251,7 @@
     overflow-y: auto !important;
     display: flex !important;
     flex-direction: column !important;
+    overscroll-behavior: contain !important;
   }
   #chat-window .chat-messages {
     flex: 1 !important;
@@ -259,6 +261,8 @@
     flex-direction: column !important;
     gap: 12px !important;
     background: #fafaf9 !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   #chat-window .chat-msg {
     max-width: 80% !important;
@@ -349,6 +353,15 @@
     border: none !important;
   }
   #chat-window .chat-pill-btn.filled:hover { background: #333 !important; }
+
+  /* Track Order button specifically — 2px taller (padding, since the
+     shared .chat-pill-btn has no explicit height) and 2px less rounded
+     than the shared pill style used elsewhere (e.g. the satisfaction
+     Yes/No buttons), which is untouched. */
+  #chat-window .chat-pill-btn.jai-track-order-btn {
+    padding: 9px 18px !important;
+    border-radius: 18px !important;
+  }
 
   /* ---------- WELCOME ---------- */
   #chat-window .chat-welcome {
@@ -567,6 +580,15 @@
 <!-- =========================================================
      WIDGET MARKUP
      ========================================================= -->
+
+<!-- Track Order button lives here as real markup — JS clones this
+     template wherever the button needs to appear (the initial JAI
+     greeting, and again any time a customer types something like
+     "track order"), instead of building it from an HTML string. -->
+<template id="jai-track-order-template">
+  <button class="chat-pill-btn filled jai-track-order-btn" onclick="showOrderLookup()">Track Order</button>
+</template>
+
 <button id="live-chat-bubble" onclick="toggleChat()">
   <div class="jai-mascot" id="jai-mascot" aria-hidden="true">
     <div class="jai-face">
