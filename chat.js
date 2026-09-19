@@ -522,7 +522,7 @@ function renderAIGreeting() {
   greeting.className = 'chat-msg admin';
   greeting.innerHTML =
     '<div style="margin-bottom:10px;font-weight:500;">'
-    + 'Hi, I\'m the janedore Assistant. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
+    + 'Hi, I\'m JAI — the Janedore AI. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
     + '<br><br>'
     + 'Looking for an existing order? Track it below.'
     + '</div>'
@@ -657,6 +657,32 @@ function customerWantsHuman(text) {
   return t.includes('human') || t.includes('agent') || t.includes('real person') || t.includes('speak to someone');
 }
 
+// ==================== JAI MASCOT STATE ====================
+// CSS (chat-widget.html) owns every animation. This just toggles which
+// state class is on #jai-mascot; the "auto-idle" timeout clears a timed
+// state (responding/excited/confused) back to idle once its animation
+// has had time to play. 'thinking' is the one state left on until
+// something else explicitly changes it, since it tracks an in-flight
+// request rather than a one-off moment.
+const JAI_STATE_CLASSES = ['jai-thinking', 'jai-responding', 'jai-excited', 'jai-confused'];
+let _jaiStateTimeout = null;
+
+function setJAIState(state, autoIdleMs) {
+  const mascot = safeEl('jai-mascot');
+  if (!mascot) return;
+  clearTimeout(_jaiStateTimeout);
+  mascot.classList.remove(...JAI_STATE_CLASSES);
+  if (state && state !== 'idle') {
+    mascot.classList.add('jai-' + state);
+    if (autoIdleMs) {
+      _jaiStateTimeout = setTimeout(() => {
+        mascot.classList.remove('jai-' + state);
+      }, autoIdleMs);
+    }
+  }
+}
+window.setJAIState = setJAIState;
+
 // ==================== MESSAGES ====================
 async function loadMessages() {
   const rtdb = getRTDB();
@@ -710,8 +736,26 @@ async function loadMessages() {
       messages.push({ _key: key, ...child.val() });
     });
     messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
-    _ScreenDebug.info('RTDB', 'Rendered ' + messages.length + ' stored messages');
+
+    // History stays in Firebase either way — this only decides what
+    // renders in the widget on open. After a few minutes with no new
+    // messages, a returning visitor gets the fresh greeting instead of
+    // their old conversation; all keys are still marked as loaded above,
+    // so nothing gets double-rendered if the listener picks up new
+    // activity on the same session later.
+    const HISTORY_STALE_MS = 5 * 60 * 1000; // a few minutes of inactivity
+    const lastMsg = messages.length ? messages[messages.length - 1] : null;
+    const isStale = lastMsg && lastMsg.createdAt && (Date.now() - lastMsg.createdAt) > HISTORY_STALE_MS;
+
+    if (!messages.length || isStale) {
+      _ScreenDebug.info('RTDB', messages.length
+        ? 'History stale (last message ' + Math.round((Date.now() - lastMsg.createdAt) / 60000) + 'm ago) — showing fresh greeting, history kept in Firebase'
+        : 'No renderable messages — showing greeting');
+      renderAIGreeting();
+    } else {
+      messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
+      _ScreenDebug.info('RTDB', 'Rendered ' + messages.length + ' stored messages');
+    }
 
     el.scrollTop = el.scrollHeight;
     return true;
@@ -962,6 +1006,7 @@ async function sendChatMessage() {
         _aiLockedUntil = 0;
       }
       _ScreenDebug.ai('AI', 'Attempting AI reply…');
+      setJAIState('thinking');
       const aiText = await getAIReply(text);
 
       if (aiText) {
@@ -979,7 +1024,7 @@ async function sendChatMessage() {
           ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: {
             text: aiText,
             sender: 'admin',
-            senderName: 'JANEDORE AI',
+            senderName: 'JAI',
             createdAt: aiTs,
             read: true,
             delivered: true,
@@ -993,9 +1038,10 @@ async function sendChatMessage() {
         // The key was pre-added above to avoid a duplicate render from the
         // live listener, but that means nothing else ever displays it —
         // render it locally now, right after the write confirms.
-        appendMessage({ text: aiText, sender: 'admin', senderName: 'JANEDORE AI', createdAt: Date.now() });
+        appendMessage({ text: aiText, sender: 'admin', senderName: 'JAI', createdAt: Date.now() });
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
+        setJAIState('responding', 1200);
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
 
@@ -1024,6 +1070,7 @@ async function sendChatMessage() {
         appendMessage({ text: fallbackText, sender: 'system', createdAt: Date.now() });
         const el = safeEl('chat-messages');
         if (el) el.scrollTop = el.scrollHeight;
+        setJAIState('confused', 1500);
       }
     }
   } catch (e) {
@@ -1199,6 +1246,7 @@ async function submitSatisfaction(satisfied) {
   thanks.appendChild(thanksText);
   el.appendChild(thanks);
   el.scrollTop = el.scrollHeight;
+  setJAIState(satisfied ? 'excited' : 'confused', 1200);
 }
 
 // ==================== ORDER LOOKUP ====================
@@ -1400,4 +1448,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Expose so toggleChat() can re-apply on every open
   window._forceChatFullScreen = forceFullScreen;
+})();
+
+// ============================================================
+// LAUNCHER BUBBLE — INVERT OVER DARK FOOTER
+// The bubble is #111 on #111, so it disappears once the black
+// footer scrolls into view behind it. Watches #main-footer with
+// an IntersectionObserver and toggles a class that flips the
+// bubble to white-on-dark so it stays visible. Self-contained —
+// styling for .over-dark-footer lives in chat-widget.html.
+// ============================================================
+(function () {
+  'use strict';
+
+  function watchFooter() {
+    const footer = document.getElementById('main-footer');
+    const bubble = document.getElementById('live-chat-bubble');
+    if (!footer || !bubble) return false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          bubble.classList.toggle('over-dark-footer', entry.isIntersecting);
+        });
+      },
+      { root: null, threshold: 0 }
+    );
+    observer.observe(footer);
+    return true;
+  }
+
+  if (!watchFooter()) {
+    // Footer element exists from page load in index.html, but guard
+    // against load-order edge cases the same way the full-screen fix does.
+    const retry = new MutationObserver(() => {
+      if (watchFooter()) retry.disconnect();
+    });
+    retry.observe(document.body, { childList: true, subtree: true });
+  }
 })();
