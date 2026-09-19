@@ -519,7 +519,7 @@ function renderAIGreeting() {
   const el = safeEl('chat-messages');
   if (!el) return;
   const greeting = document.createElement('div');
-  greeting.className = 'chat-msg admin';
+  greeting.className = 'chat-msg admin jai-msg';
   greeting.innerHTML =
     '<div style="margin-bottom:10px;font-weight:500;">'
     + 'Hi, I\'m JAI — the Janedore AI. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
@@ -527,7 +527,12 @@ function renderAIGreeting() {
     + 'Looking for an existing order? Track it below.'
     + '</div>'
     + '<button class="chat-pill-btn filled" id="ai-greeting-track-btn">Track Order</button>';
-  el.appendChild(greeting);
+  // JAI is greeting the customer here — smiles permanently on this one.
+  const row = document.createElement('div');
+  row.className = 'jai-msg-row';
+  row.appendChild(buildJAIAvatarEl('happy'));
+  row.appendChild(greeting);
+  el.appendChild(row);
   const trackBtn = document.getElementById('ai-greeting-track-btn');
   if (trackBtn) trackBtn.addEventListener('click', showOrderLookup);
 }
@@ -770,9 +775,9 @@ async function loadMessages() {
 }
 
 // FIX #5: sanitize all message rendering — no innerHTML with untrusted values
-function buildJAIAvatarEl() {
+function buildJAIAvatarEl(mood) {
   const avatar = document.createElement('div');
-  avatar.className = 'jai-msg-avatar';
+  avatar.className = 'jai-msg-avatar' + (mood === 'happy' ? ' jai-happy' : '');
   avatar.setAttribute('aria-hidden', 'true');
   const face = document.createElement('div');
   face.className = 'jai-face';
@@ -787,6 +792,19 @@ function buildJAIAvatarEl() {
   face.appendChild(mouth);
   avatar.appendChild(face);
   return avatar;
+}
+
+// Parses a leading "[[MOOD:happy]]" / "[[MOOD:neutral]]" tag the AI
+// prompt is instructed to prefix every reply with, strips it from the
+// text that actually gets shown/stored, and returns the mood separately.
+// Falls back to 'neutral' if the tag is missing or malformed — never
+// blocks the reply from displaying.
+const JAI_MOOD_TAG_REGEX = /^\s*\[\[MOOD:(happy|neutral)\]\]\s*/i;
+function parseMoodTag(rawText) {
+  const text = String(rawText || '');
+  const match = text.match(JAI_MOOD_TAG_REGEX);
+  if (!match) return { mood: 'neutral', text: text.trim() };
+  return { mood: match[1].toLowerCase(), text: text.slice(match[0].length).trim() };
 }
 
 function appendMessage(m) {
@@ -846,7 +864,7 @@ function appendMessage(m) {
   if (isJAI) {
     const row = document.createElement('div');
     row.className = 'jai-msg-row';
-    row.appendChild(buildJAIAvatarEl());
+    row.appendChild(buildJAIAvatarEl(m.mood));
     row.appendChild(div);
     el.appendChild(row);
   } else {
@@ -1040,10 +1058,12 @@ async function sendChatMessage() {
       }
       _ScreenDebug.ai('AI', 'Attempting AI reply…');
       setJAIState('thinking');
+      showTypingIndicator('JAI');
       const aiText = await getAIReply(text);
 
       if (aiText) {
         _ScreenDebug.info('SEND', 'Writing AI reply to RTDB');
+        const { mood, text: cleanedAiText } = parseMoodTag(aiText);
 
         // Success — clear any prior cooldown so AI keeps responding normally
         _aiLockedUntil = 0;
@@ -1055,26 +1075,28 @@ async function sendChatMessage() {
 
         await rtdb.ref('/').update({
           ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: {
-            text: aiText,
+            text: cleanedAiText,
             sender: 'admin',
             senderName: 'JAI',
+            mood: mood,
             createdAt: aiTs,
             read: true,
             delivered: true,
             sessionId: chatSessionId
           },
-          ['chat_inbox/' + chatSessionId + '/lastMessage']: aiText,
+          ['chat_inbox/' + chatSessionId + '/lastMessage']: cleanedAiText,
           ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
         });
-        _ScreenDebug.ok('SEND', 'AI reply written to RTDB');
+        _ScreenDebug.ok('SEND', 'AI reply written to RTDB (mood=' + mood + ')');
 
         // The key was pre-added above to avoid a duplicate render from the
         // live listener, but that means nothing else ever displays it —
         // render it locally now, right after the write confirms.
-        appendMessage({ text: aiText, sender: 'admin', senderName: 'JAI', createdAt: Date.now() });
+        appendMessage({ text: cleanedAiText, sender: 'admin', senderName: 'JAI', mood: mood, createdAt: Date.now() });
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
-        setJAIState('responding', 1200);
+        hideTypingIndicator();
+        setJAIState(mood === 'happy' ? 'happy' : 'responding', 1200);
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
 
@@ -1103,6 +1125,7 @@ async function sendChatMessage() {
         appendMessage({ text: fallbackText, sender: 'system', createdAt: Date.now() });
         const el = safeEl('chat-messages');
         if (el) el.scrollTop = el.scrollHeight;
+        hideTypingIndicator();
         setJAIState('confused', 1500);
       }
     }
@@ -1126,6 +1149,23 @@ async function sendChatMessage() {
 }
 
 // ==================== TYPING ====================
+// showTypingIndicator/hideTypingIndicator drive the three-dot bounce.
+// Used both by the real listener below (an actual human admin typing)
+// and, separately, by sendChatMessage() to show the same dots while
+// waiting on JAI's reply — so the customer sees "typing" feedback
+// during that wait too, not only when a real person is at the keyboard.
+function showTypingIndicator(label) {
+  const indicator = safeEl('chat-typing-indicator');
+  const nameEl = safeEl('chat-typing-name');
+  if (!indicator) return;
+  if (nameEl) nameEl.textContent = label || '';
+  indicator.classList.add('visible');
+}
+function hideTypingIndicator() {
+  const indicator = safeEl('chat-typing-indicator');
+  if (indicator) indicator.classList.remove('visible');
+}
+
 function handleCustomerTyping() {
   const rtdb = getRTDB();
   if (!rtdb) return;
@@ -1146,16 +1186,15 @@ function listenTyping() {
     const isTyping = val !== null && typeof val === 'object'
       ? Object.values(val).some(v => v === true)
       : val === true;
-    const indicator = safeEl('chat-typing-indicator');
-    if (indicator) indicator.style.display = isTyping ? 'block' : 'none';
-    if (indicator && isTyping && val && typeof val === 'object') {
+
+    if (!isTyping) { hideTypingIndicator(); return; }
+
+    let label = '';
+    if (val && typeof val === 'object') {
       const names = Object.keys(val).filter(k => val[k] === true);
-      indicator.textContent = names.length > 0
-        ? names[0] + ' is typing...'
-        : 'JANEDORE is typing...';
-    } else if (indicator && isTyping) {
-      indicator.textContent = 'JANEDORE is typing...';
+      label = names.length > 0 ? names[0] : '';
     }
+    showTypingIndicator(label);
   };
   _typingListenerRef.on('value', _typingListenerCb);
 }
