@@ -685,7 +685,18 @@ function productCardHome(p) {
     </div>`;
 }
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildNewsletterSection(); }
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildNewsletterSection(); }
+
+// Homepage "Shop by Accessories" row — same horizontal-slider treatment
+// and card markup as New Arrivals (productCardHome), just filtered to
+// ACCESSORY_CATEGORIES. Matches the same product set the "all-accessories"
+// category page shows (leather pouch excluded here too, consistent with
+// getCatFilteredProducts' handling of that item).
+function buildShopByAccessories() {
+  if (!DOM.accessoriesGrid) return;
+  const accessories = PRODUCTS.filter(p => p.status === 'active' && ACCESSORY_CATEGORIES.includes(p.category));
+  DOM.accessoriesGrid.innerHTML = merchandiseProducts(accessories).slice(0, 8).map(p => productCardHome(p)).join('');
+}
 
 function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
 
