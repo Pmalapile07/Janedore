@@ -797,14 +797,25 @@ function buildJAIAvatarEl(mood) {
 // Parses a leading "[[MOOD:happy]]" / "[[MOOD:neutral]]" tag the AI
 // prompt is instructed to prefix every reply with, strips it from the
 // text that actually gets shown/stored, and returns the mood separately.
-// Falls back to 'neutral' if the tag is missing or malformed — never
-// blocks the reply from displaying.
-const JAI_MOOD_TAG_REGEX = /^\s*\[\[MOOD:(happy|neutral)\]\]\s*/i;
+// The primary pattern allows flexible spacing around the colon/brackets
+// (models don't always match a strict format exactly). A second, looser
+// fallback strips ANY leading [[ ... ]] bracket tag even if it doesn't
+// match the expected keyword — so a malformed or drifted tag can never
+// leak through and show up raw in the chat, it just falls back to a
+// neutral mood instead.
+const JAI_MOOD_TAG_REGEX = /^[\s*_]*\[\[\s*MOOD\s*:\s*(happy|neutral)\s*\]\][\s*_]*/i;
+const JAI_ANY_BRACKET_TAG_REGEX = /^[\s*_]*\[\[[^\]]*\]\][\s*_]*/;
 function parseMoodTag(rawText) {
   const text = String(rawText || '');
   const match = text.match(JAI_MOOD_TAG_REGEX);
-  if (!match) return { mood: 'neutral', text: text.trim() };
-  return { mood: match[1].toLowerCase(), text: text.slice(match[0].length).trim() };
+  if (match) {
+    return { mood: match[1].toLowerCase(), text: text.slice(match[0].length).trim() };
+  }
+  const genericMatch = text.match(JAI_ANY_BRACKET_TAG_REGEX);
+  if (genericMatch) {
+    return { mood: 'neutral', text: text.slice(genericMatch[0].length).trim() };
+  }
+  return { mood: 'neutral', text: text.trim() };
 }
 
 function appendMessage(m) {
