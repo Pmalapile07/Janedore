@@ -33,12 +33,135 @@
     font-size: 16px !important;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
+    perspective: 300px !important;
+    /* JAI mascot colors: square fill vs eyes/mouth fill. Default state
+       (button bg #111) needs a WHITE square so it reads against the dark
+       button — the opposite of the literal Canva artwork (black square,
+       white eyes). See .over-dark-footer below for where the artwork's
+       actual black/white polarity shows up as designed. */
+    --jai-bg: #fff;
+    --jai-fg: #111;
   }
   #live-chat-bubble:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
   }
   body.chat-is-open #live-chat-bubble { display: none !important; }
+
+  /* Bubble is #111 on #111 — invisible once the black footer scrolls
+     behind it. Toggled by the IntersectionObserver in chat.js while
+     #main-footer is in view. This is also where the JAI mascot's colors
+     flip to match the original Canva artwork exactly (black square,
+     white eyes/mouth) — since the button itself is white here, that
+     polarity is what actually reads correctly against it. */
+  #live-chat-bubble.over-dark-footer {
+    background: #fff !important;
+    color: #111 !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important;
+    --jai-bg: #111;
+    --jai-fg: #fff;
+  }
+  #live-chat-bubble.over-dark-footer:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45) !important;
+  }
+
+  /* ---------- JAI MASCOT ----------
+     Pure CSS. A flat square (not a rendered 6-face cube — perspective +
+     rotateX/Y/Z on a flat plane reads as "3D tilt" without ever showing
+     a blank side face, which a literal spinning cube would at 90°).
+     JS only ever toggles which state class is present; every animation
+     itself — float, tilt, blink, bounce — is defined here. */
+  .jai-mascot {
+    width: 22px !important;
+    height: 22px !important;
+    position: relative !important;
+    transform-style: preserve-3d !important;
+    animation: jai-idle-float 4.5s ease-in-out infinite !important;
+  }
+  .jai-face {
+    position: absolute !important;
+    inset: 0 !important;
+    background: var(--jai-bg) !important;
+    border-radius: 4px !important;
+  }
+  .jai-eye {
+    position: absolute !important;
+    top: 32% !important;
+    width: 3.5px !important;
+    height: 3.5px !important;
+    border-radius: 50% !important;
+    background: var(--jai-fg) !important;
+    animation: jai-blink 5.5s ease-in-out infinite !important;
+  }
+  .jai-eye-left { left: 25% !important; }
+  .jai-eye-right { right: 25% !important; }
+  .jai-mouth {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 22% !important;
+    height: 1.5px !important;
+    background: var(--jai-fg) !important;
+  }
+
+  /* Blinks on its own clock, independent of whatever idle/thinking/
+     responding animation is running on the parent .jai-mascot — both
+     eyes together (that's how real blinks read as natural, not
+     unsettling), just decoupled from body movement. */
+  @keyframes jai-blink {
+    0%, 92%, 100% { transform: scaleY(1); }
+    95%           { transform: scaleY(0.1); }
+  }
+
+  /* IDLE (default) — slow float + tiny tilt. Deliberately never
+     completes a full rotation, so the face never turns away. */
+  @keyframes jai-idle-float {
+    0%   { transform: translateY(0)     rotateX(0deg)  rotateY(0deg)   rotateZ(0deg); }
+    25%  { transform: translateY(-1.5px) rotateX(6deg)  rotateY(-8deg) rotateZ(1deg); }
+    50%  { transform: translateY(0)     rotateX(0deg)  rotateY(0deg)   rotateZ(0deg); }
+    75%  { transform: translateY(1.5px)  rotateX(-6deg) rotateY(8deg)  rotateZ(-1deg); }
+    100% { transform: translateY(0)     rotateX(0deg)  rotateY(0deg)   rotateZ(0deg); }
+  }
+
+  /* THINKING — rotation slows to a near-hold, gentle sideways sway,
+     like it's turning its "attention" to one side. */
+  .jai-mascot.jai-thinking {
+    animation: jai-thinking-sway 2.8s ease-in-out infinite !important;
+  }
+  @keyframes jai-thinking-sway {
+    0%, 100% { transform: rotateY(0deg) rotateZ(0deg); }
+    50%      { transform: rotateY(14deg) rotateZ(2deg); }
+  }
+
+  /* RESPONDING — quick light bounce right when a reply lands. */
+  .jai-mascot.jai-responding {
+    animation: jai-responding-bounce 0.6s ease-in-out 2 !important;
+  }
+  @keyframes jai-responding-bounce {
+    0%   { transform: translateY(0)    rotateX(0deg); }
+    40%  { transform: translateY(-3px) rotateX(-10deg); }
+    100% { transform: translateY(0)    rotateX(0deg); }
+  }
+
+  /* EXCITED — quick little rotation bounce, e.g. on a happy resolution. */
+  .jai-mascot.jai-excited {
+    animation: jai-excited-spin 0.5s ease-in-out 2 !important;
+  }
+  @keyframes jai-excited-spin {
+    0%   { transform: rotateZ(0deg)  translateY(0); }
+    50%  { transform: rotateZ(12deg) translateY(-2px); }
+    100% { transform: rotateZ(0deg)  translateY(0); }
+  }
+
+  /* CONFUSED — a held, asymmetric tilt, e.g. on an AI failure/fallback. */
+  .jai-mascot.jai-confused {
+    animation: jai-confused-tilt 1.4s ease-in-out 1 !important;
+  }
+  @keyframes jai-confused-tilt {
+    0%   { transform: rotateZ(0deg); }
+    50%  { transform: rotateZ(-16deg); }
+    100% { transform: rotateZ(0deg); }
+  }
 
   .chat-unread-dot {
     position: absolute !important;
@@ -356,6 +479,14 @@
   }
   @media (prefers-reduced-motion: reduce) {
     #chat-window .chat-footer-mark { animation: none !important; }
+    .jai-mascot,
+    .jai-mascot.jai-thinking,
+    .jai-mascot.jai-responding,
+    .jai-mascot.jai-excited,
+    .jai-mascot.jai-confused,
+    .jai-eye {
+      animation: none !important;
+    }
   }
 </style>
 
@@ -363,7 +494,13 @@
      WIDGET MARKUP
      ========================================================= -->
 <button id="live-chat-bubble" onclick="toggleChat()">
-  <i class="ph ph-chat"></i>
+  <div class="jai-mascot" id="jai-mascot" aria-hidden="true">
+    <div class="jai-face">
+      <div class="jai-eye jai-eye-left"></div>
+      <div class="jai-eye jai-eye-right"></div>
+      <div class="jai-mouth"></div>
+    </div>
+  </div>
   <span class="chat-unread-dot" id="chat-unread-dot"></span>
 </button>
 
