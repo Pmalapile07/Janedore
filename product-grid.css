@@ -31,10 +31,12 @@
 
 /* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid)
    and Shop by Accessories (#accessories-grid), so both rows always
-   look identical. Card size/ratio reverted to the original values —
-   only the horizontal-scroll behavior and the sharing between the two
-   IDs stays. Scoped to these two IDs only — collection/category grids
-   elsewhere are untouched. */
+   look identical. No left/right padding here on purpose — the parent
+   <section> (home-all-products / home-shop-accessories) already applies
+   18px via its own inline padding, same as the section header text.
+   Adding padding here too would double it up (36px) and misalign the
+   cards against the header — that was the bug. Scoped to these two IDs
+   only — collection/category grids elsewhere are untouched. */
 #arrivals-grid,
 #accessories-grid {
   display: flex;
@@ -42,7 +44,6 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   gap: 8px;
-  padding: 0 18px;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar,
