@@ -48,10 +48,14 @@ const COLLECTION_DESCRIPTIONS = {
 const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
 
 const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
-// Accessories bundles bags, jewelry, and sunglasses into one browsable
+// Accessories bundles bags, jewelry, sunglasses, and shoes into one browsable
 // category — mirrors the exact same grouping technique CLOTHING_CATEGORIES
 // already uses below, just for a different set of categories.
-const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses'];
+// TEMPORARY: this list is hardcoded for now to fix the homepage/nav layout.
+// The plan is to move this grouping into Firestore (admin-managed) later —
+// see conversation. When that happens, this array goes away and the JS
+// reads the grouping from the database instead.
+const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses','shoes'];
 const LEATHER_POUCH_ID = 'janedore-leather-pouch';
 
 function gridTemplateFor(cols) {
