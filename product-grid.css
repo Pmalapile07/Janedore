@@ -31,12 +31,14 @@
 
 /* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid)
    and Shop by Accessories (#accessories-grid), so both rows always
-   look identical. No left/right padding here on purpose — the parent
-   <section> (home-all-products / home-shop-accessories) already applies
-   18px via its own inline padding, same as the section header text.
-   Adding padding here too would double it up (36px) and misalign the
-   cards against the header — that was the bug. Scoped to these two IDs
-   only — collection/category grids elsewhere are untouched. */
+   look identical. padding: 0 here is deliberate and explicit — these
+   elements also carry the base .product-grid class (0 8px / 10px / 12px
+   at various breakpoints), and just omitting padding here isn't enough
+   to cancel that out, since a missing property doesn't override an
+   inherited one. Alignment comes entirely from the parent <section>'s
+   own 18px inline padding, same as the section header text uses.
+   Scoped to these two IDs only — collection/category grids elsewhere
+   are untouched. */
 #arrivals-grid,
 #accessories-grid {
   display: flex;
@@ -44,6 +46,7 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   gap: 8px;
+  padding: 0;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar,
