@@ -345,6 +345,11 @@ function detachStatusListener() {
 // ==================== PAGE SCROLL LOCK ====================
 // Freezes the page behind the widget without losing scroll position.
 // Uses position:fixed + saved Y so iOS/Android URL bars behave too.
+// overscroll-behavior:none reinforces this — without it, iOS Safari can
+// still "chain" a scroll gesture from inside the widget into the page
+// once it hits the top/bottom of its own scroll area, which both leaks
+// the page behind the widget AND triggers Safari's address bar to
+// collapse/expand mid-gesture (changing viewport height on the fly).
 function lockPageScroll() {
   _pageScrollLockY = window.scrollY || window.pageYOffset || 0;
   document.body.style.setProperty('position', 'fixed', 'important');
@@ -353,7 +358,9 @@ function lockPageScroll() {
   document.body.style.setProperty('right', '0', 'important');
   document.body.style.setProperty('width', '100%', 'important');
   document.body.style.setProperty('overflow', 'hidden', 'important');
+  document.body.style.setProperty('overscroll-behavior', 'none', 'important');
   document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+  document.documentElement.style.setProperty('overscroll-behavior', 'none', 'important');
 }
 
 function unlockPageScroll() {
@@ -363,7 +370,9 @@ function unlockPageScroll() {
   document.body.style.removeProperty('right');
   document.body.style.removeProperty('width');
   document.body.style.removeProperty('overflow');
+  document.body.style.removeProperty('overscroll-behavior');
   document.documentElement.style.removeProperty('overflow');
+  document.documentElement.style.removeProperty('overscroll-behavior');
   window.scrollTo(0, _pageScrollLockY);
 }
 
@@ -515,26 +524,78 @@ function clearChatSession() {
 }
 
 // ==================== AI GREETING ====================
+// Track Order button is real markup in chat-widget.html (a <template>) —
+// this clones it rather than building a button from an HTML string, so
+// it can also be reused verbatim by renderTrackOrderPrompt() below.
+function cloneTrackOrderButton() {
+  const tpl = document.getElementById('jai-track-order-template');
+  if (tpl && tpl.content && tpl.content.firstElementChild) {
+    return tpl.content.firstElementChild.cloneNode(true);
+  }
+  // Defensive fallback, in case the template markup is ever missing.
+  const btn = document.createElement('button');
+  btn.className = 'chat-pill-btn filled jai-track-order-btn';
+  btn.textContent = 'Track Order';
+  btn.addEventListener('click', showOrderLookup);
+  return btn;
+}
+
 function renderAIGreeting() {
   const el = safeEl('chat-messages');
   if (!el) return;
   const greeting = document.createElement('div');
   greeting.className = 'chat-msg admin jai-msg';
-  greeting.innerHTML =
-    '<div style="margin-bottom:10px;font-weight:500;">'
-    + 'Hi, I\'m JAI — the Janedore AI. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
+
+  const introText = document.createElement('div');
+  introText.style.cssText = 'margin-bottom:10px;font-weight:500;';
+  introText.innerHTML =
+    'Hi, I\'m JAI — the Janedore AI. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
     + '<br><br>'
-    + 'Looking for an existing order? Track it below.'
-    + '</div>'
-    + '<button class="chat-pill-btn filled" id="ai-greeting-track-btn">Track Order</button>';
+    + 'Looking for an existing order? Track it below.';
+  greeting.appendChild(introText);
+  greeting.appendChild(cloneTrackOrderButton());
+
   // JAI is greeting the customer here — smiles permanently on this one.
   const row = document.createElement('div');
   row.className = 'jai-msg-row';
   row.appendChild(buildJAIAvatarEl('happy'));
   row.appendChild(greeting);
   el.appendChild(row);
-  const trackBtn = document.getElementById('ai-greeting-track-btn');
-  if (trackBtn) trackBtn.addEventListener('click', showOrderLookup);
+}
+
+// Detects a customer asking to track an order in plain text (e.g. "track
+// order", "track my order", "where is my order") and brings the same
+// button back into the conversation — no AI round-trip needed, this is
+// a local UI shortcut only, same as the greeting's button, so nothing
+// gets written to Firebase for it.
+function customerWantsTrackOrder(text) {
+  const t = (text || '').toLowerCase();
+  return t.includes('track order')
+    || t.includes('track my order')
+    || t.includes('order status')
+    || t.includes('where is my order')
+    || t.includes("where's my order");
+}
+
+function renderTrackOrderPrompt() {
+  const el = safeEl('chat-messages');
+  if (!el) return;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-msg admin jai-msg';
+  const textNode = document.createElement('div');
+  textNode.style.marginBottom = '10px';
+  textNode.textContent = 'Sure — you can track your order below.';
+  bubble.appendChild(textNode);
+  bubble.appendChild(cloneTrackOrderButton());
+
+  const row = document.createElement('div');
+  row.className = 'jai-msg-row';
+  row.appendChild(buildJAIAvatarEl('happy'));
+  row.appendChild(bubble);
+  el.appendChild(row);
+  el.scrollTop = el.scrollHeight;
+  setJAIState('happy', 1500);
 }
 
 // ==================== AI REPLY (STRICT RETRY + LOCKING) ====================
@@ -1032,7 +1093,10 @@ async function sendChatMessage() {
     // FIX #14: customer message is already saved — AI failure never blocks it
     const AI_COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12 hours
 
-    if (customerWantsHuman(text)) {
+    if (customerWantsTrackOrder(text)) {
+      _ScreenDebug.info('SEND', 'Customer asked to track an order — showing the Track Order button locally, no AI/RTDB round-trip needed');
+      renderTrackOrderPrompt();
+    } else if (customerWantsHuman(text)) {
       _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
 
       const handoffText = 'Got it. Connecting you with our team, they will be with you shortly.';
