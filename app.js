@@ -10,6 +10,7 @@ const DOM = {
   get cartBackdrop() { return document.getElementById("cart-backdrop"); },
   get cartPanel() { return document.getElementById("cart-panel"); },
   get arrivalsGrid() { return document.getElementById("arrivals-grid"); },
+  get accessoriesGrid() { return document.getElementById("accessories-grid"); },
   get allProductsGrid() { return document.getElementById("all-products-grid"); },
   get categoryProductsGrid() { return document.getElementById("category-products-grid"); },
   get categoryNameTag() { return document.getElementById("category-name-tag"); },
