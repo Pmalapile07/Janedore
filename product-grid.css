@@ -29,8 +29,14 @@
   .product-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* HOMEPAGE HORIZONTAL SLIDER */
-#arrivals-grid {
+/* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid)
+   and Shop by Accessories (#accessories-grid). Cards sized up and the
+   image ratio made taller than the standard shop grid so these two
+   homepage rows read as bigger, more editorial than the collection
+   pages. Scoped to these two IDs only — collection/category grids
+   elsewhere are untouched. */
+#arrivals-grid,
+#accessories-grid {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -39,22 +45,30 @@
   padding: 0 18px;
   scrollbar-width: none;
 }
-#arrivals-grid::-webkit-scrollbar { display: none; }
-#arrivals-grid .product-card {
+#arrivals-grid::-webkit-scrollbar,
+#accessories-grid::-webkit-scrollbar { display: none; }
+#arrivals-grid .product-card,
+#accessories-grid .product-card {
   flex: 0 0 auto;
-  width: 65vw;
-  max-width: 300px;
+  width: 78vw;
+  max-width: 340px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
-  #arrivals-grid .product-card { width: 28vw; max-width: 300px; }
+  #arrivals-grid .product-card,
+  #accessories-grid .product-card { width: 32vw; max-width: 340px; }
 }
 @media (min-width: 1024px) {
-  #arrivals-grid {
+  #arrivals-grid,
+  #accessories-grid {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
   }
+}
+#arrivals-grid .product-img-wrap,
+#accessories-grid .product-img-wrap {
+  aspect-ratio: 3 / 4;
 }
 
 /* PRODUCT CARD */
