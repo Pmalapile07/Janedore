@@ -30,10 +30,10 @@
 }
 
 /* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid)
-   and Shop by Accessories (#accessories-grid). Cards sized up and the
-   image ratio made taller than the standard shop grid so these two
-   homepage rows read as bigger, more editorial than the collection
-   pages. Scoped to these two IDs only — collection/category grids
+   and Shop by Accessories (#accessories-grid), so both rows always
+   look identical. Card size/ratio reverted to the original values —
+   only the horizontal-scroll behavior and the sharing between the two
+   IDs stays. Scoped to these two IDs only — collection/category grids
    elsewhere are untouched. */
 #arrivals-grid,
 #accessories-grid {
@@ -50,13 +50,13 @@
 #arrivals-grid .product-card,
 #accessories-grid .product-card {
   flex: 0 0 auto;
-  width: 78vw;
-  max-width: 340px;
+  width: 65vw;
+  max-width: 300px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
-  #accessories-grid .product-card { width: 32vw; max-width: 340px; }
+  #accessories-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
   #arrivals-grid,
@@ -65,10 +65,6 @@
     max-width: 1400px;
     margin: 0 auto;
   }
-}
-#arrivals-grid .product-img-wrap,
-#accessories-grid .product-img-wrap {
-  aspect-ratio: 3 / 4;
 }
 
 /* PRODUCT CARD */
