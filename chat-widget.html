@@ -72,8 +72,8 @@
      JS only ever toggles which state class is present; every animation
      itself — float, tilt, blink, bounce — is defined here. */
   .jai-mascot {
-    width: 22px !important;
-    height: 22px !important;
+    width: 16px !important;
+    height: 16px !important;
     position: relative !important;
     transform-style: preserve-3d !important;
     animation: jai-idle-float 4.5s ease-in-out infinite !important;
@@ -82,13 +82,13 @@
     position: absolute !important;
     inset: 0 !important;
     background: var(--jai-bg) !important;
-    border-radius: 4px !important;
+    border-radius: 3px !important;
   }
   .jai-eye {
     position: absolute !important;
     top: 32% !important;
-    width: 3.5px !important;
-    height: 3.5px !important;
+    width: 2.5px !important;
+    height: 2.5px !important;
     border-radius: 50% !important;
     background: var(--jai-fg) !important;
     animation: jai-blink 5.5s ease-in-out infinite !important;
@@ -97,11 +97,34 @@
   .jai-eye-right { right: 25% !important; }
   .jai-mouth {
     position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 22% !important;
-    height: 1.5px !important;
+    left: 25% !important;
+    right: 25% !important;
+    bottom: 24% !important;
+    height: 1px !important;
     background: var(--jai-fg) !important;
+    border-radius: 0 !important;
+  }
+
+  /* HAPPY — smile: the straight mouth bar curves into an arc instead.
+     Toggled the same way as the other states (a class on the mascot/
+     avatar container), so no direct reference to the mouth element is
+     needed anywhere in JS. */
+  .jai-mascot.jai-happy .jai-mouth,
+  .jai-msg-avatar.jai-happy .jai-mouth {
+    left: 22% !important;
+    right: 22% !important;
+    bottom: 20% !important;
+    height: 3px !important;
+    background: transparent !important;
+    border-bottom: 1px solid var(--jai-fg) !important;
+    border-radius: 0 0 50% 50% !important;
+  }
+  .jai-mascot.jai-happy {
+    animation: jai-happy-bob 1.8s ease-in-out infinite !important;
+  }
+  @keyframes jai-happy-bob {
+    0%, 100% { transform: translateY(0) rotateZ(0deg); }
+    50%      { transform: translateY(-1.5px) rotateZ(2deg); }
   }
 
   /* Blinks on its own clock, independent of whatever idle/thinking/
@@ -170,7 +193,7 @@
     width: 8px !important;
     height: 8px !important;
     border-radius: 50% !important;
-    background: #c00 !important;
+    background: #2ecc71 !important;
     border: 2px solid #fff !important;
     display: none;
   }
@@ -294,11 +317,11 @@
     flex: 1 !important;
   }
   .jai-msg-avatar {
-    width: 22px !important;
-    height: 22px !important;
+    width: 16px !important;
+    height: 16px !important;
     flex-shrink: 0 !important;
     position: relative !important;
-    margin-bottom: 2px !important;
+    margin-bottom: 4px !important;
     --jai-bg: #111;
     --jai-fg: #fff;
   }
@@ -465,14 +488,34 @@
   /* ---------- TYPING INDICATOR ---------- */
   #chat-window .chat-typing-indicator {
     padding: 6px 20px !important;
+    display: none;
+    align-items: center !important;
+    gap: 6px !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 300 !important;
     letter-spacing: 0.02em !important;
     color: #888 !important;
-    font-style: italic !important;
     background: #fafaf9 !important;
-    display: none;
+  }
+  #chat-window .chat-typing-indicator.visible { display: flex !important; }
+  #chat-window .typing-dots {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+  }
+  #chat-window .typing-dots span {
+    width: 5px !important;
+    height: 5px !important;
+    border-radius: 50% !important;
+    background: #888 !important;
+    animation: jai-typing-bounce 1.2s infinite ease-in-out !important;
+  }
+  #chat-window .typing-dots span:nth-child(2) { animation-delay: 0.15s !important; }
+  #chat-window .typing-dots span:nth-child(3) { animation-delay: 0.3s !important; }
+  @keyframes jai-typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30%           { transform: translateY(-4px); opacity: 1; }
   }
 
   /* ---------- FOOTER BRAND ---------- */
@@ -513,9 +556,11 @@
     .jai-mascot.jai-responding,
     .jai-mascot.jai-excited,
     .jai-mascot.jai-confused,
+    .jai-mascot.jai-happy,
     .jai-eye {
       animation: none !important;
     }
+    #chat-window .typing-dots span { animation: none !important; opacity: 0.7 !important; }
   }
 </style>
 
@@ -540,7 +585,10 @@
     </button>
   </div>
 
-  <div class="chat-typing-indicator" id="chat-typing-indicator">JANEDORE is typing...</div>
+  <div class="chat-typing-indicator" id="chat-typing-indicator">
+    <span id="chat-typing-name"></span>
+    <span class="typing-dots"><span></span><span></span><span></span></span>
+  </div>
 
   <div class="chat-messages" id="chat-messages"></div>
 
