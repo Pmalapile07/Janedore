@@ -770,6 +770,25 @@ async function loadMessages() {
 }
 
 // FIX #5: sanitize all message rendering — no innerHTML with untrusted values
+function buildJAIAvatarEl() {
+  const avatar = document.createElement('div');
+  avatar.className = 'jai-msg-avatar';
+  avatar.setAttribute('aria-hidden', 'true');
+  const face = document.createElement('div');
+  face.className = 'jai-face';
+  const eyeL = document.createElement('div');
+  eyeL.className = 'jai-eye jai-eye-left';
+  const eyeR = document.createElement('div');
+  eyeR.className = 'jai-eye jai-eye-right';
+  const mouth = document.createElement('div');
+  mouth.className = 'jai-mouth';
+  face.appendChild(eyeL);
+  face.appendChild(eyeR);
+  face.appendChild(mouth);
+  avatar.appendChild(face);
+  return avatar;
+}
+
 function appendMessage(m) {
   const el = safeEl('chat-messages');
   if (!el) return;
@@ -792,13 +811,19 @@ function appendMessage(m) {
     : '';
   const isCustomer = m.sender === 'customer';
 
-  const div = document.createElement('div');
-  div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin');
-
   // Sender name — sanitized, no @
   const rawName = (!isCustomer && m.senderName) ? String(m.senderName) : '';
   const safeName = (rawName && rawName.indexOf('@') === -1) ? rawName.slice(0, MAX_NAME_LENGTH) : 'Janedore';
   const showName = !isCustomer && rawName;
+
+  // Avatar shows next to JAI's own replies only — never next to a human
+  // admin's, so customers can tell at a glance which one they're talking
+  // to (the "connecting you to our team" handoff message uses senderName
+  // 'JANEDORE', not 'JAI', so it correctly gets no avatar too).
+  const isJAI = !isCustomer && rawName === 'JAI';
+
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin') + (isJAI ? ' jai-msg' : '');
 
   if (showName) {
     const nameDiv = document.createElement('div');
@@ -818,7 +843,15 @@ function appendMessage(m) {
   timeDiv.textContent = time;
   div.appendChild(timeDiv);
 
-  el.appendChild(div);
+  if (isJAI) {
+    const row = document.createElement('div');
+    row.className = 'jai-msg-row';
+    row.appendChild(buildJAIAvatarEl());
+    row.appendChild(div);
+    el.appendChild(row);
+  } else {
+    el.appendChild(div);
+  }
 }
 
 function listenChat() {
