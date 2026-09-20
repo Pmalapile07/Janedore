@@ -689,7 +689,7 @@ function productCardHome(p) {
     </div>`;
 }
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildNewsletterSection(); }
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildShopByClothing(); buildNewsletterSection(); }
 
 // Homepage "Shop by Accessories" row — same horizontal-slider treatment
 // and card markup as New Arrivals (productCardHome), just filtered to
@@ -700,6 +700,15 @@ function buildShopByAccessories() {
   if (!DOM.accessoriesGrid) return;
   const accessories = PRODUCTS.filter(p => p.status === 'active' && ACCESSORY_CATEGORIES.includes(p.category));
   DOM.accessoriesGrid.innerHTML = merchandiseProducts(accessories).slice(0, 8).map(p => productCardHome(p)).join('');
+}
+
+// Homepage "Shop by Clothing" row — same pattern as buildShopByAccessories()
+// above, filtered to CLOTHING_CATEGORIES instead, matching the
+// "all-clothing" category page's product set.
+function buildShopByClothing() {
+  if (!DOM.clothingGrid) return;
+  const clothing = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
+  DOM.clothingGrid.innerHTML = merchandiseProducts(clothing).slice(0, 8).map(p => productCardHome(p)).join('');
 }
 
 function buildNewsletterSection() {
