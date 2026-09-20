@@ -954,6 +954,19 @@ function appendMessage(m) {
   }
 }
 
+// Shared badge-trigger, used both by the live listener below (a real
+// human admin's reply, which was never pre-registered in
+// loadedMessageKeys so it reaches this listener normally) and directly
+// by sendChatMessage() for AI/handoff replies — those pre-register
+// their own key to avoid double-rendering, which means they never
+// reach this listener's callback at all, so the badge has to be
+// triggered at the point those messages are actually written instead.
+function showUnreadBadgeIfClosed() {
+  if (chatOpen) return;
+  const dot = safeEl('chat-unread-dot');
+  if (dot) dot.style.display = 'block';
+}
+
 function listenChat() {
   const rtdb = getRTDB();
   if (!rtdb) return;
@@ -972,10 +985,7 @@ function listenChat() {
     const el = safeEl('chat-messages');
     if (el) el.scrollTop = el.scrollHeight;
 
-    if (!chatOpen && m.sender === 'admin') {
-      const dot = safeEl('chat-unread-dot');
-      if (dot) dot.style.display = 'block';
-    }
+    if (m.sender === 'admin') showUnreadBadgeIfClosed();
   };
   _chatListenerRef.on('child_added', _chatListenerCb);
   _ScreenDebug.info('RTDB', 'Listening for new messages');
@@ -1131,6 +1141,7 @@ async function sendChatMessage() {
       });
 
       appendMessage({ text: handoffText, sender: 'admin', senderName: 'JANEDORE', createdAt: Date.now() });
+      showUnreadBadgeIfClosed();
       const handoffEl = safeEl('chat-messages');
       if (handoffEl) handoffEl.scrollTop = handoffEl.scrollHeight;
     } else if (_aiLockedUntil && Date.now() < _aiLockedUntil) {
@@ -1178,6 +1189,7 @@ async function sendChatMessage() {
         // live listener, but that means nothing else ever displays it —
         // render it locally now, right after the write confirms.
         appendMessage({ text: cleanedAiText, sender: 'admin', senderName: 'JAI', mood: mood, createdAt: Date.now() });
+        showUnreadBadgeIfClosed();
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
         hideTypingIndicator();
