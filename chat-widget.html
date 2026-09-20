@@ -498,20 +498,22 @@
     line-height: 1.6 !important;
     width: 100% !important;
   }
-  /* ---------- TYPING INDICATOR ---------- */
-  #chat-window .chat-typing-indicator {
-    padding: 6px 20px !important;
-    display: none;
+  /* ---------- TYPING INDICATOR ----------
+     Rendered as an actual bubble at the bottom of #chat-messages (built
+     dynamically by showTypingIndicator() in chat.js), not a fixed bar
+     under the header — so the dots appear exactly where the reply is
+     about to land, same place any other message would. Reuses the
+     .chat-msg.admin bubble look; .jai-msg gives it JAI's avatar via the
+     shared jai-msg-row markup, but needs its width un-stretched since
+     the shared .jai-msg rule sets flex:1 for full-length text bubbles —
+     three dots shouldn't stretch to fill the row. */
+  #chat-window .chat-msg.jai-msg.chat-typing-bubble {
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    padding: 10px 14px !important;
+    display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 300 !important;
-    letter-spacing: 0.02em !important;
-    color: #888 !important;
-    background: #fafaf9 !important;
   }
-  #chat-window .chat-typing-indicator.visible { display: flex !important; }
   #chat-window .typing-dots {
     display: inline-flex !important;
     align-items: center !important;
@@ -607,10 +609,9 @@
     </button>
   </div>
 
-  <div class="chat-typing-indicator" id="chat-typing-indicator">
-    <span id="chat-typing-name"></span>
-    <span class="typing-dots"><span></span><span></span><span></span></span>
-  </div>
+  <!-- Typing indicator is no longer static markup here — showTypingIndicator()
+       in chat.js builds it dynamically inside #chat-messages, at the bottom
+       of the conversation, right where the reply will actually appear. -->
 
   <div class="chat-messages" id="chat-messages"></div>
 
