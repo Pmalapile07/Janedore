@@ -45,21 +45,25 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
 /* HOMEPAGE NEWSLETTER — #homepage-newsletter-section sits as a sibling to
    <footer> in index.html (not nested inside it), so it needs its own
    explicit black background to match; footer's own background:#111
-   doesn't cascade to it. Padding/heading-size overrides here also match
-   this instance to the rest of the homepage sections (NEW ARRIVALS /
-   SHOP BY CATEGORY / SHOP BY ACCESSORIES), which use a flat 24px 18px
-   and an explicit 11px/500/0.1em heading set inline rather than the
-   --ui-* variables the base .newsletter-title above relies on. Scoped
-   to this ID so nothing else on the page is affected. */
+   doesn't cascade to it. Padding here also matches this instance to the
+   rest of the homepage sections (NEW ARRIVALS / SHOP BY CATEGORY / SHOP
+   BY ACCESSORIES), which use a flat 24px 18px. The heading/sub styling
+   reuses .home-statement-heading/.home-statement-sub from
+   home-categories.css (Inter, big statement text + small uppercase
+   label) rather than the plain .newsletter-title — those classes are
+   left-aligned by default elsewhere, so just centering them here. */
 #homepage-newsletter-section {
   background: #111;
 }
 #homepage-newsletter-section .newsletter-section {
   padding: 24px 18px;
 }
-#homepage-newsletter-section .newsletter-title {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.1em;
+#homepage-newsletter-section .home-statement-sub,
+#homepage-newsletter-section .home-statement-heading {
+  text-align: center;
+  color: #fff;
+}
+#homepage-newsletter-section .home-statement-sub {
+  margin: 0 0 12px 0;
+  color: #f4f4f4;
 }
