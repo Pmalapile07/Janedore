@@ -11,6 +11,7 @@ const DOM = {
   get cartPanel() { return document.getElementById("cart-panel"); },
   get arrivalsGrid() { return document.getElementById("arrivals-grid"); },
   get accessoriesGrid() { return document.getElementById("accessories-grid"); },
+  get clothingGrid() { return document.getElementById("clothing-grid"); },
   get allProductsGrid() { return document.getElementById("all-products-grid"); },
   get categoryProductsGrid() { return document.getElementById("category-products-grid"); },
   get categoryNameTag() { return document.getElementById("category-name-tag"); },
