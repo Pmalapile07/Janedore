@@ -55,10 +55,11 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
   color: #f4f4f4;
   text-align: center;
   margin: 0 0 16px 0;
+  top-padding: 15px;
 }
 .newsletter-heading {
   font-family: 'Inter', sans-serif;
-  font-size: 30px;
+  font-size: 25px;
   font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.01em;
