@@ -705,8 +705,8 @@ function buildShopByAccessories() {
 function buildNewsletterSection() {
   if(!DOM.homepageNewsletterSection) return;
   DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section">
-    <div class="home-statement-sub">SIGN UP FOR JANEDORE UPDATES</div>
-    <div class="home-statement-heading">Get exclusive updates on new arrivals, curated drops, and stories from independent South African brands.</div>
+    <div class="newsletter-sub">SIGN UP FOR JANEDORE UPDATES</div>
+    <div class="newsletter-heading">Get exclusive updates on new arrivals, curated drops, and stories from independent South African brands.</div>
     <div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>
     <p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p>
   </div>`;
