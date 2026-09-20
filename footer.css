@@ -27,9 +27,45 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
   color: #f4f4f4; max-width: 480px; margin: 40px auto; text-align: center; padding: 0 12px;
 }
 @media (min-width: 768px) { .brand-quote { padding: 0 16px; } }
-.newsletter-section { padding: 40px 12px 20px; max-width: 500px; margin: 0 auto; }
-@media (min-width: 768px) { .newsletter-section { padding: 40px 16px 20px; } }
-.newsletter-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #fff; margin-bottom: 16px; text-align: center; }
+/* ============================================================
+   HOMEPAGE NEWSLETTER — everything for the "Sign up for Janedore
+   updates" section lives here together: the wrapper, the label,
+   the big heading, the form, and the disclaimer. One block, one
+   file, normal class names — .newsletter-heading/.newsletter-sub
+   belong to this component only, nothing borrowed from elsewhere.
+   #homepage-newsletter-section sits as a sibling to <footer> in
+   index.html (not nested inside it), so it needs its own explicit
+   black background — footer's own background:#111 doesn't cascade
+   to it.
+   ============================================================ */
+#homepage-newsletter-section {
+  background: #111;
+}
+.newsletter-section {
+  padding: 48px 18px 24px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.newsletter-sub {
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f4f4f4;
+  text-align: center;
+  margin: 0 0 16px 0;
+}
+.newsletter-heading {
+  font-family: 'Inter', sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: #fff;
+  text-align: center;
+  margin: 0 0 24px 0;
+}
 .newsletter-form { display: flex; align-items: center; border-bottom: 0.5px solid rgba(255,255,255,0.3); padding-bottom: 4px; }
 .newsletter-input { flex: 1; border: none; outline: none; font-family: 'Manrope', sans-serif; font-size: var(--body-font-size); font-weight: var(--body-font-weight); color: #fff; padding: 8px 0; background: transparent; }
 .newsletter-input::placeholder { color: #f4f4f4; opacity: 0.6; }
@@ -41,50 +77,13 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
   text-align: center; margin-top: 10px; font-family: 'Manrope', sans-serif;
   letter-spacing: var(--body-letter-spacing);
 }
-
-/* HOMEPAGE NEWSLETTER — #homepage-newsletter-section sits as a sibling to
-   <footer> in index.html (not nested inside it), so it needs its own
-   explicit black background to match; footer's own background:#111
-   doesn't cascade to it. Padding here also matches this instance to the
-   rest of the homepage sections (NEW ARRIVALS / SHOP BY CATEGORY / SHOP
-   BY ACCESSORIES), which use a flat 24px 18px horizontally — extra top
-   padding added on purpose for breathing room above the label.
-   .home-statement-heading/.home-statement-sub (moved here from
-   home-categories.css — this is their only consumer) give the big
-   Inter statement + small uppercase label treatment; colors flipped to
-   white/light-grey for this black section, centered, heading sized down
-   2px from its original 32px/48px, with explicit gaps added below each
-   of the label, the heading, and before the input form. */
-#homepage-newsletter-section {
-  background: #111;
-}
-#homepage-newsletter-section .newsletter-section {
-  padding: 48px 18px 24px;
-}
-.home-statement-heading {
-  font-family: 'Inter', sans-serif;
-  font-size: 30px;
-  font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  margin: 0 0 24px 0;
-}
-.home-statement-sub {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-size: 11px;
-  font-weight: 300;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  margin: 0 0 16px 0;
-}
 @media (min-width: 768px) {
-  .home-statement-heading { font-size: 46px; }
+  .newsletter-section { padding: 48px 16px 24px; }
+  .newsletter-heading { font-size: 46px; }
 }
-#homepage-newsletter-section .home-statement-sub,
-#homepage-newsletter-section .home-statement-heading {
-  text-align: center;
-  color: #fff;
-}
-#homepage-newsletter-section .home-statement-sub {
-  color: #f4f4f4;
-}
+
+/* .newsletter-title kept below, unused by this section now (replaced by
+   .newsletter-sub/.newsletter-heading above) — left in place only in
+   case footer.js's own markup elsewhere on the site still uses it. */
+.newsletter-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #fff; margin-bottom: 16px; text-align: center; }
+
