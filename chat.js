@@ -414,10 +414,16 @@ function toggleChat() {
       listenChat();
       listenTyping();
       listenStatus();
-    } else if (!_chatListenerRef) {
-      detachChatListener();
+    } else {
+      // The chat message listener is intentionally left running even
+      // while the widget was minimized (see the close branch below) —
+      // that's what lets a reply flip on the unread-dot badge with the
+      // window closed. Only re-attach it here if something detached it
+      // (e.g. clearChatSession()). Typing/status listeners are cheap,
+      // so those always get a fresh attach on every open.
+      if (!_chatListenerRef) listenChat();
       detachTypingListener();
-      listenChat();
+      detachStatusListener();
       listenTyping();
       listenStatus();
     }
@@ -432,7 +438,11 @@ function toggleChat() {
     unlockPageScroll();                             // restore page scroll
 
     _ScreenDebug.info('UI', 'Chat closed');
-    detachChatListener();
+    // Chat message listener is deliberately NOT detached here — it needs
+    // to keep running in the background so a reply arriving while the
+    // widget is minimized can still turn on the green unread-dot badge.
+    // Typing/status only matter while the window is actually visible,
+    // so those still detach normally.
     detachTypingListener();
     detachStatusListener();
   }
@@ -1224,21 +1234,40 @@ async function sendChatMessage() {
 }
 
 // ==================== TYPING ====================
-// showTypingIndicator/hideTypingIndicator drive the three-dot bounce.
-// Used both by the real listener below (an actual human admin typing)
-// and, separately, by sendChatMessage() to show the same dots while
-// waiting on JAI's reply — so the customer sees "typing" feedback
-// during that wait too, not only when a real person is at the keyboard.
+// showTypingIndicator/hideTypingIndicator build/remove an actual bubble
+// at the bottom of #chat-messages — same spot any other message would
+// land — rather than toggling a fixed bar under the header. Used both
+// by the real listener below (an actual human admin typing) and,
+// separately, by sendChatMessage() to show the same dots while waiting
+// on JAI's reply.
 function showTypingIndicator(label) {
-  const indicator = safeEl('chat-typing-indicator');
-  const nameEl = safeEl('chat-typing-name');
-  if (!indicator) return;
-  if (nameEl) nameEl.textContent = label || '';
-  indicator.classList.add('visible');
+  const messagesEl = safeEl('chat-messages');
+  if (!messagesEl) return;
+  hideTypingIndicator(); // avoid stacking duplicates if called twice in a row
+
+  const isJAI = !label || label === 'JAI';
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-msg admin chat-typing-bubble' + (isJAI ? ' jai-msg' : '');
+  const dots = document.createElement('span');
+  dots.className = 'typing-dots';
+  dots.innerHTML = '<span></span><span></span><span></span>';
+  bubble.appendChild(dots);
+
+  let node = bubble;
+  if (isJAI) {
+    const row = document.createElement('div');
+    row.className = 'jai-msg-row';
+    row.appendChild(buildJAIAvatarEl());
+    row.appendChild(bubble);
+    node = row;
+  }
+  node.id = 'chat-typing-indicator';
+  messagesEl.appendChild(node);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 function hideTypingIndicator() {
-  const indicator = safeEl('chat-typing-indicator');
-  if (indicator) indicator.classList.remove('visible');
+  const existing = document.getElementById('chat-typing-indicator');
+  if (existing) existing.remove();
 }
 
 function handleCustomerTyping() {
