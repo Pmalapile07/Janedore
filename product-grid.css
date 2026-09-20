@@ -29,18 +29,19 @@
   .product-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid)
-   and Shop by Accessories (#accessories-grid), so both rows always
-   look identical. padding: 0 here is deliberate and explicit — these
-   elements also carry the base .product-grid class (0 8px / 10px / 12px
-   at various breakpoints), and just omitting padding here isn't enough
-   to cancel that out, since a missing property doesn't override an
-   inherited one. Alignment comes entirely from the parent <section>'s
-   own 18px inline padding, same as the section header text uses.
-   Scoped to these two IDs only — collection/category grids elsewhere
-   are untouched. */
+/* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid),
+   Shop by Accessories (#accessories-grid), and Shop by Clothing
+   (#clothing-grid), so all three rows always look identical. padding: 0
+   here is deliberate and explicit — these elements also carry the base
+   .product-grid class (0 8px / 10px / 12px at various breakpoints), and
+   just omitting padding here isn't enough to cancel that out, since a
+   missing property doesn't override an inherited one. Alignment comes
+   entirely from the parent <section>'s own 18px inline padding, same as
+   the section header text uses. Scoped to these three IDs only —
+   collection/category grids elsewhere are untouched. */
 #arrivals-grid,
-#accessories-grid {
+#accessories-grid,
+#clothing-grid {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -50,9 +51,11 @@
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar,
-#accessories-grid::-webkit-scrollbar { display: none; }
+#accessories-grid::-webkit-scrollbar,
+#clothing-grid::-webkit-scrollbar { display: none; }
 #arrivals-grid .product-card,
-#accessories-grid .product-card {
+#accessories-grid .product-card,
+#clothing-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
   max-width: 300px;
@@ -60,11 +63,13 @@
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
-  #accessories-grid .product-card { width: 28vw; max-width: 300px; }
+  #accessories-grid .product-card,
+  #clothing-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
   #arrivals-grid,
-  #accessories-grid {
+  #accessories-grid,
+  #clothing-grid {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
