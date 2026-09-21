@@ -118,33 +118,32 @@
   padding-top: 0;
 }
 
-/* ── CATEGORY SWIPE CARD (Scent / Beauty) ──────────────────
-   The 2x2 "Shop by Category" grid always shows exactly 4 cells
-   (enforced by the !important overrides in index.html). This
-   fourth cell hosts two categories — Scent and Beauty — as an
-   internal swipeable pair, so a 5th category can exist without
-   changing the 2x2 structure. Reuses .home-category-img,
-   .home-category-label and .swipe-bar exactly as-is; only the
-   wrapper/track/slide/dots below are new. */
-.home-category-swipe-wrap {
-  padding: 0;
+/* ── BECOME A BRAND ─────────────────────────────────────── */
+/* Reuses .newsletter-sub/.newsletter-heading (defined in footer.css,
+   loaded globally) for the label/statement, matching the newsletter's
+   typography exactly rather than inventing a new scale. Only the
+   button below is new — the chat widget's .chat-pill-btn styling is
+   scoped to #chat-window and isn't available out here. */
+#home-become-a-brand {
+  padding: 48px 18px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
-.home-category-swipe-track {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+.become-a-brand-btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 12px 32px;
+  background: #111;
+  color: #fff;
+  border-radius: 24px;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s;
 }
-.home-category-swipe-track::-webkit-scrollbar { display: none; }
-.home-category-swipe-slide {
-  flex: 0 0 100%;
-  scroll-snap-align: start;
-  cursor: pointer;
-}
-.home-category-swipe-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 6px;
-}
+.become-a-brand-btn:hover { background: #333; }
+
