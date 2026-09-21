@@ -39,7 +39,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
    to it.
    ============================================================ */
 #homepage-newsletter-section {
-  background: #111;
+  background: white;
 }
 .newsletter-section {
   padding: 48px 18px 24px;
@@ -52,7 +52,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   font-weight: 300;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #f4f4f4;
+  color: black;
   text-align: center;
   margin: 0 0 16px 0;
 }
@@ -62,7 +62,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
   font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: black;
   text-align: center;
   margin: 0 0 24px 0;
 }
