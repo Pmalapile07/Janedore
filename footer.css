@@ -2,25 +2,25 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
 .footer-top { display: flex; flex-direction: column; gap: 0; margin-bottom: 40px; }
 .footer-collapse { border-bottom: none; }
-.footer-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; cursor: pointer; user-select: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; }
+.footer-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; cursor: pointer; user-select: none; font-family: 'DM Sans', 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.1em; font-weight: 500; text-transform: uppercase; color: #111; }
 .footer-collapse-header svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 1.5; transition: transform 0.3s; }
 .footer-collapse.open .footer-collapse-header svg { transform: rotate(45deg); }
 .footer-collapse-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease; }
 .footer-collapse.open .footer-collapse-body { max-height: 400px; padding-bottom: 18px; }
 .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-.footer-links li a { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; transition: color 0.2s; cursor: pointer; }
+.footer-links li a { font-family: 'DM Sans', 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.1em; font-weight: 500; text-transform: uppercase; color: #888; transition: color 0.2s; cursor: pointer; }
 .footer-links li a:hover { color: #111; }
 .footer-about { font-size: var(--body-font-size); font-weight: var(--body-font-weight); line-height: var(--body-line-height); letter-spacing: var(--body-letter-spacing); color: #888; max-width: 480px; margin: 0 auto 28px; text-align: center; }
 .footer-currency-lang { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; position: relative; }
-.footer-currency, .footer-lang { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: color 0.2s; position: relative; }
+.footer-currency, .footer-lang { font-family: 'DM Sans', 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.1em; font-weight: 500; text-transform: uppercase; color: #888; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: color 0.2s; position: relative; }
 .footer-currency:hover, .footer-lang:hover { color: #111; }
 .footer-currency svg, .footer-lang svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 .currency-dropdown, .lang-dropdown { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #ddd; padding: 8px 0; min-width: 120px; display: none; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
 .currency-dropdown.open, .lang-dropdown.open { display: block; }
-.dropdown-option { padding: 8px 16px; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; cursor: pointer; transition: background 0.2s, color 0.2s; white-space: nowrap; }
+.dropdown-option { padding: 8px 16px; font-family: 'DM Sans', 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.1em; font-weight: 500; text-transform: uppercase; color: #888; cursor: pointer; transition: background 0.2s, color 0.2s; white-space: nowrap; }
 .dropdown-option:hover { background: #f5f5f5; color: #111; }
 .footer-bottom { padding-top: 24px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 16px; border-top: none; }
-.footer-copy { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; text-align: center; }
+.footer-copy { font-family: 'DM Sans', 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.1em; font-weight: 500; text-transform: uppercase; color: #888; text-align: center; }
 .brand-quote {
   font-size: var(--body-font-size); font-weight: var(--body-font-weight);
   line-height: var(--body-line-height); letter-spacing: var(--body-letter-spacing);
@@ -30,51 +30,51 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 /* ============================================================
    HOMEPAGE NEWSLETTER — everything for the "Sign up for Janedore
    updates" section lives here together: the wrapper, the label,
-   the big heading, the form, and the disclaimer. One block, one
-   file, normal class names — .newsletter-heading/.newsletter-sub
-   belong to this component only, nothing borrowed from elsewhere.
+   the heading, the form, and the disclaimer. One block, one file.
+
+   Deliberately quiet now, matching the rest of the site (white bg,
+   black text, thin 0.5px borders, small uppercase labels) instead of
+   a standalone black box — the black-box version was the one thing on
+   the page not speaking the same visual language as everywhere else.
    #homepage-newsletter-section sits as a sibling to <footer> in
-   index.html (not nested inside it), so it needs its own explicit
-   black background — footer's own background:#111 doesn't cascade
-   to it.
+   index.html (not nested inside it) but no longer needs its own
+   background override now that it's white like the footer beneath it.
    ============================================================ */
-#homepage-newsletter-section {
-  background: white;
-}
 .newsletter-section {
   padding: 48px 18px 24px;
   max-width: 500px;
   margin: 0 auto;
 }
 .newsletter-sub {
-  font-family: 'inter', 'Manrope', sans-serif;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: black;
+  color: #111;
   text-align: center;
   margin: 0 0 16px 0;
 }
 .newsletter-heading {
   font-family: 'Inter', sans-serif;
   font-size: 15px;
-  font-weight: 400 !important;
+  font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.01em;
-  color: black;
+  color: #111;
   text-align: center;
   margin: 0 0 24px 0;
 }
 .newsletter-form {
   display: flex;
   align-items: center;
-  background: #f4f4f2;
+  background: transparent;
+  border: 0.5px solid #ddd;
   border-radius: 24px;
   padding: 4px 4px 4px 18px;
-  transition: background 0.2s;
+  transition: border-color 0.2s;
 }
-.newsletter-form:focus-within { background: #eeeeec; }
+.newsletter-form:focus-within { border-color: #111; }
 .newsletter-input {
   flex: 1;
   border: none;
@@ -107,7 +107,7 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 .newsletter-btn:hover { background: #333; }
 .newsletter-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 .newsletter-disclaimer {
-  font-size: 10px; font-weight: var(--body-font-weight); color: #f4f4f4;
+  font-size: 10px; font-weight: var(--body-font-weight); color: #888;
   text-align: center; margin-top: 10px; font-family: 'Manrope', sans-serif;
   letter-spacing: var(--body-letter-spacing);
 }
@@ -118,5 +118,4 @@ footer { background: #fff; color: #111; padding: 60px 12px 32px; max-width: 1400
 /* .newsletter-title kept below, unused by this section now (replaced by
    .newsletter-sub/.newsletter-heading above) — left in place only in
    case footer.js's own markup elsewhere on the site still uses it. */
-.newsletter-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #fff; margin-bottom: 16px; text-align: center; }
-
+.newsletter-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 16px; text-align: center; }
