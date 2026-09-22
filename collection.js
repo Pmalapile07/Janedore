@@ -1,7 +1,14 @@
+// Canonical formatPrice — the only one left after removing the dead
+// duplicate that used to live in product-detail.js (same function name,
+// this one wins since collection.js loads after it). Merged in that
+// duplicate's currency-symbol-switching (via S.currency/CURRENCIES),
+// which had never actually run before now — number formatting itself
+// (comma-grouped, no decimals) is unchanged from what's already live.
 function formatPrice(price) {
   const n = Number(price);
   const safe = Number.isFinite(n) ? n : 0;
-  return 'R' + safe.toLocaleString('en-US');
+  const symbol = (typeof CURRENCIES !== 'undefined' && CURRENCIES[S.currency]?.symbol) || 'R';
+  return symbol + safe.toLocaleString('en-US');
 }
 
 function hasSalePrice(p) {
