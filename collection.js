@@ -403,11 +403,23 @@ function productCard(p, isLarge, showDetails, variantIndex) {
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
 
-  const metaRow = showDetails !== false ? `${brand}${name}${price}` : brand;
+  // Brand + price share one row via the existing .product-meta-row class
+  // (already built for this — space-between, price pushed to the far
+  // right — it just wasn't wired into card markup before). Title sits
+  // below; swatches (when there's more than one color) below that, via
+  // the existing .product-variant-dots class + variantSwatchesHtml()
+  // from product-detail.js. data-product-id is required on the card now —
+  // selectVariant() targets it to swap the card's image on swatch click.
+  const swatches = (p.variants && p.variants.length > 1)
+    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
+    : '';
+  const metaRow = showDetails !== false
+    ? `<div class="product-meta-row">${brand}${price}</div>${name}${swatches}`
+    : brand;
   const pid = escapeJSString(p.id);
 
   return `
-    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
+    <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
       ${metaRow}
     </div>`;
@@ -650,12 +662,20 @@ function productCardHome(p) {
   const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
+  // Same .product-meta-row / .product-variant-dots restructure as
+  // productCard() above — brand+price on one line, swatches below the
+  // title when there's more than one color. data-product-id required
+  // for selectVariant() to find and update this card on swatch click.
+  const brandHtml = `<div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>`;
+  const swatches = (p.variants && p.variants.length > 1)
+    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
+    : '';
   return `
-    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
+    <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
-      <div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>
+      <div class="product-meta-row">${brandHtml}${price}</div>
       <div class="product-title">${escapeHTML(p.name)}</div>
-      ${price}
+      ${swatches}
     </div>`;
 }
 
