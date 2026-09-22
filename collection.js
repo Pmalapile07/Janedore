@@ -637,11 +637,18 @@ function productCardHome(p) {
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
+  // Same price markup/classes as productCard() above, so homepage cards
+  // match collection/category page cards exactly — reuses formatPrice()/
+  // hasSalePrice() already defined in this file.
+  const price = hasSalePrice(p)
+    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
+    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
       <div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>
       <div class="product-title">${escapeHTML(p.name)}</div>
+      ${price}
     </div>`;
 }
 
