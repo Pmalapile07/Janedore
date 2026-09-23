@@ -154,7 +154,7 @@
 
 .product-card .product-brand,
 .product-card .product-brand-tag {
-  font-weight: 900;
+  font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -165,7 +165,7 @@
 .product-card .product-name {
   font-weight: 400;
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   color: #000;
   padding-top: 8px;
@@ -186,7 +186,7 @@
 
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 900;
+  font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -210,8 +210,8 @@
 }
 
 .variant-swatch {
-  width: 8px !important;
-  height: 8px !important;
+  width: 11px !important;
+  height: 11px !important;
   display: inline-block;
   flex-shrink: 0;
   cursor: pointer;
@@ -240,7 +240,7 @@
   display: inline-flex;
   align-items: center;
   color: #111;
-  font-size: 16px;
+  font-size: 16px !important;
   line-height: 1;
   flex-shrink: 0;
 }
