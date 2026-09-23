@@ -421,7 +421,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded');this.closest('.product-img-wrap')?.classList.add('img-wrap-loaded')"></div>
       ${detailRows}
     </div>`;
 }
@@ -658,29 +658,28 @@ function productCardHome(p) {
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
 
-  // Row 1: brand (left) + wishlist bookmark toggle (far right), same
-  // line — matches productCard() above exactly.
+  // Row 1: product name (left, in place of brand) + wishlist bookmark
+  // (far right) — matches productCard() above exactly. Scoped CSS
+  // (.product-meta-row .product-title) makes it bold 500.
   const isWished = S.wishlist.some(w => w.id === p.id);
   const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const metaRow = `<div class="product-meta-row"><div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>${wishBtn}</div>`;
+  const nameRow = `<div class="product-meta-row"><div class="product-title">${escapeHTML(p.name)}</div>${wishBtn}</div>`;
 
-  // Row 3: price (same markup as productCard() above).
+  // Row 2: price (grey, left) + swatches (right, only when more than
+  // one color) — same markup/scoping as productCard() above.
   const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-
-  // Row 4: swatches (only when there's more than one color).
   const swatches = (p.variants && p.variants.length > 1)
     ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
     : '';
+  const priceRow = `<div class="product-meta-row">${price}${swatches}</div>`;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
-      ${metaRow}
-      <div class="product-title">${escapeHTML(p.name)}</div>
-      ${price}
-      ${swatches}
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded');this.closest('.product-img-wrap')?.classList.add('img-wrap-loaded')"></div>
+      ${nameRow}
+      ${priceRow}
     </div>`;
 }
 
