@@ -444,9 +444,9 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '<div class="product-brand"></div>';
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   
-  const price = hasSalePrice(p)
-    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
-    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
+  const priceInner = hasSalePrice(p)
+    ? `<span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span>`
+    : `<span class="product-price">${formatPrice(p.price)}</span>`;
 
   const pid = escapeJSString(p.id);
   // Wishlist bookmark now sits on the SAME row as the brand name, far
@@ -458,8 +458,12 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const brandRow = `<div class="product-brand-row">${brand}${wishBtn}</div>`;
 
   const swatches = variantSwatchesHtml(p, vi);
+  // Price + swatches share one row: price left, swatches far right —
+  // mirrors the brand/wishlist row above. If there are no swatches
+  // (single-variant product), the row just contains the price.
+  const priceRow = `<div class="product-price-row">${priceInner}${swatches}</div>`;
 
-  const metaRow = showDetails !== false ? `${brandRow}${name}${price}${swatches}` : brandRow;
+  const metaRow = showDetails !== false ? `${brandRow}${name}${priceRow}` : brandRow;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
@@ -702,21 +706,23 @@ function productCardHome(p) {
   // Same price markup/classes as productCard() above, so homepage cards
   // match collection/category page cards exactly — reuses formatPrice()/
   // hasSalePrice() already defined in this file.
-  const price = hasSalePrice(p)
-    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
-    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
+  const priceInner = hasSalePrice(p)
+    ? `<span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span>`
+    : `<span class="product-price">${formatPrice(p.price)}</span>`;
   const brandHtml = `<div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>`;
   const isWished = S.wishlist.some(w => w.id === p.id);
   const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
   const brandRow = `<div class="product-brand-row">${brandHtml}${wishBtn}</div>`;
   const swatches = variantSwatchesHtml(p, vi);
+  // Price + swatches share one row: price left, swatches far right —
+  // same treatment as productCard() above.
+  const priceRow = `<div class="product-price-row">${priceInner}${swatches}</div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
       ${brandRow}
       <div class="product-title">${escapeHTML(p.name)}</div>
-      ${price}
-      ${swatches}
+      ${priceRow}
     </div>`;
 }
 
