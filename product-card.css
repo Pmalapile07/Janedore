@@ -87,7 +87,7 @@
 .product-card .product-title,
 .product-card .product-name {
   font-weight: 600;
-  font-size: 11px;   /* ★★★ CHANGED — was 11px, now -2px ★★★ */
+  font-size: 11px;   
   letter-spacing: 0.04em;
   color: #555;
   margin-top: 3px;
@@ -96,7 +96,7 @@
 
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 800;   /* ★★★ CHANGED — was 400, now 800 ★★★ */
+  font-weight: 800;   
   font-size: 11px;
   letter-spacing: 0.04em;
   color: #111;
@@ -106,6 +106,34 @@
 .product-price-sale { color: #111; }
 .product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; text-transform: uppercase; }
 
+/* --- FIXED: Price & Swatch Layout --- */
+
+/* This row sits at the bottom of the card. It aligns the Price (left) 
+   and the Swatches (right) without them ever touching. */
+.product-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Pushes price left, swatches right */
+  width: 100%;
+  margin-top: 8px;
+  gap: 8px; /* Safety gap between the price and the swatch container */
+}
+
+.product-price-row .product-price {
+  margin-top: 0; /* Reset margin so it aligns perfectly with swatches */
+}
+
+/* The container for the swatches */
+.product-variant-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto; /* Forcefully pushes the swatches to the far right */
+  padding-left: 4px; /* Extra breathing room against the price */
+}
+
+/* Meta row for Brand / other details */
 .product-meta-row {
   display: flex;
   align-items: baseline;
@@ -121,13 +149,7 @@
   margin-top: 0;
 }
 
-.product-variant-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
+/* The individual swatch styling */
 .variant-swatch {
   width: 13px;
   height: 13px;
@@ -147,6 +169,8 @@
   height: 0.5px;
   background: #111;
 }
+
+/* --- End Fix --- */
 
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
