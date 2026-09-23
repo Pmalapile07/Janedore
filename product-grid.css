@@ -1,7 +1,20 @@
 /* ============================================
-   JANEDORE · STRICT LUXURY PRODUCT GRID
+   JANEDORE · PRODUCT GRID + PRODUCT CARD LAYOUT
+   ============================================
+   This file is the authoritative owner of:
+   - the grid (.product-grid and its variants)
+   - the homepage horizontal sliders (#arrivals-grid, #accessories-grid, #clothing-grid)
+   - product card structure (.product-card and its rows)
+   - card typography (.product-brand, .product-title, .product-price)
+   - the brand + wishlist row
+   - the price + swatch row
+   - the swatch itself (.variant-swatch)
+   product-card.css is intentionally stripped of any duplicated rules
+   and now only owns: image drag prevention, image slides, sold-out
+   states, badge visual style, and editorial aspect-ratio fallbacks.
    ============================================ */
 
+/* ── GRID ─────────────────────────────────────────────────── */
 .product-grid {
   display: grid;
   gap: 8px;
@@ -29,16 +42,17 @@
   .product-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid),
-   Shop by Accessories (#accessories-grid), and Shop by Clothing
-   (#clothing-grid), so all three rows always look identical. padding: 0
-   here is deliberate and explicit — these elements also carry the base
-   .product-grid class (0 8px / 10px / 12px at various breakpoints), and
-   just omitting padding here isn't enough to cancel that out, since a
-   missing property doesn't override an inherited one. Alignment comes
-   entirely from the parent <section>'s own 18px inline padding, same as
-   the section header text uses. Scoped to these three IDs only —
-   collection/category grids elsewhere are untouched. */
+/* ── HOMEPAGE HORIZONTAL SLIDERS ──────────────────────────────
+   Shared by New Arrivals (#arrivals-grid), Shop by Accessories
+   (#accessories-grid), and Shop by Clothing (#clothing-grid), so all
+   three rows always look identical. padding: 0 here is deliberate and
+   explicit — these elements also carry the base .product-grid class
+   (0 8px / 10px / 12px at various breakpoints), and just omitting
+   padding here isn't enough to cancel that out, since a missing
+   property doesn't override an inherited one. Alignment comes entirely
+   from the parent <section>'s own 18px inline padding, same as the
+   section header text uses. Scoped to these three IDs only — collection
+   /category grids elsewhere are untouched. */
 #arrivals-grid,
 #accessories-grid,
 #clothing-grid {
@@ -76,7 +90,7 @@
   }
 }
 
-/* PRODUCT CARD */
+/* ── PRODUCT CARD ──────────────────────────────────────────── */
 .product-card {
   cursor: pointer;
   display: flex;
@@ -85,7 +99,7 @@
 }
 .product-card.featured-card, .product-card.tall-card { grid-column: auto; }
 
-/* IMAGE WRAP */
+/* ── IMAGE WRAP + SHIMMER ──────────────────────────────────── */
 .product-img-wrap {
   position: relative;
   width: 100%;
@@ -119,7 +133,7 @@
   .product-img-wrap { animation: none; }
 }
 
-/* BADGES */
+/* ── BADGES ────────────────────────────────────────────────── */
 .product-badge,
 .badge-new, .badge-sale, .badge-sold, .badge-preorder {
   position: absolute;
@@ -139,11 +153,7 @@
 .badge-sold { background: #888; color: #fff; padding: 4px 8px; }
 .badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
 
-/* TEXT CONTAINER */
-
-/* Brand row: brand name on the left, wishlist bookmark on the far right,
-   on the SAME horizontal line. The row owns the 8px top rhythm so the
-   card maintains an even vertical gap between rows. */
+/* ── BRAND ROW (brand left, wishlist right, one line) ──────── */
 .product-card .product-brand-row {
   display: flex;
   align-items: center;
@@ -152,30 +162,32 @@
   padding-top: 8px;
 }
 
+/* ── CARD TYPOGRAPHY ───────────────────────────────────────── */
+
+/* Brand — matches price typography exactly (weight 900, 11px,
+   uppercase, 0.1em tracking) so brand and price are visually paired. */
 .product-card .product-brand,
 .product-card .product-brand-tag {
-  font-weight: 700;
+  font-weight: 900;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #111;
 }
 
+/* Product name — separate styling from brand/price on purpose. */
 .product-card .product-title,
 .product-card .product-name {
   font-weight: 400;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   color: #000;
   padding-top: 8px;
   line-height: 1.3;
 }
 
-/* Price row: price on the left, swatches on the far right — mirrors the
-   brand/wishlist row above. Price matches the brand typography
-   (font-weight 900, font-size 11px, letter-spacing 0.1em, uppercase).
-   The row owns the 8px top rhythm. */
+/* ── PRICE ROW (price left, swatches right, one line) ──────── */
 .product-price-row {
   display: flex;
   align-items: center;
@@ -184,9 +196,10 @@
   padding-top: 8px;
 }
 
+/* Price — matches brand typography exactly. */
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 700;
+  font-weight: 900;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -194,14 +207,24 @@
 }
 
 .product-price-sale { color: #111; }
-.product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
+.product-price-original {
+  color: #aaa;
+  text-decoration: line-through;
+  margin-left: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
 
-.product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.product-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
 
-/* Variant swatch row — sits ON the price row, opposite side (far right).
-   Swatch size matches the wishlist bookmark icon (16px box). The selected
-   underline indicator is retained (moved inward so it stays inside the
-   row height). */
+/* ── SWATCH ROW (sits inside the price row, far right) ─────── */
 .product-swatches-row {
   display: inline-flex;
   align-items: center;
@@ -209,9 +232,10 @@
   flex-shrink: 0;
 }
 
+/* Swatch — 16px to match the wishlist icon size. */
 .variant-swatch {
-  width: 11px !important;
-  height: 11px !important;
+  width: 16px;
+  height: 16px;
   display: inline-block;
   flex-shrink: 0;
   cursor: pointer;
@@ -229,8 +253,7 @@
   background: #111;
 }
 
-/* Wishlist bookmark toggle — lives on the brand row (see
-   .product-brand-row above), not as its own row. */
+/* ── WISHLIST BUTTON (sits on the brand row, far right) ────── */
 .product-wish-btn {
   background: none;
   border: none;
@@ -240,12 +263,13 @@
   display: inline-flex;
   align-items: center;
   color: #111;
-  font-size: 16px !important;
+  font-size: 16px;
   line-height: 1;
   flex-shrink: 0;
 }
 .product-wish-btn:hover { opacity: 0.7; }
 
+/* ── EDITORIAL GRID ASPECT FALLBACKS ───────────────────────── */
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
@@ -255,6 +279,7 @@
   aspect-ratio: 5 / 6;
 }
 
+/* ── VIEW-ALL BUTTON ───────────────────────────────────────── */
 .initial-drop-view-all {
   display: block;
   margin: 8px 18px 0 auto;
