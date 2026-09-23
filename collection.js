@@ -373,19 +373,64 @@ function updateGridToggleSVG(svgId, cols) {
   updateCollectionGridIcon();
 }
 
+// Returns exactly ONE entry per product — variants are NO LONGER expanded
+// into separate cards. The variantIndex carried out is the currently
+// selected variant for that product (from S.productVariantSelections),
+// falling back to 0. This keeps every existing renderer call site
+// (`expanded.map(({product, variantIndex}) => productCard(...))`) working
+// unchanged while ensuring one product = one card.
 function expandProductVariants(products) {
-  const expanded = [];
-  products.forEach(p => {
+  return products.map(p => {
     const variants = p.variants || [];
-    if (variants.length <= 1) {
-      expanded.push({ product: p, variantIndex: 0 });
-    } else {
-      variants.forEach((v, i) => {
-        expanded.push({ product: p, variantIndex: i });
-      });
-    }
+    const stored = S.productVariantSelections[p.id];
+    const vi = (typeof stored === 'number' && stored >= 0 && stored < variants.length) ? stored : 0;
+    return { product: p, variantIndex: vi };
   });
-  return expanded;
+}
+
+// Renders the swatch row for a card. Uses the same variant convention
+// already used elsewhere in this file: `p.variants[i].images.ghost[0]`
+// for the image and (if present) `variants[i].colorHex` / `variants[i].color`
+// for the swatch fill. Falls back to #ccc, matching the .variant-swatch
+// CSS default. Only rendered when a product actually has more than one
+// variant — single-variant products render no swatch row.
+function variantSwatchesHtml(p, selectedIndex) {
+  const variants = p.variants || [];
+  if (variants.length <= 1) return '';
+  const pid = escapeJSString(p.id);
+  const swatches = variants.map((v, i) => {
+    const color = (v && (v.colorHex || v.color)) || '#ccc';
+    const label = (v && (v.name || v.color)) || ('Variant ' + (i + 1));
+    const selected = i === selectedIndex ? ' selected' : '';
+    return `<span class="variant-swatch${selected}" style="background:${escapeHTML(color)}" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}" onclick="event.stopPropagation();event.preventDefault();selectVariant('${pid}', ${i}, this);"></span>`;
+  }).join('');
+  return `<div class="product-swatches-row">${swatches}</div>`;
+}
+
+// Swaps the variant inside the ALREADY-RENDERED card: updates the stored
+// selection, swaps the image, and moves the .selected underline — no
+// re-render, no navigation, no duplicate card.
+function selectVariant(productId, variantIndex, swatchEl) {
+  const p = PRODUCTS.find(x => x.id === productId);
+  if (!p) return;
+  S.productVariantSelections[productId] = variantIndex;
+
+  const card = swatchEl && swatchEl.closest ? swatchEl.closest('.product-card') : null;
+  if (card) {
+    const imgEl = card.querySelector('.product-img-wrap img');
+    if (imgEl) {
+      const imgs = p.variants?.[variantIndex]?.images;
+      const nextSrc = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+      imgEl.classList.remove('img-loaded');
+      imgEl.src = escapeHTML(nextSrc);
+    }
+    // Move the underline: only the clicked swatch keeps .selected.
+    const row = swatchEl.parentElement;
+    if (row) {
+      row.querySelectorAll('.variant-swatch.selected').forEach(el => el.classList.remove('selected'));
+    }
+    swatchEl.classList.add('selected');
+  }
 }
 
 function productCard(p, isLarge, showDetails, variantIndex) {
@@ -395,34 +440,31 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
-  const pid = escapeJSString(p.id);
-
-  // COLLECTION-PAGE EXPERIMENT: brand name removed entirely. Product
-  // name now sits where brand used to (paired with the wishlist icon,
-  // far right) — scoped CSS (.product-meta-row .product-title) makes
-  // it bold 500 instead of the default weight. productCardHome() below
-  // (homepage sliders) is untouched — this is collection pages only.
-  const isWished = S.wishlist.some(w => w.id === p.id);
-  const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const nameRow = `<div class="product-meta-row"><div class="product-title">${escapeHTML(p.name)}</div>${wishBtn}</div>`;
-
-  // Row 2: price (grey now, via the same .product-meta-row scoping) on
-  // the left, swatches on the right — swatches sized to match the
-  // wishlist icon (16px) via the same scoped CSS.
+  
+  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '<div class="product-brand"></div>';
+  const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
+  
   const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-  const swatches = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
-    : '';
-  const priceRow = `<div class="product-meta-row">${price}${swatches}</div>`;
 
-  const detailRows = showDetails !== false ? `${nameRow}${priceRow}` : nameRow;
+  const pid = escapeJSString(p.id);
+  // Wishlist bookmark now sits on the SAME row as the brand name, far
+  // right. Wired to toggleWish() (wishlist.js) via the thin wrapper
+  // toggleWishFromCard() below, which just swaps this one icon's class
+  // instead of re-rendering the whole card.
+  const isWished = S.wishlist.some(w => w.id === p.id);
+  const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
+  const brandRow = `<div class="product-brand-row">${brand}${wishBtn}</div>`;
+
+  const swatches = variantSwatchesHtml(p, vi);
+
+  const metaRow = showDetails !== false ? `${brandRow}${name}${price}${swatches}` : brandRow;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded');this.closest('.product-img-wrap')?.classList.add('img-wrap-loaded')"></div>
-      ${detailRows}
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
+      ${metaRow}
     </div>`;
 }
 
@@ -657,29 +699,24 @@ function productCardHome(p) {
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
-
-  // Row 1: product name (left, in place of brand) + wishlist bookmark
-  // (far right) — matches productCard() above exactly. Scoped CSS
-  // (.product-meta-row .product-title) makes it bold 500.
-  const isWished = S.wishlist.some(w => w.id === p.id);
-  const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const nameRow = `<div class="product-meta-row"><div class="product-title">${escapeHTML(p.name)}</div>${wishBtn}</div>`;
-
-  // Row 2: price (grey, left) + swatches (right, only when more than
-  // one color) — same markup/scoping as productCard() above.
+  // Same price markup/classes as productCard() above, so homepage cards
+  // match collection/category page cards exactly — reuses formatPrice()/
+  // hasSalePrice() already defined in this file.
   const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-  const swatches = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
-    : '';
-  const priceRow = `<div class="product-meta-row">${price}${swatches}</div>`;
-
+  const brandHtml = `<div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>`;
+  const isWished = S.wishlist.some(w => w.id === p.id);
+  const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
+  const brandRow = `<div class="product-brand-row">${brandHtml}${wishBtn}</div>`;
+  const swatches = variantSwatchesHtml(p, vi);
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded');this.closest('.product-img-wrap')?.classList.add('img-wrap-loaded')"></div>
-      ${nameRow}
-      ${priceRow}
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
+      ${brandRow}
+      <div class="product-title">${escapeHTML(p.name)}</div>
+      ${price}
+      ${swatches}
     </div>`;
 }
 
@@ -693,7 +730,7 @@ function toggleWishFromCard(productId, iconEl) {
   if (iconEl) iconEl.className = isWished ? 'ph-fill ph-bookmark-simple' : 'ph-light ph-bookmark-simple';
 }
 
-function buildArrivals() { const track = document.getElementById('arrivals-track'); if(track) { const active = PRODUCTS.filter(p=>p.status==='active'); track.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildShopByClothing(); buildNewsletterSection(); }
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildShopByClothing(); buildNewsletterSection(); }
 
 // Homepage "Shop by Accessories" row — same horizontal-slider treatment
 // and card markup as New Arrivals (productCardHome), just filtered to
@@ -701,20 +738,18 @@ function buildArrivals() { const track = document.getElementById('arrivals-track
 // category page shows (leather pouch excluded here too, consistent with
 // getCatFilteredProducts' handling of that item).
 function buildShopByAccessories() {
-  const track = document.getElementById('accessories-track');
-  if (!track) return;
+  if (!DOM.accessoriesGrid) return;
   const accessories = PRODUCTS.filter(p => p.status === 'active' && ACCESSORY_CATEGORIES.includes(p.category));
-  track.innerHTML = merchandiseProducts(accessories).slice(0, 8).map(p => productCardHome(p)).join('');
+  DOM.accessoriesGrid.innerHTML = merchandiseProducts(accessories).slice(0, 8).map(p => productCardHome(p)).join('');
 }
 
 // Homepage "Shop by Clothing" row — same pattern as buildShopByAccessories()
 // above, filtered to CLOTHING_CATEGORIES instead, matching the
 // "all-clothing" category page's product set.
 function buildShopByClothing() {
-  const track = document.getElementById('clothing-track');
-  if (!track) return;
+  if (!DOM.clothingGrid) return;
   const clothing = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
-  track.innerHTML = merchandiseProducts(clothing).slice(0, 8).map(p => productCardHome(p)).join('');
+  DOM.clothingGrid.innerHTML = merchandiseProducts(clothing).slice(0, 8).map(p => productCardHome(p)).join('');
 }
 
 function buildNewsletterSection() {
