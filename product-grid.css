@@ -53,6 +53,7 @@
 #arrivals-grid,
 #accessories-grid,
 #clothing-grid {
+  display: block;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
