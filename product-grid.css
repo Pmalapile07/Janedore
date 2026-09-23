@@ -1,7 +1,20 @@
 /* ============================================
-   JANEDORE · STRICT LUXURY PRODUCT GRID
+   JANEDORE · PRODUCT GRID + PRODUCT CARD LAYOUT
+   ============================================
+   This file is the authoritative owner of:
+   - the grid (.product-grid and its variants)
+   - the homepage horizontal sliders (#arrivals-grid, #accessories-grid, #clothing-grid)
+   - product card structure (.product-card and its rows)
+   - card typography (.product-brand, .product-title, .product-price)
+   - the brand + wishlist row
+   - the price + swatch row
+   - the swatch itself (.variant-swatch)
+   product-card.css is intentionally stripped of any duplicated rules
+   and now only owns: image drag prevention, image slides, sold-out
+   states, badge visual style, and editorial aspect-ratio fallbacks.
    ============================================ */
 
+/* ── GRID ─────────────────────────────────────────────────── */
 .product-grid {
   display: grid;
   gap: 8px;
@@ -29,26 +42,17 @@
   .product-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid),
-   Shop by Accessories (#accessories-grid), and Shop by Clothing
-   (#clothing-grid), so all three rows always look identical. REVERTED
-   back to a single combined element (both the scroll container AND the
-   flex row at once) — the wrap/track split was my own untested idea
-   and never confirmed to fix anything; this matches the simpler,
-   single-element structure your own earlier working version used.
-   padding: 0 here is deliberate and explicit — these elements also
-   carry the base .product-grid class (0 8px / 10px / 12px at various
-   breakpoints), and just omitting padding here isn't enough to cancel
-   that out, since a missing property doesn't override an inherited
-   one. Alignment comes entirely from the parent <section>'s own 18px
-   inline padding, same as the section header text uses. Scoped to
-   these three IDs only — collection/category grids elsewhere are
-   untouched. Card widths use dvw as well as vw below — vw is
-   calculated against the browser's largest possible viewport, not its
-   current size, so on mobile it visibly resizes elements as the
-   address bar collapses/expands during scroll; older browsers without
-   dvw support simply ignore that line and keep the vw fallback
-   above it. */
+/* ── HOMEPAGE HORIZONTAL SLIDERS ──────────────────────────────
+   Shared by New Arrivals (#arrivals-grid), Shop by Accessories
+   (#accessories-grid), and Shop by Clothing (#clothing-grid), so all
+   three rows always look identical. padding: 0 here is deliberate and
+   explicit — these elements also carry the base .product-grid class
+   (0 8px / 10px / 12px at various breakpoints), and just omitting
+   padding here isn't enough to cancel that out, since a missing
+   property doesn't override an inherited one. Alignment comes entirely
+   from the parent <section>'s own 18px inline padding, same as the
+   section header text uses. Scoped to these three IDs only — collection
+   /category grids elsewhere are untouched. */
 #arrivals-grid,
 #accessories-grid,
 #clothing-grid {
@@ -66,21 +70,15 @@
 #arrivals-grid .product-card,
 #accessories-grid .product-card,
 #clothing-grid .product-card {
-  flex: 0 0 65vw;
+  flex: 0 0 auto;
   width: 65vw;
-  width: 65dvw;
   max-width: 300px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
   #accessories-grid .product-card,
-  #clothing-grid .product-card {
-    flex: 0 0 28vw;
-    width: 28vw;
-    width: 28dvw;
-    max-width: 300px;
-  }
+  #clothing-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
   #arrivals-grid,
@@ -92,7 +90,7 @@
   }
 }
 
-/* PRODUCT CARD */
+/* ── PRODUCT CARD ──────────────────────────────────────────── */
 .product-card {
   cursor: pointer;
   display: flex;
@@ -101,7 +99,7 @@
 }
 .product-card.featured-card, .product-card.tall-card { grid-column: auto; }
 
-/* IMAGE WRAP */
+/* ── IMAGE WRAP + SHIMMER ──────────────────────────────────── */
 .product-img-wrap {
   position: relative;
   width: 100%;
@@ -123,18 +121,10 @@
 /* Toggled by an inline onload handler on each <img> (see productCard()/
    productCardHome() in collection.js). While opacity is 0 the shimmer
    behind it (on .product-img-wrap itself) shows through; once loaded,
-   the image fades in and covers it. The shimmer animation itself now
-   actually stops once loaded too (see .img-wrap-loaded below) — it
-   used to keep running forever on every card, which was NOT harmless:
-   with three full slider rows on the homepage alone, that's dozens of
-   simultaneous infinite CSS animations competing for frame budget
-   during scroll, a real contributor to scroll jank. */
+   the image fades in and covers it — no extra placeholder element
+   needed, and the shimmer keeps animating harmlessly underneath. */
 .product-img-wrap img.img-loaded {
   opacity: 1;
-}
-.product-img-wrap.img-wrap-loaded {
-  animation: none;
-  background-image: none;
 }
 @keyframes product-img-shimmer {
   to { background-position-x: -200%; }
@@ -143,7 +133,7 @@
   .product-img-wrap { animation: none; }
 }
 
-/* BADGES */
+/* ── BADGES ────────────────────────────────────────────────── */
 .product-badge,
 .badge-new, .badge-sale, .badge-sold, .badge-preorder {
   position: absolute;
@@ -163,28 +153,19 @@
 .badge-sold { background: #888; color: #fff; padding: 4px 8px; }
 .badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
 
-
-/* TEXT CONTAINER */
-/* product-card.css (an older, separate file) still styles these same
-   elements and loses on every property this file also sets — except
-   margin-top, which product-card.css uses instead of the padding-top
-   this file relies on. Since those are different properties, neither
-   ever overrides the other, so product-card.css's margin-top values
-   (8px/3px/3px) were silently stacking on top of whatever spacing is
-   set here — this blanket reset closes that gap for good, regardless
-   of which row any of these three end up nested in. */
-.product-card .product-brand,
-.product-card .product-brand-tag,
-.product-card .product-title,
-.product-card .product-name,
-.product-card .product-price,
-.product-price-row .product-price {
-  margin-top: 0;
+/* ── BRAND ROW (brand left, wishlist right, one line) ──────── */
+.product-card .product-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
 }
 
-/* Brand and price now matched exactly — same weight, same letter-spacing
-   — since they sit on opposite ends of the same row (.product-meta-row)
-   and need to read as a pair. */
+/* ── CARD TYPOGRAPHY ───────────────────────────────────────── */
+
+/* Brand — matches price typography exactly (weight 900, 11px,
+   uppercase, 0.1em tracking) so brand and price are visually paired. */
 .product-card .product-brand,
 .product-card .product-brand-tag {
   font-weight: 900;
@@ -194,6 +175,7 @@
   color: #111;
 }
 
+/* Product name — separate styling from brand/price on purpose. */
 .product-card .product-title,
 .product-card .product-name {
   font-weight: 400;
@@ -205,35 +187,73 @@
   line-height: 1.3;
 }
 
+/* ── PRICE ROW (price left, swatches right, one line) ──────── */
+.product-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+/* Price — matches brand typography exactly. */
 .product-card .product-price,
 .product-price-row .product-price {
   font-weight: 900;
   font-size: 11px;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: #111;
-  padding-top: 8px;
 }
 
 .product-price-sale { color: #111; }
-.product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; text-transform: uppercase; }
-
-/* Row 1: brand (left) + wishlist bookmark (far right). Brand's own
-   padding-top is zeroed here — spacing above this whole row comes from
-   .product-meta-row's own margin-top instead, so it lines up flush with
-   the wishlist button next to it rather than sitting offset down. */
-.product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
-.product-meta-row .product-brand,
-.product-meta-row .product-brand-tag {
-  padding-top: 0;
+.product-price-original {
+  color: #aaa;
+  text-decoration: line-through;
+  margin-left: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
-/* Row 4: swatches — same 8px rhythm as everything above it. Still needed
-   for the product detail page's own "Select Color" row too
-   (.variants-row .variant-swatch) — variantSwatchesHtml() is shared. */
-.product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 8px; }
-.variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
-.variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
+.product-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
 
+/* ── SWATCH ROW (sits inside the price row, far right) ─────── */
+.product-swatches-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Swatch — 16px to match the wishlist icon size. */
+.variant-swatch {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  background: #ccc;
+  border-radius: 50%;
+}
+.variant-swatch.selected::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 0.5px;
+  background: #111;
+}
+
+/* ── WISHLIST BUTTON (sits on the brand row, far right) ────── */
 .product-wish-btn {
   background: none;
   border: none;
@@ -245,28 +265,11 @@
   color: #111;
   font-size: 16px;
   line-height: 1;
+  flex-shrink: 0;
 }
 .product-wish-btn:hover { opacity: 0.7; }
 
-/* COLLECTION-PAGE EXPERIMENT (productCard() only — productCardHome()
-   and the wishlist page reuse .product-title/.product-price/
-   .product-variant-dots unnested, so they're untouched by this): name
-   sits where brand used to (bold 500, paired with the wishlist icon),
-   price goes grey below, swatches sized to match the wishlist icon
-   (16px) and paired with price on the same row. */
-.product-meta-row .product-title {
-  font-weight: 500;
-  padding-top: 0;
-}
-.product-meta-row .product-price {
-  color: #888;
-  padding-top: 0;
-}
-.product-meta-row .product-variant-dots .variant-swatch {
-  width: 16px;
-  height: 16px;
-}
-
+/* ── EDITORIAL GRID ASPECT FALLBACKS ───────────────────────── */
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
@@ -276,6 +279,7 @@
   aspect-ratio: 5 / 6;
 }
 
+/* ── VIEW-ALL BUTTON ───────────────────────────────────────── */
 .initial-drop-view-all {
   display: block;
   margin: 8px 18px 0 auto;
