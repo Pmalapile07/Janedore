@@ -27,9 +27,16 @@
   gap: 9px;
 }
 
+/* Same fix as product-grid.css's homepage sliders — vw is calculated
+   against the browser's largest possible viewport, not its current
+   size, so on mobile it visibly resizes elements as the address bar
+   collapses/expands during scroll. dvw tracks the actual current
+   viewport instead; older browsers without dvw support simply ignore
+   that line and keep the vw fallback above it. */
 .swipe-track .product-card {
   flex: 0 0 auto;
   width: 55vw;
+  width: 55dvw;
   max-width: 310px;
   scroll-snap-align: start;
 }
@@ -37,6 +44,7 @@
 @media (min-width: 768px) {
   .swipe-track .product-card {
     width: 30vw;
+    width: 30dvw;
     max-width: 310px;
   }
 }
