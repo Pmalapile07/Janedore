@@ -107,10 +107,18 @@
 /* Toggled by an inline onload handler on each <img> (see productCard()/
    productCardHome() in collection.js). While opacity is 0 the shimmer
    behind it (on .product-img-wrap itself) shows through; once loaded,
-   the image fades in and covers it — no extra placeholder element
-   needed, and the shimmer keeps animating harmlessly underneath. */
+   the image fades in and covers it. The shimmer animation itself now
+   actually stops once loaded too (see .img-wrap-loaded below) — it
+   used to keep running forever on every card, which was NOT harmless:
+   with three full slider rows on the homepage alone, that's dozens of
+   simultaneous infinite CSS animations competing for frame budget
+   during scroll, a real contributor to scroll jank. */
 .product-img-wrap img.img-loaded {
   opacity: 1;
+}
+.product-img-wrap.img-wrap-loaded {
+  animation: none;
+  background-image: none;
 }
 @keyframes product-img-shimmer {
   to { background-position-x: -200%; }
