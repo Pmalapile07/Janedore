@@ -397,30 +397,27 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
 
-  // Row 1: brand (left) + wishlist bookmark toggle (far right), same
-  // line via .product-meta-row (flex space-between).
-  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '';
+  // COLLECTION-PAGE EXPERIMENT: brand name removed entirely. Product
+  // name now sits where brand used to (paired with the wishlist icon,
+  // far right) — scoped CSS (.product-meta-row .product-title) makes
+  // it bold 500 instead of the default weight. productCardHome() below
+  // (homepage sliders) is untouched — this is collection pages only.
   const isWished = S.wishlist.some(w => w.id === p.id);
   const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const metaRow = `<div class="product-meta-row">${brand}${wishBtn}</div>`;
+  const nameRow = `<div class="product-meta-row"><div class="product-title">${escapeHTML(p.name)}</div>${wishBtn}</div>`;
 
-  // Row 2: product name.
-  const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
-
-  // Row 3: price.
+  // Row 2: price (grey now, via the same .product-meta-row scoping) on
+  // the left, swatches on the right — swatches sized to match the
+  // wishlist icon (16px) via the same scoped CSS.
   const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-
-  // Row 4: swatches (only when there's more than one color). selectVariant()
-  // (product-detail.js) now also updates the "selected" underline on
-  // every matching card's swatches, not just the images, fixing the bug
-  // where clicking a second swatch never moved the underline off the first.
   const swatches = (p.variants && p.variants.length > 1)
     ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
     : '';
+  const priceRow = `<div class="product-meta-row">${price}${swatches}</div>`;
 
-  const detailRows = showDetails !== false ? `${metaRow}${name}${price}${swatches}` : brand;
+  const detailRows = showDetails !== false ? `${nameRow}${priceRow}` : nameRow;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
