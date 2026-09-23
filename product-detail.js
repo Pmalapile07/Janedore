@@ -48,7 +48,7 @@ function selectVariant(productId, variantIndex, evt) {
   const allImages = getAllProductImages(product, variantIndex);
 
   // Update product cards in grid
-  document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
+  document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} card.querySelectorAll('.variant-swatch').forEach((sw,i)=>sw.classList.toggle('selected', i===variantIndex)); });
 
   // Update product detail page images
   if(S.currentPage==="product-detail"){
