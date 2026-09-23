@@ -4,76 +4,163 @@
 
 .product-grid {
   display: grid;
-  gap: 9px;
-  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  grid-template-columns: 1fr;
+  padding: 0 8px;
 }
+
+@media (min-width: 640px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 10px; }
+}
+
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 0 12px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
 .product-grid.col-1 { grid-template-columns: 1fr; }
 @media (min-width: 768px) {
-  .product-grid { grid-template-columns: repeat(3, 1fr); }
   .product-grid.col-2 { grid-template-columns: repeat(2, 1fr); }
   .product-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
-#arrivals-grid {
+/* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid),
+   Shop by Accessories (#accessories-grid), and Shop by Clothing
+   (#clothing-grid), so all three rows always look identical. padding: 0
+   here is deliberate and explicit — these elements also carry the base
+   .product-grid class (0 8px / 10px / 12px at various breakpoints), and
+   just omitting padding here isn't enough to cancel that out, since a
+   missing property doesn't override an inherited one. Alignment comes
+   entirely from the parent <section>'s own 18px inline padding, same as
+   the section header text uses. Scoped to these three IDs only —
+   collection/category grids elsewhere are untouched. */
+#arrivals-grid,
+#accessories-grid,
+#clothing-grid {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  gap: 9px;
-  padding: 0 12px;
+  gap: 8px;
+  padding: 0;
   scrollbar-width: none;
 }
-#arrivals-grid::-webkit-scrollbar { display: none; }
-#arrivals-grid .product-card {
+#arrivals-grid::-webkit-scrollbar,
+#accessories-grid::-webkit-scrollbar,
+#clothing-grid::-webkit-scrollbar { display: none; }
+#arrivals-grid .product-card,
+#accessories-grid .product-card,
+#clothing-grid .product-card {
   flex: 0 0 auto;
-  width: 55vw;
-  max-width: 310px;
+  width: 65vw;
+  max-width: 300px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
-  #arrivals-grid .product-card { width: 30vw; max-width: 310px; }
+  #arrivals-grid .product-card,
+  #accessories-grid .product-card,
+  #clothing-grid .product-card { width: 28vw; max-width: 300px; }
+}
+@media (min-width: 1024px) {
+  #arrivals-grid,
+  #accessories-grid,
+  #clothing-grid {
+    justify-content: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
 }
 
+/* PRODUCT CARD */
 .product-card {
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  margin-bottom: 16px;
+  width: 100%;
 }
 .product-card.featured-card, .product-card.tall-card { grid-column: auto; }
 
+/* IMAGE WRAP */
 .product-img-wrap {
   position: relative;
-  aspect-ratio: 310 / 469;
+  width: 100%;
+  aspect-ratio: 5 / 6;
   overflow: hidden;
   background: #f0ede8;
-  width: 100%;
+  background-image: linear-gradient(110deg, #f0ede8 8%, #e8e3db 18%, #f0ede8 33%);
+  background-size: 200% 100%;
+  animation: product-img-shimmer 1.8s linear infinite;
 }
 .product-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+/* Toggled by an inline onload handler on each <img> (see productCard()/
+   productCardHome() in collection.js). While opacity is 0 the shimmer
+   behind it (on .product-img-wrap itself) shows through; once loaded,
+   the image fades in and covers it — no extra placeholder element
+   needed, and the shimmer keeps animating harmlessly underneath. */
+.product-img-wrap img.img-loaded {
+  opacity: 1;
+}
+@keyframes product-img-shimmer {
+  to { background-position-x: -200%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-img-wrap { animation: none; }
 }
 
+/* BADGES */
 .product-badge,
 .badge-new, .badge-sale, .badge-sold, .badge-preorder {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 0;
+  left: 0;
   z-index: 2;
   font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 4px 8px;
+  padding: 4px 8px !important;
   background: #111;
   color: #fff;
 }
-.badge-sale { background: #111; color: #fff; }
-.badge-sold { background: #111; color: #fff; }
-.badge-preorder { background: #111; color: #fff; }
 
+.badge-sale { background: #111; color: #fff; padding: 4px 8px; }
+.badge-sold { background: #888; color: #fff; padding: 4px 8px; }
+.badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
+
+
+/* TEXT CONTAINER */
+/* product-card.css (an older, separate file) still styles these same
+   elements and loses on every property this file also sets — except
+   margin-top, which product-card.css uses instead of the padding-top
+   this file relies on. Since those are different properties, neither
+   ever overrides the other, so product-card.css's margin-top values
+   (8px/3px/3px) were silently stacking on top of whatever spacing is
+   set here — this blanket reset closes that gap for good, regardless
+   of which row any of these three end up nested in. */
+.product-card .product-brand,
+.product-card .product-brand-tag,
+.product-card .product-title,
+.product-card .product-name,
+.product-card .product-price,
+.product-price-row .product-price {
+  margin-top: 0;
+}
+
+/* Brand and price now matched exactly — same weight, same letter-spacing
+   — since they sit on opposite ends of the same row (.product-meta-row)
+   and need to read as a pair. */
 .product-card .product-brand,
 .product-card .product-brand-tag {
   font-weight: 900;
@@ -81,71 +168,79 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #111;
-  margin-top: 8px;
 }
 
 .product-card .product-title,
 .product-card .product-name {
-  font-weight: 600;
-  font-size: 11px;   /* ★★★ CHANGED — was 11px, now -2px ★★★ */
+  font-weight: 400;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
   letter-spacing: 0.04em;
-  color: #555;
-  margin-top: 3px;
+  color: #000;
+  padding-top: 8px;
   line-height: 1.3;
 }
 
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 800;   /* ★★★ CHANGED — was 400, now 800 ★★★ */
+  font-weight: 900;
   font-size: 11px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
   color: #111;
-  margin-top: 3px;
+  padding-top: 8px;
 }
 
 .product-price-sale { color: #111; }
 .product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; text-transform: uppercase; }
 
-.product-meta-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 8px;
-}
-
+/* Row 1: brand (left) + wishlist bookmark (far right). Brand's own
+   padding-top is zeroed here — spacing above this whole row comes from
+   .product-meta-row's own margin-top instead, so it lines up flush with
+   the wishlist button next to it rather than sitting offset down. */
+.product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
 .product-meta-row .product-brand,
-.product-meta-row .product-brand-tag,
-.product-meta-row .product-price,
-.product-meta-row .product-price-row {
-  margin-top: 0;
+.product-meta-row .product-brand-tag {
+  padding-top: 0;
 }
 
-.product-variant-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
+/* Row 4: swatches — same 8px rhythm as everything above it. Still needed
+   for the product detail page's own "Select Color" row too
+   (.variants-row .variant-swatch) — variantSwatchesHtml() is shared. */
+.product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 8px; }
+.variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
+.variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
 
-.variant-swatch {
-  width: 13px;
-  height: 13px;
-  display: inline-block;
-  flex-shrink: 0;
+.product-wish-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
-  position: relative;
-  background: #ccc;
+  display: inline-flex;
+  align-items: center;
+  color: #111;
+  font-size: 16px;
+  line-height: 1;
 }
+.product-wish-btn:hover { opacity: 0.7; }
 
-.variant-swatch.selected::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  right: 0;
-  height: 0.5px;
-  background: #111;
+/* COLLECTION-PAGE EXPERIMENT (productCard() only — productCardHome()
+   and the wishlist page reuse .product-title/.product-price/
+   .product-variant-dots unnested, so they're untouched by this): name
+   sits where brand used to (bold 500, paired with the wishlist icon),
+   price goes grey below, swatches sized to match the wishlist icon
+   (16px) and paired with price on the same row. */
+.product-meta-row .product-title {
+  font-weight: 500;
+  padding-top: 0;
+}
+.product-meta-row .product-price {
+  color: #888;
+  padding-top: 0;
+}
+.product-meta-row .product-variant-dots .variant-swatch {
+  width: 16px;
+  height: 16px;
 }
 
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
@@ -154,64 +249,26 @@
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 310 / 469;
+  aspect-ratio: 5 / 6;
 }
 
-.product-img-wrap,
-.product-card-slides,
-.product-card-slide,
-.product-main-image,
-.product-thumbnail {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-}
-
-.product-img-wrap::after,
-.product-main-image::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 5;
-  pointer-events: auto;
+.initial-drop-view-all {
+  display: block;
+  margin: 8px 18px 0 auto;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   background: transparent;
+  color: #111;
+  border: none;
+  border-bottom: 1px solid #111;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.product-img-wrap,
-.product-main-image {
-  position: relative;
-}
-
-.product-card-slides {
-  display: flex;
-  width: 100%;
-  height: 100%;
-}
-.product-card-slide {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-}
-
-.product-card.sold-out .product-img-wrap img,
-.product-card.sold-out .product-card-slide {
-  opacity: 0.75;
-  filter: grayscale(35%);
-}
-.product-card.sold-out .product-brand,
-.product-card.sold-out .product-brand-tag,
-.product-card.sold-out .product-title,
-.product-card.sold-out .product-name,
-.product-card.sold-out .product-price,
-.product-card.sold-out .product-price-row .product-price {
-  opacity: 0.5;
+.initial-drop-view-all:hover {
+  opacity: 0.7;
 }
