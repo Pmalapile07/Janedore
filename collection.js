@@ -693,7 +693,7 @@ function toggleWishFromCard(productId, iconEl) {
   if (iconEl) iconEl.className = isWished ? 'ph-fill ph-bookmark-simple' : 'ph-light ph-bookmark-simple';
 }
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildShopByClothing(); buildNewsletterSection(); }
+function buildArrivals() { const track = document.getElementById('arrivals-track'); if(track) { const active = PRODUCTS.filter(p=>p.status==='active'); track.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildShopByClothing(); buildNewsletterSection(); }
 
 // Homepage "Shop by Accessories" row — same horizontal-slider treatment
 // and card markup as New Arrivals (productCardHome), just filtered to
@@ -701,18 +701,20 @@ function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter
 // category page shows (leather pouch excluded here too, consistent with
 // getCatFilteredProducts' handling of that item).
 function buildShopByAccessories() {
-  if (!DOM.accessoriesGrid) return;
+  const track = document.getElementById('accessories-track');
+  if (!track) return;
   const accessories = PRODUCTS.filter(p => p.status === 'active' && ACCESSORY_CATEGORIES.includes(p.category));
-  DOM.accessoriesGrid.innerHTML = merchandiseProducts(accessories).slice(0, 8).map(p => productCardHome(p)).join('');
+  track.innerHTML = merchandiseProducts(accessories).slice(0, 8).map(p => productCardHome(p)).join('');
 }
 
 // Homepage "Shop by Clothing" row — same pattern as buildShopByAccessories()
 // above, filtered to CLOTHING_CATEGORIES instead, matching the
 // "all-clothing" category page's product set.
 function buildShopByClothing() {
-  if (!DOM.clothingGrid) return;
+  const track = document.getElementById('clothing-track');
+  if (!track) return;
   const clothing = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
-  DOM.clothingGrid.innerHTML = merchandiseProducts(clothing).slice(0, 8).map(p => productCardHome(p)).join('');
+  track.innerHTML = merchandiseProducts(clothing).slice(0, 8).map(p => productCardHome(p)).join('');
 }
 
 function buildNewsletterSection() {
