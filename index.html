@@ -41,8 +41,7 @@
   <link rel="stylesheet" href="navigation.css">
   <link rel="stylesheet" href="hero.css">
   <link rel="stylesheet" href="home-categories.css">
-  <!-- product-card.css removed — everything it styled is now fully
-       covered (and no longer silently conflicting) by product-grid.css. -->
+  <link rel="stylesheet" href="product-card.css">
   <link rel="stylesheet" href="product-grid.css">
   <link rel="stylesheet" href="product-slider.css">
   <link rel="stylesheet" href="product-info.css">
@@ -288,7 +287,7 @@
       <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">NEW ARRIVALS</div>
       <button onclick="navigateTo('products')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
     </div>
-    <div class="product-grid" id="arrivals-grid"><div class="home-slider-track" id="arrivals-track"></div></div>
+    <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
   <section id="home-manifesto" style="padding:24px 18px;text-align:center;">
@@ -300,7 +299,7 @@
       <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY ACCESSORIES</div>
       <button onclick="navigateToCategory('all-accessories')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
     </div>
-    <div class="product-grid" id="accessories-grid"><div class="home-slider-track" id="accessories-track"></div></div>
+    <div class="product-grid" id="accessories-grid"></div>
   </section>
 
   <section id="home-shop-clothing" style="padding:24px 18px;">
@@ -308,7 +307,7 @@
       <div class="home-categories-title" style="font-weight:500 !important;font-size:11px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CLOTHING</div>
       <button onclick="navigateToCategory('all-clothing')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
     </div>
-    <div class="product-grid" id="clothing-grid"><div class="home-slider-track" id="clothing-track"></div></div>
+    <div class="product-grid" id="clothing-grid"></div>
   </section>
 
   <!-- FEATURED BRANDS — restored. Sits right after the manifesto's
@@ -322,13 +321,7 @@
     <div class="home-categories-progress" id="home-brands-progress"></div>
   </section>
 
-  <!-- NEWSLETTER — temporarily hidden, not deleted. buildNewsletterSection()
-       in collection.js already no-ops safely when this element doesn't
-       exist (DOM.homepageNewsletterSection returns null), so nothing else
-       needs to change. Uncomment to restore. -->
-  <!--
   <section id="homepage-newsletter-section"></section>
-  -->
   <footer id="main-footer"></footer>
 </div>
 
