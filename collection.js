@@ -373,64 +373,19 @@ function updateGridToggleSVG(svgId, cols) {
   updateCollectionGridIcon();
 }
 
-// Returns exactly ONE entry per product — variants are NO LONGER expanded
-// into separate cards. The variantIndex carried out is the currently
-// selected variant for that product (from S.productVariantSelections),
-// falling back to 0. This keeps every existing renderer call site
-// (`expanded.map(({product, variantIndex}) => productCard(...))`) working
-// unchanged while ensuring one product = one card.
 function expandProductVariants(products) {
-  return products.map(p => {
+  const expanded = [];
+  products.forEach(p => {
     const variants = p.variants || [];
-    const stored = S.productVariantSelections[p.id];
-    const vi = (typeof stored === 'number' && stored >= 0 && stored < variants.length) ? stored : 0;
-    return { product: p, variantIndex: vi };
+    if (variants.length <= 1) {
+      expanded.push({ product: p, variantIndex: 0 });
+    } else {
+      variants.forEach((v, i) => {
+        expanded.push({ product: p, variantIndex: i });
+      });
+    }
   });
-}
-
-// Renders the swatch row for a card. Uses the same variant convention
-// already used elsewhere in this file: `p.variants[i].images.ghost[0]`
-// for the image and (if present) `variants[i].colorHex` / `variants[i].color`
-// for the swatch fill. Falls back to #ccc, matching the .variant-swatch
-// CSS default. Only rendered when a product actually has more than one
-// variant — single-variant products render no swatch row.
-function variantSwatchesHtml(p, selectedIndex) {
-  const variants = p.variants || [];
-  if (variants.length <= 1) return '';
-  const pid = escapeJSString(p.id);
-  const swatches = variants.map((v, i) => {
-    const color = (v && (v.colorHex || v.color)) || '#ccc';
-    const label = (v && (v.name || v.color)) || ('Variant ' + (i + 1));
-    const selected = i === selectedIndex ? ' selected' : '';
-    return `<span class="variant-swatch${selected}" style="background:${escapeHTML(color)}" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}" onclick="event.stopPropagation();event.preventDefault();selectVariant('${pid}', ${i}, this);"></span>`;
-  }).join('');
-  return `<div class="product-swatches-row">${swatches}</div>`;
-}
-
-// Swaps the variant inside the ALREADY-RENDERED card: updates the stored
-// selection, swaps the image, and moves the .selected underline — no
-// re-render, no navigation, no duplicate card.
-function selectVariant(productId, variantIndex, swatchEl) {
-  const p = PRODUCTS.find(x => x.id === productId);
-  if (!p) return;
-  S.productVariantSelections[productId] = variantIndex;
-
-  const card = swatchEl && swatchEl.closest ? swatchEl.closest('.product-card') : null;
-  if (card) {
-    const imgEl = card.querySelector('.product-img-wrap img');
-    if (imgEl) {
-      const imgs = p.variants?.[variantIndex]?.images;
-      const nextSrc = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
-      imgEl.classList.remove('img-loaded');
-      imgEl.src = escapeHTML(nextSrc);
-    }
-    // Move the underline: only the clicked swatch keeps .selected.
-    const row = swatchEl.parentElement;
-    if (row) {
-      row.querySelectorAll('.variant-swatch.selected').forEach(el => el.classList.remove('selected'));
-    }
-    swatchEl.classList.add('selected');
-  }
+  return expanded;
 }
 
 function productCard(p, isLarge, showDetails, variantIndex) {
@@ -440,35 +395,37 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
-  
-  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '<div class="product-brand"></div>';
-  const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
-  
-  const priceInner = hasSalePrice(p)
-    ? `<span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span>`
-    : `<span class="product-price">${formatPrice(p.price)}</span>`;
-
   const pid = escapeJSString(p.id);
-  // Wishlist bookmark now sits on the SAME row as the brand name, far
-  // right. Wired to toggleWish() (wishlist.js) via the thin wrapper
-  // toggleWishFromCard() below, which just swaps this one icon's class
-  // instead of re-rendering the whole card.
+
+  // Row 1: brand (left) + wishlist bookmark toggle (far right), same
+  // line via .product-meta-row (flex space-between).
+  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '';
   const isWished = S.wishlist.some(w => w.id === p.id);
   const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const brandRow = `<div class="product-brand-row">${brand}${wishBtn}</div>`;
+  const metaRow = `<div class="product-meta-row">${brand}${wishBtn}</div>`;
 
-  const swatches = variantSwatchesHtml(p, vi);
-  // Price + swatches share one row: price left, swatches far right —
-  // mirrors the brand/wishlist row above. If there are no swatches
-  // (single-variant product), the row just contains the price.
-  const priceRow = `<div class="product-price-row">${priceInner}${swatches}</div>`;
+  // Row 2: product name.
+  const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
 
-  const metaRow = showDetails !== false ? `${brandRow}${name}${priceRow}` : brandRow;
+  // Row 3: price.
+  const price = hasSalePrice(p)
+    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
+    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
+
+  // Row 4: swatches (only when there's more than one color). selectVariant()
+  // (product-detail.js) now also updates the "selected" underline on
+  // every matching card's swatches, not just the images, fixing the bug
+  // where clicking a second swatch never moved the underline off the first.
+  const swatches = (p.variants && p.variants.length > 1)
+    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
+    : '';
+
+  const detailRows = showDetails !== false ? `${metaRow}${name}${price}${swatches}` : brand;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
-      ${metaRow}
+      ${detailRows}
     </div>`;
 }
 
@@ -703,26 +660,30 @@ function productCardHome(p) {
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
-  // Same price markup/classes as productCard() above, so homepage cards
-  // match collection/category page cards exactly — reuses formatPrice()/
-  // hasSalePrice() already defined in this file.
-  const priceInner = hasSalePrice(p)
-    ? `<span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span>`
-    : `<span class="product-price">${formatPrice(p.price)}</span>`;
-  const brandHtml = `<div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>`;
+
+  // Row 1: brand (left) + wishlist bookmark toggle (far right), same
+  // line — matches productCard() above exactly.
   const isWished = S.wishlist.some(w => w.id === p.id);
   const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const brandRow = `<div class="product-brand-row">${brandHtml}${wishBtn}</div>`;
-  const swatches = variantSwatchesHtml(p, vi);
-  // Price + swatches share one row: price left, swatches far right —
-  // same treatment as productCard() above.
-  const priceRow = `<div class="product-price-row">${priceInner}${swatches}</div>`;
+  const metaRow = `<div class="product-meta-row"><div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>${wishBtn}</div>`;
+
+  // Row 3: price (same markup as productCard() above).
+  const price = hasSalePrice(p)
+    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
+    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
+
+  // Row 4: swatches (only when there's more than one color).
+  const swatches = (p.variants && p.variants.length > 1)
+    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
+    : '';
+
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
-      ${brandRow}
+      ${metaRow}
       <div class="product-title">${escapeHTML(p.name)}</div>
-      ${priceRow}
+      ${price}
+      ${swatches}
     </div>`;
 }
 
