@@ -207,6 +207,25 @@
 }
 .product-wish-btn:hover { opacity: 0.7; }
 
+/* COLLECTION-PAGE EXPERIMENT (productCard() only — productCardHome()
+   and the wishlist page reuse .product-title/.product-price/
+   .product-variant-dots unnested, so they're untouched by this): name
+   sits where brand used to (bold 500, paired with the wishlist icon),
+   price goes grey below, swatches sized to match the wishlist icon
+   (16px) and paired with price on the same row. */
+.product-meta-row .product-title {
+  font-weight: 500;
+  padding-top: 0;
+}
+.product-meta-row .product-price {
+  color: #888;
+  padding-top: 0;
+}
+.product-meta-row .product-variant-dots .variant-swatch {
+  width: 16px;
+  height: 16px;
+}
+
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
