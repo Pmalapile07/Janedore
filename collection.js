@@ -403,20 +403,15 @@ function productCard(p, isLarge, showDetails, variantIndex) {
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
 
-  // Brand + price share one row via the existing .product-meta-row class
-  // (already built for this — space-between, price pushed to the far
-  // right — it just wasn't wired into card markup before). Title sits
-  // below; swatches (when there's more than one color) below that, via
-  // the existing .product-variant-dots class + variantSwatchesHtml()
-  // from product-detail.js. data-product-id is required on the card now —
-  // selectVariant() targets it to swap the card's image on swatch click.
-  const swatches = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
-    : '';
-  const metaRow = showDetails !== false
-    ? `<div class="product-meta-row">${brand}${price}</div>${name}${swatches}`
-    : brand;
   const pid = escapeJSString(p.id);
+  // Swatches removed from cards — replaced by a wishlist bookmark toggle
+  // in the same spot, wired to toggleWish() (wishlist.js) via the thin
+  // wrapper toggleWishFromCard() below, which just swaps this one icon's
+  // class instead of re-rendering the whole card.
+  const isWished = S.wishlist.some(w => w.id === p.id);
+  const wishRow = `<div class="product-wish-row"><button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button></div>`;
+
+  const metaRow = showDetails !== false ? `${brand}${name}${price}${wishRow}` : brand;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
@@ -662,21 +657,29 @@ function productCardHome(p) {
   const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-  // Same .product-meta-row / .product-variant-dots restructure as
-  // productCard() above — brand+price on one line, swatches below the
-  // title when there's more than one color. data-product-id required
-  // for selectVariant() to find and update this card on swatch click.
+  // Swatches removed — replaced by a wishlist bookmark toggle, same as
+  // productCard() above.
   const brandHtml = `<div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>`;
-  const swatches = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
-    : '';
+  const isWished = S.wishlist.some(w => w.id === p.id);
+  const wishRow = `<div class="product-wish-row"><button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button></div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')"></div>
-      <div class="product-meta-row">${brandHtml}${price}</div>
+      ${brandHtml}
       <div class="product-title">${escapeHTML(p.name)}</div>
-      ${swatches}
+      ${price}
+      ${wishRow}
     </div>`;
+}
+
+// Thin wrapper around toggleWish() (wishlist.js) for card-level bookmark
+// icons — toggles the actual wishlist state via the existing function,
+// then just swaps this one icon's class so the card it's on doesn't
+// need to be fully re-rendered.
+function toggleWishFromCard(productId, iconEl) {
+  toggleWish(productId);
+  const isWished = S.wishlist.some(w => w.id === productId);
+  if (iconEl) iconEl.className = isWished ? 'ph-fill ph-bookmark-simple' : 'ph-light ph-bookmark-simple';
 }
 
 function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildShopByClothing(); buildNewsletterSection(); }
