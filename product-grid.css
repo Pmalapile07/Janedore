@@ -180,11 +180,11 @@
    longer nested inside .product-meta-row. */
 .product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 8px; }
 .variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
-/* Card swatches only, 40% smaller (13px -> 7.8px) than the base
-   .variant-swatch size above — scoped to .product-variant-dots so the
-   product page's own "Select Color" swatches (.variants-row, a
-   different wrapper) are untouched. */
-.product-variant-dots .variant-swatch { width: 7.8px; height: 7.8px; }
+/* Card swatches only, 10% larger than the 7.8px they were shrunk to
+   (7.8 * 1.1 = 8.58) — scoped to .product-variant-dots so the product
+   page's own "Select Color" swatches (.variants-row, a different
+   wrapper) stay at the base 13px, untouched. */
+.product-variant-dots .variant-swatch { width: 8.58px; height: 8.58px; }
 .variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
 
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
