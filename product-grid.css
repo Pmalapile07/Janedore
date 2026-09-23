@@ -140,39 +140,6 @@
 .badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
 
 
-/* Restored from the now-deleted product-card.css — this was the one
-   thing in that file that WASN'T redundant. Without it, dragging a
-   finger across a product image fights the browser's native "drag
-   this image" gesture instead of cleanly scrolling the slider —
-   that's what was causing the wobble. Also covers .product-main-image/
-   .product-thumbnail, which the product detail page's own image swipe
-   (initProductSwipe() in product-detail.js) still actively uses. */
-.product-img-wrap,
-.product-card-slides,
-.product-card-slide,
-.product-main-image,
-.product-thumbnail {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-}
-.product-img-wrap::after,
-.product-main-image::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 5;
-  pointer-events: auto;
-  background: transparent;
-}
-
 /* TEXT CONTAINER */
 /* product-card.css (an older, separate file) still styles these same
    elements and loses on every property this file also sets — except
