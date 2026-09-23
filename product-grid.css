@@ -31,7 +31,13 @@
 
 /* HOMEPAGE HORIZONTAL SLIDERS — shared by New Arrivals (#arrivals-grid),
    Shop by Accessories (#accessories-grid), and Shop by Clothing
-   (#clothing-grid), so all three rows always look identical. padding: 0
+   (#clothing-grid), so all three rows always look identical. Restructured
+   to match Recently Viewed / Complete the Look's proven-stable pattern
+   exactly: the outer #arrivals-grid etc. is ONLY the scroll container
+   now (overflow-x/scroll-snap), and a separate inner .home-slider-track
+   child is the actual flex row of cards — previously one single element
+   did both jobs at once, which is the one real structural difference
+   from the sections that were never reported as unstable. padding: 0
    here is deliberate and explicit — these elements also carry the base
    .product-grid class (0 8px / 10px / 12px at various breakpoints), and
    just omitting padding here isn't enough to cancel that out, since a
@@ -42,27 +48,25 @@
    dvw as well as vw below — vw is calculated against the browser's
    largest possible viewport, not its current size, so on mobile it
    visibly resizes elements as the address bar collapses/expands during
-   scroll. dvw tracks the actual current viewport instead, which is
-   what was causing the card-wobble during scrolling; older browsers
-   that don't support dvw simply ignore that line and keep the vw
-   fallback above it. */
+   scroll; older browsers that don't support dvw simply ignore that
+   line and keep the vw fallback above it. */
 #arrivals-grid,
 #accessories-grid,
 #clothing-grid {
-  display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  gap: 8px;
   padding: 0;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar,
 #accessories-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar { display: none; }
-#arrivals-grid .product-card,
-#accessories-grid .product-card,
-#clothing-grid .product-card {
+.home-slider-track {
+  display: flex;
+  gap: 8px;
+}
+.home-slider-track .product-card {
   flex: 0 0 auto;
   width: 65vw;
   width: 65dvw;
@@ -70,9 +74,7 @@
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
-  #arrivals-grid .product-card,
-  #accessories-grid .product-card,
-  #clothing-grid .product-card {
+  .home-slider-track .product-card {
     width: 28vw;
     width: 28dvw;
     max-width: 300px;
