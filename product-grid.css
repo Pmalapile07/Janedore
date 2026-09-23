@@ -92,12 +92,31 @@
   aspect-ratio: 5 / 6;
   overflow: hidden;
   background: #f0ede8;
+  background-image: linear-gradient(110deg, #f0ede8 8%, #e8e3db 18%, #f0ede8 33%);
+  background-size: 200% 100%;
+  animation: product-img-shimmer 1.8s linear infinite;
 }
 .product-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+/* Toggled by an inline onload handler on each <img> (see productCard()/
+   productCardHome() in collection.js). While opacity is 0 the shimmer
+   behind it (on .product-img-wrap itself) shows through; once loaded,
+   the image fades in and covers it — no extra placeholder element
+   needed, and the shimmer keeps animating harmlessly underneath. */
+.product-img-wrap img.img-loaded {
+  opacity: 1;
+}
+@keyframes product-img-shimmer {
+  to { background-position-x: -200%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-img-wrap { animation: none; }
 }
 
 /* BADGES */
@@ -139,7 +158,7 @@
   font-size: 12px;
   letter-spacing: 0.04em;
   color: #000;
-  padding-top: 2px;
+  padding-top: 8px;
   line-height: 1.3;
 }
 
@@ -156,8 +175,16 @@
 .product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; text-transform: uppercase; }
 
 .product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
-.product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+/* Standalone row below the title (see productCard()/productCardHome()
+   in collection.js) — needs its own top margin now, since it's no
+   longer nested inside .product-meta-row. */
+.product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 8px; }
 .variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
+/* Card swatches only, 40% smaller (13px -> 7.8px) than the base
+   .variant-swatch size above — scoped to .product-variant-dots so the
+   product page's own "Select Color" swatches (.variants-row, a
+   different wrapper) are untouched. */
+.product-variant-dots .variant-swatch { width: 7.8px; height: 7.8px; }
 .variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
 
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
