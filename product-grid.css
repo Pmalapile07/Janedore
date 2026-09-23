@@ -141,6 +141,23 @@
 
 
 /* TEXT CONTAINER */
+/* product-card.css (an older, separate file) still styles these same
+   elements and loses on every property this file also sets — except
+   margin-top, which product-card.css uses instead of the padding-top
+   this file relies on. Since those are different properties, neither
+   ever overrides the other, so product-card.css's margin-top values
+   (8px/3px/3px) were silently stacking on top of whatever spacing is
+   set here — this blanket reset closes that gap for good, regardless
+   of which row any of these three end up nested in. */
+.product-card .product-brand,
+.product-card .product-brand-tag,
+.product-card .product-title,
+.product-card .product-name,
+.product-card .product-price,
+.product-price-row .product-price {
+  margin-top: 0;
+}
+
 /* Brand and price now matched exactly — same weight, same letter-spacing
    — since they sit on opposite ends of the same row (.product-meta-row)
    and need to read as a pair. */
