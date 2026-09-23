@@ -38,7 +38,14 @@
    missing property doesn't override an inherited one. Alignment comes
    entirely from the parent <section>'s own 18px inline padding, same as
    the section header text uses. Scoped to these three IDs only —
-   collection/category grids elsewhere are untouched. */
+   collection/category grids elsewhere are untouched. Card widths use
+   dvw as well as vw below — vw is calculated against the browser's
+   largest possible viewport, not its current size, so on mobile it
+   visibly resizes elements as the address bar collapses/expands during
+   scroll. dvw tracks the actual current viewport instead, which is
+   what was causing the card-wobble during scrolling; older browsers
+   that don't support dvw simply ignore that line and keep the vw
+   fallback above it. */
 #arrivals-grid,
 #accessories-grid,
 #clothing-grid {
@@ -58,13 +65,18 @@
 #clothing-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
+  width: 65dvw;
   max-width: 300px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
   #accessories-grid .product-card,
-  #clothing-grid .product-card { width: 28vw; max-width: 300px; }
+  #clothing-grid .product-card {
+    width: 28vw;
+    width: 28dvw;
+    max-width: 300px;
+  }
 }
 @media (min-width: 1024px) {
   #arrivals-grid,
