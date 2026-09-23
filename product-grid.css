@@ -139,8 +139,20 @@
 .badge-sold { background: #888; color: #fff; padding: 4px 8px; }
 .badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
 
-
 /* TEXT CONTAINER */
+
+/* Brand row: brand name on the left, wishlist bookmark on the far right,
+   on the SAME horizontal line. The brand's own padding-top is removed
+   here since the row itself owns the 8px top rhythm — the wishlist button
+   is inline-flex and centered so it sits level with the brand text. */
+.product-card .product-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+}
+
 .product-card .product-brand,
 .product-card .product-brand-tag {
   font-weight: 900;
@@ -148,7 +160,6 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #111;
-  padding-top: 8px;
 }
 
 .product-card .product-title,
@@ -162,30 +173,42 @@
   line-height: 1.3;
 }
 
+/* Price matches the brand typography (font-weight 900, font-size 11px,
+   letter-spacing 0.1em, uppercase) — only the top padding comes from
+   the same 8px rhythm as every other row in the card. */
 .product-card .product-price,
 .product-price-row .product-price {
-  font-weight: 800;
+  font-weight: 900;
   font-size: 11px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: #111;
   padding-top: 8px;
 }
 
 .product-price-sale { color: #111; }
-.product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; text-transform: uppercase; }
+.product-price-original { color: #aaa; text-decoration: line-through; margin-left: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
 
 .product-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
 
-/* Still needed for the product detail page's own "Select Color" swatch
-   row (.variants-row .variant-swatch) — variantSwatchesHtml() is still
-   used there, just no longer on cards. */
+/* Variant swatch row — sits underneath the price, on the same 8px
+   vertical rhythm as the rows above it. Swatch visuals and the
+   selected-underline indicator are unchanged from the existing
+   .variant-swatch rules below. */
+.product-swatches-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+
 .variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
 .variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
 
-/* Wishlist bookmark toggle — sits where card swatches used to (see
-   productCard()/productCardHome() in collection.js), same 8px rhythm
-   as brand/title/price above it for even spacing throughout the card. */
-.product-wish-row { margin-top: 8px; }
+/* Wishlist bookmark toggle — now lives on the brand row (see
+   .product-brand-row above), not as its own row. Typography of the brand
+   is untouched; only the button's own inline box is defined here. */
 .product-wish-btn {
   background: none;
   border: none;
@@ -197,6 +220,7 @@
   color: #111;
   font-size: 16px;
   line-height: 1;
+  flex-shrink: 0;
 }
 .product-wish-btn:hover { opacity: 0.7; }
 
