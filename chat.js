@@ -307,19 +307,33 @@ function waitForAIBridge(maxWaitMs = 8000) {
 }
 
 // ==================== AUTH ====================
+// ensureAuth() is called independently from page load, opening the chat
+// widget, and sending a message. Without a shared in-flight guard, two of
+// those calls landing close together (e.g. opening chat right after page
+// load) would each see no currentUser yet and each call
+// signInAnonymously() — creating two separate anonymous accounts, with
+// whichever resolves last silently winning. Any write already made under
+// the abandoned uid (like a session's ownerId) then mismatches every
+// later read/write under the surviving uid. _authInFlight makes
+// concurrent callers share one sign-in attempt instead.
+let _authInFlight = null;
 async function ensureAuth() {
-  try {
-    if (firebase.auth().currentUser) {
-      _ScreenDebug.ok('AUTH', 'Already signed in: ' + firebase.auth().currentUser.uid.slice(0, 12));
-      return firebase.auth().currentUser;
-    }
-    const result = await firebase.auth().signInAnonymously();
-    _ScreenDebug.ok('AUTH', 'Anonymous sign-in OK: ' + result.user.uid.slice(0, 12));
-    return result.user;
-  } catch (e) {
-    _ScreenDebug.err('AUTH', 'Sign-in FAILED: ' + (e.code || '') + ' ' + e.message);
-    return null;
+  if (firebase.auth().currentUser) {
+    _ScreenDebug.ok('AUTH', 'Already signed in: ' + firebase.auth().currentUser.uid.slice(0, 12));
+    return firebase.auth().currentUser;
   }
+  if (_authInFlight) return _authInFlight;
+  _authInFlight = firebase.auth().signInAnonymously()
+    .then(result => {
+      _ScreenDebug.ok('AUTH', 'Anonymous sign-in OK: ' + result.user.uid.slice(0, 12));
+      return result.user;
+    })
+    .catch(e => {
+      _ScreenDebug.err('AUTH', 'Sign-in FAILED: ' + (e.code || '') + ' ' + e.message);
+      return null;
+    })
+    .finally(() => { _authInFlight = null; });
+  return _authInFlight;
 }
 
 // ==================== DETACH LISTENERS ====================
