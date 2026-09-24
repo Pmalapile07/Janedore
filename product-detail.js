@@ -1,9 +1,5 @@
 function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
-// formatPrice removed from here — collection.js's version is canonical
-// (it always won the naming collision anyway, since collection.js loads
-// after this file; see productCardHome/productCard below for the same
-// situation). Currency-symbol switching this version used to have has
-// been merged into collection.js's formatPrice().
+function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toFixed(2)}`; }
 function isProductSoldOut(product) { return (product?.stock??0)<=0; }
 function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; }
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
@@ -112,11 +108,23 @@ function changeQuantity(delta) {
   if (el) el.textContent = S.productQuantity;
 }
 
-// productCard() removed from here — same collision as productCardHome
-// below. collection.js's productCard(p, isLarge, showDetails, variantIndex)
-// is canonical; nothing in this file called this version directly, so
-// removing it changes no behavior (collection.js's was already the one
-// actually running anywhere it mattered).
+function productCard(product, compactMode=false, isCollectionPage=false) {
+  if(!product) return ''; if(isCollectionPage && product.id === 'janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return '';
+  const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
+  const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
+  const badgeLabel = getBadgeLabel(product); const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
+  const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+  const soldOutClass = isProductSoldOut(product) ? ' sold-out' : ''; const nameClass = isCollectionPage ? ' collection-name' : ''; const displayName = isCollectionPage ? truncateName(product.name) : (product.name || '');
+  return `<div class="product-card${soldOutClass}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')"><div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')"><div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>${barsHtml}${badgeHtml}</div>${compactMode ? '' : `<div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div></div></div><div class="product-name${nameClass}">${displayName}</div>`}</div>`;
+}
+
+function productCardHome(product) {
+  if(!product) return ''; const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
+  const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
+  const badgeLabel = getBadgeLabel(product); const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
+  const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+  return `<div class="product-card${isProductSoldOut(product)?' sold-out':''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')"><div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')"><div class="product-card-slides" id="card-slides-home-${product.id}">${slidesHtml}</div>${barsHtml}${badgeHtml}</div><div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div></div></div><div class="product-name collection-name">${truncateName(product.name)}</div></div>`;
+}
 
 function cardTouchStart(e, productId) { S.cardTouchStartX[productId] = e.touches[0].clientX; }
 function cardTouchEnd(e, productId) {
@@ -156,33 +164,21 @@ function getCompleteLookProducts(currentProduct) {
 
 /* ============================================================
    SWIPE SECTION — Recently Viewed / You May Also Like / Complete the Look
-   Cards use collection.js's productCardHome() (the canonical one —
-   see note where productCardHome used to be defined below), so ratio,
-   size, price and behavior are identical to New Arrivals / Bestsellers.
    ============================================================ */
 
 function buildSwipeSection(title, products, containerId) {
   const id = containerId || `swipe-${Date.now()}`;
   const cards = products.map(p => buildSwipeCardInner(p)).join('');
 
-  // Uses native browser scroll + scroll-snap — the same mechanism
-  // #arrivals-grid (New Arrivals / Bestsellers) already uses. The old
-  // custom drag system (swipeTouchStart/swipeTouchEnd/swipeMouseDown/
-  // goSwipe) called functions that were never defined anywhere in the
-  // codebase, which is why swiping felt stuck. Native scroll needs no
-  // JS at all, so there's nothing left to break.
   return `<div class="swipe-section">
     <div class="swipe-section-title">${title}</div>
     <div class="swipe-track-wrap" id="wrap-${id}">
-      <div class="swipe-track" id="track-${id}">${cards}</div>
+      <div class="swipe-track" id="track-${id}" ontouchstart="swipeTouchStart(event,'${id}')" ontouchend="swipeTouchEnd(event,'${id}')" onmousedown="swipeMouseDown(event,'${id}')">${cards}</div>
     </div>
+    <div class="swipe-bars" id="bars-${id}"></div>
   </div>`;
 }
 
-/* Delegates to productCardHome() — now sourced solely from collection.js
-   (this file's own former copy of that function is gone; it never
-   actually ran anyway, since collection.js loads after this file and
-   always won the naming collision). */
 function buildSwipeCardInner(product) {
   if (!product) return '';
   return productCardHome(product);
