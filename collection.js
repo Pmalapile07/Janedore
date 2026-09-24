@@ -1,14 +1,7 @@
-// Canonical formatPrice — the only one left after removing the dead
-// duplicate that used to live in product-detail.js (same function name,
-// this one wins since collection.js loads after it). Merged in that
-// duplicate's currency-symbol-switching (via S.currency/CURRENCIES),
-// which had never actually run before now — number formatting itself
-// (comma-grouped, no decimals) is unchanged from what's already live.
 function formatPrice(price) {
   const n = Number(price);
   const safe = Number.isFinite(n) ? n : 0;
-  const symbol = (typeof CURRENCIES !== 'undefined' && CURRENCIES[S.currency]?.symbol) || 'R';
-  return symbol + safe.toLocaleString('en-US');
+  return 'R' + safe.toLocaleString('en-US');
 }
 
 function hasSalePrice(p) {
@@ -55,14 +48,10 @@ const COLLECTION_DESCRIPTIONS = {
 const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
 
 const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
-// Accessories bundles bags, jewelry, sunglasses, and shoes into one browsable
+// Accessories bundles bags, jewelry, and sunglasses into one browsable
 // category — mirrors the exact same grouping technique CLOTHING_CATEGORIES
 // already uses below, just for a different set of categories.
-// TEMPORARY: this list is hardcoded for now to fix the homepage/nav layout.
-// The plan is to move this grouping into Firestore (admin-managed) later —
-// see conversation. When that happens, this array goes away and the JS
-// reads the grouping from the database instead.
-const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses','shoes'];
+const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses'];
 const LEATHER_POUCH_ID = 'janedore-leather-pouch';
 
 function gridTemplateFor(cols) {
@@ -395,72 +384,101 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
-  const pid = escapeJSString(p.id);
-
-  // COLLECTION-PAGE EXPERIMENT: brand name removed entirely. Product
-  // name now sits where brand used to (paired with the wishlist icon,
-  // far right) — scoped CSS (.product-meta-row .product-title) makes
-  // it bold 500 instead of the default weight. productCardHome() below
-  // (homepage sliders) is untouched — this is collection pages only.
-  const isWished = S.wishlist.some(w => w.id === p.id);
-  const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const nameRow = `<div class="product-meta-row"><div class="product-title">${escapeHTML(p.name)}</div>${wishBtn}</div>`;
-
-  // Row 2: price (grey now, via the same .product-meta-row scoping) on
-  // the left, swatches on the right — swatches sized to match the
-  // wishlist icon (16px) via the same scoped CSS.
+  
+  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '';
+  const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
+  
   const price = hasSalePrice(p)
     ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
     : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-  const swatches = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
-    : '';
-  const priceRow = `<div class="product-meta-row">${price}${swatches}</div>`;
 
-  const detailRows = showDetails !== false ? `${nameRow}${priceRow}` : nameRow;
+  const metaRow = showDetails !== false ? `${brand}${name}${price}` : brand;
+  const pid = escapeJSString(p.id);
 
   return `
-    <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded');this.closest('.product-img-wrap')?.classList.add('img-wrap-loaded')"></div>
-      ${detailRows}
+    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
+      ${metaRow}
     </div>`;
 }
 
-// ── TOOLBAR HELPERS ──────────────────────────────────────────
-// Sort dropdown + on-sale + in-stock checkboxes are injected into the existing
-// toolbar. The filter-panel HTML is built here so all three render functions
-// stay consistent.
-
-function buildSortControl() {
-  const current = S.sortBy || 'featured';
-  const options = [
-    { v: 'featured',     l: 'Featured' },
-    { v: 'best-selling', l: 'Best Selling' },
-    { v: 'price-asc',    l: 'Price: Low to High' },
-    { v: 'price-desc',   l: 'Price: High to Low' },
-    { v: 'newest',       l: 'Newest first' },
-    { v: 'oldest',       l: 'Oldest first' },
-    { v: 'name-asc',     l: 'Name: A → Z' }
-  ];
-  return `<select id="sort-by" class="filter-select sort-by-select" onchange="setSortBy(this.value)">` +
-    options.map(o => `<option value="${o.v}"${current === o.v ? ' selected' : ''}>${escapeHTML(o.l)}</option>`).join('') +
-  `</select>`;
-}
-
-function buildFilterExtras() {
-  const f = (S.currentPage === 'category') ? S.catFilter : S.filter;
-  const onSale = f.onSale ? 'checked' : '';
-  const inStock = f.inStock ? 'checked' : '';
+function productCardHome(p) {
+  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : String(p.badge).toUpperCase()) : '';
+  const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
+  const soldOut = (p.stock ?? 0) <= 0;
+  const vi = S.productVariantSelections[p.id] ?? 0;
+  const imgs = p.variants?.[vi]?.images;
+  const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+  const pid = escapeJSString(p.id);
   return `
-    <div class="filter-group">
-      <div class="filter-group-title">Availability</div>
-      <label class="filter-option"><input type="checkbox" ${onSale} onchange="applyCollectionFilter('onSale', this.checked)"> On sale only</label>
-      <label class="filter-option"><input type="checkbox" ${inStock} onchange="applyCollectionFilter('inStock', this.checked)"> In stock only</label>
-    </div>
-  `;
+    <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
+      <div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>
+      <div class="product-title">${escapeHTML(p.name)}</div>
+    </div>`;
 }
 
-// ── RENDERERS ────────────────────────────────────────────────
+function cardTouchStart(e, productId) { S.cardTouchStartX[productId] = e.touches[0].clientX; }
+function cardTouchEnd(e, productId) {
+  const startX = S.cardTouchStartX[productId];
+  if (!startX) return;
+  const diff = startX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) < 30) return;
+
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+
+  const vi = S.productVariantSelections[productId] ?? 0;
+  const allImages = getAllProductImages(product, vi);
+  const total = allImages.length;
+  const cur = S.cardSlideIndex[productId] ?? 0;
+
+  let nxt = cur;
+  if (diff > 0 && cur < total - 1) nxt = cur + 1;
+  else if (diff < 0 && cur > 0) nxt = cur - 1;
+
+  S.cardSlideIndex[productId] = nxt;
+
+  document.querySelectorAll(`#card-slides-${productId}, #card-slides-home-${productId}`).forEach(el => {
+    if (el) el.style.transform = `translateX(-${nxt * 100}%)`;
+  });
+
+  const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+  if (card) card.querySelectorAll(".card-slider-bar").forEach((d, i) =>
+    d.classList.toggle("active", i === nxt));
+}
+
+function getCompleteLookProducts(currentProduct) {
+  if (!currentProduct) return []; const active = PRODUCTS.filter(p => p.status === 'active' && p.id !== currentProduct.id); const pouch = active.find(p => p.id === 'janedore-leather-pouch'); const clothing = active.filter(p => ['dresses','tops','bottoms','jackets','sets'].includes(p.category)); const tops = clothing.filter(p => p.category === 'tops'), bottoms = clothing.filter(p => p.category === 'bottoms'); const dresses = clothing.filter(p => p.category === 'dresses'), jewelry = active.filter(p => p.category === 'jewelry'); const bags = active.filter(p => p.category === 'bags' && p.id !== 'janedore-leather-pouch'); const sunglasses = active.filter(p => p.category === 'sunglasses'), parfum = active.filter(p => p.category === 'parfum'); let s = []; const cat = currentProduct.category;
+  if (cat === 'sunglasses') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); if (s.length < 3) s = s.concat(bottoms.slice(0,1)); } else if (['tops','bottoms','dresses','jackets','sets'].includes(cat)) { if (cat === 'tops') { s = s.concat(bottoms.slice(0,1)); s = s.concat(jewelry.slice(0,1)); if (pouch) s.push(pouch); } else if (cat === 'bottoms') { s = s.concat(tops.slice(0,2)); s = s.concat(jewelry.slice(0,1)); } else if (cat === 'dresses') { s = s.concat(jewelry.slice(0,2)); } else { s = s.concat(tops.slice(0,1)); s = s.concat(bottoms.slice(0,1)); } if (s.length < 4) s = s.concat(bags.slice(0,1)); } else if (cat === 'parfum') { s = s.concat(clothing.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); } else if (cat === 'bags') { s = s.concat(jewelry.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); if (pouch && currentProduct.id !== 'janedore-leather-pouch') s.push(pouch); } else if (cat === 'jewelry') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); }
+  return [...new Set(s)].slice(0,6);
+}
+
+/* ============================================================
+   SWIPE SECTION — Recently Viewed / You May Also Like / Complete the Look
+   ============================================================ */
+
+function buildSwipeSection(title, products, containerId) {
+  const id = containerId || `swipe-${Date.now()}`;
+  const cards = products.map(p => buildSwipeCardInner(p)).join('');
+
+  return `<div class="swipe-section">
+    <div class="swipe-section-title">${title}</div>
+    <div class="swipe-track-wrap" id="wrap-${id}">
+      <div class="swipe-track" id="track-${id}" ontouchstart="swipeTouchStart(event,'${id}')" ontouchend="swipeTouchEnd(event,'${id}')" onmousedown="swipeMouseDown(event,'${id}')">${cards}</div>
+    </div>
+    <div class="swipe-bars" id="bars-${id}"></div>
+  </div>`;
+}
+
+function buildSwipeCardInner(product) {
+  if (!product) return '';
+  return productCardHome(product);
+}
+
+function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
+function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
+function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
 
 function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
@@ -521,7 +539,6 @@ function renderSaleProducts() {
   if (S.filter.inStock) {
     filtered = filtered.filter(p => (Number(p.stock) || 0) > 0);
   }
-  // On-sale toggle is inherently true on this page; no need to re-check.
 
   const sp = merchandiseProducts(filtered, undefined, S.sortBy);
   const expanded = expandProductVariants(sp); 
@@ -535,19 +552,15 @@ function renderSaleProducts() {
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
 
-// Injects the Sort dropdown into the toolbar and the On-sale/In-stock
-// checkboxes into the filter panel. Idempotent — safe to call repeatedly.
 function injectToolbarExtras(pageId, gridSvgId) {
   const page = document.getElementById(pageId);
   if (!page) return;
 
-  // Remove any previous injection to avoid duplicates.
   const oldSort = page.querySelector('.sort-by-select');
   if (oldSort) oldSort.remove();
   const oldExtras = page.querySelector('.filter-extras-injected');
   if (oldExtras) oldExtras.remove();
 
-  // Insert sort dropdown into the toolbar (before the grid toggle if present).
   const toolbar = page.querySelector('.collection-toolbar');
   if (toolbar) {
     const svg = toolbar.querySelector('#' + gridSvgId);
@@ -565,7 +578,6 @@ function injectToolbarExtras(pageId, gridSvgId) {
     }
   }
 
-  // Insert filter extras into the filter panel.
   const panel = page.querySelector('#collection-filter-options');
   if (panel) {
     const wrapper = document.createElement('div');
@@ -573,6 +585,35 @@ function injectToolbarExtras(pageId, gridSvgId) {
     wrapper.innerHTML = buildFilterExtras();
     panel.appendChild(wrapper);
   }
+}
+
+function buildSortControl() {
+  const current = S.sortBy || 'featured';
+  const options = [
+    { v: 'featured',     l: 'Featured' },
+    { v: 'best-selling', l: 'Best Selling' },
+    { v: 'price-asc',    l: 'Price: Low to High' },
+    { v: 'price-desc',   l: 'Price: High to Low' },
+    { v: 'newest',       l: 'Newest first' },
+    { v: 'oldest',       l: 'Oldest first' },
+    { v: 'name-asc',     l: 'Name: A → Z' }
+  ];
+  return `<select id="sort-by" class="filter-select sort-by-select" onchange="setSortBy(this.value)">` +
+    options.map(o => `<option value="${o.v}"${current === o.v ? ' selected' : ''}>${escapeHTML(o.l)}</option>`).join('') +
+  `</select>`;
+}
+
+function buildFilterExtras() {
+  const f = (S.currentPage === 'category') ? S.catFilter : S.filter;
+  const onSale = f.onSale ? 'checked' : '';
+  const inStock = f.inStock ? 'checked' : '';
+  return `
+    <div class="filter-group">
+      <div class="filter-group-title">Availability</div>
+      <label class="filter-option"><input type="checkbox" ${onSale} onchange="applyCollectionFilter('onSale', this.checked)"> On sale only</label>
+      <label class="filter-option"><input type="checkbox" ${inStock} onchange="applyCollectionFilter('inStock', this.checked)"> In stock only</label>
+    </div>
+  `;
 }
 
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
@@ -624,108 +665,30 @@ function selectSortTab(cat) {
   updateCollectionGridIcon();
 }
 
-// Renders the "Shop by Category" grid — a clean, static 2x2 (4 cells,
-// always visible, no swipe/slider). Beauty was dropped (no real
-// inventory behind it yet) rather than sharing a cell with Scent via a
-// swipe gesture — that pattern tested as confusing/unfamiliar, so it's
-// gone entirely now, not just for this category.
 function buildCategoriesSlider() {
-  const grid = document.getElementById('home-categories-grid');
-  const progress = document.getElementById('home-categories-progress');
-  if (!grid || !progress) return;
-
+  const grid = document.getElementById('home-categories-grid'); const progress = document.getElementById('home-categories-progress'); if (!grid || !progress) return;
   const categories = [
     { label:'Clothing', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat:'all-clothing' },
     { label:'Accessories', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat:'all-accessories' },
     { label:'Homeware', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-8985.png?v=1789390405', cat:'homeware' },
     { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
   ];
-
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
-  // The 2x2 grid never scrolls (forced by CSS), so the progress row
-  // stays empty — nothing to indicate with only 4 fixed cells.
-  progress.innerHTML = '';
+  const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
+  progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
+  if (grid._categoriesScrollHandler) {
+    grid.removeEventListener('scroll', grid._categoriesScrollHandler);
+  }
+  const scrollHandler = () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = window.innerWidth>=900?5:window.innerWidth>=640?3:2; const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); };
+  grid._categoriesScrollHandler = scrollHandler;
+  grid.addEventListener('scroll', scrollHandler, {passive:true});
 }
 
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
-function productCardHome(p) {
-  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : String(p.badge).toUpperCase()) : '';
-  const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
-  const soldOut = (p.stock ?? 0) <= 0;
-  const vi = S.productVariantSelections[p.id] ?? 0;
-  const imgs = p.variants?.[vi]?.images;
-  const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
-  const pid = escapeJSString(p.id);
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildNewsletterSection(); }
 
-  // Row 1: product name (left, in place of brand) + wishlist bookmark
-  // (far right) — matches productCard() above exactly. Scoped CSS
-  // (.product-meta-row .product-title) makes it bold 500.
-  const isWished = S.wishlist.some(w => w.id === p.id);
-  const wishBtn = `<button type="button" class="product-wish-btn" onclick="event.stopPropagation();event.preventDefault();toggleWishFromCard('${pid}', this.firstElementChild);"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
-  const nameRow = `<div class="product-meta-row"><div class="product-title">${escapeHTML(p.name)}</div>${wishBtn}</div>`;
-
-  // Row 2: price (grey, left) + swatches (right, only when more than
-  // one color) — same markup/scoping as productCard() above.
-  const price = hasSalePrice(p)
-    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
-    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
-  const swatches = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-dots">${variantSwatchesHtml(p, vi)}</div>`
-    : '';
-  const priceRow = `<div class="product-meta-row">${price}${swatches}</div>`;
-
-  return `
-    <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${pid}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded');this.closest('.product-img-wrap')?.classList.add('img-wrap-loaded')"></div>
-      ${nameRow}
-      ${priceRow}
-    </div>`;
-}
-
-// Thin wrapper around toggleWish() (wishlist.js) for card-level bookmark
-// icons — toggles the actual wishlist state via the existing function,
-// then just swaps this one icon's class so the card it's on doesn't
-// need to be fully re-rendered.
-function toggleWishFromCard(productId, iconEl) {
-  toggleWish(productId);
-  const isWished = S.wishlist.some(w => w.id === productId);
-  if (iconEl) iconEl.className = isWished ? 'ph-fill ph-bookmark-simple' : 'ph-light ph-bookmark-simple';
-}
-
-function buildArrivals() { const grid = document.getElementById('arrivals-grid'); if(grid) { const active = PRODUCTS.filter(p=>p.status==='active'); grid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildCategoriesSlider(); buildShopByAccessories(); buildShopByClothing(); buildNewsletterSection(); }
-
-// Homepage "Shop by Accessories" row — same horizontal-slider treatment
-// and card markup as New Arrivals (productCardHome), just filtered to
-// ACCESSORY_CATEGORIES. Matches the same product set the "all-accessories"
-// category page shows (leather pouch excluded here too, consistent with
-// getCatFilteredProducts' handling of that item).
-function buildShopByAccessories() {
-  const grid = document.getElementById('accessories-grid');
-  if (!grid) return;
-  const accessories = PRODUCTS.filter(p => p.status === 'active' && ACCESSORY_CATEGORIES.includes(p.category));
-  grid.innerHTML = merchandiseProducts(accessories).slice(0, 8).map(p => productCardHome(p)).join('');
-}
-
-// Homepage "Shop by Clothing" row — same pattern as buildShopByAccessories()
-// above, filtered to CLOTHING_CATEGORIES instead, matching the
-// "all-clothing" category page's product set.
-function buildShopByClothing() {
-  const grid = document.getElementById('clothing-grid');
-  if (!grid) return;
-  const clothing = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
-  grid.innerHTML = merchandiseProducts(clothing).slice(0, 8).map(p => productCardHome(p)).join('');
-}
-
-function buildNewsletterSection() {
-  if(!DOM.homepageNewsletterSection) return;
-  DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section">
-    <div class="newsletter-sub">SIGN UP FOR JANEDORE UPDATES</div>
-    <div class="newsletter-heading">Get exclusive updates on new arrivals, curated drops, and stories from independent South African brands.</div>
-    <div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>
-    <p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p>
-  </div>`;
-}
+function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">Subscribe to our newsletter</div><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
 
 // ==================== VENDOR / BRAND PAGE ====================
 
