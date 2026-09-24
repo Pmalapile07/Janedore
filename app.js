@@ -463,6 +463,17 @@ document.addEventListener('contextmenu', function(e) {
 });
 
 // Block long-press on mobile for product images
+// FIX: was { passive: false }, forcing the browser to run this JS
+// synchronously on EVERY touch anywhere on the page (and since sliders
+// are made entirely of .product-img-wrap elements, that's every touch
+// used to scroll them) before it could start the native scroll — a
+// major, well-documented cause of scroll jank. The actual
+// e.preventDefault() below only ever ran 500ms later inside the
+// setTimeout, which has no effect that late (the browser has already
+// finished processing the touch by then) — so passive:false was
+// paying full performance cost for a preventDefault() that was never
+// actually blocking anything. passive:true removes that cost with no
+// loss of real protection, since the deferred call never worked anyway.
 document.addEventListener('touchstart', function(e) {
   if (e.target.closest('.product-img-wrap') || 
       e.target.closest('.product-main-image') || 
@@ -485,7 +496,7 @@ document.addEventListener('touchstart', function(e) {
     target.addEventListener('touchend', () => clearTimeout(longPressTimer), { once: true });
     target.addEventListener('touchmove', () => clearTimeout(longPressTimer), { once: true });
   }
-}, { passive: false });
+}, { passive: true });
 
 // Prevent dragging of any background-image divs
 document.addEventListener('dragstart', function(e) {
