@@ -533,6 +533,32 @@ function clearChatSession() {
   }
 }
 
+// A stored session id (localStorage, persists indefinitely) can outlive
+// the anonymous auth identity that owns it in the database rules
+// (Firebase Auth persistence uses IndexedDB, which Safari/iOS can clear
+// far more aggressively). When that happens the rules correctly deny
+// access to the old session forever. Abandoning it for a brand-new one —
+// which no rule can reject, since it has no owner yet — lets the
+// customer keep chatting instead of getting stuck. Unlike
+// clearChatSession(), this doesn't touch auth or the customer's saved
+// name/email, since neither caused the problem.
+function startFreshChatSession() {
+  detachChatListener();
+  detachTypingListener();
+  detachStatusListener();
+  chatSessionId = 'chat-' + Date.now();
+  localStorage.setItem('janedore_chat_session', chatSessionId);
+  loadedMessageKeys.clear();
+  _satisfactionShown = false;
+  _resolvedActive = false;
+  _aiLockedUntil = 0;
+  removeResolvedBanner();
+  listenChat();
+  listenTyping();
+  listenStatus();
+  _ScreenDebug.info('RTDB', 'Started fresh session ' + chatSessionId + ' after stale-ownership rejection');
+}
+
 // ==================== AI GREETING ====================
 // Track Order button is real markup in chat-widget.html (a <template>) —
 // this clones it rather than building a button from an HTML string, so
@@ -840,6 +866,9 @@ async function loadMessages() {
     // FIX #2: clear the "Loading..." placeholder before rendering the greeting,
     // otherwise the original loading element remains stuck on screen.
     el.innerHTML = '';
+    if (e.code === 'PERMISSION_DENIED') {
+      startFreshChatSession();
+    }
     renderAIGreeting();
     return false;
   }
@@ -1229,6 +1258,9 @@ async function sendChatMessage() {
   } catch (e) {
     // FIX #19: never swallow message-write failures
     _ScreenDebug.err('SEND', 'Failed: ' + (e.code || '') + ' ' + e.message);
+    if (e.code === 'PERMISSION_DENIED') {
+      startFreshChatSession();
+    }
     alert('Failed to send message. Please try again.');
 
     const reopenPill = document.getElementById('chat-reopening-pill');
