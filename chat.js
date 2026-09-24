@@ -833,8 +833,8 @@ async function loadMessages() {
 
     _aiLockedUntil = Number(lockSnap.val()) || 0;
     if (_aiLockedUntil && Date.now() < _aiLockedUntil) {
-      const hoursLeft = ((_aiLockedUntil - Date.now()) / 3600000).toFixed(1);
-      _ScreenDebug.info('AI', 'AI still cooling down from a prior failure — ~' + hoursLeft + 'h remaining');
+      const secsLeft = Math.round((_aiLockedUntil - Date.now()) / 1000);
+      _ScreenDebug.info('AI', 'AI still cooling down from a prior failure — ~' + secsLeft + 's remaining');
     } else if (_aiLockedUntil) {
       _ScreenDebug.info('AI', 'AI cooldown has expired — AI is eligible to try again');
       _aiLockedUntil = 0;
@@ -1154,7 +1154,9 @@ async function sendChatMessage() {
     _resolvedActive = false;
 
     // FIX #14: customer message is already saved — AI failure never blocks it
-    const AI_COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12 hours
+    // TEMPORARY: shortened from 12 hours for testing — raise this back up
+    // once the AI Bridge/chat fixes are confirmed working in production.
+    const AI_COOLDOWN_MS = 60 * 1000; // 1 minute
 
     if (customerWantsTrackOrder(text)) {
       _ScreenDebug.info('SEND', 'Customer asked to track an order — showing the Track Order button locally, no AI/RTDB round-trip needed');
@@ -1188,8 +1190,8 @@ async function sendChatMessage() {
       const handoffEl = safeEl('chat-messages');
       if (handoffEl) handoffEl.scrollTop = handoffEl.scrollHeight;
     } else if (_aiLockedUntil && Date.now() < _aiLockedUntil) {
-      const hoursLeft = ((_aiLockedUntil - Date.now()) / 3600000).toFixed(1);
-      _ScreenDebug.info('SEND', 'AI cooling down after a prior failure (~' + hoursLeft + 'h left) — skipping, leaving for admin');
+      const secsLeft = Math.round((_aiLockedUntil - Date.now()) / 1000);
+      _ScreenDebug.info('SEND', 'AI cooling down after a prior failure (~' + secsLeft + 's left) — skipping, leaving for admin');
     } else {
       if (_aiLockedUntil) {
         _ScreenDebug.info('AI', 'Cooldown expired — AI is trying again');
@@ -1240,10 +1242,10 @@ async function sendChatMessage() {
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
 
-        // Failure — lock AI out for a 12h cooldown, then it's free to try again automatically
+        // Failure — lock AI out for a cooldown, then it's free to try again automatically
         _aiLockedUntil = Date.now() + AI_COOLDOWN_MS;
         rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').set(_aiLockedUntil).catch(() => {});
-        _ScreenDebug.info('AI', 'AI locked for 12h cooldown after failure');
+        _ScreenDebug.info('AI', 'AI locked for ' + Math.round(AI_COOLDOWN_MS / 1000) + 's cooldown after failure');
 
         const fallbackText = 'Thanks for reaching out. Our customer care team will get back to you shortly.';
         const fallbackRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
