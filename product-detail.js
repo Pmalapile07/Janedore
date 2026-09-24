@@ -38,7 +38,7 @@ function getAllProductImages(product, variantIndex) {
   return all.length ? all : [PLACEHOLDER_IMAGE];
 }
 
-function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
+function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();event.preventDefault();selectVariant('${product.id}',${i},event);return false;"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
 
 function selectVariant(productId, variantIndex, evt) {
   if(evt){evt.stopPropagation();evt.preventDefault();}
@@ -48,7 +48,7 @@ function selectVariant(productId, variantIndex, evt) {
   const allImages = getAllProductImages(product, variantIndex);
 
   // Update product cards in grid
-  document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} });
+  document.querySelectorAll(`.product-card[data-product-id="${productId}"]`).forEach(card=>{ const slidesEl=card.querySelector(".product-card-slides"); if(slidesEl) slidesEl.innerHTML = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsEl=card.querySelector(".card-slider-bars"); if(barsEl) barsEl.innerHTML = allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join(""); const sc=card.querySelector(".product-card-slides"); if(sc){sc.style.transform="translateX(0)"; S.cardSlideIndex[productId]=0;} card.querySelectorAll('.variant-swatch').forEach((sw,i)=>sw.classList.toggle('selected', i===variantIndex)); });
 
   // Update product detail page images
   if(S.currentPage==="product-detail"){
