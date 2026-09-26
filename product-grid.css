@@ -89,8 +89,8 @@
 .product-badge,
 .badge-new, .badge-sale, .badge-sold, .badge-preorder {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 8px;
+  left: 8px;
   z-index: 2;
   font-size: 8px;
   font-weight: 600;
