@@ -40,9 +40,42 @@
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar { display: none; }
-#arrivals-grid .product-brand,
+#arrivals-grid .product-home-meta {
+  padding: 0 18px;
+}
+#arrivals-grid .product-home-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 #arrivals-grid .product-title {
-  text-align: center;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #888;
+}
+#arrivals-grid .product-wish-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  color: #888;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+#arrivals-grid .product-brand {
+  font-weight: 800;
+  padding-top: 0;
+  margin-top: 4px;
+}
+#arrivals-grid .product-home-price {
+  font-size: 10px;
+  color: #000;
+  margin-top: 4px;
 }
 #arrivals-grid .product-card {
   flex: 0 0 auto;
