@@ -58,7 +58,44 @@ body .site-collection-layout {
   color: #888;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   padding-top: 0;
+}
+#all-products-grid .product-home-name-row,
+#category-products-grid .product-home-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: 8px;
+}
+#all-products-grid .product-wish-btn,
+#category-products-grid .product-wish-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  color: #888;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+/* Left column only (default 2-col grid: odd position = left, even =
+   right — see gridCols in app.js). Gives left-column cards the same
+   18px inset the New Arrivals row uses, so their text lines up with
+   the rest of the page instead of sitting flush at the screen edge.
+   Right-column cards, and the wishlist icon on every card, stay flush
+   with their own card's edges. If the grid is toggled to 1 or 3
+   columns this odd/even mapping no longer means "left column" —
+   not handled here, ask if that needs covering too. */
+#all-products-grid .product-card:nth-child(odd) .product-home-name-row,
+#category-products-grid .product-card:nth-child(odd) .product-home-name-row {
+  padding-left: 18px;
+}
+#all-products-grid .product-card:nth-child(odd) .product-price-row,
+#category-products-grid .product-card:nth-child(odd) .product-price-row {
+  padding-left: 18px;
 }
 #all-products-grid .product-price,
 #category-products-grid .product-price {
