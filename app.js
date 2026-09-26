@@ -43,7 +43,7 @@ const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 // and handles numeric coercion + en-US comma formatting (R1,299) safely.
 
 const S = {
-  cart:[], wishlist:[], currentPage:"home", currentCategoryPage:null, selectedSize:null, productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2, filter:{cat:"all",size:"all",vendor:null,onSale:false,inStock:false}, catFilter:{cat:"all",size:"all",vendor:null,onSale:false,inStock:false}, sortBy:"featured", campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null, currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, productInfoTab:'description', stickyExtended:false, stickyWishHidden:false, activeSortTab:null
+  cart:[], wishlist:[], currentPage:"home", currentCategoryPage:null, selectedSize:null, productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2, filter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, catFilter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, sortBy:"featured", campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null, currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, productInfoTab:'description', stickyExtended:false, stickyWishHidden:false, activeSortTab:null
 };
 
 /* ============================================================
@@ -350,7 +350,7 @@ function setNavForPage(page) {
 
 function navigateTo(page, replaceUrl) {
   closeFilterPanel();
-  S.saleMode = false; S.filter = {cat:"all", size:"all", vendor:null, onSale:false, inStock:false};
+  S.saleMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false};
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
   S.currentPage = page; window.scrollTo({top:0,behavior:"instant"}); removeStickyBar();
@@ -369,7 +369,7 @@ function navigateTo(page, replaceUrl) {
 
 function navigateToCategory(cat, replaceUrl) {
   closeFilterPanel();
-  S.saleMode = false; S.catFilter = {cat:"all", size:"all", vendor:null, onSale:false, inStock:false}; updateCollectionUrl(cat, replaceUrl);
+  S.saleMode = false; S.catFilter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCollectionUrl(cat, replaceUrl);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
   S.previousCollectionPage = cat; removeStickyBar();
@@ -383,7 +383,7 @@ function navigateToCategory(cat, replaceUrl) {
 
 function goToProduct(productId, replaceUrl) {
   closeFilterPanel();
-  S.saleMode = false; S.filter.vendor = null; closeCart();
+  S.saleMode = false; S.filter.vendor = []; closeCart();
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   updateProductUrl(product, replaceUrl);
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
@@ -400,7 +400,7 @@ function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mai
 
 function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
-function navigateToSale() { closeFilterPanel(); S.saleMode = true; S.filter = {cat:"all", size:"all", vendor:null, onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { closeFilterPanel(); S.saleMode = true; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
   closeFilterPanel();

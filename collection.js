@@ -147,8 +147,8 @@ function passesCommonFilters(p, f) {
 function getFilteredProducts() {
   return PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
-    if (S.filter.cat !== 'all' && p.category !== S.filter.cat) return false;
-    if (S.filter.vendor && p.brand !== S.filter.vendor) return false;
+    if (S.filter.cat.length && !S.filter.cat.includes(p.category)) return false;
+    if (S.filter.vendor.length && !S.filter.vendor.includes(p.brand)) return false;
     return passesCommonFilters(p, S.filter);
   });
 }
@@ -161,7 +161,7 @@ function getCatFilteredProducts() {
   return PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
     if (p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
-    if (S.catFilter.vendor && p.brand !== S.catFilter.vendor) return false;
+    if (S.catFilter.vendor.length && !S.catFilter.vendor.includes(p.brand)) return false;
 
     if (isAllClothing) {
       if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
@@ -171,24 +171,46 @@ function getCatFilteredProducts() {
       return false;
     }
 
-    // Narrow further to a specific subcategory picked in the filter panel
+    // Narrow further to specific subcategories picked in the filter panel
     // (e.g. "Tops" while browsing All Clothing) — previously ignored, so
     // picking a subcategory here had no effect on the results at all.
-    if (S.catFilter.cat && S.catFilter.cat !== 'all' && p.category !== S.catFilter.cat) return false;
+    if (S.catFilter.cat.length && !S.catFilter.cat.includes(p.category)) return false;
 
     return passesCommonFilters(p, S.catFilter);
   });
 }
 
+// Multi-brand stores (ASOS, Superbalist, COS) let shoppers pick more
+// than one value per facet — e.g. two brands at once — rather than
+// forcing an either/or choice, so category/brand are toggled in and
+// out of a list instead of being replaced by a single value.
+function toggleArrayFilter(filterObj, type, value) {
+  const arr = filterObj[type];
+  const idx = arr.indexOf(value);
+  if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+}
+
 function applyFilter(type, value) {
-  S.filter[type] = value;
+  if (type === 'cat' || type === 'vendor') toggleArrayFilter(S.filter, type, value);
+  else S.filter[type] = value;
   if (S.saleMode) renderSaleProducts();
   else renderAllProducts();
 }
 
 function applyCatFilter(type, value) {
-  S.catFilter[type] = value;
+  if (type === 'cat' || type === 'vendor') toggleArrayFilter(S.catFilter, type, value);
+  else S.catFilter[type] = value;
   renderCategoryProducts();
+}
+
+function clearAllCollectionFilters() {
+  if (S.currentPage === 'category') {
+    S.catFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
+    renderCategoryProducts();
+  } else {
+    S.filter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
+    if (S.saleMode) renderSaleProducts(); else renderAllProducts();
+  }
 }
 
 function toggleFilterDropdown(source) {
@@ -309,11 +331,19 @@ function updateCollectionTitle() {
   }
 }
 
+// Standard faceted-search behavior (ASOS, Superbalist, COS): each facet
+// is multi-select (checkboxes, OR within the facet), option counts are
+// computed against every OTHER active filter so a shopper can see what
+// picking one would actually do, and any option that would return zero
+// results is hidden outright rather than shown as a dead end.
 function buildCategoryFilterOptions() {
   const filterContainer = document.getElementById('collection-filter-categories');
   if (!filterContainer) return;
-  
+
+  const isCategoryPage = S.currentPage === 'category';
+  const f = isCategoryPage ? S.catFilter : S.filter;
   const scope = getCategoryFilterScope();
+
   let categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
   if (scope) categories = categories.filter(c => scope.includes(c));
 
@@ -324,42 +354,87 @@ function buildCategoryFilterOptions() {
     return String(a).localeCompare(String(b));
   });
 
-  const activeCat = (S.currentPage === 'category')
-    ? (S.catFilter?.cat || 'all')
-    : (S.filter?.cat || 'all');
-  
-  let html = `<label class="filter-option"><input type="radio" name="filter-cat-collection" value="all" ${activeCat === 'all' ? 'checked' : ''} onchange="applyCollectionFilter('cat','all')"> All</label>`;
-  
+  const countFor = cat => PRODUCTS.filter(p => {
+    if (p.status !== 'active' || p.category !== cat) return false;
+    if (isCategoryPage && p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
+    if (f.vendor.length && !f.vendor.includes(p.brand)) return false;
+    return passesCommonFilters(p, f);
+  }).length;
+
+  let html = '';
   categories.forEach(cat => {
+    const count = countFor(cat);
+    if (count === 0 && !f.cat.includes(cat)) return;
     const label = String(cat).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const checked = activeCat === cat ? 'checked' : '';
-    html += `<label class="filter-option"><input type="radio" name="filter-cat-collection" value="${escapeHTML(cat)}" ${checked} onchange="applyCollectionFilter('cat','${escapeJSString(cat)}')"> ${escapeHTML(label)}</label>`;
+    const checked = f.cat.includes(cat) ? 'checked' : '';
+    html += `<label class="filter-option"><input type="checkbox" ${checked} onchange="applyCollectionFilter('cat','${escapeJSString(cat)}')"> ${escapeHTML(label)} <span class="filter-option-count">(${count})</span></label>`;
   });
-  
-  filterContainer.innerHTML = html;
+
+  filterContainer.innerHTML = html || '<div class="filter-empty-note">No filters available</div>';
 }
 
 function buildBrandFilterOptions() {
   const filterContainer = document.getElementById('collection-filter-brands');
   if (!filterContainer) return;
 
+  const isCategoryPage = S.currentPage === 'category';
+  const f = isCategoryPage ? S.catFilter : S.filter;
   const scope = getCategoryFilterScope();
+
   let pool = PRODUCTS.filter(p => p.status === 'active');
   if (scope) pool = pool.filter(p => scope.includes(p.category));
+  if (isCategoryPage) pool = pool.filter(p => p.id !== LEATHER_POUCH_ID || S.currentCategoryPage === 'sunglasses');
+
   const brands = [...new Set(pool.map(p => p.brand).filter(Boolean))].sort();
 
-  const activeBrand = (S.currentPage === 'category')
-    ? (S.catFilter?.vendor || 'all')
-    : (S.filter?.vendor || 'all');
+  const countFor = brand => pool.filter(p => {
+    if (p.brand !== brand) return false;
+    if (f.cat.length && !f.cat.includes(p.category)) return false;
+    return passesCommonFilters(p, f);
+  }).length;
 
-  let html = `<label class="filter-option"><input type="radio" name="filter-brand-collection" value="all" ${activeBrand === 'all' ? 'checked' : ''} onchange="applyCollectionFilter('vendor', null)"> All</label>`;
-
+  let html = '';
   brands.forEach(brand => {
-    const checked = activeBrand === brand ? 'checked' : '';
-    html += `<label class="filter-option"><input type="radio" name="filter-brand-collection" value="${escapeHTML(brand)}" ${checked} onchange="applyCollectionFilter('vendor','${escapeJSString(brand)}')"> ${escapeHTML(brand)}</label>`;
+    const count = countFor(brand);
+    if (count === 0 && !f.vendor.includes(brand)) return;
+    const checked = f.vendor.includes(brand) ? 'checked' : '';
+    html += `<label class="filter-option"><input type="checkbox" ${checked} onchange="applyCollectionFilter('vendor','${escapeJSString(brand)}')"> ${escapeHTML(brand)} <span class="filter-option-count">(${count})</span></label>`;
   });
 
-  filterContainer.innerHTML = html;
+  filterContainer.innerHTML = html || '<div class="filter-empty-note">No filters available</div>';
+}
+
+// Chips for every active filter value, shown above the grid (outside
+// the slide-out filter panel) so a shopper always sees what's applied
+// without opening it — same pattern as ASOS/Superbalist's applied-filter
+// row. Clicking a chip removes just that value; "Clear all" resets
+// everything at once.
+function renderActiveFilterChips() {
+  const container = document.getElementById('active-filter-chips');
+  if (!container) return;
+
+  const isCategoryPage = S.currentPage === 'category';
+  const f = isCategoryPage ? S.catFilter : S.filter;
+
+  const chips = [];
+  f.cat.forEach(cat => {
+    const label = String(cat).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    chips.push({ label, onclick: `applyCollectionFilter('cat','${escapeJSString(cat)}')` });
+  });
+  f.vendor.forEach(brand => {
+    chips.push({ label: brand, onclick: `applyCollectionFilter('vendor','${escapeJSString(brand)}')` });
+  });
+  if (f.onSale) chips.push({ label: 'On Sale', onclick: `applyCollectionFilter('onSale', false)` });
+  if (f.inStock) chips.push({ label: 'In Stock', onclick: `applyCollectionFilter('inStock', false)` });
+
+  if (!chips.length) { container.innerHTML = ''; return; }
+
+  let html = chips.map(c =>
+    `<button class="filter-chip" onclick="${c.onclick}">${escapeHTML(c.label)} <span class="filter-chip-x">&times;</span></button>`
+  ).join('');
+  html += `<button class="filter-chip-clear" onclick="clearAllCollectionFilters()">Clear all</button>`;
+
+  container.innerHTML = html;
 }
 
 function applyEditorialGrid(gridEl, cols) {
@@ -527,6 +602,7 @@ function renderAllProducts() {
   updateCollectionTitle();
   buildCategoryFilterOptions();
   buildBrandFilterOptions();
+  renderActiveFilterChips();
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
 
@@ -555,6 +631,7 @@ function renderCategoryProducts() {
   updateCollectionTitle();
   buildCategoryFilterOptions();
   buildBrandFilterOptions();
+  renderActiveFilterChips();
   injectToolbarExtras('page-category', 'cat-grid-toggle-svg');
 }
 
@@ -563,11 +640,11 @@ function renderSaleProducts() {
 
   let filtered = PRODUCTS.filter(p => p.status === 'active' && hasSalePrice(p));
 
-  if (S.filter.cat !== 'all') {
-    filtered = filtered.filter(p => p.category === S.filter.cat);
+  if (S.filter.cat.length) {
+    filtered = filtered.filter(p => S.filter.cat.includes(p.category));
   }
-  if (S.filter.vendor) {
-    filtered = filtered.filter(p => p.brand === S.filter.vendor);
+  if (S.filter.vendor.length) {
+    filtered = filtered.filter(p => S.filter.vendor.includes(p.brand));
   }
   if (S.filter.size && S.filter.size !== 'all') {
     filtered = filtered.filter(p => (p.sizes || []).includes(S.filter.size));
@@ -585,6 +662,7 @@ function renderSaleProducts() {
   updateCollectionTitle();
   buildCategoryFilterOptions();
   buildBrandFilterOptions();
+  renderActiveFilterChips();
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
 
@@ -694,7 +772,7 @@ function selectSortTab(cat) {
   S.activeSortTab = cat;
   if (cat === 'sale') { navigateToSale(); return; }
   S.saleMode = false;
-  if (cat === 'all') { S.filter.cat = 'all'; S.filter.vendor = null; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.currentCategoryPage = null; renderAllProducts(); }
+  if (cat === 'all') { S.filter.cat = []; S.filter.vendor = []; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.currentCategoryPage = null; renderAllProducts(); }
   else { navigateToCategory(cat); }
   renderCollectionSortingTabs();
   window.scrollTo({top:0,behavior:"smooth"});
