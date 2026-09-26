@@ -29,6 +29,37 @@
   .product-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* COLLECTION PAGE — matches the New Arrivals card aesthetic. Only
+   padding-left/right are overridden (not the full padding shorthand),
+   so top/bottom padding and the gap between cards are untouched. Uses
+   ID selectors so this wins over .product-grid's own padding at every
+   breakpoint without needing matching media queries here. */
+#all-products-grid,
+#category-products-grid {
+  padding-left: 0;
+  padding-right: 0;
+}
+#all-products-grid .product-title,
+#category-products-grid .product-title {
+  text-transform: uppercase;
+  font-weight: 400;
+  font-size: 10px;
+  color: #888;
+  font-family: 'DM Sans', 'Manrope', sans-serif;
+}
+#all-products-grid .product-price,
+#category-products-grid .product-price {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #000;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+#all-products-grid .product-price-row,
+#category-products-grid .product-price-row {
+  margin-bottom: 16px;
+}
+
 /* HOMEPAGE HORIZONTAL SLIDER */
 #arrivals-grid {
   display: flex;
