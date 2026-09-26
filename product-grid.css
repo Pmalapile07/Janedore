@@ -95,6 +95,8 @@
   font-size: 10px;
   color: #888;
   font-family: 'Inter', sans-serif;
+  line-height: 1.3;
+  min-height: 2.6em;
 }
 .product-wish-btn {
   background: none;
@@ -186,6 +188,7 @@ body .site-collection-layout {
    own separate working layout from sliders.css. */
 #arrivals-grid {
   display: flex;
+  align-items: flex-start;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
