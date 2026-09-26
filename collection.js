@@ -402,6 +402,12 @@ function productCard(p, isLarge, showDetails, variantIndex) {
     </div>`;
 }
 
+function formatPriceCardStyle(price) {
+  const n = Number(price);
+  const safe = Number.isFinite(n) ? n : 0;
+  return safe.toFixed(2).replace('.', ',') + ' R';
+}
+
 function productCardHome(p) {
   const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : String(p.badge).toUpperCase()) : '';
   const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
@@ -410,11 +416,19 @@ function productCardHome(p) {
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
+  const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
+  const priceDisplay = formatPriceCardStyle(priceValue);
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
-      <div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>
-      <div class="product-title">${escapeHTML(p.name)}</div>
+      <div class="product-home-meta">
+        <div class="product-home-name-row">
+          <div class="product-title">${escapeHTML(p.name)}</div>
+          <button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${pid}')"><i class="ph ph-bookmark-simple"></i></button>
+        </div>
+        <div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>
+        <div class="product-home-price">${escapeHTML(priceDisplay)}</div>
+      </div>
     </div>`;
 }
 
