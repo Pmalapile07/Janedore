@@ -194,6 +194,13 @@ body .site-collection-layout {
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar { display: none; }
+/* .product-price-row normally carries its own margin-bottom (used for
+   row-to-row spacing on the collection page) — cancelled here so the
+   VIEW ALL button's gap below is controlled by one single, directly
+   readable value instead of two rules adding together. */
+#arrivals-grid .product-price-row {
+  margin-bottom: 0;
+}
 #arrivals-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
@@ -231,7 +238,7 @@ body .site-collection-layout {
 
 .initial-drop-view-all {
   display: block;
-  margin: 8px 18px 0 auto;
+  margin: 24px 18px 0 auto;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-weight: 400;
   font-size: 10px;
