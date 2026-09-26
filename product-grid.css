@@ -42,10 +42,8 @@
 #arrivals-grid::-webkit-scrollbar { display: none; }
 #arrivals-grid .product-home-meta {
   padding: 0;
-  margin-top: 8px;
-}
-#arrivals-grid .product-card:first-child .product-home-meta {
   padding-left: 18px;
+  margin-top: 8px;
 }
 #arrivals-grid .product-home-name-row {
   display: flex;
@@ -72,12 +70,6 @@
   font-size: 16px;
   line-height: 1;
   flex-shrink: 0;
-}
-#arrivals-grid .product-brand {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
-  font-weight: 500;
-  padding-top: 0;
-  margin-top: 4px;
 }
 #arrivals-grid .product-home-price {
   font-family: 'Inter', sans-serif;
