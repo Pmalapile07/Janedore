@@ -24,9 +24,10 @@
 .home-category-img { aspect-ratio: 3 / 4; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
 .home-category-label {
   font-family: 'Manrope', sans-serif; font-size: var(--ui-font-size);
-  letter-spacing: var(--ui-letter-spacing); font-weight: 600;
-  text-transform: uppercase; color: #fff; text-align: center;
-  position: absolute; bottom: 12px; left: 0; right: 0;
+  letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
+  text-transform: uppercase; color: #111; text-align: center;
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: #fff; padding: 6px 14px;
 }
 .home-categories-progress { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
 .home-categories-progress .swipe-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
