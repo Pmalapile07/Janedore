@@ -1017,7 +1017,7 @@
             + '<span id="note-lock-indicator" style="font-size:9px;color:var(--warning,#f59e0b);margin-left:8px;display:none;">Locked by another admin</span>'
           + '</div>'
           + '<div style="padding:12px 14px;">'
-            + '<textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Manrope,sans-serif;font-size:11.5px;font-weight:300;min-height:80px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes..."></textarea>'
+            + '<textarea id="chat-note" style="width:100%;border:0.5px solid var(--border-med);padding:8px;font-family:Inter,sans-serif;font-size:11.5px;font-weight:300;min-height:80px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;" placeholder="Internal notes..."></textarea>'
             + '<button class="btn btn-sm btn-ghost" id="chat-save-note-btn" style="margin-top:7px;width:100%;">Save Note</button>'
           + '</div>'
         + '</div>';

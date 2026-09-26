@@ -29,7 +29,7 @@
 }
 
 .product-title-main {
-  font-family: 'inter', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 28px;
   font-weight: 400;
   color: #111;
@@ -40,7 +40,7 @@
 }
 
 .product-by-brand {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 400;
   color: #111;
@@ -48,7 +48,7 @@
 }
 
 .product-by-brand-name {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.1em;
@@ -57,7 +57,7 @@
 }
 
 .product-price-main {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 600;
   color: #111;
@@ -88,7 +88,7 @@
 
 .product-sizes { margin: 0; }
 .sizes-label {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.02em;
@@ -102,7 +102,7 @@
   height: 40px;
   border: none;
   background: #fff;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 500;
   color: #111;
@@ -155,7 +155,7 @@
   justify-content: center;
   transition: background 0.2s;
   padding: 0;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .quantity-selector-btn:hover {
@@ -165,7 +165,7 @@
 .quantity-selector-value {
   min-width: 40px;
   text-align: center;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -184,7 +184,7 @@
   background: #111;
   color: #fff;
   border: none;
-  font-family: 'inter', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.1em;
@@ -200,7 +200,7 @@
   background: #fff;
   color: #111;
   border: 1px solid #111;
-  font-family: 'inter', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.1em;
@@ -247,14 +247,14 @@
 .size-guide-labels {
   display: flex;
   justify-content: space-between;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 300;
   color: #111;
   letter-spacing: 0.02em;
 }
 .size-guide-disclaimer {
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 300;
   color: #888;
@@ -287,7 +287,7 @@
 }
 
 #page-product-detail .info-tab-btn {
-  font-family: 'inter', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.1em;
@@ -311,7 +311,7 @@
 
 #page-product-detail .info-tab-panel {
   display: none;
-  font-family: 'inter', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 300;
   line-height: 1.6;
@@ -326,7 +326,7 @@
 }
 
 .modal-desc {
-  font-family: 'inter', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 300;
   line-height: 1.6;
@@ -355,7 +355,7 @@
 }
 
 .shipping-calc { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
-.shipping-calc input { flex: 1; min-width: 120px; border: 0.8px solid #ddd; padding: 10px 12px; font-size: 11px; font-family: 'DM Sans', 'Manrope', sans-serif; outline: none; color: #111; }
+.shipping-calc input { flex: 1; min-width: 120px; border: 0.8px solid #ddd; padding: 10px 12px; font-size: 11px; font-family: 'Inter', sans-serif; outline: none; color: #111; }
 .shipping-calc input:focus { border-color: #111; }
 .shipping-calc button { background: #111; color: #fff; border: none; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 16px; white-space: nowrap; cursor: pointer; }
 .shipping-result { font-size: 12px; color: #111; margin-top: 6px; }

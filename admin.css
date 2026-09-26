@@ -17,7 +17,7 @@
   --shadow-nav:0 -1px 0 rgba(255,255,255,0.05),0 -8px 32px rgba(0,0,0,0.35);
   --r:14px;--r-sm:10px;--r-xs:7px;--r-lg:20px;
   --nav-h:52px;--bnav-h:80px;
-  --font:'Manrope',sans-serif;
+  --font:'Inter',sans-serif;
   --font-scale-xs:10px;--font-scale-sm:12px;--font-scale-md:13px;--font-scale-lg:16px;--font-scale-xl:20px;--font-scale-2xl:24px;--font-scale-3xl:30px;
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
   --duration-fast:0.12s;--duration-base:0.18s;--duration-slow:0.24s;

@@ -276,7 +276,7 @@
           ? '<div class="card-title" style="margin-bottom:7px;">Internal Notes</div>' +
             '<div style="margin-bottom:14px;">' +
               '<textarea id="customer-notes-input"' +
-                ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;font-family:Manrope,sans-serif;font-size:12px;font-weight:300;min-height:68px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
+                ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;font-family:Inter,sans-serif;font-size:12px;font-weight:300;min-height:68px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
                 ' placeholder="Add notes about this customer...">' +
                 esc(c.notes || '') +
               '</textarea>' +

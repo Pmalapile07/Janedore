@@ -243,7 +243,7 @@
       loader = document.createElement('div');
       loader.id = 'auth-loading';
       loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.97);display:flex;align-items:center;justify-content:center;z-index:9999;';
-      loader.innerHTML = '<div style="text-align:center;font-family:Manrope,sans-serif;"><div style="font-size:14px;color:#666;">Verifying access...</div></div>';
+      loader.innerHTML = '<div style="text-align:center;font-family:Inter,sans-serif;"><div style="font-size:14px;color:#666;">Verifying access...</div></div>';
       document.body.appendChild(loader);
     }
     loader.style.display = 'flex';
