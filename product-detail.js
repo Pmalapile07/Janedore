@@ -180,13 +180,14 @@ function buildSwipeSection(title, products, containerId) {
 }
 
 // Static 2-column grid — same card markup/styling as the collection
-// page (productCard()), not the sliding swipe-track used by Recently
-// Viewed / You May Also Like. No scroll, no touch handlers, no bars.
-function buildCompleteLookGrid(title, products, gridId) {
+// page (productCard()), not the sliding swipe-track used elsewhere.
+// No scroll, no touch handlers, no bars. Used for Recently Viewed,
+// You May Also Like, and Complete the Look.
+function buildProductGridSection(title, products, gridId) {
   const cards = products.map(p => productCard(p)).join('');
   return `<div class="swipe-section">
     <div class="swipe-section-title">${title}</div>
-    <div class="product-grid complete-look-grid" id="${gridId}">${cards}</div>
+    <div class="product-grid static-product-grid" id="${gridId}">${cards}</div>
   </div>`;
 }
 
@@ -214,9 +215,9 @@ async function renderProductPage(product) {
   const variants=product.variants||[]; const sizes=product.sizes||[];
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
   const badgeLabel=getBadgeLabel(product);
-  const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildSwipeSection('You May Also Like',related,`related-${product.id}`):'';
-  const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildCompleteLookGrid('Complete the Look',ctl,`ctl-${product.id}`):'';
-  const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
+  const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
+  const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildProductGridSection('Complete the Look',ctl,`ctl-${product.id}`):'';
+  const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildProductGridSection('Recently Viewed',rv,`rv-${product.id}`):'';
   const hasDesc=product.description&&product.description.length>0;
 
   // Progress bars for the main image slider, mirroring the swipe-bar
