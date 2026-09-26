@@ -385,14 +385,13 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   
-  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '';
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
-  
-  const price = hasSalePrice(p)
-    ? `<div class="product-price-row"><span class="product-price product-price-sale">${formatPrice(p.salePrice)}</span><span class="product-price-original">${formatPrice(p.price)}</span></div>`
-    : `<div class="product-price-row"><span class="product-price">${formatPrice(p.price)}</span></div>`;
 
-  const metaRow = showDetails !== false ? `${brand}${name}${price}` : brand;
+  const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
+  const priceDisplay = formatPriceCardStyle(priceValue);
+  const price = `<div class="product-price-row"><span class="product-price">${escapeHTML(priceDisplay)}</span></div>`;
+
+  const metaRow = `${name}${price}`;
   const pid = escapeJSString(p.id);
 
   return `
