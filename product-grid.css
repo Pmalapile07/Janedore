@@ -1,6 +1,6 @@
-/* ============================================
+/* ============================================================
    JANEDORE · STRICT LUXURY PRODUCT GRID
-   ============================================ */
+   ============================================================ */
 
 .product-grid {
   display: grid;
@@ -40,6 +40,10 @@
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar { display: none; }
+#arrivals-grid .product-brand,
+#arrivals-grid .product-title {
+  text-align: center;
+}
 #arrivals-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
