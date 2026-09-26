@@ -918,7 +918,7 @@
 
         '<div style="margin-bottom:12px;">' +
           '<div class="card-title" style="margin-bottom:7px;">Courier &amp; Tracking</div>' +
-          '<select id="courier-select" style="width:100%;margin-bottom:6px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:7px;padding:8px 11px;font-family:Manrope,sans-serif;font-size:12px;color:var(--text);outline:none;">' +
+          '<select id="courier-select" style="width:100%;margin-bottom:6px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:7px;padding:8px 11px;font-family:Inter,sans-serif;font-size:12px;color:var(--text);outline:none;">' +
             '<option value="">Select courier...</option>' +
             COURIERS.map(function (c) {
               return '<option value="' + c + '"' + (o.courier === c ? ' selected' : '') + '>' + c + '</option>';
@@ -927,7 +927,7 @@
           '<div style="display:flex;gap:6px;">' +
             '<input id="tracking-input" value="' + esc(o.trackingNumber || '') + '"' +
               ' placeholder="Tracking number"' +
-              ' style="flex:1;padding:8px 11px;border:0.5px solid var(--border-med);font-family:Manrope,sans-serif;font-size:12px;background:var(--surface2);outline:none;border-radius:7px;">' +
+              ' style="flex:1;padding:8px 11px;border:0.5px solid var(--border-med);font-family:Inter,sans-serif;font-size:12px;background:var(--surface2);outline:none;border-radius:7px;">' +
             '<button class="btn btn-sm" onclick="window._saveTrackingAndCourier(\'' + esc(orderId) + '\')">Save</button>' +
           '</div>' +
         '</div>' +
@@ -935,7 +935,7 @@
         '<div>' +
           '<div class="card-title" style="margin-bottom:7px;">Internal Notes</div>' +
           '<textarea id="order-note-input"' +
-            ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;font-family:Manrope,sans-serif;font-size:12px;font-weight:300;min-height:68px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
+            ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;font-family:Inter,sans-serif;font-size:12px;font-weight:300;min-height:68px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
             ' placeholder="Internal notes...">' +
             esc(o.internalNotes || '') +
           '</textarea>' +

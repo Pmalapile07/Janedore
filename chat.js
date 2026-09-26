@@ -942,7 +942,7 @@ function appendMessage(m) {
     const pill = document.createElement('div');
     pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
     const pillSpan = document.createElement('span');
-    pillSpan.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;';
+    pillSpan.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Inter,sans-serif;font-weight:400;';
     pillSpan.textContent = String(m.text || '');
     pill.appendChild(pillSpan);
     el.appendChild(pill);
@@ -1075,7 +1075,7 @@ async function sendChatMessage() {
       pill.id = 'chat-reopening-pill';
       pill.style.cssText = 'text-align:center;padding:6px 0;width:100%;';
       const pillSpan = document.createElement('span');
-      pillSpan.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;';
+      pillSpan.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Inter,sans-serif;font-weight:400;';
       pillSpan.textContent = 'Reopening chat…';
       pill.appendChild(pillSpan);
       el.appendChild(pill);
@@ -1402,7 +1402,7 @@ function showResolvedBanner() {
   banner.id = 'chat-resolved-banner';
   banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
   const span = document.createElement('span');
-  span.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Manrope,sans-serif;font-weight:400;';
+  span.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Inter,sans-serif;font-weight:400;';
   span.textContent = 'Resolved.';
   banner.appendChild(span);
   wrap.insertBefore(banner, wrap.firstChild);
@@ -1523,11 +1523,11 @@ async function lookupOrder() {
       wrap.style.cssText = 'margin-top:16px;color:#888;line-height:1.8;';
 
       const l1 = document.createElement('div');
-      l1.style.cssText = "font-family:'Manrope',sans-serif;font-size:12px;font-weight:400;";
+      l1.style.cssText = "font-family:'Inter',sans-serif;font-size:12px;font-weight:400;";
       l1.textContent = 'No order found';
 
       const l2 = document.createElement('div');
-      l2.style.cssText = "font-family:'Manrope',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
+      l2.style.cssText = "font-family:'Inter',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
       l2.textContent = 'Check your order number and try again';
 
       wrap.appendChild(l1);
@@ -1545,7 +1545,7 @@ async function lookupOrder() {
 
     // FIX #6: build each row with textContent for Firestore-controlled values
     const container = document.createElement('div');
-    container.style.cssText = "margin-top:20px;width:100%;text-align:left;font-family:'Manrope',sans-serif;line-height:1.8;";
+    container.style.cssText = "margin-top:20px;width:100%;text-align:left;font-family:'Inter',sans-serif;line-height:1.8;";
 
     const header = document.createElement('div');
     header.style.cssText = 'font-size:9px;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;font-weight:600;';
