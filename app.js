@@ -350,7 +350,7 @@ function setNavForPage(page) {
 
 function navigateTo(page, replaceUrl) {
   closeFilterPanel();
-  S.saleMode = false; S.filter.vendor = null;
+  S.saleMode = false; S.filter = {cat:"all", size:"all", vendor:null, onSale:false, inStock:false};
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
   S.currentPage = page; window.scrollTo({top:0,behavior:"instant"}); removeStickyBar();
@@ -369,7 +369,7 @@ function navigateTo(page, replaceUrl) {
 
 function navigateToCategory(cat, replaceUrl) {
   closeFilterPanel();
-  S.saleMode = false; S.filter.vendor = null; updateCollectionUrl(cat, replaceUrl);
+  S.saleMode = false; S.catFilter = {cat:"all", size:"all", vendor:null, onSale:false, inStock:false}; updateCollectionUrl(cat, replaceUrl);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
   S.previousCollectionPage = cat; removeStickyBar();
@@ -400,7 +400,7 @@ function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mai
 
 function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
-function navigateToSale() { closeFilterPanel(); S.saleMode = true; S.filter.vendor = null; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { closeFilterPanel(); S.saleMode = true; S.filter = {cat:"all", size:"all", vendor:null, onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
   closeFilterPanel();
