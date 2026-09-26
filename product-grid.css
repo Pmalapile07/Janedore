@@ -122,15 +122,16 @@
   margin-bottom: 16px;
 }
 
-/* --- SLIDER layout: New Arrivals (#arrivals-grid) and the swipe
-   sections that share its markup. Every card gets the same 18px left
-   inset, since in a horizontal scroll any card can become the leading
-   one — there's no fixed "first" card the way a grid has a fixed
-   column. Recently Viewed / You May Also Like / Complete the Look no
-   longer use this — they're static grids now (see GRID layout below)
-   — this is #arrivals-grid only at this point. .swipe-track is kept
+/* --- SLIDER layout: New Arrivals (#arrivals-grid), Shop by Clothing
+   (#clothing-grid), and the swipe sections that share this markup.
+   Every card gets the same 18px left inset, since in a horizontal
+   scroll any card can become the leading one — there's no fixed
+   "first" card the way a grid has a fixed column. Recently Viewed /
+   You May Also Like / Complete the Look no longer use this — they're
+   static grids now (see GRID layout below). .swipe-track is kept
    here in case anything still uses that slider markup elsewhere. */
 #arrivals-grid .product-home-meta,
+#clothing-grid .product-home-meta,
 .swipe-track .product-home-meta {
   padding-left: 18px;
 }
@@ -181,10 +182,11 @@ body .site-collection-layout {
   padding-right: 0;
 }
 
-/* --- New Arrivals slider mechanics (scroll/width) — unrelated to the
-   info-block styling above, #arrivals-grid only. .swipe-track has its
+/* --- New Arrivals / Shop by Clothing slider mechanics (scroll/width)
+   — unrelated to the info-block styling above. .swipe-track has its
    own separate working layout from sliders.css. */
-#arrivals-grid {
+#arrivals-grid,
+#clothing-grid {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -193,25 +195,22 @@ body .site-collection-layout {
   padding: 0;
   scrollbar-width: none;
 }
-#arrivals-grid::-webkit-scrollbar { display: none; }
-/* .product-price-row normally carries its own margin-bottom (used for
-   row-to-row spacing on the collection page) — cancelled here so the
-   VIEW ALL button's gap below is controlled by one single, directly
-   readable value instead of two rules adding together. */
-#arrivals-grid .product-price-row {
-  margin-bottom: 0;
-}
-#arrivals-grid .product-card {
+#arrivals-grid::-webkit-scrollbar,
+#clothing-grid::-webkit-scrollbar { display: none; }
+#arrivals-grid .product-card,
+#clothing-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
   max-width: 300px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
-  #arrivals-grid .product-card { width: 28vw; max-width: 300px; }
+  #arrivals-grid .product-card,
+  #clothing-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
-  #arrivals-grid {
+  #arrivals-grid,
+  #clothing-grid {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
@@ -238,7 +237,7 @@ body .site-collection-layout {
 
 .initial-drop-view-all {
   display: block;
-  margin: 24px 18px 0 auto;
+  margin: 8px 18px 0 auto;
   font-family: 'DM Sans', 'Manrope', sans-serif;
   font-weight: 400;
   font-size: 10px;
