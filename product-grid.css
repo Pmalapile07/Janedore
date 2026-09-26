@@ -93,6 +93,7 @@
   text-transform: uppercase;
   font-weight: 400;
   font-size: 10px;
+  letter-spacing: var(--ui-letter-spacing);
   color: #888;
   font-family: 'Inter', sans-serif;
 }
