@@ -39,6 +39,17 @@
   padding-left: 0;
   padding-right: 0;
 }
+/* The grid's own padding above only covers the grid element itself —
+   it sits inside a wrapping container, .site-collection-layout
+   (defined in collection.css, which I don't otherwise maintain),
+   that carries its own 8px left/right padding on mobile. Using
+   "body .site-collection-layout" (element+class) instead of the
+   plain class alone so this wins on specificity regardless of which
+   file loads first, rather than depending on load order. */
+body .site-collection-layout {
+  padding-left: 0;
+  padding-right: 0;
+}
 #all-products-grid .product-title,
 #category-products-grid .product-title {
   text-transform: uppercase;
