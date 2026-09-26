@@ -386,12 +386,13 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
+  const wishBtn = `<button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${escapeJSString(p.id)}')"><i class="ph ph-bookmark-simple"></i></button>`;
 
   const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
   const priceDisplay = formatPriceCardStyle(priceValue);
   const price = `<div class="product-price-row"><span class="product-price">${escapeHTML(priceDisplay)}</span></div>`;
 
-  const metaRow = `${name}${price}`;
+  const metaRow = `<div class="product-home-name-row">${name}${wishBtn}</div>${price}`;
   const pid = escapeJSString(p.id);
 
   return `
