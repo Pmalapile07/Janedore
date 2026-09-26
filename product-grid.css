@@ -123,31 +123,34 @@
 }
 
 /* --- SLIDER layout: New Arrivals (#arrivals-grid) and the swipe
-   sections that share its markup, Recently Viewed / You May Also
-   Like (.swipe-track). Every card gets the same 18px left inset,
-   since in a horizontal scroll any card can become the leading one —
-   there's no fixed "first" card the way a grid has a fixed column. */
+   sections that share its markup. Every card gets the same 18px left
+   inset, since in a horizontal scroll any card can become the leading
+   one — there's no fixed "first" card the way a grid has a fixed
+   column. Recently Viewed / You May Also Like / Complete the Look no
+   longer use this — they're static grids now (see GRID layout below)
+   — this is #arrivals-grid only at this point. .swipe-track is kept
+   here in case anything still uses that slider markup elsewhere. */
 #arrivals-grid .product-home-meta,
 .swipe-track .product-home-meta {
   padding-left: 18px;
 }
 
 /* --- GRID layout: the collection page (#all-products-grid,
-   #category-products-grid) and Complete the Look (.complete-look-grid),
-   which is now a static grid instead of a slider. Left column only
-   (odd position) gets an 8px inset, matching the badge's own corner
-   inset — right column, and the wishlist icon on every card, stay
-   flush with their own card's edges. This odd/even mapping assumes
-   the default 2-column view; toggling to 1 or 3 columns on the
-   collection page isn't covered here. */
+   #category-products-grid) and Recently Viewed / You May Also Like /
+   Complete the Look (.static-product-grid) — all static grids now,
+   no sliding. Left column only (odd position) gets an 8px inset,
+   matching the badge's own corner inset — right column, and the
+   wishlist icon on every card, stay flush with their own card's
+   edges. This odd/even mapping assumes the default 2-column view;
+   toggling the collection page to 1 or 3 columns isn't covered here. */
 #all-products-grid .product-card:nth-child(odd) .product-home-name-row,
 #category-products-grid .product-card:nth-child(odd) .product-home-name-row,
-.complete-look-grid .product-card:nth-child(odd) .product-home-name-row {
+.static-product-grid .product-card:nth-child(odd) .product-home-name-row {
   padding-left: 8px;
 }
 #all-products-grid .product-card:nth-child(odd) .product-price-row,
 #category-products-grid .product-card:nth-child(odd) .product-price-row,
-.complete-look-grid .product-card:nth-child(odd) .product-price-row {
+.static-product-grid .product-card:nth-child(odd) .product-price-row {
   padding-left: 8px;
 }
 
@@ -168,10 +171,11 @@ body .site-collection-layout {
   padding-right: 0;
 }
 
-/* --- Complete the Look: static 2-column grid, always, regardless of
-   screen size — not the responsive 1/2/3-column behavior the base
-   .product-grid rules give collection pages. */
-.complete-look-grid {
+/* --- Recently Viewed / You May Also Like / Complete the Look: static
+   2-column grid, always, regardless of screen size — not the
+   responsive 1/2/3-column behavior the base .product-grid rules give
+   collection pages. */
+.static-product-grid {
   grid-template-columns: repeat(2, 1fr) !important;
   padding-left: 0;
   padding-right: 0;
