@@ -52,6 +52,19 @@ const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
 // category — mirrors the exact same grouping technique CLOTHING_CATEGORIES
 // already uses below, just for a different set of categories.
 const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses'];
+
+// The `category` values actually relevant to whatever the customer is
+// currently browsing. Returns null on the All Products / Sale pages
+// (every category is in scope there); on a category page, returns just
+// that page's own categories, so filter options/results never
+// reference a completely different department (e.g. clothing
+// categories while browsing Homeware).
+function getCategoryFilterScope() {
+  if (S.currentPage !== 'category' || !S.currentCategoryPage) return null;
+  if (S.currentCategoryPage === 'all-clothing') return CLOTHING_CATEGORIES;
+  if (S.currentCategoryPage === 'all-accessories') return ACCESSORY_CATEGORIES;
+  return [S.currentCategoryPage];
+}
 const LEATHER_POUCH_ID = 'janedore-leather-pouch';
 
 function gridTemplateFor(cols) {
@@ -157,6 +170,11 @@ function getCatFilteredProducts() {
     } else if (!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
       return false;
     }
+
+    // Narrow further to a specific subcategory picked in the filter panel
+    // (e.g. "Tops" while browsing All Clothing) — previously ignored, so
+    // picking a subcategory here had no effect on the results at all.
+    if (S.catFilter.cat && S.catFilter.cat !== 'all' && p.category !== S.catFilter.cat) return false;
 
     return passesCommonFilters(p, S.catFilter);
   });
@@ -295,8 +313,10 @@ function buildCategoryFilterOptions() {
   const filterContainer = document.getElementById('collection-filter-categories');
   if (!filterContainer) return;
   
-  const categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
-  
+  const scope = getCategoryFilterScope();
+  let categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
+  if (scope) categories = categories.filter(c => scope.includes(c));
+
   categories.sort((a, b) => {
     const oA = CATEGORY_ORDER[a] ?? 99;
     const oB = CATEGORY_ORDER[b] ?? 99;
@@ -323,7 +343,10 @@ function buildBrandFilterOptions() {
   const filterContainer = document.getElementById('collection-filter-brands');
   if (!filterContainer) return;
 
-  const brands = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.brand).filter(Boolean))].sort();
+  const scope = getCategoryFilterScope();
+  let pool = PRODUCTS.filter(p => p.status === 'active');
+  if (scope) pool = pool.filter(p => scope.includes(p.category));
+  const brands = [...new Set(pool.map(p => p.brand).filter(Boolean))].sort();
 
   const activeBrand = (S.currentPage === 'category')
     ? (S.catFilter?.vendor || 'all')
