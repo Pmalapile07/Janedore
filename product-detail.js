@@ -108,6 +108,54 @@ function changeQuantity(delta) {
   if (el) el.textContent = S.productQuantity;
 }
 
+function productCard(product, compactMode=false, isCollectionPage=false) {
+  if(!product) return ''; if(isCollectionPage && product.id === 'janedore-leather-pouch' && S.currentCategoryPage !== 'sunglasses') return '';
+  const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
+  const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
+  const badgeLabel = getBadgeLabel(product); const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
+  const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+  const soldOutClass = isProductSoldOut(product) ? ' sold-out' : ''; const nameClass = isCollectionPage ? ' collection-name' : ''; const displayName = isCollectionPage ? truncateName(product.name) : (product.name || '');
+  return `<div class="product-card${soldOutClass}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')"><div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')"><div class="product-card-slides" id="card-slides-${product.id}">${slidesHtml}</div>${barsHtml}${badgeHtml}</div>${compactMode ? '' : `<div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div></div></div><div class="product-name${nameClass}">${displayName}</div>`}</div>`;
+}
+
+function productCardHome(product) {
+  if(!product) return ''; const vi = S.productVariantSelections[product.id] ?? 0; const allImages = getAllProductImages(product, vi);
+  const priceHtml = product.salePrice ? `<span class="product-price-sale">${formatPrice(product.salePrice)}</span><span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price);
+  const badgeLabel = getBadgeLabel(product); const badgeHtml = badgeLabel ? `<div class="product-badge-wrap"><span class="badge-${product.badge==='sold'?'sold':product.salePrice?'sale':'new'}">${badgeLabel}</span></div>` : "";
+  const slidesHtml = allImages.map(u=>`<div class="product-card-slide" style="background-image:url('${u}');"></div>`).join(""); const barsHtml = allImages.length > 1 ? `<div class="card-slider-bars">${allImages.map((_,i)=>`<div class="card-slider-bar${i===0?' active':''}"></div>`).join("")}</div>` : '';
+  return `<div class="product-card${isProductSoldOut(product)?' sold-out':''}" data-product-id="${product.id}" onclick="goToProduct('${product.id}')"><div class="product-img-wrap" ontouchstart="cardTouchStart(event,'${product.id}')" ontouchend="cardTouchEnd(event,'${product.id}')"><div class="product-card-slides" id="card-slides-home-${product.id}">${slidesHtml}</div>${barsHtml}${badgeHtml}</div><div class="product-meta-row"><div class="product-brand-tag">${product.brand||''}</div><div class="product-price-row"><div class="product-price">${priceHtml}</div></div></div><div class="product-name collection-name">${truncateName(product.name)}</div></div>`;
+}
+
+function cardTouchStart(e, productId) { S.cardTouchStartX[productId] = e.touches[0].clientX; }
+function cardTouchEnd(e, productId) {
+  const startX = S.cardTouchStartX[productId];
+  if (!startX) return;
+  const diff = startX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) < 30) return;
+
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+
+  const vi = S.productVariantSelections[productId] ?? 0;
+  const allImages = getAllProductImages(product, vi);
+  const total = allImages.length;
+  const cur = S.cardSlideIndex[productId] ?? 0;
+
+  let nxt = cur;
+  if (diff > 0 && cur < total - 1) nxt = cur + 1;
+  else if (diff < 0 && cur > 0) nxt = cur - 1;
+
+  S.cardSlideIndex[productId] = nxt;
+
+  document.querySelectorAll(`#card-slides-${productId}, #card-slides-home-${productId}`).forEach(el => {
+    if (el) el.style.transform = `translateX(-${nxt * 100}%)`;
+  });
+
+  const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+  if (card) card.querySelectorAll(".card-slider-bar").forEach((d, i) =>
+    d.classList.toggle("active", i === nxt));
+}
+
 function getCompleteLookProducts(currentProduct) {
   if (!currentProduct) return []; const active = PRODUCTS.filter(p => p.status === 'active' && p.id !== currentProduct.id); const pouch = active.find(p => p.id === 'janedore-leather-pouch'); const clothing = active.filter(p => ['dresses','tops','bottoms','jackets','sets'].includes(p.category)); const tops = clothing.filter(p => p.category === 'tops'), bottoms = clothing.filter(p => p.category === 'bottoms'); const dresses = clothing.filter(p => p.category === 'dresses'), jewelry = active.filter(p => p.category === 'jewelry'); const bags = active.filter(p => p.category === 'bags' && p.id !== 'janedore-leather-pouch'); const sunglasses = active.filter(p => p.category === 'sunglasses'), parfum = active.filter(p => p.category === 'parfum'); let s = []; const cat = currentProduct.category;
   if (cat === 'sunglasses') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); if (s.length < 3) s = s.concat(bottoms.slice(0,1)); } else if (['tops','bottoms','dresses','jackets','sets'].includes(cat)) { if (cat === 'tops') { s = s.concat(bottoms.slice(0,1)); s = s.concat(jewelry.slice(0,1)); if (pouch) s.push(pouch); } else if (cat === 'bottoms') { s = s.concat(tops.slice(0,2)); s = s.concat(jewelry.slice(0,1)); } else if (cat === 'dresses') { s = s.concat(jewelry.slice(0,2)); } else { s = s.concat(tops.slice(0,1)); s = s.concat(bottoms.slice(0,1)); } if (s.length < 4) s = s.concat(bags.slice(0,1)); } else if (cat === 'parfum') { s = s.concat(clothing.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); } else if (cat === 'bags') { s = s.concat(jewelry.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); if (pouch && currentProduct.id !== 'janedore-leather-pouch') s.push(pouch); } else if (cat === 'jewelry') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); }
@@ -128,6 +176,17 @@ function buildSwipeSection(title, products, containerId) {
       <div class="swipe-track" id="track-${id}" ontouchstart="swipeTouchStart(event,'${id}')" ontouchend="swipeTouchEnd(event,'${id}')" onmousedown="swipeMouseDown(event,'${id}')">${cards}</div>
     </div>
     <div class="swipe-bars" id="bars-${id}"></div>
+  </div>`;
+}
+
+// Static 2-column grid — same card markup/styling as the collection
+// page (productCard()), not the sliding swipe-track used by Recently
+// Viewed / You May Also Like. No scroll, no touch handlers, no bars.
+function buildCompleteLookGrid(title, products, gridId) {
+  const cards = products.map(p => productCard(p)).join('');
+  return `<div class="swipe-section">
+    <div class="swipe-section-title">${title}</div>
+    <div class="product-grid complete-look-grid" id="${gridId}">${cards}</div>
   </div>`;
 }
 
@@ -156,7 +215,7 @@ async function renderProductPage(product) {
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
   const badgeLabel=getBadgeLabel(product);
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildSwipeSection('You May Also Like',related,`related-${product.id}`):'';
-  const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildSwipeSection('Complete the Look',ctl,`ctl-${product.id}`):'';
+  const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildCompleteLookGrid('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildSwipeSection('Recently Viewed',rv,`rv-${product.id}`):'';
   const hasDesc=product.description&&product.description.length>0;
 
