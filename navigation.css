@@ -26,7 +26,7 @@
 .nav-logo { cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center; position: absolute; left: 50%; transform: translateX(-50%); }
 
 .nav-logo-text {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Telegraf', sans-serif;
   font-size: 18px;
   font-weight: 400;
   letter-spacing: 0.12em;
