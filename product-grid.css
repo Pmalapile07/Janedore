@@ -36,7 +36,7 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   gap: 8px;
-  padding: 0 18px;
+  padding: 0;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar { display: none; }
