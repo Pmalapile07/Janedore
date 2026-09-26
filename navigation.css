@@ -1,24 +1,49 @@
 #announcement-bar {
   background: #111;
   color: #fff;
-  text-align: center;
-  padding: 8px 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 8px 0;
+  position: relative;
+  z-index: 801;
+}
+
+.announcement-track {
+  display: inline-flex;
+  animation: announcement-scroll 24s linear infinite;
+}
+
+.announcement-item {
+  display: inline-block;
+  padding: 0 32px;
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
-  position: relative;
-  z-index: 801;
 }
 
+@keyframes announcement-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* TEMPORARY — categories section disabled per request, to preview the
+   home page without it. Delete this rule to bring it back. */
+#home-categories { display: none; }
+
 #main-nav {
-  height: 64px; background: #fff; display: flex; align-items: center; padding: 0 12px;
+  height: 64px; background: transparent; display: flex; align-items: center; padding: 0 12px;
   position: sticky; top: 0; z-index: 800; justify-content: space-between;
   border-bottom: none; max-width: 100%; box-shadow: none;
+  transition: background 0.25s ease;
 }
-#main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link { color: #111; }
-#main-nav .badge { background: #111; color: #fff; }
+#main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #fff; transition: color 0.25s ease; }
+#main-nav .badge { background: #fff; color: #111; transition: background 0.25s ease, color 0.25s ease; }
+
+#main-nav.scrolled { background: #fff; }
+#main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link, #main-nav.scrolled .utility-text-link, #main-nav.scrolled .nav-logo-text { color: #111; }
+#main-nav.scrolled .badge { background: #111; color: #fff; }
 @media (min-width: 768px) { #main-nav { padding: 0 16px; } }
 
 .nav-left { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
