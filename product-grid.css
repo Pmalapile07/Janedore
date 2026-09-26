@@ -56,7 +56,7 @@ body .site-collection-layout {
   font-weight: 400;
   font-size: 10px;
   color: #888;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
   padding-top: 0;
 }
 #all-products-grid .product-home-name-row,
@@ -82,12 +82,13 @@ body .site-collection-layout {
   flex-shrink: 0;
 }
 /* Left column only (default 2-col grid: odd position = left, even =
-   right — see gridCols in app.js). Padding-left matches the badge's
-   own 8px corner inset for visual consistency. Right-column cards,
-   and the wishlist icon on every card, stay flush with their own
-   card's edges. If the grid is toggled to 1 or 3 columns this
-   odd/even mapping no longer means "left column" — not handled here,
-   ask if that needs covering too. */
+   right — see gridCols in app.js). Gives left-column cards the same
+   18px inset the New Arrivals row uses, so their text lines up with
+   the rest of the page instead of sitting flush at the screen edge.
+   Right-column cards, and the wishlist icon on every card, stay flush
+   with their own card's edges. If the grid is toggled to 1 or 3
+   columns this odd/even mapping no longer means "left column" —
+   not handled here, ask if that needs covering too. */
 #all-products-grid .product-card:nth-child(odd) .product-home-name-row,
 #category-products-grid .product-card:nth-child(odd) .product-home-name-row {
   padding-left: 8px;
@@ -120,25 +121,36 @@ body .site-collection-layout {
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar { display: none; }
-#arrivals-grid .product-home-meta {
+/* Text-content styling below is shared with .swipe-track (Recently
+   Viewed / Complete the Look / You May Also Like on the product
+   detail page) — those use the exact same productCardHome() markup
+   as New Arrivals, so without this they'd fall back to old unstyled
+   rules and look inconsistent. Container/scroll/width rules above
+   and below stay #arrivals-grid only, since .swipe-track already has
+   its own working layout from sliders.css that isn't part of this. */
+#arrivals-grid .product-home-meta,
+.swipe-track .product-home-meta {
   padding: 0;
   padding-left: 18px;
   margin-top: 8px;
 }
-#arrivals-grid .product-home-name-row {
+#arrivals-grid .product-home-name-row,
+.swipe-track .product-home-name-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
-#arrivals-grid .product-title {
+#arrivals-grid .product-title,
+.swipe-track .product-title {
   text-transform: uppercase;
   font-weight: 400;
   font-size: 10px;
   color: #888;
-  font-family: 'DM Sans', 'Manrope', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
-#arrivals-grid .product-wish-btn {
+#arrivals-grid .product-wish-btn,
+.swipe-track .product-wish-btn {
   background: none;
   border: none;
   padding: 0;
@@ -151,7 +163,8 @@ body .site-collection-layout {
   line-height: 1;
   flex-shrink: 0;
 }
-#arrivals-grid .product-home-price {
+#arrivals-grid .product-home-price,
+.swipe-track .product-home-price {
   font-family: 'Inter', sans-serif;
   font-size: 10px;
   color: #000;
