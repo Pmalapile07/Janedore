@@ -800,7 +800,25 @@ function buildCategoriesSlider() {
 
 function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildNewArrivalsTabs(); buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
+
+// Row of collection shortcuts above the New Arrivals grid — "New
+// Arrivals" itself plus each clothing subcategory — so a visitor can
+// jump straight to a specific collection. Purely navigational: unlike
+// the swipe/sort tabs elsewhere, clicking one doesn't filter this grid
+// in place, it takes you to that collection's own page.
+function buildNewArrivalsTabs() {
+  const container = document.getElementById('new-arrivals-tabs');
+  if (!container) return;
+  const tabs = [{ label: 'New Arrivals', onclick: "navigateTo('products')" }]
+    .concat(CLOTHING_CATEGORIES.map(cat => ({
+      label: String(cat).replace(/\b\w/g, l => l.toUpperCase()),
+      onclick: `navigateToCategory('${escapeJSString(cat)}')`
+    })));
+  container.innerHTML = tabs.map((t, i) =>
+    `<button class="new-arrivals-tab${i === 0 ? ' active' : ''}" onclick="${t.onclick}">${escapeHTML(t.label)}</button>`
+  ).join('');
+}
 
 function buildShopByClothing() {
   const grid = document.getElementById('clothing-grid');

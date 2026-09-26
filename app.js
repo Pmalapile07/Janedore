@@ -209,6 +209,7 @@ async function init() {
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
   initVendors();
+  initNavScroll();
 
   // Path-based routes (/products/slug, /collections/cat, /pages/slug, /shop, /login, etc)
   // take priority over hash routes.
@@ -355,6 +356,11 @@ function navigateTo(page, replaceUrl) {
   document.getElementById(`page-${page}`)?.classList.add("active");
   S.currentPage = page; window.scrollTo({top:0,behavior:"instant"}); removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page","collection-page"); }
+  // Home has a hero the nav should sit transparently over; every other
+  // page has no hero, so the nav stays in its solid "scrolled" state.
+  // updateNavScrollState() (driven by the scroll listener) takes over
+  // from here once the visitor actually scrolls the home page.
+  if (page === 'home') { DOM.mainNav?.classList.remove('scrolled'); }
   setNavForPage(page);
   if (page === 'home') updateHash('');
   else if (PAGE_URL_MAP.hasOwnProperty(page)) updateCleanUrl(page, replaceUrl);
@@ -427,6 +433,24 @@ function navigateToCheckout(replaceUrl) {
 }
 
 function ensureNavScrolled() { if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); }
+
+// Transparent-over-hero header: while the home page's hero is still on
+// screen, the nav stays transparent with white text/icons; once its
+// bottom edge scrolls above the viewport (or there's no hero at all,
+// i.e. every non-home page), the nav switches to a solid white
+// background with black text/icons. Attached once — DOM.hero always
+// points at the (possibly hidden) home hero section, and a hidden
+// element's bounding rect naturally reports bottom <= 0.
+function updateNavScrollState() {
+  if (!DOM.mainNav) return;
+  if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; }
+  DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0);
+}
+function initNavScroll() {
+  DOM.hero = document.getElementById("hero");
+  updateNavScrollState();
+  window.addEventListener("scroll", updateNavScrollState, { passive: true });
+}
 
 function isDesktop() { return window.innerWidth >= 769; }
 function setHeroImage() { 
