@@ -265,7 +265,7 @@ async function renderProductPage(product) {
         <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
       </div>
     </div>
-    <div style="max-width:720px;margin:0 auto;padding:0 12px;">
+    <div style="max-width:720px;margin:0 auto;padding:0;">
       ${ctlSection}${relatedSection}
       ${rvSection}
     </div>
