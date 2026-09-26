@@ -426,7 +426,6 @@ function productCardHome(p) {
           <div class="product-title">${escapeHTML(p.name)}</div>
           <button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${pid}')"><i class="ph ph-bookmark-simple"></i></button>
         </div>
-        <div class="product-brand">${escapeHTML(p.brand || 'JANEDORE')}</div>
         <div class="product-home-price">${escapeHTML(priceDisplay)}</div>
       </div>
     </div>`;
