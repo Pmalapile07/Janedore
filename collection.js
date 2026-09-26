@@ -249,7 +249,7 @@ function updateCollectionTitle() {
   } else if (S.currentPage === 'products') {
     title = S.saleMode ? 'SALE' : 'ALL PRODUCTS';
     description = COLLECTION_DESCRIPTIONS['all'];
-    showDesc = true;
+    showDesc = false;
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
     const catTitles = {
       'all': 'ALL PRODUCTS',
