@@ -123,22 +123,21 @@
   margin-bottom: 16px;
 }
 
-/* --- SLIDER layout: New Arrivals (#arrivals-grid), Shop by Clothing
-   (#clothing-grid), and the swipe sections that share this markup.
-   Every card gets the same 18px left inset, since in a horizontal
-   scroll any card can become the leading one — there's no fixed
-   "first" card the way a grid has a fixed column. Recently Viewed /
-   You May Also Like / Complete the Look no longer use this — they're
-   static grids now (see GRID layout below). .swipe-track is kept
+/* --- SLIDER layout: Shop by Clothing (#clothing-grid) and the swipe
+   sections that share this markup. Every card gets the same 18px left
+   inset, since in a horizontal scroll any card can become the leading
+   one — there's no fixed "first" card the way a grid has a fixed
+   column. New Arrivals (#arrivals-grid) moved to the static GRID
+   layout below, to match the collection page. .swipe-track is kept
    here in case anything still uses that slider markup elsewhere. */
-#arrivals-grid .product-home-meta,
 #clothing-grid .product-home-meta,
 .swipe-track .product-home-meta {
   padding-left: 18px;
 }
 
 /* --- GRID layout: the collection page (#all-products-grid,
-   #category-products-grid) and Recently Viewed / You May Also Like /
+   #category-products-grid), the home New Arrivals grid
+   (#arrivals-grid), and Recently Viewed / You May Also Like /
    Complete the Look (.static-product-grid) — all static grids now,
    no sliding. Left column only (odd position) gets an 8px inset,
    matching the badge's own corner inset — right column, and the
@@ -147,11 +146,13 @@
    toggling the collection page to 1 or 3 columns isn't covered here. */
 #all-products-grid .product-card:nth-child(odd) .product-home-name-row,
 #category-products-grid .product-card:nth-child(odd) .product-home-name-row,
+#arrivals-grid .product-card:nth-child(odd) .product-home-name-row,
 .static-product-grid .product-card:nth-child(odd) .product-home-name-row {
   padding-left: 8px;
 }
 #all-products-grid .product-card:nth-child(odd) .product-price-row,
 #category-products-grid .product-card:nth-child(odd) .product-price-row,
+#arrivals-grid .product-card:nth-child(odd) .product-price-row,
 .static-product-grid .product-card:nth-child(odd) .product-price-row {
   padding-left: 8px;
 }
@@ -173,20 +174,22 @@ body .site-collection-layout {
   padding-right: 0;
 }
 
-/* --- Recently Viewed / You May Also Like / Complete the Look: static
-   2-column grid, always, regardless of screen size — not the
-   responsive 1/2/3-column behavior the base .product-grid rules give
-   collection pages. */
-.static-product-grid {
+/* --- Recently Viewed / You May Also Like / Complete the Look
+   (.static-product-grid) and the home New Arrivals grid
+   (#arrivals-grid): static 2-column grid, always, regardless of
+   screen size — not the responsive 1/2/3-column behavior the base
+   .product-grid rules give collection pages, matching the collection
+   page's own default 2-column view. */
+.static-product-grid,
+#arrivals-grid {
   grid-template-columns: repeat(2, 1fr) !important;
   padding-left: 0;
   padding-right: 0;
 }
 
-/* --- New Arrivals / Shop by Clothing slider mechanics (scroll/width)
-   — unrelated to the info-block styling above. .swipe-track has its
-   own separate working layout from sliders.css. */
-#arrivals-grid,
+/* --- Shop by Clothing slider mechanics (scroll/width) — unrelated to
+   the info-block styling above. .swipe-track has its own separate
+   working layout from sliders.css. */
 #clothing-grid {
   display: flex;
   overflow-x: auto;
@@ -196,9 +199,7 @@ body .site-collection-layout {
   padding: 0;
   scrollbar-width: none;
 }
-#arrivals-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar { display: none; }
-#arrivals-grid .product-card,
 #clothing-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
@@ -206,11 +207,9 @@ body .site-collection-layout {
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
-  #arrivals-grid .product-card,
   #clothing-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
-  #arrivals-grid,
   #clothing-grid {
     justify-content: center;
     max-width: 1400px;
