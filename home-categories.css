@@ -18,9 +18,11 @@
   -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 0;
 }
 .home-categories-grid::-webkit-scrollbar { display: none; }
-.home-category-card { cursor: pointer; flex: 0 0 50%; scroll-snap-align: start; }
-@media (min-width: 640px) { .home-category-card { flex: 0 0 33.333%; } }
-@media (min-width: 900px) { .home-category-card { flex: 0 0 20%; } }
+/* Sized as a true horizontal slider — bigger than the product-card
+   slider (#arrivals-grid: 65vw / 28vw, max-width 300px) rather than
+   snapping to exactly 2/3/5 per screen like a fixed grid. */
+.home-category-card { cursor: pointer; flex: 0 0 auto; width: 72vw; max-width: 340px; scroll-snap-align: start; }
+@media (min-width: 768px) { .home-category-card { width: 32vw; max-width: 340px; } }
 .home-category-img { aspect-ratio: 3 / 4; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
 .home-category-label {
   font-family: 'Inter', sans-serif; font-size: var(--ui-font-size);
