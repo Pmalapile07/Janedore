@@ -156,6 +156,12 @@
 .static-product-grid .product-card:nth-child(odd) .product-price-row {
   padding-left: 8px;
 }
+/* productCardHome() (used by #arrivals-grid) has no .product-price-row
+   wrapper — the price is a bare .product-home-price div — so the rule
+   above never matches it there. Target that class directly instead. */
+#arrivals-grid .product-card:nth-child(odd) .product-home-price {
+  padding-left: 8px;
+}
 
 /* --- Collection-page grid padding: removes the grid's own left/right
    inset (cards run edge-to-edge; the gap between cards is untouched)
