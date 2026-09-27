@@ -31,13 +31,31 @@ function toggleWish(productId) {
   saveWishlistToStorage();
 }
 
+// Cycles 1/2/3 columns, same pattern as toggleGrid()/toggleGridCat() on
+// the All Products / Category pages — kept separate (S.gridColsWish)
+// so switching the wishlist's layout doesn't affect theirs or vice versa.
+function toggleGridWish() {
+  S.gridColsWish = S.gridColsWish === 1 ? 2 : S.gridColsWish === 2 ? 3 : 1;
+  renderWishlistPage();
+}
+
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
   if (!S.wishlist.length) {
     DOM.wishPageContent.innerHTML = '<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div>';
     return;
   }
-  DOM.wishPageContent.innerHTML = `<div class="wish-page-title">Wishlist (${S.wishlist.length})</div><div class="wish-page-grid">${S.wishlist.map(p => {
+  const cols = S.gridColsWish;
+  DOM.wishPageContent.innerHTML = `<div class="wish-page-header">
+    <div class="wish-page-title">Wishlist (${S.wishlist.length})</div>
+    <button class="col-grid-toggle-btn" onclick="toggleGridWish()" title="Change grid layout">
+      <div class="col-grid-icon cols-${cols}">
+        <div class="col-grid-bar"></div>
+        <div class="col-grid-bar"></div>
+        <div class="col-grid-bar"></div>
+      </div>
+    </button>
+  </div><div class="wish-page-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${S.wishlist.map(p => {
     const vi = S.productVariantSelections[p.id] ?? 0;
     const priceHtml = p.salePrice
       ? `<span class="wish-page-price-sale">${formatPrice(p.salePrice)}</span><span class="wish-page-price-original">${formatPrice(p.price)}</span>`

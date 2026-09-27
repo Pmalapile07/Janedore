@@ -1,7 +1,8 @@
 .wish-page { max-width: 1000px; margin: 0 auto; padding: 60px 0 0; }
-.wish-page-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; margin-bottom: 40px; padding: 0 8px; }
-@media (min-width: 640px) { .wish-page-title { padding: 0 10px; } }
-@media (min-width: 1024px) { .wish-page-title { padding: 0 12px; } }
+.wish-page-header { display: flex; align-items: center; justify-content: space-between; padding: 0 8px; margin-bottom: 24px; }
+@media (min-width: 640px) { .wish-page-header { padding: 0 10px; } }
+@media (min-width: 1024px) { .wish-page-header { padding: 0 12px; } }
+.wish-page-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; }
 /* Same grid treatment as .product-grid (product-grid.css) — same
    padding/gap/column breakpoints, so the wishlist page looks like
    part of the same product grid everywhere else on the site. */
