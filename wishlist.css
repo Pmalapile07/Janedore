@@ -1,9 +1,13 @@
-.wish-page { max-width: 1000px; margin: 0 auto; padding: 60px 12px; }
-@media (min-width: 768px) { .wish-page { padding: 60px 16px; } }
-.wish-page-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; margin-bottom: 40px; }
-.wish-page-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-@media (min-width: 640px) { .wish-page-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 900px) { .wish-page-grid { grid-template-columns: repeat(4, 1fr); } }
+.wish-page { max-width: 1000px; margin: 0 auto; padding: 60px 0 0; }
+.wish-page-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; margin-bottom: 40px; padding: 0 8px; }
+@media (min-width: 640px) { .wish-page-title { padding: 0 10px; } }
+@media (min-width: 1024px) { .wish-page-title { padding: 0 12px; } }
+/* Same grid treatment as .product-grid (product-grid.css) — same
+   padding/gap/column breakpoints, so the wishlist page looks like
+   part of the same product grid everywhere else on the site. */
+.wish-page-grid { display: grid; gap: 8px; grid-template-columns: 1fr; padding: 0 8px; }
+@media (min-width: 640px) { .wish-page-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 10px; } }
+@media (min-width: 1024px) { .wish-page-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 12px; } }
 .wish-page-item { cursor: pointer; }
 .wish-page-img { aspect-ratio: 3/4; background-size: cover; background-position: center; background-color: #f0ede8; margin-bottom: 6px; position: relative; }
 .wish-page-name {
