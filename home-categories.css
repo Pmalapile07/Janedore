@@ -28,10 +28,10 @@
    than before. */
 .home-category-img { aspect-ratio: 0.78; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
 .home-category-label {
-  font-family: 'Inter', sans-serif; font-size: calc(var(--ui-font-size) + 2px);
-  letter-spacing: var(--ui-letter-spacing); font-weight: 600;
-  text-transform: uppercase; color: #111; text-align: left;
-  position: absolute; bottom: 12px; left: 12px;
+  font-family: 'Inter', sans-serif; font-size: 11px;
+  letter-spacing: 0.1em; font-weight: 500;
+  text-transform: uppercase; color: #111; text-align: center;
+  position: absolute; bottom: 12px; left: 0; right: 0;
 }
 .home-categories-progress { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
 .home-categories-progress .swipe-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
@@ -62,11 +62,11 @@
 
 .home-statement-heading {
   font-family: 'Inter', sans-serif;
-  font-size: 22px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 500;
   color: #111;
   line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 0 0 10px 0;
 }
@@ -83,7 +83,6 @@
 
 @media (min-width: 768px) {
   .home-statement { padding: 40px 16px 20px; }
-  .home-statement-heading { font-size: 32px; }
 }
 
 /* ── FEATURED BRAND ─────────────────────────────────────── */
