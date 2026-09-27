@@ -39,6 +39,11 @@ function toggleGridWish() {
   renderWishlistPage();
 }
 
+// Stripped down to reuse productCard() (collection.js) directly instead
+// of hand-rolling a parallel card template here — that's what kept
+// silently drifting out of sync with the real card markup every time
+// productCard() changed. Same function, same structure, same page as
+// All Products, permanently.
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
   if (!S.wishlist.length) {
@@ -46,8 +51,8 @@ function renderWishlistPage() {
     return;
   }
   const cols = S.gridColsWish;
+  const cards = S.wishlist.map(p => productCard(p, cols === 3, true, S.productVariantSelections[p.id] ?? 0)).join('');
   DOM.wishPageContent.innerHTML = `<div class="wish-page-header">
-    <div class="wish-page-title">Wishlist (${S.wishlist.length})</div>
     <button class="col-grid-toggle-btn" onclick="toggleGridWish()" title="Change grid layout">
       <div class="col-grid-icon cols-${cols}">
         <div class="col-grid-bar"></div>
@@ -55,23 +60,6 @@ function renderWishlistPage() {
         <div class="col-grid-bar"></div>
       </div>
     </button>
-  </div><div class="wish-page-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${S.wishlist.map(p => {
-    const vi = S.productVariantSelections[p.id] ?? 0;
-    const priceHtml = p.salePrice
-      ? `<span class="wish-page-price-sale">${formatPrice(p.salePrice)}</span><span class="wish-page-price-original">${formatPrice(p.price)}</span>`
-      : `<span class="wish-page-price">${formatPrice(p.price)}</span>`;
-    const allImages = getAllProductImages(p, vi);
-    const thumbnail = allImages.length ? allImages[0] : PLACEHOLDER_IMAGE;
-    const soldOutClass = isProductSoldOut(p) ? ' sold-out' : '';
-    return `<div class="product-card${soldOutClass}" data-product-id="${p.id}" onclick="goToProduct('${p.id}')">
-      <div class="product-img-wrap">
-        <div class="product-card-slides">
-          <div class="product-card-slide" style="background-image:url('${thumbnail}');"></div>
-        </div>
-      </div>
-      <div class="product-brand-tag">${p.brand || ''}</div>
-      <div class="product-name collection-name">${truncateName(p.name)}</div>
-      <div class="product-price-row"><div class="product-price">${priceHtml}</div></div>
-    </div>`;
-  }).join("")}</div>`;
+    <div class="wish-page-title">Wishlist (${S.wishlist.length})</div>
+  </div><div class="product-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${cards}</div>`;
 }
