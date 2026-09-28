@@ -386,17 +386,28 @@
 
       window._aiBridge = {
         async getReply(templateId, variables) {
-          console.log('[AI Bridge] getReply called — templateId=' + templateId + ' variables=' + JSON.stringify(variables));
+          const resolvedTemplateId = templateId || 'customer-support-chat';
+          console.log('[AI Bridge] getReply called — templateId=' + resolvedTemplateId + ' variables=' + JSON.stringify(variables));
           const timeoutMs = 15000;
           const timeout = new Promise(function(_, rej) {
             setTimeout(function() {
               rej(new Error('AI Bridge timeout after ' + timeoutMs + 'ms — SDK never resolved'));
             }, timeoutMs);
           });
-          const call = templateModel.generateContent(
-            templateId || 'customer-support-chat',
-            variables || {}
-          );
+          // TemplateGenerativeModel.generateContent() takes a single
+          // TemplateRequest object ({templateId, templateVariables}),
+          // not two positional arguments — firebase-js-sdk PR #10380
+          // ("refactor TemplateGenerativeModel methods to accept
+          // TemplateRequest") changed this while the feature is in
+          // Public Preview. The old two-argument call sent a request
+          // the SDK couldn't parse correctly, which never came back
+          // with a response OR a thrown error — exactly the symptom
+          // in production (every message hit the 15s timeout below,
+          // "SDK never resolved", with nothing else in the console).
+          const call = templateModel.generateContent({
+            templateId: resolvedTemplateId,
+            templateVariables: variables || {}
+          });
           const result = await Promise.race([call, timeout]);
           const response = result && result.response;
           if (!response) return null;
