@@ -101,7 +101,17 @@
   position: absolute;
   bottom: 8px;
   right: 8px;
-  z-index: 2;
+  /* Must beat product-card.css's .product-img-wrap::after (z-index: 5)
+     — a full-cover transparent overlay added to block long-press
+     image-saving on mobile, with pointer-events: auto. At z-index: 2
+     that overlay sat on top of this button everywhere in the image,
+     so every tap on the wish icon — even dead center — was actually
+     being caught by the overlay and bubbling straight to the card's
+     onclick as a plain image tap, never reaching this button's own
+     handler at all. That's the real, 100%-reproducible cause; the
+     touch-target sizing below was a real but secondary improvement,
+     not the actual bug. */
+  z-index: 6;
   width: 28px;
   height: 28px;
   background: #fff;
