@@ -490,12 +490,12 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const priceDisplay = formatPriceCardStyle(priceValue);
   const price = `<div class="product-price-row"><span class="product-price">${escapeHTML(priceDisplay)}</span></div>`;
 
-  const metaRow = `<div class="product-home-name-row">${name}${wishBtn}</div>${price}`;
+  const metaRow = `<div class="product-home-name-row">${name}</div>${price}`;
   const pid = escapeJSString(p.id);
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy">${wishBtn}</div>
       ${metaRow}
     </div>`;
 }
@@ -518,11 +518,10 @@ function productCardHome(p) {
   const priceDisplay = formatPriceCardStyle(priceValue);
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${pid}')"><i class="ph ph-bookmark-simple"></i></button></div>
       <div class="product-home-meta">
         <div class="product-home-name-row">
           <div class="product-title">${escapeHTML(p.name)}</div>
-          <button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${pid}')"><i class="ph ph-bookmark-simple"></i></button>
         </div>
         <div class="product-home-price">${escapeHTML(priceDisplay)}</div>
       </div>
