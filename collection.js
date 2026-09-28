@@ -789,17 +789,31 @@ function buildCategoriesSlider() {
     { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
   ];
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"><div class="home-category-label">${escapeHTML(c.label)}</div></div></div>`).join('');
-  const perView = window.innerWidth >= 900 ? 5 : window.innerWidth >= 640 ? 3 : 2; const maxIdx = Math.max(0, categories.length - perView);
+  // perView used to be guessed from window-width breakpoints (2/3/5 at
+  // 640/900px), which didn't match .home-category-card's actual CSS
+  // sizing (72vw mobile / 32vw desktop, breakpoint at 768px) — that
+  // mismatch is why the dot count was wrong (e.g. 4 cards, 3 dots).
+  // Measuring the real rendered card width stays correct regardless of
+  // how the CSS sizing changes in the future.
+  const perView = categoriesPerView(grid);
+  const maxIdx = Math.max(0, categories.length - perView);
   progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
   if (grid._categoriesScrollHandler) {
     grid.removeEventListener('scroll', grid._categoriesScrollHandler);
   }
-  const scrollHandler = () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = window.innerWidth>=900?5:window.innerWidth>=640?3:2; const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); };
+  const scrollHandler = () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = categoriesPerView(grid); const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); };
   grid._categoriesScrollHandler = scrollHandler;
   grid.addEventListener('scroll', scrollHandler, {passive:true});
 }
 
-function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards) return; const pw=window.innerWidth>=900?5:window.innerWidth>=640?3:2; idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0]?.offsetWidth+8||grid.offsetWidth/pw+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
+function categoriesPerView(grid) {
+  const card = grid.querySelector('.home-category-card');
+  if (!card) return 1;
+  const cw = card.offsetWidth + 8; // +8px gap
+  return Math.max(1, Math.round(grid.offsetWidth / cw));
+}
+
+function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards || !cards.length) return; const pw=categoriesPerView(grid); idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0].offsetWidth+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
 function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,4).map(p=>productCardHome(p)).join(""); } buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
 
