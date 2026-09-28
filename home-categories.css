@@ -23,10 +23,10 @@
    snapping to exactly 2/3/5 per screen like a fixed grid. */
 .home-category-card { cursor: pointer; flex: 0 0 auto; width: 72vw; max-width: 340px; scroll-snap-align: start; }
 @media (min-width: 768px) { .home-category-card { width: 32vw; max-width: 340px; } }
-/* Product card image ratio is 5/6 (≈0.833); dialed back again from
-   0.72 to 0.78 — still a touch taller than a product card, less tall
-   than before. */
-.home-category-img { aspect-ratio: 0.78; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
+/* Product card image ratio is 5/6 (≈0.833); height reduced another
+   10% from 0.78 (aspect-ratio is width/height, so shrinking height by
+   10% at the same width means dividing the ratio by 0.9: 0.78/0.9 ≈ 0.87). */
+.home-category-img { aspect-ratio: 0.87; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
 .home-category-label {
   font-family: 'Inter', sans-serif; font-size: 11px;
   letter-spacing: 0.1em; font-weight: 500;

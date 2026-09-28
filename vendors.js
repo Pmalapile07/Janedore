@@ -23,29 +23,19 @@ function renderVendorsFooter(vendors) {
 function navigateToBrandProducts(brandName) { S.saleMode = false; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; const toolbarCenter = document.getElementById("page-products").querySelector(".toolbar-center"); if(toolbarCenter) toolbarCenter.textContent = brandName.toUpperCase(); const filtered = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName); const prods = merchandiseProducts(filtered); if(DOM.allProductsGrid) { DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = prods.length ? prods.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products from this brand yet.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); } window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled(); updateChatVisibility(); }
 
 /* ============================================================
-   HOME FEATURED BRANDS — SLIDER
-   Replaces the old single-spotlight renderer. Now renders EVERY
-   active vendor (excluding JANEDORE, the house's own brand) as
-   its own slide in a horizontally scrolling slider, with swipe
-   bars beneath. Clicking a slide routes to that vendor's page
-   via navigateToVendor(vendor.id).
+   HOME "OUR BRANDS" — CONTINUOUS AUTO-SCROLLING STRIP
+   Renders every active vendor (excluding JANEDORE, the house's own
+   brand) as a logo+name pair in a strip that scrolls continuously
+   on its own — not a manual swipe slider, no progress dots.
 
    DOM contract (must exist in index.html):
-     #home-brands-slider   → slides container
-     #home-brands-progress → swipe-bar indicators
+     #home-brands-slider → strip container (CSS: overflow hidden)
 
-   Each slide uses the same .featured-brand-* classes the old
-   hardcoded sections used, so no new CSS system is required.
-   Brand name typography is set inline to match the hero heading
-   aesthetic (Inter, weight 600, 11px, uppercase, wide tracking).
-
-   Progress dots: initBrandsSliderScroll() attaches a scroll
-   listener to #home-brands-slider (same technique
-   buildCategoriesSlider() already uses in collection.js) that
-   recalculates the nearest slide on every scroll event and
-   toggles .active on the matching dot. Without this, the dots
-   render once and never update — which was the bug: rendering
-   the dots alone doesn't make them track the scroll position.
+   The strip's content is repeated enough times to read as
+   continuous even with only 1-2 brands, then that whole repeated
+   set is duplicated once more so the marquee's translateX(-50%)
+   loop point is seamless — same technique #announcement-bar uses
+   in navigation.css.
    ============================================================ */
 
 function getFeaturedBrands(vendors) {
@@ -57,56 +47,30 @@ function getFeaturedBrands(vendors) {
   });
 }
 
-function initBrandsSliderScroll(sliderEl, progressEl, count) {
-  if (!sliderEl || !progressEl || !count) return;
-  if (sliderEl._brandsScrollHandler) {
-    sliderEl.removeEventListener('scroll', sliderEl._brandsScrollHandler);
-  }
-  const handler = () => {
-    const slides = sliderEl.querySelectorAll('.featured-brand-slide');
-    if (!slides.length) return;
-    const slideWidth = slides[0].offsetWidth + 8; // matches the 8px gap in the slider CSS
-    const idx = Math.max(0, Math.min(Math.round(sliderEl.scrollLeft / slideWidth), count - 1));
-    progressEl.querySelectorAll('.swipe-bar').forEach((b, i) => b.classList.toggle('active', i === idx));
-  };
-  sliderEl._brandsScrollHandler = handler;
-  sliderEl.addEventListener('scroll', handler, { passive: true });
-}
-
 function renderHomeBrandSpotlight(vendors) {
   const sliderEl = document.getElementById('home-brands-slider');
-  const progressEl = document.getElementById('home-brands-progress');
   if (!sliderEl) return;
 
   const brands = getFeaturedBrands(vendors);
-
   if (!brands.length) {
     sliderEl.innerHTML = '';
-    if (progressEl) progressEl.innerHTML = '';
     return;
   }
 
-  sliderEl.innerHTML = brands.map(vendor => {
+  const REPEATS = Math.max(4, Math.ceil(10 / brands.length));
+  const repeated = [];
+  for (let i = 0; i < REPEATS; i++) repeated.push(...brands);
+
+  const renderItem = (vendor) => {
     const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
-    const img = vendor.heroImageUrl || vendor.logoUrl || '';
-    const escapedName = String(name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    return `
-      <div class="featured-brand-slide" onclick="navigateToVendor('${vendor.id}')">
-        <div class="featured-brand-img" style="background-image:url('${img}'); background-color:#e8e4dd;">
-          <div class="featured-brand-content">
-            <div class="featured-brand-heading" style="font-family:'Inter',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#fff;">${escapedName}</div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
+    const logo = vendor.logoUrl
+      ? `<img src="${escapeHTML(vendor.logoUrl)}" alt="" class="brand-strip-logo">`
+      : `<span class="brand-strip-logo brand-strip-logo-fallback">${escapeHTML(name.charAt(0).toUpperCase())}</span>`;
+    return `<div class="brand-strip-item" onclick="navigateToVendor('${escapeJSString(vendor.id)}')">${logo}<span class="brand-strip-name">${escapeHTML(name)}</span></div>`;
+  };
 
-  if (progressEl) {
-    progressEl.innerHTML = brands.map((_, i) =>
-      `<div class="swipe-bar${i === 0 ? ' active' : ''}"></div>`
-    ).join('');
-  }
-
-  initBrandsSliderScroll(sliderEl, progressEl, brands.length);
+  const setHTML = repeated.map(renderItem).join('');
+  sliderEl.innerHTML = `<div class="brand-strip-track">${setHTML}${setHTML}</div>`;
 }
 
 async function initVendors() {

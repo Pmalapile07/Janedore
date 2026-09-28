@@ -68,97 +68,63 @@
       }
     }
 
-    .featured-brand-section {
-      margin-bottom: 8px !important;
-      padding-bottom: 0 !important;
-    }
-
-    .featured-brand-section + .featured-brand-section {
-      margin-top: 8px !important;
-      padding-top: 0 !important;
-    }
-
-    .featured-brand-img {
-      position: relative;
-    }
-
-    .featured-brand-sub {
-      display: none !important;
-    }
-
-    .featured-brand-content {
-      position: absolute;
-      bottom: 30px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      align-items: center;
-      padding: 0;
-      justify-content: flex-end;
-    }
-
-    .featured-brand-heading {
-      margin-bottom: 14px;
-    }
-
+    /* "Our Brands" — a continuously auto-scrolling logo+name strip,
+       not a manual swipe slider. Same duplicate-the-content /
+       translateX(-50%) loop technique as #announcement-bar's marquee
+       in navigation.css. */
     #home-brand-spotlight {
-      padding: 32px 18px !important;
+      padding: 32px 0;
     }
     #home-brand-spotlight .featured-brands-slider {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      padding-bottom: 0;
+      overflow: hidden;
+      white-space: nowrap;
     }
-    #home-brand-spotlight .featured-brands-slider::-webkit-scrollbar {
-      display: none;
+    .brand-strip-track {
+      display: inline-flex;
+      align-items: center;
+      animation: brand-strip-scroll 30s linear infinite;
     }
-    #home-brand-spotlight .featured-brand-slide {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
+    .brand-strip-track:hover {
+      animation-play-state: paused;
+    }
+    .brand-strip-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 28px;
       cursor: pointer;
+      flex-shrink: 0;
     }
-    @media (min-width: 640px) {
-      #home-brand-spotlight .featured-brand-slide {
-        flex: 0 0 calc(50% - 4px);
-      }
+    .brand-strip-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #f0ede8;
     }
-    @media (min-width: 900px) {
-      #home-brand-spotlight .featured-brand-slide {
-        flex: 0 0 calc(33.333% - 6px);
-      }
-    }
-
-    #home-brand-spotlight .featured-brand-heading {
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #fff;
-      margin: 0;
-    }
-
-    #home-brands-progress {
+    .brand-strip-logo-fallback {
       display: flex;
+      align-items: center;
       justify-content: center;
-      gap: 6px;
-      margin-top: 14px;
-    }
-    #home-brands-progress .swipe-bar {
-      width: 24px;
-      height: 1px;
-      background: #ccc;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #home-brands-progress .swipe-bar.active {
       background: #111;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .brand-strip-name {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #111;
+      white-space: nowrap;
+    }
+    @keyframes brand-strip-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
     }
   </style>
 </head>
@@ -273,6 +239,10 @@
     <div class="home-categories-progress" id="home-categories-progress"></div>
   </section>
 
+  <section id="home-manifesto" style="padding:24px 18px;text-align:center;">
+    <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house for independent brands with a point of view. Every label here has been chosen for how it is made, how it looks, and how long it lasts, not for how loudly it announces itself. These are pieces made to hold their own in a wardrobe built over years, not seasons. If it is on this site, it earned its place.</p>
+  </section>
+
   <section id="home-all-products" style="padding:0 0 24px 0;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0 18px 24px 18px;">
       <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">NEW ARRIVALS</div>
@@ -281,16 +251,11 @@
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
-  <section id="home-brand-spotlight" class="featured-brand-section">
-    <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0;">
-      <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">FEATURED BRANDS</div>
+  <section id="home-brand-spotlight">
+    <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0 18px 24px 18px;">
+      <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">OUR BRANDS</div>
     </div>
     <div class="featured-brands-slider" id="home-brands-slider"></div>
-    <div class="home-categories-progress" id="home-brands-progress"></div>
-  </section>
-
-  <section id="home-manifesto" style="padding:24px 18px;text-align:center;">
-    <p id="home-manifesto-text" style="font-family: 'Inter', sans-serif; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; color: #111; line-height: 1.6; margin: 0;">A curated house for independent brands with a point of view. Every label here has been chosen for how it is made, how it looks, and how long it lasts, not for how loudly it announces itself. These are pieces made to hold their own in a wardrobe built over years, not seasons. If it is on this site, it earned its place.</p>
   </section>
 
   <section id="home-shop-clothing" style="padding:24px 0;">
