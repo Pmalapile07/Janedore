@@ -394,20 +394,19 @@
               rej(new Error('AI Bridge timeout after ' + timeoutMs + 'ms — SDK never resolved'));
             }, timeoutMs);
           });
-          // TemplateGenerativeModel.generateContent() takes a single
-          // TemplateRequest object ({templateId, templateVariables}),
-          // not two positional arguments — firebase-js-sdk PR #10380
-          // ("refactor TemplateGenerativeModel methods to accept
-          // TemplateRequest") changed this while the feature is in
-          // Public Preview. The old two-argument call sent a request
-          // the SDK couldn't parse correctly, which never came back
-          // with a response OR a thrown error — exactly the symptom
-          // in production (every message hit the 15s timeout below,
-          // "SDK never resolved", with nothing else in the console).
-          const call = templateModel.generateContent({
-            templateId: resolvedTemplateId,
-            templateVariables: variables || {}
-          });
+          // Positional (templateId, variables) — proven correct for
+          // this SDK version by direct evidence: passing a single
+          // {templateId, templateVariables} object (per a firebase-js-sdk
+          // refactor PR that turned out not to apply to this version)
+          // made the SDK stringify that whole object straight into the
+          // request URL — /templates/[object%20Object]:generateContent,
+          // a fast 404 — which only happens if this method reads its
+          // first argument directly as the template id string, i.e. it
+          // truly does take two positional arguments, not one object.
+          const call = templateModel.generateContent(
+            resolvedTemplateId,
+            variables || {}
+          );
           const result = await Promise.race([call, timeout]);
           const response = result && result.response;
           if (!response) return null;
