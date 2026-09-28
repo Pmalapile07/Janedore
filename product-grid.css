@@ -117,7 +117,23 @@
   font-size: 16px;
   line-height: 1;
   flex-shrink: 0;
+  transition: opacity 0.2s ease;
 }
+/* The visible box is 28px (below the 44px minimum touch-target size
+   guidance), so an imprecise tap can land just outside it — on the
+   image underneath, which is the whole card's click target, causing
+   an accidental navigation to the product page instead of toggling
+   the wish. This invisibly extends the actual tappable area to 44px
+   (28 + 8 + 8) without changing how the button looks. -8px reaches
+   exactly to product-img-wrap's own edge (the button sits 8px inset)
+   so it doesn't get clipped by the wrap's overflow:hidden. */
+.product-wish-btn::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.product-wish-btn:hover { opacity: 0.75; }
+.product-wish-btn:active { opacity: 0.55; }
 .product-home-price,
 .product-price {
   font-family: 'Inter', sans-serif;

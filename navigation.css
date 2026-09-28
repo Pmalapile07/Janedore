@@ -58,7 +58,9 @@
 
 .nav-right { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; justify-content: flex-end; }
 
-.nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; }
+.nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; cursor: pointer; transition: opacity 0.2s ease; }
+.nav-icon-btn:hover { opacity: 0.7; }
+.nav-icon-btn:active { opacity: 0.5; }
 .nav-icon-btn .badge { position: absolute; top: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; font-size: 7px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 .desktop-nav-links { display: none; align-items: center; gap: 24px; }
 .desktop-utility-links { display: none; align-items: center; gap: 4px; }
