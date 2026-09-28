@@ -22,7 +22,7 @@
     z-index: 9998 !important;
     width: 48px !important;
     height: 48px !important;
-    border-radius: 24px !important;
+    border-radius: 0 !important;
     background: #111 !important;
     color: #fff !important;
     border: none !important;
@@ -198,26 +198,25 @@
     display: none;
   }
 
-  /* ---------- FULL SCREEN WINDOW ---------- */
+  /* ---------- WINDOW (inset floating panel, not full screen) ---------- */
   #chat-window {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    max-height: 100vh !important;
-    max-height: 100dvh !important;
+    top: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+    height: auto !important;
+    max-height: calc(100vh - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
     background: #fff !important;
     border: none !important;
-    border-radius: 0 !important;
+    border-radius: 20px !important;
     z-index: 9999 !important;
     display: none;
     flex-direction: column !important;
-    box-shadow: none !important;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25) !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
   }
@@ -230,7 +229,7 @@
     padding: 18px 20px !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-end !important;
+    justify-content: space-between !important;
     flex-shrink: 0 !important;
   }
   #chat-window .chat-header-close {
@@ -244,6 +243,28 @@
     transition: color 0.2s !important;
   }
   #chat-window .chat-header-close:hover { color: #fff !important; }
+
+  /* Header's own Track Order button — only visible once the greeting
+     message's inline button (see .jai-track-order-btn) has scrolled
+     out of view, via the IntersectionObserver set up in
+     renderAIGreeting() (chat.js). Defaults to visible so it's never
+     lost entirely if that observer has nothing to watch (e.g. a
+     returning visitor whose recent history renders instead of a fresh
+     greeting) — chat.js hides it explicitly once it isn't needed. */
+  #chat-window .chat-header-track-btn {
+    background: #fff !important;
+    color: #111 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 8px 16px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.02em !important;
+    cursor: pointer !important;
+    transition: opacity 0.2s !important;
+  }
+  #chat-window .chat-header-track-btn:hover { opacity: 0.85 !important; }
 
   /* ---------- MESSAGES ---------- */
   #chat-window .chat-body {
@@ -355,12 +376,12 @@
   #chat-window .chat-pill-btn.filled:hover { background: #333 !important; }
 
   /* Track Order button specifically — 2px taller (padding, since the
-     shared .chat-pill-btn has no explicit height) and 2px less rounded
-     than the shared pill style used elsewhere (e.g. the satisfaction
-     Yes/No buttons), which is untouched. */
+     shared .chat-pill-btn has no explicit height) and square (no
+     rounding), unlike the shared pill style used elsewhere (e.g. the
+     satisfaction Yes/No buttons), which is untouched. */
   #chat-window .chat-pill-btn.jai-track-order-btn {
     padding: 9px 18px !important;
-    border-radius: 15px !important;
+    border-radius: 0 !important;
   }
 
   /* ---------- WELCOME ---------- */
@@ -380,6 +401,19 @@
     margin-bottom: 12px !important;
     font-weight: 400 !important;
     letter-spacing: 0.02em !important;
+  }
+  /* History-load placeholder — a plain spinner, no "Loading..." text */
+  #chat-window .chat-loading-spinner {
+    width: 28px !important;
+    height: 28px !important;
+    margin: 0 auto !important;
+    border: 2px solid #e0e0e0 !important;
+    border-top-color: #111 !important;
+    border-radius: 50% !important;
+    animation: chat-spin 0.7s linear infinite !important;
+  }
+  @keyframes chat-spin {
+    to { transform: rotate(360deg); }
   }
 
   /* ---------- INPUT PILL (border above removed) ---------- */
@@ -604,6 +638,7 @@
 
 <div id="chat-window">
   <div class="chat-header">
+    <button class="chat-header-track-btn" id="chat-header-track-btn" onclick="showOrderLookup()">Track Order</button>
     <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()">
       <i class="ph-light ph-x" id="chat-header-icon"></i>
     </button>
