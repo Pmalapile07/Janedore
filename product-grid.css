@@ -123,12 +123,26 @@
   font-family: 'Inter', sans-serif;
   font-size: 10px;
   color: #000;
-  font-weight: 400;
-  letter-spacing: normal;
+  font-weight: 500;
+  letter-spacing: var(--ui-letter-spacing);
   margin-top: 4px;
+  margin-bottom: 16px;
 }
 .product-price-row {
   margin-bottom: 16px;
+}
+/* Sits right under the price when a product has more than one color
+   variant. The negative margin-top collapses against the price's own
+   margin-bottom (16px) for a tight ~4px gap, and this becomes the
+   card's trailing space instead when present. */
+.product-variant-count {
+  margin-top: -12px;
+  margin-bottom: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: #999;
 }
 
 /* --- SLIDER layout: Shop by Clothing (#clothing-grid) and the swipe

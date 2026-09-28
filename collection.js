@@ -461,18 +461,11 @@ function updateGridToggleSVG(svgId, cols) {
 }
 
 function expandProductVariants(products) {
-  const expanded = [];
-  products.forEach(p => {
-    const variants = p.variants || [];
-    if (variants.length <= 1) {
-      expanded.push({ product: p, variantIndex: 0 });
-    } else {
-      variants.forEach((v, i) => {
-        expanded.push({ product: p, variantIndex: i });
-      });
-    }
-  });
-  return expanded;
+  // Each product renders as exactly one card regardless of how many
+  // color variants it has — a "+N colors" label on the card (see
+  // productCard()/productCardHome()) surfaces the extra variants
+  // instead of duplicating the product into one card per variant.
+  return products.map(p => ({ product: p, variantIndex: 0 }));
 }
 
 function productCard(p, isLarge, showDetails, variantIndex) {
@@ -489,8 +482,11 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
   const priceDisplay = formatPriceCardStyle(priceValue);
   const price = `<div class="product-price-row"><span class="product-price">${escapeHTML(priceDisplay)}</span></div>`;
+  const variantCount = (p.variants && p.variants.length > 1)
+    ? `<div class="product-variant-count">+${p.variants.length - 1} colors</div>`
+    : '';
 
-  const metaRow = `<div class="product-home-name-row">${name}</div>${price}`;
+  const metaRow = `<div class="product-home-name-row">${name}</div>${price}${variantCount}`;
   const pid = escapeJSString(p.id);
 
   return `
@@ -516,6 +512,9 @@ function productCardHome(p) {
   const pid = escapeJSString(p.id);
   const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
   const priceDisplay = formatPriceCardStyle(priceValue);
+  const variantCount = (p.variants && p.variants.length > 1)
+    ? `<div class="product-variant-count">+${p.variants.length - 1} colors</div>`
+    : '';
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${pid}')"><i class="ph ph-bookmark-simple"></i></button></div>
@@ -524,6 +523,7 @@ function productCardHome(p) {
           <div class="product-title">${escapeHTML(p.name)}</div>
         </div>
         <div class="product-home-price">${escapeHTML(priceDisplay)}</div>
+        ${variantCount}
       </div>
     </div>`;
 }
