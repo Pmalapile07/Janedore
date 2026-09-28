@@ -496,6 +496,7 @@ function showOrderLookup() {
   if (resultEl) resultEl.innerHTML = '';
   const input = safeEl('order-lookup-input');
   if (input) setTimeout(() => input.focus(), 100);
+  updateHeaderTrackBtnVisibility();
 }
 
 function setHeaderIcon(iconClass) {
@@ -518,6 +519,22 @@ function backToChat() {
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'flex';
   setHeaderIcon('ph-light ph-x');
+  updateHeaderTrackBtnVisibility();
+}
+
+// The header's own Track Order button (chat-widget.html) stays visible
+// by default — that's what carries the feature for a returning visitor
+// whose recent history renders instead of a fresh greeting, since there's
+// no greeting button in that case to ever hide it. It's only hidden
+// while the greeting's own inline button is genuinely on screen (no
+// need for two), or while already on the order-lookup screen itself.
+let _greetingTrackBtnVisible = false;
+function updateHeaderTrackBtnVisibility() {
+  const btn = safeEl('chat-header-track-btn');
+  if (!btn) return;
+  const orderLookup = safeEl('order-lookup');
+  const onOrderScreen = !!(orderLookup && orderLookup.style.display !== 'none');
+  btn.style.display = (!onOrderScreen && !_greetingTrackBtnVisible) ? '' : 'none';
 }
 
 function clearChatSession() {
@@ -597,7 +614,7 @@ function renderAIGreeting() {
   greeting.className = 'chat-msg admin jai-msg';
 
   const introText = document.createElement('div');
-  introText.style.cssText = 'margin-bottom:10px;font-weight:500;';
+  introText.style.cssText = 'margin-bottom:10px;font-weight:400;';
   introText.innerHTML =
     'Hi, I\'m JAI — the Janedore AI. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
     + '<br><br>'
@@ -611,6 +628,20 @@ function renderAIGreeting() {
   row.appendChild(buildJAIAvatarEl('happy'));
   row.appendChild(greeting);
   el.appendChild(row);
+
+  // Once this greeting (and its inline Track Order button) scrolls out
+  // of view, the header's own Track Order button (hidden by default
+  // while this one is visible — see updateHeaderTrackBtnVisibility())
+  // takes over so the action stays reachable without scrolling back up.
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        _greetingTrackBtnVisible = entry.isIntersecting;
+        updateHeaderTrackBtnVisibility();
+      });
+    }, { root: el, threshold: 0.01 });
+    observer.observe(row);
+  }
 }
 
 // Detects a customer asking to track an order in plain text (e.g. "track
@@ -805,7 +836,7 @@ async function loadMessages() {
   const el = safeEl('chat-messages');
   if (!rtdb || !el) { _ScreenDebug.err('RTDB', 'Cannot load — rtdb or el missing'); return false; }
 
-  el.innerHTML = '<div class="chat-welcome"><strong>Loading...</strong></div>';
+  el.innerHTML = '<div class="chat-welcome"><div class="chat-loading-spinner"></div></div>';
   _ScreenDebug.info('RTDB', 'Loading history for session ' + chatSessionId.slice(0, 20));
 
   const LOAD_TIMEOUT_MS = 10000;
