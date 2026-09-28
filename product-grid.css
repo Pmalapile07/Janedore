@@ -141,6 +141,17 @@
   color: #000;
   font-weight: 500;
   letter-spacing: var(--ui-letter-spacing);
+}
+/* Margin lives on the block-level wrapper, not shared with
+   .product-price: that one is a <span> inside .product-price-row, and
+   a stray collection.css rule once made that row `display: inline-flex`
+   — which blockifies its child, turning the span's own margin from a
+   harmless no-op (inline elements' vertical margins don't affect
+   layout) into real, layout-affecting space and roughly doubling the
+   gap below the price. Removed that conflicting rule, but keeping the
+   margin off the span itself is the actual fix, in case anything else
+   ever changes .product-price-row's display again. */
+.product-home-price {
   margin-top: 4px;
   margin-bottom: 16px;
 }
