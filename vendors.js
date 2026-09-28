@@ -1,4 +1,7 @@
-async function fetchVendors() { try { const snapshot = await db.collection('vendors').where('status','==','active').get(); if (!snapshot.empty) { const vendors = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); return vendors; } } catch(e) {} return []; }
+// "brands" is the collection admin-vendors.js's CRUD (create/edit/delete/
+// seed) actually reads and writes — "vendors" was a second, unrelated
+// collection nothing ever wrote to, so this always returned [].
+async function fetchVendors() { try { const snapshot = await db.collection('brands').where('status','==','active').get(); if (!snapshot.empty) { const vendors = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); return vendors; } } catch(e) {} return []; }
 function renderVendorsDesktop(vendors) {
   const navLinksContainer = document.querySelector('.desktop-nav-links'); if (!navLinksContainer) return;
   const existing = navLinksContainer.querySelector('.desktop-dropdown-wrap.brands-dynamic'); if (existing) existing.remove();

@@ -48,7 +48,11 @@
   var newsletterRef  = db.collection('newsletter');
   var ordersRef      = db.collection('orders');
   var customersRef   = db.collection('customers');
-  var vendorsRef     = db.collection('vendors');
+  // "brands" is the canonical collection — admin-vendors.js's full CRUD
+  // (create/edit/delete/seed) reads and writes it, and the storefront's
+  // vendor page (collection.js) reads it too. "vendors" was a second,
+  // unrelated collection nothing ever wrote to.
+  var vendorsRef     = db.collection('brands');
   var adminsRef      = db.collection('admins');
 
   window._productsRef   = productsRef;
