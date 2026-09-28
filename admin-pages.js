@@ -107,6 +107,7 @@
 
   window._handlePageSubmit = function(e, slug) {
     e.preventDefault();
+    if (!window._guard('pages', 'update')) return;
     var form = e.target;
     var data = {
       title: form.title.value,

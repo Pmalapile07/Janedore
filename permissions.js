@@ -200,7 +200,8 @@
     customers:  'customers',
     settings:   'settings',
     admins:     'admins',
-    discounts:  'discounts'
+    discounts:  'discounts',
+    pages:      'pages'
   };
 
   window._applyRoleUI = function () {
@@ -239,6 +240,8 @@
       'settings-more-item',// more menu settings item
       'admins-tab-btn',    // sidebar admins tab
       'admins-more-item',  // more menu admins item
+      'pages-tab-btn',     // sidebar pages tab
+      'pages-more-item',   // more menu pages item
       'btn-seed',          // sidebar seed button
       'btn-seed-more'      // more menu seed button
     ];

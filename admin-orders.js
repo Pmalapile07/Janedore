@@ -141,8 +141,8 @@
 
   // ─── BULK MODE ───────────────────────────────────────────────
 
-  window._toggleBulkMode = function () {
-    window._bulkMode = !window._bulkMode;
+  window._toggleBulkMode = function (forceValue) {
+    window._bulkMode = (typeof forceValue === 'boolean') ? forceValue : !window._bulkMode;
     window._selectedOrders = {};
 
     var toggleBtn = safeEl('bulk-toggle-btn');
@@ -210,10 +210,7 @@
         var o = (window._ordersData || []).find(function (x) { return x.id === id; });
         if (o) o.status = status;
       });
-      window._selectedOrders = {};
-      window._bulkMode = false;
-      window._toggleBulkMode();
-      renderOrdersTable(window._ordersData);
+      window._toggleBulkMode(false);
     }).catch(function (e) {
       showToast('Error: ' + e.message, 'error');
     });

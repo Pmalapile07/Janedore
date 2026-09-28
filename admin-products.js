@@ -760,15 +760,37 @@
     if (!container) return;
     var blocks = container.querySelectorAll('.variant-block');
     if (blocks.length <= 1) { showToast('Need at least one variant', 'info'); return; }
-    var block = container.querySelector('[data-variant-index="' + index + '"]');
-    if (block) {
-      block.remove();
-      container.querySelectorAll('.variant-block').forEach(function(b, i) {
-        b.setAttribute('data-variant-index', i);
-        var label = b.querySelector('[style*="Variant"]');
-        if (label) label.textContent = 'Variant ' + (i+1);
+    var cat = (document.querySelector('[name="category"]') || {}).value || 'dresses';
+
+    // Read every surviving block's current values, then rebuild them
+    // from scratch at their new index via buildVariantBlock(), rather
+    // than renumbering data-variant-index in place. Renumbering alone
+    // left each block's <input name="variant-color-N"> (baked in once
+    // at build time) pointing at its old index, and
+    // _handleProductSubmit reads variants by name sequentially from
+    // variant-color-0 — removing any variant but the last one created
+    // a gap there that silently dropped it and every variant after it
+    // on save. Rebuilding keeps every generated attribute (name, id,
+    // onchange index) consistent with each block's new position.
+    var remaining = [];
+    blocks.forEach(function(b) {
+      if (parseInt(b.getAttribute('data-variant-index'), 10) === index) return;
+      var vi = b.getAttribute('data-variant-index');
+      var colorEl  = b.querySelector('[name="variant-color-'  + vi + '"]');
+      var swatchEl = b.querySelector('[name="variant-swatch-' + vi + '"]');
+      var getUrls = function(type) {
+        var sel = b.querySelector('[data-img-type="' + type + '"]');
+        return sel ? Array.from(sel.selectedOptions).map(function(o){ return o.value; }) : [];
+      };
+      remaining.push({
+        color:  colorEl  ? colorEl.value  : '',
+        swatch: swatchEl ? swatchEl.value : '#111',
+        images: { model: getUrls('model'), ghost: getUrls('ghost'), detail: getUrls('detail') }
       });
-    }
+    });
+
+    container.innerHTML = remaining.map(function(v, i) { return buildVariantBlock(v, i, cat); }).join('');
+    remaining.forEach(function(v, i) { _refreshVariantPreviewStrip(i); });
   };
 
   // ── SUBMIT ────────────────────────────────────────────────────
