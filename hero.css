@@ -49,24 +49,35 @@
   display: none;
 }
 
-/* UPDATED: Removed absolute positioning and top/left/transform */
 .hero-heading {
-  /* Removed position: absolute; */
-  /* Removed top: 20px; */
-  /* Removed left: 50%; */
-  /* Removed transform: translateX(-50%); */
   z-index: 2;
-  font-family: 'Inter', sans-serif !important;
-  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   color: #fff;
-  text-transform: none;
-  line-height: 1.5;
-  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  letter-spacing: 0.1em;
   max-width: 480px;
   text-align: center;
-  margin: 0; 
+  margin: 0;
+}
+
+/* Matches home-manifesto's weight (300) — the 400 it had before read
+   too thick against the manifesto text further down the page. */
+.hero-statement-sub {
+  z-index: 2;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: #fff;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1.5;
+  max-width: 420px;
+  text-align: center;
+  margin: 0;
 }
 
 .hero-shop-btn {
@@ -90,5 +101,5 @@
 @media (max-width: 768px) {
   #hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
   .hero-content-wrap { padding: 0 20px 32px; gap: 12px; }
-  .hero-heading { font-size: 12px; max-width: 320px; /* Removed top: 16px; */ }
+  .hero-statement-sub { max-width: 320px; }
 }
