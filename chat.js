@@ -217,8 +217,8 @@ function classifyAIError(e) {
 
   if (hasDailyQuota) return 'daily-quota';
 
-  // Client-imposed timeout on the AI reply fetch
-  if (msg.includes('timed out')) return 'timeout';
+  // Bridge-imposed timeout
+  if (msg.includes('ai bridge timeout')) return 'timeout';
 
   // Transient server errors — one retry allowed
   if (
@@ -689,6 +689,11 @@ async function getAIReply(customerText) {
     return null;
   }
 
+  if (!window._aiBridge) {
+    _ScreenDebug.err('AI', 'Bridge not available on window._aiBridge');
+    return null;
+  }
+
   // FIX #3: in-flight lock
   if (_aiInFlight) {
     _ScreenDebug.warn('AI', 'Concurrent AI request blocked — previous request still in flight');
@@ -724,35 +729,11 @@ async function getAIReply(customerText) {
       }
 
       try {
-        _ScreenDebug.ai('AI', 'Calling /api/chat-ai-reply attempt ' + attempt + '/' + MAX_ATTEMPTS + ' — textLength=' + safeText.length);
+        _ScreenDebug.ai('AI', 'Calling getReply attempt ' + attempt + '/' + MAX_ATTEMPTS + ' — textLength=' + safeText.length);
         const t0 = Date.now();
-
-        // Server-side endpoint (server.js, @google/genai directly) —
-        // replaces the client-side Firebase AI Logic "template" bridge
-        // (window._aiBridge.getReply('customer-support-chat', ...) in
-        // index.html), which was hanging indefinitely in production:
-        // every message timed out at exactly the bridge's own internal
-        // 15000ms race, meaning the SDK call itself never resolved or
-        // rejected (a template/App-Check/project-config issue on that
-        // separate 'ai-logic' Firebase app instance — not something
-        // fixable from this file). This endpoint was already fully
-        // built and working, just never wired up to the widget.
-        const AI_FETCH_TIMEOUT_MS = 15000;
-        const timeoutPromise = new Promise((_, rej) => {
-          setTimeout(() => rej(new Error('AI reply timed out after ' + AI_FETCH_TIMEOUT_MS + 'ms')), AI_FETCH_TIMEOUT_MS);
+        const reply = await window._aiBridge.getReply('customer-support-chat', {
+          customerText: safeText
         });
-        const fetchPromise = fetch('/api/chat-ai-reply', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: safeText }),
-          signal: controller ? controller.signal : undefined
-        }).then(async (resp) => {
-          const data = await resp.json().catch(() => ({}));
-          if (!resp.ok) throw new Error(data.error || ('HTTP ' + resp.status));
-          return data.reply || null;
-        });
-
-        const reply = await Promise.race([fetchPromise, timeoutPromise]);
         const dt = Date.now() - t0;
 
         // FIX #15: check superseded before returning
@@ -766,7 +747,7 @@ async function getAIReply(customerText) {
         }
 
         if (!reply) {
-          _ScreenDebug.warn('AI', 'Server returned null/empty after ' + dt + 'ms');
+          _ScreenDebug.warn('AI', 'Bridge returned null/empty after ' + dt + 'ms');
           return null;
         }
 
@@ -1647,10 +1628,13 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCustomerInfoBar();
   ensureAuth();
 
-  // AI replies go through /api/chat-ai-reply (server.js) now, not the
-  // client-side window._aiBridge — nothing to wait on readiness-wise,
-  // the endpoint is either there or it isn't.
-  _ScreenDebug.setStatus('AI ready', '#7f7');
+  if (!env._aiBridge) {
+    _ScreenDebug.info('AI', 'Waiting for AI Bridge (max 8s)…');
+  }
+
+  waitForAIBridge().then(ready => {
+    _ScreenDebug.setStatus(ready ? 'AI ready' : 'AI offline', ready ? '#7f7' : '#f66');
+  });
 });
 
 // ============================================================
