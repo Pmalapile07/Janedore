@@ -477,7 +477,8 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
-  const wishBtn = `<button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${escapeJSString(p.id)}')"><i class="ph ph-bookmark-simple"></i></button>`;
+  const isWished = S.wishlist.some(w => w.id === p.id);
+  const wishBtn = `<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${escapeJSString(p.id)}', this)"><i class="${isWished ? 'ph-fill' : 'ph'} ph-bookmark-simple"></i></button>`;
 
   const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
   const priceDisplay = formatPriceCardStyle(priceValue);
@@ -515,9 +516,10 @@ function productCardHome(p) {
   const variantCount = (p.variants && p.variants.length > 1)
     ? `<div class="product-variant-count">+${p.variants.length - 1} colors</div>`
     : '';
+  const isWished = S.wishlist.some(w => w.id === p.id);
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn" onclick="event.stopPropagation();toggleWish('${pid}')"><i class="ph ph-bookmark-simple"></i></button></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph'} ph-bookmark-simple"></i></button></div>
       <div class="product-home-meta">
         <div class="product-home-name-row">
           <div class="product-title">${escapeHTML(p.name)}</div>

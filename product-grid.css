@@ -106,7 +106,7 @@
   height: 28px;
   background: #fff;
   border: none;
-  border-radius: 50%;
+  border-radius: 0;
   padding: 0;
   margin: 0;
   cursor: pointer;
@@ -175,7 +175,11 @@
 #all-products-grid .product-card:nth-child(odd) .product-price-row,
 #category-products-grid .product-card:nth-child(odd) .product-price-row,
 #arrivals-grid .product-card:nth-child(odd) .product-price-row,
-.static-product-grid .product-card:nth-child(odd) .product-price-row {
+.static-product-grid .product-card:nth-child(odd) .product-price-row,
+#all-products-grid .product-card:nth-child(odd) .product-variant-count,
+#category-products-grid .product-card:nth-child(odd) .product-variant-count,
+#arrivals-grid .product-card:nth-child(odd) .product-variant-count,
+.static-product-grid .product-card:nth-child(odd) .product-variant-count {
   padding-left: 8px;
 }
 /* productCardHome() (used by #arrivals-grid) has no .product-price-row

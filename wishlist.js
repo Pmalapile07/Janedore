@@ -17,14 +17,24 @@ function saveWishlistToStorage() {
   } catch(e) {}
 }
 
-function toggleWish(productId) {
+function toggleWish(productId, btnEl) {
   const product = PRODUCTS.find(p => p.id === productId);
   if (!product) return;
   const idx = S.wishlist.findIndex(w => w.id === productId);
+  const nowWished = idx < 0;
   if (idx >= 0) {
     S.wishlist.splice(idx, 1);
   } else {
     S.wishlist.push(product);
+  }
+  // Collection/category/home grids don't re-render on a wish toggle
+  // (only the wishlist page does, below), so flip this specific
+  // button's icon directly rather than requiring a full grid rebuild
+  // to see the change.
+  if (btnEl) {
+    const icon = btnEl.querySelector('i');
+    if (icon) icon.className = nowWished ? 'ph-fill ph-bookmark-simple' : 'ph ph-bookmark-simple';
+    btnEl.classList.toggle('wished', nowWished);
   }
   updateBadges();
   renderWishlistPage();
