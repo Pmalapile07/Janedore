@@ -25,16 +25,13 @@
   letter-spacing: var(--body-letter-spacing); line-height: var(--body-line-height);
   color: #888; font-family: 'Inter', sans-serif;
 }
+/* Static 2x2 grid — matches the 4 fixed categories exactly, unlike a
+   slider (which multi-brand fashion sites reserve for product rows,
+   not a category launcher this small). */
 .home-categories-grid {
-  display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 18px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 18px;
 }
-.home-categories-grid::-webkit-scrollbar { display: none; }
-/* Sized as a true horizontal slider — bigger than the product-card
-   slider (#arrivals-grid: 65vw / 28vw, max-width 300px) rather than
-   snapping to exactly 2/3/5 per screen like a fixed grid. */
-.home-category-card { cursor: pointer; flex: 0 0 auto; width: 72vw; max-width: 340px; scroll-snap-align: start; }
-@media (min-width: 768px) { .home-category-card { width: 32vw; max-width: 340px; } }
+.home-category-card { cursor: pointer; width: 100%; }
 /* Product card image ratio is 5/6 (≈0.833); height reduced another
    10% from 0.78 (aspect-ratio is width/height, so shrinking height by
    10% at the same width means dividing the ratio by 0.9: 0.78/0.9 ≈ 0.87). */
@@ -45,9 +42,6 @@
   text-transform: uppercase; color: #111; text-align: center;
   padding-top: 10px;
 }
-.home-categories-progress { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
-.home-categories-progress .swipe-bar { width: 24px; height: 0.5px; background: #ccc; border: none; padding: 0; cursor: pointer; transition: background 0.2s; }
-.home-categories-progress .swipe-bar.active { background: #111; }
 .arrivals-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
 .arrivals-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; }
 .arrivals-view-all { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #555; background: none; padding-bottom: 1px; transition: color 0.2s, border-color 0.2s; border: none; border-bottom: 1px solid #555; cursor: pointer; display: inline-block; }

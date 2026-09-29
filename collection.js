@@ -875,8 +875,10 @@ function selectSortTab(cat) {
   updateCollectionGridIcon();
 }
 
+// Static 2x2 grid, not a slider — exactly 4 categories, so there's
+// nothing to page through and no swipe-bar progress dots needed.
 function buildCategoriesSlider() {
-  const grid = document.getElementById('home-categories-grid'); const progress = document.getElementById('home-categories-progress'); if (!grid || !progress) return;
+  const grid = document.getElementById('home-categories-grid'); if (!grid) return;
   const categories = [
     { label:'Clothing', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat:'all-clothing' },
     { label:'Accessories', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat:'all-accessories' },
@@ -884,31 +886,7 @@ function buildCategoriesSlider() {
     { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
   ];
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
-  // perView used to be guessed from window-width breakpoints (2/3/5 at
-  // 640/900px), which didn't match .home-category-card's actual CSS
-  // sizing (72vw mobile / 32vw desktop, breakpoint at 768px) — that
-  // mismatch is why the dot count was wrong (e.g. 4 cards, 3 dots).
-  // Measuring the real rendered card width stays correct regardless of
-  // how the CSS sizing changes in the future.
-  const perView = categoriesPerView(grid);
-  const maxIdx = Math.max(0, categories.length - perView);
-  progress.innerHTML = Array.from({length: maxIdx+1}, (_,i) => `<div class="swipe-bar${i===0?' active':''}" onclick="goCategoriesSlide(${i})"></div>`).join(''); S.categoriesSlideIndex = 0;
-  if (grid._categoriesScrollHandler) {
-    grid.removeEventListener('scroll', grid._categoriesScrollHandler);
-  }
-  const scrollHandler = () => { const cards = grid.querySelectorAll('.home-category-card'); if(!cards.length) return; const pw = categoriesPerView(grid); const cw=cards[0].offsetWidth+8; S.categoriesSlideIndex=Math.max(0,Math.min(Math.round(grid.scrollLeft/cw),Math.max(0,cards.length-pw))); progress.querySelectorAll('.swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===S.categoriesSlideIndex)); };
-  grid._categoriesScrollHandler = scrollHandler;
-  grid.addEventListener('scroll', scrollHandler, {passive:true});
 }
-
-function categoriesPerView(grid) {
-  const card = grid.querySelector('.home-category-card');
-  if (!card) return 1;
-  const cw = card.offsetWidth + 8; // +8px gap
-  return Math.max(1, Math.round(grid.offsetWidth / cw));
-}
-
-function goCategoriesSlide(idx) { const grid=document.getElementById('home-categories-grid'); const cards=grid?.querySelectorAll('.home-category-card'); if(!cards || !cards.length) return; const pw=categoriesPerView(grid); idx=Math.max(0,Math.min(idx,Math.max(0,cards.length-pw))); S.categoriesSlideIndex=idx; const cw=cards[0].offsetWidth+8; grid.scrollTo({left:idx*cw,behavior:'smooth'}); document.querySelectorAll('#home-categories-progress .swipe-bar').forEach((b,i)=>b.classList.toggle('active',i===idx)); }
 
 function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
 
@@ -916,7 +894,7 @@ function buildShopByClothing() {
   const grid = document.getElementById('clothing-grid');
   if (!grid) return;
   const active = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
-  grid.innerHTML = merchandiseProducts(active).slice(0, 4).map(p => productCardHome(p)).join('');
+  grid.innerHTML = merchandiseProducts(active).slice(0, 8).map(p => productCardHome(p)).join('');
 }
 
 function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">STAY IN THE EDIT</div><p class="newsletter-subtext">Exclusive access to new arrivals, private sales &amp; editorial content.</p><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
