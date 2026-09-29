@@ -29,7 +29,7 @@
    slider (which multi-brand fashion sites reserve for product rows,
    not a category launcher this small). */
 .home-categories-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 18px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 14.4px;
 }
 .home-category-card { cursor: pointer; width: 100%; }
 /* Product card image ratio is 5/6 (≈0.833); height reduced another
