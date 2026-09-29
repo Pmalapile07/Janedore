@@ -468,50 +468,58 @@ function expandProductVariants(products) {
   return products.map(p => ({ product: p, variantIndex: 0 }));
 }
 
-// ==================== INFINITE SCROLL (6 PER PAGE) ====================
-// Shared by the All Products, Category, and Sale grids: renders the
-// first 6 cards, then reveals 6 more automatically as a sentinel
-// element below the grid scrolls into view — no page-number buttons
-// to click through. Keyed by the grid element's id so All Products
-// and Sale (which share #all-products-grid) don't bleed into each
-// other's state; renderXProducts() always calls this with the full,
-// already-filtered/sorted list, so every call starts back at 6 (a
-// fresh filter/sort/grid-toggle is meant to reset paging, not resume
-// wherever a previous list left off).
+// ==================== PAGINATION (6 PER PAGE) ====================
+// Shared by the All Products, Category, and Sale grids. Page N shows
+// exactly products [(N-1)*6, N*6) — a real discrete page, not a
+// cumulative "load more" list — with a "Showing X–Y of Z products —
+// Page N of M" footer and Previous/Next controls, hidden entirely
+// when there are 6 or fewer products (nothing to page through).
+// Keyed by the grid element's id so All Products and Sale (which
+// share #all-products-grid) don't bleed into each other's state.
+// renderXProducts() always calls this with the full, already-
+// filtered/sorted list, so every call resets back to page 1 — a
+// fresh filter/sort/grid-toggle is meant to reset paging, not keep
+// whatever page a previous list left off on.
 const PRODUCTS_PER_PAGE = 6;
-const _gridVisibleCount = {};
+const _gridCurrentPage = {};
 
 function renderPaginatedGrid(gridEl, expanded, cols) {
   if (!gridEl) return;
   const key = gridEl.id;
-  _gridVisibleCount[key] = Math.min(PRODUCTS_PER_PAGE, expanded.length);
+  const total = expanded.length;
+  const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE));
 
-  function renderVisible() {
-    const count = _gridVisibleCount[key];
-    const visible = expanded.slice(0, count);
-    gridEl.innerHTML = visible.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex)).join("");
+  function renderPage(pageNum) {
+    pageNum = Math.max(1, Math.min(pageNum, totalPages));
+    _gridCurrentPage[key] = pageNum;
+
+    const start = (pageNum - 1) * PRODUCTS_PER_PAGE;
+    const end = Math.min(start + PRODUCTS_PER_PAGE, total);
+    const pageItems = expanded.slice(start, end);
+
+    gridEl.innerHTML = pageItems.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex)).join("");
     applyEditorialGrid(gridEl, cols);
 
-    const existingSentinel = gridEl.parentNode && gridEl.parentNode.querySelector('.grid-load-sentinel[data-for="' + key + '"]');
-    if (existingSentinel) existingSentinel.remove();
+    const existingFooter = gridEl.parentNode && gridEl.parentNode.querySelector('.grid-pagination[data-for="' + key + '"]');
+    if (existingFooter) existingFooter.remove();
 
-    if (count < expanded.length) {
-      const sentinel = document.createElement('div');
-      sentinel.className = 'grid-load-sentinel';
-      sentinel.setAttribute('data-for', key);
-      gridEl.insertAdjacentElement('afterend', sentinel);
-      const observer = new IntersectionObserver((entries) => {
-        if (!entries[0].isIntersecting) return;
-        observer.disconnect();
-        sentinel.remove();
-        _gridVisibleCount[key] = Math.min(_gridVisibleCount[key] + PRODUCTS_PER_PAGE, expanded.length);
-        renderVisible();
-      }, { rootMargin: '400px' });
-      observer.observe(sentinel);
-    }
+    if (total <= PRODUCTS_PER_PAGE) return; // nothing to page through
+
+    const footer = document.createElement('div');
+    footer.className = 'grid-pagination';
+    footer.setAttribute('data-for', key);
+    footer.innerHTML =
+      '<button class="grid-pagination-btn" type="button"' + (pageNum <= 1 ? ' disabled' : '') + '>Previous</button>' +
+      '<span class="grid-pagination-status">Showing ' + (start + 1) + '–' + end + ' of ' + total + ' products — Page ' + pageNum + ' of ' + totalPages + '</span>' +
+      '<button class="grid-pagination-btn" type="button"' + (pageNum >= totalPages ? ' disabled' : '') + '>Next</button>';
+    gridEl.insertAdjacentElement('afterend', footer);
+
+    const [prevBtn, nextBtn] = footer.querySelectorAll('.grid-pagination-btn');
+    prevBtn.addEventListener('click', () => { renderPage(pageNum - 1); gridEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    nextBtn.addEventListener('click', () => { renderPage(pageNum + 1); gridEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }
 
-  renderVisible();
+  renderPage(1);
 }
 
 function productCard(p, isLarge, showDetails, variantIndex) {
