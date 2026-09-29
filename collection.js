@@ -888,13 +888,43 @@ function buildCategoriesSlider() {
   grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
 }
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); } buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); initSliderLeadingTracking('arrivals-grid'); } buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
 
 function buildShopByClothing() {
   const grid = document.getElementById('clothing-grid');
   if (!grid) return;
   const active = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
   grid.innerHTML = merchandiseProducts(active).slice(0, 8).map(p => productCardHome(p)).join('');
+  initSliderLeadingTracking('clothing-grid');
+}
+
+// #arrivals-grid / #clothing-grid are horizontal scroll-snap sliders,
+// so "the first card" isn't fixed — it's whichever card the user has
+// scrolled to the leading (left) edge. A plain :first-child selector
+// only ever matches the card that happened to render first in the DOM,
+// so it stops matching the moment someone swipes. This tracks scroll
+// position instead and moves a .slide-leading class onto whichever
+// card is actually leading, so product-grid.css's "can't sit
+// edge-to-edge with the screen" padding follows the swipe.
+function initSliderLeadingTracking(gridId) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  const update = () => {
+    const cards = grid.querySelectorAll('.product-card');
+    if (!cards.length) return;
+    const gridLeft = grid.getBoundingClientRect().left;
+    let leading = cards[0], minDist = Infinity;
+    cards.forEach(card => {
+      const dist = Math.abs(card.getBoundingClientRect().left - gridLeft);
+      if (dist < minDist) { minDist = dist; leading = card; }
+    });
+    cards.forEach(c => { if (c !== leading) c.classList.remove('slide-leading'); });
+    leading.classList.add('slide-leading');
+  };
+  if (grid._leadingScrollHandler) grid.removeEventListener('scroll', grid._leadingScrollHandler);
+  grid._leadingScrollHandler = update;
+  grid.addEventListener('scroll', update, { passive: true });
+  update();
 }
 
 function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">STAY IN THE EDIT</div><p class="newsletter-subtext">Exclusive access to new arrivals, private sales &amp; editorial content.</p><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }

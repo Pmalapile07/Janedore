@@ -240,15 +240,21 @@
 /* --- SLIDER layout: New Arrivals (#arrivals-grid), Shop by Clothing
    (#clothing-grid), and the swipe sections that share this markup
    (.swipe-track — kept in case anything still uses that slider markup
-   elsewhere). Only the first (leading) card gets left AND right
-   padding on its text — it can't sit edge-to-edge with the screen's
-   own left edge, and still needs the right-side gap before the next
-   card peeks in. Every other card's text sits flush with its own
-   image, no left/right padding. Recently Viewed / You May Also Like /
-   Complete the Look (.static-product-grid) are the only home-page-
-   adjacent grids left, and aren't affected by this rule. */
-#arrivals-grid .product-card:first-child .product-home-meta,
-#clothing-grid .product-card:first-child .product-home-meta,
+   elsewhere). Only the leading card gets left AND right padding on its
+   text — it can't sit edge-to-edge with the screen's own left edge,
+   and still needs the right-side gap before the next card peeks in.
+   Every other card's text sits flush with its own image, no
+   left/right padding. #arrivals-grid/#clothing-grid track which card
+   is actually leading via .slide-leading (initSliderLeadingTracking()
+   in collection.js) since it changes on every swipe — a plain
+   :first-child only ever matches the DOM-first card, which stops
+   being true the moment the slider scrolls. .swipe-track has no such
+   tracking wired up, so it stays on :first-child. Recently Viewed /
+   You May Also Like / Complete the Look (.static-product-grid) are the
+   only home-page-adjacent grids left, and aren't affected by this
+   rule. */
+#arrivals-grid .product-card.slide-leading .product-home-meta,
+#clothing-grid .product-card.slide-leading .product-home-meta,
 .swipe-track .product-card:first-child .product-home-meta {
   padding-left: 18px;
   padding-right: 18px;
