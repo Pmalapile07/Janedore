@@ -267,7 +267,7 @@ body .site-collection-layout {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   gap: 8px;
-  padding: 0;
+  padding: 0 18px;
   scrollbar-width: none;
 }
 #clothing-grid::-webkit-scrollbar { display: none; }
