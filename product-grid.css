@@ -9,6 +9,13 @@
   padding: 0 8px;
 }
 
+/* Invisible trigger point renderPaginatedGrid() (collection.js) watches
+   to auto-reveal the next 6 products as it scrolls into view — not a
+   visible element, just needs a real height for IntersectionObserver. */
+.grid-load-sentinel {
+  height: 1px;
+}
+
 @media (min-width: 640px) {
   .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 10px; }
 }
