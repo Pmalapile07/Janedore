@@ -529,26 +529,67 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
-  
+  const pid = escapeJSString(p.id);
+
+  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '';
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   const isWished = S.wishlist.some(w => w.id === p.id);
-  const wishBtn = `<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${escapeJSString(p.id)}', this)"><i class="${isWished ? 'ph-fill' : 'ph'} ph-bookmark-simple"></i></button>`;
+  const wishBtn = `<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph'} ph-bookmark-simple"></i></button>`;
 
   const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
   const priceDisplay = formatPriceCardStyle(priceValue);
   const price = `<div class="product-price-row"><span class="product-price">${escapeHTML(priceDisplay)}</span></div>`;
-  const variantCount = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-count">+${p.variants.length - 1} colors</div>`
-    : '';
+  const swatches = cardVariantSwatchesHtml(p, vi);
 
-  const metaRow = `<div class="product-home-name-row">${name}</div>${price}${variantCount}`;
-  const pid = escapeJSString(p.id);
+  const metaRow = `${brand}<div class="product-home-name-row">${name}</div>${price}${swatches}`;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy">${wishBtn}</div>
       ${metaRow}
     </div>`;
+}
+
+// Tiny per-variant color squares, restored below the price wherever a
+// product has more than one variant (replaces the old "+N colors" text).
+// Clicking a square swaps the already-rendered card's own <img> in
+// place — no re-render, no navigation. Named distinctly from
+// product-detail.js's own variantSwatchesHtml()/selectVariant() (that
+// page's swatches drive a slide/thumbnail gallery, not a single <img>,
+// and both scripts share the same global scope on every page).
+function cardVariantSwatchesHtml(p, selectedIndex) {
+  const variants = p.variants || [];
+  if (variants.length <= 1) return '';
+  const pid = escapeJSString(p.id);
+  const swatches = variants.map((v, i) => {
+    const color = (v && v.swatch) || '#ccc';
+    const label = (v && v.color) || ('Variant ' + (i + 1));
+    const selected = i === selectedIndex ? ' selected' : '';
+    return `<span class="variant-swatch${selected}" style="background:${escapeHTML(color)}" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}" onclick="event.stopPropagation();event.preventDefault();selectCardVariant('${pid}', ${i}, this);"></span>`;
+  }).join('');
+  return `<div class="product-swatches-row">${swatches}</div>`;
+}
+
+function selectCardVariant(productId, variantIndex, swatchEl) {
+  const p = PRODUCTS.find(x => x.id === productId);
+  if (!p) return;
+  S.productVariantSelections[productId] = variantIndex;
+
+  const card = swatchEl && swatchEl.closest ? swatchEl.closest('.product-card') : null;
+  if (card) {
+    const imgEl = card.querySelector('.product-img-wrap img');
+    if (imgEl) {
+      const imgs = p.variants?.[variantIndex]?.images;
+      const nextSrc = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+      imgEl.classList.remove('img-loaded');
+      imgEl.src = escapeHTML(nextSrc);
+    }
+    const row = swatchEl.parentElement;
+    if (row) {
+      row.querySelectorAll('.variant-swatch.selected').forEach(el => el.classList.remove('selected'));
+    }
+    swatchEl.classList.add('selected');
+  }
 }
 
 function formatPriceCardStyle(price) {
@@ -567,19 +608,19 @@ function productCardHome(p) {
   const pid = escapeJSString(p.id);
   const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
   const priceDisplay = formatPriceCardStyle(priceValue);
-  const variantCount = (p.variants && p.variants.length > 1)
-    ? `<div class="product-variant-count">+${p.variants.length - 1} colors</div>`
-    : '';
+  const brand = p.brand ? `<div class="product-brand">${escapeHTML(p.brand)}</div>` : '';
+  const swatches = cardVariantSwatchesHtml(p, vi);
   const isWished = S.wishlist.some(w => w.id === p.id);
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph'} ph-bookmark-simple"></i></button></div>
       <div class="product-home-meta">
+        ${brand}
         <div class="product-home-name-row">
           <div class="product-title">${escapeHTML(p.name)}</div>
         </div>
         <div class="product-home-price">${escapeHTML(priceDisplay)}</div>
-        ${variantCount}
+        ${swatches}
       </div>
     </div>`;
 }
