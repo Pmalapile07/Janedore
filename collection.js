@@ -471,8 +471,8 @@ function expandProductVariants(products) {
 // ==================== PAGINATION (6 PER PAGE) ====================
 // Shared by the All Products, Category, and Sale grids. Page N shows
 // exactly products [(N-1)*6, N*6) — a real discrete page, not a
-// cumulative "load more" list — with a "Showing X–Y of Z products —
-// Page N of M" footer and Previous/Next controls, hidden entirely
+// cumulative "load more" list — with a plain "Page N of M" footer
+// (arrow controls either side, no product count), hidden entirely
 // when there are 6 or fewer products (nothing to page through).
 // Keyed by the grid element's id so All Products and Sale (which
 // share #all-products-grid) don't bleed into each other's state.
@@ -509,12 +509,12 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
     footer.className = 'grid-pagination';
     footer.setAttribute('data-for', key);
     footer.innerHTML =
-      '<button class="grid-pagination-btn" type="button"' + (pageNum <= 1 ? ' disabled' : '') + '>Previous</button>' +
-      '<span class="grid-pagination-status">Showing ' + (start + 1) + '–' + end + ' of ' + total + ' products — Page ' + pageNum + ' of ' + totalPages + '</span>' +
-      '<button class="grid-pagination-btn" type="button"' + (pageNum >= totalPages ? ' disabled' : '') + '>Next</button>';
+      '<button class="grid-pagination-arrow" type="button" aria-label="Previous page"' + (pageNum <= 1 ? ' disabled' : '') + '>&#8249;</button>' +
+      '<span class="grid-pagination-status">Page ' + pageNum + ' of ' + totalPages + '</span>' +
+      '<button class="grid-pagination-arrow" type="button" aria-label="Next page"' + (pageNum >= totalPages ? ' disabled' : '') + '>&#8250;</button>';
     gridEl.insertAdjacentElement('afterend', footer);
 
-    const [prevBtn, nextBtn] = footer.querySelectorAll('.grid-pagination-btn');
+    const [prevBtn, nextBtn] = footer.querySelectorAll('.grid-pagination-arrow');
     prevBtn.addEventListener('click', () => { renderPage(pageNum - 1); gridEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     nextBtn.addEventListener('click', () => { renderPage(pageNum + 1); gridEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }

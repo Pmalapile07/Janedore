@@ -10,41 +10,37 @@
 }
 
 /* Pagination footer — renderPaginatedGrid() (collection.js) inserts
-   this right after a grid, showing the current range/total and
-   Previous/Next controls. Omitted entirely for 6 or fewer products. */
+   this right after a grid: a plain "Page N of M" with arrow controls
+   either side. Omitted entirely for 6 or fewer products. */
 .grid-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 18px;
   padding: 24px 18px;
-  flex-wrap: wrap;
 }
 .grid-pagination-status {
   font-family: 'Inter', sans-serif;
   font-size: 11px;
-  letter-spacing: 0.02em;
-  color: #888;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #111;
   text-align: center;
 }
-.grid-pagination-btn {
+.grid-pagination-arrow {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 18px;
+  line-height: 1;
   background: none;
   border: none;
-  border-bottom: 1px solid #111;
   color: #111;
-  padding: 4px 0;
+  padding: 4px 6px;
   cursor: pointer;
   transition: opacity 0.2s;
 }
-.grid-pagination-btn:hover { opacity: 0.7; }
-.grid-pagination-btn:disabled {
+.grid-pagination-arrow:hover { opacity: 0.6; }
+.grid-pagination-arrow:disabled {
   color: #ccc;
-  border-color: #ccc;
   cursor: default;
   opacity: 1;
 }
@@ -97,8 +93,8 @@
 .product-badge,
 .badge-new, .badge-sale, .badge-sold, .badge-preorder {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 4px;
+  right: 4px;
   z-index: 2;
   font-size: 8px;
   font-weight: 600;
