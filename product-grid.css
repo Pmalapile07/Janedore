@@ -97,7 +97,7 @@
   left: 8px;
   z-index: 2;
   font-size: 8px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 4px 8px !important;
@@ -136,7 +136,7 @@
 }
 .product-wish-btn {
   position: absolute;
-  bottom: 0;
+  top: 0;
   right: 0;
   /* Must beat product-card.css's .product-img-wrap::after (z-index: 5)
      — a full-cover transparent overlay added to block long-press
