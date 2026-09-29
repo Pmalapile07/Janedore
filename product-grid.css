@@ -184,14 +184,16 @@
 
 /* --- SLIDER layout: Shop by Clothing (#clothing-grid) and the swipe
    sections that share this markup. Every card gets the same 18px left
-   inset, since in a horizontal scroll any card can become the leading
-   one — there's no fixed "first" card the way a grid has a fixed
-   column. New Arrivals (#arrivals-grid) moved to the static GRID
-   layout below, to match the collection page. .swipe-track is kept
-   here in case anything still uses that slider markup elsewhere. */
+   AND right inset, since in a horizontal scroll any card can become
+   the leading (or trailing) one — there's no fixed "first"/"last"
+   card the way a grid has fixed columns. New Arrivals (#arrivals-grid)
+   moved to the static GRID layout below, to match the collection page.
+   .swipe-track is kept here in case anything still uses that slider
+   markup elsewhere. */
 #clothing-grid .product-home-meta,
 .swipe-track .product-home-meta {
   padding-left: 18px;
+  padding-right: 18px;
 }
 
 /* --- GRID layout: the collection page (#all-products-grid,
