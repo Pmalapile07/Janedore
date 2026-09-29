@@ -15,7 +15,7 @@
 }
 .home-categories-grid {
   display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 0;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 18px;
 }
 .home-categories-grid::-webkit-scrollbar { display: none; }
 /* Sized as a true horizontal slider — bigger than the product-card
