@@ -9,11 +9,44 @@
   padding: 0 8px;
 }
 
-/* Invisible trigger point renderPaginatedGrid() (collection.js) watches
-   to auto-reveal the next 6 products as it scrolls into view — not a
-   visible element, just needs a real height for IntersectionObserver. */
-.grid-load-sentinel {
-  height: 1px;
+/* Pagination footer — renderPaginatedGrid() (collection.js) inserts
+   this right after a grid, showing the current range/total and
+   Previous/Next controls. Omitted entirely for 6 or fewer products. */
+.grid-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px 18px;
+  flex-wrap: wrap;
+}
+.grid-pagination-status {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: #888;
+  text-align: center;
+}
+.grid-pagination-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #111;
+  color: #111;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.grid-pagination-btn:hover { opacity: 0.7; }
+.grid-pagination-btn:disabled {
+  color: #ccc;
+  border-color: #ccc;
+  cursor: default;
+  opacity: 1;
 }
 
 @media (min-width: 640px) {
@@ -72,12 +105,12 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 4px 8px !important;
-  background: #111;
-  color: #fff;
+  background: #FFFFFF;
+  color: #000000;
 }
-.badge-sale { background: #111; color: #fff; padding: 4px 8px; }
-.badge-sold { background: #888; color: #fff; padding: 4px 8px; }
-.badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
+.badge-sale { background: #FFFFFF; color: #000000; padding: 4px 8px; }
+.badge-sold { background: #FFFFFF; color: #000000; padding: 4px 8px; }
+.badge-preorder { background: #FFFFFF; color: #000000; padding: 4px 8px; }
 
 /* ============================================
    PRODUCT CARD — info block
