@@ -27,13 +27,21 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
   color: #777; max-width: 480px; margin: 40px auto; text-align: center; padding: 0 12px;
 }
 @media (min-width: 768px) { .brand-quote { padding: 0 16px; } }
-.newsletter-section { padding: 40px 12px 20px; max-width: 500px; margin: 0 auto; }
-@media (min-width: 768px) { .newsletter-section { padding: 40px 16px 20px; } }
-.newsletter-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #fff; margin-bottom: 16px; text-align: center; }
+.newsletter-section { padding: 40px 32px 20px; max-width: 500px; margin: 0 auto; }
+@media (min-width: 768px) { .newsletter-section { padding: 40px 48px 20px; } }
+/* Font-size matches .hero-heading (hero.css) — the only text element
+   on the hero, so "the same size as the hero's text" has one answer. */
+.newsletter-title { font-size: 11px; letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; margin-bottom: 10px; text-align: center; }
+.newsletter-subtext {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--body-font-size); font-weight: var(--body-font-weight);
+  line-height: var(--body-line-height); letter-spacing: var(--body-letter-spacing);
+  color: #111; text-align: center; margin: 0 0 20px;
+}
 .newsletter-form { display: flex; align-items: center; border-bottom: 0.5px solid #444; padding-bottom: 4px; }
-.newsletter-input { flex: 1; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: var(--body-font-size); font-weight: var(--body-font-weight); color: #fff; padding: 8px 0; background: transparent; }
+.newsletter-input { flex: 1; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: var(--body-font-size); font-weight: var(--body-font-weight); color: #111; padding: 8px 0; background: transparent; }
 .newsletter-input::placeholder { color: #888; }
-.newsletter-btn { background: none; border: none; padding: 8px 4px; display: flex; align-items: center; cursor: pointer; color: #fff; transition: opacity 0.2s; }
+.newsletter-btn { background: none; border: none; padding: 8px 4px; display: flex; align-items: center; cursor: pointer; color: #111; transition: opacity 0.2s; }
 .newsletter-btn:hover { opacity: 0.7; }
 .newsletter-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 .newsletter-disclaimer {
