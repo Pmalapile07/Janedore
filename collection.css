@@ -489,9 +489,9 @@ body.on-collection-page .collection-filter-bar {
    BADGES
    ========================================= */
 
-.badge-sale { background: #111; color: #fff; padding: 4px 8px; }
-.badge-sold { background: #888; color: #fff; padding: 4px 8px; }
-.badge-preorder { background: #111; color: #fff; padding: 4px 8px; }
+.badge-sale { background: #FFFFFF; color: #000000; padding: 4px 8px; }
+.badge-sold { background: #FFFFFF; color: #000000; padding: 4px 8px; }
+.badge-preorder { background: #FFFFFF; color: #000000; padding: 4px 8px; }
 
 /* =========================================
    FEATURED BRAND SECTIONS - FIXES
