@@ -4,7 +4,7 @@
 
 .product-grid {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   grid-template-columns: 1fr;
   padding: 0 8px;
 }
@@ -266,8 +266,8 @@ body .site-collection-layout {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  gap: 8px;
-  padding: 0 18px;
+  gap: 6px;
+  padding: 0 18px !important;
   scrollbar-width: none;
 }
 #clothing-grid::-webkit-scrollbar { display: none; }
