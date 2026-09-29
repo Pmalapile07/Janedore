@@ -3,11 +3,15 @@
 /* Editorial break between New Arrivals and Shop by Clothing — the two
    product grids sat directly on top of each other with nothing
    between them once Featured Brands came out and the manifesto moved
-   up, so this is a full-bleed pause, not another content block. */
-#home-editorial-banner { cursor: pointer; }
+   up, so this is a pause, not another content block. Left/right
+   padding now matches .product-grid's own breakpoints (product-grid.css)
+   instead of running full-bleed, at the user's request. */
+#home-editorial-banner { cursor: pointer; padding: 0 8px; }
+@media (min-width: 640px) { #home-editorial-banner { padding: 0 10px; } }
+@media (min-width: 1024px) { #home-editorial-banner { padding: 0 12px; } }
 .home-editorial-img {
   width: 100%;
-  aspect-ratio: 5 / 6;
+  aspect-ratio: 1 / 1;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -29,7 +33,7 @@
    slider (which multi-brand fashion sites reserve for product rows,
    not a category launcher this small). */
 .home-categories-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding-left: 14.4px; padding-right: 6px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 6px;
 }
 .home-category-card { cursor: pointer; width: 100%; }
 /* Product card image ratio is 5/6 (≈0.833); height reduced another
