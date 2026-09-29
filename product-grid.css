@@ -99,8 +99,8 @@
 }
 .product-wish-btn {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  bottom: 0;
+  right: 0;
   /* Must beat product-card.css's .product-img-wrap::after (z-index: 5)
      — a full-cover transparent overlay added to block long-press
      image-saving on mobile, with pointer-events: auto. At z-index: 2
