@@ -468,6 +468,52 @@ function expandProductVariants(products) {
   return products.map(p => ({ product: p, variantIndex: 0 }));
 }
 
+// ==================== INFINITE SCROLL (6 PER PAGE) ====================
+// Shared by the All Products, Category, and Sale grids: renders the
+// first 6 cards, then reveals 6 more automatically as a sentinel
+// element below the grid scrolls into view — no page-number buttons
+// to click through. Keyed by the grid element's id so All Products
+// and Sale (which share #all-products-grid) don't bleed into each
+// other's state; renderXProducts() always calls this with the full,
+// already-filtered/sorted list, so every call starts back at 6 (a
+// fresh filter/sort/grid-toggle is meant to reset paging, not resume
+// wherever a previous list left off).
+const PRODUCTS_PER_PAGE = 6;
+const _gridVisibleCount = {};
+
+function renderPaginatedGrid(gridEl, expanded, cols) {
+  if (!gridEl) return;
+  const key = gridEl.id;
+  _gridVisibleCount[key] = Math.min(PRODUCTS_PER_PAGE, expanded.length);
+
+  function renderVisible() {
+    const count = _gridVisibleCount[key];
+    const visible = expanded.slice(0, count);
+    gridEl.innerHTML = visible.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex)).join("");
+    applyEditorialGrid(gridEl, cols);
+
+    const existingSentinel = gridEl.parentNode && gridEl.parentNode.querySelector('.grid-load-sentinel[data-for="' + key + '"]');
+    if (existingSentinel) existingSentinel.remove();
+
+    if (count < expanded.length) {
+      const sentinel = document.createElement('div');
+      sentinel.className = 'grid-load-sentinel';
+      sentinel.setAttribute('data-for', key);
+      gridEl.insertAdjacentElement('afterend', sentinel);
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries[0].isIntersecting) return;
+        observer.disconnect();
+        sentinel.remove();
+        _gridVisibleCount[key] = Math.min(_gridVisibleCount[key] + PRODUCTS_PER_PAGE, expanded.length);
+        renderVisible();
+      }, { rootMargin: '400px' });
+      observer.observe(sentinel);
+    }
+  }
+
+  renderVisible();
+}
+
 function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
@@ -597,8 +643,7 @@ function renderAllProducts() {
   let prods = merchandiseProducts(getFilteredProducts(), undefined, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
-  DOM.allProductsGrid.innerHTML = expanded.map(({product, variantIndex}) => productCard(product, S.gridCols===3, true, variantIndex)).join("");
-  applyEditorialGrid(DOM.allProductsGrid, S.gridCols);
+  renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
   buildCategoryFilterOptions();
@@ -622,10 +667,11 @@ function renderCategoryProducts() {
   let prods=merchandiseProducts(cp, S.currentCategoryPage, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.categoryProductsGrid.style.gridTemplateColumns=gridTemplateFor(S.gridColsCat);
-  DOM.categoryProductsGrid.innerHTML = expanded.length
-    ? expanded.map(({product, variantIndex}) => productCard(product, S.gridColsCat===3, true, variantIndex)).join("")
-    : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products in this category yet.</div>';
-  applyEditorialGrid(DOM.categoryProductsGrid, S.gridColsCat);
+  if (expanded.length) {
+    renderPaginatedGrid(DOM.categoryProductsGrid, expanded, S.gridColsCat);
+  } else {
+    DOM.categoryProductsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products in this category yet.</div>';
+  }
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){DOM.categoryDescriptionWrap.innerHTML='';}
   renderCollectionSortingTabs();
@@ -655,11 +701,14 @@ function renderSaleProducts() {
   }
 
   const sp = merchandiseProducts(filtered, undefined, S.sortBy);
-  const expanded = expandProductVariants(sp); 
-  DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols); 
-  DOM.allProductsGrid.innerHTML = expanded.length ? expanded.map(({product, variantIndex})=>productCard(product, S.gridCols===3, true, variantIndex)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>'; 
-  applyEditorialGrid(DOM.allProductsGrid, S.gridCols); 
-  updateGridToggleSVG("grid-toggle-svg", S.gridCols); 
+  const expanded = expandProductVariants(sp);
+  DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
+  if (expanded.length) {
+    renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
+  } else {
+    DOM.allProductsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>';
+  }
+  updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
   buildCategoryFilterOptions();
   buildBrandFilterOptions();
