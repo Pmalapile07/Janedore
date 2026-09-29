@@ -239,6 +239,27 @@ app.post('/api/chat-ai-reply', async (req, res) => {
   }
 });
 
+// ==================== CACHE BUSTING ====================
+// None of the local <link>/<script> tags in index.html carry a version
+// query string, so a CDN in front of this domain (Cloudflare etc. — very
+// common for a custom domain) can cache .css/.js files at the edge by
+// file extension alone, ignoring whatever Cache-Control this server
+// sends. That means a CSS/JS fix can be correct in the deployed source
+// and still never reach a browser, indefinitely, until the edge cache
+// naturally expires — indistinguishable from "the fix didn't work."
+// BUILD_ID changes on every deploy (a fresh process start), so appending
+// it as a query string busts any such cache immediately, every time,
+// with no manual version-bumping required.
+const BUILD_ID = Date.now();
+
+function injectCacheBust(html) {
+  return html.replace(/\b(href|src)="([^"]+\.(?:css|js))"/g, (match, attr, filePath) => {
+    if (/^(?:https?:)?\/\//.test(filePath)) return match; // external CDN URL — leave alone
+    const sep = filePath.includes('?') ? '&' : '?';
+    return attr + '="' + filePath + sep + 'v=' + BUILD_ID + '"';
+  });
+}
+
 // ==================== SEO HELPERS ====================
 
 function escapeHtml(str) {
@@ -381,7 +402,7 @@ app.get('/products/:slug', async (req, res, next) => {
 
     const indexPath = path.join(__dirname, 'index.html');
     const rawHtml = fs.readFileSync(indexPath, 'utf8');
-    const finalHtml = injectProductMeta(rawHtml, product, product.slug || slug);
+    const finalHtml = injectCacheBust(injectProductMeta(rawHtml, product, product.slug || slug));
     res.send(finalHtml);
   } catch (e) {
     console.error('[PRODUCT ROUTE] Error:', e.message);
@@ -397,17 +418,21 @@ app.get('/collections/:cat', (req, res, next) => {
   try {
     const indexPath = path.join(__dirname, 'index.html');
     const rawHtml = fs.readFileSync(indexPath, 'utf8');
-    const finalHtml = injectCollectionMeta(rawHtml, req.params.cat);
-    if (!finalHtml) return next(); // unknown category — let the normal SPA handle it
-    res.send(finalHtml);
+    const withMeta = injectCollectionMeta(rawHtml, req.params.cat);
+    if (!withMeta) return next(); // unknown category — let the normal SPA handle it
+    res.send(injectCacheBust(withMeta));
   } catch (e) {
     console.error('[COLLECTION ROUTE] Error:', e.message);
     return next();
   }
 });
 
-// Serve static files (CSS, JS, images, etc.)
-app.use(express.static(path.join(__dirname)));
+// Serve static files (CSS, JS, images, etc.). index:false stops this from
+// auto-serving index.html for "/" itself (its default behavior) — every
+// HTML page must go through the routes below instead, so the cache-bust
+// query string actually gets injected rather than silently skipped for
+// the single most-visited URL on the site.
+app.use(express.static(path.join(__dirname), { index: false }));
 
 // Catch-all for HTML routing — only sends index.html for clean URLs
 app.get('*', (req, res) => {
@@ -416,7 +441,8 @@ app.get('*', (req, res) => {
     return res.status(404).send('Not found');
   }
   // Otherwise send index.html for client-side routing
-  res.sendFile(path.join(__dirname, 'index.html'));
+  const rawHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  res.send(injectCacheBust(rawHtml));
 });
 
 const PORT = process.env.PORT || 3000;
