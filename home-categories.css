@@ -1,5 +1,17 @@
 #home-categories { padding: 48px 18px 32px; max-width: 1400px; margin: 0 auto; }
 @media (min-width: 768px) { #home-categories { padding: 48px 16px 32px; } }
+/* Editorial break between New Arrivals and Shop by Clothing — the two
+   product grids sat directly on top of each other with nothing
+   between them once Featured Brands came out and the manifesto moved
+   up, so this is a full-bleed pause, not another content block. */
+#home-editorial-banner { cursor: pointer; }
+.home-editorial-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 #home-all-products { padding: 0 0 32px; max-width: 1400px; margin: 0 auto; }
 @media (min-width: 768px) { #home-all-products { padding: 0 0 32px; } }
 .home-categories-wrap { display: flex; flex-direction: column; gap: 0; }
