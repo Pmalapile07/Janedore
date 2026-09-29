@@ -33,9 +33,15 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
 #homepage-newsletter-section { background: #111; }
 .newsletter-section { padding: 40px 32px 20px; max-width: 500px; margin: 0 auto; }
 @media (min-width: 768px) { .newsletter-section { padding: 40px 48px 20px; } }
-/* Font-size matches .hero-heading (hero.css) — the only text element
-   on the hero, so "the same size as the hero's text" has one answer. */
+/* Font-size matches .hero-heading exactly, at every breakpoint. Its
+   base size lives in hero.css (11px), but index.html's own inline
+   <style> block bumps it to 22px !important under 768px — easy to
+   miss since it's not in hero.css itself — so this needs the same
+   mobile override or it silently mismatches on phones. */
 .newsletter-title { font-size: 11px; letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #fff; margin-bottom: 10px; text-align: center; }
+@media (max-width: 768px) {
+  .newsletter-title { font-size: 22px; }
+}
 .newsletter-subtext {
   font-family: 'Inter', sans-serif;
   font-size: var(--body-font-size); font-weight: var(--body-font-weight);
