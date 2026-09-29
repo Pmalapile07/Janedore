@@ -366,10 +366,6 @@ body .site-collection-layout {
    and untouched by it.
    ============================================ */
 
-.product-variant-dots { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.variant-swatch { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; cursor: pointer; position: relative; background: #ccc; }
-.variant-swatch.selected::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 0.5px; background: #111; }
-
 .product-grid.editorial-2col .product-card.featured-card .product-img-wrap,
 .product-grid.editorial-2col .product-card.tall-card .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+1) .product-img-wrap,
