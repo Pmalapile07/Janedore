@@ -74,7 +74,12 @@
 .product-variants { margin: 0; }
 .variants-row { display: flex; align-items: center; gap: 10px; }
 
-.variant-swatch {
+/* Scoped to .variants-row (this page's own swatch wrapper — see
+   variantSwatchesHtml() in product-detail.js) — this file loads after
+   product-grid.css, and a bare .variant-swatch here would silently
+   override the grid cards' own smaller borderless swatches everywhere
+   else on the site, since both are plain single-class selectors. */
+.variants-row .variant-swatch {
   width: 24px;
   height: 24px;
   border-radius: 0%;
@@ -83,7 +88,7 @@
   position: relative;
   border: 1px solid #ddd;
 }
-.variant-swatch.selected { border-color: #111; border-width: 1px; }
+.variants-row .variant-swatch.selected { border-color: #111; border-width: 1px; }
 .variant-plus { font-size: 10px; color: #888; margin-left: 4px; }
 
 .product-sizes { margin: 0; }
