@@ -42,20 +42,38 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
 @media (max-width: 768px) {
   .newsletter-title { font-size: 22px; }
 }
+/* Typography (family/weight/size/letter-spacing/line-height) matches
+   #home-manifesto-text exactly. Colors stay light, not manifesto's
+   #111 — this section has a dark (#111) background, so black text
+   would be invisible here. */
 .newsletter-subtext {
   font-family: 'Inter', sans-serif;
-  font-size: var(--body-font-size); font-weight: var(--body-font-weight);
-  line-height: var(--body-line-height); letter-spacing: var(--body-letter-spacing);
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
   color: #888; text-align: center; margin: 0 0 20px;
 }
 .newsletter-form { display: flex; align-items: center; border-bottom: 0.5px solid #444; padding-bottom: 4px; }
-.newsletter-input { flex: 1; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: var(--body-font-size); font-weight: var(--body-font-weight); color: #fff; padding: 8px 0; background: transparent; }
+.newsletter-input {
+  flex: 1; border: none; outline: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  color: #fff; padding: 8px 0; background: transparent;
+}
 .newsletter-input::placeholder { color: #888; }
 .newsletter-btn { background: none; border: none; padding: 8px 4px; display: flex; align-items: center; cursor: pointer; color: #fff; transition: opacity 0.2s; }
 .newsletter-btn:hover { opacity: 0.7; }
 .newsletter-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 .newsletter-disclaimer {
-  font-size: 10px; font-weight: var(--body-font-weight); color: #aaa;
-  text-align: center; margin-top: 10px; font-family: 'Inter', sans-serif;
-  letter-spacing: var(--body-letter-spacing);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  color: #aaa;
+  text-align: center; margin-top: 10px;
 }
