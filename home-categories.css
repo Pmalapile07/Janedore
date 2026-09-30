@@ -1,7 +1,10 @@
 /* Bottom padding (the gap before the editorial banner below) matches
-   .home-categories-grid's own gap: 6px, at the user's request. */
+   .product-grid's own responsive gap breakpoints exactly (6px / 10px /
+   12px, product-grid.css), not just its base value. */
 #home-categories { padding: 48px 18px 6px; max-width: 1400px; margin: 0 auto; }
-@media (min-width: 768px) { #home-categories { padding: 48px 16px 6px; } }
+@media (min-width: 640px) { #home-categories { padding-bottom: 10px; } }
+@media (min-width: 768px) { #home-categories { padding-left: 16px; padding-right: 16px; } }
+@media (min-width: 1024px) { #home-categories { padding-bottom: 12px; } }
 /* Editorial break between New Arrivals and Shop by Clothing — the two
    product grids sat directly on top of each other with nothing
    between them once Featured Brands came out and the manifesto moved
@@ -19,13 +22,13 @@
   background-position: center;
   background-repeat: no-repeat;
 }
-/* Flat scrim (not a directional gradient) so the white heading stays
-   legible now that it's centered rather than bottom-anchored — same
-   treatment as .hero-overlay in hero.css. */
+/* Bottom-weighted scrim so the white heading/button stay legible
+   against an arbitrary photo, now that both sit bottom-left rather
+   than centered. */
 .editorial-banner-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.2);
+  background: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0) 55%);
 }
 .editorial-banner-content {
   position: absolute;
@@ -33,10 +36,10 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-end;
   padding: 28px 24px;
-  text-align: center;
+  text-align: left;
 }
 .editorial-banner-heading {
   font-family: 'Inter', sans-serif;
