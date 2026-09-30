@@ -540,10 +540,12 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const swatches = cardVariantSwatchesHtml(p, vi);
   const price = `<div class="product-price-row"><span class="product-price">${escapeHTML(priceDisplay)}</span>${swatches}</div>`;
 
+  const metaRow = `<div class="product-home-name-row">${name}</div>${price}`;
+
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy">${name}${wishBtn}</div>
-      ${price}
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy">${wishBtn}</div>
+      ${metaRow}
     </div>`;
 }
 
@@ -610,8 +612,9 @@ function productCardHome(p) {
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy">${name}<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-thin'} ph-heart"></i></button></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-thin'} ph-heart"></i></button></div>
       <div class="product-home-meta">
+        <div class="product-home-name-row">${name}</div>
         <div class="product-home-price-row"><span class="product-home-price">${escapeHTML(priceDisplay)}</span>${swatches}</div>
       </div>
     </div>`;
@@ -880,7 +883,7 @@ function buildCategoriesSlider() {
     { label:'Homeware', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-8985.png?v=1789390405', cat:'homeware' },
     { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
   ];
-  grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"></div><div class="home-category-label">${escapeHTML(c.label)}</div></div>`).join('');
+  grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"><div class="home-category-label">${escapeHTML(c.label)}</div></div></div>`).join('');
 }
 
 function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); initSliderLeadingTracking('arrivals-grid'); } buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
