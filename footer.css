@@ -43,9 +43,9 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
   .newsletter-title { font-size: 22px; }
 }
 /* Typography (family/weight/size/letter-spacing/line-height) matches
-   #home-manifesto-text exactly. Colors stay light, not manifesto's
-   #111 — this section has a dark (#111) background, so black text
-   would be invisible here. */
+   #home-manifesto-text exactly, at every breakpoint. Colors stay
+   light, not manifesto's #111 — this section has a dark (#111)
+   background, so black text would be invisible here. */
 .newsletter-subtext {
   font-family: 'Inter', sans-serif;
   font-weight: 300;
@@ -76,4 +76,15 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
   line-height: 1.6;
   color: #aaa;
   text-align: center; margin-top: 10px;
+}
+/* #home-manifesto-text drops to 12px under 768px via an !important
+   rule in index.html's own inline <style> block — easy to miss since
+   it's not in this file. Matching only the 14px base value left these
+   two genuinely different sizes on phones. */
+@media (max-width: 768px) {
+  .newsletter-subtext,
+  .newsletter-input,
+  .newsletter-disclaimer {
+    font-size: 12px;
+  }
 }
