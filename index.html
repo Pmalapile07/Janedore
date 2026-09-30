@@ -245,14 +245,11 @@
     <div class="home-categories-grid" id="home-categories-grid"></div>
   </section>
 
-  <section id="home-editorial-banner" onclick="navigateToCategory('all-clothing')">
-    <div class="home-editorial-img" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287');">
-      <div class="editorial-banner-overlay"></div>
-      <div class="editorial-banner-content">
-        <div class="editorial-banner-heading">More Than One Brand</div>
-        <button class="editorial-banner-btn" onclick="event.stopPropagation();navigateToCategory('all-clothing')">Learn More</button>
-      </div>
+  <section id="home-shop-brand" style="padding:24px 0;">
+    <div class="home-categories-header" style="display:flex;align-items:center;justify-content:flex-start;text-align:left;padding:0 18px 24px 18px;">
+      <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY BRAND</div>
     </div>
+    <div class="product-grid" id="brand-grid"></div>
   </section>
 
   <section id="home-shop-clothing" style="padding:24px 0;">
@@ -261,6 +258,16 @@
       <button onclick="navigateToCategory('all-clothing')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
     </div>
     <div class="product-grid" id="clothing-grid"></div>
+  </section>
+
+  <section id="home-editorial-banner" onclick="navigateToCategory('all-clothing')">
+    <div class="home-editorial-img" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287');">
+      <div class="editorial-banner-overlay"></div>
+      <div class="editorial-banner-content">
+        <div class="editorial-banner-heading">More Than One Brand</div>
+        <button class="editorial-banner-btn" onclick="event.stopPropagation();navigateToCategory('all-clothing')">Learn More</button>
+      </div>
+    </div>
   </section>
 
   <section id="home-manifesto" style="padding:24px 18px 40px 18px;text-align:center;">

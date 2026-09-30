@@ -73,6 +73,23 @@ function renderHomeBrandSpotlight(vendors) {
   sliderEl.innerHTML = `<div class="brand-strip-track">${setHTML}${setHTML}</div>`;
 }
 
+// Home page "Shop by Brand" — a manual swipe slider (#brand-grid),
+// distinct from the auto-scrolling marquee above. One real card per
+// brand, same 5/6 image ratio as a product card.
+function buildShopByBrand(vendors) {
+  const grid = document.getElementById('brand-grid');
+  if (!grid) return;
+
+  const brands = getFeaturedBrands(vendors);
+  if (!brands.length) { grid.innerHTML = ''; return; }
+
+  grid.innerHTML = brands.map(vendor => {
+    const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
+    const bg = vendor.logoUrl ? `background-image:url('${escapeForCssUrl(vendor.logoUrl)}');` : '';
+    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.id)}')"><div class="shop-brand-img" style="${bg}"></div><div class="shop-brand-name">${escapeHTML(name)}</div></div>`;
+  }).join('');
+}
+
 async function initVendors() {
   const vendors = await fetchVendors();
   S.vendors = vendors;
@@ -80,4 +97,5 @@ async function initVendors() {
   renderVendorsMobile(vendors);
   renderVendorsFooter(vendors);
   renderHomeBrandSpotlight(vendors);
+  buildShopByBrand(vendors);
 }

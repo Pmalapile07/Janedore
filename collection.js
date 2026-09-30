@@ -535,10 +535,12 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const isWished = S.wishlist.some(w => w.id === p.id);
   const wishBtn = `<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-thin'} ph-heart"></i></button>`;
 
-  const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
-  const priceDisplay = formatPriceCardStyle(priceValue);
+  const onSale = hasSalePrice(p);
+  const priceInner = onSale
+    ? `<span class="product-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span>`
+    : `<span class="product-price">${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
   const swatches = cardVariantSwatchesHtml(p, vi);
-  const price = `<div class="product-price-row"><span class="product-price">${escapeHTML(priceDisplay)}</span>${swatches}</div>`;
+  const price = `<div class="product-price-row">${priceInner}${swatches}</div>`;
 
   const metaRow = `<div class="product-home-name-row">${name}</div>${price}`;
 
@@ -605,8 +607,10 @@ function productCardHome(p) {
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
-  const priceValue = hasSalePrice(p) ? p.salePrice : p.price;
-  const priceDisplay = formatPriceCardStyle(priceValue);
+  const onSale = hasSalePrice(p);
+  const priceInner = onSale
+    ? `<span class="product-home-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span>`
+    : `<span class="product-home-price">${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
   const swatches = cardVariantSwatchesHtml(p, vi);
   const isWished = S.wishlist.some(w => w.id === p.id);
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
@@ -615,7 +619,7 @@ function productCardHome(p) {
       <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-thin'} ph-heart"></i></button></div>
       <div class="product-home-meta">
         <div class="product-home-name-row">${name}</div>
-        <div class="product-home-price-row"><span class="product-home-price">${escapeHTML(priceDisplay)}</span>${swatches}</div>
+        <div class="product-home-price-row">${priceInner}${swatches}</div>
       </div>
     </div>`;
 }
