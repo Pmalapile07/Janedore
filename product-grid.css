@@ -189,6 +189,20 @@
   font-weight: 300;
   letter-spacing: var(--ui-letter-spacing);
 }
+/* On-sale price pair — sale price red, original struck through and
+   gray. Only rendered when hasSalePrice(p) is true (collection.js). */
+.product-price-sale {
+  color: #c0392b;
+}
+.product-price-original {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: var(--ui-letter-spacing);
+  color: #999;
+  text-decoration: line-through;
+  margin-left: 6px;
+}
 /* Margin lives on the row wrapper, not shared with .product-price/
    .product-home-price themselves: both now share their row with the
    variant swatches (price left, swatches right), and a stray
@@ -346,6 +360,60 @@ body .site-collection-layout {
     max-width: 1400px;
     margin: 0 auto;
   }
+}
+
+/* --- Shop by Brand slider — same slider mechanics as #arrivals-grid/
+   #clothing-grid above, but its own dedicated card markup (image +
+   name only, no price/wishlist/badge/swatches) since a brand isn't a
+   product. Cards are sized slightly bigger than the product sliders'
+   (70vw/30vw/320px vs 65vw/28vw/300px), same 5/6 image ratio. */
+#brand-grid {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 6px;
+  padding: 0 18px !important;
+  scrollbar-width: none;
+}
+#brand-grid::-webkit-scrollbar { display: none; }
+.shop-brand-card {
+  cursor: pointer;
+  flex: 0 0 auto;
+  width: 70vw;
+  max-width: 320px;
+  scroll-snap-align: start;
+}
+@media (min-width: 768px) {
+  .shop-brand-card { width: 30vw; max-width: 320px; }
+}
+@media (min-width: 1024px) {
+  #brand-grid {
+    justify-content: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+/* background-size:contain (not cover) — brand logos aren't tall
+   lifestyle photos, so cropping them like a product photo would
+   distort or cut them off. */
+.shop-brand-img {
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #f0ede8;
+}
+.shop-brand-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: var(--ui-letter-spacing);
+  color: #111;
+  text-align: center;
+  margin-top: 10px;
 }
 
 /* ============================================
