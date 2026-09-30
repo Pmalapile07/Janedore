@@ -1,9 +1,9 @@
-/* Bottom padding now matches this section's own top padding (48px) —
-   the previous attempt matched .product-grid's row-gap (6-12px),
-   which turned out too small to read as an intentional gap at all;
-   this section's own top/bottom spacing being symmetric is the gap
-   that was actually missing. */
-#home-categories { padding: 48px 18px; max-width: 1400px; margin: 0 auto; }
+/* Bottom padding matches .home-categories-grid's own row-gap (6px) —
+   the vertical gap between the grid's two rows, not this section's
+   own top padding. An inline style on the <section> tag itself was
+   silently forcing this to 24px regardless of what got set here; that
+   inline style is gone now, so 6px actually renders. */
+#home-categories { padding: 48px 18px 6px; max-width: 1400px; margin: 0 auto; }
 @media (min-width: 768px) { #home-categories { padding-left: 16px; padding-right: 16px; } }
 /* Editorial break between New Arrivals and Shop by Clothing — the two
    product grids sat directly on top of each other with nothing
