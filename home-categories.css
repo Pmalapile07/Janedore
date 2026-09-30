@@ -19,13 +19,13 @@
   background-position: center;
   background-repeat: no-repeat;
 }
-/* Subtle bottom-weighted scrim so the white heading/button stay
-   legible over an arbitrary product photo, same idea as .hero-overlay
-   in hero.css. */
+/* Flat scrim (not a directional gradient) so the white heading stays
+   legible now that it's centered rather than bottom-anchored — same
+   treatment as .hero-overlay in hero.css. */
 .editorial-banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0) 55%);
+  background: rgba(0,0,0,0.2);
 }
 .editorial-banner-content {
   position: absolute;
@@ -34,7 +34,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   padding: 28px 24px;
   text-align: center;
 }
@@ -43,20 +43,21 @@
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+  text-transform: uppercase;
   color: #fff;
   margin: 0 0 14px;
 }
+/* Matches .hero-shop-btn (hero.css) exactly — white bg, black text. */
 .editorial-banner-btn {
   font-family: 'Inter', sans-serif;
   font-weight: 400;
   font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  background: transparent;
-  color: #fff;
+  background: #fff;
+  color: #111;
   border: none;
-  border-bottom: 1px solid #fff;
-  padding: 4px 0;
+  padding: 12px 32px;
   cursor: pointer;
   transition: opacity 0.2s;
 }
