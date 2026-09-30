@@ -31,8 +31,10 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
    gray body text) — the newsletter section sits directly above the
    footer, so it reads as one continuous block with it. */
 #homepage-newsletter-section { background: #111; }
-.newsletter-section { padding: 40px 32px 20px; max-width: 500px; margin: 0 auto; }
-@media (min-width: 768px) { .newsletter-section { padding: 40px 48px 20px; } }
+/* Matches #home-manifesto's own padding exactly (index.html inline
+   style: 24px 18px 40px 18px), no separate desktop override — that
+   section doesn't have one either. */
+.newsletter-section { padding: 24px 18px 40px 18px; max-width: 500px; margin: 0 auto; }
 /* Font-size matches .hero-heading exactly, at every breakpoint. Its
    base size lives in hero.css (11px), but index.html's own inline
    <style> block bumps it to 22px !important under 768px — easy to
