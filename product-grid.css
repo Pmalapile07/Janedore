@@ -112,29 +112,26 @@
    PRODUCT CARD — info block
    One shared style, used everywhere this markup appears: New
    Arrivals, Recently Viewed, You May Also Like, Complete the Look,
-   and the collection page. Name now overlays the image (centered,
-   white) instead of sitting below it; price and variant swatches
-   share one row underneath — price left, swatches right.
+   and the collection page. Name (uppercase, black) back below the
+   image where it started; price and variant swatches share one row
+   underneath the name — price left, swatches right.
    ============================================ */
 .product-home-meta {
   margin-top: 10px;
 }
-/* Centered over the image itself rather than in the text block below
-   it. Sizing/case/weight unchanged from the old below-image treatment
-   — only position and color (white, to read against a photo) changed. */
+.product-home-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
 .product-title {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 3;
-  width: 90%;
-  text-align: center;
   text-transform: uppercase;
   font-weight: 400;
   font-size: 10px;
   letter-spacing: var(--ui-letter-spacing);
-  color: #fff;
+  color: #111;
   font-family: 'Inter', sans-serif;
 }
 .product-wish-btn {
@@ -203,17 +200,10 @@
 .product-home-price {
   margin: 0;
 }
-/* .product-price-row is the first thing under the image now that the
-   name moved onto it, so it carries the "gap from image" margin
-   (10px, matching every other card's image-to-info spacing) alongside
-   its own trailing margin. .product-home-price-row is productCardHome()'s
-   equivalent — nested inside .product-home-meta, which already
-   supplies that top gap, so it only needs the trailing margin. */
 .product-price-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
   margin-bottom: 16px;
 }
 .product-home-price-row {
@@ -279,13 +269,16 @@
 /* --- GRID layout: the collection page (#all-products-grid,
    #category-products-grid) and Recently Viewed / You May Also Like /
    Complete the Look (.static-product-grid) — all static grids now, no
-   sliding. Left column only (odd position) gets an 8px inset on the
-   price row, matching the badge's own corner inset — right column,
-   and the wishlist icon on every card, stay flush with their own
-   card's edges. The name no longer needs this treatment since it
-   overlays the (centered) image rather than sitting in this row. This
+   sliding. Left column only (odd position) gets an 8px inset, matching
+   the badge's own corner inset — right column, and the wishlist icon
+   on every card, stay flush with their own card's edges. This
    odd/even mapping assumes the default 2-column view; toggling the
    collection page to 1 or 3 columns isn't covered here. */
+#all-products-grid .product-card:nth-child(odd) .product-home-name-row,
+#category-products-grid .product-card:nth-child(odd) .product-home-name-row,
+.static-product-grid .product-card:nth-child(odd) .product-home-name-row {
+  padding-left: 8px;
+}
 #all-products-grid .product-card:nth-child(odd) .product-price-row,
 #category-products-grid .product-card:nth-child(odd) .product-price-row,
 .static-product-grid .product-card:nth-child(odd) .product-price-row {
