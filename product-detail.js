@@ -149,7 +149,9 @@ function buildSwipeCardInner(product) {
 }
 
 function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
-function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
+function toggleInfoAccordion(key) {
+  document.getElementById(`info-accordion-${key}`)?.classList.toggle('open');
+}
 function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
 
 async function renderProductPage(product) {
@@ -206,15 +208,28 @@ async function renderProductPage(product) {
         </div>
         <button class="add-to-wishlist-btn" onclick="addToWishlist('${product.id}')">Add to Wishlist</button>
       </div>
-      <div class="info-tabs-wrap">
-        <div class="info-tabs-row">
-          <button class="info-tab-btn active" data-tab="composition" onclick="switchInfoTab('composition')">Composition</button>
-          <button class="info-tab-btn" data-tab="measurements" onclick="switchInfoTab('measurements')">Measurements</button>
-          <button class="info-tab-btn" data-tab="shipping" onclick="switchInfoTab('shipping')">Shipping</button>
+      <div class="info-accordion-wrap">
+        <div class="info-accordion-item open" id="info-accordion-composition">
+          <div class="info-accordion-header" onclick="toggleInfoAccordion('composition')">
+            Composition &amp; Care
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="info-accordion-body"><p>${product.compositionCare||'No composition details available.'}</p></div>
         </div>
-        <div class="info-tab-panel active" data-tab="composition"><p>${product.compositionCare||'No composition details available.'}</p></div>
-        <div class="info-tab-panel" data-tab="measurements"><p>${product.measurements||'No measurements available.'}</p></div>
-        <div class="info-tab-panel" data-tab="shipping"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
+        <div class="info-accordion-item" id="info-accordion-measurements">
+          <div class="info-accordion-header" onclick="toggleInfoAccordion('measurements')">
+            Measurements
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="info-accordion-body"><p>${product.measurements||'No measurements available.'}</p></div>
+        </div>
+        <div class="info-accordion-item" id="info-accordion-shipping">
+          <div class="info-accordion-header" onclick="toggleInfoAccordion('shipping')">
+            Shipping &amp; Returns
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="info-accordion-body"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
+        </div>
       </div>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0;">

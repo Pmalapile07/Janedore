@@ -537,7 +537,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
 
   const onSale = hasSalePrice(p);
   const priceInner = onSale
-    ? `<span class="product-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span>`
+    ? `<div class="product-price-stack"><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span><span class="product-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span></div>`
     : `<span class="product-price">${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
   const swatches = cardVariantSwatchesHtml(p, vi);
   const price = `<div class="product-price-row">${priceInner}${swatches}</div>`;
@@ -609,7 +609,7 @@ function productCardHome(p) {
   const pid = escapeJSString(p.id);
   const onSale = hasSalePrice(p);
   const priceInner = onSale
-    ? `<span class="product-home-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span>`
+    ? `<div class="product-price-stack"><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span><span class="product-home-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span></div>`
     : `<span class="product-home-price">${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
   const swatches = cardVariantSwatchesHtml(p, vi);
   const isWished = S.wishlist.some(w => w.id === p.id);
@@ -683,7 +683,6 @@ function buildSwipeCardInner(product) {
 }
 
 function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
-function switchInfoTab(tab) { S.productInfoTab=tab; document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.info-tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab)); }
 function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
 
 function renderAllProducts() {
