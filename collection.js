@@ -683,8 +683,6 @@ function buildSwipeCardInner(product) {
 }
 
 function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
-function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
-
 function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
   let prods = merchandiseProducts(getFilteredProducts(), undefined, S.sortBy);

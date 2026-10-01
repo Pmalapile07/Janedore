@@ -179,7 +179,6 @@ window.handleReviewImage = handleReviewImage;
 window.toggleWish = toggleWish;
 window.addPouchToCart = addPouchToCart;
 window.moveCampaignSlider = moveCampaignSlider;
-window.calculateShipping = calculateShipping;
 window.selectStickySize = selectStickySize;
 window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
