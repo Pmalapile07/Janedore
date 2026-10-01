@@ -86,7 +86,7 @@ function buildShopByBrand(vendors) {
   grid.innerHTML = brands.map(vendor => {
     const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
     const bg = vendor.logoUrl ? `background-image:url('${escapeForCssUrl(vendor.logoUrl)}');` : '';
-    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.id)}')"><div class="shop-brand-img" style="${bg}"></div><div class="shop-brand-name">${escapeHTML(name)}</div></div>`;
+    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.id)}')"><div class="shop-brand-img" style="${bg}"><div class="shop-brand-overlay"></div><div class="shop-brand-name">${escapeHTML(name)}</div></div></div>`;
   }).join('');
 }
 
