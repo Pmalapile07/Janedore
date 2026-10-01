@@ -52,26 +52,30 @@
   color: #fff;
   margin: 0 0 14px;
 }
-/* Matches .hero-shop-btn (hero.css) exactly — white bg, black text. */
+/* Ghost/underline style, matching .initial-drop-view-all (product-grid.css)
+   — just a bottom border line, no fill — but white since it sits over
+   a dark photo overlay instead of a white page background. */
 .editorial-banner-btn {
   font-family: 'Inter', sans-serif;
   font-weight: 400;
   font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  background: #fff;
-  color: #111;
+  background: transparent;
+  color: #fff;
   border: none;
-  padding: 12px 32px;
+  border-bottom: 1px solid #fff;
+  padding: 4px 0;
   cursor: pointer;
   transition: opacity 0.2s;
 }
-.editorial-banner-btn:hover { opacity: 0.85; }
-/* Bottom padding reduced 32px -> 16px, alongside #home-categories's
-   top-padding cut, to tighten the New Arrivals -> Shop by Category
-   gap (was 80px combined, now 40px). */
-#home-all-products { padding: 0 0 16px; max-width: 1400px; margin: 0 auto; }
-@media (min-width: 768px) { #home-all-products { padding: 0 0 16px; } }
+.editorial-banner-btn:hover { opacity: 0.7; }
+/* Bottom padding dropped to 0 — the previous 16px, combined with
+   #home-categories's own 24px top padding, still made this gap (40px)
+   visibly bigger than every other section-to-section gap on the page
+   (24-30px). #home-categories's 24px top padding alone now carries
+   the whole gap, matching those other transitions. */
+#home-all-products { padding: 0; max-width: 1400px; margin: 0 auto; }
 .home-categories-wrap { display: flex; flex-direction: column; gap: 0; }
 .home-categories-header { text-align: center; margin-bottom: 0; }
 .home-categories-title {
