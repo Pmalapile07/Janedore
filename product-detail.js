@@ -96,12 +96,6 @@ function selectProductSize(btn, size) {
   S.selectedSize = size;
 }
 
-function changeQuantity(delta) {
-  S.productQuantity = Math.max(1, (S.productQuantity || 1) + delta);
-  const el = document.getElementById('product-qty-value');
-  if (el) el.textContent = S.productQuantity;
-}
-
 function getCompleteLookProducts(currentProduct) {
   if (!currentProduct) return []; const active = PRODUCTS.filter(p => p.status === 'active' && p.id !== currentProduct.id); const pouch = active.find(p => p.id === 'janedore-leather-pouch'); const clothing = active.filter(p => ['dresses','tops','bottoms','jackets','sets'].includes(p.category)); const tops = clothing.filter(p => p.category === 'tops'), bottoms = clothing.filter(p => p.category === 'bottoms'); const dresses = clothing.filter(p => p.category === 'dresses'), jewelry = active.filter(p => p.category === 'jewelry'); const bags = active.filter(p => p.category === 'bags' && p.id !== 'janedore-leather-pouch'); const sunglasses = active.filter(p => p.category === 'sunglasses'), parfum = active.filter(p => p.category === 'parfum'); let s = []; const cat = currentProduct.category;
   if (cat === 'sunglasses') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); if (s.length < 3) s = s.concat(bottoms.slice(0,1)); } else if (['tops','bottoms','dresses','jackets','sets'].includes(cat)) { if (cat === 'tops') { s = s.concat(bottoms.slice(0,1)); s = s.concat(jewelry.slice(0,1)); if (pouch) s.push(pouch); } else if (cat === 'bottoms') { s = s.concat(tops.slice(0,2)); s = s.concat(jewelry.slice(0,1)); } else if (cat === 'dresses') { s = s.concat(jewelry.slice(0,2)); } else { s = s.concat(tops.slice(0,1)); s = s.concat(bottoms.slice(0,1)); } if (s.length < 4) s = s.concat(bags.slice(0,1)); } else if (cat === 'parfum') { s = s.concat(clothing.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); } else if (cat === 'bags') { s = s.concat(jewelry.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); if (pouch && currentProduct.id !== 'janedore-leather-pouch') s.push(pouch); } else if (cat === 'jewelry') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); }
@@ -161,6 +155,7 @@ async function renderProductPage(product) {
   const variants=product.variants||[]; const sizes=product.sizes||[];
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
   const badgeLabel=getBadgeLabel(product);
+  const isWished=S.wishlist.some(w=>w.id===product.id);
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
   const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildProductGridSection('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildProductGridSection('Recently Viewed',rv,`rv-${product.id}`):'';
@@ -180,22 +175,17 @@ async function renderProductPage(product) {
     </div>
     <div class="product-info">
       <div class="product-name-group">
+        <h1 class="product-title-main">${product.name||''}</h1>
         <p class="product-by-brand-name">${product.brand||'JANEDORE'}</p>
-        <div class="product-name-price-row">
-          <h1 class="product-title-main">${product.name||''}</h1>
-          <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
-        </div>
       </div>
       <div class="product-size-color-group">
         ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
         ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div><div class="size-guide-note">Need help with sizing? <span>View our size guide</span></div></div>`:''}
       </div>
-      <div class="product-action-group">
-        <div class="qty-cart-row">
-          <div class="quantity-selector-unified"><button class="quantity-selector-btn" onclick="changeQuantity(-1)">−</button><span class="quantity-selector-value" id="product-qty-value">1</span><button class="quantity-selector-btn" onclick="changeQuantity(1)">+</button></div>
-          <button class="add-to-bag-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Bag')}</button>
-        </div>
-        <button class="add-to-wishlist-btn" onclick="addToWishlist('${product.id}')">Add to Wishlist</button>
+      <div class="product-fixed-bar">
+        <div class="product-fixed-price">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+        <button class="product-fixed-wish-btn${isWished?' wished':''}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-thin'} ph-heart"></i></button>
+        <button class="product-fixed-add-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Cart')}</button>
       </div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
