@@ -4,8 +4,9 @@
    the previous 18px/16px, which didn't match it. An inline style on
    the <section> tag itself was silently forcing bottom to 24px
    regardless of what got set here; that inline style is gone now, so
-   these values actually render. */
-#home-categories { padding: 48px 6px 6px; max-width: 1400px; margin: 0 auto; }
+   these values actually render. Top padding reduced 48px -> 24px to
+   tighten the gap after New Arrivals. */
+#home-categories { padding: 24px 6px 6px; max-width: 1400px; margin: 0 auto; }
 /* Editorial break between New Arrivals and Shop by Clothing — the two
    product grids sat directly on top of each other with nothing
    between them once Featured Brands came out and the manifesto moved
@@ -66,8 +67,11 @@
   transition: opacity 0.2s;
 }
 .editorial-banner-btn:hover { opacity: 0.85; }
-#home-all-products { padding: 0 0 32px; max-width: 1400px; margin: 0 auto; }
-@media (min-width: 768px) { #home-all-products { padding: 0 0 32px; } }
+/* Bottom padding reduced 32px -> 16px, alongside #home-categories's
+   top-padding cut, to tighten the New Arrivals -> Shop by Category
+   gap (was 80px combined, now 40px). */
+#home-all-products { padding: 0 0 16px; max-width: 1400px; margin: 0 auto; }
+@media (min-width: 768px) { #home-all-products { padding: 0 0 16px; } }
 .home-categories-wrap { display: flex; flex-direction: column; gap: 0; }
 .home-categories-header { text-align: center; margin-bottom: 0; }
 .home-categories-title {
