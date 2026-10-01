@@ -187,7 +187,7 @@
 
 .add-to-bag-btn {
   width: 100%;
-  height: 48px;
+  height: 44px;
   background: #111;
   color: #fff;
   border: none;
@@ -204,25 +204,29 @@
 .add-to-bag-btn:active { background: #000; }
 .add-to-bag-btn:disabled { background: #ccc; cursor: not-allowed; }
 
+/* Secondary action, so it shouldn't visually compete with Add to Bag
+   — a slim underline button instead of a second full-width box,
+   matching .initial-drop-view-all/.editorial-banner-btn elsewhere. */
 .add-to-wishlist-btn {
-  width: 100%;
-  height: 48px;
-  background: #fff;
+  display: block;
+  align-self: center;
+  width: auto;
+  height: auto;
+  background: transparent;
   color: #111;
-  border: 1px solid #111;
+  border: none;
+  border-bottom: 1px solid #111;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
+  padding: 4px 0;
+  margin: 10px 0 0;
   cursor: pointer;
-  margin: 0;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: opacity 0.2s;
 }
-.add-to-wishlist-btn:hover {
-  background: #111;
-  color: #fff;
-}
+.add-to-wishlist-btn:hover { opacity: 0.7; }
 
 .size-guide-row {
   padding-top: 14px;
@@ -274,65 +278,72 @@
 }
 
 /* ============================================================
-   INFO TABS — converted from an accordion to an underlined tab
-   bar (SSENSE/COS-style): the three labels sit in one row with
-   a border under the whole row, and the active label gets a
-   dark underline instead of an expanding panel below it.
-   Only the active tab's panel is shown; switching is instant,
-   nothing stacks or grows in height.
+   INFO ACCORDION — vertical accordion (Composition & Care /
+   Measurements / Shipping & Returns), matching the footer's own
+   accordion (.footer-collapse, footer.css) exactly — same
+   plus-rotates-to-x icon, same max-height transition — just
+   dark-on-light instead of light-on-dark. Replaces the earlier
+   underlined-tab-bar treatment.
    ============================================================ */
 
-#page-product-detail .info-tabs-wrap {
-  display: flex;
-  flex-direction: column;
+.info-accordion-wrap {
   width: 100%;
   margin: 0;
+  border-top: 1px solid #eee;
 }
 
-#page-product-detail .info-tabs-row {
+.info-accordion-item {
+  border-bottom: 1px solid #eee;
+}
+
+.info-accordion-header {
   display: flex;
-  justify-content: center;
-  gap: 24px;
-  border-bottom: 1px solid #111;
-}
-
-#page-product-detail .info-tab-btn {
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  cursor: pointer;
+  user-select: none;
   font-family: 'Inter', sans-serif;
   font-size: 11px;
-  font-weight: 400;
   letter-spacing: 0.1em;
-  color: #888;
-  background: none;
-  cursor: pointer;
-  border: none;
-  padding: 14px 0;
-  margin: 0;
-  text-align: center;
+  font-weight: 400;
   text-transform: uppercase;
-  position: relative;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-#page-product-detail .info-tab-btn.active {
   color: #111;
-  font-weight: 500;
 }
 
-#page-product-detail .info-tab-panel {
-  display: none;
+.info-accordion-header svg {
+  width: 14px;
+  height: 14px;
+  stroke: #888;
+  fill: none;
+  stroke-width: 1.5;
+  transition: transform 0.3s;
+  flex-shrink: 0;
+}
+
+.info-accordion-item.open .info-accordion-header svg {
+  transform: rotate(45deg);
+}
+
+.info-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+}
+
+.info-accordion-item.open .info-accordion-body {
+  max-height: 400px;
+  padding-bottom: 18px;
+}
+
+.info-accordion-body p {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 300;
   line-height: 1.6;
   letter-spacing: 0.02em;
   color: #777;
-  padding: 16px 0 0;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-#page-product-detail .info-tab-panel.active {
-  display: block;
+  margin: 0;
 }
 
 .modal-desc {

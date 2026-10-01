@@ -189,8 +189,17 @@
   font-weight: 300;
   letter-spacing: var(--ui-letter-spacing);
 }
-/* On-sale price pair — sale price red, original struck through and
-   gray. Only rendered when hasSalePrice(p) is true (collection.js). */
+/* On-sale price pair — original (struck through, gray) stacked above
+   the sale price (red), in the same left-hand slot the single regular
+   price normally occupies. Stacking them vertically, instead of
+   side by side, keeps the row's right-hand slot free for swatches —
+   two prices sitting inline there would crowd a product that also
+   has color variants. Only rendered when hasSalePrice(p) is true
+   (collection.js). */
+.product-price-stack {
+  display: flex;
+  flex-direction: column;
+}
 .product-price-sale {
   color: #c0392b;
 }
@@ -201,7 +210,6 @@
   letter-spacing: var(--ui-letter-spacing);
   color: #999;
   text-decoration: line-through;
-  margin-left: 6px;
 }
 /* Margin lives on the row wrapper, not shared with .product-price/
    .product-home-price themselves: both now share their row with the
