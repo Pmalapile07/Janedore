@@ -5,10 +5,14 @@
   margin: 0 auto;
 }
 
+/* Font-size/weight match the "NEW ARRIVALS" home heading exactly
+   (.home-categories-title's own inline override in index.html,
+   13px/500) rather than the shared --ui-font-size/--ui-font-weight
+   vars (10px/400) that the rest of this rule still uses. */
 .swipe-section-title {
-  font-size: var(--ui-font-size);
+  font-size: 13px;
   letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight);
+  font-weight: 500;
   text-transform: uppercase;
   color: #111;
   margin-bottom: 12px;

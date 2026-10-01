@@ -50,12 +50,8 @@ function selectVariant(productId, variantIndex, evt) {
   if(S.currentPage==="product-detail"){
     const images = getAllProductImages(product, variantIndex);
     const mainImg = document.getElementById("product-main-image");
-    const thumbsEl = document.getElementById("product-thumbnails");
     const barsEl = document.getElementById("product-image-bars");
     if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; }
-    if(thumbsEl){
-      thumbsEl.innerHTML = images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('');
-    }
     if(barsEl){
       barsEl.innerHTML = images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('');
     }
@@ -70,7 +66,6 @@ function selectVariant(productId, variantIndex, evt) {
 function switchMainImage(index, url) {
   const mainImage = document.getElementById('product-main-image');
   if (mainImage) { mainImage.style.backgroundImage = `url('${url}')`; }
-  document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
   document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === index));
   currentImageIndex = index;
 }
@@ -91,7 +86,6 @@ function initProductSwipe(images) {
     if (diff > 0 && currentImageIndex < productImages.length - 1) { currentImageIndex++; }
     else if (diff < 0 && currentImageIndex > 0) { currentImageIndex--; }
     mainImage.style.backgroundImage = `url('${productImages[currentImageIndex]}')`;
-    document.querySelectorAll('.product-thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
     document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === currentImageIndex));
   }, {passive: true});
 }
@@ -152,8 +146,6 @@ function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").for
 function toggleInfoAccordion(key) {
   document.getElementById(`info-accordion-${key}`)?.classList.toggle('open');
 }
-function toggleDescExpand() { const desc=document.getElementById('modal-desc'); const toggle=document.getElementById('desc-toggle'); if(!desc||!toggle)return; if(desc.classList.contains('expanded')){desc.classList.remove('expanded');toggle.textContent='View More';}else{desc.classList.add('expanded');toggle.textContent='View Less';} }
-
 async function renderProductPage(product) {
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null; S.productQuantity=1;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
@@ -172,13 +164,12 @@ async function renderProductPage(product) {
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
   const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildProductGridSection('Complete the Look',ctl,`ctl-${product.id}`):'';
   const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildProductGridSection('Recently Viewed',rv,`rv-${product.id}`):'';
-  const hasDesc=product.description&&product.description.length>0;
 
   // Progress bars for the main image slider, mirroring the swipe-bar
-  // dots used in Recently Viewed / You May Also Like / Complete the Look
-  const imageBarsHtml = images.length > 1
-    ? `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`
-    : '';
+  // dots used in Recently Viewed / You May Also Like / Complete the Look.
+  // Always rendered — a single image still shows one bar — replacing the
+  // old thumbnail strip entirely.
+  const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
 
   DOM.productDetail.innerHTML=`
     <div class="product-slider" id="product-slider">
@@ -186,20 +177,18 @@ async function renderProductPage(product) {
         ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
       </div>
       ${imageBarsHtml}
-      <div class="product-thumbnails" id="product-thumbnails">
-        ${images.map((u,i)=>`<div class="product-thumbnail${i===0?' active':''}" style="background-image:url('${u}');" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}
-      </div>
     </div>
     <div class="product-info">
       <div class="product-name-group">
-        <h1 class="product-title-main">${product.name||''}</h1>
-        <p class="product-by-brand">By <span class="product-by-brand-name">${product.brand||'JANEDORE'}</span></p>
+        <p class="product-by-brand-name">${product.brand||'JANEDORE'}</p>
+        <div class="product-name-price-row">
+          <h1 class="product-title-main">${product.name||''}</h1>
+          <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+        </div>
       </div>
-      ${hasDesc?`<div class="modal-desc expanded" id="modal-desc">${product.description||''}</div>`:'<p style="font-size:12px;font-weight:300;color:#111;">No description available.</p>'}
-      <div class="product-price-main">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
       <div class="product-size-color-group">
-        ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div></div>`:''}
         ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
+        ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div><div class="size-guide-note">Need help with sizing? <span>View our size guide</span></div></div>`:''}
       </div>
       <div class="product-action-group">
         <div class="qty-cart-row">
@@ -209,7 +198,14 @@ async function renderProductPage(product) {
         <button class="add-to-wishlist-btn" onclick="addToWishlist('${product.id}')">Add to Wishlist</button>
       </div>
       <div class="info-accordion-wrap">
-        <div class="info-accordion-item open" id="info-accordion-composition">
+        <div class="info-accordion-item open" id="info-accordion-description">
+          <div class="info-accordion-header" onclick="toggleInfoAccordion('description')">
+            Description
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="info-accordion-body"><div>${product.description||'No description available.'}</div></div>
+        </div>
+        <div class="info-accordion-item" id="info-accordion-composition">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('composition')">
             Composition &amp; Care
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -228,7 +224,7 @@ async function renderProductPage(product) {
             Shipping &amp; Returns
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </div>
-          <div class="info-accordion-body"><p>${product.shippingReturns||'No shipping details available.'}</p><div class="shipping-calc"><input id="postal-code-input" placeholder="Enter postal code"><button onclick="calculateShipping()">Calculate</button></div><div class="shipping-result" id="shipping-result"></div></div>
+          <div class="info-accordion-body"><p>${product.shippingReturns||'No shipping details available.'}</p></div>
         </div>
       </div>
     </div>

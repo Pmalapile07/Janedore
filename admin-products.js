@@ -639,7 +639,7 @@
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Organization</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;" onchange="window._applySizePreset()">' + catOptions + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;">' + catOptions + '</select></div>' +
           '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
           '<div class="form-group" style="padding:0;"><label>Collections <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="collections" value="' + esc((p.collections||[]).join(', ')) + '" placeholder="e.g. Summer 2026, New arrivals"></div>' +
           '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +

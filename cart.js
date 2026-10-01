@@ -429,13 +429,5 @@ function updateBadges() {
   if (DOM.wishBadge) { DOM.wishBadge.style.display = S.wishlist.length > 0 ? "flex" : "none"; DOM.wishBadge.textContent = S.wishlist.length; }
 }
 
-function calculateShipping() {
-  const postal = document.getElementById("postal-code-input")?.value.trim();
-  const res = document.getElementById("shipping-result");
-  if (!res) return;
-  if (!postal || postal.length < 3) { res.textContent = "Please enter a valid postal code."; return; }
-  res.textContent = `Estimated shipping: ${formatPrice(Math.floor(Math.random() * 150) + 50)} (3-5 business days)`;
-}
-
 // Initialize discount from storage on page load
 loadAppliedDiscount();
