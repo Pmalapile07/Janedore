@@ -727,7 +727,7 @@ function getSuggestedProducts(currentProduct, excludeIds) {
   const featured = pool.filter(p => p.featured && p.brand !== currentProduct.brand);
   const rest = pool.filter(p => !p.featured && p.brand !== currentProduct.brand);
 
-  return merchandiseProducts([...sameBrand, ...featured, ...rest]).slice(0, 6);
+  return merchandiseProducts([...sameBrand, ...featured, ...rest]).slice(0, 4);
 }
 
 /* ============================================================
@@ -1067,7 +1067,7 @@ function renderVendorPage(vendor) {
         </div>
       </div>
     </section>
-    <div class="product-grid" id="vendor-products-grid" style="padding: 0 18px 32px; max-width:1400px; margin:0 auto;"></div>
+    <div class="product-grid" id="vendor-products-grid" style="max-width:1400px; margin:0 auto;"></div>
   `;
 
   const gridEl = document.getElementById('vendor-products-grid');

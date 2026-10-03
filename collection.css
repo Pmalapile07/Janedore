@@ -428,9 +428,15 @@ body.on-collection-page .collection-filter-bar {
    VENDOR/BRAND PAGE
    ========================================= */
 
+/* Padding matches #hero's own (12px mobile, 16px desktop, see
+   @media below) — the image sits inset instead of running
+   edge-to-edge, same treatment as the home page hero. */
 .vendor-hero-section {
   width: 100%;
   margin-bottom: 30px;
+  padding: 12px;
+  background: #fff;
+  box-sizing: border-box;
 }
 
 .vendor-hero-img {
@@ -483,6 +489,10 @@ body.on-collection-page .collection-filter-bar {
   .vendor-hero-desc {
     font-size: 11px;
   }
+}
+
+@media (min-width: 769px) {
+  .vendor-hero-section { padding: 16px; }
 }
 
 /* =========================================
