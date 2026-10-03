@@ -66,7 +66,7 @@ function renderHomeBrandSpotlight(vendors) {
     const logo = vendor.logoUrl
       ? `<img src="${escapeHTML(vendor.logoUrl)}" alt="" class="brand-strip-logo">`
       : `<span class="brand-strip-logo brand-strip-logo-fallback">${escapeHTML(name.charAt(0).toUpperCase())}</span>`;
-    return `<div class="brand-strip-item" onclick="navigateToVendor('${escapeJSString(vendor.id)}')">${logo}<span class="brand-strip-name">${escapeHTML(name)}</span></div>`;
+    return `<div class="brand-strip-item" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')">${logo}<span class="brand-strip-name">${escapeHTML(name)}</span></div>`;
   };
 
   const setHTML = repeated.map(renderItem).join('');
@@ -86,12 +86,13 @@ function buildShopByBrand(vendors) {
   grid.innerHTML = brands.map(vendor => {
     const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
     const bg = vendor.logoUrl ? `background-image:url('${escapeForCssUrl(vendor.logoUrl)}');` : '';
-    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.id)}')"><div class="shop-brand-img" style="${bg}"><div class="shop-brand-overlay"></div><div class="shop-brand-name">${escapeHTML(name)}</div></div></div>`;
+    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')"><div class="shop-brand-img" style="${bg}"><div class="shop-brand-overlay"></div><div class="shop-brand-name">${escapeHTML(name)}</div></div></div>`;
   }).join('');
 }
 
 async function initVendors() {
   const vendors = await fetchVendors();
+  await backfillMissingVendorSlugs(vendors);
   S.vendors = vendors;
   renderVendorsDesktop(vendors);
   renderVendorsMobile(vendors);

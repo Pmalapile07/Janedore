@@ -1005,18 +1005,17 @@ function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; D
 
 // ==================== VENDOR / BRAND PAGE ====================
 
-async function navigateToVendor(vendorId, replaceUrl) {
+async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
   S.saleMode = false;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-vendor").classList.add("active");
   S.currentPage = "vendor";
-  S.currentVendorId = vendorId;
   removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page"); DOM.mainNav.classList.add("collection-page"); }
   // Shows the shared filter bar (grid toggle, FILTER button, title)
   // above the grid, same as the products/category pages.
   document.body.classList.add('on-collection-page');
-  const newPath = '/brands/' + encodeURIComponent(vendorId);
+  const newPath = '/brands/' + encodeURIComponent(vendorIdOrSlug);
   if (window.location.pathname !== newPath) {
     replaceUrl ? history.replaceState(null, null, newPath) : history.pushState(null, null, newPath);
   }
@@ -1026,11 +1025,36 @@ async function navigateToVendor(vendorId, replaceUrl) {
   // carry over to the next brand you look at.
   S.vendorFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
   S.gridColsVendor = 2;
+
+  // Resolve a slug (the normal case — every brand link passes its
+  // slug now) or a raw doc ID (old links already shared/indexed) down
+  // to the real Firestore doc ID. S.vendors may not be loaded yet (a
+  // fresh /brands/{slug} page load can race initVendors()), so fall
+  // back to a live query by slug instead of assuming an unrecognized
+  // value must already be a doc ID.
+  let docId = vendorIdOrSlug;
+  const known = findVendorBySlug(vendorIdOrSlug);
+  if (known) {
+    docId = known.id;
+  } else {
+    try {
+      const bySlug = await db.collection('brands').where('slug', '==', vendorIdOrSlug).limit(1).get();
+      if (!bySlug.empty) docId = bySlug.docs[0].id;
+    } catch(e) {}
+  }
+  S.currentVendorId = docId;
+
   try {
-    const doc = await db.collection('brands').doc(vendorId).get();
+    const doc = await db.collection('brands').doc(docId).get();
     const vendor = doc.exists ? Object.assign({id:doc.id}, doc.data()) : null;
     S.currentVendor = vendor;
     renderVendorPage(vendor);
+    // Silently upgrade the address bar to the canonical slug URL if we
+    // arrived via a raw ID or anything else — no new history entry.
+    const canonicalPath = '/brands/' + encodeURIComponent(vendor?.slug || docId);
+    if (window.location.pathname !== canonicalPath) {
+      history.replaceState(null, null, canonicalPath);
+    }
   } catch(e) {
     console.error('Error fetching vendor:', e);
     S.currentVendor = null;
