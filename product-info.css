@@ -8,7 +8,9 @@
   gap: 28px;
 }
 
-.product-breadcrumb {
+/* Generic breadcrumb trail — used on the product page and reused as-is
+   on brand/vendor, category/collection, and wishlist pages. */
+.page-breadcrumb {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -21,13 +23,15 @@
   font-weight: 400;
   letter-spacing: 0.02em;
 }
-.product-breadcrumb span { color: #888; }
-.product-breadcrumb span[onclick] { cursor: pointer; }
-.product-breadcrumb span[onclick]:hover { color: #111; }
-.product-breadcrumb-sep { color: #ccc; }
-.product-breadcrumb-current { color: #111; }
+.page-breadcrumb span { color: #888; }
+.page-breadcrumb span[onclick] { cursor: pointer; }
+.page-breadcrumb span[onclick]:hover { color: #111; }
+.page-breadcrumb-sep { color: #ccc; }
+/* One weight step heavier than the trail's other links, to mark which
+   page you're currently on. */
+.page-breadcrumb-current { color: #111; font-weight: 500; }
 @media (min-width: 768px) {
-  .product-breadcrumb { padding: 16px 16px 0; }
+  .page-breadcrumb { padding: 16px 16px 0; }
 }
 
 .product-badge-detail {

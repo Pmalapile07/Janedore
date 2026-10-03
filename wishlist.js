@@ -56,13 +56,18 @@ function toggleGridWish() {
 // All Products, permanently.
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
+  const breadcrumbHtml = `<nav class="page-breadcrumb" aria-label="Breadcrumb">
+    <span onclick="navigateTo('home')">Home</span>
+    <span class="page-breadcrumb-sep">/</span>
+    <span class="page-breadcrumb-current">Wishlist</span>
+  </nav>`;
   if (!S.wishlist.length) {
-    DOM.wishPageContent.innerHTML = '<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div>';
+    DOM.wishPageContent.innerHTML = breadcrumbHtml + '<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div>';
     return;
   }
   const cols = S.gridColsWish;
   const cards = S.wishlist.map(p => productCard(p, cols === 3, true, S.productVariantSelections[p.id] ?? 0)).join('');
-  DOM.wishPageContent.innerHTML = `<div class="wish-page-header">
+  DOM.wishPageContent.innerHTML = breadcrumbHtml + `<div class="wish-page-header">
     <button class="col-grid-toggle-btn" onclick="toggleGridWish()" title="Change grid layout">
       <div class="col-grid-icon cols-${cols}">
         <div class="col-grid-bar"></div>

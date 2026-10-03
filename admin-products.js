@@ -11,6 +11,45 @@
   var isSuperAdmin      = window._isSuperAdmin;
   var requireSuperAdmin = window._requireSuperAdmin;
   var productsRef       = window._productsRef;
+  var brandsRef         = window._adminDB.collection('brands');
+
+  // Vendors tab only populates window._vendorsData when visited, which left
+  // resolveVendorId() falling through to the stale hardcoded map (or the
+  // 'janedore' bug below) on any session where Products was used first.
+  // Fetching here too means it's ready by the time a human finishes filling
+  // out the product form, regardless of which admin tab was opened first.
+  if (!window._vendorsData) {
+    brandsRef.get().then(function(snap) {
+      if (!window._vendorsData) {
+        window._vendorsData = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+      }
+      _backfillVendorIds();
+    }).catch(function() {});
+  }
+
+  // One-time repair for products saved while resolveVendorId() couldn't find
+  // a match: their vendorId was defaulted to the literal string 'janedore'
+  // (not the real vendor doc id 'vendor-janedore'), which coincidentally
+  // matches the house brand's slug and sent every such product's brand
+  // link to the Janedore page instead of its actual brand. Only touches
+  // products whose vendorId doesn't match any real vendor.
+  function _backfillVendorIds() {
+    var vendors = window._vendorsData || [];
+    var products = window._allProducts || [];
+    if (!vendors.length || !products.length) return;
+    var validIds = {};
+    vendors.forEach(function(v) { validIds[v.id] = true; });
+    products.forEach(function(p) {
+      if (validIds[p.vendorId]) return;
+      var correctId = resolveVendorId(p.brand);
+      if (correctId && correctId !== p.vendorId) {
+        productsRef.doc(p.id).update({ vendorId: correctId }).then(function() {
+          p.vendorId = correctId;
+        }).catch(function(e) { console.error('Vendor backfill failed for', p.id, e); });
+      }
+    });
+  }
+  window._backfillVendorIds = _backfillVendorIds;
 
   var CATEGORIES = [
     { group: 'Clothing',         items: ['dresses','tops','bottoms','jackets','coats','sets','jumpsuits','skirts','trousers','shorts','knitwear','swimwear','activewear','lingerie'] },
@@ -244,6 +283,7 @@
   window._renderProductsTab = function() {
     var mc = safeEl('main-content');
     if (!mc) return;
+    _backfillVendorIds();
     var allProducts = window._allProducts || [];
     var hasAny = allProducts.length > 0;
     var canAdd = isSuperAdmin() || window._currentUserRole === 'VENDOR';
@@ -861,7 +901,11 @@
       // product would show up when filtering by brand name (which reads
       // the `brand` field) but never match its real vendor by vendorId
       // (brand pages, admin's vendor product counts/lists).
-      vendorId:             window._currentVendorId || resolveVendorId(form.brand.value) || (existingProduct ? existingProduct.vendorId : null) || 'janedore',
+      // No 'janedore' fallback here on purpose: that string isn't a real
+      // vendor doc id, but it happens to match the house brand's slug, so
+      // an unresolved brand used to silently send the product's brand
+      // link to the Janedore page instead of leaving it unset.
+      vendorId:             window._currentVendorId || resolveVendorId(form.brand.value) || (existingProduct ? existingProduct.vendorId : null) || null,
       category:             form.category.value,
       price:                price,
       salePrice:            salePrice,
@@ -906,6 +950,10 @@
 
     if (data.variants.length === 0) {
       data.variants.push({ color:'Default', swatch:'#111', images:{ model:[], ghost:[], detail:[] } });
+    }
+
+    if (!data.vendorId) {
+      showToast('No vendor found for brand "' + data.brand + '" — product saved without a brand link', 'error');
     }
 
     saveProduct(data);

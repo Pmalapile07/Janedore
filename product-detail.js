@@ -159,7 +159,8 @@ async function renderProductPage(product) {
   // category-by-category rules. Excludes whatever You May Also Like
   // (above) already shows, so the two sections don't repeat products.
   const suggested=getSuggestedProducts(product,related.map(p=>p.id)); const suggestedSection=suggested.length?buildProductGridSection('Suggested Products',suggested,`suggested-${product.id}`):'';
-  const shopByBrandVendors=getFeaturedBrands((S.vendors||[]).filter(v=>v.id!==product.vendorId));
+  const productVendor=findVendorForProduct(product);
+  const shopByBrandVendors=getFeaturedBrands((S.vendors||[]).filter(v=>v.id!==(productVendor?productVendor.id:null)));
   const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by Brand</div><div class="product-grid brand-grid-scroll">${shopByBrandCardsHtml(shopByBrandVendors)}</div></div>`:'';
 
   // Progress bars for the main image slider, mirroring the swipe-bar
@@ -169,11 +170,12 @@ async function renderProductPage(product) {
   const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
 
   const categoryLabel = String(product.category||'').replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
-  const breadcrumbHtml = `<nav class="product-breadcrumb" aria-label="Breadcrumb">
+  const breadcrumbHtml = `<nav class="page-breadcrumb" aria-label="Breadcrumb">
     <span onclick="navigateTo('home')">Home</span>
-    ${product.category?`<span class="product-breadcrumb-sep">/</span><span onclick="navigateToCategory('${product.category}')">${categoryLabel}</span>`:''}
-    <span class="product-breadcrumb-sep">/</span>
-    <span class="product-breadcrumb-current">${escapeHTML(product.name||'')}</span>
+    ${productVendor?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')">${escapeHTML(product.brand||'')}</span>`:''}
+    ${product.category?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCategory('${product.category}')">${categoryLabel}</span>`:''}
+    <span class="page-breadcrumb-sep">/</span>
+    <span class="page-breadcrumb-current">${escapeHTML(product.name||'')}</span>
   </nav>`;
 
   DOM.productDetail.innerHTML=`
@@ -188,7 +190,7 @@ async function renderProductPage(product) {
       <div class="product-name-group">
         <h1 class="product-title-main">${product.name||''}</h1>
         <div class="product-brand-price-row">
-          <p class="product-by-brand-name"${product.vendorId?` onclick="navigateToVendor('${(S.vendors||[]).find(v=>v.id===product.vendorId)?.slug||product.vendorId}')"`:''}>${product.brand||'JANEDORE'}</p>
+          <p class="product-by-brand-name"${productVendor?` onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')"`:''}>${product.brand||'JANEDORE'}</p>
           <div class="product-price-top">${originalPrice?`<span class="price-current price-sale">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
         </div>
       </div>
