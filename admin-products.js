@@ -81,12 +81,26 @@
   // needed elsewhere.
   var BADGE_PRESETS = ['new','sale','sold out','pre-order'];
 
-  // FIX: Map brand names to vendor IDs
+  // Hardcoded fallback for when window._vendorsData isn't loaded yet
+  // (it's only populated after visiting the Vendors tab this session) —
+  // these IDs rot the moment a vendor record is deleted/recreated
+  // through the admin UI, since that generates a brand-new Firestore
+  // doc ID this map never finds out about. resolveVendorId() below
+  // always prefers the live vendor list when it's available, and only
+  // falls back to this map when it isn't.
   var VENDOR_ID_MAP = {
     'JANEDORE': 'vendor-janedore',
     'NIRIUS CO': 'uf1c4uBKwmCAVafjEdRL',
     'THATO': 'vendor-thato'
   };
+
+  function resolveVendorId(brandName) {
+    var live = (window._vendorsData || []).find(function(v) {
+      return (v.brand && v.brand === brandName) || (v.name && v.name === brandName);
+    });
+    if (live) return live.id;
+    return VENDOR_ID_MAP[brandName] || null;
+  }
 
   function markdownToHtml(text) {
     if (!text) return '';
@@ -840,7 +854,14 @@
       sku:                  form.sku.value,
       name:                 form.name.value,
       brand:                form.brand.value,
-      vendorId:             existingProduct ? existingProduct.vendorId : (window._currentVendorId || VENDOR_ID_MAP[form.brand.value] || 'janedore'),
+      // Re-derived from the current Brand selection on every save, not
+      // just at creation — previously, editing an existing product and
+      // changing its Brand dropdown left vendorId silently pointing at
+      // whatever brand the product was originally created with, so the
+      // product would show up when filtering by brand name (which reads
+      // the `brand` field) but never match its real vendor by vendorId
+      // (brand pages, admin's vendor product counts/lists).
+      vendorId:             window._currentVendorId || resolveVendorId(form.brand.value) || (existingProduct ? existingProduct.vendorId : null) || 'janedore',
       category:             form.category.value,
       price:                price,
       salePrice:            salePrice,
