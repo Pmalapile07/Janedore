@@ -654,10 +654,25 @@ function cardTouchEnd(e, productId) {
     d.classList.toggle("active", i === nxt));
 }
 
-function getCompleteLookProducts(currentProduct) {
-  if (!currentProduct) return []; const active = PRODUCTS.filter(p => p.status === 'active' && p.id !== currentProduct.id); const pouch = active.find(p => p.id === 'janedore-leather-pouch'); const clothing = active.filter(p => ['dresses','tops','bottoms','jackets','sets'].includes(p.category)); const tops = clothing.filter(p => p.category === 'tops'), bottoms = clothing.filter(p => p.category === 'bottoms'); const dresses = clothing.filter(p => p.category === 'dresses'), jewelry = active.filter(p => p.category === 'jewelry'); const bags = active.filter(p => p.category === 'bags' && p.id !== 'janedore-leather-pouch'); const sunglasses = active.filter(p => p.category === 'sunglasses'), parfum = active.filter(p => p.category === 'parfum'); let s = []; const cat = currentProduct.category;
-  if (cat === 'sunglasses') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); if (s.length < 3) s = s.concat(bottoms.slice(0,1)); } else if (['tops','bottoms','dresses','jackets','sets'].includes(cat)) { if (cat === 'tops') { s = s.concat(bottoms.slice(0,1)); s = s.concat(jewelry.slice(0,1)); if (pouch) s.push(pouch); } else if (cat === 'bottoms') { s = s.concat(tops.slice(0,2)); s = s.concat(jewelry.slice(0,1)); } else if (cat === 'dresses') { s = s.concat(jewelry.slice(0,2)); } else { s = s.concat(tops.slice(0,1)); s = s.concat(bottoms.slice(0,1)); } if (s.length < 4) s = s.concat(bags.slice(0,1)); } else if (cat === 'parfum') { s = s.concat(clothing.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); } else if (cat === 'bags') { s = s.concat(jewelry.slice(0,2)); s = s.concat(sunglasses.slice(0,1)); if (pouch && currentProduct.id !== 'janedore-leather-pouch') s.push(pouch); } else if (cat === 'jewelry') { if (pouch) s.push(pouch); s = s.concat(tops.slice(0,2)); }
-  return [...new Set(s)].slice(0,6);
+// Works for every category (the old version only had rules for 9 of
+// them, and showed nothing at all for everything else). Priority:
+// 1) other products from the same brand ("more from this designer"),
+// 2) site-wide featured picks, 3) whatever's left — so there's always
+// something to show as long as other active products exist.
+// excludeIds lets a caller keep this from repeating products another
+// section on the same page (e.g. You May Also Like) already shows.
+function getSuggestedProducts(currentProduct, excludeIds) {
+  if (!currentProduct) return [];
+  const exclude = new Set([currentProduct.id, ...(excludeIds || [])]);
+  const active = PRODUCTS.filter(p => p.status === 'active' && !exclude.has(p.id));
+  const inStock = active.filter(p => !isProductSoldOut(p));
+  const pool = inStock.length ? inStock : active;
+
+  const sameBrand = pool.filter(p => p.brand === currentProduct.brand);
+  const featured = pool.filter(p => p.featured && p.brand !== currentProduct.brand);
+  const rest = pool.filter(p => !p.featured && p.brand !== currentProduct.brand);
+
+  return merchandiseProducts([...sameBrand, ...featured, ...rest]).slice(0, 6);
 }
 
 /* ============================================================
