@@ -101,6 +101,10 @@
   text-decoration: line-through;
   margin-left: 8px;
 }
+/* Matches .product-price-sale on the grid cards (product-grid.css). */
+.price-sale {
+  color: #c0392b;
+}
 
 .product-size-color-group {
   display: flex;

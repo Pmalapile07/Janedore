@@ -379,7 +379,8 @@ body .site-collection-layout {
    name only, no price/wishlist/badge/swatches) since a brand isn't a
    product. Cards are sized slightly bigger than the product sliders'
    (70vw/30vw/320px vs 65vw/28vw/300px), same 5/6 image ratio. */
-#brand-grid {
+#brand-grid,
+.brand-grid-scroll {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -388,7 +389,8 @@ body .site-collection-layout {
   padding: 0 18px !important;
   scrollbar-width: none;
 }
-#brand-grid::-webkit-scrollbar { display: none; }
+#brand-grid::-webkit-scrollbar,
+.brand-grid-scroll::-webkit-scrollbar { display: none; }
 .shop-brand-card {
   cursor: pointer;
   flex: 0 0 auto;
@@ -400,7 +402,8 @@ body .site-collection-layout {
   .shop-brand-card { width: 30vw; max-width: 320px; }
 }
 @media (min-width: 1024px) {
-  #brand-grid {
+  #brand-grid,
+  .brand-grid-scroll {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;

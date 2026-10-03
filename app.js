@@ -475,10 +475,24 @@ function initNavScroll() {
 }
 
 function isDesktop() { return window.innerWidth >= 769; }
-function setHeroImage() { 
-  if(DOM.heroBg) DOM.heroBg.style.backgroundImage = isDesktop() ? 
-    "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" : 
-    "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')"; 
+// Only actually touches the hero's background-image when the
+// desktop/mobile choice would genuinely change, not on every resize
+// tick. Mobile Safari fires resize events while scrolling (its
+// address bar retracting/expanding changes window height), so without
+// this guard, a long scroll session could re-trigger this dozens of
+// times — same URL each time, but still real style-recalc work, and a
+// plausible contributor to the hero/header occasionally flashing
+// blank on a slower phone.
+// State lives on the function itself (not a module-level let) since
+// this function is also called immediately at script load, before a
+// later-declared let would be initialized.
+function setHeroImage() {
+  const desktop = isDesktop();
+  if (desktop === setHeroImage._lastIsDesktop) return;
+  setHeroImage._lastIsDesktop = desktop;
+  if(DOM.heroBg) DOM.heroBg.style.backgroundImage = desktop ?
+    "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" :
+    "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')";
 }
 window.addEventListener('resize', setHeroImage);
 

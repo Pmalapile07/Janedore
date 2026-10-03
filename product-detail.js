@@ -159,6 +159,8 @@ async function renderProductPage(product) {
   // category-by-category rules. Excludes whatever You May Also Like
   // (above) already shows, so the two sections don't repeat products.
   const suggested=getSuggestedProducts(product,related.map(p=>p.id)); const suggestedSection=suggested.length?buildProductGridSection('Suggested Products',suggested,`suggested-${product.id}`):'';
+  const shopByBrandVendors=getFeaturedBrands((S.vendors||[]).filter(v=>v.id!==product.vendorId));
+  const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by Brand</div><div class="product-grid brand-grid-scroll">${shopByBrandCardsHtml(shopByBrandVendors)}</div></div>`:'';
 
   // Progress bars for the main image slider, mirroring the swipe-bar
   // dots used in Recently Viewed / You May Also Like / Complete the Look.
@@ -187,7 +189,7 @@ async function renderProductPage(product) {
         <h1 class="product-title-main">${product.name||''}</h1>
         <div class="product-brand-price-row">
           <p class="product-by-brand-name"${product.vendorId?` onclick="navigateToVendor('${(S.vendors||[]).find(v=>v.id===product.vendorId)?.slug||product.vendorId}')"`:''}>${product.brand||'JANEDORE'}</p>
-          <div class="product-price-top">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+          <div class="product-price-top">${originalPrice?`<span class="price-current price-sale">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
         </div>
       </div>
       <div class="product-size-color-group">
@@ -220,7 +222,7 @@ async function renderProductPage(product) {
       </div>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0;">
-      ${suggestedSection}${relatedSection}
+      ${suggestedSection}${shopByBrandSection}${relatedSection}
     </div>
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer");
