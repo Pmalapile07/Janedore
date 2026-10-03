@@ -1,8 +1,11 @@
+/* Side padding matches .product-info's own (12px mobile, 16px desktop
+   below) so the image lines up flush with the text content under it,
+   instead of running edge-to-edge. */
 .product-slider {
   position: relative;
   width: 100%;
   margin: 0;
-  padding: 0;
+  padding: 12px;
 }
 
 .product-main-image {
@@ -16,6 +19,7 @@
 }
 
 @media (min-width: 769px) {
+  .product-slider { padding: 16px; }
   .product-main-image { aspect-ratio: 2/3; }
 }
 

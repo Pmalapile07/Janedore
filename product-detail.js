@@ -176,7 +176,10 @@ async function renderProductPage(product) {
     <div class="product-info">
       <div class="product-name-group">
         <h1 class="product-title-main">${product.name||''}</h1>
-        <p class="product-by-brand-name">${product.brand||'JANEDORE'}</p>
+        <div class="product-brand-price-row">
+          <p class="product-by-brand-name"${product.vendorId?` onclick="navigateToVendor('${product.vendorId}')"`:''}>${product.brand||'JANEDORE'}</p>
+          <div class="product-price-top">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+        </div>
       </div>
       <div class="product-size-color-group">
         ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
