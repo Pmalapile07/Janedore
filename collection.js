@@ -60,6 +60,9 @@ const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses'];
 // reference a completely different department (e.g. clothing
 // categories while browsing Homeware).
 function getCategoryFilterScope() {
+  if (S.currentPage === 'vendor') {
+    return S.currentVendor ? [...new Set(getVendorBaseProducts(S.currentVendor).map(p => p.category).filter(Boolean))] : [];
+  }
   if (S.currentPage !== 'category' || !S.currentCategoryPage) return null;
   if (S.currentCategoryPage === 'all-clothing') return CLOTHING_CATEGORIES;
   if (S.currentCategoryPage === 'all-accessories') return ACCESSORY_CATEGORIES;
@@ -112,6 +115,7 @@ function setSortBy(value) {
   S.sortBy = value;
   if (S.saleMode) renderSaleProducts();
   else if (S.currentPage === 'category') renderCategoryProducts();
+  else if (S.currentPage === 'vendor') renderVendorPage(S.currentVendor);
   else renderAllProducts();
 }
 
@@ -180,6 +184,29 @@ function getCatFilteredProducts() {
   });
 }
 
+// Every active product actually belonging to this brand — same
+// matching logic renderVendorPage() always used (vendorId match, or
+// normalized brand name match as a fallback). No facet filters
+// applied yet; that's getVendorFilteredProducts() below.
+function getVendorBaseProducts(vendor) {
+  if (!vendor) return [];
+  const brandName = vendor?.brand || vendor?.name || '';
+  const normalizedBrandName = normalizeBrandName(brandName);
+  return PRODUCTS.filter(p => {
+    if (p.status !== 'active') return false;
+    if (vendor?.id && p.vendorId === vendor.id) return true;
+    if (p.brand && brandName && normalizeBrandName(p.brand) === normalizedBrandName) return true;
+    return false;
+  });
+}
+
+function getVendorFilteredProducts(vendor) {
+  return getVendorBaseProducts(vendor).filter(p => {
+    if (S.vendorFilter.cat.length && !S.vendorFilter.cat.includes(p.category)) return false;
+    return passesCommonFilters(p, S.vendorFilter);
+  });
+}
+
 // Multi-brand stores (ASOS, Superbalist, COS) let shoppers pick more
 // than one value per facet — e.g. two brands at once — rather than
 // forcing an either/or choice, so category/brand are toggled in and
@@ -203,10 +230,19 @@ function applyCatFilter(type, value) {
   renderCategoryProducts();
 }
 
+function applyVendorFilter(type, value) {
+  if (type === 'cat' || type === 'vendor') toggleArrayFilter(S.vendorFilter, type, value);
+  else S.vendorFilter[type] = value;
+  renderVendorPage(S.currentVendor);
+}
+
 function clearAllCollectionFilters() {
   if (S.currentPage === 'category') {
     S.catFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
     renderCategoryProducts();
+  } else if (S.currentPage === 'vendor') {
+    S.vendorFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
+    renderVendorPage(S.currentVendor);
   } else {
     S.filter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
     if (S.saleMode) renderSaleProducts(); else renderAllProducts();
@@ -252,12 +288,14 @@ function applyCollectionFilter(type, value) {
   if(backdrop) backdrop.classList.remove("open");
   if (S.currentPage === 'products') { applyFilter(type, value); }
   else if (S.currentPage === 'category') { applyCatFilter(type, value); }
+  else if (S.currentPage === 'vendor') { applyVendorFilter(type, value); }
   updateCollectionGridIcon();
 }
 
 function toggleCollectionGrid() {
   if (S.currentPage === 'products') { toggleGrid(); }
   else if (S.currentPage === 'category') { toggleGridCat(); }
+  else if (S.currentPage === 'vendor') { toggleGridVendor(); }
   updateCollectionGridIcon();
 }
 
@@ -267,6 +305,7 @@ function updateCollectionGridIcon() {
   let cols;
   if (S.currentPage === 'products') { cols = S.gridCols || 2; }
   else if (S.currentPage === 'category') { cols = S.gridColsCat || 2; }
+  else if (S.currentPage === 'vendor') { cols = S.gridColsVendor || 2; }
   else { cols = 2; }
   icon.classList.remove('cols-1', 'cols-2', 'cols-3');
   if (cols === 1) { icon.classList.add('cols-1'); }
@@ -341,8 +380,13 @@ function buildCategoryFilterOptions() {
   if (!filterContainer) return;
 
   const isCategoryPage = S.currentPage === 'category';
-  const f = isCategoryPage ? S.catFilter : S.filter;
+  const isVendorPage = S.currentPage === 'vendor';
+  const f = isVendorPage ? S.vendorFilter : (isCategoryPage ? S.catFilter : S.filter);
   const scope = getCategoryFilterScope();
+  // Restricts counts to just this brand's own products, same as
+  // getVendorFilteredProducts() — otherwise a vendor page's category
+  // counts would show site-wide totals instead of this brand's.
+  const vendorIds = isVendorPage ? new Set(getVendorBaseProducts(S.currentVendor).map(p => p.id)) : null;
 
   let categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
   if (scope) categories = categories.filter(c => scope.includes(c));
@@ -356,6 +400,7 @@ function buildCategoryFilterOptions() {
 
   const countFor = cat => PRODUCTS.filter(p => {
     if (p.status !== 'active' || p.category !== cat) return false;
+    if (isVendorPage) return vendorIds.has(p.id) && passesCommonFilters(p, f);
     if (isCategoryPage && p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
     if (f.vendor.length && !f.vendor.includes(p.brand)) return false;
     return passesCommonFilters(p, f);
@@ -376,6 +421,16 @@ function buildCategoryFilterOptions() {
 function buildBrandFilterOptions() {
   const filterContainer = document.getElementById('collection-filter-brands');
   if (!filterContainer) return;
+
+  // Every product on a vendor page is already that one brand, so a
+  // brand filter has nothing to do there — hide the whole group
+  // instead of showing it with a single, always-checked option.
+  const filterGroup = filterContainer.closest('.filter-group');
+  if (S.currentPage === 'vendor') {
+    if (filterGroup) filterGroup.style.display = 'none';
+    return;
+  }
+  if (filterGroup) filterGroup.style.display = '';
 
   const isCategoryPage = S.currentPage === 'category';
   const f = isCategoryPage ? S.catFilter : S.filter;
@@ -414,7 +469,7 @@ function renderActiveFilterChips() {
   if (!container) return;
 
   const isCategoryPage = S.currentPage === 'category';
-  const f = isCategoryPage ? S.catFilter : S.filter;
+  const f = S.currentPage === 'vendor' ? S.vendorFilter : (isCategoryPage ? S.catFilter : S.filter);
 
   const chips = [];
   f.cat.forEach(cat => {
@@ -780,9 +835,12 @@ function injectToolbarExtras(pageId, gridSvgId) {
   const page = document.getElementById(pageId);
   if (!page) return;
 
-  const oldSort = page.querySelector('.sort-by-select');
-  if (oldSort) oldSort.remove();
-  const oldExtras = page.querySelector('.filter-extras-injected');
+  // #collection-filter-options is a single global panel shared by every
+  // page (it sits outside all .page containers in index.html), not
+  // nested inside whichever page is currently active — page.querySelector
+  // here always came back empty, so the On Sale/In Stock checkboxes
+  // this builds were never actually appended anywhere, on any page.
+  const oldExtras = document.querySelector('.filter-extras-injected');
   if (oldExtras) oldExtras.remove();
 
   const toolbar = page.querySelector('.collection-toolbar');
@@ -802,7 +860,7 @@ function injectToolbarExtras(pageId, gridSvgId) {
     }
   }
 
-  const panel = page.querySelector('#collection-filter-options');
+  const panel = document.getElementById('collection-filter-options');
   if (panel) {
     const wrapper = document.createElement('div');
     wrapper.className = 'filter-extras-injected';
@@ -828,7 +886,7 @@ function buildSortControl() {
 }
 
 function buildFilterExtras() {
-  const f = (S.currentPage === 'category') ? S.catFilter : S.filter;
+  const f = S.currentPage === 'vendor' ? S.vendorFilter : (S.currentPage === 'category' ? S.catFilter : S.filter);
   const onSale = f.onSale ? 'checked' : '';
   const inStock = f.inStock ? 'checked' : '';
   return `
@@ -843,6 +901,8 @@ function buildFilterExtras() {
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
 
 function toggleGridCat() { S.gridColsCat = S.gridColsCat === 1 ? 2 : S.gridColsCat === 2 ? 3 : 1; renderCategoryProducts(); updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat); updateCollectionGridIcon(); }
+
+function toggleGridVendor() { S.gridColsVendor = S.gridColsVendor === 1 ? 2 : S.gridColsVendor === 2 ? 3 : 1; renderVendorPage(S.currentVendor); updateCollectionGridIcon(); }
 
 function renderCollectionSortingTabs() {
   const page = document.getElementById(S.currentPage === 'products' ? 'page-products' : 'page-category');
@@ -953,17 +1013,27 @@ async function navigateToVendor(vendorId, replaceUrl) {
   S.currentVendorId = vendorId;
   removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page"); DOM.mainNav.classList.add("collection-page"); }
+  // Shows the shared filter bar (grid toggle, FILTER button, title)
+  // above the grid, same as the products/category pages.
+  document.body.classList.add('on-collection-page');
   const newPath = '/brands/' + encodeURIComponent(vendorId);
   if (window.location.pathname !== newPath) {
     replaceUrl ? history.replaceState(null, null, newPath) : history.pushState(null, null, newPath);
   }
   const el = document.getElementById('vendor-page-content');
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  // Reset per-visit so a filter/grid choice on one brand's page doesn't
+  // carry over to the next brand you look at.
+  S.vendorFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
+  S.gridColsVendor = 2;
   try {
     const doc = await db.collection('brands').doc(vendorId).get();
-    renderVendorPage(doc.exists ? Object.assign({id:doc.id}, doc.data()) : null);
+    const vendor = doc.exists ? Object.assign({id:doc.id}, doc.data()) : null;
+    S.currentVendor = vendor;
+    renderVendorPage(vendor);
   } catch(e) {
     console.error('Error fetching vendor:', e);
+    S.currentVendor = null;
     renderVendorPage(null);
   }
   window.scrollTo({top:0,behavior:"instant"});
@@ -980,18 +1050,12 @@ function normalizeBrandName(name) {
 function renderVendorPage(vendor) {
   const el = document.getElementById('vendor-page-content');
   if (!el) return;
+  S.currentVendor = vendor;
   const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
   const brandName = vendor?.brand || vendor?.name || '';
   const desc = vendor?.description || '';
-  const normalizedBrandName = normalizeBrandName(brandName);
-  
-  const products = merchandiseProducts(PRODUCTS.filter(p => {
-    if (p.status !== 'active') return false;
-    if (vendor?.id && p.vendorId === vendor.id) return true;
-    if (p.brand && brandName && normalizeBrandName(p.brand) === normalizedBrandName) return true;
-    return false;
-  }), 'vendor');
-  
+
+  const products = merchandiseProducts(getVendorFilteredProducts(vendor), 'vendor', S.sortBy);
   const expanded = expandProductVariants(products);
 
   el.innerHTML = `
@@ -1003,11 +1067,23 @@ function renderVendorPage(vendor) {
         </div>
       </div>
     </section>
-    <div class="product-grid" style="padding: 0 18px 32px; max-width:1400px; margin:0 auto;">
-      ${expanded.map(({product, variantIndex}) => productCard(product, false, true, variantIndex)).join('')}
-    </div>
+    <div class="product-grid" id="vendor-products-grid" style="padding: 0 18px 32px; max-width:1400px; margin:0 auto;"></div>
   `;
-  
+
+  const gridEl = document.getElementById('vendor-products-grid');
+  gridEl.style.gridTemplateColumns = gridTemplateFor(S.gridColsVendor);
+  if (expanded.length) {
+    renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
+  } else {
+    gridEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products match these filters.</div>';
+  }
+  updateCollectionGridIcon();
+  updateCollectionTitle();
+  buildCategoryFilterOptions();
+  buildBrandFilterOptions();
+  renderActiveFilterChips();
+  injectToolbarExtras('page-vendor', 'col-grid-icon');
+
   const footerEl = document.getElementById('vendor-footer');
   if (footerEl && typeof buildFooter === 'function') {
     buildFooter('vendor-footer');
