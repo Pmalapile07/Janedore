@@ -41,6 +41,15 @@
   position: sticky; top: 0; z-index: 800;
   border-bottom: none; max-width: 100%; box-shadow: none;
   transition: background 0.25s ease;
+  /* Keeps this element on its own stable GPU compositing layer —
+     without it, a sticky-positioned element on iOS Safari can
+     occasionally lose its painted content (rendering blank/white)
+     after the page sits backgrounded or idle for a while and then
+     gets resumed. Cheap, standard mitigation for that known behavior. */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 #main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #111; transition: color 0.25s ease; }
 #main-nav .badge { background: #111; color: #fff; transition: background 0.25s ease, color 0.25s ease; }

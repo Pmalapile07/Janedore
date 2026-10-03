@@ -76,18 +76,23 @@ function renderHomeBrandSpotlight(vendors) {
 // Home page "Shop by Brand" — a manual swipe slider (#brand-grid),
 // distinct from the auto-scrolling marquee above. One real card per
 // brand, same 5/6 image ratio as a product card.
+// Shared by the home page's #brand-grid and the product page's own
+// Shop by Brand section — same cards, same onclick, different
+// container each place renders them into.
+function shopByBrandCardsHtml(brands) {
+  return brands.map(vendor => {
+    const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
+    const bg = vendor.logoUrl ? `background-image:url('${escapeForCssUrl(vendor.logoUrl)}');` : '';
+    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')"><div class="shop-brand-img" style="${bg}"><div class="shop-brand-overlay"></div><div class="shop-brand-name">${escapeHTML(name)}</div></div></div>`;
+  }).join('');
+}
+
 function buildShopByBrand(vendors) {
   const grid = document.getElementById('brand-grid');
   if (!grid) return;
 
   const brands = getFeaturedBrands(vendors);
-  if (!brands.length) { grid.innerHTML = ''; return; }
-
-  grid.innerHTML = brands.map(vendor => {
-    const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
-    const bg = vendor.logoUrl ? `background-image:url('${escapeForCssUrl(vendor.logoUrl)}');` : '';
-    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')"><div class="shop-brand-img" style="${bg}"><div class="shop-brand-overlay"></div><div class="shop-brand-name">${escapeHTML(name)}</div></div></div>`;
-  }).join('');
+  grid.innerHTML = brands.length ? shopByBrandCardsHtml(brands) : '';
 }
 
 async function initVendors() {
