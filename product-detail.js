@@ -160,8 +160,10 @@ async function renderProductPage(product) {
   const badgeLabel=getBadgeLabel(product);
   const isWished=S.wishlist.some(w=>w.id===product.id);
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
-  const ctl=getCompleteLookProducts(product); const ctlSection=ctl.length?buildProductGridSection('Complete the Look',ctl,`ctl-${product.id}`):'';
-  const rv=S.recentlyViewed.filter(p=>p.id!==product.id).slice(0,6); const rvSection=rv.length?buildProductGridSection('Recently Viewed',rv,`rv-${product.id}`):'';
+  // Replaces both the old "Complete the Look" and "Recently Viewed"
+  // sections with one "Suggested Products" block (same cross-sell
+  // picks Complete the Look used).
+  const suggested=getCompleteLookProducts(product); const suggestedSection=suggested.length?buildProductGridSection('Suggested Products',suggested,`suggested-${product.id}`):'';
 
   // Progress bars for the main image slider, mirroring the swipe-bar
   // dots used in Recently Viewed / You May Also Like / Complete the Look.
@@ -188,32 +190,21 @@ async function renderProductPage(product) {
         ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
         ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div><div class="size-guide-note">Need help with sizing? <span>View our size guide</span></div></div>`:''}
       </div>
-      <div class="product-fixed-bar">
-        <div class="product-fixed-price">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
-        <button class="product-fixed-wish-btn${isWished?' wished':''}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-thin'} ph-heart"></i></button>
-        <button class="product-fixed-add-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Cart')}</button>
+      <div class="product-add-row">
+        <button class="product-wish-row-btn${isWished?' wished':''}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-thin'} ph-heart"></i></button>
+        <button class="product-add-row-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Cart')}</button>
       </div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('description')">
-            Description
+            Product Information
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </div>
-          <div class="info-accordion-body"><div>${product.description||'No description available.'}</div></div>
-        </div>
-        <div class="info-accordion-item" id="info-accordion-composition">
-          <div class="info-accordion-header" onclick="toggleInfoAccordion('composition')">
-            Composition &amp; Care
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <div class="info-accordion-body">
+            <div>${product.description||'No description available.'}</div>
+            ${product.compositionCare?`<p class="info-sub-label">Composition &amp; Care</p><p>${product.compositionCare}</p>`:''}
+            ${product.measurements?`<p class="info-sub-label">Measurements</p><p>${product.measurements}</p>`:''}
           </div>
-          <div class="info-accordion-body"><p>${product.compositionCare||'No composition details available.'}</p></div>
-        </div>
-        <div class="info-accordion-item" id="info-accordion-measurements">
-          <div class="info-accordion-header" onclick="toggleInfoAccordion('measurements')">
-            Measurements
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
-          <div class="info-accordion-body"><p>${product.measurements||'No measurements available.'}</p></div>
         </div>
         <div class="info-accordion-item" id="info-accordion-shipping">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('shipping')">
@@ -225,8 +216,7 @@ async function renderProductPage(product) {
       </div>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0;">
-      ${ctlSection}${relatedSection}
-      ${rvSection}
+      ${suggestedSection}${relatedSection}
     </div>
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer");
