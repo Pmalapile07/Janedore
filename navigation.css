@@ -32,9 +32,13 @@
    swaps in once scrolled. The .scrolled rules below are now no-ops
    (every state already matches them) rather than being ripped out,
    since plenty of JS call sites still toggle that class. */
+/* The icon row and the search bar row are both inside this single
+   sticky container — one shared box, so there's no gap or seam
+   between them (and no need for the search row to be separately
+   sticky/offset). */
 #main-nav {
-  height: 64px; background: #fff; display: flex; align-items: center; padding: 0 12px;
-  position: sticky; top: 0; z-index: 800; justify-content: space-between;
+  background: #fff; display: flex; flex-direction: column;
+  position: sticky; top: 0; z-index: 800;
   border-bottom: none; max-width: 100%; box-shadow: none;
   transition: background 0.25s ease;
 }
@@ -44,7 +48,16 @@
 #main-nav.scrolled { background: #fff; }
 #main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link, #main-nav.scrolled .utility-text-link, #main-nav.scrolled .nav-logo-text { color: #111; }
 #main-nav.scrolled .badge { background: #111; color: #fff; }
-@media (min-width: 768px) { #main-nav { padding: 0 16px; } }
+
+/* Formerly #main-nav's own row styles — .nav-logo's absolute centering
+   still resolves against this (position:relative makes it the nearest
+   positioned ancestor, taking over from #main-nav now that #main-nav
+   wraps two stacked rows instead of being the row itself). */
+.nav-top-row {
+  height: 64px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 12px; position: relative;
+}
+@media (min-width: 768px) { .nav-top-row { padding: 0 16px; } }
 
 .nav-left { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
 
@@ -74,7 +87,6 @@
   .desktop-nav-links { display: flex; }
   .desktop-utility-links { display: flex; }
   .nav-logo { position: static; transform: none; margin: 0 24px; }
-  #main-nav { justify-content: space-between; }
   .nav-left { flex: 0 1 auto; justify-content: flex-start; }
   .nav-right { flex: 0 0 auto; justify-content: flex-end; }
   /* Both icons are redundant with .desktop-utility-links' own
