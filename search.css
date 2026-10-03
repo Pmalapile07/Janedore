@@ -1,12 +1,7 @@
-/* Always-visible entry point into #search-overlay below, sitting
-   right under #main-nav and staying stuck to it on scroll — both the
-   row (solid white, flush with the nav) and the pill inside it
-   (#main-nav is 64px tall, hence top:64px). */
+/* Always-visible entry point into #search-overlay below. Lives inside
+   #main-nav itself (same sticky container as the icon row above it),
+   so there's no gap/seam and no separate sticky positioning needed. */
 .search-bar-row {
-  position: sticky;
-  top: 64px;
-  z-index: 799;
-  background: #fff;
   padding: 0 12px 12px;
 }
 @media (min-width: 768px) {
@@ -41,7 +36,7 @@
 #search-overlay.open { opacity: 1; pointer-events: all; }
 .search-overlay-header { display: flex; align-items: center; padding: 0 12px; height: 64px; gap: 16px; }
 @media (min-width: 768px) { .search-overlay-header { padding: 0 16px; } }
-.search-input-wrap { flex: 1; display: flex; align-items: center; gap: 12px; background: #f5f5f5; padding: 8px 16px; border-radius: 4px; }
+.search-input-wrap { flex: 1; display: flex; align-items: center; gap: 12px; background: #f4f4f4; padding: 8px 16px; border-radius: 24px; }
 .search-input-wrap svg { width: 18px; height: 18px; stroke: #aaa; fill: none; stroke-width: 1.5; flex-shrink: 0; }
 #search-input { flex: 1; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: #111; letter-spacing: 0.02em; background: transparent; }
 #search-input::placeholder { color: #aaa; }
