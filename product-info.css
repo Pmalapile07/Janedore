@@ -8,6 +8,28 @@
   gap: 28px;
 }
 
+.product-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 12px 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.product-breadcrumb span { color: #888; }
+.product-breadcrumb span[onclick] { cursor: pointer; }
+.product-breadcrumb span[onclick]:hover { color: #111; }
+.product-breadcrumb-sep { color: #ccc; }
+.product-breadcrumb-current { color: #111; }
+@media (min-width: 768px) {
+  .product-breadcrumb { padding: 16px 16px 0; }
+}
+
 .product-badge-detail {
   position: absolute;
   top: 5px;

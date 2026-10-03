@@ -166,7 +166,16 @@ async function renderProductPage(product) {
   // old thumbnail strip entirely.
   const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
 
+  const categoryLabel = String(product.category||'').replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+  const breadcrumbHtml = `<nav class="product-breadcrumb" aria-label="Breadcrumb">
+    <span onclick="navigateTo('home')">Home</span>
+    ${product.category?`<span class="product-breadcrumb-sep">/</span><span onclick="navigateToCategory('${product.category}')">${categoryLabel}</span>`:''}
+    <span class="product-breadcrumb-sep">/</span>
+    <span class="product-breadcrumb-current">${escapeHTML(product.name||'')}</span>
+  </nav>`;
+
   DOM.productDetail.innerHTML=`
+    ${breadcrumbHtml}
     <div class="product-slider" id="product-slider">
       <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');">
         ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
@@ -177,7 +186,7 @@ async function renderProductPage(product) {
       <div class="product-name-group">
         <h1 class="product-title-main">${product.name||''}</h1>
         <div class="product-brand-price-row">
-          <p class="product-by-brand-name"${product.vendorId?` onclick="navigateToVendor('${product.vendorId}')"`:''}>${product.brand||'JANEDORE'}</p>
+          <p class="product-by-brand-name"${product.vendorId?` onclick="navigateToVendor('${(S.vendors||[]).find(v=>v.id===product.vendorId)?.slug||product.vendorId}')"`:''}>${product.brand||'JANEDORE'}</p>
           <div class="product-price-top">${originalPrice?`<span class="price-current">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
         </div>
       </div>

@@ -124,6 +124,33 @@ async function backfillMissingSlugs(products) {
   if (writes.length) await Promise.all(writes);
 }
 
+// Same backfill-once pattern as products, for brand/vendor pages — gives
+// every vendor an SEO-friendly /brands/{slug} URL instead of the raw
+// Firestore doc ID (which for admin-created vendors is a random,
+// meaningless string like "uf1c4uBKwmCAVafjEdRL").
+async function backfillMissingVendorSlugs(vendors) {
+  const existingSlugs = new Set(vendors.filter(v => v.slug).map(v => v.slug));
+  const writes = [];
+  vendors.forEach(v => {
+    if (!v.slug) {
+      const slug = makeUniqueSlug(generateSlugBase(v.brand || v.name), existingSlugs);
+      v.slug = slug;
+      writes.push(
+        db.collection('brands').doc(v.id).update({ slug }).catch(e => {
+          console.warn('Vendor slug backfill failed for', v.id, e);
+        })
+      );
+    }
+  });
+  if (writes.length) await Promise.all(writes);
+}
+
+// Slug first (the canonical, SEO-friendly URL), raw doc ID as a fallback
+// so old /brands/{id} links people already have out there keep working.
+function findVendorBySlug(slug) {
+  return (S.vendors || []).find(v => v.slug === slug) || (S.vendors || []).find(v => v.id === slug);
+}
+
 function findProductBySlug(slug) {
   return PRODUCTS.find(p => p.slug === slug) || PRODUCTS.find(p => p.id === slug);
 }
@@ -222,6 +249,8 @@ async function init() {
       navigateToCategory(pathRoute.cat, true);
     } else if (pathRoute.page === 'content') {
       navigateToContentPage(pathRoute.slug, true);
+    } else if (pathRoute.page === 'vendor') {
+      navigateToVendor(pathRoute.slug, true);
     } else if (pathRoute.page === 'login') {
       navigateToLogin(true);
     } else if (pathRoute.page === 'account') {
@@ -299,6 +328,8 @@ function getRouteFromPath() {
   if (m) return { page: 'category', cat: decodeURIComponent(m[1]) };
   m = path.match(/^\/pages\/([^\/]+)\/?$/);
   if (m) return { page: 'content', slug: decodeURIComponent(m[1]) };
+  m = path.match(/^\/brands\/([^\/]+)\/?$/);
+  if (m) return { page: 'vendor', slug: decodeURIComponent(m[1]) };
   m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial)\/?$/);
   if (m) return { page: URL_TO_PAGE_MAP[m[1]] || m[1] };
   return null;
@@ -316,6 +347,9 @@ window.addEventListener('popstate', () => {
       return;
     } else if (pathRoute.page === 'content') {
       navigateToContentPage(pathRoute.slug, true);
+      return;
+    } else if (pathRoute.page === 'vendor') {
+      navigateToVendor(pathRoute.slug, true);
       return;
     } else if (pathRoute.page === 'login') {
       navigateToLogin(true);
