@@ -533,7 +533,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
 
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   const isWished = S.wishlist.some(w => w.id === p.id);
-  const wishBtn = `<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-thin'} ph-heart"></i></button>`;
+  const wishBtn = `<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button>`;
 
   const onSale = hasSalePrice(p);
   const priceInner = onSale
@@ -616,7 +616,7 @@ function productCardHome(p) {
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-thin'} ph-heart"></i></button></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button></div>
       <div class="product-home-meta">
         <div class="product-home-name-row">${name}</div>
         <div class="product-home-price-row">${priceInner}${swatches}</div>

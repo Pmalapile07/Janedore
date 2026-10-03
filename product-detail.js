@@ -186,7 +186,7 @@ async function renderProductPage(product) {
         ${sizes.length?`<div class="product-sizes"><div class="sizes-label">Size</div><div class="sizes-row">${sizes.map(s=>`<button class="product-size-btn${S.selectedSize===s?' sel':''}" onclick="selectProductSize(this,'${s}')">${s}</button>`).join('')}</div><div class="size-guide-note">Need help with sizing? <span>View our size guide</span></div></div>`:''}
       </div>
       <div class="product-add-row">
-        <button class="product-wish-row-btn${isWished?' wished':''}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-thin'} ph-heart"></i></button>
+        <button class="product-wish-row-btn${isWished?' wished':''}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-light'} ph-heart"></i></button>
         <button class="product-add-row-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Cart')}</button>
       </div>
       <div class="info-accordion-wrap">
