@@ -38,6 +38,22 @@ function navigateToBrandProducts(brandName) { S.saleMode = false; updateHash('pr
    in navigation.css.
    ============================================================ */
 
+// Resolves a product's real vendor record. Looks up by vendorId first, but
+// falls back to a brand-name match rather than ever treating an unmatched
+// vendorId as if it were a slug/doc-id itself — a product saved while its
+// vendorId couldn't be resolved used to default to the literal string
+// 'janedore', which happens to equal the house brand's slug and sent every
+// such product's brand link to the Janedore page instead of its own.
+function findVendorForProduct(product) {
+  if (!product) return null;
+  const vendors = S.vendors || [];
+  const byId = vendors.find(v => v.id === product.vendorId);
+  if (byId) return byId;
+  const brandName = (product.brand || '').toLowerCase().trim();
+  if (!brandName) return null;
+  return vendors.find(v => (v.name || v.brandName || v.brand || '').toLowerCase().trim() === brandName) || null;
+}
+
 function getFeaturedBrands(vendors) {
   if (!vendors || !vendors.length) return [];
   // JANEDORE is the house's own main brand, not a guest.

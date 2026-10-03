@@ -1,4 +1,9 @@
 .wish-page { max-width: 1000px; margin: 0 auto; padding: 60px 0 0; }
+/* Overrides .page-breadcrumb's own narrower 720px cap/centering —
+   match this page's own left-aligned 1000px-wide layout instead. */
+.wish-page > .page-breadcrumb { max-width: none; margin: 0; padding: 0 8px 20px; }
+@media (min-width: 640px) { .wish-page > .page-breadcrumb { padding: 0 10px 20px; } }
+@media (min-width: 1024px) { .wish-page > .page-breadcrumb { padding: 0 12px 20px; } }
 /* Same layout technique as #collection-filter-bar on All Products:
    grid-toggle sits in normal flow on the left, title is absolutely
    centered regardless of what's beside it (not flex space-between,

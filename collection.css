@@ -15,6 +15,22 @@
 }
 
 /* =========================================
+   BREADCRUMB - ABOVE FILTER BAR
+   ========================================= */
+
+/* Hidden by default (same pattern as .collection-filter-bar below) —
+   only shown on the All Products / category / vendor pages, which all
+   share this one global element rather than each having their own. */
+#collection-page-breadcrumb {
+  display: none;
+  max-width: 1400px;
+  padding: 12px 20px 0;
+}
+body.on-collection-page #collection-page-breadcrumb {
+  display: flex;
+}
+
+/* =========================================
    COLLECTION DESCRIPTION - ABOVE FILTER BAR
    ========================================= */
 

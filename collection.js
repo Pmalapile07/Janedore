@@ -316,19 +316,24 @@ function updateCollectionGridIcon() {
 function updateCollectionTitle() {
   const titleEl = document.getElementById('collection-filter-title-display');
   const descEl = document.getElementById('collection-top-description');
+  const bcEl = document.getElementById('collection-page-breadcrumb');
   if (!titleEl) return;
-  
+
   let title = 'ALL PRODUCTS';
   let description = '';
   let showDesc = false;
-  
+  let bcLabel = title;
+
   if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = 'BRAND';
     showDesc = false;
+    const vendorName = S.currentVendor ? (S.currentVendor.name || S.currentVendor.brandName || S.currentVendor.brand) : null;
+    bcLabel = vendorName || 'Brand';
   } else if (S.currentPage === 'products') {
     title = S.saleMode ? 'SALE' : 'ALL PRODUCTS';
     description = COLLECTION_DESCRIPTIONS['all'];
     showDesc = false;
+    bcLabel = S.saleMode ? 'Sale' : 'All Products';
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
     const catTitles = {
       'all': 'ALL PRODUCTS',
@@ -349,17 +354,19 @@ function updateCollectionTitle() {
     // Hardcoded category description text is intentionally not shown
     // on category pages anymore — title only.
     showDesc = false;
+    bcLabel = title.charAt(0) + title.slice(1).toLowerCase();
   } else {
     if (titleEl) titleEl.style.display = 'none';
     if (descEl) descEl.style.display = 'none';
+    if (bcEl) bcEl.innerHTML = '';
     return;
   }
-  
+
   if (titleEl) {
     titleEl.style.display = 'block';
     titleEl.textContent = title;
   }
-  
+
   if (descEl) {
     if (showDesc && description) {
       descEl.innerHTML = `<p>${description}</p>`;
@@ -367,6 +374,10 @@ function updateCollectionTitle() {
     } else {
       descEl.style.display = 'none';
     }
+  }
+
+  if (bcEl) {
+    bcEl.innerHTML = `<span onclick="navigateTo('home')">Home</span><span class="page-breadcrumb-sep">/</span><span class="page-breadcrumb-current">${escapeHTML(bcLabel)}</span>`;
   }
 }
 
