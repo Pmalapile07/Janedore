@@ -1,3 +1,30 @@
+/* Always-visible entry point into #search-overlay below, sitting
+   right under #main-nav — replaces the old icon-only trigger. */
+.search-bar-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 12px 12px;
+  padding: 10px 16px;
+  background: #f4f4f4;
+  border-radius: 24px;
+  cursor: pointer;
+}
+.search-bar-trigger i {
+  font-size: 16px;
+  color: #888;
+  flex-shrink: 0;
+}
+.search-bar-trigger span {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #888;
+}
+@media (min-width: 768px) {
+  .search-bar-trigger { margin: 0 16px 16px; max-width: 480px; }
+}
+
 #search-overlay { position: fixed; inset: 0; background: #fff; z-index: 1000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 #search-overlay.open { opacity: 1; pointer-events: all; }
 .search-overlay-header { display: flex; align-items: center; padding: 0 12px; height: 64px; gap: 16px; }

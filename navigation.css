@@ -28,14 +28,18 @@
   to { transform: translateX(-50%); }
 }
 
+/* Always solid white/black — no more transparent-over-hero state that
+   swaps in once scrolled. The .scrolled rules below are now no-ops
+   (every state already matches them) rather than being ripped out,
+   since plenty of JS call sites still toggle that class. */
 #main-nav {
-  height: 64px; background: transparent; display: flex; align-items: center; padding: 0 12px;
+  height: 64px; background: #fff; display: flex; align-items: center; padding: 0 12px;
   position: sticky; top: 0; z-index: 800; justify-content: space-between;
   border-bottom: none; max-width: 100%; box-shadow: none;
   transition: background 0.25s ease;
 }
-#main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #fff; transition: color 0.25s ease; }
-#main-nav .badge { background: #fff; color: #111; transition: background 0.25s ease, color 0.25s ease; }
+#main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #111; transition: color 0.25s ease; }
+#main-nav .badge { background: #111; color: #fff; transition: background 0.25s ease, color 0.25s ease; }
 
 #main-nav.scrolled { background: #fff; }
 #main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link, #main-nav.scrolled .utility-text-link, #main-nav.scrolled .nav-logo-text { color: #111; }
@@ -73,8 +77,10 @@
   #main-nav { justify-content: space-between; }
   .nav-left { flex: 0 1 auto; justify-content: flex-start; }
   .nav-right { flex: 0 0 auto; justify-content: flex-end; }
+  /* Both icons are redundant with .desktop-utility-links' own
+     Login/Wishlist/Cart text links at this width — Search now has
+     its own always-visible bar below the nav instead of an icon. */
   .nav-right .nav-icon-btn { display: none; }
-  .nav-right .nav-icon-btn[title="Search"] { display: flex; }
 }
 
 #menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 950; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
