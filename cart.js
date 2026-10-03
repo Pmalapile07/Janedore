@@ -343,9 +343,11 @@ function renderCart() {
     const itemBrand = sanitizeHTML(item.brand || '');
     const itemColor = sanitizeHTML(item.color || '');
     const itemSize = sanitizeHTML(item.size || '');
+    const itemSizeDisplay = itemSize !== 'OS' ? itemSize : '';
+    const itemMeta = [itemColor, itemSizeDisplay].filter(Boolean).join(' · ');
     const productId = sanitizeHTML(item.productId || '');
-    
-    return `<div class="cart-item-row" onclick="goToProduct('${productId}')"><div class="cart-item-img-placeholder" style="background-image:url('${thumbnail}');"></div><div style="flex:1"><div class="ci-brand">${itemBrand}</div><div class="ci-name">${truncateNameTwoWords(itemName)}</div><div class="ci-meta">${itemColor} · ${itemSize}</div><div class="ci-qty"><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex})">−</button><span class="ci-qty-num">${item.qty}</span><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex})">+</button></div></div><span class="ci-price">${formatPrice(getCartItemLineTotal(item))}</span><button class="ci-remove" onclick="event.stopPropagation();removeFromCart('${productId}','${itemSize}',${item.variantIndex})">×</button></div>`;
+
+    return `<div class="cart-item-row" onclick="goToProduct('${productId}')"><div class="cart-item-img-placeholder" style="background-image:url('${thumbnail}');"></div><div style="flex:1"><div class="ci-brand">${itemBrand}</div><div class="ci-name">${truncateNameTwoWords(itemName)}</div><div class="ci-meta">${itemMeta}</div><div class="ci-qty"><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex})">−</button><span class="ci-qty-num">${item.qty}</span><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex})">+</button></div></div><span class="ci-price">${formatPrice(getCartItemLineTotal(item))}</span><button class="ci-remove" onclick="event.stopPropagation();removeFromCart('${productId}','${itemSize}',${item.variantIndex})">×</button></div>`;
   }).join("");
 
   if (hasSunglassesInCart() && !pouchAlreadyInCart()) {
@@ -389,14 +391,16 @@ function renderCartPage() {
     const itemBrand = sanitizeHTML(item.brand || '');
     const itemColor = sanitizeHTML(item.color || '');
     const itemSize = sanitizeHTML(item.size || '');
+    const itemSizeDisplay = itemSize !== 'OS' ? itemSize : '';
+    const itemMeta = [itemColor, itemSizeDisplay].filter(Boolean).join(' · ');
     const productId = sanitizeHTML(item.productId || '');
-    
+
     html += `<div class="cart-page-item" onclick="goToProduct('${productId}')">
       <div class="cart-page-img" style="background-image:url('${thumbnail}');"></div>
       <div class="cart-page-details">
         <div class="cart-page-brand">${itemBrand}</div>
         <div class="cart-page-name">${itemName}</div>
-        <div class="cart-page-meta">${itemColor} · ${itemSize}</div>
+        <div class="cart-page-meta">${itemMeta}</div>
         <div class="cart-page-qty-wrap">
           <button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex});">−</button>
           <span class="cart-page-qty-num">${item.qty}</span>

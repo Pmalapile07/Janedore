@@ -152,7 +152,10 @@ async function renderProductPage(product) {
 
   const vi=S.productVariantSelections[product.id]; const images=getAllProductImages(product,vi); const soldOut=isProductSoldOut(product);
   const isPreorder=product.badge==='pre-order';
-  const variants=product.variants||[]; const sizes=product.sizes||[];
+  const variants=product.variants||[];
+  // 'OS' is a placeholder sentinel, not a real size — never show it as
+  // a selectable "size" (there's nothing to actually select).
+  const sizes=(product.sizes||[]).filter(s=>s!=='OS');
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
   const badgeLabel=getBadgeLabel(product);
   const isWished=S.wishlist.some(w=>w.id===product.id);

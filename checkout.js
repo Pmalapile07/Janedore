@@ -53,12 +53,14 @@ function renderCheckoutSummary() {
       ? item.thumbnail 
       : (product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE);
     
+    // 'OS' is a placeholder sentinel, not a real size — never display it.
+    const itemSizeDisplay = item.size && item.size !== 'OS' ? item.size : '';
     return `<div class="checkout-item">
       <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
       <div class="checkout-item-info">
         <div class="checkout-item-brand">${item.brand || ''}</div>
         <div class="checkout-item-name">${item.name}</div>
-        <div class="checkout-item-meta">${item.color || ''}${item.color && item.size ? ' · ' : ''}${item.size || ''} · Qty: ${item.qty}</div>
+        <div class="checkout-item-meta">${item.color || ''}${item.color && itemSizeDisplay ? ' · ' : ''}${itemSizeDisplay} · Qty: ${item.qty}</div>
       </div>
       <div class="checkout-item-price">${formatPrice((item.salePrice ?? item.price ?? 0) * item.qty)}</div>
     </div>`;
