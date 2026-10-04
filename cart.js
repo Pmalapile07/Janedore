@@ -153,9 +153,24 @@ function addToCart(productId, size, qty) {
   if (!product || isProductSoldOut(product)) return;
   const vi = S.productVariantSelections[productId] ?? 0;
   const variant = getCartVariant(product, vi);
-  const existing = S.cart.find(i => i.productId === productId && i.size === (size || product.sizes[0]) && i.variantIndex === vi);
-  if (existing) existing.qty += q;
-  else S.cart.push({ productId, variantIndex: vi, size: size || product.sizes[0] || 'OS', qty: q, name: sanitizeHTML(product.name), brand: sanitizeHTML(product.brand), price: product.price, salePrice: product.salePrice, color: sanitizeHTML(variant.color || 'Default'), thumbnail: getProductThumbnail(product, vi) });
+  const resolvedSize = size || product.sizes[0] || 'OS';
+  const existing = S.cart.find(i => i.productId === productId && i.size === resolvedSize && i.variantIndex === vi);
+
+  // Stock is tracked per size within each color — cap against what's
+  // actually left for this exact combination, not just the product as a
+  // whole, and account for however many of it are already sitting in
+  // the cart so a second click can't add past what's really available.
+  const available = getVariantSizeStock(product, vi, resolvedSize);
+  const room = available - (existing ? existing.qty : 0);
+  if (room <= 0) {
+    alert((product.name || 'This item') + ' (' + resolvedSize + ') is out of stock.');
+    return;
+  }
+  const addQty = Math.min(q, room);
+  if (addQty < q) alert('Only ' + available + ' of ' + (product.name || 'this item') + ' (' + resolvedSize + ') left — added what’s available.');
+
+  if (existing) existing.qty += addQty;
+  else S.cart.push({ productId, variantIndex: vi, size: resolvedSize, qty: addQty, name: sanitizeHTML(product.name), brand: sanitizeHTML(product.brand), price: product.price, salePrice: product.salePrice, color: sanitizeHTML(variant.color || 'Default'), thumbnail: getProductThumbnail(product, vi) });
   if (typeof lastConfirmedOrderNumber !== 'undefined' && lastConfirmedOrderNumber) {
     lastConfirmedOrderNumber = null;
     sessionStorage.removeItem('janedore_last_order_number');
@@ -173,8 +188,13 @@ function changeQty(productId, size, delta, vi) {
   const item = S.cart.find(i => i.productId === productId && i.size === size && i.variantIndex === vi);
   if (!item) return;
   const nq = item.qty + delta;
-  if (nq <= 0) { removeFromCart(productId, size, vi); }
-  else { item.qty = nq; commitCartChange(); }
+  if (nq <= 0) { removeFromCart(productId, size, vi); return; }
+  if (delta > 0) {
+    const product = getCartProduct(productId);
+    const available = product ? getVariantSizeStock(product, vi, size) : nq;
+    if (nq > available) { alert('Only ' + available + ' left in stock.'); return; }
+  }
+  item.qty = nq; commitCartChange();
 }
 
 function addPouchToCart() {
