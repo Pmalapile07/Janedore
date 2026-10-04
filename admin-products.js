@@ -11,7 +11,7 @@
   var isSuperAdmin      = window._isSuperAdmin;
   var requireSuperAdmin = window._requireSuperAdmin;
   var productsRef       = window._productsRef;
-  var brandsRef         = window._adminDB.collection('brands');
+  var vendorsRef        = window._adminDB.collection('vendors');
 
   // Vendors tab only populates window._vendorsData when visited, which left
   // resolveVendorId() falling through to the stale hardcoded map (or the
@@ -19,7 +19,7 @@
   // Fetching here too means it's ready by the time a human finishes filling
   // out the product form, regardless of which admin tab was opened first.
   if (!window._vendorsData) {
-    brandsRef.get().then(function(snap) {
+    vendorsRef.get().then(function(snap) {
       if (!window._vendorsData) {
         window._vendorsData = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
       }
