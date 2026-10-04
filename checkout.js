@@ -187,20 +187,63 @@ async function placeOrder(e) {
     // product that sells out between two concurrent checkouts correctly
     // fails the second one instead of letting it through.
     const orderRef = db.collection('orders').doc();
-    const productRefs = S.cart.map(item => db.collection('products').doc(item.productId));
+
+    // Group cart lines by product — the same product can appear twice
+    // (two different sizes/colors of one item), and each product must be
+    // read and written only once in this transaction: writing it twice
+    // would have the second write silently clobber the first's stock
+    // change, since each write replaces that product's whole stock state.
+    const itemsByProduct = {};
+    S.cart.forEach(item => {
+      (itemsByProduct[item.productId] = itemsByProduct[item.productId] || []).push(item);
+    });
+    const productIds = Object.keys(itemsByProduct);
+    const productRefs = productIds.map(id => db.collection('products').doc(id));
 
     await db.runTransaction(async (transaction) => {
       const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
 
-      for (let i = 0; i < S.cart.length; i++) {
-        const doc = productDocs[i];
-        if (doc.exists) {
-          const currentStock = doc.data().stock || 0;
-          if (currentStock < S.cart[i].qty) {
-            const err = new Error((S.cart[i].name || 'An item') + ' only has ' + currentStock + ' left in stock.');
+      // Validate every line first — nothing gets written until the whole
+      // cart is confirmed to fit, same as before.
+      const updates = [];
+      for (let p = 0; p < productIds.length; p++) {
+        const doc = productDocs[p];
+        if (!doc.exists) continue;
+        const data = doc.data();
+        const items = itemsByProduct[productIds[p]];
+        const stockByVariant = (data.stockByVariant && typeof data.stockByVariant === 'object') ? data.stockByVariant : null;
+
+        if (stockByVariant) {
+          // Stock is tracked per size per color — check/decrement each
+          // line against its own (variant, size) bucket, not the product
+          // as a whole, so selling out Size S doesn't block Size M.
+          const nextByVariant = JSON.parse(JSON.stringify(stockByVariant));
+          for (const item of items) {
+            const vi = item.variantIndex ?? 0;
+            const key = item.size || 'OS';
+            const sizeStock = nextByVariant[vi] || {};
+            const current = typeof sizeStock[key] === 'number' ? sizeStock[key] : 0;
+            if (current < item.qty) {
+              const err = new Error((item.name || 'An item') + ' (' + key + ') only has ' + current + ' left in stock.');
+              err.outOfStock = true;
+              throw err;
+            }
+            sizeStock[key] = current - item.qty;
+            nextByVariant[vi] = sizeStock;
+          }
+          const newTotal = Object.values(nextByVariant).reduce((sum, sizes) =>
+            sum + Object.values(sizes).reduce((a, n) => a + (typeof n === 'number' ? n : 0), 0), 0);
+          updates.push({ ref: productRefs[p], data: { stockByVariant: nextByVariant, stock: newTotal } });
+        } else {
+          // Not yet broken down by size/color — same flat check as before.
+          const currentStock = data.stock || 0;
+          const totalQty = items.reduce((a, it) => a + it.qty, 0);
+          if (currentStock < totalQty) {
+            const err = new Error((items[0].name || 'An item') + ' only has ' + currentStock + ' left in stock.');
             err.outOfStock = true;
             throw err;
           }
+          updates.push({ ref: productRefs[p], data: { stock: currentStock - totalQty } });
         }
       }
 
@@ -209,13 +252,7 @@ async function placeOrder(e) {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      for (let i = 0; i < S.cart.length; i++) {
-        const doc = productDocs[i];
-        if (doc.exists) {
-          const currentStock = doc.data().stock || 0;
-          transaction.update(productRefs[i], { stock: currentStock - S.cart[i].qty });
-        }
-      }
+      updates.forEach(u => transaction.update(u.ref, u.data));
     });
 
     // Fire-and-forget — the order is already placed and stock is already

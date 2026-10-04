@@ -168,6 +168,13 @@
 .product-size-btn:hover { background: #ececec; }
 .product-size-btn.sel { background: #111; color: #fff; }
 .product-size-btn.sel:hover { background: #111; }
+.product-size-btn.out-of-stock {
+  background: #f4f4f4;
+  color: #bbb;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+.product-size-btn.out-of-stock:hover { background: #f4f4f4; }
 
 /* Placeholder entry point — no size-guide content exists yet, so this
    is inert (no click handler) until there's somewhere for it to go. */

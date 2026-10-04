@@ -63,6 +63,20 @@
 
   var SIZE_UNITS = ['Custom','OS','XS–XXL','UK','EU','US','cm','inches'];
 
+  // Single source of truth for turning the raw "Sizes" text field into
+  // the actual size strings the product is saved with (e.g. "3, 4, 5"
+  // with unit "UK" becomes ["UK 3","UK 4","UK 5"]). Used both for the
+  // live preview/stock-grid editing and the final save, so a variant's
+  // stock-by-size keys always match the sizes the product is saved
+  // with — building them from two slightly different computations was
+  // the exact bug class this whole feature exists to fix.
+  function computeSizesList(rawValue, unit) {
+    return (rawValue || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean).map(function(s) {
+      if (unit === 'OS' || unit === 'XS–XXL' || unit === 'Custom') return s;
+      return s.toLowerCase().indexOf(unit.toLowerCase()) === 0 ? s : unit + ' ' + s;
+    });
+  }
+
   var SIZE_PRESETS = {
     'clothing':    { unit: 'XS–XXL', sizes: 'XS, S, M, L, XL, XXL' },
     'dresses':     { unit: 'XS–XXL', sizes: 'XS, S, M, L, XL, XXL' },
@@ -508,13 +522,15 @@
     var sizesEl = safeEl('pf-sizes-input');
     var preview = safeEl('pf-size-preview');
     if (!unitEl || !sizesEl || !preview) return;
-    var unit  = unitEl.value;
-    var sizes = sizesEl.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-    if (sizes.length === 0) { preview.innerHTML = '<span style="color:var(--muted);font-size:11px;">No sizes yet</span>'; return; }
-    preview.innerHTML = sizes.map(function(s) {
-      var label = (unit === 'OS' || unit === 'XS–XXL' || unit === 'Custom') ? s : unit + ' ' + s;
-      return '<span style="display:inline-block;border:0.8px solid #111;padding:6px 10px;font-size:10px;letter-spacing:0.05em;margin:3px;">' + esc(label) + '</span>';
-    }).join('');
+    var sizes = computeSizesList(sizesEl.value, unitEl.value);
+    if (sizes.length === 0) {
+      preview.innerHTML = '<span style="color:var(--muted);font-size:11px;">No sizes yet</span>';
+    } else {
+      preview.innerHTML = sizes.map(function(label) {
+        return '<span style="display:inline-block;border:0.8px solid #111;padding:6px 10px;font-size:10px;letter-spacing:0.05em;margin:3px;">' + esc(label) + '</span>';
+      }).join('');
+    }
+    window._rebuildAllVariantStockGrids(sizes);
   };
 
   // ── SEO PREVIEW HELPER ───────────────────────────────────────
@@ -675,7 +691,7 @@
         '<div style="padding:0 16px 12px;border-top:0.5px solid var(--border);">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;"><span class="card-title" style="font-size:12px;">Variants</span><button type="button" class="btn btn-xs btn-ghost" onclick="window._addVariant()"><i class="ph-light ph-plus"></i> Add variant</button></div>' +
           '<div id="variants-container">' +
-            (p.variants||[]).map(function(v, i){ return buildVariantBlock(v, i, p.category); }).join('') +
+            (p.variants||[]).map(function(v, i){ return buildVariantBlock(v, i, p.category, p.sizes||[], (p.stockByVariant && p.stockByVariant[i]) || {}); }).join('') +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -685,7 +701,7 @@
         '<div class="card-header"><span class="card-title">Inventory</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>SKU</label><input name="sku" value="' + esc(p.sku||'') + '" placeholder="e.g. DRS-RBB-001"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Stock quantity</label><div style="display:flex;align-items:center;gap:10px;"><button type="button" class="no-qty-btn" onclick="window._pfChangeStock(-1)"><i class="ph-light ph-minus"></i></button><input name="stock" id="pf-stock" type="number" min="0" value="' + esc(String(p.stock||0)) + '" style="width:80px;text-align:center;" oninput="window._pfUpdateStockLabel()"><button type="button" class="no-qty-btn" onclick="window._pfChangeStock(1)"><i class="ph-light ph-plus"></i></button><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
+          '<div class="form-group" style="padding:0;"><label>Total stock <span style="font-size:10px;color:var(--muted);">— set per size, per color above</span></label><div style="display:flex;align-items:center;gap:10px;"><span id="pf-stock-total" style="font-size:20px;font-weight:500;">' + esc(String(p.stock||0)) + '</span><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
         '</div>' +
       '</div>' +
 
@@ -733,7 +749,6 @@
 
     _renderMediaPool();
     window._pfUpdateMargin();
-    window._pfUpdateStockLabel();
     window._updateSizePreview();
     window._updateSeoPreview();
   };
@@ -749,7 +764,7 @@
 
   // ── VARIANT BLOCK ─────────────────────────────────────────────
 
-  function buildVariantBlock(v, index, category) {
+  function buildVariantBlock(v, index, category, sizes, stockForVariant) {
     v = v || {};
     var images     = v.images || { model:[], ghost:[], detail:[] };
     var modelUrls  = Array.isArray(images.model)  ? images.model  : [];
@@ -771,8 +786,71 @@
         _buildVariantImageSelector('detail', index, detailUrls) +
       '</div>' +
       '<div id="variant-preview-strip-' + index + '" style="margin-top:8px;"><div style="font-size:10.5px;color:var(--muted);">No images assigned</div></div>' +
+      buildVariantStockGrid(index, sizes, stockForVariant) +
     '</div>';
   }
+
+  // Stock is entered per size, per color — a customer picks one exact
+  // (color, size) combination, so that's the only level at which "is
+  // this in stock" is actually true or false. Sizes with no size option
+  // at all (accessories etc.) fall back to a single "OS" bucket.
+  function buildVariantStockGrid(index, sizes, stock) {
+    stock = stock || {};
+    var keys = (sizes && sizes.length) ? sizes : ['OS'];
+    var cells = keys.map(function(s, i) {
+      var val = typeof stock[s] === 'number' ? stock[s] : 0;
+      return '<div style="display:flex;flex-direction:column;gap:3px;">' +
+        '<label style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">' + esc(s) + '</label>' +
+        '<input type="number" min="0" name="variant-stock-' + index + '-' + i + '" data-stock-size="' + esc(s) + '" value="' + val + '" style="width:100%;text-align:center;padding:6px 4px;" oninput="window._refreshVariantStockTotal(' + index + ')">' +
+      '</div>';
+    }).join('');
+    var total = keys.reduce(function(sum, s){ return sum + (typeof stock[s] === 'number' ? stock[s] : 0); }, 0);
+    return '<div class="variant-stock-grid" data-variant-stock-index="' + index + '" style="margin-top:12px;padding-top:12px;border-top:0.5px dashed var(--border);">' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px;">Stock by size</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;">' + cells + '</div>' +
+      '<div class="variant-stock-total" id="variant-stock-total-' + index + '" style="font-size:10.5px;color:var(--muted);margin-top:8px;">' + total + ' total for this color</div>' +
+    '</div>';
+  }
+
+  window._refreshVariantStockTotal = function(index) {
+    var block = document.querySelector('[data-variant-stock-index="' + index + '"]');
+    var totalEl = safeEl('variant-stock-total-' + index);
+    if (!block || !totalEl) return;
+    var total = 0;
+    block.querySelectorAll('input[data-stock-size]').forEach(function(inp) { total += parseInt(inp.value, 10) || 0; });
+    totalEl.textContent = total + ' total for this color';
+    window._refreshGrandStockTotal();
+  };
+
+  window._refreshGrandStockTotal = function() {
+    var grandEl = safeEl('pf-stock-total');
+    var labelEl = safeEl('pf-stock-label');
+    if (!grandEl) return;
+    var total = 0;
+    document.querySelectorAll('.variant-stock-grid input[data-stock-size]').forEach(function(inp) { total += parseInt(inp.value, 10) || 0; });
+    grandEl.textContent = total;
+    if (!labelEl) return;
+    if (total === 0)     labelEl.textContent = 'Out of stock';
+    else if (total <= 3) labelEl.textContent = total + ' left — low stock';
+    else                  labelEl.textContent = total + ' in stock';
+  };
+
+  // Rebuilds every variant's stock grid to match a new size list (the
+  // Sizes field changed), carrying forward whatever was already typed
+  // for any size that still exists.
+  window._rebuildAllVariantStockGrids = function(sizes) {
+    document.querySelectorAll('.variant-block').forEach(function(block) {
+      var index = parseInt(block.getAttribute('data-variant-index'), 10);
+      var gridEl = block.querySelector('.variant-stock-grid');
+      if (!gridEl) return;
+      var existingStock = {};
+      gridEl.querySelectorAll('input[data-stock-size]').forEach(function(inp) {
+        existingStock[inp.getAttribute('data-stock-size')] = parseInt(inp.value, 10) || 0;
+      });
+      gridEl.outerHTML = buildVariantStockGrid(index, sizes, existingStock);
+    });
+    window._refreshGrandStockTotal();
+  };
 
   // ── PRICING / STOCK HELPERS ───────────────────────────────────
 
@@ -793,30 +871,16 @@
       '<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Original price</span><span>R' + price.toLocaleString('en-ZA') + '</span></div>';
   };
 
-  window._pfChangeStock = function(delta) {
-    var el = safeEl('pf-stock');
-    if (!el) return;
-    el.value = Math.max(0, (parseInt(el.value, 10) || 0) + delta);
-    window._pfUpdateStockLabel();
-  };
-
-  window._pfUpdateStockLabel = function() {
-    var el    = safeEl('pf-stock');
-    var label = safeEl('pf-stock-label');
-    if (!el || !label) return;
-    var qty = parseInt(el.value, 10) || 0;
-    if (qty === 0)     label.textContent = 'Out of stock';
-    else if (qty <= 3) label.textContent = qty + ' left — low stock';
-    else               label.textContent = qty + ' in stock';
-  };
-
   // ── VARIANT ADD / REMOVE ──────────────────────────────────────
 
   window._addVariant = function() {
     var c = safeEl('variants-container');
     if (!c) return;
     var cat = (document.querySelector('[name="category"]') || {}).value || 'dresses';
-    c.insertAdjacentHTML('beforeend', buildVariantBlock({ images:{ model:[], ghost:[], detail:[] } }, c.children.length, cat));
+    var sizesEl = safeEl('pf-sizes-input');
+    var unitEl  = safeEl('pf-size-unit');
+    var sizes = sizesEl ? computeSizesList(sizesEl.value, unitEl ? unitEl.value : 'Custom') : [];
+    c.insertAdjacentHTML('beforeend', buildVariantBlock({ images:{ model:[], ghost:[], detail:[] } }, c.children.length, cat, sizes, {}));
   };
 
   window._removeVariant = function(index) {
@@ -825,6 +889,9 @@
     var blocks = container.querySelectorAll('.variant-block');
     if (blocks.length <= 1) { showToast('Need at least one variant', 'info'); return; }
     var cat = (document.querySelector('[name="category"]') || {}).value || 'dresses';
+    var sizesEl = safeEl('pf-sizes-input');
+    var unitEl  = safeEl('pf-size-unit');
+    var sizes = sizesEl ? computeSizesList(sizesEl.value, unitEl ? unitEl.value : 'Custom') : [];
 
     // Read every surviving block's current values, then rebuild them
     // from scratch at their new index via buildVariantBlock(), rather
@@ -846,15 +913,21 @@
         var sel = b.querySelector('[data-img-type="' + type + '"]');
         return sel ? Array.from(sel.selectedOptions).map(function(o){ return o.value; }) : [];
       };
+      var stock = {};
+      b.querySelectorAll('input[data-stock-size]').forEach(function(inp) {
+        stock[inp.getAttribute('data-stock-size')] = parseInt(inp.value, 10) || 0;
+      });
       remaining.push({
         color:  colorEl  ? colorEl.value  : '',
         swatch: swatchEl ? swatchEl.value : '#111',
-        images: { model: getUrls('model'), ghost: getUrls('ghost'), detail: getUrls('detail') }
+        images: { model: getUrls('model'), ghost: getUrls('ghost'), detail: getUrls('detail') },
+        stock:  stock
       });
     });
 
-    container.innerHTML = remaining.map(function(v, i) { return buildVariantBlock(v, i, cat); }).join('');
+    container.innerHTML = remaining.map(function(v, i) { return buildVariantBlock(v, i, cat, sizes, v.stock); }).join('');
     remaining.forEach(function(v, i) { _refreshVariantPreviewStrip(i); });
+    window._refreshGrandStockTotal();
   };
 
   // ── SUBMIT ────────────────────────────────────────────────────
@@ -866,21 +939,32 @@
     var existingProduct = existingId ? allProducts.find(function(p){ return p.id === existingId; }) : null;
 
     var price     = parseFloat(form.price.value);
-    var stock     = parseInt(form.stock.value, 10);
     var salePrice = form.salePrice.value ? parseFloat(form.salePrice.value) : null;
 
     if (isNaN(price) || price < 0) { showToast('Invalid price', 'error'); return; }
-    if (isNaN(stock) || stock < 0) { showToast('Invalid stock quantity', 'error'); return; }
 
     var unitEl  = safeEl('pf-size-unit');
     var sizesEl = safeEl('pf-sizes-input');
     var unit    = unitEl  ? unitEl.value  : 'Custom';
     var rawSizes = sizesEl ? sizesEl.value : (form.sizes ? form.sizes.value : '');
+    var sizes = computeSizesList(rawSizes, unit);
 
-    var sizes = rawSizes.split(',').map(function(s){ return s.trim(); }).filter(Boolean).map(function(s) {
-      if (unit === 'OS' || unit === 'XS–XXL' || unit === 'Custom') return s;
-      // Only prepend unit if not already included
-      return s.toLowerCase().indexOf(unit.toLowerCase()) === 0 ? s : unit + ' ' + s;
+    // Stock is entered per size within each color variant; the product's
+    // total is just the sum of those, computed here rather than trusted
+    // from a separate manual field that could drift out of sync with the
+    // real per-size numbers.
+    var stockByVariant = {};
+    var stock = 0;
+    document.querySelectorAll('.variant-stock-grid').forEach(function(grid) {
+      var vi = grid.getAttribute('data-variant-stock-index');
+      var sizeStock = {};
+      grid.querySelectorAll('input[data-stock-size]').forEach(function(inp) {
+        var qty = parseInt(inp.value, 10);
+        if (isNaN(qty) || qty < 0) qty = 0;
+        sizeStock[inp.getAttribute('data-stock-size')] = qty;
+        stock += qty;
+      });
+      stockByVariant[vi] = sizeStock;
     });
 
     // Slug: keep the existing one untouched on edit. Only generate a new
@@ -923,6 +1007,7 @@
       sizes:                sizes,
       sizeUnit:             unit,
       stock:                stock,
+      stockByVariant:       stockByVariant,
       status:               form.status.value,
       featured:             form.featured.value === 'true',
       description:          markdownToHtml(form.description.value),
