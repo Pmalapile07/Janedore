@@ -28,6 +28,9 @@ function isSizeInStock(product, variantIndex, size) {
 function buildSizeRowHtml(product, variantIndex) {
   const sizes = (product.sizes || []).filter(s => s !== 'OS');
   if (!sizes.length) return '';
+  // A single size isn't a choice — select it automatically instead of
+  // making the customer click the one option there is.
+  if (sizes.length === 1 && S.selectedSize !== sizes[0]) S.selectedSize = sizes[0];
   const buttons = sizes.map(s => {
     const inStock = isSizeInStock(product, variantIndex, s);
     const cls = 'product-size-btn' + (S.selectedSize === s ? ' sel' : '') + (inStock ? '' : ' out-of-stock');

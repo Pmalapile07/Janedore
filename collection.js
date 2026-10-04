@@ -598,6 +598,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
 
+  const brand = `<div class="product-brand">${escapeHTML(p.brand || '')}</div>`;
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   const isWished = S.wishlist.some(w => w.id === p.id);
   const wishBtn = `<button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button>`;
@@ -609,7 +610,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const swatches = cardVariantSwatchesHtml(p, vi);
   const price = `<div class="product-price-row">${priceInner}${swatches}</div>`;
 
-  const metaRow = `<div class="product-home-name-row">${name}</div>${price}`;
+  const metaRow = `${brand}<div class="product-card-name-row">${name}</div>${price}`;
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
