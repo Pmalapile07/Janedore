@@ -42,6 +42,49 @@ app.get('/api/cloudinary-config', (req, res) => {
   });
 });
 
+// ==================== ONLINE STORE GATE ====================
+// The "Coming Soon" on/off flag and the visitor password that bypasses
+// it both live in Firestore, but neither is read by the public client
+// directly: the flag's own doc could be made public-readable safely,
+// but it shares a security-rules shape with the password doc, and the
+// password itself must NEVER be sent to an anonymous browser. Routing
+// both through the server (firebase-admin, bypasses client rules
+// entirely) means no public Firestore rule changes are needed at all,
+// and the password is never exposed, even in a network tab.
+
+app.get('/api/online-store-status', async (req, res) => {
+  if (!adminDb) return res.json({ comingSoonEnabled: true });
+  try {
+    const doc = await adminDb.collection('settings').doc('onlineStore').get();
+    // Defaults to true (gated) when unset — matches the site's behavior
+    // before this toggle existed, so a fresh/unconfigured doc never
+    // accidentally exposes the site.
+    const comingSoonEnabled = doc.exists && doc.data().comingSoonEnabled === false ? false : true;
+    res.json({ comingSoonEnabled });
+  } catch (e) {
+    console.error('[ONLINE_STORE_STATUS] Error:', e.message);
+    res.json({ comingSoonEnabled: true });
+  }
+});
+
+app.post('/api/verify-visitor-password', async (req, res) => {
+  const password = req.body && req.body.password;
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ ok: false });
+  }
+  if (!adminDb) return res.status(503).json({ ok: false });
+
+  try {
+    const doc = await adminDb.collection('settings').doc('onlineStoreSecrets').get();
+    const storedPassword = doc.exists ? doc.data().visitorPassword : null;
+    const ok = !!storedPassword && password === storedPassword;
+    res.json({ ok });
+  } catch (e) {
+    console.error('[VERIFY_VISITOR_PASSWORD] Error:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // Newsletter welcome email via Resend
 app.post('/api/send-welcome-email', (req, res) => {
   const email = req.body && req.body.email;

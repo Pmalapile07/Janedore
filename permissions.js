@@ -201,7 +201,8 @@
     settings:   'settings',
     admins:     'admins',
     discounts:  'discounts',
-    pages:      'pages'
+    pages:      'pages',
+    onlineStore: 'settings'
   };
 
   window._applyRoleUI = function () {
@@ -238,6 +239,8 @@
       'vendors-more-item', // more menu vendors item
       'settings-tab-btn',  // sidebar settings tab
       'settings-more-item',// more menu settings item
+      'online-store-tab-btn',  // sidebar online store tab
+      'online-store-more-item',// more menu online store item
       'admins-tab-btn',    // sidebar admins tab
       'admins-more-item',  // more menu admins item
       'pages-tab-btn',     // sidebar pages tab

@@ -387,6 +387,37 @@
   .signup-msg.success { color: #5a8a5a; }
   .signup-msg.error   { color: #c0392b; }
 
+  .visitor-access-wrap {
+    width: 100%;
+    max-width: 480px;
+    margin: 28px auto 0;
+    text-align: center;
+  }
+  .visitor-access-link {
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+    cursor: pointer;
+  }
+  .visitor-access-link-em {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .visitor-access-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    max-width: 320px;
+    margin: 0 auto;
+    transition: border-color 0.3s;
+  }
+  .visitor-access-row:focus-within { border-color: var(--text); }
+  .visitor-access-wrap .signup-msg { text-align: center; }
+
   @media (prefers-reduced-motion: reduce) {
     .envelope-paper { animation: none; transform: translateY(-16px) scale(1); opacity: 1; }
     .envelope-lid { display: none; }
@@ -586,6 +617,23 @@
     </div>
     <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
   </div>
+  <div class="visitor-access-wrap">
+    <span class="visitor-access-link" id="visitor-access-link">Have a preview password? <span class="visitor-access-link-em">Enter it</span></span>
+    <div class="visitor-access-row" id="visitor-access-row" style="display:none;">
+      <label for="visitor-password-input" class="sr-only">Password</label>
+      <input type="password"
+             class="signup-input"
+             id="visitor-password-input"
+             placeholder="Password"
+             autocomplete="off"
+             aria-describedby="visitor-msg">
+      <button type="button" class="signup-submit" id="visitor-submit-btn" aria-label="Enter">
+        <span id="visitor-btn-text">Enter</span>
+        <span id="visitor-btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="signup-msg" id="visitor-msg" role="status" aria-live="polite"></div>
+  </div>
 </main>
 
 <footer class="site-footer">
@@ -618,6 +666,112 @@
     <div class="admin-error" id="admin-error"></div>
   </div>
 </div>
+
+<script>
+  // ── Early exit: already unlocked, or the gate is off entirely ──────
+  // Runs before anything else so there's no flash of this page for
+  // someone who shouldn't be seeing it anymore.
+  (function() {
+    function hasCookie(name) { return document.cookie.indexOf(name + '=1') !== -1; }
+    if (hasCookie('jd_admin') || hasCookie('jd_visitor')) {
+      window.location.replace('index.html');
+      return;
+    }
+    fetch('/api/online-store-status').then(function(r) { return r.json(); }).then(function(data) {
+      if (data && data.comingSoonEnabled === false) {
+        window.location.replace('index.html');
+      }
+    }).catch(function() {});
+  })();
+
+  // Shared by both the newsletter signup and the visitor password flow
+  // below — kept independent of Firebase (unlike everything in the next
+  // script block) so neither breaks if Firebase's SDK has a hiccup.
+  var RateLimiter = {
+    attempts: {},
+    check: function(key, limit, windowMs) {
+      limit    = limit    || 5;
+      windowMs = windowMs || 300000;
+      var now  = Date.now();
+      this.attempts[key] = (this.attempts[key] || []).filter(function(t) { return now - t < windowMs; });
+      if (this.attempts[key].length >= limit) return false;
+      this.attempts[key].push(now);
+      return true;
+    }
+  };
+
+  // ── Visitor password access ─────────────────────────────────
+  // A lightweight, visible alternative to the hidden admin login below —
+  // for showing the live site to someone (an investor, a friend) before
+  // launch, without handing out real admin credentials. The password
+  // itself is never sent to this page; it's checked server-side via
+  // /api/verify-visitor-password (server.js), which never reveals it
+  // back either way. Deliberately independent of Firebase — this only
+  // ever talks to our own server, so it should keep working even if the
+  // Firebase SDK below fails to load.
+  (function() {
+    var visitorLink    = document.getElementById('visitor-access-link');
+    var visitorRow     = document.getElementById('visitor-access-row');
+    var visitorInput   = document.getElementById('visitor-password-input');
+    var visitorBtn     = document.getElementById('visitor-submit-btn');
+    var visitorBtnText = document.getElementById('visitor-btn-text');
+    var visitorSpinner = document.getElementById('visitor-btn-spinner');
+    var visitorMsg     = document.getElementById('visitor-msg');
+
+    function setVisitorCookie() {
+      var expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = 'jd_visitor=1; path=/; expires=' + expires + '; SameSite=Strict';
+    }
+    function setVisitorLoading(v) {
+      visitorBtn.disabled = v;
+      visitorBtnText.style.display = v ? 'none' : 'inline';
+      visitorSpinner.style.display = v ? 'inline-block' : 'none';
+    }
+    function showVisitorMsg(text, type) {
+      visitorMsg.textContent = text;
+      visitorMsg.className   = 'signup-msg ' + type;
+    }
+
+    visitorLink.addEventListener('click', function() {
+      visitorLink.style.display = 'none';
+      visitorRow.style.display  = 'flex';
+      visitorInput.focus();
+    });
+
+    function doVisitorLogin() {
+      var password = visitorInput.value;
+      if (!password) { showVisitorMsg('Please enter a password.', 'error'); return; }
+
+      var cid = localStorage.getItem('jd_cid') || ('c_' + Math.random().toString(36).substr(2, 9));
+      localStorage.setItem('jd_cid', cid);
+      if (!RateLimiter.check(cid + '_v')) {
+        showVisitorMsg('Too many attempts. Please wait a few minutes.', 'error'); return;
+      }
+
+      showVisitorMsg('', ''); setVisitorLoading(true);
+
+      fetch('/api/verify-visitor-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: password })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data && data.ok) {
+          setVisitorCookie();
+          window.location.href = 'index.html';
+        } else {
+          showVisitorMsg('Incorrect password.', 'error');
+          setVisitorLoading(false);
+        }
+      }).catch(function() {
+        showVisitorMsg('Something went wrong. Please try again.', 'error');
+        setVisitorLoading(false);
+      });
+    }
+
+    visitorBtn.addEventListener('click', doVisitorLogin);
+    visitorInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doVisitorLogin(); });
+  })();
+</script>
 
 <script>
   var firebaseConfig = {
@@ -682,19 +836,6 @@
     spinner.style.display = v ? 'inline-block' : 'none';
   }
   function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-
-  var RateLimiter = {
-    attempts: {},
-    check: function(key, limit, windowMs) {
-      limit    = limit    || 5;
-      windowMs = windowMs || 300000;
-      var now  = Date.now();
-      this.attempts[key] = (this.attempts[key] || []).filter(function(t) { return now - t < windowMs; });
-      if (this.attempts[key].length >= limit) return false;
-      this.attempts[key].push(now);
-      return true;
-    }
-  };
 
   function handleSignup() {
     var email = emailEl.value.trim().toLowerCase();

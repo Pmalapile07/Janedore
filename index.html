@@ -316,51 +316,71 @@
   function hasAdminCookie() {
     return document.cookie.indexOf('jd_admin=1') !== -1;
   }
+  // Set after a visitor enters the correct password on the Coming Soon
+  // page — a separate, lower-privilege cookie from jd_admin, so a
+  // visitor only ever gets to browse the live site, never into /admin.
+  function hasVisitorCookie() {
+    return document.cookie.indexOf('jd_visitor=1') !== -1;
+  }
 
-  if (hasAdminCookie()) {
+  function revealSite() {
+    if (_authResolved) return;
     _authResolved = true;
     document.getElementById('auth-guard-style').remove();
   }
 
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (_authResolved) return;
+  if (hasAdminCookie() || hasVisitorCookie()) {
+    revealSite();
+  } else {
+    // Online Store "Coming Soon" toggle (admin-online-store.js /
+    // server.js) — when it's off, the site is live to everyone and the
+    // whole admin/visitor gate below is skipped entirely. A failed
+    // status check fails closed (falls through to the gate) rather than
+    // risking exposing a site that's meant to stay hidden.
+    fetch('/api/online-store-status').then(function(r) { return r.json(); }).then(function(data) {
+      if (data && data.comingSoonEnabled === false) {
+        revealSite();
+      } else {
+        runAuthGate();
+      }
+    }).catch(function() {
+      runAuthGate();
+    });
+  }
 
-    if (!user) {
-      if (hasAdminCookie()) {
+  function runAuthGate() {
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (_authResolved) return;
+
+      if (!user) {
+        if (hasAdminCookie() || hasVisitorCookie()) {
+          revealSite();
+          return;
+        }
         _authResolved = true;
-        document.getElementById('auth-guard-style').remove();
+        window.location.replace('janedore-coming-soon.html');
         return;
       }
-      _authResolved = true;
-      window.location.replace('janedore-coming-soon.html');
-      return;
-    }
 
-    firebase.firestore().collection('admins').doc(user.uid).get()
-      .then(function(doc) {
-        if (_authResolved) return;
-        var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
-        if (role !== 'SUPER_ADMIN') {
-          _authResolved = true;
-          firebase.auth().signOut().then(function() {
-            window.location.replace('janedore-coming-soon.html');
-          });
-          return;
-        }
-        _authResolved = true;
-        document.getElementById('auth-guard-style').remove();
-      })
-      .catch(function() {
-        if (_authResolved) return;
-        if (hasAdminCookie()) {
-          _authResolved = true;
-          document.getElementById('auth-guard-style').remove();
-          return;
-        }
-        _authResolved = true;
-        document.getElementById('auth-guard-style').remove();
-      });
-  });
+      firebase.firestore().collection('admins').doc(user.uid).get()
+        .then(function(doc) {
+          if (_authResolved) return;
+          var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
+          if (role !== 'SUPER_ADMIN') {
+            _authResolved = true;
+            firebase.auth().signOut().then(function() {
+              window.location.replace('janedore-coming-soon.html');
+            });
+            return;
+          }
+          revealSite();
+        })
+        .catch(function() {
+          if (_authResolved) return;
+          revealSite();
+        });
+    });
+  }
 </script>
 <script src="vendors.js"></script>
 <script src="cart.js"></script>

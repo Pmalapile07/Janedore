@@ -345,7 +345,8 @@
       dashboard: 'dashboard', products: 'products', orders: 'orders',
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
       vendors: 'vendors', customers: 'customers', settings: 'settings',
-      admins: 'admins', pages: 'pages', discounts: 'discounts'
+      admins: 'admins', pages: 'pages', discounts: 'discounts',
+      onlineStore: 'settings'
     };
 
     var module = TAB_MODULE_MAP[tab];
@@ -386,6 +387,7 @@
       case 'customers':   if (window._renderCustomersTab)   window._renderCustomersTab();   break;
       case 'vendors':     if (window._renderVendorsTab)     window._renderVendorsTab();     break;
       case 'settings':    if (window._renderSettingsTab)    window._renderSettingsTab();    break;
+      case 'onlineStore': if (window._renderOnlineStoreTab) window._renderOnlineStoreTab(); break;
       case 'admins':      if (window._renderAdminsTab)      window._renderAdminsTab();      break;
       case 'pages':       if (window._renderPagesTab)       window._renderPagesTab();       break;
       case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;

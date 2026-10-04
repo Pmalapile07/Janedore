@@ -51,7 +51,6 @@
       tiktokUrl: '',
       metaTitle: 'Janedore — Curated Fashion',
       metaDescription: 'A curated multi-brand fashion house.',
-      maintenanceMode: false,
       updatedAt: null
     };
   }
@@ -197,23 +196,6 @@
           '</div>' +
         '</div>' +
 
-        // ═══ MAINTENANCE ═══
-        '<div class="card" style="margin-bottom:24px;">' +
-          '<div class="card-header"><span class="card-title">Maintenance</span></div>' +
-          '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:12px;">' +
-
-            '<div class="form-group" style="padding:0;">' +
-              '<label>Maintenance Mode</label>' +
-              '<select name="maintenanceMode">' +
-                '<option value="false"' + (!s.maintenanceMode ? ' selected' : '') + '>Off — Store is live</option>' +
-                '<option value="true"' + (s.maintenanceMode ? ' selected' : '') + '>On — Show "Coming Soon" page</option>' +
-              '</select>' +
-              '<div style="font-size:10px;color:var(--muted);margin-top:4px;">When enabled, visitors will see a maintenance page instead of the store.</div>' +
-            '</div>' +
-
-          '</div>' +
-        '</div>' +
-
         // Save button at bottom
         '<button type="submit" class="btn btn-primary" style="width:100%;margin-bottom:80px;">' +
           '<i class="ph-light ph-check" style="margin-right:4px;"></i> Save All Settings' +
@@ -246,7 +228,6 @@
       tiktokUrl:             form.tiktokUrl.value.trim(),
       metaTitle:             form.metaTitle.value.trim(),
       metaDescription:       form.metaDescription.value.trim(),
-      maintenanceMode:       form.maintenanceMode.value === 'true',
       updatedAt:             firebase.firestore.FieldValue.serverTimestamp()
     };
 
