@@ -136,7 +136,7 @@ async function backfillMissingVendorSlugs(vendors) {
       const slug = makeUniqueSlug(generateSlugBase(v.brand || v.name), existingSlugs);
       v.slug = slug;
       writes.push(
-        db.collection('brands').doc(v.id).update({ slug }).catch(e => {
+        db.collection('vendors').doc(v.id).update({ slug }).catch(e => {
           console.warn('Vendor slug backfill failed for', v.id, e);
         })
       );

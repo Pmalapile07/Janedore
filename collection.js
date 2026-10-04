@@ -1049,14 +1049,14 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
     docId = known.id;
   } else {
     try {
-      const bySlug = await db.collection('brands').where('slug', '==', vendorIdOrSlug).limit(1).get();
+      const bySlug = await db.collection('vendors').where('slug', '==', vendorIdOrSlug).limit(1).get();
       if (!bySlug.empty) docId = bySlug.docs[0].id;
     } catch(e) {}
   }
   S.currentVendorId = docId;
 
   try {
-    const doc = await db.collection('brands').doc(docId).get();
+    const doc = await db.collection('vendors').doc(docId).get();
     const vendor = doc.exists ? Object.assign({id:doc.id}, doc.data()) : null;
     S.currentVendor = vendor;
     renderVendorPage(vendor);

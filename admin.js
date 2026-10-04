@@ -48,11 +48,12 @@
   var newsletterRef  = db.collection('newsletter');
   var ordersRef      = db.collection('orders');
   var customersRef   = db.collection('customers');
-  // "brands" is the canonical collection — admin-vendors.js's full CRUD
-  // (create/edit/delete/seed) reads and writes it, and the storefront's
-  // vendor page (collection.js) reads it too. "vendors" was a second,
-  // unrelated collection nothing ever wrote to.
-  var vendorsRef     = db.collection('brands');
+  // "vendors" is the canonical collection — it's where the real vendor
+  // records actually live. A prior pass mistakenly repointed this at
+  // "brands" (which had nothing in it), thinking "vendors" was dead;
+  // reverted. admin-vendors.js's full CRUD (create/edit/delete/seed) and
+  // the storefront's vendor page (collection.js) both read/write "vendors".
+  var vendorsRef     = db.collection('vendors');
   var adminsRef      = db.collection('admins');
 
   window._productsRef   = productsRef;

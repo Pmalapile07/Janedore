@@ -12,7 +12,7 @@
   var isSuperAdmin = window._isSuperAdmin;
   var mountModal   = window._mountModal;
   var closeModal   = window._closeModal;
-  var brandsRef    = window._adminDB.collection('brands');
+  var vendorsRef   = window._adminDB.collection('vendors');
   var ordersRef    = window._ordersRef;
   var productsRef  = window._productsRef;
   var adminsRef    = window._adminsRef;
@@ -49,7 +49,7 @@
       '<div id="vendors-list"><div class="empty-state"><div class="empty-state-text">Loading...</div></div></div>';
 
     Promise.all([
-      brandsRef.get(),
+      vendorsRef.get(),
       ordersRef.orderBy('createdAt', 'desc').limit(200).get()
     ]).then(function(results) {
       var brandsSnap = results[0];
@@ -283,7 +283,7 @@
           createdBy: window._currentUser.uid
         });
       }).then(function() {
-        return brandsRef.doc(vendorId).update({
+        return vendorsRef.doc(vendorId).update({
           accountEmail: email,
           accountUid: uid,
           updatedAt: new Date().toISOString()
@@ -366,7 +366,7 @@
 
     mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Loading your brand profile...</div></div>';
 
-    brandsRef.doc(vendorId).get().then(function(doc) {
+    vendorsRef.doc(vendorId).get().then(function(doc) {
       if (!doc.exists) {
         mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Brand profile not found.</div></div>';
         return;
@@ -487,7 +487,7 @@
       updatedAt:     new Date().toISOString()
     };
 
-    brandsRef.doc(vendorId).update(data).then(function() {
+    vendorsRef.doc(vendorId).update(data).then(function() {
       showToast('Brand profile updated');
     }).catch(function(e) {
       console.error('[VENDOR_PROFILE_UPDATE]', e);
@@ -568,7 +568,7 @@
       data.createdAt = new Date().toISOString();
     }
 
-    brandsRef.doc(brandId).set(data, { merge: true }).then(function() {
+    vendorsRef.doc(brandId).set(data, { merge: true }).then(function() {
       showToast('Brand saved');
       closeModal();
       window._renderVendorsTab();
@@ -581,7 +581,7 @@
   window._deleteVendor = function(vendorId) {
     if (!isSuperAdmin()) return;
     if (!confirm('Delete this brand? This cannot be undone.')) return;
-    brandsRef.doc(vendorId).delete().then(function() {
+    vendorsRef.doc(vendorId).delete().then(function() {
       showToast('Brand deleted');
       closeModal();
       window._renderVendorsTab();
@@ -606,7 +606,7 @@
     ];
 
     var promises = defaults.map(function(v) {
-      return brandsRef.doc(v.id).set(v, { merge: true });
+      return vendorsRef.doc(v.id).set(v, { merge: true });
     });
 
     Promise.all(promises).then(function() {
