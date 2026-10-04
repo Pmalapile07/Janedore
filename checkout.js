@@ -159,39 +159,68 @@ async function placeOrder(e) {
     total,
     currency: S.currency,
     itemCount: S.cart.reduce((a, i) => a + i.qty, 0),
-    status: 'pending'
+    status: 'pending',
+    paymentStatus: 'unpaid'
   };
   
   try {
-    await db.collection('orders').add({
-      ...orderData,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    
-    try {
-      for (const item of S.cart) {
-        const productRef = db.collection('products').doc(item.productId);
-        const productDoc = await productRef.get();
-        if (productDoc.exists) {
-          const currentStock = productDoc.data().stock || 0;
-          await productRef.update({ stock: Math.max(0, currentStock - item.qty) });
+    // Order creation and the stock decrement happen in a single
+    // transaction — both succeed together or neither does. Previously
+    // these were two separate steps: the order was always created, and
+    // stock was decremented afterward on a best-effort basis (a failure
+    // there was just logged, leaving the order and the inventory count
+    // out of sync forever). That separate step also read-then-wrote
+    // stock non-atomically, so two customers checking out the last unit
+    // at the same moment could both succeed and oversell it.
+    // Firestore transactions serialize against each other on the same
+    // document, so this closes both problems at once: every read happens
+    // before any write (required by the API), stock sufficiency is
+    // checked for the whole cart before anything is committed, and a
+    // product that sells out between two concurrent checkouts correctly
+    // fails the second one instead of letting it through.
+    const orderRef = db.collection('orders').doc();
+    const productRefs = S.cart.map(item => db.collection('products').doc(item.productId));
+
+    await db.runTransaction(async (transaction) => {
+      const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+
+      for (let i = 0; i < S.cart.length; i++) {
+        const doc = productDocs[i];
+        if (doc.exists) {
+          const currentStock = doc.data().stock || 0;
+          if (currentStock < S.cart[i].qty) {
+            const err = new Error((S.cart[i].name || 'An item') + ' only has ' + currentStock + ' left in stock.');
+            err.outOfStock = true;
+            throw err;
+          }
         }
       }
-    } catch (stockError) {
-      console.warn('Stock update failed but order saved:', stockError);
-    }
-    
+
+      transaction.set(orderRef, {
+        ...orderData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      for (let i = 0; i < S.cart.length; i++) {
+        const doc = productDocs[i];
+        if (doc.exists) {
+          const currentStock = doc.data().stock || 0;
+          transaction.update(productRefs[i], { stock: currentStock - S.cart[i].qty });
+        }
+      }
+    });
+
     document.getElementById('checkout-form-view').style.display = 'none';
     document.getElementById('checkout-confirmation-view').style.display = 'block';
     document.getElementById('confirmation-order-number').textContent = 'Order #' + orderData.orderNumber;
-    
+
     S.cart = [];
     updateBadges();
     renderCart();
     saveCartToStorage();
-    
+
   } catch (e) {
     console.warn('Order error:', e);
-    alert('Error placing order: ' + e.message);
+    alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
   }
 }
