@@ -90,24 +90,6 @@
     border-bottom: 0.8px solid #888;
   }
   .login-link:hover { color: #111; border-color: #111; }
-  .login-back-btn {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    color: #888;
-    border-bottom: 0.8px solid #888;
-    background: none;
-    padding-bottom: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 32px;
-    display: inline-block;
-    border: none;
-    border-bottom: 0.8px solid #888;
-  }
-  .login-back-btn:hover { color: #111; border-color: #111; }
 
   /* Account Dashboard */
   .account-container {
@@ -191,7 +173,6 @@
 <div id="login-view">
   <div class="login-page-container">
     <div class="login-box">
-      <button class="login-back-btn" onclick="navigateTo('home')">← Back</button>
       <div class="login-title" id="login-mode-title">Sign In</div>
       <div class="login-error" id="login-error"></div>
       
@@ -218,7 +199,6 @@
 <!-- ACCOUNT DASHBOARD VIEW -->
 <div id="account-view" style="display:none;">
   <div class="account-container">
-    <button class="login-back-btn" onclick="navigateTo('home')">← Back to Store</button>
     <div class="account-title">My Account</div>
     
     <div class="account-section">

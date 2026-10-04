@@ -5,9 +5,37 @@ function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; 
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
 function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'…'; }
 
-function getBadgeLabel(product) {
-  if (!product.badge) return '';
-  return product.badge === 'sold' ? 'SOLD OUT' : product.badge.toUpperCase();
+// Badges are computed from real product data rather than a manually-set
+// flag, so staff never have to remember to update them: New = added
+// within the last PRODUCT_NEW_DAYS days, Sale = has a valid sale price
+// below the list price, Sold Out = zero stock. Only Pre-order and a
+// free-text custom label stay admin-set. Sold Out always wins and hides
+// every other badge — a product that can't be bought shouldn't also be
+// advertised as new or on sale.
+var PRODUCT_NEW_DAYS = 5;
+var RESERVED_BADGE_VALUES = ['new', 'sale', 'sold out', 'sold'];
+
+function isProductNew(product) {
+  var created = product && product.createdAt ? new Date(product.createdAt).getTime() : NaN;
+  if (!created || isNaN(created)) return false;
+  var ageMs = Date.now() - created;
+  return ageMs >= 0 && ageMs <= PRODUCT_NEW_DAYS * 24 * 60 * 60 * 1000;
+}
+
+function getProductBadges(product) {
+  if (!product) return [];
+  if (isProductSoldOut(product)) return ['SOLD OUT'];
+
+  var badges = [];
+  if (isProductNew(product)) badges.push('NEW');
+  if (hasSalePrice(product)) badges.push('SALE');
+
+  var manual = (product.badge || '').trim();
+  if (manual && RESERVED_BADGE_VALUES.indexOf(manual.toLowerCase()) === -1) {
+    badges.push(manual.toUpperCase());
+  }
+
+  return badges;
 }
 
 function getProductImages(product, variantIndex) {
@@ -151,7 +179,7 @@ async function renderProductPage(product) {
   // a selectable "size" (there's nothing to actually select).
   const sizes=(product.sizes||[]).filter(s=>s!=='OS');
   const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
-  const badgeLabel=getBadgeLabel(product);
+  const productBadges=getProductBadges(product);
   const isWished=S.wishlist.some(w=>w.id===product.id);
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
   // Same-brand picks first, then site-wide featured products, then
@@ -185,7 +213,7 @@ async function renderProductPage(product) {
     ${breadcrumbHtml}
     <div class="product-slider" id="product-slider">
       <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');">
-        ${badgeLabel?`<span class="product-badge-detail">${badgeLabel}</span>`:''}
+        ${productBadges.length?`<div class="product-badge-detail-stack">${productBadges.map(b=>`<span class="product-badge-detail">${escapeHTML(b)}</span>`).join('')}</div>`:''}
       </div>
       ${imageBarsHtml}
     </div>

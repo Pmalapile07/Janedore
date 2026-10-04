@@ -114,10 +114,12 @@
   var BRANDS   = ['JANEDORE','NIRIUS CO','THATO'];
   var STATUSES = ['active', 'draft', 'archived'];
 
-  // Badge presets shown in the dropdown. "sold out" is stored exactly as
-  // written here so the storefront can just uppercase it — no special-casing
-  // needed elsewhere.
-  var BADGE_PRESETS = ['new','sale','sold out','pre-order'];
+  // New, Sale, and Sold Out are now computed automatically from the
+  // product's actual data (date added, sale price, stock) — see
+  // getProductBadges() in product-detail.js — so they're no longer
+  // offered as manual choices here. Only Pre-order stays staff-set.
+  var BADGE_PRESETS = ['pre-order'];
+  var RESERVED_BADGE_VALUES = ['new', 'sale', 'sold out', 'sold'];
 
   // Hardcoded fallback for when window._vendorsData isn't loaded yet
   // (it's only populated after visiting the Vendors tab this session) —
@@ -589,8 +591,12 @@
     // Badge: figure out whether the saved value matches one of the presets,
     // or whether it's a custom typed value that needs the free-text field.
     var isPresetBadge = p.badge && BADGE_PRESETS.indexOf(p.badge) !== -1;
-    var badgeSelectValue = isPresetBadge ? p.badge : (p.badge ? '__custom__' : '');
-    var badgeCustomValue = isPresetBadge ? '' : (p.badge || '');
+    // A product saved before New/Sale/Sold Out became automatic may still
+    // have one of those words stored in badge — treat it as if nothing
+    // were manually set, since it no longer means anything as a choice.
+    var isReservedBadge = p.badge && RESERVED_BADGE_VALUES.indexOf(String(p.badge).toLowerCase()) !== -1;
+    var badgeSelectValue = isPresetBadge ? p.badge : ((p.badge && !isReservedBadge) ? '__custom__' : '');
+    var badgeCustomValue = (isPresetBadge || isReservedBadge) ? '' : (p.badge || '');
 
     mc.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
@@ -607,7 +613,7 @@
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>Product status</label><select name="status" style="width:100%;">' + STATUSES.map(function(s){ return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select></div>' +
           '<div class="form-group" style="padding:0;">' +
-            '<label>Badge</label>' +
+            '<label>Badge <span style="font-size:10px;color:var(--muted);">— New, Sale &amp; Sold Out show automatically based on date added, sale price &amp; stock. Use this only for Pre-order or a custom label.</span></label>' +
             '<select name="badge" id="pf-badge-select" style="width:100%;" onchange="window._pfToggleCustomBadge()">' +
               '<option value=""' + (badgeSelectValue === '' ? ' selected' : '') + '>None</option>' +
               BADGE_PRESETS.map(function(b){ var label = b.replace(/\b\w/g,function(l){return l.toUpperCase();}); return '<option value="'+esc(b)+'"'+(badgeSelectValue===b?' selected':'')+'>'+label+'</option>'; }).join('') +
