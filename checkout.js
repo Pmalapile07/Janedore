@@ -210,6 +210,26 @@ async function placeOrder(e) {
       }
     });
 
+    // Fire-and-forget — the order is already placed and stock is already
+    // decremented at this point; a failed confirmation email shouldn't
+    // block or undo any of that, just get logged.
+    fetch('/api/send-order-confirmation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderNumber: orderData.orderNumber,
+        customerEmail: orderData.customerEmail,
+        customerName: orderData.customerName,
+        items: orderData.items,
+        subtotal: orderData.subtotal,
+        shipping: orderData.shipping,
+        total: orderData.total,
+        currency: orderData.currency
+      })
+    }).catch(function(err) {
+      console.warn('[EMAIL] Order confirmation failed to send:', err.message);
+    });
+
     document.getElementById('checkout-form-view').style.display = 'none';
     document.getElementById('checkout-confirmation-view').style.display = 'block';
     document.getElementById('confirmation-order-number').textContent = 'Order #' + orderData.orderNumber;
