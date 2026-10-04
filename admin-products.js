@@ -27,20 +27,19 @@
     }).catch(function() {});
   }
 
-  // One-time repair for products saved while resolveVendorId() couldn't find
-  // a match: their vendorId was defaulted to the literal string 'janedore'
-  // (not the real vendor doc id 'vendor-janedore'), which coincidentally
-  // matches the house brand's slug and sent every such product's brand
-  // link to the Janedore page instead of its actual brand. Only touches
-  // products whose vendorId doesn't match any real vendor.
+  // One-time repair for products whose vendorId doesn't match their own
+  // brand field. Covers two distinct cases: an "orphaned" vendorId that
+  // doesn't match any real vendor doc (e.g. the old 'janedore' literal
+  // bug), and a "mismatched" vendorId that IS a real, valid vendor — just
+  // the WRONG one (e.g. a product left pointing at vendor-janedore from
+  // before its Brand dropdown was changed to another brand). Always
+  // re-derives from the brand field and corrects on any disagreement,
+  // same as the save-time logic in _handleProductSubmit below.
   function _backfillVendorIds() {
     var vendors = window._vendorsData || [];
     var products = window._allProducts || [];
     if (!vendors.length || !products.length) return;
-    var validIds = {};
-    vendors.forEach(function(v) { validIds[v.id] = true; });
     products.forEach(function(p) {
-      if (validIds[p.vendorId]) return;
       var correctId = resolveVendorId(p.brand);
       if (correctId && correctId !== p.vendorId) {
         productsRef.doc(p.id).update({ vendorId: correctId }).then(function() {
@@ -134,11 +133,14 @@
   };
 
   function resolveVendorId(brandName) {
+    var needle = (brandName || '').toLowerCase().trim();
+    if (!needle) return null;
     var live = (window._vendorsData || []).find(function(v) {
-      return (v.brand && v.brand === brandName) || (v.name && v.name === brandName);
+      return (v.brand && v.brand.toLowerCase().trim() === needle) || (v.name && v.name.toLowerCase().trim() === needle);
     });
     if (live) return live.id;
-    return VENDOR_ID_MAP[brandName] || null;
+    var mapKey = Object.keys(VENDOR_ID_MAP).find(function(k) { return k.toLowerCase() === needle; });
+    return mapKey ? VENDOR_ID_MAP[mapKey] : null;
   }
 
   function markdownToHtml(text) {

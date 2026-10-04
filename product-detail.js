@@ -160,7 +160,10 @@ async function renderProductPage(product) {
   // (above) already shows, so the two sections don't repeat products.
   const suggested=getSuggestedProducts(product,related.map(p=>p.id)); const suggestedSection=suggested.length?buildProductGridSection('Suggested Products',suggested,`suggested-${product.id}`):'';
   const productVendor=findVendorForProduct(product);
-  const shopByBrandVendors=getFeaturedBrands((S.vendors||[]).filter(v=>v.id!==(productVendor?productVendor.id:null)));
+  // Shows every brand, including the one this product is from — the
+  // shopper is already looking at that brand's product, so there's no
+  // real redundancy in also listing it here.
+  const shopByBrandVendors=getFeaturedBrands(S.vendors||[]);
   const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by Brand</div><div class="product-grid brand-grid-scroll">${shopByBrandCardsHtml(shopByBrandVendors)}</div></div>`:'';
 
   // Progress bars for the main image slider, mirroring the swipe-bar
@@ -223,7 +226,7 @@ async function renderProductPage(product) {
         </div>
       </div>
     </div>
-    <div style="max-width:720px;margin:0 auto;padding:0;">
+    <div style="max-width:720px;margin:0 auto;padding:0 0 32px;">
       ${suggestedSection}${shopByBrandSection}${relatedSection}
     </div>
     <footer id="product-footer"></footer>`;
