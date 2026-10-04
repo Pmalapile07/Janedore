@@ -1524,7 +1524,7 @@ async function lookupOrder() {
   const resultEl = safeEl('order-result');
   if (!db || !input || !resultEl) return;
 
-  const orderNum = input.value.trim().toUpperCase();
+  const orderNum = input.value.trim().toUpperCase().replace(/^#/, '');
   if (!orderNum) {
     resultEl.innerHTML = '';
     const msg = document.createElement('div');

@@ -268,7 +268,7 @@
 
     var statusFilter  = statusFilterEl  ? statusFilterEl.value  : '';
     var paymentFilter = paymentFilterEl ? paymentFilterEl.value : '';
-    var search        = searchEl ? (searchEl.value || '').toLowerCase() : '';
+    var search        = searchEl ? (searchEl.value || '').toLowerCase().replace(/^#/, '') : '';
 
     var filtered = orders.filter(function (o) {
       if (statusFilter === 'abandoned') {
@@ -341,7 +341,7 @@
                 : '') +
               '<td>' +
                 '<span style="font-size:11.5px;font-weight:500;">' +
-                  '#' + esc((o.orderNumber || o.id).toString().slice(-8).toUpperCase()) +
+                  '#' + esc(o.orderNumber || o.id) +
                 '</span>' +
                 (abandoned && !window._bulkMode
                   ? '<div><span class="badge badge-warning" style="font-size:9px;padding:2px 6px;">Abandoned</span></div>'
@@ -760,7 +760,7 @@
 
     ordersRef.add(payload).then(function (ref) {
       if (draftId) draftsRef.doc(draftId).delete().catch(function () {});
-      showToast('Order #' + ref.id.substring(0, 8).toUpperCase() + ' created');
+      showToast('Order #' + payload.orderNumber + ' created');
       window._renderOrdersTab();
     }).catch(function (e) {
       console.error('[SUBMIT_ORDER]', e);
@@ -780,8 +780,8 @@
       '<div class="slide-panel" style="width:min(92vw,460px);">' +
         '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
         '<div class="ui-label" style="margin-bottom:4px;">Order</div>' +
-        '<div style="font-size:21px;font-weight:400;margin-bottom:18px;">' +
-          '#' + esc(orderId.substring(0, 14)) +
+        '<div style="font-size:21px;font-weight:400;margin-bottom:18px;" id="order-detail-heading">' +
+          '#' + esc((o && o.orderNumber) || orderId) +
         '</div>' +
         (o
           ? renderOrderDetailContent(o, orderId)
@@ -794,6 +794,13 @@
       ordersRef.doc(orderId).get().then(function (doc) {
         if (!doc.exists) return;
         var data  = Object.assign({ id: doc.id }, doc.data());
+        var headingEl = safeEl('order-detail-heading');
+        // A fresh order the admin's cached list doesn't have yet (exactly
+        // what happens right after a customer checks out) used to leave
+        // this showing the raw Firestore doc ID forever — this fetch is
+        // what finally has the real orderNumber, so update it here too,
+        // not just the body below it.
+        if (headingEl) headingEl.textContent = '#' + (data.orderNumber || orderId);
         var loadEl = safeEl('order-detail-loading');
         if (loadEl) loadEl.outerHTML = renderOrderDetailContent(data, orderId);
       }).catch(function (e) { console.error('[ORDER_DETAIL_FETCH]', e); });
@@ -826,7 +833,7 @@
 
     html +=
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;margin-top:14px;">' +
-        '<button class="btn btn-sm btn-ghost" onclick="window._copyOrderId(\'' + esc(orderId) + '\')">Copy #</button>' +
+        '<button class="btn btn-sm btn-ghost" onclick="window._copyOrderId(\'' + esc(o.orderNumber || orderId) + '\')">Copy #</button>' +
         (o.customerPhone
           ? '<button class="btn btn-sm btn-ghost" onclick="window._whatsappCustomer(\'' + esc(o.customerPhone) + '\')">WhatsApp</button>'
           : '') +
@@ -1029,7 +1036,7 @@
       '@media print{body{padding:20px;}}' +
       '</style></head><body>' +
       '<h1>Janedore</h1>' +
-      '<div class="order-num">Order #' + esc((o.orderNumber || orderId).toString().slice(-8).toUpperCase()) + ' · ' + fmtDate(o.createdAt) + '</div>' +
+      '<div class="order-num">Order #' + esc(o.orderNumber || orderId) + ' · ' + fmtDate(o.createdAt) + '</div>' +
       '<h2>Customer</h2>' +
       '<p>' + esc(o.customerName || 'Guest') + '</p>' +
       '<p>' + esc(o.customerEmail || '') + '</p>' +
@@ -1065,7 +1072,8 @@
 
   window._quickRefund = function (orderId) {
     if (!window._guard('orders', 'approve')) return;
-    if (!confirm('Mark order #' + orderId.substring(0, 10) + ' as refunded?')) return;
+    var existing = window._ordersData ? window._ordersData.filter(function (x) { return x.id === orderId; })[0] : null;
+    if (!confirm('Mark order #' + ((existing && existing.orderNumber) || orderId) + ' as refunded?')) return;
     ordersRef.doc(orderId)
       .update({ status: 'refunded', updatedAt: new Date().toISOString() })
       .then(function () {

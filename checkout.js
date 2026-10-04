@@ -1,17 +1,18 @@
 // ==================== CHECKOUT LOGIC ====================
 
 let checkoutEmail = localStorage.getItem('janedore_checkout_email') || '';
+let lastConfirmedOrderNumber = sessionStorage.getItem('janedore_last_order_number') || null;
 
 function navigateToCheckout() {
   const user = firebase.auth().currentUser;
-  
-  if (!S.cart.length && !user) {
+
+  if (!S.cart.length && !user && !lastConfirmedOrderNumber) {
     alert('Your cart is empty');
     return;
   }
-  
+
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  
+
   const checkoutPage = document.getElementById("page-checkout");
   if (checkoutPage) {
     checkoutPage.classList.add("active");
@@ -19,10 +20,17 @@ function navigateToCheckout() {
     updateHash('checkout');
     window.scrollTo({ top: 0, behavior: "smooth" });
     ensureNavScrolled();
-    
+
+    if (!S.cart.length && lastConfirmedOrderNumber) {
+      document.getElementById('checkout-form-view').style.display = 'none';
+      document.getElementById('checkout-confirmation-view').style.display = 'block';
+      document.getElementById('confirmation-order-number').textContent = 'Order #' + lastConfirmedOrderNumber;
+      return;
+    }
+
     document.getElementById('checkout-form-view').style.display = 'block';
     document.getElementById('checkout-confirmation-view').style.display = 'none';
-    
+
     if (user && user.email) {
       document.getElementById('checkout-email').value = user.email;
       if (user.displayName) {
@@ -233,6 +241,9 @@ async function placeOrder(e) {
     document.getElementById('checkout-form-view').style.display = 'none';
     document.getElementById('checkout-confirmation-view').style.display = 'block';
     document.getElementById('confirmation-order-number').textContent = 'Order #' + orderData.orderNumber;
+
+    lastConfirmedOrderNumber = orderData.orderNumber;
+    sessionStorage.setItem('janedore_last_order_number', lastConfirmedOrderNumber);
 
     S.cart = [];
     updateBadges();
