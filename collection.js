@@ -8,7 +8,8 @@ function hasSalePrice(p) {
   if (!p || p.salePrice === null || p.salePrice === undefined || p.salePrice === '') {
     return false;
   }
-  return Number.isFinite(Number(p.salePrice));
+  const sale = Number(p.salePrice);
+  return Number.isFinite(sale) && sale > 0 && sale < Number(p.price || 0);
 }
 
 function escapeHTML(value) {
@@ -591,8 +592,8 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
 function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
-  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : String(p.badge).toUpperCase()) : '';
-  const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
+  const badges = getProductBadges(p);
+  const badge = badges.length ? `<div class="product-badge-stack">${badges.map(b => `<span class="product-badge">${escapeHTML(b)}</span>`).join('')}</div>` : '';
   const imgs = p.variants?.[vi]?.images;
   const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
@@ -666,8 +667,8 @@ function formatPriceCardStyle(price) {
 }
 
 function productCardHome(p) {
-  const badgeLabel = p.badge ? (p.badge === 'sold' ? 'SOLD OUT' : String(p.badge).toUpperCase()) : '';
-  const badge = badgeLabel ? `<span class="product-badge">${escapeHTML(badgeLabel)}</span>` : '';
+  const badges = getProductBadges(p);
+  const badge = badges.length ? `<div class="product-badge-stack">${badges.map(b => `<span class="product-badge">${escapeHTML(b)}</span>`).join('')}</div>` : '';
   const soldOut = (p.stock ?? 0) <= 0;
   const vi = S.productVariantSelections[p.id] ?? 0;
   const imgs = p.variants?.[vi]?.images;
