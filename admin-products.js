@@ -129,7 +129,7 @@
   // falls back to this map when it isn't.
   var VENDOR_ID_MAP = {
     'JANEDORE': 'vendor-janedore',
-    'NIRIUS CO': 'uf1c4uBKwmCAVafjEdRL',
+    'NIRIUS CO': 'vendor-nirius',
     'THATO': 'vendor-thato'
   };
 

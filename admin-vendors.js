@@ -19,6 +19,40 @@
 
   var role = null;
 
+  // "vendors" and "brands" were accidentally created to hold the same
+  // data and drifted apart before the code settled on "vendors" as
+  // canonical. Rather than just discarding "brands" (which would lose
+  // whatever's only there, e.g. heroImageUrl), this one-time pass fills
+  // in any field a "vendors" doc is missing from its matching "brands"
+  // doc (matched by brand/name text, since doc ids differ — e.g. Nirius
+  // is "uf1c4uBKwmCAVafjEdRL" in brands but "vendor-nirius" in vendors).
+  // Never overwrites a field "vendors" already has a value for.
+  var LEGACY_MERGE_FIELDS = ['heroImageUrl', 'category', 'country', 'lastContact', 'priority', 'stage'];
+  function _mergeLegacyBrandsData() {
+    var vendors = window._vendorsData || [];
+    if (!vendors.length) return;
+    window._adminDB.collection('brands').get().then(function(snap) {
+      var legacyDocs = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+      vendors.forEach(function(v) {
+        var vName = ((v.name || v.brand || '') + '').toLowerCase().trim();
+        if (!vName) return;
+        var legacy = legacyDocs.find(function(l) {
+          return ((l.name || l.brand || '') + '').toLowerCase().trim() === vName;
+        });
+        if (!legacy) return;
+        var patch = {};
+        LEGACY_MERGE_FIELDS.forEach(function(f) {
+          if ((v[f] === undefined || v[f] === '' || v[f] === null) && legacy[f]) patch[f] = legacy[f];
+        });
+        if (Object.keys(patch).length) {
+          vendorsRef.doc(v.id).set(patch, { merge: true }).then(function() {
+            Object.assign(v, patch);
+          }).catch(function(e) { console.error('Legacy brands merge failed for', v.id, e); });
+        }
+      });
+    }).catch(function() {});
+  }
+
   /* ─────────────────────────────────────────────────────────
      RENDER VENDORS TAB — role-based
   ───────────────────────────────────────────────────────── */
@@ -58,6 +92,7 @@
       window._vendorsData = brandsSnap.docs.map(function(d) {
         return Object.assign({ id: d.id }, d.data());
       });
+      _mergeLegacyBrandsData();
 
       var orders = ordersSnap.docs.map(function(d) {
         return Object.assign({ id: d.id }, d.data());
