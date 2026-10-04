@@ -252,8 +252,10 @@ async function init() {
     } else if (pathRoute.page === 'vendor') {
       navigateToVendor(pathRoute.slug, true);
     } else if (pathRoute.page === 'login') {
+      await window.authReady;
       navigateToLogin(true);
     } else if (pathRoute.page === 'account') {
+      await window.authReady;
       navigateToAccount(true);
     } else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
@@ -268,8 +270,8 @@ async function init() {
     else if (route.page === 'category') {
       navigateToCategory(route.cat, true);
     }
-    else if (route.page === 'login') navigateToLogin(true);
-    else if (route.page === 'account') navigateToAccount(true);
+    else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
+    else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
     else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(route.page)) {
       navigateTo(route.page, true);
     }
@@ -335,7 +337,7 @@ function getRouteFromPath() {
   return null;
 }
 
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', async () => {
   closeFilterPanel();
   const pathRoute = getRouteFromPath();
   if (pathRoute) {
@@ -352,9 +354,11 @@ window.addEventListener('popstate', () => {
       navigateToVendor(pathRoute.slug, true);
       return;
     } else if (pathRoute.page === 'login') {
+      await window.authReady;
       navigateToLogin(true);
       return;
     } else if (pathRoute.page === 'account') {
+      await window.authReady;
       navigateToAccount(true);
       return;
     } else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(pathRoute.page)) {
@@ -365,8 +369,8 @@ window.addEventListener('popstate', () => {
   const route = getRouteFromHash();
   if (route.page === 'product-detail') goToProduct(route.productId, true);
   else if (route.page === 'category') navigateToCategory(route.cat, true);
-  else if (route.page === 'login') navigateToLogin(true);
-  else if (route.page === 'account') navigateToAccount(true);
+  else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
+  else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
   else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(route.page)) navigateTo(route.page, true);
   else navigateTo('home');
 });

@@ -70,6 +70,22 @@ firebase.auth().onAuthStateChanged(function(user) {
   }
 });
 
+// ==================== AUTH READY SIGNAL ====================
+// Firebase Auth restores a persisted session from IndexedDB
+// asynchronously — firebase.auth().currentUser reads null for a brief
+// moment on every fresh page load even when a real session is about to
+// be restored. Page-load routing that decides "is this customer logged
+// in" (the /login and /account routes in app.js) must await this before
+// reading currentUser, or it reads that transient null and wrongly
+// bounces a genuinely-logged-in customer to the login form. Resolves
+// once, with whatever the first onAuthStateChanged callback reports.
+window.authReady = new Promise(function(resolve) {
+  var unsubscribe = firebase.auth().onAuthStateChanged(function(user) {
+    unsubscribe();
+    resolve(user);
+  });
+});
+
 // ==================== FIREBASE FUNCTIONS ====================
 
 async function getProductReviews(productId) {
