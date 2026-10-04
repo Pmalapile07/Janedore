@@ -39,20 +39,22 @@ function navigateToBrandProducts(brandName) { S.saleMode = false; updateHash('pr
    in navigation.css.
    ============================================================ */
 
-// Resolves a product's real vendor record. Looks up by vendorId first, but
-// falls back to a brand-name match rather than ever treating an unmatched
-// vendorId as if it were a slug/doc-id itself — a product saved while its
-// vendorId couldn't be resolved used to default to the literal string
-// 'janedore', which happens to equal the house brand's slug and sent every
-// such product's brand link to the Janedore page instead of its own.
+// Resolves a product's real vendor record. Checks the brand-name text
+// first, not vendorId — vendorId has twice turned out unreliable in this
+// app's real data (defaulted to the literal 'janedore' when it couldn't
+// be resolved at save time, and separately left pointing at a real-but-
+// wrong vendor after a product's Brand dropdown was changed). brand text
+// is what a human actually typed/selected, so it's trusted first; vendorId
+// is only a fallback for the rare product with a blank brand field.
 function findVendorForProduct(product) {
   if (!product) return null;
   const vendors = S.vendors || [];
-  const byId = vendors.find(v => v.id === product.vendorId);
-  if (byId) return byId;
   const brandName = (product.brand || '').toLowerCase().trim();
-  if (!brandName) return null;
-  return vendors.find(v => (v.name || v.brandName || v.brand || '').toLowerCase().trim() === brandName) || null;
+  if (brandName) {
+    const byBrand = vendors.find(v => (v.name || v.brandName || v.brand || '').toLowerCase().trim() === brandName);
+    if (byBrand) return byBrand;
+  }
+  return vendors.find(v => v.id === product.vendorId) || null;
 }
 
 function getFeaturedBrands(vendors) {
