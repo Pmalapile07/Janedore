@@ -451,13 +451,13 @@
               '</div>' +
 
               '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
-                '<label>Logo URL</label>' +
-                '<input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://...">' +
+                '<label>Logo</label>' +
+                '<div style="display:flex;gap:8px;"><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div>' +
               '</div>' +
 
               '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
-                '<label>Hero Image URL</label>' +
-                '<input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://...">' +
+                '<label>Hero Image</label>' +
+                '<div style="display:flex;gap:8px;"><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div>' +
               '</div>' +
 
             '</form>' +
@@ -552,8 +552,8 @@
         '<div class="form-group"><label>Display Name</label><input name="brand" value="' + esc(v.brand) + '" placeholder="e.g. NIRIUS CO"></div>' +
         '<div class="form-group"><label>Contact Email</label><input name="email" type="email" value="' + esc(v.email) + '" placeholder="vendor@brand.com"></div>' +
         '<div class="form-group"><label>Description</label><textarea name="description">' + esc(v.description || '') + '</textarea></div>' +
-        '<div class="form-group"><label>Logo URL</label><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..."></div>' +
-        '<div class="form-group"><label>Hero Image URL</label><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..."></div>' +
+        '<div class="form-group"><label>Logo</label><div style="display:flex;gap:8px;"><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div></div>' +
+        '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:8px;"><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div></div>' +
 
         '<div class="form-row">' +
           '<div class="form-group"><label>Commission %</label><input name="commissionRate" type="number" value="' + esc(String(v.commissionRate || 15)) + '" min="0" max="100"></div>' +
