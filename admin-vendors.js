@@ -19,6 +19,19 @@
 
   var role = null;
 
+  // Opens the device's native file picker directly (same as product image
+  // uploads) instead of Cloudinary's own branded widget UI, and writes the
+  // result straight into whichever input sits right before this button.
+  window._uploadSingleImageTo = function(btn) {
+    var input = btn.previousElementSibling;
+    if (!input) return;
+    window._uploadToCloudinary(function(url) {
+      input.value = url;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      showToast('Image uploaded!');
+    }, false);
+  };
+
   // "vendors" and "brands" were accidentally created to hold the same
   // data and drifted apart before the code settled on "vendors" as
   // canonical. Rather than just discarding "brands" (which would lose
@@ -452,12 +465,12 @@
 
               '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
                 '<label>Logo</label>' +
-                '<div style="display:flex;gap:8px;"><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div>' +
+                '<div style="display:flex;gap:8px;"><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="window._uploadSingleImageTo(this)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div>' +
               '</div>' +
 
               '<div class="form-group" style="padding:0;margin-bottom:12px;">' +
                 '<label>Hero Image</label>' +
-                '<div style="display:flex;gap:8px;"><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div>' +
+                '<div style="display:flex;gap:8px;"><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="window._uploadSingleImageTo(this)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div>' +
               '</div>' +
 
             '</form>' +
@@ -552,8 +565,8 @@
         '<div class="form-group"><label>Display Name</label><input name="brand" value="' + esc(v.brand) + '" placeholder="e.g. NIRIUS CO"></div>' +
         '<div class="form-group"><label>Contact Email</label><input name="email" type="email" value="' + esc(v.email) + '" placeholder="vendor@brand.com"></div>' +
         '<div class="form-group"><label>Description</label><textarea name="description">' + esc(v.description || '') + '</textarea></div>' +
-        '<div class="form-group"><label>Logo</label><div style="display:flex;gap:8px;"><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div></div>' +
-        '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:8px;"><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="uploadToCloudinary(this.previousElementSibling)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div></div>' +
+        '<div class="form-group"><label>Logo</label><div style="display:flex;gap:8px;"><input name="logoUrl" value="' + esc(v.logoUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="window._uploadSingleImageTo(this)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div></div>' +
+        '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:8px;"><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="window._uploadSingleImageTo(this)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div></div>' +
 
         '<div class="form-row">' +
           '<div class="form-group"><label>Commission %</label><input name="commissionRate" type="number" value="' + esc(String(v.commissionRate || 15)) + '" min="0" max="100"></div>' +

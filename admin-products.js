@@ -189,7 +189,9 @@
   // directly, then uploads each file straight to Cloudinary's REST
   // endpoint. onSuccess fires once per file, as soon as that file is done,
   // so images appear one by one instead of waiting for a batch to finish.
-  window._uploadToCloudinary = function(onSuccess) {
+  // multiple defaults to true (the product media pool's own behavior);
+  // pass false for a single-image field like a vendor's logo/hero image.
+  window._uploadToCloudinary = function(onSuccess, multiple) {
     var cloudName    = window.CLOUDINARY_CLOUD_NAME;
     var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
     if (!cloudName)    { showToast('Cloudinary cloud name not configured.', 'error'); return; }
@@ -198,7 +200,7 @@
     var input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/png,image/jpeg,image/webp';
-    input.multiple = true;
+    input.multiple = multiple !== false;
     input.style.display = 'none';
     document.body.appendChild(input);
 
