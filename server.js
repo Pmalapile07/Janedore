@@ -85,6 +85,180 @@ app.post('/api/verify-visitor-password', async (req, res) => {
   }
 });
 
+// ==================== EMAIL SYSTEM ====================
+// Shared by every notification this app sends. Two pieces:
+//   emailLayout()      — the visual shell (logo, divider, heading, footer),
+//                         lifted out of what used to be a one-off HTML
+//                         string duplicated per email. Every new email
+//                         type reuses this instead of rebuilding it.
+//   sendResendEmail()  — the actual Resend API call, previously hand-built
+//                         inline inside the welcome-email route. Now a
+//                         promise-returning helper any route can call.
+// from/replyTo default to support@ (the "replies welcome" address);
+// pass noreply@ explicitly for emails that don't need a response — order
+// confirmations etc. — matching the two addresses already set up on the
+// janedore.co.za domain in Resend.
+
+function emailLayout(opts) {
+  const heading = opts.heading;
+  const bodyHtml = opts.bodyHtml;
+  const signature = opts.signature || '— Janedore';
+  const footerHtml = opts.footerHtml ||
+    'You’re receiving this because you have an account or placed an order at janedore.co.za.<br>' +
+    '<a href="mailto:support@janedore.co.za">support@janedore.co.za</a>';
+
+  return ('<!DOCTYPE html>\n' +
+'<html lang="en">\n' +
+'<head>\n' +
+'  <meta charset="UTF-8">\n' +
+'  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+'  <title>' + heading + '</title>\n' +
+'  <style>\n' +
+'    * { margin: 0; padding: 0; box-sizing: border-box; }\n' +
+'    body {\n' +
+'      background-color: #ffffff;\n' +
+"      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;\n" +
+'      -webkit-font-smoothing: antialiased;\n' +
+'      color: #1a1a1a;\n' +
+'    }\n' +
+'    .wrapper {\n' +
+'      max-width: 560px;\n' +
+'      margin: 0 auto;\n' +
+'      padding: 64px 40px;\n' +
+'    }\n' +
+'    .logo {\n' +
+'      font-size: 13px;\n' +
+'      letter-spacing: 0.22em;\n' +
+'      text-transform: uppercase;\n' +
+'      color: #1a1a1a;\n' +
+'      margin-bottom: 56px;\n' +
+'      display: block;\n' +
+'    }\n' +
+'    .divider {\n' +
+'      width: 32px;\n' +
+'      height: 1px;\n' +
+'      background: #1a1a1a;\n' +
+'      margin-bottom: 40px;\n' +
+'    }\n' +
+'    .heading {\n' +
+'      font-size: 28px;\n' +
+'      font-weight: 300;\n' +
+'      line-height: 1.2;\n' +
+'      letter-spacing: -0.01em;\n' +
+'      color: #1a1a1a;\n' +
+'      margin-bottom: 24px;\n' +
+'    }\n' +
+'    .body-text {\n' +
+'      font-size: 14px;\n' +
+'      font-weight: 300;\n' +
+'      line-height: 1.8;\n' +
+'      color: #6b6b6b;\n' +
+'      margin-bottom: 24px;\n' +
+'    }\n' +
+'    .signature {\n' +
+'      display: block;\n' +
+'      font-size: 12px;\n' +
+'      font-weight: 400;\n' +
+'      letter-spacing: 0.1em;\n' +
+'      text-transform: uppercase;\n' +
+'      color: #1a1a1a;\n' +
+'      margin-top: 24px;\n' +
+'    }\n' +
+'    .footer {\n' +
+'      margin-top: 64px;\n' +
+'      padding-top: 32px;\n' +
+'      border-top: 1px solid #e0e0e0;\n' +
+'      font-size: 10px;\n' +
+'      color: #aaaaaa;\n' +
+'      letter-spacing: 0.04em;\n' +
+'      line-height: 1.8;\n' +
+'    }\n' +
+'    .footer a {\n' +
+'      color: #aaaaaa;\n' +
+'      text-decoration: underline;\n' +
+'    }\n' +
+'    table.items { width: 100%; border-collapse: collapse; }\n' +
+'    table.items td {\n' +
+'      padding: 14px 0;\n' +
+'      border-bottom: 1px solid #efefef;\n' +
+'      font-size: 13px;\n' +
+'      color: #1a1a1a;\n' +
+'      vertical-align: top;\n' +
+'    }\n' +
+'    table.items td.qty { color: #6b6b6b; white-space: nowrap; padding-left: 12px; }\n' +
+'    table.items td.price { text-align: right; white-space: nowrap; padding-left: 12px; }\n' +
+'    table.totals { width: 100%; border-collapse: collapse; margin-top: 16px; }\n' +
+'    table.totals td { padding: 4px 0; font-size: 13px; }\n' +
+'    table.totals td.label { color: #6b6b6b; }\n' +
+'    table.totals td.value { text-align: right; }\n' +
+'    table.totals tr.grand td {\n' +
+'      padding-top: 14px;\n' +
+'      border-top: 1px solid #e0e0e0;\n' +
+'      font-size: 15px;\n' +
+'      font-weight: 500;\n' +
+'      color: #1a1a1a;\n' +
+'    }\n' +
+'  </style>\n' +
+'</head>\n' +
+'<body>\n' +
+'  <div class="wrapper">\n' +
+'    <span class="logo">Janedore</span>\n' +
+'    <div class="divider"></div>\n' +
+'    <h1 class="heading">' + heading + '</h1>\n' +
+'    ' + bodyHtml + '\n' +
+'    <span class="signature">' + signature + '</span>\n' +
+'    <div class="footer">' + footerHtml + '</div>\n' +
+'  </div>\n' +
+'</body>\n' +
+'</html>');
+}
+
+function sendResendEmail(opts) {
+  return new Promise((resolve, reject) => {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      return reject(new Error('RESEND_API_KEY not set'));
+    }
+
+    const fromAddress = opts.from || 'Janedore <support@janedore.co.za>';
+    const body = JSON.stringify({
+      from:     fromAddress,
+      reply_to: opts.replyTo || fromAddress,
+      to:       Array.isArray(opts.to) ? opts.to : [opts.to],
+      subject:  opts.subject,
+      html:     opts.html,
+      text:     opts.text
+    });
+
+    const options = {
+      hostname: 'api.resend.com',
+      path:     '/emails',
+      method:   'POST',
+      headers:  {
+        'Authorization':  `Bearer ${apiKey}`,
+        'Content-Type':   'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      }
+    };
+
+    const request = https.request(options, (response) => {
+      let data = '';
+      response.on('data', chunk => { data += chunk; });
+      response.on('end', () => {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          resolve();
+        } else {
+          reject(new Error('Resend API error ' + response.statusCode + ': ' + data));
+        }
+      });
+    });
+
+    request.on('error', reject);
+    request.write(body);
+    request.end();
+  });
+}
+
 // Newsletter welcome email via Resend
 app.post('/api/send-welcome-email', (req, res) => {
   const email = req.body && req.body.email;
@@ -93,145 +267,99 @@ app.post('/api/send-welcome-email', (req, res) => {
     return res.status(400).json({ error: 'Invalid email' });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error('[RESEND] RESEND_API_KEY not set');
-    return res.status(500).json({ error: 'Email service not configured' });
-  }
+  const html = emailLayout({
+    heading: 'You’re on the list.',
+    bodyHtml: '<p class="body-text">We’re not quite ready yet — but when we are,<br>you’ll be the first to know.</p>'
+  });
+  const text = 'You’re on the list.\n\nWe’re not quite ready yet — but when we are, you’ll be the first to know.\n\n— Janedore\n\nsupport@janedore.co.za';
 
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You're on the list.</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background-color: #ffffff;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      color: #1a1a1a;
-    }
-    .wrapper {
-      max-width: 560px;
-      margin: 0 auto;
-      padding: 64px 40px;
-    }
-    .logo {
-      font-size: 13px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: #1a1a1a;
-      margin-bottom: 56px;
-      display: block;
-    }
-    .divider {
-      width: 32px;
-      height: 1px;
-      background: #1a1a1a;
-      margin-bottom: 40px;
-    }
-    .heading {
-      font-size: 28px;
-      font-weight: 300;
-      line-height: 1.2;
-      letter-spacing: -0.01em;
-      color: #1a1a1a;
-      margin-bottom: 24px;
-    }
-    .body-text {
-      font-size: 14px;
-      font-weight: 300;
-      line-height: 1.8;
-      color: #6b6b6b;
-      margin-bottom: 48px;
-    }
-    .signature {
-      font-size: 12px;
-      font-weight: 400;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #1a1a1a;
-    }
-    .footer {
-      margin-top: 64px;
-      padding-top: 32px;
-      border-top: 1px solid #e0e0e0;
-      font-size: 10px;
-      color: #aaaaaa;
-      letter-spacing: 0.04em;
-      line-height: 1.8;
-    }
-    .footer a {
-      color: #aaaaaa;
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <span class="logo">Janedore</span>
-    <div class="divider"></div>
-    <h1 class="heading">You're on the list.</h1>
-    <p class="body-text">
-      We're not quite ready yet — but when we are,<br>
-      you'll be the first to know.
-    </p>
-    <span class="signature">— Janedore</span>
-    <div class="footer">
-      You're receiving this because you signed up at janedore.co.za.<br>
-      <a href="mailto:support@janedore.co.za">support@janedore.co.za</a>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
-
-  const text = `You're on the list.\n\nWe're not quite ready yet — but when we are, you'll be the first to know.\n\n— Janedore\n\nsupport@janedore.co.za`;
-
-  const body = JSON.stringify({
-    from:     'Janedore <support@janedore.co.za>',
-    reply_to: 'support@janedore.co.za',
-    to:       [email],
-    subject:  "You\u2019re on the list.",
+  sendResendEmail({
+    from: 'Janedore <support@janedore.co.za>',
+    to: email,
+    subject: 'You’re on the list.',
     html,
     text
-  });
-
-  const options = {
-    hostname: 'api.resend.com',
-    path:     '/emails',
-    method:   'POST',
-    headers:  {
-      'Authorization':  `Bearer ${apiKey}`,
-      'Content-Type':   'application/json',
-      'Content-Length': Buffer.byteLength(body)
-    }
-  };
-
-  const request = https.request(options, (response) => {
-    let data = '';
-    response.on('data', chunk => { data += chunk; });
-    response.on('end', () => {
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        console.log('[RESEND] Email sent to:', email);
-        res.json({ success: true });
-      } else {
-        console.error('[RESEND] API error:', response.statusCode, data);
-        res.status(500).json({ error: 'Failed to send email' });
-      }
-    });
-  });
-
-  request.on('error', (err) => {
-    console.error('[RESEND] Request error:', err.message);
+  }).then(() => {
+    console.log('[RESEND] Welcome email sent to:', email);
+    res.json({ success: true });
+  }).catch((err) => {
+    console.error('[RESEND] Welcome email error:', err.message);
     res.status(500).json({ error: 'Failed to send email' });
   });
+});
 
-  request.write(body);
-  request.end();
+// Order confirmation email via Resend — fired by checkout.js right after
+// an order is successfully placed. Uses noreply@ since a receipt doesn't
+// need a reply, but still points anyone with a real question at support@.
+app.post('/api/send-order-confirmation', (req, res) => {
+  const b = req.body || {};
+  const orderNumber = b.orderNumber;
+  const customerEmail = b.customerEmail;
+  const customerName = b.customerName;
+  const items = b.items;
+  const subtotal = b.subtotal;
+  const shipping = b.shipping;
+  const total = b.total;
+  const currency = b.currency;
+
+  if (!customerEmail || !customerEmail.includes('@') || !orderNumber || !Array.isArray(items) || !items.length) {
+    return res.status(400).json({ error: 'Invalid order data' });
+  }
+
+  const symbol = (!currency || currency === 'ZAR') ? 'R' : (currency + ' ');
+  const fmt = (n) => symbol + Number(n || 0).toFixed(2);
+
+  const itemsRowsHtml = items.map((item) => {
+    const details = [item.color, item.size].filter(Boolean).join(' / ');
+    return '<tr>' +
+      '<td>' + escapeHtml(item.name || 'Item') +
+        (item.brand ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(item.brand) + '</span>' : '') +
+        (details ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(details) + '</span>' : '') +
+      '</td>' +
+      '<td class="qty">x' + (item.qty || 1) + '</td>' +
+      '<td class="price">' + fmt(item.price) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  const itemsTextLines = items.map((item) =>
+    (item.name || 'Item') + ' x' + (item.qty || 1) + ' — ' + fmt(item.price)
+  ).join('\n');
+
+  const bodyHtml =
+    '<p class="body-text">Hi ' + escapeHtml(customerName || 'there') + ', thank you for your order — here’s what we’ve got.</p>' +
+    '<table class="items">' + itemsRowsHtml + '</table>' +
+    '<table class="totals">' +
+      '<tr><td class="label">Subtotal</td><td class="value">' + fmt(subtotal) + '</td></tr>' +
+      '<tr><td class="label">Shipping</td><td class="value">' + (shipping ? fmt(shipping) : 'Free') + '</td></tr>' +
+      '<tr class="grand"><td class="label" style="color:#1a1a1a;">Total</td><td class="value">' + fmt(total) + '</td></tr>' +
+    '</table>' +
+    '<p class="body-text" style="margin-top:32px;">Order #' + escapeHtml(orderNumber) + '</p>';
+
+  const html = emailLayout({
+    heading: 'Order confirmed.',
+    bodyHtml: bodyHtml,
+    footerHtml: 'Questions about your order? <a href="mailto:support@janedore.co.za">support@janedore.co.za</a>'
+  });
+
+  const text = 'Order confirmed.\n\nHi ' + (customerName || 'there') + ', thank you for your order.\n\n' +
+    itemsTextLines +
+    '\n\nSubtotal: ' + fmt(subtotal) + '\nShipping: ' + (shipping ? fmt(shipping) : 'Free') + '\nTotal: ' + fmt(total) +
+    '\n\nOrder #' + orderNumber + '\n\n— Janedore\nsupport@janedore.co.za';
+
+  sendResendEmail({
+    from: 'Janedore <noreply@janedore.co.za>',
+    replyTo: 'support@janedore.co.za',
+    to: customerEmail,
+    subject: 'Order confirmed — #' + orderNumber,
+    html,
+    text
+  }).then(() => {
+    console.log('[RESEND] Order confirmation sent to:', customerEmail);
+    res.json({ success: true });
+  }).catch((err) => {
+    console.error('[RESEND] Order confirmation error:', err.message);
+    res.status(500).json({ error: 'Failed to send email' });
+  });
 });
 
 // ==================== CHAT AI REPLY ====================
