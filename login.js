@@ -189,7 +189,9 @@ async function loadAccountData() {
         ordersContainer.innerHTML = ordersHTML;
       }
     } catch (e) {
-      ordersContainer.innerHTML = '<p class="account-muted">Unable to load orders.</p>';
+      ordersContainer.innerHTML = '<p class="account-muted">Unable to load orders.</p><p class="account-muted" style="font-size:10px;word-break:break-word;"></p>';
+      ordersContainer.querySelector('p:last-child').textContent = (e && (e.message || e.code)) || '';
+      console.error('[ACCOUNT_ORDERS]', e);
     }
   }
 
@@ -219,7 +221,9 @@ async function loadAccountData() {
         reviewsContainer.innerHTML = reviewsHTML;
       }
     } catch (e) {
-      reviewsContainer.innerHTML = '<p class="account-muted">Unable to load reviews.</p>';
+      reviewsContainer.innerHTML = '<p class="account-muted">Unable to load reviews.</p><p class="account-muted" style="font-size:10px;word-break:break-word;"></p>';
+      reviewsContainer.querySelector('p:last-child').textContent = (e && (e.message || e.code)) || '';
+      console.error('[ACCOUNT_REVIEWS]', e);
     }
   }
 }

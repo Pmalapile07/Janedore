@@ -156,6 +156,10 @@ function addToCart(productId, size, qty) {
   const existing = S.cart.find(i => i.productId === productId && i.size === (size || product.sizes[0]) && i.variantIndex === vi);
   if (existing) existing.qty += q;
   else S.cart.push({ productId, variantIndex: vi, size: size || product.sizes[0] || 'OS', qty: q, name: sanitizeHTML(product.name), brand: sanitizeHTML(product.brand), price: product.price, salePrice: product.salePrice, color: sanitizeHTML(variant.color || 'Default'), thumbnail: getProductThumbnail(product, vi) });
+  if (typeof lastConfirmedOrderNumber !== 'undefined' && lastConfirmedOrderNumber) {
+    lastConfirmedOrderNumber = null;
+    sessionStorage.removeItem('janedore_last_order_number');
+  }
   commitCartChange();
   openCart();
 }
