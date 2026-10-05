@@ -127,6 +127,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .card-header{padding:var(--space-3) var(--space-4);display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);}
 .card-title{font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
 
+/* ── HOMEPAGE ACCORDION (admin-homepage.js) ──────────────────────────────────
+   Native <details>/<summary> — collapsed by default, no custom JS needed
+   for expand/collapse. The summary shows a quick preview (thumbnail +
+   current heading) so a section doesn't need to be opened just to see
+   what's already set. */
+.homepage-accordion-summary{list-style:none;padding:var(--space-3) var(--space-4);display:flex;align-items:center;gap:var(--space-2);cursor:pointer;user-select:none;}
+.homepage-accordion-summary::-webkit-details-marker{display:none;}
+.homepage-accordion-summary-main{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text);flex:0 0 auto;}
+.homepage-accordion-preview{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.homepage-accordion-thumb{width:22px;height:22px;border-radius:4px;object-fit:cover;flex-shrink:0;}
+.homepage-accordion-chevron{transition:transform .15s ease;color:var(--muted);flex-shrink:0;}
+.homepage-accordion[open] .homepage-accordion-chevron{transform:rotate(180deg);}
+.homepage-accordion-body{padding:0 var(--space-4) var(--space-4);display:flex;flex-direction:column;gap:10px;border-top:0.5px solid var(--border);padding-top:var(--space-3);}
+
 /* ── DASHBOARD ─────────────────────────────────────────────────────────────── */
 .dashboard-shell{padding:0;}
 .dash-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-2);margin-bottom:var(--space-4);}

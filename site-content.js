@@ -3,8 +3,9 @@
 // Category's heading + tiles, Shop by Clothing's heading/button, the
 // editorial banner, Shop by Brand's heading, and the newsletter copy
 // all used to be hardcoded in index.html/collection.js. They now come
-// from siteContent/homepage + siteContent/collectionPages (written by
-// the admin "Homepage" tab, admin-homepage.js), fetched once here.
+// from siteContent/homepage (written by the admin "Homepage" tab,
+// admin-homepage.js) + siteContent/collectionPages (written by the
+// admin "Pages" tab, admin-pages.js), fetched once here.
 //
 // index.html already ships every one of these elements with literal
 // empty-state text ("Heading"/"Button") baked in, so a blank/unset
@@ -13,11 +14,21 @@
 
 window._siteContent = { homepage: {}, collectionPages: {} };
 
+// A link is always {type, value}. 'home'/'products'/'sale' need no
+// value; everything else does. Each type maps to a real navigation
+// function already used elsewhere in the app, so a button/tile can
+// point anywhere a normal nav link can — not just a handful of pages.
 function goToSiteLink(link) {
   if (!link || !link.type) return;
   const value = (link.value || '').trim();
+  if (link.type === 'home') { navigateTo('home'); return; }
   if (link.type === 'category' && value) { navigateToCategory(value); return; }
   if (link.type === 'vendor' && value) { navigateToVendor(value); return; }
+  if (link.type === 'product' && value) {
+    const product = PRODUCTS.find(p => p.id === value);
+    if (product) { goToProduct(product.id); return; }
+  }
+  if (link.type === 'page' && value) { navigateToContentPage(value); return; }
   if (link.type === 'sale') { navigateToSale(); return; }
   if (link.type === 'url' && value) { window.location.href = value; return; }
   navigateTo('products');
