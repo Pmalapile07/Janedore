@@ -390,6 +390,7 @@
       case 'onlineStore': if (window._renderOnlineStoreTab) window._renderOnlineStoreTab(); break;
       case 'admins':      if (window._renderAdminsTab)      window._renderAdminsTab();      break;
       case 'pages':       if (window._renderPagesTab)       window._renderPagesTab();       break;
+      case 'homepage':    if (window._renderHomepageTab)    window._renderHomepageTab();    break;
       case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;
     }
   }

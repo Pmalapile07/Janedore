@@ -56,9 +56,6 @@ function escapeForCssUrl(url) {
   return String(safe).replace(/['"\\\n\r]/g, '');
 }
 
-const COLLECTION_DESCRIPTIONS = {
-  'all-clothing': 'Our complete clothing edit — refined silhouettes for the modern wardrobe.', 'dresses': 'Effortless dresses that balance structure and fluidity.', 'tops': 'Elevated essentials, from sculptural blouses to relaxed knits.', 'bottoms': 'Tailored trousers and fluid skirts with quiet intention.', 'jackets': 'Outerwear that defines the silhouette — sharp, soft, and considered.', 'sets': 'Coordinated pieces designed to be worn together or styled apart.', 'bags': 'Understated accessories that complete the look without saying too much.', 'jewelry': 'Sculptural adornments — timeless pieces with modern sensibility.', 'sunglasses': 'Bold yet refined eyewear for the discerning gaze.', 'parfum': 'A study in scent. THATO parfums are crafted for the considered wearer.', 'all-accessories': 'Bags, jewelry, and eyewear — the details that finish the look.', 'homeware': 'Considered pieces for the home. New arrivals coming soon.', 'all': 'Explore the complete edit of considered pieces, distinctive designs, and understated essentials.'
-};
 const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
 
 const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
@@ -338,36 +335,51 @@ function updateCollectionTitle() {
   let showDesc = false;
   let bcLabel = title;
 
+  // catTitles is only the fallback shown before admin-homepage.js's
+  // siteContent/collectionPages has loaded (or for a slug nobody's
+  // customized yet) — window._siteContent.collectionPages[slug].title
+  // overrides it once site-content.js's fetch resolves.
+  const catTitles = {
+    'all': 'ALL PRODUCTS',
+    'sale': 'SALE',
+    'all-clothing': 'CLOTHING',
+    'all-accessories': 'ACCESSORIES',
+    'homeware': 'HOMEWARE',
+    'dresses': 'DRESSES',
+    'tops': 'TOPS',
+    'bottoms': 'BOTTOMS',
+    'jackets': 'JACKETS',
+    'sets': 'SETS',
+    'bags': 'BAGS',
+    'jewelry': 'JEWELRY',
+    'sunglasses': 'SUNGLASSES',
+    'parfum': 'SCENT'
+  };
+  const collectionPages = (window._siteContent && window._siteContent.collectionPages) || {};
+  function collectionCopyFor(slug) {
+    const custom = collectionPages[slug] || {};
+    return {
+      title: (custom.title || '').trim() || catTitles[slug] || slug.toUpperCase(),
+      description: (custom.description || '').trim()
+    };
+  }
+
   if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = 'BRAND';
     showDesc = false;
     const vendorName = S.currentVendor ? (S.currentVendor.name || S.currentVendor.brandName || S.currentVendor.brand) : null;
     bcLabel = vendorName || 'Brand';
   } else if (S.currentPage === 'products') {
-    title = S.saleMode ? 'SALE' : 'ALL PRODUCTS';
-    description = COLLECTION_DESCRIPTIONS['all'];
-    showDesc = false;
+    const copy = collectionCopyFor(S.saleMode ? 'sale' : 'all');
+    title = copy.title;
+    description = copy.description;
+    showDesc = !!description;
     bcLabel = S.saleMode ? 'Sale' : 'All Products';
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
-    const catTitles = {
-      'all': 'ALL PRODUCTS',
-      'all-clothing': 'CLOTHING',
-      'all-accessories': 'ACCESSORIES',
-      'homeware': 'HOMEWARE',
-      'dresses': 'DRESSES',
-      'tops': 'TOPS',
-      'bottoms': 'BOTTOMS',
-      'jackets': 'JACKETS',
-      'sets': 'SETS',
-      'bags': 'BAGS',
-      'jewelry': 'JEWELRY',
-      'sunglasses': 'SUNGLASSES',
-      'parfum': 'SCENT'
-    };
-    title = catTitles[S.currentCategoryPage] || S.currentCategoryPage.toUpperCase();
-    // Hardcoded category description text is intentionally not shown
-    // on category pages anymore — title only.
-    showDesc = false;
+    const copy = collectionCopyFor(S.currentCategoryPage);
+    title = copy.title;
+    description = copy.description;
+    showDesc = !!description;
     bcLabel = title.charAt(0) + title.slice(1).toLowerCase();
   } else {
     if (titleEl) titleEl.style.display = 'none';
@@ -980,20 +992,12 @@ function selectSortTab(cat) {
   updateCollectionGridIcon();
 }
 
-// Static 2x2 grid, not a slider — exactly 4 categories, so there's
-// nothing to page through and no swipe-bar progress dots needed.
-function buildCategoriesSlider() {
-  const grid = document.getElementById('home-categories-grid'); if (!grid) return;
-  const categories = [
-    { label:'Clothing', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287', cat:'all-clothing' },
-    { label:'Accessories', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/026EDA9F-298C-41BB-9076-F133E69A87D8.png?v=1778779703', cat:'all-accessories' },
-    { label:'Homeware', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-8985.png?v=1789390405', cat:'homeware' },
-    { label:'Scent', img:'https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6691.png?v=1778920601', cat:'parfum' }
-  ];
-  grid.innerHTML = categories.map(c => `<div class="home-category-card" onclick="navigateToCategory('${escapeJSString(c.cat)}')"><div class="home-category-img" style="background-image:url('${escapeForCssUrl(c.img)}');background-size:cover;background-position:center;"><div class="home-category-label">${escapeHTML(c.label)}</div></div></div>`).join('');
-}
+// Shop by Category's tiles used to be a hardcoded 4-item array here —
+// they're now admin-editable content (siteContent/homepage.shopByCategory,
+// written by admin-homepage.js), rendered by renderShopByCategory() in
+// site-content.js once that fetch resolves. Nothing to do here anymore.
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); initSliderLeadingTracking('arrivals-grid'); } buildShopByClothing(); buildCategoriesSlider(); buildNewsletterSection(); }
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); initSliderLeadingTracking('arrivals-grid'); } buildShopByClothing(); buildNewsletterSection(); }
 
 function buildShopByClothing() {
   const grid = document.getElementById('clothing-grid');
@@ -1032,7 +1036,12 @@ function initSliderLeadingTracking(gridId) {
   update();
 }
 
-function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title">STAY IN THE EDIT</div><p class="newsletter-subtext">Exclusive access to new arrivals, private sales &amp; editorial content.</p><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer">By signing up, you agree to our privacy policy.</p></div>`; }
+// Heading/subtext/disclaimer start as literal empty-state placeholders —
+// site-content.js overwrites them with the admin-set siteContent/homepage
+// copy once that fetch resolves (see renderSiteContent() there). Nothing
+// here is hardcoded marketing copy anymore; it's just what shows if the
+// admin hasn't filled the Newsletter section in yet.
+function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title" id="newsletter-heading">Heading</div><p class="newsletter-subtext" id="newsletter-subtext"></p><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer" id="newsletter-disclaimer"></p></div>`; }
 
 // ==================== VENDOR / BRAND PAGE ====================
 
