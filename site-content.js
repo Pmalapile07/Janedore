@@ -27,15 +27,28 @@ function goToSiteLink(link) {
 // real image only once that image has actually finished downloading —
 // same fade-avoidance-of-a-half-loaded-image idea as the product grid's
 // img-loaded class, just for background-image elements instead of <img>.
+// No url at all (admin hasn't set one yet) settles on a plain, static
+// neutral box (.content-empty) rather than leaving the animated shimmer
+// running forever, which would look like a stuck loading state.
 function loadBackgroundImage(el, url) {
   if (!el) return;
-  if (!url) { el.classList.remove('content-shimmer'); return; }
+  if (!url) {
+    el.classList.remove('content-shimmer');
+    el.classList.add('content-empty');
+    el.style.backgroundImage = '';
+    return;
+  }
+  el.classList.remove('content-empty');
+  el.classList.add('content-shimmer');
   const probe = new Image();
   probe.onload = function () {
     el.style.backgroundImage = "url('" + url.replace(/['"\\]/g, '') + "')";
     el.classList.remove('content-shimmer');
   };
-  probe.onerror = function () { el.classList.remove('content-shimmer'); };
+  probe.onerror = function () {
+    el.classList.remove('content-shimmer');
+    el.classList.add('content-empty');
+  };
   probe.src = url;
 }
 
@@ -69,19 +82,23 @@ function renderShopByCategory(shopByCategory) {
 
   const grid = document.getElementById('home-categories-grid');
   if (!grid) return;
-  const tiles = Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : [];
-  if (!tiles.length) { grid.innerHTML = ''; return; }
+  let tiles = Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : [];
+  // Nothing configured in admin yet — show 4 empty placeholder tiles
+  // (the grid's original fixed layout) instead of leaving the whole
+  // section blank, same empty-state idea as everything else here.
+  const isPlaceholder = tiles.length === 0;
+  if (isPlaceholder) tiles = [{}, {}, {}, {}];
 
   grid.innerHTML = tiles.map(function (_, i) {
     return '<div class="home-category-card" data-tile-index="' + i + '">' +
-      '<div class="home-category-img content-shimmer"><div class="home-category-label"></div></div>' +
+      '<div class="home-category-img"><div class="home-category-label"></div></div>' +
     '</div>';
   }).join('');
 
   grid.querySelectorAll('[data-tile-index]').forEach(function (cardEl, i) {
     const tile = tiles[i];
     cardEl.querySelector('.home-category-label').textContent = tile.label || 'Category';
-    cardEl.onclick = function () { goToSiteLink(tile.link); };
+    cardEl.onclick = isPlaceholder ? null : function () { goToSiteLink(tile.link); };
     loadBackgroundImage(cardEl.querySelector('.home-category-img'), tile.imageUrl);
   });
 }
