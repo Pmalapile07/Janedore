@@ -125,6 +125,14 @@
   background-size: 400% 100% !important;
   animation: product-img-shimmer 1.6s ease-in-out infinite;
 }
+/* Settled "nothing configured" state — a flat box, not an endlessly
+   animating one, which would otherwise look like a stuck loading spinner
+   for a box that was never going to load anything. */
+.content-empty {
+  background-color: #f0ede8 !important;
+  background-image: none !important;
+  animation: none !important;
+}
 
 .product-badge-stack {
   position: absolute;
