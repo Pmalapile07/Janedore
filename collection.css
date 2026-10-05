@@ -120,7 +120,7 @@ body.on-collection-page .collection-filter-bar {
 .col-grid-bar {
   width: 100%;
   background: #fff;
-  border: 1.5px solid #111;
+  border: 1px solid #111;
   box-sizing: border-box;
   transition: height 0.3s ease;
 }
