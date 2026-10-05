@@ -38,6 +38,19 @@ function safeImageURL(url) {
   return PLACEHOLDER_IMAGE;
 }
 
+// Grid/card thumbnails were loading the exact same full-resolution file
+// Cloudinary stores the original upload as — often several MB — just to
+// display it at a few hundred pixels wide in a product card. Cloudinary
+// URLs always carry exactly one /upload/ segment; inserting transform
+// params there resizes+compresses *at Cloudinary's CDN*, not here, so
+// this only ever shrinks what gets downloaded. The stored secure_url and
+// the full-resolution product-detail/zoom image are untouched. Any URL
+// without an /upload/ segment (the inline SVG PLACEHOLDER_IMAGE, or a
+// non-Cloudinary source) just passes through unchanged.
+function gridThumbURL(url) {
+  return safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fill,w_700,h_840/');
+}
+
 function escapeForCssUrl(url) {
   const safe = safeImageURL(url);
   return String(safe).replace(/['"\\\n\r]/g, '');
@@ -595,7 +608,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
   const badges = getProductBadges(p);
   const badge = badges.length ? `<div class="product-badge-stack">${badges.map(b => `<span class="product-badge">${escapeHTML(b)}</span>`).join('')}</div>` : '';
   const imgs = p.variants?.[vi]?.images;
-  const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+  const ghost = gridThumbURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
 
   const brand = `<div class="product-brand">${escapeHTML(p.brand || '')}</div>`;
@@ -614,7 +627,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy">${wishBtn}</div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">${wishBtn}</div>
       ${metaRow}
     </div>`;
 }
@@ -649,7 +662,7 @@ function selectCardVariant(productId, variantIndex, swatchEl) {
     const imgEl = card.querySelector('.product-img-wrap img');
     if (imgEl) {
       const imgs = p.variants?.[variantIndex]?.images;
-      const nextSrc = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+      const nextSrc = gridThumbURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
       imgEl.classList.remove('img-loaded');
       imgEl.src = escapeHTML(nextSrc);
     }
@@ -673,7 +686,7 @@ function productCardHome(p) {
   const soldOut = (p.stock ?? 0) <= 0;
   const vi = S.productVariantSelections[p.id] ?? 0;
   const imgs = p.variants?.[vi]?.images;
-  const ghost = safeImageURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+  const ghost = gridThumbURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
   const pid = escapeJSString(p.id);
   const onSale = hasSalePrice(p);
   const priceInner = onSale
@@ -685,7 +698,7 @@ function productCardHome(p) {
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button></div>
       <div class="product-home-meta">
         ${brand}
         <div class="product-home-name-row">${name}</div>
