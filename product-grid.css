@@ -207,23 +207,16 @@
 }
 .product-wish-btn:hover { opacity: 0.75; }
 .product-wish-btn:active { opacity: 0.55; }
+/* Black everywhere — red is only ever for .product-price-sale (an
+   actual discounted price), never tied to which page a card appears
+   on. */
 .product-home-price,
 .product-price {
   font-family: 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 300;
   letter-spacing: var(--ui-letter-spacing);
-}
-.product-home-price,
-.product-price {
   color: #000;
-}
-/* Added only on the real collection/wishlist pages (productCard()'s
-   redPrice param) — not on the home page's campaign slider, search
-   results, or product-detail's suggested-product grids, which also
-   render through productCard() but should keep a plain black price. */
-.product-price-collection {
-  color: #c0392b;
 }
 /* On-sale price pair — original (struck through, gray) stacked above
    the sale price (red), in the same left-hand slot the single regular
