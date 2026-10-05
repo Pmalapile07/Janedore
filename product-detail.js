@@ -287,7 +287,7 @@ async function renderProductPage(product) {
       <div class="product-name-group">
         <h1 class="product-title-main">${product.name||''}</h1>
         <div class="product-brand-price-row">
-          <p class="product-by-brand-name"${productVendor?` onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')"`:''}>${product.brand||'JANEDORE'}</p>
+          <p class="product-by-brand-name"${productVendor?` onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')"`:''}>${product.brand||'JANEDORE'}${productVendor?' <i class="ph ph-arrow-right"></i>':''}</p>
           <div class="product-price-top">${originalPrice?`<span class="price-current price-sale">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
         </div>
       </div>
