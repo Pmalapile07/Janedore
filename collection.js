@@ -770,6 +770,7 @@ function buildSwipeCardInner(product) {
 function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); S.selectedSize=size; }
 function renderAllProducts() {
   if(!DOM.allProductsGrid) return;
+  restoreCollectionFilterBar();
   let prods = merchandiseProducts(getFilteredProducts(), undefined, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
@@ -784,6 +785,7 @@ function renderAllProducts() {
 
 function renderCategoryProducts() {
   if(!S.currentCategoryPage || !DOM.categoryProductsGrid) return;
+  restoreCollectionFilterBar();
   let cp;
   if(S.currentCategoryPage==='parfum') cp=getCatFilteredProducts().filter(p=>p.category==='parfum');
   else if(S.currentCategoryPage==='jewelry') cp=getCatFilteredProducts().filter(p=>p.category==='jewelry');
@@ -812,8 +814,9 @@ function renderCategoryProducts() {
   injectToolbarExtras('page-category', 'cat-grid-toggle-svg');
 }
 
-function renderSaleProducts() { 
+function renderSaleProducts() {
   if(!DOM.allProductsGrid) return;
+  restoreCollectionFilterBar();
 
   let filtered = PRODUCTS.filter(p => p.status === 'active' && hasSalePrice(p));
 
@@ -1087,6 +1090,52 @@ function normalizeBrandName(name) {
   return name.trim().toLowerCase().replace(/nirious co/g, 'nirius co');
 }
 
+// The shared filter bar (#collection-filter-bar, holding the grid
+// toggle + FILTER button) and its active-chips row normally live right
+// after the nav, above every collection-style page's content — correct
+// for All Products/Category, which open straight into a grid with no
+// hero image above it. The vendor/brand page has a hero image first,
+// and the filter bar belongs below that image, directly above the
+// grid — not above the image, where it was sitting by default since
+// it's the same DOM position every collection page shares. Relocated
+// here instead of duplicating the bar per page, so there's still only
+// one real element with its handlers intact — moveFilterBarBelowVendorHero()
+// physically moves that one node; restoreCollectionFilterBar() (called
+// by the other collection pages) puts it back.
+let _filterBarHomeParent = null;
+let _filterBarHomeNext = null;
+
+function _rememberFilterBarHome() {
+  if (_filterBarHomeParent) return;
+  const bar = document.getElementById('collection-filter-bar');
+  if (!bar) return;
+  _filterBarHomeParent = bar.parentNode;
+  _filterBarHomeNext = bar.nextSibling;
+}
+
+function restoreCollectionFilterBar() {
+  _rememberFilterBarHome();
+  const bar = document.getElementById('collection-filter-bar');
+  const chips = document.getElementById('active-filter-chips');
+  if (!bar || !_filterBarHomeParent) return;
+  if (bar.parentNode === _filterBarHomeParent) return; // already home
+  if (_filterBarHomeNext && _filterBarHomeNext.parentNode === _filterBarHomeParent) {
+    _filterBarHomeParent.insertBefore(bar, _filterBarHomeNext);
+  } else {
+    _filterBarHomeParent.appendChild(bar);
+  }
+  if (chips) bar.insertAdjacentElement('afterend', chips);
+}
+
+function moveFilterBarBelowVendorHero(heroSection) {
+  _rememberFilterBarHome();
+  const bar = document.getElementById('collection-filter-bar');
+  const chips = document.getElementById('active-filter-chips');
+  if (!bar || !heroSection) return;
+  heroSection.insertAdjacentElement('afterend', bar);
+  if (chips) bar.insertAdjacentElement('afterend', chips);
+}
+
 function renderVendorPage(vendor) {
   const el = document.getElementById('vendor-page-content');
   if (!el) return;
@@ -1109,6 +1158,8 @@ function renderVendorPage(vendor) {
     </section>
     <div class="product-grid" id="vendor-products-grid" style="max-width:1400px; margin:0 auto;"></div>
   `;
+
+  moveFilterBarBelowVendorHero(el.querySelector('.vendor-hero-section'));
 
   const gridEl = document.getElementById('vendor-products-grid');
   gridEl.style.gridTemplateColumns = gridTemplateFor(S.gridColsVendor);
