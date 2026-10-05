@@ -997,7 +997,12 @@ function selectSortTab(cat) {
 // written by admin-homepage.js), rendered by renderShopByCategory() in
 // site-content.js once that fetch resolves. Nothing to do here anymore.
 
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active).slice(0,8).map(p=>productCardHome(p)).join(""); initSliderLeadingTracking('arrivals-grid'); } buildShopByClothing(); buildNewsletterSection(); }
+// "New Arrivals" means newest first — merchandiseProducts()'s own
+// default order is by category then price, which has nothing to do
+// with when a product was added, so it's overridden here with the
+// 'newest' sort (createdAt, falling back to updatedAt) already built
+// into applySort(). Automatic: nothing to toggle per product.
+function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active, undefined, 'newest').slice(0,8).map(p=>productCardHome(p)).join(""); initSliderLeadingTracking('arrivals-grid'); } buildShopByClothing(); buildNewsletterSection(); }
 
 function buildShopByClothing() {
   const grid = document.getElementById('clothing-grid');
