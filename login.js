@@ -250,6 +250,7 @@ firebase.auth().onAuthStateChanged(user => {
   } else {
     // Signed out (real user)
     if (typeof clearWishlistOnLogout === 'function') clearWishlistOnLogout();
+    if (typeof clearChatIdentityOnLogout === 'function') clearChatIdentityOnLogout();
     if (S.currentPage === 'login') {
       showLoginView();
     }
