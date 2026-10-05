@@ -36,11 +36,36 @@ function navigateToCheckout() {
       if (user.displayName) {
         document.getElementById('checkout-name').value = user.displayName;
       }
+      prefillCheckoutFromProfile(user.uid);
     } else if (checkoutEmail) {
       document.getElementById('checkout-email').value = checkoutEmail;
     }
-    
+
     renderCheckoutSummary();
+  }
+}
+
+// Fills in a returning signed-in customer's saved address — written to
+// their profile the first time they complete an order while logged in
+// (see placeOrder() below) — so they don't retype it on every visit.
+// Guarded per field so it only fills in blanks, never overwrites
+// something already typed this session.
+async function prefillCheckoutFromProfile(uid) {
+  try {
+    const doc = await db.collection('customers').doc(uid).get();
+    if (!doc.exists) return;
+    const c = doc.data();
+    const fillIfEmpty = (id, value) => {
+      const el = document.getElementById(id);
+      if (el && !el.value && value) el.value = value;
+    };
+    fillIfEmpty('checkout-phone', c.phone);
+    fillIfEmpty('checkout-address', c.address);
+    fillIfEmpty('checkout-city', c.city);
+    fillIfEmpty('checkout-postal', c.postalCode);
+    fillIfEmpty('checkout-country', c.country);
+  } catch (e) {
+    console.warn('[CHECKOUT] Could not load saved address:', e.message);
   }
 }
 
@@ -277,6 +302,24 @@ async function placeOrder(e) {
     }).catch(function(err) {
       console.warn('[EMAIL] Order confirmation failed to send:', err.message);
     });
+
+    // Fire-and-forget — save this address to the signed-in customer's
+    // profile so it's there to prefill next visit. Same reasoning as the
+    // confirmation email above: the order is already placed, so a failure
+    // here should never block or undo any of that, just get logged.
+    if (user) {
+      db.collection('customers').doc(user.uid).set({
+        name,
+        phone,
+        address,
+        city,
+        postalCode: postal,
+        country,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(function(err) {
+        console.warn('[CHECKOUT] Could not save address to profile:', err.message);
+      });
+    }
 
     document.getElementById('checkout-form-view').style.display = 'none';
     document.getElementById('checkout-confirmation-view').style.display = 'block';
