@@ -202,6 +202,7 @@
     admins:     'admins',
     discounts:  'discounts',
     pages:      'pages',
+    homepage:   'homepage',
     onlineStore: 'settings'
   };
 
