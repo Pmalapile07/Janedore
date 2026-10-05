@@ -564,7 +564,7 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
     const end = Math.min(start + PRODUCTS_PER_PAGE, total);
     const pageItems = expanded.slice(start, end);
 
-    gridEl.innerHTML = pageItems.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex, true)).join("");
+    gridEl.innerHTML = pageItems.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex)).join("");
     applyEditorialGrid(gridEl, cols);
 
     const existingFooter = gridEl.parentNode && gridEl.parentNode.querySelector('.grid-pagination[data-for="' + key + '"]');
@@ -589,12 +589,7 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
   renderPage(1);
 }
 
-// redPrice: true only on the actual collection/wishlist pages (set
-// explicitly by their own call sites below) — this same function is
-// also reused by the home page's campaign slider, global search
-// results, and product-detail's "You May Also Like"/Suggested grids,
-// none of which should get the red collection-page price treatment.
-function productCard(p, isLarge, showDetails, variantIndex, redPrice) {
+function productCard(p, isLarge, showDetails, variantIndex) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
   const badges = getProductBadges(p);
@@ -611,7 +606,7 @@ function productCard(p, isLarge, showDetails, variantIndex, redPrice) {
   const onSale = hasSalePrice(p);
   const priceInner = onSale
     ? `<div class="product-price-stack"><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span><span class="product-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span></div>`
-    : `<span class="product-price${redPrice ? ' product-price-collection' : ''}">${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
+    : `<span class="product-price">${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
   const swatches = cardVariantSwatchesHtml(p, vi);
   const price = `<div class="product-price-row">${priceInner}${swatches}</div>`;
 
