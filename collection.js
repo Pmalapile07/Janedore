@@ -1026,6 +1026,7 @@ function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; D
 // ==================== VENDOR / BRAND PAGE ====================
 
 async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
+  closeSearch();
   S.saleMode = false;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-vendor").classList.add("active");
