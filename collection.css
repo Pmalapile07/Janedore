@@ -119,8 +119,8 @@ body.on-collection-page .collection-filter-bar {
 
 .col-grid-bar {
   width: 100%;
-  background: #111;
-  border: none;
+  background: #fff;
+  border: 1.5px solid #111;
   box-sizing: border-box;
   transition: height 0.3s ease;
 }
