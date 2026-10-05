@@ -5,6 +5,7 @@
 
 async function navigateToContentPage(slug, replaceUrl) {
   closeFilterPanel();
+  closeSearch();
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page-content").classList.add("active");
   S.currentPage = "content";
