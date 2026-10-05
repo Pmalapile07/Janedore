@@ -219,10 +219,6 @@ window.selectStickySize = selectStickySize;
 window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
-// ==================== HERO IMAGE - LOAD IMMEDIATELY ====================
-// Set hero image before any async operations to prevent grey flash
-setHeroImage();
-
 // ==================== CLOSE FILTER PANEL HELPER ====================
 function closeFilterPanel() {
   const filterPanel = document.getElementById('collection-filter-options');
@@ -241,6 +237,7 @@ async function init() {
   loadWishlistFromStorage();
   updateBadges();
   buildArrivals();
+  if (typeof renderSiteContent === 'function') renderSiteContent();
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
@@ -491,27 +488,10 @@ function initNavScroll() {
   ensureNavScrolled();
 }
 
-function isDesktop() { return window.innerWidth >= 769; }
-// Only actually touches the hero's background-image when the
-// desktop/mobile choice would genuinely change, not on every resize
-// tick. Mobile Safari fires resize events while scrolling (its
-// address bar retracting/expanding changes window height), so without
-// this guard, a long scroll session could re-trigger this dozens of
-// times — same URL each time, but still real style-recalc work, and a
-// plausible contributor to the hero/header occasionally flashing
-// blank on a slower phone.
-// State lives on the function itself (not a module-level let) since
-// this function is also called immediately at script load, before a
-// later-declared let would be initialized.
-function setHeroImage() {
-  const desktop = isDesktop();
-  if (desktop === setHeroImage._lastIsDesktop) return;
-  setHeroImage._lastIsDesktop = desktop;
-  if(DOM.heroBg) DOM.heroBg.style.backgroundImage = desktop ?
-    "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159')" :
-    "url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287')";
-}
-window.addEventListener('resize', setHeroImage);
+// Hero image is now admin-set (siteContent/homepage.hero.imageUrl, see
+// site-content.js) — one image, CSS object-fit/background-size:cover
+// handles desktop/mobile responsively, so there's no more desktop/mobile
+// URL switching to do here.
 
 function openMenu() { closeFilterPanel(); DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
 function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }

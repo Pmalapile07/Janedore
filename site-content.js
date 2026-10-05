@@ -1,0 +1,156 @@
+// ==================== SITE CONTENT (ADMIN-EDITABLE HOMEPAGE) ====================
+// Hero image/heading/button, New Arrivals' heading/button, Shop by
+// Category's heading + tiles, Shop by Clothing's heading/button, the
+// editorial banner, Shop by Brand's heading, and the newsletter copy
+// all used to be hardcoded in index.html/collection.js. They now come
+// from siteContent/homepage + siteContent/collectionPages (written by
+// the admin "Homepage" tab, admin-homepage.js), fetched once here.
+//
+// index.html already ships every one of these elements with literal
+// empty-state text ("Heading"/"Button") baked in, so a blank/unset
+// Firestore doc never looks broken mid-fetch or if admin hasn't
+// touched a field yet — it just obviously reads as unfilled-in.
+
+window._siteContent = { homepage: {}, collectionPages: {} };
+
+function goToSiteLink(link) {
+  if (!link || !link.type) return;
+  const value = (link.value || '').trim();
+  if (link.type === 'category' && value) { navigateToCategory(value); return; }
+  if (link.type === 'vendor' && value) { navigateToVendor(value); return; }
+  if (link.type === 'sale') { navigateToSale(); return; }
+  if (link.type === 'url' && value) { window.location.href = value; return; }
+  navigateTo('products');
+}
+
+// Swaps a CSS background-image box from its shimmer placeholder to the
+// real image only once that image has actually finished downloading —
+// same fade-avoidance-of-a-half-loaded-image idea as the product grid's
+// img-loaded class, just for background-image elements instead of <img>.
+function loadBackgroundImage(el, url) {
+  if (!el) return;
+  if (!url) { el.classList.remove('content-shimmer'); return; }
+  const probe = new Image();
+  probe.onload = function () {
+    el.style.backgroundImage = "url('" + url.replace(/['"\\]/g, '') + "')";
+    el.classList.remove('content-shimmer');
+  };
+  probe.onerror = function () { el.classList.remove('content-shimmer'); };
+  probe.src = url;
+}
+
+function renderHero(hero) {
+  hero = hero || {};
+  const headingEl = document.getElementById('hero-heading');
+  const btnEl = document.getElementById('hero-shop-btn');
+  if (headingEl) headingEl.textContent = hero.heading || 'Heading';
+  if (btnEl) {
+    btnEl.textContent = hero.buttonText || 'Button';
+    btnEl.onclick = function () { goToSiteLink(hero.buttonLink); };
+  }
+  loadBackgroundImage(document.getElementById('hero-bg'), hero.imageUrl);
+}
+
+function renderNewArrivalsHeader(arrivals) {
+  arrivals = arrivals || {};
+  const headingEl = document.getElementById('arrivals-heading');
+  const btnEl = document.getElementById('arrivals-view-all-btn');
+  if (headingEl) headingEl.textContent = arrivals.heading || 'Collection Heading';
+  if (btnEl) {
+    btnEl.textContent = arrivals.buttonText || 'Button';
+    btnEl.onclick = function () { goToSiteLink(arrivals.buttonLink); };
+  }
+}
+
+function renderShopByCategory(shopByCategory) {
+  shopByCategory = shopByCategory || {};
+  const headingEl = document.getElementById('shop-by-category-heading');
+  if (headingEl) headingEl.textContent = shopByCategory.heading || 'Heading';
+
+  const grid = document.getElementById('home-categories-grid');
+  if (!grid) return;
+  const tiles = Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : [];
+  if (!tiles.length) { grid.innerHTML = ''; return; }
+
+  grid.innerHTML = tiles.map(function (_, i) {
+    return '<div class="home-category-card" data-tile-index="' + i + '">' +
+      '<div class="home-category-img content-shimmer"><div class="home-category-label"></div></div>' +
+    '</div>';
+  }).join('');
+
+  grid.querySelectorAll('[data-tile-index]').forEach(function (cardEl, i) {
+    const tile = tiles[i];
+    cardEl.querySelector('.home-category-label').textContent = tile.label || 'Category';
+    cardEl.onclick = function () { goToSiteLink(tile.link); };
+    loadBackgroundImage(cardEl.querySelector('.home-category-img'), tile.imageUrl);
+  });
+}
+
+function renderShopByClothingHeader(clothing) {
+  clothing = clothing || {};
+  const headingEl = document.getElementById('clothing-heading');
+  const btnEl = document.getElementById('clothing-view-all-btn');
+  if (headingEl) headingEl.textContent = clothing.heading || 'Heading';
+  if (btnEl) {
+    btnEl.textContent = clothing.buttonText || 'Button';
+    btnEl.onclick = function () { goToSiteLink(clothing.buttonLink); };
+  }
+}
+
+function renderEditorialBanner(banner) {
+  banner = banner || {};
+  const headingEl = document.getElementById('banner-heading');
+  const btnEl = document.getElementById('banner-btn');
+  const imgEl = document.getElementById('editorial-banner-img');
+  if (headingEl) headingEl.textContent = banner.heading || 'Heading';
+  if (btnEl) {
+    btnEl.textContent = banner.buttonText || 'Button';
+    btnEl.onclick = function (e) { e.stopPropagation(); goToSiteLink(banner.buttonLink); };
+  }
+  if (imgEl) imgEl.onclick = function () { goToSiteLink(banner.buttonLink); };
+  loadBackgroundImage(imgEl, banner.imageUrl);
+}
+
+function renderShopByBrandHeader(shopByBrand) {
+  shopByBrand = shopByBrand || {};
+  const headingEl = document.getElementById('shop-by-brand-heading');
+  if (headingEl) headingEl.textContent = shopByBrand.heading || 'Heading';
+}
+
+function renderNewsletter(newsletter) {
+  newsletter = newsletter || {};
+  const headingEl = document.getElementById('newsletter-heading');
+  const subtextEl = document.getElementById('newsletter-subtext');
+  const disclaimerEl = document.getElementById('newsletter-disclaimer');
+  if (headingEl) headingEl.textContent = newsletter.heading || 'Heading';
+  if (subtextEl) subtextEl.textContent = newsletter.subtext || '';
+  if (disclaimerEl) disclaimerEl.textContent = newsletter.disclaimer || '';
+}
+
+async function renderSiteContent() {
+  try {
+    const [homepageSnap, collectionPagesSnap] = await Promise.all([
+      db.collection('siteContent').doc('homepage').get(),
+      db.collection('siteContent').doc('collectionPages').get()
+    ]);
+    const homepage = homepageSnap.exists ? (homepageSnap.data() || {}) : {};
+    const collectionPages = collectionPagesSnap.exists ? (collectionPagesSnap.data() || {}) : {};
+    window._siteContent = { homepage, collectionPages };
+
+    renderHero(homepage.hero);
+    renderNewArrivalsHeader(homepage.newArrivals);
+    renderShopByCategory(homepage.shopByCategory);
+    renderShopByClothingHeader(homepage.shopByClothing);
+    renderEditorialBanner(homepage.editorialBanner);
+    renderShopByBrandHeader(homepage.shopByBrand);
+    renderNewsletter(homepage.newsletter);
+
+    // The category/products page title+description may already be on
+    // screen (a direct link straight into a collection page) using the
+    // hardcoded fallback — refresh it now that the admin override, if
+    // any, is in.
+    if (typeof updateCollectionTitle === 'function') updateCollectionTitle();
+  } catch (e) {
+    console.warn('[SITE CONTENT] Could not load homepage content:', e.message);
+  }
+}

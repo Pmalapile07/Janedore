@@ -113,6 +113,19 @@
   opacity: 1;
 }
 
+/* Generic shimmer-while-loading treatment for any CSS background-image
+   box outside the product grid — the hero and the editorial banner, set
+   via site-content.js once their admin-uploaded image URL loads. Same
+   animation as .product-img-wrap::before above. !important beats the
+   inline background-size/position those elements already carry for
+   their final (loaded) state. */
+.content-shimmer {
+  background-color: #f0ede8 !important;
+  background-image: linear-gradient(90deg, #f0ede8 25%, #e6e1d6 37%, #f0ede8 50%) !important;
+  background-size: 400% 100% !important;
+  animation: product-img-shimmer 1.6s ease-in-out infinite;
+}
+
 .product-badge-stack {
   position: absolute;
   top: 8px;

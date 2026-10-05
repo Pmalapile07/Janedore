@@ -9,14 +9,11 @@
   <link rel="shortcut icon" type="image/png" href="Janedore.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
-  <link rel="preload" as="image" 
-        href="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/IMG-6700.png?v=1778930159" 
-        media="(min-width: 769px)">
-  <link rel="preload" as="image" 
-        href="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287" 
-        media="(max-width: 768px)">
-  
+
+  <!-- Hero image is admin-set (siteContent/homepage.hero.imageUrl) and
+       fetched at runtime by site-content.js, so it can't be preloaded
+       here the way the old hardcoded desktop/mobile URLs were. -->
+
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -228,50 +225,50 @@
 
 <div class="page active" id="page-home">
   <section id="hero">
-  <div class="hero-bg-placeholder" id="hero-bg"></div>
+  <div class="hero-bg-placeholder content-shimmer" id="hero-bg"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content-wrap">
-    <h2 class="hero-heading">The Independent Collective.</h2>
-    <button class="hero-shop-btn" onclick="navigateTo('products')">SHOP NOW</button>
+    <h2 class="hero-heading" id="hero-heading">Heading</h2>
+    <button class="hero-shop-btn" id="hero-shop-btn">Button</button>
   </div>
 </section>
 
   <section id="home-all-products">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:24px 18px 24px 18px;">
-      <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">NEW ARRIVALS</div>
-      <button onclick="navigateTo('products')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
+      <div class="home-categories-title" id="arrivals-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Collection Heading</div>
+      <button id="arrivals-view-all-btn" class="initial-drop-view-all" style="display:inline-block;margin:0;">Button</button>
     </div>
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
   <section id="home-categories">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:flex-start;text-align:left;padding:0 18px 24px 18px;">
-      <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CATEGORY</div>
+      <div class="home-categories-title" id="shop-by-category-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
     </div>
     <div class="home-categories-grid" id="home-categories-grid"></div>
   </section>
 
   <section id="home-shop-clothing" style="padding:24px 0;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding:0 18px 24px 18px;">
-      <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY CLOTHING</div>
-      <button onclick="navigateToCategory('all-clothing')" class="initial-drop-view-all" style="display:inline-block;margin:0;">VIEW ALL</button>
+      <div class="home-categories-title" id="clothing-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
+      <button id="clothing-view-all-btn" class="initial-drop-view-all" style="display:inline-block;margin:0;">Button</button>
     </div>
     <div class="product-grid" id="clothing-grid"></div>
   </section>
 
-  <section id="home-editorial-banner" onclick="navigateToCategory('all-clothing')">
-    <div class="home-editorial-img" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/9162BAA4-A86C-48DF-8F07-0E410D3CC2E0.png?v=1778858287');">
+  <section id="home-editorial-banner">
+    <div class="home-editorial-img content-shimmer" id="editorial-banner-img">
       <div class="editorial-banner-overlay"></div>
       <div class="editorial-banner-content">
-        <div class="editorial-banner-heading">More Than One Brand</div>
-        <button class="editorial-banner-btn" onclick="event.stopPropagation();navigateToCategory('all-clothing')">Learn More</button>
+        <div class="editorial-banner-heading" id="banner-heading">Heading</div>
+        <button class="editorial-banner-btn" id="banner-btn">Button</button>
       </div>
     </div>
   </section>
 
   <section id="home-shop-brand" style="padding:24px 0;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:flex-start;text-align:left;padding:0 18px 24px 18px;">
-      <div class="home-categories-title" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">SHOP BY BRAND</div>
+      <div class="home-categories-title" id="shop-by-brand-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
     </div>
     <div class="product-grid" id="brand-grid"></div>
   </section>
@@ -462,6 +459,7 @@
 
 <script src="chat.js"></script>
 <script src="app.js"></script>
+<script src="site-content.js"></script>
 
 <div id="chat-container"></div>
 <script>
