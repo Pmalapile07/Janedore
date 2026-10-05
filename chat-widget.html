@@ -241,6 +241,15 @@
     padding: 0 !important;
     line-height: 1 !important;
     transition: color 0.2s !important;
+    /* Pinned to the right unconditionally, rather than relying on
+       justify-content:space-between to put it there. That only works
+       while chat-header-track-btn (its sibling) is visible — the
+       moment chat.js hides that button (display:none, while on the
+       order-lookup screen or while the greeting's own inline Track
+       Order button is on screen), this becomes the header's only
+       flex child, and a lone flex item under space-between collapses
+       to the start (left) edge instead of staying right. */
+    margin-left: auto !important;
   }
   #chat-window .chat-header-close:hover { color: #fff !important; }
 
