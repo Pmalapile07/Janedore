@@ -149,7 +149,10 @@ async function placeOrder(e) {
     customerName: name,
     customerPhone: phone,
     customerId: user ? user.uid : null,
-    shippingAddress: { address, city, postal, country },
+    shippingAddress: address,
+    city,
+    postalCode: postal,
+    country,
     items: S.cart.map(item => ({
       productId: item.productId,
       name: item.name,
