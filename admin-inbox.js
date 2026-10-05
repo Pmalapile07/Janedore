@@ -1006,6 +1006,10 @@
               + '<div id="cinfo-orders"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
             + '</div>'
             + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
+              + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Reviews</div>'
+              + '<div id="cinfo-reviews"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
+            + '</div>'
+            + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
               + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Customer satisfaction</div>'
               + '<div id="cinfo-satisfaction"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
             + '</div>'
@@ -1091,10 +1095,15 @@
     },
 
     renderCustomerInfo: function (sessionData, sessionId) {
-      var nameEl   = safeEl('cinfo-name');
-      var emailEl  = safeEl('cinfo-email');
-      var cartEl   = safeEl('cinfo-cart');
-      var ordersEl = safeEl('cinfo-orders');
+      var nameEl    = safeEl('cinfo-name');
+      var emailEl   = safeEl('cinfo-email');
+      var cartEl    = safeEl('cinfo-cart');
+      var ordersEl  = safeEl('cinfo-orders');
+      var reviewsEl = safeEl('cinfo-reviews');
+      // Only a real logged-in account carries customerEmail (chat.js
+      // only fills it in for a non-anonymous user) — guests have nothing
+      // here to match an account's order/review history against.
+      var custEmail = (sessionData.customerEmail || '').trim().toLowerCase();
 
       if (nameEl)  nameEl.textContent  = sessionData.customerName  || 'Guest';
       if (emailEl) emailEl.textContent = sessionData.customerEmail || '—';
@@ -1121,40 +1130,76 @@
         }
       }
 
-      if (ordersEl && sessionId) {
-        window._ordersRef.where('chatSessionId', '==', sessionId)
-          .orderBy('createdAt', 'desc').limit(5).get()
-          .then(function(snap) {
-            var el = safeEl('cinfo-orders');
-            if (!el) return;
-            if (snap.empty) {
-              el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No orders linked to this session</span>';
-              return;
-            }
-            var html = snap.docs.map(function(d) {
-              var o       = d.data();
-              var status  = o.status || 'pending';
-              var raw     = o.createdAt;
-              var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
-              var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-              var total   = 'R' + Number(o.subtotal || o.total || 0).toLocaleString('en-ZA');
-              return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
-                + '<div style="display:flex;justify-content:space-between;font-size:10.5px;">'
-                + '<span style="font-weight:500;">' + esc(o.orderNumber || d.id.substring(0, 10)) + '</span>'
-                + '<span>' + total + '</span></div>'
-                + '<div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin-top:1px;">'
-                + '<span>' + dateStr + '</span>'
-                + '<span class="badge badge-' + esc(status) + '" style="font-size:8px;">' + esc(status) + '</span>'
-                + '</div></div>';
-            }).join('');
-            el.innerHTML = html;
-          })
-          .catch(function() {
-            var el = safeEl('cinfo-orders');
-            if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load orders</span>';
-          });
-      } else if (ordersEl) {
-        ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No session ID</span>';
+      if (ordersEl) {
+        if (custEmail) {
+          window._ordersRef.where('customerEmail', '==', custEmail)
+            .orderBy('createdAt', 'desc').limit(5).get()
+            .then(function(snap) {
+              var el = safeEl('cinfo-orders');
+              if (!el) return;
+              if (snap.empty) {
+                el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No orders from this customer</span>';
+                return;
+              }
+              var html = snap.docs.map(function(d) {
+                var o       = d.data();
+                var status  = o.status || 'pending';
+                var raw     = o.createdAt;
+                var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
+                var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+                var total   = 'R' + Number(o.subtotal || o.total || 0).toLocaleString('en-ZA');
+                return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
+                  + '<div style="display:flex;justify-content:space-between;font-size:10.5px;">'
+                  + '<span style="font-weight:500;">' + esc(o.orderNumber || d.id.substring(0, 10)) + '</span>'
+                  + '<span>' + total + '</span></div>'
+                  + '<div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin-top:1px;">'
+                  + '<span>' + dateStr + '</span>'
+                  + '<span class="badge badge-' + esc(status) + '" style="font-size:8px;">' + esc(status) + '</span>'
+                  + '</div></div>';
+              }).join('');
+              el.innerHTML = html;
+            })
+            .catch(function() {
+              var el = safeEl('cinfo-orders');
+              if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load orders</span>';
+            });
+        } else {
+          ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Guest — not signed in</span>';
+        }
+      }
+
+      if (reviewsEl) {
+        if (custEmail) {
+          window._reviewsRef.where('email', '==', custEmail)
+            .orderBy('createdAt', 'desc').limit(5).get()
+            .then(function(snap) {
+              var el = safeEl('cinfo-reviews');
+              if (!el) return;
+              if (snap.empty) {
+                el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">No reviews from this customer</span>';
+                return;
+              }
+              var html = snap.docs.map(function(d) {
+                var r       = d.data();
+                var raw     = r.createdAt;
+                var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
+                var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+                var stars   = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
+                return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
+                  + '<div style="font-size:10.5px;">' + stars + '</div>'
+                  + '<div style="font-size:10px;color:var(--text);margin-top:1px;">' + esc(r.text || 'No comment') + '</div>'
+                  + '<div style="font-size:9.5px;color:var(--muted);margin-top:1px;">' + dateStr + '</div>'
+                  + '</div>';
+              }).join('');
+              el.innerHTML = html;
+            })
+            .catch(function() {
+              var el = safeEl('cinfo-reviews');
+              if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load reviews</span>';
+            });
+        } else {
+          reviewsEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Guest — not signed in</span>';
+        }
       }
 
       // Satisfaction result.

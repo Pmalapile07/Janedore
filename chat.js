@@ -155,6 +155,28 @@ localStorage.setItem('janedore_chat_session', chatSessionId);
 
 let customerEmail = sanitizeEmail(localStorage.getItem('janedore_chat_email') || '');
 let customerName  = sanitizeName(localStorage.getItem('janedore_chat_name') || '');
+
+// If the shopper is signed into a real account, that's their identity —
+// not the localStorage keys above, which nothing in this app ever sets.
+// Mirrors how checkout/wishlist already treat a real login as the source
+// of truth. Safe to call anytime: a no-op for guests/anonymous sessions.
+function syncCustomerIdentityFromAccount() {
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous) return;
+  if (user.displayName) customerName = sanitizeName(user.displayName);
+  if (user.email) customerEmail = sanitizeEmail(user.email);
+}
+
+// Mirrors clearWishlistOnLogout() (wishlist.js) — called from login.js's
+// auth listener on real sign-out, so a shared device doesn't carry one
+// customer's name/email into the next guest's (or next customer's) chat.
+function clearChatIdentityOnLogout() {
+  if (!customerName && !customerEmail) return;
+  customerName = '';
+  customerEmail = '';
+  updateCustomerInfoBar();
+}
+
 let chatOpen = false;
 let typingTimeout = null;
 let loadedMessageKeys = new Set();
@@ -442,6 +464,7 @@ function toggleChat() {
       listenStatus();
     }
 
+    syncCustomerIdentityFromAccount();
     updateCustomerInfoBar();
     ensureAuth();
     const input = safeEl('chat-input');
@@ -1120,6 +1143,7 @@ async function sendChatMessage() {
   try {
     await ensureAuth();
     const user = firebase.auth().currentUser;
+    syncCustomerIdentityFromAccount();
 
     const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
     const ts = firebase.database.ServerValue.TIMESTAMP;
