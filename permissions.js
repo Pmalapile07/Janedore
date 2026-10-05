@@ -246,6 +246,8 @@
       'admins-more-item',  // more menu admins item
       'pages-tab-btn',     // sidebar pages tab
       'pages-more-item',   // more menu pages item
+      'homepage-tab-btn',  // sidebar homepage tab
+      'homepage-more-item',// more menu homepage item
       'btn-seed',          // sidebar seed button
       'btn-seed-more'      // more menu seed button
     ];
