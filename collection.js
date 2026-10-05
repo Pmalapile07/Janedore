@@ -1156,7 +1156,9 @@ function renderVendorPage(vendor) {
         </div>
       </div>
     </section>
-    <div class="product-grid" id="vendor-products-grid" style="max-width:1400px; margin:0 auto;"></div>
+    <section class="site-collection-layout">
+      <div class="product-grid" id="vendor-products-grid"></div>
+    </section>
   `;
 
   moveFilterBarBelowVendorHero(el.querySelector('.vendor-hero-section'));
