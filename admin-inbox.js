@@ -758,8 +758,8 @@
       updates[INBOX_ROOT + '/' + sessionId + '/pinned']       = pinned;
       return rtdb.ref('/').update(updates).then(function () { return pinned; });
     },
-    lookupOrders: function (sessionId) {
-      return ordersRef.where('chatSessionId', '==', sessionId).limit(10).get();
+    lookupOrders: function (customerEmail) {
+      return ordersRef.where('customerEmail', '==', customerEmail).limit(10).get();
     },
 
     // Invite admin to session.
@@ -1641,7 +1641,17 @@
     saveNote:        function (sessionId) { var el = safeEl('chat-note'); if (el) ChatDB.saveNote(sessionId, el.value).then(function () { showToast('Note saved'); }).catch(function (e) { showToast('Error: ' + e.message, 'error'); }); },
     handleNoteFocus: function (sessionId) { ChatDB.lockNote(sessionId).then(function (result) { if (result.locked) { ChatRenderer.setNoteLock(true); showToast('Note is being edited by another admin', 'info'); } }).catch(function () {}); },
     handleNoteBlur:  function (sessionId) { ChatDB.unlockNote(sessionId); ChatRenderer.setNoteLock(false); },
-    lookupOrders:    function (sessionId) { ChatDB.lookupOrders(sessionId).then(function (snap) { showToast(snap.empty ? 'No orders linked' : 'Found ' + snap.size + ' order(s)', 'info'); }).catch(function () {}); },
+    lookupOrders:    function (sessionId) {
+      // Orders aren't tagged with the chat session they came from, so
+      // this matches on the customer's account email instead — the same
+      // field the Customer card's Order history/Reviews blocks use.
+      // That email only exists once a real (non-anonymous) account is
+      // behind the chat; guests have nothing to match against.
+      var emailEl = safeEl('cinfo-email');
+      var email   = emailEl ? emailEl.textContent.trim() : '';
+      if (!email || email === '—') { showToast('No account email for this chat', 'info'); return; }
+      ChatDB.lookupOrders(email.toLowerCase()).then(function (snap) { showToast(snap.empty ? 'No orders found' : 'Found ' + snap.size + ' order(s)', 'info'); }).catch(function () {});
+    },
     setFilterTab:    function (tab) { ChatState.setFilterTab(tab); ChatRenderer.setTabActive(tab); ChatRenderer.renderSessionsList(ChatState.getSessions()); },
     setSearchQuery:  U.debounce(function (q) { ChatState.setSearchQuery(q); ChatRenderer.renderSessionsList(ChatState.getSessions()); }, Cfg.SEARCH_DEBOUNCE_MS),
 
