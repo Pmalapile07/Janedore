@@ -36,6 +36,15 @@ const DOM = {
 };
 
 let PRODUCTS = [];
+// Resolves once PRODUCTS is actually populated — the wishlist account
+// sync (wishlist.js, triggered by login.js's auth listener) needs this:
+// Firebase Auth can restore a signed-in session before fetchProducts()
+// resolves, and rehydrating/merging a wishlist's product ids against an
+// empty PRODUCTS array would silently produce an empty list — which,
+// written straight back to the account, would wipe a real saved
+// wishlist instead of merging into it.
+let _resolveProductsReady;
+window.productsReady = new Promise(r => { _resolveProductsReady = r; });
 const CURRENCIES = { ZAR:{label:"ZAR R",symbol:"R"}, BWP:{label:"BWP P",symbol:"P"}, USD:{label:"USD $",symbol:"$"}, LSL:{label:"LSL M",symbol:"M"}, NAD:{label:"NAD N$",symbol:"N$"} };
 const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500'%3E%3Crect fill='%23f0ede8' width='400' height='500'/%3E%3C/svg%3E";
 
@@ -226,6 +235,7 @@ async function init() {
   loadCartFromStorage();
   updateBadges();
   PRODUCTS = await fetchProducts();
+  _resolveProductsReady();
   cleanCartOrphans();
   loadRecentlyViewedFromStorage();
   loadWishlistFromStorage();

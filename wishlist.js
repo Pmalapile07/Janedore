@@ -39,6 +39,76 @@ function toggleWish(productId, btnEl) {
   updateBadges();
   renderWishlistPage();
   saveWishlistToStorage();
+  syncWishlistToAccount();
+}
+
+// ==================== ACCOUNT SYNC ====================
+// Guests keep working exactly as before (localStorage only). Signed-in
+// customers additionally get customers/{uid}.wishlist (an array of
+// product ids) kept in step with it, so the wishlist follows them to
+// any device they log into. Driven entirely by login.js's single auth
+// listener (syncWishlistOnLogin/clearWishlistOnLogout below) rather
+// than a second listener here, so the two never race each other on the
+// same sign-in/out transition.
+
+let _wishlistSyncedUid = null; // guards against re-merging on every
+                                // auth-state tick for an already-synced user
+
+// Fire-and-forget — pushes the current wishlist to the signed-in
+// customer's profile. No-op for guests and chat's anonymous sessions.
+function syncWishlistToAccount() {
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous) return;
+  db.collection('customers').doc(user.uid).set({
+    wishlist: S.wishlist.map(p => p.id),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).catch(function(err) {
+    console.warn('[WISHLIST] Could not save to account:', err.message);
+  });
+}
+
+// Called once per sign-in (see login.js) with whatever's in the
+// customer's saved wishlist, merged with whatever's already in this
+// browser's local wishlist as a guest — nothing gets lost either way.
+async function syncWishlistOnLogin(uid) {
+  if (_wishlistSyncedUid === uid) return;
+  await window.productsReady;
+  try {
+    const doc = await db.collection('customers').doc(uid).get();
+    const remoteIds = (doc.exists && Array.isArray(doc.data().wishlist)) ? doc.data().wishlist : [];
+    const localIds = S.wishlist.map(p => p.id);
+    const mergedIds = Array.from(new Set(remoteIds.concat(localIds)));
+
+    S.wishlist = mergedIds.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+    saveWishlistToStorage();
+    _wishlistSyncedUid = uid;
+
+    // Only write back if the merge actually changed something — avoids
+    // a pointless write on every login when nothing local was added.
+    if (mergedIds.length !== remoteIds.length) {
+      await db.collection('customers').doc(uid).set({
+        wishlist: mergedIds,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    updateBadges();
+    if (S.currentPage === 'wishlist') renderWishlistPage();
+  } catch (e) {
+    console.warn('[WISHLIST] Could not sync with account:', e.message);
+  }
+}
+
+// The account's wishlist stays safely saved in Firestore — this just
+// clears the local mirror so it doesn't linger as a "guest" wishlist
+// for whoever uses this browser next.
+function clearWishlistOnLogout() {
+  if (!_wishlistSyncedUid) return; // was never a signed-in wishlist to begin with
+  _wishlistSyncedUid = null;
+  S.wishlist = [];
+  saveWishlistToStorage();
+  updateBadges();
+  if (S.currentPage === 'wishlist') renderWishlistPage();
 }
 
 // Cycles 1/2/3 columns, same pattern as toggleGrid()/toggleGridCat() on

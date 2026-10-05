@@ -238,6 +238,7 @@ firebase.auth().onAuthStateChanged(user => {
 
   if (user) {
     // Real signed-in user
+    if (typeof syncWishlistOnLogin === 'function') syncWishlistOnLogin(user.uid);
     if (S.currentPage === 'login') {
       showAccountView();
       updateHash('account');
@@ -248,6 +249,7 @@ firebase.auth().onAuthStateChanged(user => {
     }
   } else {
     // Signed out (real user)
+    if (typeof clearWishlistOnLogout === 'function') clearWishlistOnLogout();
     if (S.currentPage === 'login') {
       showLoginView();
     }
