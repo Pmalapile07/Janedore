@@ -196,14 +196,15 @@
   margin-top: 10px;
   margin-bottom: 4px;
 }
-/* Matches .search-bar-trigger span ("Search products or brands") exactly
-   — same font-family/size/weight/color, at the user's request. */
+/* Font/size/weight match .search-bar-trigger span ("Search products or
+   brands"), but black rather than that span's grey — product names
+   need to read as real content, not muted placeholder-style text. */
 .product-title {
   text-transform: none;
   font-weight: 400;
   font-size: 13px;
   letter-spacing: normal;
-  color: #888;
+  color: #111;
   font-family: 'Inter', sans-serif;
 }
 .product-wish-btn {
