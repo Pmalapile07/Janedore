@@ -34,6 +34,15 @@ function goToSiteLink(link) {
   navigateTo('products');
 }
 
+// Same w_/q_auto/f_auto Cloudinary transform idea as collection.js's
+// gridThumbURL(), just with c_limit instead of c_fill — these boxes
+// (hero, category tiles, editorial banner) don't share one fixed aspect
+// ratio the way product cards do, so capping width without forcing a
+// crop avoids distorting whatever crop the admin actually uploaded.
+function contentImageURL(url, maxWidth) {
+  return safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_limit,w_' + maxWidth + '/');
+}
+
 // Swaps a CSS background-image box from its shimmer placeholder to the
 // real image only once that image has actually finished downloading —
 // same fade-avoidance-of-a-half-loaded-image idea as the product grid's
@@ -41,7 +50,7 @@ function goToSiteLink(link) {
 // No url at all (admin hasn't set one yet) settles on a plain, static
 // neutral box (.content-empty) rather than leaving the animated shimmer
 // running forever, which would look like a stuck loading state.
-function loadBackgroundImage(el, url) {
+function loadBackgroundImage(el, url, maxWidth) {
   if (!el) return;
   if (!url) {
     el.classList.remove('content-shimmer');
@@ -49,18 +58,19 @@ function loadBackgroundImage(el, url) {
     el.style.backgroundImage = '';
     return;
   }
+  const sized = maxWidth ? contentImageURL(url, maxWidth) : url;
   el.classList.remove('content-empty');
   el.classList.add('content-shimmer');
   const probe = new Image();
   probe.onload = function () {
-    el.style.backgroundImage = "url('" + url.replace(/['"\\]/g, '') + "')";
+    el.style.backgroundImage = "url('" + sized.replace(/['"\\]/g, '') + "')";
     el.classList.remove('content-shimmer');
   };
   probe.onerror = function () {
     el.classList.remove('content-shimmer');
     el.classList.add('content-empty');
   };
-  probe.src = url;
+  probe.src = sized;
 }
 
 function renderHero(hero) {
@@ -73,7 +83,7 @@ function renderHero(hero) {
     btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(hero.buttonLink); };
   }
-  loadBackgroundImage(document.getElementById('hero-bg'), hero.imageUrl);
+  loadBackgroundImage(document.getElementById('hero-bg'), hero.imageUrl, 1600);
 }
 
 function renderNewArrivalsHeader(arrivals) {
@@ -112,7 +122,7 @@ function renderShopByCategory(shopByCategory) {
     const tile = tiles[i];
     cardEl.querySelector('.home-category-label').textContent = tile.label || 'Category';
     cardEl.onclick = isPlaceholder ? null : function () { goToSiteLink(tile.link); };
-    loadBackgroundImage(cardEl.querySelector('.home-category-img'), tile.imageUrl);
+    loadBackgroundImage(cardEl.querySelector('.home-category-img'), tile.imageUrl, 600);
   });
 }
 
@@ -140,7 +150,7 @@ function renderEditorialBanner(banner) {
     btnEl.onclick = function (e) { e.stopPropagation(); goToSiteLink(banner.buttonLink); };
   }
   if (imgEl) imgEl.onclick = function () { goToSiteLink(banner.buttonLink); };
-  loadBackgroundImage(imgEl, banner.imageUrl);
+  loadBackgroundImage(imgEl, banner.imageUrl, 1600);
 }
 
 function renderShopByBrandHeader(shopByBrand) {

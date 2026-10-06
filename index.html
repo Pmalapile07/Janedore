@@ -21,8 +21,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
 
-  <style id="auth-guard-style">body { visibility: hidden; }</style>
-
   <style>
   @font-face {
     font-family: 'Telegraf';
@@ -325,20 +323,28 @@
     return document.cookie.indexOf('jd_visitor=1') !== -1;
   }
 
+  // The public storefront paints immediately — it is never hidden while
+  // this resolves. This gate only decides whether to redirect AWAY from
+  // the storefront (the Coming Soon password lock, below); it never
+  // decides whether to show it, so there's no visibility toggle left
+  // here to flip. revealSite() just marks the check as settled so a
+  // slower branch (e.g. the Firestore admin-role read in runAuthGate())
+  // can't redirect after a faster branch already cleared the visitor.
   function revealSite() {
-    if (_authResolved) return;
     _authResolved = true;
-    document.getElementById('auth-guard-style').remove();
   }
 
   if (hasAdminCookie() || hasVisitorCookie()) {
     revealSite();
   } else {
     // Online Store "Coming Soon" toggle (admin-online-store.js /
-    // server.js) — when it's off, the site is live to everyone and the
-    // whole admin/visitor gate below is skipped entirely. A failed
-    // status check fails closed (falls through to the gate) rather than
-    // risking exposing a site that's meant to stay hidden.
+    // server.js) — when it's off (the normal, launched state), this
+    // resolves to revealSite() and nothing further happens. When it's
+    // on, a visitor with neither cookie gets redirected to the password
+    // page below as soon as this and the Firebase Auth check resolve —
+    // same redirect as before, just no longer blocking paint while it
+    // runs. A failed status check falls through to the same gate
+    // (runAuthGate) rather than assuming the site should stay open.
     fetch('/api/online-store-status').then(function(r) { return r.json(); }).then(function(data) {
       if (data && data.comingSoonEnabled === false) {
         revealSite();

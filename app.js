@@ -220,6 +220,12 @@ function closeFilterPanel() {
 async function init() {
   loadCartFromStorage();
   updateBadges();
+  // Fired before awaiting fetchProducts() below (not after) so the
+  // siteContent/homepage read — and therefore hero image discovery —
+  // starts in parallel with the products fetch instead of serially
+  // behind it. The two read unrelated Firestore documents; nothing
+  // here depends on PRODUCTS being ready first.
+  if (typeof renderSiteContent === 'function') renderSiteContent();
   PRODUCTS = await fetchProducts();
   _resolveProductsReady();
   cleanCartOrphans();
@@ -227,7 +233,6 @@ async function init() {
   loadWishlistFromStorage();
   updateBadges();
   buildArrivals();
-  if (typeof renderSiteContent === 'function') renderSiteContent();
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
