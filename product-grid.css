@@ -384,31 +384,27 @@
 
 /* --- GRID layout: the collection page (#all-products-grid,
    #category-products-grid, #vendor-products-grid) and Recently Viewed /
-   You May Also Like / Complete the Look (.static-product-grid) — all
-   static grids now, no sliding. Left column only (odd position) gets
-   an 8px inset, matching the badge's own corner inset — right column,
-   and the wishlist icon on every card, stay flush with their own
-   card's edges. .static-product-grid is always 2 columns (no toggle),
-   so it applies unconditionally; the three toggleable grids only get it
-   while actually in 2-column view (.grid-cols-2, set by
-   applyGridColsClass() in collection.js) — in 1 or 3 columns there's no
-   left/right pairing to offset, so odd cards would get a stray nudge
-   for no reason (every other card down the page, regardless of what's
-   visually in the same row). */
-#all-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-brand,
-#category-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-brand,
-#vendor-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-brand,
-.static-product-grid .product-card:nth-child(odd) .product-brand,
-#all-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-card-name-row,
-#category-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-card-name-row,
-#vendor-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-card-name-row,
-.static-product-grid .product-card:nth-child(odd) .product-card-name-row {
+   You May Also Like / Complete the Look (.static-product-grid). Every
+   card's info gets the same 8px left inset, matching the badge's own
+   corner inset — always on, regardless of column count (1/2/3) or
+   position in the grid. This used to be conditional (left-column-only
+   in 2-column view, nothing at all in 1 or 3 columns), which read as
+   padding randomly disappearing depending on the grid toggle — it's
+   unconditional now so it's never missing. */
+#all-products-grid .product-card .product-brand,
+#category-products-grid .product-card .product-brand,
+#vendor-products-grid .product-card .product-brand,
+.static-product-grid .product-card .product-brand,
+#all-products-grid .product-card .product-card-name-row,
+#category-products-grid .product-card .product-card-name-row,
+#vendor-products-grid .product-card .product-card-name-row,
+.static-product-grid .product-card .product-card-name-row {
   padding-left: 8px;
 }
-#all-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-price-row,
-#category-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-price-row,
-#vendor-products-grid.grid-cols-2 .product-card:nth-child(odd) .product-price-row,
-.static-product-grid .product-card:nth-child(odd) .product-price-row {
+#all-products-grid .product-card .product-price-row,
+#category-products-grid .product-card .product-price-row,
+#vendor-products-grid .product-card .product-price-row,
+.static-product-grid .product-card .product-price-row {
   padding-left: 8px;
 }
 
