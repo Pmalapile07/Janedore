@@ -49,11 +49,3 @@
   opacity: 0.75;
   filter: grayscale(35%);
 }
-.product-card.sold-out .product-brand,
-.product-card.sold-out .product-brand-tag,
-.product-card.sold-out .product-title,
-.product-card.sold-out .product-name,
-.product-card.sold-out .product-price,
-.product-card.sold-out .product-price-row .product-price {
-  opacity: 0.5;
-}
