@@ -586,6 +586,36 @@ function expandProductVariants(products) {
 const PRODUCTS_PER_PAGE = 6;
 const _gridCurrentPage = {};
 
+// Flat #f4f4f4 box, no shimmer (nothing is ever going to load into it),
+// literal "Brand"/"Product Name"/"00" text, not clickable — shown
+// instead of a real card wherever a grid has no products at all, so an
+// empty catalog never looks broken or blank. Same count (6) as a full
+// page of PRODUCTS_PER_PAGE above.
+function placeholderProductCard() {
+  return `
+    <div class="product-card product-card-placeholder">
+      <div class="product-img-wrap"></div>
+      <div class="product-brand">Brand</div>
+      <div class="product-card-name-row"><div class="product-title">Product Name</div></div>
+      <div class="product-price-row"><span class="product-price">00</span></div>
+    </div>`;
+}
+function placeholderProductCardHome() {
+  return `
+    <div class="product-card product-card-placeholder">
+      <div class="product-img-wrap"></div>
+      <div class="product-home-meta">
+        <div class="product-brand">Brand</div>
+        <div class="product-home-name-row"><div class="product-title">Product Name</div></div>
+        <div class="product-home-price-row"><span class="product-home-price">00</span></div>
+      </div>
+    </div>`;
+}
+function placeholderProductCards(count, home) {
+  const one = home ? placeholderProductCardHome : placeholderProductCard;
+  return Array.from({ length: count }, one).join('');
+}
+
 function renderPaginatedGrid(gridEl, expanded, cols) {
   if (!gridEl) return;
   const key = gridEl.id;
@@ -600,8 +630,12 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
     const end = Math.min(start + PRODUCTS_PER_PAGE, total);
     const pageItems = expanded.slice(start, end);
 
-    gridEl.innerHTML = pageItems.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex)).join("");
-    applyEditorialGrid(gridEl, cols);
+    if (total === 0) {
+      gridEl.innerHTML = placeholderProductCards(PRODUCTS_PER_PAGE);
+    } else {
+      gridEl.innerHTML = pageItems.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex)).join("");
+      applyEditorialGrid(gridEl, cols);
+    }
 
     const existingFooter = gridEl.parentNode && gridEl.parentNode.querySelector('.grid-pagination[data-for="' + key + '"]');
     if (existingFooter) existingFooter.remove();
@@ -837,11 +871,7 @@ function renderCategoryProducts() {
   const expanded = expandProductVariants(prods);
   DOM.categoryProductsGrid.style.gridTemplateColumns=gridTemplateFor(S.gridColsCat);
   applyGridColsClass(DOM.categoryProductsGrid, S.gridColsCat);
-  if (expanded.length) {
-    renderPaginatedGrid(DOM.categoryProductsGrid, expanded, S.gridColsCat);
-  } else {
-    DOM.categoryProductsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products in this category yet.</div>';
-  }
+  renderPaginatedGrid(DOM.categoryProductsGrid, expanded, S.gridColsCat);
   updateGridToggleSVG("cat-grid-toggle-svg",S.gridColsCat);
   if(DOM.categoryDescriptionWrap){DOM.categoryDescriptionWrap.innerHTML='';}
   renderCollectionSortingTabs();
@@ -875,11 +905,7 @@ function renderSaleProducts() {
   const expanded = expandProductVariants(sp);
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
   applyGridColsClass(DOM.allProductsGrid, S.gridCols);
-  if (expanded.length) {
-    renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
-  } else {
-    DOM.allProductsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No sale items at the moment.</div>';
-  }
+  renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
   buildCategoryFilterOptions();
@@ -1016,13 +1042,23 @@ function selectSortTab(cat) {
 // with when a product was added, so it's overridden here with the
 // 'newest' sort (createdAt, falling back to updatedAt) already built
 // into applySort(). Automatic: nothing to toggle per product.
-function buildArrivals() { if(DOM.arrivalsGrid) { const active = PRODUCTS.filter(p=>p.status==='active'); DOM.arrivalsGrid.innerHTML = merchandiseProducts(active, undefined, 'newest').slice(0,8).map(p=>productCardHome(p)).join(""); initSliderLeadingTracking('arrivals-grid'); } buildShopByClothing(); buildNewsletterSection(); }
+function buildArrivals() {
+  if (DOM.arrivalsGrid) {
+    const active = PRODUCTS.filter(p => p.status === 'active');
+    const top = merchandiseProducts(active, undefined, 'newest').slice(0, 8);
+    DOM.arrivalsGrid.innerHTML = top.length ? top.map(p => productCardHome(p)).join("") : placeholderProductCards(6, true);
+    initSliderLeadingTracking('arrivals-grid');
+  }
+  buildShopByClothing();
+  buildNewsletterSection();
+}
 
 function buildShopByClothing() {
   const grid = document.getElementById('clothing-grid');
   if (!grid) return;
   const active = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
-  grid.innerHTML = merchandiseProducts(active).slice(0, 8).map(p => productCardHome(p)).join('');
+  const top = merchandiseProducts(active).slice(0, 8);
+  grid.innerHTML = top.length ? top.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true);
   initSliderLeadingTracking('clothing-grid');
 }
 
@@ -1219,11 +1255,7 @@ function renderVendorPage(vendor) {
   const gridEl = document.getElementById('vendor-products-grid');
   gridEl.style.gridTemplateColumns = gridTemplateFor(S.gridColsVendor);
   applyGridColsClass(gridEl, S.gridColsVendor);
-  if (expanded.length) {
-    renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
-  } else {
-    gridEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products match these filters.</div>';
-  }
+  renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
   updateCollectionGridIcon();
   updateCollectionTitle();
   buildCategoryFilterOptions();
