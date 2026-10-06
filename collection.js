@@ -674,7 +674,7 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
     if (total === 0) {
       gridEl.innerHTML = placeholderProductCards(PRODUCTS_PER_PAGE);
     } else {
-      gridEl.innerHTML = pageItems.map(({product, variantIndex}) => productCard(product, cols===3, true, variantIndex)).join("");
+      gridEl.innerHTML = pageItems.map(({product, variantIndex}, i) => productCard(product, cols===3, true, variantIndex, pageNum === 1 && i < 4 && (i === 0 ? 'high' : true))).join("");
       applyEditorialGrid(gridEl, cols);
     }
 
@@ -700,7 +700,7 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
   renderPage(1);
 }
 
-function productCard(p, isLarge, showDetails, variantIndex) {
+function productCard(p, isLarge, showDetails, variantIndex, eager) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
   const badges = getProductBadges(p);
@@ -725,7 +725,7 @@ function productCard(p, isLarge, showDetails, variantIndex) {
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">${wishBtn}</div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">${wishBtn}</div>
       ${metaRow}
     </div>`;
 }
@@ -778,7 +778,7 @@ function formatPriceCardStyle(price) {
   return 'R' + safe.toFixed(2).replace('.', ',');
 }
 
-function productCardHome(p) {
+function productCardHome(p, eager) {
   const badges = getProductBadges(p);
   const badge = badges.length ? `<div class="product-badge-stack">${badges.map(b => `<span class="product-badge">${escapeHTML(b)}</span>`).join('')}</div>` : '';
   const soldOut = (p.stock ?? 0) <= 0;
@@ -796,7 +796,7 @@ function productCardHome(p) {
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" loading="lazy" onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')"><button class="product-wish-btn${isWished ? ' wished' : ''}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button></div>
       <div class="product-home-meta">
         ${brand}
         <div class="product-home-name-row">${name}</div>
@@ -1087,7 +1087,7 @@ function buildArrivals() {
   if (DOM.arrivalsGrid) {
     const active = PRODUCTS.filter(p => p.status === 'active');
     const top = merchandiseProducts(active, undefined, 'newest').slice(0, 8);
-    DOM.arrivalsGrid.innerHTML = top.length ? top.map(p => productCardHome(p)).join("") : placeholderProductCards(6, true);
+    DOM.arrivalsGrid.innerHTML = top.length ? top.map((p, i) => productCardHome(p, i < 3 && (i === 0 ? 'high' : true))).join("") : placeholderProductCards(6, true);
     initSliderLeadingTracking('arrivals-grid');
   }
   buildShopByClothing();
