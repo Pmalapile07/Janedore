@@ -191,7 +191,7 @@
   font-size: 10px;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: var(--ui-letter-spacing);
+  letter-spacing: normal;
   color: #111;
   margin-top: 10px;
   margin-bottom: 4px;
