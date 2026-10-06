@@ -14,7 +14,7 @@
        fetched at runtime by site-content.js, so it can't be preloaded
        here the way the old hardcoded desktop/mobile URLs were. -->
 
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -384,18 +384,18 @@
     });
   }
 </script>
-<script src="vendors.js"></script>
-<script src="cart.js"></script>
-<script src="wishlist.js"></script>
-<script src="search.js"></script>
-<script src="modals.js"></script>
-<script src="product-detail.js?v=3"></script>
+<script src="vendors.js" defer></script>
+<script src="cart.js" defer></script>
+<script src="wishlist.js" defer></script>
+<script src="search.js" defer></script>
+<script src="modals.js" defer></script>
+<script src="product-detail.js?v=3" defer></script>
 
-<script src="sticky-bar.js"></script>
-<script src="collection.js"></script>
-<script src="content-pages.js"></script>
-<script src="sliders.js"></script>
-<script src="footer.js"></script>
+<script src="sticky-bar.js" defer></script>
+<script src="collection.js" defer></script>
+<script src="content-pages.js" defer></script>
+<script src="sliders.js" defer></script>
+<script src="footer.js" defer></script>
 
 <script type="module">
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -462,9 +462,9 @@
   }
 </script>
 
-<script src="chat.js"></script>
-<script src="app.js"></script>
-<script src="site-content.js"></script>
+<script src="chat.js" defer></script>
+<script src="app.js" defer></script>
+<script src="site-content.js" defer></script>
 
 <div id="chat-container"></div>
 <script>
@@ -487,10 +487,8 @@
   });
 </script>
 
-<script src="checkout.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="admin.js"></script>
-<script src="login.js"></script>
+<script src="checkout.js" defer></script>
+<script src="login.js" defer></script>
 
 <div class="page" id="page-login">
   <div id="login-loaded"></div>
