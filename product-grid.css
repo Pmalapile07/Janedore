@@ -116,10 +116,12 @@
 /* Empty-catalog placeholder cards (placeholderProductCard(s) in
    collection.js) — shown instead of real cards when a grid has nothing
    to display at all, not while something is loading. Flat #f4f4f4, no
-   shimmer (nothing is ever coming), not clickable. */
+   shimmer (nothing is ever coming). Clickable — opens a placeholder
+   product-detail page (previewPlaceholderProduct(), collection.js) so
+   the product page itself can be designed/styled before any real
+   product exists. */
 .product-card-placeholder {
-  cursor: default;
-  pointer-events: none;
+  cursor: pointer;
 }
 .product-card-placeholder .product-img-wrap {
   background: #f4f4f4;
@@ -144,7 +146,7 @@
    animating one, which would otherwise look like a stuck loading spinner
    for a box that was never going to load anything. */
 .content-empty {
-  background-color: #f0ede8 !important;
+  background-color: #f4f4f4 !important;
   background-image: none !important;
   animation: none !important;
 }

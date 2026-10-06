@@ -46,7 +46,7 @@ let PRODUCTS = [];
 let _resolveProductsReady;
 window.productsReady = new Promise(r => { _resolveProductsReady = r; });
 const CURRENCIES = { ZAR:{label:"ZAR R",symbol:"R"}, BWP:{label:"BWP P",symbol:"P"}, USD:{label:"USD $",symbol:"$"}, LSL:{label:"LSL M",symbol:"M"}, NAD:{label:"NAD N$",symbol:"N$"} };
-const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500'%3E%3Crect fill='%23f0ede8' width='400' height='500'/%3E%3C/svg%3E";
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500'%3E%3Crect fill='%23f4f4f4' width='400' height='500'/%3E%3C/svg%3E";
 
 // formatPrice removed from app.js — the storefront version lives in collections.js
 // and handles numeric coercion + en-US comma formatting (R1,299) safely.

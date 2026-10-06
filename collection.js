@@ -587,13 +587,15 @@ const PRODUCTS_PER_PAGE = 6;
 const _gridCurrentPage = {};
 
 // Flat #f4f4f4 box, no shimmer (nothing is ever going to load into it),
-// literal "Brand"/"Product Name"/"00" text, not clickable — shown
-// instead of a real card wherever a grid has no products at all, so an
-// empty catalog never looks broken or blank. Same count (6) as a full
-// page of PRODUCTS_PER_PAGE above.
+// literal "Brand"/"Product Name"/"00" text — shown instead of a real
+// card wherever a grid has no products at all, so an empty catalog
+// never looks broken or blank. Same count (6) as a full page of
+// PRODUCTS_PER_PAGE above. Clickable through to a placeholder product
+// page (previewPlaceholderProduct() below) so the product page itself
+// can be designed before any real product exists.
 function placeholderProductCard() {
   return `
-    <div class="product-card product-card-placeholder">
+    <div class="product-card product-card-placeholder" onclick="previewPlaceholderProduct()">
       <div class="product-img-wrap"></div>
       <div class="product-brand">Brand</div>
       <div class="product-card-name-row"><div class="product-title">Product Name</div></div>
@@ -602,7 +604,7 @@ function placeholderProductCard() {
 }
 function placeholderProductCardHome() {
   return `
-    <div class="product-card product-card-placeholder">
+    <div class="product-card product-card-placeholder" onclick="previewPlaceholderProduct()">
       <div class="product-img-wrap"></div>
       <div class="product-home-meta">
         <div class="product-brand">Brand</div>
@@ -614,6 +616,45 @@ function placeholderProductCardHome() {
 function placeholderProductCards(count, home) {
   const one = home ? placeholderProductCardHome : placeholderProductCard;
   return Array.from({ length: count }, one).join('');
+}
+
+// A synthetic, never-saved product — exists only so the real product
+// page template (renderProductPage(), product-detail.js) has something
+// to render for the "Brand"/"Product Name" cards above. stock:1 keeps
+// it out of the sold-out treatment (that's not what's being previewed
+// here); empty variant images fall through to PLACEHOLDER_IMAGE
+// (app.js), which is the same #f4f4f4 box now. Never written to
+// PRODUCTS or Firestore — goToProduct()'s normal PRODUCTS.find() has
+// no way to reach it, which is exactly why this needs its own entry
+// point instead of just calling goToProduct() with a fake id.
+const PLACEHOLDER_PRODUCT = {
+  id: '__placeholder__',
+  name: 'Product Name',
+  brand: 'Brand',
+  category: '',
+  price: 0,
+  salePrice: null,
+  badge: null,
+  sizes: [],
+  stock: 1,
+  status: 'draft',
+  featured: false,
+  description: '',
+  productFeatures: '',
+  compositionCare: '',
+  shippingReturns: '',
+  measurements: '',
+  variants: [{ color: '', swatch: '#f4f4f4', images: { model: [], ghost: [], detail: [] } }]
+};
+
+function previewPlaceholderProduct() {
+  closeFilterPanel();
+  closeSearch();
+  S.saleMode = false;
+  if (typeof closeCart === 'function') closeCart();
+  if (DOM.mainNav) { DOM.mainNav.classList.add('product-page'); DOM.mainNav.classList.remove('collection-page'); }
+  document.body.classList.remove('on-collection-page');
+  renderProductPage(PLACEHOLDER_PRODUCT);
 }
 
 function renderPaginatedGrid(gridEl, expanded, cols) {
