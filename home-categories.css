@@ -1,12 +1,9 @@
-/* Bottom padding matches .home-categories-grid's own row-gap (6px) —
-   the vertical gap between the grid's two rows. Left/right padding
-   also matches that grid's own left/right padding (6px), instead of
-   the previous 18px/16px, which didn't match it. An inline style on
-   the <section> tag itself was silently forcing bottom to 24px
-   regardless of what got set here; that inline style is gone now, so
-   these values actually render. Top padding reduced 48px -> 24px to
-   tighten the gap after New Arrivals. */
-#home-categories { padding: 24px 6px 6px; max-width: 1400px; margin: 0 auto; }
+/* Vertical rhythm only here — left/right lives on .home-categories-grid
+   itself below (same self-padding pattern as #home-shop-clothing/
+   #home-shop-brand's own grids), so it isn't double-counted on top of
+   that. Top padding reduced 48px -> 24px to tighten the gap after New
+   Arrivals. */
+#home-categories { padding: 24px 0 6px; max-width: 1400px; margin: 0 auto; }
 /* Editorial break between New Arrivals and Shop by Clothing — the two
    product grids sat directly on top of each other with nothing
    between them once Featured Brands came out and the manifesto moved
@@ -16,6 +13,18 @@
 #home-editorial-banner { cursor: pointer; padding: 0 8px; }
 @media (min-width: 640px) { #home-editorial-banner { padding: 0 10px; } }
 @media (min-width: 1024px) { #home-editorial-banner { padding: 0 12px; } }
+
+/* New Arrivals / Shop by Category / Shop by Clothing / Shop by Brand
+   section headers all share this class. Left/right now matches
+   .product-grid's own breakpoints too, so a heading lines up with the
+   grid tiles under it instead of sitting at its own flat 18px inset —
+   that mismatch was what made Shop by Brand in particular look
+   unpadded next to its grid. Bottom spacing (24px) unchanged; top is
+   0 by default, overridden inline just on New Arrivals' header
+   (the one section that needs top padding too). */
+.home-categories-header { padding: 0 8px 24px; }
+@media (min-width: 640px) { .home-categories-header { padding: 0 10px 24px; } }
+@media (min-width: 1024px) { .home-categories-header { padding: 0 12px 24px; } }
 .home-editorial-img {
   position: relative;
   width: 100%;
@@ -91,8 +100,11 @@
    slider (which multi-brand fashion sites reserve for product rows,
    not a category launcher this small). */
 .home-categories-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 6px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+  padding: 0 8px;
 }
+@media (min-width: 640px) { .home-categories-grid { padding: 0 10px; } }
+@media (min-width: 1024px) { .home-categories-grid { padding: 0 12px; } }
 .home-category-card { cursor: pointer; width: 100%; }
 /* Product card image ratio is 5/6 (≈0.833); height reduced another
    10% from 0.78 (aspect-ratio is width/height, so shrinking height by

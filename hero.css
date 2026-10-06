@@ -9,9 +9,18 @@
   justify-content: center;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 12px;
+  padding: 12px 8px;
   background: #fff;
   box-sizing: border-box;
+}
+/* Left/right matches .product-grid's own responsive padding
+   (product-grid.css) so the hero frames the same width as the product
+   grid below it. Vertical 12px is unrelated and untouched. */
+@media (min-width: 640px) {
+  #hero { padding: 12px 10px; }
+}
+@media (min-width: 1024px) {
+  #hero { padding: 12px 12px; }
 }
 
 /* Inset to #hero's own padding, not the full section, so the image
