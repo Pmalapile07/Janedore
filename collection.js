@@ -1137,7 +1137,7 @@ function initSliderLeadingTracking(gridId) {
 // copy once that fetch resolves (see renderSiteContent() there). Nothing
 // here is hardcoded marketing copy anymore; it's just what shows if the
 // admin hasn't filled the Newsletter section in yet.
-function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title" id="newsletter-heading">Heading</div><p class="newsletter-subtext" id="newsletter-subtext"></p><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer" id="newsletter-disclaimer"></p></div>`; }
+function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title skeleton-text" id="newsletter-heading">Heading</div><p class="newsletter-subtext" id="newsletter-subtext"></p><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer" id="newsletter-disclaimer"></p></div>`; }
 
 // ==================== VENDOR / BRAND PAGE ====================
 

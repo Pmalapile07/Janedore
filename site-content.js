@@ -67,9 +67,10 @@ function renderHero(hero) {
   hero = hero || {};
   const headingEl = document.getElementById('hero-heading');
   const btnEl = document.getElementById('hero-shop-btn');
-  if (headingEl) headingEl.textContent = hero.heading || 'Heading';
+  if (headingEl) { headingEl.textContent = hero.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
     btnEl.textContent = hero.buttonText || 'Button';
+    btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(hero.buttonLink); };
   }
   loadBackgroundImage(document.getElementById('hero-bg'), hero.imageUrl);
@@ -79,9 +80,10 @@ function renderNewArrivalsHeader(arrivals) {
   arrivals = arrivals || {};
   const headingEl = document.getElementById('arrivals-heading');
   const btnEl = document.getElementById('arrivals-view-all-btn');
-  if (headingEl) headingEl.textContent = arrivals.heading || 'Collection Heading';
+  if (headingEl) { headingEl.textContent = arrivals.heading || 'Collection Heading'; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
     btnEl.textContent = arrivals.buttonText || 'Button';
+    btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(arrivals.buttonLink); };
   }
 }
@@ -89,7 +91,7 @@ function renderNewArrivalsHeader(arrivals) {
 function renderShopByCategory(shopByCategory) {
   shopByCategory = shopByCategory || {};
   const headingEl = document.getElementById('shop-by-category-heading');
-  if (headingEl) headingEl.textContent = shopByCategory.heading || 'Heading';
+  if (headingEl) { headingEl.textContent = shopByCategory.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
 
   const grid = document.getElementById('home-categories-grid');
   if (!grid) return;
@@ -118,9 +120,10 @@ function renderShopByClothingHeader(clothing) {
   clothing = clothing || {};
   const headingEl = document.getElementById('clothing-heading');
   const btnEl = document.getElementById('clothing-view-all-btn');
-  if (headingEl) headingEl.textContent = clothing.heading || 'Heading';
+  if (headingEl) { headingEl.textContent = clothing.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
     btnEl.textContent = clothing.buttonText || 'Button';
+    btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(clothing.buttonLink); };
   }
 }
@@ -130,9 +133,10 @@ function renderEditorialBanner(banner) {
   const headingEl = document.getElementById('banner-heading');
   const btnEl = document.getElementById('banner-btn');
   const imgEl = document.getElementById('editorial-banner-img');
-  if (headingEl) headingEl.textContent = banner.heading || 'Heading';
+  if (headingEl) { headingEl.textContent = banner.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
     btnEl.textContent = banner.buttonText || 'Button';
+    btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function (e) { e.stopPropagation(); goToSiteLink(banner.buttonLink); };
   }
   if (imgEl) imgEl.onclick = function () { goToSiteLink(banner.buttonLink); };
@@ -142,7 +146,7 @@ function renderEditorialBanner(banner) {
 function renderShopByBrandHeader(shopByBrand) {
   shopByBrand = shopByBrand || {};
   const headingEl = document.getElementById('shop-by-brand-heading');
-  if (headingEl) headingEl.textContent = shopByBrand.heading || 'Heading';
+  if (headingEl) { headingEl.textContent = shopByBrand.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
 }
 
 function renderNewsletter(newsletter) {
@@ -150,7 +154,7 @@ function renderNewsletter(newsletter) {
   const headingEl = document.getElementById('newsletter-heading');
   const subtextEl = document.getElementById('newsletter-subtext');
   const disclaimerEl = document.getElementById('newsletter-disclaimer');
-  if (headingEl) headingEl.textContent = newsletter.heading || 'Heading';
+  if (headingEl) { headingEl.textContent = newsletter.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
   if (subtextEl) subtextEl.textContent = newsletter.subtext || '';
   if (disclaimerEl) disclaimerEl.textContent = newsletter.disclaimer || '';
 }
@@ -180,5 +184,12 @@ async function renderSiteContent() {
     if (typeof updateCollectionTitle === 'function') updateCollectionTitle();
   } catch (e) {
     console.warn('[SITE CONTENT] Could not load homepage content:', e.message);
+    // Fetch itself failed (not just an empty/unset doc, which the
+    // render* functions above already handle) — stop the shimmer so it
+    // doesn't spin forever and fall back to the literal "Heading"/
+    // "Button" placeholder text baked into the HTML.
+    document.querySelectorAll('.skeleton-text').forEach(function (el) {
+      el.classList.remove('skeleton-text');
+    });
   }
 }
