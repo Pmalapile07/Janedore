@@ -85,6 +85,17 @@ function gridTemplateFor(cols) {
   return cols === 1 ? "1fr" : cols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)";
 }
 
+// The nth-child(odd) left-padding on product-card text (product-grid.css)
+// only makes sense in 2-column view — it offsets left-column cards
+// against the right column. In 1 or 3 columns there's no such pairing,
+// so odd-numbered cards would get a stray left nudge for no reason. This
+// class lets that CSS rule scope itself to 2-column mode only.
+function applyGridColsClass(el, cols) {
+  if (!el) return;
+  el.classList.remove('grid-cols-1', 'grid-cols-2', 'grid-cols-3');
+  el.classList.add('grid-cols-' + cols);
+}
+
 function isLeatherPouchAllowed(context) {
   return context === 'sunglasses' || context === 'vendor';
 }
@@ -799,6 +810,7 @@ function renderAllProducts() {
   let prods = merchandiseProducts(getFilteredProducts(), undefined, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
+  applyGridColsClass(DOM.allProductsGrid, S.gridCols);
   renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
@@ -824,6 +836,7 @@ function renderCategoryProducts() {
   let prods=merchandiseProducts(cp, S.currentCategoryPage, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.categoryProductsGrid.style.gridTemplateColumns=gridTemplateFor(S.gridColsCat);
+  applyGridColsClass(DOM.categoryProductsGrid, S.gridColsCat);
   if (expanded.length) {
     renderPaginatedGrid(DOM.categoryProductsGrid, expanded, S.gridColsCat);
   } else {
@@ -861,6 +874,7 @@ function renderSaleProducts() {
   const sp = merchandiseProducts(filtered, undefined, S.sortBy);
   const expanded = expandProductVariants(sp);
   DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
+  applyGridColsClass(DOM.allProductsGrid, S.gridCols);
   if (expanded.length) {
     renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
   } else {
@@ -1192,6 +1206,7 @@ function renderVendorPage(vendor) {
 
   const gridEl = document.getElementById('vendor-products-grid');
   gridEl.style.gridTemplateColumns = gridTemplateFor(S.gridColsVendor);
+  applyGridColsClass(gridEl, S.gridColsVendor);
   if (expanded.length) {
     renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
   } else {
