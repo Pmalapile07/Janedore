@@ -14,7 +14,7 @@
        fetched at runtime by site-content.js, so it can't be preloaded
        here the way the old hardcoded desktop/mobile URLs were. -->
 
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -228,22 +228,22 @@
   <div class="hero-bg-placeholder content-shimmer" id="hero-bg"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content-wrap">
-    <h2 class="hero-heading" id="hero-heading">Heading</h2>
-    <button class="hero-shop-btn" id="hero-shop-btn">Button</button>
+    <h2 class="hero-heading skeleton-text" id="hero-heading">Heading</h2>
+    <button class="hero-shop-btn skeleton-text" id="hero-shop-btn">Button</button>
   </div>
 </section>
 
   <section id="home-all-products">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;padding-top:24px;">
-      <div class="home-categories-title" id="arrivals-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Collection Heading</div>
-      <button id="arrivals-view-all-btn" class="initial-drop-view-all" style="display:inline-block;margin:0;">Button</button>
+      <div class="home-categories-title skeleton-text" id="arrivals-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Collection Heading</div>
+      <button id="arrivals-view-all-btn" class="initial-drop-view-all skeleton-text" style="display:inline-block;margin:0;">Button</button>
     </div>
     <div class="product-grid" id="arrivals-grid"></div>
   </section>
 
   <section id="home-categories">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:flex-start;text-align:left;">
-      <div class="home-categories-title" id="shop-by-category-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
+      <div class="home-categories-title skeleton-text" id="shop-by-category-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
     </div>
     <div class="home-categories-grid" id="home-categories-grid">
       <div class="home-category-card"><div class="home-category-img"><div class="home-category-label">Category</div></div></div>
@@ -255,8 +255,8 @@
 
   <section id="home-shop-clothing" style="padding:24px 0;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;">
-      <div class="home-categories-title" id="clothing-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
-      <button id="clothing-view-all-btn" class="initial-drop-view-all" style="display:inline-block;margin:0;">Button</button>
+      <div class="home-categories-title skeleton-text" id="clothing-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
+      <button id="clothing-view-all-btn" class="initial-drop-view-all skeleton-text" style="display:inline-block;margin:0;">Button</button>
     </div>
     <div class="product-grid" id="clothing-grid"></div>
   </section>
@@ -265,15 +265,15 @@
     <div class="home-editorial-img content-shimmer" id="editorial-banner-img">
       <div class="editorial-banner-overlay"></div>
       <div class="editorial-banner-content">
-        <div class="editorial-banner-heading" id="banner-heading">Heading</div>
-        <button class="editorial-banner-btn" id="banner-btn">Button</button>
+        <div class="editorial-banner-heading skeleton-text" id="banner-heading">Heading</div>
+        <button class="editorial-banner-btn skeleton-text" id="banner-btn">Button</button>
       </div>
     </div>
   </section>
 
   <section id="home-shop-brand" style="padding:24px 0;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:flex-start;text-align:left;">
-      <div class="home-categories-title" id="shop-by-brand-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
+      <div class="home-categories-title skeleton-text" id="shop-by-brand-heading" style="font-weight:500 !important;font-size:13px !important;letter-spacing:0.1em;color:#111;padding:8px 0;">Heading</div>
     </div>
     <div class="product-grid" id="brand-grid"></div>
   </section>
@@ -384,18 +384,18 @@
     });
   }
 </script>
-<script src="vendors.js"></script>
-<script src="cart.js"></script>
-<script src="wishlist.js"></script>
-<script src="search.js"></script>
-<script src="modals.js"></script>
-<script src="product-detail.js?v=3"></script>
+<script src="vendors.js" defer></script>
+<script src="cart.js" defer></script>
+<script src="wishlist.js" defer></script>
+<script src="search.js" defer></script>
+<script src="modals.js" defer></script>
+<script src="product-detail.js?v=3" defer></script>
 
-<script src="sticky-bar.js"></script>
-<script src="collection.js"></script>
-<script src="content-pages.js"></script>
-<script src="sliders.js"></script>
-<script src="footer.js"></script>
+<script src="sticky-bar.js" defer></script>
+<script src="collection.js" defer></script>
+<script src="content-pages.js" defer></script>
+<script src="sliders.js" defer></script>
+<script src="footer.js" defer></script>
 
 <script type="module">
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -462,9 +462,9 @@
   }
 </script>
 
-<script src="chat.js"></script>
-<script src="app.js"></script>
-<script src="site-content.js"></script>
+<script src="chat.js" defer></script>
+<script src="app.js" defer></script>
+<script src="site-content.js" defer></script>
 
 <div id="chat-container"></div>
 <script>
@@ -487,10 +487,8 @@
   });
 </script>
 
-<script src="checkout.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="admin.js"></script>
-<script src="login.js"></script>
+<script src="checkout.js" defer></script>
+<script src="login.js" defer></script>
 
 <div class="page" id="page-login">
   <div id="login-loaded"></div>

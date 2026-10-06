@@ -151,6 +151,26 @@
   animation: none !important;
 }
 
+/* Text placeholders (homepage section headings/buttons) — while
+   siteContent is loading, the real text underneath ("Heading"/
+   "Button", baked into the HTML so there's always something to size
+   against) is made invisible and a shimmer bar shows in its place,
+   sized to that text's own box. A readable word sitting on the page
+   for even a moment reads as broken; a pulsing bar reads as loading.
+   site-content.js removes this class once the real (or confirmed
+   empty) text is set — an still-empty field then shows the literal
+   "Heading"/"Button" text as the deliberate "go fill this in" signal,
+   same as before, just no longer shown while still fetching. */
+.skeleton-text {
+  color: transparent !important;
+  background-image: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 50%) !important;
+  background-size: 400% 100% !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  animation: product-img-shimmer 1.6s ease-in-out infinite;
+  border-radius: 3px;
+}
+
 .product-badge-stack {
   position: absolute;
   top: 8px;
