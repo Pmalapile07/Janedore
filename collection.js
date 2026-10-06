@@ -1180,6 +1180,18 @@ function moveFilterBarBelowVendorHero(heroSection) {
 function renderVendorPage(vendor) {
   const el = document.getElementById('vendor-page-content');
   if (!el) return;
+  // moveFilterBarBelowVendorHero() (below) relocates the shared
+  // #collection-filter-bar/#active-filter-chips to live inside this
+  // element's subtree. If this function runs again before they're
+  // moved back out — a second vendor visited, sort/filter changed, or
+  // just the grid toggle clicked, all of which call renderVendorPage()
+  // again — el.innerHTML below would destroy them outright (they'd be
+  // actual descendants of el at that point), and the next
+  // getElementById('collection-filter-bar') would find nothing,
+  // silently leaving the page with no filter bar at all. Moving them
+  // back to their real home first guarantees they're never inside el
+  // when it gets wiped.
+  restoreCollectionFilterBar();
   S.currentVendor = vendor;
   const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
   const brandName = vendor?.brand || vendor?.name || '';
