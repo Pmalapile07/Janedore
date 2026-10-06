@@ -113,6 +113,21 @@
   opacity: 1;
 }
 
+/* Empty-catalog placeholder cards (placeholderProductCard(s) in
+   collection.js) — shown instead of real cards when a grid has nothing
+   to display at all, not while something is loading. Flat #f4f4f4, no
+   shimmer (nothing is ever coming), not clickable. */
+.product-card-placeholder {
+  cursor: default;
+  pointer-events: none;
+}
+.product-card-placeholder .product-img-wrap {
+  background: #f4f4f4;
+}
+.product-card-placeholder .product-img-wrap::before {
+  display: none;
+}
+
 /* Generic shimmer-while-loading treatment for any CSS background-image
    box outside the product grid — the hero and the editorial banner, set
    via site-content.js once their admin-uploaded image URL loads. Same
