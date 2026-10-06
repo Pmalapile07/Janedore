@@ -7,10 +7,15 @@
 // admin-homepage.js) + siteContent/collectionPages (written by the
 // admin "Pages" tab, admin-pages.js), fetched once here.
 //
-// index.html already ships every one of these elements with literal
-// empty-state text ("Heading"/"Button") baked in, so a blank/unset
-// Firestore doc never looks broken mid-fetch or if admin hasn't
-// touched a field yet — it just obviously reads as unfilled-in.
+// A field with nothing set (mid-fetch, or admin genuinely hasn't
+// filled it in yet) renders as empty, never as a literal placeholder
+// word like "Heading"/"Button" — those are internal/CMS strings and
+// must never be customer-visible, even briefly. server.js
+// server-side-renders the current siteContent/homepage doc straight
+// into the HTML response (see injectHomepageContent() there), so in
+// the common case these elements already hold real text before this
+// file's own fetch below even starts; this fetch just keeps them
+// current if admin changed something since that response was cached.
 
 window._siteContent = { homepage: {}, collectionPages: {} };
 
@@ -59,6 +64,11 @@ function loadBackgroundImage(el, url, maxWidth) {
     return;
   }
   const sized = maxWidth ? contentImageURL(url, maxWidth) : url;
+  // server.js's SSR injection (injectHomepageContent) may have already
+  // set this exact image before this script ever ran — skip re-adding
+  // the shimmer class for a reload that would just flicker the already-
+  // correct image back to loading and immediately back again.
+  if (el.style.backgroundImage === "url('" + sized.replace(/['"\\]/g, '') + "')") return;
   el.classList.remove('content-empty');
   el.classList.add('content-shimmer');
   const probe = new Image();
@@ -77,9 +87,9 @@ function renderHero(hero) {
   hero = hero || {};
   const headingEl = document.getElementById('hero-heading');
   const btnEl = document.getElementById('hero-shop-btn');
-  if (headingEl) { headingEl.textContent = hero.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { headingEl.textContent = hero.heading || ''; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
-    btnEl.textContent = hero.buttonText || 'Button';
+    btnEl.textContent = hero.buttonText || '';
     btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(hero.buttonLink); };
   }
@@ -90,9 +100,9 @@ function renderNewArrivalsHeader(arrivals) {
   arrivals = arrivals || {};
   const headingEl = document.getElementById('arrivals-heading');
   const btnEl = document.getElementById('arrivals-view-all-btn');
-  if (headingEl) { headingEl.textContent = arrivals.heading || 'Collection Heading'; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { headingEl.textContent = arrivals.heading || ''; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
-    btnEl.textContent = arrivals.buttonText || 'Button';
+    btnEl.textContent = arrivals.buttonText || '';
     btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(arrivals.buttonLink); };
   }
@@ -101,7 +111,7 @@ function renderNewArrivalsHeader(arrivals) {
 function renderShopByCategory(shopByCategory) {
   shopByCategory = shopByCategory || {};
   const headingEl = document.getElementById('shop-by-category-heading');
-  if (headingEl) { headingEl.textContent = shopByCategory.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { headingEl.textContent = shopByCategory.heading || ''; headingEl.classList.remove('skeleton-text'); }
 
   const grid = document.getElementById('home-categories-grid');
   if (!grid) return;
@@ -120,7 +130,7 @@ function renderShopByCategory(shopByCategory) {
 
   grid.querySelectorAll('[data-tile-index]').forEach(function (cardEl, i) {
     const tile = tiles[i];
-    cardEl.querySelector('.home-category-label').textContent = tile.label || 'Category';
+    cardEl.querySelector('.home-category-label').textContent = tile.label || '';
     cardEl.onclick = isPlaceholder ? null : function () { goToSiteLink(tile.link); };
     loadBackgroundImage(cardEl.querySelector('.home-category-img'), tile.imageUrl, 600);
   });
@@ -130,9 +140,9 @@ function renderShopByClothingHeader(clothing) {
   clothing = clothing || {};
   const headingEl = document.getElementById('clothing-heading');
   const btnEl = document.getElementById('clothing-view-all-btn');
-  if (headingEl) { headingEl.textContent = clothing.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { headingEl.textContent = clothing.heading || ''; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
-    btnEl.textContent = clothing.buttonText || 'Button';
+    btnEl.textContent = clothing.buttonText || '';
     btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(clothing.buttonLink); };
   }
@@ -143,9 +153,9 @@ function renderEditorialBanner(banner) {
   const headingEl = document.getElementById('banner-heading');
   const btnEl = document.getElementById('banner-btn');
   const imgEl = document.getElementById('editorial-banner-img');
-  if (headingEl) { headingEl.textContent = banner.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { headingEl.textContent = banner.heading || ''; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
-    btnEl.textContent = banner.buttonText || 'Button';
+    btnEl.textContent = banner.buttonText || '';
     btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function (e) { e.stopPropagation(); goToSiteLink(banner.buttonLink); };
   }
@@ -156,7 +166,7 @@ function renderEditorialBanner(banner) {
 function renderShopByBrandHeader(shopByBrand) {
   shopByBrand = shopByBrand || {};
   const headingEl = document.getElementById('shop-by-brand-heading');
-  if (headingEl) { headingEl.textContent = shopByBrand.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { headingEl.textContent = shopByBrand.heading || ''; headingEl.classList.remove('skeleton-text'); }
 }
 
 function renderNewsletter(newsletter) {
@@ -164,7 +174,7 @@ function renderNewsletter(newsletter) {
   const headingEl = document.getElementById('newsletter-heading');
   const subtextEl = document.getElementById('newsletter-subtext');
   const disclaimerEl = document.getElementById('newsletter-disclaimer');
-  if (headingEl) { headingEl.textContent = newsletter.heading || 'Heading'; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { headingEl.textContent = newsletter.heading || ''; headingEl.classList.remove('skeleton-text'); }
   if (subtextEl) subtextEl.textContent = newsletter.subtext || '';
   if (disclaimerEl) disclaimerEl.textContent = newsletter.disclaimer || '';
 }

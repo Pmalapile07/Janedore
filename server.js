@@ -546,6 +546,156 @@ function injectCollectionMeta(html, cat) {
   return replaceHeadTags(html, metaBlock);
 }
 
+// ==================== HOMEPAGE CONTENT (SSR) ====================
+// siteContent/homepage (the admin "Homepage" tab, admin-homepage.js /
+// site-content.js) used to be invisible to a fresh page load entirely
+// — the browser got static "Heading"/"Button" fallback text, and real
+// content only replaced it once the client's own Firestore read
+// resolved. That meant customers routinely saw raw CMS placeholder
+// strings for the first second or two of every visit. Fetching the
+// same public doc here, server-side, and splicing it directly into
+// the HTML response removes that gap: the response the browser gets
+// already has real copy in it. site-content.js's own client-side
+// fetch still runs on top of this and keeps things current if admin
+// changes something between this response being cached and the page
+// loading, but it's no longer the only source of the customer's first
+// paint.
+//
+// Cached for HOMEPAGE_CACHE_MS so a burst of traffic costs one
+// Firestore read, not one per request — marketing copy doesn't need
+// per-request freshness, and the client-side fetch already covers the
+// "admin just changed it" case for anyone already on the page.
+let _homepageCache = null;
+let _homepageCacheAt = 0;
+const HOMEPAGE_CACHE_MS = 30000;
+
+async function getCachedHomepage() {
+  const now = Date.now();
+  if (_homepageCache && (now - _homepageCacheAt) < HOMEPAGE_CACHE_MS) return _homepageCache;
+  const doc = await adminDb.collection('siteContent').doc('homepage').get();
+  _homepageCache = doc.exists ? (doc.data() || {}) : {};
+  _homepageCacheAt = now;
+  return _homepageCache;
+}
+
+// Same f_auto/q_auto/c_limit idea as site-content.js's contentImageURL()
+// client-side — only ever shrinks what Cloudinary serves, computed here
+// too so the hero/banner/category image is already sized correctly in
+// the very first HTML response instead of only after the client's own
+// fetch resolves.
+function adminImageURL(url, maxWidth) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!/^https:\/\//i.test(trimmed)) return '';
+  if (!trimmed.includes('/upload/')) return trimmed;
+  return trimmed.replace('/upload/', '/upload/f_auto,q_auto,c_limit,w_' + maxWidth + '/');
+}
+
+// Fills the text content of <TAG ... id="id" ...>...</TAG> and drops
+// skeleton-text/content-shimmer from its class list — this element's
+// content is now decided (real text, or confirmed genuinely unset), so
+// there's nothing left for it to visually wait on. Leaves the element
+// untouched (still shimmering) if id isn't found, which only happens
+// if index.html's markup ever changes out from under this.
+function fillTextElement(html, id, text) {
+  const re = new RegExp('(<[a-zA-Z0-9]+\\b[^>]*\\bid="' + id + '"[^>]*>)([^<]*)(</)');
+  return html.replace(re, function (_m, openTag, _oldText, closeStart) {
+    const cleanedOpen = openTag.replace(/\s*\b(skeleton-text|content-shimmer)\b/g, '');
+    return cleanedOpen + escapeHtml(text || '') + closeStart;
+  });
+}
+
+function fillBackgroundElement(html, id, imageUrl, maxWidth) {
+  const url = adminImageURL(imageUrl, maxWidth);
+  const re = new RegExp('(<div\\b[^>]*\\bid="' + id + '"[^>]*)(>)');
+  return html.replace(re, function (_m, openAttrs, gt) {
+    if (url) {
+      const safeUrl = url.replace(/['"\\]/g, '');
+      const cleaned = openAttrs.replace(/\s*\bcontent-shimmer\b/g, '');
+      return cleaned + " style=\"background-image:url('" + safeUrl + "');background-size:cover;background-position:center;\"" + gt;
+    }
+    // SSR succeeded but this field is genuinely unset — settle to the
+    // flat neutral empty state instead of animating a shimmer forever;
+    // same content-shimmer -> content-empty distinction
+    // loadBackgroundImage() makes client-side once ITS fetch resolves.
+    return openAttrs.replace(/\bcontent-shimmer\b/, 'content-empty') + gt;
+  });
+}
+
+// renderShopByCategory() in site-content.js always rebuilds this grid's
+// innerHTML from scratch regardless of what's here, so this only needs
+// to get the initial paint right (image + label), not full
+// interactivity (onclick) — the client overwrites it moments later
+// either way. Unconfigured (no tiles) leaves the 4 static neutral
+// placeholder tiles already in index.html untouched.
+function applyShopByCategoryTiles(html, tiles) {
+  if (!tiles.length) return html;
+  const inner = tiles.map(function (tile) {
+    const label = escapeHtml(tile.label || '');
+    const url = adminImageURL(tile.imageUrl, 600);
+    const safeUrl = url.replace(/['"\\]/g, '');
+    const style = url ? " style=\"background-image:url('" + safeUrl + "');background-size:cover;background-position:center;\"" : '';
+    return '<div class="home-category-card"><div class="home-category-img"' + style + '><div class="home-category-label">' + label + '</div></div></div>';
+  }).join('');
+  return html.replace(
+    /(<div class="home-categories-grid" id="home-categories-grid">)[\s\S]*?(<\/div>\s*<\/section>)/,
+    '$1' + inner + '$2'
+  );
+}
+
+function applyHomepageContent(html, homepage) {
+  const hero = homepage.hero || {};
+  const arrivals = homepage.newArrivals || {};
+  const shopByCategory = homepage.shopByCategory || {};
+  const clothing = homepage.shopByClothing || {};
+  const banner = homepage.editorialBanner || {};
+  const shopByBrand = homepage.shopByBrand || {};
+
+  html = fillTextElement(html, 'hero-heading', hero.heading);
+  html = fillTextElement(html, 'hero-shop-btn', hero.buttonText);
+  html = fillBackgroundElement(html, 'hero-bg', hero.imageUrl, 1600);
+
+  html = fillTextElement(html, 'arrivals-heading', arrivals.heading);
+  html = fillTextElement(html, 'arrivals-view-all-btn', arrivals.buttonText);
+
+  html = fillTextElement(html, 'shop-by-category-heading', shopByCategory.heading);
+  html = applyShopByCategoryTiles(html, Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : []);
+
+  html = fillTextElement(html, 'clothing-heading', clothing.heading);
+  html = fillTextElement(html, 'clothing-view-all-btn', clothing.buttonText);
+
+  html = fillTextElement(html, 'banner-heading', banner.heading);
+  html = fillTextElement(html, 'banner-btn', banner.buttonText);
+  html = fillBackgroundElement(html, 'editorial-banner-img', banner.imageUrl, 1600);
+
+  html = fillTextElement(html, 'shop-by-brand-heading', shopByBrand.heading);
+
+  return html;
+}
+
+// Entry point used by every route below that serves index.html. Never
+// throws — falls back to the untouched static HTML (still correct,
+// just shimmering until the client's own fetch resolves) if adminDb
+// isn't configured or the Firestore read fails for any reason.
+async function injectHomepageContent(html) {
+  if (!adminDb) return html;
+  try {
+    const homepage = await getCachedHomepage();
+    return applyHomepageContent(html, homepage || {});
+  } catch (e) {
+    console.error('[HOMEPAGE SSR] Error:', e.message);
+    return html;
+  }
+}
+
+async function renderIndexHtml(headTransform) {
+  const indexPath = path.join(__dirname, 'index.html');
+  let html = fs.readFileSync(indexPath, 'utf8');
+  if (headTransform) html = headTransform(html);
+  html = await injectHomepageContent(html);
+  return injectCacheBust(html);
+}
+
 // ==================== PRODUCT SEO ROUTE ====================
 // Must be registered before the static middleware and catch-all below.
 // Serves index.html with real per-product <title>/meta/canonical/OG/JSON-LD
@@ -571,9 +721,7 @@ app.get('/products/:slug', async (req, res, next) => {
 
     if (!product) return next();
 
-    const indexPath = path.join(__dirname, 'index.html');
-    const rawHtml = fs.readFileSync(indexPath, 'utf8');
-    const finalHtml = injectCacheBust(injectProductMeta(rawHtml, product, product.slug || slug));
+    const finalHtml = await renderIndexHtml(h => injectProductMeta(h, product, product.slug || slug));
     res.send(finalHtml);
   } catch (e) {
     console.error('[PRODUCT ROUTE] Error:', e.message);
@@ -585,13 +733,11 @@ app.get('/products/:slug', async (req, res, next) => {
 // Also before static middleware and catch-all. No database call needed —
 // categories are a fixed set, so this is pure string injection.
 
-app.get('/collections/:cat', (req, res, next) => {
+app.get('/collections/:cat', async (req, res, next) => {
   try {
-    const indexPath = path.join(__dirname, 'index.html');
-    const rawHtml = fs.readFileSync(indexPath, 'utf8');
-    const withMeta = injectCollectionMeta(rawHtml, req.params.cat);
-    if (!withMeta) return next(); // unknown category — let the normal SPA handle it
-    res.send(injectCacheBust(withMeta));
+    if (!CATEGORY_META[req.params.cat]) return next(); // unknown category — let the normal SPA handle it
+    const html = await renderIndexHtml(h => injectCollectionMeta(h, req.params.cat));
+    res.send(html);
   } catch (e) {
     console.error('[COLLECTION ROUTE] Error:', e.message);
     return next();
@@ -606,14 +752,20 @@ app.get('/collections/:cat', (req, res, next) => {
 app.use(express.static(path.join(__dirname), { index: false }));
 
 // Catch-all for HTML routing — only sends index.html for clean URLs
-app.get('*', (req, res) => {
+app.get('*', async (req, res) => {
   // If it looks like a file request (.css, .js, .png etc), let it 404
   if (req.path.includes('.')) {
     return res.status(404).send('Not found');
   }
-  // Otherwise send index.html for client-side routing
-  const rawHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-  res.send(injectCacheBust(rawHtml));
+  // Otherwise send index.html for client-side routing, with the current
+  // homepage content already spliced in — see renderIndexHtml() above.
+  try {
+    res.send(await renderIndexHtml());
+  } catch (e) {
+    console.error('[CATCH-ALL] Error:', e.message);
+    const rawHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    res.send(injectCacheBust(rawHtml));
+  }
 });
 
 const PORT = process.env.PORT || 3000;

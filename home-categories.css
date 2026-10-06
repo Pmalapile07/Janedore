@@ -109,7 +109,7 @@
 /* Product card image ratio is 5/6 (≈0.833); height reduced another
    10% from 0.78 (aspect-ratio is width/height, so shrinking height by
    10% at the same width means dividing the ratio by 0.9: 0.78/0.9 ≈ 0.87). */
-.home-category-img { aspect-ratio: 0.87; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
+.home-category-img { aspect-ratio: 0.87; background-color: #f4f4f4; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
 /* Centered over the category image itself instead of sitting below it. */
 .home-category-label {
   position: absolute;
