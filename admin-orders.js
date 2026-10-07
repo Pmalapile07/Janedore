@@ -36,9 +36,13 @@
   window._selectedOrders = {};
   window._bulkMode = false;
 
+  // "Abandoned" means we genuinely don't know what happened — payment
+  // never resolved either way. An explicit outcome (paid, cancelled at
+  // PayFast, or failed per PayFast's own ITN) is a known result, not an
+  // abandonment, even though none of those is 'paid' either.
   function isAbandoned(o) {
     if ((o.status || 'pending') !== 'pending') return false;
-    if ((o.paymentStatus || 'unpaid') === 'paid') return false;
+    if ((o.paymentStatus || 'unpaid') !== 'unpaid') return false;
     if (!o.createdAt) return true;
     var ts = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
     return (Date.now() - ts.getTime()) > ABANDONED_THRESHOLD_MS;
@@ -250,6 +254,8 @@
           '<option value="">All Payments</option>' +
           '<option value="paid">Paid</option>' +
           '<option value="unpaid">Unpaid</option>' +
+          '<option value="cancelled">Cancelled</option>' +
+          '<option value="failed">Failed</option>' +
           '<option value="refunded">Refunded</option>' +
         '</select>' +
         '<div class="toolbar-spacer"></div>' +
@@ -913,7 +919,6 @@
         '<div class="card-title" style="margin-bottom:8px;">Update Status</div>' +
         '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;">' +
           ORDER_STATUSES.map(function (s) {
-            if (s === 'refunded' && !canRefund) return '';
             return '<button class="btn btn-xs ' + (o.status === s ? 'btn-primary' : 'btn-ghost') + '"' +
               ' onclick="window._updateOrderStatus(\'' + esc(orderId) + '\',\'' + esc(s) + '\')">' +
               esc(s) + '</button>';
@@ -952,9 +957,12 @@
 
   // ─── ORDER TIMELINE ──────────────────────────────────────────
 
+  // Fulfillment states only — 'pending' here means "order record exists",
+  // not "paid". Whether payment actually cleared is read from
+  // paymentStatus (set exclusively by the verified PayFast ITN, or by an
+  // explicit refund), never from this status value — see renderOrderTimeline.
   var TIMELINE_STEPS = [
     { key: 'pending',     label: 'Order Placed',    icon: 'ph-shopping-cart' },
-    { key: 'paid',        label: 'Payment Confirmed', icon: 'ph-credit-card' },
     { key: 'processing',  label: 'Processing',       icon: 'ph-package' },
     { key: 'packed',      label: 'Packed',           icon: 'ph-archive' },
     { key: 'shipped',     label: 'Shipped',          icon: 'ph-truck' },
@@ -962,6 +970,7 @@
   ];
 
   function renderOrderTimeline(o) {
+    var paymentConfirmed = (o.paymentStatus || 'unpaid') === 'paid';
     var currentStatus = o.status || 'pending';
     var currentIndex = -1;
 
@@ -979,11 +988,19 @@
       '</div>';
     }
 
+    // Insert a "Payment Confirmed" step right after "Order Placed", driven
+    // by paymentStatus rather than status. Fulfillment steps never render
+    // as reached ahead of payment actually clearing, even if status
+    // already says otherwise (e.g. a manually-created admin order).
+    var steps = [TIMELINE_STEPS[0], { key: 'paid', label: 'Payment Confirmed', icon: 'ph-credit-card' }]
+      .concat(TIMELINE_STEPS.slice(1));
+    var effectiveIndex = paymentConfirmed ? currentIndex + 1 : 0;
+
     var html = '<div style="padding:8px 0 4px;">';
-    for (var j = 0; j < TIMELINE_STEPS.length; j++) {
-      var step = TIMELINE_STEPS[j];
-      var isComplete = j <= currentIndex;
-      var isCurrent = j === currentIndex;
+    for (var j = 0; j < steps.length; j++) {
+      var step = steps[j];
+      var isComplete = j <= effectiveIndex;
+      var isCurrent = j === effectiveIndex;
 
       html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;">' +
         '<div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;' +
@@ -1000,8 +1017,8 @@
         '</div>' +
       '</div>';
 
-      if (j < TIMELINE_STEPS.length - 1) {
-        html += '<div style="margin-left:11px;width:2px;height:8px;background:' + (j < currentIndex ? 'var(--text)' : 'var(--border-med)') + ';border-radius:1px;"></div>';
+      if (j < steps.length - 1) {
+        html += '<div style="margin-left:11px;width:2px;height:8px;background:' + (j < effectiveIndex ? 'var(--text)' : 'var(--border-med)') + ';border-radius:1px;"></div>';
       }
     }
     html += '</div>';
@@ -1075,12 +1092,12 @@
     var existing = window._ordersData ? window._ordersData.filter(function (x) { return x.id === orderId; })[0] : null;
     if (!confirm('Mark order #' + ((existing && existing.orderNumber) || orderId) + ' as refunded?')) return;
     ordersRef.doc(orderId)
-      .update({ status: 'refunded', updatedAt: new Date().toISOString() })
+      .update({ paymentStatus: 'refunded', updatedAt: new Date().toISOString() })
       .then(function () {
         showToast('Order marked as refunded');
         if (window._ordersData) {
           var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
-          if (o) o.status = 'refunded';
+          if (o) o.paymentStatus = 'refunded';
         }
         closePanel();
       }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
@@ -1088,9 +1105,6 @@
 
   window._updateOrderStatus = function (orderId, status) {
     if (!window._guard('orders', 'update')) return;
-    if (status === 'refunded' && !window._can('orders', 'approve')) {
-      showToast('Only Super Admin can issue refunds.', 'error'); return;
-    }
     if (ORDER_STATUSES.indexOf(status) === -1) { showToast('Invalid status value', 'error'); return; }
     ordersRef.doc(orderId)
       .update({ status: status, updatedAt: new Date().toISOString() })

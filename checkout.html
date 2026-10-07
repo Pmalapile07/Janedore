@@ -189,6 +189,7 @@
     margin-top: 16px;
   }
   .checkout-place-order-btn:hover { background: #333; }
+  .checkout-place-order-btn:disabled { background: #888; cursor: not-allowed; }
   .checkout-confirmation {
     text-align: center;
     padding: 60px 20px;
@@ -227,6 +228,16 @@
     transition: all 0.2s;
   }
   .checkout-confirmation-btn:hover { color: #555; border-color: #555; }
+  .checkout-confirming-spinner {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 20px;
+    border: 1.5px solid #e5e5e5;
+    border-top-color: #111;
+    border-radius: 50%;
+    animation: checkout-spin 0.8s linear infinite;
+  }
+  @keyframes checkout-spin { to { transform: rotate(360deg); } }
   .checkout-required { color: #aaa; font-weight: 300; font-size: 10px; }
   .checkout-trust-badges {
     margin-top: 20px;
@@ -310,11 +321,17 @@
             <label>Street Address <span class="checkout-required">required</span></label>
             <input type="text" id="checkout-address" required placeholder="House number and street name">
           </div>
-          <div class="checkout-form-row-3">
+          <div class="checkout-form-row">
             <div class="checkout-form-group">
               <label>City <span class="checkout-required">required</span></label>
               <input type="text" id="checkout-city" required placeholder="Johannesburg">
             </div>
+            <div class="checkout-form-group">
+              <label>Province</label>
+              <input type="text" id="checkout-province" placeholder="Gauteng">
+            </div>
+          </div>
+          <div class="checkout-form-row">
             <div class="checkout-form-group">
               <label>Postal Code</label>
               <input type="text" id="checkout-postal" placeholder="2000">
@@ -333,11 +350,11 @@
               </select>
             </div>
           </div>
-          
+
           <div class="checkout-section-title">Payment</div>
-          <p class="checkout-payment-note">Demo mode — no payment will be processed.<br>You will receive an order confirmation.</p>
-          
-          <button type="submit" class="checkout-place-order-btn">Place Order</button>
+          <p class="checkout-payment-note">You'll be redirected to PayFast to complete your payment securely.<br>You will receive an order confirmation once it clears.</p>
+
+          <button type="submit" class="checkout-place-order-btn" id="checkout-place-order-btn">Place Order</button>
         </form>
       </div>
       
@@ -381,5 +398,12 @@
     <p style="font-size:12px;color:#888;margin-bottom:8px;">Thank you for your order.</p>
     <p style="font-size:11px;color:#aaa;margin-bottom:24px;">A confirmation will be sent to your email.</p>
     <button class="checkout-confirmation-btn" onclick="navigateTo('home')">Continue Shopping</button>
+  </div>
+
+  <div id="checkout-confirming-view" class="checkout-confirmation" style="display:none;">
+    <div class="checkout-confirming-spinner" id="checkout-confirming-spinner"></div>
+    <div class="checkout-confirmation-title">Confirming your payment</div>
+    <p id="checkout-confirming-text" style="font-size:12px;color:#888;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;">This usually only takes a few seconds — please don't close this page.</p>
+    <button class="checkout-confirmation-btn" id="checkout-confirming-retry" style="display:none;">Check Again</button>
   </div>
 </div>

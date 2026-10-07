@@ -171,7 +171,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .badge-draft,.badge-pending,.badge-unfulfilled,.badge-warning{background:var(--warning-soft);color:var(--warning);}
 .badge-processing,.badge-packed,.badge-pinned,.badge-info,.badge-new{background:var(--accent-soft);color:var(--accent);}
 .badge-shipped{background:var(--purple-soft);color:var(--purple);}
-.badge-cancelled,.badge-refunded,.badge-hidden,.badge-danger{background:var(--danger-soft);color:var(--danger);}
+.badge-cancelled,.badge-refunded,.badge-failed,.badge-hidden,.badge-danger{background:var(--danger-soft);color:var(--danger);}
 .badge-unread{background:var(--accent);color:#fff;}
 .badge-sold,.badge-super,.badge-muted{background:var(--surface3);color:var(--muted);}
 

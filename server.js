@@ -533,6 +533,28 @@ app.get('/api/payfast/debug', (req, res) => {
   res.json(lastPayFastDebug || { message: 'No /api/payfast/initiate call recorded yet since this server last restarted. Try checkout first, then reload this page.' });
 });
 
+// Called by checkout.js when the customer lands back on cancel_url —
+// the only signal we get for an explicit cancel, since PayFast's ITN
+// only fires for an actual payment attempt. Guarded against the order
+// having been paid in the meantime (e.g. the ITN winning a race against
+// this call) so a cancel report can never downgrade a real payment.
+app.post('/api/payfast/order/:id/cancel', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const orderRef = adminDb.collection('orders').doc(req.params.id);
+    const orderDoc = await orderRef.get();
+    if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
+    const order = orderDoc.data();
+    if ((order.paymentStatus || 'unpaid') === 'unpaid') {
+      await orderRef.update({ paymentStatus: 'cancelled' });
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[PAYFAST_CANCEL] Error:', e.message);
+    res.status(500).json({ error: 'Could not record cancellation' });
+  }
+});
+
 const PAYFAST_VALID_HOSTS = ['www.payfast.co.za', 'sandbox.payfast.co.za', 'w1w.payfast.co.za', 'w2w.payfast.co.za'];
 
 function resolveValidPayFastIps() {
@@ -633,6 +655,12 @@ app.post('/api/payfast/notify', async (req, res) => {
 
     if (pfData.payment_status !== 'COMPLETE') {
       console.log('[PAYFAST_ITN]', orderId, 'status is', pfData.payment_status, '— not marking paid');
+      // Only act on an explicit FAILED — PENDING (used by some payment
+      // methods) may still resolve to COMPLETE on a later ITN, so it's
+      // left alone rather than being recorded as a failure prematurely.
+      if (pfData.payment_status === 'FAILED' && order.paymentStatus === 'unpaid') {
+        await orderRef.update({ paymentStatus: 'failed' });
+      }
       return;
     }
     if (order.paymentStatus === 'paid') {

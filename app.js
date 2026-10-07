@@ -239,6 +239,26 @@ async function init() {
   initVendors();
   initNavScroll();
 
+  // PayFast redirects the customer back to "/?payfast_return=1&order=..."
+  // (a bare path with query params, no hash), so without this check the
+  // routing below falls through to the home page while checkout.js's own
+  // PayFast-return handler is, independently and concurrently, trying to
+  // show the checkout page's confirming/confirmation view — whichever one
+  // finishes last wins, so the customer could get yanked back to home
+  // mid-confirmation. Recognizing it here means both agree on landing on
+  // checkout; checkout.js alone decides which inner view to show.
+  //
+  // Reads a flag rather than re-parsing location.search: checkout.js's
+  // own PayFast-return handler runs earlier (at script-load time, before
+  // this DOMContentLoaded-bound init() does) and rewrites the URL to
+  // strip these query params once it's read them, so by the time init()
+  // runs they'd already be gone from the URL.
+  if (window.__payfastReturnActive) {
+    navigateTo('checkout', true);
+    updateChatVisibility();
+    return;
+  }
+
   // Path-based routes (/products/slug, /collections/cat, /pages/slug, /shop, /login, etc)
   // take priority over hash routes.
   const pathRoute = getRouteFromPath();

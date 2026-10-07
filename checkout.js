@@ -3,6 +3,31 @@
 let checkoutEmail = localStorage.getItem('janedore_checkout_email') || '';
 let lastConfirmedOrderNumber = sessionStorage.getItem('janedore_last_order_number') || null;
 
+// True from the moment a PayFast-return confirmation poll starts until
+// it either succeeds or the customer is shown the "check again" fallback.
+// app.js's init() also lands on the checkout page on a PayFast return
+// (see the comment there), which otherwise races this poll: if init()'s
+// navigateTo('checkout') runs while a poll is still waiting, it would
+// call navigateToCheckout() below and reset the view back to the plain
+// form, hiding the spinner the poll is actively showing. This flag tells
+// navigateToCheckout() to leave the inner view alone while that's true.
+let payFastConfirmPending = false;
+
+// Shared by navigateToCheckout() and the PayFast-return flow below —
+// both need to force the checkout page active regardless of whatever
+// page the router's own startup logic landed on.
+function activateCheckoutPage() {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const checkoutPage = document.getElementById("page-checkout");
+  if (!checkoutPage) return null;
+  checkoutPage.classList.add("active");
+  S.currentPage = "checkout";
+  updateHash('checkout');
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  ensureNavScrolled();
+  return checkoutPage;
+}
+
 function navigateToCheckout() {
   const user = firebase.auth().currentUser;
 
@@ -11,25 +36,26 @@ function navigateToCheckout() {
     return;
   }
 
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-
-  const checkoutPage = document.getElementById("page-checkout");
+  const checkoutPage = activateCheckoutPage();
   if (checkoutPage) {
-    checkoutPage.classList.add("active");
-    S.currentPage = "checkout";
-    updateHash('checkout');
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    ensureNavScrolled();
+    if (payFastConfirmPending) return;
+
+    const confirmingView = document.getElementById('checkout-confirming-view');
 
     if (!S.cart.length && lastConfirmedOrderNumber) {
       document.getElementById('checkout-form-view').style.display = 'none';
       document.getElementById('checkout-confirmation-view').style.display = 'block';
+      if (confirmingView) confirmingView.style.display = 'none';
       document.getElementById('confirmation-order-number').textContent = 'Order #' + lastConfirmedOrderNumber;
       return;
     }
 
     document.getElementById('checkout-form-view').style.display = 'block';
     document.getElementById('checkout-confirmation-view').style.display = 'none';
+    if (confirmingView) confirmingView.style.display = 'none';
+
+    const placeOrderBtn = document.getElementById('checkout-place-order-btn');
+    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Place Order'; }
 
     if (user && user.email) {
       document.getElementById('checkout-email').value = user.email;
@@ -62,6 +88,7 @@ async function prefillCheckoutFromProfile(uid) {
     fillIfEmpty('checkout-phone', c.phone);
     fillIfEmpty('checkout-address', c.address);
     fillIfEmpty('checkout-city', c.city);
+    fillIfEmpty('checkout-province', c.province);
     fillIfEmpty('checkout-postal', c.postalCode);
     fillIfEmpty('checkout-country', c.country);
   } catch (e) {
@@ -132,22 +159,33 @@ function renderCheckoutSummary() {
 
 async function placeOrder(e) {
   e.preventDefault();
-  
+
   if (!S.cart.length) {
     alert('Your cart is empty.');
     return;
   }
-  
+
+  // Same loading-state pattern as login.js's handleLoginSubmit(): disable
+  // the button and swap its label while the request is in flight. This
+  // also doubles as the duplicate-submission guard — a disabled button
+  // doesn't fire further submit events, so a second click (or the
+  // keyboard re-submitting) while this is still running does nothing.
+  const submitBtn = document.getElementById('checkout-place-order-btn');
+  if (submitBtn && submitBtn.disabled) return;
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Please wait…'; }
+
   const email = document.getElementById('checkout-email').value.trim();
   const name = document.getElementById('checkout-name').value.trim();
   const address = document.getElementById('checkout-address').value.trim();
   const city = document.getElementById('checkout-city').value.trim();
+  const province = document.getElementById('checkout-province').value.trim();
   const postal = document.getElementById('checkout-postal').value.trim();
   const country = document.getElementById('checkout-country').value.trim();
   const phone = document.getElementById('checkout-phone').value.trim();
   
   if (!email || !name || !address || !city || !country) {
     alert('Please fill in all required fields.');
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
     return;
   }
   
@@ -178,6 +216,7 @@ async function placeOrder(e) {
     customerId: user ? user.uid : null,
     shippingAddress: address,
     city,
+    province,
     postalCode: postal,
     country,
     // vendorId per line + the order-level vendorIds list below are what
@@ -305,6 +344,7 @@ async function placeOrder(e) {
         phone,
         address,
         city,
+        province,
         postalCode: postal,
         country,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -326,7 +366,11 @@ async function placeOrder(e) {
   } catch (e) {
     console.warn('Order error:', e);
     alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
   }
+  // No restore on success: redirectToPayFast() navigates the browser
+  // away, so the button stays disabled/"Please wait…" until that
+  // happens rather than flickering back to clickable first.
 }
 
 // Asks the server to build a signed PayFast payment request for this
@@ -360,31 +404,15 @@ async function redirectToPayFast(orderId) {
   form.submit();
 }
 
-// Runs once on page load (called below, at script-load time — this
-// file is deferred, so the DOM already exists by the time it runs).
-// PayFast's ITN (server-side, see server.js) is sent and processed
-// BEFORE the customer is redirected back to return_url per PayFast's
-// own docs, so by the time this runs the order's paymentStatus should
-// already reflect the real outcome — this just asks what the server
-// already decided, rather than deciding anything itself.
-async function handlePayFastReturn() {
-  const params = new URLSearchParams(window.location.search);
-  const orderId = params.get('order');
-  if (!orderId) return;
+// PayFast's ITN (server-side, see server.js) is usually sent and
+// processed before the customer is redirected back to return_url, but
+// that's not a hard guarantee — Render's free tier can be slow to wake
+// up, so the order's paymentStatus may not have updated yet by the time
+// the customer lands back here. Rather than check once and give up,
+// poll a few times with backoff before concluding anything.
+const PAYFAST_POLL_DELAYS_MS = [1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000]; // ~25s total
 
-  const isReturn = params.get('payfast_return') === '1';
-  const isCancel = params.get('payfast_cancel') === '1';
-  if (!isReturn && !isCancel) return;
-
-  // Either way, the URL's done its job — drop the query params so a
-  // refresh doesn't replay this.
-  history.replaceState(null, '', window.location.pathname);
-
-  if (isCancel) {
-    alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
-    return;
-  }
-
+async function pollPaymentStatus(orderId, attempt) {
   try {
     const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status');
     const data = await res.json();
@@ -397,12 +425,85 @@ async function handlePayFastReturn() {
       lastConfirmedOrderNumber = data.orderNumber || orderId;
       sessionStorage.setItem('janedore_last_order_number', lastConfirmedOrderNumber);
 
+      payFastConfirmPending = false;
       navigateToCheckout();
-    } else {
-      alert('We\'re still confirming your payment — check your email shortly, or contact us if this takes more than a few minutes.');
+      return;
     }
   } catch (e) {
     console.warn('[PAYFAST_RETURN] Could not confirm payment status:', e.message);
   }
+
+  if (attempt < PAYFAST_POLL_DELAYS_MS.length) {
+    setTimeout(function () { pollPaymentStatus(orderId, attempt + 1); }, PAYFAST_POLL_DELAYS_MS[attempt]);
+  } else {
+    showPayFastConfirmTimeout(orderId);
+  }
+}
+
+function showPayFastConfirmingView() {
+  payFastConfirmPending = true;
+  activateCheckoutPage();
+  const formView = document.getElementById('checkout-form-view');
+  const confirmationView = document.getElementById('checkout-confirmation-view');
+  const confirmingView = document.getElementById('checkout-confirming-view');
+  if (formView) formView.style.display = 'none';
+  if (confirmationView) confirmationView.style.display = 'none';
+  if (confirmingView) confirmingView.style.display = 'block';
+}
+
+function showPayFastConfirmTimeout(orderId) {
+  const spinner = document.getElementById('checkout-confirming-spinner');
+  const text = document.getElementById('checkout-confirming-text');
+  const retryBtn = document.getElementById('checkout-confirming-retry');
+  if (spinner) spinner.style.display = 'none';
+  if (text) text.textContent = 'This is taking longer than usual. We\'ll email your confirmation as soon as it clears, or check again now.';
+  if (retryBtn) {
+    retryBtn.style.display = 'inline-block';
+    retryBtn.onclick = function () {
+      retryBtn.style.display = 'none';
+      if (spinner) spinner.style.display = 'block';
+      if (text) text.textContent = 'This usually only takes a few seconds — please don\'t close this page.';
+      pollPaymentStatus(orderId, 0);
+    };
+  }
+}
+
+// Runs once on page load, at script-load time (this file is deferred,
+// so the DOM already exists by the time it runs). app.js's init() also
+// recognizes payfast_return/payfast_cancel and lands on the checkout
+// page itself regardless of which of the two finishes first — see the
+// comment next to that check in app.js — so there's no dependency here
+// on run order between the two.
+function handlePayFastReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get('order');
+  if (!orderId) return;
+
+  const isReturn = params.get('payfast_return') === '1';
+  const isCancel = params.get('payfast_cancel') === '1';
+  if (!isReturn && !isCancel) return;
+
+  // Flag read by app.js's init() (see the comment there) — set before
+  // the URL is rewritten below, since init() runs later (after
+  // DOMContentLoaded) and by then location.search would already be
+  // stripped if it tried to read the params itself.
+  window.__payfastReturnActive = true;
+
+  // Either way, the URL's done its job — drop the query params so a
+  // refresh doesn't replay this.
+  history.replaceState(null, '', window.location.pathname);
+
+  if (isCancel) {
+    // Best-effort — the customer's bag is already intact regardless of
+    // whether this call succeeds, so a network failure here shouldn't
+    // block showing them the message below.
+    fetch('/api/payfast/order/' + encodeURIComponent(orderId) + '/cancel', { method: 'POST' })
+      .catch(function (e) { console.warn('[PAYFAST_CANCEL] Could not record cancellation:', e.message); });
+    alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
+    return;
+  }
+
+  showPayFastConfirmingView();
+  pollPaymentStatus(orderId, 0);
 }
 handlePayFastReturn();
