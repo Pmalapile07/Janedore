@@ -424,7 +424,8 @@ function renderCart() {
     </div>`;
   }
   
-  DOM.cartFoot.innerHTML = `${discountHtml}<div class="cart-subtotal"><span class="cart-subtotal-label">${appliedDiscount ? 'Total' : 'Subtotal'}</span><span class="cart-subtotal-val">${formatPrice(finalTotal)}</span></div>${appliedDiscount && discountAmount > 0 ? `<div class="cart-original-price" style="text-decoration:line-through;color:var(--muted);font-size:12px;">${formatPrice(sub)}</div>` : ''}<div class="cart-ship-note">${shipping.message}</div>${cartHasMultipleTypes() ? '<div class="cart-multi-package-note">contents may arrive in multiple packages</div>' : ''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="handleCheckoutClick()">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
+  const hasSoldOut = cartHasSoldOutItem();
+  DOM.cartFoot.innerHTML = `${discountHtml}<div class="cart-subtotal"><span class="cart-subtotal-label">${appliedDiscount ? 'Total' : 'Subtotal'}</span><span class="cart-subtotal-val">${formatPrice(finalTotal)}</span></div>${appliedDiscount && discountAmount > 0 ? `<div class="cart-original-price" style="text-decoration:line-through;color:var(--muted);font-size:12px;">${formatPrice(sub)}</div>` : ''}<div class="cart-ship-note">${shipping.message}</div>${cartHasMultipleTypes() ? '<div class="cart-multi-package-note">contents may arrive in multiple packages</div>' : ''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
 }
 
 function renderCartPage() {
@@ -467,12 +468,13 @@ function renderCartPage() {
   });
 
   const sub = getCartSubtotal();
+  const hasSoldOut = cartHasSoldOutItem();
 
   html += `<div class="cart-page-summary">
     <div class="cart-page-subtotal">Subtotal <strong>${formatPrice(sub)}</strong></div>
     <div class="cart-page-actions">
       <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
-      <button class="cart-page-btn primary" onclick="handleCheckoutClick()">Checkout</button>
+      <button class="cart-page-btn primary"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout</button>
     </div>
   </div>`;
   DOM.cartPageContent.innerHTML = html;
