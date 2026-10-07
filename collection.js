@@ -1162,6 +1162,22 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
   if (window.location.pathname !== newPath) {
     replaceUrl ? history.replaceState(null, null, newPath) : history.pushState(null, null, newPath);
   }
+  // Must happen before the innerHTML wipe just below: if the shared
+  // #collection-filter-bar (and its child #collection-filter-title-display,
+  // which updateCollectionTitle() depends on to do anything at all) is
+  // still sitting inside #vendor-page-content from a PREVIOUS vendor
+  // visit, that wipe destroys them outright — not just relocates them,
+  // actually removes them from the document, permanently, since nothing
+  // after this point has any way to get them back. That's the real root
+  // cause of both the "grid toggle disappears" and "breadcrumb never
+  // updates again" symptoms: once titleEl is gone, updateCollectionTitle()
+  // bails out on its very first line (`if (!titleEl) return;`) on every
+  // future call, for the rest of the page's lifetime, regardless of how
+  // many more times the user navigates. renderVendorPage() also calls
+  // restoreCollectionFilterBar() at its own top, but that's too late —
+  // it only helps for the NEXT visit, after this wipe has already
+  // destroyed them for the current one.
+  restoreCollectionFilterBar();
   const el = document.getElementById('vendor-page-content');
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
   // Reset per-visit so a filter/grid choice on one brand's page doesn't
