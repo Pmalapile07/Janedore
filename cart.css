@@ -38,6 +38,11 @@
 .btn-view-cart:hover { background: #f5f5f5; }
 .btn-checkout-main { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; transition: background 0.2s; cursor: pointer; }
 .btn-checkout-main:hover { background: #333; }
+/* Same grey/not-allowed treatment as .product-add-row-btn:disabled on
+   the product page's own Sold Out button — a black button here reads
+   as fully clickable, which this one deliberately isn't. */
+.btn-checkout-main:disabled { background: #ccc; cursor: not-allowed; }
+.btn-checkout-main:disabled:hover { background: #ccc; }
 .cart-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
 .cart-empty-msg { font-family: 'Inter', sans-serif; font-size: var(--body-font-size); font-weight: 500; color: #111; letter-spacing: var(--body-letter-spacing); margin-bottom: 24px; }
 .btn-continue-shopping { background: #fff; color: #111; border: 0.8px solid #111; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 14px 32px; transition: all 0.2s; cursor: pointer; }
@@ -80,6 +85,8 @@
 .cart-page-btn { padding: 14px 32px; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; cursor: pointer; transition: all 0.2s; font-family: inherit; }
 .cart-page-btn.primary { background: #111; color: #fff; border: none; }
 .cart-page-btn.primary:hover { background: #333; }
+.cart-page-btn.primary:disabled { background: #ccc; cursor: not-allowed; }
+.cart-page-btn.primary:disabled:hover { background: #ccc; }
 .cart-page-btn.secondary { background: #fff; color: #111; border: 0.8px solid #111; }
 .cart-page-btn.secondary:hover { background: #f5f5f5; }
 .cart-page-empty { text-align: center; padding: 60px 0; }
