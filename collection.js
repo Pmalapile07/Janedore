@@ -1189,12 +1189,21 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
       if (!bySlug.empty) docId = bySlug.docs[0].id;
     } catch(e) {}
   }
-  if (myNavToken !== vendorNavToken) return; // a newer navigateToVendor() call has since started
+  // Bails if either a newer navigateToVendor() call has started (token
+  // mismatch) OR the user has since navigated to a completely different
+  // kind of page — e.g. clicked away to All Products while this fetch
+  // was still in flight. S.currentPage only reads 'vendor' for as long
+  // as a vendor page is actually showing; every other navigation
+  // function (navigateTo(), navigateToCategory(), goToProduct(), ...)
+  // sets it to something else as part of showing its own page, so this
+  // one check catches every "navigated away" case without needing a
+  // token bump at each of those call sites individually.
+  if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
   S.currentVendorId = docId;
 
   try {
     const doc = await db.collection('vendors').doc(docId).get();
-    if (myNavToken !== vendorNavToken) return; // ditto — don't let a stale fetch overwrite a newer navigation
+    if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
     const vendor = doc.exists ? Object.assign({id:doc.id}, doc.data()) : null;
     S.currentVendor = vendor;
     renderVendorPage(vendor);
@@ -1205,12 +1214,12 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
       history.replaceState(null, null, canonicalPath);
     }
   } catch(e) {
-    if (myNavToken !== vendorNavToken) return;
+    if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
     console.error('Error fetching vendor:', e);
     S.currentVendor = null;
     renderVendorPage(null);
   }
-  if (myNavToken !== vendorNavToken) return;
+  if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
   window.scrollTo({top:0,behavior:"instant"});
   ensureNavScrolled();
   updateChatVisibility();
