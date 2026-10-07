@@ -35,6 +35,23 @@ const DOM = {
   get chatBubble() { return document.getElementById("live-chat-bubble"); }
 };
 
+// Bumped by every page-navigation function (navigateTo, navigateToCategory,
+// goToProduct, navigateToVendor, navigateToContentPage, navigateToLogin,
+// navigateToAccount) — the one shared signal for "has the user moved on to
+// a different page since an async fetch for the PREVIOUS page started."
+// Any code that fetches data for a page and then renders it should capture
+// this value before the fetch (`const myNav = ++pageNavGeneration;`) and
+// check `myNav !== pageNavGeneration` immediately after awaiting — if it
+// no longer matches, something else has navigated since, and the fetch's
+// result must be thrown away instead of applied, no matter how long the
+// fetch took or what order multiple fetches resolve in. Without this, a
+// slow background fetch for a page the user has since left can resolve
+// later and corrupt whatever page they're actually looking at by then —
+// this is what the one-off vendorNavToken in collection.js used to guard
+// against for vendor pages only; this replaces it as the shared mechanism
+// every page-level fetch should use.
+let pageNavGeneration = 0;
+
 let PRODUCTS = [];
 // Resolves once PRODUCTS is actually populated — the wishlist account
 // sync (wishlist.js, triggered by login.js's auth listener) needs this:
@@ -410,6 +427,7 @@ function setNavForPage(page) {
 }
 
 function navigateTo(page, replaceUrl) {
+  ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
   S.saleMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false};
@@ -430,6 +448,7 @@ function navigateTo(page, replaceUrl) {
 }
 
 function navigateToCategory(cat, replaceUrl) {
+  ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
   S.saleMode = false; S.catFilter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCollectionUrl(cat, replaceUrl);
@@ -445,6 +464,7 @@ function navigateToCategory(cat, replaceUrl) {
 }
 
 function goToProduct(productId, replaceUrl) {
+  ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
   S.saleMode = false; S.filter.vendor = []; closeCart();
@@ -464,9 +484,10 @@ function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mai
 
 function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
-function navigateToSale() { closeFilterPanel(); closeSearch(); S.saleMode = true; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
+  ++pageNavGeneration;
   closeFilterPanel();
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-login").classList.add("active");
@@ -475,6 +496,7 @@ function navigateToLogin(replaceUrl) {
 }
 
 function navigateToAccount(replaceUrl) {
+  ++pageNavGeneration;
   closeFilterPanel();
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-account").classList.add("active");
@@ -483,6 +505,7 @@ function navigateToAccount(replaceUrl) {
 }
 
 function navigateToCheckout(replaceUrl) {
+  ++pageNavGeneration;
   closeFilterPanel();
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-checkout").classList.add("active");

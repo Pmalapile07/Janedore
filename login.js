@@ -7,6 +7,7 @@
 let loginMode = 'signin'; // 'signin' or 'signup'
 
 function navigateToLogin() {
+  ++pageNavGeneration;
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const loginPage = document.getElementById("page-login");
   if (loginPage) {
@@ -27,6 +28,7 @@ function navigateToLogin() {
 }
 
 function navigateToAccount() {
+  ++pageNavGeneration;
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const accountPage = document.getElementById("page-account");
   if (accountPage) {
