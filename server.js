@@ -427,6 +427,13 @@ function generatePayFastSignature(data, passphrase) {
   return crypto.createHash('md5').update(getString).digest('hex');
 }
 
+// TEMPORARY — holds the most recent /api/payfast/initiate call's debug
+// info in memory so it can be viewed via GET /api/payfast/debug below,
+// without needing Render's log viewer. Single most-recent snapshot
+// only, never persisted, cleared on every server restart. Remove both
+// this and the route once a real sandbox payment goes through cleanly.
+let lastPayFastDebug = null;
+
 app.post('/api/payfast/initiate', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   if (!PAYFAST_MERCHANT_ID || !PAYFAST_MERCHANT_KEY) return res.status(503).json({ error: 'PayFast not configured' });
@@ -490,11 +497,23 @@ app.post('/api/payfast/initiate', async (req, res) => {
     // TEMPORARY — debug logging while tracking down a signature
     // mismatch on the first live sandbox test. Remove once a real
     // payment goes through cleanly. Passphrase itself is deliberately
-    // never logged, only whether it's present and how long it is.
-    console.log('[PAYFAST_INITIATE][DEBUG] Param string (pre-passphrase):', buildPayFastParamString(data));
-    console.log('[PAYFAST_INITIATE][DEBUG] Passphrase set:', !!PAYFAST_PASSPHRASE, '| length:', (PAYFAST_PASSPHRASE || '').length);
+    // never logged or stored, only whether it's present and how long
+    // it is. Stashed in memory (not just console.log) and exposed via
+    // GET /api/payfast/debug below — Render's log viewer separates
+    // "build" and "runtime" logs in a way that's easy to mix up, so
+    // this gives a one-click way to see it instead: open the URL,
+    // screenshot it.
+    const paramString = buildPayFastParamString(data);
     const signature = generatePayFastSignature(data, PAYFAST_PASSPHRASE);
-    console.log('[PAYFAST_INITIATE][DEBUG] Computed signature:', signature);
+    lastPayFastDebug = {
+      at: new Date().toISOString(),
+      orderId,
+      paramString,
+      passphraseSet: !!PAYFAST_PASSPHRASE,
+      passphraseLength: (PAYFAST_PASSPHRASE || '').length,
+      signature
+    };
+    console.log('[PAYFAST_INITIATE][DEBUG]', JSON.stringify(lastPayFastDebug));
 
     const fields = Object.assign({}, data, { signature });
     if (setupField) fields.setup = setupField;
@@ -504,6 +523,14 @@ app.post('/api/payfast/initiate', async (req, res) => {
     console.error('[PAYFAST_INITIATE] Error:', e.message);
     res.status(500).json({ error: 'Could not start payment' });
   }
+});
+
+// TEMPORARY — open this URL in a browser right after a checkout
+// attempt to see exactly what the last /api/payfast/initiate call
+// computed, no Render log-diving required. Remove alongside
+// lastPayFastDebug once a real sandbox payment succeeds.
+app.get('/api/payfast/debug', (req, res) => {
+  res.json(lastPayFastDebug || { message: 'No /api/payfast/initiate call recorded yet since this server last restarted. Try checkout first, then reload this page.' });
 });
 
 const PAYFAST_VALID_HOSTS = ['www.payfast.co.za', 'sandbox.payfast.co.za', 'w1w.payfast.co.za', 'w2w.payfast.co.za'];
