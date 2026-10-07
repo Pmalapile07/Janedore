@@ -700,6 +700,41 @@ app.get('/api/orders/:id/status', async (req, res) => {
   }
 });
 
+// Called once, right after /status confirms paymentStatus === 'paid', to
+// populate the real order confirmation page (items, address, totals) —
+// kept separate from /status above so the polling loop there stays a
+// small, cheap payload instead of re-fetching the whole order on every
+// retry. Only a curated set of fields is returned, not the raw Firestore
+// doc, so adding internal-only fields to orders later doesn't leak them
+// here by accident.
+app.get('/api/orders/:id', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const doc = await adminDb.collection('orders').doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Not found' });
+    const order = doc.data();
+    res.json({
+      orderNumber: order.orderNumber || req.params.id,
+      status: order.status || 'pending',
+      paymentStatus: order.paymentStatus || 'unpaid',
+      items: order.items || [],
+      subtotal: order.subtotal || 0,
+      shipping: order.shipping || 0,
+      total: order.total || 0,
+      currency: order.currency || 'ZAR',
+      customerName: order.customerName || '',
+      shippingAddress: order.shippingAddress || '',
+      city: order.city || '',
+      province: order.province || '',
+      postalCode: order.postalCode || '',
+      country: order.country || '',
+      createdAt: order.createdAt ? order.createdAt.toDate().toISOString() : null
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not load order' });
+  }
+});
+
 // ==================== CHAT AI REPLY ====================
 // Called by chat.js (customer-facing widget) whenever a customer sends
 // a message and hasn't explicitly asked for a human. Uses the official

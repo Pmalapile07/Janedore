@@ -214,6 +214,108 @@
     color: #888;
     margin-bottom: 24px;
   }
+  .checkout-confirmation-page { padding: 60px 12px 80px; max-width: 1000px; margin: 0 auto; }
+  .checkout-confirmation-header { text-align: center; margin-bottom: 40px; }
+  .checkout-confirmation-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: 500;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 20px;
+  }
+  .checkout-confirmation-body { font-size: 12px; color: #555; line-height: 1.7; margin-bottom: 24px; }
+  .checkout-confirmation-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background: #fafaf9;
+    border: 0.5px solid #e5e5e5;
+    margin-bottom: 32px;
+  }
+  .checkout-confirmation-stat {
+    padding: 22px 24px;
+    text-align: center;
+    border-left: 0.5px solid #e5e5e5;
+  }
+  .checkout-confirmation-stat:first-child { border-left: none; }
+  .checkout-confirmation-stat-label {
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 8px;
+  }
+  .checkout-confirmation-stat-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .checkout-confirmation-stat-sub { font-size: 10px; color: #999; margin-top: 6px; line-height: 1.4; }
+  .checkout-confirmation-status-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #2e8b57; flex-shrink: 0;
+  }
+  .checkout-confirmation-status-dot.danger { background: #c00; }
+  .checkout-confirmation-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'Inter', sans-serif;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    font-weight: var(--ui-font-weight, 400);
+    text-transform: uppercase;
+    color: #111;
+    padding-bottom: 8px;
+    border-bottom: 0.5px solid #e5e5e5;
+    margin-bottom: 4px;
+  }
+  .checkout-confirmation-section-head span:last-child { color: #aaa; }
+  .checkout-confirmation-brand-group { margin-top: 20px; }
+  .checkout-confirmation-brand-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--ui-font-size, 9px);
+    letter-spacing: var(--ui-letter-spacing, 0.2em);
+    text-transform: uppercase;
+    color: #111;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .checkout-confirmation-brand-head span:last-child { color: #aaa; font-weight: 400; }
+  .checkout-confirmation-items .checkout-item { font-size: 12px; }
+  .checkout-confirmation-items .checkout-item-img { width: 64px; height: 78px; }
+  .checkout-confirmation-items .checkout-item-qty { color: #888; font-size: 11px; min-width: 50px; text-align: center; }
+  .checkout-confirmation-footer {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    margin-top: 36px;
+  }
+  .checkout-confirmation-footer-box {
+    background: #fafaf9;
+    border: 0.5px solid #e5e5e5;
+    padding: 22px 24px;
+  }
+  .checkout-confirmation-footer-left { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .checkout-confirmation-footer-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #111;
+    margin-bottom: 10px;
+  }
+  .checkout-confirmation-address { font-size: 12px; color: #555; line-height: 1.7; }
+  .checkout-confirmation-address strong { color: #111; font-weight: 500; display: block; margin-bottom: 2px; }
+  .checkout-confirmation-payment { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #111; }
+  .checkout-confirmation-payment svg { width: 20px; height: 20px; stroke: #111; fill: none; stroke-width: 1.5; flex-shrink: 0; }
   .checkout-confirmation-btn {
     font-family: 'Inter', sans-serif;
     font-size: var(--ui-font-size, 9px);
@@ -290,6 +392,11 @@
     .checkout-form-row, .checkout-form-row-3 { grid-template-columns: 1fr; }
     .checkout-summary { position: static; order: -1; margin-bottom: 24px; }
     .checkout-container { padding: 40px 12px; }
+    .checkout-confirmation-stats { grid-template-columns: 1fr; }
+    .checkout-confirmation-stat { border-left: none; border-top: 0.5px solid #e5e5e5; }
+    .checkout-confirmation-stat:first-child { border-top: none; }
+    .checkout-confirmation-footer { grid-template-columns: 1fr; }
+    .checkout-confirmation-footer-left { grid-template-columns: 1fr; gap: 20px; }
   }
 </style>
 
@@ -391,13 +498,61 @@
     </div>
   </div>
   
-  <div id="checkout-confirmation-view" class="checkout-confirmation" style="display:none;">
-    <div class="checkout-confirmation-icon">&#10003;</div>
-    <div class="checkout-confirmation-title">Order Confirmed</div>
-    <div class="checkout-confirmation-order" id="confirmation-order-number"></div>
-    <p style="font-size:12px;color:#888;margin-bottom:8px;">Thank you for your order.</p>
-    <p style="font-size:11px;color:#aaa;margin-bottom:24px;">A confirmation will be sent to your email.</p>
-    <button class="checkout-confirmation-btn" onclick="navigateTo('home')">Continue Shopping</button>
+  <div id="checkout-confirmation-view" class="checkout-confirmation-page" style="display:none;">
+    <div class="checkout-confirmation-header">
+      <div class="checkout-confirmation-icon">&#10003;</div>
+      <div class="checkout-confirmation-title">Order Confirmed</div>
+      <div class="checkout-confirmation-subtitle">Thank You For Shopping With Us</div>
+      <p class="checkout-confirmation-body">Your payment was successful and your order has been received.<br>You'll receive a confirmation email shortly.</p>
+      <button class="checkout-confirmation-btn" onclick="navigateTo('home')">Continue Shopping &#8594;</button>
+    </div>
+
+    <div class="checkout-confirmation-stats">
+      <div class="checkout-confirmation-stat">
+        <div class="checkout-confirmation-stat-label">Order Number</div>
+        <div class="checkout-confirmation-stat-value" id="confirmation-order-number"></div>
+        <div class="checkout-confirmation-stat-sub" id="confirmation-order-date"></div>
+      </div>
+      <div class="checkout-confirmation-stat">
+        <div class="checkout-confirmation-stat-label">Order Status</div>
+        <div class="checkout-confirmation-stat-value">
+          <span class="checkout-confirmation-status-dot" id="confirmation-status-dot"></span>
+          <span id="confirmation-status-text">Payment Confirmed</span>
+        </div>
+        <div class="checkout-confirmation-stat-sub">We'll email you once your order has been packed and shipped.</div>
+      </div>
+      <div class="checkout-confirmation-stat">
+        <div class="checkout-confirmation-stat-label">Estimated Delivery</div>
+        <div class="checkout-confirmation-stat-value" id="confirmation-delivery-estimate"></div>
+        <div class="checkout-confirmation-stat-sub">You'll receive a tracking number once your order is on the way.</div>
+      </div>
+    </div>
+
+    <div class="checkout-confirmation-section-head">
+      <span>Items In Your Order</span>
+      <span id="confirmation-item-count"></span>
+    </div>
+    <div id="confirmation-items" class="checkout-confirmation-items"></div>
+
+    <div class="checkout-confirmation-footer">
+      <div class="checkout-confirmation-footer-box checkout-confirmation-footer-left">
+        <div>
+          <div class="checkout-confirmation-footer-label">Delivery Details</div>
+          <div class="checkout-confirmation-address" id="confirmation-address"></div>
+        </div>
+        <div>
+          <div class="checkout-confirmation-footer-label">Payment Method</div>
+          <div class="checkout-confirmation-payment">
+            <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            PayFast
+          </div>
+        </div>
+      </div>
+      <div class="checkout-confirmation-footer-box">
+        <div class="checkout-confirmation-footer-label">Order Summary</div>
+        <div id="confirmation-summary"></div>
+      </div>
+    </div>
   </div>
 
   <div id="checkout-confirming-view" class="checkout-confirmation" style="display:none;">
