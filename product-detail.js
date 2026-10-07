@@ -143,8 +143,19 @@ function selectVariant(productId, variantIndex, evt) {
     // Update swipe init
     productImages = images;
     currentImageIndex = 0;
-    // Update swatch selected state
-    document.querySelectorAll('.variant-swatch').forEach((s,i) => s.classList.toggle('selected', i === variantIndex));
+    // Update swatch selected state — scoped to the main product's own
+    // swatch row, not every .variant-swatch on the page. Unscoped, this
+    // also matched related-product cards elsewhere on the page (same
+    // class, from collection.js's productCard()), toggling .selected by
+    // raw document-order index against this product's own 0/1 index —
+    // on any page where another product's swatches render before this
+    // one in the DOM, the wrong element got highlighted (or none did),
+    // even though the color swap itself worked. That's what looked like
+    // the swatch picker being "stubborn."
+    const mainSwatchRow = document.querySelector('#page-product-detail .variants-row');
+    if (mainSwatchRow) {
+      mainSwatchRow.querySelectorAll('.variant-swatch').forEach((s,i) => s.classList.toggle('selected', i === variantIndex));
+    }
     // Stock availability per size can differ by color, so a size chosen
     // for the previous color may not even apply to this one — reset the
     // selection and rebuild the size row against the new variant's stock,
