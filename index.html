@@ -530,5 +530,31 @@
   });
 </script>
 
+<!-- TEMPORARY — live debug readout for tracing the vendor-breadcrumb
+     bug. Shows what the app's own state actually is, in real time, no
+     DevTools needed: tap it to collapse/expand. Remove once that bug is
+     confirmed fixed. -->
+<div id="nav-debug-overlay" style="position:fixed;bottom:8px;left:8px;z-index:99999;background:rgba(0,0,0,0.85);color:#0f0;font-family:monospace;font-size:10px;line-height:1.5;padding:6px 8px;border-radius:6px;max-width:92vw;white-space:pre;" onclick="this.classList.toggle('collapsed')"></div>
+<style>#nav-debug-overlay.collapsed { padding: 4px 6px; } #nav-debug-overlay.collapsed > span { display: none; }</style>
+<script>
+(function () {
+  var el = document.getElementById('nav-debug-overlay');
+  if (!el) return;
+  setInterval(function () {
+    var vendorName = (typeof S !== 'undefined' && S.currentVendor) ? (S.currentVendor.name || S.currentVendor.brand || S.currentVendor.id) : '-';
+    var bc = document.getElementById('collection-page-breadcrumb');
+    var bcText = bc ? bc.textContent.trim() : '(missing)';
+    var filterBar = document.getElementById('collection-filter-bar');
+    var filterBarParent = filterBar ? (filterBar.closest('#vendor-page-content') ? 'INSIDE vendor page (hidden)' : filterBar.closest('.page.active') ? 'visible page' : 'elsewhere') : '(missing)';
+    el.innerHTML = '<span>DEBUG — tap to collapse</span>\n' +
+      'page: ' + (typeof S !== 'undefined' ? S.currentPage : '?') + '\n' +
+      'vendor: ' + vendorName + '\n' +
+      'navGen: ' + (typeof pageNavGeneration !== 'undefined' ? pageNavGeneration : '?') + '\n' +
+      'breadcrumb: ' + bcText + '\n' +
+      'filterBar: ' + filterBarParent;
+  }, 250);
+})();
+</script>
+
 </body>
 </html>
