@@ -91,7 +91,7 @@
    .nav-logo-text entirely when set; see site-content.js's renderLogo()
    and server.js's applyLogoImage() for the swap. */
 .nav-logo-img {
-  height: 29px;
+  height: 35px;
   width: auto;
   display: block;
   object-fit: contain;
