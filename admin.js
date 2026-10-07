@@ -82,7 +82,11 @@
   var CHAT_ROOT = 'live_chat';
   window._CHAT_ROOT = CHAT_ROOT;
 
-  window._ORDER_STATUSES  = ['pending','paid','processing','packed','shipped','delivered','cancelled','refunded'];
+  // Fulfillment states only — payment events ('paid'/'refunded') live on
+  // paymentStatus, which only the verified PayFast ITN (or an explicit
+  // refund action) is allowed to set. See admin-orders.js's TIMELINE_STEPS
+  // and _quickRefund.
+  window._ORDER_STATUSES  = ['pending','processing','packed','shipped','delivered','cancelled'];
   window._QUICK_REPLIES   = [
     'Hi! How can I help you today?',
     'Your order is being processed.',
