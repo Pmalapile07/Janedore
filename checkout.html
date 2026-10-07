@@ -321,11 +321,17 @@
             <label>Street Address <span class="checkout-required">required</span></label>
             <input type="text" id="checkout-address" required placeholder="House number and street name">
           </div>
-          <div class="checkout-form-row-3">
+          <div class="checkout-form-row">
             <div class="checkout-form-group">
               <label>City <span class="checkout-required">required</span></label>
               <input type="text" id="checkout-city" required placeholder="Johannesburg">
             </div>
+            <div class="checkout-form-group">
+              <label>Province</label>
+              <input type="text" id="checkout-province" placeholder="Gauteng">
+            </div>
+          </div>
+          <div class="checkout-form-row">
             <div class="checkout-form-group">
               <label>Postal Code</label>
               <input type="text" id="checkout-postal" placeholder="2000">
@@ -344,10 +350,10 @@
               </select>
             </div>
           </div>
-          
+
           <div class="checkout-section-title">Payment</div>
-          <p class="checkout-payment-note">Demo mode — no payment will be processed.<br>You will receive an order confirmation.</p>
-          
+          <p class="checkout-payment-note">You'll be redirected to PayFast to complete your payment securely.<br>You will receive an order confirmation once it clears.</p>
+
           <button type="submit" class="checkout-place-order-btn" id="checkout-place-order-btn">Place Order</button>
         </form>
       </div>

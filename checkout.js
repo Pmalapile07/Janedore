@@ -88,6 +88,7 @@ async function prefillCheckoutFromProfile(uid) {
     fillIfEmpty('checkout-phone', c.phone);
     fillIfEmpty('checkout-address', c.address);
     fillIfEmpty('checkout-city', c.city);
+    fillIfEmpty('checkout-province', c.province);
     fillIfEmpty('checkout-postal', c.postalCode);
     fillIfEmpty('checkout-country', c.country);
   } catch (e) {
@@ -177,6 +178,7 @@ async function placeOrder(e) {
   const name = document.getElementById('checkout-name').value.trim();
   const address = document.getElementById('checkout-address').value.trim();
   const city = document.getElementById('checkout-city').value.trim();
+  const province = document.getElementById('checkout-province').value.trim();
   const postal = document.getElementById('checkout-postal').value.trim();
   const country = document.getElementById('checkout-country').value.trim();
   const phone = document.getElementById('checkout-phone').value.trim();
@@ -214,6 +216,7 @@ async function placeOrder(e) {
     customerId: user ? user.uid : null,
     shippingAddress: address,
     city,
+    province,
     postalCode: postal,
     country,
     // vendorId per line + the order-level vendorIds list below are what
@@ -341,6 +344,7 @@ async function placeOrder(e) {
         phone,
         address,
         city,
+        province,
         postalCode: postal,
         country,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
