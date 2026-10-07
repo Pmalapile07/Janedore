@@ -1141,17 +1141,13 @@ function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; D
 
 // ==================== VENDOR / BRAND PAGE ====================
 
-// Guards against two navigateToVendor() calls overlapping — leaving one
-// brand's page for another before the first's Firestore reads finish.
-// Without this, whichever call's await happens to resolve LAST wins and
-// overwrites S.currentVendor/the breadcrumb, even if it was the older,
-// now-abandoned navigation — exactly the "shows the previous brand's
-// name" bug. Each call captures its own token and bails out after each
-// await if a newer call has since started.
-let vendorNavToken = 0;
-
 async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
-  const myNavToken = ++vendorNavToken;
+  // Shared with every other page-navigation function (see the
+  // pageNavGeneration comment in app.js) — guards against this fetch
+  // outliving the visit, whether that's a second navigateToVendor()
+  // call (another brand) or navigating away to a completely different
+  // page (All Products, home, back button, anything).
+  const myNavGen = ++pageNavGeneration;
   closeSearch();
   S.saleMode = false;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -1189,21 +1185,15 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
       if (!bySlug.empty) docId = bySlug.docs[0].id;
     } catch(e) {}
   }
-  // Bails if either a newer navigateToVendor() call has started (token
-  // mismatch) OR the user has since navigated to a completely different
-  // kind of page — e.g. clicked away to All Products while this fetch
-  // was still in flight. S.currentPage only reads 'vendor' for as long
-  // as a vendor page is actually showing; every other navigation
-  // function (navigateTo(), navigateToCategory(), goToProduct(), ...)
-  // sets it to something else as part of showing its own page, so this
-  // one check catches every "navigated away" case without needing a
-  // token bump at each of those call sites individually.
-  if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
+  // Bails if the user has navigated anywhere else since this fetch
+  // started — another brand's page, All Products, back button, anything
+  // — because every navigation function bumps pageNavGeneration (app.js).
+  if (myNavGen !== pageNavGeneration) return;
   S.currentVendorId = docId;
 
   try {
     const doc = await db.collection('vendors').doc(docId).get();
-    if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
+    if (myNavGen !== pageNavGeneration) return;
     const vendor = doc.exists ? Object.assign({id:doc.id}, doc.data()) : null;
     S.currentVendor = vendor;
     renderVendorPage(vendor);
@@ -1214,12 +1204,12 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
       history.replaceState(null, null, canonicalPath);
     }
   } catch(e) {
-    if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
+    if (myNavGen !== pageNavGeneration) return;
     console.error('Error fetching vendor:', e);
     S.currentVendor = null;
     renderVendorPage(null);
   }
-  if (myNavToken !== vendorNavToken || S.currentPage !== 'vendor') return;
+  if (myNavGen !== pageNavGeneration) return;
   window.scrollTo({top:0,behavior:"instant"});
   ensureNavScrolled();
   updateChatVisibility();

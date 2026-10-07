@@ -39,6 +39,12 @@ function activateCheckoutPage() {
 }
 
 function navigateToCheckout() {
+  // Participates in app.js's shared pageNavGeneration counter (see the
+  // comment there) even though this function has no async fetch of its
+  // own — bumping it here still invalidates any OTHER page's in-flight
+  // fetch (a vendor page's, a content page's) the moment the user lands
+  // on checkout, same as every other navigation function does.
+  ++pageNavGeneration;
   const user = firebase.auth().currentUser;
 
   if (!S.cart.length && !user && !lastConfirmedOrderNumber) {

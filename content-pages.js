@@ -4,6 +4,11 @@
 // Doc shape: { title: string, content: string (HTML) }
 
 async function navigateToContentPage(slug, replaceUrl) {
+  // Shared with every other page-navigation function (see the
+  // pageNavGeneration comment in app.js) — without this, a slow fetch
+  // for a policy/help page the user has since left can resolve later
+  // and overwrite whatever page they've actually navigated to since.
+  const myNavGen = ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -24,11 +29,14 @@ async function navigateToContentPage(slug, replaceUrl) {
 
   try {
     const doc = await db.collection('pages').doc(slug).get();
+    if (myNavGen !== pageNavGeneration) return;
     renderContentPage(doc.exists ? doc.data() : null, slug);
   } catch (e) {
+    if (myNavGen !== pageNavGeneration) return;
     console.error('Error fetching content page:', e);
     renderContentPage(null, slug);
   }
+  if (myNavGen !== pageNavGeneration) return;
 
   window.scrollTo({ top: 0, behavior: "instant" });
   ensureNavScrolled();
