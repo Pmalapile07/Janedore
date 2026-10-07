@@ -3,6 +3,31 @@
 let checkoutEmail = localStorage.getItem('janedore_checkout_email') || '';
 let lastConfirmedOrderNumber = sessionStorage.getItem('janedore_last_order_number') || null;
 
+// True from the moment a PayFast-return confirmation poll starts until
+// it either succeeds or the customer is shown the "check again" fallback.
+// app.js's init() also lands on the checkout page on a PayFast return
+// (see the comment there), which otherwise races this poll: if init()'s
+// navigateTo('checkout') runs while a poll is still waiting, it would
+// call navigateToCheckout() below and reset the view back to the plain
+// form, hiding the spinner the poll is actively showing. This flag tells
+// navigateToCheckout() to leave the inner view alone while that's true.
+let payFastConfirmPending = false;
+
+// Shared by navigateToCheckout() and the PayFast-return flow below —
+// both need to force the checkout page active regardless of whatever
+// page the router's own startup logic landed on.
+function activateCheckoutPage() {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const checkoutPage = document.getElementById("page-checkout");
+  if (!checkoutPage) return null;
+  checkoutPage.classList.add("active");
+  S.currentPage = "checkout";
+  updateHash('checkout');
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  ensureNavScrolled();
+  return checkoutPage;
+}
+
 function navigateToCheckout() {
   const user = firebase.auth().currentUser;
 
@@ -11,25 +36,23 @@ function navigateToCheckout() {
     return;
   }
 
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-
-  const checkoutPage = document.getElementById("page-checkout");
+  const checkoutPage = activateCheckoutPage();
   if (checkoutPage) {
-    checkoutPage.classList.add("active");
-    S.currentPage = "checkout";
-    updateHash('checkout');
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    ensureNavScrolled();
+    if (payFastConfirmPending) return;
+
+    const confirmingView = document.getElementById('checkout-confirming-view');
 
     if (!S.cart.length && lastConfirmedOrderNumber) {
       document.getElementById('checkout-form-view').style.display = 'none';
       document.getElementById('checkout-confirmation-view').style.display = 'block';
+      if (confirmingView) confirmingView.style.display = 'none';
       document.getElementById('confirmation-order-number').textContent = 'Order #' + lastConfirmedOrderNumber;
       return;
     }
 
     document.getElementById('checkout-form-view').style.display = 'block';
     document.getElementById('checkout-confirmation-view').style.display = 'none';
+    if (confirmingView) confirmingView.style.display = 'none';
 
     if (user && user.email) {
       document.getElementById('checkout-email').value = user.email;
@@ -360,31 +383,15 @@ async function redirectToPayFast(orderId) {
   form.submit();
 }
 
-// Runs once on page load (called below, at script-load time — this
-// file is deferred, so the DOM already exists by the time it runs).
-// PayFast's ITN (server-side, see server.js) is sent and processed
-// BEFORE the customer is redirected back to return_url per PayFast's
-// own docs, so by the time this runs the order's paymentStatus should
-// already reflect the real outcome — this just asks what the server
-// already decided, rather than deciding anything itself.
-async function handlePayFastReturn() {
-  const params = new URLSearchParams(window.location.search);
-  const orderId = params.get('order');
-  if (!orderId) return;
+// PayFast's ITN (server-side, see server.js) is usually sent and
+// processed before the customer is redirected back to return_url, but
+// that's not a hard guarantee — Render's free tier can be slow to wake
+// up, so the order's paymentStatus may not have updated yet by the time
+// the customer lands back here. Rather than check once and give up,
+// poll a few times with backoff before concluding anything.
+const PAYFAST_POLL_DELAYS_MS = [1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000]; // ~25s total
 
-  const isReturn = params.get('payfast_return') === '1';
-  const isCancel = params.get('payfast_cancel') === '1';
-  if (!isReturn && !isCancel) return;
-
-  // Either way, the URL's done its job — drop the query params so a
-  // refresh doesn't replay this.
-  history.replaceState(null, '', window.location.pathname);
-
-  if (isCancel) {
-    alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
-    return;
-  }
-
+async function pollPaymentStatus(orderId, attempt) {
   try {
     const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status');
     const data = await res.json();
@@ -397,12 +404,80 @@ async function handlePayFastReturn() {
       lastConfirmedOrderNumber = data.orderNumber || orderId;
       sessionStorage.setItem('janedore_last_order_number', lastConfirmedOrderNumber);
 
+      payFastConfirmPending = false;
       navigateToCheckout();
-    } else {
-      alert('We\'re still confirming your payment — check your email shortly, or contact us if this takes more than a few minutes.');
+      return;
     }
   } catch (e) {
     console.warn('[PAYFAST_RETURN] Could not confirm payment status:', e.message);
   }
+
+  if (attempt < PAYFAST_POLL_DELAYS_MS.length) {
+    setTimeout(function () { pollPaymentStatus(orderId, attempt + 1); }, PAYFAST_POLL_DELAYS_MS[attempt]);
+  } else {
+    showPayFastConfirmTimeout(orderId);
+  }
+}
+
+function showPayFastConfirmingView() {
+  payFastConfirmPending = true;
+  activateCheckoutPage();
+  const formView = document.getElementById('checkout-form-view');
+  const confirmationView = document.getElementById('checkout-confirmation-view');
+  const confirmingView = document.getElementById('checkout-confirming-view');
+  if (formView) formView.style.display = 'none';
+  if (confirmationView) confirmationView.style.display = 'none';
+  if (confirmingView) confirmingView.style.display = 'block';
+}
+
+function showPayFastConfirmTimeout(orderId) {
+  const spinner = document.getElementById('checkout-confirming-spinner');
+  const text = document.getElementById('checkout-confirming-text');
+  const retryBtn = document.getElementById('checkout-confirming-retry');
+  if (spinner) spinner.style.display = 'none';
+  if (text) text.textContent = 'This is taking longer than usual. We\'ll email your confirmation as soon as it clears, or check again now.';
+  if (retryBtn) {
+    retryBtn.style.display = 'inline-block';
+    retryBtn.onclick = function () {
+      retryBtn.style.display = 'none';
+      if (spinner) spinner.style.display = 'block';
+      if (text) text.textContent = 'This usually only takes a few seconds — please don\'t close this page.';
+      pollPaymentStatus(orderId, 0);
+    };
+  }
+}
+
+// Runs once on page load, at script-load time (this file is deferred,
+// so the DOM already exists by the time it runs). app.js's init() also
+// recognizes payfast_return/payfast_cancel and lands on the checkout
+// page itself regardless of which of the two finishes first — see the
+// comment next to that check in app.js — so there's no dependency here
+// on run order between the two.
+function handlePayFastReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get('order');
+  if (!orderId) return;
+
+  const isReturn = params.get('payfast_return') === '1';
+  const isCancel = params.get('payfast_cancel') === '1';
+  if (!isReturn && !isCancel) return;
+
+  // Flag read by app.js's init() (see the comment there) — set before
+  // the URL is rewritten below, since init() runs later (after
+  // DOMContentLoaded) and by then location.search would already be
+  // stripped if it tried to read the params itself.
+  window.__payfastReturnActive = true;
+
+  // Either way, the URL's done its job — drop the query params so a
+  // refresh doesn't replay this.
+  history.replaceState(null, '', window.location.pathname);
+
+  if (isCancel) {
+    alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
+    return;
+  }
+
+  showPayFastConfirmingView();
+  pollPaymentStatus(orderId, 0);
 }
 handlePayFastReturn();
