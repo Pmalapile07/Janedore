@@ -527,17 +527,26 @@ body .site-collection-layout {
     margin: 0 auto;
   }
 }
-/* background-size:contain (not cover) — brand logos aren't tall
-   lifestyle photos, so cropping them like a product photo would
-   distort or cut them off. */
 .shop-brand-img {
   position: relative;
   width: 100%;
   aspect-ratio: 5 / 6;
-  background-size: contain;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-color: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The vendor's logo (admin's separate Logo field), centered on top of
+   the hero photo — same layout as a typical brand-directory card
+   (hero image + logo mark over it). */
+.shop-brand-logo {
+  max-width: 55%;
+  max-height: 35%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 /* ============================================
