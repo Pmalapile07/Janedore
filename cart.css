@@ -19,6 +19,12 @@
 .ci-price { font-size: 11px; font-weight: 800; letter-spacing: var(--body-letter-spacing); color: #111; }
 .ci-remove { position: absolute; bottom: 16px; right: 0; background: none; border: none; font-size: 16px; color: #bbb; transition: color 0.2s; line-height: 1; padding: 0; cursor: pointer; }
 .ci-remove:hover { color: #111; }
+/* Same dimming PR #126-era CSS already applies to a sold-out product
+   card's image, kept consistent here. */
+.cart-item-row.sold-out .cart-item-img-placeholder { opacity: 0.75; filter: grayscale(35%); }
+.ci-sold-out-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #b3261e; margin-bottom: 8px; }
+.ci-qty-btn:disabled { color: #ccc; cursor: not-allowed; }
+.ci-qty-btn:disabled:hover { background: #fff; }
 .cart-foot { padding: 16px 24px; flex-shrink: 0; }
 .cart-subtotal { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .cart-subtotal-label { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #111; }
@@ -61,6 +67,10 @@
 .cart-page-price { font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: #111; font-family: 'Inter', sans-serif; text-transform: uppercase; }
 .cart-page-remove { position: absolute; bottom: 24px; right: 0; background: none; border: none; font-size: 18px; color: #bbb; cursor: pointer; padding: 4px 8px; transition: color 0.2s; }
 .cart-page-remove:hover { color: #111; }
+.cart-page-item.sold-out .cart-page-img { opacity: 0.75; filter: grayscale(35%); }
+.cart-page-sold-out-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #b3261e; margin-bottom: 10px; }
+.cart-page-qty-btn:disabled { color: #ccc; cursor: not-allowed; }
+.cart-page-qty-btn:disabled:hover { background: #fff; }
 .cart-page-summary { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
 .cart-page-subtotal { font-size: var(--ui-font-size); font-weight: var(--ui-font-weight); letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; color: #111; }
 .cart-page-subtotal strong { font-weight: 300; font-size: 12px; letter-spacing: 0.04em; }
