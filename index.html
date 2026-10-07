@@ -546,10 +546,12 @@
     var bcText = bc ? bc.textContent.trim() : '(missing)';
     var filterBar = document.getElementById('collection-filter-bar');
     var filterBarParent = filterBar ? (filterBar.closest('#vendor-page-content') ? 'INSIDE vendor page (hidden)' : filterBar.closest('.page.active') ? 'visible page' : 'elsewhere') : '(missing)';
+    var staleCode = (typeof vendorNavToken !== 'undefined') ? 'YES — OLD CODE' : 'no';
     el.innerHTML = '<span>DEBUG — tap to collapse</span>\n' +
       'page: ' + (typeof S !== 'undefined' ? S.currentPage : '?') + '\n' +
       'vendor: ' + vendorName + '\n' +
       'navGen: ' + (typeof pageNavGeneration !== 'undefined' ? pageNavGeneration : '?') + '\n' +
+      'STALE collection.js?: ' + staleCode + '\n' +
       'breadcrumb: ' + bcText + '\n' +
       'filterBar: ' + filterBarParent;
   }, 250);
