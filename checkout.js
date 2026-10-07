@@ -3,6 +3,16 @@
 let checkoutEmail = localStorage.getItem('janedore_checkout_email') || '';
 let lastConfirmedOrderNumber = sessionStorage.getItem('janedore_last_order_number') || null;
 
+// Full order details (items, address, totals) for the confirmation page
+// — separate from lastConfirmedOrderNumber above, which alone isn't
+// enough to render a real confirmation page. Persisted the same way, so
+// refreshing or reopening checkout.html still shows the full page.
+let lastConfirmedOrderDetails = null;
+try {
+  const storedOrderDetails = sessionStorage.getItem('janedore_last_order_details');
+  if (storedOrderDetails) lastConfirmedOrderDetails = JSON.parse(storedOrderDetails);
+} catch (e) { /* ignore — falls back to the order-number-only view */ }
+
 // True from the moment a PayFast-return confirmation poll starts until
 // it either succeeds or the customer is shown the "check again" fallback.
 // app.js's init() also lands on the checkout page on a PayFast return
@@ -46,7 +56,13 @@ function navigateToCheckout() {
       document.getElementById('checkout-form-view').style.display = 'none';
       document.getElementById('checkout-confirmation-view').style.display = 'block';
       if (confirmingView) confirmingView.style.display = 'none';
-      document.getElementById('confirmation-order-number').textContent = 'Order #' + lastConfirmedOrderNumber;
+      if (lastConfirmedOrderDetails) {
+        renderOrderConfirmation(lastConfirmedOrderDetails);
+      } else {
+        // Details fetch failed or hasn't happened yet — fall back to
+        // just the order number rather than showing broken/empty markup.
+        document.getElementById('confirmation-order-number').textContent = '#' + lastConfirmedOrderNumber;
+      }
       return;
     }
 
@@ -425,6 +441,8 @@ async function pollPaymentStatus(orderId, attempt) {
       lastConfirmedOrderNumber = data.orderNumber || orderId;
       sessionStorage.setItem('janedore_last_order_number', lastConfirmedOrderNumber);
 
+      await loadConfirmedOrderDetails(orderId);
+
       payFastConfirmPending = false;
       navigateToCheckout();
       return;
@@ -437,6 +455,119 @@ async function pollPaymentStatus(orderId, attempt) {
     setTimeout(function () { pollPaymentStatus(orderId, attempt + 1); }, PAYFAST_POLL_DELAYS_MS[attempt]);
   } else {
     showPayFastConfirmTimeout(orderId);
+  }
+}
+
+// Fetches the full order (items, address, totals) for the confirmation
+// page and caches it — a failure here isn't fatal, navigateToCheckout()
+// falls back to showing just the order number.
+async function loadConfirmedOrderDetails(orderId) {
+  try {
+    const res = await fetch('/api/orders/' + encodeURIComponent(orderId));
+    if (!res.ok) return;
+    lastConfirmedOrderDetails = await res.json();
+    sessionStorage.setItem('janedore_last_order_details', JSON.stringify(lastConfirmedOrderDetails));
+  } catch (e) {
+    console.warn('[CHECKOUT] Could not load order details for confirmation page:', e.message);
+  }
+}
+
+function formatConfirmationDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }) +
+    ', ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+}
+
+// No courier/logistics integration exists yet, so this is a generic
+// estimate (order date + 5-9 days), not a real tracked delivery window —
+// matches how most storefronts show a delivery estimate before a
+// tracking number actually exists.
+function formatDeliveryEstimate(iso) {
+  const base = iso ? new Date(iso) : new Date();
+  const start = new Date(base); start.setDate(start.getDate() + 5);
+  const end = new Date(base); end.setDate(end.getDate() + 9);
+  const fmt = (d) => d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' });
+  return fmt(start) + ' – ' + fmt(end);
+}
+
+function renderOrderConfirmation(order) {
+  const numberEl = document.getElementById('confirmation-order-number');
+  if (numberEl) numberEl.textContent = '#' + (order.orderNumber || '');
+
+  const dateEl = document.getElementById('confirmation-order-date');
+  if (dateEl) dateEl.textContent = formatConfirmationDate(order.createdAt);
+
+  const deliveryEl = document.getElementById('confirmation-delivery-estimate');
+  if (deliveryEl) deliveryEl.textContent = formatDeliveryEstimate(order.createdAt);
+
+  const statusDot = document.getElementById('confirmation-status-dot');
+  const statusText = document.getElementById('confirmation-status-text');
+  if (statusDot && statusText) {
+    if (order.paymentStatus === 'paid') {
+      statusDot.classList.remove('danger');
+      statusText.textContent = 'Payment Confirmed';
+    } else {
+      statusDot.classList.add('danger');
+      statusText.textContent = order.paymentStatus === 'refunded' ? 'Refunded' : 'Payment Pending';
+    }
+  }
+
+  const items = order.items || [];
+  const itemCount = items.reduce((a, i) => a + (i.qty || 0), 0);
+  const countEl = document.getElementById('confirmation-item-count');
+  if (countEl) countEl.textContent = itemCount + (itemCount === 1 ? ' Item' : ' Items');
+
+  const brandGroups = {};
+  items.forEach(item => {
+    const brand = item.brand || 'Unknown';
+    (brandGroups[brand] = brandGroups[brand] || []).push(item);
+  });
+
+  const itemsEl = document.getElementById('confirmation-items');
+  if (itemsEl) {
+    itemsEl.innerHTML = Object.keys(brandGroups).map(brand => {
+      const groupItems = brandGroups[brand];
+      const groupCount = groupItems.reduce((a, i) => a + (i.qty || 0), 0);
+      const rows = groupItems.map(item => {
+        const product = PRODUCTS.find(p => p.id === item.productId);
+        const thumbnail = product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE;
+        const sizeDisplay = item.size && item.size !== 'OS' ? item.size : '';
+        return `<div class="checkout-item">
+          <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
+          <div class="checkout-item-info">
+            <div class="checkout-item-name">${item.name}</div>
+            <div class="checkout-item-meta">${item.color || ''}${item.color && sizeDisplay ? ' · ' : ''}${sizeDisplay}</div>
+          </div>
+          <div class="checkout-item-qty">Qty: ${item.qty}</div>
+          <div class="checkout-item-price">${formatPrice((item.price || 0) * item.qty)}</div>
+        </div>`;
+      }).join('');
+      return `<div class="checkout-confirmation-brand-group">
+        <div class="checkout-confirmation-brand-head"><span>${brand}</span><span>${groupCount + (groupCount === 1 ? ' Item' : ' Items')}</span></div>
+        ${rows}
+      </div>`;
+    }).join('');
+  }
+
+  const addressEl = document.getElementById('confirmation-address');
+  if (addressEl) {
+    const line2 = [order.city, order.province].filter(Boolean).join(', ');
+    const line3 = [order.postalCode, order.country].filter(Boolean).join(', ');
+    addressEl.innerHTML =
+      '<strong>' + (order.customerName || '') + '</strong>' +
+      (order.shippingAddress || '') + '<br>' +
+      line2 + '<br>' +
+      line3;
+  }
+
+  const summaryEl = document.getElementById('confirmation-summary');
+  if (summaryEl) {
+    summaryEl.innerHTML =
+      '<div class="checkout-total-row"><span>Items (' + itemCount + ')</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
+      '<div class="checkout-total-row"><span>Shipping</span><span>' + (order.shipping === 0 ? 'Free' : formatPrice(order.shipping || 0)) + '</span></div>' +
+      '<div class="checkout-total-divider"></div>' +
+      '<div class="checkout-total-final"><strong>Total</strong><strong>' + formatPrice(order.total || 0) + '</strong></div>';
   }
 }
 
