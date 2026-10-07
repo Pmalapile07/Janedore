@@ -517,15 +517,18 @@ body .site-collection-layout {
 #brand-grid { padding: 0 8px !important; }
 @media (min-width: 640px) { #brand-grid { padding: 0 10px !important; } }
 @media (min-width: 1024px) { #brand-grid { padding: 0 12px !important; } }
+/* Same size as the product card sliders (#arrivals-grid/#clothing-grid
+   .product-card below), so Shop by Brand cards read as the same visual
+   scale as every other card on the homepage. */
 .shop-brand-card {
   cursor: pointer;
   flex: 0 0 auto;
-  width: 35vw;
-  max-width: 160px;
+  width: 65vw;
+  max-width: 300px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
-  .shop-brand-card { width: 15vw; max-width: 160px; }
+  .shop-brand-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
   #brand-grid,
