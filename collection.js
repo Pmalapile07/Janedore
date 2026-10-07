@@ -1141,7 +1141,17 @@ function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; D
 
 // ==================== VENDOR / BRAND PAGE ====================
 
+// Guards against two navigateToVendor() calls overlapping — leaving one
+// brand's page for another before the first's Firestore reads finish.
+// Without this, whichever call's await happens to resolve LAST wins and
+// overwrites S.currentVendor/the breadcrumb, even if it was the older,
+// now-abandoned navigation — exactly the "shows the previous brand's
+// name" bug. Each call captures its own token and bails out after each
+// await if a newer call has since started.
+let vendorNavToken = 0;
+
 async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
+  const myNavToken = ++vendorNavToken;
   closeSearch();
   S.saleMode = false;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -1179,10 +1189,12 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
       if (!bySlug.empty) docId = bySlug.docs[0].id;
     } catch(e) {}
   }
+  if (myNavToken !== vendorNavToken) return; // a newer navigateToVendor() call has since started
   S.currentVendorId = docId;
 
   try {
     const doc = await db.collection('vendors').doc(docId).get();
+    if (myNavToken !== vendorNavToken) return; // ditto — don't let a stale fetch overwrite a newer navigation
     const vendor = doc.exists ? Object.assign({id:doc.id}, doc.data()) : null;
     S.currentVendor = vendor;
     renderVendorPage(vendor);
@@ -1193,10 +1205,12 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
       history.replaceState(null, null, canonicalPath);
     }
   } catch(e) {
+    if (myNavToken !== vendorNavToken) return;
     console.error('Error fetching vendor:', e);
     S.currentVendor = null;
     renderVendorPage(null);
   }
+  if (myNavToken !== vendorNavToken) return;
   window.scrollTo({top:0,behavior:"instant"});
   ensureNavScrolled();
   updateChatVisibility();
