@@ -100,7 +100,8 @@ function renderHomeBrandSpotlight(vendors) {
 // container each place renders them into.
 function shopByBrandCardsHtml(brands) {
   return brands.map(vendor => {
-    const bg = vendor.logoUrl ? `background-image:url('${escapeForCssUrl(vendor.logoUrl)}');` : '';
+    const brandImg = vendor.heroImageUrl || vendor.logoUrl;
+    const bg = brandImg ? `background-image:url('${escapeForCssUrl(brandImg)}');` : '';
     return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')"><div class="shop-brand-img" style="${bg}"></div></div>`;
   }).join('');
 }
