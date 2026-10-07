@@ -2,7 +2,7 @@
   /* Targets just the icon row now — #main-nav itself wraps that row
      plus the search bar row below it, so forcing a height on #main-nav
      directly would crush both into whatever height this is. */
-  .nav-top-row { height: 56px; } .nav-logo img { height: 22px; }
+  .nav-top-row { height: 56px; }
   /* No more negative margin-top to tuck the hero behind the nav — nav
      is solid now (not transparent-over-hero), so hero just flows
      normally below it like everything else. */
