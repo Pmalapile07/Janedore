@@ -70,7 +70,12 @@
 
 .nav-left { display: flex; align-items: center; gap: 0; flex: 0 1 auto; }
 
-.nav-logo { cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center; position: absolute; left: 50%; transform: translateX(-50%); }
+/* Now nested inside .nav-left (next to the hamburger button) rather
+   than a separate top-level flex item — margin-left matches .nav-right's
+   own 4px icon gap, so the hamburger→logo gap and the wishlist→cart gap
+   read as the same spacing. The ≥1024px rule below still fully overrides
+   this for desktop's text-link nav, independent of this change. */
+.nav-logo { cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center; margin-left: 4px; }
 
 .nav-logo-text {
   font-family: 'Telegraf', sans-serif;
