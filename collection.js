@@ -1270,7 +1270,10 @@ function renderVendorPage(vendor) {
   // when it gets wiped.
   restoreCollectionFilterBar();
   S.currentVendor = vendor;
-  const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
+  // Same image source as the homepage's Shop by Brand cards
+  // (vendors.js's shopByBrandCardsHtml) — logoUrl, not the separate
+  // heroImageUrl field — so a brand's image matches wherever it shows up.
+  const heroImg = safeImageURL(vendor?.logoUrl || '');
   const brandName = vendor?.brand || vendor?.name || '';
   const desc = vendor?.description || '';
 
