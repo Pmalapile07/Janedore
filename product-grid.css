@@ -539,27 +539,6 @@ body .site-collection-layout {
   background-repeat: no-repeat;
   background-color: #f4f4f4;
 }
-/* Bottom-weighted scrim so the white name stays legible regardless of
-   the logo artwork behind it — same idea as .editorial-banner-overlay. */
-.shop-brand-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0) 55%);
-}
-.shop-brand-name {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 14px;
-  z-index: 2;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: var(--ui-letter-spacing);
-  color: #fff;
-  text-align: center;
-}
 
 /* ============================================
    Everything below is unrelated to the product-info redesign above
