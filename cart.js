@@ -51,6 +51,33 @@ function saveAppliedDiscount() {
 function getCartProduct(productId) { return PRODUCTS.find(p => p.id === productId); }
 function getCartVariant(product, variantIndex) { return (product?.variants || [])[variantIndex] ?? {}; }
 
+// --- Stock re-check at cart time ---
+// addToCart()/changeQty() only check stock at the moment they run — an
+// item already sitting in the cart never gets re-checked again, so if
+// it sells out (someone else buys the last one, or admin zeroes it)
+// while it's just sitting there, the cart showed no sign of it at all;
+// the only thing that ever caught it was placeOrder()'s Firestore
+// transaction, deep at the end of checkout, after the customer had
+// already filled in their whole address. This re-checks live stock for
+// each line wherever the cart is rendered instead, so it shows up right
+// where the problem actually is.
+function getCartItemStock(item) {
+  const product = getCartProduct(item.productId);
+  if (!product) return 0;
+  return getVariantSizeStock(product, item.variantIndex, item.size);
+}
+function cartHasSoldOutItem() {
+  return S.cart.some(item => getCartItemStock(item) <= 0);
+}
+function handleCheckoutClick() {
+  if (cartHasSoldOutItem()) {
+    alert('Please remove the sold out item(s) from your bag before checking out.');
+    return;
+  }
+  closeCart();
+  navigateTo('checkout');
+}
+
 // --- Per-item helpers ---
 function getCartItemThumbnail(item) {
   if (item.thumbnail && item.thumbnail !== PLACEHOLDER_IMAGE) return item.thumbnail;
@@ -370,8 +397,9 @@ function renderCart() {
     const itemSizeDisplay = itemSize !== 'OS' ? itemSize : '';
     const itemMeta = [itemColor, itemSizeDisplay].filter(Boolean).join(' · ');
     const productId = sanitizeHTML(item.productId || '');
+    const soldOut = getCartItemStock(item) <= 0;
 
-    return `<div class="cart-item-row" onclick="goToProduct('${productId}')"><div class="cart-item-img-placeholder" style="background-image:url('${thumbnail}');"></div><div style="flex:1"><div class="ci-brand">${itemBrand}</div><div class="ci-name">${truncateNameTwoWords(itemName)}</div><div class="ci-meta">${itemMeta}</div><div class="ci-qty"><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex})">−</button><span class="ci-qty-num">${item.qty}</span><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex})">+</button></div></div><span class="ci-price">${formatPrice(getCartItemLineTotal(item))}</span><button class="ci-remove" onclick="event.stopPropagation();removeFromCart('${productId}','${itemSize}',${item.variantIndex})">×</button></div>`;
+    return `<div class="cart-item-row${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${productId}')"><div class="cart-item-img-placeholder" style="background-image:url('${thumbnail}');"></div><div style="flex:1"><div class="ci-brand">${itemBrand}</div><div class="ci-name">${truncateNameTwoWords(itemName)}</div><div class="ci-meta">${itemMeta}</div>${soldOut ? '<div class="ci-sold-out-badge">Sold Out</div>' : ''}<div class="ci-qty"><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex})">−</button><span class="ci-qty-num">${item.qty}</span><button class="ci-qty-btn"${soldOut ? ' disabled' : ''} onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex})">+</button></div></div><span class="ci-price">${formatPrice(getCartItemLineTotal(item))}</span><button class="ci-remove" onclick="event.stopPropagation();removeFromCart('${productId}','${itemSize}',${item.variantIndex})">×</button></div>`;
   }).join("");
 
   if (hasSunglassesInCart() && !pouchAlreadyInCart()) {
@@ -396,7 +424,7 @@ function renderCart() {
     </div>`;
   }
   
-  DOM.cartFoot.innerHTML = `${discountHtml}<div class="cart-subtotal"><span class="cart-subtotal-label">${appliedDiscount ? 'Total' : 'Subtotal'}</span><span class="cart-subtotal-val">${formatPrice(finalTotal)}</span></div>${appliedDiscount && discountAmount > 0 ? `<div class="cart-original-price" style="text-decoration:line-through;color:var(--muted);font-size:12px;">${formatPrice(sub)}</div>` : ''}<div class="cart-ship-note">${shipping.message}</div>${cartHasMultipleTypes() ? '<div class="cart-multi-package-note">contents may arrive in multiple packages</div>' : ''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="closeCart();navigateTo('checkout');">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
+  DOM.cartFoot.innerHTML = `${discountHtml}<div class="cart-subtotal"><span class="cart-subtotal-label">${appliedDiscount ? 'Total' : 'Subtotal'}</span><span class="cart-subtotal-val">${formatPrice(finalTotal)}</span></div>${appliedDiscount && discountAmount > 0 ? `<div class="cart-original-price" style="text-decoration:line-through;color:var(--muted);font-size:12px;">${formatPrice(sub)}</div>` : ''}<div class="cart-ship-note">${shipping.message}</div>${cartHasMultipleTypes() ? '<div class="cart-multi-package-note">contents may arrive in multiple packages</div>' : ''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main" onclick="handleCheckoutClick()">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
 }
 
 function renderCartPage() {
@@ -418,17 +446,19 @@ function renderCartPage() {
     const itemSizeDisplay = itemSize !== 'OS' ? itemSize : '';
     const itemMeta = [itemColor, itemSizeDisplay].filter(Boolean).join(' · ');
     const productId = sanitizeHTML(item.productId || '');
+    const soldOut = getCartItemStock(item) <= 0;
 
-    html += `<div class="cart-page-item" onclick="goToProduct('${productId}')">
+    html += `<div class="cart-page-item${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${productId}')">
       <div class="cart-page-img" style="background-image:url('${thumbnail}');"></div>
       <div class="cart-page-details">
         <div class="cart-page-brand">${itemBrand}</div>
         <div class="cart-page-name">${itemName}</div>
         <div class="cart-page-meta">${itemMeta}</div>
+        ${soldOut ? '<div class="cart-page-sold-out-badge">Sold Out</div>' : ''}
         <div class="cart-page-qty-wrap">
           <button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex});">−</button>
           <span class="cart-page-qty-num">${item.qty}</span>
-          <button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex});">+</button>
+          <button class="cart-page-qty-btn"${soldOut ? ' disabled' : ''} onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex});">+</button>
         </div>
       </div>
       <div class="cart-page-price">${formatPrice(lineTotal)}</div>
@@ -442,7 +472,7 @@ function renderCartPage() {
     <div class="cart-page-subtotal">Subtotal <strong>${formatPrice(sub)}</strong></div>
     <div class="cart-page-actions">
       <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
-      <button class="cart-page-btn primary" onclick="navigateTo('checkout')">Checkout</button>
+      <button class="cart-page-btn primary" onclick="handleCheckoutClick()">Checkout</button>
     </div>
   </div>`;
   DOM.cartPageContent.innerHTML = html;
