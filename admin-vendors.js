@@ -160,6 +160,7 @@
         '<th>Revenue</th>' +
         '<th>Commission</th>' +
         '<th>Account</th>' +
+        '<th>PayFast</th>' +
         '<th>Status</th>' +
         (canEdit ? '<th></th>' : '') +
       '</tr></thead>' +
@@ -170,6 +171,7 @@
         var orderCount   = vendorOrders[v.id] || 0;
         var commission   = v.commissionRate || 0;
         var hasAccount   = v.accountEmail ? true : false;
+        var hasPayfast   = v.payfastMerchantId ? true : false;
 
         return '<tr onclick="window._openVendorDetail(\'' + esc(v.id) + '\')" style="cursor:pointer;">' +
           '<td style="font-weight:500;">' + esc(v.name || v.id) + '</td>' +
@@ -182,6 +184,11 @@
             (hasAccount
               ? '<span style="font-size:10px;color:var(--success);">✓ ' + esc(v.accountEmail) + '</span>'
               : '<span style="font-size:10px;color:var(--muted2);">No login</span>') +
+          '</td>' +
+          '<td>' +
+            (hasPayfast
+              ? '<span style="font-size:10px;color:var(--success);">✓ Connected</span>'
+              : '<span style="font-size:10px;color:var(--muted2);">Not set up</span>') +
           '</td>' +
           '<td>' + statusBadge(v.status || 'active') + '</td>' +
           (canEdit
@@ -553,7 +560,7 @@
     }
 
     var v = vendorId ? (window._vendorsData || []).find(function(x) { return x.id === vendorId; }) : null;
-    v = v || { id:'', name:'', brand:'', email:'', description:'', logoUrl:'', heroImageUrl:'', commissionRate:15, status:'active', notes:'', accountEmail:'' };
+    v = v || { id:'', name:'', brand:'', email:'', description:'', logoUrl:'', heroImageUrl:'', commissionRate:15, status:'active', notes:'', accountEmail:'', payfastMerchantId:'' };
 
     var modalHTML = '<div class="modal modal-sm">' +
       '<div class="modal-handle"></div>' +
@@ -572,6 +579,8 @@
           '<div class="form-group"><label>Commission %</label><input name="commissionRate" type="number" value="' + esc(String(v.commissionRate || 15)) + '" min="0" max="100"></div>' +
           '<div class="form-group"><label>Status</label><select name="status"><option value="active"' + (v.status === 'active' ? ' selected' : '') + '>Active</option><option value="suspended"' + (v.status === 'suspended' ? ' selected' : '') + '>Suspended</option><option value="inactive"' + (v.status === 'inactive' ? ' selected' : '') + '>Inactive</option></select></div>' +
         '</div>' +
+
+        '<div class="form-group"><label>PayFast Merchant ID</label><input name="payfastMerchantId" value="' + esc(v.payfastMerchantId || '') + '" placeholder="e.g. 10000105" inputmode="numeric"><div style="font-size:10px;color:var(--muted);margin-top:4px;">From the vendor\'s own PayFast account settings page — only the ID, never their key or passphrase. Lets checkout automatically split their share of a sale straight to them.</div></div>' +
 
         '<div class="form-group"><label>Internal Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
 
@@ -608,6 +617,7 @@
       logoUrl:        form.logoUrl.value.trim(),
       heroImageUrl:   form.heroImageUrl.value.trim(),
       commissionRate: commission,
+      payfastMerchantId: form.payfastMerchantId.value.trim(),
       status:         form.status.value,
       notes:          form.notes.value.trim(),
       updatedAt:      new Date().toISOString()

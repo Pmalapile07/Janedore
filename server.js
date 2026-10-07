@@ -7,6 +7,12 @@ const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 
+// Render terminates TLS and proxies requests — without this, req.ip
+// reads Render's internal proxy address instead of the real caller's,
+// which the PayFast ITN handler below depends on to verify a
+// notification really came from PayFast's own servers.
+app.set('trust proxy', true);
+
 app.use(express.json());
 
 // ==================== FIREBASE ADMIN INIT ====================
@@ -288,26 +294,15 @@ app.post('/api/send-welcome-email', (req, res) => {
   });
 });
 
-// Order confirmation email via Resend — fired by checkout.js right after
-// an order is successfully placed. Uses noreply@ since a receipt doesn't
-// need a reply, but still points anyone with a real question at support@.
-app.post('/api/send-order-confirmation', (req, res) => {
-  const b = req.body || {};
-  const orderNumber = b.orderNumber;
-  const customerEmail = b.customerEmail;
-  const customerName = b.customerName;
-  const items = b.items;
-  const subtotal = b.subtotal;
-  const shipping = b.shipping;
-  const total = b.total;
-  const currency = b.currency;
-
-  if (!customerEmail || !customerEmail.includes('@') || !orderNumber || !Array.isArray(items) || !items.length) {
-    return res.status(400).json({ error: 'Invalid order data' });
-  }
-
-  const symbol = (!currency || currency === 'ZAR') ? 'R' : (currency + ' ');
+// Order confirmation email via Resend. Used to be fired by checkout.js
+// the instant an order was created — before any payment had actually
+// happened. Now built here as a plain function and called only from
+// the PayFast ITN handler below, once a payment is genuinely confirmed
+// (see "PAYFAST INTEGRATION").
+function buildOrderConfirmationEmail(order) {
+  const symbol = (!order.currency || order.currency === 'ZAR') ? 'R' : (order.currency + ' ');
   const fmt = (n) => symbol + Number(n || 0).toFixed(2);
+  const items = order.items || [];
 
   const itemsRowsHtml = items.map((item) => {
     const details = [item.color, item.size].filter(Boolean).join(' / ');
@@ -326,14 +321,14 @@ app.post('/api/send-order-confirmation', (req, res) => {
   ).join('\n');
 
   const bodyHtml =
-    '<p class="body-text">Hi ' + escapeHtml(customerName || 'there') + ', thank you for your order — here’s what we’ve got.</p>' +
+    '<p class="body-text">Hi ' + escapeHtml(order.customerName || 'there') + ', thank you for your order — here’s what we’ve got.</p>' +
     '<table class="items">' + itemsRowsHtml + '</table>' +
     '<table class="totals">' +
-      '<tr><td class="label">Subtotal</td><td class="value">' + fmt(subtotal) + '</td></tr>' +
-      '<tr><td class="label">Shipping</td><td class="value">' + (shipping ? fmt(shipping) : 'Free') + '</td></tr>' +
-      '<tr class="grand"><td class="label" style="color:#1a1a1a;">Total</td><td class="value">' + fmt(total) + '</td></tr>' +
+      '<tr><td class="label">Subtotal</td><td class="value">' + fmt(order.subtotal) + '</td></tr>' +
+      '<tr><td class="label">Shipping</td><td class="value">' + (order.shipping ? fmt(order.shipping) : 'Free') + '</td></tr>' +
+      '<tr class="grand"><td class="label" style="color:#1a1a1a;">Total</td><td class="value">' + fmt(order.total) + '</td></tr>' +
     '</table>' +
-    '<p class="body-text" style="margin-top:32px;">Order #' + escapeHtml(orderNumber) + '</p>';
+    '<p class="body-text" style="margin-top:32px;">Order #' + escapeHtml(order.orderNumber) + '</p>';
 
   const html = emailLayout({
     heading: 'Order confirmed.',
@@ -341,25 +336,301 @@ app.post('/api/send-order-confirmation', (req, res) => {
     footerHtml: 'Questions about your order? <a href="mailto:support@janedore.co.za">support@janedore.co.za</a>'
   });
 
-  const text = 'Order confirmed.\n\nHi ' + (customerName || 'there') + ', thank you for your order.\n\n' +
+  const text = 'Order confirmed.\n\nHi ' + (order.customerName || 'there') + ', thank you for your order.\n\n' +
     itemsTextLines +
-    '\n\nSubtotal: ' + fmt(subtotal) + '\nShipping: ' + (shipping ? fmt(shipping) : 'Free') + '\nTotal: ' + fmt(total) +
-    '\n\nOrder #' + orderNumber + '\n\n— Janedore\nsupport@janedore.co.za';
+    '\n\nSubtotal: ' + fmt(order.subtotal) + '\nShipping: ' + (order.shipping ? fmt(order.shipping) : 'Free') + '\nTotal: ' + fmt(order.total) +
+    '\n\nOrder #' + order.orderNumber + '\n\n— Janedore\nsupport@janedore.co.za';
 
-  sendResendEmail({
+  return { html, text, subject: 'Order confirmed — #' + order.orderNumber };
+}
+
+function sendOrderConfirmationEmail(order) {
+  const email = buildOrderConfirmationEmail(order);
+  return sendResendEmail({
     from: 'Janedore <noreply@janedore.co.za>',
     replyTo: 'support@janedore.co.za',
-    to: customerEmail,
-    subject: 'Order confirmed — #' + orderNumber,
-    html,
-    text
-  }).then(() => {
-    console.log('[RESEND] Order confirmation sent to:', customerEmail);
-    res.json({ success: true });
-  }).catch((err) => {
-    console.error('[RESEND] Order confirmation error:', err.message);
-    res.status(500).json({ error: 'Failed to send email' });
+    to: order.customerEmail,
+    subject: email.subject,
+    html: email.html,
+    text: email.text
   });
+}
+
+// ==================== PAYFAST INTEGRATION ====================
+// Reference: PayFast's own Developer Documentation (Custom Integration
+// + ITN + Split Payments sections). Three pieces:
+//   1. generatePayFastSignature() — the exact algorithm PayFast's docs
+//      specify (their own PHP reference implementation, translated).
+//   2. POST /api/payfast/initiate — called by checkout.js right after
+//      an order is created (still pending/unpaid); builds the signed
+//      field set checkout.js submits as a redirect to PayFast.
+//   3. POST /api/payfast/notify — the ITN webhook PayFast calls once a
+//      payment completes. Runs all four checks PayFast's docs require
+//      before trusting it, then marks the order paid and sends the
+//      confirmation email — this is now the ONLY place that happens.
+
+const crypto = require('crypto');
+
+// Defaults to sandbox — PAYFAST_SANDBOX must be explicitly set to the
+// literal string 'false' to process real payments. A missing or
+// misspelled env var fails safe (stays in sandbox) rather than
+// accidentally going live.
+const PAYFAST_SANDBOX = process.env.PAYFAST_SANDBOX !== 'false';
+const PAYFAST_HOST = PAYFAST_SANDBOX ? 'sandbox.payfast.co.za' : 'www.payfast.co.za';
+const PAYFAST_PROCESS_URL = 'https://' + PAYFAST_HOST + '/eng/process';
+const PAYFAST_MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID;
+const PAYFAST_MERCHANT_KEY = process.env.PAYFAST_MERCHANT_KEY;
+const PAYFAST_PASSPHRASE = process.env.PAYFAST_PASSPHRASE;
+
+if (!PAYFAST_MERCHANT_ID || !PAYFAST_MERCHANT_KEY) {
+  console.warn('[PAYFAST] PAYFAST_MERCHANT_ID/PAYFAST_MERCHANT_KEY not set — /api/payfast/initiate will fail until they are');
+} else {
+  console.log('[PAYFAST] Initialized in', PAYFAST_SANDBOX ? 'SANDBOX' : 'LIVE', 'mode');
+}
+
+// PHP's urlencode() — which PayFast's signature algorithm is specified
+// in terms of — differs from JS's encodeURIComponent() in two ways:
+// spaces become '+' (not %20), and it additionally escapes ! ' ( ) * ~
+// which encodeURIComponent leaves untouched. A different encoding
+// produces a different hash, which PayFast silently rejects as a
+// signature mismatch, so this match has to be exact, not approximate.
+function payFastUrlEncode(str) {
+  return encodeURIComponent(String(str))
+    .replace(/%20/g, '+')
+    .replace(/[!'()*~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+}
+
+// Mirrors PayFast's documented PHP reference implementation exactly:
+// concatenate non-blank fields in the order they're given — NOT
+// alphabetical; PayFast's docs explicitly warn not to confuse this
+// with a different, alphabetically-ordered API they also expose —
+// append the passphrase, MD5 the result. `data` must be a plain object
+// built with keys in the exact order PayFast's field list specifies;
+// JS preserves string-key insertion order, so this only works if the
+// caller constructed the object correctly to begin with.
+function generatePayFastSignature(data, passphrase) {
+  let pfOutput = '';
+  for (const key of Object.keys(data)) {
+    const val = data[key];
+    if (val !== '' && val !== undefined && val !== null) {
+      pfOutput += key + '=' + payFastUrlEncode(String(val).trim()) + '&';
+    }
+  }
+  let getString = pfOutput.slice(0, -1);
+  if (passphrase) {
+    getString += '&passphrase=' + payFastUrlEncode(String(passphrase).trim());
+  }
+  return crypto.createHash('md5').update(getString).digest('hex');
+}
+
+app.post('/api/payfast/initiate', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (!PAYFAST_MERCHANT_ID || !PAYFAST_MERCHANT_KEY) return res.status(503).json({ error: 'PayFast not configured' });
+
+  const orderId = req.body && req.body.orderId;
+  if (!orderId) return res.status(400).json({ error: 'Missing orderId' });
+
+  try {
+    const orderRef = adminDb.collection('orders').doc(orderId);
+    const orderDoc = await orderRef.get();
+    if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
+    const order = orderDoc.data();
+    if (order.paymentStatus === 'paid') return res.status(400).json({ error: 'Order already paid' });
+
+    const nameParts = (order.customerName || '').trim().split(/\s+/).filter(Boolean);
+    const nameFirst = nameParts[0] || 'Customer';
+    const nameLast = nameParts.slice(1).join(' ') || 'Customer';
+
+    // Field order matters — the signature below is a hash of these
+    // fields concatenated in exactly this order, not sorted.
+    const data = {
+      merchant_id: PAYFAST_MERCHANT_ID,
+      merchant_key: PAYFAST_MERCHANT_KEY,
+      return_url: SITE_URL + '/?payfast_return=1&order=' + encodeURIComponent(orderId),
+      cancel_url: SITE_URL + '/?payfast_cancel=1&order=' + encodeURIComponent(orderId),
+      notify_url: SITE_URL + '/api/payfast/notify',
+      name_first: nameFirst,
+      name_last: nameLast,
+      email_address: order.customerEmail,
+      m_payment_id: orderId,
+      amount: Number(order.total || 0).toFixed(2),
+      item_name: 'Janedore Order #' + (order.orderNumber || orderId)
+    };
+
+    // Split Payments can only target ONE third-party merchant per
+    // transaction (PayFast's own constraint, not ours) — only attach a
+    // split when this order has exactly one vendor and that vendor has
+    // a PayFast account on file. A multi-vendor cart, or a vendor with
+    // no PayFast ID configured yet, just pays Janedore in full, same
+    // as any order would without this field — nothing breaks either
+    // way, the payout is just manual for that order instead.
+    let setupField = null;
+    if (Array.isArray(order.vendorIds) && order.vendorIds.length === 1) {
+      const vendorDoc = await adminDb.collection('vendors').doc(order.vendorIds[0]).get();
+      const vendor = vendorDoc.exists ? vendorDoc.data() : null;
+      if (vendor && vendor.payfastMerchantId) {
+        const commission = Number(vendor.commissionRate);
+        const vendorPercentage = Number.isFinite(commission)
+          ? Math.max(0, Math.min(100, Math.round(100 - commission)))
+          : 85; // falls back to admin-vendors.js's own 15%-commission default
+        setupField = JSON.stringify({
+          split_payment: { merchant_id: Number(vendor.payfastMerchantId), percentage: vendorPercentage }
+        });
+      }
+    }
+
+    // Signature is computed on `data` alone — PayFast's docs explicitly
+    // exclude `setup` from the signature calculation; adding it before
+    // this point would make every split payment fail with a mismatch.
+    const signature = generatePayFastSignature(data, PAYFAST_PASSPHRASE);
+
+    const fields = Object.assign({}, data, { signature });
+    if (setupField) fields.setup = setupField;
+
+    res.json({ action: PAYFAST_PROCESS_URL, fields });
+  } catch (e) {
+    console.error('[PAYFAST_INITIATE] Error:', e.message);
+    res.status(500).json({ error: 'Could not start payment' });
+  }
+});
+
+const PAYFAST_VALID_HOSTS = ['www.payfast.co.za', 'sandbox.payfast.co.za', 'w1w.payfast.co.za', 'w2w.payfast.co.za'];
+
+function resolveValidPayFastIps() {
+  const dns = require('dns');
+  return new Promise((resolve) => {
+    const ips = new Set();
+    let remaining = PAYFAST_VALID_HOSTS.length;
+    PAYFAST_VALID_HOSTS.forEach((host) => {
+      dns.lookup(host, { all: true }, (err, addresses) => {
+        if (!err && addresses) addresses.forEach(a => ips.add(a.address));
+        remaining -= 1;
+        if (remaining === 0) resolve(ips);
+      });
+    });
+  });
+}
+
+function payFastServerConfirm(paramString) {
+  return new Promise((resolve) => {
+    const options = {
+      hostname: PAYFAST_HOST,
+      path: '/eng/query/validate',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(paramString)
+      }
+    };
+    const request = https.request(options, (response) => {
+      let data = '';
+      response.on('data', chunk => { data += chunk; });
+      response.on('end', () => resolve(data.trim() === 'VALID'));
+    });
+    request.on('error', () => resolve(false));
+    request.write(paramString);
+    request.end();
+  });
+}
+
+// PayFast posts the ITN as application/x-www-form-urlencoded, scoped
+// to just this path so the rest of the app keeps using express.json().
+app.use('/api/payfast/notify', express.urlencoded({ extended: false }));
+
+app.post('/api/payfast/notify', async (req, res) => {
+  // Ack immediately — PayFast retries aggressively (instantly, then
+  // after 10 minutes, then exponentially) if it doesn't get a 200, and
+  // every check below runs independently of this response.
+  res.status(200).send('OK');
+
+  if (!adminDb) { console.error('[PAYFAST_ITN] adminDb not configured'); return; }
+
+  try {
+    const pfData = req.body || {};
+    const receivedSignature = pfData.signature;
+    const dataForSignature = Object.assign({}, pfData);
+    delete dataForSignature.signature;
+
+    // Check 1 — signature. Recomputed the same way as initiate, over
+    // every field PayFast actually posted back.
+    const expectedSignature = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE);
+    if (expectedSignature !== receivedSignature) {
+      console.error('[PAYFAST_ITN] Signature mismatch for', pfData.m_payment_id);
+      return;
+    }
+
+    // Check 2 — the request really came from a PayFast server.
+    const validIps = await resolveValidPayFastIps();
+    const requestIp = String(req.ip || '').replace('::ffff:', '');
+    if (!validIps.has(requestIp)) {
+      console.error('[PAYFAST_ITN] Untrusted source IP:', requestIp, 'for', pfData.m_payment_id);
+      return;
+    }
+
+    // Check 3 — the amount paid matches what this order actually costs.
+    const orderId = pfData.m_payment_id;
+    if (!orderId) { console.error('[PAYFAST_ITN] Missing m_payment_id'); return; }
+    const orderRef = adminDb.collection('orders').doc(orderId);
+    const orderDoc = await orderRef.get();
+    if (!orderDoc.exists) { console.error('[PAYFAST_ITN] Unknown order:', orderId); return; }
+    const order = orderDoc.data();
+    const expectedAmount = Number(order.total || 0);
+    const receivedAmount = Number(pfData.amount_gross || 0);
+    if (Math.abs(expectedAmount - receivedAmount) > 0.01) {
+      console.error('[PAYFAST_ITN] Amount mismatch for', orderId, '— expected', expectedAmount, 'got', receivedAmount);
+      return;
+    }
+
+    // Check 4 — ask PayFast itself to confirm this exact transaction.
+    const paramString = Object.keys(pfData)
+      .filter(k => k !== 'signature')
+      .map(k => k + '=' + payFastUrlEncode(pfData[k]))
+      .join('&');
+    const confirmed = await payFastServerConfirm(paramString);
+    if (!confirmed) {
+      console.error('[PAYFAST_ITN] Server confirmation failed for', orderId);
+      return;
+    }
+
+    if (pfData.payment_status !== 'COMPLETE') {
+      console.log('[PAYFAST_ITN]', orderId, 'status is', pfData.payment_status, '— not marking paid');
+      return;
+    }
+    if (order.paymentStatus === 'paid') {
+      console.log('[PAYFAST_ITN] Order', orderId, 'already marked paid — ignoring duplicate notification');
+      return;
+    }
+
+    await orderRef.update({
+      paymentStatus: 'paid',
+      status: 'processing',
+      paidAt: admin.firestore.FieldValue.serverTimestamp(),
+      pfPaymentId: pfData.pf_payment_id || null
+    });
+
+    sendOrderConfirmationEmail(Object.assign({}, order, { orderNumber: order.orderNumber || orderId })).catch((err) => {
+      console.warn('[PAYFAST_ITN] Confirmation email failed for', orderId, ':', err.message);
+    });
+
+    console.log('[PAYFAST_ITN] Order', orderId, 'marked paid.');
+  } catch (e) {
+    console.error('[PAYFAST_ITN] Unhandled error:', e.message);
+  }
+});
+
+// Lets checkout.js poll "is this order actually paid yet" once the
+// customer lands back on return_url — the ITN above is the source of
+// truth, this just lets the browser ask what it already decided.
+app.get('/api/orders/:id/status', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const doc = await adminDb.collection('orders').doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Not found' });
+    const order = doc.data();
+    res.json({ paymentStatus: order.paymentStatus || 'unpaid', orderNumber: order.orderNumber || req.params.id });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not check order status' });
+  }
 });
 
 // ==================== CHAT AI REPLY ====================

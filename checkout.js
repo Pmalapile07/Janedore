@@ -295,30 +295,10 @@ async function placeOrder(e) {
       updates.forEach(u => transaction.update(u.ref, u.data));
     });
 
-    // Fire-and-forget — the order is already placed and stock is already
-    // decremented at this point; a failed confirmation email shouldn't
-    // block or undo any of that, just get logged.
-    fetch('/api/send-order-confirmation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderNumber: orderData.orderNumber,
-        customerEmail: orderData.customerEmail,
-        customerName: orderData.customerName,
-        items: orderData.items,
-        subtotal: orderData.subtotal,
-        shipping: orderData.shipping,
-        total: orderData.total,
-        currency: orderData.currency
-      })
-    }).catch(function(err) {
-      console.warn('[EMAIL] Order confirmation failed to send:', err.message);
-    });
-
     // Fire-and-forget — save this address to the signed-in customer's
-    // profile so it's there to prefill next visit. Same reasoning as the
-    // confirmation email above: the order is already placed, so a failure
-    // here should never block or undo any of that, just get logged.
+    // profile so it's there to prefill next visit. The order is already
+    // placed, so a failure here should never block or undo any of
+    // that, just get logged.
     if (user) {
       db.collection('customers').doc(user.uid).set({
         name,
@@ -333,20 +313,96 @@ async function placeOrder(e) {
       });
     }
 
-    document.getElementById('checkout-form-view').style.display = 'none';
-    document.getElementById('checkout-confirmation-view').style.display = 'block';
-    document.getElementById('confirmation-order-number').textContent = 'Order #' + orderData.orderNumber;
-
-    lastConfirmedOrderNumber = orderData.orderNumber;
-    sessionStorage.setItem('janedore_last_order_number', lastConfirmedOrderNumber);
-
-    S.cart = [];
-    updateBadges();
-    renderCart();
-    saveCartToStorage();
+    // The order exists now (status: pending, paymentStatus: unpaid) but
+    // nothing has actually been paid for yet — that's what this redirect
+    // is for. The cart is deliberately NOT cleared here: if the customer
+    // cancels on PayFast's side, they land back on the site with their
+    // bag intact instead of having to re-add everything. Clearing it,
+    // sending the confirmation email, and showing the confirmation
+    // screen all now happen only once handlePayFastReturn() below
+    // confirms the order actually got paid.
+    await redirectToPayFast(orderRef.id);
 
   } catch (e) {
     console.warn('Order error:', e);
     alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
   }
 }
+
+// Asks the server to build a signed PayFast payment request for this
+// order (the signature needs the account passphrase, which must never
+// reach the browser, so this can only happen server-side — see
+// /api/payfast/initiate in server.js) and submits it as a real form
+// POST, which navigates the browser away to PayFast's payment page.
+async function redirectToPayFast(orderId) {
+  const res = await fetch('/api/payfast/initiate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId })
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(function () { return {}; });
+    throw new Error(body.error || 'Could not start payment. Please try again.');
+  }
+  const { action, fields } = await res.json();
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = action;
+  Object.keys(fields).forEach(function (key) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = fields[key];
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+}
+
+// Runs once on page load (called below, at script-load time — this
+// file is deferred, so the DOM already exists by the time it runs).
+// PayFast's ITN (server-side, see server.js) is sent and processed
+// BEFORE the customer is redirected back to return_url per PayFast's
+// own docs, so by the time this runs the order's paymentStatus should
+// already reflect the real outcome — this just asks what the server
+// already decided, rather than deciding anything itself.
+async function handlePayFastReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get('order');
+  if (!orderId) return;
+
+  const isReturn = params.get('payfast_return') === '1';
+  const isCancel = params.get('payfast_cancel') === '1';
+  if (!isReturn && !isCancel) return;
+
+  // Either way, the URL's done its job — drop the query params so a
+  // refresh doesn't replay this.
+  history.replaceState(null, '', window.location.pathname);
+
+  if (isCancel) {
+    alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status');
+    const data = await res.json();
+    if (data.paymentStatus === 'paid') {
+      S.cart = [];
+      updateBadges();
+      renderCart();
+      saveCartToStorage();
+
+      lastConfirmedOrderNumber = data.orderNumber || orderId;
+      sessionStorage.setItem('janedore_last_order_number', lastConfirmedOrderNumber);
+
+      navigateToCheckout();
+    } else {
+      alert('We\'re still confirming your payment — check your email shortly, or contact us if this takes more than a few minutes.');
+    }
+  } catch (e) {
+    console.warn('[PAYFAST_RETURN] Could not confirm payment status:', e.message);
+  }
+}
+handlePayFastReturn();
