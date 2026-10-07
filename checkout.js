@@ -159,15 +159,17 @@ async function placeOrder(e) {
   const total = subtotal + shipping;
   
   const brandGroups = {};
+  const vendorIdSet = new Set();
   S.cart.forEach(item => {
     const product = PRODUCTS.find(p => p.id === item.productId);
     const brand = product?.brand || 'Unknown';
     if (!brandGroups[brand]) brandGroups[brand] = [];
     brandGroups[brand].push(item);
+    if (product?.vendorId) vendorIdSet.add(product.vendorId);
   });
-  
+
   const user = firebase.auth().currentUser;
-  
+
   const orderData = {
     orderNumber: 'ORD-' + Date.now(),
     customerEmail: email,
@@ -178,18 +180,28 @@ async function placeOrder(e) {
     city,
     postalCode: postal,
     country,
-    items: S.cart.map(item => ({
-      productId: item.productId,
-      name: item.name,
-      brand: item.brand,
-      size: item.size,
-      color: item.color,
-      qty: item.qty,
-      price: item.salePrice || item.price,
-      variantIndex: item.variantIndex
-    })),
+    // vendorId per line + the order-level vendorIds list below are what
+    // admin-vendors.js's revenue/order-count tally already reads
+    // (vendorRevenue/vendorOrders in renderVendorsTab) — this was never
+    // being written, so every vendor's dashboard numbers have been
+    // silently stuck at zero regardless of real sales.
+    items: S.cart.map(item => {
+      const product = PRODUCTS.find(p => p.id === item.productId);
+      return {
+        productId: item.productId,
+        name: item.name,
+        brand: item.brand,
+        vendorId: product?.vendorId || null,
+        size: item.size,
+        color: item.color,
+        qty: item.qty,
+        price: item.salePrice || item.price,
+        variantIndex: item.variantIndex
+      };
+    }),
     packageCount: Object.keys(brandGroups).length,
     brands: Object.keys(brandGroups),
+    vendorIds: Array.from(vendorIdSet),
     subtotal,
     shipping,
     total,
