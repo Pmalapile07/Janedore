@@ -189,6 +189,7 @@
     margin-top: 16px;
   }
   .checkout-place-order-btn:hover { background: #333; }
+  .checkout-place-order-btn:disabled { background: #888; cursor: not-allowed; }
   .checkout-confirmation {
     text-align: center;
     padding: 60px 20px;
@@ -347,7 +348,7 @@
           <div class="checkout-section-title">Payment</div>
           <p class="checkout-payment-note">Demo mode — no payment will be processed.<br>You will receive an order confirmation.</p>
           
-          <button type="submit" class="checkout-place-order-btn">Place Order</button>
+          <button type="submit" class="checkout-place-order-btn" id="checkout-place-order-btn">Place Order</button>
         </form>
       </div>
       

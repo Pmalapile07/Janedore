@@ -54,6 +54,9 @@ function navigateToCheckout() {
     document.getElementById('checkout-confirmation-view').style.display = 'none';
     if (confirmingView) confirmingView.style.display = 'none';
 
+    const placeOrderBtn = document.getElementById('checkout-place-order-btn');
+    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Place Order'; }
+
     if (user && user.email) {
       document.getElementById('checkout-email').value = user.email;
       if (user.displayName) {
@@ -155,12 +158,21 @@ function renderCheckoutSummary() {
 
 async function placeOrder(e) {
   e.preventDefault();
-  
+
   if (!S.cart.length) {
     alert('Your cart is empty.');
     return;
   }
-  
+
+  // Same loading-state pattern as login.js's handleLoginSubmit(): disable
+  // the button and swap its label while the request is in flight. This
+  // also doubles as the duplicate-submission guard — a disabled button
+  // doesn't fire further submit events, so a second click (or the
+  // keyboard re-submitting) while this is still running does nothing.
+  const submitBtn = document.getElementById('checkout-place-order-btn');
+  if (submitBtn && submitBtn.disabled) return;
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Please wait…'; }
+
   const email = document.getElementById('checkout-email').value.trim();
   const name = document.getElementById('checkout-name').value.trim();
   const address = document.getElementById('checkout-address').value.trim();
@@ -171,6 +183,7 @@ async function placeOrder(e) {
   
   if (!email || !name || !address || !city || !country) {
     alert('Please fill in all required fields.');
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
     return;
   }
   
@@ -349,7 +362,11 @@ async function placeOrder(e) {
   } catch (e) {
     console.warn('Order error:', e);
     alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
   }
+  // No restore on success: redirectToPayFast() navigates the browser
+  // away, so the button stays disabled/"Please wait…" until that
+  // happens rather than flickering back to clickable first.
 }
 
 // Asks the server to build a signed PayFast payment request for this
