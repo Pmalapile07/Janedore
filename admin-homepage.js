@@ -264,6 +264,12 @@
     var news = h.newsletter || {};
 
     var sectionsHtml =
+      accordionSectionHtml('ph-stamp', 'Site Logo',
+        thumbHtml(h.logoUrl) + '<span>' + (h.logoUrl ? 'Image set' : 'Using text wordmark') + '</span>',
+        imageFieldHtml('logoImage', h.logoUrl, 'Logo') +
+        '<p class="account-muted" style="font-size:11px;margin:0;">Replaces the "JANEDORE" text in the header once set. Clear the URL to go back to text.</p>'
+      ) +
+
       accordionSectionHtml('ph-image', 'Hero',
         thumbHtml(hero.imageUrl) + '<span>' + esc(hero.heading || 'Heading') + '</span>',
         imageFieldHtml('heroImage', hero.imageUrl, 'Image') +
@@ -344,6 +350,7 @@
     });
 
     var homepageData = {
+      logoUrl: form.logoImage.value.trim(),
       hero: {
         imageUrl: form.heroImage.value.trim(),
         heading: form.heroHeading.value.trim(),
