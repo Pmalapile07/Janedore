@@ -102,7 +102,8 @@ function shopByBrandCardsHtml(brands) {
   return brands.map(vendor => {
     const brandImg = vendor.heroImageUrl || vendor.logoUrl;
     const bg = brandImg ? `background-image:url('${escapeForCssUrl(brandImg)}');` : '';
-    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')"><div class="shop-brand-img" style="${bg}"></div></div>`;
+    const logo = vendor.logoUrl ? `<img src="${escapeHTML(vendor.logoUrl)}" alt="" class="shop-brand-logo">` : '';
+    return `<div class="shop-brand-card" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')"><div class="shop-brand-img" style="${bg}">${logo}</div></div>`;
   }).join('');
 }
 
