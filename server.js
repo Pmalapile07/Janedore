@@ -408,7 +408,7 @@ function payFastUrlEncode(str) {
 // built with keys in the exact order PayFast's field list specifies;
 // JS preserves string-key insertion order, so this only works if the
 // caller constructed the object correctly to begin with.
-function generatePayFastSignature(data, passphrase) {
+function buildPayFastParamString(data) {
   let pfOutput = '';
   for (const key of Object.keys(data)) {
     const val = data[key];
@@ -416,7 +416,11 @@ function generatePayFastSignature(data, passphrase) {
       pfOutput += key + '=' + payFastUrlEncode(String(val).trim()) + '&';
     }
   }
-  let getString = pfOutput.slice(0, -1);
+  return pfOutput.slice(0, -1);
+}
+
+function generatePayFastSignature(data, passphrase) {
+  let getString = buildPayFastParamString(data);
   if (passphrase) {
     getString += '&passphrase=' + payFastUrlEncode(String(passphrase).trim());
   }
@@ -482,7 +486,15 @@ app.post('/api/payfast/initiate', async (req, res) => {
     // Signature is computed on `data` alone — PayFast's docs explicitly
     // exclude `setup` from the signature calculation; adding it before
     // this point would make every split payment fail with a mismatch.
+    //
+    // TEMPORARY — debug logging while tracking down a signature
+    // mismatch on the first live sandbox test. Remove once a real
+    // payment goes through cleanly. Passphrase itself is deliberately
+    // never logged, only whether it's present and how long it is.
+    console.log('[PAYFAST_INITIATE][DEBUG] Param string (pre-passphrase):', buildPayFastParamString(data));
+    console.log('[PAYFAST_INITIATE][DEBUG] Passphrase set:', !!PAYFAST_PASSPHRASE, '| length:', (PAYFAST_PASSPHRASE || '').length);
     const signature = generatePayFastSignature(data, PAYFAST_PASSPHRASE);
+    console.log('[PAYFAST_INITIATE][DEBUG] Computed signature:', signature);
 
     const fields = Object.assign({}, data, { signature });
     if (setupField) fields.setup = setupField;
