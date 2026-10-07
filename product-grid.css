@@ -520,12 +520,12 @@ body .site-collection-layout {
 .shop-brand-card {
   cursor: pointer;
   flex: 0 0 auto;
-  width: 70vw;
-  max-width: 320px;
+  width: 35vw;
+  max-width: 160px;
   scroll-snap-align: start;
 }
 @media (min-width: 768px) {
-  .shop-brand-card { width: 30vw; max-width: 320px; }
+  .shop-brand-card { width: 15vw; max-width: 160px; }
 }
 @media (min-width: 1024px) {
   #brand-grid,
@@ -549,7 +549,10 @@ body .site-collection-layout {
 }
 /* The vendor's logo (admin's separate Logo field), centered on top of
    the hero photo — same layout as a typical brand-directory card
-   (hero image + logo mark over it). */
+   (hero image + logo mark over it). Sized in % of the card, so it
+   already scales down proportionally with .shop-brand-card's own
+   width/max-width above — no separate adjustment needed when that
+   shrinks. */
 .shop-brand-logo {
   max-width: 55%;
   max-height: 35%;
