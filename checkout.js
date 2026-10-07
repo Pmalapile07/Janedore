@@ -494,6 +494,11 @@ function handlePayFastReturn() {
   history.replaceState(null, '', window.location.pathname);
 
   if (isCancel) {
+    // Best-effort — the customer's bag is already intact regardless of
+    // whether this call succeeds, so a network failure here shouldn't
+    // block showing them the message below.
+    fetch('/api/payfast/order/' + encodeURIComponent(orderId) + '/cancel', { method: 'POST' })
+      .catch(function (e) { console.warn('[PAYFAST_CANCEL] Could not record cancellation:', e.message); });
     alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
     return;
   }

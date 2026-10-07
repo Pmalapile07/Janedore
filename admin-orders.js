@@ -36,9 +36,13 @@
   window._selectedOrders = {};
   window._bulkMode = false;
 
+  // "Abandoned" means we genuinely don't know what happened — payment
+  // never resolved either way. An explicit outcome (paid, cancelled at
+  // PayFast, or failed per PayFast's own ITN) is a known result, not an
+  // abandonment, even though none of those is 'paid' either.
   function isAbandoned(o) {
     if ((o.status || 'pending') !== 'pending') return false;
-    if ((o.paymentStatus || 'unpaid') === 'paid') return false;
+    if ((o.paymentStatus || 'unpaid') !== 'unpaid') return false;
     if (!o.createdAt) return true;
     var ts = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
     return (Date.now() - ts.getTime()) > ABANDONED_THRESHOLD_MS;
@@ -250,6 +254,8 @@
           '<option value="">All Payments</option>' +
           '<option value="paid">Paid</option>' +
           '<option value="unpaid">Unpaid</option>' +
+          '<option value="cancelled">Cancelled</option>' +
+          '<option value="failed">Failed</option>' +
           '<option value="refunded">Refunded</option>' +
         '</select>' +
         '<div class="toolbar-spacer"></div>' +
