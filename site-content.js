@@ -163,6 +163,25 @@ function renderEditorialBanner(banner) {
   loadBackgroundImage(imgEl, banner.imageUrl, 1600);
 }
 
+// Swaps the header's text wordmark for an uploaded image (admin
+// Homepage tab > Site Logo) once one's set — server.js's SSR already
+// does this for the very first paint (applyLogoImage()), this just
+// keeps it current if admin changes it after that response was cached.
+function renderLogo(logoUrl) {
+  const imgEl = document.getElementById('nav-logo-img');
+  const textEl = document.getElementById('nav-logo-text');
+  if (!imgEl || !textEl) return;
+  if (logoUrl) {
+    const sized = contentImageURL(logoUrl, 200);
+    if (imgEl.src !== sized) imgEl.src = sized;
+    imgEl.style.display = 'block';
+    textEl.style.display = 'none';
+  } else {
+    imgEl.style.display = 'none';
+    textEl.style.display = '';
+  }
+}
+
 function renderShopByBrandHeader(shopByBrand) {
   shopByBrand = shopByBrand || {};
   const headingEl = document.getElementById('shop-by-brand-heading');
@@ -189,6 +208,7 @@ async function renderSiteContent() {
     const collectionPages = collectionPagesSnap.exists ? (collectionPagesSnap.data() || {}) : {};
     window._siteContent = { homepage, collectionPages };
 
+    renderLogo(homepage.logoUrl);
     renderHero(homepage.hero);
     renderNewArrivalsHeader(homepage.newArrivals);
     renderShopByCategory(homepage.shopByCategory);

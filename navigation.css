@@ -87,6 +87,16 @@
   white-space: nowrap;
 }
 
+/* Uploaded logo image (admin Homepage tab > Site Logo) — replaces
+   .nav-logo-text entirely when set; see site-content.js's renderLogo()
+   and server.js's applyLogoImage() for the swap. */
+.nav-logo-img {
+  height: 24px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
 .nav-right { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; justify-content: flex-end; }
 
 .nav-icon-btn { background: none; border: none; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; cursor: pointer; transition: opacity 0.2s ease; }
