@@ -509,6 +509,14 @@ body .site-collection-layout {
 }
 #brand-grid::-webkit-scrollbar,
 .brand-grid-scroll::-webkit-scrollbar { display: none; }
+/* Homepage's own Shop by Brand grid — matches the editorial banner
+   image's padding right above it (#home-editorial-banner in
+   home-categories.css) instead of the flat 18px shared with the
+   product page's own Shop by Brand slider (.brand-grid-scroll), which
+   keeps its original padding below. */
+#brand-grid { padding: 0 8px !important; }
+@media (min-width: 640px) { #brand-grid { padding: 0 10px !important; } }
+@media (min-width: 1024px) { #brand-grid { padding: 0 12px !important; } }
 .shop-brand-card {
   cursor: pointer;
   flex: 0 0 auto;
