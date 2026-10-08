@@ -7,6 +7,11 @@
 // GA4 immediately and on every later visit; declining never loads it.
 (function () {
   'use strict';
+  // Paused — holding off on both the banner and GA4 for now. Flip to
+  // true to turn it back on; everything below is untouched.
+  const ENABLED = false;
+  if (!ENABLED) return;
+
   const GA4_ID = 'G-Y9NMT0ZGKZ';
   const STORAGE_KEY = 'janedore_cookie_consent';
 
