@@ -467,11 +467,18 @@ body .site-collection-layout {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   gap: 6px;
-  padding: 0 18px !important;
+  /* Left-only here — the matching right-side gutter is a trailing
+     ::after spacer below instead of padding-right, because Safari
+     (desktop and iOS) drops a scroll container's trailing padding
+     entirely once content overflows. Padding-left isn't affected;
+     it's the right-hand gap after the last card that goes missing. */
+  padding: 0 0 0 18px !important;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar { display: none; }
+#arrivals-grid::after,
+#clothing-grid::after { content: ''; flex: 0 0 18px; }
 #arrivals-grid .product-card,
 #clothing-grid .product-card {
   flex: 0 0 auto;
@@ -504,19 +511,31 @@ body .site-collection-layout {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   gap: 6px;
-  padding: 0 18px !important;
+  /* Left-only — see the ::after spacer rule just below for why
+     (same Safari trailing-padding-in-scroll-container bug as
+     #arrivals-grid/#clothing-grid above). */
+  padding: 0 0 0 18px !important;
   scrollbar-width: none;
 }
 #brand-grid::-webkit-scrollbar,
 .brand-grid-scroll::-webkit-scrollbar { display: none; }
+#brand-grid::after,
+.brand-grid-scroll::after { content: ''; flex: 0 0 18px; }
 /* Homepage's own Shop by Brand grid — matches the editorial banner
    image's padding right above it (#home-editorial-banner in
    home-categories.css) instead of the flat 18px shared with the
    product page's own Shop by Brand slider (.brand-grid-scroll), which
    keeps its original padding below. */
-#brand-grid { padding: 0 8px !important; }
-@media (min-width: 640px) { #brand-grid { padding: 0 10px !important; } }
-@media (min-width: 1024px) { #brand-grid { padding: 0 12px !important; } }
+#brand-grid { padding: 0 0 0 8px !important; }
+#brand-grid::after { flex: 0 0 8px; }
+@media (min-width: 640px) {
+  #brand-grid { padding: 0 0 0 10px !important; }
+  #brand-grid::after { flex: 0 0 10px; }
+}
+@media (min-width: 1024px) {
+  #brand-grid { padding: 0 0 0 12px !important; }
+  #brand-grid::after { flex: 0 0 12px; }
+}
 /* Same size as the product card sliders (#arrivals-grid/#clothing-grid
    .product-card below), so Shop by Brand cards read as the same visual
    scale as every other card on the homepage. */
