@@ -6,6 +6,12 @@
 // subscribed, either way) means never again for that browser.
 (function () {
   'use strict';
+  // Paused — felt overwhelming when both this and the cookie banner
+  // could show at once. Flip to true to turn it back on; everything
+  // below is untouched and ready to go.
+  const ENABLED = false;
+  if (!ENABLED) return;
+
   const STORAGE_KEY = 'janedore_newsletter_popup_shown';
 
   function alreadyShown() {
