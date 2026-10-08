@@ -48,6 +48,24 @@
     return (Date.now() - ts.getTime()) > ABANDONED_THRESHOLD_MS;
   }
 
+  // Appends one entry to the order's real activity log (o.timeline) —
+  // Firestore write plus an optimistic local update so the detail panel
+  // (if open) reflects it immediately rather than waiting on a refetch.
+  // FieldValue.serverTimestamp() can't be used inside an array element,
+  // so this uses a plain ISO string instead, same as every other
+  // timestamp this file already writes by hand (updatedAt, etc).
+  function logOrderTimelineEvent(orderId, text) {
+    var entry = { text: text, at: new Date().toISOString() };
+    ordersRef.doc(orderId).update({
+      timeline: firebase.firestore.FieldValue.arrayUnion(entry)
+    }).catch(function (e) { console.warn('[ORDER_TIMELINE]', e.message); });
+    if (window._ordersData) {
+      var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
+      if (o) o.timeline = (o.timeline || []).concat([entry]);
+    }
+    return entry;
+  }
+
   // ─── RENDER ORDERS TAB ───────────────────────────────────────
 
   window._renderOrdersTab = function () {
@@ -75,7 +93,9 @@
         '<div class="section-title">Orders</div>' +
         '<div class="section-actions">' +
           (window._can('orders', 'create')
-            ? '<button class="btn btn-sm btn-primary" onclick="window._openNewOrderForm()">Create Order</button>'
+            ? '<button class="btn btn-sm btn-primary orders-create-btn" onclick="window._openNewOrderForm()" aria-label="Create Order" title="Create Order">' +
+                '<i class="ph-light ph-plus"></i>' +
+              '</button>'
             : '') +
           '<div class="orders-actions-menu-wrap">' +
             '<button class="btn btn-sm btn-ghost orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Actions">' +
@@ -221,6 +241,7 @@
     batch.commit().then(function () {
       showToast(ids.length + ' order' + (ids.length !== 1 ? 's' : '') + ' updated to ' + status);
       ids.forEach(function (id) {
+        logOrderTimelineEvent(id, 'You changed the order status to ' + status.charAt(0).toUpperCase() + status.slice(1) + '.');
         var o = (window._ordersData || []).find(function (x) { return x.id === id; });
         if (o) o.status = status;
       });
@@ -285,7 +306,6 @@
             '<label class="orders-filter-popover-label">Status</label>' +
             '<select class="filter-select" id="order-status-filter" onchange="window._filterOrders()">' +
               '<option value="">Any status</option>' +
-              '<option value="abandoned">Abandoned</option>' +
               ORDER_STATUSES.map(function (s) {
                 return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
               }).join('') +
@@ -309,7 +329,10 @@
     renderOrdersTable(orders);
   }
 
-  var ORDER_TAB_LABELS = { all: 'All', unfulfilled: 'Unfulfilled', unpaid: 'Unpaid', open: 'Open' };
+  var ORDER_TAB_LABELS = {
+    all: 'All', unfulfilled: 'Unfulfilled', unpaid: 'Unpaid', open: 'Open',
+    abandoned: 'Abandoned', returns: 'Returns', archived: 'Archived'
+  };
 
   function renderOrderTabs() {
     var tabsEl = safeEl('orders-tabs');
@@ -357,6 +380,7 @@
 
   function renderOrdersTable(orders) {
     var canDelete       = window._can('orders', 'delete');
+    var canUpdate       = window._can('orders', 'update');
     var statusFilterEl  = safeEl('order-status-filter');
     var paymentFilterEl = safeEl('order-payment-filter');
     var searchEl        = safeEl('order-search');
@@ -368,17 +392,19 @@
     var tab = window._orderTab || 'all';
 
     var filtered = orders.filter(function (o) {
-      if (statusFilter === 'abandoned') {
-        if (!isAbandoned(o)) return false;
-      } else if (statusFilter) {
-        if ((o.status || 'pending') !== statusFilter) return false;
-      }
+      if (statusFilter && (o.status || 'pending') !== statusFilter) return false;
       if (paymentFilter && (o.paymentStatus || 'unpaid') !== paymentFilter) return false;
       // Tabs are a second, independent filter dimension on top of the
-      // status/payment dropdowns above — both apply together.
+      // status/payment dropdowns above — both apply together. "All"
+      // still means literally everything, archived orders included —
+      // every other tab hides archived orders, same as Shopify.
+      if (tab !== 'all' && tab !== 'archived' && o.archived) return false;
       if (tab === 'unfulfilled' && (o.fulfillmentStatus || 'unfulfilled') === 'fulfilled') return false;
       if (tab === 'unpaid' && (o.paymentStatus || 'unpaid') !== 'unpaid') return false;
-      if (tab === 'open' && (o.status === 'cancelled' || o.status === 'delivered')) return false;
+      if (tab === 'open' && o.status === 'cancelled') return false;
+      if (tab === 'abandoned' && !isAbandoned(o)) return false;
+      if (tab === 'returns' && !o.returnRequested) return false;
+      if (tab === 'archived' && !o.archived) return false;
       if (search) {
         var hay = (
           o.id +
@@ -402,22 +428,9 @@
       return;
     }
 
-    var abandonedCount = orders.filter(isAbandoned).length;
-    var bannerHTML = '';
-    if (abandonedCount > 0 && statusFilter !== 'abandoned') {
-      bannerHTML =
-        '<div class="orders-abandoned-banner" onclick="window._filterToAbandoned()">' +
-          '<i class="ph-light ph-warning-circle" style="font-size:15px;flex-shrink:0;"></i>' +
-          '<span>' + abandonedCount + ' abandoned order' + (abandonedCount !== 1 ? 's' : '') +
-            ' — payment never confirmed.</span>' +
-          '<span class="orders-abandoned-link">View <i class="ph-light ph-arrow-right" style="font-size:11px;"></i></span>' +
-        '</div>';
-    }
-
     var allSelected = filtered.length > 0 && filtered.every(function (o) { return window._selectedOrders[o.id]; });
 
     wrap.innerHTML =
-      bannerHTML +
       (window._bulkMode
         ? '<label class="orders-select-all"><input type="checkbox" onchange="window._toggleAllOrders(this.checked)"' + (allSelected ? ' checked' : '') + '> Select all</label>'
         : '') +
@@ -449,10 +462,19 @@
                 statusBadge(o.paymentStatus || 'unpaid') +
               '</div>' +
             '</div>' +
-            (canDelete && !window._bulkMode
-              ? '<button class="order-row-delete" onclick="event.stopPropagation();window._deleteOrder(\'' + esc(o.id) + '\')" aria-label="Delete order">' +
-                  '<i class="ph-light ph-trash"></i>' +
-                '</button>'
+            (!window._bulkMode && (canUpdate || canDelete)
+              ? '<div class="order-row-actions">' +
+                  (canUpdate
+                    ? '<button class="order-row-icon-btn" onclick="event.stopPropagation();window._toggleOrderArchived(\'' + esc(o.id) + '\',' + !!o.archived + ')" aria-label="' + (o.archived ? 'Unarchive order' : 'Archive order') + '" title="' + (o.archived ? 'Unarchive' : 'Archive') + '">' +
+                        '<i class="ph-light ph-' + (o.archived ? 'tray-arrow-up' : 'archive') + '"></i>' +
+                      '</button>'
+                    : '') +
+                  (canDelete
+                    ? '<button class="order-row-icon-btn order-row-icon-btn-danger" onclick="event.stopPropagation();window._deleteOrder(\'' + esc(o.id) + '\')" aria-label="Delete order" title="Delete">' +
+                        '<i class="ph-light ph-trash"></i>' +
+                      '</button>'
+                    : '') +
+                '</div>'
               : '') +
           '</div>';
         }).join('') +
@@ -461,11 +483,6 @@
 
   window._filterOrders = function () {
     if (window._ordersData) renderOrdersTable(window._ordersData);
-  };
-
-  window._filterToAbandoned = function () {
-    var el = safeEl('order-status-filter');
-    if (el) { el.value = 'abandoned'; window._filterOrders(); }
   };
 
   // ─── EMPTY STATE ─────────────────────────────────────────────
@@ -869,15 +886,17 @@
     var o = (window._ordersData || []).filter(function (x) { return x.id === orderId; })[0];
 
     var panelHTML =
-      '<div class="slide-panel" style="width:min(92vw,460px);">' +
-        '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
-        '<div class="ui-label" style="margin-bottom:4px;">Order</div>' +
-        '<div style="font-size:21px;font-weight:400;margin-bottom:18px;" id="order-detail-heading">' +
-          '#' + esc((o && o.orderNumber) || orderId) +
+      '<div class="order-detail-fullscreen">' +
+        '<div class="order-detail-fullscreen-header">' +
+          '<button class="order-detail-back-btn" onclick="window._closePanel()" aria-label="Back to orders"><i class="ph-light ph-arrow-left"></i></button>' +
+          '<span id="order-detail-heading">#' + esc((o && o.orderNumber) || orderId) + '</span>' +
+          '<button class="order-detail-back-btn" onclick="window._printPackingSlip(\'' + esc(orderId) + '\')" aria-label="Print packing slip" title="Print packing slip"><i class="ph-light ph-printer"></i></button>' +
         '</div>' +
-        (o
-          ? renderOrderDetailContent(o, orderId)
-          : '<div id="order-detail-loading" style="color:var(--muted);font-size:13px;">Loading...</div>') +
+        '<div class="order-detail-fullscreen-body">' +
+          (o
+            ? renderOrderDetailContent(o, orderId)
+            : '<div id="order-detail-loading" style="color:var(--muted);font-size:13px;">Loading...</div>') +
+        '</div>' +
       '</div>';
 
     mountPanel(panelHTML);
@@ -921,7 +940,7 @@
         statusBadge(o.fulfillmentStatus || 'unfulfilled') +
       '</div>';
 
-    html += '<div class="card-title" style="margin-bottom:8px;">Order Progress</div>';
+    html += '<div class="card-title" style="margin-bottom:8px;">Timeline</div>';
     html += renderOrderTimeline(o);
 
     html +=
@@ -1046,74 +1065,39 @@
   }
 
   // ─── ORDER TIMELINE ──────────────────────────────────────────
+  // Real, chronological activity log (o.timeline, written by
+  // logOrderTimelineEvent() from every mutating action in this file:
+  // status changes, refunds, notes, tracking, archive/unarchive) —
+  // replaces the old fixed-steps progress stepper this used to be.
+  // Matches Shopify's own order timeline: newest entry first, a dot +
+  // timestamp + plain description, no synthetic "steps" that may not
+  // reflect what actually happened to a given order.
 
-  // Fulfillment states only — 'pending' here means "order record exists",
-  // not "paid". Whether payment actually cleared is read from
-  // paymentStatus (set exclusively by the verified PayFast ITN, or by an
-  // explicit refund), never from this status value — see renderOrderTimeline.
-  var TIMELINE_STEPS = [
-    { key: 'pending',     label: 'Order Placed',    icon: 'ph-shopping-cart' },
-    { key: 'processing',  label: 'Processing',       icon: 'ph-package' },
-    { key: 'packed',      label: 'Packed',           icon: 'ph-archive' },
-    { key: 'shipped',     label: 'Shipped',          icon: 'ph-truck' },
-    { key: 'delivered',   label: 'Delivered',        icon: 'ph-check-circle' }
-  ];
+  function formatTimelineWhen(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' }) + ', ' +
+      d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+  }
 
   function renderOrderTimeline(o) {
-    var paymentConfirmed = (o.paymentStatus || 'unpaid') === 'paid';
-    var currentStatus = o.status || 'pending';
-    var currentIndex = -1;
+    var entries = (o.timeline || []).slice();
+    var placedAt = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate().toISOString() : o.createdAt) : null;
+    // "Order placed" isn't logged by logOrderTimelineEvent() — order
+    // creation happens in checkout.js, outside this file — so it's
+    // synthesized here as the earliest entry instead.
+    entries.unshift({ text: 'Order placed.', at: placedAt });
+    entries.reverse();
 
-    for (var i = 0; i < TIMELINE_STEPS.length; i++) {
-      if (TIMELINE_STEPS[i].key === currentStatus) {
-        currentIndex = i;
-        break;
-      }
-    }
-
-    if (currentIndex === -1) {
-      var label = currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1);
-      return '<div style="padding:10px 0;font-size:12px;color:var(--muted);text-align:center;">' +
-        'Status: <span style="color:var(--text);font-weight:500;">' + label + '</span>' +
-      '</div>';
-    }
-
-    // Insert a "Payment Confirmed" step right after "Order Placed", driven
-    // by paymentStatus rather than status. Fulfillment steps never render
-    // as reached ahead of payment actually clearing, even if status
-    // already says otherwise (e.g. a manually-created admin order).
-    var steps = [TIMELINE_STEPS[0], { key: 'paid', label: 'Payment Confirmed', icon: 'ph-credit-card' }]
-      .concat(TIMELINE_STEPS.slice(1));
-    var effectiveIndex = paymentConfirmed ? currentIndex + 1 : 0;
-
-    var html = '<div style="padding:8px 0 4px;">';
-    for (var j = 0; j < steps.length; j++) {
-      var step = steps[j];
-      var isComplete = j <= effectiveIndex;
-      var isCurrent = j === effectiveIndex;
-
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;">' +
-        '<div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;' +
-          (isComplete
-            ? 'background:var(--text);color:#fff;'
-            : 'background:var(--surface3);color:var(--muted2);') +
-          'font-size:11px;">' +
-          (isComplete ? '<i class="ph-light ph-check" style="font-size:12px;"></i>' : (j + 1)) +
-        '</div>' +
-        '<div style="flex:1;min-width:0;">' +
-          '<div style="font-size:11.5px;font-weight:' + (isCurrent ? '500' : '400') + ';color:' + (isComplete ? 'var(--text)' : 'var(--muted2)') + ';">' +
-            step.label +
-          '</div>' +
-        '</div>' +
-      '</div>';
-
-      if (j < steps.length - 1) {
-        html += '<div style="margin-left:11px;width:2px;height:8px;background:' + (j < effectiveIndex ? 'var(--text)' : 'var(--border-med)') + ';border-radius:1px;"></div>';
-      }
-    }
-    html += '</div>';
-
-    return html;
+    return '<div class="order-timeline">' +
+      entries.map(function (entry) {
+        return '<div class="order-timeline-entry">' +
+          '<div class="order-timeline-dot"></div>' +
+          '<div class="order-timeline-time">' + esc(formatTimelineWhen(entry.at)) + '</div>' +
+          '<div class="order-timeline-text">' + esc(entry.text) + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
   }
 
   // ─── PACKING SLIP ────────────────────────────────────────────
@@ -1185,6 +1169,7 @@
       .update({ paymentStatus: 'refunded', updatedAt: new Date().toISOString() })
       .then(function () {
         showToast('Order marked as refunded');
+        logOrderTimelineEvent(orderId, 'You refunded this order.');
         if (window._ordersData) {
           var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
           if (o) o.paymentStatus = 'refunded';
@@ -1207,6 +1192,20 @@
     }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
+  window._toggleOrderArchived = function (orderId, currentlyArchived) {
+    if (!window._guard('orders', 'update')) return;
+    var next = !currentlyArchived;
+    ordersRef.doc(orderId).update({ archived: next, updatedAt: new Date().toISOString() }).then(function () {
+      showToast(next ? 'Order archived' : 'Order unarchived');
+      logOrderTimelineEvent(orderId, next ? 'You archived this order.' : 'You unarchived this order.');
+      if (window._ordersData) {
+        var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
+        if (o) o.archived = next;
+        renderOrdersTable(window._ordersData);
+      }
+    }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+  };
+
   window._updateOrderStatus = function (orderId, status) {
     if (!window._guard('orders', 'update')) return;
     if (ORDER_STATUSES.indexOf(status) === -1) { showToast('Invalid status value', 'error'); return; }
@@ -1214,6 +1213,7 @@
       .update({ status: status, updatedAt: new Date().toISOString() })
       .then(function () {
         showToast('Status updated to ' + status);
+        logOrderTimelineEvent(orderId, 'You changed the order status to ' + status.charAt(0).toUpperCase() + status.slice(1) + '.');
         if (window._ordersData) {
           var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
           if (o) { o.status = status; renderOrdersTable(window._ordersData); }
@@ -1236,6 +1236,9 @@
 
     ordersRef.doc(orderId).update(data).then(function () {
       showToast('Tracking saved');
+      logOrderTimelineEvent(orderId, data.trackingNumber
+        ? 'You added tracking number ' + data.trackingNumber + (data.courier ? ' via ' + data.courier : '') + '.'
+        : 'You removed the tracking info on this order.');
       var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
       if (o) { o.trackingNumber = data.trackingNumber; o.courier = data.courier; }
     }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
@@ -1245,9 +1248,13 @@
     if (!window._guard('orders', 'update')) return;
     var input = safeEl('order-note-input');
     if (!input) return;
+    var hasNote = !!input.value.trim();
     ordersRef.doc(orderId)
       .update({ internalNotes: input.value, updatedAt: new Date().toISOString() })
-      .then(function () { showToast('Note saved'); })
+      .then(function () {
+        showToast('Note saved');
+        logOrderTimelineEvent(orderId, hasNote ? 'You added a note to this order.' : 'You removed the note on this order.');
+      })
       .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 

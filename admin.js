@@ -344,6 +344,14 @@
 
   // ─── TAB NAVIGATION ──────────────────────────────────────────
 
+  var TAB_TITLES = {
+    dashboard: 'Dashboard', products: 'Products', orders: 'Orders',
+    messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
+    vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
+    admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
+    homepage: 'Homepage', onlineStore: 'Online Store'
+  };
+
   window.switchTab = function(tab) {
     var TAB_MODULE_MAP = {
       dashboard: 'dashboard', products: 'products', orders: 'orders',
@@ -360,6 +368,8 @@
     }
 
     window._currentTab = tab;
+    var titleEl = safeEl('top-nav-title');
+    if (titleEl) titleEl.textContent = TAB_TITLES[tab] || 'Dashboard';
     if (tab !== 'messages') {
       window._activeChatSession = null;
       if (window._detachActiveChatListeners) window._detachActiveChatListeners();
