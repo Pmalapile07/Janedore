@@ -26,7 +26,15 @@
   --form-gap:16px;
 }
 html{height:100%;font-size:14px;scroll-behavior:smooth;}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+/* #app-body is its own fixed, internally scrolling panel below (same
+   pattern #desktop-sidebar already uses), so the dark nav/body
+   background is what's always visible behind it and the white card's
+   rounded top corners stay fixed on screen instead of travelling with
+   page scroll. Not forcing overflow:hidden here — #login-screen (shown
+   before #admin-panel) still needs the page itself able to scroll on
+   very small viewports; it just never needs to in practice once
+   #admin-panel is up, since nothing in it adds normal-flow height. */
+body{font-family:var(--font);background:var(--nav-bg);color:var(--text);line-height:1.5;min-height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 
 /* ── LOGIN ─────────────────────────────────────────────────────────────────── */
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:100vh;min-height:100dvh;background:#080808;padding:0;position:relative;overflow:hidden;}
@@ -66,8 +74,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
    every tab's heading (Dashboard, Orders, Products, Inbox, ...), set via
    switchTab() in admin.js, so the bump applies everywhere automatically. */
 .nav-brand{font-family:var(--font);font-size:18px;font-weight:700;letter-spacing:.01em;color:rgba(255,255,255,0.95);white-space:nowrap;}
-/* Fill-weight icon (not light/regular) sized and aligned to read as part
-   of the title itself, not a thin, disconnected mark beside it. */
+/* ph-caret-down (regular weight, per the icon markup given) sized and
+   aligned to read as part of the title itself, not a thin, disconnected
+   mark beside it. */
 .nav-brand-caret{font-size:16px;line-height:1;color:rgba(255,255,255,0.95);display:flex;align-items:center;}
 /* Create Order + the order-actions menu render here on tabs that have
    them (Orders right now) — see switchTab()/​_renderOrdersTab(). */
@@ -97,17 +106,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .sidebar-icon i{line-height:1;}
 
 /* ── APP BODY ──────────────────────────────────────────────────────────────── */
-/* The dark band here (exactly --r-lg deep, matching #main-content's own
-   top corner radius below) is what #main-content's rounded top corners
-   reveal, instead of the page's plain --bg — that's what turns the
-   straight edge between the dark nav and the white card into a curved
-   "arc" where they meet, same as Shopify's own admin. #main-content is
-   an ordinary in-flow child here, so it naturally paints over this band
-   everywhere except in the two corner notches the border-radius cuts
-   away — no z-index/stacking trick needed, and the fixed nav bar above
-   still correctly covers it all once the page is scrolled. */
-#app-body{margin-top:var(--nav-h);padding-bottom:calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));background:linear-gradient(to bottom,var(--nav-bg) 0,var(--nav-bg) var(--r-lg),var(--bg) var(--r-lg));}
-#main-content{padding:var(--space-4) var(--space-4) 0;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));max-width:880px;margin:0 auto;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;}
+/* #app-body is the white card itself now — fixed in place between the
+   top nav and bottom nav (same fixed-panel-with-internal-scroll pattern
+   #desktop-sidebar already uses), so its rounded top corners are always
+   on screen and never travel, no matter how far its own content is
+   scrolled. Its background is solid body/nav-bg dark everywhere (see
+   body, above), so the two corner notches the border-radius cuts out of
+   this rectangle simply show that dark background straight through —
+   that's the curved "arc" where the dark header meets the white card,
+   and it's always visible for the same reason, not just at rest. */
+#app-body{position:fixed;top:var(--nav-h);left:0;right:0;bottom:0;z-index:50;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;padding-bottom:calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));}
+#main-content{padding:var(--space-4) var(--space-4) 0;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));max-width:880px;margin:0 auto;}
 
 /* ── BOTTOM NAV ────────────────────────────────────────────────────────────── */
 #bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;justify-content:center;padding:var(--space-2) var(--space-3);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
