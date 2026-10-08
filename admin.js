@@ -331,6 +331,18 @@
           ? (data.vendorId || null)
           : null;
         console.log('[JANEDORE AUTH] Role resolved:', window._currentUserRole);
+
+        // Firestore's security rules check request.auth.token.vendorId
+        // (a custom claim, stamped on by /api/admin/sync-staff-claims)
+        // for a vendor's own list queries, like "every order I'm part
+        // of" — not the admins/{uid} doc itself, which a list request
+        // can't look up. Forcing a token refresh here means a vendor
+        // whose claims were just synced by a Super Admin gets them on
+        // their very next page load, without needing to fully sign out
+        // first — cheap, and harmless if the claims were already current.
+        if (window._currentUserRole === 'VENDOR' && user.getIdToken) {
+          user.getIdToken(true).catch(function (e) { console.warn('[TOKEN_REFRESH]', e); });
+        }
       } else {
         window._currentUserRole = 'VIEWER';
         window._currentVendorId = null;
