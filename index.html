@@ -3,6 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <base href="/">
+  <script>
+  // Prevents a visible flash of the home page right after PayFast
+  // redirects back here. #page-home ships "active" in the raw HTML
+  // below, so on a hard page load (exactly what this redirect is) it's
+  // what the browser paints first — the actual routing decision (land
+  // on checkout/confirmation instead) only happens once checkout.js
+  // runs, a deferred script near the bottom of the page, which is
+  // always a beat after that first paint. This runs synchronously,
+  // before any of the page's own markup is parsed, so it can hide
+  // #page-home before it's ever painted. checkout.js's own
+  // handlePayFastReturn() (also script-load-time, before
+  // DOMContentLoaded) removes this the moment it's done its own job —
+  // see the comment there.
+  (function () {
+    if (!/[?&](payfast_return|payfast_cancel)=1\b/.test(location.search)) return;
+    var style = document.createElement('style');
+    style.id = 'payfast-early-hide';
+    style.textContent = '#page-home{display:none!important}';
+    document.head.appendChild(style);
+    // Safety net in case something stops checkout.js from ever running
+    // — better a flash of home after 8s than a permanently blank page.
+    setTimeout(function () {
+      var el = document.getElementById('payfast-early-hide');
+      if (el) el.remove();
+    }, 8000);
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>JANEDORE | Curated Fashion</title>
   <link rel="icon" type="image/png" href="Janedore.png">

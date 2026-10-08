@@ -620,6 +620,13 @@ function handlePayFastReturn() {
   const isCancel = params.get('payfast_cancel') === '1';
   if (!isReturn && !isCancel) return;
 
+  // The early inline <script> in index.html's <head> hid #page-home so
+  // it never got painted while this was still undecided — safe to
+  // remove now, either branch below takes it from here (activating
+  // checkout, or leaving home visible behind the cancel alert).
+  const earlyHide = document.getElementById('payfast-early-hide');
+  if (earlyHide) earlyHide.remove();
+
   // Flag read by app.js's init() (see the comment there) — set before
   // the URL is rewritten below, since init() runs later (after
   // DOMContentLoaded) and by then location.search would already be
