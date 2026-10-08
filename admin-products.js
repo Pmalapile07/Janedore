@@ -288,6 +288,11 @@
   // inside the white content area below.
   var PRODUCT_TAB_LABELS = { all: 'All', active: 'Active', draft: 'Draft', archived: 'Archived' };
 
+  // Create-product + the "⋯" actions menu render in the dark top bar
+  // itself, next to "Products", same as Orders — not as a second row
+  // inside the white content area below.
+  var PRODUCT_TAB_LABELS = { all: 'All', active: 'Active', draft: 'Draft', archived: 'Archived' };
+
   window._renderProductsTab = function() {
     var mc = safeEl('main-content');
     if (!mc) return;
