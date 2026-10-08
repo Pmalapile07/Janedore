@@ -88,34 +88,37 @@
     var canUpdate = window._can('orders', 'update');
     var canDelete = window._can('orders', 'delete');
 
-    mc.innerHTML =
-      // No .section-title here on purpose — the top nav bar already shows
-      // "Orders" (see switchTab() in admin.js), so a second one right
-      // below it was a visibly different, redundant duplicate.
-      '<div class="section-header" style="margin-bottom:10px;justify-content:flex-end;">' +
-        '<div class="section-actions">' +
-          (window._can('orders', 'create')
-            ? '<button class="orders-create-btn" onclick="window._openNewOrderForm()" aria-label="Create Order" title="Create Order">' +
-                '<i class="ph ph-plus-circle"></i>' +
-              '</button>'
-            : '') +
-          '<div class="orders-actions-menu-wrap">' +
-            '<button class="btn btn-sm btn-ghost orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Actions">' +
-              '<i class="ph-light ph-dots-three-vertical"></i>' +
+    // Create Order + the order-actions (⋯) menu render in the dark top
+    // bar itself, next to "Orders", same as Shopify — not as a second
+    // row inside the white content area below (that row used to be
+    // nothing but these two buttons, which is the "huge empty gap
+    // above search" this was causing).
+    var topActionsEl = safeEl('top-nav-actions');
+    if (topActionsEl) {
+      topActionsEl.innerHTML =
+        (window._can('orders', 'create')
+          ? '<button class="orders-create-btn" onclick="window._openNewOrderForm()" aria-label="Create Order" title="Create Order">' +
+              '<i class="ph ph-plus-circle"></i>' +
+            '</button>'
+          : '') +
+        '<div class="orders-actions-menu-wrap">' +
+          '<button class="orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Order actions">' +
+            '<i class="ph-light ph-dots-three-vertical"></i>' +
+          '</button>' +
+          '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
+            '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshOrders()">' +
+              '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
             '</button>' +
-            '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
-              '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshOrders()">' +
-                '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
-              '</button>' +
-              (canUpdate
-                ? '<button class="orders-actions-item" id="bulk-toggle-btn" onclick="window._toggleOrdersActionsMenu();window._toggleBulkMode()">' +
-                    '<i class="ph-light ph-check-square"></i> Select Orders' +
-                  '</button>'
-                : '') +
-            '</div>' +
+            (canUpdate
+              ? '<button class="orders-actions-item" id="bulk-toggle-btn" onclick="window._toggleOrdersActionsMenu();window._toggleBulkMode()">' +
+                  '<i class="ph-light ph-check-square"></i> Select Orders' +
+                '</button>'
+              : '') +
           '</div>' +
-        '</div>' +
-      '</div>' +
+        '</div>';
+    }
+
+    mc.innerHTML =
       '<div id="bulk-actions" class="orders-bulk-bar" style="display:none;">' +
         '<select class="filter-select" id="bulk-status-select" style="padding:6px 24px 6px 9px;font-size:11px;">' +
           '<option value="">Bulk status...</option>' +
@@ -435,18 +438,36 @@
 
     var allSelected = filtered.length > 0 && filtered.every(function (o) { return window._selectedOrders[o.id]; });
 
+    // Orders are already newest-first (Firestore query is orderBy
+    // createdAt desc), so a plain "did the day change since the last
+    // row" check is enough to group them under a date heading, same
+    // as Shopify — no separate sort/grouping pass needed.
+    var lastDateKey = undefined;
+
     wrap.innerHTML =
       (window._bulkMode
         ? '<label class="orders-select-all"><input type="checkbox" onchange="window._toggleAllOrders(this.checked)"' + (allSelected ? ' checked' : '') + '> Select all</label>'
         : '') +
       '<div class="orders-list">' +
         filtered.map(function (o) {
+          var createdDate = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt)) : null;
+          var dateKey = createdDate ? createdDate.toDateString() : null;
+          var dateGroupHtml = '';
+          if (dateKey !== lastDateKey) {
+            lastDateKey = dateKey;
+            var dateLabel = createdDate
+              ? createdDate.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
+              : 'No date';
+            dateGroupHtml = '<div class="orders-date-group">' + esc(dateLabel) + '</div>';
+          }
+
           var abandoned = isAbandoned(o);
           var isSelected = !!window._selectedOrders[o.id];
           var rowClick = window._bulkMode
             ? 'window._toggleOrderSelection(\'' + esc(o.id) + '\',' + !isSelected + ')'
             : 'window._openOrderDetail(\'' + esc(o.id) + '\')';
-          return '<div class="order-row' + (isSelected ? ' selected' : '') + '" onclick="' + rowClick + '">' +
+          return dateGroupHtml +
+            '<div class="order-row' + (isSelected ? ' selected' : '') + '" onclick="' + rowClick + '">' +
             (window._bulkMode
               ? '<input type="checkbox" class="order-row-checkbox" onclick="event.stopPropagation()"' + (isSelected ? ' checked' : '') +
                 ' onchange="window._toggleOrderSelection(\'' + esc(o.id) + '\',this.checked)">'
