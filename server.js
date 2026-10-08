@@ -600,7 +600,15 @@ function payFastServerConfirm(paramString) {
 
 // PayFast posts the ITN as application/x-www-form-urlencoded, scoped
 // to just this path so the rest of the app keeps using express.json().
-app.use('/api/payfast/notify', express.urlencoded({ extended: false }));
+// verify stashes the exact raw bytes PayFast sent (req.rawBody) before
+// express's parser decodes anything — TEMPORARY, for the same ITN
+// signature-mismatch investigation as the debug block below: compares
+// our reconstructed param string against what was actually on the
+// wire, which rules out (or confirms) any decode/re-encode drift.
+app.use('/api/payfast/notify', express.urlencoded({
+  extended: false,
+  verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); }
+}));
 
 app.post('/api/payfast/notify', async (req, res) => {
   // Ack immediately — PayFast retries aggressively (instantly, then
@@ -630,16 +638,20 @@ app.post('/api/payfast/notify', async (req, res) => {
     // that once ITN is confirmed matching on a real sandbox payment.
     const itnParamString = buildPayFastParamString(dataForSignature);
     const expectedSignature = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE);
+    const expectedSignatureNoPassphrase = generatePayFastSignature(dataForSignature, null);
     lastPayFastItnDebug = {
       at: new Date().toISOString(),
       orderId: pfData.m_payment_id || null,
+      rawPostBody: req.rawBody || null,
       rawBody: dataForSignature,
       paramString: itnParamString,
       passphraseSet: !!PAYFAST_PASSPHRASE,
       passphraseLength: (PAYFAST_PASSPHRASE || '').length,
       expectedSignature,
+      expectedSignatureNoPassphrase,
       receivedSignature,
-      match: expectedSignature === receivedSignature
+      match: expectedSignature === receivedSignature,
+      matchNoPassphrase: expectedSignatureNoPassphrase === receivedSignature
     };
     console.log('[PAYFAST_ITN][DEBUG]', JSON.stringify(lastPayFastItnDebug));
 
