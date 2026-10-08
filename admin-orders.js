@@ -89,8 +89,10 @@
     var canDelete = window._can('orders', 'delete');
 
     mc.innerHTML =
-      '<div class="section-header" style="margin-bottom:10px;">' +
-        '<div class="section-title">Orders</div>' +
+      // No .section-title here on purpose — the top nav bar already shows
+      // "Orders" (see switchTab() in admin.js), so a second one right
+      // below it was a visibly different, redundant duplicate.
+      '<div class="section-header" style="margin-bottom:10px;justify-content:flex-end;">' +
         '<div class="section-actions">' +
           (window._can('orders', 'create')
             ? '<button class="btn btn-sm btn-primary orders-create-btn" onclick="window._openNewOrderForm()" aria-label="Create Order" title="Create Order">' +

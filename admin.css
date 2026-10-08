@@ -51,7 +51,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 /* ── ADMIN PANEL ───────────────────────────────────────────────────────────── */
 #admin-panel{display:none;flex-direction:column;min-height:100vh;}
 #top-nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--nav-bg);display:flex;align-items:center;padding:0 max(16px,env(safe-area-inset-left)) 0 max(16px,env(safe-area-inset-right));z-index:200;gap:var(--space-2);}
-.nav-brand{font-family:var(--font);font-size:var(--font-scale-md);font-weight:200;letter-spacing:.28em;color:rgba(255,255,255,0.9);flex:1;white-space:nowrap;}
+/* Shows the current section's name (see switchTab() in admin.js) —
+   used to be a static "JANEDORE" wordmark, which is why this was thin
+   and widely letter-spaced; a real title like "Dashboard"/"Products"
+   needs normal weight and spacing to actually read well. */
+.nav-brand{font-family:var(--font);font-size:var(--font-scale-lg);font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,0.95);flex:1;white-space:nowrap;}
 .nav-status-area{display:flex;align-items:center;gap:var(--space-1);background:rgba(255,255,255,0.06);border-radius:var(--r-lg);padding:var(--space-1) var(--space-2);}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);transition:background 0.4s;flex-shrink:0;}
 .status-dot.online{background:#3ecf5d;}.status-dot.offline{background:#ff5c5c;}
@@ -78,7 +82,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 
 /* ── APP BODY ──────────────────────────────────────────────────────────────── */
 #app-body{margin-top:var(--nav-h);padding-bottom:calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));}
-#main-content{padding:var(--space-4) var(--space-4) 0;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));max-width:880px;margin:0 auto;}
+/* White card with rounded top corners sitting just under the dark top
+   nav bar, against the page's own slightly-off-white --bg behind it —
+   same look as Shopify's own admin. */
+#main-content{padding:var(--space-4) var(--space-4) 0;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));max-width:880px;margin:0 auto;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;}
 
 /* ── BOTTOM NAV ────────────────────────────────────────────────────────────── */
 #bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;justify-content:center;padding:var(--space-2) var(--space-3);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
@@ -488,6 +495,10 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .order-row-total{font-size:var(--font-scale-md);font-weight:600;color:var(--text);flex-shrink:0;}
 .order-row-meta{font-size:var(--font-scale-sm);color:var(--muted);}
 .order-row-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;}
+/* Neutral gray in the list, same as Shopify's own order list — the
+   colorful badge-{status} palette (green/red/yellow/...) stays as-is
+   everywhere else (order detail, dashboard, etc), just overridden here. */
+.order-row-badges .badge{background:var(--surface3);color:var(--text2);}
 .order-row-actions{flex-shrink:0;display:flex;flex-direction:column;gap:2px;}
 .order-row-icon-btn{flex-shrink:0;width:28px;height:28px;border-radius:var(--r-xs);border:none;background:none;color:var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--duration-fast);}
 .order-row-icon-btn:hover{color:var(--text2);background:var(--surface3);}

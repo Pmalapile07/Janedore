@@ -115,56 +115,42 @@ function openMoreMenu(){document.getElementById('more-menu-overlay').classList.a
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');}
 
 // ─── THEME TOGGLE ──────────────────────────────────────────
+// Plain light↔dark toggle — no "follow system" middle state. The
+// admin used to fall back to the device's prefers-color-scheme
+// whenever nothing was explicitly chosen, which silently dark-moded
+// the whole panel (search bar, badges, everything) for anyone with
+// their phone in dark mode, with no visible way to tell why. Defaults
+// to light now, every time, until someone taps this to go dark.
 function toggleTheme() {
   var root = document.documentElement;
   var icon = document.getElementById('theme-icon');
-  
+
   if (root.classList.contains('dark-mode')) {
-    // Switch to light
     root.classList.remove('dark-mode');
     root.classList.add('light-mode');
     localStorage.setItem('jd_theme', 'light');
-    if (icon) { icon.className = 'ph-light ph-sun'; }
-  } else if (root.classList.contains('light-mode')) {
-    // Switch to system default
-    root.classList.remove('light-mode');
-    localStorage.removeItem('jd_theme');
-    updateThemeIcon();
+    if (icon) { icon.className = 'ph-light ph-moon'; }
   } else {
-    // Switch to dark
+    root.classList.remove('light-mode');
     root.classList.add('dark-mode');
     localStorage.setItem('jd_theme', 'dark');
     if (icon) { icon.className = 'ph-light ph-sun'; }
   }
 }
 
-function updateThemeIcon() {
-  var icon = document.getElementById('theme-icon');
-  if (!icon) return;
-  var root = document.documentElement;
-  var isDark = root.classList.contains('dark-mode') ||
-    (window.matchMedia('(prefers-color-scheme: dark)').matches && !root.classList.contains('light-mode'));
-  icon.className = isDark ? 'ph-light ph-sun' : 'ph-light ph-moon';
-}
-
-// Apply saved theme on load
+// Apply saved theme on load — light unless 'dark' was explicitly chosen.
 (function initTheme() {
   var saved = localStorage.getItem('jd_theme');
   var root = document.documentElement;
-  
+  var icon = document.getElementById('theme-icon');
+
   if (saved === 'dark') {
     root.classList.add('dark-mode');
-  } else if (saved === 'light') {
+    if (icon) icon.className = 'ph-light ph-sun';
+  } else {
     root.classList.add('light-mode');
+    if (icon) icon.className = 'ph-light ph-moon';
   }
-  
-  setTimeout(updateThemeIcon, 100);
-  
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
-    if (!localStorage.getItem('jd_theme')) {
-      updateThemeIcon();
-    }
-  });
 })();
 </script>
 
