@@ -61,10 +61,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
    instead of a circle squeezed inside another rounded square button. */
 .orders-create-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;padding:0;color:rgba(255,255,255,0.95);font-size:22px;cursor:pointer;}
 .nav-brand-wrap{display:flex;align-items:center;gap:1px;flex:1;min-width:0;}
-.nav-brand{font-family:var(--font);font-size:var(--font-scale-lg);font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,0.95);white-space:nowrap;}
-/* Regular (not light) weight, close to full white — reads as part of
-   the title instead of a faint, disconnected mark beside it. */
-.nav-brand-caret{font-size:15px;color:rgba(255,255,255,0.85);}
+/* +2px over --font-scale-lg (16px) and a touch heavier than the rest of
+   the nav, per request — this is the one shared title element behind
+   every tab's heading (Dashboard, Orders, Products, Inbox, ...), set via
+   switchTab() in admin.js, so the bump applies everywhere automatically. */
+.nav-brand{font-family:var(--font);font-size:18px;font-weight:700;letter-spacing:.01em;color:rgba(255,255,255,0.95);white-space:nowrap;}
+/* Fill-weight icon (not light/regular) sized and aligned to read as part
+   of the title itself, not a thin, disconnected mark beside it. */
+.nav-brand-caret{font-size:16px;line-height:1;color:rgba(255,255,255,0.95);display:flex;align-items:center;}
 /* Create Order + the order-actions menu render here on tabs that have
    them (Orders right now) — see switchTab()/​_renderOrdersTab(). */
 .top-nav-actions{display:flex;align-items:center;gap:var(--space-1);}
@@ -518,8 +522,8 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .order-row-checkbox{margin-top:3px;cursor:pointer;flex-shrink:0;}
 .order-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
 .order-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2);}
-.order-row-number{font-size:var(--font-scale-md);font-weight:600;color:var(--text2);}
-.order-row-total{font-size:var(--font-scale-md);font-weight:600;color:var(--text2);flex-shrink:0;}
+.order-row-number{font-size:var(--font-scale-md);font-weight:500;color:var(--text2);opacity:.82;}
+.order-row-total{font-size:var(--font-scale-md);font-weight:500;color:var(--text2);opacity:.82;flex-shrink:0;}
 .order-row-meta{font-size:var(--font-scale-sm);color:var(--muted);}
 .order-row-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;}
 /* Neutral gray in the list, same as Shopify's own order list — the

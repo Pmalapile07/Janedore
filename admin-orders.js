@@ -103,7 +103,7 @@
           : '') +
         '<div class="orders-actions-menu-wrap">' +
           '<button class="orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Order actions">' +
-            '<i class="ph-light ph-dots-three-vertical"></i>' +
+            '<i class="ph-light ph-dots-three"></i>' +
           '</button>' +
           '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
             '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshOrders()">' +
@@ -387,8 +387,6 @@
   // ─── RENDER TABLE ────────────────────────────────────────────
 
   function renderOrdersTable(orders) {
-    var canDelete       = window._can('orders', 'delete');
-    var canUpdate       = window._can('orders', 'update');
     var statusFilterEl  = safeEl('order-status-filter');
     var paymentFilterEl = safeEl('order-payment-filter');
     var searchEl        = safeEl('order-search');
@@ -488,20 +486,12 @@
                 statusBadge(o.paymentStatus || 'unpaid') +
               '</div>' +
             '</div>' +
-            (!window._bulkMode && (canUpdate || canDelete)
-              ? '<div class="order-row-actions">' +
-                  (canUpdate
-                    ? '<button class="order-row-icon-btn" onclick="event.stopPropagation();window._toggleOrderArchived(\'' + esc(o.id) + '\',' + !!o.archived + ')" aria-label="' + (o.archived ? 'Unarchive order' : 'Archive order') + '" title="' + (o.archived ? 'Unarchive' : 'Archive') + '">' +
-                        '<i class="ph-light ph-' + (o.archived ? 'tray-arrow-up' : 'archive') + '"></i>' +
-                      '</button>'
-                    : '') +
-                  (canDelete
-                    ? '<button class="order-row-icon-btn order-row-icon-btn-danger" onclick="event.stopPropagation();window._deleteOrder(\'' + esc(o.id) + '\')" aria-label="Delete order" title="Delete">' +
-                        '<i class="ph-light ph-trash"></i>' +
-                      '</button>'
-                    : '') +
-                '</div>'
-              : '') +
+            // Archive/delete icon buttons used to render here, per row.
+            // Removed from view per request — window._toggleOrderArchived
+            // and window._deleteOrder (plus their permission checks and
+            // Firestore logic, below) are untouched; these actions just
+            // aren't rendered beside each order right now. They'll get a
+            // new home (bulk bar / order detail / elsewhere) later.
           '</div>';
         }).join('') +
       '</div>';

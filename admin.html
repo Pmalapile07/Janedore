@@ -43,19 +43,15 @@
   <nav id="top-nav">
     <span class="nav-brand-wrap">
       <span class="nav-brand" id="top-nav-title">Dashboard</span>
-      <i class="ph ph-caret-down nav-brand-caret"></i>
+      <i class="ph-fill ph-caret-down nav-brand-caret"></i>
     </span>
     <!-- Per-tab action buttons (Create Order + its own order-actions
          menu, etc) render here — see switchTab() in admin.js, which
          clears this on every tab change, and _renderOrdersTab() in
          admin-orders.js, which is the only one that currently fills
-         it. Plain account icon here, same as before — not a second
-         "More" trigger; that stays exactly where it already is, as
-         the bottom nav's own last item. -->
+         it. No account/profile icon here on purpose — this header is
+         just the page title + per-tab actions now. -->
     <div id="top-nav-actions" class="top-nav-actions"></div>
-    <button class="nav-avatar" id="admin-avatar" title="Account">
-      <i class="ph ph-user"></i>
-    </button>
   </nav>
 
   <nav id="desktop-sidebar">
