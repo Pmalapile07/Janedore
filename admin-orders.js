@@ -198,35 +198,44 @@
         '</div>';
     }
 
-    // A vendor only ever sees orders that include at least one of their
-    // own items (Firestore rules enforce the same scope on read) — an
-    // array-contains query, sorted client-side below rather than with
-    // .orderBy() so this never needs a composite index set up in the
-    // Firebase console. Staff get the existing unfiltered query.
-    var query = window._currentUserRole === 'VENDOR'
-      ? ordersRef.where('vendorIds', 'array-contains', window._currentVendorId).limit(200)
-      : ordersRef.orderBy('createdAt', 'desc').limit(200);
-
-    query.get().then(function (snap) {
-      window._ordersData = snap.docs.map(function (d) {
-        return Object.assign({ id: d.id }, d.data());
-      });
-      if (window._currentUserRole === 'VENDOR') {
-        window._ordersData.sort(function (a, b) {
-          var at = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
-          var bt = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
-          return bt - at;
-        });
-      }
+    function finishLoad(orders) {
+      window._ordersData = orders;
       window._selectedOrders = {};
       renderOrdersUI(window._ordersData);
-    }).catch(function (e) {
+    }
+
+    function failLoad(e) {
       console.error('[ORDERS_LOAD]', e);
       if (wrap) {
         wrap.innerHTML =
           '<p style="color:var(--danger);font-size:12px;padding:16px;">Error: ' + esc(e.message) + '</p>';
       }
-    });
+    }
+
+    if (window._currentUserRole === 'VENDOR') {
+      // A vendor's order list goes through the server instead of a direct
+      // Firestore query: Firestore can't authorize a *list* request using a
+      // rule that needs its own lookup, only request.auth.token claims, so
+      // this is served by /api/vendor/orders (Firebase Admin SDK, bypasses
+      // security rules entirely) rather than depending on that to be set up
+      // exactly right on every account.
+      window._currentUser.getIdToken().then(function (token) {
+        return fetch('/api/vendor/orders', { headers: { Authorization: 'Bearer ' + token } });
+      }).then(function (res) {
+        return res.json().then(function (body) {
+          if (!res.ok) throw new Error(body.error || 'Could not load orders');
+          return body;
+        });
+      }).then(function (body) {
+        finishLoad(body.orders || []);
+      }).catch(failLoad);
+    } else {
+      ordersRef.orderBy('createdAt', 'desc').limit(200).get().then(function (snap) {
+        finishLoad(snap.docs.map(function (d) {
+          return Object.assign({ id: d.id }, d.data());
+        }));
+      }).catch(failLoad);
+    }
   }
 
   window._refreshOrders = function () {

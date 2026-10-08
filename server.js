@@ -849,6 +849,73 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
   }
 });
 
+// ==================== VENDOR ORDER LIST ====================
+// Firestore flatly refuses to run a *list* query (the Orders tab's
+// "every order I'm part of") whose authorization needs a lookup beyond
+// the caller's own token — see firestore.rules' long comment on the
+// orders `allow list` rule for the full story, and server.js's own
+// /api/admin/sync-staff-claims below for the custom-claims approach
+// that's supposed to fix it. That approach kept hitting friction
+// getting a flawless rules file published from a phone's Firebase
+// Console, so this is the pragmatic fallback: let a vendor's own
+// browser ask the SERVER for their orders instead of asking Firestore
+// directly. The Admin SDK below is never subject to security rules at
+// all (that's what "admin" means), so this sidesteps the whole
+// list-query limitation rather than depending on the rules being
+// exactly right. Verifies the caller's own ID token and reads their
+// role/vendorId fresh from their admins/{uid} doc (never trusts
+// anything the client claims about itself) before running the query.
+app.get('/api/vendor/orders', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const authHeader = req.headers.authorization || '';
+    const match = authHeader.match(/^Bearer (.+)$/);
+    if (!match) return res.status(401).json({ error: 'No auth token' });
+
+    let decoded;
+    try {
+      decoded = await admin.auth().verifyIdToken(match[1]);
+    } catch (e) {
+      return res.status(401).json({ error: 'Invalid auth token' });
+    }
+
+    const callerDoc = await adminDb.collection('admins').doc(decoded.uid).get();
+    if (!callerDoc.exists || callerDoc.data().role !== 'VENDOR') {
+      return res.status(403).json({ error: 'Not a vendor account' });
+    }
+    const vendorId = callerDoc.data().vendorId;
+    if (!vendorId) return res.status(400).json({ error: 'No brand linked to this account' });
+
+    // No .orderBy() alongside the array-contains filter, same reason as
+    // the client-side version this replaces: avoids needing a composite
+    // index set up in the Firebase console. Sorted here instead.
+    const snap = await adminDb.collection('orders')
+      .where('vendorIds', 'array-contains', vendorId)
+      .limit(200)
+      .get();
+
+    const orders = snap.docs.map((d) => {
+      const data = d.data();
+      // createdAt is a real Firestore Timestamp — JSON can't carry that
+      // as-is, and admin-orders.js's own o.createdAt.toDate ? ... : new
+      // Date(o.createdAt) pattern already treats a plain ISO string the
+      // same way it treats a live Timestamp, so this needs no other
+      // client-side change at all.
+      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+        data.createdAt = data.createdAt.toDate().toISOString();
+      }
+      return Object.assign({ id: d.id }, data);
+    });
+
+    orders.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+    res.json({ orders });
+  } catch (e) {
+    console.error('[VENDOR_ORDERS] Error:', e.message);
+    res.status(500).json({ error: 'Could not load orders' });
+  }
+});
+
 // ==================== STAFF AUTH CLAIMS ====================
 // A vendor's account role/vendorId lives on their admins/{uid} Firestore
 // doc, which is what every *single-document* read already checks fine
