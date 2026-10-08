@@ -95,8 +95,8 @@
       '<div class="section-header" style="margin-bottom:10px;justify-content:flex-end;">' +
         '<div class="section-actions">' +
           (window._can('orders', 'create')
-            ? '<button class="btn btn-sm btn-primary orders-create-btn" onclick="window._openNewOrderForm()" aria-label="Create Order" title="Create Order">' +
-                '<i class="ph-light ph-plus"></i>' +
+            ? '<button class="orders-create-btn" onclick="window._openNewOrderForm()" aria-label="Create Order" title="Create Order">' +
+                '<i class="ph ph-plus-circle"></i>' +
               '</button>'
             : '') +
           '<div class="orders-actions-menu-wrap">' +
@@ -295,14 +295,17 @@
     toolbarWrap.innerHTML =
       '<div class="orders-search-row">' +
         '<div class="orders-search-wrap">' +
-          '<i class="ph-light ph-magnifying-glass"></i>' +
+          '<i class="ph ph-magnifying-glass"></i>' +
           '<input class="orders-search-input" id="order-search"' +
             ' placeholder="Search orders"' +
             ' oninput="window._filterOrders()">' +
         '</div>' +
+        '<button class="orders-sort-btn" aria-label="Sort" title="Sort">' +
+          '<i class="ph ph-arrows-down-up"></i>' +
+        '</button>' +
         '<div class="orders-filter-menu-wrap">' +
           '<button class="orders-filter-btn" id="orders-filter-btn" onclick="window._toggleOrdersFilterPopover(event)" aria-label="Filter">' +
-            '<i class="ph-light ph-funnel"></i>' +
+            '<i class="ph ph-funnel"></i>' +
           '</button>' +
           '<div class="orders-filter-popover" id="orders-filter-popover" onclick="event.stopPropagation()">' +
             '<label class="orders-filter-popover-label">Status</label>' +
