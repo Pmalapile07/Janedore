@@ -56,6 +56,16 @@ function navigateToCheckout() {
   if (checkoutPage) {
     if (payFastConfirmPending) return;
 
+    // checkout.html (containing every element below) loads into
+    // #checkout-loaded via its own independent fetch in index.html —
+    // if that hasn't resolved yet, none of these elements exist. Wait
+    // for it and retry instead of silently no-op'ing on null, which is
+    // what used to leave the page looking blank.
+    if (!document.getElementById('checkout-form-view')) {
+      (window.checkoutFragmentReady || Promise.resolve()).then(navigateToCheckout);
+      return;
+    }
+
     const confirmingView = document.getElementById('checkout-confirming-view');
 
     if (!S.cart.length && lastConfirmedOrderNumber) {
@@ -580,6 +590,17 @@ function renderOrderConfirmation(order) {
 function showPayFastConfirmingView() {
   payFastConfirmPending = true;
   activateCheckoutPage();
+
+  // This runs at script-load time, right as the PayFast redirect lands
+  // — almost certainly before checkout.html's own independent fetch
+  // (in index.html) has finished injecting these elements into
+  // #checkout-loaded. Wait for it rather than silently no-op'ing on
+  // null, same as navigateToCheckout() above.
+  if (!document.getElementById('checkout-form-view')) {
+    (window.checkoutFragmentReady || Promise.resolve()).then(showPayFastConfirmingView);
+    return;
+  }
+
   const formView = document.getElementById('checkout-form-view');
   const confirmationView = document.getElementById('checkout-confirmation-view');
   const confirmingView = document.getElementById('checkout-confirming-view');

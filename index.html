@@ -548,7 +548,13 @@
 </div>
 
 <script>
-  fetch('checkout.html').then(r => r.text()).then(html => {
+  // Exposed on window so checkout.js can wait for this before touching
+  // anything inside #checkout-loaded — this fetch and checkout.js's own
+  // PayFast-return handling are two independent async operations with
+  // no ordering guarantee between them, and this one losing the race
+  // (slower network, cold server right after a PayFast redirect) is
+  // what made the confirming/confirmation views silently fail to show.
+  window.checkoutFragmentReady = fetch('checkout.html').then(r => r.text()).then(html => {
     document.getElementById('checkout-loaded').innerHTML = html;
   });
 </script>
