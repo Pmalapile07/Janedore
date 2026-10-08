@@ -346,7 +346,7 @@
 
     if (orders.length === 0) {
       toolbarWrap.innerHTML = '';
-      tableWrap.innerHTML   = renderEmptyState(false);
+      tableWrap.innerHTML   = renderEmptyState();
       if (toggleBtn) toggleBtn.style.display = 'none';
       return;
     }
@@ -482,7 +482,7 @@
     if (!wrap) return;
 
     if (filtered.length === 0) {
-      wrap.innerHTML = renderEmptyState(true);
+      wrap.innerHTML = renderEmptyState();
       return;
     }
 
@@ -555,33 +555,9 @@
 
   // ─── EMPTY STATE ─────────────────────────────────────────────
 
-  function renderEmptyState(isFiltered) {
-    var canCreate = window._can('orders', 'create');
-    var role = window._currentUserRole;
-
-    var subtitle;
-    if (isFiltered) {
-      subtitle = 'No orders match your current filters. Try adjusting your search or filter.';
-    } else if (role === 'ADMIN') {
-      subtitle = 'Orders from all brands will appear here once customers start placing them.' +
-        (canCreate ? ' You can also create an order manually for phone or in-person sales.' : '');
-    } else {
-      subtitle = 'Orders placed on your store will appear here.' +
-        (canCreate ? ' You can also create an order manually for phone or in-person sales.' : '');
-    }
-
+  function renderEmptyState() {
     return '<div class="orders-empty-state">' +
-      '<div class="orders-empty-icon"><i class="ph-light ph-receipt"></i></div>' +
-      '<div class="orders-empty-title">Manage your orders</div>' +
-      '<div class="orders-empty-sub">' + subtitle + '</div>' +
-      (!isFiltered && canCreate
-        ? '<button class="orders-empty-btn" onclick="window._openNewOrderForm()">' +
-            '<i class="ph-light ph-plus" style="font-size:15px;"></i>' +
-            'Create your first order' +
-          '</button>'
-        : (isFiltered
-          ? '<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="window._clearOrderFilters()">Clear filters</button>'
-          : '')) +
+      '<div class="orders-empty-title">No orders found.</div>' +
     '</div>';
   }
 
