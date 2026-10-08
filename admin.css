@@ -55,7 +55,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
    used to be a static "JANEDORE" wordmark, which is why this was thin
    and widely letter-spaced; a real title like "Dashboard"/"Products"
    needs normal weight and spacing to actually read well. */
-.nav-brand{font-family:var(--font);font-size:var(--font-scale-lg);font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,0.95);flex:1;white-space:nowrap;}
+/* Plain icon button — ph-plus-circle's own glyph is already a circle
+   outline with a + inside it, so no extra button background/border is
+   layered on top; that's what makes it read as "a perfect circle"
+   instead of a circle squeezed inside another rounded square button. */
+.orders-create-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;padding:0;color:rgba(255,255,255,0.95);font-size:22px;cursor:pointer;}
+.nav-brand-wrap{display:flex;align-items:center;gap:2px;flex:1;min-width:0;}
+.nav-brand{font-family:var(--font);font-size:var(--font-scale-lg);font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,0.95);white-space:nowrap;}
+.nav-brand-caret{font-size:14px;color:rgba(255,255,255,0.6);}
 .nav-status-area{display:flex;align-items:center;gap:var(--space-1);background:rgba(255,255,255,0.06);border-radius:var(--r-lg);padding:var(--space-1) var(--space-2);}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);transition:background 0.4s;flex-shrink:0;}
 .status-dot.online{background:#3ecf5d;}.status-dot.offline{background:#ff5c5c;}
@@ -63,7 +70,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .nav-icon-btn{width:34px;height:34px;border-radius:50%;background:var(--nav-icon-bg);border:0.5px solid var(--nav-icon-border);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:background var(--duration-fast);color:rgba(255,255,255,0.8);font-size:var(--font-scale-lg);}
 .nav-icon-btn:active{background:rgba(255,255,255,0.14);}
 #messages-unread-badge{position:absolute;top:-2px;right:-2px;background:#e53935;color:#fff;font-size:var(--font-scale-xs);font-weight:700;min-width:15px;height:15px;border-radius:var(--space-2);display:none;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid var(--nav-bg);}
-.nav-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06));border:0.5px solid rgba(255,255,255,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:var(--font-scale-sm);font-weight:500;}
+.nav-avatar{width:30px;height:30px;padding:0;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06));border:0.5px solid rgba(255,255,255,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:var(--font-scale-md);font-weight:500;}
 .role-badge{font-size:var(--font-scale-xs);letter-spacing:.06em;padding:var(--space-1) var(--space-2);border-radius:var(--space-1);font-weight:600;}
 .badge-super{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);}
 .badge-admin{background:rgba(26,86,219,0.2);color:#7eb3ff;}
@@ -449,8 +456,13 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    default, closed on any outside click (see closeAllOrderPopovers() in
    admin-orders.js) or by re-clicking the trigger. */
 .orders-actions-menu-wrap,.orders-filter-menu-wrap{position:relative;display:inline-block;}
-.orders-actions-btn,.orders-filter-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:0.5px solid var(--border-med);background:var(--surface);color:var(--text2);font-size:16px;cursor:pointer;transition:background var(--duration-fast);}
-.orders-actions-btn:active,.orders-filter-btn:active{background:var(--surface3);}
+.orders-actions-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:0.5px solid var(--border-med);background:var(--surface);color:var(--text2);font-size:16px;cursor:pointer;transition:background var(--duration-fast);}
+.orders-actions-btn:active{background:var(--surface3);}
+/* Sort + filter — same gray pill as the search bar beside them, dark
+   icon (not the muted gray the generic .orders-actions-btn above uses
+   for the dark-header Actions menu). */
+.orders-sort-btn,.orders-filter-btn{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:var(--r-sm);border:none;background:var(--surface3);color:var(--text);font-size:17px;cursor:pointer;transition:background var(--duration-fast);}
+.orders-sort-btn:active,.orders-filter-btn:active{background:var(--border-med);}
 .orders-actions-popover,.orders-filter-popover{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-sm);box-shadow:var(--shadow-sm);padding:var(--space-2);min-width:180px;z-index:40;display:none;flex-direction:column;gap:var(--space-1);}
 .orders-actions-popover.open,.orders-filter-popover.open{display:flex;}
 .orders-actions-item{display:flex;align-items:center;gap:var(--space-2);width:100%;padding:var(--space-2) var(--space-3);border:none;background:none;border-radius:var(--r-xs);font-family:var(--font);font-size:var(--font-scale-md);color:var(--text);text-align:left;cursor:pointer;transition:background var(--duration-fast);}
@@ -465,7 +477,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    for (#F4F4F4); var(--surface3) resolves to that in light mode and to
    the equivalent dark-mode surface automatically. */
 .orders-search-row{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);}
-.orders-search-wrap{flex:1;display:flex;align-items:center;gap:var(--space-2);background:var(--surface3);border-radius:var(--r-lg);padding:var(--space-3) var(--space-4);color:var(--muted);}
+.orders-search-wrap{flex:1;display:flex;align-items:center;gap:var(--space-2);background:var(--surface3);border-radius:var(--r-sm);padding:var(--space-3) var(--space-4);color:var(--muted);}
 .orders-search-input{flex:1;border:none;background:none;outline:none;font-family:var(--font);font-size:var(--font-scale-md);color:var(--text2);}
 .orders-search-input::placeholder{color:var(--muted);}
 
@@ -491,8 +503,8 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .order-row-checkbox{margin-top:3px;cursor:pointer;flex-shrink:0;}
 .order-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
 .order-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2);}
-.order-row-number{font-size:var(--font-scale-md);font-weight:600;color:var(--text);}
-.order-row-total{font-size:var(--font-scale-md);font-weight:600;color:var(--text);flex-shrink:0;}
+.order-row-number{font-size:var(--font-scale-md);font-weight:600;color:var(--text2);}
+.order-row-total{font-size:var(--font-scale-md);font-weight:600;color:var(--text2);flex-shrink:0;}
 .order-row-meta{font-size:var(--font-scale-sm);color:var(--muted);}
 .order-row-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;}
 /* Neutral gray in the list, same as Shopify's own order list — the

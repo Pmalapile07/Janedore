@@ -279,8 +279,6 @@
       safeSetDisplay('admin-panel', 'none');
       showAuthLoading();
 
-      var initials = (user.email || 'A').substring(0,1).toUpperCase();
-      var iniEl = safeEl('admin-initials'); if (iniEl) iniEl.textContent = initials;
       [safeEl('admin-email'), safeEl('admin-email-more')].forEach(function(el) { if (el) el.textContent = user.email; });
 
       loadUserRole(user).then(function() {

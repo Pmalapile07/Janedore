@@ -10,6 +10,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<!-- Regular (plain "ph" prefix) and fill ("ph-fill" prefix) weights —
+     every existing icon here still uses ph-light, these two are just
+     for the handful that need a bolder look (Create Order's
+     plus-circle, the filled three-dot "more" glyph). -->
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 <link rel="stylesheet" href="admin.css">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -35,11 +41,13 @@
 
 <div id="admin-panel">
   <nav id="top-nav">
-    <span class="nav-brand" id="top-nav-title">Dashboard</span>
-    <button class="nav-icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme" style="margin-right:4px;">
-      <i class="ph-light ph-moon" id="theme-icon"></i>
+    <span class="nav-brand-wrap">
+      <span class="nav-brand" id="top-nav-title">Dashboard</span>
+      <i class="ph-light ph-caret-down nav-brand-caret"></i>
+    </span>
+    <button class="nav-avatar" id="admin-avatar" title="More" onclick="openMoreMenu()">
+      <i class="ph-fill ph-dots-three"></i>
     </button>
-    <div class="nav-avatar" id="admin-avatar" title="Account"><span id="admin-initials">A</span></div>
   </nav>
 
   <nav id="desktop-sidebar">
@@ -114,44 +122,9 @@ function togglePw(){
 function openMoreMenu(){document.getElementById('more-menu-overlay').classList.add('open');document.getElementById('more-menu-panel').classList.add('open');}
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');}
 
-// ─── THEME TOGGLE ──────────────────────────────────────────
-// Plain light↔dark toggle — no "follow system" middle state. The
-// admin used to fall back to the device's prefers-color-scheme
-// whenever nothing was explicitly chosen, which silently dark-moded
-// the whole panel (search bar, badges, everything) for anyone with
-// their phone in dark mode, with no visible way to tell why. Defaults
-// to light now, every time, until someone taps this to go dark.
-function toggleTheme() {
-  var root = document.documentElement;
-  var icon = document.getElementById('theme-icon');
-
-  if (root.classList.contains('dark-mode')) {
-    root.classList.remove('dark-mode');
-    root.classList.add('light-mode');
-    localStorage.setItem('jd_theme', 'light');
-    if (icon) { icon.className = 'ph-light ph-moon'; }
-  } else {
-    root.classList.remove('light-mode');
-    root.classList.add('dark-mode');
-    localStorage.setItem('jd_theme', 'dark');
-    if (icon) { icon.className = 'ph-light ph-sun'; }
-  }
-}
-
-// Apply saved theme on load — light unless 'dark' was explicitly chosen.
-(function initTheme() {
-  var saved = localStorage.getItem('jd_theme');
-  var root = document.documentElement;
-  var icon = document.getElementById('theme-icon');
-
-  if (saved === 'dark') {
-    root.classList.add('dark-mode');
-    if (icon) icon.className = 'ph-light ph-sun';
-  } else {
-    root.classList.add('light-mode');
-    if (icon) icon.className = 'ph-light ph-moon';
-  }
-})();
+// No manual theme toggle anymore — the admin now just follows the
+// device's own light/dark setting automatically, via the
+// prefers-color-scheme CSS in admin.css. No JS needed for that.
 </script>
 
 <script>
