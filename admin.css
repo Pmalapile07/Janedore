@@ -554,6 +554,8 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 
 .badge-unpaid{background:var(--danger-soft);color:var(--danger);}
 .badge-fulfilled{background:var(--success-soft);color:var(--success);}
+/* Some but not all vendors on a multi-vendor order have added tracking. */
+.badge-partial{background:var(--purple-soft);color:var(--purple);}
 
 /* ── ORDER DETAIL: REAL TIMELINE ──────────────────────────────────────────── */
 .order-timeline{position:relative;padding-left:16px;}
@@ -596,6 +598,13 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .order-item-sku{font-size:var(--font-scale-xs);color:var(--muted2);margin-top:1px;}
 .order-item-price{flex-shrink:0;text-align:right;font-size:var(--font-scale-sm);color:var(--text2);white-space:nowrap;}
 .order-item-qty{display:block;font-size:var(--font-scale-xs);color:var(--muted);margin-top:1px;}
+/* One per vendor on a multi-vendor order — brand name + that vendor's
+   own shipped/not-shipped pill, its items, then either that vendor's
+   own (editable) tracking form or everyone else's read-only status. */
+.order-vendor-group{margin-bottom:10px;}
+.order-vendor-group-header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:7px;}
+.order-vendor-group-brand{font-size:var(--font-scale-sm);font-weight:600;color:var(--text);}
+.order-vendor-group-readonly{font-size:var(--font-scale-sm);color:var(--muted);padding:0 var(--space-1);}
 /* A plain text input matching .filter-select's box but without its
    dropdown-chevron background image, which only belongs on an actual
    <select>. */
