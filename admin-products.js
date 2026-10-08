@@ -412,7 +412,7 @@
             (p.brand ? ' · ' + esc(p.brand) : '') +
           '</div>' +
         '</div>' +
-        '<span class="badge badge-' + esc(p.status||'draft') + '">' + esc(p.status||'draft') + '</span>' +
+        '<span class="badge" style="background:var(--surface3);color:var(--muted);">' + esc(p.status||'draft') + '</span>' +
     '</div>';
   }
 
