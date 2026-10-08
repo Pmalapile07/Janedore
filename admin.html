@@ -85,12 +85,14 @@
   <div id="app-body"><main id="main-content"></main></div>
 
   <div id="bottom-nav">
+    <button class="bnav-search-btn" onclick="window._showToast('Admin search coming soon')" aria-label="Search"><i class="ph ph-magnifying-glass"></i></button>
     <div class="bottom-nav-pill">
-      <button class="bnav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="bnav-icon"><i class="ph-light ph-chart-line"></i></span><span class="bnav-label">Home</span></button>
-      <button class="bnav-btn" data-tab="orders" onclick="switchTab('orders')"><span class="bnav-icon"><i class="ph-light ph-folders"></i></span><span class="bnav-label">Orders</span></button>
-      <button class="bnav-btn" data-tab="products" onclick="switchTab('products')"><span class="bnav-icon"><i class="ph-light ph-barcode"></i></span><span class="bnav-label">Products</span></button>
-      <button class="bnav-btn" onclick="openMoreMenu()"><span class="bnav-icon"><i class="ph-light ph-dots-three-outline"></i></span><span class="bnav-label">More</span><span class="bnav-badge" id="bnav-msg-badge"></span></button>
+      <button class="bnav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')" aria-label="Home"><i class="ph-fill ph-house"></i></button>
+      <button class="bnav-btn" data-tab="orders" onclick="switchTab('orders')" aria-label="Orders"><i class="ph ph-cardholder"></i></button>
+      <button class="bnav-btn" data-tab="products" onclick="switchTab('products')" aria-label="Products"><i class="ph ph-tag"></i></button>
+      <button class="bnav-btn" onclick="openMoreMenu()" aria-label="More"><i class="ph ph-list"></i><span class="bnav-badge" id="bnav-msg-badge"></span></button>
     </div>
+    <button class="bnav-jai-btn" onclick="window._showToast('Jai is coming soon')" aria-label="Jai"><i class="ph ph-robot"></i></button>
   </div>
 
   <div id="more-menu-overlay" onclick="closeMoreMenu()"></div>
