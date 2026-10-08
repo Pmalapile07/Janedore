@@ -68,6 +68,7 @@
     window._bulkMode = false;
 
     var canUpdate = window._can('orders', 'update');
+    var canDelete = window._can('orders', 'delete');
 
     mc.innerHTML =
       '<div class="section-header" style="margin-bottom:10px;">' +
@@ -87,6 +88,9 @@
                   }).join('') +
                 '</select>' +
                 '<button class="btn btn-xs btn-primary" onclick="window._applyBulkStatus()">Apply</button>' +
+                (canDelete
+                  ? '<button class="btn btn-xs btn-danger" onclick="window._applyBulkDelete()">Delete Selected</button>'
+                  : '') +
                 '<button class="btn btn-xs btn-ghost" onclick="window._toggleBulkMode()">Cancel</button>' +
               '</div>'
             : '') +
@@ -214,6 +218,28 @@
         var o = (window._ordersData || []).find(function (x) { return x.id === id; });
         if (o) o.status = status;
       });
+      window._toggleBulkMode(false);
+    }).catch(function (e) {
+      showToast('Error: ' + e.message, 'error');
+    });
+  };
+
+  window._applyBulkDelete = function () {
+    if (!window._guard('orders', 'delete')) return;
+
+    var ids = Object.keys(window._selectedOrders);
+    if (ids.length === 0) { showToast('No orders selected', 'error'); return; }
+
+    if (!confirm('Permanently delete ' + ids.length + ' order' + (ids.length !== 1 ? 's' : '') + '? This cannot be undone.')) return;
+
+    var batch = db.batch();
+    ids.forEach(function (id) {
+      batch.delete(ordersRef.doc(id));
+    });
+
+    batch.commit().then(function () {
+      showToast(ids.length + ' order' + (ids.length !== 1 ? 's' : '') + ' deleted');
+      window._ordersData = (window._ordersData || []).filter(function (o) { return ids.indexOf(o.id) === -1; });
       window._toggleBulkMode(false);
     }).catch(function (e) {
       showToast('Error: ' + e.message, 'error');
