@@ -494,6 +494,9 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .orders-actions-popover.open,.orders-filter-popover.open{display:flex;}
 .orders-actions-item{display:flex;align-items:center;gap:var(--space-2);width:100%;padding:var(--space-2) var(--space-3);border:none;background:none;border-radius:var(--r-xs);font-family:var(--font);font-size:var(--font-scale-md);color:var(--text);text-align:left;cursor:pointer;transition:background var(--duration-fast);}
 .orders-actions-item:active{background:var(--surface3);}
+.orders-actions-item-danger{color:var(--danger);}
+.orders-actions-item-danger:active{background:var(--danger-soft);}
+.orders-actions-divider{height:0.5px;background:var(--border);margin:var(--space-1) 2px;}
 .orders-filter-popover-label{font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:var(--space-2) 0 var(--space-1);}
 .orders-filter-popover-label:first-child{margin-top:0;}
 .orders-filter-popover select{width:100%;}
@@ -569,10 +572,34 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    .slide-panel's fixed-width side drawer, with a page-style header
    (back arrow, title, print) instead of a floating close "×". */
 .order-detail-fullscreen{position:fixed;inset:0;z-index:351;background:var(--surface);display:flex;flex-direction:column;animation:fadeIn var(--duration-base) ease;}
-.order-detail-fullscreen-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);padding:calc(var(--space-3) + env(safe-area-inset-top,0)) var(--space-4) var(--space-3);border-bottom:0.5px solid var(--border);font-family:var(--font);font-size:var(--font-scale-lg);font-weight:500;color:var(--text);}
+/* Grid (not space-between) so the order number is genuinely centered
+   regardless of the left side (one button) and right side (now two:
+   Print + the order's own ⋯ actions menu) carrying different widths. */
+.order-detail-fullscreen-header{flex-shrink:0;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--space-2);padding:calc(var(--space-3) + env(safe-area-inset-top,0)) var(--space-4) var(--space-3);border-bottom:0.5px solid var(--border);font-family:var(--font);font-size:var(--font-scale-lg);font-weight:500;color:var(--text);}
+#order-detail-heading{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 var(--space-1);}
+.order-detail-header-actions{display:flex;align-items:center;gap:var(--space-2);flex-shrink:0;}
 .order-detail-back-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;border:none;background:var(--surface3);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background var(--duration-fast);}
 .order-detail-back-btn:hover{background:var(--border-med);}
 .order-detail-fullscreen-body{flex:1;overflow-y:auto;padding:var(--space-4) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom,0));}
+.order-detail-archived-banner{display:flex;align-items:center;gap:var(--space-2);background:var(--surface3);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:var(--space-2) var(--space-4);font-size:var(--font-scale-sm);color:var(--muted);}
+/* Shopify-style product row — image, name/variant/SKU stack, price×qty
+   right-aligned. .order-items-panel just removes .info-panel's own
+   padding-equivalent row spacing so each row can control its own. */
+.order-items-panel{padding:var(--space-2) var(--space-3);}
+.order-item-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;}
+.order-item-row + .order-item-row{border-top:0.5px solid var(--border-light);}
+.order-item-img{flex-shrink:0;width:48px;height:48px;border-radius:var(--r-xs);background:var(--surface3) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:18px;}
+.order-item-img.has-image{color:transparent;}
+.order-item-info{flex:1;min-width:0;}
+.order-item-name{font-size:var(--font-scale-sm);font-weight:500;color:var(--text);}
+.order-item-variant{font-size:var(--font-scale-xs);color:var(--muted);margin-top:1px;}
+.order-item-sku{font-size:var(--font-scale-xs);color:var(--muted2);margin-top:1px;}
+.order-item-price{flex-shrink:0;text-align:right;font-size:var(--font-scale-sm);color:var(--text2);white-space:nowrap;}
+.order-item-qty{display:block;font-size:var(--font-scale-xs);color:var(--muted);margin-top:1px;}
+/* A plain text input matching .filter-select's box but without its
+   dropdown-chevron background image, which only belongs on an actual
+   <select>. */
+.order-tracking-input{background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:var(--space-2) var(--space-3);font-family:var(--font);font-size:var(--font-scale-sm);color:var(--text2);outline:none;box-shadow:var(--shadow-xs);}
 
 /* ── SETUP GUIDE ──────────────────────────────────────────────────────────── */
 .setup-guide{max-width:520px;padding:var(--space-2) 0 48px;}

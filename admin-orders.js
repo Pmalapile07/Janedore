@@ -5,6 +5,7 @@
 
   var db                = window._adminDB;
   var esc               = window._esc;
+  var safeUrl           = window._safeUrl;
   var safeEl            = window._safeEl;
   var fmt               = window._fmt;
   var fmtDate           = window._fmtDate;
@@ -902,18 +903,23 @@
         '<div class="order-detail-fullscreen-header">' +
           '<button class="order-detail-back-btn" onclick="window._closePanel()" aria-label="Back to orders"><i class="ph-light ph-arrow-left"></i></button>' +
           '<span id="order-detail-heading">#' + esc((o && o.orderNumber) || orderId) + '</span>' +
-          '<button class="order-detail-back-btn" onclick="window._printPackingSlip(\'' + esc(orderId) + '\')" aria-label="Print packing slip" title="Print packing slip"><i class="ph-light ph-printer"></i></button>' +
+          '<div class="order-detail-header-actions">' +
+            '<button class="order-detail-back-btn" onclick="window._printPackingSlip(\'' + esc(orderId) + '\')" aria-label="Print packing slip" title="Print packing slip"><i class="ph-light ph-printer"></i></button>' +
+            renderOrderDetailMenu(o, orderId) +
+          '</div>' +
         '</div>' +
-        '<div class="order-detail-fullscreen-body">' +
+        '<div class="order-detail-fullscreen-body" id="order-detail-body">' +
           (o
             ? renderOrderDetailContent(o, orderId)
-            : '<div id="order-detail-loading" style="color:var(--muted);font-size:13px;">Loading...</div>') +
+            : '<div id="order-detail-loading" style="color:var(--muted);font-size:13px;padding:var(--space-4) 0;">Loading...</div>') +
         '</div>' +
       '</div>';
 
     mountPanel(panelHTML);
 
-    if (!o) {
+    if (o) {
+      loadOrderItemImages(o);
+    } else {
       ordersRef.doc(orderId).get().then(function (doc) {
         if (!doc.exists) return;
         var data  = Object.assign({ id: doc.id }, doc.data());
@@ -924,16 +930,68 @@
         // what finally has the real orderNumber, so update it here too,
         // not just the body below it.
         if (headingEl) headingEl.textContent = '#' + (data.orderNumber || orderId);
-        var loadEl = safeEl('order-detail-loading');
-        if (loadEl) loadEl.outerHTML = renderOrderDetailContent(data, orderId);
+        var bodyEl = safeEl('order-detail-body');
+        if (bodyEl) bodyEl.innerHTML = renderOrderDetailContent(data, orderId);
+        loadOrderItemImages(data);
       }).catch(function (e) { console.error('[ORDER_DETAIL_FETCH]', e); });
     }
+  };
+
+  // The order-detail page's own order-level actions menu (Copy #,
+  // WhatsApp, Archive, Refund, Delete) — distinct from both the Orders
+  // list page's own ⋯ menu (select/bulk actions) and the bottom nav's
+  // "More". Reuses the same popover/menu-item CSS as that list-page
+  // menu (just a different element id), so it already closes on outside
+  // click via the shared closeAllOrderPopovers() below.
+  function renderOrderDetailMenu(o, orderId) {
+    var canRefund = window._can('orders', 'approve');
+    var canDelete = window._can('orders', 'delete');
+    var archived  = !!(o && o.archived);
+    return (
+      '<div class="orders-actions-menu-wrap">' +
+        '<button class="order-detail-back-btn" onclick="window._toggleOrderDetailMenu(event)" aria-label="Order actions">' +
+          '<i class="ph ph-dots-three"></i>' +
+        '</button>' +
+        '<div class="orders-actions-popover" id="order-detail-actions-popover" onclick="event.stopPropagation()">' +
+          '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._copyOrderId(\'' + esc((o && o.orderNumber) || orderId) + '\')">' +
+            '<i class="ph-light ph-copy"></i> Copy #' +
+          '</button>' +
+          (o && o.customerPhone
+            ? '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._whatsappCustomer(\'' + esc(o.customerPhone) + '\')">' +
+                '<i class="ph-light ph-whatsapp-logo"></i> WhatsApp customer' +
+              '</button>'
+            : '') +
+          '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._toggleOrderArchived(\'' + esc(orderId) + '\',' + archived + ')">' +
+            '<i class="ph-light ph-' + (archived ? 'tray-arrow-up' : 'archive') + '"></i> ' + (archived ? 'Unarchive' : 'Archive') +
+          '</button>' +
+          (canRefund
+            ? '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._quickRefund(\'' + esc(orderId) + '\')">' +
+                '<i class="ph-light ph-arrow-counter-clockwise"></i> Refund' +
+              '</button>'
+            : '') +
+          (canDelete
+            ? '<div class="orders-actions-divider"></div>' +
+              '<button class="orders-actions-item orders-actions-item-danger" onclick="window._toggleOrderDetailMenu();window._deleteOrder(\'' + esc(orderId) + '\')">' +
+                '<i class="ph-light ph-trash"></i> Delete order' +
+              '</button>'
+            : '') +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  window._toggleOrderDetailMenu = function (e) {
+    if (e) e.stopPropagation();
+    var pop = safeEl('order-detail-actions-popover');
+    if (!pop) return;
+    var isOpen = pop.classList.contains('open');
+    closeAllOrderPopovers();
+    if (!isOpen) pop.classList.add('open');
   };
 
   function renderOrderDetailContent(o, orderId) {
     var canUpdate  = window._can('orders', 'update');
     var canRefund  = window._can('orders', 'approve');
-    var canDelete  = window._can('orders', 'delete');
     var abandoned  = isAbandoned(o);
     var html       = '';
 
@@ -944,136 +1002,209 @@
           '<span>This order was abandoned — payment was never confirmed.</span>' +
         '</div>';
     }
+    if (o.archived) {
+      html +=
+        '<div class="order-detail-archived-banner" style="margin-bottom:14px;">' +
+          '<i class="ph-light ph-archive" style="font-size:15px;flex-shrink:0;"></i>' +
+          '<span>This order is archived.</span>' +
+        '</div>';
+    }
 
+    // ── Status ──────────────────────────────────────────────────
     html +=
-      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;">' +
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:' + (canUpdate ? '10px' : '18px') + ';">' +
         statusBadge(o.status) +
         statusBadge(o.paymentStatus || 'unpaid') +
         statusBadge(o.fulfillmentStatus || 'unfulfilled') +
       '</div>';
 
-    html += '<div class="card-title" style="margin-bottom:8px;">Timeline</div>';
-    html += renderOrderTimeline(o);
+    if (canUpdate) {
+      html +=
+        '<div style="margin-bottom:18px;">' +
+          '<label class="card-title" style="display:block;margin-bottom:6px;">Update status</label>' +
+          '<select class="filter-select" style="width:100%;" onchange="window._updateOrderStatus(\'' + esc(orderId) + '\',this.value)">' +
+            ORDER_STATUSES.map(function (s) {
+              return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>';
+    }
 
-    html +=
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;margin-top:14px;">' +
-        '<button class="btn btn-sm btn-ghost" onclick="window._copyOrderId(\'' + esc(o.orderNumber || orderId) + '\')">Copy #</button>' +
-        (o.customerPhone
-          ? '<button class="btn btn-sm btn-ghost" onclick="window._whatsappCustomer(\'' + esc(o.customerPhone) + '\')">WhatsApp</button>'
-          : '') +
-        '<button class="btn btn-sm btn-ghost" onclick="window._printPackingSlip(\'' + esc(orderId) + '\')">Packing Slip</button>' +
-        (canRefund
-          ? '<button class="btn btn-sm btn-danger" onclick="window._quickRefund(\'' + esc(orderId) + '\')">Refund</button>'
-          : '') +
-        (canDelete
-          ? '<button class="btn btn-sm btn-danger" onclick="window._deleteOrder(\'' + esc(orderId) + '\')">Delete</button>'
-          : '') +
-      '</div>';
-
+    // ── Customer ────────────────────────────────────────────────
     html +=
       '<div class="card-title" style="margin-bottom:7px;">Customer</div>' +
-      '<div class="info-panel" style="margin-bottom:14px;">' +
+      '<div class="info-panel" style="margin-bottom:8px;">' +
         '<div class="info-row"><span class="label">Name</span><span>'  + esc(o.customerName  || '—') + '</span></div>' +
         '<div class="info-row"><span class="label">Email</span><span>' + esc(o.customerEmail || '—') + '</span></div>' +
         '<div class="info-row"><span class="label">Phone</span><span>' + esc(o.customerPhone || '—') + '</span></div>' +
       '</div>';
+    if (o.customerPhone) {
+      html +=
+        '<button class="btn btn-sm btn-ghost" style="margin-bottom:18px;" onclick="window._whatsappCustomer(\'' + esc(o.customerPhone) + '\')">' +
+          '<i class="ph-light ph-whatsapp-logo"></i> WhatsApp customer' +
+        '</button>';
+    } else {
+      html += '<div style="margin-bottom:10px;"></div>';
+    }
 
+    // ── Items / fulfillment ─────────────────────────────────────
     if (o.items && o.items.length > 0) {
+      var fulfilled = (o.fulfillmentStatus || 'unfulfilled') === 'fulfilled';
       html +=
-        '<div class="card-title" style="margin-bottom:7px;">Items (' + o.items.length + ')</div>' +
-        '<div class="info-panel" style="margin-bottom:14px;">';
-      o.items.forEach(function (item) {
-        html +=
-          '<div class="info-row">' +
-            '<span class="label">' + esc(item.name) + ' × ' + item.qty + '</span>' +
-            '<span>' + fmt((item.price || 0) * item.qty) + '</span>' +
-          '</div>';
-      });
-      html +=
-          '<div class="info-row" style="border-top:0.5px solid var(--border);font-weight:500;">' +
-            '<span class="label">Total</span>' +
-            '<span>' + fmt(o.total || o.subtotal || 0) + '</span>' +
-          '</div>' +
+        '<div class="card-title" style="margin-bottom:7px;">' + (fulfilled ? 'Fulfilled' : 'Unfulfilled') + ' (' + o.items.length + ')</div>' +
+        '<div class="info-panel order-items-panel" style="margin-bottom:18px;">' +
+        o.items.map(function (item, idx) {
+          return (
+            '<div class="order-item-row">' +
+              '<div class="order-item-img" data-item-index="' + idx + '"><i class="ph-light ph-image"></i></div>' +
+              '<div class="order-item-info">' +
+                '<div class="order-item-name">' + esc(item.name) + '</div>' +
+                (item.color || item.size
+                  ? '<div class="order-item-variant">' + esc([item.color, item.size].filter(Boolean).join(' · ')) + '</div>'
+                  : '') +
+                '<div class="order-item-sku" data-item-index="' + idx + '"></div>' +
+              '</div>' +
+              '<div class="order-item-price">' +
+                fmt(item.price || 0) +
+                '<span class="order-item-qty">× ' + (item.qty || 1) + '</span>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('') +
         '</div>';
     }
 
-    if (o.shippingAddress) {
+    // ── Shipping / tracking ─────────────────────────────────────
+    if (o.shippingAddress || o.city || o.province) {
       html +=
         '<div class="card-title" style="margin-bottom:7px;">Shipping</div>' +
-        '<div class="info-panel" style="margin-bottom:14px;">' +
-          '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress || o.city || '—') + '</span></div>' +
+        '<div class="info-panel" style="margin-bottom:' + (canUpdate ? '8px' : '18px') + ';">' +
+          '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">City</span><span>'     + esc(o.city || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">Province</span><span>' + esc(o.province || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Tracking</span><span>' + esc(o.trackingNumber || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Courier</span><span>'  + esc(o.courier || '—') + '</span></div>' +
-        '</div>';
-    }
-
-    if (canRefund) {
-      html +=
-        '<div class="card-title" style="margin-bottom:7px;">Revenue</div>' +
-        '<div class="info-panel" style="margin-bottom:14px;">' +
-          '<div class="info-row"><span class="label">Subtotal</span><span>'         + fmt(o.subtotal        || 0) + '</span></div>' +
-          '<div class="info-row"><span class="label">Shipping</span><span>'         + fmt(o.shippingFee     || 0) + '</span></div>' +
-          '<div class="info-row"><span class="label">Total</span><span>'            + fmt(o.total           || 0) + '</span></div>' +
-          '<div class="info-row"><span class="label">Platform Revenue</span><span>' + fmt(o.platformRevenue || 0) + '</span></div>' +
-          '<div class="info-row"><span class="label">Payout Status</span><span>'    + statusBadge(o.payoutStatus || 'pending') + '</span></div>' +
+          (!canUpdate
+            ? '<div class="info-row"><span class="label">Tracking</span><span>' + (o.trackingNumber ? esc(o.trackingNumber) + (o.courier ? ' via ' + esc(o.courier) : '') : 'Not added yet') + '</span></div>'
+            : '') +
         '</div>';
 
-      if (o.vendorPayouts && Object.keys(o.vendorPayouts).length > 0) {
-        html += '<div class="card-title" style="margin-bottom:7px;">Vendor Payouts</div>' +
-          '<div class="info-panel" style="margin-bottom:14px;">';
-        Object.keys(o.vendorPayouts).forEach(function (vid) {
-          var vp = o.vendorPayouts[vid];
-          html +=
-            '<div class="info-row">' +
-              '<span class="label">' + esc(vid) + (vp.isHouseBrand ? ' (house)' : '') + '</span>' +
-              '<span>' + fmt(vp.payout) + '</span>' +
-            '</div>';
-        });
-        html += '</div>';
+      if (canUpdate) {
+        html +=
+          '<div style="margin-bottom:18px;">' +
+            '<label class="card-title" style="display:block;margin-bottom:6px;">' + (o.trackingNumber ? 'Tracking' : 'Add tracking') + '</label>' +
+            '<select id="courier-select" class="filter-select" style="width:100%;margin-bottom:6px;">' +
+              '<option value="">Select courier...</option>' +
+              COURIERS.map(function (c) {
+                return '<option value="' + c + '"' + (o.courier === c ? ' selected' : '') + '>' + c + '</option>';
+              }).join('') +
+            '</select>' +
+            '<div style="display:flex;gap:6px;">' +
+              '<input id="tracking-input" value="' + esc(o.trackingNumber || '') + '"' +
+                ' placeholder="Tracking number"' +
+                ' class="order-tracking-input" style="flex:1;">' +
+              '<button class="btn btn-sm" onclick="window._saveTrackingAndCourier(\'' + esc(orderId) + '\')">Save</button>' +
+            '</div>' +
+          '</div>';
       }
     }
 
+    // ── Payment / totals ────────────────────────────────────────
+    html += '<div class="card-title" style="margin-bottom:7px;">Payment</div>' +
+      '<div class="info-panel" style="margin-bottom:18px;">' +
+        '<div class="info-row"><span class="label">Subtotal</span><span>' + fmt(o.subtotal || 0) + '</span></div>' +
+        '<div class="info-row"><span class="label">Shipping</span><span>' + fmt(o.shippingFee || 0) + '</span></div>' +
+        '<div class="info-row" style="font-weight:600;"><span class="label">Total</span><span>' + fmt(o.total || o.subtotal || 0) + '</span></div>' +
+        (o.paymentStatus === 'paid'
+          ? '<div class="info-row"><span class="label" style="color:var(--success);">Paid</span><span style="color:var(--success);">' + fmt(o.total || 0) + '</span></div>'
+          : o.paymentStatus === 'refunded'
+            ? '<div class="info-row"><span class="label" style="color:var(--muted);">Refunded</span><span>' + fmt(o.total || 0) + '</span></div>'
+            : '<div class="info-row"><span class="label" style="color:var(--warning);">Outstanding</span><span style="color:var(--warning);">' + fmt(o.total || 0) + '</span></div>') +
+      '</div>';
+
+    // ── Additional information (secondary — only for roles that can
+    // see revenue/payout data in the first place, same gate as before) ──
+    if (canRefund && ((o.platformRevenue || o.payoutStatus) || (o.vendorPayouts && Object.keys(o.vendorPayouts).length > 0))) {
+      html +=
+        '<div class="card-title" style="margin-bottom:7px;opacity:.7;">Additional information</div>' +
+        '<div class="info-panel" style="margin-bottom:18px;font-size:var(--font-scale-xs);">' +
+          '<div class="info-row"><span class="label">Platform revenue</span><span>' + fmt(o.platformRevenue || 0) + '</span></div>' +
+          '<div class="info-row"><span class="label">Payout status</span><span>' + statusBadge(o.payoutStatus || 'pending') + '</span></div>' +
+          (o.vendorPayouts
+            ? Object.keys(o.vendorPayouts).map(function (vid) {
+                var vp = o.vendorPayouts[vid];
+                return '<div class="info-row"><span class="label">' + esc(vid) + (vp.isHouseBrand ? ' (house)' : '') + '</span><span>' + fmt(vp.payout) + '</span></div>';
+              }).join('')
+            : '') +
+        '</div>';
+    }
+
+    // ── Timeline / activity ─────────────────────────────────────
+    html += '<div class="card-title" style="margin-bottom:8px;">Timeline</div>';
+    html += renderOrderTimeline(o);
+
     if (canUpdate) {
       html +=
-        '<div class="card-title" style="margin-bottom:8px;">Update Status</div>' +
-        '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;">' +
-          ORDER_STATUSES.map(function (s) {
-            return '<button class="btn btn-xs ' + (o.status === s ? 'btn-primary' : 'btn-ghost') + '"' +
-              ' onclick="window._updateOrderStatus(\'' + esc(orderId) + '\',\'' + esc(s) + '\')">' +
-              esc(s) + '</button>';
-          }).join('') +
-        '</div>' +
-
-        '<div style="margin-bottom:12px;">' +
-          '<div class="card-title" style="margin-bottom:7px;">Courier &amp; Tracking</div>' +
-          '<select id="courier-select" style="width:100%;margin-bottom:6px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:7px;padding:8px 11px;font-family:Inter,sans-serif;font-size:12px;color:var(--text);outline:none;">' +
-            '<option value="">Select courier...</option>' +
-            COURIERS.map(function (c) {
-              return '<option value="' + c + '"' + (o.courier === c ? ' selected' : '') + '>' + c + '</option>';
-            }).join('') +
-          '</select>' +
-          '<div style="display:flex;gap:6px;">' +
-            '<input id="tracking-input" value="' + esc(o.trackingNumber || '') + '"' +
-              ' placeholder="Tracking number"' +
-              ' style="flex:1;padding:8px 11px;border:0.5px solid var(--border-med);font-family:Inter,sans-serif;font-size:12px;background:var(--surface2);outline:none;border-radius:7px;">' +
-            '<button class="btn btn-sm" onclick="window._saveTrackingAndCourier(\'' + esc(orderId) + '\')">Save</button>' +
-          '</div>' +
-        '</div>' +
-
-        '<div>' +
-          '<div class="card-title" style="margin-bottom:7px;">Internal Notes</div>' +
+        '<div style="margin-top:12px;">' +
           '<textarea id="order-note-input"' +
-            ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;font-family:Inter,sans-serif;font-size:12px;font-weight:300;min-height:68px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
-            ' placeholder="Internal notes...">' +
+            ' style="width:100%;border:0.5px solid var(--border-med);padding:9px 11px;font-family:Inter,sans-serif;font-size:12px;font-weight:300;min-height:56px;background:var(--surface2);outline:none;border-radius:7px;resize:vertical;"' +
+            ' placeholder="Add an internal note...">' +
             esc(o.internalNotes || '') +
           '</textarea>' +
-          '<button class="btn btn-sm btn-ghost" style="margin-top:7px;" onclick="window._saveOrderNote(\'' + esc(orderId) + '\')">Save Note</button>' +
+          '<button class="btn btn-sm btn-ghost" style="margin-top:7px;" onclick="window._saveOrderNote(\'' + esc(orderId) + '\')">Save note</button>' +
         '</div>';
     }
 
     return html;
+  }
+
+  // ── Product thumbnails for order items ───────────────────────
+  // Order items only ever stored productId/name/variantIndex etc (see
+  // checkout.js) — never an image URL — so the live product doc is the
+  // only existing source of truth for what each item actually looks
+  // like today. Fetched after the detail panel is already on screen
+  // (same progressive-enhancement shape as the full order fetch above)
+  // so a cached order still renders instantly; the image/SKU just fill
+  // in a moment later. Mirrors the exact ghost/model/detail image
+  // priority admin-products.js's own renderProductRow() already uses,
+  // so a product's thumbnail looks the same here as it does there.
+  function pickItemThumbnail(product, variantIndex) {
+    if (!product) return '';
+    var variants = product.variants || [];
+    var v = variants[variantIndex] || variants[0] || {};
+    var imgs = v.images || {};
+    var ordered = product.category === 'jewelry'
+      ? [].concat(imgs.model || [], imgs.ghost || [], imgs.detail || [])
+      : [].concat(imgs.ghost || [], imgs.model || [], imgs.detail || []);
+    return safeUrl(ordered[0] || '');
+  }
+
+  function loadOrderItemImages(o) {
+    var items = o.items || [];
+    var ids = [];
+    items.forEach(function (it) {
+      if (it.productId && ids.indexOf(it.productId) === -1) ids.push(it.productId);
+    });
+    if (!ids.length) return;
+
+    Promise.all(ids.map(function (id) {
+      return productsRef.doc(id).get().catch(function () { return null; });
+    })).then(function (docs) {
+      var products = {};
+      docs.forEach(function (doc, i) {
+        if (doc && doc.exists) products[ids[i]] = doc.data();
+      });
+      items.forEach(function (item, idx) {
+        var product = products[item.productId];
+        if (!product) return;
+        var url = pickItemThumbnail(product, item.variantIndex);
+        var imgEl = document.querySelector('.order-item-img[data-item-index="' + idx + '"]');
+        if (imgEl && url) {
+          imgEl.style.backgroundImage = "url('" + url + "')";
+          imgEl.classList.add('has-image');
+        }
+        var skuEl = document.querySelector('.order-item-sku[data-item-index="' + idx + '"]');
+        if (skuEl && product.sku) skuEl.textContent = 'SKU: ' + product.sku;
+      });
+    }).catch(function (e) { console.error('[ORDER_ITEM_IMAGES]', e); });
   }
 
   // ─── ORDER TIMELINE ──────────────────────────────────────────
@@ -1215,6 +1346,12 @@
         if (o) o.archived = next;
         renderOrdersTable(window._ordersData);
       }
+      // Only caller left is the order-detail page's own ⋯ menu, so the
+      // detail panel is always open here — close back to the updated
+      // list, same as _updateOrderStatus/_quickRefund already do, so
+      // the now-stale "Archive"/"Unarchive" label in that menu is never
+      // left showing the wrong action.
+      closePanel();
     }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
