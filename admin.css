@@ -60,9 +60,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
    layered on top; that's what makes it read as "a perfect circle"
    instead of a circle squeezed inside another rounded square button. */
 .orders-create-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;padding:0;color:rgba(255,255,255,0.95);font-size:22px;cursor:pointer;}
-.nav-brand-wrap{display:flex;align-items:center;gap:2px;flex:1;min-width:0;}
+.nav-brand-wrap{display:flex;align-items:center;gap:1px;flex:1;min-width:0;}
 .nav-brand{font-family:var(--font);font-size:var(--font-scale-lg);font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,0.95);white-space:nowrap;}
-.nav-brand-caret{font-size:14px;color:rgba(255,255,255,0.6);}
+/* Regular (not light) weight, close to full white — reads as part of
+   the title instead of a faint, disconnected mark beside it. */
+.nav-brand-caret{font-size:15px;color:rgba(255,255,255,0.85);}
+/* Create Order + the order-actions menu render here on tabs that have
+   them (Orders right now) — see switchTab()/​_renderOrdersTab(). */
+.top-nav-actions{display:flex;align-items:center;gap:var(--space-1);}
 .nav-status-area{display:flex;align-items:center;gap:var(--space-1);background:rgba(255,255,255,0.06);border-radius:var(--r-lg);padding:var(--space-1) var(--space-2);}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);transition:background 0.4s;flex-shrink:0;}
 .status-dot.online{background:#3ecf5d;}.status-dot.offline{background:#ff5c5c;}
@@ -456,12 +461,15 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    default, closed on any outside click (see closeAllOrderPopovers() in
    admin-orders.js) or by re-clicking the trigger. */
 .orders-actions-menu-wrap,.orders-filter-menu-wrap{position:relative;display:inline-block;}
-.orders-actions-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:0.5px solid var(--border-med);background:var(--surface);color:var(--text2);font-size:16px;cursor:pointer;transition:background var(--duration-fast);}
-.orders-actions-btn:active{background:var(--surface3);}
+/* Lives in the dark top bar now (next to Create Order), same plain
+   white-icon-no-background treatment as .orders-create-btn — not a
+   white circular chip, which only made sense when this sat in the
+   white content area below. */
+.orders-actions-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;padding:0;color:rgba(255,255,255,0.95);font-size:19px;cursor:pointer;}
 /* Sort + filter — same gray pill as the search bar beside them, dark
    icon (not the muted gray the generic .orders-actions-btn above uses
    for the dark-header Actions menu). */
-.orders-sort-btn,.orders-filter-btn{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:var(--r-sm);border:none;background:var(--surface3);color:var(--text);font-size:17px;cursor:pointer;transition:background var(--duration-fast);}
+.orders-sort-btn,.orders-filter-btn{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:none;background:var(--surface3);color:var(--text);font-size:17px;cursor:pointer;transition:background var(--duration-fast);}
 .orders-sort-btn:active,.orders-filter-btn:active{background:var(--border-med);}
 .orders-actions-popover,.orders-filter-popover{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-sm);box-shadow:var(--shadow-sm);padding:var(--space-2);min-width:180px;z-index:40;display:none;flex-direction:column;gap:var(--space-1);}
 .orders-actions-popover.open,.orders-filter-popover.open{display:flex;}
@@ -491,6 +499,13 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .orders-count-row{margin-bottom:var(--space-2);}
 
 .orders-select-all{display:flex;align-items:center;gap:var(--space-2);font-size:var(--font-scale-sm);color:var(--text2);padding:var(--space-2) 0;cursor:pointer;}
+
+/* Date group heading — one per distinct day, inserted right before
+   that day's first row (see the lastDateKey check in
+   renderOrdersTable()). A quiet gray label/"belt", never mistaken for
+   an order row itself. */
+.orders-date-group{padding:8px 12px;margin:0 -4px 2px;background:var(--surface2);border-radius:var(--r-xs);font-size:var(--font-scale-xs);font-weight:600;color:var(--muted);}
+.orders-date-group:not(:first-child){margin-top:10px;}
 
 /* Order rows — stacked list instead of a wide table, so nothing needs
    horizontal scrolling on a phone. Order #/total on one line, customer/
