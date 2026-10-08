@@ -283,23 +283,6 @@
     }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
   };
 
-  window.duplicateProduct = function(productId) {
-    var p = (window._allProducts || []).find(function(x){ return x.id === productId; });
-    if (!p) return;
-    var copy = Object.assign({}, p);
-    copy.id = ''; copy.name = copy.name + ' (Copy)'; copy.sku = copy.sku + '-COPY';
-    copy.slug = _uniqueSlug(_slugify(copy.name), window._allProducts || [], null);
-    copy.status = 'draft'; copy.createdAt = new Date().toISOString(); copy.updatedAt = new Date().toISOString();
-    var ref = productsRef.doc(); copy.id = ref.id;
-    ref.set(copy).then(function() { showToast('Product duplicated'); window._loadProducts(); }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
-  };
-
-  window.archiveProduct = function(productId) {
-    productsRef.doc(productId).update({ status: 'archived', updatedAt: new Date().toISOString() })
-      .then(function() { showToast('Product archived'); window._loadProducts(); window._renderProductsTab(); })
-      .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
-  };
-
   // Create-product + the "⋯" actions menu render in the dark top bar
   // itself, next to "Products", same as Orders — not as a second row
   // inside the white content area below.
@@ -414,21 +397,17 @@
       ? [].concat(firstImages.model||[], firstImages.ghost||[], firstImages.detail||[])
       : [].concat(firstImages.ghost||[], firstImages.model||[], firstImages.detail||[]);
     var thumb = safeUrl(allImages[0] || '');
-    return '<div class="product-row">' +
-      '<div onclick="window._openProductForm(\'' + esc(p.id) + '\')" style="flex:1;min-width:0;display:flex;align-items:center;cursor:pointer;">' +
+    var stockLabel = esc(String(p.stock)) + ' available';
+    return '<div class="product-row" onclick="window._openProductForm(\'' + esc(p.id) + '\')">' +
         (thumb ? '<img src="'+esc(thumb)+'" class="pi-thumb" onerror="this.style.display=\'none\'" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:12px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;"></div>') +
         '<div style="flex:1;min-width:0;">' +
           '<div class="pi-name">' + esc(p.name) + '</div>' +
-          '<div class="pi-meta">' + esc(p.brand||'') + ' · ' + esc(p.category||'') + ' · ' + fmt(p.price) +
-            (p.stock <= 3 ? ' · <span style="color:var(--danger);font-weight:600;">' + esc(String(p.stock)) + ' left</span>' : ' · ' + esc(String(p.stock)) + ' in stock') +
+          '<div class="pi-meta">' +
+            (p.stock <= 3 ? '<span style="color:var(--danger);font-weight:600;">' + stockLabel + '</span>' : stockLabel) +
+            (p.brand ? ' · ' + esc(p.brand) : '') +
           '</div>' +
         '</div>' +
-      '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;">' +
         '<span class="badge badge-' + esc(p.status||'draft') + '">' + esc(p.status||'draft') + '</span>' +
-        '<button class="btn btn-xs btn-ghost" onclick="event.stopPropagation();duplicateProduct(\'' + esc(p.id) + '\')" title="Duplicate"><i class="ph-light ph-copy"></i></button>' +
-        '<button class="btn btn-xs btn-ghost" onclick="event.stopPropagation();archiveProduct(\'' + esc(p.id) + '\')" title="Archive"><i class="ph-light ph-archive"></i></button>' +
-      '</div>' +
     '</div>';
   }
 
