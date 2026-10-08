@@ -458,8 +458,8 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    for (#F4F4F4); var(--surface3) resolves to that in light mode and to
    the equivalent dark-mode surface automatically. */
 .orders-search-row{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);}
-.orders-search-wrap{flex:1;display:flex;align-items:center;gap:var(--space-2);background:var(--surface3);border-radius:var(--r-lg);padding:var(--space-2) var(--space-4);color:var(--muted);}
-.orders-search-input{flex:1;border:none;background:none;outline:none;font-family:var(--font);font-size:var(--font-scale-md);color:var(--text);}
+.orders-search-wrap{flex:1;display:flex;align-items:center;gap:var(--space-2);background:var(--surface3);border-radius:var(--r-lg);padding:var(--space-3) var(--space-4);color:var(--muted);}
+.orders-search-input{flex:1;border:none;background:none;outline:none;font-family:var(--font);font-size:var(--font-scale-md);color:var(--text2);}
 .orders-search-input::placeholder{color:var(--muted);}
 
 /* Status tabs — plain text tabs, selected one gets a dark pill, same
@@ -488,11 +488,35 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .order-row-total{font-size:var(--font-scale-md);font-weight:600;color:var(--text);flex-shrink:0;}
 .order-row-meta{font-size:var(--font-scale-sm);color:var(--muted);}
 .order-row-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;}
-.order-row-delete{flex-shrink:0;width:28px;height:28px;border-radius:var(--r-xs);border:none;background:none;color:var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--duration-fast);}
-.order-row-delete:hover{color:var(--danger);background:var(--danger-soft);}
+.order-row-actions{flex-shrink:0;display:flex;flex-direction:column;gap:2px;}
+.order-row-icon-btn{flex-shrink:0;width:28px;height:28px;border-radius:var(--r-xs);border:none;background:none;color:var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--duration-fast);}
+.order-row-icon-btn:hover{color:var(--text2);background:var(--surface3);}
+.order-row-icon-btn-danger:hover{color:var(--danger);background:var(--danger-soft);}
 
 .badge-unpaid{background:var(--danger-soft);color:var(--danger);}
 .badge-fulfilled{background:var(--success-soft);color:var(--success);}
+
+/* ── ORDER DETAIL: REAL TIMELINE ──────────────────────────────────────────── */
+.order-timeline{position:relative;padding-left:16px;}
+.order-timeline::before{content:'';position:absolute;left:3px;top:5px;bottom:5px;width:1.5px;background:var(--border-med);}
+.order-timeline-entry{position:relative;padding-bottom:14px;}
+.order-timeline-entry:last-child{padding-bottom:0;}
+.order-timeline-dot{position:absolute;left:-16px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--muted2);box-shadow:0 0 0 2px var(--surface);}
+.order-timeline-entry:first-child .order-timeline-dot{background:var(--text);}
+.order-timeline-time{font-size:10px;color:var(--muted);margin-bottom:1px;}
+.order-timeline-text{font-size:12.5px;color:var(--text);line-height:1.4;}
+
+/* ── ORDER DETAIL: FULL SCREEN (not a slide-in panel) ─────────────────────── */
+/* Reuses mountPanel()/closePanel() (same Escape-key and overlay-click
+   handling as every other panel) — this just gives the ORDER DETAIL
+   panel specifically its own full-viewport presentation instead of
+   .slide-panel's fixed-width side drawer, with a page-style header
+   (back arrow, title, print) instead of a floating close "×". */
+.order-detail-fullscreen{position:fixed;inset:0;z-index:351;background:var(--surface);display:flex;flex-direction:column;animation:fadeIn var(--duration-base) ease;}
+.order-detail-fullscreen-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);padding:calc(var(--space-3) + env(safe-area-inset-top,0)) var(--space-4) var(--space-3);border-bottom:0.5px solid var(--border);font-family:var(--font);font-size:var(--font-scale-lg);font-weight:500;color:var(--text);}
+.order-detail-back-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;border:none;background:var(--surface3);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background var(--duration-fast);}
+.order-detail-back-btn:hover{background:var(--border-med);}
+.order-detail-fullscreen-body{flex:1;overflow-y:auto;padding:var(--space-4) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom,0));}
 
 /* ── SETUP GUIDE ──────────────────────────────────────────────────────────── */
 .setup-guide{max-width:520px;padding:var(--space-2) 0 48px;}
