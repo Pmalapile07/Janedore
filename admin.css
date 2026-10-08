@@ -436,6 +436,64 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .order-row-abandoned td{background:rgba(192,112,0,0.03);}
 .order-row-abandoned:hover td{background:rgba(192,112,0,0.06)!important;}
 
+/* ── ORDERS LIST (Shopify-style header/search/tabs/rows) ─────────────────── */
+/* Small floating popover pattern shared by the Actions (⋯) menu and the
+   Filter (funnel) menu — anchored under their trigger button, hidden by
+   default, closed on any outside click (see closeAllOrderPopovers() in
+   admin-orders.js) or by re-clicking the trigger. */
+.orders-actions-menu-wrap,.orders-filter-menu-wrap{position:relative;display:inline-block;}
+.orders-actions-btn,.orders-filter-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:0.5px solid var(--border-med);background:var(--surface);color:var(--text2);font-size:16px;cursor:pointer;transition:background var(--duration-fast);}
+.orders-actions-btn:active,.orders-filter-btn:active{background:var(--surface3);}
+.orders-actions-popover,.orders-filter-popover{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-sm);box-shadow:var(--shadow-sm);padding:var(--space-2);min-width:180px;z-index:40;display:none;flex-direction:column;gap:var(--space-1);}
+.orders-actions-popover.open,.orders-filter-popover.open{display:flex;}
+.orders-actions-item{display:flex;align-items:center;gap:var(--space-2);width:100%;padding:var(--space-2) var(--space-3);border:none;background:none;border-radius:var(--r-xs);font-family:var(--font);font-size:var(--font-scale-md);color:var(--text);text-align:left;cursor:pointer;transition:background var(--duration-fast);}
+.orders-actions-item:active{background:var(--surface3);}
+.orders-filter-popover-label{font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:var(--space-2) 0 var(--space-1);}
+.orders-filter-popover-label:first-child{margin-top:0;}
+.orders-filter-popover select{width:100%;}
+
+.orders-bulk-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--surface3);border-radius:var(--r-sm);padding:var(--space-2) var(--space-3);margin-bottom:var(--space-3);}
+
+/* Search bar — full-width, pale-gray pill, matching the color Pearl asked
+   for (#F4F4F4); var(--surface3) resolves to that in light mode and to
+   the equivalent dark-mode surface automatically. */
+.orders-search-row{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);}
+.orders-search-wrap{flex:1;display:flex;align-items:center;gap:var(--space-2);background:var(--surface3);border-radius:var(--r-lg);padding:var(--space-2) var(--space-4);color:var(--muted);}
+.orders-search-input{flex:1;border:none;background:none;outline:none;font-family:var(--font);font-size:var(--font-scale-md);color:var(--text);}
+.orders-search-input::placeholder{color:var(--muted);}
+
+/* Status tabs — plain text tabs, selected one gets a dark pill, same
+   shape language as Shopify's. Horizontally scrollable so it still works
+   if more tabs get added later without wrapping awkwardly on phones. */
+.orders-tabs{display:flex;align-items:center;gap:4px;overflow-x:auto;margin-bottom:var(--space-2);-webkit-overflow-scrolling:touch;}
+.orders-tabs::-webkit-scrollbar{display:none;}
+.orders-tab{flex:0 0 auto;border:none;background:none;padding:var(--space-2) var(--space-3);border-radius:var(--r-lg);font-family:var(--font);font-size:var(--font-scale-sm);font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all var(--duration-fast);}
+.orders-tab.active{background:var(--text);color:var(--surface);}
+.orders-count-row{margin-bottom:var(--space-2);}
+
+.orders-select-all{display:flex;align-items:center;gap:var(--space-2);font-size:var(--font-scale-sm);color:var(--text2);padding:var(--space-2) 0;cursor:pointer;}
+
+/* Order rows — stacked list instead of a wide table, so nothing needs
+   horizontal scrolling on a phone. Order #/total on one line, customer/
+   items/time on the next, status badges on a third. */
+.orders-list{display:flex;flex-direction:column;}
+.order-row{display:flex;align-items:flex-start;gap:var(--space-2);padding:var(--space-3) 0;border-bottom:0.5px solid var(--border-light);cursor:pointer;transition:background var(--duration-fast);}
+.orders-list .order-row:last-child{border-bottom:none;}
+.order-row:active{background:var(--surface2);}
+.order-row.selected{background:var(--accent-soft);}
+.order-row-checkbox{margin-top:3px;cursor:pointer;flex-shrink:0;}
+.order-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.order-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2);}
+.order-row-number{font-size:var(--font-scale-md);font-weight:600;color:var(--text);}
+.order-row-total{font-size:var(--font-scale-md);font-weight:600;color:var(--text);flex-shrink:0;}
+.order-row-meta{font-size:var(--font-scale-sm);color:var(--muted);}
+.order-row-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;}
+.order-row-delete{flex-shrink:0;width:28px;height:28px;border-radius:var(--r-xs);border:none;background:none;color:var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--duration-fast);}
+.order-row-delete:hover{color:var(--danger);background:var(--danger-soft);}
+
+.badge-unpaid{background:var(--danger-soft);color:var(--danger);}
+.badge-fulfilled{background:var(--success-soft);color:var(--success);}
+
 /* ── SETUP GUIDE ──────────────────────────────────────────────────────────── */
 .setup-guide{max-width:520px;padding:var(--space-2) 0 48px;}
 .setup-guide-hd{margin-bottom:var(--space-5);}
