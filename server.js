@@ -436,14 +436,6 @@ function generatePayFastSignature(data, passphrase, includeBlanks) {
   return crypto.createHash('md5').update(getString).digest('hex');
 }
 
-// TEMPORARY — holds the most recent /api/payfast/initiate call's debug
-// info in memory so it can be viewed via GET /api/payfast/debug below,
-// without needing Render's log viewer. Single most-recent snapshot
-// only, never persisted, cleared on every server restart. Remove both
-// this and the route once a real sandbox payment goes through cleanly.
-let lastPayFastDebug = null;
-let lastPayFastItnDebug = null;
-
 app.post('/api/payfast/initiate', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   if (!PAYFAST_MERCHANT_ID || !PAYFAST_MERCHANT_KEY) return res.status(503).json({ error: 'PayFast not configured' });
@@ -503,27 +495,7 @@ app.post('/api/payfast/initiate', async (req, res) => {
     // Signature is computed on `data` alone — PayFast's docs explicitly
     // exclude `setup` from the signature calculation; adding it before
     // this point would make every split payment fail with a mismatch.
-    //
-    // TEMPORARY — debug logging while tracking down a signature
-    // mismatch on the first live sandbox test. Remove once a real
-    // payment goes through cleanly. Passphrase itself is deliberately
-    // never logged or stored, only whether it's present and how long
-    // it is. Stashed in memory (not just console.log) and exposed via
-    // GET /api/payfast/debug below — Render's log viewer separates
-    // "build" and "runtime" logs in a way that's easy to mix up, so
-    // this gives a one-click way to see it instead: open the URL,
-    // screenshot it.
-    const paramString = buildPayFastParamString(data);
     const signature = generatePayFastSignature(data, PAYFAST_PASSPHRASE);
-    lastPayFastDebug = {
-      at: new Date().toISOString(),
-      orderId,
-      paramString,
-      passphraseSet: !!PAYFAST_PASSPHRASE,
-      passphraseLength: (PAYFAST_PASSPHRASE || '').length,
-      signature
-    };
-    console.log('[PAYFAST_INITIATE][DEBUG]', JSON.stringify(lastPayFastDebug));
 
     const fields = Object.assign({}, data, { signature });
     if (setupField) fields.setup = setupField;
@@ -533,17 +505,6 @@ app.post('/api/payfast/initiate', async (req, res) => {
     console.error('[PAYFAST_INITIATE] Error:', e.message);
     res.status(500).json({ error: 'Could not start payment' });
   }
-});
-
-// TEMPORARY — open this URL in a browser right after a checkout
-// attempt to see exactly what the last /api/payfast/initiate call
-// computed, no Render log-diving required. Remove alongside
-// lastPayFastDebug once a real sandbox payment succeeds.
-app.get('/api/payfast/debug', (req, res) => {
-  res.json({
-    initiate: lastPayFastDebug || { message: 'No /api/payfast/initiate call recorded yet since this server last restarted. Try checkout first, then reload this page.' },
-    itn: lastPayFastItnDebug || { message: 'No /api/payfast/notify ITN recorded yet since this server last restarted. Complete a sandbox payment, then reload this page.' }
-  });
 });
 
 // Called by checkout.js when the customer lands back on cancel_url —
@@ -609,15 +570,7 @@ function payFastServerConfirm(paramString) {
 
 // PayFast posts the ITN as application/x-www-form-urlencoded, scoped
 // to just this path so the rest of the app keeps using express.json().
-// verify stashes the exact raw bytes PayFast sent (req.rawBody) before
-// express's parser decodes anything — TEMPORARY, for the same ITN
-// signature-mismatch investigation as the debug block below: compares
-// our reconstructed param string against what was actually on the
-// wire, which rules out (or confirms) any decode/re-encode drift.
-app.use('/api/payfast/notify', express.urlencoded({
-  extended: false,
-  verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); }
-}));
+app.use('/api/payfast/notify', express.urlencoded({ extended: false }));
 
 app.post('/api/payfast/notify', async (req, res) => {
   // Ack immediately — PayFast retries aggressively (instantly, then
@@ -635,40 +588,12 @@ app.post('/api/payfast/notify', async (req, res) => {
 
     // Check 1 — signature. Recomputed over every field PayFast posted
     // back, INCLUDING blank ones (item_description, custom_str1-5,
-    // custom_int1-5) — a real sandbox payment's raw POST body (logged
-    // below as rawPostBody) proved PayFast's own ITN signature counts
-    // those, even though initiate correctly omits blanks from its own
-    // outgoing signature. That mismatch (confirmed via two prior
-    // sandbox tests' debug output, not assumed) was why every payment
-    // was failing this check and never getting marked paid.
-    //
-    // TEMPORARY — keeping the full comparison matrix (blanks
-    // included/stripped × with/without passphrase) logged and exposed
-    // via GET /api/payfast/debug until a real sandbox payment confirms
-    // `match: true` end to end. Remove once confirmed.
-    const itnParamStringBlanksIncluded = buildPayFastParamString(dataForSignature, true);
-    const itnParamStringBlanksStripped = buildPayFastParamString(dataForSignature, false);
+    // custom_int1-5) — PayFast's own ITN signature counts those, even
+    // though initiate correctly omits blanks from its own outgoing
+    // signature (confirmed against a real sandbox payment's raw POST
+    // body before this was changed from the old blanks-stripped
+    // version, which failed on every single payment).
     const expectedSignature = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE, true);
-    const expectedSignatureBlanksStripped = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE, false);
-    const expectedSignatureNoPassphrase = generatePayFastSignature(dataForSignature, null, true);
-    lastPayFastItnDebug = {
-      at: new Date().toISOString(),
-      orderId: pfData.m_payment_id || null,
-      rawPostBody: req.rawBody || null,
-      rawBody: dataForSignature,
-      paramString: itnParamStringBlanksIncluded,
-      paramStringBlanksStripped: itnParamStringBlanksStripped,
-      passphraseSet: !!PAYFAST_PASSPHRASE,
-      passphraseLength: (PAYFAST_PASSPHRASE || '').length,
-      expectedSignature,
-      expectedSignatureBlanksStripped,
-      expectedSignatureNoPassphrase,
-      receivedSignature,
-      match: expectedSignature === receivedSignature,
-      matchBlanksStripped: expectedSignatureBlanksStripped === receivedSignature,
-      matchNoPassphrase: expectedSignatureNoPassphrase === receivedSignature
-    };
-    console.log('[PAYFAST_ITN][DEBUG]', JSON.stringify(lastPayFastItnDebug));
 
     if (expectedSignature !== receivedSignature) {
       console.error('[PAYFAST_ITN] Signature mismatch for', pfData.m_payment_id);
