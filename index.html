@@ -9,6 +9,10 @@
   <link rel="shortcut icon" type="image/png" href="Janedore.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Same-origin + preloaded so Telegraf is ready before first paint
+       instead of swapping in after a visible flash (was fetched from
+       raw.githubusercontent.com, which isn't a real asset CDN). -->
+  <link rel="preload" href="TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf" as="font" type="font/otf" crossorigin>
 
   <!-- Hero image is admin-set (siteContent/homepage.hero.imageUrl) and
        fetched at runtime by site-content.js, so it can't be preloaded
@@ -24,10 +28,10 @@
   <style>
   @font-face {
     font-family: 'Telegraf';
-    src: url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
+    src: url('TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
     font-weight: 400;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
   }
   </style>
 

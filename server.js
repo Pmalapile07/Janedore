@@ -1145,7 +1145,19 @@ app.get('/collections/:cat', async (req, res, next) => {
 // HTML page must go through the routes below instead, so the cache-bust
 // query string actually gets injected rather than silently skipped for
 // the single most-visited URL on the site.
-app.use(express.static(path.join(__dirname), { index: false }));
+app.use(express.static(path.join(__dirname), {
+  index: false,
+  // Font files are named with a content hash and never change in place —
+  // safe to cache for a year so repeat visits don't re-fetch them (and
+  // don't risk a visible font swap) the way the default no-cache headers
+  // would. CSS/JS/images keep the default (always revalidated) since
+  // those get edited in place during active development.
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.otf') || filePath.endsWith('.ttf') || filePath.endsWith('.woff2')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 // Catch-all for HTML routing — only sends index.html for clean URLs
 app.get('*', async (req, res) => {
