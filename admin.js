@@ -385,8 +385,8 @@
     var titleEl = safeEl('top-nav-title');
     if (titleEl) titleEl.textContent = TAB_TITLES[tab] || 'Dashboard';
     // Cleared on every switch — whichever render*Tab() runs next fills
-    // it back in if that section has its own top-bar actions (only
-    // Orders does right now); otherwise it just stays empty.
+    // it back in if that section has its own top-bar actions (Orders
+    // and Products do); otherwise it just stays empty.
     var topActionsEl = safeEl('top-nav-actions');
     if (topActionsEl) topActionsEl.innerHTML = '';
     if (tab !== 'messages') {
