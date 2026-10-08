@@ -103,7 +103,7 @@
           : '') +
         '<div class="orders-actions-menu-wrap">' +
           '<button class="orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Order actions">' +
-            '<i class="ph-light ph-dots-three"></i>' +
+            '<i class="ph-fill ph-dots-three"></i>' +
           '</button>' +
           '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
             '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshOrders()">' +
