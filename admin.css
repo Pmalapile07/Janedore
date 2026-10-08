@@ -97,10 +97,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .sidebar-icon i{line-height:1;}
 
 /* ── APP BODY ──────────────────────────────────────────────────────────────── */
-#app-body{margin-top:var(--nav-h);padding-bottom:calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));}
-/* White card with rounded top corners sitting just under the dark top
-   nav bar, against the page's own slightly-off-white --bg behind it —
-   same look as Shopify's own admin. */
+/* The dark band here (exactly --r-lg deep, matching #main-content's own
+   top corner radius below) is what #main-content's rounded top corners
+   reveal, instead of the page's plain --bg — that's what turns the
+   straight edge between the dark nav and the white card into a curved
+   "arc" where they meet, same as Shopify's own admin. #main-content is
+   an ordinary in-flow child here, so it naturally paints over this band
+   everywhere except in the two corner notches the border-radius cuts
+   away — no z-index/stacking trick needed, and the fixed nav bar above
+   still correctly covers it all once the page is scrolled. */
+#app-body{margin-top:var(--nav-h);padding-bottom:calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));background:linear-gradient(to bottom,var(--nav-bg) 0,var(--nav-bg) var(--r-lg),var(--bg) var(--r-lg));}
 #main-content{padding:var(--space-4) var(--space-4) 0;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));max-width:880px;margin:0 auto;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;}
 
 /* ── BOTTOM NAV ────────────────────────────────────────────────────────────── */
@@ -189,7 +195,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .toolbar-spacer{flex:1;}
 
 /* ── BADGES ────────────────────────────────────────────────────────────────── */
-.badge{display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);border-radius:var(--r-lg);font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.04em;white-space:nowrap;}
+.badge{display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);border-radius:var(--r-lg);font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.04em;white-space:nowrap;text-transform:capitalize;}
 .badge-active,.badge-paid,.badge-delivered,.badge-approved,.badge-success{background:var(--success-soft);color:var(--success);}
 .badge-draft,.badge-pending,.badge-unfulfilled,.badge-warning{background:var(--warning-soft);color:var(--warning);}
 .badge-processing,.badge-packed,.badge-pinned,.badge-info,.badge-new{background:var(--accent-soft);color:var(--accent);}
@@ -469,7 +475,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    white-icon-no-background treatment as .orders-create-btn — not a
    white circular chip, which only made sense when this sat in the
    white content area below. */
-.orders-actions-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;padding:0;color:rgba(255,255,255,0.95);font-size:19px;cursor:pointer;}
+.orders-actions-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;padding:0;color:rgba(255,255,255,0.95);font-size:25px;cursor:pointer;}
 /* Sort + filter — same gray pill as the search bar beside them, dark
    icon (not the muted gray the generic .orders-actions-btn above uses
    for the dark-header Actions menu). */
@@ -508,7 +514,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    that day's first row (see the lastDateKey check in
    renderOrdersTable()). A quiet gray label/"belt", never mistaken for
    an order row itself. */
-.orders-date-group{padding:8px 12px;margin:0 -4px 2px;background:var(--surface2);border-radius:var(--r-xs);font-size:var(--font-scale-xs);font-weight:600;color:var(--muted);}
+.orders-date-group{padding:0;margin:0 0 2px;font-size:var(--font-scale-xs);font-weight:600;color:var(--muted);}
 .orders-date-group:not(:first-child){margin-top:10px;}
 
 /* Order rows — stacked list instead of a wide table, so nothing needs
