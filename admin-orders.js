@@ -353,13 +353,6 @@
     var toggleBtn = safeEl('bulk-toggle-btn');
     if (toggleBtn) toggleBtn.style.display = orders.length > 0 && !window._bulkMode ? '' : 'none';
 
-    if (orders.length === 0) {
-      toolbarWrap.innerHTML = '';
-      tableWrap.innerHTML   = renderEmptyState();
-      if (toggleBtn) toggleBtn.style.display = 'none';
-      return;
-    }
-
     toolbarWrap.innerHTML =
       '<div class="orders-search-row">' +
         '<div class="orders-search-wrap">' +
