@@ -103,7 +103,7 @@
           : '') +
         '<div class="orders-actions-menu-wrap">' +
           '<button class="orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Order actions">' +
-            '<i class="ph-fill ph-dots-three"></i>' +
+            '<i class="ph ph-dots-three"></i>' +
           '</button>' +
           '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
             '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshOrders()">' +
@@ -308,7 +308,7 @@
         '</button>' +
         '<div class="orders-filter-menu-wrap">' +
           '<button class="orders-filter-btn" id="orders-filter-btn" onclick="window._toggleOrdersFilterPopover(event)" aria-label="Filter">' +
-            '<i class="ph ph-funnel"></i>' +
+            '<i class="ph ph-funnel-simple"></i>' +
           '</button>' +
           '<div class="orders-filter-popover" id="orders-filter-popover" onclick="event.stopPropagation()">' +
             '<label class="orders-filter-popover-label">Status</label>' +
@@ -330,8 +330,7 @@
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="orders-tabs" id="orders-tabs"></div>' +
-      '<div class="orders-count-row"><span id="orders-count" class="ui-label"></span></div>';
+      '<div class="orders-tabs" id="orders-tabs"></div>';
 
     renderOrderTabs();
     renderOrdersTable(orders);
@@ -422,9 +421,6 @@
       }
       return true;
     });
-
-    var countEl = safeEl('orders-count');
-    if (countEl) countEl.textContent = filtered.length + ' order' + (filtered.length !== 1 ? 's' : '');
 
     var wrap = safeEl('orders-table-wrap');
     if (!wrap) return;
