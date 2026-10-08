@@ -16,6 +16,7 @@
      plus-circle, the filled three-dot "more" glyph). -->
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
 <link rel="stylesheet" href="admin.css">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -85,14 +86,14 @@
   <div id="app-body"><main id="main-content"></main></div>
 
   <div id="bottom-nav">
-    <button class="bnav-search-btn" onclick="window._showToast('Admin search coming soon')" aria-label="Search"><i class="ph ph-magnifying-glass"></i></button>
+    <button class="bnav-search-btn" onclick="window._showToast('Admin search coming soon')" aria-label="Search"><i class="ph-bold ph-magnifying-glass"></i></button>
     <div class="bottom-nav-pill">
       <button class="bnav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')" aria-label="Home"><i class="ph-fill ph-house"></i></button>
-      <button class="bnav-btn" data-tab="orders" onclick="switchTab('orders')" aria-label="Orders"><i class="ph ph-cardholder"></i></button>
-      <button class="bnav-btn" data-tab="products" onclick="switchTab('products')" aria-label="Products"><i class="ph ph-tag"></i></button>
-      <button class="bnav-btn" onclick="openMoreMenu()" aria-label="More"><i class="ph ph-list"></i><span class="bnav-badge" id="bnav-msg-badge"></span></button>
+      <button class="bnav-btn" data-tab="orders" onclick="switchTab('orders')" aria-label="Orders"><i class="ph-bold ph-cardholder"></i></button>
+      <button class="bnav-btn" data-tab="products" onclick="switchTab('products')" aria-label="Products"><i class="ph-bold ph-tag"></i></button>
+      <button class="bnav-btn" onclick="openMoreMenu()" aria-label="More"><i class="ph-bold ph-list"></i><span class="bnav-badge" id="bnav-msg-badge"></span></button>
     </div>
-    <button class="bnav-jai-btn" onclick="window._showToast('Jai is coming soon')" aria-label="Jai"><i class="ph ph-robot"></i></button>
+    <button class="bnav-jai-btn" onclick="window._showToast('Jai is coming soon')" aria-label="Jai"><i class="ph-bold ph-robot"></i></button>
   </div>
 
   <div id="more-menu-overlay" onclick="closeMoreMenu()"></div>

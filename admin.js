@@ -400,11 +400,12 @@
       var isActive = b.dataset.tab === tab;
       b.classList.toggle('active', isActive);
       // Shopify-style selected state: the tab's own icon swaps from
-      // outline (ph) to solid (ph-fill) instead of just recoloring.
+      // bold outline (ph-bold) to solid (ph-fill) instead of just
+      // recoloring.
       var icon = b.querySelector('i');
       if (icon) {
         icon.classList.toggle('ph-fill', isActive);
-        icon.classList.toggle('ph', !isActive);
+        icon.classList.toggle('ph-bold', !isActive);
       }
     });
     document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) {
