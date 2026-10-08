@@ -229,7 +229,8 @@
           ? '<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap;">' +
               '<button class="btn btn-sm btn-ghost" onclick="window._openVendorModal(\'' + esc(vendorId) + '\')">Edit Brand</button>' +
               (v.accountEmail
-                ? '<button class="btn btn-sm btn-ghost" onclick="window._resetVendorPassword(\'' + esc(vendorId) + '\')">Reset Password</button>'
+                ? '<button class="btn btn-sm btn-ghost" onclick="window._resetVendorPassword(\'' + esc(vendorId) + '\')">Reset Password</button>' +
+                  '<button class="btn btn-sm btn-ghost" onclick="window._syncVendorPermissions(\'' + esc(v.accountUid || '') + '\')" title="Re-sync this vendor\'s role/brand onto their login, in case Orders or similar wasn\'t showing up for them">Sync Permissions</button>'
                 : '<button class="btn btn-sm btn-primary" onclick="window._createVendorAccount(\'' + esc(vendorId) + '\')">Create Login Account</button>') +
             '</div>'
           : '') +
@@ -344,6 +345,8 @@
           updatedAt: new Date().toISOString()
         });
       }).then(function() {
+        return window._syncStaffClaims(uid);
+      }).then(function() {
         var v = (window._vendorsData || []).find(function(x) { return x.id === vendorId; });
         if (v) { v.accountEmail = email; v.accountUid = uid; }
 
@@ -394,6 +397,34 @@
     navigator.clipboard.writeText(text)
       .then(function() { showToast('Credentials copied to clipboard'); })
       .catch(function() { showToast('Could not copy', 'error'); });
+  };
+
+  // Stamps this staff account's role/vendorId onto its own Firebase Auth
+  // token (a "custom claim") via server.js, using the Admin SDK — a
+  // browser can never set these itself. Firestore's security rules need
+  // this for a vendor's own *list* queries (e.g. "every order I'm part
+  // of") specifically, since a list request can't fall back to looking
+  // up their admins/{uid} doc the way a single-document read can. Called
+  // automatically right after creating a new vendor login, and available
+  // as a manual "Sync Permissions" action for one created before this
+  // existed, or if their role/vendorId ever changes.
+  window._syncStaffClaims = function(uid) {
+    if (!window._currentUser || !window._currentUser.getIdToken) return Promise.resolve();
+    return window._currentUser.getIdToken().then(function(token) {
+      return fetch('/api/admin/sync-staff-claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ uid: uid })
+      });
+    }).catch(function(e) { console.warn('[SYNC_STAFF_CLAIMS]', e); });
+  };
+
+  window._syncVendorPermissions = function(accountUid) {
+    if (!accountUid) return;
+    showToast('Syncing permissions...');
+    window._syncStaffClaims(accountUid).then(function() {
+      showToast('Permissions synced. The vendor needs to log out and back in once for it to take effect.');
+    });
   };
 
   /* ─────────────────────────────────────────────────────────

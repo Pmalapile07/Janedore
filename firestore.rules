@@ -166,11 +166,28 @@ service cloud.firestore {
       // so this is full order visibility for every vendor on it, not just
       // their own slice — they just can't edit anything but their own
       // tracking (see the update rule below).
-      allow read: if isPlatformStaff() ||
+      //
+      // Split into get/list (rather than one `read`) on purpose: Firestore
+      // can't prove a *list* request (a query) is safe when the rule needs
+      // an extra document lookup (adminDoc(), i.e. get()) to decide — it
+      // only allows that for a single-document get(). So `list` checks
+      // request.auth.token.vendorId instead (a custom claim stamped onto
+      // the vendor's own auth token by /api/admin/sync-staff-claims in
+      // server.js, kept in sync with their admins/{uid} doc) — no lookup
+      // needed, so Firestore can actually evaluate it for a query. `get`
+      // keeps using adminDoc() as before, which is fine for a single doc.
+      allow get: if isPlatformStaff() ||
         (isSignedIn() &&
          (resource.data.customerId == request.auth.uid ||
           resource.data.customerEmail == request.auth.token.email)) ||
         (isVendor() && resource.data.vendorIds is list && adminDoc().vendorId in resource.data.vendorIds);
+
+      allow list: if isPlatformStaff() ||
+        (isSignedIn() &&
+         (resource.data.customerId == request.auth.uid ||
+          resource.data.customerEmail == request.auth.token.email)) ||
+        (request.auth.token.role == 'VENDOR' && request.auth.token.vendorId is string &&
+         resource.data.vendorIds is list && request.auth.token.vendorId in resource.data.vendorIds);
 
       allow create: if
         request.resource.data.status == 'pending' &&

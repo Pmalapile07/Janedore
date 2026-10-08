@@ -849,6 +849,58 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
   }
 });
 
+// ==================== STAFF AUTH CLAIMS ====================
+// A vendor's account role/vendorId lives on their admins/{uid} Firestore
+// doc, which is what every *single-document* read already checks fine
+// (adminDoc() in firestore.rules). But Firestore flatly refuses to run
+// that kind of extra lookup when evaluating a *list* request (a query,
+// like "every order this vendor is part of") — it can only allow a list
+// request using facts already on the caller's own auth token, with no
+// further reads. See firestore.rules' orders `allow list` rule, which
+// checks request.auth.token.vendorId instead of a Firestore lookup —
+// this endpoint is what actually puts vendorId onto that token, via
+// Firebase Auth "custom claims" (only settable with admin privileges,
+// never from a browser). Call it once after creating a vendor's login,
+// and again any time their role/vendorId might have changed, so an
+// already-existing account can be brought in sync too.
+app.post('/api/admin/sync-staff-claims', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const authHeader = req.headers.authorization || '';
+    const match = authHeader.match(/^Bearer (.+)$/);
+    if (!match) return res.status(401).json({ error: 'No auth token' });
+
+    let decoded;
+    try {
+      decoded = await admin.auth().verifyIdToken(match[1]);
+    } catch (e) {
+      return res.status(401).json({ error: 'Invalid auth token' });
+    }
+
+    const callerDoc = await adminDb.collection('admins').doc(decoded.uid).get();
+    if (!callerDoc.exists || callerDoc.data().role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Only a Super Admin can sync staff claims' });
+    }
+
+    const targetUid = req.body && req.body.uid ? String(req.body.uid) : '';
+    if (!targetUid) return res.status(400).json({ error: 'uid is required' });
+
+    const targetDoc = await adminDb.collection('admins').doc(targetUid).get();
+    if (!targetDoc.exists) return res.status(404).json({ error: 'That staff account was not found' });
+    const data = targetDoc.data();
+
+    await admin.auth().setCustomUserClaims(targetUid, {
+      role: data.role || null,
+      vendorId: data.vendorId || null
+    });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[SYNC_STAFF_CLAIMS] Error:', e.message);
+    res.status(500).json({ error: 'Could not sync claims' });
+  }
+});
+
 // ==================== CHAT AI REPLY ====================
 // Called by chat.js (customer-facing widget) whenever a customer sends
 // a message and hasn't explicitly asked for a human. Uses the official
