@@ -23,3 +23,25 @@
 .review-image-preview { width: 60px; height: 60px; object-fit: cover; display: none; border: 0.8px solid #ddd; }
 .review-submit-btn { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; cursor: pointer; transition: background 0.2s; font-family: inherit; }
 .review-submit-btn:hover { background: #333; }
+
+/* ==================== NEWSLETTER POPUP ====================
+   Same open/close pattern as #review-modal-backdrop above. Shown by
+   newsletter-popup.js once a page's footer scrolls into view — the
+   inner .newsletter-* classes (title/subtext/form/input/btn/
+   disclaimer) are the same dark-theme styling from footer.css that
+   used to live in a static section above the footer. */
+#newsletter-popup-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#newsletter-popup-backdrop.open { opacity: 1; pointer-events: all; }
+#newsletter-popup {
+  background: #111; width: 90%; max-width: 440px; padding: 40px 32px;
+  position: relative;
+}
+.newsletter-popup-close {
+  position: absolute; top: 16px; right: 16px; background: none; border: none;
+  font-size: 18px; cursor: pointer; color: #888;
+}
+.newsletter-popup-close:hover { color: #fff; }

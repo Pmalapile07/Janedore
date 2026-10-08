@@ -29,7 +29,6 @@ const DOM = {
   get gridToggleSvg() { return document.getElementById("grid-toggle-svg"); },
   get catGridToggleSvg() { return document.getElementById("cat-grid-toggle-svg"); },
   get mainNav() { return document.getElementById("main-nav"); },
-  get homepageNewsletterSection() { return document.getElementById("homepage-newsletter-section"); },
   get heroBg() { return document.getElementById("hero-bg"); },
   hero: null,
   get chatBubble() { return document.getElementById("live-chat-bubble"); }

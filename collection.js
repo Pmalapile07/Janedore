@@ -1091,7 +1091,6 @@ function buildArrivals() {
     initSliderLeadingTracking('arrivals-grid');
   }
   buildShopByClothing();
-  buildNewsletterSection();
 }
 
 function buildShopByClothing() {
@@ -1131,13 +1130,6 @@ function initSliderLeadingTracking(gridId) {
   grid.addEventListener('scroll', update, { passive: true });
   update();
 }
-
-// Heading/subtext/disclaimer start as literal empty-state placeholders —
-// site-content.js overwrites them with the admin-set siteContent/homepage
-// copy once that fetch resolves (see renderSiteContent() there). Nothing
-// here is hardcoded marketing copy anymore; it's just what shows if the
-// admin hasn't filled the Newsletter section in yet.
-function buildNewsletterSection() { if(!DOM.homepageNewsletterSection) return; DOM.homepageNewsletterSection.innerHTML = `<div class="newsletter-section"><div class="newsletter-title skeleton-text" id="newsletter-heading"></div><p class="newsletter-subtext" id="newsletter-subtext"></p><div class="newsletter-form"><input class="newsletter-input" type="email" placeholder="Enter your email" id="newsletter-email"><button class="newsletter-btn" onclick="subscribeNewsletter(document.getElementById('newsletter-email').value)"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div><p class="newsletter-disclaimer" id="newsletter-disclaimer"></p></div>`; }
 
 // ==================== VENDOR / BRAND PAGE ====================
 
