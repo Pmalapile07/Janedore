@@ -268,6 +268,7 @@
   // ─── RENDER TABLE ────────────────────────────────────────────
 
   function renderOrdersTable(orders) {
+    var canDelete       = window._can('orders', 'delete');
     var statusFilterEl  = safeEl('order-status-filter');
     var paymentFilterEl = safeEl('order-payment-filter');
     var searchEl        = safeEl('order-search');
@@ -365,6 +366,10 @@
               '<td onclick="event.stopPropagation()">' +
                 '<button class="btn btn-xs btn-ghost"' +
                   ' onclick="window._openOrderDetail(\'' + esc(o.id) + '\')">View</button>' +
+                (canDelete
+                  ? ' <button class="btn btn-xs btn-danger"' +
+                    ' onclick="window._deleteOrder(\'' + esc(o.id) + '\')">Delete</button>'
+                  : '') +
               '</td>' +
             '</tr>';
           }).join('') +
@@ -816,6 +821,7 @@
   function renderOrderDetailContent(o, orderId) {
     var canUpdate  = window._can('orders', 'update');
     var canRefund  = window._can('orders', 'approve');
+    var canDelete  = window._can('orders', 'delete');
     var abandoned  = isAbandoned(o);
     var html       = '';
 
@@ -846,6 +852,9 @@
         '<button class="btn btn-sm btn-ghost" onclick="window._printPackingSlip(\'' + esc(orderId) + '\')">Packing Slip</button>' +
         (canRefund
           ? '<button class="btn btn-sm btn-danger" onclick="window._quickRefund(\'' + esc(orderId) + '\')">Refund</button>'
+          : '') +
+        (canDelete
+          ? '<button class="btn btn-sm btn-danger" onclick="window._deleteOrder(\'' + esc(orderId) + '\')">Delete</button>'
           : '') +
       '</div>';
 
@@ -1101,6 +1110,20 @@
         }
         closePanel();
       }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+  };
+
+  window._deleteOrder = function (orderId) {
+    if (!window._guard('orders', 'delete')) return;
+    var existing = window._ordersData ? window._ordersData.filter(function (x) { return x.id === orderId; })[0] : null;
+    if (!confirm('Permanently delete order #' + ((existing && existing.orderNumber) || orderId) + '? This cannot be undone.')) return;
+    ordersRef.doc(orderId).delete().then(function () {
+      showToast('Order deleted');
+      if (window._ordersData) {
+        window._ordersData = window._ordersData.filter(function (x) { return x.id !== orderId; });
+        renderOrdersTable(window._ordersData);
+      }
+      closePanel();
+    }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
   window._updateOrderStatus = function (orderId, status) {
