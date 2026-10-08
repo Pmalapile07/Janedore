@@ -516,7 +516,7 @@
   window._stopChatMonitoring = stopChatMonitoring;
 
   function updateUnreadBadge() {
-    ['messages-unread-badge','bnav-msg-badge'].forEach(function(id) {
+    ['messages-unread-badge','bnav-msg-badge','more-msg-badge'].forEach(function(id) {
       var badge = safeEl(id);
       if (badge) {
         badge.textContent    = window._totalUnreadMessages;
