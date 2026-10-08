@@ -242,6 +242,17 @@
   </div>
 </div>
 
+<!-- POPIA-compliant cookie consent banner (cookie-consent.js) — shows
+     once per browser until Accept/Decline is chosen; Google Analytics
+     (GA4) only loads after Accept. -->
+<div id="cookie-banner">
+  <p class="cookie-banner-text">We use cookies to understand how you use Janedore and improve your shopping experience. <a onclick="navigateToContentPage('privacy-policy')">Learn more</a></p>
+  <div class="cookie-banner-actions">
+    <button class="cookie-banner-decline" onclick="setCookieConsent(false)">Decline</button>
+    <button class="cookie-banner-accept" onclick="setCookieConsent(true)">Accept</button>
+  </div>
+</div>
+
 <div class="page active" id="page-home">
   <section id="hero">
   <div class="hero-bg-placeholder content-shimmer" id="hero-bg"></div>
@@ -491,6 +502,7 @@
 <script src="chat.js" defer></script>
 <script src="app.js" defer></script>
 <script src="newsletter-popup.js" defer></script>
+<script src="cookie-consent.js" defer></script>
 <script src="site-content.js" defer></script>
 
 <div id="chat-container"></div>
