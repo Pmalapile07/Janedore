@@ -392,7 +392,7 @@
         : '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No products found</div></div>';
       return;
     }
-    listWrap.innerHTML = '<div class="product-list" id="products-list">' + filtered.map(renderProductRow).join('') + '</div>';
+    listWrap.innerHTML = '<div class="products-list" id="products-list">' + filtered.map(renderProductRow).join('') + '</div>';
   }
 
   function renderProductRow(p) {
@@ -403,7 +403,7 @@
       : [].concat(firstImages.ghost||[], firstImages.model||[], firstImages.detail||[]);
     var thumb = safeUrl(allImages[0] || '');
     var stockLabel = esc(String(p.stock)) + ' available';
-    return '<div class="product-row" onclick="window._openProductForm(\'' + esc(p.id) + '\')">' +
+    return '<div class="products-row" onclick="window._openProductForm(\'' + esc(p.id) + '\')">' +
         (thumb ? '<img src="'+esc(thumb)+'" class="pi-thumb" onerror="this.style.display=\'none\'" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:12px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;"></div>') +
         '<div style="flex:1;min-width:0;">' +
           '<div class="pi-name">' + esc(p.name) + '</div>' +
