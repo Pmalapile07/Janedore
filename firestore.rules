@@ -59,21 +59,27 @@ service cloud.firestore {
     // anything else. request.resource.data.vendorTracking is a map
     // keyed by vendorId, e.g. {"vendor-abc": {trackingNumber, courier,
     // addedAt}} — this checks only the caller's OWN key in that map
-    // changed, comparing against the existing map (or {} if no vendor
-    // had added tracking yet). The fields *inside* that one entry
-    // aren't deep-validated (same accepted bounded risk as
-    // isVariantStockDecrementOnly() below) — the worst case is a vendor
-    // writing junk into their own tracking entry, never touching
-    // another vendor's data, the order total, or payment/status.
+    // changed. Written as two branches instead of one diff-against-an-
+    // empty-map expression: the very first vendor to ever add tracking
+    // to an order (vendorTracking doesn't exist on it yet) just needs
+    // their new map to contain only their own key; every write after
+    // that diffs the new map against the real existing one. The fields
+    // *inside* that one entry aren't deep-validated (same accepted
+    // bounded risk as isVariantStockDecrementOnly() below) — the worst
+    // case is a vendor writing junk into their own tracking entry,
+    // never touching another vendor's data, the order total, or
+    // payment/status.
     function vendorTrackingOwnEntryOnly() {
       let vid = adminDoc().vendorId;
       return isVendor() &&
              resource.data.vendorIds is list && vid in resource.data.vendorIds &&
              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vendorTracking', 'updatedAt']) &&
              request.resource.data.vendorTracking is map &&
-             request.resource.data.vendorTracking.diff(
-               ('vendorTracking' in resource.data) ? resource.data.vendorTracking : {}
-             ).affectedKeys().hasOnly([vid]);
+             (
+               'vendorTracking' in resource.data
+                 ? request.resource.data.vendorTracking.diff(resource.data.vendorTracking).affectedKeys().hasOnly([vid])
+                 : request.resource.data.vendorTracking.keys().hasOnly([vid])
+             );
     }
 
     // Lets checkout (run by an anonymous customer, no admin/vendor role at
