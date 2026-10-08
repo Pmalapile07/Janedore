@@ -49,6 +49,53 @@
     return (Date.now() - ts.getTime()) > ABANDONED_THRESHOLD_MS;
   }
 
+  // Fulfilled means "someone added a tracking number" — for this
+  // multi-vendor marketplace, each brand ships its own items from its
+  // own warehouse, so there's no single "we packed it" event the way a
+  // single-seller store has. o.fulfillmentStatus is never stored
+  // directly (nothing writes it any more) — it's always derived here
+  // from the real tracking data, so it can never drift out of sync with
+  // what vendors have actually done:
+  //   - an order with vendorIds (the normal, checkout-created case):
+  //     'fulfilled' once every vendor on the order has added tracking
+  //     in o.vendorTracking, 'partial' once some have, else 'unfulfilled'.
+  //   - a manually-created order with no vendor split (admin's own "New
+  //     Order" form): falls back to the single legacy trackingNumber
+  //     field, same as before this existed.
+  function computeFulfillmentStatus(o) {
+    var vendorIds = Array.isArray(o.vendorIds) ? o.vendorIds : [];
+    if (!vendorIds.length) {
+      return o.trackingNumber ? 'fulfilled' : 'unfulfilled';
+    }
+    var tracking = o.vendorTracking || {};
+    var shipped = vendorIds.filter(function (vid) {
+      return tracking[vid] && tracking[vid].trackingNumber;
+    });
+    if (shipped.length === 0) return 'unfulfilled';
+    if (shipped.length === vendorIds.length) return 'fulfilled';
+    return 'partial';
+  }
+
+  // Splits an order's items into one group per vendor (preserving each
+  // item's original index, which the image/SKU resolver keys off of) —
+  // an item with no vendorId at all (shouldn't happen for a real
+  // checkout-created order, but defensively handled) falls into its own
+  // group with vendorId: null, which renderOrderDetailContent treats as
+  // the legacy single-tracking case.
+  function groupOrderItemsByVendor(items) {
+    var groups = [];
+    var byVendor = {};
+    items.forEach(function (item, idx) {
+      var key = item.vendorId || '__none__';
+      if (!byVendor[key]) {
+        byVendor[key] = { vendorId: item.vendorId || null, brand: item.brand || 'Items', items: [] };
+        groups.push(byVendor[key]);
+      }
+      byVendor[key].items.push({ item: item, idx: idx });
+    });
+    return groups;
+  }
+
   // Appends one entry to the order's real activity log (o.timeline) —
   // Firestore write plus an optimistic local update so the detail panel
   // (if open) reflects it immediately rather than waiting on a refetch.
@@ -72,16 +119,6 @@
   window._renderOrdersTab = function () {
     var mc = safeEl('main-content');
     if (!mc) return;
-
-    // Vendor: blocked from orders collection by Firestore rules
-    if (window._currentUserRole === 'VENDOR') {
-      mc.innerHTML = '<div class="orders-empty-state">' +
-        '<div class="orders-empty-icon"><i class="ph-light ph-receipt"></i></div>' +
-        '<div class="orders-empty-title">Your Orders</div>' +
-        '<div class="orders-empty-sub">Your sales and order data will appear here. Revenue reports are updated periodically by Janedore.</div>' +
-      '</div>';
-      return;
-    }
 
     window._selectedOrders = {};
     window._bulkMode = false;
@@ -142,12 +179,14 @@
   // ─── LOAD ────────────────────────────────────────────────────
 
   function loadOrders() {
-    // Vendor can't read orders collection
-    if (window._currentUserRole === 'VENDOR') return;
-
     if (!window._can('orders', 'read')) {
       var wrap = safeEl('orders-table-wrap');
       if (wrap) wrap.innerHTML = '<p style="padding:16px;color:var(--danger);font-size:12px;">Access denied.</p>';
+      return;
+    }
+    if (window._currentUserRole === 'VENDOR' && !window._currentVendorId) {
+      var wrap0 = safeEl('orders-table-wrap');
+      if (wrap0) wrap0.innerHTML = '<p style="padding:16px;color:var(--danger);font-size:12px;">No vendor account linked — contact support.</p>';
       return;
     }
 
@@ -159,10 +198,26 @@
         '</div>';
     }
 
-    ordersRef.orderBy('createdAt', 'desc').limit(200).get().then(function (snap) {
+    // A vendor only ever sees orders that include at least one of their
+    // own items (Firestore rules enforce the same scope on read) — an
+    // array-contains query, sorted client-side below rather than with
+    // .orderBy() so this never needs a composite index set up in the
+    // Firebase console. Staff get the existing unfiltered query.
+    var query = window._currentUserRole === 'VENDOR'
+      ? ordersRef.where('vendorIds', 'array-contains', window._currentVendorId).limit(200)
+      : ordersRef.orderBy('createdAt', 'desc').limit(200);
+
+    query.get().then(function (snap) {
       window._ordersData = snap.docs.map(function (d) {
         return Object.assign({ id: d.id }, d.data());
       });
+      if (window._currentUserRole === 'VENDOR') {
+        window._ordersData.sort(function (a, b) {
+          var at = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+          var bt = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+          return bt - at;
+        });
+      }
       window._selectedOrders = {};
       renderOrdersUI(window._ordersData);
     }).catch(function (e) {
@@ -405,7 +460,7 @@
       // still means literally everything, archived orders included —
       // every other tab hides archived orders, same as Shopify.
       if (tab !== 'all' && tab !== 'archived' && o.archived) return false;
-      if (tab === 'unfulfilled' && (o.fulfillmentStatus || 'unfulfilled') === 'fulfilled') return false;
+      if (tab === 'unfulfilled' && computeFulfillmentStatus(o) === 'fulfilled') return false;
       if (tab === 'unpaid' && (o.paymentStatus || 'unpaid') !== 'unpaid') return false;
       if (tab === 'open' && o.status === 'cancelled') return false;
       if (tab === 'abandoned' && !isAbandoned(o)) return false;
@@ -479,7 +534,7 @@
               '</div>' +
               '<div class="order-row-badges">' +
                 (abandoned ? '<span class="badge badge-warning">Abandoned</span>' : '') +
-                statusBadge(o.fulfillmentStatus || 'unfulfilled') +
+                statusBadge(computeFulfillmentStatus(o)) +
                 statusBadge(o.paymentStatus || 'unpaid') +
               '</div>' +
             '</div>' +
@@ -838,7 +893,6 @@
       vendorIds:         vendorIds,
       internalNotes:     (safeEl('no-notes') || {}).value || '',
       status:            status || 'pending',
-      fulfillmentStatus: 'unfulfilled',
       payoutStatus:      'pending',
       source:            'manual',
       createdBy:         (window._currentUser && window._currentUser.uid) || null
@@ -944,6 +998,7 @@
   // menu (just a different element id), so it already closes on outside
   // click via the shared closeAllOrderPopovers() below.
   function renderOrderDetailMenu(o, orderId) {
+    var canUpdate = window._can('orders', 'update');
     var canRefund = window._can('orders', 'approve');
     var canDelete = window._can('orders', 'delete');
     var archived  = !!(o && o.archived);
@@ -961,9 +1016,11 @@
                 '<i class="ph-light ph-whatsapp-logo"></i> WhatsApp customer' +
               '</button>'
             : '') +
-          '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._toggleOrderArchived(\'' + esc(orderId) + '\',' + archived + ')">' +
-            '<i class="ph-light ph-' + (archived ? 'tray-arrow-up' : 'archive') + '"></i> ' + (archived ? 'Unarchive' : 'Archive') +
-          '</button>' +
+          (canUpdate
+            ? '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._toggleOrderArchived(\'' + esc(orderId) + '\',' + archived + ')">' +
+                '<i class="ph-light ph-' + (archived ? 'tray-arrow-up' : 'archive') + '"></i> ' + (archived ? 'Unarchive' : 'Archive') +
+              '</button>'
+            : '') +
           (canRefund
             ? '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._quickRefund(\'' + esc(orderId) + '\')">' +
                 '<i class="ph-light ph-arrow-counter-clockwise"></i> Refund' +
@@ -1015,7 +1072,7 @@
       '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:' + (canUpdate ? '10px' : '18px') + ';">' +
         statusBadge(o.status) +
         statusBadge(o.paymentStatus || 'unpaid') +
-        statusBadge(o.fulfillmentStatus || 'unfulfilled') +
+        statusBadge(computeFulfillmentStatus(o)) +
       '</div>';
 
     if (canUpdate) {
@@ -1047,64 +1104,85 @@
       html += '<div style="margin-bottom:10px;"></div>';
     }
 
-    // ── Items / fulfillment ─────────────────────────────────────
+    // ── Items / fulfillment, grouped per vendor ───────────────────
+    // An order can hold items from several brands, each shipping from
+    // its own warehouse — so "fulfillment" isn't one action, it's one
+    // per vendor. Everyone sees every vendor's items/items-level
+    // status here (full order visibility); only the vendor that owns a
+    // given group — or staff — can actually add tracking to it.
     if (o.items && o.items.length > 0) {
-      var fulfilled = (o.fulfillmentStatus || 'unfulfilled') === 'fulfilled';
-      html +=
-        '<div class="card-title" style="margin-bottom:7px;">' + (fulfilled ? 'Fulfilled' : 'Unfulfilled') + ' (' + o.items.length + ')</div>' +
-        '<div class="info-panel order-items-panel" style="margin-bottom:18px;">' +
-        o.items.map(function (item, idx) {
-          return (
-            '<div class="order-item-row">' +
-              '<div class="order-item-img" data-item-index="' + idx + '"><i class="ph-light ph-image"></i></div>' +
-              '<div class="order-item-info">' +
-                '<div class="order-item-name">' + esc(item.name) + '</div>' +
-                (item.color || item.size
-                  ? '<div class="order-item-variant">' + esc([item.color, item.size].filter(Boolean).join(' · ')) + '</div>'
-                  : '') +
-                '<div class="order-item-sku" data-item-index="' + idx + '"></div>' +
-              '</div>' +
-              '<div class="order-item-price">' +
-                fmt(item.price || 0) +
-                '<span class="order-item-qty">× ' + (item.qty || 1) + '</span>' +
-              '</div>' +
-            '</div>'
-          );
-        }).join('') +
-        '</div>';
+      html += '<div class="card-title" style="margin-bottom:7px;">Items</div>';
+      html += groupOrderItemsByVendor(o.items).map(function (group) {
+        var groupTracking = group.vendorId
+          ? (o.vendorTracking && o.vendorTracking[group.vendorId]) || null
+          : (o.trackingNumber ? { trackingNumber: o.trackingNumber, courier: o.courier } : null);
+        var shipped = !!(groupTracking && groupTracking.trackingNumber);
+        var canEditGroup = canUpdate ||
+          (group.vendorId && window._can('orders', 'update_own_tracking', { vendorId: group.vendorId }));
+
+        return (
+          '<div class="order-vendor-group">' +
+            '<div class="order-vendor-group-header">' +
+              '<span class="order-vendor-group-brand">' + esc(group.brand) + '</span>' +
+              statusBadge(shipped ? 'fulfilled' : 'unfulfilled') +
+            '</div>' +
+            '<div class="info-panel order-items-panel" style="margin-bottom:' + (canEditGroup ? '8px' : '14px') + ';">' +
+              group.items.map(function (entry) {
+                var item = entry.item, idx = entry.idx;
+                return (
+                  '<div class="order-item-row">' +
+                    '<div class="order-item-img" data-item-index="' + idx + '"><i class="ph-light ph-image"></i></div>' +
+                    '<div class="order-item-info">' +
+                      '<div class="order-item-name">' + esc(item.name) + '</div>' +
+                      (item.color || item.size
+                        ? '<div class="order-item-variant">' + esc([item.color, item.size].filter(Boolean).join(' · ')) + '</div>'
+                        : '') +
+                      '<div class="order-item-sku" data-item-index="' + idx + '"></div>' +
+                    '</div>' +
+                    '<div class="order-item-price">' +
+                      fmt(item.price || 0) +
+                      '<span class="order-item-qty">× ' + (item.qty || 1) + '</span>' +
+                    '</div>' +
+                  '</div>'
+                );
+              }).join('') +
+            '</div>' +
+            (canEditGroup
+              ? '<div style="margin-bottom:18px;">' +
+                  '<label class="card-title" style="display:block;margin-bottom:6px;">' + (shipped ? 'Tracking' : 'Add tracking') + '</label>' +
+                  '<select class="filter-select order-group-courier" data-vendor="' + esc(group.vendorId || '') + '" style="width:100%;margin-bottom:6px;">' +
+                    '<option value="">Select courier...</option>' +
+                    COURIERS.map(function (c) {
+                      return '<option value="' + c + '"' + ((groupTracking && groupTracking.courier === c) ? ' selected' : '') + '>' + c + '</option>';
+                    }).join('') +
+                  '</select>' +
+                  '<div style="display:flex;gap:6px;">' +
+                    '<input class="order-tracking-input order-group-tracking" data-vendor="' + esc(group.vendorId || '') + '"' +
+                      ' value="' + esc((groupTracking && groupTracking.trackingNumber) || '') + '"' +
+                      ' placeholder="Tracking number" style="flex:1;">' +
+                    '<button class="btn btn-sm" onclick="window._saveVendorTracking(\'' + esc(orderId) + '\',\'' + esc(group.vendorId || '') + '\')">Save</button>' +
+                  '</div>' +
+                '</div>'
+              : '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
+                  (shipped
+                    ? esc(groupTracking.trackingNumber) + (groupTracking.courier ? ' via ' + esc(groupTracking.courier) : '')
+                    : 'Not shipped yet') +
+                '</div>')
+        );
+      }).join('');
     }
 
-    // ── Shipping / tracking ─────────────────────────────────────
+    // ── Shipping address (tracking itself lives per-vendor above,
+    // since each brand ships its own items from its own warehouse —
+    // this is just where it's all going) ───────────────────────────
     if (o.shippingAddress || o.city || o.province) {
       html +=
-        '<div class="card-title" style="margin-bottom:7px;">Shipping</div>' +
-        '<div class="info-panel" style="margin-bottom:' + (canUpdate ? '8px' : '18px') + ';">' +
+        '<div class="card-title" style="margin-bottom:7px;">Shipping address</div>' +
+        '<div class="info-panel" style="margin-bottom:18px;">' +
           '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">City</span><span>'     + esc(o.city || '—') + '</span></div>' +
           '<div class="info-row"><span class="label">Province</span><span>' + esc(o.province || '—') + '</span></div>' +
-          (!canUpdate
-            ? '<div class="info-row"><span class="label">Tracking</span><span>' + (o.trackingNumber ? esc(o.trackingNumber) + (o.courier ? ' via ' + esc(o.courier) : '') : 'Not added yet') + '</span></div>'
-            : '') +
         '</div>';
-
-      if (canUpdate) {
-        html +=
-          '<div style="margin-bottom:18px;">' +
-            '<label class="card-title" style="display:block;margin-bottom:6px;">' + (o.trackingNumber ? 'Tracking' : 'Add tracking') + '</label>' +
-            '<select id="courier-select" class="filter-select" style="width:100%;margin-bottom:6px;">' +
-              '<option value="">Select courier...</option>' +
-              COURIERS.map(function (c) {
-                return '<option value="' + c + '"' + (o.courier === c ? ' selected' : '') + '>' + c + '</option>';
-              }).join('') +
-            '</select>' +
-            '<div style="display:flex;gap:6px;">' +
-              '<input id="tracking-input" value="' + esc(o.trackingNumber || '') + '"' +
-                ' placeholder="Tracking number"' +
-                ' class="order-tracking-input" style="flex:1;">' +
-              '<button class="btn btn-sm" onclick="window._saveTrackingAndCourier(\'' + esc(orderId) + '\')">Save</button>' +
-            '</div>' +
-          '</div>';
-      }
     }
 
     // ── Payment / totals ────────────────────────────────────────
@@ -1371,25 +1449,78 @@
       }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 
-  window._saveTrackingAndCourier = function (orderId) {
-    if (!window._guard('orders', 'update')) return;
-    var tracking = safeEl('tracking-input');
-    var courier  = safeEl('courier-select');
-    if (!tracking) return;
+  // Fire-and-forget: asks server.js to email the customer that (part
+  // of) their order has shipped, now that tracking was just saved. The
+  // Firestore write above is what actually matters and has already
+  // succeeded by the time this runs — if the email fails (no network,
+  // Resend down, token issue) that's logged but never surfaces as an
+  // error to the admin/vendor, since the real action already worked.
+  function notifyShipped(orderId, vendorId) {
+    if (!window._currentUser || !window._currentUser.getIdToken) return;
+    window._currentUser.getIdToken().then(function (token) {
+      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-shipped', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ vendorId: vendorId || '' })
+      });
+    }).catch(function (e) { console.warn('[NOTIFY_SHIPPED]', e.message); });
+  }
 
-    var data = {
-      trackingNumber: tracking.value.trim(),
-      courier: courier ? courier.value : '',
-      updatedAt: new Date().toISOString()
-    };
+  // vendorId === '' (the group with no vendor split, i.e. a manually-
+  // created order) writes the legacy flat trackingNumber/courier
+  // fields, exactly like before this existed. A real vendorId writes
+  // only that one vendor's entry in o.vendorTracking (a dot-path
+  // update, so Firestore only touches that single map key — sibling
+  // vendors' tracking is untouched both in the write itself and in
+  // what the security rules allow a vendor to change).
+  window._saveVendorTracking = function (orderId, vendorId) {
+    var trackingEl = document.querySelector('.order-group-tracking[data-vendor="' + vendorId + '"]');
+    var courierEl  = document.querySelector('.order-group-courier[data-vendor="' + vendorId + '"]');
+    if (!trackingEl) return;
 
-    ordersRef.doc(orderId).update(data).then(function () {
+    var trackingNumber = trackingEl.value.trim();
+    var courier = courierEl ? courierEl.value : '';
+
+    if (!vendorId) {
+      if (!window._guard('orders', 'update')) return;
+      var legacyData = { trackingNumber: trackingNumber, courier: courier, updatedAt: new Date().toISOString() };
+      ordersRef.doc(orderId).update(legacyData).then(function () {
+        showToast('Tracking saved');
+        logOrderTimelineEvent(orderId, trackingNumber
+          ? 'You added tracking number ' + trackingNumber + (courier ? ' via ' + courier : '') + '.'
+          : 'You removed the tracking info on this order.');
+        var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
+        if (o) { o.trackingNumber = trackingNumber; o.courier = courier; }
+        if (trackingNumber) notifyShipped(orderId, '');
+        window._openOrderDetail(orderId);
+      }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+      return;
+    }
+
+    if (!window._can('orders', 'update') &&
+        !window._can('orders', 'update_own_tracking', { vendorId: vendorId })) {
+      showToast('You do not have permission to do that.', 'error');
+      return;
+    }
+    if (!trackingNumber) { showToast('Enter a tracking number', 'error'); return; }
+
+    var entry = { trackingNumber: trackingNumber, courier: courier, addedAt: new Date().toISOString() };
+    var patch = { updatedAt: new Date().toISOString() };
+    patch['vendorTracking.' + vendorId] = entry;
+
+    ordersRef.doc(orderId).update(patch).then(function () {
       showToast('Tracking saved');
-      logOrderTimelineEvent(orderId, data.trackingNumber
-        ? 'You added tracking number ' + data.trackingNumber + (data.courier ? ' via ' + data.courier : '') + '.'
-        : 'You removed the tracking info on this order.');
       var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
-      if (o) { o.trackingNumber = data.trackingNumber; o.courier = data.courier; }
+      var brand = 'A vendor';
+      if (o) {
+        o.vendorTracking = o.vendorTracking || {};
+        o.vendorTracking[vendorId] = entry;
+        var ownItem = (o.items || []).filter(function (it) { return it.vendorId === vendorId; })[0];
+        if (ownItem && ownItem.brand) brand = ownItem.brand;
+      }
+      logOrderTimelineEvent(orderId, brand + ' added tracking number ' + trackingNumber + (courier ? ' via ' + courier : '') + '.');
+      notifyShipped(orderId, vendorId);
+      window._openOrderDetail(orderId);
     }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };
 

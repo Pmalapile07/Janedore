@@ -1,0 +1,409 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================
+    // HELPER FUNCTIONS
+    // =========================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function isAnyAdmin() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isSuperAdmin() {
+      return isAnyAdmin() && adminDoc().role == 'SUPER_ADMIN';
+    }
+
+    function isAdmin() {
+      return isAnyAdmin() && adminDoc().role == 'ADMIN';
+    }
+
+    function isVendor() {
+      return isAnyAdmin() && adminDoc().role == 'VENDOR';
+    }
+
+    function isOwnVendor(vendorId) {
+      return isVendor() && adminDoc().vendorId == vendorId;
+    }
+
+    function isPlatformStaff() {
+      return isSuperAdmin() || isAdmin();
+    }
+
+    function noRestrictedFieldsChanged() {
+      return !(request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['platformRevenue', 'vendorPayouts', 'payoutStatus',
+                 'commissionRate', 'status', 'paymentStatus']));
+    }
+
+    // Vendors can only update their own profile — not commission or status.
+    function vendorProfileFieldsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['name', 'brand', 'email', 'description', 'logoUrl', 'heroImageUrl', 'updatedAt']);
+    }
+
+    // A vendor may add/edit tracking only for their own line items on an
+    // order they're actually part of (resource.data.vendorIds, written
+    // from each line item's own vendorId at order-creation time) — not
+    // the order's status/payment, not any other vendor's tracking, not
+    // anything else. request.resource.data.vendorTracking is a map
+    // keyed by vendorId, e.g. {"vendor-abc": {trackingNumber, courier,
+    // addedAt}} — this checks only the caller's OWN key in that map
+    // changed, comparing against the existing map (or {} if no vendor
+    // had added tracking yet). The fields *inside* that one entry
+    // aren't deep-validated (same accepted bounded risk as
+    // isVariantStockDecrementOnly() below) — the worst case is a vendor
+    // writing junk into their own tracking entry, never touching
+    // another vendor's data, the order total, or payment/status.
+    function vendorTrackingOwnEntryOnly() {
+      let vid = adminDoc().vendorId;
+      return isVendor() &&
+             resource.data.vendorIds is list && vid in resource.data.vendorIds &&
+             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vendorTracking', 'updatedAt']) &&
+             request.resource.data.vendorTracking is map &&
+             request.resource.data.vendorTracking.diff(
+               ('vendorTracking' in resource.data) ? resource.data.vendorTracking : {}
+             ).affectedKeys().hasOnly([vid]);
+    }
+
+    // Lets checkout (run by an anonymous customer, no admin/vendor role at
+    // all) decrement a product's stock after an order is placed, without
+    // opening up product edits generally. Three guards: only the stock
+    // field itself may change, the new value can't go negative, and it
+    // can only move DOWN from whatever it currently is — so this can
+    // never be used to restore/inflate stock, change price, or touch
+    // anything else on the product.
+    function isStockDecrementOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) &&
+             request.resource.data.stock is number &&
+             request.resource.data.stock >= 0 &&
+             request.resource.data.stock < resource.data.stock;
+    }
+
+    // Same idea as isStockDecrementOnly(), for products that now track
+    // stock per size/color instead of one flat number. Only stock and
+    // stockByVariant may change — never variants itself (images, colors,
+    // names), never price, never anything else — and the total stock can
+    // only move down, never up. stockByVariant's individual numbers
+    // aren't deep-validated (Firestore rules can't diff into an
+    // arbitrary-keyed nested map), so the bounded worst case is a bad
+    // actor reshuffling quantities between sizes, never inflating the
+    // total, defacing a listing, or touching any other product.
+    function isVariantStockDecrementOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'stockByVariant']) &&
+             request.resource.data.stock is number &&
+             request.resource.data.stock >= 0 &&
+             request.resource.data.stock <= resource.data.stock;
+    }
+
+    // =========================================================
+    // PRODUCTS
+    // =========================================================
+
+    match /products/{productId} {
+      allow read: if true;
+
+      // The app never writes status == 'published' — it uses
+      // 'active' / 'draft' / 'archived', and 'active' is what the
+      // storefront treats as live. Checking against the status value
+      // the app actually uses, so a vendor can't self-publish straight
+      // to live.
+      allow create: if isSuperAdmin() ||
+        (isVendor() &&
+         request.resource.data.vendorId == adminDoc().vendorId &&
+         request.resource.data.status != 'active');
+
+      allow update: if isSuperAdmin() ||
+        (isVendor() &&
+         resource.data.vendorId == adminDoc().vendorId &&
+         request.resource.data.vendorId == adminDoc().vendorId &&
+         request.resource.data.status != 'active') ||
+        isStockDecrementOnly() ||
+        isVariantStockDecrementOnly();
+
+      allow delete: if isSuperAdmin() ||
+        (isVendor() && resource.data.vendorId == adminDoc().vendorId);
+    }
+
+    // =========================================================
+    // VENDORS
+    // =========================================================
+
+    match /vendors/{vendorId} {
+      allow read: if true;
+
+      allow create: if isSuperAdmin();
+
+      // Super Admin: full update. Vendor: profile fields only.
+      allow update: if isSuperAdmin() ||
+        (isOwnVendor(vendorId) && vendorProfileFieldsOnly());
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // ORDERS
+    // =========================================================
+
+    match /orders/{orderId} {
+      // Customers can read an order that's actually theirs, matched the
+      // same way checkout.js and login.js already tie an order to its
+      // owner (by uid when signed in at checkout, or by email on the
+      // account page's own query). A vendor can read any order that
+      // includes at least one of their own items — resource.data.vendorIds
+      // is written at order-creation time from each line item's own
+      // vendorId (see checkout.js / admin-orders.js's manual order form),
+      // so this is full order visibility for every vendor on it, not just
+      // their own slice — they just can't edit anything but their own
+      // tracking (see the update rule below).
+      allow read: if isPlatformStaff() ||
+        (isSignedIn() &&
+         (resource.data.customerId == request.auth.uid ||
+          resource.data.customerEmail == request.auth.token.email)) ||
+        (isVendor() && resource.data.vendorIds is list && adminDoc().vendorId in resource.data.vendorIds);
+
+      allow create: if
+        request.resource.data.status == 'pending' &&
+        request.resource.data.paymentStatus == 'unpaid' &&
+        !('platformRevenue' in request.resource.data) &&
+        !('vendorPayouts'   in request.resource.data) &&
+        !('payoutStatus'    in request.resource.data) &&
+        !('createdBy'       in request.resource.data);
+
+      allow create: if isSuperAdmin();
+
+      allow update: if isAdmin() && noRestrictedFieldsChanged();
+
+      allow update: if isSuperAdmin();
+
+      // A vendor adding/editing tracking for their own items — see
+      // vendorTrackingOwnEntryOnly() above for exactly what this allows.
+      allow update: if vendorTrackingOwnEntryOnly();
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // ORDER DRAFTS
+    // =========================================================
+
+    match /order_drafts/{draftId} {
+      allow read, write: if isPlatformStaff();
+    }
+
+    // =========================================================
+    // REVIEWS
+    // =========================================================
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+
+      // Requires the real shape addProductReview() actually writes, a
+      // 1–5 numeric rating, and sane length caps — not unrestricted
+      // public writes.
+      allow create: if
+        request.resource.data.keys().hasOnly(['productId', 'rating', 'text', 'name', 'country', 'createdAt']) &&
+        request.resource.data.productId is string && request.resource.data.productId.size() > 0 &&
+        request.resource.data.rating is number &&
+        request.resource.data.rating >= 1 && request.resource.data.rating <= 5 &&
+        request.resource.data.text is string && request.resource.data.text.size() <= 2000 &&
+        request.resource.data.name is string && request.resource.data.name.size() <= 100;
+
+      allow update: if isSuperAdmin() || isAdmin() ||
+        (isVendor() &&
+         resource.data.vendorId == adminDoc().vendorId &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vendorReply', 'vendorRepliedAt']));
+
+      allow delete: if isSuperAdmin() || isAdmin();
+    }
+
+    // =========================================================
+    // NEWSLETTER
+    // =========================================================
+
+    match /newsletter/{docId} {
+      // Read/update are staff-only; create stays public (signup has to
+      // work for anonymous visitors) but is restricted to the exact
+      // fields your two signup flows (firebase.js and the coming-soon
+      // page) actually write.
+      allow read, update: if isPlatformStaff();
+      allow create: if
+        request.resource.data.keys().hasOnly(['email', 'subscribedAt', 'source', 'userAgent', 'referrer']) &&
+        request.resource.data.email is string && request.resource.data.email.size() > 0;
+      allow delete: if isPlatformStaff();
+    }
+
+    // =========================================================
+    // CUSTOMERS
+    // =========================================================
+
+    match /customers/{userId} {
+      allow create: if isSignedIn();
+
+      allow read, update: if isPlatformStaff() ||
+        (isSignedIn() && request.auth.uid == userId);
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // ADMINS
+    // =========================================================
+
+    match /admins/{adminId} {
+      // Super Admin: full read. Each user can read their own doc (needed for role loading).
+      allow read: if isSuperAdmin() ||
+                     (isSignedIn() && request.auth.uid == adminId);
+
+      // Only Super Admin can create admin records (including vendor accounts)
+      allow create: if isSuperAdmin();
+
+      // Super Admin: full update. Users can update their own non-role fields only.
+      allow update: if isSuperAdmin() ||
+        (isSignedIn() && request.auth.uid == adminId &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['lastLogin', 'updatedAt']));
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // VENDOR SALES
+    // =========================================================
+
+    match /vendor_sales/{vendorId} {
+      allow read: if isSuperAdmin() || isOwnVendor(vendorId);
+      allow write: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // SETTINGS
+    // =========================================================
+
+    // onlineStoreSecrets (the visitor password) gets its own rule, Super
+    // Admin only — nothing else needs to see it, since the public-facing
+    // password check already goes through the server, not this rule.
+    match /settings/onlineStoreSecrets {
+      allow read, write: if isSuperAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if isPlatformStaff() || isVendor();
+      allow write: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // PAGES
+    // =========================================================
+
+    match /pages/{pageId} {
+      // Public can read published pages (storefront)
+      allow read: if true;
+
+      // Only Super Admin can create / edit / delete pages
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // SITE CONTENT (homepage hero/sections + collection page titles)
+    // =========================================================
+
+    match /siteContent/{docId} {
+      // Public can read (storefront renders the homepage/collection
+      // pages from this — see site-content.js)
+      allow read: if true;
+
+      // Only Super Admin can create / edit / delete — same access level
+      // as Pages above (admin-homepage.js's "Homepage" tab is gated the
+      // same way).
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // DISCOUNTS
+    // =========================================================
+
+    match /discounts/{discountId} {
+      // Anyone can read discounts (customers need this to validate codes at checkout)
+      allow read: if true;
+
+      // Platform staff can create discounts
+      allow create: if isPlatformStaff();
+
+      // Platform staff can update discounts
+      allow update: if isPlatformStaff();
+
+      // Only Super Admin can delete discounts
+      allow delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // DISCOUNT CODES
+    // =========================================================
+
+    match /discountCodes/{codeId} {
+      // Anyone can read discount codes (customers need this to validate codes)
+      allow read: if true;
+
+      // Platform staff can create discount codes
+      allow create: if isPlatformStaff();
+
+      // Platform staff can update discount codes
+      allow update: if isPlatformStaff();
+
+      // Only Super Admin can delete discount codes
+      allow delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // MISSION CONTROL COLLECTIONS
+    // =========================================================
+
+    match /brands/{docId}         { allow read: if true; allow write: if isPlatformStaff(); }
+    match /suppliers/{docId}      { allow read, write: if isPlatformStaff(); }
+    match /samples/{docId}        { allow read, write: if isPlatformStaff(); }
+    match /campaigns/{docId}      { allow read, write: if isPlatformStaff(); }
+    match /admin_launch/{docId}   { allow read, write: if isPlatformStaff(); }
+    match /launch_projects/{docId}{ allow read, write: if isPlatformStaff(); }
+    match /milestones/{docId}     { allow read, write: if isPlatformStaff(); }
+    match /recent_wins/{docId}    { allow read, write: if isPlatformStaff(); }
+    match /waiting_on/{docId}     { allow read, write: if isPlatformStaff(); }
+
+    match /founder_notes/{docId}  { allow read, write: if isSuperAdmin(); }
+
+    // =========================================================
+    // CHAT FALLBACK (Firestore legacy — real chat is in RTDB)
+    // =========================================================
+
+    match /chats/{docId}    { allow create: if true; allow read, update, delete: if isPlatformStaff(); }
+    match /messages/{docId} { allow create: if true; allow read, update, delete: if isPlatformStaff(); }
+
+    // =========================================================
+    // HEALTH CHECK
+    // =========================================================
+
+    match /_health_check/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // =========================================================
+    // DEFAULT DENY
+    // =========================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

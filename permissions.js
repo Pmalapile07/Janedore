@@ -35,7 +35,12 @@
 
     VENDOR: {
       dashboard:  ['read'],
-      orders:     ['read_own'],
+      // update_own_tracking: a vendor may add/edit tracking only on the
+      // line items in an order that are theirs (checked with context
+      // {vendorId: item.vendorId} at the call site) — not the order's
+      // status, payment, other vendors' items, or anything else. This
+      // is deliberately narrower than 'update', which VENDOR never gets.
+      orders:     ['read_own', 'update_own_tracking'],
       products:   ['read_own', 'create', 'update_own', 'delete_own'],
       inbox:      ['read_own', 'reply_own'],
       reviews:    ['read_own', 'reply_own'],

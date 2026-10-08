@@ -715,6 +715,140 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 });
 
+// ==================== SHIPPING NOTIFICATION ====================
+// Fired from the admin order-detail page the moment a vendor (or staff)
+// successfully saves tracking for their own line items on an order.
+// This is a genuinely new email — until now the only order email was
+// the payment confirmation. Each brand on a multi-vendor order ships
+// separately, so this fires every time any one of them adds tracking,
+// and says "partially shipped" unless that save was the LAST vendor on
+// the order still missing tracking — same fulfilled/partial logic the
+// admin UI itself uses (computeFulfillmentStatus in admin-orders.js),
+// just re-derived here from the order doc read fresh via firebase-admin
+// so it can't be spoofed by whatever a client happens to send.
+
+function computeOrderFulfillment(order) {
+  const vendorIds = Array.isArray(order.vendorIds) ? order.vendorIds : [];
+  if (!vendorIds.length) {
+    return (order.trackingNumber ? 'fulfilled' : 'unfulfilled');
+  }
+  const tracking = order.vendorTracking || {};
+  const shipped = vendorIds.filter((vid) => tracking[vid] && tracking[vid].trackingNumber);
+  if (shipped.length === 0) return 'unfulfilled';
+  if (shipped.length === vendorIds.length) return 'fulfilled';
+  return 'partial';
+}
+
+// Verifies the request actually came from an admin/vendor account with
+// the right to ship for this vendorId — the same authorization the
+// Firestore security rules already enforce on the tracking write itself,
+// re-checked here since this endpoint also sends an email containing
+// the customer's name, address and order contents.
+async function authorizeShipmentRequest(req, vendorId) {
+  const authHeader = req.headers.authorization || '';
+  const match = authHeader.match(/^Bearer (.+)$/);
+  if (!match) return { ok: false, reason: 'No auth token' };
+
+  let decoded;
+  try {
+    decoded = await admin.auth().verifyIdToken(match[1]);
+  } catch (e) {
+    return { ok: false, reason: 'Invalid auth token' };
+  }
+
+  const adminDoc = await adminDb.collection('admins').doc(decoded.uid).get();
+  if (!adminDoc.exists) return { ok: false, reason: 'Not a staff/vendor account' };
+  const role = adminDoc.data().role;
+
+  if (role === 'SUPER_ADMIN' || role === 'ADMIN') return { ok: true };
+  if (role === 'VENDOR' && adminDoc.data().vendorId === vendorId) return { ok: true };
+  return { ok: false, reason: 'Not authorized for this vendor' };
+}
+
+function buildShipmentEmail(order, vendorId, status) {
+  const symbol = (!order.currency || order.currency === 'ZAR') ? 'R' : (order.currency + ' ');
+  const fmt = (n) => symbol + Number(n || 0).toFixed(2);
+  const allItems = order.items || [];
+  const shippedItems = vendorId ? allItems.filter((i) => i.vendorId === vendorId) : allItems;
+  const tracking = vendorId ? (order.vendorTracking || {})[vendorId] : { trackingNumber: order.trackingNumber, courier: order.courier };
+
+  const heading = status === 'fulfilled' ? 'Your order has shipped.' : 'Part of your order has shipped.';
+  const intro = status === 'fulfilled'
+    ? 'Good news — everything in your order is now on its way.'
+    : 'Good news — part of your order is now on its way. The rest will follow in a separate shipment as each brand ships from its own warehouse.';
+
+  const itemsRowsHtml = shippedItems.map((item) => {
+    const details = [item.color, item.size].filter(Boolean).join(' / ');
+    return '<tr>' +
+      '<td>' + escapeHtml(item.name || 'Item') +
+        (item.brand ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(item.brand) + '</span>' : '') +
+        (details ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(details) + '</span>' : '') +
+      '</td>' +
+      '<td class="qty">x' + (item.qty || 1) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  const trackingHtml = tracking && tracking.trackingNumber
+    ? '<p class="body-text">' +
+        (tracking.courier ? escapeHtml(tracking.courier) + ' — ' : '') +
+        escapeHtml(tracking.trackingNumber) +
+      '</p>'
+    : '';
+
+  const bodyHtml =
+    '<p class="body-text">Hi ' + escapeHtml(order.customerName || 'there') + ', ' + intro + '</p>' +
+    '<table class="items">' + itemsRowsHtml + '</table>' +
+    trackingHtml +
+    '<p class="body-text" style="margin-top:32px;">Order #' + escapeHtml(order.orderNumber || '') + '</p>';
+
+  const html = emailLayout({ heading, bodyHtml, footerHtml: 'Questions about your order? <a href="mailto:support@janedore.co.za">support@janedore.co.za</a>' });
+
+  const text = heading + '\n\nHi ' + (order.customerName || 'there') + ', ' + intro + '\n\n' +
+    shippedItems.map((i) => (i.name || 'Item') + ' x' + (i.qty || 1)).join('\n') +
+    (tracking && tracking.trackingNumber ? '\n\n' + (tracking.courier || '') + ' — ' + tracking.trackingNumber : '') +
+    '\n\nOrder #' + (order.orderNumber || '') + '\n\n— Janedore\nsupport@janedore.co.za';
+
+  return { html, text, subject: heading + ' — Order #' + (order.orderNumber || '') };
+}
+
+app.post('/api/orders/:id/notify-shipped', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const vendorId = req.body && req.body.vendorId ? String(req.body.vendorId) : '';
+
+    const auth = await authorizeShipmentRequest(req, vendorId);
+    if (!auth.ok) return res.status(403).json({ error: auth.reason || 'Not authorized' });
+
+    const orderRef = adminDb.collection('orders').doc(req.params.id);
+    const orderDoc = await orderRef.get();
+    if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
+    const order = orderDoc.data();
+
+    if (vendorId && (!Array.isArray(order.vendorIds) || order.vendorIds.indexOf(vendorId) === -1)) {
+      return res.status(400).json({ error: 'That vendor is not part of this order' });
+    }
+    if (!order.customerEmail) return res.json({ ok: true, skipped: 'No customer email on file' });
+
+    const status = computeOrderFulfillment(order);
+    if (status === 'unfulfilled') return res.json({ ok: true, skipped: 'Nothing shipped yet' });
+
+    const email = buildShipmentEmail(order, vendorId || null, status);
+    await sendResendEmail({
+      from: 'Janedore <noreply@janedore.co.za>',
+      replyTo: 'support@janedore.co.za',
+      to: order.customerEmail,
+      subject: email.subject,
+      html: email.html,
+      text: email.text
+    });
+
+    res.json({ ok: true, status });
+  } catch (e) {
+    console.error('[NOTIFY_SHIPPED] Error:', e.message);
+    res.status(500).json({ error: 'Could not send shipping notification' });
+  }
+});
+
 // ==================== CHAT AI REPLY ====================
 // Called by chat.js (customer-facing widget) whenever a customer sends
 // a message and hasn't explicitly asked for a human. Uses the official
