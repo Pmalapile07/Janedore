@@ -300,39 +300,90 @@
       .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
   };
 
+  // Create-product + the "⋯" actions menu render in the dark top bar
+  // itself, next to "Products", same as Orders — not as a second row
+  // inside the white content area below.
+  var PRODUCT_TAB_LABELS = { all: 'All', active: 'Active', draft: 'Draft', archived: 'Archived' };
+
   window._renderProductsTab = function() {
     var mc = safeEl('main-content');
     if (!mc) return;
     _backfillVendorIds();
-    var allProducts = window._allProducts || [];
-    var hasAny = allProducts.length > 0;
     var canAdd = isSuperAdmin() || window._currentUserRole === 'VENDOR';
+
+    var topActionsEl = safeEl('top-nav-actions');
+    if (topActionsEl) {
+      topActionsEl.innerHTML =
+        (canAdd
+          ? '<button class="orders-create-btn" onclick="window._openProductForm(null)" aria-label="Add product" title="Add product">' +
+              '<i class="ph ph-plus-circle"></i>' +
+            '</button>'
+          : '') +
+        '<div class="orders-actions-menu-wrap">' +
+          '<button class="orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Product actions">' +
+            '<i class="ph ph-dots-three"></i>' +
+          '</button>' +
+          '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
+            '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshProducts()">' +
+              '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+    }
 
     mc.innerHTML =
       (window._currentUserRole === 'VENDOR' ? '<div class="vendor-scope-bar">Showing your brand products only</div>' : '') +
-      '<div class="section-header" style="margin-bottom:10px;">' +
-        '<div class="section-title">Products</div>' +
-        '<div class="section-actions">' +
-          '<button class="btn btn-sm btn-ghost" onclick="window._refreshProducts()" title="Refresh"><i class="ph-light ph-arrows-clockwise"></i> Refresh</button>' +
-          (hasAny && canAdd ? '<button class="btn btn-sm btn-primary" onclick="window._openProductForm(null)">Add product</button>' : '') +
+      '<div id="products-toolbar-wrap"></div>' +
+      '<div id="products-list-wrap"></div>';
+
+    renderProductsToolbar();
+    window._filterProducts();
+  };
+
+  function renderProductsToolbar() {
+    var toolbarWrap = safeEl('products-toolbar-wrap');
+    if (!toolbarWrap) return;
+    toolbarWrap.innerHTML =
+      '<div class="orders-search-row">' +
+        '<div class="orders-search-wrap">' +
+          '<i class="ph ph-magnifying-glass"></i>' +
+          '<input class="orders-search-input" id="product-search" placeholder="Search products" oninput="window._filterProducts()">' +
+        '</div>' +
+        '<button class="orders-sort-btn" aria-label="Sort" title="Sort">' +
+          '<i class="ph ph-arrows-down-up"></i>' +
+        '</button>' +
+        '<div class="orders-filter-menu-wrap">' +
+          '<button class="orders-filter-btn" id="orders-filter-btn" onclick="window._toggleOrdersFilterPopover(event)" aria-label="Filter">' +
+            '<i class="ph ph-funnel-simple"></i>' +
+          '</button>' +
+          '<div class="orders-filter-popover" id="orders-filter-popover" onclick="event.stopPropagation()">' +
+            '<label class="orders-filter-popover-label">Category</label>' +
+            '<select class="filter-select" id="product-cat-filter" onchange="window._filterProducts()">' +
+              '<option value="">All Categories</option>' +
+              ALL_CATEGORY_ITEMS.map(function(c){ return '<option value="'+c+'">'+c.replace(/-/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})+'</option>'; }).join('') +
+            '</select>' +
+          '</div>' +
         '</div>' +
       '</div>' +
-      (hasAny ? (
-        '<div class="toolbar" style="margin-bottom:12px;">' +
-          '<input class="search-input" id="product-search" placeholder="Search products..." oninput="window._filterProducts()">' +
-          '<select class="filter-select" id="product-cat-filter" onchange="window._filterProducts()">' +
-            '<option value="">All Categories</option>' +
-            ALL_CATEGORY_ITEMS.map(function(c){ return '<option value="'+c+'">'+c.replace(/-/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})+'</option>'; }).join('') +
-          '</select>' +
-          '<select class="filter-select" id="product-status-filter" onchange="window._filterProducts()">' +
-            '<option value="">All Statuses</option>' +
-            STATUSES.map(function(s){ return '<option value="'+s+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') +
-          '</select>' +
-          '<div class="toolbar-spacer"></div>' +
-          '<span id="products-filtered-count" class="ui-label"></span>' +
-        '</div>' +
-        '<div class="product-list" id="products-list">' + allProducts.map(renderProductRow).join('') + '</div>'
-      ) : renderEmptyState());
+      '<div class="orders-tabs" id="products-tabs"></div>';
+    renderProductTabs();
+  }
+
+  function renderProductTabs() {
+    var tabsEl = safeEl('products-tabs');
+    if (!tabsEl) return;
+    var active = window._productTab || 'all';
+    tabsEl.innerHTML = Object.keys(PRODUCT_TAB_LABELS).map(function (t) {
+      return '<button class="orders-tab' + (active === t ? ' active' : '') + '" onclick="window._setProductTab(\'' + t + '\')">' +
+        PRODUCT_TAB_LABELS[t] +
+      '</button>';
+    }).join('');
+  }
+
+  window._setProductTab = function (tab) {
+    window._productTab = tab;
+    renderProductTabs();
+    window._filterProducts();
   };
 
   window._refreshProducts = function() { showToast('Refreshing...'); window._loadProducts(); };
@@ -342,6 +393,18 @@
       return '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-package"></i></div><div class="orders-empty-title">No products yet</div><div class="orders-empty-sub">Products from all brands will appear here once added.</div></div>';
     }
     return '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-package"></i></div><div class="orders-empty-title">Add your first product</div><div class="orders-empty-sub">Your products will appear here.</div><button class="orders-empty-btn" onclick="window._openProductForm(null)"><i class="ph-light ph-plus" style="font-size:15px;"></i> Add product</button></div>';
+  }
+
+  function renderFilteredProducts(filtered) {
+    var listWrap = safeEl('products-list-wrap');
+    if (!listWrap) return;
+    if (filtered.length === 0) {
+      listWrap.innerHTML = (window._allProducts || []).length === 0
+        ? renderEmptyState()
+        : '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No products found</div></div>';
+      return;
+    }
+    listWrap.innerHTML = '<div class="product-list" id="products-list">' + filtered.map(renderProductRow).join('') + '</div>';
   }
 
   function renderProductRow(p) {
@@ -371,20 +434,17 @@
 
   window._filterProducts = function() {
     var allProducts = window._allProducts || [];
-    var search  = (safeEl('product-search')        || {}).value  || '';
-    var cat     = (safeEl('product-cat-filter')    || {}).value  || '';
-    var status  = (safeEl('product-status-filter') || {}).value  || '';
+    var search  = (safeEl('product-search')     || {}).value || '';
+    var cat     = (safeEl('product-cat-filter') || {}).value || '';
+    var tab     = window._productTab || 'all';
     search = search.toLowerCase();
     var filtered = allProducts.filter(function(p) {
-      if (cat    && p.category !== cat)    return false;
-      if (status && p.status   !== status) return false;
+      if (cat && p.category !== cat) return false;
+      if (tab !== 'all' && (p.status || 'draft') !== tab) return false;
       if (search && (p.name+p.brand+(p.sku||'')).toLowerCase().indexOf(search) === -1) return false;
       return true;
     });
-    var countEl = safeEl('products-filtered-count');
-    if (countEl) countEl.textContent = filtered.length + ' product' + (filtered.length !== 1 ? 's' : '');
-    var listEl = safeEl('products-list');
-    if (listEl) listEl.innerHTML = filtered.map(renderProductRow).join('');
+    renderFilteredProducts(filtered);
   };
 
   // ── MEDIA POOL ───────────────────────────────────────────────
