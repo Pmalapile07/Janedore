@@ -27,11 +27,11 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
   color: #777; max-width: 480px; margin: 40px auto; text-align: center; padding: 0 12px;
 }
 @media (min-width: 768px) { .brand-quote { padding: 0 16px; } }
-/* Same dark theme as footer (background: #111, white headings, #888
-   gray body text) — the newsletter section sits directly above the
-   footer, so it reads as one continuous block with it. */
-#homepage-newsletter-section { background: #111; }
-.newsletter-section { padding: 24px 18px 40px 18px; max-width: 500px; margin: 0 auto; }
+/* Same dark theme as the footer (background: #111, white headings,
+   #888 gray body text) — these classes used to style a static section
+   that sat directly above the footer; now reused inside the
+   newsletter popup modal instead (see modals.css for the modal shell
+   itself and newsletter-popup.js for when it shows). */
 /* Font-size matches .hero-heading exactly, at every breakpoint. Its
    base size lives in hero.css (11px), but index.html's own inline
    <style> block bumps it to 22px !important under 768px — easy to
