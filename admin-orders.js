@@ -74,32 +74,38 @@
       '<div class="section-header" style="margin-bottom:10px;">' +
         '<div class="section-title">Orders</div>' +
         '<div class="section-actions">' +
-          '<button class="btn btn-sm btn-ghost" onclick="window._refreshOrders()" title="Refresh">' +
-            '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
-          '</button>' +
-          (canUpdate
-            ? '<button class="btn btn-sm btn-ghost" id="bulk-toggle-btn" onclick="window._toggleBulkMode()" style="display:none;">' +
-                '<i class="ph-light ph-check-square"></i> Select</button>' +
-              '<div id="bulk-actions" style="display:none;gap:6px;">' +
-                '<select class="filter-select" id="bulk-status-select" style="padding:6px 24px 6px 9px;font-size:11px;">' +
-                  '<option value="">Bulk status...</option>' +
-                  ORDER_STATUSES.map(function (s) {
-                    return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
-                  }).join('') +
-                '</select>' +
-                '<button class="btn btn-xs btn-primary" onclick="window._applyBulkStatus()">Apply</button>' +
-                (canDelete
-                  ? '<button class="btn btn-xs btn-danger" onclick="window._applyBulkDelete()">Delete Selected</button>'
-                  : '') +
-                '<button class="btn btn-xs btn-ghost" onclick="window._toggleBulkMode()">Cancel</button>' +
-              '</div>'
-            : '') +
           (window._can('orders', 'create')
-            ? '<button class="btn btn-sm btn-primary" onclick="window._openNewOrderForm()">' +
-                '<i class="ph-light ph-plus"></i> New Order' +
-              '</button>'
+            ? '<button class="btn btn-sm btn-primary" onclick="window._openNewOrderForm()">Create Order</button>'
             : '') +
+          '<div class="orders-actions-menu-wrap">' +
+            '<button class="btn btn-sm btn-ghost orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Actions">' +
+              '<i class="ph-light ph-dots-three-vertical"></i>' +
+            '</button>' +
+            '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
+              '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshOrders()">' +
+                '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
+              '</button>' +
+              (canUpdate
+                ? '<button class="orders-actions-item" id="bulk-toggle-btn" onclick="window._toggleOrdersActionsMenu();window._toggleBulkMode()">' +
+                    '<i class="ph-light ph-check-square"></i> Select Orders' +
+                  '</button>'
+                : '') +
+            '</div>' +
+          '</div>' +
         '</div>' +
+      '</div>' +
+      '<div id="bulk-actions" class="orders-bulk-bar" style="display:none;">' +
+        '<select class="filter-select" id="bulk-status-select" style="padding:6px 24px 6px 9px;font-size:11px;">' +
+          '<option value="">Bulk status...</option>' +
+          ORDER_STATUSES.map(function (s) {
+            return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+          }).join('') +
+        '</select>' +
+        '<button class="btn btn-xs btn-primary" onclick="window._applyBulkStatus()">Apply</button>' +
+        (canDelete
+          ? '<button class="btn btn-xs btn-danger" onclick="window._applyBulkDelete()">Delete Selected</button>'
+          : '') +
+        '<button class="btn btn-xs btn-ghost" onclick="window._toggleBulkMode()">Cancel</button>' +
       '</div>' +
       '<div id="orders-toolbar-wrap"></div>' +
       '<div id="orders-table-wrap"></div>';
@@ -264,32 +270,88 @@
     }
 
     toolbarWrap.innerHTML =
-      '<div class="toolbar" style="margin-bottom:12px;">' +
-        '<input class="search-input" id="order-search"' +
-          ' placeholder="Search by name, email, order ID..."' +
-          ' oninput="window._filterOrders()"' +
-          ' style="min-width:180px;">' +
-        '<select class="filter-select" id="order-status-filter" onchange="window._filterOrders()">' +
-          '<option value="">All Orders</option>' +
-          '<option value="abandoned">Abandoned</option>' +
-          ORDER_STATUSES.map(function (s) {
-            return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
-          }).join('') +
-        '</select>' +
-        '<select class="filter-select" id="order-payment-filter" onchange="window._filterOrders()">' +
-          '<option value="">All Payments</option>' +
-          '<option value="paid">Paid</option>' +
-          '<option value="unpaid">Unpaid</option>' +
-          '<option value="cancelled">Cancelled</option>' +
-          '<option value="failed">Failed</option>' +
-          '<option value="refunded">Refunded</option>' +
-        '</select>' +
-        '<div class="toolbar-spacer"></div>' +
-        '<span id="orders-count" class="ui-label"></span>' +
-      '</div>';
+      '<div class="orders-search-row">' +
+        '<div class="orders-search-wrap">' +
+          '<i class="ph-light ph-magnifying-glass"></i>' +
+          '<input class="orders-search-input" id="order-search"' +
+            ' placeholder="Search orders"' +
+            ' oninput="window._filterOrders()">' +
+        '</div>' +
+        '<div class="orders-filter-menu-wrap">' +
+          '<button class="orders-filter-btn" id="orders-filter-btn" onclick="window._toggleOrdersFilterPopover(event)" aria-label="Filter">' +
+            '<i class="ph-light ph-funnel"></i>' +
+          '</button>' +
+          '<div class="orders-filter-popover" id="orders-filter-popover" onclick="event.stopPropagation()">' +
+            '<label class="orders-filter-popover-label">Status</label>' +
+            '<select class="filter-select" id="order-status-filter" onchange="window._filterOrders()">' +
+              '<option value="">Any status</option>' +
+              '<option value="abandoned">Abandoned</option>' +
+              ORDER_STATUSES.map(function (s) {
+                return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+              }).join('') +
+            '</select>' +
+            '<label class="orders-filter-popover-label">Payment</label>' +
+            '<select class="filter-select" id="order-payment-filter" onchange="window._filterOrders()">' +
+              '<option value="">Any payment</option>' +
+              '<option value="paid">Paid</option>' +
+              '<option value="unpaid">Unpaid</option>' +
+              '<option value="cancelled">Cancelled</option>' +
+              '<option value="failed">Failed</option>' +
+              '<option value="refunded">Refunded</option>' +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="orders-tabs" id="orders-tabs"></div>' +
+      '<div class="orders-count-row"><span id="orders-count" class="ui-label"></span></div>';
 
+    renderOrderTabs();
     renderOrdersTable(orders);
   }
+
+  var ORDER_TAB_LABELS = { all: 'All', unfulfilled: 'Unfulfilled', unpaid: 'Unpaid', open: 'Open' };
+
+  function renderOrderTabs() {
+    var tabsEl = safeEl('orders-tabs');
+    if (!tabsEl) return;
+    var active = window._orderTab || 'all';
+    tabsEl.innerHTML = Object.keys(ORDER_TAB_LABELS).map(function (t) {
+      return '<button class="orders-tab' + (active === t ? ' active' : '') + '" onclick="window._setOrderTab(\'' + t + '\')">' +
+        ORDER_TAB_LABELS[t] +
+      '</button>';
+    }).join('');
+  }
+
+  window._setOrderTab = function (tab) {
+    window._orderTab = tab;
+    renderOrderTabs();
+    if (window._ordersData) renderOrdersTable(window._ordersData);
+  };
+
+  window._toggleOrdersActionsMenu = function (e) {
+    if (e) e.stopPropagation();
+    var pop = safeEl('orders-actions-popover');
+    if (!pop) return;
+    var isOpen = pop.classList.contains('open');
+    closeAllOrderPopovers();
+    if (!isOpen) pop.classList.add('open');
+  };
+
+  window._toggleOrdersFilterPopover = function (e) {
+    if (e) e.stopPropagation();
+    var pop = safeEl('orders-filter-popover');
+    if (!pop) return;
+    var isOpen = pop.classList.contains('open');
+    closeAllOrderPopovers();
+    if (!isOpen) pop.classList.add('open');
+  };
+
+  function closeAllOrderPopovers() {
+    document.querySelectorAll('.orders-actions-popover.open, .orders-filter-popover.open').forEach(function (p) {
+      p.classList.remove('open');
+    });
+  }
+  document.addEventListener('click', closeAllOrderPopovers);
 
   // ─── RENDER TABLE ────────────────────────────────────────────
 
@@ -303,6 +365,8 @@
     var paymentFilter = paymentFilterEl ? paymentFilterEl.value : '';
     var search        = searchEl ? (searchEl.value || '').toLowerCase().replace(/^#/, '') : '';
 
+    var tab = window._orderTab || 'all';
+
     var filtered = orders.filter(function (o) {
       if (statusFilter === 'abandoned') {
         if (!isAbandoned(o)) return false;
@@ -310,6 +374,11 @@
         if ((o.status || 'pending') !== statusFilter) return false;
       }
       if (paymentFilter && (o.paymentStatus || 'unpaid') !== paymentFilter) return false;
+      // Tabs are a second, independent filter dimension on top of the
+      // status/payment dropdowns above — both apply together.
+      if (tab === 'unfulfilled' && (o.fulfillmentStatus || 'unfulfilled') === 'fulfilled') return false;
+      if (tab === 'unpaid' && (o.paymentStatus || 'unpaid') !== 'unpaid') return false;
+      if (tab === 'open' && (o.status === 'cancelled' || o.status === 'delivered')) return false;
       if (search) {
         var hay = (
           o.id +
@@ -349,58 +418,44 @@
 
     wrap.innerHTML =
       bannerHTML +
-      '<div class="table-wrap">' +
-        '<table class="data-table">' +
-          '<thead><tr>' +
-            (window._bulkMode ? '<th style="width:34px;"><input type="checkbox" onchange="window._toggleAllOrders(this.checked)"' + (allSelected ? ' checked' : '') + ' style="cursor:pointer;"></th>' : '') +
-            '<th>Order</th>' +
-            '<th>Customer</th>' +
-            '<th>Items</th>' +
-            '<th>Total</th>' +
-            '<th>Payment</th>' +
-            '<th>Status</th>' +
-            '<th>Date</th>' +
-            '<th></th>' +
-          '</tr></thead>' +
-          '<tbody>' +
-          filtered.map(function (o) {
-            var abandoned = isAbandoned(o);
-            var isSelected = !!window._selectedOrders[o.id];
-            return '<tr onclick="' + (window._bulkMode ? 'window._toggleOrderSelection(\'' + esc(o.id) + '\',' + !isSelected + ');event.stopPropagation();' : 'window._openOrderDetail(\'' + esc(o.id) + '\')') + '"' +
-              (abandoned && !window._bulkMode ? ' class="order-row-abandoned"' : '') +
-              (isSelected ? ' style="background:var(--accent-soft);"' : '') + '>' +
-              (window._bulkMode
-                ? '<td onclick="event.stopPropagation();"><input type="checkbox"' + (isSelected ? ' checked' : '') + ' onchange="window._toggleOrderSelection(\'' + esc(o.id) + '\',this.checked)" style="cursor:pointer;"></td>'
-                : '') +
-              '<td>' +
-                '<span style="font-size:11.5px;font-weight:500;">' +
-                  '#' + esc(o.orderNumber || o.id) +
-                '</span>' +
-                (abandoned && !window._bulkMode
-                  ? '<div><span class="badge badge-warning" style="font-size:9px;padding:2px 6px;">Abandoned</span></div>'
-                  : '') +
-              '</td>' +
-              '<td>' +
-                '<div style="font-weight:400;">' + esc(o.customerName  || 'Guest') + '</div>' +
-                '<div class="cell-muted">'        + esc(o.customerEmail || '')      + '</div>' +
-              '</td>' +
-              '<td class="cell-muted">' + esc(String(o.itemCount || 0)) + '</td>' +
-              '<td style="font-weight:400;">' + fmt(o.total || o.subtotal || 0) + '</td>' +
-              '<td>' + statusBadge(o.paymentStatus || 'unpaid') + '</td>' +
-              '<td>' + statusBadge(o.status        || 'pending') + '</td>' +
-              '<td class="cell-muted">' + fmtDate(o.createdAt) + '</td>' +
-              '<td onclick="event.stopPropagation()">' +
-                '<button class="btn btn-xs btn-ghost"' +
-                  ' onclick="window._openOrderDetail(\'' + esc(o.id) + '\')">View</button>' +
-                (canDelete
-                  ? ' <button class="btn btn-xs btn-danger"' +
-                    ' onclick="window._deleteOrder(\'' + esc(o.id) + '\')">Delete</button>'
-                  : '') +
-              '</td>' +
-            '</tr>';
-          }).join('') +
-          '</tbody>' +
-        '</table>' +
+      (window._bulkMode
+        ? '<label class="orders-select-all"><input type="checkbox" onchange="window._toggleAllOrders(this.checked)"' + (allSelected ? ' checked' : '') + '> Select all</label>'
+        : '') +
+      '<div class="orders-list">' +
+        filtered.map(function (o) {
+          var abandoned = isAbandoned(o);
+          var isSelected = !!window._selectedOrders[o.id];
+          var rowClick = window._bulkMode
+            ? 'window._toggleOrderSelection(\'' + esc(o.id) + '\',' + !isSelected + ')'
+            : 'window._openOrderDetail(\'' + esc(o.id) + '\')';
+          return '<div class="order-row' + (isSelected ? ' selected' : '') + '" onclick="' + rowClick + '">' +
+            (window._bulkMode
+              ? '<input type="checkbox" class="order-row-checkbox" onclick="event.stopPropagation()"' + (isSelected ? ' checked' : '') +
+                ' onchange="window._toggleOrderSelection(\'' + esc(o.id) + '\',this.checked)">'
+              : '') +
+            '<div class="order-row-main">' +
+              '<div class="order-row-top">' +
+                '<span class="order-row-number">#' + esc(o.orderNumber || o.id) + '</span>' +
+                '<span class="order-row-total">' + fmt(o.total || o.subtotal || 0) + '</span>' +
+              '</div>' +
+              '<div class="order-row-meta">' +
+                esc(o.customerName || 'Guest') + ' · ' +
+                esc(String(o.itemCount || 0)) + ' item' + (o.itemCount === 1 ? '' : 's') + ' · ' +
+                fmtTime(o.createdAt) +
+              '</div>' +
+              '<div class="order-row-badges">' +
+                (abandoned ? '<span class="badge badge-warning">Abandoned</span>' : '') +
+                statusBadge(o.fulfillmentStatus || 'unfulfilled') +
+                statusBadge(o.paymentStatus || 'unpaid') +
+              '</div>' +
+            '</div>' +
+            (canDelete && !window._bulkMode
+              ? '<button class="order-row-delete" onclick="event.stopPropagation();window._deleteOrder(\'' + esc(o.id) + '\')" aria-label="Delete order">' +
+                  '<i class="ph-light ph-trash"></i>' +
+                '</button>'
+              : '') +
+          '</div>';
+        }).join('') +
       '</div>';
   }
 
