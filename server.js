@@ -401,26 +401,35 @@ function payFastUrlEncode(str) {
 }
 
 // Mirrors PayFast's documented PHP reference implementation exactly:
-// concatenate non-blank fields in the order they're given — NOT
-// alphabetical; PayFast's docs explicitly warn not to confuse this
-// with a different, alphabetically-ordered API they also expose —
-// append the passphrase, MD5 the result. `data` must be a plain object
-// built with keys in the exact order PayFast's field list specifies;
-// JS preserves string-key insertion order, so this only works if the
+// concatenate fields in the order they're given — NOT alphabetical;
+// PayFast's docs explicitly warn not to confuse this with a
+// different, alphabetically-ordered API they also expose — append the
+// passphrase, MD5 the result. `data` must be a plain object built
+// with keys in the exact order PayFast's field list specifies; JS
+// preserves string-key insertion order, so this only works if the
 // caller constructed the object correctly to begin with.
-function buildPayFastParamString(data) {
+//
+// includeBlanks: initiate's own outgoing fields are never blank in
+// practice, so this stays false there (unchanged, already confirmed
+// correct — PayFast accepts and processes the resulting signature).
+// A real ITN signature mismatch traced to the raw POST body having
+// blank fields (item_description, custom_str1-5, custom_int1-5) that
+// this used to silently drop before hashing — PayFast's own ITN
+// signature includes them, so this is passed true there instead.
+function buildPayFastParamString(data, includeBlanks) {
   let pfOutput = '';
   for (const key of Object.keys(data)) {
     const val = data[key];
-    if (val !== '' && val !== undefined && val !== null) {
-      pfOutput += key + '=' + payFastUrlEncode(String(val).trim()) + '&';
+    const isBlank = (val === '' || val === undefined || val === null);
+    if (includeBlanks || !isBlank) {
+      pfOutput += key + '=' + payFastUrlEncode(String(isBlank ? '' : val).trim()) + '&';
     }
   }
   return pfOutput.slice(0, -1);
 }
 
-function generatePayFastSignature(data, passphrase) {
-  let getString = buildPayFastParamString(data);
+function generatePayFastSignature(data, passphrase, includeBlanks) {
+  let getString = buildPayFastParamString(data, includeBlanks);
   if (passphrase) {
     getString += '&passphrase=' + payFastUrlEncode(String(passphrase).trim());
   }
@@ -624,33 +633,39 @@ app.post('/api/payfast/notify', async (req, res) => {
     const dataForSignature = Object.assign({}, pfData);
     delete dataForSignature.signature;
 
-    // Check 1 — signature. Recomputed the same way as initiate, over
-    // every field PayFast actually posted back.
+    // Check 1 — signature. Recomputed over every field PayFast posted
+    // back, INCLUDING blank ones (item_description, custom_str1-5,
+    // custom_int1-5) — a real sandbox payment's raw POST body (logged
+    // below as rawPostBody) proved PayFast's own ITN signature counts
+    // those, even though initiate correctly omits blanks from its own
+    // outgoing signature. That mismatch (confirmed via two prior
+    // sandbox tests' debug output, not assumed) was why every payment
+    // was failing this check and never getting marked paid.
     //
-    // TEMPORARY — debug logging while tracking down a signature
-    // mismatch on ITN specifically (initiate's own signature is
-    // already confirmed correct, since PayFast accepts it and lets
-    // the payment go through). Logs the full raw ITN body (no secrets
-    // in it — the passphrase itself is still never logged) plus the
-    // param string and both signatures, so a mismatch is visible
-    // field-by-field instead of guessed at. Also exposed via the
-    // existing GET /api/payfast/debug route. Remove both this and
-    // that once ITN is confirmed matching on a real sandbox payment.
-    const itnParamString = buildPayFastParamString(dataForSignature);
-    const expectedSignature = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE);
-    const expectedSignatureNoPassphrase = generatePayFastSignature(dataForSignature, null);
+    // TEMPORARY — keeping the full comparison matrix (blanks
+    // included/stripped × with/without passphrase) logged and exposed
+    // via GET /api/payfast/debug until a real sandbox payment confirms
+    // `match: true` end to end. Remove once confirmed.
+    const itnParamStringBlanksIncluded = buildPayFastParamString(dataForSignature, true);
+    const itnParamStringBlanksStripped = buildPayFastParamString(dataForSignature, false);
+    const expectedSignature = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE, true);
+    const expectedSignatureBlanksStripped = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE, false);
+    const expectedSignatureNoPassphrase = generatePayFastSignature(dataForSignature, null, true);
     lastPayFastItnDebug = {
       at: new Date().toISOString(),
       orderId: pfData.m_payment_id || null,
       rawPostBody: req.rawBody || null,
       rawBody: dataForSignature,
-      paramString: itnParamString,
+      paramString: itnParamStringBlanksIncluded,
+      paramStringBlanksStripped: itnParamStringBlanksStripped,
       passphraseSet: !!PAYFAST_PASSPHRASE,
       passphraseLength: (PAYFAST_PASSPHRASE || '').length,
       expectedSignature,
+      expectedSignatureBlanksStripped,
       expectedSignatureNoPassphrase,
       receivedSignature,
       match: expectedSignature === receivedSignature,
+      matchBlanksStripped: expectedSignatureBlanksStripped === receivedSignature,
       matchNoPassphrase: expectedSignatureNoPassphrase === receivedSignature
     };
     console.log('[PAYFAST_ITN][DEBUG]', JSON.stringify(lastPayFastItnDebug));
