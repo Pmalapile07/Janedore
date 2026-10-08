@@ -559,7 +559,8 @@
 
   function renderEmptyState() {
     return '<div class="orders-empty-state">' +
-      '<div class="orders-empty-title">No orders found.</div>' +
+      '<i class="ph ph-magnifying-glass orders-empty-icon"></i>' +
+      '<div class="orders-empty-title">No orders found</div>' +
     '</div>';
   }
 
