@@ -138,7 +138,11 @@
 
   function fmtTime(ts) {
     if (!ts) return '';
-    var d = new Date(ts);
+    // Firestore Timestamp objects (createdAt etc.) need .toDate() first —
+    // handing one straight to `new Date(...)` doesn't parse it and
+    // silently produces "Invalid Date", same fix fmtDate()/fmtDateShort()
+    // above already have.
+    var d = ts.toDate ? ts.toDate() : new Date(ts);
     return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   }
   window._fmtTime = fmtTime;
