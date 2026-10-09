@@ -176,7 +176,10 @@
     <button class="more-menu-item" data-tab="newsletter" onclick="closeMoreMenu();switchTab('newsletter')"><div class="more-menu-icon"><i class="ph-bold ph-mailbox"></i></div><div style="flex:1"><div class="more-menu-item-label">Newsletter</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
 
     <div id="online-store-more-item" style="display:none;">
-      <button class="more-menu-item has-children" data-tab="onlineStore" onclick="toggleMoreAccordion('onlinestore', this)"><div class="more-menu-icon"><i class="ph-bold ph-browsers"></i></div><div style="flex:1"><div class="more-menu-item-label">Online Store</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+      <div class="more-menu-item has-children" data-tab="onlineStore">
+        <button class="more-menu-item-main" onclick="toggleMoreAccordion('onlinestore', this)"><div class="more-menu-icon"><i class="ph-bold ph-browsers"></i></div><div style="flex:1"><div class="more-menu-item-label">Online Store</div></div></button>
+        <button class="more-menu-arrow-btn" onclick="toggleMoreAccordion('onlinestore', this)" aria-label="Expand Online Store"><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+      </div>
       <div class="more-menu-sublist" id="more-sub-onlinestore">
         <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('homepage')">Theme</button>
         <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('pages')">Pages</button>
