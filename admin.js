@@ -844,7 +844,6 @@
   // ─── PUBLIC API ALIASES ──────────────────────────────────────
 
   window.loadProducts        = loadProducts;
-  window.seedDefaultData     = window._seedDefaultData;
   window.openNewProductModal = window._openNewProductModal;
   window.openProductModal    = window._openProductModal;
   window.filterProducts      = window._filterProducts;
