@@ -1065,7 +1065,7 @@
       html +=
         '<div style="margin-bottom:18px;">' +
           '<label class="card-title" style="display:block;margin-bottom:6px;">Update status</label>' +
-          '<select class="filter-select" style="width:100%;" onchange="window._updateOrderStatus(\'' + esc(orderId) + '\',this.value)">' +
+          '<select class="filter-select order-status-select" style="width:100%;" onchange="window._updateOrderStatus(\'' + esc(orderId) + '\',this.value)">' +
             ORDER_STATUSES.map(function (s) {
               return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
             }).join('') +
