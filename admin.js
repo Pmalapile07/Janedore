@@ -567,7 +567,7 @@
     // so only bail out here when both the query AND the scope are at
     // their defaults.
     if (!query && scope === 'all') {
-      ['all', 'orders', 'products', 'customers'].forEach(function(s) { setCount('search-count-' + s, 0); });
+      ['all', 'orders', 'products', 'draft', 'archived', 'customers'].forEach(function(s) { setCount('search-count-' + s, 0); });
       body.innerHTML = '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No recent searches</div></div>';
       return;
     }
