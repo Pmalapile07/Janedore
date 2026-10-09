@@ -126,23 +126,62 @@
   <div id="more-menu-overlay" onclick="closeMoreMenu()"></div>
   <div id="more-menu-panel">
     <button class="more-menu-item" data-tab="dashboard" onclick="closeMoreMenu();switchTab('dashboard')"><div class="more-menu-icon"><i class="ph-bold ph-house"></i></div><div style="flex:1"><div class="more-menu-item-label">Home</div></div></button>
-    <button class="more-menu-item" data-tab="orders" onclick="closeMoreMenu();switchTab('orders')"><div class="more-menu-icon"><i class="ph-bold ph-cardholder"></i></div><div style="flex:1"><div class="more-menu-item-label">Orders</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
-    <button class="more-menu-item" data-tab="products" onclick="closeMoreMenu();switchTab('products')"><div class="more-menu-icon"><i class="ph-bold ph-tag"></i></div><div style="flex:1"><div class="more-menu-item-label">Products</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
-    <button class="more-menu-item" data-tab="customers" onclick="closeMoreMenu();switchTab('customers')"><div class="more-menu-icon"><i class="ph-fill ph-user-list"></i></div><div style="flex:1"><div class="more-menu-item-label">Customers</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+
+    <button class="more-menu-item has-children" data-tab="orders" onclick="toggleMoreAccordion('orders', this)"><div class="more-menu-icon"><i class="ph-bold ph-cardholder"></i></div><div style="flex:1"><div class="more-menu-item-label">Orders</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-sublist" id="more-sub-orders">
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._orderTab='all';switchTab('orders')">All orders</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Draft orders isn\'t available yet')">Draft orders</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._orderTab='abandoned';switchTab('orders')">Abandoned checkouts</button>
+    </div>
+
+    <button class="more-menu-item has-children" data-tab="products" onclick="toggleMoreAccordion('products', this)"><div class="more-menu-icon"><i class="ph-bold ph-tag"></i></div><div style="flex:1"><div class="more-menu-item-label">Products</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-sublist" id="more-sub-products">
+      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('products')">All products</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Collections isn\'t available yet')">Collections</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Inventory isn\'t available yet')">Inventory</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Purchase orders isn\'t available yet')">Purchase orders</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Gift cards isn\'t available yet')">Gift cards</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('vendors')">Brands</button>
+    </div>
+
+    <button class="more-menu-item has-children" data-tab="customers" onclick="toggleMoreAccordion('customers', this)"><div class="more-menu-icon"><i class="ph-fill ph-user-list"></i></div><div style="flex:1"><div class="more-menu-item-label">Customers</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-sublist" id="more-sub-customers">
+      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('customers')">All customers</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Segments isn\'t available yet')">Segments</button>
+    </div>
+
     <button class="more-menu-item" data-tab="messages" onclick="closeMoreMenu();switchTab('messages')"><div class="more-menu-icon"><i class="ph-bold ph-chat"></i></div><div style="flex:1"><div class="more-menu-item-label">Inbox</div></div><span class="bnav-badge" id="more-msg-badge" style="position:static;border:none;margin-right:2px;"></span><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <button class="more-menu-item" data-tab="reviews" onclick="closeMoreMenu();switchTab('reviews')"><div class="more-menu-icon"><i class="ph-bold ph-star"></i></div><div style="flex:1"><div class="more-menu-item-label">Reviews</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <div class="more-divider"></div>
-    <button class="more-menu-item" data-tab="vendors" id="vendors-more-item" onclick="closeMoreMenu();switchTab('vendors')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-handshake"></i></div><div style="flex:1"><div class="more-menu-item-label">Vendors</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+
+    <div id="vendors-more-item" style="display:none;">
+      <button class="more-menu-item has-children" data-tab="vendors" onclick="toggleMoreAccordion('vendors', this)"><div class="more-menu-icon"><i class="ph-bold ph-handshake"></i></div><div style="flex:1"><div class="more-menu-item-label">Vendors</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+      <div class="more-menu-sublist" id="more-sub-vendors">
+        <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('vendors')">All vendors</button>
+        <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Approved filter isn\'t available yet')">Approved</button>
+        <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Pending filter isn\'t available yet')">Pending</button>
+      </div>
+    </div>
     <button class="more-menu-item" data-tab="admins" id="admins-more-item" onclick="closeMoreMenu();switchTab('admins')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-ticket"></i></div><div style="flex:1"><div class="more-menu-item-label">Admins</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <div class="more-divider"></div>
     <button class="more-menu-item" data-tab="discounts" onclick="closeMoreMenu();switchTab('discounts')"><div class="more-menu-icon"><i class="ph-bold ph-seal-percent"></i></div><div style="flex:1"><div class="more-menu-item-label">Discounts</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <button class="more-menu-item" data-tab="newsletter" onclick="closeMoreMenu();switchTab('newsletter')"><div class="more-menu-icon"><i class="ph-bold ph-mailbox"></i></div><div style="flex:1"><div class="more-menu-item-label">Newsletter</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
-    <div class="more-menu-section-label">Content</div>
-    <button class="more-menu-item" data-tab="homepage" id="homepage-more-item" onclick="closeMoreMenu();switchTab('homepage')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-browser"></i></div><div style="flex:1"><div class="more-menu-item-label">Homepage</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
-    <button class="more-menu-item" data-tab="pages" id="pages-more-item" onclick="closeMoreMenu();switchTab('pages')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-file"></i></div><div style="flex:1"><div class="more-menu-item-label">Pages</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
-    <button class="more-menu-item" data-tab="onlineStore" id="online-store-more-item" onclick="closeMoreMenu();switchTab('onlineStore')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-browsers"></i></div><div style="flex:1"><div class="more-menu-item-label">Online Store</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+
+    <div id="online-store-more-item" style="display:none;">
+      <button class="more-menu-item has-children" data-tab="onlineStore" onclick="toggleMoreAccordion('onlinestore', this)"><div class="more-menu-icon"><i class="ph-bold ph-browsers"></i></div><div style="flex:1"><div class="more-menu-item-label">Online Store</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+      <div class="more-menu-sublist" id="more-sub-onlinestore">
+        <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('homepage')">Theme</button>
+        <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('pages')">Pages</button>
+        <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('onlineStore')">Preferences</button>
+      </div>
+    </div>
     <div class="more-divider"></div>
-    <button class="more-menu-item" data-tab="analytics" onclick="closeMoreMenu();switchTab('analytics')"><div class="more-menu-icon"><i class="ph-bold ph-chart-bar"></i></div><div style="flex:1"><div class="more-menu-item-label">Analytics</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+
+    <button class="more-menu-item has-children" data-tab="analytics" onclick="toggleMoreAccordion('analytics', this)"><div class="more-menu-icon"><i class="ph-bold ph-chart-bar"></i></div><div style="flex:1"><div class="more-menu-item-label">Analytics</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-sublist" id="more-sub-analytics">
+      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('analytics')">Reports</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Live View isn\'t available yet')">Live view</button>
+    </div>
     <button class="more-menu-item" data-tab="settings" id="settings-more-item" onclick="closeMoreMenu();switchTab('settings')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-gear"></i></div><div style="flex:1"><div class="more-menu-item-label">Settings</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <button class="more-menu-item" data-tab="devtools" id="devtools-more-item" onclick="closeMoreMenu();switchTab('devtools')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-wrench"></i></div><div style="flex:1"><div class="more-menu-item-label">Developer Tools</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <div class="more-divider"></div>
@@ -161,6 +200,7 @@ function togglePw(){
 }
 function openMoreMenu(){if(window._closeAdminSearch)window._closeAdminSearch();document.getElementById('more-menu-overlay').classList.add('open');document.getElementById('more-menu-panel').classList.add('open');document.querySelectorAll('#more-menu-panel .more-menu-item[data-tab]').forEach(function(b){b.classList.toggle('active',b.dataset.tab===window._currentTab);});if(window._setBottomNavActive)window._setBottomNavActive('more');}
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');if(window._revertBottomNavActive)window._revertBottomNavActive();}
+function toggleMoreAccordion(key,btn){var sub=document.getElementById('more-sub-'+key);if(!sub)return;var open=btn.classList.toggle('expanded');sub.classList.toggle('open',open);}
 
 // No manual theme toggle anymore — the admin now just follows the
 // device's own light/dark setting automatically, via the

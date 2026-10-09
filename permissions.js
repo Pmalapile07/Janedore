@@ -254,9 +254,10 @@
       'admins-tab-btn',    // sidebar admins tab
       'admins-more-item',  // more menu admins item
       'pages-tab-btn',     // sidebar pages tab
-      'pages-more-item',   // more menu pages item
       'homepage-tab-btn',  // sidebar homepage tab
-      'homepage-more-item',// more menu homepage item
+      // more menu homepage/pages items are folded into the
+      // online-store-more-item accordion wrapper (see admin.html),
+      // so they no longer have separate ids to gate here.
       'devtools-tab-btn',  // sidebar developer tools tab
       'devtools-more-item' // more menu developer tools item
     ];

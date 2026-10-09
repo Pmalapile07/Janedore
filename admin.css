@@ -196,19 +196,32 @@ input, select, textarea { font-size:16px !important; }
 .more-menu-item-label{font-size:16px;font-weight:600;color:#000;}
 .more-menu-item-desc{font-size:var(--font-scale-sm);color:rgba(0,0,0,0.45);margin-top:var(--space-1);}
 .more-menu-arrow{margin-left:auto;color:rgba(0,0,0,0.35);font-size:var(--font-scale-lg);display:flex;align-items:center;}
-.more-menu-arrow i{display:inline-block;transform:rotate(90deg);}
+.more-menu-arrow i{display:inline-block;transform:rotate(90deg);transition:transform var(--duration-fast);}
 .more-divider{height:0.5px;background:rgba(0,0,0,0.1);margin:6px var(--space-5);}
 .more-menu-section-label{padding:var(--space-4) var(--space-5) var(--space-1);font-size:var(--font-scale-sm);font-weight:500;color:rgba(0,0,0,0.4);}
 /* Marks whichever row matches the tab the admin was on when More was
    opened (see openMoreMenu() in admin.html) — a background drawn via
    ::before behind the row's own content instead of margin/width on
    the row itself, so the icon and label never shift position when a
-   row becomes active. Right inset matches the row's own right
-   padding (space-5), the same place every other row's chevron sits,
-   so the pill never extends past that. */
-.more-menu-item.active::before{content:'';position:absolute;top:1px;bottom:1px;left:var(--space-3);right:var(--space-5);background:var(--surface2);border-radius:var(--r-lg);}
+   row becomes active. Right inset is wider than the row's own right
+   padding so the pill visibly stops before the chevron zone instead
+   of running flush up to it. */
+.more-menu-item.active::before{content:'';position:absolute;top:1px;bottom:1px;left:var(--space-3);right:calc(var(--space-5) * 2);background:var(--surface2);border-radius:var(--r-lg);}
 .more-menu-item.active > *{position:relative;z-index:1;}
-.more-menu-item.active .more-menu-arrow{display:none;}
+/* Rows with no sub-list have no functional use for a chevron once
+   they're the active/current one — the pill itself already says "you
+   are here". Accordion rows (.has-children) keep theirs even while
+   active, since the chevron is now the expand/collapse control. */
+.more-menu-item.active:not(.has-children) .more-menu-arrow{display:none;}
+
+/* Accordion: rows with sub-items toggle an inline list instead of
+   navigating (see toggleMoreAccordion() in admin.html). The chevron
+   flips from pointing down (collapsed) to pointing up (expanded). */
+.more-menu-item.has-children.expanded .more-menu-arrow i{transform:rotate(-90deg);}
+.more-menu-sublist{max-height:0;overflow:hidden;transition:max-height var(--duration-base) var(--ease-out);}
+.more-menu-sublist.open{max-height:400px;}
+.more-menu-subitem{display:block;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:var(--space-2) var(--space-5) var(--space-2) 66px;font-family:var(--font);font-size:15px;font-weight:400;color:rgba(0,0,0,0.55);transition:background var(--duration-fast);}
+.more-menu-subitem:active{background:rgba(0,0,0,0.06);}
 
 /* ── SECTION HEADERS ───────────────────────────────────────────────────────── */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);gap:var(--space-2);flex-wrap:wrap;}
