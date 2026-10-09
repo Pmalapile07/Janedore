@@ -144,7 +144,7 @@ input, select, textarea { font-size:16px !important; }
 /* Full-screen overlay opened from the bottom nav's search button —
    dark header (close + search field, no barcode scan since there's
    nothing to scan yet) over a white results sheet, Shopify-style. */
-#admin-search-overlay{display:none;position:fixed;inset:0;z-index:500;background:#0a0a0a;flex-direction:column;}
+#admin-search-overlay{display:none;position:fixed;top:0;bottom:var(--bnav-h);left:0;right:0;z-index:500;background:#0a0a0a;flex-direction:column;}
 #admin-search-overlay.open{display:flex;}
 .admin-search-header{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);padding-top:calc(var(--space-3) + env(safe-area-inset-top,0));flex-shrink:0;}
 .admin-search-close{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;}
@@ -166,15 +166,15 @@ input, select, textarea { font-size:16px !important; }
 .search-result-icon{width:36px;height:36px;border-radius:50%;background:var(--surface3);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
 
 /* ── MORE MENU ─────────────────────────────────────────────────────────────── */
-#more-menu-overlay{display:none;position:fixed;inset:0;background:var(--overlay-bg);z-index:300;animation:fadeIn var(--duration-base) ease;}
+#more-menu-overlay{display:none;position:fixed;top:0;bottom:var(--bnav-h);left:0;right:0;background:var(--overlay-bg);z-index:300;animation:fadeIn var(--duration-base) ease;}
 #more-menu-overlay.open{display:block;}
-/* Black, same as #top-nav's --nav-bg, and taller (near full-screen)
-   per request — text/handle/divider colors flipped to light since
-   they used to sit on a white sheet. */
-#more-menu-panel{position:fixed;top:0;bottom:0;left:0;right:0;background:var(--nav-bg);border-radius:0;padding:calc(var(--space-3) + env(safe-area-inset-top,0)) 0 calc(var(--space-4) + env(safe-area-inset-bottom,0));z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);overflow-y:auto;}
+/* Black, same as #top-nav's --nav-bg, full screen except for a strip
+   at the bottom left clear for #bottom-nav, which stays usable while
+   More is open — text/divider colors flipped to light since they
+   used to sit on a white sheet. No handle or "More" title any more,
+   per request; the first item starts right at the top padding. */
+#more-menu-panel{position:fixed;top:0;bottom:var(--bnav-h);left:0;right:0;background:var(--nav-bg);border-radius:0;padding:calc(var(--space-3) + env(safe-area-inset-top,0)) 0 var(--space-3);z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);overflow-y:auto;}
 #more-menu-panel.open{transform:translateY(0);}
-.more-menu-handle{width:34px;height:4px;background:rgba(255,255,255,0.25);border-radius:var(--space-1);margin:var(--space-3) auto var(--space-4);}
-.more-menu-title{font-family:var(--font);font-size:var(--font-scale-xl);font-weight:200;color:#fff;padding:0 var(--space-5) var(--space-3);border-bottom:0.5px solid rgba(255,255,255,0.12);margin-bottom:var(--space-1);letter-spacing:.03em;}
 .more-menu-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);cursor:pointer;transition:background var(--duration-fast);border:none;background:none;width:100%;text-align:left;}
 .more-menu-item:active{background:rgba(255,255,255,0.06);}
 .more-menu-icon{width:34px;height:34px;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;font-size:var(--font-scale-lg);flex-shrink:0;}
