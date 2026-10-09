@@ -425,6 +425,9 @@
         '<span class="badge" style="' + badgeStyle + '">' + esc(status) + '</span>' +
     '</div>';
   }
+  // Exposed so admin search can show a matched product looking
+  // identical to how it looks in the Products list itself.
+  window._renderProductRowHTML = renderProductRow;
 
   window._filterProducts = function() {
     var allProducts = window._allProducts || [];
