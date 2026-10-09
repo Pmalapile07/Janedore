@@ -142,7 +142,7 @@ function togglePw(){
   var i=document.getElementById('login-password'),b=document.querySelector('.pw-toggle');
   if(i.type==='password'){i.type='text';b.textContent='HIDE';}else{i.type='password';b.textContent='SHOW';}
 }
-function openMoreMenu(){document.getElementById('more-menu-overlay').classList.add('open');document.getElementById('more-menu-panel').classList.add('open');}
+function openMoreMenu(){if(window._closeAdminSearch)window._closeAdminSearch();document.getElementById('more-menu-overlay').classList.add('open');document.getElementById('more-menu-panel').classList.add('open');}
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');}
 
 // No manual theme toggle anymore — the admin now just follows the
