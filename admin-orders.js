@@ -48,6 +48,7 @@
     var ts = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
     return (Date.now() - ts.getTime()) > ABANDONED_THRESHOLD_MS;
   }
+  window._isAbandonedOrder = isAbandoned;
 
   // Fulfilled means "someone added a tracking number" — for this
   // multi-vendor marketplace, each brand ships its own items from its
