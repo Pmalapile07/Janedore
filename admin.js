@@ -367,6 +367,13 @@
   };
 
   window.switchTab = function(tab) {
+    // Tapping a nav button while the search overlay or the More sheet
+    // is open used to switch the tab underneath without dismissing
+    // either — they're both full-screen, so the switch was invisible
+    // and it looked "stuck" on whichever was open. Close both first.
+    if (window._closeAdminSearch) window._closeAdminSearch();
+    if (typeof closeMoreMenu === 'function') closeMoreMenu();
+
     var TAB_MODULE_MAP = {
       dashboard: 'dashboard', products: 'products', orders: 'orders',
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
@@ -649,6 +656,7 @@
   window._openAdminSearch = function() {
     var ov = safeEl('admin-search-overlay');
     if (!ov) return;
+    if (typeof closeMoreMenu === 'function') closeMoreMenu();
     ov.classList.add('open');
     window._adminSearchScope = 'all';
     document.querySelectorAll('.admin-search-tab[data-scope]').forEach(function(t) {
