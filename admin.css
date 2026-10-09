@@ -677,6 +677,11 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
    deliberately not applied here; this re-opens that zoom-on-tap
    behavior for this field specifically, by request. */
 .order-tracking-input{background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:var(--space-2) var(--space-3);font-family:var(--font);font-size:var(--font-scale-sm)!important;color:var(--text2);outline:none;box-shadow:var(--shadow-xs);}
+/* Order detail's "Update status" and "Select courier" dropdowns,
+   back to matching the rest of the order detail text (.info-row is
+   font-scale-sm) instead of the global 16px input floor — same
+   zoom-on-tap tradeoff as .order-tracking-input above. */
+.order-status-select,.order-group-courier{font-size:var(--font-scale-sm)!important;}
 
 /* ── SETUP GUIDE ──────────────────────────────────────────────────────────── */
 .setup-guide{max-width:520px;padding:var(--space-2) 0 48px;}
