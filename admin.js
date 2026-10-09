@@ -480,6 +480,176 @@
   }
   window._loadProducts = loadProducts;
 
+  // ─── ADMIN SEARCH ────────────────────────────────────────────
+  // Opened from the bottom nav's search button. Products search is
+  // instant (window._allProducts is already loaded for every role on
+  // login). Orders/Customers need their own fetch, scoped the same
+  // way the Orders tab itself is (vendor -> /api/vendor/orders, staff
+  // -> a direct query) since this runs before either tab may ever
+  // have been visited this session — cached after the first search so
+  // repeat keystrokes don't re-fetch.
+
+  var _adminSearchOrdersPromise = null;
+  var _adminSearchQuery = '';
+
+  function fetchAdminSearchOrders() {
+    if (_adminSearchOrdersPromise) return _adminSearchOrdersPromise;
+    var isVendor = window._currentUserRole === 'VENDOR';
+    var p = isVendor
+      ? window._currentUser.getIdToken().then(function(token) {
+          return fetch('/api/vendor/orders', { headers: { Authorization: 'Bearer ' + token } });
+        }).then(function(res) { return res.json(); }).then(function(body) { return body.orders || []; })
+      : ordersRef.orderBy('createdAt', 'desc').limit(300).get().then(function(snap) {
+          return snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+        });
+    _adminSearchOrdersPromise = p.catch(function(e) { _adminSearchOrdersPromise = null; throw e; });
+    return _adminSearchOrdersPromise;
+  }
+
+  // Same shape admin-customers.js derives from orders, so a result
+  // clicked here can hand straight off to window._openCustomerDetail.
+  // Only written to the shared globals when nothing has loaded them
+  // already — the real Customers tab's own 500-order fetch should win
+  // if it got there first.
+  function getCustomersForSearch() {
+    if (window._customersData) return Promise.resolve(window._customersData);
+    return fetchAdminSearchOrders().then(function(orders) {
+      var map = {};
+      orders.forEach(function(o) {
+        var email = (o.customerEmail || '').toLowerCase().trim();
+        if (!email) return;
+        if (!map[email]) {
+          map[email] = {
+            name: o.customerName || 'Guest', email: email, phone: o.customerPhone || '',
+            shippingAddress: o.shippingAddress || {}, orders: 0, spent: 0,
+            lastOrder: null, firstOrder: null, orderIds: [], status: 'active'
+          };
+        }
+        var c = map[email];
+        c.orders++; c.spent += (o.total || o.subtotal || 0); c.orderIds.push(o.id);
+        if (o.customerName && o.customerName !== 'Guest') c.name = o.customerName;
+        if (o.customerPhone) c.phone = o.customerPhone;
+        if (o.shippingAddress && o.shippingAddress.address) c.shippingAddress = o.shippingAddress;
+        var d = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt)) : null;
+        if (d) {
+          if (!c.lastOrder || d > c.lastOrder) c.lastOrder = d;
+          if (!c.firstOrder || d < c.firstOrder) c.firstOrder = d;
+        }
+      });
+      var list = Object.values(map).sort(function(a, b) { return b.spent - a.spent; });
+      if (!window._customersData) { window._customersData = list; window._allOrdersData = orders; }
+      return list;
+    });
+  }
+
+  function searchResultRow(iconClass, title, sub, onclick) {
+    return '<div class="search-result-row" onclick="' + onclick + '">' +
+      '<div class="search-result-icon"><i class="' + iconClass + '"></i></div>' +
+      '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div><div class="pi-meta">' + esc(sub) + '</div></div>' +
+    '</div>';
+  }
+
+  function renderAdminSearchResults(query) {
+    var body = safeEl('admin-search-body');
+    if (!body) return;
+    query = (query || '').trim().toLowerCase();
+    _adminSearchQuery = query;
+    var scope = window._adminSearchScope || 'all';
+
+    if (!query) {
+      body.innerHTML = '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No recent searches</div></div>';
+      return;
+    }
+
+    body.innerHTML = '<div class="empty-state"><div class="empty-state-text">Searching...</div></div>';
+    var needsOrders = scope === 'all' || scope === 'orders';
+    var needsCustomers = scope === 'all' || scope === 'customers';
+
+    Promise.all([
+      needsOrders ? fetchAdminSearchOrders() : Promise.resolve([]),
+      needsCustomers ? getCustomersForSearch() : Promise.resolve([])
+    ]).then(function(results) {
+      if (_adminSearchQuery !== query) return; // a newer keystroke already superseded this
+      var orders = results[0], customers = results[1];
+      var html = '';
+
+      if (scope === 'all' || scope === 'products') {
+        var products = (window._allProducts || []).filter(function(p) {
+          return ((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.sku || '')).toLowerCase().indexOf(query) !== -1;
+        }).slice(0, 15);
+        if (products.length) {
+          html += '<div class="search-section-label">Products</div>' + products.map(function(p) {
+            return searchResultRow('ph-bold ph-tag', p.name,
+              (p.brand ? p.brand + ' · ' : '') + (p.stock != null ? p.stock + ' available' : ''),
+              "window._closeAdminSearch();window._openProductForm('" + esc(p.id) + "')");
+          }).join('');
+        }
+      }
+
+      if (scope === 'all' || scope === 'orders') {
+        var orderMatches = orders.filter(function(o) {
+          return ((o.orderNumber || o.id || '') + ' ' + (o.customerName || '') + ' ' + (o.customerEmail || '')).toLowerCase().indexOf(query) !== -1;
+        }).slice(0, 15);
+        if (orderMatches.length) {
+          html += '<div class="search-section-label">Orders</div>' + orderMatches.map(function(o) {
+            return searchResultRow('ph-bold ph-cardholder', '#' + (o.orderNumber || o.id), o.customerName || o.customerEmail || '',
+              "window._closeAdminSearch();window._openOrderDetail('" + esc(o.id) + "')");
+          }).join('');
+        }
+      }
+
+      if (scope === 'all' || scope === 'customers') {
+        var customerMatches = customers.filter(function(c) {
+          return (c.name + ' ' + c.email).toLowerCase().indexOf(query) !== -1;
+        }).slice(0, 15);
+        if (customerMatches.length) {
+          html += '<div class="search-section-label">Customers</div>' + customerMatches.map(function(c) {
+            return searchResultRow('ph-bold ph-user', c.name, c.email + ' · ' + c.orders + ' order' + (c.orders !== 1 ? 's' : ''),
+              "window._closeAdminSearch();window._openCustomerDetail('" + esc(c.email) + "')");
+          }).join('');
+        }
+      }
+
+      body.innerHTML = html || '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No results found</div></div>';
+    }).catch(function(e) {
+      if (_adminSearchQuery !== query) return;
+      body.innerHTML = '<p style="padding:16px;color:var(--danger);font-size:12px;">Error: ' + esc(e.message) + '</p>';
+    });
+  }
+
+  window._openAdminSearch = function() {
+    var ov = safeEl('admin-search-overlay');
+    if (!ov) return;
+    ov.classList.add('open');
+    window._adminSearchScope = 'all';
+    document.querySelectorAll('.admin-search-tab[data-scope]').forEach(function(t) {
+      t.classList.toggle('active', t.dataset.scope === 'all');
+    });
+    var input = safeEl('admin-search-input');
+    if (input) input.value = '';
+    renderAdminSearchResults('');
+    if (input) setTimeout(function() { input.focus(); }, 50);
+  };
+
+  window._closeAdminSearch = function() {
+    var ov = safeEl('admin-search-overlay');
+    if (ov) ov.classList.remove('open');
+  };
+
+  window._setAdminSearchScope = function(scope) {
+    window._adminSearchScope = scope;
+    document.querySelectorAll('.admin-search-tab[data-scope]').forEach(function(t) {
+      t.classList.toggle('active', t.dataset.scope === scope);
+    });
+    var input = safeEl('admin-search-input');
+    renderAdminSearchResults(input ? input.value : '');
+  };
+
+  window._runAdminSearch = function() {
+    var input = safeEl('admin-search-input');
+    renderAdminSearchResults(input ? input.value : '');
+  };
+
   // ─── CHAT MONITORING ─────────────────────────────────────────
 
   var chatsMonitorRef      = null;

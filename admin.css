@@ -132,6 +132,29 @@ body{font-family:var(--font);background:var(--nav-bg);color:var(--text);line-hei
 .bnav-btn.active{background:var(--surface2);color:var(--text);}
 .bnav-badge{position:absolute;top:2px;right:2px;background:#e53935;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:var(--space-2);display:none;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid #fff;}
 
+/* ── ADMIN SEARCH ──────────────────────────────────────────────────────────── */
+/* Full-screen overlay opened from the bottom nav's search button —
+   dark header (close + search field, no barcode scan since there's
+   nothing to scan yet) over a white results sheet, Shopify-style. */
+#admin-search-overlay{display:none;position:fixed;inset:0;z-index:500;background:#0a0a0a;flex-direction:column;}
+#admin-search-overlay.open{display:flex;}
+.admin-search-header{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);padding-top:calc(var(--space-3) + env(safe-area-inset-top,0));flex-shrink:0;}
+.admin-search-close{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;}
+.admin-search-input-wrap{flex:1;display:flex;align-items:center;gap:var(--space-2);background:rgba(255,255,255,0.08);border-radius:var(--r-sm);padding:var(--space-3) var(--space-4);color:rgba(255,255,255,0.4);min-width:0;}
+.admin-search-input-wrap i{font-size:17px;flex-shrink:0;}
+.admin-search-input-wrap input{flex:1;min-width:0;background:none;border:none;outline:none;color:#fff;font-family:var(--font);font-size:var(--font-scale-md);}
+.admin-search-input-wrap input::placeholder{color:rgba(255,255,255,0.4);}
+.admin-search-tabs{display:flex;align-items:center;gap:var(--space-2);padding:0 var(--space-4) var(--space-3);overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;}
+.admin-search-tabs::-webkit-scrollbar{display:none;}
+.admin-search-tab{flex:0 0 auto;background:none;border:none;padding:var(--space-2) var(--space-3);border-radius:var(--r-lg);font-family:var(--font);font-size:var(--font-scale-sm);font-weight:500;color:rgba(255,255,255,0.55);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;}
+.admin-search-tab.active{background:rgba(255,255,255,0.12);color:#fff;}
+.admin-search-tab-filters{margin-left:auto;}
+.admin-search-body{flex:1;min-height:0;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--space-6) + env(safe-area-inset-bottom,0));}
+.search-section-label{font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:var(--space-4) var(--space-4) var(--space-1);}
+.search-result-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-bottom:0.5px solid var(--border-light);cursor:pointer;transition:background var(--duration-fast);}
+.search-result-row:active{background:var(--surface2);}
+.search-result-icon{width:36px;height:36px;border-radius:50%;background:var(--surface3);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+
 /* ── MORE MENU ─────────────────────────────────────────────────────────────── */
 #more-menu-overlay{display:none;position:fixed;inset:0;background:var(--overlay-bg);z-index:300;animation:fadeIn var(--duration-base) ease;}
 #more-menu-overlay.open{display:block;}

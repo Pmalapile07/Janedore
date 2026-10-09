@@ -86,7 +86,7 @@
   <div id="app-body"><main id="main-content"></main></div>
 
   <div id="bottom-nav">
-    <button class="bnav-search-btn" onclick="window._showToast('Admin search coming soon')" aria-label="Search"><i class="ph-bold ph-magnifying-glass"></i></button>
+    <button class="bnav-search-btn" onclick="window._openAdminSearch()" aria-label="Search"><i class="ph-bold ph-magnifying-glass"></i></button>
     <div class="bottom-nav-pill">
       <button class="bnav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')" aria-label="Home"><i class="ph-fill ph-house"></i></button>
       <button class="bnav-btn" data-tab="orders" onclick="switchTab('orders')" aria-label="Orders"><i class="ph-bold ph-cardholder"></i></button>
@@ -94,6 +94,24 @@
       <button class="bnav-btn" onclick="openMoreMenu()" aria-label="More"><i class="ph-bold ph-list"></i><span class="bnav-badge" id="bnav-msg-badge"></span></button>
     </div>
     <button class="bnav-jai-btn" onclick="window._showToast('Jai is coming soon')" aria-label="Jai"><i class="ph-bold ph-robot"></i></button>
+  </div>
+
+  <div id="admin-search-overlay">
+    <div class="admin-search-header">
+      <button class="admin-search-close" onclick="window._closeAdminSearch()" aria-label="Close search"><i class="ph ph-x"></i></button>
+      <div class="admin-search-input-wrap">
+        <i class="ph ph-magnifying-glass"></i>
+        <input type="text" id="admin-search-input" placeholder="Search" autocomplete="off" oninput="window._runAdminSearch()">
+      </div>
+    </div>
+    <div class="admin-search-tabs" id="admin-search-tabs">
+      <button class="admin-search-tab active" data-scope="all" onclick="window._setAdminSearchScope('all')">All</button>
+      <button class="admin-search-tab" data-scope="orders" onclick="window._setAdminSearchScope('orders')">Orders</button>
+      <button class="admin-search-tab" data-scope="products" onclick="window._setAdminSearchScope('products')">Products</button>
+      <button class="admin-search-tab" data-scope="customers" onclick="window._setAdminSearchScope('customers')">Customers</button>
+      <button class="admin-search-tab admin-search-tab-filters" onclick="window._showToast('Filters coming soon')"><i class="ph ph-funnel-simple"></i> All filters</button>
+    </div>
+    <div class="admin-search-body" id="admin-search-body"></div>
   </div>
 
   <div id="more-menu-overlay" onclick="closeMoreMenu()"></div>
