@@ -198,6 +198,13 @@ input, select, textarea { font-size:16px !important; }
 .more-menu-arrow{margin-left:auto;color:rgba(0,0,0,0.35);font-size:var(--font-scale-lg);display:flex;align-items:center;}
 .more-menu-arrow i{display:inline-block;transform:rotate(90deg);}
 .more-divider{height:0.5px;background:rgba(0,0,0,0.1);margin:var(--space-2) var(--space-5);}
+.more-menu-section-label{padding:var(--space-4) var(--space-5) var(--space-1);font-size:var(--font-scale-sm);font-weight:500;color:rgba(0,0,0,0.4);}
+/* Marks whichever row matches the tab the admin was on when More was
+   opened (see openMoreMenu() in admin.html) — an inset pill instead
+   of the plain flush row every other item has, and no chevron since
+   it's not a destination to navigate to from here. */
+.more-menu-item.active{background:var(--surface2);border-radius:var(--r-lg);margin:0 var(--space-3);width:calc(100% - (var(--space-3) * 2));}
+.more-menu-item.active .more-menu-arrow{display:none;}
 
 /* ── SECTION HEADERS ───────────────────────────────────────────────────────── */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);gap:var(--space-2);flex-wrap:wrap;}
