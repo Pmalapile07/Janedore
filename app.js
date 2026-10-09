@@ -103,6 +103,7 @@ const PAGE_URL_MAP = {
   products: 'shop',
   campaign: 'campaign',
   editorial: 'editorial',
+  brands: 'brands',
   login: 'login',
   account: 'account',
   checkout: 'checkout',
@@ -249,7 +250,7 @@ async function init() {
   loadWishlistFromStorage();
   updateBadges();
   buildArrivals();
-  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
+  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","brands-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
   initVendors();
@@ -355,7 +356,7 @@ function updateCollectionUrl(cat, replaceUrl) {
   else history.pushState(null, null, newPath);
 }
 
-function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
+function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'brands') return { page: 'brands' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 
 // Reads clean /products/{slug}, /collections/{cat}, /pages/{slug}, and every
 // mapped utility/content page (/shop, /login, /account, /checkout, /cart,
@@ -399,7 +400,7 @@ window.addEventListener('popstate', async () => {
       await window.authReady;
       navigateToAccount(true);
       return;
-    } else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(pathRoute.page)) {
+    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
       return;
     }
@@ -409,7 +410,7 @@ window.addEventListener('popstate', async () => {
   else if (route.page === 'category') navigateToCategory(route.cat, true);
   else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
   else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
-  else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(route.page)) navigateTo(route.page, true);
+  else if (['cart','wishlist','checkout','products','campaign','editorial','brands'].includes(route.page)) navigateTo(route.page, true);
   else navigateTo('home');
 });
 
