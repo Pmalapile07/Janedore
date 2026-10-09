@@ -471,20 +471,29 @@ body .site-collection-layout {
      ::after spacer below instead of padding-right, because Safari
      (desktop and iOS) drops a scroll container's trailing padding
      entirely once content overflows. Padding-left isn't affected;
-     it's the right-hand gap after the last card that goes missing. */
-  padding: 0 0 0 18px !important;
+     it's the right-hand gap after the last card that goes missing.
+     Values (8/10/12px) match #hero's own responsive padding
+     (hero.css) and .product-grid's (both edges line up with the
+     hero section above and the grid below). */
+  padding: 0 0 0 8px !important;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar { display: none; }
 #arrivals-grid::after,
-#clothing-grid::after { content: ''; flex: 0 0 18px; }
+#clothing-grid::after { content: ''; flex: 0 0 8px; }
 #arrivals-grid .product-card,
 #clothing-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
   max-width: 300px;
   scroll-snap-align: start;
+}
+@media (min-width: 640px) {
+  #arrivals-grid,
+  #clothing-grid { padding: 0 0 0 10px !important; }
+  #arrivals-grid::after,
+  #clothing-grid::after { flex: 0 0 10px; }
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
@@ -496,7 +505,10 @@ body .site-collection-layout {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
+    padding: 0 0 0 12px !important;
   }
+  #arrivals-grid::after,
+  #clothing-grid::after { flex: 0 0 12px; }
 }
 
 /* --- Shop by Brand slider — same slider mechanics as #arrivals-grid/
