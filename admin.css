@@ -168,25 +168,28 @@ input, select, textarea { font-size:16px !important; }
 /* ── MORE MENU ─────────────────────────────────────────────────────────────── */
 #more-menu-overlay{display:none;position:fixed;inset:0;background:var(--overlay-bg);z-index:300;animation:fadeIn var(--duration-base) ease;}
 #more-menu-overlay.open{display:block;}
-#more-menu-panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:0 0 calc(var(--space-4) + env(safe-area-inset-bottom,0));z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);max-height:72vh;overflow-y:auto;}
+/* Black, same as #top-nav's --nav-bg, and taller (near full-screen)
+   per request — text/handle/divider colors flipped to light since
+   they used to sit on a white sheet. */
+#more-menu-panel{position:fixed;bottom:0;left:0;right:0;background:var(--nav-bg);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:0 0 calc(var(--space-4) + env(safe-area-inset-bottom,0));z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);max-height:92vh;overflow-y:auto;}
 #more-menu-panel.open{transform:translateY(0);}
-.more-menu-handle{width:34px;height:4px;background:var(--border-med);border-radius:var(--space-1);margin:var(--space-3) auto var(--space-4);}
-.more-menu-title{font-family:var(--font);font-size:var(--font-scale-xl);font-weight:200;padding:0 var(--space-5) var(--space-3);border-bottom:0.5px solid var(--border);margin-bottom:var(--space-1);letter-spacing:.03em;}
+.more-menu-handle{width:34px;height:4px;background:rgba(255,255,255,0.25);border-radius:var(--space-1);margin:var(--space-3) auto var(--space-4);}
+.more-menu-title{font-family:var(--font);font-size:var(--font-scale-xl);font-weight:200;color:#fff;padding:0 var(--space-5) var(--space-3);border-bottom:0.5px solid rgba(255,255,255,0.12);margin-bottom:var(--space-1);letter-spacing:.03em;}
 .more-menu-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);cursor:pointer;transition:background var(--duration-fast);border:none;background:none;width:100%;text-align:left;}
-.more-menu-item:active{background:var(--surface3);}
+.more-menu-item:active{background:rgba(255,255,255,0.06);}
 .more-menu-icon{width:34px;height:34px;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;font-size:var(--font-scale-lg);flex-shrink:0;}
 .more-menu-icon i{line-height:1;}
-.more-menu-item-label{font-size:var(--font-scale-md);font-weight:400;color:var(--text);}
-.more-menu-item-desc{font-size:var(--font-scale-sm);color:var(--muted);margin-top:var(--space-1);}
-.more-menu-arrow{margin-left:auto;color:var(--muted2);font-size:var(--font-scale-lg);font-weight:300;}
+.more-menu-item-label{font-size:var(--font-scale-md);font-weight:400;color:#fff;}
+.more-menu-item-desc{font-size:var(--font-scale-sm);color:rgba(255,255,255,0.45);margin-top:var(--space-1);}
+.more-menu-arrow{margin-left:auto;color:rgba(255,255,255,0.35);font-size:var(--font-scale-lg);font-weight:300;}
 .mmi-teal .more-menu-icon{background:var(--teal-soft);color:var(--teal);}
 .mmi-green .more-menu-icon{background:var(--success-soft);color:var(--success);}
 .mmi-blue .more-menu-icon{background:var(--accent-soft);color:var(--accent);}
 .mmi-orange .more-menu-icon{background:var(--warning-soft);color:var(--warning);}
 .mmi-purple .more-menu-icon{background:var(--purple-soft);color:var(--purple);}
 .mmi-red .more-menu-icon{background:var(--danger-soft);color:var(--danger);}
-.mmi-gray .more-menu-icon{background:var(--surface3);color:var(--muted);}
-.more-divider{height:0.5px;background:var(--border);margin:var(--space-2) var(--space-5);}
+.mmi-gray .more-menu-icon{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
+.more-divider{height:0.5px;background:rgba(255,255,255,0.12);margin:var(--space-2) var(--space-5);}
 
 /* ── SECTION HEADERS ───────────────────────────────────────────────────────── */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);gap:var(--space-2);flex-wrap:wrap;}
