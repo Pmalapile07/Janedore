@@ -137,13 +137,14 @@ input, select, textarea { font-size:16px !important; }
 #bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-2) var(--space-4);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
 /* Search/Jai already have their own always-on white circle (border +
    shadow), unlike the pill tabs below which have none until active —
-   so "selected" here is a smaller grey circle inset within that white
-   one (via ::before), not a full-bleed fill, which would've just
-   looked like the same circle changing color. */
+   so "selected" here is a ::before overlay rather than swapping the
+   button's own background directly. It's full-bleed (inset:0), same
+   as the center pill icons, so the selected look matches across all
+   five nav icons. */
 .bnav-search-btn,.bnav-jai-btn{position:relative;pointer-events:all;flex-shrink:0;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:0.5px solid var(--border);box-shadow:var(--shadow-nav);font-size:21px;color:var(--text2);cursor:pointer;transition:background var(--duration-fast);}
 .bnav-search-btn:active,.bnav-jai-btn:active{background:var(--surface2);}
 .bnav-search-btn.active{color:var(--text);}
-.bnav-search-btn.active::before,.bnav-jai-btn.active::before{content:'';position:absolute;inset:6px;border-radius:50%;background:rgba(0,0,0,0.1);}
+.bnav-search-btn.active::before,.bnav-jai-btn.active::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.1);}
 .bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:27px;padding:3px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-nav);}
 .bnav-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:none;border:none;cursor:pointer;transition:background var(--duration-fast),color var(--duration-fast);position:relative;font-size:21px;color:var(--muted2);}
 .bnav-btn i{line-height:1;}
