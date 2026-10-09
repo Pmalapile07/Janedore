@@ -472,9 +472,12 @@ body .site-collection-layout {
      (desktop and iOS) drops a scroll container's trailing padding
      entirely once content overflows. Padding-left isn't affected;
      it's the right-hand gap after the last card that goes missing.
-     Values (8/10/12px) match #hero's own responsive padding
-     (hero.css) and .product-grid's (both edges line up with the
-     hero section above and the grid below). */
+     Values match #hero's own actual responsive padding (hero.css):
+     8px base, 10px from 640px, 16px from 769px -- #hero has an
+     earlier 1024px rule too (12px) but a later, equal-specificity
+     769px rule overrides it site-wide, so 16px is what #hero really
+     renders at any width >=769px, not 12px. Matching that real
+     behavior here, not the dead 1024px value. */
   padding: 0 0 0 8px !important;
   scrollbar-width: none;
 }
@@ -499,16 +502,19 @@ body .site-collection-layout {
   #arrivals-grid .product-card,
   #clothing-grid .product-card { width: 28vw; max-width: 300px; }
 }
+@media (min-width: 769px) {
+  #arrivals-grid,
+  #clothing-grid { padding: 0 0 0 16px !important; }
+  #arrivals-grid::after,
+  #clothing-grid::after { flex: 0 0 16px; }
+}
 @media (min-width: 1024px) {
   #arrivals-grid,
   #clothing-grid {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 0 0 12px !important;
   }
-  #arrivals-grid::after,
-  #clothing-grid::after { flex: 0 0 12px; }
 }
 
 /* --- Shop by Brand slider — same slider mechanics as #arrivals-grid/
@@ -544,9 +550,11 @@ body .site-collection-layout {
   #brand-grid { padding: 0 0 0 10px !important; }
   #brand-grid::after { flex: 0 0 10px; }
 }
-@media (min-width: 1024px) {
-  #brand-grid { padding: 0 0 0 12px !important; }
-  #brand-grid::after { flex: 0 0 12px; }
+/* #hero's real padding past 1024px is 16px, not 12px -- see the
+   comment on #arrivals-grid/#clothing-grid above for why. */
+@media (min-width: 769px) {
+  #brand-grid { padding: 0 0 0 16px !important; }
+  #brand-grid::after { flex: 0 0 16px; }
 }
 /* Same size as the product card sliders (#arrivals-grid/#clothing-grid
    .product-card below), so Shop by Brand cards read as the same visual
