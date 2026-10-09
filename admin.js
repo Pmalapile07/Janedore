@@ -591,8 +591,6 @@
       var productMatches = (window._allProducts || []).filter(function(p) {
         return matches((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.sku || ''));
       });
-      var draftMatches = productMatches.filter(function(p) { return (p.status || 'draft') === 'draft'; });
-      var archivedMatches = productMatches.filter(function(p) { return p.status === 'archived'; });
       var orderMatches = orders.filter(function(o) {
         return matches((o.orderNumber || o.id || '') + ' ' + (o.customerName || '') + ' ' + (o.customerEmail || ''));
       });
@@ -600,46 +598,36 @@
         return matches(c.name + ' ' + c.email);
       });
 
-      function productRow(p) {
-        return searchResultRow('ph-bold ph-tag', p.name,
-          (p.brand ? p.brand + ' · ' : '') + (p.stock != null ? p.stock + ' available' : ''),
-          "window._closeAdminSearch();window._openProductForm('" + esc(p.id) + "')");
-      }
-
       setCount('search-count-products', productMatches.length);
-      setCount('search-count-draft', draftMatches.length);
-      setCount('search-count-archived', archivedMatches.length);
       setCount('search-count-orders', orderMatches.length);
       setCount('search-count-customers', customerMatches.length);
       setCount('search-count-all', productMatches.length + orderMatches.length + customerMatches.length);
 
       var html = '';
 
-      if (scope === 'all' || scope === 'products') {
-        if (productMatches.length) {
-          html += '<div class="search-section-label">Products</div>' + productMatches.slice(0, 15).map(productRow).join('');
-        }
+      // Products/Orders reuse the exact same row markup (badges
+      // included) their own tabs render, via window._renderProductRowHTML
+      // / window._renderOrderRowHTML, so a match here looks identical to
+      // finding it in the Products/Orders tab itself — not a simplified
+      // search-only version. Those rows render with zero horizontal
+      // padding (they rely on #main-content's own padding in their native
+      // list), so this wraps them in matching padding here instead.
+      if ((scope === 'all' || scope === 'products') && productMatches.length) {
+        html += '<div class="search-section-label">Products</div>' +
+          '<div style="padding:0 var(--space-4);">' +
+          productMatches.slice(0, 15).map(function(p) {
+            return '<div onclick="window._closeAdminSearch()">' + window._renderProductRowHTML(p) + '</div>';
+          }).join('') +
+          '</div>';
       }
 
-      if (scope === 'draft') {
-        if (draftMatches.length) {
-          html += '<div class="search-section-label">Draft</div>' + draftMatches.slice(0, 15).map(productRow).join('');
-        }
-      }
-
-      if (scope === 'archived') {
-        if (archivedMatches.length) {
-          html += '<div class="search-section-label">Archived</div>' + archivedMatches.slice(0, 15).map(productRow).join('');
-        }
-      }
-
-      if (scope === 'all' || scope === 'orders') {
-        if (orderMatches.length) {
-          html += '<div class="search-section-label">Orders</div>' + orderMatches.slice(0, 15).map(function(o) {
-            return searchResultRow('ph-bold ph-cardholder', '#' + (o.orderNumber || o.id), o.customerName || o.customerEmail || '',
-              "window._closeAdminSearch();window._openOrderDetail('" + esc(o.id) + "')");
-          }).join('');
-        }
+      if ((scope === 'all' || scope === 'orders') && orderMatches.length) {
+        html += '<div class="search-section-label">Orders</div>' +
+          '<div style="padding:0 var(--space-4);">' +
+          orderMatches.slice(0, 15).map(function(o) {
+            return '<div onclick="window._closeAdminSearch()">' + window._renderOrderRowHTML(o) + '</div>';
+          }).join('') +
+          '</div>';
       }
 
       if (scope === 'all' || scope === 'customers') {

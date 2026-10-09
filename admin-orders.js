@@ -513,43 +513,50 @@
             dateGroupHtml = '<div class="orders-date-group">' + esc(dateLabel) + '</div>';
           }
 
-          var abandoned = isAbandoned(o);
-          var isSelected = !!window._selectedOrders[o.id];
-          var rowClick = window._bulkMode
-            ? 'window._toggleOrderSelection(\'' + esc(o.id) + '\',' + !isSelected + ')'
-            : 'window._openOrderDetail(\'' + esc(o.id) + '\')';
-          return dateGroupHtml +
-            '<div class="order-row' + (isSelected ? ' selected' : '') + '" onclick="' + rowClick + '">' +
-            (window._bulkMode
-              ? '<input type="checkbox" class="order-row-checkbox" onclick="event.stopPropagation()"' + (isSelected ? ' checked' : '') +
-                ' onchange="window._toggleOrderSelection(\'' + esc(o.id) + '\',this.checked)">'
-              : '') +
-            '<div class="order-row-main">' +
-              '<div class="order-row-top">' +
-                '<span class="order-row-number">#' + esc(o.orderNumber || o.id) + '</span>' +
-                '<span class="order-row-total">' + fmt(o.total || o.subtotal || 0) + '</span>' +
-              '</div>' +
-              '<div class="order-row-meta">' +
-                esc(o.customerName || 'Guest') + ' · ' +
-                esc(String(o.itemCount || 0)) + ' item' + (o.itemCount === 1 ? '' : 's') + ' · ' +
-                fmtTime(o.createdAt) +
-              '</div>' +
-              '<div class="order-row-badges">' +
-                (abandoned ? '<span class="badge badge-warning">Abandoned</span>' : '') +
-                statusBadge(computeFulfillmentStatus(o)) +
-                statusBadge(o.paymentStatus || 'unpaid') +
-              '</div>' +
-            '</div>' +
-            // Archive/delete icon buttons used to render here, per row.
-            // Removed from view per request — window._toggleOrderArchived
-            // and window._deleteOrder (plus their permission checks and
-            // Firestore logic, below) are untouched; these actions just
-            // aren't rendered beside each order right now. They'll get a
-            // new home (bulk bar / order detail / elsewhere) later.
-          '</div>';
+          return dateGroupHtml + renderOrderRowHTML(o);
         }).join('') +
       '</div>';
   }
+
+  // The exact order row (badges included) — pulled out so admin search
+  // can show a matched order looking identical to how it looks in the
+  // Orders list itself, instead of its own simplified version.
+  function renderOrderRowHTML(o) {
+    var abandoned = isAbandoned(o);
+    var isSelected = !!window._selectedOrders[o.id];
+    var rowClick = window._bulkMode
+      ? 'window._toggleOrderSelection(\'' + esc(o.id) + '\',' + !isSelected + ')'
+      : 'window._openOrderDetail(\'' + esc(o.id) + '\')';
+    return '<div class="order-row' + (isSelected ? ' selected' : '') + '" onclick="' + rowClick + '">' +
+      (window._bulkMode
+        ? '<input type="checkbox" class="order-row-checkbox" onclick="event.stopPropagation()"' + (isSelected ? ' checked' : '') +
+          ' onchange="window._toggleOrderSelection(\'' + esc(o.id) + '\',this.checked)">'
+        : '') +
+      '<div class="order-row-main">' +
+        '<div class="order-row-top">' +
+          '<span class="order-row-number">#' + esc(o.orderNumber || o.id) + '</span>' +
+          '<span class="order-row-total">' + fmt(o.total || o.subtotal || 0) + '</span>' +
+        '</div>' +
+        '<div class="order-row-meta">' +
+          esc(o.customerName || 'Guest') + ' · ' +
+          esc(String(o.itemCount || 0)) + ' item' + (o.itemCount === 1 ? '' : 's') + ' · ' +
+          fmtTime(o.createdAt) +
+        '</div>' +
+        '<div class="order-row-badges">' +
+          (abandoned ? '<span class="badge badge-warning">Abandoned</span>' : '') +
+          statusBadge(computeFulfillmentStatus(o)) +
+          statusBadge(o.paymentStatus || 'unpaid') +
+        '</div>' +
+      '</div>' +
+      // Archive/delete icon buttons used to render here, per row.
+      // Removed from view per request — window._toggleOrderArchived
+      // and window._deleteOrder (plus their permission checks and
+      // Firestore logic, below) are untouched; these actions just
+      // aren't rendered beside each order right now. They'll get a
+      // new home (bulk bar / order detail / elsewhere) later.
+    '</div>';
+  }
+  window._renderOrderRowHTML = renderOrderRowHTML;
 
   window._filterOrders = function () {
     if (window._ordersData) renderOrdersTable(window._ordersData);
