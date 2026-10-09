@@ -47,6 +47,7 @@
           '<div class="section-title">Dashboard</div>' +
           '<div style="font-size:11px;color:var(--muted);">' + new Date().toLocaleDateString('en-ZA', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + '</div>' +
         '</div>' +
+        dashOverviewHTML() +
         '<div class="dash-stat-grid" id="dash-stat-grid">' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Total Revenue</div><div class="dash-stat-value" id="stat-revenue">—</div></div>' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Total Orders</div><div class="dash-stat-value" id="stat-orders">—</div></div>' +
@@ -101,6 +102,8 @@
       setStat('stat-products', totalProducts);
       setStat('stat-payouts',  pendingPayouts);
       setStat('stat-abandoned', abandoned);
+
+      renderDashOverview(orders, _dashRangeDays);
 
       var recent = orders.slice(0, 8);
       var recentEl = safeEl('dash-recent-orders');
@@ -174,6 +177,7 @@
           '<div class="section-title">Dashboard</div>' +
           '<div style="font-size:11px;color:var(--muted);">' + new Date().toLocaleDateString('en-ZA', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + '</div>' +
         '</div>' +
+        dashOverviewHTML() +
         '<div class="dash-stat-grid" id="dash-stat-grid">' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Orders Pending</div><div class="dash-stat-value" id="stat-pending">—</div></div>' +
           '<div class="dash-stat-card"><div class="dash-stat-label">Unread Messages</div><div class="dash-stat-value" id="stat-unread">—</div></div>' +
@@ -229,6 +233,8 @@
       setStat('stat-lowstock',  lowStock.length);
       setStat('stat-abandoned', abandoned);
       setStat('stat-brands',    activeBrands);
+
+      renderDashOverview(orders, _dashRangeDays);
 
       var recent = orders.slice(0, 8);
       var recentEl = safeEl('dash-recent-orders');
@@ -404,6 +410,114 @@
       setStat('stat-revenue',  '—');
       setStat('stat-orders',   '—');
       showToast('Could not load full dashboard. Some data may be unavailable.', 'error');
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     OVERVIEW — Shopify-style Live/Sessions/Sales/Orders/Conversion
+     row + trend chart, shown above the existing stat cards for
+     SUPER_ADMIN and ADMIN (not Vendor — site-wide traffic isn't
+     scoped per brand, and vendors already get their own revenue view
+     via vendor_sales below this).
+
+     Sales/Orders and the chart are real, computed from the same
+     orders fetch the stat cards below already use — no extra query.
+     Live/Sessions/Conversion stay "—" for now: there's no visitor
+     tracking wired up yet (no Google Analytics reads, no presence
+     system). Once a GA4 property + service account are connected,
+     those three get the same real treatment instead of being hidden.
+  ═══════════════════════════════════════════════════════════ */
+  var _dashRangeDays  = 30;
+  var _dashOrdersCache = null;
+
+  function dashOverviewHTML() {
+    return '<div class="dash-overview">' +
+      '<div class="dash-overview-stats">' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label"><span class="dash-live-dot"></span>Live</span><span class="dash-overview-stat-value" id="ov-live">—</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Sessions</span><span class="dash-overview-stat-value" id="ov-sessions">—</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Total sales</span><span class="dash-overview-stat-value" id="ov-sales">—</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Orders</span><span class="dash-overview-stat-value" id="ov-orders">—</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Conversion</span><span class="dash-overview-stat-value" id="ov-conversion">—</span></div>' +
+      '</div>' +
+      '<div class="dash-overview-chart-wrap"><canvas id="dash-overview-chart"></canvas></div>' +
+      '<div class="dash-overview-controls">' +
+        [1, 7, 30, 90].map(function (d) {
+          var label = d === 1 ? 'Today' : d + ' days';
+          return '<button class="dash-overview-range-btn' + (d === _dashRangeDays ? ' active' : '') + '" data-days="' + d + '" onclick="window._setDashRange(' + d + ')">' + label + '</button>';
+        }).join('') +
+        '<button class="dash-overview-report-btn" onclick="window._showToast(\'Full reports coming soon\')">View report</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  window._setDashRange = function (days) {
+    renderDashOverview(_dashOrdersCache || [], days);
+  };
+
+  function renderDashOverview(orders, days) {
+    _dashOrdersCache = orders;
+    _dashRangeDays    = days;
+
+    document.querySelectorAll('.dash-overview-range-btn').forEach(function (b) {
+      b.classList.toggle('active', Number(b.dataset.days) === days);
+    });
+
+    var today = new Date();
+    var buckets = [];
+    for (var i = days - 1; i >= 0; i--) {
+      buckets.push({ date: new Date(today.getFullYear(), today.getMonth(), today.getDate() - i), revenue: 0, orders: 0 });
+    }
+    var startMs = buckets[0].date.getTime();
+
+    var totalSales = 0, totalOrders = 0;
+    orders.forEach(function (o) {
+      var ts = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt)) : null;
+      if (!ts) return;
+      var dayStart = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate()).getTime();
+      if (dayStart < startMs) return;
+      var idx = Math.round((dayStart - startMs) / 86400000);
+      if (idx < 0 || idx >= buckets.length) return;
+      var amt = o.total || o.subtotal || 0;
+      buckets[idx].revenue += amt;
+      buckets[idx].orders  += 1;
+      totalSales += amt;
+      totalOrders += 1;
+    });
+
+    setStat('ov-sales',  'R' + totalSales.toLocaleString('en-ZA'));
+    setStat('ov-orders', totalOrders);
+
+    var canvas = safeEl('dash-overview-chart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; }
+
+    window._analyticsChart = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: buckets.map(function (b) { return b.date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }); }),
+        datasets: [{
+          data: buckets.map(function (b) { return b.revenue; }),
+          borderColor: '#1a56db',
+          backgroundColor: 'rgba(26,86,219,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function (ctx) { return 'R' + ctx.parsed.y.toLocaleString('en-ZA'); } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 }, color: '#8a8a8a' } },
+          y: { display: false, beginAtZero: true }
+        }
+      }
     });
   }
 
