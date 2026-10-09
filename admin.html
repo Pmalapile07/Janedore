@@ -105,10 +105,10 @@
       </div>
     </div>
     <div class="admin-search-tabs" id="admin-search-tabs">
-      <button class="admin-search-tab active" data-scope="all" onclick="window._setAdminSearchScope('all')">All</button>
-      <button class="admin-search-tab" data-scope="orders" onclick="window._setAdminSearchScope('orders')">Orders</button>
-      <button class="admin-search-tab" data-scope="products" onclick="window._setAdminSearchScope('products')">Products</button>
-      <button class="admin-search-tab" data-scope="customers" onclick="window._setAdminSearchScope('customers')">Customers</button>
+      <button class="admin-search-tab active" data-scope="all" onclick="window._setAdminSearchScope('all')">All<span class="admin-search-tab-count" id="search-count-all"></span></button>
+      <button class="admin-search-tab" data-scope="orders" onclick="window._setAdminSearchScope('orders')">Orders<span class="admin-search-tab-count" id="search-count-orders"></span></button>
+      <button class="admin-search-tab" data-scope="products" onclick="window._setAdminSearchScope('products')">Products<span class="admin-search-tab-count" id="search-count-products"></span></button>
+      <button class="admin-search-tab" data-scope="customers" onclick="window._setAdminSearchScope('customers')">Customers<span class="admin-search-tab-count" id="search-count-customers"></span></button>
       <button class="admin-search-tab admin-search-tab-filters" onclick="window._showToast('Filters coming soon')"><i class="ph ph-funnel-simple"></i> All filters</button>
     </div>
     <div class="admin-search-body" id="admin-search-body"></div>
