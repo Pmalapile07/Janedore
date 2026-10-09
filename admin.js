@@ -366,6 +366,44 @@
     homepage: 'Homepage', onlineStore: 'Online Store'
   };
 
+  // Exactly one bottom-nav element reads as "selected" at a time —
+  // one of the three pill tabs, the More button (standing in for
+  // every tab only reachable through the More sheet), or the search
+  // button. Without this, tapping More/Search left whichever pill tab
+  // was active still showing its highlight, making it look like
+  // nothing happened ("stuck on" the old icon).
+  function setBottomNavActive(which) {
+    document.querySelectorAll('.bnav-btn[data-tab]').forEach(function(b) {
+      var isActive = b.dataset.tab === which;
+      b.classList.toggle('active', isActive);
+      // Shopify-style selected state: the tab's own icon swaps from
+      // bold outline (ph-bold) to solid (ph-fill) instead of just
+      // recoloring.
+      var icon = b.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('ph-fill', isActive);
+        icon.classList.toggle('ph-bold', !isActive);
+      }
+    });
+    var moreBtn = document.querySelector('.bottom-nav-pill .bnav-btn:not([data-tab])');
+    if (moreBtn) moreBtn.classList.toggle('active', which === 'more');
+    var searchBtn = document.querySelector('.bnav-search-btn');
+    if (searchBtn) searchBtn.classList.toggle('active', which === 'search');
+  }
+  window._setBottomNavActive = setBottomNavActive;
+
+  function bnavKeyForTab(tab) {
+    return (tab === 'dashboard' || tab === 'orders' || tab === 'products') ? tab : 'more';
+  }
+
+  // Closing More/Search without picking anything (tapping the
+  // backdrop, the X button) doesn't change window._currentTab, so the
+  // nav highlight should fall back to whatever that still is, not
+  // just go blank.
+  window._revertBottomNavActive = function() {
+    setBottomNavActive(bnavKeyForTab(window._currentTab));
+  };
+
   window.switchTab = function(tab) {
     // Tapping a nav button while the search overlay or the More sheet
     // is open used to switch the tab underneath without dismissing
@@ -403,21 +441,7 @@
     document.querySelectorAll('.sidebar-btn[data-tab]').forEach(function(b) {
       b.classList.toggle('active', b.dataset.tab === tab);
     });
-    document.querySelectorAll('.bnav-btn[data-tab]').forEach(function(b) {
-      var isActive = b.dataset.tab === tab;
-      b.classList.toggle('active', isActive);
-      // Shopify-style selected state: the tab's own icon swaps from
-      // bold outline (ph-bold) to solid (ph-fill) instead of just
-      // recoloring.
-      var icon = b.querySelector('i');
-      if (icon) {
-        icon.classList.toggle('ph-fill', isActive);
-        icon.classList.toggle('ph-bold', !isActive);
-      }
-    });
-    document.querySelectorAll('.bnav-btn:not([data-tab])').forEach(function(b) {
-      b.classList.remove('active');
-    });
+    setBottomNavActive(bnavKeyForTab(tab));
     cleanupModalState();
     renderCurrentTab();
   };
@@ -658,6 +682,7 @@
     if (!ov) return;
     if (typeof closeMoreMenu === 'function') closeMoreMenu();
     ov.classList.add('open');
+    setBottomNavActive('search');
     window._adminSearchScope = 'all';
     document.querySelectorAll('.admin-search-tab[data-scope]').forEach(function(t) {
       t.classList.toggle('active', t.dataset.scope === 'all');
@@ -671,6 +696,7 @@
   window._closeAdminSearch = function() {
     var ov = safeEl('admin-search-overlay');
     if (ov) ov.classList.remove('open');
+    window._revertBottomNavActive();
   };
 
   window._setAdminSearchScope = function(scope) {
