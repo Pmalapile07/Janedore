@@ -419,7 +419,7 @@
           '<div class="pi-name">' + esc(p.name) + '</div>' +
           '<div class="pi-meta">' +
             (p.stock <= 3 ? '<span style="color:var(--danger);font-weight:600;">' + stockLabel + '</span>' : stockLabel) +
-            (p.brand ? ' · ' + esc(p.brand) : '') +
+            (p.brand ? ' · <span style="font-weight:600;font-size:11px;">' + esc(p.brand) + '</span>' : '') +
           '</div>' +
         '</div>' +
         '<span class="badge" style="' + badgeStyle + '">' + esc(status) + '</span>' +
