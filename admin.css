@@ -215,6 +215,23 @@ input, select, textarea { font-size:16px !important; }
 
 /* ── DASHBOARD ─────────────────────────────────────────────────────────────── */
 .dashboard-shell{padding:0;}
+
+/* ── DASHBOARD OVERVIEW (live/sessions/sales/orders/conversion + chart) ─────── */
+.dash-overview{margin-bottom:var(--space-5);}
+.dash-overview-stats{display:flex;gap:22px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;margin-bottom:var(--space-3);}
+.dash-overview-stats::-webkit-scrollbar{display:none;}
+.dash-overview-stat{display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
+.dash-overview-stat-label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.dash-overview-stat-value{font-size:19px;font-weight:600;color:var(--text);line-height:1.1;}
+.dash-live-dot{width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;animation:dashLivePulse 1.6s ease-in-out infinite;}
+@keyframes dashLivePulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.dash-overview-chart-wrap{height:140px;margin-bottom:var(--space-3);}
+.dash-overview-controls{display:flex;align-items:center;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.dash-overview-controls::-webkit-scrollbar{display:none;}
+.dash-overview-range-btn{flex:0 0 auto;border:none;background:var(--surface2);padding:6px 12px;border-radius:var(--r-lg);font-family:var(--font);font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;}
+.dash-overview-range-btn.active{background:var(--text);color:var(--surface);}
+.dash-overview-report-btn{flex:0 0 auto;margin-left:auto;border:none;background:var(--surface2);padding:6px 12px;border-radius:var(--r-lg);font-family:var(--font);font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;}
+
 .dash-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-2);margin-bottom:var(--space-4);}
 .dash-stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:var(--space-4);box-shadow:var(--shadow-xs);}
 .dash-stat-label{font-size:var(--font-scale-xs);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:var(--space-1);font-weight:600;}
