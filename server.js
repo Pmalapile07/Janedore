@@ -1373,6 +1373,27 @@ app.get('/collections/:cat', async (req, res, next) => {
   }
 });
 
+// ==================== ADMIN PANEL ROUTE ====================
+// Also before static middleware. admin.html was never routed through
+// injectCacheBust() the way index.html is above — it was just served
+// as-is by the static middleware below, so admin.css/admin.js/every
+// admin-*.js carried no version query string at all. Any CDN sitting
+// in front of this domain (see the CACHE BUSTING comment above) can
+// then cache those files at the edge by file extension indefinitely,
+// serving a stale admin panel no matter how correct or how deployed a
+// fix is — indistinguishable from "the fix didn't work," same failure
+// mode injectCacheBust() exists to prevent, just never applied here.
+
+app.get(['/admin', '/admin.html'], (req, res) => {
+  try {
+    const html = fs.readFileSync(path.join(__dirname, 'admin.html'), 'utf8');
+    res.send(injectCacheBust(html));
+  } catch (e) {
+    console.error('[ADMIN ROUTE] Error:', e.message);
+    res.status(500).send('Error loading admin panel');
+  }
+});
+
 // Serve static files (CSS, JS, images, etc.). index:false stops this from
 // auto-serving index.html for "/" itself (its default behavior) — every
 // HTML page must go through the routes below instead, so the cache-bust
