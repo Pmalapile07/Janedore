@@ -42,8 +42,8 @@
 
 <div id="admin-panel">
   <nav id="top-nav">
-    <span class="nav-brand-wrap">
-      <span class="nav-brand" id="top-nav-title">Dashboard</span>
+    <span class="nav-brand-wrap" style="display:none;">
+      <span class="nav-brand" id="top-nav-title"></span>
       <i class="ph ph-caret-down nav-brand-caret"></i>
     </span>
     <!-- Per-tab action buttons (Create Order + its own order-actions
@@ -127,16 +127,20 @@
   <div id="more-menu-panel">
     <button class="more-menu-item" data-tab="dashboard" onclick="closeMoreMenu();switchTab('dashboard')"><div class="more-menu-icon"><i class="ph-bold ph-house"></i></div><div style="flex:1"><div class="more-menu-item-label">Home</div></div></button>
 
-    <button class="more-menu-item has-children" data-tab="orders" onclick="toggleMoreAccordion('orders', this)"><div class="more-menu-icon"><i class="ph-bold ph-cardholder"></i></div><div style="flex:1"><div class="more-menu-item-label">Orders</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-item has-children" data-tab="orders">
+      <button class="more-menu-item-main" onclick="closeMoreMenu();window._orderTab='all';switchTab('orders')"><div class="more-menu-icon"><i class="ph-bold ph-cardholder"></i></div><div style="flex:1"><div class="more-menu-item-label">Orders</div></div></button>
+      <button class="more-menu-arrow-btn" onclick="toggleMoreAccordion('orders', this)" aria-label="Expand Orders"><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    </div>
     <div class="more-menu-sublist" id="more-sub-orders">
-      <button class="more-menu-subitem" onclick="closeMoreMenu();window._orderTab='all';switchTab('orders')">All orders</button>
-      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Draft orders isn\'t available yet')">Draft orders</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();window._orderTab='draft';switchTab('orders')">Draft orders</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._orderTab='abandoned';switchTab('orders')">Abandoned checkouts</button>
     </div>
 
-    <button class="more-menu-item has-children" data-tab="products" onclick="toggleMoreAccordion('products', this)"><div class="more-menu-icon"><i class="ph-bold ph-tag"></i></div><div style="flex:1"><div class="more-menu-item-label">Products</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-item has-children" data-tab="products">
+      <button class="more-menu-item-main" onclick="closeMoreMenu();switchTab('products')"><div class="more-menu-icon"><i class="ph-bold ph-tag"></i></div><div style="flex:1"><div class="more-menu-item-label">Products</div></div></button>
+      <button class="more-menu-arrow-btn" onclick="toggleMoreAccordion('products', this)" aria-label="Expand Products"><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    </div>
     <div class="more-menu-sublist" id="more-sub-products">
-      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('products')">All products</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Collections isn\'t available yet')">Collections</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Inventory isn\'t available yet')">Inventory</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Purchase orders isn\'t available yet')">Purchase orders</button>
@@ -144,9 +148,11 @@
       <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('vendors')">Brands</button>
     </div>
 
-    <button class="more-menu-item has-children" data-tab="customers" onclick="toggleMoreAccordion('customers', this)"><div class="more-menu-icon"><i class="ph-fill ph-user-list"></i></div><div style="flex:1"><div class="more-menu-item-label">Customers</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-item has-children" data-tab="customers">
+      <button class="more-menu-item-main" onclick="closeMoreMenu();switchTab('customers')"><div class="more-menu-icon"><i class="ph-fill ph-user-list"></i></div><div style="flex:1"><div class="more-menu-item-label">Customers</div></div></button>
+      <button class="more-menu-arrow-btn" onclick="toggleMoreAccordion('customers', this)" aria-label="Expand Customers"><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    </div>
     <div class="more-menu-sublist" id="more-sub-customers">
-      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('customers')">All customers</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Segments isn\'t available yet')">Segments</button>
     </div>
 
@@ -155,9 +161,11 @@
     <div class="more-divider"></div>
 
     <div id="vendors-more-item" style="display:none;">
-      <button class="more-menu-item has-children" data-tab="vendors" onclick="toggleMoreAccordion('vendors', this)"><div class="more-menu-icon"><i class="ph-bold ph-handshake"></i></div><div style="flex:1"><div class="more-menu-item-label">Vendors</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+      <div class="more-menu-item has-children" data-tab="vendors">
+        <button class="more-menu-item-main" onclick="closeMoreMenu();switchTab('vendors')"><div class="more-menu-icon"><i class="ph-bold ph-handshake"></i></div><div style="flex:1"><div class="more-menu-item-label">Vendors</div></div></button>
+        <button class="more-menu-arrow-btn" onclick="toggleMoreAccordion('vendors', this)" aria-label="Expand Vendors"><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+      </div>
       <div class="more-menu-sublist" id="more-sub-vendors">
-        <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('vendors')">All vendors</button>
         <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Approved filter isn\'t available yet')">Approved</button>
         <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Pending filter isn\'t available yet')">Pending</button>
       </div>
@@ -177,9 +185,11 @@
     </div>
     <div class="more-divider"></div>
 
-    <button class="more-menu-item has-children" data-tab="analytics" onclick="toggleMoreAccordion('analytics', this)"><div class="more-menu-icon"><i class="ph-bold ph-chart-bar"></i></div><div style="flex:1"><div class="more-menu-item-label">Analytics</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <div class="more-menu-item has-children" data-tab="analytics">
+      <button class="more-menu-item-main" onclick="closeMoreMenu();switchTab('analytics')"><div class="more-menu-icon"><i class="ph-bold ph-chart-bar"></i></div><div style="flex:1"><div class="more-menu-item-label">Analytics</div></div></button>
+      <button class="more-menu-arrow-btn" onclick="toggleMoreAccordion('analytics', this)" aria-label="Expand Analytics"><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    </div>
     <div class="more-menu-sublist" id="more-sub-analytics">
-      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('analytics')">Reports</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Live View isn\'t available yet')">Live view</button>
     </div>
     <button class="more-menu-item" data-tab="settings" id="settings-more-item" onclick="closeMoreMenu();switchTab('settings')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-gear"></i></div><div style="flex:1"><div class="more-menu-item-label">Settings</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
@@ -200,7 +210,7 @@ function togglePw(){
 }
 function openMoreMenu(){if(window._closeAdminSearch)window._closeAdminSearch();document.getElementById('more-menu-overlay').classList.add('open');document.getElementById('more-menu-panel').classList.add('open');document.querySelectorAll('#more-menu-panel .more-menu-item[data-tab]').forEach(function(b){b.classList.toggle('active',b.dataset.tab===window._currentTab);});if(window._setBottomNavActive)window._setBottomNavActive('more');}
 function closeMoreMenu(){document.getElementById('more-menu-overlay').classList.remove('open');document.getElementById('more-menu-panel').classList.remove('open');if(window._revertBottomNavActive)window._revertBottomNavActive();}
-function toggleMoreAccordion(key,btn){var sub=document.getElementById('more-sub-'+key);if(!sub)return;var open=btn.classList.toggle('expanded');sub.classList.toggle('open',open);}
+function toggleMoreAccordion(key,btn){var row=btn.closest('.more-menu-item');var sub=document.getElementById('more-sub-'+key);if(!row||!sub)return;var open=row.classList.toggle('expanded');sub.classList.toggle('open',open);}
 
 // No manual theme toggle anymore — the admin now just follows the
 // device's own light/dark setting automatically, via the

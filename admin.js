@@ -359,7 +359,7 @@
   // ─── TAB NAVIGATION ──────────────────────────────────────────
 
   var TAB_TITLES = {
-    dashboard: 'Home', products: 'Products', orders: 'Orders',
+    dashboard: '', products: 'Products', orders: 'Orders',
     messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
     admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
@@ -429,8 +429,14 @@
     }
 
     window._currentTab = tab;
+    var title = TAB_TITLES[tab] || '';
     var titleEl = safeEl('top-nav-title');
-    if (titleEl) titleEl.textContent = TAB_TITLES[tab] || 'Dashboard';
+    if (titleEl) titleEl.textContent = title;
+    // Home has no header title at all (per request) -- hide the whole
+    // brand wrap, caret included, rather than leaving an empty label
+    // with a lone dropdown caret floating next to it.
+    var brandWrapEl = document.querySelector('.nav-brand-wrap');
+    if (brandWrapEl) brandWrapEl.style.display = title ? '' : 'none';
     // Cleared on every switch — whichever render*Tab() runs next fills
     // it back in if that section has its own top-bar actions (Orders
     // and Products do); otherwise it just stays empty.
