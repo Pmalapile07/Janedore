@@ -27,10 +27,12 @@
       newsletter: [],
       vendors:    ['read'],
       customers:  [],
-      discounts:  ['read', 'create', 'update', 'delete']
-      // Note: 'admins' is intentionally not listed here — Admin role
-      // has no access to manage other admin/staff accounts. Only
-      // SUPER_ADMIN (the '*' wildcard above) can.
+      discounts:  ['read', 'create', 'update', 'delete'],
+      analytics:  ['read']
+      // Note: 'admins' and 'devtools' are intentionally not listed here —
+      // Admin role has no access to manage other admin/staff accounts or
+      // to internal diagnostics. Only SUPER_ADMIN (the '*' wildcard above)
+      // can.
     },
 
     VENDOR: {
@@ -208,7 +210,9 @@
     discounts:  'discounts',
     pages:      'pages',
     homepage:   'homepage',
-    onlineStore: 'settings'
+    onlineStore: 'settings',
+    analytics:  'analytics',
+    devtools:   'devtools'
   };
 
   window._applyRoleUI = function () {
@@ -253,8 +257,8 @@
       'pages-more-item',   // more menu pages item
       'homepage-tab-btn',  // sidebar homepage tab
       'homepage-more-item',// more menu homepage item
-      'btn-seed',          // sidebar seed button
-      'btn-seed-more'      // more menu seed button
+      'devtools-tab-btn',  // sidebar developer tools tab
+      'devtools-more-item' // more menu developer tools item
     ];
     superAdminOnlyIds.forEach(function (id) {
       var el = document.getElementById(id);

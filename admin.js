@@ -363,7 +363,8 @@
     messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
     admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
-    homepage: 'Homepage', onlineStore: 'Online Store'
+    homepage: 'Homepage', onlineStore: 'Online Store',
+    analytics: 'Analytics', devtools: 'Developer Tools'
   };
 
   // Exactly one bottom-nav element reads as "selected" at a time —
@@ -417,7 +418,8 @@
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
       vendors: 'vendors', customers: 'customers', settings: 'settings',
       admins: 'admins', pages: 'pages', discounts: 'discounts',
-      onlineStore: 'settings'
+      onlineStore: 'settings', homepage: 'homepage',
+      analytics: 'analytics', devtools: 'devtools'
     };
 
     var module = TAB_MODULE_MAP[tab];
@@ -465,6 +467,8 @@
       case 'pages':       if (window._renderPagesTab)       window._renderPagesTab();       break;
       case 'homepage':    if (window._renderHomepageTab)    window._renderHomepageTab();    break;
       case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;
+      case 'analytics':   if (window._renderAnalyticsTab)   window._renderAnalyticsTab();   break;
+      case 'devtools':    if (window._renderDevtoolsTab)    window._renderDevtoolsTab();    break;
     }
   }
 
