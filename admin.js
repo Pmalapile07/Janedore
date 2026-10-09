@@ -567,7 +567,7 @@
     // so only bail out here when both the query AND the scope are at
     // their defaults.
     if (!query && scope === 'all') {
-      ['all', 'orders', 'products', 'customers'].forEach(function(s) { setCount('search-count-' + s, 0); });
+      ['all', 'orders', 'products', 'draft', 'archived', 'customers'].forEach(function(s) { setCount('search-count-' + s, 0); });
       body.innerHTML = '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No recent searches</div></div>';
       return;
     }
@@ -591,6 +591,8 @@
       var productMatches = (window._allProducts || []).filter(function(p) {
         return matches((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.sku || ''));
       });
+      var draftMatches = productMatches.filter(function(p) { return (p.status || 'draft') === 'draft'; });
+      var archivedMatches = productMatches.filter(function(p) { return p.status === 'archived'; });
       var orderMatches = orders.filter(function(o) {
         return matches((o.orderNumber || o.id || '') + ' ' + (o.customerName || '') + ' ' + (o.customerEmail || ''));
       });
@@ -598,7 +600,15 @@
         return matches(c.name + ' ' + c.email);
       });
 
+      function productRow(p) {
+        return searchResultRow('ph-bold ph-tag', p.name,
+          (p.brand ? p.brand + ' · ' : '') + (p.stock != null ? p.stock + ' available' : ''),
+          "window._closeAdminSearch();window._openProductForm('" + esc(p.id) + "')");
+      }
+
       setCount('search-count-products', productMatches.length);
+      setCount('search-count-draft', draftMatches.length);
+      setCount('search-count-archived', archivedMatches.length);
       setCount('search-count-orders', orderMatches.length);
       setCount('search-count-customers', customerMatches.length);
       setCount('search-count-all', productMatches.length + orderMatches.length + customerMatches.length);
@@ -607,11 +617,19 @@
 
       if (scope === 'all' || scope === 'products') {
         if (productMatches.length) {
-          html += '<div class="search-section-label">Products</div>' + productMatches.slice(0, 15).map(function(p) {
-            return searchResultRow('ph-bold ph-tag', p.name,
-              (p.brand ? p.brand + ' · ' : '') + (p.stock != null ? p.stock + ' available' : ''),
-              "window._closeAdminSearch();window._openProductForm('" + esc(p.id) + "')");
-          }).join('');
+          html += '<div class="search-section-label">Products</div>' + productMatches.slice(0, 15).map(productRow).join('');
+        }
+      }
+
+      if (scope === 'draft') {
+        if (draftMatches.length) {
+          html += '<div class="search-section-label">Draft</div>' + draftMatches.slice(0, 15).map(productRow).join('');
+        }
+      }
+
+      if (scope === 'archived') {
+        if (archivedMatches.length) {
+          html += '<div class="search-section-label">Archived</div>' + archivedMatches.slice(0, 15).map(productRow).join('');
         }
       }
 
