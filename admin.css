@@ -189,21 +189,25 @@ input, select, textarea { font-size:16px !important; }
    the top padding. */
 #more-menu-panel{position:fixed;top:0;bottom:0;left:0;right:0;background:#fff;border-radius:0;padding:calc(var(--space-3) + env(safe-area-inset-top,0)) 0 calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);overflow-y:auto;}
 #more-menu-panel.open{transform:translateY(0);}
-.more-menu-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);cursor:pointer;transition:background var(--duration-fast);border:none;background:none;width:100%;text-align:left;}
+.more-menu-item{position:relative;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);cursor:pointer;transition:background var(--duration-fast);border:none;background:none;width:100%;text-align:left;}
 .more-menu-item:active{background:rgba(0,0,0,0.06);}
 .more-menu-icon{width:34px;height:34px;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;font-size:calc(var(--font-scale-lg) + 2px);flex-shrink:0;background:none;color:rgba(0,0,0,0.62);}
 .more-menu-icon i{line-height:1;}
-.more-menu-item-label{font-size:16px;font-weight:400;color:#000;}
+.more-menu-item-label{font-size:16px;font-weight:600;color:#000;}
 .more-menu-item-desc{font-size:var(--font-scale-sm);color:rgba(0,0,0,0.45);margin-top:var(--space-1);}
 .more-menu-arrow{margin-left:auto;color:rgba(0,0,0,0.35);font-size:var(--font-scale-lg);display:flex;align-items:center;}
 .more-menu-arrow i{display:inline-block;transform:rotate(90deg);}
-.more-divider{height:0.5px;background:rgba(0,0,0,0.1);margin:var(--space-2) var(--space-5);}
+.more-divider{height:0.5px;background:rgba(0,0,0,0.1);margin:6px var(--space-5);}
 .more-menu-section-label{padding:var(--space-4) var(--space-5) var(--space-1);font-size:var(--font-scale-sm);font-weight:500;color:rgba(0,0,0,0.4);}
 /* Marks whichever row matches the tab the admin was on when More was
-   opened (see openMoreMenu() in admin.html) — an inset pill instead
-   of the plain flush row every other item has, and no chevron since
-   it's not a destination to navigate to from here. */
-.more-menu-item.active{background:var(--surface2);border-radius:var(--r-lg);margin:0 var(--space-3);width:calc(100% - (var(--space-3) * 2));}
+   opened (see openMoreMenu() in admin.html) — a background drawn via
+   ::before behind the row's own content instead of margin/width on
+   the row itself, so the icon and label never shift position when a
+   row becomes active. Right inset matches the row's own right
+   padding (space-5), the same place every other row's chevron sits,
+   so the pill never extends past that. */
+.more-menu-item.active::before{content:'';position:absolute;top:1px;bottom:1px;left:var(--space-3);right:var(--space-5);background:var(--surface2);border-radius:var(--r-lg);}
+.more-menu-item.active > *{position:relative;z-index:1;}
 .more-menu-item.active .more-menu-arrow{display:none;}
 
 /* ── SECTION HEADERS ───────────────────────────────────────────────────────── */
