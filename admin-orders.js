@@ -396,7 +396,7 @@
   }
 
   var ORDER_TAB_LABELS = {
-    all: 'All', unfulfilled: 'Unfulfilled', unpaid: 'Unpaid', open: 'Open',
+    all: 'All', draft: 'Draft', unfulfilled: 'Unfulfilled', unpaid: 'Unpaid', open: 'Open',
     abandoned: 'Abandoned', returns: 'Returns', archived: 'Archived'
   };
 
@@ -463,6 +463,7 @@
       // still means literally everything, archived orders included —
       // every other tab hides archived orders, same as Shopify.
       if (tab !== 'all' && tab !== 'archived' && o.archived) return false;
+      if (tab === 'draft' && o.status !== 'draft') return false;
       if (tab === 'unfulfilled' && computeFulfillmentStatus(o) === 'fulfilled') return false;
       if (tab === 'unpaid' && (o.paymentStatus || 'unpaid') !== 'unpaid') return false;
       if (tab === 'open' && o.status === 'cancelled') return false;

@@ -191,6 +191,17 @@ input, select, textarea { font-size:16px !important; }
 #more-menu-panel.open{transform:translateY(0);}
 .more-menu-item{position:relative;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);cursor:pointer;transition:background var(--duration-fast);border:none;background:none;width:100%;text-align:left;}
 .more-menu-item:active{background:rgba(0,0,0,0.06);}
+/* Accordion rows (.has-children) are a <div>, not a single clickable
+   button — the row text and the chevron are two separate buttons
+   inside it (.more-menu-item-main navigates, .more-menu-arrow-btn
+   only expands/collapses), so the wrapper itself isn't a button and
+   shouldn't look or behave like one. */
+.more-menu-item.has-children{padding:0;cursor:default;gap:0;}
+.more-menu-item.has-children:active{background:none;}
+.more-menu-item-main{flex:1;min-width:0;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-2) var(--space-3) var(--space-5);cursor:pointer;border:none;background:none;text-align:left;font-family:var(--font);color:inherit;transition:background var(--duration-fast);}
+.more-menu-item-main:active{background:rgba(0,0,0,0.06);}
+.more-menu-arrow-btn{flex-shrink:0;border:none;background:none;cursor:pointer;display:flex;align-items:center;padding:var(--space-3) var(--space-5) var(--space-3) var(--space-2);transition:background var(--duration-fast);}
+.more-menu-arrow-btn:active{background:rgba(0,0,0,0.06);}
 .more-menu-icon{width:34px;height:34px;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;font-size:calc(var(--font-scale-lg) + 2px);flex-shrink:0;background:none;color:rgba(0,0,0,0.62);}
 .more-menu-icon i{line-height:1;}
 .more-menu-item-label{font-size:16px;font-weight:600;color:#000;}
@@ -220,7 +231,7 @@ input, select, textarea { font-size:16px !important; }
 .more-menu-item.has-children.expanded .more-menu-arrow i{transform:rotate(-90deg);}
 .more-menu-sublist{max-height:0;overflow:hidden;transition:max-height var(--duration-base) var(--ease-out);}
 .more-menu-sublist.open{max-height:400px;}
-.more-menu-subitem{display:block;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:var(--space-2) var(--space-5) var(--space-2) 66px;font-family:var(--font);font-size:15px;font-weight:400;color:rgba(0,0,0,0.55);transition:background var(--duration-fast);}
+.more-menu-subitem{display:block;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:var(--space-2) var(--space-5) var(--space-2) 66px;font-family:var(--font);font-size:16px;font-weight:600;color:rgba(0,0,0,0.55);transition:background var(--duration-fast);}
 .more-menu-subitem:active{background:rgba(0,0,0,0.06);}
 
 /* ── SECTION HEADERS ───────────────────────────────────────────────────────── */
