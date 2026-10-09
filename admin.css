@@ -134,10 +134,11 @@ input, select, textarea { font-size:16px !important; }
    (500) — those now run full-screen behind it rather than leaving a
    gap, so the nav has to float on top to stay visible/tappable over
    either. */
-#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:var(--space-2) var(--space-5);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-2) var(--space-5);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
 .bnav-search-btn,.bnav-jai-btn{pointer-events:all;flex-shrink:0;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:0.5px solid var(--border);box-shadow:var(--shadow-nav);font-size:20px;color:var(--text2);cursor:pointer;transition:background var(--duration-fast);}
 .bnav-search-btn:active,.bnav-jai-btn:active{background:var(--surface2);}
-.bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:26px;padding:3px;display:flex;align-items:center;gap:1px;box-shadow:var(--shadow-nav);}
+.bnav-search-btn.active{background:var(--surface2);color:var(--text);}
+.bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:26px;padding:3px;display:flex;align-items:center;gap:3px;box-shadow:var(--shadow-nav);}
 .bnav-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:none;border:none;cursor:pointer;transition:background var(--duration-fast),color var(--duration-fast);position:relative;font-size:20px;color:var(--muted2);}
 .bnav-btn i{line-height:1;}
 .bnav-btn:active{background:var(--surface2);}
