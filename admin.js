@@ -556,12 +556,18 @@
     _adminSearchQuery = query;
     var scope = window._adminSearchScope || 'all';
 
+    function setCount(id, n) {
+      var el = safeEl(id);
+      if (el) el.textContent = n > 0 ? String(n) : '';
+    }
+
     // "No recent searches" is only the All tab's empty-field landing
     // state (matches the reference). Switching to a single-type tab
     // with nothing typed should browse that type, not show nothing —
     // so only bail out here when both the query AND the scope are at
     // their defaults.
     if (!query && scope === 'all') {
+      ['all', 'orders', 'products', 'customers'].forEach(function(s) { setCount('search-count-' + s, 0); });
       body.innerHTML = '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No recent searches</div></div>';
       return;
     }
@@ -571,23 +577,37 @@
     }
 
     body.innerHTML = '<div class="empty-state"><div class="empty-state-text">Loading...</div></div>';
-    var needsOrders = scope === 'all' || scope === 'orders';
-    var needsCustomers = scope === 'all' || scope === 'customers';
 
+    // Every tab's count pill needs all three datasets regardless of
+    // which one is currently open, so orders/customers are always
+    // fetched here (both cached after the first call).
     Promise.all([
-      needsOrders ? fetchAdminSearchOrders() : Promise.resolve([]),
-      needsCustomers ? getCustomersForSearch() : Promise.resolve([])
+      fetchAdminSearchOrders(),
+      getCustomersForSearch()
     ]).then(function(results) {
       if (_adminSearchQuery !== query) return; // a newer keystroke already superseded this
       var orders = results[0], customers = results[1];
+
+      var productMatches = (window._allProducts || []).filter(function(p) {
+        return matches((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.sku || ''));
+      });
+      var orderMatches = orders.filter(function(o) {
+        return matches((o.orderNumber || o.id || '') + ' ' + (o.customerName || '') + ' ' + (o.customerEmail || ''));
+      });
+      var customerMatches = customers.filter(function(c) {
+        return matches(c.name + ' ' + c.email);
+      });
+
+      setCount('search-count-products', productMatches.length);
+      setCount('search-count-orders', orderMatches.length);
+      setCount('search-count-customers', customerMatches.length);
+      setCount('search-count-all', productMatches.length + orderMatches.length + customerMatches.length);
+
       var html = '';
 
       if (scope === 'all' || scope === 'products') {
-        var products = (window._allProducts || []).filter(function(p) {
-          return matches((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.sku || ''));
-        }).slice(0, 15);
-        if (products.length) {
-          html += '<div class="search-section-label">Products</div>' + products.map(function(p) {
+        if (productMatches.length) {
+          html += '<div class="search-section-label">Products</div>' + productMatches.slice(0, 15).map(function(p) {
             return searchResultRow('ph-bold ph-tag', p.name,
               (p.brand ? p.brand + ' · ' : '') + (p.stock != null ? p.stock + ' available' : ''),
               "window._closeAdminSearch();window._openProductForm('" + esc(p.id) + "')");
@@ -596,11 +616,8 @@
       }
 
       if (scope === 'all' || scope === 'orders') {
-        var orderMatches = orders.filter(function(o) {
-          return matches((o.orderNumber || o.id || '') + ' ' + (o.customerName || '') + ' ' + (o.customerEmail || ''));
-        }).slice(0, 15);
         if (orderMatches.length) {
-          html += '<div class="search-section-label">Orders</div>' + orderMatches.map(function(o) {
+          html += '<div class="search-section-label">Orders</div>' + orderMatches.slice(0, 15).map(function(o) {
             return searchResultRow('ph-bold ph-cardholder', '#' + (o.orderNumber || o.id), o.customerName || o.customerEmail || '',
               "window._closeAdminSearch();window._openOrderDetail('" + esc(o.id) + "')");
           }).join('');
@@ -608,11 +625,8 @@
       }
 
       if (scope === 'all' || scope === 'customers') {
-        var customerMatches = customers.filter(function(c) {
-          return matches(c.name + ' ' + c.email);
-        }).slice(0, 15);
         if (customerMatches.length) {
-          html += '<div class="search-section-label">Customers</div>' + customerMatches.map(function(c) {
+          html += '<div class="search-section-label">Customers</div>' + customerMatches.slice(0, 15).map(function(c) {
             return searchResultRow('ph-bold ph-user', c.name, c.email + ' · ' + c.orders + ' order' + (c.orders !== 1 ? 's' : ''),
               "window._closeAdminSearch();window._openCustomerDetail('" + esc(c.email) + "')");
           }).join('');
