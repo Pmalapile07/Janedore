@@ -187,23 +187,23 @@ input, select, textarea { font-size:16px !important; }
    the plain page background behind it) looked broken. No handle or
    "More" title any more, per request; the first item starts right at
    the top padding. */
-#more-menu-panel{position:fixed;top:0;bottom:0;left:0;right:0;background:var(--nav-bg);border-radius:0;padding:calc(var(--space-3) + env(safe-area-inset-top,0)) 0 calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);overflow-y:auto;}
+#more-menu-panel{position:fixed;top:0;bottom:0;left:0;right:0;background:#fff;border-radius:0;padding:calc(var(--space-3) + env(safe-area-inset-top,0)) 0 calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);overflow-y:auto;}
 #more-menu-panel.open{transform:translateY(0);}
 .more-menu-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);cursor:pointer;transition:background var(--duration-fast);border:none;background:none;width:100%;text-align:left;}
-.more-menu-item:active{background:rgba(255,255,255,0.06);}
+.more-menu-item:active{background:rgba(0,0,0,0.06);}
 .more-menu-icon{width:34px;height:34px;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;font-size:var(--font-scale-lg);flex-shrink:0;}
 .more-menu-icon i{line-height:1;}
-.more-menu-item-label{font-size:var(--font-scale-md);font-weight:400;color:#fff;}
-.more-menu-item-desc{font-size:var(--font-scale-sm);color:rgba(255,255,255,0.45);margin-top:var(--space-1);}
-.more-menu-arrow{margin-left:auto;color:rgba(255,255,255,0.35);font-size:var(--font-scale-lg);font-weight:300;}
+.more-menu-item-label{font-size:calc(var(--font-scale-md) * 2);font-weight:400;color:#000;}
+.more-menu-item-desc{font-size:var(--font-scale-sm);color:rgba(0,0,0,0.45);margin-top:var(--space-1);}
+.more-menu-arrow{margin-left:auto;color:rgba(0,0,0,0.35);font-size:var(--font-scale-lg);font-weight:300;}
 .mmi-teal .more-menu-icon{background:var(--teal-soft);color:var(--teal);}
 .mmi-green .more-menu-icon{background:var(--success-soft);color:var(--success);}
 .mmi-blue .more-menu-icon{background:var(--accent-soft);color:var(--accent);}
 .mmi-orange .more-menu-icon{background:var(--warning-soft);color:var(--warning);}
 .mmi-purple .more-menu-icon{background:var(--purple-soft);color:var(--purple);}
 .mmi-red .more-menu-icon{background:var(--danger-soft);color:var(--danger);}
-.mmi-gray .more-menu-icon{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
-.more-divider{height:0.5px;background:rgba(255,255,255,0.12);margin:var(--space-2) var(--space-5);}
+.mmi-gray .more-menu-icon{background:rgba(0,0,0,0.06);color:rgba(0,0,0,0.55);}
+.more-divider{height:0.5px;background:rgba(0,0,0,0.1);margin:var(--space-2) var(--space-5);}
 
 /* ── SECTION HEADERS ───────────────────────────────────────────────────────── */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);gap:var(--space-2);flex-wrap:wrap;}
