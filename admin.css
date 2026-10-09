@@ -16,7 +16,7 @@
   --shadow-lg:0 8px 32px rgba(0,0,0,0.13),0 2px 8px rgba(0,0,0,0.07);
   --shadow-nav:0 -1px 0 rgba(255,255,255,0.05),0 -8px 32px rgba(0,0,0,0.35);
   --r:14px;--r-sm:10px;--r-xs:7px;--r-lg:20px;
-  --nav-h:52px;--bnav-h:62px;
+  --nav-h:52px;--bnav-h:64px;
   --font:'Inter',sans-serif;
   --font-scale-xs:10px;--font-scale-sm:12px;--font-scale-md:13px;--font-scale-lg:16px;--font-scale-xl:20px;--font-scale-2xl:24px;--font-scale-3xl:30px;
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
@@ -134,15 +134,21 @@ input, select, textarea { font-size:16px !important; }
    (500) — those now run full-screen behind it rather than leaving a
    gap, so the nav has to float on top to stay visible/tappable over
    either. */
-#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-2) var(--space-5);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
-.bnav-search-btn,.bnav-jai-btn{pointer-events:all;flex-shrink:0;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:0.5px solid var(--border);box-shadow:var(--shadow-nav);font-size:20px;color:var(--text2);cursor:pointer;transition:background var(--duration-fast);}
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-2) var(--space-4);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
+/* Search/Jai already have their own always-on white circle (border +
+   shadow), unlike the pill tabs below which have none until active —
+   so "selected" here is a smaller grey circle inset within that white
+   one (via ::before), not a full-bleed fill, which would've just
+   looked like the same circle changing color. */
+.bnav-search-btn,.bnav-jai-btn{position:relative;pointer-events:all;flex-shrink:0;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:0.5px solid var(--border);box-shadow:var(--shadow-nav);font-size:21px;color:var(--text2);cursor:pointer;transition:background var(--duration-fast);}
 .bnav-search-btn:active,.bnav-jai-btn:active{background:var(--surface2);}
-.bnav-search-btn.active{background:var(--surface2);color:var(--text);}
-.bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:26px;padding:3px;display:flex;align-items:center;gap:3px;box-shadow:var(--shadow-nav);}
-.bnav-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:none;border:none;cursor:pointer;transition:background var(--duration-fast),color var(--duration-fast);position:relative;font-size:20px;color:var(--muted2);}
+.bnav-search-btn.active{color:var(--text);}
+.bnav-search-btn.active::before,.bnav-jai-btn.active::before{content:'';position:absolute;inset:6px;border-radius:50%;background:rgba(0,0,0,0.1);}
+.bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:27px;padding:3px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-nav);}
+.bnav-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:none;border:none;cursor:pointer;transition:background var(--duration-fast),color var(--duration-fast);position:relative;font-size:21px;color:var(--muted2);}
 .bnav-btn i{line-height:1;}
-.bnav-btn:active{background:var(--surface2);}
-.bnav-btn.active{background:var(--surface2);color:var(--text);}
+.bnav-btn:active{background:rgba(0,0,0,0.1);}
+.bnav-btn.active{background:rgba(0,0,0,0.1);color:var(--text);}
 .bnav-badge{position:absolute;top:2px;right:2px;background:#e53935;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:var(--space-2);display:none;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid #fff;}
 
 /* ── ADMIN SEARCH ──────────────────────────────────────────────────────────── */
