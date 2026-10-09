@@ -130,7 +130,11 @@ input, select, textarea { font-size:16px !important; }
 /* Three separate floating chips, Shopify-style: a lone search button,
    a center pill of the four main tabs, and a lone Jai button — all on
    a white background instead of the old single dark pill. */
-#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:var(--space-2) var(--space-5);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
+/* z-index above both the More sheet (301) and the search overlay
+   (500) — those now run full-screen behind it rather than leaving a
+   gap, so the nav has to float on top to stay visible/tappable over
+   either. */
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:var(--space-2) var(--space-5);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
 .bnav-search-btn,.bnav-jai-btn{pointer-events:all;flex-shrink:0;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:0.5px solid var(--border);box-shadow:var(--shadow-nav);font-size:20px;color:var(--text2);cursor:pointer;transition:background var(--duration-fast);}
 .bnav-search-btn:active,.bnav-jai-btn:active{background:var(--surface2);}
 .bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:26px;padding:3px;display:flex;align-items:center;gap:1px;box-shadow:var(--shadow-nav);}
@@ -144,7 +148,7 @@ input, select, textarea { font-size:16px !important; }
 /* Full-screen overlay opened from the bottom nav's search button —
    dark header (close + search field, no barcode scan since there's
    nothing to scan yet) over a white results sheet, Shopify-style. */
-#admin-search-overlay{display:none;position:fixed;top:0;bottom:var(--bnav-h);left:0;right:0;z-index:500;background:#0a0a0a;flex-direction:column;}
+#admin-search-overlay{display:none;position:fixed;inset:0;z-index:500;background:#0a0a0a;flex-direction:column;}
 #admin-search-overlay.open{display:flex;}
 .admin-search-header{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);padding-top:calc(var(--space-3) + env(safe-area-inset-top,0));flex-shrink:0;}
 .admin-search-close{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;}
@@ -159,21 +163,23 @@ input, select, textarea { font-size:16px !important; }
 .admin-search-tab-filters{margin-left:auto;}
 .admin-search-tab-count{background:rgba(255,255,255,0.18);color:inherit;font-size:10px;font-weight:600;line-height:1;padding:3px 6px;border-radius:999px;}
 .admin-search-tab-count:empty{display:none;}
-.admin-search-body{flex:1;min-height:0;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--space-6) + env(safe-area-inset-bottom,0));}
+.admin-search-body{flex:1;min-height:0;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));}
 .search-section-label{font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:var(--space-4) var(--space-4) var(--space-1);}
 .search-result-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-bottom:0.5px solid var(--border-light);cursor:pointer;transition:background var(--duration-fast);}
 .search-result-row:active{background:var(--surface2);}
 .search-result-icon{width:36px;height:36px;border-radius:50%;background:var(--surface3);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
 
 /* ── MORE MENU ─────────────────────────────────────────────────────────────── */
-#more-menu-overlay{display:none;position:fixed;top:0;bottom:var(--bnav-h);left:0;right:0;background:var(--overlay-bg);z-index:300;animation:fadeIn var(--duration-base) ease;}
+#more-menu-overlay{display:none;position:fixed;inset:0;background:var(--overlay-bg);z-index:300;animation:fadeIn var(--duration-base) ease;}
 #more-menu-overlay.open{display:block;}
-/* Black, same as #top-nav's --nav-bg, full screen except for a strip
-   at the bottom left clear for #bottom-nav, which stays usable while
-   More is open — text/divider colors flipped to light since they
-   used to sit on a white sheet. No handle or "More" title any more,
-   per request; the first item starts right at the top padding. */
-#more-menu-panel{position:fixed;top:0;bottom:var(--bnav-h);left:0;right:0;background:var(--nav-bg);border-radius:0;padding:calc(var(--space-3) + env(safe-area-inset-top,0)) 0 var(--space-3);z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);overflow-y:auto;}
+/* Black, same as #top-nav's --nav-bg, truly full screen — #bottom-nav
+   sits at a higher z-index than this panel so it still floats on top
+   and stays usable while More is open, same as it floats over any
+   other tab's content; leaving an actual gap here instead (showing
+   the plain page background behind it) looked broken. No handle or
+   "More" title any more, per request; the first item starts right at
+   the top padding. */
+#more-menu-panel{position:fixed;top:0;bottom:0;left:0;right:0;background:var(--nav-bg);border-radius:0;padding:calc(var(--space-3) + env(safe-area-inset-top,0)) 0 calc(var(--bnav-h) + var(--space-2) + env(safe-area-inset-bottom,0));z-index:301;transform:translateY(100%);transition:transform var(--duration-slow) var(--ease-out);overflow-y:auto;}
 #more-menu-panel.open{transform:translateY(0);}
 .more-menu-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);cursor:pointer;transition:background var(--duration-fast);border:none;background:none;width:100%;text-align:left;}
 .more-menu-item:active{background:rgba(255,255,255,0.06);}
