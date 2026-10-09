@@ -336,6 +336,11 @@ input, select, textarea { font-size:16px !important; }
 .form-group label{display:block;font-size:var(--font-scale-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:var(--space-2);}
 .form-group input,.form-group select,.form-group textarea{width:100%;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-xs);padding:var(--space-2) var(--space-3);font-family:var(--font);font-size:var(--font-scale-md);color:var(--text);outline:none;transition:border-color var(--duration-base),background var(--duration-base);-webkit-appearance:none;}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:rgba(26,86,219,0.4);background:var(--surface);box-shadow:0 0 0 3px rgba(26,86,219,0.06);}
+/* Product edit form only, back to its original smaller size — the
+   global 16px-minimum (set to stop iOS auto-zooming on focus) is
+   deliberately not applied here; this re-opens that zoom-on-tap
+   behavior for this form specifically, by request. */
+#product-form input,#product-form select,#product-form textarea{font-size:var(--font-scale-md)!important;}
 .form-group textarea{min-height:78px;resize:vertical;}
 
 /* ── VARIANT BLOCKS ────────────────────────────────────────────────────────── */
@@ -667,8 +672,11 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .order-vendor-group-readonly{font-size:var(--font-scale-sm);color:var(--muted);padding:0 var(--space-1);}
 /* A plain text input matching .filter-select's box but without its
    dropdown-chevron background image, which only belongs on an actual
-   <select>. */
-.order-tracking-input{background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:var(--space-2) var(--space-3);font-family:var(--font);font-size:var(--font-scale-sm);color:var(--text2);outline:none;box-shadow:var(--shadow-xs);}
+   <select>. Back to its original smaller size — the global
+   16px-minimum (set to stop iOS auto-zooming on focus) is
+   deliberately not applied here; this re-opens that zoom-on-tap
+   behavior for this field specifically, by request. */
+.order-tracking-input{background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:var(--space-2) var(--space-3);font-family:var(--font);font-size:var(--font-scale-sm)!important;color:var(--text2);outline:none;box-shadow:var(--shadow-xs);}
 
 /* ── SETUP GUIDE ──────────────────────────────────────────────────────────── */
 .setup-guide{max-width:520px;padding:var(--space-2) 0 48px;}
