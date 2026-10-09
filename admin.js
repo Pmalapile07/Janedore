@@ -556,12 +556,21 @@
     _adminSearchQuery = query;
     var scope = window._adminSearchScope || 'all';
 
-    if (!query) {
+    // "No recent searches" is only the All tab's empty-field landing
+    // state (matches the reference). Switching to a single-type tab
+    // with nothing typed should browse that type, not show nothing —
+    // so only bail out here when both the query AND the scope are at
+    // their defaults.
+    if (!query && scope === 'all') {
       body.innerHTML = '<div class="orders-empty-state"><i class="ph ph-magnifying-glass orders-empty-icon"></i><div class="orders-empty-title">No recent searches</div></div>';
       return;
     }
 
-    body.innerHTML = '<div class="empty-state"><div class="empty-state-text">Searching...</div></div>';
+    function matches(text) {
+      return !query || text.toLowerCase().indexOf(query) !== -1;
+    }
+
+    body.innerHTML = '<div class="empty-state"><div class="empty-state-text">Loading...</div></div>';
     var needsOrders = scope === 'all' || scope === 'orders';
     var needsCustomers = scope === 'all' || scope === 'customers';
 
@@ -575,7 +584,7 @@
 
       if (scope === 'all' || scope === 'products') {
         var products = (window._allProducts || []).filter(function(p) {
-          return ((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.sku || '')).toLowerCase().indexOf(query) !== -1;
+          return matches((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.sku || ''));
         }).slice(0, 15);
         if (products.length) {
           html += '<div class="search-section-label">Products</div>' + products.map(function(p) {
@@ -588,7 +597,7 @@
 
       if (scope === 'all' || scope === 'orders') {
         var orderMatches = orders.filter(function(o) {
-          return ((o.orderNumber || o.id || '') + ' ' + (o.customerName || '') + ' ' + (o.customerEmail || '')).toLowerCase().indexOf(query) !== -1;
+          return matches((o.orderNumber || o.id || '') + ' ' + (o.customerName || '') + ' ' + (o.customerEmail || ''));
         }).slice(0, 15);
         if (orderMatches.length) {
           html += '<div class="search-section-label">Orders</div>' + orderMatches.map(function(o) {
@@ -600,7 +609,7 @@
 
       if (scope === 'all' || scope === 'customers') {
         var customerMatches = customers.filter(function(c) {
-          return (c.name + ' ' + c.email).toLowerCase().indexOf(query) !== -1;
+          return matches(c.name + ' ' + c.email);
         }).slice(0, 15);
         if (customerMatches.length) {
           html += '<div class="search-section-label">Customers</div>' + customerMatches.map(function(c) {
