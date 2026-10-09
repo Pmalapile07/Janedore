@@ -57,30 +57,39 @@
 
   <nav id="desktop-sidebar">
     <div class="sidebar-section-label">Main</div>
-    <button class="sidebar-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="sidebar-icon"><i class="ph-light ph-chart-line"></i></span>Dashboard</button>
+    <button class="sidebar-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="sidebar-icon"><i class="ph-light ph-chart-line"></i></span>Home</button>
     <button class="sidebar-btn" data-tab="orders" onclick="switchTab('orders')"><span class="sidebar-icon"><i class="ph-light ph-folders"></i></span>Orders</button>
+
+    <div class="sidebar-section-label">Products</div>
     <button class="sidebar-btn" data-tab="products" onclick="switchTab('products')"><span class="sidebar-icon"><i class="ph-light ph-barcode"></i></span>Products</button>
-    <button class="sidebar-btn" data-tab="discounts" onclick="switchTab('discounts')"><span class="sidebar-icon"><i class="ph-light ph-tag"></i></span>Discounts</button>
+    <button class="sidebar-btn" data-tab="reviews" onclick="switchTab('reviews')"><span class="sidebar-icon"><i class="ph-light ph-star"></i></span>Reviews</button>
+
+    <div class="sidebar-section-label">Customers</div>
+    <button class="sidebar-btn" data-tab="customers" onclick="switchTab('customers')"><span class="sidebar-icon"><i class="ph-light ph-folder-simple-user"></i></span>Customers</button>
     <button class="sidebar-btn" data-tab="messages" onclick="switchTab('messages')"><span class="sidebar-icon"><i class="ph-light ph-chat"></i></span>Inbox</button>
 
-    <div class="sidebar-section-label">Store</div>
-    <button class="sidebar-btn" data-tab="customers" onclick="switchTab('customers')"><span class="sidebar-icon"><i class="ph-light ph-folder-simple-user"></i></span>Customers</button>
-    <button class="sidebar-btn" data-tab="reviews" onclick="switchTab('reviews')"><span class="sidebar-icon"><i class="ph-light ph-star"></i></span>Reviews</button>
-    <button class="sidebar-btn" data-tab="newsletter" onclick="switchTab('newsletter')"><span class="sidebar-icon"><i class="ph-light ph-mailbox"></i></span>Newsletter</button>
     <button class="sidebar-btn" id="vendors-tab-btn" data-tab="vendors" onclick="switchTab('vendors')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-handshake"></i></span>Vendors</button>
-
-    <div class="sidebar-section-label">Platform</div>
     <button class="sidebar-btn" id="admins-tab-btn" data-tab="admins" onclick="switchTab('admins')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-users-three"></i></span>Admins</button>
-    <button class="sidebar-btn" id="pages-tab-btn" data-tab="pages" onclick="switchTab('pages')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-file-text"></i></span>Pages</button>
+
+    <div class="sidebar-section-label">Growth</div>
+    <button class="sidebar-btn" data-tab="discounts" onclick="switchTab('discounts')"><span class="sidebar-icon"><i class="ph-light ph-tag"></i></span>Discounts</button>
+    <button class="sidebar-btn" data-tab="newsletter" onclick="switchTab('newsletter')"><span class="sidebar-icon"><i class="ph-light ph-mailbox"></i></span>Newsletter</button>
+
+    <div class="sidebar-section-label">Content</div>
     <button class="sidebar-btn" id="homepage-tab-btn" data-tab="homepage" onclick="switchTab('homepage')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-browser"></i></span>Homepage</button>
-    <button class="sidebar-btn" id="settings-tab-btn" data-tab="settings" onclick="switchTab('settings')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-gear"></i></span>Settings</button>
+    <button class="sidebar-btn" id="pages-tab-btn" data-tab="pages" onclick="switchTab('pages')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-file-text"></i></span>Pages</button>
     <button class="sidebar-btn" id="online-store-tab-btn" data-tab="onlineStore" onclick="switchTab('onlineStore')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-storefront"></i></span>Online Store</button>
+
+    <button class="sidebar-btn" data-tab="analytics" onclick="switchTab('analytics')"><span class="sidebar-icon"><i class="ph-light ph-chart-bar"></i></span>Analytics</button>
+    <button class="sidebar-btn" id="settings-tab-btn" data-tab="settings" onclick="switchTab('settings')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-gear"></i></span>Settings</button>
+
+    <div class="sidebar-section-label">Developer Tools</div>
+    <button class="sidebar-btn" id="devtools-tab-btn" data-tab="devtools" onclick="switchTab('devtools')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-wrench"></i></span>Developer Tools</button>
 
     <div style="flex:1;"></div>
     <div class="sidebar-section-label">Account</div>
     <div style="padding:8px 12px 4px;"><div style="font-size:11px;color:var(--muted);" id="admin-email">—</div><span class="role-badge" id="admin-role-badge" style="display:none;margin-top:5px;"></span></div>
     <button class="sidebar-btn" onclick="handleLogout()" style="color:var(--danger);"><span class="sidebar-icon"><i class="ph-light ph-sign-out"></i></span>Sign Out</button>
-    <button class="sidebar-btn btn-sm" id="btn-seed" onclick="seedDefaultData()" style="display:none;font-size:11px;color:var(--muted);"><span class="sidebar-icon"><i class="ph-light ph-database"></i></span>Seed Data</button>
   </nav>
 
   <div id="app-body"><main id="main-content"></main></div>
@@ -119,15 +128,20 @@
     <button class="more-menu-item mmi-teal" onclick="closeMoreMenu();switchTab('messages')"><div class="more-menu-icon"><i class="ph-light ph-chat"></i></div><div style="flex:1"><div class="more-menu-item-label">Inbox</div><div class="more-menu-item-desc">Customer messages</div></div><span class="bnav-badge" id="more-msg-badge" style="position:static;border:none;margin-right:2px;"></span><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-blue" onclick="closeMoreMenu();switchTab('customers')"><div class="more-menu-icon"><i class="ph-light ph-folder-simple-user"></i></div><div style="flex:1"><div class="more-menu-item-label">Customers</div><div class="more-menu-item-desc">View &amp; manage customers</div></div><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-orange" onclick="closeMoreMenu();switchTab('reviews')"><div class="more-menu-icon"><i class="ph-light ph-star"></i></div><div style="flex:1"><div class="more-menu-item-label">Reviews</div><div class="more-menu-item-desc">Moderate product reviews</div></div><span class="more-menu-arrow">›</span></button>
-    <button class="more-menu-item mmi-green" onclick="closeMoreMenu();switchTab('newsletter')"><div class="more-menu-icon"><i class="ph-light ph-mailbox"></i></div><div style="flex:1"><div class="more-menu-item-label">Newsletter</div><div class="more-menu-item-desc">Subscriber management</div></div><span class="more-menu-arrow">›</span></button>
-    <button class="more-menu-item mmi-teal" onclick="closeMoreMenu();switchTab('discounts')"><div class="more-menu-icon"><i class="ph-light ph-tag"></i></div><div style="flex:1"><div class="more-menu-item-label">Discounts</div><div class="more-menu-item-desc">Create &amp; manage discount codes</div></div><span class="more-menu-arrow">›</span></button>
+    <div class="more-divider"></div>
     <button class="more-menu-item mmi-purple" id="vendors-more-item" onclick="closeMoreMenu();switchTab('vendors')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-handshake"></i></div><div style="flex:1"><div class="more-menu-item-label">Vendors</div><div class="more-menu-item-desc">Manage brand partners</div></div><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-gray" id="admins-more-item" onclick="closeMoreMenu();switchTab('admins')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-users-three"></i></div><div style="flex:1"><div class="more-menu-item-label">Admins</div><div class="more-menu-item-desc">Manage staff accounts</div></div><span class="more-menu-arrow">›</span></button>
-    <button class="more-menu-item mmi-gray" id="pages-more-item" onclick="closeMoreMenu();switchTab('pages')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-file-text"></i></div><div style="flex:1"><div class="more-menu-item-label">Pages</div><div class="more-menu-item-desc">Edit policy &amp; help pages</div></div><span class="more-menu-arrow">›</span></button>
+    <div class="more-divider"></div>
+    <button class="more-menu-item mmi-teal" onclick="closeMoreMenu();switchTab('discounts')"><div class="more-menu-icon"><i class="ph-light ph-tag"></i></div><div style="flex:1"><div class="more-menu-item-label">Discounts</div><div class="more-menu-item-desc">Create &amp; manage discount codes</div></div><span class="more-menu-arrow">›</span></button>
+    <button class="more-menu-item mmi-green" onclick="closeMoreMenu();switchTab('newsletter')"><div class="more-menu-icon"><i class="ph-light ph-mailbox"></i></div><div style="flex:1"><div class="more-menu-item-label">Newsletter</div><div class="more-menu-item-desc">Subscriber management</div></div><span class="more-menu-arrow">›</span></button>
+    <div class="more-divider"></div>
     <button class="more-menu-item mmi-gray" id="homepage-more-item" onclick="closeMoreMenu();switchTab('homepage')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-browser"></i></div><div style="flex:1"><div class="more-menu-item-label">Homepage</div><div class="more-menu-item-desc">Edit hero, sections &amp; collection pages</div></div><span class="more-menu-arrow">›</span></button>
-    <button class="more-menu-item mmi-gray" id="settings-more-item" onclick="closeMoreMenu();switchTab('settings')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-gear"></i></div><div style="flex:1"><div class="more-menu-item-label">Settings</div><div class="more-menu-item-desc">Platform configuration</div></div><span class="more-menu-arrow">›</span></button>
+    <button class="more-menu-item mmi-gray" id="pages-more-item" onclick="closeMoreMenu();switchTab('pages')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-file-text"></i></div><div style="flex:1"><div class="more-menu-item-label">Pages</div><div class="more-menu-item-desc">Edit policy &amp; help pages</div></div><span class="more-menu-arrow">›</span></button>
     <button class="more-menu-item mmi-gray" id="online-store-more-item" onclick="closeMoreMenu();switchTab('onlineStore')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-storefront"></i></div><div style="flex:1"><div class="more-menu-item-label">Online Store</div><div class="more-menu-item-desc">Coming Soon page on/off</div></div><span class="more-menu-arrow">›</span></button>
-    <button class="more-menu-item mmi-gray" id="btn-seed-more" onclick="closeMoreMenu();seedDefaultData()" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-database"></i></div><div style="flex:1"><div class="more-menu-item-label">Seed Data</div><div class="more-menu-item-desc">Load default vendors + products</div></div><span class="more-menu-arrow">›</span></button>
+    <div class="more-divider"></div>
+    <button class="more-menu-item mmi-blue" onclick="closeMoreMenu();switchTab('analytics')"><div class="more-menu-icon"><i class="ph-light ph-chart-bar"></i></div><div style="flex:1"><div class="more-menu-item-label">Analytics</div><div class="more-menu-item-desc">Reports &amp; insights</div></div><span class="more-menu-arrow">›</span></button>
+    <button class="more-menu-item mmi-gray" id="settings-more-item" onclick="closeMoreMenu();switchTab('settings')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-gear"></i></div><div style="flex:1"><div class="more-menu-item-label">Settings</div><div class="more-menu-item-desc">Platform configuration</div></div><span class="more-menu-arrow">›</span></button>
+    <button class="more-menu-item mmi-gray" id="devtools-more-item" onclick="closeMoreMenu();switchTab('devtools')" style="display:none;"><div class="more-menu-icon"><i class="ph-light ph-wrench"></i></div><div style="flex:1"><div class="more-menu-item-label">Developer Tools</div><div class="more-menu-item-desc">Diagnostics &amp; utilities</div></div><span class="more-menu-arrow">›</span></button>
     <div class="more-divider"></div>
     <button class="more-menu-item mmi-red" onclick="closeMoreMenu();handleLogout()"><div class="more-menu-icon"><i class="ph-light ph-sign-out"></i></div><div style="flex:1"><div class="more-menu-item-label">Sign Out</div><div class="more-menu-item-desc" id="admin-email-more">—</div></div></button>
   </div>
@@ -180,6 +194,7 @@ fetch('/api/cloudinary-config')
 <script src="admin-settings.js"></script>
 <script src="admin-online-store.js"></script>
 <script src="admin-discounts.js"></script>
+<script src="admin-devtools.js"></script>
 
 </body>
 </html>

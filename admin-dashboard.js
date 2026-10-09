@@ -225,7 +225,7 @@
           var label = d === 1 ? 'Today' : d + ' days';
           return '<button class="dash-overview-range-btn' + (d === _dashRangeDays ? ' active' : '') + '" data-days="' + d + '" onclick="window._setDashRange(' + d + ')">' + label + '</button>';
         }).join('') +
-        '<button class="dash-overview-report-btn" onclick="window._showToast(\'Full reports coming soon\')">View report</button>' +
+        '<button class="dash-overview-report-btn" onclick="window.switchTab(\'analytics\')">View report</button>' +
       '</div>' +
     '</div>';
   }
@@ -300,6 +300,23 @@
       }
     });
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     ANALYTICS — placeholder destination for Home's "View report"
+     button. No real detailed-reporting system exists yet (same
+     Live/Sessions/Conversion gap as the Home overview widget — see
+     note above), so this intentionally shows nothing fabricated,
+     just an honest "not built yet" state.
+  ═══════════════════════════════════════════════════════════ */
+  window._renderAnalyticsTab = function () {
+    var mc = safeEl('main-content');
+    if (!mc) return;
+    mc.innerHTML = '<div class="empty-state">' +
+      '<div class="empty-state-icon"><i class="ph-light ph-chart-bar"></i></div>' +
+      '<div class="empty-state-text">Detailed analytics are not set up yet</div>' +
+      '<div style="font-size:var(--font-scale-sm);color:var(--muted2);max-width:380px;">The Home overview shows real sales and order totals. Live visitors, sessions, and conversion rate need a connected analytics source (e.g. Google Analytics) before deeper reporting can appear here.</div>' +
+    '</div>';
+  };
 
   /* ─────────────────────────────────────────────────────────
      HELPERS

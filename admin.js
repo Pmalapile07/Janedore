@@ -359,7 +359,7 @@
   // ─── TAB NAVIGATION ──────────────────────────────────────────
 
   var TAB_TITLES = {
-    dashboard: 'Dashboard', products: 'Products', orders: 'Orders',
+    dashboard: 'Home', products: 'Products', orders: 'Orders',
     messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
     admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
