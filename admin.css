@@ -16,7 +16,7 @@
   --shadow-lg:0 8px 32px rgba(0,0,0,0.13),0 2px 8px rgba(0,0,0,0.07);
   --shadow-nav:0 -1px 0 rgba(255,255,255,0.05),0 -8px 32px rgba(0,0,0,0.35);
   --r:14px;--r-sm:10px;--r-xs:7px;--r-lg:20px;
-  --nav-h:52px;--bnav-h:80px;
+  --nav-h:52px;--bnav-h:62px;
   --font:'Inter',sans-serif;
   --font-scale-xs:10px;--font-scale-sm:12px;--font-scale-md:13px;--font-scale-lg:16px;--font-scale-xl:20px;--font-scale-2xl:24px;--font-scale-3xl:30px;
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
@@ -122,11 +122,11 @@ body{font-family:var(--font);background:var(--nav-bg);color:var(--text);line-hei
 /* Three separate floating chips, Shopify-style: a lone search button,
    a center pill of the four main tabs, and a lone Jai button — all on
    a white background instead of the old single dark pill. */
-#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom,0));pointer-events:none;}
-.bnav-search-btn,.bnav-jai-btn{pointer-events:all;flex-shrink:0;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:0.5px solid var(--border);box-shadow:var(--shadow-nav);font-size:25px;color:var(--text2);cursor:pointer;transition:background var(--duration-fast);}
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:var(--space-2) var(--space-5);padding-bottom:calc(var(--space-2) + env(safe-area-inset-bottom,0));pointer-events:none;}
+.bnav-search-btn,.bnav-jai-btn{pointer-events:all;flex-shrink:0;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:0.5px solid var(--border);box-shadow:var(--shadow-nav);font-size:20px;color:var(--text2);cursor:pointer;transition:background var(--duration-fast);}
 .bnav-search-btn:active,.bnav-jai-btn:active{background:var(--surface2);}
-.bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:32px;padding:4px;display:flex;align-items:center;gap:2px;box-shadow:var(--shadow-nav);}
-.bnav-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:none;border:none;cursor:pointer;transition:background var(--duration-fast),color var(--duration-fast);position:relative;font-size:25px;color:var(--muted2);}
+.bottom-nav-pill{pointer-events:all;background:#fff;border:0.5px solid var(--border);border-radius:26px;padding:3px;display:flex;align-items:center;gap:1px;box-shadow:var(--shadow-nav);}
+.bnav-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:none;border:none;cursor:pointer;transition:background var(--duration-fast),color var(--duration-fast);position:relative;font-size:20px;color:var(--muted2);}
 .bnav-btn i{line-height:1;}
 .bnav-btn:active{background:var(--surface2);}
 .bnav-btn.active{background:var(--surface2);color:var(--text);}
