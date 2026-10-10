@@ -22,20 +22,20 @@ body.on-brands-page .search-bar-row {
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: #f4f4f4;
+  background: #2a2a2a;
   border-radius: 24px;
   cursor: pointer;
 }
 .search-bar-trigger i {
   font-size: 16px;
-  color: #888;
+  color: #999;
   flex-shrink: 0;
 }
 .search-bar-trigger span {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 400;
-  color: #888;
+  color: #999;
 }
 @media (min-width: 768px) {
   .search-bar-trigger { max-width: 480px; }
