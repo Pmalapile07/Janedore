@@ -636,6 +636,105 @@ body .site-collection-layout {
 }
 
 /* ============================================
+   BRANDS PAGE (/brands) — A-Z directory
+   renderBrandsPage() (vendors.js). The featured grid reuses
+   .shop-brand-card/.shop-brand-img/.shop-brand-logo above verbatim
+   (same cards as the homepage's Shop by Brand section) — only the
+   slider-specific sizing (flex/vw-width/scroll-snap) is overridden
+   here for a static grid instead.
+   ============================================ */
+.brands-page-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 0 4px;
+  margin-bottom: 40px;
+}
+@media (min-width: 640px) {
+  .brands-page-grid { gap: 12px; padding: 0 6px; }
+}
+@media (min-width: 1024px) {
+  .brands-page-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+.brands-page-grid .shop-brand-card {
+  width: 100%;
+  max-width: none;
+  flex: none;
+  scroll-snap-align: none;
+}
+
+.brands-az-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  justify-content: center;
+  padding: 20px 12px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 32px;
+}
+.brands-az-letter {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  text-decoration: none;
+  cursor: pointer;
+}
+.brands-az-letter.disabled {
+  color: #ccc;
+  cursor: default;
+}
+
+.brands-az-list {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+.brands-az-group {
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
+  scroll-margin-top: 90px;
+}
+.brands-az-group:last-child { border-bottom: none; }
+.brands-az-heading {
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 12px;
+}
+.brands-az-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.brands-az-items li {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: #444;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.brands-az-items li:hover { color: #111; }
+
+.brands-empty {
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #888;
+  padding: 40px 0;
+}
+
+/* ============================================
    Everything below is unrelated to the product-info redesign above
    and untouched by it.
    ============================================ */
