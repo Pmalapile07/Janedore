@@ -657,6 +657,46 @@ function previewPlaceholderProduct() {
   renderProductPage(PLACEHOLDER_PRODUCT);
 }
 
+// Same idea as PLACEHOLDER_PRODUCT above, for the /brands empty-state
+// cards (placeholderBrandCardsHtml(), vendors.js). id:'__placeholder__'
+// keeps getVendorBaseProducts() from matching any real product, so the
+// preview's grid falls through to its own placeholder product cards.
+const PLACEHOLDER_VENDOR = {
+  id: '__placeholder__',
+  name: 'Brand',
+  brand: 'Brand',
+  slug: '',
+  heroImageUrl: '',
+  logoUrl: '',
+  description: ''
+};
+
+// Mirrors previewPlaceholderProduct() — lets a brand's page be designed
+// before any real vendor exists. Unlike navigateToVendor(), there's no
+// Firestore doc to fetch and no URL to push, so this just does the
+// page-activation/filter-bar bookkeeping navigateToVendor() would
+// normally do, then renders straight from the placeholder.
+function previewPlaceholderVendor() {
+  closeSearch();
+  S.saleMode = false;
+  if (typeof closeCart === 'function') closeCart();
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page-vendor").classList.add("active");
+  S.currentPage = "vendor";
+  removeStickyBar();
+  if (DOM.mainNav) { DOM.mainNav.classList.remove("product-page"); DOM.mainNav.classList.add("collection-page"); }
+  document.body.classList.add('on-collection-page');
+  S.currentVendorId = null;
+  S.vendorFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
+  S.gridColsVendor = 2;
+  restoreCollectionFilterBar();
+  S.currentVendor = PLACEHOLDER_VENDOR;
+  renderVendorPage(PLACEHOLDER_VENDOR);
+  window.scrollTo({top:0,behavior:"instant"});
+  ensureNavScrolled();
+  updateChatVisibility();
+}
+
 function renderPaginatedGrid(gridEl, expanded, cols) {
   if (!gridEl) return;
   const key = gridEl.id;

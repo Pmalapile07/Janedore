@@ -107,13 +107,16 @@ function shopByBrandCardsHtml(brands) {
   }).join('');
 }
 
-// Flat #f4f4f4 box with a literal "Brand" label, not clickable — same
-// "never looks broken or blank" idea as placeholderProductCard()
-// (collection.js) for an empty product grid. Used by the /brands page's
-// featured grid when there are no brands yet.
+// Flat #f4f4f4 box with a literal "Brand" label — same "never looks
+// broken or blank" idea as placeholderProductCard() (collection.js) for
+// an empty product grid. Used on the home page's Shop by Brand slider
+// and the /brands page's featured grid when there are no brands yet.
+// Clickable through to previewPlaceholderVendor() (collection.js), same
+// pattern as placeholderProductCard() -> previewPlaceholderProduct(),
+// so the brand page itself can be designed before any real brand exists.
 function placeholderBrandCardsHtml(count) {
   return Array.from({ length: count }, () =>
-    '<div class="shop-brand-card shop-brand-card-placeholder"><div class="shop-brand-img"><span class="shop-brand-placeholder-label">Brand</span></div></div>'
+    '<div class="shop-brand-card shop-brand-card-placeholder" onclick="previewPlaceholderVendor()"><div class="shop-brand-img"><span class="shop-brand-placeholder-label">Brand</span></div></div>'
   ).join('');
 }
 
