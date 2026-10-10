@@ -628,9 +628,10 @@ body .site-collection-layout {
 /* Empty-catalog placeholder (placeholderBrandCardsHtml() in vendors.js) —
    same flat-box, no-shimmer, literal-label idea as
    .product-card-placeholder above, shown on the /brands page's featured
-   grid when there are no brands yet. */
+   grid when there are no brands yet. Clickable (previewPlaceholderVendor(),
+   collection.js) just like .product-card-placeholder is. */
 .shop-brand-card-placeholder {
-  cursor: default;
+  cursor: pointer;
 }
 .shop-brand-placeholder-label {
   font-family: 'Inter', sans-serif;
