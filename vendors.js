@@ -143,7 +143,7 @@ function renderBrandsPage(vendors) {
 
   const brands = getFeaturedBrands(vendors || []);
   if (!brands.length) {
-    grid.innerHTML = placeholderBrandCardsHtml(8);
+    grid.innerHTML = placeholderBrandCardsHtml(4);
     indexEl.innerHTML = '';
     listEl.innerHTML = '<div class="brands-empty">No brands available yet.</div>';
     return;
