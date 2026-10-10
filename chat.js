@@ -641,30 +641,37 @@ function cloneTrackOrderButton() {
 // there is only ever one send path. Cards are disabled synchronously
 // (before sendChatMessage() runs its own async validation/RTDB write)
 // to close the double-submit window a fast double-click could otherwise
-// slip through, and stay disabled once a real conversation has started.
+// slip through, then re-enabled once that send settles (success or
+// failure) — a BRIEF lock on the click just made, never a permanent
+// one, so every card keeps working independently afterward.
 function disableQuickActionCards() {
   document.querySelectorAll('.jai-quick-card').forEach(btn => { btn.disabled = true; });
+}
+function enableQuickActionCards() {
+  document.querySelectorAll('.jai-quick-card').forEach(btn => { btn.disabled = false; });
 }
 
 function quickActionDiscoverProduct() {
   disableQuickActionCards();
   const input = safeEl('chat-input');
-  if (!input) return;
+  if (!input) { enableQuickActionCards(); return; }
   input.value = "I'm looking for something new — can you help me find the right piece?";
-  sendChatMessage();
+  Promise.resolve(sendChatMessage()).finally(enableQuickActionCards);
 }
 
+// Navigates to the order-lookup screen — synchronous, no RTDB write, so
+// there's no double-submit race to guard against here; nothing to
+// disable/re-enable.
 function quickActionTrackOrder() {
-  disableQuickActionCards();
   showOrderLookup();
 }
 
 function quickActionShippingReturns() {
   disableQuickActionCards();
   const input = safeEl('chat-input');
-  if (!input) return;
+  if (!input) { enableQuickActionCards(); return; }
   input.value = "What's your shipping and returns policy?";
-  sendChatMessage();
+  Promise.resolve(sendChatMessage()).finally(enableQuickActionCards);
 }
 
 function quickActionAskAnything() {
@@ -1798,24 +1805,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // iOS Safari doesn't shrink window.innerHeight when the keyboard opens
+  // (it resizes the *visual* viewport, not the layout viewport) — a
+  // #chat-window sized from innerHeight alone stays tall enough to tuck
+  // its bottom-anchored composer/footer under the keyboard, while the
+  // last message (laid out inside that same too-tall box) ends up
+  // sitting where the composer visually is once the keyboard pushes the
+  // real visible area up. window.visualViewport reports the actual
+  // visible area (and its offset) when available, so prefer it.
+  function getViewportBox() {
+    const vv = window.visualViewport;
+    if (vv) {
+      return { w: vv.width, h: vv.height, top: vv.offsetTop, left: vv.offsetLeft };
+    }
+    return {
+      w: window.innerWidth  || document.documentElement.clientWidth,
+      h: window.innerHeight || document.documentElement.clientHeight,
+      top: 0,
+      left: 0
+    };
+  }
+
   function forceFullScreen() {
     const win = document.getElementById('chat-window');
     if (!win) return;
 
     fixAncestors(win.parentElement);
 
-    const vw = window.innerWidth  || document.documentElement.clientWidth;
-    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const box = getViewportBox();
 
     win.style.setProperty('position', 'fixed', 'important');
-    win.style.setProperty('top', '0', 'important');
-    win.style.setProperty('left', '0', 'important');
-    win.style.setProperty('right', '0', 'important');
-    win.style.setProperty('bottom', '0', 'important');
-    win.style.setProperty('width', vw + 'px', 'important');
-    win.style.setProperty('height', vh + 'px', 'important');
-    win.style.setProperty('max-width', vw + 'px', 'important');
-    win.style.setProperty('max-height', vh + 'px', 'important');
+    win.style.setProperty('top', box.top + 'px', 'important');
+    win.style.setProperty('left', box.left + 'px', 'important');
+    win.style.setProperty('right', 'auto', 'important');
+    win.style.setProperty('bottom', 'auto', 'important');
+    win.style.setProperty('width', box.w + 'px', 'important');
+    win.style.setProperty('height', box.h + 'px', 'important');
+    win.style.setProperty('max-width', box.w + 'px', 'important');
+    win.style.setProperty('max-height', box.h + 'px', 'important');
     win.style.setProperty('margin', '0', 'important');
     win.style.setProperty('border-radius', '0', 'important');
   }
@@ -1845,6 +1872,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('orientationchange', function () {
     setTimeout(onResize, 150);
   });
+  // Fires when the iOS/Android on-screen keyboard opens/closes or the
+  // page is pinch-zoomed — window's own 'resize' does not reliably fire
+  // for either on iOS Safari.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onResize);
+    window.visualViewport.addEventListener('scroll', onResize);
+  }
 
   // Expose so toggleChat() can re-apply on every open
   window._forceChatFullScreen = forceFullScreen;
