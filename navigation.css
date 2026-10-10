@@ -1,33 +1,3 @@
-#announcement-bar {
-  background: #3a3a3a;
-  color: #fff;
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 8px 0;
-  position: relative;
-  z-index: 801;
-}
-
-.announcement-track {
-  display: inline-flex;
-  animation: announcement-scroll 24s linear infinite;
-}
-
-.announcement-item {
-  display: inline-block;
-  padding: 0 32px;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-}
-
-@keyframes announcement-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
 /* Always solid white/black — no more transparent-over-hero state that
    swaps in once scrolled. The .scrolled rules below are now no-ops
    (every state already matches them) rather than being ripped out,
