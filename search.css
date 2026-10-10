@@ -7,6 +7,15 @@
 @media (min-width: 768px) {
   .search-bar-row { padding: 0 16px 16px; }
 }
+/* Brands directory page only (body.on-brands-page, toggled by
+   setNavForPage() in app.js) — the search bar isn't part of that
+   page's own navigation (it has its own A-Z index for that), and
+   hiding it also tightens the gap between the nav and the A-Z Brands
+   heading, matching the reference layout. Every other page is
+   untouched. */
+body.on-brands-page .search-bar-row {
+  display: none;
+}
 
 .search-bar-trigger {
   display: flex;

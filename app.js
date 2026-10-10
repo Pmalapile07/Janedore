@@ -420,7 +420,7 @@ window.addEventListener('popstate', async () => {
 
 function setNavForPage(page) {
   if (!DOM.mainNav) return;
-  
+
   // Toggle body class for collection pages — shows the shared
   // filter bar (grid toggle, FILTER button, title) above the grid.
   if (page === 'products' || page === 'category' || page === 'vendor') {
@@ -428,6 +428,12 @@ function setNavForPage(page) {
   } else {
     document.body.classList.remove('on-collection-page');
   }
+
+  // Hides #main-nav's search bar only on the brands directory page
+  // (navigation.css) — tightens the gap between the nav and the A-Z
+  // heading, matching the reference layout; every other page keeps the
+  // search bar exactly as before.
+  document.body.classList.toggle('on-brands-page', page === 'brands');
 }
 
 function navigateTo(page, replaceUrl) {
