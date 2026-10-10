@@ -1994,18 +1994,44 @@ document.addEventListener('DOMContentLoaded', () => {
     fixAncestors(win.parentElement);
 
     const box = getViewportBox();
+    const vv = window.visualViewport;
+    const innerH = window.innerHeight || document.documentElement.clientHeight;
 
     win.style.setProperty('position', 'fixed', 'important');
-    win.style.setProperty('top', box.top + 'px', 'important');
     win.style.setProperty('left', box.left + 'px', 'important');
     win.style.setProperty('right', 'auto', 'important');
-    win.style.setProperty('bottom', 'auto', 'important');
     win.style.setProperty('width', box.w + 'px', 'important');
-    win.style.setProperty('height', box.h + 'px', 'important');
     win.style.setProperty('max-width', box.w + 'px', 'important');
-    win.style.setProperty('max-height', box.h + 'px', 'important');
     win.style.setProperty('margin', '0', 'important');
     win.style.setProperty('border-radius', '0', 'important');
+
+    // A keyboard is very likely open when the visual viewport is
+    // meaningfully shorter than the layout viewport — pin an explicit
+    // height from visualViewport so the composer stays above the
+    // keyboard instead of sliding under it (see the keyboard-covered-
+    // message fix this logic came from).
+    //
+    // Otherwise (the common case — no keyboard) anchor top AND bottom
+    // and let the browser itself stretch the panel to fill the real
+    // visible area every frame, rather than relying on a JS-computed
+    // pixel height. iOS Safari's bottom toolbar show/hide timing can
+    // make a snapshotted visualViewport.height stale by the time it's
+    // applied, leaving a thin gap at the bottom with the real page
+    // visible through it — anchoring both edges is immune to that,
+    // since it's the browser's own layout engine keeping it in sync,
+    // not a one-off JS measurement.
+    const keyboardLikelyOpen = !!(vv && (innerH - vv.height > 80));
+    if (keyboardLikelyOpen) {
+      win.style.setProperty('top', box.top + 'px', 'important');
+      win.style.setProperty('bottom', 'auto', 'important');
+      win.style.setProperty('height', box.h + 'px', 'important');
+      win.style.setProperty('max-height', box.h + 'px', 'important');
+    } else {
+      win.style.setProperty('top', '0', 'important');
+      win.style.setProperty('bottom', '0', 'important');
+      win.style.removeProperty('height');
+      win.style.setProperty('max-height', 'none', 'important');
+    }
   }
 
   function onResize() {
