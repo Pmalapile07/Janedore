@@ -6,7 +6,7 @@
   display: grid;
   gap: 6px;
   grid-template-columns: 1fr;
-  padding: 0 8px;
+  padding: 0 10px;
 }
 
 /* Pagination footer — renderPaginatedGrid() (collection.js) inserts
@@ -46,14 +46,14 @@
 }
 
 @media (min-width: 640px) {
-  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 10px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 12px; }
 }
 
 @media (min-width: 1024px) {
   .product-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    padding: 0 12px;
+    padding: 0 14px;
     max-width: 1400px;
     margin: 0 auto;
   }
@@ -502,14 +502,14 @@ body .site-collection-layout {
      padding's own value, so it's easy to miss) even though it never
      touches padding-right -- there's no snap point past the last
      card, so nothing auto-scrolls that edge. */
-  padding: 0 0 0 8px !important;
-  scroll-padding-left: 8px;
+  padding: 0 0 0 10px !important;
+  scroll-padding-left: 10px;
   scrollbar-width: none;
 }
 #arrivals-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar { display: none; }
 #arrivals-grid::after,
-#clothing-grid::after { content: ''; flex: 0 0 8px; }
+#clothing-grid::after { content: ''; flex: 0 0 10px; }
 #arrivals-grid .product-card,
 #clothing-grid .product-card {
   flex: 0 0 auto;
@@ -519,9 +519,9 @@ body .site-collection-layout {
 }
 @media (min-width: 640px) {
   #arrivals-grid,
-  #clothing-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
+  #clothing-grid { padding: 0 0 0 12px !important; scroll-padding-left: 12px; }
   #arrivals-grid::after,
-  #clothing-grid::after { flex: 0 0 10px; }
+  #clothing-grid::after { flex: 0 0 12px; }
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
@@ -533,11 +533,11 @@ body .site-collection-layout {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 0 0 12px !important;
-    scroll-padding-left: 12px;
+    padding: 0 0 0 14px !important;
+    scroll-padding-left: 14px;
   }
   #arrivals-grid::after,
-  #clothing-grid::after { flex: 0 0 12px; }
+  #clothing-grid::after { flex: 0 0 14px; }
 }
 
 /* --- Shop by Brand slider — same slider mechanics as #arrivals-grid/
@@ -571,11 +571,11 @@ body .site-collection-layout {
    home-categories.css) instead of the flat 18px shared with the
    product page's own Shop by Brand slider (.brand-grid-scroll), which
    keeps its original padding below. */
-#brand-grid { padding: 0 0 0 8px !important; scroll-padding-left: 8px; }
-#brand-grid::after { flex: 0 0 8px; }
+#brand-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
+#brand-grid::after { flex: 0 0 10px; }
 @media (min-width: 640px) {
-  #brand-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
-  #brand-grid::after { flex: 0 0 10px; }
+  #brand-grid { padding: 0 0 0 12px !important; scroll-padding-left: 12px; }
+  #brand-grid::after { flex: 0 0 12px; }
 }
 /* Same size as the product card sliders (#arrivals-grid/#clothing-grid
    .product-card below), so Shop by Brand cards read as the same visual
@@ -597,8 +597,8 @@ body .site-collection-layout {
     max-width: 1400px;
     margin: 0 auto;
   }
-  #brand-grid { padding: 0 0 0 12px !important; scroll-padding-left: 12px; }
-  #brand-grid::after { flex: 0 0 12px; }
+  #brand-grid { padding: 0 0 0 14px !important; scroll-padding-left: 14px; }
+  #brand-grid::after { flex: 0 0 14px; }
 }
 .shop-brand-img {
   position: relative;
