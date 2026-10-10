@@ -675,20 +675,22 @@ body .site-collection-layout {
   gap: 10px 14px;
   justify-content: center;
   padding: 20px 12px;
-  border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
   margin-bottom: 32px;
 }
 .brands-az-letter {
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-  color: #111;
+  color: #ccc;
   text-decoration: none;
   cursor: pointer;
 }
 .brands-az-letter.disabled {
-  color: #ccc;
+  color: #111;
+  cursor: default;
+}
+.brands-az-hash {
   cursor: default;
 }
 
