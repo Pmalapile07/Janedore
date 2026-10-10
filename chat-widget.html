@@ -564,6 +564,39 @@
     font-size: 15px !important;
   }
 
+  /* ---------- AI-SUGGESTED PRODUCT CARDS ----------
+     Reuses the real site .product-card component (collection.js's
+     productCard()) verbatim — same markup, same click/wishlist/swatch
+     behavior as the shop grid — just scaled down to a width that fits
+     the chat panel instead of a grid cell. A single match renders one
+     card; more than one renders a horizontally swipeable row. */
+  #chat-window .jai-product-row {
+    display: flex !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-top: 2px !important;
+    align-self: flex-start !important;
+  }
+  #chat-window .jai-product-slider {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+  }
+  #chat-window .jai-product-slider::-webkit-scrollbar { display: none !important; }
+  #chat-window .jai-product-row .product-card {
+    flex: 0 0 auto !important;
+    width: 140px !important;
+    cursor: pointer !important;
+  }
+  #chat-window .jai-product-row .product-title,
+  #chat-window .jai-product-row .product-brand,
+  #chat-window .jai-product-row .product-price,
+  #chat-window .jai-product-row .product-home-price,
+  #chat-window .jai-product-row .product-price-original {
+    font-size: 9px !important;
+  }
+
   /* ---------- WELCOME ---------- */
   #chat-window .chat-welcome {
     text-align: center !important;

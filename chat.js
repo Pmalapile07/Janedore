@@ -884,6 +884,25 @@ function describeProductForAI(p) {
   return `- ${p.name || 'Unnamed product'} by ${p.brand || 'JANEDORE'} (${p.category || 'uncategorized'}), ${price}, ${sizes ? sizes + ', ' : ''}${stockNote}`;
 }
 
+// Renders the real site product card (collection.js's productCard()) —
+// same markup, same click/wishlist/swatch behavior as the shop grid —
+// inside the chat, scaled down via CSS (see chat-widget.html) to a
+// width that fits the chat panel. One match renders a single card;
+// more than one renders a horizontally swipeable row. productCard()
+// already HTML-escapes every dynamic value itself (the same function
+// is already used with innerHTML elsewhere, e.g. navigateToBrandProducts()
+// in vendors.js), so this follows the same established-safe pattern.
+function renderAIProductSuggestions(products) {
+  const el = safeEl('chat-messages');
+  if (!el || !products.length || typeof productCard !== 'function') return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'jai-product-row' + (products.length > 1 ? ' jai-product-slider' : ' jai-product-single');
+  wrap.innerHTML = products.map(p => productCard(p, false, true)).join('');
+  el.appendChild(wrap);
+  el.scrollTop = el.scrollHeight;
+}
+
 // Always resolves to a usable string — including the "nothing matched"
 // case — so the template can do a plain {{products}} substitution with
 // no conditional logic required.
@@ -1521,6 +1540,20 @@ async function sendChatMessage() {
         // live listener, but that means nothing else ever displays it —
         // render it locally now, right after the write confirms.
         appendMessage({ text: cleanedAiText, sender: 'admin', senderName: 'JAI', mood: mood, createdAt: Date.now() });
+
+        // Real product cards for whatever was relevant to this message —
+        // reuses the exact same matched-products data already given to
+        // the AI (see buildProductsContextForAI()/getAIReply()) rather
+        // than trying to parse product names out of its reply text, so
+        // there's no risk of a card mismatching or a hallucinated item.
+        try {
+          const productsForCards = await getActiveProductsForAI();
+          const matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
+          if (matchedForCards.length) renderAIProductSuggestions(matchedForCards);
+        } catch (e) {
+          _ScreenDebug.err('AI', 'Failed to render product suggestions: ' + e.message);
+        }
+
         showUnreadBadgeIfClosed();
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
