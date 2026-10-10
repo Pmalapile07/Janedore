@@ -718,7 +718,8 @@ body .site-collection-layout {
 .brands-az-items li {
   font-family: 'Inter', sans-serif;
   font-size: 12px;
-  font-weight: 300;
+  font-weight: 400;
+  letter-spacing: 0.3px;
   color: #444;
   padding: 8px 0;
   cursor: pointer;
