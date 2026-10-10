@@ -14,7 +14,7 @@ function navigateToLogin() {
     loginPage.classList.add("active");
     S.currentPage = "login";
     updateHash('login');
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" });
     ensureNavScrolled();
 
     // Only treat as signed in if this is a real (non-anonymous) user
@@ -35,7 +35,7 @@ function navigateToAccount() {
     accountPage.classList.add("active");
     S.currentPage = "account";
     updateHash('account');
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" });
     ensureNavScrolled();
 
     const user = firebase.auth().currentUser;

@@ -337,7 +337,7 @@ async function renderProductPage(product) {
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer");
   if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
-  window.scrollTo({top:0,behavior:"smooth"}); ensureNavScrolled();
+  window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled();
   updateAddToCartState();
   setTimeout(() => initProductSwipe(images), 100);
 }
