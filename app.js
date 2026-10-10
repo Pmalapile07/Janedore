@@ -539,7 +539,14 @@ function toggleBrandsCollapse() { const el = document.getElementById('brands-col
 function updateChatVisibility() {
   if (!DOM.chatBubble) return;
   const hiddenPages = ['product-detail', 'products', 'category', 'wishlist', 'cart'];
-  DOM.chatBubble.style.display = hiddenPages.includes(S.currentPage) ? 'none' : 'flex';
+  // #live-chat-bubble's base rule (chat-widget.html) is itself
+  // `display: flex !important` — a plain inline style here can never
+  // win against that, so this was silently a no-op on every page it
+  // was meant to hide the bubble on. Only ever looked like it worked
+  // because the chat staying open (its own `!important` CSS) happened
+  // to hide the bubble for an unrelated reason. setProperty(...,
+  // 'important') actually wins the specificity tie against the base rule.
+  DOM.chatBubble.style.setProperty('display', hiddenPages.includes(S.currentPage) ? 'none' : 'flex', 'important');
 }
 // ==================== IMAGE PROTECTION ====================
 // Prevent long-press/right-click saving of product images
