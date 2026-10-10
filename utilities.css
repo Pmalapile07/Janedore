@@ -1,4 +1,17 @@
-html { font-size: 13.6px; scroll-behavior: smooth; }
+/* No global scroll-behavior:smooth here on purpose — every page
+   navigation (navigateTo()/navigateToCategory()/goToProduct()/etc.,
+   app.js) explicitly resets scroll with behavior:"instant" so the new
+   page starts at its top, not wherever the previous page was scrolled
+   to. A blanket CSS smooth default fights that: Safari in particular
+   has known bugs where an explicit instant JS scrollTo doesn't
+   reliably override a smooth scroll-behavior set via CSS, so the
+   reset ends up animating instead of snapping -- visible as the
+   sticky header briefly sitting over content (a breadcrumb, a page
+   heading) that hasn't finished scrolling into place yet. Anywhere
+   this site actually wants a smooth scroll (pagination, the brand
+   grid, etc.) already asks for it explicitly via behavior:"smooth" on
+   that specific call, so nothing relies on this default. */
+html { font-size: 13.6px; }
 @media (min-width: 769px) { html { font-size: 10.88px; } }
 body {
   font-family: 'Inter', sans-serif;
