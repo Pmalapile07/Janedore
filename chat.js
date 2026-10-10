@@ -818,6 +818,116 @@ function renderTrackOrderPrompt() {
   setJAIState('happy', 1500);
 }
 
+// ==================== AI GROUNDING (products + shipping/returns/FAQ) ====================
+// Gives the Firebase AI Logic prompt template ("customer-support-chat")
+// real access to the live product catalog and the actual shipping/
+// returns/FAQ page content, by passing them in as extra template
+// variables alongside customerText. The template itself lives in the
+// Firebase/Vertex AI console (not in this codebase) and must read
+// {{products}} / {{shippingInfo}} to actually use them — this only
+// supplies the data.
+
+const AI_CONTEXT_CACHE_MS = 5 * 60 * 1000;
+let _productsContextCache = { data: [], ts: 0 };
+let _shippingContextCache = { data: '', ts: 0 };
+
+async function getActiveProductsForAI() {
+  const now = Date.now();
+  if (now - _productsContextCache.ts < AI_CONTEXT_CACHE_MS) return _productsContextCache.data;
+  try {
+    const snap = await db.collection('products').where('status', '==', 'active').get();
+    _productsContextCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: now };
+  } catch (e) {
+    _ScreenDebug.err('AI', 'Failed to load products for grounding: ' + e.message);
+  }
+  return _productsContextCache.data;
+}
+
+// Common words long enough to pass the length filter but meaningless as
+// a match signal — without excluding these, "do you have a dress for
+// evening" could match a completely unrelated product whose description
+// just happens to also contain "for" or "have".
+const AI_PRODUCT_SEARCH_STOPWORDS = new Set([
+  'the', 'and', 'for', 'are', 'you', 'your', 'have', 'has', 'with', 'this',
+  'that', 'any', 'some', 'can', 'could', 'would', 'what', 'where', 'when',
+  'looking', 'want', 'need', 'please', 'hello', 'hi', 'hey', 'thanks', 'thank'
+]);
+
+// Plain keyword match, not a real search engine — scores each product by
+// how many words from the customer's message appear in its name/brand/
+// category/description, and keeps only genuine matches. A message with
+// no product-shaped words ("hi", "thanks") correctly matches nothing.
+function findRelevantProductsForAI(products, messageText, limit) {
+  const words = String(messageText || '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(w => w.length > 2 && !AI_PRODUCT_SEARCH_STOPWORDS.has(w));
+  if (!words.length) return [];
+
+  const scored = products
+    .map(p => {
+      const haystack = [p.name, p.brand, p.category, p.description, p.productFeatures]
+        .filter(Boolean).join(' ').toLowerCase();
+      const score = words.reduce((n, w) => n + (haystack.includes(w) ? 1 : 0), 0);
+      return { product: p, score };
+    })
+    .filter(s => s.score > 0);
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map(s => s.product);
+}
+
+function describeProductForAI(p) {
+  const price = p.salePrice != null ? `R${p.salePrice} (was R${p.price})` : `R${p.price}`;
+  const sizes = Array.isArray(p.sizes) && p.sizes.length ? `sizes: ${p.sizes.join(', ')}` : '';
+  const stockNote = (p.stock > 0) ? 'in stock' : 'currently out of stock';
+  return `- ${p.name || 'Unnamed product'} by ${p.brand || 'JANEDORE'} (${p.category || 'uncategorized'}), ${price}, ${sizes ? sizes + ', ' : ''}${stockNote}`;
+}
+
+// Always resolves to a usable string — including the "nothing matched"
+// case — so the template can do a plain {{products}} substitution with
+// no conditional logic required.
+async function buildProductsContextForAI(messageText) {
+  const products = await getActiveProductsForAI();
+  const matches = findRelevantProductsForAI(products, messageText, 6);
+  if (!matches.length) {
+    return "No specific products matched this message yet. If the customer is looking for something, ask a short clarifying question (what they're after, size, occasion) before recommending anything — don't invent products.";
+  }
+  return matches.map(describeProductForAI).join('\n');
+}
+
+// Same slugs admin-pages.js seeds for the "Policies"/"Help" footer
+// groups (content-pages.js) — keep in sync if those slugs ever change.
+const AI_SHIPPING_CONTEXT_SLUGS = ['shipping-policy', 'return-policy', 'faq'];
+
+function stripHtmlTagsForAI(str) {
+  return String(str || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+async function getShippingReturnsContextForAI() {
+  const now = Date.now();
+  if (_shippingContextCache.data && now - _shippingContextCache.ts < AI_CONTEXT_CACHE_MS) {
+    return _shippingContextCache.data;
+  }
+  try {
+    const docs = await Promise.all(
+      AI_SHIPPING_CONTEXT_SLUGS.map(slug => db.collection('pages').doc(slug).get())
+    );
+    const sections = docs
+      .map((doc, i) => {
+        if (!doc.exists) return '';
+        const data = doc.data();
+        const text = stripHtmlTagsForAI(data.content || '');
+        return text ? `${data.title || AI_SHIPPING_CONTEXT_SLUGS[i]}:\n${text}` : '';
+      })
+      .filter(Boolean);
+    _shippingContextCache = { data: sections.join('\n\n'), ts: now };
+  } catch (e) {
+    _ScreenDebug.err('AI', 'Failed to load shipping/returns/FAQ for grounding: ' + e.message);
+  }
+  return _shippingContextCache.data || 'No shipping/returns/FAQ information is available right now.';
+}
+
 // ==================== AI REPLY (STRICT RETRY + LOCKING) ====================
 async function getAIReply(customerText) {
   const MAX_ATTEMPTS = 1;
@@ -870,8 +980,14 @@ async function getAIReply(customerText) {
       try {
         _ScreenDebug.ai('AI', 'Calling getReply attempt ' + attempt + '/' + MAX_ATTEMPTS + ' — textLength=' + safeText.length);
         const t0 = Date.now();
+        const [productsContext, shippingInfo] = await Promise.all([
+          buildProductsContextForAI(safeText),
+          getShippingReturnsContextForAI()
+        ]);
         const reply = await window._aiBridge.getReply('customer-support-chat', {
-          customerText: safeText
+          customerText: safeText,
+          products: productsContext,
+          shippingInfo: shippingInfo
         });
         const dt = Date.now() - t0;
 
