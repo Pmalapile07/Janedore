@@ -198,25 +198,24 @@
     display: none;
   }
 
-  /* ---------- WINDOW (inset floating panel, not full screen) ---------- */
+  /* ---------- WINDOW (full screen; forceFullScreen() in chat.js sets
+     the real inline-!important top/left/width/height on open/resize —
+     this is just a sane CSS-only fallback, no rounded corners/shadow
+     since the open panel is always edge-to-edge, never a floating
+     card). ---------- */
   #chat-window {
     position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
-    right: 12px !important;
-    bottom: 12px !important;
-    width: auto !important;
-    max-width: calc(100vw - 24px) !important;
-    height: auto !important;
-    max-height: calc(100vh - 24px) !important;
-    max-height: calc(100dvh - 24px) !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
     background: #fff !important;
     border: none !important;
-    border-radius: 20px !important;
     z-index: 9999 !important;
     display: none;
     flex-direction: column !important;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.25) !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
   }
@@ -224,56 +223,101 @@
 
   /* ---------- HEADER ---------- */
   #chat-window .chat-header {
-    background: #111 !important;
-    color: #fff !important;
-    padding: 18px 20px !important;
+    background: #fff !important;
+    color: #111 !important;
+    padding: 16px 20px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
+    gap: 12px !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+    flex-shrink: 0 !important;
+  }
+  #chat-window .chat-header-identity {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+  }
+  #chat-window .chat-header-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    flex-shrink: 0 !important;
+    border-radius: 50% !important;
+    background: #111 !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.03em !important;
+  }
+  #chat-window .chat-header-name {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #111 !important;
+    line-height: 1.3 !important;
+  }
+  #chat-window .chat-header-status {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 300 !important;
+    color: #888 !important;
+    line-height: 1.3 !important;
+  }
+  #chat-window .chat-header-status-dot {
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    background: #4caf50 !important;
+    flex-shrink: 0 !important;
+  }
+  #chat-window .chat-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
     flex-shrink: 0 !important;
   }
   #chat-window .chat-header-close {
     background: none !important;
     border: none !important;
-    color: rgba(255,255,255,0.6) !important;
+    color: rgba(0,0,0,0.55) !important;
     cursor: pointer !important;
     font-size: 16px !important;
     padding: 0 !important;
     line-height: 1 !important;
     transition: color 0.2s !important;
-    /* Pinned to the right unconditionally, rather than relying on
-       justify-content:space-between to put it there. That only works
-       while chat-header-track-btn (its sibling) is visible — the
-       moment chat.js hides that button (display:none, while on the
-       order-lookup screen or while the greeting's own inline Track
-       Order button is on screen), this becomes the header's only
-       flex child, and a lone flex item under space-between collapses
-       to the start (left) edge instead of staying right. */
     margin-left: auto !important;
   }
-  #chat-window .chat-header-close:hover { color: #fff !important; }
+  #chat-window .chat-header-close:hover { color: #111 !important; }
 
-  /* Header's own Track Order button — only visible once the greeting
-     message's inline button (see .jai-track-order-btn) has scrolled
-     out of view, via the IntersectionObserver set up in
-     renderAIGreeting() (chat.js). Defaults to visible so it's never
-     lost entirely if that observer has nothing to watch (e.g. a
-     returning visitor whose recent history renders instead of a fresh
-     greeting) — chat.js hides it explicitly once it isn't needed. */
+  /* Header's own Track Order button — only visible once the greeting's
+     welcome screen (see #jai-welcome-screen) has scrolled out of view,
+     via the IntersectionObserver set up in renderAIGreeting() (chat.js).
+     Defaults to visible so it's never lost entirely if that observer has
+     nothing to watch (e.g. a returning visitor whose recent history
+     renders instead of a fresh greeting) — chat.js hides it explicitly
+     while the welcome screen (or the order-lookup screen) is on screen. */
   #chat-window .chat-header-track-btn {
     background: #fff !important;
     color: #111 !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 8px 16px !important;
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 20px !important;
+    padding: 7px 14px !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 11px !important;
     font-weight: 400 !important;
     letter-spacing: 0.02em !important;
     cursor: pointer !important;
-    transition: opacity 0.2s !important;
+    transition: opacity 0.2s, background 0.2s !important;
   }
-  #chat-window .chat-header-track-btn:hover { opacity: 0.85 !important; }
+  #chat-window .chat-header-track-btn:hover { background: #f4f4f2 !important; }
 
   /* ---------- MESSAGES ---------- */
   #chat-window .chat-body {
@@ -290,7 +334,7 @@
     padding: 20px !important;
     flex-direction: column !important;
     gap: 12px !important;
-    background: #fafaf9 !important;
+    background: #fff !important;
     overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch !important;
   }
@@ -393,6 +437,126 @@
     border-radius: 0 !important;
   }
 
+  /* ---------- WELCOME SCREEN (greeting card + quick-action cards) ----------
+     Built by renderAIGreeting() (chat.js). Separate from the old
+     .chat-msg bubble styling below — explicitly NOT applied to regular
+     conversation bubbles, which keep their existing 12px size. */
+  #chat-window #jai-welcome-screen {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 18px !important;
+  }
+  #chat-window .jai-msg-row.jai-welcome-row {
+    max-width: 92% !important;
+    align-items: flex-start !important;
+  }
+  #chat-window .jai-welcome-card {
+    background: #fff !important;
+    border: 1px solid #e1e1e1 !important;
+    border-radius: 26px !important;
+    padding: 18px 18px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    flex: 1 !important;
+  }
+  #chat-window .jai-welcome-greeting,
+  #chat-window .jai-welcome-question {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #111 !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.01em !important;
+  }
+  #chat-window .jai-welcome-role {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #111 !important;
+    line-height: 1.5 !important;
+  }
+  #chat-window .jai-welcome-body {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 12.5px !important;
+    font-weight: 300 !important;
+    color: #666 !important;
+    line-height: 1.6 !important;
+    letter-spacing: 0.01em !important;
+  }
+  #chat-window .jai-welcome-time {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 300 !important;
+    color: #aaa !important;
+    margin-top: 4px !important;
+  }
+  #chat-window .jai-quick-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 9px !important;
+    width: 100% !important;
+  }
+  #chat-window .jai-quick-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    background: #fff !important;
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+    font-family: 'Inter', sans-serif !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: background 0.2s, border-color 0.2s !important;
+  }
+  #chat-window .jai-quick-card:hover {
+    background: #fafaf9 !important;
+    border-color: #d8d8d8 !important;
+  }
+  #chat-window .jai-quick-card:disabled {
+    opacity: 0.5 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+  }
+  #chat-window .jai-card-icon {
+    width: 46px !important;
+    height: 46px !important;
+    flex-shrink: 0 !important;
+    border-radius: 50% !important;
+    background: #f4f4f2 !important;
+    color: #111 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+  }
+  #chat-window .jai-card-text {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+  #chat-window .jai-card-title {
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    color: #111 !important;
+    letter-spacing: 0.01em !important;
+  }
+  #chat-window .jai-card-desc {
+    font-size: 11px !important;
+    font-weight: 300 !important;
+    color: #888 !important;
+  }
+  #chat-window .jai-card-chevron {
+    flex-shrink: 0 !important;
+    color: #bbb !important;
+    font-size: 15px !important;
+  }
+
   /* ---------- WELCOME ---------- */
   #chat-window .chat-welcome {
     text-align: center !important;
@@ -453,7 +617,7 @@
     background: transparent !important;
     padding: 10px 8px 10px 0 !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     font-weight: 300 !important;
     letter-spacing: 0.02em !important;
     color: #111 !important;
@@ -461,7 +625,7 @@
   }
   #chat-window .chat-input::placeholder { color: #aaa !important; }
 
-  /* Send button — wider, arrow icon, inside pill, far right */
+  /* Send button — circular, arrow icon, inside pill, far right */
   #chat-window .chat-send-btn {
     position: static !important;
     top: auto !important;
@@ -469,11 +633,11 @@
     bottom: auto !important;
     left: auto !important;
     flex-shrink: 0 !important;
-    width: 52px !important;
-    height: 36px !important;
-    min-width: 52px !important;
-    min-height: 36px !important;
-    border-radius: 24px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 50% !important;
     background: #111 !important;
     color: #fff !important;
     border: none !important;
@@ -582,7 +746,7 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 6px !important;
-    padding: 10px 0 !important;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0 !important;
     background: #fff !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 12px !important;
@@ -647,10 +811,19 @@
 
 <div id="chat-window">
   <div class="chat-header">
-    <button class="chat-header-track-btn" id="chat-header-track-btn" onclick="showOrderLookup()">Track Order</button>
-    <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()">
-      <i class="ph-light ph-x" id="chat-header-icon"></i>
-    </button>
+    <div class="chat-header-identity">
+      <div class="chat-header-avatar" aria-hidden="true">JAI</div>
+      <div>
+        <div class="chat-header-name">JAI</div>
+        <div class="chat-header-status"><span class="chat-header-status-dot" aria-hidden="true"></span>Online</div>
+      </div>
+    </div>
+    <div class="chat-header-right">
+      <button class="chat-header-track-btn" id="chat-header-track-btn" onclick="showOrderLookup()">Track Order</button>
+      <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()">
+        <i class="ph-light ph-x" id="chat-header-icon"></i>
+      </button>
+    </div>
   </div>
 
   <!-- Typing indicator is no longer static markup here — showTypingIndicator()

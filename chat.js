@@ -17,7 +17,11 @@ const SESSION_ID_REGEX        = /^chat-\d{10,16}$/;
 
 // ==================== ON-SCREEN DEBUG PANEL ====================
 const _ScreenDebug = {
-  enabled: true,
+  // Off by default for real customers. Opt in explicitly during
+  // development with ?jaidebug=1 in the URL, or by setting
+  // localStorage.jaiDebug = '1' (persists across reloads).
+  enabled: (new URLSearchParams(window.location.search).get('jaidebug') === '1')
+    || (typeof localStorage !== 'undefined' && localStorage.getItem('jaiDebug') === '1'),
   maxRows: 60,
   panel: null,
   logEl: null,
@@ -630,32 +634,137 @@ function cloneTrackOrderButton() {
   return btn;
 }
 
+// Quick-action starter cards (built by renderAIGreeting() below). Each
+// one drives the SAME real pipeline a typed message would — set the
+// visible input's value, then call the real global sendChatMessage() —
+// rather than writing to RTDB or calling getAIReply() directly, so
+// there is only ever one send path. Cards are disabled synchronously
+// (before sendChatMessage() runs its own async validation/RTDB write)
+// to close the double-submit window a fast double-click could otherwise
+// slip through, and stay disabled once a real conversation has started.
+function disableQuickActionCards() {
+  document.querySelectorAll('.jai-quick-card').forEach(btn => { btn.disabled = true; });
+}
+
+function quickActionDiscoverProduct() {
+  disableQuickActionCards();
+  const input = safeEl('chat-input');
+  if (!input) return;
+  input.value = "I'm looking for something new — can you help me find the right piece?";
+  sendChatMessage();
+}
+
+function quickActionTrackOrder() {
+  disableQuickActionCards();
+  showOrderLookup();
+}
+
+function quickActionShippingReturns() {
+  disableQuickActionCards();
+  const input = safeEl('chat-input');
+  if (!input) return;
+  input.value = "What's your shipping and returns policy?";
+  sendChatMessage();
+}
+
+function quickActionAskAnything() {
+  const input = safeEl('chat-input');
+  if (input) input.focus();
+}
+
 function renderAIGreeting() {
   const el = safeEl('chat-messages');
   if (!el) return;
-  const greeting = document.createElement('div');
-  greeting.className = 'chat-msg admin jai-msg';
 
-  const introText = document.createElement('div');
-  introText.style.cssText = 'margin-bottom:10px;font-weight:400;';
-  introText.innerHTML =
-    'Hi, I\'m JAI — the Janedore AI. I can help with sizing, shipping, returns, product questions, or finding the right piece.'
-    + '<br><br>'
-    + 'Looking for an existing order? Track it below.';
-  greeting.appendChild(introText);
-  greeting.appendChild(cloneTrackOrderButton());
+  const screen = document.createElement('div');
+  screen.id = 'jai-welcome-screen';
+
+  const card = document.createElement('div');
+  card.className = 'jai-welcome-card';
+
+  const greetingLine = document.createElement('div');
+  greetingLine.className = 'jai-welcome-greeting';
+  greetingLine.textContent = 'Hi, welcome to JANEDORE.';
+
+  const roleLine = document.createElement('div');
+  roleLine.className = 'jai-welcome-role';
+  roleLine.textContent = "I'm JAI, your personal shopping assistant.";
+
+  const bodyLine = document.createElement('div');
+  bodyLine.className = 'jai-welcome-body';
+  bodyLine.textContent = "Whether you're discovering something new, choosing the perfect piece, or need help with an order, I'm here to help.";
+
+  const questionLine = document.createElement('div');
+  questionLine.className = 'jai-welcome-question';
+  questionLine.textContent = 'How can I assist you today?';
+
+  const timeLine = document.createElement('div');
+  timeLine.className = 'jai-welcome-time';
+  timeLine.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  card.appendChild(greetingLine);
+  card.appendChild(roleLine);
+  card.appendChild(bodyLine);
+  card.appendChild(questionLine);
+  card.appendChild(timeLine);
 
   // JAI is greeting the customer here — smiles permanently on this one.
   const row = document.createElement('div');
-  row.className = 'jai-msg-row';
+  row.className = 'jai-msg-row jai-welcome-row';
   row.appendChild(buildJAIAvatarEl('happy'));
-  row.appendChild(greeting);
-  el.appendChild(row);
+  row.appendChild(card);
+  screen.appendChild(row);
 
-  // Once this greeting (and its inline Track Order button) scrolls out
-  // of view, the header's own Track Order button (hidden by default
-  // while this one is visible — see updateHeaderTrackBtnVisibility())
-  // takes over so the action stays reachable without scrolling back up.
+  const actions = document.createElement('div');
+  actions.className = 'jai-quick-actions';
+
+  const QUICK_ACTION_CARDS = [
+    { icon: 'ph-light ph-shopping-bag', title: 'Find my next piece', desc: 'Get help discovering something new',          onClick: quickActionDiscoverProduct },
+    { icon: 'ph-light ph-package',      title: 'Track my order',     desc: 'Check the status of an existing order',       onClick: quickActionTrackOrder },
+    { icon: 'ph-light ph-truck',        title: 'Shipping & returns', desc: 'Delivery times, costs and how returns work',  onClick: quickActionShippingReturns },
+    { icon: 'ph-light ph-chat-circle',  title: 'Ask JAI anything',   desc: 'Type your own question',                     onClick: quickActionAskAnything }
+  ];
+
+  QUICK_ACTION_CARDS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'jai-quick-card';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'jai-card-icon';
+    const iconEl = document.createElement('i');
+    iconEl.className = c.icon;
+    iconWrap.appendChild(iconEl);
+
+    const textWrap = document.createElement('div');
+    textWrap.className = 'jai-card-text';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'jai-card-title';
+    titleEl.textContent = c.title;
+    const descEl = document.createElement('div');
+    descEl.className = 'jai-card-desc';
+    descEl.textContent = c.desc;
+    textWrap.appendChild(titleEl);
+    textWrap.appendChild(descEl);
+
+    const chevron = document.createElement('i');
+    chevron.className = 'ph-light ph-caret-right jai-card-chevron';
+
+    btn.appendChild(iconWrap);
+    btn.appendChild(textWrap);
+    btn.appendChild(chevron);
+    btn.addEventListener('click', c.onClick);
+
+    actions.appendChild(btn);
+  });
+
+  screen.appendChild(actions);
+  el.appendChild(screen);
+
+  // Once this welcome screen scrolls out of view, the header's own
+  // Track Order button (hidden by default while this one is visible —
+  // see updateHeaderTrackBtnVisibility()) takes over so the action
+  // stays reachable without scrolling back up.
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -663,7 +772,7 @@ function renderAIGreeting() {
         updateHeaderTrackBtnVisibility();
       });
     }, { root: el, threshold: 0.01 });
-    observer.observe(row);
+    observer.observe(screen);
   }
 }
 
