@@ -666,6 +666,17 @@ body .site-collection-layout {
     margin-right: auto;
   }
 }
+/* "A-Z Brands" heading (index.html) — extra padding matching
+   .brands-page-grid's own (4px/6px/16px) on top of the page
+   section's shared 12px, so the heading's left edge lines up with
+   the grid cards below it instead of sitting less indented. */
+.brands-page-heading { padding: 0 4px; }
+@media (min-width: 640px) {
+  .brands-page-heading { padding: 0 6px; }
+}
+@media (min-width: 1024px) {
+  .brands-page-heading { padding: 0 16px; }
+}
 .brands-page-grid .shop-brand-card {
   width: 100%;
   max-width: none;
