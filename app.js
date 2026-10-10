@@ -133,21 +133,25 @@ function makeUniqueSlug(base, existingSlugs) {
 
 // Only writes a slug to Firestore when a product doesn't already have one —
 // existing slugs are never touched, per rule: don't change slugs on edit.
-async function backfillMissingSlugs(products) {
+//
+// Not awaited by its caller (fetchProducts()) on purpose: every product
+// missing a slug gets its own Firestore WRITE here, and writes are
+// slower than reads. The in-memory fix (p.slug = slug, below) happens
+// synchronously regardless, so the page already has correct slugs to
+// render/link with immediately — there's nothing a visitor needs to
+// wait on. The actual Firestore writes still happen, just in the
+// background, self-healing the data without holding up first paint.
+function backfillMissingSlugs(products) {
   const existingSlugs = new Set(products.filter(p => p.slug).map(p => p.slug));
-  const writes = [];
   products.forEach(p => {
     if (!p.slug) {
       const slug = makeUniqueSlug(generateSlugBase(p.name), existingSlugs);
       p.slug = slug;
-      writes.push(
-        db.collection('products').doc(p.id).update({ slug }).catch(e => {
-          console.warn('Slug backfill failed for', p.id, e);
-        })
-      );
+      db.collection('products').doc(p.id).update({ slug }).catch(e => {
+        console.warn('Slug backfill failed for', p.id, e);
+      });
     }
   });
-  if (writes.length) await Promise.all(writes);
 }
 
 // Same backfill-once pattern as products, for brand/vendor pages — gives
@@ -185,7 +189,7 @@ async function fetchProducts() {
   try {
     const snapshot = await db.collection('products').where('status','==','active').get();
     const products = snapshot.docs.map(d=>({id:d.id,...d.data()}));
-    await backfillMissingSlugs(products);
+    backfillMissingSlugs(products);
     return products;
   } catch(e) {
     console.error('Error fetching products:', e);

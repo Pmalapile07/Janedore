@@ -171,6 +171,27 @@
   border-radius: 3px;
 }
 
+/* Loading skeleton cards — baked directly into index.html for
+   #arrivals-grid/#clothing-grid, visible the instant the page paints,
+   before any JS has run. buildArrivals()/buildShopByClothing()
+   (collection.js) overwrite this innerHTML with real cards (or
+   .product-card-placeholder's "nothing is ever coming" state) once
+   fetchProducts() resolves — same assignment either already does, no
+   cleanup needed. Distinct from .product-card-placeholder above: this
+   one keeps .product-img-wrap's own shimmer (something IS coming),
+   shows no placeholder text, and isn't clickable. */
+.product-card-loading {
+  cursor: default;
+  pointer-events: none;
+}
+.product-card-loading .loading-bar {
+  border-radius: 2px;
+  margin-top: 8px;
+}
+.product-card-loading .loading-bar-brand { width: 30%; height: 9px; }
+.product-card-loading .loading-bar-title { width: 70%; height: 10px; }
+.product-card-loading .loading-bar-price { width: 25%; height: 9px; margin-bottom: 16px; }
+
 .product-badge-stack {
   position: absolute;
   top: 8px;
