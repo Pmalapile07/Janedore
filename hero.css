@@ -9,7 +9,7 @@
   justify-content: center;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 12px 8px;
+  padding: 12px 10px;
   background: #fff;
   box-sizing: border-box;
 }
@@ -17,10 +17,10 @@
    (product-grid.css) so the hero frames the same width as the product
    grid below it. Vertical 12px is unrelated and untouched. */
 @media (min-width: 640px) {
-  #hero { padding: 12px 10px; }
+  #hero { padding: 12px 12px; }
 }
 @media (min-width: 1024px) {
-  #hero { padding: 12px 12px; }
+  #hero { padding: 12px 14px; }
 }
 
 /* Inset to #hero's own padding, not the full section, so the image
@@ -32,7 +32,7 @@
    now, same values used for the slider edges below (product-grid.css). */
 .hero-bg-placeholder {
   position: absolute;
-  inset: 12px 8px;
+  inset: 12px 10px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -40,15 +40,15 @@
 
 .hero-overlay {
   position: absolute;
-  inset: 12px 8px;
+  inset: 12px 10px;
   background: rgba(0,0,0,0.2);
 }
 
 @media (min-width: 640px) {
-  .hero-bg-placeholder, .hero-overlay { inset: 12px 10px; }
+  .hero-bg-placeholder, .hero-overlay { inset: 12px 12px; }
 }
 @media (min-width: 1024px) {
-  .hero-bg-placeholder, .hero-overlay { inset: 12px 12px; }
+  .hero-bg-placeholder, .hero-overlay { inset: 12px 14px; }
 }
 
 .hero-content-wrap {
