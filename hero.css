@@ -24,10 +24,15 @@
 }
 
 /* Inset to #hero's own padding, not the full section, so the image
-   has a visible margin instead of running edge-to-edge. */
+   has a visible margin instead of running edge-to-edge. Was a flat
+   12px regardless of breakpoint, so the image's real visible margin
+   (12px) didn't match #hero's own declared left/right padding (8px
+   base, 10px from 640px) -- only matched by coincidence at the
+   earlier 1024px tier. Tracks the real padding at every breakpoint
+   now, same values used for the slider edges below (product-grid.css). */
 .hero-bg-placeholder {
   position: absolute;
-  inset: 12px;
+  inset: 12px 8px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -35,8 +40,12 @@
 
 .hero-overlay {
   position: absolute;
-  inset: 12px;
+  inset: 12px 8px;
   background: rgba(0,0,0,0.2);
+}
+
+@media (min-width: 640px) {
+  .hero-bg-placeholder, .hero-overlay { inset: 12px 10px; }
 }
 
 .hero-content-wrap {
