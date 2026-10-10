@@ -122,7 +122,7 @@ function buildShopByBrand(vendors) {
   if (!grid) return;
 
   const brands = getFeaturedBrands(vendors);
-  grid.innerHTML = brands.length ? shopByBrandCardsHtml(brands) : '';
+  grid.innerHTML = brands.length ? shopByBrandCardsHtml(brands) : placeholderBrandCardsHtml(4);
 }
 
 // ==================== BRANDS PAGE (/brands) — A-Z directory ====================
@@ -142,15 +142,11 @@ function renderBrandsPage(vendors) {
   if (!grid || !indexEl || !listEl) return;
 
   const brands = getFeaturedBrands(vendors || []);
-  if (!brands.length) {
-    grid.innerHTML = placeholderBrandCardsHtml(4);
-    indexEl.innerHTML = '';
-    listEl.innerHTML = '<div class="brands-empty">No brands available yet.</div>';
-    return;
-  }
 
-  grid.innerHTML = shopByBrandCardsHtml(brands);
-
+  // Index built from LETTERS/groups up front, before the empty check,
+  // so the A-Z row always renders (every letter in its disabled state
+  // when there are no brands yet) instead of going blank — matches
+  // the grid/list below, which already show their own empty states.
   const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
   const groups = {};
   brands
@@ -172,6 +168,14 @@ function renderBrandsPage(vendors) {
       ? `<a class="brands-az-letter" href="#brands-letter-${letter}">${letter}</a>`
       : `<span class="brands-az-letter disabled">${letter}</span>`;
   }).join('');
+
+  if (!brands.length) {
+    grid.innerHTML = placeholderBrandCardsHtml(4);
+    listEl.innerHTML = '<div class="brands-empty">No brands available yet.</div>';
+    return;
+  }
+
+  grid.innerHTML = shopByBrandCardsHtml(brands);
 
   listEl.innerHTML = LETTERS.filter(letter => groups[letter]).map(letter => {
     const items = groups[letter].map(v => {
