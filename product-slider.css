@@ -1,10 +1,16 @@
 /* Side padding matches .product-info's own (12px mobile, 16px desktop
    below) so the image lines up flush with the text content under it,
-   instead of running edge-to-edge. */
+   instead of running edge-to-edge. max-width/margin:auto also matches
+   .product-info/.page-breadcrumb's own centering (product-info.css) —
+   without it, past 720px+padding wide the image stayed pinned to the
+   raw viewport edges while the text column recentered itself, so the
+   two diverged (and diverged further the wider the screen got) instead
+   of staying flush. */
 .product-slider {
   position: relative;
   width: 100%;
-  margin: 0;
+  max-width: 720px;
+  margin: 0 auto;
   padding: 12px;
 }
 
