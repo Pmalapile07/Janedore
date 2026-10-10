@@ -10,9 +10,9 @@
    up, so this is a pause, not another content block. Left/right
    padding now matches .product-grid's own breakpoints (product-grid.css)
    instead of running full-bleed, at the user's request. */
-#home-editorial-banner { cursor: pointer; padding: 0 10px; }
-@media (min-width: 640px) { #home-editorial-banner { padding: 0 12px; } }
-@media (min-width: 1024px) { #home-editorial-banner { padding: 0 14px; } }
+#home-editorial-banner { cursor: pointer; padding: 0 12px; }
+@media (min-width: 640px) { #home-editorial-banner { padding: 0 14px; } }
+@media (min-width: 1024px) { #home-editorial-banner { padding: 0 16px; } }
 
 /* New Arrivals / Shop by Category / Shop by Clothing / Shop by Brand
    section headers all share this class. Left/right now matches
@@ -22,9 +22,9 @@
    unpadded next to its grid. Bottom spacing (24px) unchanged; top is
    0 by default, overridden inline just on New Arrivals' header
    (the one section that needs top padding too). */
-.home-categories-header { padding: 0 10px 24px; }
-@media (min-width: 640px) { .home-categories-header { padding: 0 12px 24px; } }
-@media (min-width: 1024px) { .home-categories-header { padding: 0 14px 24px; } }
+.home-categories-header { padding: 0 12px 24px; }
+@media (min-width: 640px) { .home-categories-header { padding: 0 14px 24px; } }
+@media (min-width: 1024px) { .home-categories-header { padding: 0 16px 24px; } }
 .home-editorial-img {
   position: relative;
   width: 100%;
@@ -101,10 +101,10 @@
    not a category launcher this small). */
 .home-categories-grid {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
-  padding: 0 10px;
+  padding: 0 12px;
 }
-@media (min-width: 640px) { .home-categories-grid { padding: 0 12px; } }
-@media (min-width: 1024px) { .home-categories-grid { padding: 0 14px; } }
+@media (min-width: 640px) { .home-categories-grid { padding: 0 14px; } }
+@media (min-width: 1024px) { .home-categories-grid { padding: 0 16px; } }
 .home-category-card { cursor: pointer; width: 100%; }
 /* Product card image ratio is 5/6 (≈0.833); height reduced another
    10% from 0.78 (aspect-ratio is width/height, so shrinking height by
