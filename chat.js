@@ -1958,9 +1958,21 @@ document.addEventListener('DOMContentLoaded', () => {
     el.style.setProperty('will-change', 'auto', 'important');
   }
 
+  // Neutralizes wrapper divs BETWEEN #chat-window and <body> that could
+  // trap its position:fixed inside their own coordinate system (e.g. a
+  // parent with its own transform/position:relative). Must stop at
+  // <body> itself, not walk past it: lockPageScroll()/unlockPageScroll()
+  // (chat.js) deliberately set body's own position to fixed while the
+  // chat is open, to freeze the page behind it. This used to walk all
+  // the way through body and reset ITS position back to static too —
+  // on every single call, including the one forceFullScreen() makes
+  // immediately after every lockPageScroll() call on open — silently
+  // undoing the scroll lock from the moment the chat opened. That's
+  // what let the real page behind scroll instead of the chat's own
+  // message list, and real-device reports on iOS Safari.
   function fixAncestors(startEl) {
     let el = startEl;
-    while (el && el !== document.documentElement) {
+    while (el && el !== document.body && el !== document.documentElement) {
       stripTraps(el);
       el = el.parentElement;
     }
