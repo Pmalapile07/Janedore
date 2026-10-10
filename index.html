@@ -176,14 +176,29 @@
       <span>Search products or brands</span>
     </div>
   </div>
+</nav>
+
+<!-- Lives outside #main-nav on purpose — #main-nav is position:sticky
+     (pinned while scrolling), but this row is meant to scroll away
+     with the page content below it (the hero image on home, the A-Z
+     index on brands, etc.), not stay pinned with the header. Sits
+     outside every .page div too (same pattern as
+     #collection-page-breadcrumb above), so it's a single persistent
+     element shown on every page rather than something each page
+     re-renders. */ -->
+<div class="nav-quick-links-wrap" id="nav-quick-links-wrap">
+  <button class="nav-quick-chevron nav-quick-chevron-left hidden" id="nav-quick-chevron-left" aria-label="Scroll left" onclick="scrollNavQuickLinks(-1)"><i class="ph ph-caret-left"></i></button>
   <div class="nav-quick-links" id="nav-quick-links">
+    <button class="nav-quick-link" data-nav-page="home" onclick="navigateTo('home')">All</button>
     <button class="nav-quick-link" data-nav-page="newin" onclick="navigateToNewIn()">New In</button>
     <button class="nav-quick-link" data-nav-page="categories" onclick="navigateTo('categories')">Categories</button>
     <button class="nav-quick-link" data-nav-page="brands" onclick="navigateTo('brands')">Brands</button>
     <button class="nav-quick-link" data-nav-page="editorial" onclick="navigateTo('editorial')">Editorial</button>
+    <button class="nav-quick-link" data-nav-page="giftcards" onclick="navigateTo('giftcards')">Gift Cards</button>
     <button class="nav-quick-link" data-nav-page="sale" onclick="navigateToSale()">Sale</button>
   </div>
-</nav>
+  <button class="nav-quick-chevron nav-quick-chevron-right hidden" id="nav-quick-chevron-right" aria-label="Scroll right" onclick="scrollNavQuickLinks(1)"><i class="ph ph-caret-right"></i></button>
+</div>
 
 <nav class="page-breadcrumb" id="collection-page-breadcrumb" aria-label="Breadcrumb"></nav>
 
@@ -353,6 +368,7 @@
 
 <div class="page" id="page-editorial"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Editorial</div></div></section><footer id="editorial-footer"></footer></div>
 <div class="page" id="page-categories"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Categories</div></div></section><footer id="categories-footer"></footer></div>
+<div class="page" id="page-giftcards"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Gift Cards</div></div></section><footer id="giftcards-footer"></footer></div>
 <div class="page" id="page-brands"><section style="padding:12px 12px 60px"><div style="text-align:left;margin-bottom:16px"><div style="font-family:'Inter',sans-serif;font-size:22px;font-weight:400">A&#8211;Z <span style="font-weight:600">Brands</span></div></div><div class="brands-page-grid" id="brands-page-grid"></div><div class="brands-az-index" id="brands-az-index"></div><div class="brands-az-list" id="brands-az-list"></div></section><footer id="brands-footer"></footer></div>
 <div class="page" id="page-cart"><div class="cart-page" id="cart-page-content"></div><footer id="cart-footer"></footer></div>
 <div class="page" id="page-wishlist"><div class="wish-page" id="wish-page-content"></div><footer id="wishlist-footer"></footer></div>
