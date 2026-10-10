@@ -154,6 +154,9 @@ function renderBrandsPage(vendors) {
     });
 
   indexEl.innerHTML = LETTERS.map(letter => {
+    if (letter === '#') {
+      return `<span class="brands-az-letter brands-az-hash">#</span>`;
+    }
     const has = !!groups[letter];
     return has
       ? `<a class="brands-az-letter" href="#brands-letter-${letter}">${letter}</a>`
