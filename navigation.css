@@ -79,7 +79,7 @@
 
 .nav-logo-text {
   font-family: 'Telegraf', sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -91,7 +91,7 @@
    .nav-logo-text entirely when set; see site-content.js's renderLogo()
    and server.js's applyLogoImage() for the swap. */
 .nav-logo-img {
-  height: 35px;
+  height: 36px;
   width: auto;
   display: block;
   object-fit: contain;
