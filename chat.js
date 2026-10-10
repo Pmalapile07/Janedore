@@ -899,6 +899,18 @@ function renderAIProductSuggestions(products) {
   const wrap = document.createElement('div');
   wrap.className = 'jai-product-row' + (products.length > 1 ? ' jai-product-slider' : ' jai-product-single');
   wrap.innerHTML = products.map(p => productCard(p, false, true)).join('');
+
+  // productCard()'s own onclick (shared site-wide, untouched) already
+  // navigates to the product page — this chat-only listener additionally
+  // closes the full-screen chat overlay right after, the same way the
+  // header's X button does, so the customer actually sees the product
+  // page they just tapped instead of finding it hidden behind the still-
+  // open chat. Delegated on the wrapper so it fires once per card tap,
+  // during the bubble phase, after the card's own navigation has run.
+  wrap.addEventListener('click', (e) => {
+    if (e.target.closest('.product-card') && chatOpen) toggleChat();
+  });
+
   el.appendChild(wrap);
   el.scrollTop = el.scrollHeight;
 }
