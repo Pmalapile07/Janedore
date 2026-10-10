@@ -448,6 +448,7 @@ function navigateTo(page, replaceUrl) {
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
   if(page==="checkout"){ navigateToCheckout(replaceUrl); }
   if(page==="editorial") ensureNavScrolled();
+  if(page==="brands"){ if (typeof renderBrandsPage === 'function') renderBrandsPage(S.vendors || []); ensureNavScrolled(); }
   updateChatVisibility();
 }
 

@@ -115,6 +115,60 @@ function buildShopByBrand(vendors) {
   grid.innerHTML = brands.length ? shopByBrandCardsHtml(brands) : '';
 }
 
+// ==================== BRANDS PAGE (/brands) — A-Z directory ====================
+// Same structure as a typical brand-directory page (Superbalist's
+// /brands was the reference): a grid of brand cards at the top (reuses
+// shopByBrandCardsHtml()/navigateToVendor() verbatim, same cards as the
+// homepage's Shop by Brand section, just laid out as a static 2-column
+// grid instead of a swipe slider — see .brands-page-grid in
+// product-grid.css), then a jump-to-letter index, then every brand
+// listed under its own letter heading. Scales to however many real
+// vendors exist — with very few brands it's just a short page, not a
+// broken one.
+function renderBrandsPage(vendors) {
+  const grid = document.getElementById('brands-page-grid');
+  const indexEl = document.getElementById('brands-az-index');
+  const listEl = document.getElementById('brands-az-list');
+  if (!grid || !indexEl || !listEl) return;
+
+  const brands = getFeaturedBrands(vendors || []);
+  if (!brands.length) {
+    grid.innerHTML = '';
+    indexEl.innerHTML = '';
+    listEl.innerHTML = '<div class="brands-empty">No brands available yet.</div>';
+    return;
+  }
+
+  grid.innerHTML = shopByBrandCardsHtml(brands);
+
+  const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
+  const groups = {};
+  brands
+    .slice()
+    .sort((a, b) => (a.name || a.brandName || '').localeCompare(b.name || b.brandName || ''))
+    .forEach(v => {
+      const name = v.name || v.brandName || 'Unknown Brand';
+      const first = name.charAt(0).toUpperCase();
+      const letter = /[A-Z]/.test(first) ? first : '#';
+      (groups[letter] = groups[letter] || []).push(v);
+    });
+
+  indexEl.innerHTML = LETTERS.map(letter => {
+    const has = !!groups[letter];
+    return has
+      ? `<a class="brands-az-letter" href="#brands-letter-${letter}">${letter}</a>`
+      : `<span class="brands-az-letter disabled">${letter}</span>`;
+  }).join('');
+
+  listEl.innerHTML = LETTERS.filter(letter => groups[letter]).map(letter => {
+    const items = groups[letter].map(v => {
+      const name = v.name || v.brandName || 'Unknown Brand';
+      return `<li onclick="navigateToVendor('${escapeJSString(v.slug || v.id)}')">${escapeHTML(name)}</li>`;
+    }).join('');
+    return `<div class="brands-az-group" id="brands-letter-${letter}"><div class="brands-az-heading">${letter}</div><ul class="brands-az-items">${items}</ul></div>`;
+  }).join('');
+}
+
 async function initVendors() {
   const vendors = await fetchVendors();
   await backfillMissingVendorSlugs(vendors);
@@ -124,4 +178,5 @@ async function initVendors() {
   renderVendorsFooter(vendors);
   renderHomeBrandSpotlight(vendors);
   buildShopByBrand(vendors);
+  renderBrandsPage(vendors);
 }
