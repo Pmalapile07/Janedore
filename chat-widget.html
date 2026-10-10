@@ -510,12 +510,19 @@
     font-family: 'Inter', sans-serif !important;
     text-align: left !important;
     cursor: pointer !important;
-    transition: background 0.2s, border-color 0.2s !important;
+    opacity: 1 !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transition: background 0.2s, border-color 0.2s, opacity 0.2s !important;
   }
   #chat-window .jai-quick-card:hover {
     background: #fafaf9 !important;
     border-color: #d8d8d8 !important;
   }
+  /* Disabled only for the brief window a card's own click is actually
+     in flight (see disableQuickActionCards()/enableQuickActionCards()
+     in chat.js) — never a permanent state once one card has been used. */
   #chat-window .jai-quick-card:disabled {
     opacity: 0.5 !important;
     cursor: default !important;
@@ -526,7 +533,7 @@
     height: 46px !important;
     flex-shrink: 0 !important;
     border-radius: 50% !important;
-    background: #f4f4f2 !important;
+    background: #f4f4f4 !important;
     color: #111 !important;
     display: flex !important;
     align-items: center !important;
@@ -543,17 +550,17 @@
   #chat-window .jai-card-title {
     font-size: 12.5px !important;
     font-weight: 600 !important;
-    color: #111 !important;
+    color: #111111 !important;
     letter-spacing: 0.01em !important;
   }
   #chat-window .jai-card-desc {
     font-size: 11px !important;
     font-weight: 300 !important;
-    color: #888 !important;
+    color: #666666 !important;
   }
   #chat-window .jai-card-chevron {
     flex-shrink: 0 !important;
-    color: #bbb !important;
+    color: #111111 !important;
     font-size: 15px !important;
   }
 
