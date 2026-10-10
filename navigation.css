@@ -36,6 +36,10 @@
    page re-renders.
    ============================================ */
 .nav-quick-links-wrap {
+  /* Hidden for now at the founder's request after several rounds of
+     tweaking it still didn't read right — markup/JS left in place
+     (not deleted) in case this gets revisited later. */
+  display: none;
   position: relative;
   background: #fff;
   /* No padding-bottom of its own — .nav-quick-links below already has
