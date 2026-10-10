@@ -1069,7 +1069,7 @@ function selectSortTab(cat) {
   if (cat === 'all') { S.filter.cat = []; S.filter.vendor = []; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.currentCategoryPage = null; renderAllProducts(); }
   else { navigateToCategory(cat); }
   renderCollectionSortingTabs();
-  window.scrollTo({top:0,behavior:"smooth"});
+  window.scrollTo({top:0,behavior:"instant"});
   updateCollectionGridIcon();
 }
 
