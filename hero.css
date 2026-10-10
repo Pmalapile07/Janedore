@@ -47,6 +47,9 @@
 @media (min-width: 640px) {
   .hero-bg-placeholder, .hero-overlay { inset: 12px 10px; }
 }
+@media (min-width: 1024px) {
+  .hero-bg-placeholder, .hero-overlay { inset: 12px 12px; }
+}
 
 .hero-content-wrap {
   position: relative;
@@ -124,9 +127,4 @@
   #hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
   .hero-content-wrap { padding: 0 20px 32px; gap: 12px; }
   .hero-statement-sub { max-width: 320px; }
-}
-
-@media (min-width: 769px) {
-  #hero { padding: 16px; }
-  .hero-bg-placeholder, .hero-overlay { inset: 16px; }
 }
