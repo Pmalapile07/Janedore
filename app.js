@@ -104,6 +104,7 @@ const PAGE_URL_MAP = {
   campaign: 'campaign',
   editorial: 'editorial',
   brands: 'brands',
+  categories: 'categories',
   login: 'login',
   account: 'account',
   checkout: 'checkout',
@@ -254,7 +255,7 @@ async function init() {
   loadWishlistFromStorage();
   updateBadges();
   buildArrivals();
-  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","brands-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
+  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","brands-footer","categories-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
   initVendors();
@@ -300,7 +301,7 @@ async function init() {
     } else if (pathRoute.page === 'account') {
       await window.authReady;
       navigateToAccount(true);
-    } else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(pathRoute.page)) {
+    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
     } else {
       navigateTo('home');
@@ -315,7 +316,7 @@ async function init() {
     }
     else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
     else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
-    else if (['cart','wishlist','checkout','products','campaign','editorial'].includes(route.page)) {
+    else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(route.page)) {
       navigateTo(route.page, true);
     }
     else navigateTo('home');
@@ -360,7 +361,7 @@ function updateCollectionUrl(cat, replaceUrl) {
   else history.pushState(null, null, newPath);
 }
 
-function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'brands') return { page: 'brands' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
+function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'brands') return { page: 'brands' }; if (hash === 'categories') return { page: 'categories' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 
 // Reads clean /products/{slug}, /collections/{cat}, /pages/{slug}, and every
 // mapped utility/content page (/shop, /login, /account, /checkout, /cart,
@@ -375,7 +376,7 @@ function getRouteFromPath() {
   if (m) return { page: 'content', slug: decodeURIComponent(m[1]) };
   m = path.match(/^\/brands\/([^\/]+)\/?$/);
   if (m) return { page: 'vendor', slug: decodeURIComponent(m[1]) };
-  m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial)\/?$/);
+  m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial|brands|categories)\/?$/);
   if (m) return { page: URL_TO_PAGE_MAP[m[1]] || m[1] };
   return null;
 }
@@ -404,7 +405,7 @@ window.addEventListener('popstate', async () => {
       await window.authReady;
       navigateToAccount(true);
       return;
-    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands'].includes(pathRoute.page)) {
+    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
       return;
     }
@@ -414,7 +415,7 @@ window.addEventListener('popstate', async () => {
   else if (route.page === 'category') navigateToCategory(route.cat, true);
   else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
   else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
-  else if (['cart','wishlist','checkout','products','campaign','editorial','brands'].includes(route.page)) navigateTo(route.page, true);
+  else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(route.page)) navigateTo(route.page, true);
   else navigateTo('home');
 });
 
@@ -434,6 +435,32 @@ function setNavForPage(page) {
   // heading, matching the reference layout; every other page keeps the
   // search bar exactly as before.
   document.body.classList.toggle('on-brands-page', page === 'brands');
+
+  updateNavQuickLinks(page);
+}
+
+// Highlights whichever .nav-quick-link (the New In/Categories/Brands/
+// Editorial/Sale row under the search bar, index.html) matches the
+// page just navigated to. Both New In and Sale land on the same
+// #page-products — which tab lights up depends on S.saleMode /
+// S.sortBy, which navigateToNewIn()/navigateToSale() both already set
+// before calling setNavForPage() — reading it here rather than
+// passing a separate flag through every call site. A manual sort
+// change via the dropdown (or any other path onto #page-products)
+// just leaves the row unhighlighted, same as the reference. Pages
+// with no matching tab at all (cart, product detail, a vendor page,
+// etc.) behave the same way.
+function updateNavQuickLinks(page) {
+  let key = page;
+  if (page === 'products') key = S.saleMode ? 'sale' : (S.sortBy === 'newest' ? 'newin' : null);
+  document.querySelectorAll('.nav-quick-link').forEach(el => {
+    const isActive = el.dataset.navPage === key;
+    el.classList.toggle('active', isActive);
+    // Same behavior as the bash.com reference: clicking a tab further
+    // down the row scrolls it into view instead of leaving it partly
+    // clipped at the edge.
+    if (isActive) el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+  });
 }
 
 function navigateTo(page, replaceUrl) {
@@ -454,6 +481,7 @@ function navigateTo(page, replaceUrl) {
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
   if(page==="checkout"){ navigateToCheckout(replaceUrl); }
   if(page==="editorial") ensureNavScrolled();
+  if(page==="categories") ensureNavScrolled();
   if(page==="brands"){ if (typeof renderBrandsPage === 'function') renderBrandsPage(S.vendors || []); ensureNavScrolled(); }
   updateChatVisibility();
 }
@@ -496,6 +524,15 @@ function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mai
 function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
 function navigateToSale() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+
+// Same shape as navigateToSale() — lands on the All Products grid, but
+// sorted newest-first (the same 'newest' sort merchandiseProducts()
+// already supports, used elsewhere for the homepage's own Arrivals
+// rail) instead of filtering to on-sale items. S.sortBy drives
+// renderAllProducts()'s own sort internally, so setting it here before
+// calling renderAllProducts() is all that's needed — no separate
+// render path like sale's renderSaleProducts().
+function navigateToNewIn() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'all'; renderCollectionSortingTabs(); renderAllProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
   ++pageNavGeneration;

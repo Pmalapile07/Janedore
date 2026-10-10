@@ -22,6 +22,70 @@
   -webkit-backface-visibility: hidden;
 }
 #main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #fff; transition: color 0.25s ease; }
+
+/* Quick-link row (Home/Shop/Sale/Categories/Brands) under the search
+   bar — same idea as bash.com's category tab row, reference the
+   founder sent: a plain white strip, grey text, no pill/fill behind
+   the active one (that was an earlier, rejected version — a colored
+   pill against the black header read as "wrong", not intentional).
+   Still lives inside #main-nav's own sticky block like the search bar
+   above it, just with its own white background instead of inheriting
+   the header's black. Horizontally scrollable so it never wraps.
+   Active-state class is toggled by updateNavQuickLinks() (app.js),
+   called from setNavForPage() on every navigation. */
+.nav-quick-links {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* Bottom padding deliberately smaller than top — on the real device
+     (real Inter font, which this sandbox can't load) the gap below
+     the row read visibly wider than the gap above it even though both
+     measured equal here against a fallback font. Shaving the bottom
+     down compensates. */
+  padding: 8px 8px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.nav-quick-links::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) {
+  .nav-quick-links { padding: 8px 12px 4px; }
+}
+/* line-height:1 + inline-flex/align-items:center is deliberate, not
+   decorative — a plain <button> with the font's default line-height
+   can render its glyphs visibly off-center within an otherwise
+   perfectly symmetric padding box (the founder flagged exactly this:
+   text sitting "slightly up" even though the row's own top/bottom
+   padding already matched). This makes the text center on the glyph
+   box itself, independent of font metrics. */
+.nav-quick-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #888;
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.nav-quick-link:hover { color: #111; }
+/* Active tab is a solid black pill with white bold text — matches
+   the bash.com reference exactly (confirmed from two follow-up
+   screenshots showing both the default "All" pill and a clicked
+   category pill); the earlier plain-bold-text version was wrong. */
+.nav-quick-link.active {
+  background: #111;
+  color: #fff;
+  font-weight: 600;
+}
 #main-nav .badge { background: #fff; color: #111; transition: background 0.25s ease, color 0.25s ease; }
 
 #main-nav.scrolled { background: #111; }
