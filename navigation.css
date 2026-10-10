@@ -54,17 +54,17 @@
      (#hero, .product-grid — 8px/10px/12px) instead of a wider,
      header-specific value, so the row doesn't look like it's
      overextending past where every other section's edge sits. */
-  padding: 12px 8px;
+  padding: 12px 8px 11.5px;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
 .nav-quick-links::-webkit-scrollbar { display: none; }
 @media (min-width: 640px) {
-  .nav-quick-links { padding: 12px 10px; }
+  .nav-quick-links { padding: 12px 10px 11.5px; }
 }
 @media (min-width: 1024px) {
-  .nav-quick-links { padding: 12px 12px; }
+  .nav-quick-links { padding: 12px 12px 11.5px; }
 }
 /* line-height:1 + inline-flex/align-items:center is deliberate, not
    decorative — a plain <button> with the font's default line-height
@@ -110,17 +110,16 @@
   transform: translateY(-50%);
   width: 28px;
   height: 28px;
-  border-radius: 8px;
-  background: #fff;
+  background: none;
   border: none;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 2;
   color: #111;
-  font-size: 13px;
+  font-size: 14px;
   padding: 0;
 }
 .nav-quick-chevron.hidden { display: none; }
