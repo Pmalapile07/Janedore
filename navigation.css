@@ -22,43 +22,55 @@
   -webkit-backface-visibility: hidden;
 }
 #main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #fff; transition: color 0.25s ease; }
+#main-nav .badge { background: #fff; color: #111; transition: background 0.25s ease, color 0.25s ease; }
 
-/* Quick-link row (Home/Shop/Sale/Categories/Brands) under the search
-   bar — same idea as bash.com's category tab row, reference the
-   founder sent: a plain white strip, grey text, no pill/fill behind
-   the active one (that was an earlier, rejected version — a colored
-   pill against the black header read as "wrong", not intentional).
-   Still lives inside #main-nav's own sticky block like the search bar
-   above it, just with its own white background instead of inheriting
-   the header's black. Horizontally scrollable so it never wraps.
-   Active-state class is toggled by updateNavQuickLinks() (app.js),
-   called from setNavForPage() on every navigation. */
-.nav-quick-links {
+/* ============================================
+   QUICK-LINK ROW (All / New In / Categories / Brands / Editorial /
+   Gift Cards / Sale) — bash.com's category tab row is the reference.
+   Deliberately OUTSIDE #main-nav (index.html) so it scrolls away with
+   the page content below it instead of staying pinned with the
+   sticky header — a white strip that reads as part of the page, not
+   part of the black nav bar. Lives outside every .page div too (same
+   pattern as #collection-page-breadcrumb above it), so it's one
+   persistent element shown on every page rather than something each
+   page re-renders.
+   ============================================ */
+.nav-quick-links-wrap {
+  position: relative;
   background: #fff;
+  /* No padding-bottom of its own — .nav-quick-links below already has
+     12px of its own bottom padding, which combined with whatever the
+     next section's own top padding is (12px on #hero, 12px on the
+     brands page's section, etc.) already gives every page real,
+     non-zero breathing room without stacking a second gap on top of
+     it (that stacking was the earlier "padding is huge" bug: 12px row
+     + 16px here + 12px hero top = 40px total). */
+}
+.nav-quick-links {
   display: flex;
   align-items: center;
   gap: 4px;
-  /* Bottom padding deliberately smaller than top — on the real device
-     (real Inter font, which this sandbox can't load) the gap below
-     the row read visibly wider than the gap above it even though both
-     measured equal here against a fallback font. Shaving the bottom
-     down compensates. */
-  padding: 8px 8px 4px;
+  /* Left/right matches the site's own standard responsive inset
+     (#hero, .product-grid — 8px/10px/12px) instead of a wider,
+     header-specific value, so the row doesn't look like it's
+     overextending past where every other section's edge sits. */
+  padding: 12px 8px;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
 .nav-quick-links::-webkit-scrollbar { display: none; }
-@media (min-width: 768px) {
-  .nav-quick-links { padding: 8px 12px 4px; }
+@media (min-width: 640px) {
+  .nav-quick-links { padding: 12px 10px; }
+}
+@media (min-width: 1024px) {
+  .nav-quick-links { padding: 12px 12px; }
 }
 /* line-height:1 + inline-flex/align-items:center is deliberate, not
    decorative — a plain <button> with the font's default line-height
    can render its glyphs visibly off-center within an otherwise
-   perfectly symmetric padding box (the founder flagged exactly this:
-   text sitting "slightly up" even though the row's own top/bottom
-   padding already matched). This makes the text center on the glyph
-   box itself, independent of font metrics. */
+   perfectly symmetric padding box. This makes the text center on the
+   glyph box itself, independent of font metrics. */
 .nav-quick-link {
   flex: 0 0 auto;
   display: inline-flex;
@@ -66,7 +78,7 @@
   line-height: 1;
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
   color: #888;
   background: none;
   border: none;
@@ -78,15 +90,42 @@
 }
 .nav-quick-link:hover { color: #111; }
 /* Active tab is a solid black pill with white bold text — matches
-   the bash.com reference exactly (confirmed from two follow-up
+   the bash.com reference (confirmed against two follow-up
    screenshots showing both the default "All" pill and a clicked
-   category pill); the earlier plain-bold-text version was wrong. */
+   category pill). */
 .nav-quick-link.active {
   background: #111;
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
 }
-#main-nav .badge { background: #fff; color: #111; transition: background 0.25s ease, color 0.25s ease; }
+
+/* Floating scroll-affordance carets — shown only when there's
+   actually more row to scroll to in that direction
+   (updateNavQuickLinksChevrons(), app.js, toggles .hidden on scroll).
+   Positioned over the row rather than taking up their own flex slot,
+   same as the reference. */
+.nav-quick-chevron {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  border: none;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  color: #111;
+  font-size: 13px;
+  padding: 0;
+}
+.nav-quick-chevron.hidden { display: none; }
+.nav-quick-chevron-left { left: 6px; }
+.nav-quick-chevron-right { right: 6px; }
 
 #main-nav.scrolled { background: #111; }
 #main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link, #main-nav.scrolled .utility-text-link, #main-nav.scrolled .nav-logo-text { color: #fff; }

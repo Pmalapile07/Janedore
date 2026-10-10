@@ -105,6 +105,7 @@ const PAGE_URL_MAP = {
   editorial: 'editorial',
   brands: 'brands',
   categories: 'categories',
+  giftcards: 'gift-cards',
   login: 'login',
   account: 'account',
   checkout: 'checkout',
@@ -255,11 +256,16 @@ async function init() {
   loadWishlistFromStorage();
   updateBadges();
   buildArrivals();
-  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","brands-footer","categories-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
+  const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","brands-footer","categories-footer","giftcards-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
   initVendors();
   initNavScroll();
+  const navQuickLinksRow = document.getElementById('nav-quick-links');
+  if (navQuickLinksRow) {
+    navQuickLinksRow.addEventListener('scroll', updateNavQuickLinksChevrons, { passive: true });
+    updateNavQuickLinksChevrons();
+  }
 
   // PayFast redirects the customer back to "/?payfast_return=1&order=..."
   // (a bare path with query params, no hash), so without this check the
@@ -301,7 +307,7 @@ async function init() {
     } else if (pathRoute.page === 'account') {
       await window.authReady;
       navigateToAccount(true);
-    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(pathRoute.page)) {
+    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories','giftcards'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
     } else {
       navigateTo('home');
@@ -316,7 +322,7 @@ async function init() {
     }
     else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
     else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
-    else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(route.page)) {
+    else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories','giftcards'].includes(route.page)) {
       navigateTo(route.page, true);
     }
     else navigateTo('home');
@@ -361,7 +367,7 @@ function updateCollectionUrl(cat, replaceUrl) {
   else history.pushState(null, null, newPath);
 }
 
-function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'brands') return { page: 'brands' }; if (hash === 'categories') return { page: 'categories' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
+function getRouteFromHash() { const hash = window.location.hash.replace('#', ''); if (!hash) return { page: 'home' }; if (hash === 'products') return { page: 'products' }; if (hash === 'campaign') return { page: 'campaign' }; if (hash === 'cart') return { page: 'cart' }; if (hash === 'wishlist') return { page: 'wishlist' }; if (hash === 'checkout') return { page: 'checkout' }; if (hash === 'editorial') return { page: 'editorial' }; if (hash === 'brands') return { page: 'brands' }; if (hash === 'categories') return { page: 'categories' }; if (hash === 'giftcards') return { page: 'giftcards' }; if (hash === 'login') return { page: 'login' }; if (hash === 'account') return { page: 'account' }; if (hash.startsWith('category-')) return { page: 'category', cat: hash.replace('category-', '') }; if (hash.startsWith('product-')) return { page: 'product-detail', productId: hash.replace('product-', '') }; return { page: 'home' }; }
 
 // Reads clean /products/{slug}, /collections/{cat}, /pages/{slug}, and every
 // mapped utility/content page (/shop, /login, /account, /checkout, /cart,
@@ -376,7 +382,7 @@ function getRouteFromPath() {
   if (m) return { page: 'content', slug: decodeURIComponent(m[1]) };
   m = path.match(/^\/brands\/([^\/]+)\/?$/);
   if (m) return { page: 'vendor', slug: decodeURIComponent(m[1]) };
-  m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial|brands|categories)\/?$/);
+  m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial|brands|categories|gift-cards)\/?$/);
   if (m) return { page: URL_TO_PAGE_MAP[m[1]] || m[1] };
   return null;
 }
@@ -405,7 +411,7 @@ window.addEventListener('popstate', async () => {
       await window.authReady;
       navigateToAccount(true);
       return;
-    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(pathRoute.page)) {
+    } else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories','giftcards'].includes(pathRoute.page)) {
       navigateTo(pathRoute.page, true);
       return;
     }
@@ -415,7 +421,7 @@ window.addEventListener('popstate', async () => {
   else if (route.page === 'category') navigateToCategory(route.cat, true);
   else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
   else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
-  else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories'].includes(route.page)) navigateTo(route.page, true);
+  else if (['cart','wishlist','checkout','products','campaign','editorial','brands','categories','giftcards'].includes(route.page)) navigateTo(route.page, true);
   else navigateTo('home');
 });
 
@@ -463,6 +469,29 @@ function updateNavQuickLinks(page) {
   });
 }
 
+// Scroll affordance for the quick-links row — a floating left/right
+// caret, shown only when there's actually more row to scroll to in
+// that direction (bash.com reference shows the same pattern: no left
+// caret at the start of the row, no right caret once scrolled all the
+// way to the end). Bound to the row's own 'scroll' event in init()
+// below, plus called once up front so the initial state is correct
+// even before the user has scrolled at all.
+function updateNavQuickLinksChevrons() {
+  const row = document.getElementById('nav-quick-links');
+  const left = document.getElementById('nav-quick-chevron-left');
+  const right = document.getElementById('nav-quick-chevron-right');
+  if (!row || !left || !right) return;
+  const maxScroll = row.scrollWidth - row.clientWidth;
+  left.classList.toggle('hidden', row.scrollLeft <= 2);
+  right.classList.toggle('hidden', maxScroll <= 2 || row.scrollLeft >= maxScroll - 2);
+}
+
+function scrollNavQuickLinks(direction) {
+  const row = document.getElementById('nav-quick-links');
+  if (!row) return;
+  row.scrollBy({ left: direction * 160, behavior: 'smooth' });
+}
+
 function navigateTo(page, replaceUrl) {
   ++pageNavGeneration;
   closeFilterPanel();
@@ -482,6 +511,7 @@ function navigateTo(page, replaceUrl) {
   if(page==="checkout"){ navigateToCheckout(replaceUrl); }
   if(page==="editorial") ensureNavScrolled();
   if(page==="categories") ensureNavScrolled();
+  if(page==="giftcards") ensureNavScrolled();
   if(page==="brands"){ if (typeof renderBrandsPage === 'function') renderBrandsPage(S.vendors || []); ensureNavScrolled(); }
   updateChatVisibility();
 }
