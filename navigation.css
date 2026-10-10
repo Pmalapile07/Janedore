@@ -37,7 +37,7 @@
    between them (and no need for the search row to be separately
    sticky/offset). */
 #main-nav {
-  background: #fff; display: flex; flex-direction: column;
+  background: #111; display: flex; flex-direction: column;
   position: sticky; top: 0; z-index: 800;
   border-bottom: none; max-width: 100%; box-shadow: none;
   transition: background 0.25s ease;
@@ -51,12 +51,12 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-#main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #111; transition: color 0.25s ease; }
-#main-nav .badge { background: #111; color: #fff; transition: background 0.25s ease, color 0.25s ease; }
+#main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #fff; transition: color 0.25s ease; }
+#main-nav .badge { background: #fff; color: #111; transition: background 0.25s ease, color 0.25s ease; }
 
-#main-nav.scrolled { background: #fff; }
-#main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link, #main-nav.scrolled .utility-text-link, #main-nav.scrolled .nav-logo-text { color: #111; }
-#main-nav.scrolled .badge { background: #111; color: #fff; }
+#main-nav.scrolled { background: #111; }
+#main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link, #main-nav.scrolled .utility-text-link, #main-nav.scrolled .nav-logo-text { color: #fff; }
+#main-nav.scrolled .badge { background: #fff; color: #111; }
 
 /* Formerly #main-nav's own row styles — .nav-logo's absolute centering
    still resolves against this (position:relative makes it the nearest
