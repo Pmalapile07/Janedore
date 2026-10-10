@@ -6,7 +6,12 @@
   /* No more negative margin-top to tuck the hero behind the nav — nav
      is solid now (not transparent-over-hero), so hero just flows
      normally below it like everything else. */
-  #hero { height: calc(68vh + 2px); min-height: 420px; padding-bottom: 48px; }
+  /* padding-bottom intentionally dropped from here — it used to be
+     48px, fighting hero.css's own symmetric 12px top/bottom padding
+     (hero.css loads earlier, so this rule's padding-bottom silently
+     won and made the hero's bottom edge ~36px deeper than its top).
+     Leaving height/min-height alone; only the padding was asymmetric. */
+  #hero { height: calc(68vh + 2px); min-height: 420px; }
   .campaign-heading { font-size: 48px; margin-bottom: 40px; }
   .search-results-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-currency-lang { gap: 16px; }
@@ -23,7 +28,7 @@
 }
 @media (max-width: 480px) {
   .nav-top-row { height: 52px; }
-  #hero { height: calc(65vh + 2px); min-height: 392px; padding-bottom: 40px; }
+  #hero { height: calc(65vh + 2px); min-height: 392px; }
   .footer-currency-lang { flex-direction: row; justify-content: center; gap: 20px; }
   .collection-toolbar { top: 52px; }
   .collection-sorting-tabs { top: 90px; }
