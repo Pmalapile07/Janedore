@@ -635,6 +635,20 @@ body .site-collection-layout {
   pointer-events: none;
 }
 
+/* Empty-catalog placeholder (placeholderBrandCardsHtml() in vendors.js) —
+   same flat-box, no-shimmer, literal-label idea as
+   .product-card-placeholder above, shown on the /brands page's featured
+   grid when there are no brands yet. */
+.shop-brand-card-placeholder {
+  cursor: default;
+}
+.shop-brand-placeholder-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #999;
+}
+
 /* ============================================
    BRANDS PAGE (/brands) — A-Z directory
    renderBrandsPage() (vendors.js). The featured grid reuses

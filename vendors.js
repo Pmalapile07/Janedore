@@ -107,6 +107,16 @@ function shopByBrandCardsHtml(brands) {
   }).join('');
 }
 
+// Flat #f4f4f4 box with a literal "Brand" label, not clickable — same
+// "never looks broken or blank" idea as placeholderProductCard()
+// (collection.js) for an empty product grid. Used by the /brands page's
+// featured grid when there are no brands yet.
+function placeholderBrandCardsHtml(count) {
+  return Array.from({ length: count }, () =>
+    '<div class="shop-brand-card shop-brand-card-placeholder"><div class="shop-brand-img"><span class="shop-brand-placeholder-label">Brand</span></div></div>'
+  ).join('');
+}
+
 function buildShopByBrand(vendors) {
   const grid = document.getElementById('brand-grid');
   if (!grid) return;
@@ -133,7 +143,7 @@ function renderBrandsPage(vendors) {
 
   const brands = getFeaturedBrands(vendors || []);
   if (!brands.length) {
-    grid.innerHTML = '';
+    grid.innerHTML = placeholderBrandCardsHtml(8);
     indexEl.innerHTML = '';
     listEl.innerHTML = '<div class="brands-empty">No brands available yet.</div>';
     return;
