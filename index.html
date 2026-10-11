@@ -65,17 +65,12 @@
   <link rel="icon" type="image/png" href="Janedore.png">
   <link rel="shortcut icon" type="image/png" href="Janedore.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <!-- display=optional (not the default "swap") on purpose, same
-       reasoning as Telegraf's own font-display:optional below: swap
-       shows a fallback font on first paint, then swaps to Inter the
-       moment it finishes loading — a visible reflow (Inter's
-       character widths differ from the fallback, shifting line-wraps
-       and element heights) with no scrolling or interaction involved,
-       on every page, since Inter is used almost everywhere. optional
-       uses the fallback for this page view if Inter isn't ready
-       almost immediately, never swapping later, instead of reflowing
-       after the page already looks "done" to someone looking at it. -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=optional" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Load the full Inter family used throughout the interface. Keep the
+       stylesheet render-blocking so the browser has the font-face rules
+       before first paint, and preload Telegraf below for its local use.
+       This avoids an unintended fallback-font appearance at startup. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Same-origin + preloaded so Telegraf is ready before first paint
        instead of swapping in after a visible flash (was fetched from
        raw.githubusercontent.com, which isn't a real asset CDN). -->
@@ -98,7 +93,7 @@
     src: url('TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype');
     font-weight: 400;
     font-style: normal;
-    font-display: optional;
+    font-display: swap;
   }
   </style>
 
