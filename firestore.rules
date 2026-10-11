@@ -338,6 +338,15 @@ service cloud.firestore {
     }
 
     // =========================================================
+    // CATEGORIES (storefront reads; Super Admin manages)
+    // =========================================================
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // =========================================================
     // SITE CONTENT (homepage hero/sections + collection page titles)
     // =========================================================
 
