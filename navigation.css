@@ -93,6 +93,16 @@ body.on-vendor-page .nav-quick-links-wrap,
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
+/* Brands-page-specific, not a change to the shared 1px value above —
+   that value is deliberately balanced against #hero's own top padding
+   elsewhere (see the comment above), and a global increase here would
+   throw that off everywhere else. The brands page's own next section
+   has the same 12px top padding as #hero, so this override is the
+   same kind of "deliberately small, stacks with the next section"
+   value, just a bigger one, by request. */
+body.on-brands-page .nav-quick-links {
+  padding-bottom: 12px;
+}
 @media (min-width: 640px) {
   .nav-quick-links { padding-left: 10px; padding-right: 10px; }
 }
