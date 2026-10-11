@@ -622,6 +622,22 @@ function ensureNavScrolled() { if (DOM.mainNav) DOM.mainNav.classList.add("scrol
 // that was just wasted work on every scroll tick, which is a real
 // contributor to scroll/tap jank on slower phones.
 function initNavScroll() {
+  const nav = DOM.mainNav;
+  if (nav) {
+    const syncNavHeight = () => {
+      // Use the rendered height, not a guessed mobile/desktop constant:
+      // the search row is hidden on some pages and responsive rows differ.
+      document.documentElement.style.setProperty('--main-nav-sticky-height', nav.getBoundingClientRect().height + 'px');
+    };
+    syncNavHeight();
+    if (typeof ResizeObserver !== 'undefined') {
+      if (window.__janedoreNavHeightObserver) window.__janedoreNavHeightObserver.disconnect();
+      window.__janedoreNavHeightObserver = new ResizeObserver(syncNavHeight);
+      window.__janedoreNavHeightObserver.observe(nav);
+    } else {
+      window.addEventListener('resize', syncNavHeight, { passive: true });
+    }
+  }
   ensureNavScrolled();
 }
 
