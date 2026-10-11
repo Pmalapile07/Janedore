@@ -40,6 +40,26 @@
   // preview-bridge.js reads this flag instead of location.search.
   window.__adminPreview = (window.self !== window.top) && /[?&]adminPreview=1\b/.test(location.search);
   </script>
+  <script>
+  // A logo-triggered homepage reload must behave like a fresh visit at scrollY=0.
+  // The browser can otherwise restore the old footer position after the first paint.
+  (function () {
+    var key = 'janedore_force_top_on_reload';
+    try {
+      if (sessionStorage.getItem(key) !== '1') return;
+      sessionStorage.removeItem(key);
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+      // Reassert after the browser's initial page-show lifecycle as a safeguard
+      // for mobile browsers that apply restoration later than the first paint.
+      window.addEventListener('pageshow', function () {
+        window.scrollTo(0, 0);
+      }, { once: true });
+    } catch (e) {
+      // The logo handler also scrolls to the top before reloading.
+    }
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>JANEDORE | Curated Fashion</title>
   <link rel="icon" type="image/png" href="Janedore.png">
@@ -181,7 +201,7 @@
   <div class="nav-top-row">
     <div class="nav-left">
       <button class="nav-icon-btn" onclick="openMenu()"><i class="ph ph-list"></i></button>
-      <div class="nav-logo" onclick="if (S.currentPage === 'home') { window.location.reload(); } else { navigateTo('home'); }" role="link" tabindex="0" aria-label="JANEDORE home"><img id="nav-logo-img" class="nav-logo-img" alt="JANEDORE" style="display:none;"><span class="nav-logo-text" id="nav-logo-text">JANEDORE</span></div>
+      <div class="nav-logo" onclick="if (S.currentPage === 'home') { try { sessionStorage.setItem('janedore_force_top_on_reload', '1'); } catch (e) {} if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0); window.location.reload(); } else { navigateTo('home'); }" role="link" tabindex="0" aria-label="JANEDORE home"><img id="nav-logo-img" class="nav-logo-img" alt="JANEDORE" style="display:none;"><span class="nav-logo-text" id="nav-logo-text">JANEDORE</span></div>
       <div class="desktop-nav-links">
         <a class="desktop-nav-link" onclick="navigateTo('home')">The Understated</a>
         <a class="desktop-nav-link" onclick="navigateTo('products')">Shop</a>
