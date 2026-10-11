@@ -536,10 +536,29 @@ function navigateTo(page, replaceUrl) {
   if(page==="wishlist"){ renderWishlistPage(); ensureNavScrolled(); }
   if(page==="checkout"){ navigateToCheckout(replaceUrl); }
   if(page==="editorial") ensureNavScrolled();
-  if(page==="categories") ensureNavScrolled();
+  if(page==="categories"){ renderDynamicCategoriesPage(); ensureNavScrolled(); }
   if(page==="giftcards") ensureNavScrolled();
   if(page==="brands"){ if (typeof renderBrandsPage === 'function') renderBrandsPage(S.vendors || []); ensureNavScrolled(); }
   updateChatVisibility();
+}
+
+
+function renderDynamicCategoriesPage() {
+  var grid = document.getElementById('categories-page-grid');
+  if (!grid || typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return;
+  firebase.firestore().collection('categories').get().then(function(snapshot) {
+    if (!grid.isConnected) return;
+    var categories = snapshot.docs.map(function(doc) { return Object.assign({id:doc.id},doc.data()); });
+    grid.innerHTML = categories.map(function(c) {
+      var name = String(c.name || '').replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];});
+      var image = String(c.imageUrl || '');
+      if (!/^https:\/\//i.test(image)) image = '';
+      var safeImage = image.replace(/['"\\\\\n\r]/g,'');
+      var slug = String(c.slug || c.id || '').replace(/[^a-z0-9-]/gi,'');
+      return '<button type="button" class="home-category-card" onclick="navigateToCategory(\'' + slug + '\')" aria-label="Browse ' + name + '"><div class="home-category-img' + (image ? '' : ' content-empty') + '"' + (image ? ' style="background-image:url(&quot;' + safeImage + '&quot;);background-size:cover;background-position:center;"' : '') + '><div class="home-category-label">' + name + '</div></div></button>';
+    }).join('');
+    grid.style.display = categories.length ? '' : 'none';
+  }).catch(function(err){ console.error('Could not load storefront categories',err); });
 }
 
 function navigateToCategory(cat, replaceUrl) {
