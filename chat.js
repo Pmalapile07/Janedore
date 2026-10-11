@@ -2345,9 +2345,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ============================================================
 // LAUNCHER BUBBLE — STABLE COLOUR OVER DARK FOOTER
-// Change colour only when the fixed launcher actually overlaps the footer.
-// A small hysteresis gap prevents flicker at the overlap boundary.
-// ============================================================
+// Switch only when the fixed launcher actually overlaps the footer.
 (function () {
   'use strict';
   if (window.__janedoreFooterBubbleWatcher) return;
@@ -2365,7 +2363,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const horizontalOverlap = Math.min(f.right, b.right) - Math.max(f.left, b.left);
     const verticalOverlap = Math.min(f.bottom, b.bottom) - Math.max(f.top, b.top);
     const currentlyWhite = bubble.classList.contains('over-dark-footer');
-    // Enter after 12px of real overlap; exit only once overlap is gone.
+
+    // Require a little overlap before switching to white. Once white, retain
+    // the state until the footer has fully cleared the launcher, avoiding
+    // rapid colour changes at the boundary.
     const shouldBeWhite = horizontalOverlap > 0 &&
       verticalOverlap > (currentlyWhite ? 0 : 12);
     if (shouldBeWhite !== currentlyWhite) {
@@ -2376,16 +2377,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function scheduleUpdate() {
     if (scheduled) return;
     scheduled = true;
-    requestAnimationFrame(updateBubbleColour);
+    window.requestAnimationFrame(updateBubbleColour);
   }
 
   window.addEventListener('scroll', scheduleUpdate, { passive: true });
   window.addEventListener('resize', scheduleUpdate, { passive: true });
   window.addEventListener('load', scheduleUpdate);
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', scheduleUpdate, { once: true });
-  }
-  // Handles the widget/footer being injected after the script runs.
+
   const readyObserver = new MutationObserver(() => {
     if (document.getElementById('main-footer') &&
         document.getElementById('live-chat-bubble')) {
@@ -2401,4 +2399,4 @@ document.addEventListener('DOMContentLoaded', () => {
       readyObserver.observe(document.body, { childList: true, subtree: true });
     }
   }
-})();
+})();;
