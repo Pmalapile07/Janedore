@@ -1317,9 +1317,23 @@
       wrap.className = 'chat-msg-admin' + (isAdmin ? '' : ' customer-msg');
       if (m._key) wrap.setAttribute('data-key', m._key);
 
+      var isImage = m.type === 'image' && m.imageUrl;
+
       var bubble = document.createElement('div');
-      bubble.className   = 'chat-bubble';
-      bubble.textContent = m.text || '';
+      bubble.className = 'chat-bubble' + (isImage ? ' chat-bubble-image' : '');
+      if (isImage) {
+        // src is a stored URL, never user-authored HTML — same safe
+        // pattern as every other image rendered from stored data
+        // elsewhere in admin (product/vendor thumbnails, etc.).
+        var img = document.createElement('img');
+        img.src = m.imageUrl;
+        img.alt = 'Photo from customer';
+        img.loading = 'lazy';
+        img.onclick = function () { window.open(m.imageUrl, '_blank', 'noopener'); };
+        bubble.appendChild(img);
+      } else {
+        bubble.textContent = m.text || '';
+      }
 
       var statusHtml = '';
       if (isAdmin) {
@@ -1339,8 +1353,36 @@
       meta.innerHTML = esc(displayName) + ' · ' + esc(m.createdAt ? fmtTime(m.createdAt) : '') + statusHtml;
 
       wrap.appendChild(bubble);
+      // Product cards JAI (the AI) suggested alongside this reply —
+      // m.products is a trimmed snapshot written at send time (chat.js's
+      // buildProductCardSnapshot()), not a live re-match against the
+      // message text, so this always shows exactly what the customer
+      // was shown, even if the catalog has changed since. Previously
+      // nothing was ever saved here, so a conversation that referenced
+      // a product never showed it on this side at all.
+      if (m.products && m.products.length) wrap.appendChild(this._buildProductCards(m.products));
       wrap.appendChild(meta);
       return wrap;
+    },
+
+    _buildProductCards: function (products) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin:6px 0;';
+      products.forEach(function (p) {
+        var price = (p.salePrice != null)
+          ? '<span style="text-decoration:line-through;color:var(--muted);margin-right:5px;">R' + Number(p.price || 0).toLocaleString('en-ZA') + '</span>R' + Number(p.salePrice).toLocaleString('en-ZA')
+          : 'R' + Number(p.price || 0).toLocaleString('en-ZA');
+        var card = document.createElement('div');
+        card.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:6px 8px;max-width:240px;';
+        card.innerHTML =
+          (p.image ? '<img src="' + esc(p.image) + '" alt="" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;">' : '') +
+          '<div style="min-width:0;">' +
+            '<div style="font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(p.name || '') + '</div>' +
+            '<div style="font-size:10px;color:var(--muted);">' + esc(p.brand || '') + ' · ' + price + '</div>' +
+          '</div>';
+        row.appendChild(card);
+      });
+      return row;
     },
 
     setTypingVisible:   function (v) { var el = safeEl('typing-indicator'); if (el) el.style.display = v ? 'flex' : 'none'; },

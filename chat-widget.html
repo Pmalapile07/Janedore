@@ -695,6 +695,56 @@
   }
   #chat-window .chat-send-btn:hover { background: #333 !important; }
   #chat-window .chat-send-btn:active { transform: scale(0.96) !important; }
+
+  /* Attach-image button — same circular footprint as the send button,
+     but lighter (grey on transparent) since it's a secondary action
+     sitting on the opposite side of the input pill. */
+  #chat-window .chat-attach-btn {
+    flex-shrink: 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 50% !important;
+    background: none !important;
+    color: #888 !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-right: 2px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 17px !important;
+    transition: background 0.2s, color 0.2s !important;
+  }
+  #chat-window .chat-attach-btn:hover { background: #eeeeec !important; color: #111 !important; }
+  #chat-window .chat-attach-btn:disabled { opacity: 0.4 !important; cursor: default !important; }
+
+  /* An uploaded/received image, shown in place of the usual text
+     bubble — chat-msg's own padding/background still apply (same
+     wrapper element, just no text), this only shapes the image itself. */
+  #chat-window .chat-image-bubble {
+    display: block !important;
+    max-width: 180px !important;
+    max-height: 220px !important;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 12px !important;
+    object-fit: cover !important;
+    cursor: pointer !important;
+  }
+  /* Overrides .chat-msg.customer/.admin's own colored bubble — an
+     image doesn't need the black/white chat-bubble chrome behind it,
+     just enough padding to round its corners off the edge. Color is
+     reset too: .customer's white text (meant for its black bubble)
+     would be invisible against the page now that the black background
+     is gone. */
+  #chat-window .chat-msg-image {
+    padding: 4px !important;
+    background: none !important;
+    border: none !important;
+    color: #888 !important;
+  }
   #chat-window .chat-send-btn.wide {
     width: auto !important;
     min-width: auto !important;
@@ -889,6 +939,9 @@
 
   <div class="chat-input-wrap" id="chat-input-wrap" style="display:flex;">
     <div class="chat-input-pill">
+      <button class="chat-attach-btn" id="chat-attach-btn" onclick="pickAndSendChatImage()" aria-label="Attach a photo">
+        <i class="ph-light ph-image"></i>
+      </button>
       <input class="chat-input" id="chat-input" placeholder="Type your message…"
              onkeypress="if(event.key==='Enter')sendChatMessage()"
              oninput="handleCustomerTyping()">

@@ -13,6 +13,7 @@ const MAX_AI_INPUT_LENGTH     = 1000;   // AI input hard cap
 const MAX_NAME_LENGTH         = 60;
 const MAX_EMAIL_LENGTH        = 120;
 const MAX_SESSION_ID_LENGTH   = 80;
+const MAX_CHAT_IMAGE_BYTES    = 8000000; // 8MB — smaller than admin's 20MB product-photo cap; this is a customer's own phone photo, not professional product media
 const SESSION_ID_REGEX        = /^chat-\d{10,16}$/;
 
 // ==================== ON-SCREEN DEBUG PANEL ====================
@@ -191,6 +192,7 @@ let _aiDisabledReason = '';
 let _aiInFlight = false;              // FIX #3: concurrency guard
 let _currentAIRequestId = null;       // FIX #4: dedup guard
 let _currentAIAbort = null;           // FIX #15: abort controller
+let _imageUploadInFlight = false;     // same idea as _aiInFlight, for sendChatImage()
 let _chatListenerRef = null;
 let _chatListenerCb  = null;
 let _typingListenerRef = null;
@@ -725,11 +727,15 @@ function renderAIGreeting() {
   const actions = document.createElement('div');
   actions.className = 'jai-quick-actions';
 
+  // Regular weight (ph), not ph-light — matches the header cart icon
+  // (nav-cart-icon, index.html) and the closed chat bubble's own icon
+  // (chat-widget.html), reused verbatim below rather than visually
+  // similar substitutes, by request.
   const QUICK_ACTION_CARDS = [
-    { icon: 'ph-light ph-shopping-bag', title: 'Find my next piece', desc: 'Get help discovering something new',          onClick: quickActionDiscoverProduct },
-    { icon: 'ph-light ph-package',      title: 'Track my order',     desc: 'Check the status of an existing order',       onClick: quickActionTrackOrder },
-    { icon: 'ph-light ph-truck',        title: 'Shipping & returns', desc: 'Delivery times, costs and how returns work',  onClick: quickActionShippingReturns },
-    { icon: 'ph-light ph-chat-circle',  title: 'Ask JAI anything',   desc: 'Type your own question',                     onClick: quickActionAskAnything }
+    { icon: 'ph ph-tote-simple', title: 'Find my next piece', desc: 'Get help discovering something new',          onClick: quickActionDiscoverProduct },
+    { icon: 'ph ph-package',     title: 'Track my order',     desc: 'Check the status of an existing order',       onClick: quickActionTrackOrder },
+    { icon: 'ph ph-truck',       title: 'Shipping & returns', desc: 'Delivery times, costs and how returns work',  onClick: quickActionShippingReturns },
+    { icon: 'ph ph-chat',        title: 'Ask JAI anything',   desc: 'Type your own question',                     onClick: quickActionAskAnything }
   ];
 
   QUICK_ACTION_CARDS.forEach(c => {
@@ -884,6 +890,28 @@ function describeProductForAI(p) {
   return `- ${p.name || 'Unnamed product'} by ${p.brand || 'JANEDORE'} (${p.category || 'uncategorized'}), ${price}, ${sizes ? sizes + ', ' : ''}${stockNote}`;
 }
 
+// Trimmed snapshot of a product, small enough to attach directly to
+// the chat message it was suggested in (see the AI-reply write below),
+// not the full Firestore doc. Written at the moment the product cards
+// are shown so ANY later viewer of this conversation — the customer
+// reopening it, or the admin reading it in the inbox — can render the
+// exact same cards deterministically from stored data, instead of each
+// re-running findRelevantProductsForAI() against the message text and
+// hoping it matches the same products (it might not: the catalog can
+// change between when the message was sent and when it's read back).
+function buildProductCardSnapshot(p) {
+  const imgs = p.variants?.[0]?.images;
+  return {
+    id: p.id,
+    name: p.name || '',
+    brand: p.brand || '',
+    price: p.price ?? null,
+    salePrice: p.salePrice ?? null,
+    image: imgs?.ghost?.[0] || imgs?.model?.[0] || '',
+    slug: p.slug || ''
+  };
+}
+
 // Renders the real site product card (collection.js's productCard()) —
 // same markup, same click/wishlist/swatch behavior as the shop grid —
 // inside the chat, scaled down via CSS (see chat-widget.html) to a
@@ -913,6 +941,35 @@ function renderAIProductSuggestions(products) {
 
   el.appendChild(wrap);
   el.scrollTop = el.scrollHeight;
+}
+
+// Lightweight product card built straight from a message's persisted
+// snapshot (buildProductCardSnapshot(), above), for reopened/reloaded
+// chat history (appendMessage(), via listenChat()'s normal
+// child_added — a freshly-arriving reply still uses the richer
+// renderAIProductSuggestions() above, which has the full product data
+// on hand already). Deliberately simpler than the real productCard():
+// no wishlist button, no color swatches, no stock/badge state — this
+// is a snapshot of how the product looked when it was suggested, not
+// a live product grid, so it's just enough to recognize it and tap
+// through.
+function renderProductCardsFromSnapshot(el, products) {
+  if (!el || !products || !products.length) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'jai-product-row' + (products.length > 1 ? ' jai-product-slider' : ' jai-product-single');
+  wrap.innerHTML = products.map(p => {
+    const priceHtml = p.salePrice != null
+      ? `<div class="product-price-stack"><span class="product-price-original">${escapeHTML(formatPriceCardStyle(p.price))}</span><span class="product-price product-price-sale">${escapeHTML(formatPriceCardStyle(p.salePrice))}</span></div>`
+      : `<span class="product-price">${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
+    return `
+    <div class="product-card" onclick="goToProduct('${escapeJSString(p.id)}');if(chatOpen)toggleChat();">
+      <div class="product-img-wrap"><img src="${escapeHTML(gridThumbURL(p.image || PLACEHOLDER_IMAGE))}" alt="${escapeHTML(p.name)}" loading="lazy"></div>
+      <div class="product-brand">${escapeHTML(p.brand || '')}</div>
+      <div class="product-card-name-row"><div class="product-title">${escapeHTML(p.name || '')}</div></div>
+      <div class="product-price-row">${priceHtml}</div>
+    </div>`;
+  }).join('');
+  el.appendChild(wrap);
 }
 
 // Always resolves to a usable string — including the "nothing matched"
@@ -1282,8 +1339,10 @@ function appendMessage(m) {
   // 'JANEDORE', not 'JAI', so it correctly gets no avatar too).
   const isJAI = !isCustomer && rawName === 'JAI';
 
+  const isImage = m.type === 'image' && m.imageUrl;
+
   const div = document.createElement('div');
-  div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin') + (isJAI ? ' jai-msg' : '');
+  div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin') + (isJAI ? ' jai-msg' : '') + (isImage ? ' chat-msg-image' : '');
 
   if (showName) {
     const nameDiv = document.createElement('div');
@@ -1292,10 +1351,23 @@ function appendMessage(m) {
     div.appendChild(nameDiv);
   }
 
-  // Message text — textContent, never innerHTML
-  const textNode = document.createElement('span');
-  textNode.textContent = String(m.text || '');
-  div.appendChild(textNode);
+  if (isImage) {
+    // src is never user-authored HTML, just a URL — safe as an
+    // attribute, same as every other image src built from stored data
+    // elsewhere in this app (collection.js's productCard() etc.).
+    const img = document.createElement('img');
+    img.className = 'chat-image-bubble';
+    img.src = String(m.imageUrl);
+    img.alt = 'Photo';
+    img.loading = 'lazy';
+    img.onclick = () => window.open(String(m.imageUrl), '_blank', 'noopener');
+    div.appendChild(img);
+  } else {
+    // Message text — textContent, never innerHTML
+    const textNode = document.createElement('span');
+    textNode.textContent = String(m.text || '');
+    div.appendChild(textNode);
+  }
 
   // Timestamp
   const timeDiv = document.createElement('div');
@@ -1312,6 +1384,14 @@ function appendMessage(m) {
   } else {
     el.appendChild(div);
   }
+
+  // Only ever set on a stored message (sendChatMessage()'s own direct
+  // call for a freshly-arriving reply doesn't pass this — it already
+  // called the richer renderAIProductSuggestions() itself, with the
+  // full product data on hand), so this only fires for real history —
+  // reopening the chat, or loading older messages — reconstructed from
+  // exactly what was actually shown at the time.
+  if (m.products && m.products.length) renderProductCardsFromSnapshot(el, m.products);
 }
 
 // Shared badge-trigger, used both by the live listener below (a real
@@ -1532,17 +1612,36 @@ async function sendChatMessage() {
         const aiTs = firebase.database.ServerValue.TIMESTAMP;
         loadedMessageKeys.add(aiRef.key);
 
+        // Computed BEFORE the write (not after, like before) so the
+        // product snapshots can be saved on the message itself — see
+        // buildProductCardSnapshot()'s own comment for why. Reuses the
+        // exact same matched-products data already given to the AI
+        // (see buildProductsContextForAI()/getAIReply()) rather than
+        // trying to parse product names out of its reply text, so
+        // there's no risk of a card mismatching or a hallucinated item.
+        let matchedForCards = [];
+        try {
+          const productsForCards = await getActiveProductsForAI();
+          matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
+        } catch (e) {
+          _ScreenDebug.err('AI', 'Failed to match products for cards: ' + e.message);
+        }
+        const productSnapshots = matchedForCards.map(buildProductCardSnapshot);
+
+        const aiMessage = {
+          text: cleanedAiText,
+          sender: 'admin',
+          senderName: 'JAI',
+          mood: mood,
+          createdAt: aiTs,
+          read: true,
+          delivered: true,
+          sessionId: chatSessionId
+        };
+        if (productSnapshots.length) aiMessage.products = productSnapshots;
+
         await rtdb.ref('/').update({
-          ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: {
-            text: cleanedAiText,
-            sender: 'admin',
-            senderName: 'JAI',
-            mood: mood,
-            createdAt: aiTs,
-            read: true,
-            delivered: true,
-            sessionId: chatSessionId
-          },
+          ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: aiMessage,
           ['chat_inbox/' + chatSessionId + '/lastMessage']: cleanedAiText,
           ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
         });
@@ -1553,18 +1652,7 @@ async function sendChatMessage() {
         // render it locally now, right after the write confirms.
         appendMessage({ text: cleanedAiText, sender: 'admin', senderName: 'JAI', mood: mood, createdAt: Date.now() });
 
-        // Real product cards for whatever was relevant to this message —
-        // reuses the exact same matched-products data already given to
-        // the AI (see buildProductsContextForAI()/getAIReply()) rather
-        // than trying to parse product names out of its reply text, so
-        // there's no risk of a card mismatching or a hallucinated item.
-        try {
-          const productsForCards = await getActiveProductsForAI();
-          const matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
-          if (matchedForCards.length) renderAIProductSuggestions(matchedForCards);
-        } catch (e) {
-          _ScreenDebug.err('AI', 'Failed to render product suggestions: ' + e.message);
-        }
+        if (matchedForCards.length) renderAIProductSuggestions(matchedForCards);
 
         showUnreadBadgeIfClosed();
         const aiEl = safeEl('chat-messages');
@@ -1622,6 +1710,143 @@ async function sendChatMessage() {
   } finally {
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     if (input) { input.disabled = false; input.focus(); }
+  }
+}
+
+// ==================== IMAGE UPLOAD ====================
+// Same unsigned-upload Cloudinary pattern as window._uploadToCloudinary
+// (admin-products.js) — an unsigned preset is specifically designed to
+// be called from any client, so this is just as safe to call from the
+// storefront as from the admin panel. /api/cloudinary-config (server.js)
+// already serves cloudName/uploadPreset with no auth gate at all, for
+// exactly this reason — reused as-is, not duplicated, by index.html's
+// own fetch of it (see that file).
+function uploadChatImageToCloudinary(file) {
+  return new Promise((resolve, reject) => {
+    const cloudName = window.CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) { reject(new Error('Image upload is not available right now.')); return; }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+    fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: formData })
+      .then(res => res.json())
+      .then(result => {
+        if (result && result.secure_url) resolve(result.secure_url);
+        else reject(new Error((result && result.error && result.error.message) || 'Upload failed'));
+      })
+      .catch(reject);
+  });
+}
+
+// Triggered by the attach button next to the message input
+// (chat-widget.html). Builds the file picker on the fly rather than a
+// static hidden <input> — same approach admin-products.js's own
+// window._uploadToCloudinary already uses.
+function pickAndSendChatImage() {
+  if (_imageUploadInFlight) return;
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/webp';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+
+  input.onchange = () => {
+    const file = input.files && input.files[0];
+    if (input.parentNode) input.parentNode.removeChild(input);
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) { alert('Please choose a PNG, JPEG, or WEBP image.'); return; }
+    if (file.size > MAX_CHAT_IMAGE_BYTES) { alert('That image is too large (max ' + Math.round(MAX_CHAT_IMAGE_BYTES / 1000000) + 'MB).'); return; }
+    sendChatImage(file);
+  };
+  input.click();
+}
+
+// Mirrors sendChatMessage()'s own RTDB-write shape (same chat_inbox
+// bookkeeping, same sessionId/customerEmail/customerName fields) but
+// type:'image' instead of a text field, and deliberately does NOT try
+// to trigger an AI reply — the text-based AI bridge has no way to
+// meaningfully respond to a photo, so this is purely "hand it to a
+// human," same as the existing handoff/fallback paths already do for
+// other cases the AI can't help with.
+async function sendChatImage(file) {
+  const rtdb = getRTDB();
+  if (!rtdb || _imageUploadInFlight) return;
+  _imageUploadInFlight = true;
+
+  const attachBtn = safeEl('chat-attach-btn');
+  if (attachBtn) attachBtn.disabled = true;
+
+  // Optimistic local preview — the real bubble (appendMessage()) only
+  // renders once the write confirms, same pattern sendChatMessage()
+  // would follow if it needed one; shown immediately here because an
+  // image upload can take a few real seconds, long enough that no
+  // visible feedback at all would read as broken.
+  const localUrl = URL.createObjectURL(file);
+  const tempId = 'chat-image-temp-' + Date.now();
+  const messagesEl = safeEl('chat-messages');
+  if (messagesEl) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg customer chat-msg-image';
+    div.id = tempId;
+    div.style.opacity = '0.5';
+    const img = document.createElement('img');
+    img.className = 'chat-image-bubble';
+    img.src = localUrl;
+    div.appendChild(img);
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  try {
+    await ensureAuth();
+    const user = firebase.auth().currentUser;
+    syncCustomerIdentityFromAccount();
+
+    const imageUrl = await uploadChatImageToCloudinary(file);
+
+    const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+    const ts = firebase.database.ServerValue.TIMESTAMP;
+    loadedMessageKeys.add(msgRef.key);
+
+    const updates = {};
+    updates['live_chat/' + chatSessionId + '/messages/' + msgRef.key] = {
+      sessionId: chatSessionId,
+      customerEmail: customerEmail,
+      customerName: customerName,
+      type: 'image',
+      imageUrl: imageUrl,
+      sender: 'customer',
+      createdAt: ts,
+      read: false,
+      delivered: false,
+      userId: user ? user.uid : 'anonymous'
+    };
+    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = '📷 Photo';
+    updates['chat_inbox/' + chatSessionId + '/lastMessageAt'] = ts;
+    updates['chat_inbox/' + chatSessionId + '/customerEmail'] = customerEmail;
+    updates['chat_inbox/' + chatSessionId + '/customerName'] = customerName || 'Guest';
+    updates['chat_inbox/' + chatSessionId + '/unreadCount'] = firebase.database.ServerValue.increment(1);
+    updates['live_chat/' + chatSessionId + '/meta/status'] = 'open';
+    updates['live_chat/' + chatSessionId + '/meta/ownerId'] = user ? user.uid : 'anonymous';
+    updates['chat_inbox/' + chatSessionId + '/status'] = 'open';
+
+    await rtdb.ref('/').update(updates);
+
+    const tempEl = document.getElementById(tempId);
+    if (tempEl) tempEl.remove();
+    appendMessage({ type: 'image', imageUrl: imageUrl, sender: 'customer', createdAt: Date.now() });
+  } catch (e) {
+    _ScreenDebug.err('SEND', 'Image send failed: ' + (e.code || '') + ' ' + e.message);
+    const tempEl = document.getElementById(tempId);
+    if (tempEl) tempEl.remove();
+    alert('Failed to send image. Please try again.');
+  } finally {
+    URL.revokeObjectURL(localUrl);
+    _imageUploadInFlight = false;
+    if (attachBtn) attachBtn.disabled = false;
   }
 }
 
