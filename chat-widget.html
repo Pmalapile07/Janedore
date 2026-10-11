@@ -838,6 +838,15 @@
   <button class="chat-pill-btn filled jai-track-order-btn" onclick="showOrderLookup()">Track Order</button>
 </template>
 
+<!-- The only copy of this markup — index.html used to also ship a
+     static duplicate with this same id, directly in the page, as what
+     looked like leftover scaffolding from before this file was split
+     out. Two elements sharing an id meant document.getElementById
+     (DOM.chatBubble, app.js) always resolved to that static one, not
+     this real, fully-styled one, so updateChatVisibility() was
+     silently toggling an invisible element every time — the
+     wishlist/cart hide behavior never actually worked. Keep this the
+     one and only #live-chat-bubble. -->
 <button id="live-chat-bubble" onclick="toggleChat()">
   <i class="ph ph-chat" aria-hidden="true"></i>
   <span class="chat-unread-dot" id="chat-unread-dot"></span>

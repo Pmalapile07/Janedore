@@ -406,11 +406,6 @@
   <div id="content-page-body"></div>
   <footer id="content-footer"></footer>
 </div>
-<button id="live-chat-bubble" onclick="toggleChat()">
-  <i class="ph ph-chat"></i>
-  <span class="chat-unread-dot" id="chat-unread-dot"></span>
-</button>
-
 <script src="firebase.js"></script>
 <script>
   var _authResolved = false;
@@ -583,6 +578,17 @@
     .then(r => r.text())
     .then(html => {
       document.getElementById('chat-container').innerHTML = html;
+      // #live-chat-bubble only exists from this point on (it used to
+      // also ship as a static duplicate directly in this file, which
+      // is why it's removed from here now — see chat-widget.html's own
+      // comment). Any updateChatVisibility() call before this resolves
+      // (routing on initial page load, for instance landing straight
+      // on /wishlist or /cart) safely no-ops since DOM.chatBubble
+      // (app.js) is null until now, so it needs calling again right
+      // here once the real bubble actually exists, or a direct load of
+      // a page the bubble should be hidden on would show it anyway
+      // until the next navigation.
+      if (typeof updateChatVisibility === 'function') updateChatVisibility();
     })
     .catch(err => console.error('Chat widget failed:', err));
 </script>
