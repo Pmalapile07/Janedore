@@ -34,8 +34,18 @@ body.on-collection-page #collection-page-breadcrumb {
    COLLECTION DESCRIPTION - ABOVE FILTER BAR
    ========================================= */
 
+/* No !important on either rule (unlike most of this file's other
+   hide/show pairs) — updateCollectionTitle() (collection.js) sets
+   this element's real display via inline style on every render,
+   toggling it per page based on whether a custom description is
+   actually configured. !important here would win over that inline
+   style and force this block visible even when genuinely empty,
+   which is exactly what was happening: a phantom ~40px padding box
+   with no content, breaking the symmetry between the breadcrumb above
+   it and the filter bar/product grid below. These two rules just set
+   the fallback for the moment before that JS runs. */
 .collection-top-description {
-  display: none !important;
+  display: none;
   padding: 24px 20px 16px;
   text-align: center;
   max-width: 600px;
@@ -43,7 +53,7 @@ body.on-collection-page #collection-page-breadcrumb {
 }
 
 body.on-collection-page .collection-top-description {
-  display: block !important;
+  display: block;
 }
 
 .collection-top-description p {
