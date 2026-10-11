@@ -565,6 +565,21 @@
   }
 </script>
 
+<script>
+  // Same unsigned-config endpoint admin.html already fetches (server.js
+  // serves it with no auth gate — an unsigned Cloudinary preset is
+  // meant to be client-visible) — needed here for the chat widget's own
+  // image-upload button (chat.js's uploadChatImageToCloudinary()).
+  fetch('/api/cloudinary-config')
+    .then(function (res) { return res.json(); })
+    .then(function (config) {
+      window.CLOUDINARY_CLOUD_NAME = config.cloudName;
+      window.CLOUDINARY_UPLOAD_PRESET = config.uploadPreset;
+    })
+    .catch(function (err) {
+      console.error('Cloudinary config failed to load', err);
+    });
+</script>
 <script src="chat.js" defer></script>
 <script src="app.js" defer></script>
 <script src="newsletter-popup.js" defer></script>

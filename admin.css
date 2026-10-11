@@ -474,6 +474,11 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .chat-bubble{max-width:74%;padding:var(--space-2) var(--space-3);font-size:var(--font-scale-md);line-height:1.45;word-break:break-word;}
 .chat-msg-admin:not(.customer-msg) .chat-bubble{background:#3b82f6;color:#fff;border-radius:18px 18px var(--space-1) 18px;}
 .customer-msg .chat-bubble{background:#1c1c1e;color:#fff;border-radius:18px 18px 18px var(--space-1);}
+/* A customer-sent photo — drops the colored bubble chrome (same idea
+   as chat-widget.html's own .chat-msg-image), just enough padding to
+   round the image's own corners off the edge. */
+.chat-bubble-image{background:none!important;padding:3px!important;}
+.chat-bubble-image img{display:block;max-width:160px;max-height:200px;width:100%;height:auto;border-radius:12px;object-fit:cover;cursor:pointer;}
 .msg-meta{font-size:var(--font-scale-xs);color:var(--muted2);margin-top:var(--space-1);padding:0 var(--space-1);}
 .typing-indicator{display:none;padding:var(--space-1) var(--space-4);font-size:var(--font-scale-sm);color:var(--muted);font-style:italic;background:var(--surface);border-top:0.5px solid var(--border);animation:pulse 1.4s infinite;}
 @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
