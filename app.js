@@ -557,7 +557,12 @@ function renderDynamicCategoriesPage() {
       var slug = String(c.slug || c.id || '').replace(/[^a-z0-9-]/gi,'');
       return '<button type="button" class="home-category-card" onclick="navigateToCategory(\'' + slug + '\')" aria-label="Browse ' + name + '"><div class="home-category-img' + (image ? '' : ' content-empty') + '"' + (image ? ' style="background-image:url(&quot;' + safeImage + '&quot;);background-size:cover;background-position:center;"' : '') + '><div class="home-category-label">' + name + '</div></div></button>';
     }).join('');
-    grid.style.display = categories.length ? '' : 'none';
+    if (!categories.length) {
+      grid.innerHTML = Array.from({ length: 8 }, function() {
+        return '<div class="home-category-card category-empty-card" aria-hidden="true"><div class="home-category-img content-empty"></div></div>';
+      }).join('');
+    }
+    grid.style.display = '';
   }).catch(function(err){ console.error('Could not load storefront categories',err); });
 }
 
