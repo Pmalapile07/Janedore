@@ -694,6 +694,8 @@ function previewPlaceholderVendor() {
   removeStickyBar();
   if (DOM.mainNav) { DOM.mainNav.classList.remove("product-page"); DOM.mainNav.classList.add("collection-page"); }
   document.body.classList.add('on-collection-page');
+  document.body.classList.add('on-vendor-page');
+  document.body.classList.remove('on-login-page');
   S.currentVendorId = null;
   S.vendorFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
   S.gridColsVendor = 2;
@@ -1240,6 +1242,15 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
   // Shows the shared filter bar (grid toggle, FILTER button, title)
   // above the grid, same as the products/category pages.
   document.body.classList.add('on-collection-page');
+  // Own marker (not shared with products/category, which also use
+  // on-collection-page) so the quick-links row can be hidden on the
+  // vendor page specifically (navigation.css). Cleared by
+  // setNavForPage() (app.js), which every other page routes through.
+  document.body.classList.add('on-vendor-page');
+  // This path bypasses setNavForPage() too, so a stale on-login-page
+  // (set directly by login.js, which also bypasses it) needs clearing
+  // here as well.
+  document.body.classList.remove('on-login-page');
   const newPath = '/brands/' + encodeURIComponent(vendorIdOrSlug);
   if (window.location.pathname !== newPath) {
     replaceUrl ? history.replaceState(null, null, newPath) : history.pushState(null, null, newPath);

@@ -35,10 +35,19 @@
    persistent element shown on every page rather than something each
    page re-renders.
    ============================================ */
-/* Hidden entirely on the editorial page, per explicit request
-   (body.on-editorial-page, toggled by setNavForPage() in app.js) —
-   every other page keeps it. */
-body.on-editorial-page .nav-quick-links-wrap {
+/* Hidden entirely on the editorial, login, vendor/brand, and single
+   product pages, per explicit request — every other page keeps it.
+   Three different markers because these pages set state through three
+   different code paths (see each one's own comment, app.js/
+   collection.js): on-editorial-page/on-login-page (setNavForPage()),
+   on-vendor-page (navigateToVendor()/previewPlaceholderVendor(),
+   collection.js — bypasses setNavForPage()), and #main-nav.product-page
+   (goToProduct(), app.js — also bypasses setNavForPage(), and already
+   existed before this as the marker product-detail.css itself uses). */
+body.on-editorial-page .nav-quick-links-wrap,
+body.on-login-page .nav-quick-links-wrap,
+body.on-vendor-page .nav-quick-links-wrap,
+#main-nav.product-page ~ .nav-quick-links-wrap {
   display: none;
 }
 .nav-quick-links-wrap {
