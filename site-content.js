@@ -123,8 +123,10 @@ function renderShopByCategory(shopByCategory) {
       .sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }); });
 
     if (!categories.length) {
-      grid.innerHTML = '';
-      grid.style.display = 'none';
+      grid.innerHTML = Array.from({ length: 8 }, function() {
+        return '<div class="home-category-card category-empty-card" aria-hidden="true"><div class="home-category-img content-empty"></div></div>';
+      }).join('');
+      grid.style.display = '';
       return;
     }
 
