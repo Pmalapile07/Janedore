@@ -2354,7 +2354,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let scheduled = false;
   function updateBubbleColour() {
     scheduled = false;
-    const footer = document.getElementById('main-footer');
+    // Each SPA page has its own footer. Read the footer inside the active
+    // page so the launcher flips on product, collection, and other pages too.
+    const activePage = document.querySelector('.page.active');
+    const footer = activePage
+      ? activePage.querySelector('footer[id$="-footer"]')
+      : document.getElementById('main-footer');
     const bubble = document.getElementById('live-chat-bubble');
     if (!footer || !bubble) return;
 
