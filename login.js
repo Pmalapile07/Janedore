@@ -16,6 +16,12 @@ function navigateToLogin() {
     updateHash('login');
     window.scrollTo({ top: 0, behavior: "instant" });
     ensureNavScrolled();
+    // This function (not app.js's same-named one, which it shadows —
+    // see the file-level comment) is what actually runs, so the
+    // quick-links row's login-page hide (navigation.css) has to be
+    // set here directly; setNavForPage() (app.js) is never reached on
+    // this path.
+    document.body.classList.add('on-login-page');
 
     // Only treat as signed in if this is a real (non-anonymous) user
     const user = firebase.auth().currentUser;
@@ -37,6 +43,10 @@ function navigateToAccount() {
     updateHash('account');
     window.scrollTo({ top: 0, behavior: "instant" });
     ensureNavScrolled();
+    // Account page isn't one of the pages the quick-links row is
+    // hidden on — clear the marker login set, in case this redirects
+    // anywhere other than back into navigateToLogin() below.
+    document.body.classList.remove('on-login-page');
 
     const user = firebase.auth().currentUser;
     if (user && !user.isAnonymous) {

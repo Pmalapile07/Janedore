@@ -443,9 +443,18 @@ function setNavForPage(page) {
   document.body.classList.toggle('on-brands-page', page === 'brands');
 
   // Hides the quick-links row (All/Brands/Categories/Editorial/Gift
-  // Cards/New In/Sale) on the editorial page only, per explicit
-  // request — every other page keeps it.
+  // Cards/New In/Sale) on the editorial and login pages, per explicit
+  // request — every other page routed through here keeps it. The
+  // product detail and vendor/brand pages are hidden too, but via
+  // their own markers (navigation.css) since goToProduct() (app.js)
+  // and navigateToVendor()/previewPlaceholderVendor() (collection.js)
+  // don't route through this function at all.
   document.body.classList.toggle('on-editorial-page', page === 'editorial');
+  document.body.classList.toggle('on-login-page', page === 'login');
+  // Every page that DOES route through here is, by definition, not the
+  // vendor page — goToProduct() (the other path that bypasses this
+  // function) clears this same class itself.
+  document.body.classList.remove('on-vendor-page');
 
   updateNavQuickLinks(page);
 }
@@ -551,6 +560,13 @@ function goToProduct(productId, replaceUrl) {
   S.stickyWishHidden = false;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   document.body.classList.remove('on-collection-page');
+  // setNavForPage() isn't called on this path, so stale markers from
+  // it need clearing here too — the quick-links row's product-page
+  // hide rule (navigation.css) keys off #main-nav.product-page above,
+  // not these, but leaving one around would wrongly hide the row on
+  // whatever page comes next, until that page happens to clear it.
+  document.body.classList.remove('on-vendor-page');
+  document.body.classList.remove('on-login-page');
   renderProductPage(product); updateChatVisibility();
 }
 
