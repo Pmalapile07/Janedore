@@ -240,6 +240,19 @@ function toggleInfoAccordion(key) {
   document.getElementById(`info-accordion-${key}`)?.classList.toggle('open');
 }
 async function renderProductPage(product) {
+  // Reset scroll FIRST, before any DOM writes below — not just
+  // before the real content (the big innerHTML write further down),
+  // but before even showLoading()'s placeholder. Product pages are
+  // almost always opened from partway down a scrolled grid (unlike
+  // quick-link taps, which happen near the top already), so there's
+  // real scrollY to carry over. Doing this at the end of the function
+  // (where it used to be) left a window where the browser could paint
+  // a frame of the new, tall content at the OLD scroll position —
+  // showing whatever section of the product page happened to fall at
+  // that old offset — before snapping to top, which is exactly what
+  // looked like "the page slides up under the header as if someone
+  // scrolled."
+  window.scrollTo({top:0,behavior:"instant"});
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null; S.productQuantity=1;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   showLoading(DOM.productDetail);
@@ -337,7 +350,7 @@ async function renderProductPage(product) {
     <footer id="product-footer"></footer>`;
   buildFooter("product-footer");
   if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
-  window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled();
+  ensureNavScrolled();
   updateAddToCartState();
   setTimeout(() => initProductSwipe(images), 100);
 }
