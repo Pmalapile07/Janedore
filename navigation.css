@@ -39,26 +39,24 @@
   display: flex;
   align-items: center;
   background: #fff;
-  /* Left/right matches the site's own standard responsive inset
-     (#hero, .product-grid — 8px/10px/12px) instead of a wider,
-     header-specific value, so the row doesn't look like it's
-     overextending past where every other section's edge sits. Now
-     lives on the wrap (not .nav-quick-links below) since the chevrons
-     are real flex siblings sitting at this same edge, not absolutely
-     positioned over the scrollable row. */
-  padding: 0 8px;
-}
-@media (min-width: 640px) {
-  .nav-quick-links-wrap { padding: 0 10px; }
-}
-@media (min-width: 1024px) {
-  .nav-quick-links-wrap { padding: 0 12px; }
+  /* No left/right padding here (deliberate, not an oversight) — the
+     chevrons sit flush at the true screen edge, while the tab TEXT
+     keeps the site's own standard responsive inset (#hero,
+     .product-grid — 8px/10px/12px) via .nav-quick-links's own
+     left/right padding below. */
 }
 .nav-quick-links {
   display: flex;
   align-items: center;
   gap: 4px;
-  /* Bottom padding is deliberately small (not matched to the 13px
+  /* Left/right matches the site's own standard responsive inset
+     (#hero, .product-grid — 8px/10px/12px) instead of a wider,
+     header-specific value, so the row doesn't look like it's
+     overextending past where every other section's edge sits. Lives
+     here (not the wrap) so the chevrons — flex siblings of this
+     element, outside this padding — can sit flush at the true screen
+     edge instead of matching this inset.
+     Bottom padding is deliberately small (not matched to the 13px
      top) because .nav-quick-links-wrap and the section after it
      (#hero, etc.) are both solid white with no visible seam between
      them — the real visual gap below the text is this value PLUS
@@ -68,10 +66,16 @@
      (which turns black at the #main-nav boundary instead, so nothing
      stacks on top of it there). Measured via the live DOM, not
      assumed — confirmed 13px above vs 23px below before this fix. */
-  padding: 13px 0 1px;
+  padding: 13px 8px 1px;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+}
+@media (min-width: 640px) {
+  .nav-quick-links { padding-left: 10px; padding-right: 10px; }
+}
+@media (min-width: 1024px) {
+  .nav-quick-links { padding-left: 12px; padding-right: 12px; }
 }
 .nav-quick-links::-webkit-scrollbar { display: none; }
 /* line-height:1 + inline-flex/align-items:center is deliberate, not
@@ -129,6 +133,18 @@
   color: #111;
   font-size: 14px;
   padding: 6px;
+  /* .nav-quick-links-wrap centers flex children on its own box, but
+     .nav-quick-links has asymmetric padding (13px top / 1px bottom —
+     see its own comment) so the tab TEXT inside it sits 6px below
+     that box's true center. Without this, the chevron centers on the
+     box instead of the text, landing 6px too high. A margin-top on a
+     centered flex item only shifts its rendered position by HALF the
+     margin value (align-items:center splits the remaining free space
+     evenly around the margin box), so this needs to be 12px — double
+     the 6px actual shift — confirmed by measuring the rendered
+     position, not assumed. Keep this in sync if that padding ever
+     changes again. */
+  margin-top: 12px;
 }
 .nav-quick-chevron.hidden { display: none; }
 
