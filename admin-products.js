@@ -1111,4 +1111,71 @@
     saveProduct(data);
   };
 
+
+  // Categories manager: categories are stored in Firestore and assigned through
+  // the existing product.category field so category browsing stays compatible.
+  var categoriesRef = window._adminDB.collection('categories');
+  function categorySlug(name) { return (name || '').toString().toLowerCase().trim().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+  window._renderCategoriesTab = function() {
+    var mc = safeEl('main-content'); if (!mc) return;
+    if (window._currentUserRole !== 'SUPER_ADMIN') { mc.innerHTML = '<div class="empty-state"><p>Only Super Admins can manage categories.</p></div>'; return; }
+    mc.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;"><div style="font-size:13px;color:var(--muted);">Manage the categories customers browse on JANEDORE.</div><button class="btn btn-primary" type="button" onclick="window._showCategoryForm()"><i class="ph-light ph-plus"></i> Add category</button></div><div id="categories-admin-form-wrap"></div><div id="categories-admin-list"></div>';
+    window._loadAdminCategories();
+  };
+  window._loadAdminCategories = function() {
+    var list = safeEl('categories-admin-list'); if (list) list.innerHTML = '<div style="padding:24px 0;color:var(--muted);">Loading categories…</div>';
+    categoriesRef.get().then(function(snap) {
+      var categories = snap.docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
+      window._adminCategoriesData = categories;
+      var target = safeEl('categories-admin-list'); if (!target) return;
+      if (!categories.length) { target.innerHTML = '<div style="padding:48px 20px;text-align:center;border:1px dashed var(--border);border-radius:12px;color:var(--muted);"><i class="ph-light ph-squares-four" style="font-size:28px;"></i><p style="margin-top:10px;">No categories yet</p><p style="font-size:12px;margin-top:5px;">Add your first category when you are ready.</p></div>'; return; }
+      target.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">' + categories.map(function(c) {
+        var count = (window._allProducts || []).filter(function(p) { return p.category === c.slug; }).length;
+        return '<article style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);">' + (c.imageUrl ? '<img src="' + esc(c.imageUrl) + '" alt="" style="width:100%;height:150px;object-fit:cover;display:block;">' : '<div style="height:150px;display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--muted);"><i class="ph-light ph-image" style="font-size:28px;"></i></div>') + '<div style="padding:14px;"><div style="font-weight:600;">' + esc(c.name || '') + '</div><div style="font-size:12px;color:var(--muted);margin:5px 0 12px;">' + count + ' tagged product' + (count === 1 ? '' : 's') + '</div><div style="display:flex;gap:8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._showCategoryForm(\'' + esc(c.id) + '\')">Edit</button><button class="btn btn-sm btn-ghost" type="button" onclick="window._deleteCategory(\'' + esc(c.id) + '\')">Delete</button></div></div></article>';
+      }).join('') + '</div>';
+    }).catch(function(err) { if (list) list.innerHTML = '<div style="padding:20px;color:var(--danger,#b42318);">Could not load categories: ' + esc(err.message || 'Please try again.') + '</div>'; });
+  };
+  window._showCategoryForm = function(categoryId) {
+    var wrap = safeEl('categories-admin-form-wrap'); if (!wrap) return;
+    var category = (window._adminCategoriesData || []).find(function(c) { return c.id === categoryId; }) || {name:'',imageUrl:'',slug:''};
+    var products = window._allProducts || [];
+    wrap.innerHTML = '<form id="admin-category-form" style="border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;background:var(--surface);" onsubmit="window._saveAdminCategory(event,\'' + esc(categoryId || '') + '\')"><div style="font-weight:600;margin-bottom:16px;">' + (categoryId ? 'Edit category' : 'New category') + '</div><div class="form-group"><label for="admin-category-name">Category name</label><input id="admin-category-name" name="name" required maxlength="80" value="' + esc(category.name || '') + '" placeholder="e.g. Home & Living"></div><div class="form-group"><label for="admin-category-image">Category image</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="admin-category-image" name="imageUrl" value="' + esc(category.imageUrl || '') + '" placeholder="Image URL" style="flex:1;min-width:180px;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._uploadCategoryImage()"><i class="ph-light ph-cloud-arrow-up"></i> Upload image</button></div><div id="admin-category-image-preview" style="margin-top:10px;">' + (category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" style="max-width:180px;max-height:130px;object-fit:cover;border-radius:8px;">' : '') + '</div></div><div class="form-group"><label>Tag products</label><input id="admin-category-product-search" placeholder="Search products" oninput="window._filterCategoryProductChoices()" style="margin-bottom:8px;"><div id="admin-category-products" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' + (products.length ? products.map(function(pr) { return '<label data-category-product-row data-search="' + esc((pr.name || '').toLowerCase()) + '" style="display:flex;align-items:center;gap:9px;padding:8px 4px;font-size:13px;"><input type="checkbox" name="productIds" value="' + esc(pr.id) + '"' + (pr.category === category.slug ? ' checked' : '') + '><span>' + esc(pr.name || pr.id) + '</span><span style="margin-left:auto;color:var(--muted);font-size:11px;">' + esc(pr.brand || '') + '</span></label>'; }).join('') : '<div style="padding:10px;color:var(--muted);">No products loaded yet.</div>') + '</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">Each product has one primary category.</div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" class="btn btn-ghost" onclick="window._cancelCategoryForm()">Cancel</button><button type="submit" class="btn btn-primary">Save category</button></div></form>';
+  };
+  window._uploadCategoryImage = function() {
+    if (typeof window._uploadToCloudinary !== 'function') { showToast('Image upload is not ready yet. Please try again.', 'error'); return; }
+    window._uploadToCloudinary(function(url) { var input = safeEl('admin-category-image'), preview = safeEl('admin-category-image-preview'); if (input) input.value = url; if (preview) preview.innerHTML = '<img src="' + esc(url) + '" alt="" style="max-width:180px;max-height:130px;object-fit:cover;border-radius:8px;">'; }, false);
+  };
+  window._filterCategoryProductChoices = function() {
+    var query = ((safeEl('admin-category-product-search') || {}).value || '').toLowerCase().trim(), list = safeEl('admin-category-products'); if (!list) return;
+    list.querySelectorAll('[data-category-product-row]').forEach(function(row) { row.style.display = (row.getAttribute('data-search') || '').indexOf(query) !== -1 ? 'flex' : 'none'; });
+  };
+  window._cancelCategoryForm = function() { var wrap = safeEl('categories-admin-form-wrap'); if (wrap) wrap.innerHTML = ''; };
+  window._saveAdminCategory = function(event, categoryId) {
+    event.preventDefault();
+    if (!window._currentUser || !window._roleResolved || window._currentUserRole !== 'SUPER_ADMIN') { showToast('Only an authenticated Super Admin can save categories.', 'error'); return; }
+    var form = safeEl('admin-category-form'); if (!form) return;
+    var name = (form.elements.name.value || '').trim(), imageUrl = (form.elements.imageUrl.value || '').trim(), slug = categorySlug(name);
+    if (!name || !slug) { showToast('Enter a valid category name.', 'error'); return; }
+    if ((window._adminCategoriesData || []).some(function(c) { return c.slug === slug && c.id !== categoryId; })) { showToast('A category with that name already exists.', 'error'); return; }
+    var selectedIds = Array.prototype.slice.call(form.querySelectorAll('input[name="productIds"]:checked')).map(function(input) { return input.value; }), old = (window._adminCategoriesData || []).find(function(c) { return c.id === categoryId; });
+    var batch = window._adminDB.batch(), ref = categoryId ? categoriesRef.doc(categoryId) : categoriesRef.doc(slug);
+    var data = {name:name,slug:slug,imageUrl:imageUrl,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if (!categoryId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    batch.set(ref,data,{merge:true});
+    var chosen = {}; selectedIds.forEach(function(id) { chosen[id] = true; });
+    (window._allProducts || []).forEach(function(pr) { if (chosen[pr.id]) batch.set(productsRef.doc(pr.id),{category:slug},{merge:true}); else if (old && pr.category === old.slug) batch.set(productsRef.doc(pr.id),{category:''},{merge:true}); });
+    batch.commit().then(function() {
+      (window._allProducts || []).forEach(function(pr) { if (chosen[pr.id]) pr.category = slug; else if (old && pr.category === old.slug) pr.category = ''; });
+      showToast('Category saved'); window._loadProducts(); window._loadAdminCategories(); window._cancelCategoryForm();
+    }).catch(function(err) { showToast('Could not save category: ' + (err.message || 'Unknown error'), 'error'); });
+  };
+  window._deleteCategory = function(categoryId) {
+    if (window._currentUserRole !== 'SUPER_ADMIN') { showToast('Only Super Admins can delete categories.', 'error'); return; }
+    var category = (window._adminCategoriesData || []).find(function(c) { return c.id === categoryId; });
+    if (!category || !confirm('Delete the category "' + category.name + '"? Products assigned to it will be left uncategorized.')) return;
+    var batch = window._adminDB.batch(); batch.delete(categoriesRef.doc(categoryId));
+    (window._allProducts || []).forEach(function(pr) { if (pr.category === category.slug) batch.set(productsRef.doc(pr.id),{category:''},{merge:true}); });
+    batch.commit().then(function() { (window._allProducts || []).forEach(function(pr) { if (pr.category === category.slug) pr.category = ''; }); showToast('Category deleted'); window._loadProducts(); window._loadAdminCategories(); }).catch(function(err) { showToast('Could not delete category: ' + (err.message || 'Unknown error'), 'error'); });
+  };
+
 })();
