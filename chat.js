@@ -2344,39 +2344,61 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 // ============================================================
-// LAUNCHER BUBBLE — INVERT OVER DARK FOOTER
-// The bubble is #111 on #111, so it disappears once the black
-// footer scrolls into view behind it. Watches #main-footer with
-// an IntersectionObserver and toggles a class that flips the
-// bubble to white-on-dark so it stays visible. Self-contained —
-// styling for .over-dark-footer lives in chat-widget.html.
+// LAUNCHER BUBBLE — STABLE COLOUR OVER DARK FOOTER
+// Change colour only when the fixed launcher actually overlaps the footer.
+// A small hysteresis gap prevents flicker at the overlap boundary.
 // ============================================================
 (function () {
   'use strict';
+  if (window.__janedoreFooterBubbleWatcher) return;
+  window.__janedoreFooterBubbleWatcher = true;
 
-  function watchFooter() {
+  let scheduled = false;
+  function updateBubbleColour() {
+    scheduled = false;
     const footer = document.getElementById('main-footer');
     const bubble = document.getElementById('live-chat-bubble');
-    if (!footer || !bubble) return false;
+    if (!footer || !bubble) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          bubble.classList.toggle('over-dark-footer', entry.isIntersecting);
-        });
-      },
-      { root: null, threshold: 0 }
-    );
-    observer.observe(footer);
-    return true;
+    const f = footer.getBoundingClientRect();
+    const b = bubble.getBoundingClientRect();
+    const horizontalOverlap = Math.min(f.right, b.right) - Math.max(f.left, b.left);
+    const verticalOverlap = Math.min(f.bottom, b.bottom) - Math.max(f.top, b.top);
+    const currentlyWhite = bubble.classList.contains('over-dark-footer');
+    // Enter after 12px of real overlap; exit only once overlap is gone.
+    const shouldBeWhite = horizontalOverlap > 0 &&
+      verticalOverlap > (currentlyWhite ? 0 : 12);
+    if (shouldBeWhite !== currentlyWhite) {
+      bubble.classList.toggle('over-dark-footer', shouldBeWhite);
+    }
   }
 
-  if (!watchFooter()) {
-    // Footer element exists from page load in index.html, but guard
-    // against load-order edge cases the same way the full-screen fix does.
-    const retry = new MutationObserver(() => {
-      if (watchFooter()) retry.disconnect();
-    });
-    retry.observe(document.body, { childList: true, subtree: true });
+  function scheduleUpdate() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(updateBubbleColour);
+  }
+
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  window.addEventListener('resize', scheduleUpdate, { passive: true });
+  window.addEventListener('load', scheduleUpdate);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleUpdate, { once: true });
+  }
+  // Handles the widget/footer being injected after the script runs.
+  const readyObserver = new MutationObserver(() => {
+    if (document.getElementById('main-footer') &&
+        document.getElementById('live-chat-bubble')) {
+      readyObserver.disconnect();
+      scheduleUpdate();
+    }
+  });
+  if (document.body) {
+    if (document.getElementById('main-footer') &&
+        document.getElementById('live-chat-bubble')) {
+      scheduleUpdate();
+    } else {
+      readyObserver.observe(document.body, { childList: true, subtree: true });
+    }
   }
 })();
