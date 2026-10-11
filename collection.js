@@ -136,6 +136,7 @@ function applySort(products, sortBy) {
 function setSortBy(value) {
   S.sortBy = value;
   if (S.saleMode) renderSaleProducts();
+  else if (S.newInMode) renderNewInProducts();
   else if (S.currentPage === 'category') renderCategoryProducts();
   else if (S.currentPage === 'vendor') renderVendorPage(S.currentVendor);
   else renderAllProducts();
@@ -243,6 +244,7 @@ function applyFilter(type, value) {
   if (type === 'cat' || type === 'vendor') toggleArrayFilter(S.filter, type, value);
   else S.filter[type] = value;
   if (S.saleMode) renderSaleProducts();
+  else if (S.newInMode) renderNewInProducts();
   else renderAllProducts();
 }
 
@@ -267,7 +269,9 @@ function clearAllCollectionFilters() {
     renderVendorPage(S.currentVendor);
   } else {
     S.filter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
-    if (S.saleMode) renderSaleProducts(); else renderAllProducts();
+    if (S.saleMode) renderSaleProducts();
+    else if (S.newInMode) renderNewInProducts();
+    else renderAllProducts();
   }
 }
 
@@ -353,6 +357,7 @@ function updateCollectionTitle() {
   const catTitles = {
     'all': 'ALL PRODUCTS',
     'sale': 'SALE',
+    'newin': 'NEW IN',
     'all-clothing': 'CLOTHING',
     'all-accessories': 'ACCESSORIES',
     'homeware': 'HOMEWARE',
@@ -381,11 +386,12 @@ function updateCollectionTitle() {
     const vendorName = S.currentVendor ? (S.currentVendor.name || S.currentVendor.brandName || S.currentVendor.brand) : null;
     bcLabel = vendorName || 'Brand';
   } else if (S.currentPage === 'products') {
-    const copy = collectionCopyFor(S.saleMode ? 'sale' : 'all');
+    const slug = S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all');
+    const copy = collectionCopyFor(slug);
     title = copy.title;
     description = copy.description;
     showDesc = !!description;
-    bcLabel = S.saleMode ? 'Sale' : 'All Products';
+    bcLabel = S.saleMode ? 'Sale' : (S.newInMode ? 'New In' : 'All Products');
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
     const copy = collectionCopyFor(S.currentCategoryPage);
     title = copy.title;
@@ -651,6 +657,7 @@ function previewPlaceholderProduct() {
   closeFilterPanel();
   closeSearch();
   S.saleMode = false;
+  S.newInMode = false;
   if (typeof closeCart === 'function') closeCart();
   if (DOM.mainNav) { DOM.mainNav.classList.add('product-page'); DOM.mainNav.classList.remove('collection-page'); }
   document.body.classList.remove('on-collection-page');
@@ -679,6 +686,7 @@ const PLACEHOLDER_VENDOR = {
 function previewPlaceholderVendor() {
   closeSearch();
   S.saleMode = false;
+  S.newInMode = false;
   if (typeof closeCart === 'function') closeCart();
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page-vendor").classList.add("active");
@@ -963,6 +971,46 @@ function renderCategoryProducts() {
   injectToolbarExtras('page-category', 'cat-grid-toggle-svg');
 }
 
+// Same shape as renderSaleProducts() above, but filters to genuinely
+// new products (isProductNew(), product-detail.js — createdAt within
+// PRODUCT_NEW_DAYS) instead of on-sale ones. Previously "New In" just
+// sorted the entire catalog newest-first without actually filtering
+// it, so it looked identical to All Products once you scrolled past
+// the first few items. renderPaginatedGrid() already falls back to
+// its placeholder cards when `filtered` is empty, so a quiet period
+// with nothing newly added still never looks broken.
+function renderNewInProducts() {
+  if(!DOM.allProductsGrid) return;
+  restoreCollectionFilterBar();
+
+  let filtered = PRODUCTS.filter(p => p.status === 'active' && isProductNew(p));
+
+  if (S.filter.cat.length) {
+    filtered = filtered.filter(p => S.filter.cat.includes(p.category));
+  }
+  if (S.filter.vendor.length) {
+    filtered = filtered.filter(p => S.filter.vendor.includes(p.brand));
+  }
+  if (S.filter.size && S.filter.size !== 'all') {
+    filtered = filtered.filter(p => (p.sizes || []).includes(S.filter.size));
+  }
+  if (S.filter.inStock) {
+    filtered = filtered.filter(p => (Number(p.stock) || 0) > 0);
+  }
+
+  const np = merchandiseProducts(filtered, undefined, S.sortBy);
+  const expanded = expandProductVariants(np);
+  DOM.allProductsGrid.style.gridTemplateColumns = gridTemplateFor(S.gridCols);
+  applyGridColsClass(DOM.allProductsGrid, S.gridCols);
+  renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
+  updateGridToggleSVG("grid-toggle-svg", S.gridCols);
+  updateCollectionTitle();
+  buildCategoryFilterOptions();
+  buildBrandFilterOptions();
+  renderActiveFilterChips();
+  injectToolbarExtras('page-products', 'grid-toggle-svg');
+}
+
 function renderSaleProducts() {
   if(!DOM.allProductsGrid) return;
   restoreCollectionFilterBar();
@@ -1062,7 +1110,7 @@ function buildFilterExtras() {
   `;
 }
 
-function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
+function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else if (S.newInMode) renderNewInProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
 
 function toggleGridCat() { S.gridColsCat = S.gridColsCat === 1 ? 2 : S.gridColsCat === 2 ? 3 : 1; renderCategoryProducts(); updateGridToggleSVG("cat-grid-toggle-svg", S.gridColsCat); updateCollectionGridIcon(); }
 
@@ -1082,7 +1130,7 @@ function renderCollectionSortingTabs() {
     else if (ACCESSORY_CATEGORIES.includes(S.currentCategoryPage)) active = 'all-accessories';
     else active = S.currentCategoryPage;
   } else {
-    active = S.activeSortTab || (S.saleMode ? 'sale' : 'all');
+    active = S.activeSortTab || (S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all'));
   }
   const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${escapeJSString(t.cat)}')">${escapeHTML(t.label)}</button>`).join('');
   const container = document.createElement('div');
@@ -1106,6 +1154,7 @@ function selectSortTab(cat) {
   S.activeSortTab = cat;
   if (cat === 'sale') { navigateToSale(); return; }
   S.saleMode = false;
+  S.newInMode = false;
   if (cat === 'all') { S.filter.cat = []; S.filter.vendor = []; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.currentCategoryPage = null; renderAllProducts(); }
   else { navigateToCategory(cat); }
   renderCollectionSortingTabs();
@@ -1182,6 +1231,7 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
   const myNavGen = ++pageNavGeneration;
   closeSearch();
   S.saleMode = false;
+  S.newInMode = false;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-vendor").classList.add("active");
   S.currentPage = "vendor";

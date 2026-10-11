@@ -68,7 +68,7 @@ const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 // and handles numeric coercion + en-US comma formatting (R1,299) safely.
 
 const S = {
-  cart:[], wishlist:[], currency:"ZAR", currentPage:"home", currentCategoryPage:null, selectedSize:null, productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2, gridColsWish:2, gridColsVendor:2, filter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, catFilter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, vendorFilter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, currentVendor:null, sortBy:"featured", campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null, currentReviewProductId:null, saleMode:false, categoriesSlideIndex:0, productInfoTab:'description', stickyExtended:false, stickyWishHidden:false, activeSortTab:null
+  cart:[], wishlist:[], currency:"ZAR", currentPage:"home", currentCategoryPage:null, selectedSize:null, productVariantSelections:{}, imageMode:"ghost", gridCols:2, gridColsCat:2, gridColsWish:2, gridColsVendor:2, filter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, catFilter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, vendorFilter:{cat:[],size:"all",vendor:[],onSale:false,inStock:false}, currentVendor:null, sortBy:"featured", campaignSlideIndex:0, recentlyViewed:[], currentSlide:0, cardTouchStartX:{}, cardSlideIndex:{}, swipeState:{}, previousCollectionPage:null, currentReviewProductId:null, saleMode:false, newInMode:false, categoriesSlideIndex:0, productInfoTab:'description', stickyExtended:false, stickyWishHidden:false, activeSortTab:null
 };
 
 /* ============================================================
@@ -442,6 +442,11 @@ function setNavForPage(page) {
   // search bar exactly as before.
   document.body.classList.toggle('on-brands-page', page === 'brands');
 
+  // Hides the quick-links row (All/Brands/Categories/Editorial/Gift
+  // Cards/New In/Sale) on the editorial page only, per explicit
+  // request — every other page keeps it.
+  document.body.classList.toggle('on-editorial-page', page === 'editorial');
+
   updateNavQuickLinks(page);
 }
 
@@ -449,8 +454,8 @@ function setNavForPage(page) {
 // Editorial/Sale row under the search bar, index.html) matches the
 // page just navigated to. Both New In and Sale land on the same
 // #page-products — which tab lights up depends on S.saleMode /
-// S.sortBy, which navigateToNewIn()/navigateToSale() both already set
-// before calling setNavForPage() — reading it here rather than
+// S.newInMode, which navigateToNewIn()/navigateToSale() both already
+// set before calling setNavForPage() — reading it here rather than
 // passing a separate flag through every call site. A manual sort
 // change via the dropdown (or any other path onto #page-products)
 // just leaves the row unhighlighted, same as the reference. Pages
@@ -458,7 +463,7 @@ function setNavForPage(page) {
 // etc.) behave the same way.
 function updateNavQuickLinks(page) {
   let key = page;
-  if (page === 'products') key = S.saleMode ? 'sale' : (S.sortBy === 'newest' ? 'newin' : null);
+  if (page === 'products') key = S.saleMode ? 'sale' : (S.newInMode ? 'newin' : null);
   document.querySelectorAll('.nav-quick-link').forEach(el => {
     const isActive = el.dataset.navPage === key;
     el.classList.toggle('active', isActive);
@@ -496,7 +501,7 @@ function navigateTo(page, replaceUrl) {
   ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
-  S.saleMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false};
+  S.saleMode = false; S.newInMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false};
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
   S.currentPage = page; window.scrollTo({top:0,behavior:"instant"}); removeStickyBar();
@@ -520,7 +525,7 @@ function navigateToCategory(cat, replaceUrl) {
   ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
-  S.saleMode = false; S.catFilter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCollectionUrl(cat, replaceUrl);
+  S.saleMode = false; S.newInMode = false; S.catFilter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCollectionUrl(cat, replaceUrl);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-category").classList.add("active"); S.currentPage="category"; S.currentCategoryPage=cat;
   S.previousCollectionPage = cat; removeStickyBar();
@@ -536,7 +541,7 @@ function goToProduct(productId, replaceUrl) {
   ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
-  S.saleMode = false; S.filter.vendor = []; closeCart();
+  S.saleMode = false; S.newInMode = false; S.filter.vendor = []; closeCart();
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   updateProductUrl(product, replaceUrl);
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
@@ -553,16 +558,16 @@ function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mai
 
 function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
-function navigateToSale() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.newInMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
-// Same shape as navigateToSale() — lands on the All Products grid, but
-// sorted newest-first (the same 'newest' sort merchandiseProducts()
-// already supports, used elsewhere for the homepage's own Arrivals
-// rail) instead of filtering to on-sale items. S.sortBy drives
-// renderAllProducts()'s own sort internally, so setting it here before
-// calling renderAllProducts() is all that's needed — no separate
-// render path like sale's renderSaleProducts().
-function navigateToNewIn() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'all'; renderCollectionSortingTabs(); renderAllProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+// Same shape as navigateToSale() — filters PRODUCTS to genuinely new
+// items (renderNewInProducts(), collection.js — isProductNew(),
+// product-detail.js's createdAt-within-PRODUCT_NEW_DAYS check) instead
+// of on-sale ones. Previously this just set S.sortBy='newest' and
+// called renderAllProducts(), which sorted the WHOLE catalog
+// newest-first without filtering anything out — indistinguishable
+// from All Products once you scrolled past the first few items.
+function navigateToNewIn() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.newInMode = true; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'newin'; renderCollectionSortingTabs(); renderNewInProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
   ++pageNavGeneration;
