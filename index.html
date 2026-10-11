@@ -30,6 +30,16 @@
     }, 8000);
   })();
   </script>
+  <script>
+  // Captured here, synchronously, before any deferred script runs —
+  // app.js's own routing (init() -> navigateTo('home') -> updateHash())
+  // calls history.pushState(null,null,'/') on a load from any path
+  // other than exactly '/' (e.g. '/index.html', which is how the
+  // admin's preview iframe loads this page), which strips this query
+  // string before a deferred script would ever get to read it.
+  // preview-bridge.js reads this flag instead of location.search.
+  window.__adminPreview = (window.self !== window.top) && /[?&]adminPreview=1\b/.test(location.search);
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>JANEDORE | Curated Fashion</title>
   <link rel="icon" type="image/png" href="Janedore.png">
@@ -82,6 +92,11 @@
   <link rel="stylesheet" href="footer.css">
   <link rel="stylesheet" href="buttons.css">
   <link rel="stylesheet" href="responsive.css">
+  <!-- Inert outside the admin's live-preview iframe — see its own
+       top-of-file comment (preview-bridge.js, which gates this
+       class entirely) for why this is always loaded, unconditionally,
+       rather than only on an admin-specific page. -->
+  <link rel="stylesheet" href="preview-bridge.css">
 
   <style>
     @media (max-width: 768px) {
@@ -550,6 +565,7 @@
 <script src="newsletter-popup.js" defer></script>
 <script src="cookie-consent.js" defer></script>
 <script src="site-content.js" defer></script>
+<script src="preview-bridge.js" defer></script>
 
 <div id="chat-container"></div>
 <script>

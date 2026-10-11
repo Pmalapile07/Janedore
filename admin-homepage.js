@@ -198,9 +198,13 @@
   // the summary (current heading/thumbnail) so you can see what's set
   // without opening it. Native <details>/<summary>, no custom JS needed
   // for the expand/collapse behavior itself.
-  function accordionSectionHtml(icon, title, previewHtml, bodyHtml) {
+  // `field` is a stable slug (not the display title, which is free text
+  // that could change) matching the slug the live preview iframe posts
+  // back via postMessage when its corresponding section is clicked —
+  // see openHomepageAccordionField() below and preview-bridge.js.
+  function accordionSectionHtml(icon, title, previewHtml, bodyHtml, field) {
     return (
-      '<div class="card" style="margin-bottom:10px;">' +
+      '<div class="card" style="margin-bottom:10px;" data-homepage-field="' + esc(field || '') + '">' +
         '<details class="homepage-accordion">' +
           '<summary class="homepage-accordion-summary">' +
             '<span class="homepage-accordion-summary-main">' +
@@ -267,7 +271,8 @@
       accordionSectionHtml('ph-stamp', 'Site Logo',
         thumbHtml(h.logoUrl) + '<span>' + (h.logoUrl ? 'Image set' : 'Using text wordmark') + '</span>',
         imageFieldHtml('logoImage', h.logoUrl, 'Logo') +
-        '<p class="account-muted" style="font-size:11px;margin:0;">Replaces the "JANEDORE" text in the header once set. Clear the URL to go back to text.</p>'
+        '<p class="account-muted" style="font-size:11px;margin:0;">Replaces the "JANEDORE" text in the header once set. Clear the URL to go back to text.</p>',
+        'logo'
       ) +
 
       accordionSectionHtml('ph-image', 'Hero',
@@ -275,28 +280,32 @@
         imageFieldHtml('heroImage', hero.imageUrl, 'Image') +
         '<div class="form-group" style="padding:0;"><label>Heading</label><input name="heroHeading" value="' + esc(hero.heading || '') + '" placeholder="Heading"></div>' +
         '<div class="form-group" style="padding:0;"><label>Button Text</label><input name="heroButtonText" value="' + esc(hero.buttonText || '') + '" placeholder="Button"></div>' +
-        linkFieldHtml('heroButtonLink', hero.buttonLink, 'Button Link')
+        linkFieldHtml('heroButtonLink', hero.buttonLink, 'Button Link'),
+        'hero'
       ) +
 
       accordionSectionHtml('ph-squares-four', 'New Arrivals',
         '<span>' + esc(arrivals.heading || 'Collection Heading') + '</span>',
         '<div class="form-group" style="padding:0;"><label>Heading</label><input name="arrivalsHeading" value="' + esc(arrivals.heading || '') + '" placeholder="Collection Heading"></div>' +
         '<div class="form-group" style="padding:0;"><label>Button Text</label><input name="arrivalsButtonText" value="' + esc(arrivals.buttonText || '') + '" placeholder="Button"></div>' +
-        linkFieldHtml('arrivalsButtonLink', arrivals.buttonLink, 'Button Link')
+        linkFieldHtml('arrivalsButtonLink', arrivals.buttonLink, 'Button Link'),
+        'arrivals'
       ) +
 
       accordionSectionHtml('ph-grid-four', 'Shop by Category',
         '<span>' + esc(shopCat.heading || 'Heading') + ' · ' + _tilesState.length + ' tile' + (_tilesState.length === 1 ? '' : 's') + '</span>',
         '<div class="form-group" style="padding:0;"><label>Heading</label><input name="categoryHeading" value="' + esc(shopCat.heading || '') + '" placeholder="Heading"></div>' +
         '<div id="category-tiles-container"></div>' +
-        '<button type="button" class="btn btn-sm btn-ghost" onclick="window._addCategoryTile()"><i class="ph-light ph-plus"></i> Add tile</button>'
+        '<button type="button" class="btn btn-sm btn-ghost" onclick="window._addCategoryTile()"><i class="ph-light ph-plus"></i> Add tile</button>',
+        'category'
       ) +
 
       accordionSectionHtml('ph-t-shirt', 'Shop by Clothing',
         '<span>' + esc(clothing.heading || 'Heading') + '</span>',
         '<div class="form-group" style="padding:0;"><label>Heading</label><input name="clothingHeading" value="' + esc(clothing.heading || '') + '" placeholder="Heading"></div>' +
         '<div class="form-group" style="padding:0;"><label>Button Text</label><input name="clothingButtonText" value="' + esc(clothing.buttonText || '') + '" placeholder="Button"></div>' +
-        linkFieldHtml('clothingButtonLink', clothing.buttonLink, 'Button Link')
+        linkFieldHtml('clothingButtonLink', clothing.buttonLink, 'Button Link'),
+        'clothing'
       ) +
 
       accordionSectionHtml('ph-rectangle', 'Editorial Banner',
@@ -304,20 +313,23 @@
         imageFieldHtml('bannerImage', banner.imageUrl, 'Image') +
         '<div class="form-group" style="padding:0;"><label>Heading</label><input name="bannerHeading" value="' + esc(banner.heading || '') + '" placeholder="Heading"></div>' +
         '<div class="form-group" style="padding:0;"><label>Button Text</label><input name="bannerButtonText" value="' + esc(banner.buttonText || '') + '" placeholder="Button"></div>' +
-        linkFieldHtml('bannerButtonLink', banner.buttonLink, 'Button Link')
+        linkFieldHtml('bannerButtonLink', banner.buttonLink, 'Button Link'),
+        'banner'
       ) +
 
       accordionSectionHtml('ph-handshake', 'Shop by Brand',
         '<span>' + esc(brand.heading || 'Heading') + '</span>',
         '<p class="account-muted" style="font-size:11px;margin:0;">The brand tiles themselves come from Vendors — add or edit a brand\'s logo there. Only the section heading is set here.</p>' +
-        '<div class="form-group" style="padding:0;"><label>Heading</label><input name="brandHeading" value="' + esc(brand.heading || '') + '" placeholder="Heading"></div>'
+        '<div class="form-group" style="padding:0;"><label>Heading</label><input name="brandHeading" value="' + esc(brand.heading || '') + '" placeholder="Heading"></div>',
+        'brand'
       ) +
 
       accordionSectionHtml('ph-envelope-simple', 'Newsletter',
         '<span>' + esc(news.heading || 'Heading') + '</span>',
         '<div class="form-group" style="padding:0;"><label>Heading</label><input name="newsletterHeading" value="' + esc(news.heading || '') + '" placeholder="Heading"></div>' +
         '<div class="form-group" style="padding:0;"><label>Subtext</label><input name="newsletterSubtext" value="' + esc(news.subtext || '') + '" placeholder=""></div>' +
-        '<div class="form-group" style="padding:0;"><label>Disclaimer</label><input name="newsletterDisclaimer" value="' + esc(news.disclaimer || '') + '" placeholder=""></div>'
+        '<div class="form-group" style="padding:0;"><label>Disclaimer</label><input name="newsletterDisclaimer" value="' + esc(news.disclaimer || '') + '" placeholder=""></div>',
+        'newsletter'
       );
 
     mc.innerHTML =
@@ -326,11 +338,129 @@
         '<button type="button" class="btn btn-primary" onclick="document.getElementById(\'homepage-form\').requestSubmit()"><i class="ph-light ph-check" style="margin-right:4px;"></i> Save</button>' +
       '</div>' +
       '<p class="account-muted" style="font-size:11px;margin:0 0 12px;">Collection page titles &amp; descriptions moved to the Pages tab.</p>' +
+      livePreviewHtml() +
       '<form id="homepage-form" onsubmit="window._handleHomepageSubmit(event)">' +
         sectionsHtml +
       '</form>';
 
     renderTilesContainer();
+    wireLivePreview();
+  }
+
+  // ==================== LIVE PREVIEW ====================
+  // The real storefront, loaded in an iframe pointing at this same
+  // origin's own homepage (?adminPreview=1 opts it into
+  // preview-bridge.js's click-reporting behavior — see that file).
+  // Clicking a section in the preview posts a message back here, which
+  // opens and scrolls to the matching accordion above instead of
+  // leaving you to hunt for the right one by title.
+  //
+  // This is a click-to-jump aid, not live bidirectional editing — the
+  // iframe shows a snapshot of the live site, not a draft of unsaved
+  // form changes. "Refresh" below just reloads it.
+  var _previewListenerBound = false;
+  var _previewOpen = true;
+
+  function livePreviewHtml() {
+    return (
+      '<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);">' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<i class="ph-light ph-browser"></i>' +
+            '<span style="font-size:12px;font-weight:500;">Live Preview</span>' +
+            '<span class="account-muted" style="font-size:11px;">Click a section below to jump to its fields</span>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button type="button" class="btn btn-sm btn-ghost" onclick="window._refreshHomepagePreview()"><i class="ph-light ph-arrow-clockwise"></i></button>' +
+            '<button type="button" class="btn btn-sm btn-ghost" onclick="window._toggleHomepagePreview()" id="homepage-preview-toggle"><i class="ph-light ph-caret-up"></i></button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="homepage-preview-wrap" style="height:70vh;max-height:640px;">' +
+          '<iframe id="homepage-preview-frame" src="/?adminPreview=1" style="width:100%;height:100%;border:none;display:block;" title="Live homepage preview"></iframe>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  window._refreshHomepagePreview = function () {
+    var f = safeEl('homepage-preview-frame');
+    if (f) f.src = f.src;
+  };
+
+  window._toggleHomepagePreview = function () {
+    _previewOpen = !_previewOpen;
+    var wrap = safeEl('homepage-preview-wrap');
+    var btn = safeEl('homepage-preview-toggle');
+    if (wrap) wrap.style.display = _previewOpen ? '' : 'none';
+    if (btn) btn.innerHTML = '<i class="ph-light ' + (_previewOpen ? 'ph-caret-up' : 'ph-caret-down') + '"></i>';
+  };
+
+  // Opens the accordion card whose data-homepage-field matches, closes
+  // the rest (so the one you just clicked is easy to find), and
+  // scrolls it into view with a brief highlight flash.
+  function openHomepageAccordionField(field) {
+    var target = document.querySelector('[data-homepage-field="' + field + '"]');
+    if (!target) return;
+    document.querySelectorAll('[data-homepage-field] > details').forEach(function (d) {
+      d.open = false;
+    });
+    var details = target.querySelector('details');
+    if (details) details.open = true;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.add('homepage-field-flash');
+    setTimeout(function () { target.classList.remove('homepage-field-flash'); }, 1200);
+  }
+
+  // Sets the real form field a preview edit corresponds to, so Save
+  // (unchanged, bulk-submits the whole form) picks it up exactly like
+  // it would if you'd typed into the sidebar directly — this is the
+  // only thing a preview edit actually touches; nothing hits Firestore
+  // until Save. Dispatches 'input' in case anything else is listening
+  // for it (nothing is, today, but mirrors how _uploadSingleImageTo
+  // already does this for manual uploads).
+  function setFormFieldValue(inputName, value) {
+    var input = document.querySelector('#homepage-form [name="' + inputName + '"]');
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function wireLivePreview() {
+    if (_previewListenerBound) return;
+    _previewListenerBound = true;
+    window.addEventListener('message', function (e) {
+      // Same-origin only — the iframe always loads this site's own
+      // homepage, never anything external, so a different origin here
+      // means the message isn't from our own preview bridge.
+      if (e.origin !== window.location.origin) return;
+      var frame = safeEl('homepage-preview-frame');
+      if (!frame || e.source !== frame.contentWindow) return;
+      var data = e.data;
+      if (!data || data.source !== 'janedore-preview') return;
+
+      if (data.type === 'sectionClicked') {
+        openHomepageAccordionField(data.field);
+      } else if (data.type === 'fieldEdited') {
+        // Typing directly in the preview — sync on every keystroke so
+        // Save always has the latest value, but no accordion-jumping
+        // or scrolling here: that's the whole point of editing inline
+        // instead of through the sidebar.
+        setFormFieldValue(data.inputName, data.value);
+      } else if (data.type === 'imageFieldClicked') {
+        if (!window._uploadToCloudinary) return;
+        window._uploadToCloudinary(function (url) {
+          setFormFieldValue(data.inputName, url);
+          showToast('Image uploaded!');
+          // Reflects the new image in the preview immediately, same
+          // as the upload already does in the sidebar's own thumbnail
+          // — without this it'd only show up after Save + a reload.
+          frame.contentWindow.postMessage(
+            { source: 'janedore-admin', type: 'imageUpdated', inputName: data.inputName, url: url },
+            window.location.origin
+          );
+        }, false);
+      }
+    });
   }
 
   window._handleHomepageSubmit = function (e) {
