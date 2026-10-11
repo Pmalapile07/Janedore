@@ -1922,6 +1922,21 @@ async function lookupOrder() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
+  // Skipped entirely inside the admin's live-preview iframe
+  // (window.__adminPreview, index.html). ensureAuth() below calls
+  // firebase.auth().signInAnonymously() unconditionally on every page
+  // load — harmless on a customer's own browser, but Firebase Auth
+  // persistence is shared across same-origin contexts (IndexedDB), so
+  // inside an iframe embedded in the admin panel this can race the
+  // admin's own already-signed-in session: if the SDK hasn't finished
+  // restoring it from storage yet at the moment this runs,
+  // currentUser briefly reads null, signInAnonymously() fires, and the
+  // admin's real session gets silently replaced by an anonymous one —
+  // which is exactly what broke admin.js's own auth-gated UI (nav
+  // icons disappearing, "login as admin" repeating) the first time
+  // this preview shipped. Chat has no reason to exist inside a design
+  // preview anyway, so the whole module just doesn't run there.
+  if (window.__adminPreview) return;
   _ScreenDebug.ensurePanel();
   _ScreenDebug.info('INIT', 'Chat module loaded at ' + new Date().toTimeString().slice(0,8));
 
