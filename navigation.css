@@ -36,40 +36,40 @@
    page re-renders.
    ============================================ */
 .nav-quick-links-wrap {
-  /* Hidden for now at the founder's request after several rounds of
-     tweaking it still didn't read right — markup/JS left in place
-     (not deleted) in case this gets revisited later. */
-  display: none;
-  position: relative;
+  display: flex;
+  align-items: center;
   background: #fff;
-  /* No padding-bottom of its own — .nav-quick-links below already has
-     12px of its own bottom padding, which combined with whatever the
-     next section's own top padding is (12px on #hero, 12px on the
-     brands page's section, etc.) already gives every page real,
-     non-zero breathing room without stacking a second gap on top of
-     it (that stacking was the earlier "padding is huge" bug: 12px row
-     + 16px here + 12px hero top = 40px total). */
+  /* Left/right matches the site's own standard responsive inset
+     (#hero, .product-grid — 8px/10px/12px) instead of a wider,
+     header-specific value, so the row doesn't look like it's
+     overextending past where every other section's edge sits. Now
+     lives on the wrap (not .nav-quick-links below) since the chevrons
+     are real flex siblings sitting at this same edge, not absolutely
+     positioned over the scrollable row. */
+  padding: 0 8px;
+}
+@media (min-width: 640px) {
+  .nav-quick-links-wrap { padding: 0 10px; }
+}
+@media (min-width: 1024px) {
+  .nav-quick-links-wrap { padding: 0 12px; }
 }
 .nav-quick-links {
   display: flex;
   align-items: center;
   gap: 4px;
-  /* Left/right matches the site's own standard responsive inset
-     (#hero, .product-grid — 8px/10px/12px) instead of a wider,
-     header-specific value, so the row doesn't look like it's
-     overextending past where every other section's edge sits. */
-  padding: 12px 8px 11.5px;
+  /* No padding-bottom beyond the row's own 11px — combined with
+     whatever the next section's own top padding is (12px on #hero,
+     12px on the brands page's section, etc.) already gives every page
+     real, non-zero breathing room without stacking a second gap on
+     top of it (that stacking was the earlier "padding is huge" bug:
+     12px row + 16px here + 12px hero top = 40px total). */
+  padding: 12px 0 11px;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
 .nav-quick-links::-webkit-scrollbar { display: none; }
-@media (min-width: 640px) {
-  .nav-quick-links { padding: 12px 10px 11.5px; }
-}
-@media (min-width: 1024px) {
-  .nav-quick-links { padding: 12px 12px 11.5px; }
-}
 /* line-height:1 + inline-flex/align-items:center is deliberate, not
    decorative — a plain <button> with the font's default line-height
    can render its glyphs visibly off-center within an otherwise
@@ -103,32 +103,30 @@
   font-weight: 700;
 }
 
-/* Floating scroll-affordance carets — shown only when there's
-   actually more row to scroll to in that direction
-   (updateNavQuickLinksChevrons(), app.js, toggles .hidden on scroll).
-   Positioned over the row rather than taking up their own flex slot,
-   same as the reference. */
+/* Scroll-affordance carets — shown only when there's actually more
+   row to scroll to in that direction (updateNavQuickLinksChevrons(),
+   app.js, toggles .hidden on scroll). Real flex siblings of
+   .nav-quick-links now, not absolutely positioned over it, so they
+   never sit on top of the tab text underneath — a solid white pill
+   with its own padding, reading as part of the row instead of a
+   floating control. */
 .nav-quick-chevron {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  background: none;
-  border: none;
-  box-shadow: none;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  border: none;
+  box-shadow: none;
+  border-radius: 999px;
   cursor: pointer;
-  z-index: 2;
   color: #111;
   font-size: 14px;
-  padding: 0;
+  padding: 6px;
 }
 .nav-quick-chevron.hidden { display: none; }
-.nav-quick-chevron-left { left: 6px; }
-.nav-quick-chevron-right { right: 6px; }
 
 #main-nav.scrolled { background: #111; }
 #main-nav.scrolled .nav-icon-btn, #main-nav.scrolled .desktop-nav-link, #main-nav.scrolled .utility-text-link, #main-nav.scrolled .nav-logo-text { color: #fff; }
