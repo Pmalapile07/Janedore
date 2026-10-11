@@ -79,7 +79,10 @@ body.on-collection-page .collection-top-description {
   justify-content: space-between;
   gap: 12px;
   position: sticky;
-  top: 0;
+  /* Stay directly below the full sticky header (icon row + search row).
+     app.js measures the actual header height so this adapts to mobile,
+     desktop, and pages where the search row is hidden. */
+  top: var(--main-nav-sticky-height, 120px);
   z-index: 100;
 }
 
