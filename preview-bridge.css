@@ -1,0 +1,53 @@
+/* Admin live-preview only (preview-bridge.js adds this class to <html>
+   when the page is actually embedded in the admin's iframe with
+   ?adminPreview=1 — never on a customer's own visit, so none of this
+   is reachable outside that iframe). */
+html.admin-preview-active .admin-preview-hoverable {
+  cursor: pointer;
+  outline: 2px dashed transparent;
+  outline-offset: -2px;
+  transition: outline-color 0.15s ease;
+  position: relative;
+}
+html.admin-preview-active .admin-preview-hoverable:hover {
+  outline-color: #111;
+}
+html.admin-preview-active .admin-preview-hoverable:hover::before {
+  content: "Click to edit";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #111;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+  z-index: 50;
+  pointer-events: none;
+}
+html.admin-preview-active .admin-preview-image-field:hover::before {
+  content: "Click to change image";
+}
+/* The logo's hover label would otherwise sit at the same top/left
+   corner as the nav's own content and look cramped — nudge it below
+   the logo instead. */
+html.admin-preview-active .nav-logo.admin-preview-hoverable:hover::before {
+  top: calc(100% + 6px);
+  left: 0;
+}
+
+/* Actively editing a text field — solid outline instead of the
+   dashed hover one, and the label swaps to a hint instead of
+   "Click to edit" since it's already open. */
+html.admin-preview-active .admin-preview-text-field.admin-preview-editing {
+  outline: 2px solid #111;
+  outline-offset: -2px;
+  cursor: text;
+}
+html.admin-preview-active .admin-preview-text-field.admin-preview-editing:hover::before,
+html.admin-preview-active .admin-preview-text-field.admin-preview-editing::before {
+  content: "Editing — click away to finish";
+  opacity: 1;
+}

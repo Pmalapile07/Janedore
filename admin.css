@@ -259,6 +259,15 @@ input, select, textarea { font-size:16px !important; }
 .homepage-accordion[open] .homepage-accordion-chevron{transform:rotate(180deg);}
 .homepage-accordion-body{padding:0 var(--space-4) var(--space-4);display:flex;flex-direction:column;gap:10px;border-top:0.5px solid var(--border);padding-top:var(--space-3);}
 
+/* Brief highlight when a live-preview click (admin-homepage.js's
+   wireLivePreview()) jumps the page to this card, so it's obvious
+   which section just opened instead of just silently scrolling. */
+.homepage-field-flash{animation:homepage-field-flash .3s ease 4;}
+@keyframes homepage-field-flash{
+  0%,100%{box-shadow:none;}
+  50%{box-shadow:0 0 0 2px var(--accent,#111) inset;}
+}
+
 /* ── DASHBOARD ─────────────────────────────────────────────────────────────── */
 .dashboard-shell{padding:0;}
 
