@@ -1808,9 +1808,15 @@ async function sendChatImage(file) {
     const imageUrl = await uploadChatImageToCloudinary(file);
 
     const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+    const handoffRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
     const ts = firebase.database.ServerValue.TIMESTAMP;
+    const handoffText = 'Thanks for sharing the photo! I’ve flagged this conversation for our customer care team. Please tell us briefly what you need help with while they review it.';
     loadedMessageKeys.add(msgRef.key);
+    loadedMessageKeys.add(handoffRef.key);
 
+    // Image messages never go to Gemini. Save the photo, explicitly flag
+    // the inbox for human assistance, and acknowledge the customer in one
+    // atomic RTDB update so the image cannot arrive without its handoff.
     const updates = {};
     updates['live_chat/' + chatSessionId + '/messages/' + msgRef.key] = {
       sessionId: chatSessionId,
@@ -1824,11 +1830,22 @@ async function sendChatImage(file) {
       delivered: false,
       userId: user ? user.uid : 'anonymous'
     };
-    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = '📷 Photo';
+    updates['live_chat/' + chatSessionId + '/messages/' + handoffRef.key] = {
+      text: handoffText,
+      sender: 'system',
+      senderName: 'JAI',
+      createdAt: ts,
+      read: true,
+      delivered: true,
+      sessionId: chatSessionId
+    };
+    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = '📷 Photo — human assistance requested';
     updates['chat_inbox/' + chatSessionId + '/lastMessageAt'] = ts;
     updates['chat_inbox/' + chatSessionId + '/customerEmail'] = customerEmail;
     updates['chat_inbox/' + chatSessionId + '/customerName'] = customerName || 'Guest';
     updates['chat_inbox/' + chatSessionId + '/unreadCount'] = firebase.database.ServerValue.increment(1);
+    updates['chat_inbox/' + chatSessionId + '/needsHuman'] = true;
+    updates['chat_inbox/' + chatSessionId + '/needsHumanAt'] = ts;
     updates['live_chat/' + chatSessionId + '/meta/status'] = 'open';
     updates['live_chat/' + chatSessionId + '/meta/ownerId'] = user ? user.uid : 'anonymous';
     updates['chat_inbox/' + chatSessionId + '/status'] = 'open';
@@ -1838,6 +1855,9 @@ async function sendChatImage(file) {
     const tempEl = document.getElementById(tempId);
     if (tempEl) tempEl.remove();
     appendMessage({ type: 'image', imageUrl: imageUrl, sender: 'customer', createdAt: Date.now() });
+    appendMessage({ text: handoffText, sender: 'system', senderName: 'JAI', createdAt: Date.now() });
+    showUnreadBadgeIfClosed();
+    _ScreenDebug.ok('SEND', 'Image saved; human handoff flagged; no AI image analysis used');
   } catch (e) {
     _ScreenDebug.err('SEND', 'Image send failed: ' + (e.code || '') + ' ' + e.message);
     const tempEl = document.getElementById(tempId);
