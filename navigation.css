@@ -15,11 +15,18 @@
      without it, a sticky-positioned element on iOS Safari can
      occasionally lose its painted content (rendering blank/white)
      after the page sits backgrounded or idle for a while and then
-     gets resumed. Cheap, standard mitigation for that known behavior. */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+     gets resumed. will-change (not an actual transform value) gets
+     the same layer promotion without it: applying a real `transform`
+     to a `position:sticky` element is a documented WebKit/CSS-spec
+     interaction that can desync the element's hit-test region from
+     where it's actually painted after scrolling — almost certainly
+     the cause of a separately reported bug where tapping elsewhere on
+     the page (after scrolling) would sometimes open the search
+     overlay, since #main-nav's own .search-bar-trigger is the only
+     element anywhere in the codebase that triggers it. Swapped from
+     transform:translateZ(0)/backface-visibility:hidden to will-change
+     to fix that without losing the original mitigation. */
+  will-change: transform;
 }
 #main-nav .nav-icon-btn, #main-nav .desktop-nav-link, #main-nav .utility-text-link, #main-nav .nav-logo-text { color: #fff; transition: color 0.25s ease; }
 #main-nav .badge { background: #fff; color: #111; transition: background 0.25s ease, color 0.25s ease; }
