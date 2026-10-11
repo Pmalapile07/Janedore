@@ -513,8 +513,20 @@ function navigateTo(page, replaceUrl) {
   S.saleMode = false; S.newInMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false};
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
-  S.currentPage = page; window.scrollTo({top:0,behavior:"instant"}); removeStickyBar();
+  S.currentPage = page;
+  removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page","collection-page"); }
+  // Reset scroll after switching the destination page and nav classes.
+  // On iOS Safari, scrolling before these layout changes can leave the
+  // sticky header visually out of sync with the non-sticky quick-links row.
+  const resetPageScroll = () => window.scrollTo(0, 0);
+  resetPageScroll();
+  requestAnimationFrame(() => {
+    resetPageScroll();
+    // Re-resolve the sticky header against the destination page layout.
+    // The quick-links row remains in normal document flow.
+    if (DOM.mainNav) DOM.mainNav.getBoundingClientRect();
+  });
   setNavForPage(page);
   if (page === 'home') updateHash('');
   else if (PAGE_URL_MAP.hasOwnProperty(page)) updateCleanUrl(page, replaceUrl);
