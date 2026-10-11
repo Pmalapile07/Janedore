@@ -114,28 +114,44 @@ function renderShopByCategory(shopByCategory) {
   if (headingEl) { headingEl.textContent = shopByCategory.heading || ''; headingEl.classList.remove('skeleton-text'); }
 
   const grid = document.getElementById('home-categories-grid');
-  if (!grid) return;
-  let tiles = Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : [];
-  // Nothing configured in admin yet — show 4 empty placeholder tiles
-  // (the grid's original fixed layout) instead of leaving the whole
-  // section blank, same empty-state idea as everything else here.
-  const isPlaceholder = tiles.length === 0;
-  if (isPlaceholder) tiles = [{}, {}, {}, {}];
+  if (!grid || typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return;
+  firebase.firestore().collection('categories').get().then(function(snapshot) {
+    if (!grid.isConnected) return;
+    const categories = snapshot.docs
+      .map(function(doc) { return Object.assign({ id: doc.id }, doc.data()); })
+      .filter(function(category) { return category.featuredOnHomepage === true; })
+      .sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }); });
 
-  grid.innerHTML = tiles.map(function (_, i) {
-    return '<div class="home-category-card" data-tile-index="' + i + '">' +
-      '<div class="home-category-img"><div class="home-category-label"></div></div>' +
-    '</div>';
-  }).join('');
+    if (!categories.length) {
+      grid.innerHTML = '';
+      grid.style.display = 'none';
+      return;
+    }
 
-  grid.querySelectorAll('[data-tile-index]').forEach(function (cardEl, i) {
-    const tile = tiles[i];
-    cardEl.querySelector('.home-category-label').textContent = tile.label || '';
-    cardEl.onclick = isPlaceholder ? null : function () { goToSiteLink(tile.link); };
-    loadBackgroundImage(cardEl.querySelector('.home-category-img'), tile.imageUrl, 600);
+    grid.style.display = '';
+    grid.innerHTML = categories.map(function(category) {
+      const slug = String(category.slug || category.id).replace(/[^a-z0-9-]/gi, '');
+      const name = String(category.name || '').replace(/[&<>"']/g, function(ch) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch];
+      });
+      return '<button type="button" class="home-category-card" data-category-slug="' + slug +
+        '" aria-label="Browse ' + name + '"><div class="home-category-img' +
+        (category.imageUrl ? '' : ' content-empty') + '"><div class="home-category-label">' +
+        name + '</div></div></button>';
+    }).join('');
+
+    grid.querySelectorAll('[data-category-slug]').forEach(function(card, index) {
+      const category = categories[index];
+      const imageEl = card.querySelector('.home-category-img');
+      if (category.imageUrl && /^https:\/\//i.test(category.imageUrl)) loadBackgroundImage(imageEl, category.imageUrl, 600);
+      card.addEventListener('click', function() {
+        if (typeof navigateToCategory === 'function') navigateToCategory(card.getAttribute('data-category-slug'));
+      });
+    });
+  }).catch(function(error) {
+    console.warn('[SITE CONTENT] Could not load homepage categories:', error.message);
   });
 }
-
 function renderShopByClothingHeader(clothing) {
   clothing = clothing || {};
   const headingEl = document.getElementById('clothing-heading');
