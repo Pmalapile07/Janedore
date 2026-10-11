@@ -696,17 +696,19 @@
   #chat-window .chat-send-btn:hover { background: #333 !important; }
   #chat-window .chat-send-btn:active { transform: scale(0.96) !important; }
 
-  /* Attach-image button — same circular footprint as the send button,
-     but lighter (grey on transparent) since it's a secondary action
-     sitting on the opposite side of the input pill. */
+  /* Attach-image button — same circular footprint/sizing as the send
+     button (44px), and the same pale-grey filled-circle treatment as
+     the welcome screen's own .jai-card-icon, instead of a plain
+     transparent icon. */
   #chat-window .chat-attach-btn {
     flex-shrink: 0 !important;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: 50% !important;
-    background: none !important;
-    color: #888 !important;
+    background: #f4f4f4 !important;
+    color: #111 !important;
     border: none !important;
     padding: 0 !important;
     margin-right: 2px !important;
@@ -717,7 +719,7 @@
     font-size: 17px !important;
     transition: background 0.2s, color 0.2s !important;
   }
-  #chat-window .chat-attach-btn:hover { background: #eeeeec !important; color: #111 !important; }
+  #chat-window .chat-attach-btn:hover { background: #eeeeec !important; }
   #chat-window .chat-attach-btn:disabled { opacity: 0.4 !important; cursor: default !important; }
   /* Phosphor only ships a horizontal paperclip — rotated 90deg to read
      as the vertical orientation instead. */
