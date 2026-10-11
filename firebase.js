@@ -58,6 +58,21 @@ if (typeof firebase.appCheck === 'function') {
 
 firebase.auth().onAuthStateChanged(function(user) {
   if (!user) {
+    // Skipped inside the admin's live-preview iframe
+    // (window.__adminPreview, set in <head> before this file runs).
+    // This comment's own original assumption ("an admin user is
+    // already signed in, so this is a no-op") doesn't hold there: a
+    // freshly loaded iframe gets its own first onAuthStateChanged
+    // callback, which can fire with user===null before the real
+    // admin session has finished restoring from IndexedDB (same
+    // async-restoration race window.authReady below exists to guard
+    // against elsewhere). Since Firebase Auth persistence is shared
+    // across same-origin contexts, signInAnonymously() here doesn't
+    // just affect the iframe — it overwrites the admin's own
+    // persisted session with an anonymous one, which is exactly what
+    // broke the admin panel (nav icons disappearing, "login as admin"
+    // repeating) the first time the live-preview iframe shipped.
+    if (window.__adminPreview) return;
     firebase.auth().signInAnonymously()
       .then(function(result) {
         console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — Anonymous auth established:', result.user.uid.slice(0, 12));
