@@ -58,13 +58,17 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  /* No padding-bottom beyond the row's own 11px — combined with
-     whatever the next section's own top padding is (12px on #hero,
-     12px on the brands page's section, etc.) already gives every page
-     real, non-zero breathing room without stacking a second gap on
-     top of it (that stacking was the earlier "padding is huge" bug:
-     12px row + 16px here + 12px hero top = 40px total). */
-  padding: 12px 0 11px;
+  /* Bottom padding is deliberately small (not matched to the 13px
+     top) because .nav-quick-links-wrap and the section after it
+     (#hero, etc.) are both solid white with no visible seam between
+     them — the real visual gap below the text is this value PLUS
+     that next section's own top padding (12px on #hero), stacking
+     into one continuous white gap the eye reads as a single space.
+     1px + 12px = 13px, matching the 13px white gap above the text
+     (which turns black at the #main-nav boundary instead, so nothing
+     stacks on top of it there). Measured via the live DOM, not
+     assumed — confirmed 13px above vs 23px below before this fix. */
+  padding: 13px 0 1px;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
