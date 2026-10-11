@@ -719,6 +719,12 @@
   }
   #chat-window .chat-attach-btn:hover { background: #eeeeec !important; color: #111 !important; }
   #chat-window .chat-attach-btn:disabled { opacity: 0.4 !important; cursor: default !important; }
+  /* Phosphor only ships a horizontal paperclip — rotated 90deg to read
+     as the vertical orientation instead. */
+  #chat-window .chat-attach-icon {
+    display: inline-block !important;
+    transform: rotate(90deg) !important;
+  }
 
   /* An uploaded/received image, shown in place of the usual text
      bubble — chat-msg's own padding/background still apply (same
@@ -940,7 +946,7 @@
   <div class="chat-input-wrap" id="chat-input-wrap" style="display:flex;">
     <div class="chat-input-pill">
       <button class="chat-attach-btn" id="chat-attach-btn" onclick="pickAndSendChatImage()" aria-label="Attach a photo">
-        <i class="ph-light ph-image"></i>
+        <i class="ph ph-paperclip-horizontal chat-attach-icon"></i>
       </button>
       <input class="chat-input" id="chat-input" placeholder="Type your message…"
              onkeypress="if(event.key==='Enter')sendChatMessage()"
