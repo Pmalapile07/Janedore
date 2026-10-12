@@ -464,7 +464,7 @@ function updateCollectionTitle() {
   }
 
   if (descEl) {
-    if (showDesc && description) {
+    if (showDesc && (description || collectionImage)) {
       const imageMarkup = collectionImage && safeImageURL(collectionImage) !== PLACEHOLDER_IMAGE ? `<img src="${escapeHTML(safeImageURL(collectionImage))}" alt="" loading="lazy" style="width:100%;max-height:320px;object-fit:cover;display:block;margin:0 0 14px;">` : '';
       const descriptionMarkup = description ? `<p>${escapeHTML(description)}</p>` : '';
       descEl.innerHTML = imageMarkup + descriptionMarkup;
