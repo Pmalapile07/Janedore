@@ -17,7 +17,8 @@
   }
   function canManage(collection) {
     return isSuperAdmin() || (window._currentUserRole === 'VENDOR' && collection &&
-      collection.vendorId && collection.vendorId === window._currentVendorId);
+      collection.vendorId && collection.vendorId === window._currentVendorId &&
+      collection.status !== 'active' && collection.published !== true);
   }
   function hasMember(product, collection) {
     if (collection && collection.collectionType === 'automated') {
@@ -78,7 +79,7 @@
           '<div style="font-size:11px;color:var(--muted);margin:6px 0 10px;">/collections/' + esc(item.handle || item.slug || item.id) + '</div>' +
           '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">' + count + ' assigned product' + (count === 1 ? '' : 's') + (item.featured ? ' · Featured' : '') + '</div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._editAdminCollection(\'' + esc(item.id) + '\')">Edit</button>' +
-          (canManage(item) ? '<button class="btn btn-sm btn-ghost" type="button" onclick="window._toggleAdminCollectionPublish(\'' + esc(item.id) + '\')">' + (published ? 'Unpublish' : 'Publish') + '</button><button class="btn btn-sm btn-ghost" type="button" style="color:var(--danger);" onclick="window._deleteAdminCollection(\'' + esc(item.id) + '\')">Delete</button>' : '') +
+          (canManage(item) ? (isSuperAdmin() ? '<button class="btn btn-sm btn-ghost" type="button" onclick="window._toggleAdminCollectionPublish(\'' + esc(item.id) + '\')">' + (published ? 'Unpublish' : 'Publish') + '</button>' : '') + '<button class="btn btn-sm btn-ghost" type="button" style="color:var(--danger);" onclick="window._deleteAdminCollection(\'' + esc(item.id) + '\')">Delete</button>' : '') +
           '</div></div></article>';
       }).join('') + '</div>';
   }
