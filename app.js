@@ -296,7 +296,7 @@ async function init() {
       if (product) { goToProduct(product.id, true); }
       else { navigateTo('home'); }
     } else if (pathRoute.page === 'category') {
-      navigateToCategory(pathRoute.cat, true);
+      navigateToCollection(pathRoute.cat, true);
     } else if (pathRoute.page === 'content') {
       navigateToContentPage(pathRoute.slug, true);
     } else if (pathRoute.page === 'vendor') {
@@ -318,7 +318,7 @@ async function init() {
       goToProduct(route.productId, true);
     }
     else if (route.page === 'category') {
-      navigateToCategory(route.cat, true);
+      navigateToCollection(route.cat, true);
     }
     else if (route.page === 'login') { await window.authReady; navigateToLogin(true); }
     else if (route.page === 'account') { await window.authReady; navigateToAccount(true); }
@@ -472,6 +472,7 @@ function setNavForPage(page) {
 // etc.) behave the same way.
 function updateNavQuickLinks(page) {
   let key = page;
+  if (page === 'category' && S.currentCollectionHandle) key = 'collection-' + S.currentCollectionHandle;
   if (page === 'products') key = S.saleMode ? 'sale' : (S.newInMode ? 'newin' : null);
   document.querySelectorAll('.nav-quick-link').forEach(el => {
     const isActive = el.dataset.navPage === key;
@@ -567,6 +568,8 @@ function renderDynamicCategoriesPage() {
 }
 
 function navigateToCategory(cat, replaceUrl) {
+  S.currentCollectionHandle = null;
+  S.currentCollectionData = null;
   ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
@@ -580,6 +583,31 @@ function navigateToCategory(cat, replaceUrl) {
   renderCollectionSortingTabs();
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
   renderCategoryProducts(); window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled(); updateChatVisibility();
+}
+
+// Resolve /collections/:handle from published Firestore records first.
+// If the handle is not a collection, retain the existing category route.
+async function navigateToCollection(handle, replaceUrl) {
+  if (typeof window._loadPublishedCollections !== 'function') { navigateToCategory(handle, replaceUrl); return; }
+  try {
+    const items = await window._loadPublishedCollections();
+    const collection = (items || []).find(function (item) { return String(item.handle || item.slug || item.id) === String(handle); });
+    if (!collection) { navigateToCategory(handle, replaceUrl); return; }
+    ++pageNavGeneration; closeFilterPanel(); closeSearch();
+    S.saleMode = false; S.newInMode = false;
+    S.catFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
+    S.currentCollectionHandle = String(collection.handle || collection.slug || collection.id);
+    S.currentCollectionData = collection; S.currentCategoryPage = S.currentCollectionHandle;
+    S.currentPage = 'category'; S.previousCollectionPage = S.currentCollectionHandle;
+    updateCollectionUrl(S.currentCollectionHandle, replaceUrl);
+    document.querySelectorAll('.page').forEach(function (page) { page.classList.remove('active'); });
+    document.getElementById('page-category').classList.add('active'); removeStickyBar();
+    if (DOM.mainNav) { DOM.mainNav.classList.remove('product-page'); DOM.mainNav.classList.add('collection-page'); }
+    setNavForPage('category'); S.activeSortTab = S.currentCollectionHandle;
+    if (DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
+    renderCollectionSortingTabs(); renderCategoryProducts();
+    window.scrollTo({top:0,behavior:'instant'}); ensureNavScrolled(); updateChatVisibility();
+  } catch (error) { console.error('[COLLECTIONS] Could not resolve collection route:', error); navigateToCategory(handle, replaceUrl); }
 }
 
 function goToProduct(productId, replaceUrl) {
