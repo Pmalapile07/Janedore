@@ -22,7 +22,10 @@
   function hasMember(product, collection) {
     if (collection && collection.collectionType === 'automated') {
       if (collection.automatedRule === 'sale') return typeof window._hasSalePrice === 'function' ? window._hasSalePrice(product) : Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.price || 0);
-      if (collection.automatedRule === 'newin') return typeof window._isProductNew === 'function' ? window._isProductNew(product) : false;
+      if (collection.automatedRule === 'newin') {
+        var created = product.createdAt && typeof product.createdAt.toDate === 'function' ? product.createdAt.toDate() : new Date(product.createdAt || 0);
+        return !!created && !isNaN(created.getTime()) && Date.now() - created.getTime() <= 5 * 24 * 60 * 60 * 1000;
+      }
     }
     var values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
     var handle = String(collection.handle || collection.slug || collection.id || '').toLowerCase();
@@ -124,6 +127,7 @@
       }).join('') : '<div style="padding:12px;color:var(--muted);">No products available in your scope.</div>') +
       '</div><small style="color:var(--muted);display:block;margin-top:6px;">Selected products use the existing collections field. Vendor accounts only see products in their own scope.</small></div>' +
       '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px;"><button type="button" class="btn btn-ghost" onclick="window._cancelAdminCollectionForm()">Cancel</button><button type="submit" class="btn btn-primary">Save collection</button></div></form>';
+    window._toggleAdminCollectionRule();
   };
   window._toggleAdminCollectionRule = function () {
     var type = document.getElementById('admin-collection-type');
