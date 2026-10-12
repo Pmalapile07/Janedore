@@ -109,45 +109,11 @@ function renderNewArrivalsHeader(arrivals) {
   }
 }
 
-function renderFeaturedCollections(collections) {
-  const section = document.getElementById('home-featured-collections');
-  const grid = document.getElementById('home-collections-grid');
-  if (!section || !grid) return;
-  const items = (collections || []).filter(function (item) { return item.featured === true; })
-    .sort(function (a, b) {
-      return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
-        String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
-    }).slice(0, 4);
-  if (!items.length) {
-    section.style.display = 'none';
-    grid.innerHTML = '';
-    return;
-  }
-  grid.innerHTML = items.map(function (item) {
-    const handle = String(item.handle || item.slug || item.id || '').replace(/[^a-z0-9-]/gi, '');
-    const name = String(item.title || item.name || handle).replace(/[&<>"']/g, function (ch) {
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[ch];
-    });
-    return '<button type="button" class="home-category-card" data-featured-collection="' + handle + '" aria-label="Browse ' + name + '"><div class="home-category-img' + (item.imageUrl ? '' : ' content-empty') + '"><div class="home-category-label">' + name + '</div></div></button>';
-  }).join('');
-  items.forEach(function (item, index) {
-    const card = grid.querySelectorAll('[data-featured-collection]')[index];
-    if (!card) return;
-    const image = card.querySelector('.home-category-img');
-    if (item.imageUrl && /^https:\/\//i.test(item.imageUrl)) loadBackgroundImage(image, item.imageUrl, 600);
-    card.addEventListener('click', function () {
-      if (typeof window.navigateToCollection === 'function') window.navigateToCollection(item.handle || item.slug || item.id);
-    });
-  });
-  section.style.display = '';
-}
-
 function renderCollectionQuickLinks() {
   const row = document.getElementById('nav-quick-links');
   if (!row || typeof window._loadPublishedCollections !== 'function') return;
   row.querySelectorAll('[data-dynamic-collection-link]').forEach(function (el) { el.remove(); });
   window._loadPublishedCollections().then(function (collections) {
-    renderFeaturedCollections(collections);
     if (!row.isConnected) return;
     const published = collections || [];
     ['sale', 'newin'].forEach(function (handle) {
