@@ -104,6 +104,10 @@ window._loadPublishedCollections = function (forceRefresh) {
 
 function productBelongsToCollection(product, collection) {
   if (!product || !collection) return false;
+  if (collection.collectionType === 'automated') {
+    if (collection.automatedRule === 'sale') return hasSalePrice(product);
+    if (collection.automatedRule === 'newin') return typeof isProductNew === 'function' && isProductNew(product);
+  }
   const values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
   const handle = String(collection.handle || collection.slug || collection.id || '').trim().toLowerCase();
   const title = String(collection.title || collection.name || '').trim().toLowerCase();
