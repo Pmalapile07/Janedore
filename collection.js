@@ -205,13 +205,6 @@ function passesCommonFilters(p, f) {
 function getFilteredProducts() {
   return PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
-    if (S.currentCollectionHandle) {
-      const collection = S.currentCollectionData ||
-        (window._publishedCollections || []).find(function (item) {
-          return String(item.handle || item.slug || item.id) === S.currentCollectionHandle;
-        });
-      if (!productBelongsToCollection(p, collection)) return false;
-    }
     if (S.filter.cat.length && !S.filter.cat.includes(p.category)) return false;
     if (S.filter.vendor.length && !S.filter.vendor.includes(p.brand)) return false;
     return passesCommonFilters(p, S.filter);
@@ -225,6 +218,13 @@ function getCatFilteredProducts() {
 
   return PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
+    if (S.currentCollectionHandle) {
+      const collection = S.currentCollectionData ||
+        (window._publishedCollections || []).find(function (item) {
+          return String(item.handle || item.slug || item.id) === S.currentCollectionHandle;
+        });
+      if (!productBelongsToCollection(p, collection)) return false;
+    }
     if (p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
     if (S.catFilter.vendor.length && !S.catFilter.vendor.includes(p.brand)) return false;
 
