@@ -50,16 +50,30 @@
   }
   window._backfillVendorIds = _backfillVendorIds;
 
-  var CATEGORIES = [
-    { group: 'Clothing',         items: ['dresses','tops','bottoms','jackets','coats','sets','jumpsuits','skirts','trousers','shorts','knitwear','swimwear','activewear','lingerie'] },
-    { group: 'Footwear',         items: ['heels','flats','boots','sneakers','sandals','mules','loafers'] },
-    { group: 'Bags',             items: ['handbags','clutches','tote-bags','shoulder-bags','crossbody-bags','backpacks','mini-bags'] },
-    { group: 'Accessories',      items: ['sunglasses','eyewear','jewelry','scarves','belts','hats','hair-accessories','gloves','iphone-cases'] },
-    { group: 'Hair',             items: ['extensions','clip-ins','hair-pieces'] },
-    { group: 'Beauty & Scent',   items: ['parfum','body-care','candles','homeware'] }
-  ];
+  function getProductCategoryRecords() {
+    return (window._adminCategoriesData || []).slice().sort(function (a, b) {
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }
 
-  var ALL_CATEGORY_ITEMS = CATEGORIES.reduce(function(acc, g) { return acc.concat(g.items); }, []);
+  function getProductCategorySlugs() {
+    var values = getProductCategoryRecords().map(function (category) { return String(category.slug || category.id || '').trim(); }).filter(Boolean);
+    (window._allProducts || []).forEach(function (product) { if (product.category && values.indexOf(product.category) === -1) values.push(product.category); });
+    return values.sort(function (a, b) { return a.localeCompare(b); });
+  }
+
+  function renderProductCategoryOptions(product) {
+    var records = getProductCategoryRecords();
+    var options = records.map(function (category) {
+      var slug = String(category.slug || category.id || '');
+      return '<option value="' + esc(slug) + '"' + (product.category === slug ? ' selected' : '') + '>' + esc(category.name || slug) + '</option>';
+    });
+    if (product.category && !records.some(function (category) { return String(category.slug || category.id) === product.category; })) {
+      options.unshift('<option value="' + esc(product.category) + '" selected>' + esc(product.category.replace(/-/g, ' ')) + ' (existing tag)</option>');
+    }
+    if (!options.length) options.push('<option value="" selected>No categories configured</option>');
+    return options.join('');
+  }
 
   var SIZE_UNITS = ['Custom','OS','XS–XXL','UK','EU','US','cm','inches'];
 
@@ -348,7 +362,7 @@
             '<label class="orders-filter-popover-label">Category</label>' +
             '<select class="filter-select" id="product-cat-filter" onchange="window._filterProducts()">' +
               '<option value="">All Categories</option>' +
-              ALL_CATEGORY_ITEMS.map(function(c){ return '<option value="'+c+'">'+c.replace(/-/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})+'</option>'; }).join('') +
+              getProductCategorySlugs().map(function(c){ return '<option value="'+esc(c)+'">'+esc(c.replace(/-/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();}))+'</option>'; }).join('') +
             '</select>' +
           '</div>' +
         '</div>' +
@@ -646,19 +660,24 @@
   window._openProductModal    = function(id) { window._openProductForm(id); };
 
   window._openProductForm = function(productOrId) {
-    if (!window._adminCollectionsData) {
+    if (!window._adminCollectionsData || !window._adminCategoriesData) {
       if (!window._adminCollectionsLoadPromise) {
         var collectionQuery = window._adminDB.collection('collections');
         if (window._currentUserRole === 'VENDOR' && window._currentVendorId) {
           collectionQuery = collectionQuery.where('vendorId', '==', window._currentVendorId);
         }
-        window._adminCollectionsLoadPromise = collectionQuery.get().then(function (snapshot) {
-          window._adminCollectionsData = snapshot.docs.map(function (doc) { return Object.assign({id:doc.id}, doc.data()); });
+        window._adminCollectionsLoadPromise = Promise.all([
+          collectionQuery.get(),
+          window._adminDB.collection('categories').get()
+        ]).then(function (snapshots) {
+          window._adminCollectionsData = snapshots[0].docs.map(function (doc) { return Object.assign({id:doc.id}, doc.data()); });
+          window._adminCategoriesData = snapshots[1].docs.map(function (doc) { return Object.assign({id:doc.id}, doc.data()); });
           return window._adminCollectionsData;
         }).catch(function (error) {
           window._adminCollectionsLoadPromise = null;
-          showToast('Could not load collections: ' + (error.message || 'Please try again.'), 'error');
-          window._adminCollectionsData = [];
+          showToast('Could not load product organization data: ' + (error.message || 'Please try again.'), 'error');
+          window._adminCollectionsData = window._adminCollectionsData || [];
+          window._adminCategoriesData = window._adminCategoriesData || [];
           return [];
         });
       }
@@ -694,15 +713,8 @@
     if (!mc) return;
     var isNew = !p.id;
 
-    // Build category options with groups
-    var catOptions = CATEGORIES.map(function(g) {
-      return '<optgroup label="' + esc(g.group) + '">' +
-        g.items.map(function(c) {
-          var label = c.replace(/-/g,' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); });
-          return '<option value="' + esc(c) + '"' + (p.category === c ? ' selected' : '') + '>' + label + '</option>';
-        }).join('') +
-      '</optgroup>';
-    }).join('');
+    // Categories come from the shared Firestore Categories manager.
+    var catOptions = renderProductCategoryOptions(p);
 
     var currentSizes = (p.sizes || []).join(', ');
     var currentUnit  = p.sizeUnit || 'XS–XXL';
