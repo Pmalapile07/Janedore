@@ -75,12 +75,12 @@
     var productCount = function (item) {
       return products.filter(function (product) { return product.status !== 'archived' && hasMember(product, item); }).length;
     };
-    var toolbar = '<div class="catalog-toolbar"><label class="catalog-search"><i class="ph ph-magnifying-glass"></i><input id="collections-admin-search" type="search" placeholder="Search collections" oninput="window._filterAdminCollections()" autocomplete="off"></label><span class="catalog-total" id="collections-admin-total">' + items.length + ' collection' + (items.length === 1 ? '' : 's') + '</span></div>';
+    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" type="search" placeholder="Search collections" oninput="window._filterAdminCollections()" autocomplete="off"></div><span class="catalog-total" id="collections-admin-total">' + items.length + ' collections</span></div>';
     if (!items.length) {
       list.innerHTML = toolbar + '<div class="catalog-empty"><i class="ph ph-stack"></i><p>No collections yet</p><span>Create your first collection to curate products across brands.</span></div>';
       return;
     }
-    list.innerHTML = toolbar + '<div class="catalog-list" role="list">' + items.map(function (item) {
+    list.innerHTML = toolbar + '<div class="products-list catalog-list" role="list">' + items.map(function (item) {
       var count = productCount(item);
       var brandCount = brandsFor(item);
       var title = item.title || item.name || item.handle || item.id;
