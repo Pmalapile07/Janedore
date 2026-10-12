@@ -81,6 +81,37 @@ function getCategoryFilterScope() {
 }
 const LEATHER_POUCH_ID = 'janedore-leather-pouch';
 
+// Published collections are the shared storefront source of truth.
+// The status constraint is required by the public Firestore read rule.
+window._publishedCollectionsPromise = window._publishedCollectionsPromise || null;
+window._loadPublishedCollections = function (forceRefresh) {
+  if (!forceRefresh && window._publishedCollectionsPromise) return window._publishedCollectionsPromise;
+  if (typeof db === 'undefined' || !db || typeof db.collection !== 'function') return Promise.resolve([]);
+  window._publishedCollectionsPromise = db.collection('collections').where('status', '==', 'active').get()
+    .then(function (snapshot) {
+      window._publishedCollections = snapshot.docs.map(function (doc) {
+        return Object.assign({ id: doc.id }, doc.data());
+      }).filter(function (item) { return item.published !== false; });
+      return window._publishedCollections;
+    }).catch(function (error) {
+      window._publishedCollectionsPromise = null;
+      console.warn('[COLLECTIONS] Could not load published collections:', error.message);
+      return [];
+    });
+  return window._publishedCollectionsPromise;
+};
+
+function productBelongsToCollection(product, collection) {
+  if (!product || !collection) return false;
+  const values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
+  const handle = String(collection.handle || collection.slug || collection.id || '').trim().toLowerCase();
+  const title = String(collection.title || collection.name || '').trim().toLowerCase();
+  return values.some(function (value) {
+    value = String(value || '').trim().toLowerCase();
+    return value && (value === handle || value === title);
+  });
+}
+
 function gridTemplateFor(cols) {
   return cols === 1 ? "1fr" : cols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)";
 }
@@ -174,6 +205,13 @@ function passesCommonFilters(p, f) {
 function getFilteredProducts() {
   return PRODUCTS.filter(p => {
     if (p.status !== 'active') return false;
+    if (S.currentCollectionHandle) {
+      const collection = S.currentCollectionData ||
+        (window._publishedCollections || []).find(function (item) {
+          return String(item.handle || item.slug || item.id) === S.currentCollectionHandle;
+        });
+      if (!productBelongsToCollection(p, collection)) return false;
+    }
     if (S.filter.cat.length && !S.filter.cat.includes(p.category)) return false;
     if (S.filter.vendor.length && !S.filter.vendor.includes(p.brand)) return false;
     return passesCommonFilters(p, S.filter);
@@ -380,7 +418,13 @@ function updateCollectionTitle() {
     };
   }
 
-  if (S.currentPage === 'vendor' && S.currentVendorId) {
+  if (S.currentCollectionHandle && S.currentCollectionData) {
+    const collection = S.currentCollectionData;
+    title = String(collection.title || collection.name || collection.handle || S.currentCollectionHandle).toUpperCase();
+    description = String(collection.description || '');
+    showDesc = !!description;
+    bcLabel = collection.title || collection.name || collection.handle || S.currentCollectionHandle;
+  } else if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = 'BRAND';
     showDesc = false;
     const vendorName = S.currentVendor ? (S.currentVendor.name || S.currentVendor.brandName || S.currentVendor.brand) : null;
@@ -949,7 +993,8 @@ function renderCategoryProducts() {
   if(!S.currentCategoryPage || !DOM.categoryProductsGrid) return;
   restoreCollectionFilterBar();
   let cp;
-  if(S.currentCategoryPage==='parfum') cp=getCatFilteredProducts().filter(p=>p.category==='parfum');
+  if (S.currentCollectionHandle) cp=getCatFilteredProducts();
+  else if(S.currentCategoryPage==='parfum') cp=getCatFilteredProducts().filter(p=>p.category==='parfum');
   else if(S.currentCategoryPage==='jewelry') cp=getCatFilteredProducts().filter(p=>p.category==='jewelry');
   else if(S.currentCategoryPage==='sunglasses') cp=getCatFilteredProducts().filter(p=>p.category==='sunglasses'||p.id===LEATHER_POUCH_ID);
   else if(S.currentCategoryPage==='all-clothing') cp=getCatFilteredProducts().filter(p=>CLOTHING_CATEGORIES.includes(p.category));
