@@ -75,7 +75,7 @@
     var productCount = function (item) {
       return products.filter(function (product) { return product.status !== 'archived' && hasMember(product, item); }).length;
     };
-    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" placeholder="Search collections" oninput="window._filterAdminCollections()"></div></div>';
+    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" placeholder="Search collections" oninput="window._filterAdminCollections()"></div><div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'collections\')" aria-label="Collection actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="collections-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'collections\')"><i class="ph ph-check-circle"></i> Select items</button></div></div></div>';
     if (!items.length) {
       list.innerHTML = toolbar + '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-stack"></i></div><div class="orders-empty-title">No collections yet</div><div class="orders-empty-sub">Create your first collection to curate products across brands.</div></div>';
       return;
@@ -87,7 +87,7 @@
       var published = item.status === 'active' || item.published === true;
       var image = item.imageUrl ? '<img src="' + esc(item.imageUrl) + '" alt="" loading="lazy" class="pi-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="ph ph-image"></i></div>';
       var search = String(title + ' ' + (item.handle || item.slug || '') + ' ' + (item.description || '')).toLowerCase();
-      return '<div class="products-row" role="listitem" data-collection-search="' + esc(search) + '" onclick="window._editAdminCollection(\'' + esc(item.id) + '\')">' +
+      return '<div class="products-row admin-selectable-row" role="listitem" data-catalog-id="' + esc(item.id) + '" data-collection-search="' + esc(search) + '" onclick="window._catalogBulkToggle(event,\'collections\',\'' + esc(item.id) + '\',function(){window._editAdminCollection(\'' + esc(item.id) + '\')})"><span class="admin-select-check"><i class="ph ph-check"></i></span>' +
         image +
         '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div>' +
         '<div class="pi-meta">' + count + ' products · ' + brandCount + ' brands</div></div>' +
@@ -281,18 +281,18 @@
       .then(function () { showToast(publish ? 'Collection published' : 'Collection unpublished'); loadCollections(); })
       .catch(function (error) { showToast('Could not update collection: ' + error.message, 'error'); });
   };
-  window._deleteAdminCollection = function (id) {
+  window._deleteAdminCollection = function (id, skipConfirm) {
     var item = (window._adminCollectionsData || []).find(function (c) { return c.id === id; });
-    if (!item || !canManage(item)) { showToast('You do not have permission to delete this collection.', 'error'); return; }
+    if (!item || !canManage(item)) { showToast('You do not have permission to delete this collection.', 'error'); return Promise.reject(new Error('Permission denied')); }
     var title = item.title || item.name || item.handle || id;
     if (window._currentUserRole === 'VENDOR' && (window._allProducts || []).some(function (product) {
       if (product.status !== 'active') return false;
       return hasMember(product, item);
     })) {
       showToast('A Super Admin must delete this collection because it is assigned to published products.', 'error');
-      return;
+      return Promise.reject(new Error('Published products are assigned to this collection'));
     }
-    if (!confirm('Delete "' + title + '"? This removes the collection record and its membership from loaded products. This cannot be undone.')) return;
+    if (!skipConfirm && !confirm('Delete "' + title + '"? This removes the collection record and its membership from loaded products. This cannot be undone.')) return Promise.resolve(false);
     var handle = String(item.handle || item.slug || id).toLowerCase();
     var name = String(item.title || item.name || '').toLowerCase();
     var batch = db.batch(); batch.delete(collectionsRef.doc(id));
@@ -302,7 +302,7 @@
       var next = memberships.filter(function (value) { value = String(value || '').trim().toLowerCase(); return value !== handle && (!name || value !== name); });
       if (next.join('|') !== memberships.join('|')) batch.set(productsRef.doc(product.id), { collections: next }, { merge: true });
     });
-    batch.commit().then(function () { showToast('Collection deleted'); window._loadProducts(); loadCollections(); })
-      .catch(function (error) { showToast('Could not delete collection: ' + error.message, 'error'); });
+    return batch.commit().then(function () { if (!skipConfirm) { showToast('Collection deleted'); window._loadProducts(); loadCollections(); } return true; })
+      .catch(function (error) { if (!skipConfirm) showToast('Could not delete collection: ' + error.message, 'error'); throw error; });
   };
 })();

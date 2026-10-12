@@ -970,3 +970,26 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 #product-form .form-group input,#product-form .form-group select,#product-form .form-group textarea{border-radius:9px;min-height:42px;}
 #product-form .form-group textarea{min-height:88px;}
 @media(max-width:480px){.product-editor-header{grid-template-columns:36px minmax(0,1fr) auto;gap:6px;padding:6px 0 12px;margin-bottom:14px;}.product-editor-back,.product-editor-icon{width:34px;height:34px;font-size:16px;}.product-editor-save{height:34px;padding:0 12px;font-size:12px;}.product-editor-heading{font-size:14px;}#product-form>.card>.card-header{padding:14px 14px;}#product-form>.card>div:not(.card-header){padding-left:14px!important;padding-right:14px!important;}}
+
+
+/* Shopify-style bulk selection for catalog managers */
+.admin-bulk-actions-wrap{position:relative;flex-shrink:0}
+.admin-catalog-actions[hidden]{display:none!important}
+.admin-catalog-actions{position:absolute;right:0;top:calc(100% + 8px);z-index:1000;min-width:190px;padding:8px;background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.admin-catalog-actions-title{padding:8px 10px 10px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);margin-bottom:4px}
+.admin-catalog-actions button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 10px;border:0;border-radius:7px;background:transparent;text-align:left;font:inherit;color:var(--text);cursor:pointer}
+.admin-catalog-actions button:hover{background:var(--surface2)}
+.admin-selectable-row .admin-select-check{display:none}
+.admin-select-check{width:20px;height:20px;flex:0 0 20px;align-items:center;justify-content:center;border:1.5px solid var(--border-med,#aaa);border-radius:5px;color:#fff;background:transparent;margin-right:10px}
+.admin-catalog-selecting .admin-selectable-row .admin-select-check{display:inline-flex}
+.admin-select-check i{display:none}
+.admin-selectable-row.is-catalog-selected .admin-select-check{background:var(--text,#222);border-color:var(--text,#222)}
+.admin-selectable-row.is-catalog-selected .admin-select-check i{display:block}
+.admin-catalog-selection-bar{position:fixed;z-index:12000;left:16px;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#191919;color:#fff;border-radius:18px;box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.admin-catalog-selection-bar button{min-height:46px;border:0;border-radius:12px;padding:0 16px;font:inherit;font-weight:500;cursor:pointer}
+.admin-selection-count{display:flex;align-items:center;gap:8px;background:#333;color:#fff}
+.admin-selection-delete{background:#333;color:#fff}
+.admin-selection-delete:disabled{opacity:.45;cursor:not-allowed}
+.admin-select-check-cell{width:30px!important;padding-right:0!important}
+.admin-select-check-cell .admin-select-check{display:none;margin:0}
+.admin-catalog-selecting .admin-select-check-cell .admin-select-check{display:inline-flex}
