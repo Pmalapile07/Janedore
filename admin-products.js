@@ -1209,10 +1209,7 @@
     var stats = function(category) {
       var categoryProducts = products.filter(function(p) { return p.status !== 'archived' && p.category === category.slug; });
       var brands = {};
-      categoryProducts.forEach(function(p) {
-        var brand = String(p.brand || p.vendorName || '').trim();
-        if (brand) brands[brand.toLowerCase()] = true;
-      });
+      categoryProducts.forEach(function(p) { var brand = String(p.brand || p.vendorName || '').trim(); if (brand) brands[brand.toLowerCase()] = true; });
       var linkedCollections = collections.filter(function(collection) {
         if (collection.status === 'archived') return false;
         return categoryProducts.some(function(product) {
@@ -1228,18 +1225,20 @@
       });
       return { products:categoryProducts.length, brands:Object.keys(brands).length, collections:linkedCollections.length };
     };
-    var toolbar = '<div class="catalog-toolbar"><label class="catalog-search"><i class="ph ph-magnifying-glass"></i><input id="categories-admin-search" type="search" placeholder="Search categories" oninput="window._filterAdminCategories()" autocomplete="off"></label><span class="catalog-total" id="categories-admin-total">' + categories.length + ' categor' + (categories.length === 1 ? 'y' : 'ies') + '</span><button class="catalog-add-btn" type="button" onclick="window._showCategoryForm()" aria-label="Add category"><i class="ph ph-plus"></i></button></div>';
+    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="categories-admin-search" placeholder="Search categories" oninput="window._filterAdminCategories()"></div></div>';
     if (!categories.length) {
-      target.innerHTML = toolbar + '<div class="catalog-empty"><i class="ph ph-squares-four"></i><p>No categories yet</p><span>Add your first department when you are ready.</span></div>';
+      target.innerHTML = toolbar + '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-squares-four"></i></div><div class="orders-empty-title">No categories yet</div><div class="orders-empty-sub">Add your first department when you are ready.</div></div>';
       return;
     }
-    target.innerHTML = toolbar + '<div class="catalog-list" role="list">' + categories.map(function(category) {
+    target.innerHTML = toolbar + '<div class="products-list" role="list">' + categories.map(function(category) {
       var count = stats(category);
       var title = category.name || '';
       var search = String(title + ' ' + (category.slug || '')).toLowerCase();
-      var image = category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" loading="lazy">' : '<span class="catalog-thumb-empty"><i class="ph ph-image"></i></span>';
-      return '<article class="catalog-row" role="listitem" data-category-search="' + esc(search) + '"><div class="catalog-thumb">' + image + '</div><div class="catalog-row-main"><div class="catalog-row-title">' + esc(title) + '</div><div class="catalog-row-meta"><span>' + count.collections + ' collection' + (count.collections === 1 ? '' : 's') + '</span><span class="catalog-meta-dot">·</span><span>' + count.brands + ' brand' + (count.brands === 1 ? '' : 's') + '</span></div><div class="catalog-row-handle">' + count.products + ' tagged product' + (count.products === 1 ? '' : 's') + (category.featuredOnHomepage ? ' · Featured on homepage' : '') + '</div></div><div class="catalog-row-end"><button class="catalog-row-edit" type="button" aria-label="Edit ' + esc(title) + '" onclick="window._showCategoryForm(\'' + esc(category.id) + '\')"><i class="ph ph-caret-right"></i></button></div></article>';
-    }).join('') + '<div class="catalog-no-results" id="categories-admin-no-results" style="display:none;">No categories match your search.</div></div>';
+      var image = category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" loading="lazy" class="pi-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="ph ph-image"></i></div>';
+      return '<div class="products-row" role="listitem" data-category-search="' + esc(search) + '" onclick="window._showCategoryForm(\\'' + esc(category.id) + '\\')">' + image +
+        '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div><div class="pi-meta">' + count.collections + ' collections · ' + count.brands + ' brands</div>' +
+        '<div class="pi-meta">' + count.products + ' tagged products' + (category.featuredOnHomepage ? ' · Featured on homepage' : '') + '</div></div><i class="ph ph-caret-right" style="color:var(--muted);"></i></div>';
+    }).join('') + '<div class="orders-empty-sub" id="categories-admin-no-results" style="display:none;padding:18px 0;">No categories match your search.</div></div>';
   }
   window._filterAdminCategories = function() {
     var input = safeEl('categories-admin-search');
