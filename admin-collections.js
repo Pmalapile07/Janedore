@@ -107,8 +107,8 @@
       vendorId: isSuperAdmin() ? '' : window._currentVendorId
     };
     if (collectionId && !canManage(collection)) { showToast('You do not have permission to edit this collection.', 'error'); return; }
-    var products = window._allProducts || [];
     var vendorOnly = window._currentUserRole === 'VENDOR';
+    var products = (window._allProducts || []).filter(function (product) { return !vendorOnly || product.status !== 'active'; });
     wrap.innerHTML = '<form id="admin-collection-form" onsubmit="window._saveAdminCollection(event,\'' + esc(collectionId || '') + '\')" style="border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;background:var(--surface);">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;"><div style="font-weight:600;">' + (collectionId ? 'Edit collection' : 'New collection') + '</div><button type="button" class="btn btn-sm btn-ghost" onclick="window._cancelAdminCollectionForm()">Cancel</button></div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">' +
@@ -205,6 +205,7 @@
     var batch = db.batch();
     batch.set(ref, data, { merge: true });
     (window._allProducts || []).forEach(function (product) {
+      if (window._currentUserRole === 'VENDOR' && product.status === 'active') return;
       var memberships = Array.isArray(product.collections) ? product.collections.slice() : String(product.collections || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
       var oldHandle = old ? String(old.handle || old.slug || old.id).toLowerCase() : '';
       var oldTitle = old ? String(old.title || old.name || '').toLowerCase() : '';
@@ -238,6 +239,7 @@
     var name = String(item.title || item.name || '').toLowerCase();
     var batch = db.batch(); batch.delete(collectionsRef.doc(id));
     (window._allProducts || []).forEach(function (product) {
+      if (window._currentUserRole === 'VENDOR' && product.status === 'active') return;
       var memberships = Array.isArray(product.collections) ? product.collections.slice() : String(product.collections || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
       var next = memberships.filter(function (value) { value = String(value || '').trim().toLowerCase(); return value !== handle && (!name || value !== name); });
       if (next.join('|') !== memberships.join('|')) batch.set(productsRef.doc(product.id), { collections: next }, { merge: true });
