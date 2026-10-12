@@ -20,6 +20,10 @@
       collection.vendorId && collection.vendorId === window._currentVendorId);
   }
   function hasMember(product, collection) {
+    if (collection && collection.collectionType === 'automated') {
+      if (collection.automatedRule === 'sale') return typeof window._hasSalePrice === 'function' ? window._hasSalePrice(product) : Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.price || 0);
+      if (collection.automatedRule === 'newin') return typeof window._isProductNew === 'function' ? window._isProductNew(product) : false;
+    }
     var values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
     var handle = String(collection.handle || collection.slug || collection.id || '').toLowerCase();
     var title = String(collection.title || collection.name || '').toLowerCase();
@@ -96,7 +100,7 @@
     var collection = (window._adminCollectionsData || []).find(function (c) { return c.id === collectionId; }) || {
       title: '', handle: '', description: '', imageUrl: '', status: 'draft',
       sortOrder: ((window._adminCollectionsData || []).length + 1) * 10,
-      visibleInNavigation: false, featured: false, seoTitle: '', seoDescription: '',
+      collectionType: 'manual', automatedRule: 'sale', visibleInNavigation: false, featured: false, seoTitle: '', seoDescription: '',
       vendorId: isSuperAdmin() ? '' : window._currentVendorId
     };
     if (collectionId && !canManage(collection)) { showToast('You do not have permission to edit this collection.', 'error'); return; }
@@ -109,10 +113,11 @@
       '<div class="form-group"><label for="admin-collection-handle">URL handle</label><input id="admin-collection-handle" name="handle" required maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="' + esc(collection.handle || collection.slug || collection.id || '') + '" placeholder="the-weekend-edit"><small style="color:var(--muted);">Lowercase letters, numbers and hyphens.</small></div></div>' +
       '<div class="form-group"><label for="admin-collection-description">Description</label><textarea id="admin-collection-description" name="description" rows="3" maxlength="3000" placeholder="Tell customers what brings this edit together.">' + esc(collection.description || '') + '</textarea></div>' +
       '<div class="form-group"><label for="admin-collection-image">Collection image</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="admin-collection-image" name="imageUrl" value="' + esc(collection.imageUrl || '') + '" placeholder="Image URL" style="flex:1;min-width:180px;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._uploadAdminCollectionImage()">Upload image</button></div><div id="admin-collection-image-preview" style="margin-top:10px;">' + (collection.imageUrl ? '<img src="' + esc(collection.imageUrl) + '" alt="" style="max-width:220px;max-height:150px;object-fit:cover;border-radius:8px;">' : '') + '</div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;"><div class="form-group"><label for="admin-collection-type">Product selection</label><select id="admin-collection-type" name="collectionType" onchange="window._toggleAdminCollectionRule()"><option value="manual"' + ((collection.collectionType || 'manual') === 'manual' ? ' selected' : '') + '>Manual selection</option><option value="automated"' + (collection.collectionType === 'automated' ? ' selected' : '') + '>Automated rule</option></select></div><div class="form-group" id="admin-collection-rule-wrap"><label for="admin-collection-rule">Automated rule</label><select id="admin-collection-rule" name="automatedRule"><option value="sale"' + ((collection.automatedRule || 'sale') === 'sale' ? ' selected' : '') + '>Products on sale</option><option value="newin"' + (collection.automatedRule === 'newin' ? ' selected' : '') + '>New arrivals</option></select></div></div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;"><div class="form-group"><label for="admin-collection-status">Status</label><select id="admin-collection-status" name="status"' + (vendorOnly ? ' disabled' : '') + '><option value="draft"' + ((collection.status !== 'active' && collection.published !== true) ? ' selected' : '') + '>Draft</option><option value="active"' + ((collection.status === 'active' || collection.published === true) ? ' selected' : '') + '>Published</option></select>' + (vendorOnly ? '<small style="color:var(--muted);">Vendor collections remain drafts until approved.</small>' : '') + '</div><div class="form-group"><label for="admin-collection-order">Display order</label><input id="admin-collection-order" name="sortOrder" type="number" min="0" step="1" value="' + esc(collection.sortOrder == null ? 0 : collection.sortOrder) + '"></div></div>' +
       '<div style="display:flex;gap:18px;flex-wrap:wrap;margin:8px 0 18px;"><label style="display:flex;align-items:center;gap:8px;font-size:12px;"><input type="checkbox" name="visibleInNavigation"' + (collection.visibleInNavigation ? ' checked' : '') + '> Show in collection navigation / Quick Links</label><label style="display:flex;align-items:center;gap:8px;font-size:12px;"><input type="checkbox" name="featured"' + (collection.featured ? ' checked' : '') + '> Feature in storefront sections</label></div>' +
       '<div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;"><div style="font-weight:600;margin-bottom:12px;">Search engine listing</div><div class="form-group"><label for="admin-collection-seo-title">SEO title</label><input id="admin-collection-seo-title" name="seoTitle" maxlength="180" value="' + esc(collection.seoTitle || '') + '" placeholder="Defaults to collection name"></div><div class="form-group"><label for="admin-collection-seo-description">SEO description</label><textarea id="admin-collection-seo-description" name="seoDescription" rows="2" maxlength="320" placeholder="Short description for search results.">' + esc(collection.seoDescription || '') + '</textarea></div></div>' +
-      '<div style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;"><div style="font-weight:600;margin-bottom:8px;">Products</div><input id="admin-collection-product-search" placeholder="Search products by name or brand" oninput="window._filterAdminCollectionProducts()" style="margin-bottom:8px;width:100%;"><div id="admin-collection-products" style="max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' +
+      '<div id="admin-collection-manual-products" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;"><div style="font-weight:600;margin-bottom:8px;">Products</div><input id="admin-collection-product-search" placeholder="Search products by name or brand" oninput="window._filterAdminCollectionProducts()" style="margin-bottom:8px;width:100%;"><div id="admin-collection-products" style="max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' +
       (products.length ? products.map(function (p) {
         var label = (p.name || p.title || p.id) + ' ' + (p.brand || '');
         return '<label data-collection-product-row data-search="' + esc(label.toLowerCase()) + '" style="display:flex;align-items:center;gap:9px;padding:8px 4px;font-size:12px;border-bottom:1px solid var(--border);"><input type="checkbox" name="productIds" value="' + esc(p.id) + '"' + (hasMember(p, collection) ? ' checked' : '') + '><span style="flex:1;">' + esc(p.name || p.title || p.id) + '</span><span style="color:var(--muted);font-size:10px;">' + esc(p.brand || '') + '</span></label>';
@@ -120,6 +125,15 @@
       '</div><small style="color:var(--muted);display:block;margin-top:6px;">Selected products use the existing collections field. Vendor accounts only see products in their own scope.</small></div>' +
       '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px;"><button type="button" class="btn btn-ghost" onclick="window._cancelAdminCollectionForm()">Cancel</button><button type="submit" class="btn btn-primary">Save collection</button></div></form>';
   };
+  window._toggleAdminCollectionRule = function () {
+    var type = document.getElementById('admin-collection-type');
+    var rule = document.getElementById('admin-collection-rule-wrap');
+    var products = document.getElementById('admin-collection-manual-products');
+    var automated = !!type && type.value === 'automated';
+    if (rule) rule.style.display = automated ? '' : 'none';
+    if (products) products.style.display = automated ? 'none' : '';
+  };
+
   window._suggestCollectionHandle = function () {
     var title = document.getElementById('admin-collection-title');
     var handle = document.getElementById('admin-collection-handle');
@@ -162,11 +176,14 @@
     var handle = form.elements.handle.value.trim().toLowerCase();
     if (!title || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(handle)) { showToast('Enter a collection name and a valid URL handle.', 'error'); return; }
     if ((window._adminCollectionsData || []).some(function (c) { return (c.handle || c.slug || c.id) === handle && c.id !== collectionId; })) { showToast('That collection URL handle is already in use.', 'error'); return; }
-    var selectedIds = Array.prototype.slice.call(form.querySelectorAll('input[name="productIds"]:checked')).map(function (input) { return input.value; });
+    var collectionType = form.elements.collectionType.value === 'automated' ? 'automated' : 'manual';
+    var automatedRule = form.elements.automatedRule.value === 'newin' ? 'newin' : 'sale';
+    var selectedIds = collectionType === 'manual' ? Array.prototype.slice.call(form.querySelectorAll('input[name="productIds"]:checked')).map(function (input) { return input.value; }) : [];
     var chosen = {}; selectedIds.forEach(function (id) { chosen[id] = true; });
     var status = isSuperAdmin() ? form.elements.status.value : 'draft';
     var data = {
       title: title, name: title, handle: handle, slug: handle,
+      collectionType: collectionType, automatedRule: automatedRule,
       description: form.elements.description.value.trim(),
       imageUrl: form.elements.imageUrl.value.trim(),
       status: status, published: status === 'active',
