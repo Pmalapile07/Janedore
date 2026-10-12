@@ -187,16 +187,17 @@ function renderShopByCategory(shopByCategory) {
   if (!grid || typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return;
   firebase.firestore().collection('categories').get().then(function(snapshot) {
     if (!grid.isConnected) return;
-    const categories = snapshot.docs
+    const allCategories = snapshot.docs
       .map(function(doc) { return Object.assign({ id: doc.id }, doc.data()); })
-      .filter(function(category) { return category.featuredOnHomepage === true; })
-      .sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }); }).slice(0, 4);
+      .sort(function(a, b) { return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }); });
+    const featuredCategories = allCategories.filter(function(category) { return category.featuredOnHomepage === true; });
+    // Keep the homepage populated when categories exist but none have been
+    // explicitly featured yet. Featured categories still take priority.
+    const categories = (featuredCategories.length ? featuredCategories : allCategories).slice(0, 4);
 
     if (!categories.length) {
-      grid.innerHTML = Array.from({ length: 4 }, function() {
-        return '<div class="home-category-card category-empty-card" aria-hidden="true"><div class="home-category-img content-empty"></div></div>';
-      }).join('');
-      grid.style.display = '';
+      grid.innerHTML = '';
+      grid.style.display = 'none';
       return;
     }
 
