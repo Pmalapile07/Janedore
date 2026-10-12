@@ -292,7 +292,7 @@
       showToast('A Super Admin must delete this collection because it is assigned to published products.', 'error');
       return Promise.reject(new Error('Published products are assigned to this collection'));
     }
-    if (!confirm('Delete "' + title + '"? This removes the collection record and its membership from loaded products. This cannot be undone.')) return;
+    if (!skipConfirm && !confirm('Delete "' + title + '"? This removes the collection record and its membership from loaded products. This cannot be undone.')) return Promise.resolve(false);
     var handle = String(item.handle || item.slug || id).toLowerCase();
     var name = String(item.title || item.name || '').toLowerCase();
     var batch = db.batch(); batch.delete(collectionsRef.doc(id));
