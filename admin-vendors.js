@@ -83,11 +83,15 @@
     // SUPER_ADMIN or ADMIN — show vendor list
     var canEdit = isSuperAdmin();
 
+    var topActions = safeEl('top-nav-actions');
+    if (topActions) {
+      topActions.innerHTML =
+        '<div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'brands\')" aria-label="Brand actions" title="Actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="brands-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'brands\')"><i class="ph ph-check-circle"></i> Select items</button></div></div>';
+    }
     mc.innerHTML =
       '<div class="section-header" style="margin-bottom:12px;">' +
         '<div class="section-title">Brands</div>' +
         '<div style="display:flex;gap:8px;align-items:center;">' +
-          '<div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'brands\')" aria-label="Brand actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="brands-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'brands\')"><i class="ph ph-check-circle"></i> Select items</button></div></div>' +
           (canEdit
             ? '<button class="btn btn-sm btn-ghost" id="seed-vendors-btn" onclick="window._seedDefaultVendors()">Seed Default Brands</button>' +
               '<button class="btn btn-sm btn-primary" onclick="window._openVendorModal(null)">+ Add Brand</button>'

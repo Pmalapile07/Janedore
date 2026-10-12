@@ -1217,7 +1217,7 @@
     if (topActions) {
       topActions.innerHTML =
         '<button class="orders-create-btn" type="button" onclick="window._showCategoryForm()" aria-label="Add category" title="Add category"><i class="ph ph-plus-circle"></i></button>' +
-        '<button class="orders-actions-btn" type="button" onclick="window._loadAdminCategories()" aria-label="Refresh categories" title="Refresh categories"><i class="ph ph-dots-three"></i></button>';
+        '<div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'categories\')" aria-label="Category actions" title="Actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="categories-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'categories\')"><i class="ph ph-check-circle"></i> Select items</button><button type="button" onclick="window._loadAdminCategories()"><i class="ph ph-arrow-clockwise"></i> Refresh categories</button></div></div>';
     }
     mc.innerHTML = '<div id="categories-admin-form-wrap"></div><div id="categories-admin-list"></div>';
     window._loadAdminCategories();
@@ -1322,7 +1322,7 @@
       });
       return { products:categoryProducts.length, brands:Object.keys(brands).length, collections:linkedCollections.length };
     };
-    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="categories-admin-search" placeholder="Search categories" oninput="window._filterAdminCategories()"></div><div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'categories\')" aria-label="Category actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="categories-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'categories\')"><i class="ph ph-check-circle"></i> Select items</button></div></div></div>';
+    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="categories-admin-search" placeholder="Search categories" oninput="window._filterAdminCategories()"></div></div>';
     if (!categories.length) {
       target.innerHTML = toolbar + '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-squares-four"></i></div><div class="orders-empty-title">No categories yet</div><div class="orders-empty-sub">Add your first department when you are ready.</div></div>';
       return;

@@ -75,7 +75,7 @@
     var productCount = function (item) {
       return products.filter(function (product) { return product.status !== 'archived' && hasMember(product, item); }).length;
     };
-    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" placeholder="Search collections" oninput="window._filterAdminCollections()"></div><div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'collections\')" aria-label="Collection actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="collections-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'collections\')"><i class="ph ph-check-circle"></i> Select items</button></div></div></div>';
+    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" placeholder="Search collections" oninput="window._filterAdminCollections()"></div></div>';
     if (!items.length) {
       list.innerHTML = toolbar + '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-stack"></i></div><div class="orders-empty-title">No collections yet</div><div class="orders-empty-sub">Create your first collection to curate products across brands.</div></div>';
       return;
@@ -123,7 +123,7 @@
     if (topActions) {
       topActions.innerHTML =
         (canCreate ? '<button class="orders-create-btn" type="button" onclick="window._showAdminCollectionForm(null)" aria-label="Add collection" title="Add collection"><i class="ph ph-plus-circle"></i></button>' : '') +
-        '<button class="orders-actions-btn" type="button" onclick="window._refreshAdminCollections()" aria-label="Refresh collections" title="Refresh collections"><i class="ph ph-dots-three"></i></button>';
+        '<div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'collections\')" aria-label="Collection actions" title="Actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="collections-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'collections\')"><i class="ph ph-check-circle"></i> Select items</button><button type="button" onclick="window._refreshAdminCollections()"><i class="ph ph-arrow-clockwise"></i> Refresh collections</button></div></div>';
     }
     mc.innerHTML = '<div id="collections-admin-form-wrap"></div><div id="collections-admin-list"></div>';
     loadCollections();
