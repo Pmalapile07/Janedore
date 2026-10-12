@@ -1244,6 +1244,61 @@
       if (list) list.innerHTML = '<div class="catalog-empty"><p>Could not load categories</p><span>' + esc(err.message || 'Please try again.') + '</span><button class="btn btn-ghost" type="button" onclick="window._loadAdminCategories()">Retry</button></div>';
     });
   };
+
+  var _catalogBulk = { type: '', ids: [] };
+  window._catalogBulkStart = function(type) {
+    _catalogBulk = {type:type,ids:[]};
+    document.querySelectorAll('.admin-catalog-actions').forEach(function(m){m.hidden=true;});
+    document.body.classList.add('admin-catalog-selecting');
+    window._catalogBulkBar();
+  };
+  window._catalogBulkToggle = function(event,type,id,open) {
+    if (!document.body.classList.contains('admin-catalog-selecting')) { if(open) open(); return; }
+    event.preventDefault(); event.stopPropagation();
+    if (_catalogBulk.type !== type) return;
+    var i=_catalogBulk.ids.indexOf(id);
+    if(i<0)_catalogBulk.ids.push(id);else _catalogBulk.ids.splice(i,1);
+    var row=document.querySelector('[data-catalog-id="'+CSS.escape(id)+'"]');
+    if(row)row.classList.toggle('is-catalog-selected',i<0);
+    window._catalogBulkBar();
+  };
+  window._catalogBulkBar = function() {
+    var old=document.getElementById('admin-catalog-selection-bar');if(old)old.remove();
+    if(!document.body.classList.contains('admin-catalog-selecting'))return;
+    var bar=document.createElement('div');bar.id='admin-catalog-selection-bar';bar.className='admin-catalog-selection-bar';
+    bar.innerHTML='<button type="button" class="admin-selection-count" onclick="window._catalogBulkCancel()"><i class="ph ph-x-circle"></i> '+_catalogBulk.ids.length+'</button><button type="button" class="admin-selection-delete" '+(!_catalogBulk.ids.length?'disabled':'')+' onclick="window._catalogBulkDelete()">Delete</button>';
+    document.body.appendChild(bar);
+  };
+  window._catalogBulkCancel = function() {
+    document.body.classList.remove('admin-catalog-selecting');
+    document.querySelectorAll('.is-catalog-selected').forEach(function(r){r.classList.remove('is-catalog-selected');});
+    var bar=document.getElementById('admin-catalog-selection-bar');if(bar)bar.remove();
+    _catalogBulk={type:'',ids:[]};
+  };
+  window._catalogBulkDelete = function() {
+    var ids=_catalogBulk.ids.slice(),type=_catalogBulk.type;
+    if(!ids.length)return;
+    if(type==='categories') {
+      if(window._currentUserRole!=='SUPER_ADMIN'){showToast('Only Super Admins can delete categories.','error');return;}
+      var items=(window._adminCategoriesData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
+      if(!confirm('Delete '+items.length+' selected categor'+(items.length===1?'y':'ies')+'? Products assigned to them will be left uncategorized. This cannot be undone.'))return;
+      var batch=window._adminDB.batch();
+      items.forEach(function(item){batch.delete(categoriesRef.doc(item.id));(window._allProducts||[]).forEach(function(pr){if(pr.category===item.slug)batch.set(productsRef.doc(pr.id),{category:''},{merge:true});});});
+      batch.commit().then(function(){(window._allProducts||[]).forEach(function(pr){if(items.some(function(it){return pr.category===it.slug;}))pr.category='';});showToast('Selected categories deleted');window._catalogBulkCancel();window._loadProducts();window._loadAdminCategories();}).catch(function(e){showToast('Could not delete categories: '+e.message,'error');});
+    } else if(type==='collections') {
+      var items=(window._adminCollectionsData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
+      if(!confirm('Delete '+items.length+' selected collection'+(items.length===1?'':'s')+'? This cannot be undone.'))return;
+      Promise.all(items.map(function(item){return window._deleteAdminCollection(item.id,true);})).then(function(){showToast('Selected collections deleted');window._catalogBulkCancel();window._loadProducts();window._loadAdminCollections();}).catch(function(e){showToast('Could not delete collections: '+(e.message||'Please try again.'),'error');});
+    } else if(type==='brands') {
+      if(window._currentUserRole!=='SUPER_ADMIN'){showToast('Only Super Admin can delete brands.','error');return;}
+      var items=(window._vendorsData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
+      if(!confirm('Delete '+items.length+' selected brand'+(items.length===1?'':'s')+'? This cannot be undone.'))return;
+      Promise.all(items.map(function(item){return window._adminDB.collection('vendors').doc(item.id).delete();})).then(function(){showToast('Selected brands deleted');window._catalogBulkCancel();window._renderVendorsTab();}).catch(function(e){showToast('Could not delete brands: '+e.message,'error');});
+    }
+  };
+  window._toggleCatalogActions = function(event,type){event.stopPropagation();var menu=document.getElementById(type+'-actions-menu');if(menu)menu.hidden=!menu.hidden;};
+  document.addEventListener('click',function(event){if(!event.target.closest('.admin-bulk-actions-wrap'))document.querySelectorAll('.admin-catalog-actions').forEach(function(m){m.hidden=true;});});
+
   function renderAdminCategoriesList(categories) {
     var target = safeEl('categories-admin-list'); if (!target) return;
     var products = window._allProducts || [];
@@ -1267,7 +1322,7 @@
       });
       return { products:categoryProducts.length, brands:Object.keys(brands).length, collections:linkedCollections.length };
     };
-    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="categories-admin-search" placeholder="Search categories" oninput="window._filterAdminCategories()"></div></div>';
+    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="categories-admin-search" placeholder="Search categories" oninput="window._filterAdminCategories()"></div><div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'categories\')" aria-label="Category actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="categories-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'categories\')"><i class="ph ph-check-circle"></i> Select items</button></div></div></div>';
     if (!categories.length) {
       target.innerHTML = toolbar + '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-squares-four"></i></div><div class="orders-empty-title">No categories yet</div><div class="orders-empty-sub">Add your first department when you are ready.</div></div>';
       return;
@@ -1277,7 +1332,7 @@
       var title = category.name || '';
       var search = String(title + ' ' + (category.slug || '')).toLowerCase();
       var image = category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" loading="lazy" class="pi-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="ph ph-image"></i></div>';
-      return '<div class="products-row" role="listitem" data-category-search="' + esc(search) + '" onclick="window._showCategoryForm(\'' + esc(category.id) + '\')">' + image +
+      return '<div class="products-row admin-selectable-row" role="listitem" data-catalog-id="' + esc(category.id) + '" data-category-search="' + esc(search) + '" onclick="window._catalogBulkToggle(event,\'categories\',\'' + esc(category.id) + '\',function(){window._showCategoryForm(\'' + esc(category.id) + '\')})"><span class="admin-select-check"><i class="ph ph-check"></i></span>' + image +
         '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div><div class="pi-meta">' + count.collections + ' collections · ' + count.brands + ' brands</div>' +
         '<div class="pi-meta">' + count.products + ' tagged products' + (category.featuredOnHomepage ? ' · Featured on homepage' : '') + '</div></div><i class="ph ph-caret-right" style="color:var(--muted);"></i></div>';
     }).join('') + '<div class="orders-empty-sub" id="categories-admin-no-results" style="display:none;padding:18px 0;">No categories match your search.</div></div>';
