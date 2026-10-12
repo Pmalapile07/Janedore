@@ -75,6 +75,7 @@ function getCategoryFilterScope() {
     return S.currentVendor ? [...new Set(getVendorBaseProducts(S.currentVendor).map(p => p.category).filter(Boolean))] : [];
   }
   if (S.currentPage !== 'category' || !S.currentCategoryPage) return null;
+  if (S.currentCollectionHandle) return [...new Set(PRODUCTS.filter(function (p) { return productBelongsToCollection(p, S.currentCollectionData); }).map(function (p) { return p.category; }).filter(Boolean))];
   if (S.currentCategoryPage === 'all-clothing') return CLOTHING_CATEGORIES;
   if (S.currentCategoryPage === 'all-accessories') return ACCESSORY_CATEGORIES;
   return [S.currentCategoryPage];
@@ -225,15 +226,17 @@ function getCatFilteredProducts() {
         });
       if (!productBelongsToCollection(p, collection)) return false;
     }
-    if (p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
+    if (p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses' && !S.currentCollectionHandle) return false;
     if (S.catFilter.vendor.length && !S.catFilter.vendor.includes(p.brand)) return false;
 
-    if (isAllClothing) {
-      if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
-    } else if (isAllAccessories) {
-      if (!ACCESSORY_CATEGORIES.includes(p.category)) return false;
-    } else if (!S.currentCollectionHandle && !isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
-      return false;
+    if (!S.currentCollectionHandle) {
+      if (isAllClothing) {
+        if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
+      } else if (isAllAccessories) {
+        if (!ACCESSORY_CATEGORIES.includes(p.category)) return false;
+      } else if (!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
+        return false;
+      }
     }
 
     // Narrow further to specific subcategories picked in the filter panel
@@ -456,7 +459,7 @@ function updateCollectionTitle() {
 
   if (descEl) {
     if (showDesc && description) {
-      descEl.innerHTML = `<p>${description}</p>`;
+      descEl.innerHTML = `<p>${escapeHTML(description)}</p>`;
       descEl.style.display = 'block';
     } else {
       descEl.style.display = 'none';
