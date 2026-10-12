@@ -1187,7 +1187,13 @@
   window._renderCategoriesTab = function() {
     var mc = safeEl('main-content'); if (!mc) return;
     if (window._currentUserRole !== 'SUPER_ADMIN') { mc.innerHTML = '<div class="empty-state"><p>Only Super Admins can manage categories.</p></div>'; return; }
-    mc.innerHTML = '<div class="catalog-page-intro"><p>Manage the departments customers browse across JANEDORE.</p></div><div id="categories-admin-form-wrap"></div><div id="categories-admin-list"></div>';
+    var topActions = safeEl('top-nav-actions');
+    if (topActions) {
+      topActions.innerHTML =
+        '<button class="orders-create-btn" type="button" onclick="window._showCategoryForm()" aria-label="Add category" title="Add category"><i class="ph ph-plus-circle"></i></button>' +
+        '<button class="orders-actions-btn" type="button" onclick="window._loadAdminCategories()" aria-label="Refresh categories" title="Refresh categories"><i class="ph ph-dots-three"></i></button>';
+    }
+    mc.innerHTML = '<div id="categories-admin-form-wrap"></div><div id="categories-admin-list"></div>';
     window._loadAdminCategories();
   };
   window._loadAdminCategories = function() {
