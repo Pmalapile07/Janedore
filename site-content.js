@@ -148,7 +148,13 @@ function renderCollectionQuickLinks() {
   window._loadPublishedCollections().then(function (collections) {
     renderFeaturedCollections(collections);
     if (!row.isConnected) return;
-    const visible = (collections || []).filter(function (item) { return item.visibleInNavigation === true; })
+    const published = collections || [];
+    ['sale', 'newin'].forEach(function (handle) {
+      const staticLink = row.querySelector('[data-nav-page="' + handle + '"]');
+      const dynamicRecord = published.some(function (item) { return String(item.handle || item.slug || item.id) === handle; });
+      if (staticLink) staticLink.style.display = dynamicRecord ? 'none' : '';
+    });
+    const visible = published.filter(function (item) { return item.visibleInNavigation === true; })
       .sort(function (a, b) {
         return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
           String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
