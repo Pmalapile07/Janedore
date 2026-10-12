@@ -232,7 +232,7 @@ function getCatFilteredProducts() {
       if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
     } else if (isAllAccessories) {
       if (!ACCESSORY_CATEGORIES.includes(p.category)) return false;
-    } else if (!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
+    } else if (!S.currentCollectionHandle && !isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
       return false;
     }
 
