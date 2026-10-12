@@ -392,6 +392,7 @@ function updateCollectionTitle() {
 
   let title = 'ALL PRODUCTS';
   let description = '';
+  let collectionImage = '';
   let showDesc = false;
   let bcLabel = title;
 
@@ -429,7 +430,8 @@ function updateCollectionTitle() {
     const collection = S.currentCollectionData;
     title = String(collection.title || collection.name || collection.handle || S.currentCollectionHandle).toUpperCase();
     description = String(collection.description || '');
-    showDesc = !!description;
+    collectionImage = String(collection.imageUrl || '');
+    showDesc = !!description || !!collectionImage;
     bcLabel = collection.title || collection.name || collection.handle || S.currentCollectionHandle;
   } else if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = 'BRAND';
@@ -463,8 +465,10 @@ function updateCollectionTitle() {
 
   if (descEl) {
     if (showDesc && description) {
-      descEl.innerHTML = `<p>${escapeHTML(description)}</p>`;
-      descEl.style.display = 'block';
+      const imageMarkup = collectionImage && safeImageURL(collectionImage) !== PLACEHOLDER_IMAGE ? `<img src="${escapeHTML(safeImageURL(collectionImage))}" alt="" loading="lazy" style="width:100%;max-height:320px;object-fit:cover;display:block;margin:0 0 14px;">` : '';
+      const descriptionMarkup = description ? `<p>${escapeHTML(description)}</p>` : '';
+      descEl.innerHTML = imageMarkup + descriptionMarkup;
+      descEl.style.display = imageMarkup || descriptionMarkup ? 'block' : 'none';
     } else {
       descEl.style.display = 'none';
     }
