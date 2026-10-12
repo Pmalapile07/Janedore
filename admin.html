@@ -142,7 +142,7 @@
     </div>
     <div class="more-menu-sublist" id="more-sub-products">
       <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('categories')">Categories</button>
-      <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Collections isn\'t available yet')">Collections</button>
+      <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('collections')">Collections</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Inventory isn\'t available yet')">Inventory</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Purchase orders isn\'t available yet')">Purchase orders</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._showToast('Gift cards isn\'t available yet')">Gift cards</button>
@@ -239,6 +239,7 @@ fetch('/api/cloudinary-config')
 
 <script src="admin-dashboard.js"></script>
 <script src="admin-products.js"></script>
+<script src="admin-collections.js"></script>
 <script src="admin-orders.js"></script>
 <script src="admin-customers.js"></script>
 <script src="admin-reviews.js"></script>
