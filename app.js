@@ -508,6 +508,8 @@ function scrollNavQuickLinks(direction) {
 }
 
 function navigateTo(page, replaceUrl) {
+  S.currentCollectionHandle = null;
+  S.currentCollectionData = null;
   ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
@@ -634,11 +636,11 @@ function goToProduct(productId, replaceUrl) {
   renderProductPage(product); updateChatVisibility();
 }
 
-function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCategory(S.previousCollectionPage); else navigateTo('products'); }
+function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page"); if(S.previousCollectionPage&&S.previousCollectionPage!=='products') navigateToCollection(S.previousCollectionPage); else navigateTo('products'); }
 
 function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
-function navigateToSale() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.newInMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSale() { S.currentCollectionHandle = null; S.currentCollectionData = null; ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.newInMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 // Same shape as navigateToSale() — filters PRODUCTS to genuinely new
 // items (renderNewInProducts(), collection.js — isProductNew(),
@@ -647,7 +649,7 @@ function navigateToSale() { ++pageNavGeneration; closeFilterPanel(); closeSearch
 // called renderAllProducts(), which sorted the WHOLE catalog
 // newest-first without filtering anything out — indistinguishable
 // from All Products once you scrolled past the first few items.
-function navigateToNewIn() { ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.newInMode = true; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'newin'; renderCollectionSortingTabs(); renderNewInProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToNewIn() { S.currentCollectionHandle = null; S.currentCollectionData = null; ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.newInMode = true; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'newin'; renderCollectionSortingTabs(); renderNewInProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToLogin(replaceUrl) {
   ++pageNavGeneration;
