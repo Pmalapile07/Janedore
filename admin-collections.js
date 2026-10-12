@@ -119,11 +119,19 @@
       return;
     }
     var canCreate = isSuperAdmin() || window._currentUserRole === 'VENDOR';
-    mc.innerHTML = '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px;">' +
-      '<div><div class="section-title" style="margin-bottom:4px;">Collections</div><p style="font-size:12px;color:var(--muted);max-width:520px;">Curate products into customer-facing edits. Collections stay separate from permanent product categories.</p></div>' +
-      (canCreate ? '<button class="btn btn-primary" type="button" onclick="window._showAdminCollectionForm(null)"><i class="ph-light ph-plus" style="margin-right:5px;"></i> Create collection</button>' : '') +
-      '</div><div id="collections-admin-form-wrap"></div><div id="collections-admin-list"></div>';
+    var topActions = document.getElementById('top-nav-actions');
+    if (topActions) {
+      topActions.innerHTML =
+        (canCreate ? '<button class="orders-create-btn" type="button" onclick="window._showAdminCollectionForm(null)" aria-label="Add collection" title="Add collection"><i class="ph ph-plus-circle"></i></button>' : '') +
+        '<button class="orders-actions-btn" type="button" onclick="window._refreshAdminCollections()" aria-label="Refresh collections" title="Refresh collections"><i class="ph ph-dots-three"></i></button>';
+    }
+    mc.innerHTML = '<div id="collections-admin-form-wrap"></div><div id="collections-admin-list"></div>';
     loadCollections();
+  };
+  window._refreshAdminCollections = function() {
+    window._adminCollectionsData = null;
+    loadCollections();
+  };
   };
   window._showAdminCollectionForm = function (collectionId) {
     var wrap = document.getElementById('collections-admin-form-wrap');
