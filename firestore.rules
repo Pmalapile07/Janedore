@@ -338,6 +338,34 @@ service cloud.firestore {
     }
 
     // =========================================================
+    // COLLECTIONS (published storefront records + scoped management)
+    // =========================================================
+
+    match /collections/{collectionId} {
+      // Public storefront queries must constrain status == 'active'.
+      // Staff can inspect all records; vendors can inspect their own.
+      allow read: if resource.data.status == 'active' ||
+        isPlatformStaff() ||
+        (isVendor() && resource.data.vendorId == adminDoc().vendorId);
+
+      allow create: if isSuperAdmin() ||
+        (isVendor() &&
+         request.resource.data.vendorId == adminDoc().vendorId &&
+         request.resource.data.status != 'active' &&
+         request.resource.data.published != true);
+
+      allow update: if isSuperAdmin() ||
+        (isVendor() &&
+         resource.data.vendorId == adminDoc().vendorId &&
+         request.resource.data.vendorId == adminDoc().vendorId &&
+         request.resource.data.status != 'active' &&
+         request.resource.data.published != true);
+
+      allow delete: if isSuperAdmin() ||
+        (isVendor() && resource.data.vendorId == adminDoc().vendorId);
+    }
+
+    // =========================================================
     // CATEGORIES (storefront reads; Super Admin manages)
     // =========================================================
 
