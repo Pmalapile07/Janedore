@@ -1364,8 +1364,33 @@ app.get('/products/:slug', async (req, res, next) => {
 
 app.get('/collections/:cat', async (req, res, next) => {
   try {
-    if (!CATEGORY_META[req.params.cat]) return next(); // unknown category — let the normal SPA handle it
-    const html = await renderIndexHtml(h => injectCollectionMeta(h, req.params.cat));
+    const handle = req.params.cat;
+    const snapshot = await adminDb.collection('collections')
+      .where('handle', '==', handle)
+      .where('status', '==', 'active')
+      .limit(1).get();
+    if (!snapshot.empty) {
+      const collection = snapshot.docs[0].data() || {};
+      if (collection.published === false) return next();
+      const titleText = String(collection.seoTitle || collection.title || collection.name || handle);
+      const descriptionText = String(collection.seoDescription || collection.description || '');
+      const canonicalUrl = `${SITE_URL}/collections/${encodeURIComponent(handle)}`;
+      const title = `${titleText} | JANEDORE`;
+      const metaBlock = `
+        <title>${escapeHtml(title)}</title>
+        <meta name="description" content="${escapeHtml(descriptionText)}">
+        <link rel="canonical" href="${canonicalUrl}">
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="${escapeHtml(title)}">
+        <meta property="og:description" content="${escapeHtml(descriptionText)}">
+        <meta property="og:url" content="${canonicalUrl}">
+      </head>`;
+      const html = await renderIndexHtml(h => replaceHeadTags(h, metaBlock));
+      res.send(html);
+      return;
+    }
+    if (!CATEGORY_META[handle]) return next();
+    const html = await renderIndexHtml(h => injectCollectionMeta(h, handle));
     res.send(html);
   } catch (e) {
     console.error('[COLLECTION ROUTE] Error:', e.message);
