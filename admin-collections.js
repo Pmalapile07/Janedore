@@ -87,7 +87,7 @@
       var published = item.status === 'active' || item.published === true;
       var image = item.imageUrl ? '<img src="' + esc(item.imageUrl) + '" alt="" loading="lazy" class="pi-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="ph ph-image"></i></div>';
       var search = String(title + ' ' + (item.handle || item.slug || '') + ' ' + (item.description || '')).toLowerCase();
-      return '<div class="products-row" role="listitem" data-collection-search="' + esc(search) + '" onclick="window._editAdminCollection(\\'' + esc(item.id) + '\\')">' +
+      return '<div class="products-row" role="listitem" data-collection-search="' + esc(search) + '" onclick="window._editAdminCollection(\'' + esc(item.id) + '\')">' +
         image +
         '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div>' +
         '<div class="pi-meta">' + count + ' products · ' + brandCount + ' brands</div></div>' +
