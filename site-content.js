@@ -28,6 +28,7 @@ function goToSiteLink(link) {
   const value = (link.value || '').trim();
   if (link.type === 'home') { navigateTo('home'); return; }
   if (link.type === 'category' && value) { navigateToCategory(value); return; }
+  if (link.type === 'collection' && value) { navigateToCollection(value); return; }
   if (link.type === 'vendor' && value) { navigateToVendor(value); return; }
   if (link.type === 'product' && value) {
     const product = PRODUCTS.find(p => p.id === value);
