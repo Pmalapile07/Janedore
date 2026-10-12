@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Helvetica';
+  src: url('/Helvetica.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Vertical rhythm only here — left/right lives on .home-categories-grid
    itself below (same self-padding pattern as #home-shop-clothing/
    #home-shop-brand's own grids), so it isn't double-counted on top of
@@ -88,8 +96,9 @@
 .home-categories-wrap { display: flex; flex-direction: column; gap: 0; }
 .home-categories-header { text-align: center; margin-bottom: 0; }
 .home-categories-title {
-  font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight); text-transform: none !important; color: #111; margin-bottom: 8px;
+  font-family: 'Helvetica', sans-serif;
+  font-size: var(--ui-font-size); letter-spacing: normal;
+  font-weight: 400; text-transform: none !important; color: #111; margin-bottom: 8px;
 }
 .home-categories-subtitle {
   font-size: var(--body-font-size); font-weight: var(--body-font-weight);
@@ -122,15 +131,15 @@
   text-transform: uppercase; color: #fff; text-align: center;
 }
 .arrivals-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-.arrivals-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; }
+.arrivals-title { font-family: 'Helvetica', sans-serif; font-size: var(--ui-font-size); letter-spacing: normal; font-weight: 400; text-transform: none; }
 .arrivals-view-all { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #555; background: none; padding-bottom: 1px; transition: color 0.2s, border-color 0.2s; border: none; border-bottom: 1px solid #555; cursor: pointer; display: inline-block; }
 .arrivals-view-all:hover { color: #111; border-color: #111; }
 .home-categories-title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Helvetica', sans-serif;
   font-weight: 400;
   font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  letter-spacing: normal;
+  text-transform: none;
   color: #111;
   margin-bottom: 4px;
 }
