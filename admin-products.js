@@ -1192,10 +1192,11 @@
   };
   window._loadAdminCategories = function() {
     var list = safeEl('categories-admin-list'); if (list) list.innerHTML = '<div class="catalog-loading">Loading categories…</div>';
-    categoriesRef.get().then(function(snap) {
-      var categories = snap.docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
+    Promise.all([categoriesRef.get(), window._adminDB.collection('collections').get()]).then(function(results) {
+      var categories = results[0].docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
       categories.sort(function(a,b) { return String(a.name || '').localeCompare(String(b.name || '')); });
       window._adminCategoriesData = categories;
+      window._adminCollectionsData = results[1].docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
       renderAdminCategoriesList(categories);
     }).catch(function(err) {
       if (list) list.innerHTML = '<div class="catalog-empty"><p>Could not load categories</p><span>' + esc(err.message || 'Please try again.') + '</span><button class="btn btn-ghost" type="button" onclick="window._loadAdminCategories()">Retry</button></div>';
