@@ -608,12 +608,63 @@
       '<div style="font-size:11.5px;color:var(--muted);line-height:1.4;">' + esc(desc || 'Add a meta description to control how this product appears in search results.') + '</div>';
   };
 
+  function productCollectionValues(product) {
+    return Array.isArray(product && product.collections) ? product.collections.slice() :
+      String(product && product.collections || '').split(',').map(function (value) { return value.trim(); }).filter(Boolean);
+  }
+
+  function renderProductCollectionOptions(product) {
+    var items = window._adminCollectionsData || [];
+    var values = productCollectionValues(product);
+    var keys = {};
+    items.forEach(function (item) {
+      keys[String(item.handle || item.slug || item.id).toLowerCase()] = true;
+      keys[String(item.title || item.name || '').toLowerCase()] = true;
+    });
+    var legacy = values.filter(function (value) { return !keys[String(value).trim().toLowerCase()]; });
+    var checks = items.slice().sort(function (a, b) {
+      return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
+        String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
+    }).map(function (item) {
+      var handle = String(item.handle || item.slug || item.id);
+      var title = String(item.title || item.name || handle);
+      var checked = values.some(function (value) {
+        value = String(value).trim().toLowerCase();
+        return value === handle.toLowerCase() || value === title.toLowerCase();
+      });
+      return '<label style="display:flex;align-items:center;gap:8px;padding:7px 2px;font-size:12px;"><input type="checkbox" name="collectionHandles" value="' + esc(handle) + '"' + (checked ? ' checked' : '') + '><span style="flex:1;">' + esc(title) + '</span><span style="color:var(--muted);font-size:10px;">' + (item.status === 'active' ? 'Published' : 'Draft') + '</span></label>';
+    }).join('');
+    return '<div class="form-group" style="padding:0;"><label>Collections</label><input type="hidden" name="legacyCollections" value="' + esc(JSON.stringify(legacy)) + '"><div style="border:1px solid var(--border);border-radius:8px;padding:8px 12px;max-height:190px;overflow:auto;">' +
+      (checks || '<div style="font-size:12px;color:var(--muted);padding:6px 0;">No collections created yet.</div>') +
+      '</div><small style="font-size:10px;color:var(--muted);">Choose from the shared Collections manager. Categories remain separate.</small>' +
+      (legacy.length ? '<small style="display:block;font-size:10px;color:var(--muted);margin-top:5px;">' + legacy.length + ' existing unlinked collection value(s) will be preserved.</small>' : '') + '</div>';
+  }
+
   // ── OPEN PRODUCT FORM ────────────────────────────────────────
 
   window._openNewProductModal = function() { window._openProductForm(null); };
   window._openProductModal    = function(id) { window._openProductForm(id); };
 
   window._openProductForm = function(productOrId) {
+    if (!window._adminCollectionsData) {
+      if (!window._adminCollectionsLoadPromise) {
+        var collectionQuery = window._adminDB.collection('collections');
+        if (window._currentUserRole === 'VENDOR' && window._currentVendorId) {
+          collectionQuery = collectionQuery.where('vendorId', '==', window._currentVendorId);
+        }
+        window._adminCollectionsLoadPromise = collectionQuery.get().then(function (snapshot) {
+          window._adminCollectionsData = snapshot.docs.map(function (doc) { return Object.assign({id:doc.id}, doc.data()); });
+          return window._adminCollectionsData;
+        }).catch(function (error) {
+          window._adminCollectionsLoadPromise = null;
+          showToast('Could not load collections: ' + (error.message || 'Please try again.'), 'error');
+          window._adminCollectionsData = [];
+          return [];
+        });
+      }
+      window._adminCollectionsLoadPromise.then(function () { window._openProductForm(productOrId); });
+      return;
+    }
     var allProducts = window._allProducts || [];
     var p;
     if (typeof productOrId === 'string') {
@@ -778,7 +829,7 @@
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;">' + catOptions + '</select></div>' +
           '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Collections <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="collections" value="' + esc((p.collections||[]).join(', ')) + '" placeholder="e.g. Summer 2026, New arrivals"></div>' +
+          renderProductCollectionOptions(p) +
           '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
         '</div>' +
       '</div>' +
@@ -1077,7 +1128,12 @@
       onlineStore:          form.onlineStore ? form.onlineStore.value === 'true' : true,
       seoTitle:             form.seoTitle ? form.seoTitle.value : '',
       metaDescription:      form.metaDescription ? form.metaDescription.value : '',
-      collections:          form.collections ? form.collections.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [],
+      collections:          (function() {
+        var selected = Array.prototype.slice.call(form.querySelectorAll('input[name="collectionHandles"]:checked')).map(function(input) { return input.value; });
+        var legacy = [];
+        try { legacy = JSON.parse((form.elements.legacyCollections || {}).value || '[]'); } catch (_) {}
+        return legacy.concat(selected.filter(function(value) { return legacy.indexOf(value) === -1; }));
+      })(),
       tags:                 form.tags.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean),
       createdAt:            existingProduct ? (existingProduct.createdAt || new Date().toISOString()) : new Date().toISOString(),
       updatedAt:            new Date().toISOString(),
