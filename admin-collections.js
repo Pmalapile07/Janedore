@@ -75,26 +75,25 @@
     var productCount = function (item) {
       return products.filter(function (product) { return product.status !== 'archived' && hasMember(product, item); }).length;
     };
-    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" type="search" placeholder="Search collections" oninput="window._filterAdminCollections()" autocomplete="off"></div><span class="catalog-total" id="collections-admin-total">' + items.length + ' collections</span></div>';
+    var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" placeholder="Search collections" oninput="window._filterAdminCollections()"></div></div>';
     if (!items.length) {
-      list.innerHTML = toolbar + '<div class="catalog-empty"><i class="ph ph-stack"></i><p>No collections yet</p><span>Create your first collection to curate products across brands.</span></div>';
+      list.innerHTML = toolbar + '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-stack"></i></div><div class="orders-empty-title">No collections yet</div><div class="orders-empty-sub">Create your first collection to curate products across brands.</div></div>';
       return;
     }
-    list.innerHTML = toolbar + '<div class="products-list catalog-list" role="list">' + items.map(function (item) {
+    list.innerHTML = toolbar + '<div class="products-list" role="list">' + items.map(function (item) {
       var count = productCount(item);
       var brandCount = brandsFor(item);
       var title = item.title || item.name || item.handle || item.id;
       var published = item.status === 'active' || item.published === true;
-      var image = item.imageUrl ? '<img src="' + esc(item.imageUrl) + '" alt="" loading="lazy">' : '<span class="catalog-thumb-empty"><i class="ph ph-image"></i></span>';
+      var image = item.imageUrl ? '<img src="' + esc(item.imageUrl) + '" alt="" loading="lazy" class="pi-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="ph ph-image"></i></div>';
       var search = String(title + ' ' + (item.handle || item.slug || '') + ' ' + (item.description || '')).toLowerCase();
-      return '<article class="catalog-row" role="listitem" data-collection-search="' + esc(search) + '">' +
-        '<div class="catalog-thumb">' + image + '</div>' +
-        '<div class="catalog-row-main"><div class="catalog-row-title">' + esc(title) + '</div>' +
-        '<div class="catalog-row-meta"><span>' + count + ' product' + (count === 1 ? '' : 's') + '</span><span class="catalog-meta-dot">·</span><span>' + brandCount + ' brand' + (brandCount === 1 ? '' : 's') + '</span></div>' +
-        '<div class="catalog-row-handle">/collections/' + esc(item.handle || item.slug || item.id) + '</div></div>' +
-        '<div class="catalog-row-end"><span class="catalog-status ' + (published ? 'is-published' : 'is-draft') + '">' + (published ? 'Published' : 'Draft') + '</span>' +
-        '<button class="catalog-row-edit" type="button" aria-label="Edit ' + esc(title) + '" onclick="window._editAdminCollection(\'' + esc(item.id) + '\')"><i class="ph ph-caret-right"></i></button></div></article>';
-    }).join('') + '<div class="catalog-no-results" id="collections-admin-no-results" style="display:none;">No collections match your search.</div></div>';
+      return '<div class="products-row" role="listitem" data-collection-search="' + esc(search) + '" onclick="window._editAdminCollection(\\'' + esc(item.id) + '\\')">' +
+        image +
+        '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div>' +
+        '<div class="pi-meta">' + count + ' products · ' + brandCount + ' brands</div></div>' +
+        '<span class="badge" style="' + (published ? 'background:var(--surface2);color:var(--text2);' : 'background:var(--surface2);color:var(--muted);') + '">' + (published ? 'Active' : 'Draft') + '</span>' +
+      '</div>';
+    }).join('') + '<div class="orders-empty-sub" id="collections-admin-no-results" style="display:none;padding:18px 0;">No collections match your search.</div></div>';
   }
   window._filterAdminCollections = function () {
     var input = document.getElementById('collections-admin-search');
