@@ -359,7 +359,7 @@
   // ─── TAB NAVIGATION ──────────────────────────────────────────
 
   var TAB_TITLES = {
-    dashboard: '', products: 'Products', categories: 'Categories', orders: 'Orders',
+    dashboard: '', products: 'Products', categories: 'Categories', collections: 'Collections', orders: 'Orders',
     messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
     admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
@@ -414,7 +414,7 @@
     if (typeof closeMoreMenu === 'function') closeMoreMenu();
 
     var TAB_MODULE_MAP = {
-      dashboard: 'dashboard', products: 'products', categories: 'products', orders: 'orders',
+      dashboard: 'dashboard', products: 'products', categories: 'products', collections: 'collections', orders: 'orders',
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
       vendors: 'vendors', customers: 'customers', settings: 'settings',
       admins: 'admins', pages: 'pages', discounts: 'discounts',
@@ -462,6 +462,7 @@
       case 'dashboard':   if (window._renderDashboardTab)   window._renderDashboardTab();   break;
       case 'products':    if (window._renderProductsTab)    window._renderProductsTab();    break;
       case 'categories': if (window._renderCategoriesTab) window._renderCategoriesTab(); break;
+      case 'collections': if (window._renderCollectionsTab) window._renderCollectionsTab(); break;
       case 'messages':    if (window._renderMessagesTab)    window._renderMessagesTab();    break;
       case 'reviews':     if (window._renderReviewsTab)     window._renderReviewsTab();     break;
       case 'newsletter':  if (window._renderNewsletterTab)  window._renderNewsletterTab();  break;
