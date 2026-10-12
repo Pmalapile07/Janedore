@@ -1366,11 +1366,13 @@ app.get('/collections/:cat', async (req, res, next) => {
   try {
     const handle = req.params.cat;
     const snapshot = await adminDb.collection('collections')
-      .where('handle', '==', handle)
-      .where('status', '==', 'active')
-      .limit(1).get();
-    if (!snapshot.empty) {
-      const collection = snapshot.docs[0].data() || {};
+      .where('status', '==', 'active').get();
+    const matchingDoc = snapshot.docs.find(doc => {
+      const data = doc.data() || {};
+      return String(data.handle || data.slug || doc.id) === handle;
+    });
+    if (matchingDoc) {
+      const collection = matchingDoc.data() || {};
       if (collection.published === false) return next();
       const titleText = String(collection.seoTitle || collection.title || collection.name || handle);
       const descriptionText = String(collection.seoDescription || collection.description || '');
