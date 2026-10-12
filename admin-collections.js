@@ -132,7 +132,6 @@
     window._adminCollectionsData = null;
     loadCollections();
   };
-  };
   window._showAdminCollectionForm = function (collectionId) {
     var wrap = document.getElementById('collections-admin-form-wrap');
     if (!wrap) return;
