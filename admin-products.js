@@ -1198,12 +1198,22 @@
   };
   window._loadAdminCategories = function() {
     var list = safeEl('categories-admin-list'); if (list) list.innerHTML = '<div class="catalog-loading">Loading categories…</div>';
-    Promise.all([categoriesRef.get(), window._adminDB.collection('collections').get()]).then(function(results) {
-      var categories = results[0].docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
+
+    // Categories are independently public-readable. A denied collections query
+    // must not make the entire Categories screen look like its own read failed.
+    categoriesRef.get().then(function(snapshot) {
+      var categories = snapshot.docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
       categories.sort(function(a,b) { return String(a.name || '').localeCompare(String(b.name || '')); });
       window._adminCategoriesData = categories;
-      window._adminCollectionsData = results[1].docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
-      renderAdminCategoriesList(categories);
+
+      return window._adminDB.collection('collections').get().then(function(collectionSnapshot) {
+        window._adminCollectionsData = collectionSnapshot.docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
+      }).catch(function(err) {
+        window._adminCollectionsData = [];
+        console.error('[JANEDORE CATEGORIES] Could not load collection counts:', err);
+      }).then(function() {
+        renderAdminCategoriesList(categories);
+      });
     }).catch(function(err) {
       if (list) list.innerHTML = '<div class="catalog-empty"><p>Could not load categories</p><span>' + esc(err.message || 'Please try again.') + '</span><button class="btn btn-ghost" type="button" onclick="window._loadAdminCategories()">Retry</button></div>';
     });
