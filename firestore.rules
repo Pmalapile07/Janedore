@@ -138,7 +138,10 @@ service cloud.firestore {
         isVariantStockDecrementOnly();
 
       allow delete: if isSuperAdmin() ||
-        (isVendor() && resource.data.vendorId == adminDoc().vendorId);
+        (isVendor() &&
+         resource.data.vendorId == adminDoc().vendorId &&
+         resource.data.status != 'active' &&
+         resource.data.published != true);
     }
 
     // =========================================================
