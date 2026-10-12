@@ -1235,7 +1235,7 @@
       var title = category.name || '';
       var search = String(title + ' ' + (category.slug || '')).toLowerCase();
       var image = category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" loading="lazy" class="pi-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="ph ph-image"></i></div>';
-      return '<div class="products-row" role="listitem" data-category-search="' + esc(search) + '" onclick="window._showCategoryForm(\\'' + esc(category.id) + '\\')">' + image +
+      return '<div class="products-row" role="listitem" data-category-search="' + esc(search) + '" onclick="window._showCategoryForm(\'' + esc(category.id) + '\')">' + image +
         '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div><div class="pi-meta">' + count.collections + ' collections · ' + count.brands + ' brands</div>' +
         '<div class="pi-meta">' + count.products + ' tagged products' + (category.featuredOnHomepage ? ' · Featured on homepage' : '') + '</div></div><i class="ph ph-caret-right" style="color:var(--muted);"></i></div>';
     }).join('') + '<div class="orders-empty-sub" id="categories-admin-no-results" style="display:none;padding:18px 0;">No categories match your search.</div></div>';
