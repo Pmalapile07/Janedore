@@ -1187,21 +1187,73 @@
   window._renderCategoriesTab = function() {
     var mc = safeEl('main-content'); if (!mc) return;
     if (window._currentUserRole !== 'SUPER_ADMIN') { mc.innerHTML = '<div class="empty-state"><p>Only Super Admins can manage categories.</p></div>'; return; }
-    mc.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;"><div style="font-size:13px;color:var(--muted);">Manage the categories customers browse on JANEDORE.</div><button class="btn btn-primary" type="button" onclick="window._showCategoryForm()"><i class="ph-light ph-plus"></i> Add category</button></div><div id="categories-admin-form-wrap"></div><div id="categories-admin-list"></div>';
+    mc.innerHTML = '<div class="catalog-page-intro"><p>Manage the departments customers browse across JANEDORE.</p></div><div id="categories-admin-form-wrap"></div><div id="categories-admin-list"></div>';
     window._loadAdminCategories();
   };
   window._loadAdminCategories = function() {
-    var list = safeEl('categories-admin-list'); if (list) list.innerHTML = '<div style="padding:24px 0;color:var(--muted);">Loading categories…</div>';
+    var list = safeEl('categories-admin-list'); if (list) list.innerHTML = '<div class="catalog-loading">Loading categories…</div>';
     categoriesRef.get().then(function(snap) {
       var categories = snap.docs.map(function(doc) { return Object.assign({id:doc.id}, doc.data()); });
+      categories.sort(function(a,b) { return String(a.name || '').localeCompare(String(b.name || '')); });
       window._adminCategoriesData = categories;
-      var target = safeEl('categories-admin-list'); if (!target) return;
-      if (!categories.length) { target.innerHTML = '<div style="padding:48px 20px;text-align:center;border:1px dashed var(--border);border-radius:12px;color:var(--muted);"><i class="ph-light ph-squares-four" style="font-size:28px;"></i><p style="margin-top:10px;">No categories yet</p><p style="font-size:12px;margin-top:5px;">Add your first category when you are ready.</p></div>'; return; }
-      target.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">' + categories.map(function(c) {
-        var count = (window._allProducts || []).filter(function(p) { return p.category === c.slug; }).length;
-        return '<article style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);">' + (c.imageUrl ? '<img src="' + esc(c.imageUrl) + '" alt="" style="width:100%;height:150px;object-fit:cover;display:block;">' : '<div style="height:150px;display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--muted);"><i class="ph-light ph-image" style="font-size:28px;"></i></div>') + '<div style="padding:14px;"><div style="font-weight:600;">' + esc(c.name || '') + '</div><div style="font-size:12px;color:var(--muted);margin:5px 0 12px;">' + count + ' tagged product' + (count === 1 ? '' : 's') + '</div><div style="font-size:11px;margin-bottom:12px;color:' + (c.featuredOnHomepage ? 'var(--success,#16803d)' : 'var(--muted)') + ';">' + (c.featuredOnHomepage ? 'Featured on homepage' : 'Not featured on homepage') + '</div><div style="display:flex;gap:8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._showCategoryForm(\'' + esc(c.id) + '\')">Edit</button><button class="btn btn-sm btn-ghost" type="button" onclick="window._deleteCategory(\'' + esc(c.id) + '\')">Delete</button></div></div></article>';
-      }).join('') + '</div>';
-    }).catch(function(err) { if (list) list.innerHTML = '<div style="padding:20px;color:var(--danger,#b42318);">Could not load categories: ' + esc(err.message || 'Please try again.') + '</div>'; });
+      renderAdminCategoriesList(categories);
+    }).catch(function(err) {
+      if (list) list.innerHTML = '<div class="catalog-empty"><p>Could not load categories</p><span>' + esc(err.message || 'Please try again.') + '</span><button class="btn btn-ghost" type="button" onclick="window._loadAdminCategories()">Retry</button></div>';
+    });
+  };
+  function renderAdminCategoriesList(categories) {
+    var target = safeEl('categories-admin-list'); if (!target) return;
+    var products = window._allProducts || [];
+    var collections = window._adminCollectionsData || [];
+    var stats = function(category) {
+      var categoryProducts = products.filter(function(p) { return p.status !== 'archived' && p.category === category.slug; });
+      var brands = {};
+      categoryProducts.forEach(function(p) {
+        var brand = String(p.brand || p.vendorName || '').trim();
+        if (brand) brands[brand.toLowerCase()] = true;
+      });
+      var linkedCollections = collections.filter(function(collection) {
+        if (collection.status === 'archived') return false;
+        return categoryProducts.some(function(product) {
+          if (collection.collectionType === 'automated') {
+            if (collection.automatedRule === 'sale') return typeof window._hasSalePrice === 'function' ? window._hasSalePrice(product) : Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.price || 0);
+            if (collection.automatedRule === 'newin') return false;
+          }
+          var values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
+          var handle = String(collection.handle || collection.slug || collection.id).toLowerCase();
+          var title = String(collection.title || collection.name || '').toLowerCase();
+          return values.some(function(value) { value = String(value || '').trim().toLowerCase(); return value && (value === handle || value === title); });
+        });
+      });
+      return { products:categoryProducts.length, brands:Object.keys(brands).length, collections:linkedCollections.length };
+    };
+    var toolbar = '<div class="catalog-toolbar"><label class="catalog-search"><i class="ph ph-magnifying-glass"></i><input id="categories-admin-search" type="search" placeholder="Search categories" oninput="window._filterAdminCategories()" autocomplete="off"></label><span class="catalog-total" id="categories-admin-total">' + categories.length + ' categor' + (categories.length === 1 ? 'y' : 'ies') + '</span><button class="catalog-add-btn" type="button" onclick="window._showCategoryForm()" aria-label="Add category"><i class="ph ph-plus"></i></button></div>';
+    if (!categories.length) {
+      target.innerHTML = toolbar + '<div class="catalog-empty"><i class="ph ph-squares-four"></i><p>No categories yet</p><span>Add your first department when you are ready.</span></div>';
+      return;
+    }
+    target.innerHTML = toolbar + '<div class="catalog-list" role="list">' + categories.map(function(category) {
+      var count = stats(category);
+      var title = category.name || '';
+      var search = String(title + ' ' + (category.slug || '')).toLowerCase();
+      var image = category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" loading="lazy">' : '<span class="catalog-thumb-empty"><i class="ph ph-image"></i></span>';
+      return '<article class="catalog-row" role="listitem" data-category-search="' + esc(search) + '"><div class="catalog-thumb">' + image + '</div><div class="catalog-row-main"><div class="catalog-row-title">' + esc(title) + '</div><div class="catalog-row-meta"><span>' + count.collections + ' collection' + (count.collections === 1 ? '' : 's') + '</span><span class="catalog-meta-dot">·</span><span>' + count.brands + ' brand' + (count.brands === 1 ? '' : 's') + '</span></div><div class="catalog-row-handle">' + count.products + ' tagged product' + (count.products === 1 ? '' : 's') + (category.featuredOnHomepage ? ' · Featured on homepage' : '') + '</div></div><div class="catalog-row-end"><button class="catalog-row-edit" type="button" aria-label="Edit ' + esc(title) + '" onclick="window._showCategoryForm(\'' + esc(category.id) + '\')"><i class="ph ph-caret-right"></i></button></div></article>';
+    }).join('') + '<div class="catalog-no-results" id="categories-admin-no-results" style="display:none;">No categories match your search.</div></div>';
+  }
+  window._filterAdminCategories = function() {
+    var input = safeEl('categories-admin-search');
+    var query = input ? input.value.toLowerCase().trim() : '';
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-category-search]'));
+    var visible = 0;
+    rows.forEach(function(row) {
+      var match = (row.getAttribute('data-category-search') || '').indexOf(query) !== -1;
+      row.style.display = match ? 'flex' : 'none';
+      if (match) visible++;
+    });
+    var total = safeEl('categories-admin-total');
+    if (total) total.textContent = visible + ' categor' + (visible === 1 ? 'y' : 'ies');
+    var empty = safeEl('categories-admin-no-results');
+    if (empty) empty.style.display = visible ? 'none' : 'block';
   };
   window._showCategoryForm = function(categoryId) {
     var wrap = safeEl('categories-admin-form-wrap'); if (!wrap) return;
