@@ -1171,17 +1171,22 @@ function renderCollectionSortingTabs() {
   if (!page) return;
   let existing = page.querySelector('.collection-sorting-tabs');
   if (existing) existing.remove();
-  const tabs = [
-    { label: 'View All', cat: 'all' }, { label: 'Clothing', cat: 'all-clothing' }, { label: 'Accessories', cat: 'all-accessories' }, { label: 'Homeware', cat: 'homeware' }, { label: 'Scent', cat: 'parfum' }
-  ];
-  let active;
-  if (S.currentPage === 'category') {
-    if (CLOTHING_CATEGORIES.includes(S.currentCategoryPage)) active = 'all-clothing';
-    else if (ACCESSORY_CATEGORIES.includes(S.currentCategoryPage)) active = 'all-accessories';
-    else active = S.currentCategoryPage;
-  } else {
-    active = S.activeSortTab || (S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all'));
+  if (!window._publishedCollections && typeof window._loadPublishedCollections === 'function') {
+    window._loadPublishedCollections().then(function () {
+      const currentPage = document.getElementById(S.currentPage === 'products' ? 'page-products' : 'page-category');
+      if (currentPage && currentPage.classList.contains('active')) renderCollectionSortingTabs();
+    });
   }
+  const collections = (window._publishedCollections || []).slice().sort(function (a, b) {
+    return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
+      String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
+  });
+  const tabs = [{ label: 'View All', cat: 'all' }].concat(collections.map(function (item) {
+    return { label: item.title || item.name || item.handle || item.id, cat: String(item.handle || item.slug || item.id) };
+  }));
+  let active;
+  if (S.currentPage === 'category') active = S.currentCollectionHandle || S.currentCategoryPage;
+  else active = S.activeSortTab || (S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all'));
   const tabsHtml = tabs.map(t => `<button class="sorting-tab${t.cat === active ? ' active' : ''}" onclick="selectSortTab('${escapeJSString(t.cat)}')">${escapeHTML(t.label)}</button>`).join('');
   const container = document.createElement('div');
   container.className = 'collection-sorting-tabs';
@@ -1202,11 +1207,16 @@ function renderCollectionSortingTabs() {
 
 function selectSortTab(cat) {
   S.activeSortTab = cat;
+  const collection = (window._publishedCollections || []).find(function (item) {
+    return String(item.handle || item.slug || item.id) === String(cat);
+  });
+  if (collection) { navigateToCollection(cat); return; }
   if (cat === 'sale') { navigateToSale(); return; }
+  if (cat === 'newin') { navigateToNewIn(); return; }
   S.saleMode = false;
   S.newInMode = false;
-  if (cat === 'all') { S.filter.cat = []; S.filter.vendor = []; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.currentCategoryPage = null; renderAllProducts(); }
-  else { navigateToCategory(cat); }
+  if (cat === 'all') { navigateTo('products'); return; }
+  navigateToCategory(cat);
   renderCollectionSortingTabs();
   window.scrollTo({top:0,behavior:"instant"});
   updateCollectionGridIcon();
