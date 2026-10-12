@@ -108,6 +108,35 @@ function renderNewArrivalsHeader(arrivals) {
   }
 }
 
+function renderCollectionQuickLinks() {
+  const row = document.getElementById('nav-quick-links');
+  if (!row || typeof window._loadPublishedCollections !== 'function') return;
+  row.querySelectorAll('[data-dynamic-collection-link]').forEach(function (el) { el.remove(); });
+  window._loadPublishedCollections().then(function (collections) {
+    if (!row.isConnected) return;
+    const visible = (collections || []).filter(function (item) { return item.visibleInNavigation === true; })
+      .sort(function (a, b) {
+        return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
+          String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
+      });
+    visible.forEach(function (item) {
+      const handle = String(item.handle || item.slug || item.id || '');
+      if (!handle) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'nav-quick-link';
+      button.setAttribute('data-dynamic-collection-link', 'true');
+      button.setAttribute('data-nav-page', 'collection-' + handle);
+      button.textContent = item.title || item.name || handle;
+      button.addEventListener('click', function () {
+        if (typeof window.navigateToCollection === 'function') window.navigateToCollection(handle);
+      });
+      row.appendChild(button);
+    });
+    if (typeof window.updateNavQuickLinksChevrons === 'function') window.updateNavQuickLinksChevrons();
+  });
+}
+
 function renderShopByCategory(shopByCategory) {
   shopByCategory = shopByCategory || {};
   const headingEl = document.getElementById('shop-by-category-heading');
@@ -227,6 +256,7 @@ async function renderSiteContent() {
     window._siteContent = { homepage, collectionPages };
 
     renderLogo(homepage.logoUrl);
+    renderCollectionQuickLinks();
     renderHero(homepage.hero);
     renderNewArrivalsHeader(homepage.newArrivals);
     renderShopByCategory(homepage.shopByCategory);
