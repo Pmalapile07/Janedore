@@ -22,6 +22,7 @@
       dashboard:  ['read'],
       orders:     ['read', 'update'],
       products:   ['read'],
+      collections:['read'],
       inbox:      ['read', 'reply', 'moderate'],
       reviews:    ['read', 'moderate'],
       newsletter: [],
@@ -44,6 +45,7 @@
       // is deliberately narrower than 'update', which VENDOR never gets.
       orders:     ['read_own', 'update_own_tracking'],
       products:   ['read_own', 'create', 'update_own', 'delete_own'],
+      collections:['read_own', 'create', 'update_own', 'delete_own'],
       inbox:      ['read_own', 'reply_own'],
       reviews:    ['read_own', 'reply_own'],
       newsletter: [],
