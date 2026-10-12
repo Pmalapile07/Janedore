@@ -62,27 +62,55 @@
   function renderList(items) {
     var list = document.getElementById('collections-admin-list');
     if (!list) return;
+    var products = window._allProducts || [];
+    var brandsFor = function (item) {
+      var brands = {};
+      products.forEach(function (product) {
+        if (product.status === 'archived' || !hasMember(product, item)) return;
+        var brand = String(product.brand || product.vendorName || '').trim();
+        if (brand) brands[brand.toLowerCase()] = brand;
+      });
+      return Object.keys(brands).length;
+    };
+    var productCount = function (item) {
+      return products.filter(function (product) { return product.status !== 'archived' && hasMember(product, item); }).length;
+    };
+    var toolbar = '<div class="catalog-toolbar"><label class="catalog-search"><i class="ph ph-magnifying-glass"></i><input id="collections-admin-search" type="search" placeholder="Search collections" oninput="window._filterAdminCollections()" autocomplete="off"></label><span class="catalog-total" id="collections-admin-total">' + items.length + ' collection' + (items.length === 1 ? '' : 's') + '</span></div>';
     if (!items.length) {
-      list.innerHTML = '<div class="empty-state"><p>No collections yet.</p><p style="color:var(--muted);font-size:12px;margin-top:6px;">Create a collection to curate products across JANEDORE.</p></div>';
+      list.innerHTML = toolbar + '<div class="catalog-empty"><i class="ph ph-stack"></i><p>No collections yet</p><span>Create your first collection to curate products across brands.</span></div>';
       return;
     }
-    list.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">' +
-      items.map(function (item) {
-        var count = (window._allProducts || []).filter(function (p) { return hasMember(p, item); }).length;
-        var title = item.title || item.name || item.handle || item.id;
-        var published = item.status === 'active' || item.published === true;
-        var image = item.imageUrl ? '<img src="' + esc(item.imageUrl) + '" alt="" loading="lazy" style="width:100%;height:145px;object-fit:cover;display:block;background:var(--surface2);">' :
-          '<div style="height:145px;display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--muted);"><i class="ph-light ph-image" style="font-size:28px;"></i></div>';
-        return '<article style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);min-width:0;">' + image +
-          '<div style="padding:14px;"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"><div style="font-weight:600;overflow-wrap:anywhere;">' + esc(title) + '</div>' +
-          '<span style="font-size:10px;white-space:nowrap;padding:3px 7px;border-radius:20px;background:' + (published ? 'var(--success-bg,#e8f5ec)' : 'var(--surface2)') + ';color:' + (published ? 'var(--success,#16803d)' : 'var(--muted)') + ';">' + (published ? 'Published' : 'Draft') + '</span></div>' +
-          '<div style="font-size:11px;color:var(--muted);margin:6px 0 10px;">/collections/' + esc(item.handle || item.slug || item.id) + '</div>' +
-          '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">' + count + ' assigned product' + (count === 1 ? '' : 's') + (item.featured ? ' · Featured' : '') + '</div>' +
-          '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._editAdminCollection(\'' + esc(item.id) + '\')">Edit</button>' +
-          (canManage(item) ? (isSuperAdmin() ? '<button class="btn btn-sm btn-ghost" type="button" onclick="window._toggleAdminCollectionPublish(\'' + esc(item.id) + '\')">' + (published ? 'Unpublish' : 'Publish') + '</button>' : '') + '<button class="btn btn-sm btn-ghost" type="button" style="color:var(--danger);" onclick="window._deleteAdminCollection(\'' + esc(item.id) + '\')">Delete</button>' : '') +
-          '</div></div></article>';
-      }).join('') + '</div>';
+    list.innerHTML = toolbar + '<div class="catalog-list" role="list">' + items.map(function (item) {
+      var count = productCount(item);
+      var brandCount = brandsFor(item);
+      var title = item.title || item.name || item.handle || item.id;
+      var published = item.status === 'active' || item.published === true;
+      var image = item.imageUrl ? '<img src="' + esc(item.imageUrl) + '" alt="" loading="lazy">' : '<span class="catalog-thumb-empty"><i class="ph ph-image"></i></span>';
+      var search = String(title + ' ' + (item.handle || item.slug || '') + ' ' + (item.description || '')).toLowerCase();
+      return '<article class="catalog-row" role="listitem" data-collection-search="' + esc(search) + '">' +
+        '<div class="catalog-thumb">' + image + '</div>' +
+        '<div class="catalog-row-main"><div class="catalog-row-title">' + esc(title) + '</div>' +
+        '<div class="catalog-row-meta"><span>' + count + ' product' + (count === 1 ? '' : 's') + '</span><span class="catalog-meta-dot">·</span><span>' + brandCount + ' brand' + (brandCount === 1 ? '' : 's') + '</span></div>' +
+        '<div class="catalog-row-handle">/collections/' + esc(item.handle || item.slug || item.id) + '</div></div>' +
+        '<div class="catalog-row-end"><span class="catalog-status ' + (published ? 'is-published' : 'is-draft') + '">' + (published ? 'Published' : 'Draft') + '</span>' +
+        '<button class="catalog-row-edit" type="button" aria-label="Edit ' + esc(title) + '" onclick="window._editAdminCollection(\'' + esc(item.id) + '\')"><i class="ph ph-caret-right"></i></button></div></article>';
+    }).join('') + '<div class="catalog-no-results" id="collections-admin-no-results" style="display:none;">No collections match your search.</div></div>';
   }
+  window._filterAdminCollections = function () {
+    var input = document.getElementById('collections-admin-search');
+    var query = input ? input.value.toLowerCase().trim() : '';
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-collection-search]'));
+    var visible = 0;
+    rows.forEach(function (row) {
+      var match = (row.getAttribute('data-collection-search') || '').indexOf(query) !== -1;
+      row.style.display = match ? 'flex' : 'none';
+      if (match) visible++;
+    });
+    var total = document.getElementById('collections-admin-total');
+    if (total) total.textContent = visible + ' collection' + (visible === 1 ? '' : 's');
+    var empty = document.getElementById('collections-admin-no-results');
+    if (empty) empty.style.display = visible ? 'none' : 'block';
+  };
   window._loadAdminCollections = loadCollections;
   window._renderCollectionsTab = function () {
     var mc = document.getElementById('main-content');
