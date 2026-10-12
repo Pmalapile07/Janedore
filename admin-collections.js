@@ -180,6 +180,22 @@
     var handle = form.elements.handle.value.trim().toLowerCase();
     if (!title || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(handle)) { showToast('Enter a collection name and a valid URL handle.', 'error'); return; }
     if ((window._adminCollectionsData || []).some(function (c) { return (c.handle || c.slug || c.id) === handle && c.id !== collectionId; })) { showToast('That collection URL handle is already in use.', 'error'); return; }
+    if (window._currentUserRole === 'VENDOR' && old) {
+      var oldHandleForScope = String(old.handle || old.slug || old.id).toLowerCase();
+      var oldTitleForScope = String(old.title || old.name || '').toLowerCase();
+      var activeMembership = (window._allProducts || []).some(function (product) {
+        if (product.status !== 'active') return false;
+        var values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
+        return values.some(function (value) {
+          value = String(value || '').trim().toLowerCase();
+          return value === oldHandleForScope || (!!oldTitleForScope && value === oldTitleForScope);
+        });
+      });
+      if (activeMembership && (handle !== oldHandleForScope || title.toLowerCase() !== oldTitleForScope)) {
+        showToast('A Super Admin must rename this collection because it is assigned to published products.', 'error');
+        return;
+      }
+    }
     var collectionType = form.elements.collectionType.value === 'automated' ? 'automated' : 'manual';
     var automatedRule = form.elements.automatedRule.value === 'newin' ? 'newin' : 'sale';
     var selectedIds = collectionType === 'manual' ? Array.prototype.slice.call(form.querySelectorAll('input[name="productIds"]:checked')).map(function (input) { return input.value; }) : [];
@@ -234,6 +250,13 @@
     var item = (window._adminCollectionsData || []).find(function (c) { return c.id === id; });
     if (!item || !canManage(item)) { showToast('You do not have permission to delete this collection.', 'error'); return; }
     var title = item.title || item.name || item.handle || id;
+    if (window._currentUserRole === 'VENDOR' && (window._allProducts || []).some(function (product) {
+      if (product.status !== 'active') return false;
+      return hasMember(product, item);
+    })) {
+      showToast('A Super Admin must delete this collection because it is assigned to published products.', 'error');
+      return;
+    }
     if (!confirm('Delete "' + title + '"? This removes the collection record and its membership from loaded products. This cannot be undone.')) return;
     var handle = String(item.handle || item.slug || id).toLowerCase();
     var name = String(item.title || item.name || '').toLowerCase();
