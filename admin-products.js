@@ -735,10 +735,18 @@
     var badgeCustomValue = (isPresetBadge || isReservedBadge) ? '' : (p.badge || '');
 
     mc.innerHTML =
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
-        '<button type="button" class="btn btn-ghost" onclick="window._renderProductsTab()"><i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Cancel</button>' +
-        '<div style="font-size:13px;font-weight:500;color:var(--text);">' + (isNew ? 'Add product' : 'Edit product') + '</div>' +
-        '<button type="button" class="btn btn-primary" onclick="document.getElementById(\'product-form\').requestSubmit()"><i class="ph-light ph-check" style="margin-right:4px;"></i> Save</button>' +
+      '<div class="product-editor-header">' +
+        '<button type="button" class="product-editor-back" onclick="window._renderProductsTab()" aria-label="Back to products"><i class="ph ph-arrow-left"></i></button>' +
+        '<div class="product-editor-heading">' + (isNew ? 'Add product' : esc(p.name || 'Edit product')) + '</div>' +
+        '<div class="product-editor-actions">' +
+          '<button type="button" class="product-editor-icon" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')" aria-label="Share product" title="Share product"><i class="ph ph-share-network"></i></button>' +
+          '<button type="button" class="product-editor-icon" onclick="window._toggleProductEditorMenu(event)" aria-label="More product actions" title="More actions"><i class="ph ph-dots-three"></i></button>' +
+          '<div class="product-editor-menu" id="product-editor-menu" hidden>' +
+            '<button type="button" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')">Copy product link</button>' +
+            '<button type="button" onclick="window._renderProductsTab()">Cancel editing</button>' +
+          '</div>' +
+          '<button type="button" class="product-editor-save" onclick="document.getElementById(\'product-form\').requestSubmit()">Save</button>' +
+        '</div>' +
       '</div>' +
 
       '<form id="product-form" onsubmit="window._handleProductSubmit(event,\'' + esc(p.id) + '\')">' +
@@ -779,6 +787,17 @@
         '</div>' +
       '</div>' +
 
+      // 8. ORGANIZATION
+      '<div class="card" style="margin-bottom:12px;">' +
+        '<div class="card-header"><span class="card-title">Organization</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;">' + catOptions + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
+          renderProductCollectionOptions(p) +
+          '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
+        '</div>' +
+      '</div>' +
+
       // 4. PRICING
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Pricing</span></div>' +
@@ -786,6 +805,14 @@
           '<div class="form-group" style="padding:0;"><label>Price (R)</label><input name="price" type="number" min="0" step="0.01" value="' + esc(String(p.price||0)) + '" required oninput="window._pfUpdateMargin()"></div>' +
           '<div class="form-group" style="padding:0;"><label>Sale price (R) <span style="font-size:10px;color:var(--muted);">— leave blank if not on sale</span></label><input name="salePrice" type="number" min="0" step="0.01" value="' + esc(String(p.salePrice||'')) + '" oninput="window._pfUpdateMargin()"></div>' +
           '<div id="pf-margin-display" style="background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none;"></div>' +
+        '</div>' +
+      '</div>' +
+
+      // 9. SALES CHANNELS
+      '<div class="card" style="margin-bottom:12px;">' +
+        '<div class="card-header"><span class="card-title">Sales channels</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div class="form-group" style="padding:0;"><label>Online Store</label><select name="onlineStore" style="width:100%;"><option value="true"'+(p.onlineStore===false?'':' selected')+'>Enabled</option><option value="false"'+(p.onlineStore===false?' selected':'')+'>Disabled</option></select></div>' +
         '</div>' +
       '</div>' +
 
@@ -835,25 +862,6 @@
         '</div>' +
       '</div>' +
 
-      // 8. ORGANIZATION
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Organization</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;">' + catOptions + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
-          renderProductCollectionOptions(p) +
-          '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
-        '</div>' +
-      '</div>' +
-
-      // 9. SALES CHANNELS
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Sales channels</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Online Store</label><select name="onlineStore" style="width:100%;"><option value="true"'+(p.onlineStore===false?'':' selected')+'>Enabled</option><option value="false"'+(p.onlineStore===false?' selected':'')+'>Disabled</option></select></div>' +
-        '</div>' +
-      '</div>' +
-
       // 10. SEO
       '<div class="card" style="margin-bottom:24px;">' +
         '<div class="card-header"><span class="card-title">Search engine listing</span></div>' +
@@ -865,13 +873,31 @@
         '</div>' +
       '</div>' +
 
-      '</form>';
+
 
     _renderMediaPool();
     window._pfUpdateMargin();
     window._updateSizePreview();
     window._updateSeoPreview();
   };
+
+  window._shareAdminProduct = function(productId) {
+    var product = (window._allProducts || []).find(function(item) { return item.id === productId; });
+    if (!product || !product.slug) { showToast('Save the product first to create its shareable link.', 'info'); return; }
+    var url = window.location.origin + '/products/' + product.slug;
+    if (navigator.share) navigator.share({ title: product.name || 'JANEDORE product', url: url }).catch(function() {});
+    else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function() { showToast('Product link copied'); }).catch(function() { showToast(url, 'info'); });
+    else showToast(url, 'info');
+  };
+  window._toggleProductEditorMenu = function(event) {
+    if (event) event.stopPropagation();
+    var menu = document.getElementById('product-editor-menu');
+    if (menu) menu.hidden = !menu.hidden;
+  };
+  document.addEventListener('click', function(event) {
+    var menu = document.getElementById('product-editor-menu');
+    if (menu && !event.target.closest('.product-editor-actions')) menu.hidden = true;
+  });
 
   // ── BADGE HELPER ─────────────────────────────────────────────
 
