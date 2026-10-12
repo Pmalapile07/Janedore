@@ -86,7 +86,8 @@
     mc.innerHTML =
       '<div class="section-header" style="margin-bottom:12px;">' +
         '<div class="section-title">Brands</div>' +
-        '<div style="display:flex;gap:8px;">' +
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+          '<div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'brands\')" aria-label="Brand actions"><i class="ph ph-dots-three"></i></button><div class="admin-catalog-actions" id="brands-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div><button type="button" onclick="window._catalogBulkStart(\'brands\')"><i class="ph ph-check-circle"></i> Select items</button></div></div>' +
           (canEdit
             ? '<button class="btn btn-sm btn-ghost" id="seed-vendors-btn" onclick="window._seedDefaultVendors()">Seed Default Brands</button>' +
               '<button class="btn btn-sm btn-primary" onclick="window._openVendorModal(null)">+ Add Brand</button>'
@@ -153,7 +154,7 @@
     el.innerHTML =
       '<div class="table-wrap"><table class="data-table">' +
       '<thead><tr>' +
-        '<th>Brand</th>' +
+        '<th class="admin-select-check-cell"></th><th>Brand</th>' +
         '<th>Display Name</th>' +
         '<th>Products</th>' +
         '<th>Orders</th>' +
@@ -173,7 +174,8 @@
         var hasAccount   = v.accountEmail ? true : false;
         var hasPayfast   = v.payfastMerchantId ? true : false;
 
-        return '<tr onclick="window._openVendorDetail(\'' + esc(v.id) + '\')" style="cursor:pointer;">' +
+        return '<tr data-catalog-id="' + esc(v.id) + '" class="admin-selectable-row" onclick="window._catalogBulkToggle(event,\'brands\',\'' + esc(v.id) + '\',function(){window._openVendorDetail(\'' + esc(v.id) + '\')})" style="cursor:pointer;">' +
+          '<td class="admin-select-check-cell"><span class="admin-select-check"><i class="ph ph-check"></i></span></td>' +
           '<td style="font-weight:500;">' + esc(v.name || v.id) + '</td>' +
           '<td>' + esc(v.brand || '—') + '</td>' +
           '<td>' + productCount + '</td>' +
