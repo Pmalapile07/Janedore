@@ -375,10 +375,8 @@ input, select, textarea { font-size:16px !important; }
 .pi-name{font-size:var(--font-scale-md);font-weight:400;color:var(--text);}
 .pi-meta{font-size:var(--font-scale-sm);font-weight:300;color:var(--muted);margin-top:var(--space-1);}
 
-/* Products tab's own list/row — like .product-list/.product-row above
-   (still used by the Pages tab, nested inside a bordered .card so it
-   needs its own box/inset), but flush with no outer card and no
-   per-row horizontal padding, same as Orders' .orders-list/.order-row. */
+/* Products tab's own list/row — shared by Products, Collections and Categories.
+   Flush rows keep the mobile catalog calm and scannable. */
 .products-list{display:flex;flex-direction:column;}
 .products-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:0.5px solid var(--border-light);cursor:pointer;transition:background var(--duration-fast);}
 .products-row:last-child{border-bottom:none;}
