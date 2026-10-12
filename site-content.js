@@ -162,8 +162,12 @@ function renderShopByCategory(shopByCategory) {
     const categories = (featuredCategories.length ? featuredCategories : allCategories).slice(0, 4);
 
     if (!categories.length) {
-      grid.innerHTML = '';
-      grid.style.display = 'none';
+      // Keep the four homepage category placeholders visible until categories
+      // are created in Admin. Do not collapse the section when the data is empty.
+      grid.style.display = '';
+      grid.innerHTML = Array.from({ length: 4 }, function() {
+        return '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
+      }).join('');
       return;
     }
 
