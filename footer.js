@@ -68,7 +68,7 @@ function buildFooter(id) {
     <div class="footer-brand-divider" aria-hidden="true"></div>
 
     <div class="footer-brand-mark" aria-label="JANEDORE">
-      <span>JANEDORE</span>
+      <span class="footer-logo-fallback">JANEDORE</span>
     </div>
 
     <div class="footer-socials" aria-label="Social media">
@@ -78,10 +78,25 @@ function buildFooter(id) {
     </div>
 
     <div class="footer-bottom">
-      <div class="footer-copy">© 2026 JANEDORE. All rights reserved.</div>
-      <p class="footer-disclaimer">This multi-brand platform features independently owned brands. Unless otherwise stated, the brands featured are not owned by or affiliated with the platform and remain the property of their respective owners.</p>
+      <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span> <span class="footer-disclaimer">This multi-brand platform features independently owned brands. Unless otherwise stated, the brands featured are not owned by or affiliated with the platform and remain the property of their respective owners.</span></p>
     </div>
   `;
+
+  const headerLogo = document.querySelector(".nav-logo");
+  const footerLogoMark = el.querySelector(".footer-brand-mark");
+  if (headerLogo && footerLogoMark) {
+    const logoClone = headerLogo.cloneNode(true);
+    logoClone.className = "footer-logo-clone";
+    logoClone.removeAttribute("onclick");
+    logoClone.removeAttribute("role");
+    logoClone.removeAttribute("tabindex");
+    logoClone.removeAttribute("aria-label");
+    const logoImage = logoClone.querySelector("#nav-logo-img");
+    if (logoImage) { logoImage.removeAttribute("id"); logoImage.style.display = "block"; }
+    const logoText = logoClone.querySelector("#nav-logo-text");
+    if (logoText) logoText.removeAttribute("id");
+    footerLogoMark.replaceChildren(logoClone);
+  }
 }
 
 
