@@ -127,7 +127,7 @@ function toggleGridWish() {
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
   if (!S.wishlist.length) {
-    DOM.wishPageContent.innerHTML = '<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\\'products\\')">Continue Shopping</button></div>';
+    DOM.wishPageContent.innerHTML = '<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div>';
     return;
   }
   const cols = S.gridColsWish;
