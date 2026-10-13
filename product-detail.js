@@ -313,17 +313,31 @@ async function renderProductPage(product) {
   // old thumbnail strip entirely.
   const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
 
-  const categoryLabel = String(product.category||'').replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+  const categoryLabel = String(product.category||'').replace(/-/g,' ').replace(/\\b\\w/g,l=>l.toUpperCase());
+  const productCollectionValues = (Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(','))
+    .map(value => String(value || '').trim().toLowerCase()).filter(Boolean);
+  const publishedCollections = typeof window._loadPublishedCollections === 'function'
+    ? await window._loadPublishedCollections()
+    : (window._publishedCollections || []);
+  const productCollection = publishedCollections.find(collection => {
+    const handle = String(collection.handle || collection.slug || collection.id || '').trim().toLowerCase();
+    const title = String(collection.title || collection.name || '').trim().toLowerCase();
+    return productCollectionValues.some(value => value === handle || value === title);
+  });
+  const collectionHandle = productCollection && (productCollection.handle || productCollection.slug || productCollection.id);
+  const collectionLabel = productCollection && (productCollection.title || productCollection.name || collectionHandle);
+  const brandLabel = String(product.brand || productVendor?.brand || productVendor?.name || '').trim();
   const breadcrumbHtml = `<div class="product-breadcrumb-bar">
     <button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button>
     <nav class="page-breadcrumb" aria-label="Breadcrumb">
       <span onclick="navigateTo('home')">Home</span>
-      ${productVendor?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')">${escapeHTML(product.brand||'')}</span>`:''}
-      ${product.category?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCategory('${product.category}')">${categoryLabel}</span>`:''}
+      ${product.category ? `<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCategory('${escapeJSString(product.category)}')">${escapeHTML(categoryLabel)}</span>` : ''}
+      ${productCollection && collectionHandle ? `<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCollection('${escapeJSString(collectionHandle)}')">${escapeHTML(collectionLabel)}</span>` : ''}
+      ${brandLabel ? `<span class="page-breadcrumb-sep">/</span>${productVendor ? `<span onclick="navigateToVendor('${escapeJSString(productVendor.slug || productVendor.id)}')">${escapeHTML(brandLabel)}</span>` : `<span>${escapeHTML(brandLabel)}</span>`}` : ''}
       <span class="page-breadcrumb-sep">/</span>
       <span class="page-breadcrumb-current">${escapeHTML(product.name||'')}</span>
     </nav>
-    <button class="product-breadcrumb-share" type="button" onclick="shareCurrentProduct('${product.id}')" aria-label="Share product"><i class="ph ph-share-network"></i></button>
+    <button class="product-breadcrumb-share" type="button" onclick="shareCurrentProduct('${escapeJSString(product.id)}')" aria-label="Share product"><i class="ph ph-share-network"></i></button>
   </div>`;
 
   DOM.productDetail.innerHTML=`
