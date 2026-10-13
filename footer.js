@@ -65,6 +65,12 @@ function buildFooter(id) {
       ${collapseHTML}
     </div>
 
+    <div class="footer-brand-divider" aria-hidden="true"></div>
+
+    <div class="footer-brand-mark" aria-label="JANEDORE">
+      <span>JANEDORE</span>
+    </div>
+
     <div class="footer-socials" aria-label="Social media">
       <i class="ph-fill ph-facebook-logo" aria-label="Facebook" role="img"></i>
       <i class="ph-bold ph-instagram-logo" aria-label="Instagram" role="img"></i>
@@ -72,9 +78,8 @@ function buildFooter(id) {
     </div>
 
     <div class="footer-bottom">
-      <div class="footer-copy">
-        © 2026 JANEDORE. ALL RIGHTS RESERVED.
-      </div>
+      <div class="footer-copy">© 2026 JANEDORE. All rights reserved.</div>
+      <p class="footer-disclaimer">This multi-brand platform features independently owned brands. Unless otherwise stated, the brands featured are not owned by or affiliated with the platform and remain the property of their respective owners.</p>
     </div>
   `;
 }
