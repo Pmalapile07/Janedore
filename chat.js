@@ -1601,33 +1601,31 @@ async function sendChatMessage() {
       const aiText = await getAIReply(text);
 
       if (aiText) {
-        _ScreenDebug.info('SEND', 'Writing AI reply to RTDB');
+        _ScreenDebug.info('SEND', 'AI returned text; preparing immediate UI render');
         const { mood, text: cleanedAiText } = parseMoodTag(aiText);
 
-        // Success — clear any prior cooldown so AI keeps responding normally
+        // A successful model response must not be hidden just because the
+        // follow-up RTDB persistence write is slow or rejected. Render first;
+        // persist the same message afterward. The key is pre-registered so
+        // the child_added listener cannot duplicate the locally rendered bubble.
         _aiLockedUntil = 0;
         rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').remove().catch(() => {});
 
-        const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-        const aiTs = firebase.database.ServerValue.TIMESTAMP;
-        loadedMessageKeys.add(aiRef.key);
-
-        // Computed BEFORE the write (not after, like before) so the
-        // product snapshots can be saved on the message itself — see
-        // buildProductCardSnapshot()'s own comment for why. Reuses the
-        // exact same matched-products data already given to the AI
-        // (see buildProductsContextForAI()/getAIReply()) rather than
-        // trying to parse product names out of its reply text, so
-        // there's no risk of a card mismatching or a hallucinated item.
         let matchedForCards = [];
+        let productSnapshots = [];
         try {
           const productsForCards = await getActiveProductsForAI();
           matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
+          productSnapshots = matchedForCards.map(buildProductCardSnapshot);
         } catch (e) {
-          _ScreenDebug.err('AI', 'Failed to match products for cards: ' + e.message);
+          _ScreenDebug.err('AI', 'Product suggestions failed; showing text reply without cards: ' + e.message);
+          matchedForCards = [];
+          productSnapshots = [];
         }
-        const productSnapshots = matchedForCards.map(buildProductCardSnapshot);
 
+        const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
+        loadedMessageKeys.add(aiRef.key);
+        const aiTs = firebase.database.ServerValue.TIMESTAMP;
         const aiMessage = {
           text: cleanedAiText,
           sender: 'admin',
@@ -1640,25 +1638,39 @@ async function sendChatMessage() {
         };
         if (productSnapshots.length) aiMessage.products = productSnapshots;
 
-        await rtdb.ref('/').update({
-          ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: aiMessage,
-          ['chat_inbox/' + chatSessionId + '/lastMessage']: cleanedAiText,
-          ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
+        // Render the actual response before waiting on Firebase to save it.
+        appendMessage({
+          text: cleanedAiText,
+          sender: 'admin',
+          senderName: 'JAI',
+          mood: mood,
+          createdAt: Date.now()
         });
-        _ScreenDebug.ok('SEND', 'AI reply written to RTDB (mood=' + mood + ')');
-
-        // The key was pre-added above to avoid a duplicate render from the
-        // live listener, but that means nothing else ever displays it —
-        // render it locally now, right after the write confirms.
-        appendMessage({ text: cleanedAiText, sender: 'admin', senderName: 'JAI', mood: mood, createdAt: Date.now() });
-
-        if (matchedForCards.length) renderAIProductSuggestions(matchedForCards);
-
+        if (matchedForCards.length) {
+          try {
+            renderAIProductSuggestions(matchedForCards);
+          } catch (e) {
+            _ScreenDebug.err('AI', 'Could not render product suggestions: ' + e.message);
+          }
+        }
         showUnreadBadgeIfClosed();
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
         hideTypingIndicator();
         setJAIState(mood === 'happy' ? 'happy' : 'responding', 1200);
+
+        try {
+          await rtdb.ref('/').update({
+            ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: aiMessage,
+            ['chat_inbox/' + chatSessionId + '/lastMessage']: cleanedAiText,
+            ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
+          });
+          _ScreenDebug.ok('SEND', 'AI reply rendered and saved to RTDB (mood=' + mood + ')');
+        } catch (saveError) {
+          // Keep the already-visible answer. Report the persistence problem
+          // separately so it can be diagnosed without discarding the reply.
+          _ScreenDebug.err('RTDB', 'AI reply displayed but could not be saved: ' + (saveError.code || '') + ' ' + saveError.message);
+        }
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
 
