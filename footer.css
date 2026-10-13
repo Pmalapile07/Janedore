@@ -2,7 +2,7 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
 @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
 .footer-top { display: flex; flex-direction: column; gap: 0; margin-bottom: 40px; }
 .footer-collapse { border-bottom: none; }
-.footer-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; cursor: pointer; user-select: none; font-family: 'Inter', sans-serif; font-size: 13px !important; letter-spacing: 0; font-weight: 500; text-transform: none; color: #fff; }
+.footer-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; cursor: pointer; user-select: none; font-family: 'Inter', sans-serif; font-size: 13px !important; letter-spacing: 0; font-weight: 400; text-transform: none; color: #fff; }
 .footer-collapse-header svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 1.5; transition: transform 0.3s; }
 .footer-collapse.open .footer-collapse-header svg { transform: rotate(45deg); }
 .footer-collapse-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease; }
