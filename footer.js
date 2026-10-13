@@ -9,7 +9,7 @@ function buildFooter(id) {
       id: "shop",
       title: "Shop",
       links: [
-        { label: "New Arrivals", action: "navigateTo('products')" },
+        { label: "New Arrivals", action: "navigateToNewIn()" },
         { label: "All Products", action: "navigateTo('products')" },
         { label: "Sale", action: "navigateToSale()" }
       ]
