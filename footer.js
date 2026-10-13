@@ -51,7 +51,6 @@ function buildFooter(id) {
             ${section.links.map(link => `
               <li>
                 <a onclick="navigateToContentPage(\'${link.slug}\')">${link.label}</a>
-                ${link.label === "Brand Partnerships" ? `<ul class="footer-sub-links"><li><a onclick="navigateToContentPage(\'become-a-brand\')">Become a Brand</a></li></ul>` : ""}
               </li>
             `).join("")}
           </ul>
