@@ -475,7 +475,7 @@ function updateCollectionTitle() {
   }
 
   if (bcEl) {
-    bcEl.innerHTML = `<span onclick="navigateTo('home')">Home</span><span class="page-breadcrumb-sep">/</span><span class="page-breadcrumb-current">${escapeHTML(bcLabel)}</span>`;
+    bcEl.innerHTML = `<span onclick="navigateTo('home')">Home</span><span class="page-breadcrumb-sep"> / </span><span class="page-breadcrumb-current">${escapeHTML(bcLabel)}</span>`;
   }
 }
 
