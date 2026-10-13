@@ -9,7 +9,6 @@ function buildFooter(id) {
       links: [
         { label: "About JANEDORE LTD", slug: "about" },
         { label: "Brand Partnerships", slug: "contact" },
-        { label: "Become a Brand", slug: "become-a-brand" },
         { label: "Sustainability", slug: "sustainability" }
       ]
     },
@@ -51,7 +50,8 @@ function buildFooter(id) {
           <ul class="footer-links">
             ${section.links.map(link => `
               <li>
-                <a onclick="navigateToContentPage('${link.slug}')">${link.label}</a>
+                <a onclick="navigateToContentPage(\'${link.slug}\')">${link.label}</a>
+                ${link.label === "Brand Partnerships" ? `<ul class="footer-sub-links"><li><a onclick="navigateToContentPage(\'become-a-brand\')">Become a Brand</a></li></ul>` : ""}
               </li>
             `).join("")}
           </ul>
