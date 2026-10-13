@@ -46,13 +46,15 @@
   margin: 0;
   padding: 0;
 }
-.page-breadcrumb span { color: #888; }
-.page-breadcrumb span[onclick] { cursor: pointer; }
-.page-breadcrumb span[onclick]:hover { color: #111; }
-.page-breadcrumb-sep { color: #ccc; }
-/* One weight step heavier than the trail's other links, to mark which
-   page you're currently on. */
-.page-breadcrumb-current { color: #111; font-weight: 500; }
+.page-breadcrumb {
+  font-size: 9px;
+}
+.page-breadcrumb span { color: #888; font-weight: 300; }
+.page-breadcrumb .page-breadcrumb-link { cursor: pointer; font-weight: 300; }
+.page-breadcrumb .page-breadcrumb-link:hover { color: #111; }
+.page-breadcrumb-sep { color: #ccc; font-weight: 300; }
+/* The current page is darker and slightly stronger than the trail. */
+.page-breadcrumb .page-breadcrumb-current { color: #111; font-weight: 500; }
 @media (min-width: 768px) {
   .product-breadcrumb-bar { padding: 16px 16px 0; }
   .page-breadcrumb { padding: 16px 16px 0; }
