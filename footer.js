@@ -7,7 +7,7 @@ function buildFooter(id) {
       id: "the-house",
       title: "The Company",
       links: [
-        { label: "About JANEDORE LTD", slug: "about" },
+        { label: "About JANEDORE Ltd.", slug: "about" },
         { label: "Brand Partnerships", slug: "contact" },
         { label: "Sustainability", slug: "sustainability" }
       ]
