@@ -61,10 +61,8 @@ function buildFooter(id) {
   }).join("");
 
   el.innerHTML = `
-    <div class="footer-bottom">
-      <div class="footer-copy">
-        © 2026 JANEDORE. ALL RIGHTS RESERVED.
-      </div>
+    <div class="footer-top">
+      ${collapseHTML}
     </div>
 
     <div class="footer-socials" aria-label="Social media">
@@ -73,8 +71,10 @@ function buildFooter(id) {
       <i class="ph-bold ph-tiktok-logo" aria-label="TikTok" role="img"></i>
     </div>
 
-    <div class="footer-top">
-      ${collapseHTML}
+    <div class="footer-bottom">
+      <div class="footer-copy">
+        © 2026 JANEDORE. ALL RIGHTS RESERVED.
+      </div>
     </div>
   `;
 }
