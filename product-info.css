@@ -87,9 +87,9 @@
 }
 
 .product-title-main {
-  font-family: 'Inter', sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 20px;
-  font-weight: 300;
+  font-weight: 500;
   color: #111;
   line-height: 1.15;
   letter-spacing: -0.02em;
