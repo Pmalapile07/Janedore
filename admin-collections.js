@@ -63,6 +63,21 @@
     var list = document.getElementById('collections-admin-list');
     if (!list) return;
     var products = window._allProducts || [];
+    var isPlatformAdmin = isSuperAdmin();
+    var activeProducts = products.filter(function (product) { return product.status === 'active'; });
+    var activeBrands = {};
+    activeProducts.forEach(function (product) {
+      var brand = String(product.brand || product.vendorName || '').trim();
+      if (brand) activeBrands[brand.toLowerCase()] = brand;
+    });
+    var allProductsRow = isPlatformAdmin
+      ? '<div class="products-row" role="listitem" data-collection-search="all products all /shop system collection" onclick="window._showAllProductsCollectionInfo()" style="cursor:pointer;">' +
+          '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text2);"><i class="ph ph-stack"></i></div>' +
+          '<div style="flex:1;min-width:0;"><div class="pi-name">All Products</div>' +
+          '<div class="pi-meta">' + activeProducts.length + ' active products · ' + Object.keys(activeBrands).length + ' brands · /shop</div></div>' +
+          '<span class="badge" style="background:var(--surface2);color:var(--text2);">System</span>' +
+        '</div>'
+      : '';
     var brandsFor = function (item) {
       var brands = {};
       products.forEach(function (product) {
@@ -76,11 +91,11 @@
       return products.filter(function (product) { return product.status !== 'archived' && hasMember(product, item); }).length;
     };
     var toolbar = '<div class="orders-search-row"><div class="orders-search-wrap"><i class="ph ph-magnifying-glass"></i><input class="orders-search-input" id="collections-admin-search" placeholder="Search collections" oninput="window._filterAdminCollections()"></div></div>';
-    if (!items.length) {
+    if (!items.length && !isPlatformAdmin) {
       list.innerHTML = toolbar + '<div class="orders-empty-state"><div class="orders-empty-icon"><i class="ph-light ph-stack"></i></div><div class="orders-empty-title">No collections yet</div><div class="orders-empty-sub">Create your first collection to curate products across brands.</div></div>';
       return;
     }
-    list.innerHTML = toolbar + '<div class="products-list" role="list">' + items.map(function (item) {
+    list.innerHTML = toolbar + '<div class="products-list" role="list">' + allProductsRow + items.map(function (item) {
       var count = productCount(item);
       var brandCount = brandsFor(item);
       var title = item.title || item.name || item.handle || item.id;
@@ -95,6 +110,24 @@
       '</div>';
     }).join('') + '<div class="orders-empty-sub" id="collections-admin-no-results" style="display:none;padding:18px 0;">No collections match your search.</div></div>';
   }
+
+  // All Products is a built-in, read-only collection. It is not stored as
+  // a normal Firestore collection because its membership is always derived
+  // from the active product catalogue. The storefront's canonical route is /shop.
+  window._showAllProductsCollectionInfo = function () {
+    if (!isSuperAdmin()) return;
+    var wrap = document.getElementById('collections-admin-form-wrap');
+    if (!wrap) return;
+    var activeProducts = (window._allProducts || []).filter(function (product) { return product.status === 'active'; });
+    wrap.innerHTML =
+      '<div style="border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;background:var(--surface);">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;"><div style="font-weight:600;">All Products <span class="badge" style="margin-left:6px;background:var(--surface2);color:var(--text2);">System collection</span></div><button type="button" class="btn btn-sm btn-ghost" onclick="window._cancelAdminCollectionForm()">Close</button></div>' +
+        '<div class="form-group"><label>Collection name</label><input value="All Products" disabled></div>' +
+        '<div class="form-group"><label>Product condition</label><input value="Include every active product" disabled><small style="color:var(--muted);">This system condition is fixed and cannot be edited. Products enter or leave automatically when their status changes.</small></div>' +
+        '<div class="form-group"><label>Storefront URL</label><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><input value="https://janedore.co.za/shop" readonly style="flex:1;min-width:220px;"><a class="btn btn-ghost" href="https://janedore.co.za/shop" target="_blank" rel="noopener noreferrer">Open shop <i class="ph ph-arrow-square-out" style="margin-left:4px;"></i></a></div></div>' +
+        '<div style="font-size:12px;color:var(--muted);">' + activeProducts.length + ' active products currently included.</div>' +
+      '</div>';
+  };
   window._filterAdminCollections = function () {
     var input = document.getElementById('collections-admin-search');
     var query = input ? input.value.toLowerCase().trim() : '';
