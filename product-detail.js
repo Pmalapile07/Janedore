@@ -239,6 +239,29 @@ function selectSize(btn,size) { document.querySelectorAll(".modal-size-btn").for
 function toggleInfoAccordion(key) {
   document.getElementById(`info-accordion-${key}`)?.classList.toggle('open');
 }
+function goBackFromProduct() {
+  if (window.history.length > 1) window.history.back();
+  else navigateTo('home');
+}
+
+async function shareCurrentProduct(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  const url = window.location.href;
+  const title = product?.name || document.title || 'JANEDORE product';
+  const shareData = { title, text: title, url };
+  if (navigator.share) {
+    try { await navigator.share(shareData); }
+    catch (error) { if (error?.name !== 'AbortError') console.error('Product share failed:', error); }
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    alert('Product link copied. You can now share it in any app.');
+  } catch (error) {
+    window.prompt('Copy this product link to share it:', url);
+  }
+}
+
 async function renderProductPage(product) {
   // Reset scroll FIRST, before any DOM writes below — not just
   // before the real content (the big innerHTML write further down),
@@ -291,13 +314,17 @@ async function renderProductPage(product) {
   const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
 
   const categoryLabel = String(product.category||'').replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
-  const breadcrumbHtml = `<nav class="page-breadcrumb" aria-label="Breadcrumb">
-    <span onclick="navigateTo('home')">Home</span>
-    ${productVendor?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')">${escapeHTML(product.brand||'')}</span>`:''}
-    ${product.category?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCategory('${product.category}')">${categoryLabel}</span>`:''}
-    <span class="page-breadcrumb-sep">/</span>
-    <span class="page-breadcrumb-current">${escapeHTML(product.name||'')}</span>
-  </nav>`;
+  const breadcrumbHtml = `<div class="product-breadcrumb-bar">
+    <button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button>
+    <nav class="page-breadcrumb" aria-label="Breadcrumb">
+      <span onclick="navigateTo('home')">Home</span>
+      ${productVendor?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')">${escapeHTML(product.brand||'')}</span>`:''}
+      ${product.category?`<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCategory('${product.category}')">${categoryLabel}</span>`:''}
+      <span class="page-breadcrumb-sep">/</span>
+      <span class="page-breadcrumb-current">${escapeHTML(product.name||'')}</span>
+    </nav>
+    <button class="product-breadcrumb-share" type="button" onclick="shareCurrentProduct('${product.id}')" aria-label="Share product"><i class="ph ph-share-network"></i></button>
+  </div>`;
 
   DOM.productDetail.innerHTML=`
     ${breadcrumbHtml}
