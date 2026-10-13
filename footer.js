@@ -84,30 +84,18 @@ function buildFooter(id) {
 
   const headerLogo = document.querySelector(".nav-logo");
   const footerLogoMark = el.querySelector(".footer-brand-mark");
-  if (headerLogo && footerLogoMark) {
-    const logoClone = headerLogo.cloneNode(true);
-    logoClone.className = "footer-logo-clone";
-    logoClone.removeAttribute("onclick");
-    logoClone.removeAttribute("role");
-    logoClone.removeAttribute("tabindex");
-    logoClone.removeAttribute("aria-label");
-    const logoImage = logoClone.querySelector("#nav-logo-img");
-    if (logoImage) { logoImage.removeAttribute("id"); logoImage.style.display = "block"; }
-    const logoText = logoClone.querySelector("#nav-logo-text");
-    if (logoText) {
-      logoText.removeAttribute("id");
-      const headerTextStyle = window.getComputedStyle(headerLogo.querySelector(".nav-logo-text"));
-      logoText.style.fontSize = headerTextStyle.fontSize;
-      logoText.style.fontFamily = headerTextStyle.fontFamily;
-      logoText.style.fontWeight = headerTextStyle.fontWeight;
-      logoText.style.letterSpacing = headerTextStyle.letterSpacing;
-      logoText.style.lineHeight = headerTextStyle.lineHeight;
-      logoText.style.color = "#fff";
-    }
-    logoClone.style.border = "0";
-    logoClone.style.outline = "0";
-    logoClone.style.boxShadow = "none";
-    footerLogoMark.replaceChildren(logoClone);
+  const headerLogoText = headerLogo?.querySelector(".nav-logo-text");
+  if (footerLogoMark && headerLogoText) {
+    const logoText = headerLogoText.cloneNode(true);
+    logoText.removeAttribute("id");
+    logoText.style.color = "#fff";
+    const computed = window.getComputedStyle(headerLogoText);
+    logoText.style.fontSize = computed.fontSize;
+    logoText.style.fontFamily = computed.fontFamily;
+    logoText.style.fontWeight = computed.fontWeight;
+    logoText.style.letterSpacing = computed.letterSpacing;
+    logoText.style.lineHeight = computed.lineHeight;
+    footerLogoMark.replaceChildren(logoText);
   }
 }
 
