@@ -78,7 +78,7 @@ function buildFooter(id) {
     </div>
 
     <div class="footer-bottom">
-      <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span> <span class="footer-disclaimer">This multi-brand platform features independently owned brands. Unless otherwise stated, the brands featured are not owned by or affiliated with the platform and remain the property of their respective owners.</span></p>
+      <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span> <span class="footer-disclaimer">Independent brands featured on this platform remain the property of their respective owners.</span></p>
     </div>
   `;
 
@@ -94,7 +94,19 @@ function buildFooter(id) {
     const logoImage = logoClone.querySelector("#nav-logo-img");
     if (logoImage) { logoImage.removeAttribute("id"); logoImage.style.display = "block"; }
     const logoText = logoClone.querySelector("#nav-logo-text");
-    if (logoText) logoText.removeAttribute("id");
+    if (logoText) {
+      logoText.removeAttribute("id");
+      const headerTextStyle = window.getComputedStyle(headerLogo.querySelector(".nav-logo-text"));
+      logoText.style.fontSize = headerTextStyle.fontSize;
+      logoText.style.fontFamily = headerTextStyle.fontFamily;
+      logoText.style.fontWeight = headerTextStyle.fontWeight;
+      logoText.style.letterSpacing = headerTextStyle.letterSpacing;
+      logoText.style.lineHeight = headerTextStyle.lineHeight;
+      logoText.style.color = "#fff";
+    }
+    logoClone.style.border = "0";
+    logoClone.style.outline = "0";
+    logoClone.style.boxShadow = "none";
     footerLogoMark.replaceChildren(logoClone);
   }
 }
