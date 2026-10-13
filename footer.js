@@ -81,13 +81,13 @@ function buildFooter(id) {
     </div>
 
     <div class="footer-socials" aria-label="Social media">
-      <i class="ph-fill ph-facebook-logo" aria-label="Facebook" role="img"></i>
+      <i class="ph ph-facebook-logo" aria-label="Facebook" role="img"></i>
       <i class="ph-bold ph-instagram-logo" aria-label="Instagram" role="img"></i>
       <i class="ph-bold ph-tiktok-logo" aria-label="TikTok" role="img"></i>
     </div>
 
     <div class="footer-bottom">
-      <p class="footer-legal-line"><span class="footer-copy">© 2026 JANEDORE LTD. All rights reserved.</span><span class="footer-disclaimer">Independent brands featured on JANEDORE remain the property of their respective owners.</span></p>
+      <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span> <span class="footer-disclaimer">Independent brands featured on this platform remain the property of their respective owners.</span></p>
     </div>
   `;
 
@@ -97,7 +97,7 @@ function buildFooter(id) {
   if (footerLogoMark && headerLogoText) {
     const logoText = headerLogoText.cloneNode(true);
     logoText.removeAttribute("id");
-    logoText.style.color = "#111";
+    logoText.style.color = "#fff";
     const computed = window.getComputedStyle(headerLogoText);
     logoText.style.fontSize = computed.fontSize;
     logoText.style.fontFamily = computed.fontFamily;
