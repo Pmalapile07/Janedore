@@ -64,9 +64,9 @@ function buildFooter(id) {
     <div class="footer-menu-divider" aria-hidden="true"></div>
 
     <nav class="footer-quick-links" aria-label="Quick links">
-      <a href="/pages/track-your-order"><i class="ph ph-truck" aria-hidden="true"></i><span>Track Your Order</span></a>
-      <a href="/pages/log-a-return"><i class="ph ph-arrow-u-down-left" aria-hidden="true"></i><span>Log a Return</span></a>
-      <a href="/pages/become-a-brand"><i class="ph ph-house-line" aria-hidden="true"></i><span>Become a Brand</span></a>
+      <a onclick="navigateToContentPage('track-your-order')"><i class="ph ph-truck" aria-hidden="true"></i><span>Track Your Order</span></a>
+      <a onclick="navigateToContentPage('log-a-return')"><i class="ph ph-arrow-u-down-left" aria-hidden="true"></i><span>Log a Return</span></a>
+      <a onclick="navigateToContentPage('become-a-brand')"><i class="ph ph-house-line" aria-hidden="true"></i><span>Become a Brand</span></a>
     </nav>
 
     <div class="footer-top">
