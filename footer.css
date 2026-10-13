@@ -2,13 +2,13 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
 @media (min-width: 768px) { footer { padding: 60px 16px 32px; } }
 .footer-top { display: flex; flex-direction: column; gap: 0; margin-bottom: 40px; }
 .footer-collapse { border-bottom: none; }
-.footer-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; cursor: pointer; user-select: none; font-family: Helvetica, Arial, sans-serif; font-size: 13px; letter-spacing: 0; font-weight: 500; text-transform: none; color: #fff; }
+.footer-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; cursor: pointer; user-select: none; font-family: Helvetica, Arial, sans-serif; font-size: 16px !important; letter-spacing: 0; font-weight: 500; text-transform: none; color: #fff; }
 .footer-collapse-header svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 1.5; transition: transform 0.3s; }
 .footer-collapse.open .footer-collapse-header svg { transform: rotate(45deg); }
 .footer-collapse-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease; }
 .footer-collapse.open .footer-collapse-body { max-height: 400px; padding-bottom: 18px; }
 .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-.footer-links li a { font-family: Helvetica, Arial, sans-serif; font-size: 13px; letter-spacing: 0; font-weight: 400; text-transform: none; color: #888; transition: color 0.2s; cursor: pointer; }
+.footer-links li a { font-family: Helvetica, Arial, sans-serif; font-size: 16px !important; letter-spacing: 0; font-weight: 400; text-transform: none; color: #888; transition: color 0.2s; cursor: pointer; }
 .footer-links li a:hover { color: #fff; }
 .footer-about { font-size: var(--body-font-size); font-weight: var(--body-font-weight); line-height: var(--body-line-height); letter-spacing: var(--body-letter-spacing); color: #888; max-width: 480px; margin: 0 auto 28px; text-align: center; }
 .footer-currency-lang { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; position: relative; }
