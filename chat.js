@@ -1601,27 +1601,10 @@ async function sendChatMessage() {
       const aiText = await getAIReply(text);
 
       if (aiText) {
-        _ScreenDebug.info('SEND', 'AI returned text; preparing immediate UI render');
+        _ScreenDebug.info('SEND', 'AI returned text; rendering reply immediately');
         const { mood, text: cleanedAiText } = parseMoodTag(aiText);
-
-        // A successful model response must not be hidden just because the
-        // follow-up RTDB persistence write is slow or rejected. Render first;
-        // persist the same message afterward. The key is pre-registered so
-        // the child_added listener cannot duplicate the locally rendered bubble.
         _aiLockedUntil = 0;
         rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').remove().catch(() => {});
-
-        let matchedForCards = [];
-        let productSnapshots = [];
-        try {
-          const productsForCards = await getActiveProductsForAI();
-          matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
-          productSnapshots = matchedForCards.map(buildProductCardSnapshot);
-        } catch (e) {
-          _ScreenDebug.err('AI', 'Product suggestions failed; showing text reply without cards: ' + e.message);
-          matchedForCards = [];
-          productSnapshots = [];
-        }
 
         const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
         loadedMessageKeys.add(aiRef.key);
@@ -1636,9 +1619,10 @@ async function sendChatMessage() {
           delivered: true,
           sessionId: chatSessionId
         };
-        if (productSnapshots.length) aiMessage.products = productSnapshots;
 
-        // Render the actual response before waiting on Firebase to save it.
+        // Show the model's text before doing optional product matching or
+        // waiting for the RTDB write. Neither slow product data nor a failed
+        // persistence request should make a successful answer disappear.
         appendMessage({
           text: cleanedAiText,
           sender: 'admin',
@@ -1646,13 +1630,6 @@ async function sendChatMessage() {
           mood: mood,
           createdAt: Date.now()
         });
-        if (matchedForCards.length) {
-          try {
-            renderAIProductSuggestions(matchedForCards);
-          } catch (e) {
-            _ScreenDebug.err('AI', 'Could not render product suggestions: ' + e.message);
-          }
-        }
         showUnreadBadgeIfClosed();
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
@@ -1667,9 +1644,25 @@ async function sendChatMessage() {
           });
           _ScreenDebug.ok('SEND', 'AI reply rendered and saved to RTDB (mood=' + mood + ')');
         } catch (saveError) {
-          // Keep the already-visible answer. Report the persistence problem
-          // separately so it can be diagnosed without discarding the reply.
           _ScreenDebug.err('RTDB', 'AI reply displayed but could not be saved: ' + (saveError.code || '') + ' ' + saveError.message);
+        }
+
+        // Product cards are an enhancement to the text reply, not a
+        // prerequisite for displaying it. Failures here must never hide JAI's answer.
+        try {
+          const productsForCards = await getActiveProductsForAI();
+          const matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
+          const productSnapshots = matchedForCards.map(buildProductCardSnapshot);
+          if (matchedForCards.length) {
+            renderAIProductSuggestions(matchedForCards);
+          }
+          if (productSnapshots.length) {
+            await rtdb.ref('live_chat/' + chatSessionId + '/messages/' + aiRef.key)
+              .update({ products: productSnapshots })
+              .catch(e => _ScreenDebug.err('RTDB', 'Reply shown, but product-card history could not be saved: ' + (e.code || '') + ' ' + e.message));
+          }
+        } catch (e) {
+          _ScreenDebug.err('AI', 'Product suggestions failed; text reply is already visible: ' + e.message);
         }
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
