@@ -5,20 +5,20 @@ function buildFooter(id) {
   const sections = [
     {
       id: "the-house",
-      title: "The House",
+      title: "The Company",
       links: [
-        { label: "About JANEDORE", slug: "about" },
-        { label: "Brand Partnerships", slug: "contact" }
+        { label: "About JANEDORE LTD", slug: "about" },
+        { label: "Brand Partnerships", slug: "contact" },
+        { label: "Become a Brand", slug: "become-a-brand" },
+        { label: "Sustainability", slug: "sustainability" }
       ]
     },
     {
       id: "client-services",
       title: "Client Services",
       links: [
-        { label: "Frequently Asked Questions", slug: "faq" },
         { label: "Delivery & Collection", slug: "shipping-policy" },
-        { label: "Returns & Refunds", slug: "return-policy" },
-        { label: "Client Support", slug: "contact" }
+        { label: "Returns & Refunds", slug: "return-policy" }
       ]
     },
     {
@@ -64,7 +64,8 @@ function buildFooter(id) {
     <nav class="footer-quick-links" aria-label="Quick links">
       <a onclick="navigateToContentPage('track-your-order')"><i class="ph ph-truck" aria-hidden="true"></i><span>Track Your Order</span></a>
       <a onclick="navigateToContentPage('log-a-return')"><i class="ph ph-arrow-u-down-left" aria-hidden="true"></i><span>Log a Return</span></a>
-      <a onclick="navigateToContentPage('become-a-brand')"><i class="ph ph-house-line" aria-hidden="true"></i><span>Become a Brand</span></a>
+      <a onclick="navigateToContentPage('client-support')"><i class="ph ph-headset" aria-hidden="true"></i><span>Client Support</span></a>
+      <a onclick="navigateToContentPage('faq')"><i class="ph ph-question" aria-hidden="true"></i><span>Frequently Asked Questions</span></a>
     </nav>
 
     <div class="footer-menu-divider" aria-hidden="true"></div>
@@ -86,7 +87,7 @@ function buildFooter(id) {
     </div>
 
     <div class="footer-bottom">
-      <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span> <span class="footer-disclaimer">Independent brands featured on this platform remain the property of their respective owners.</span></p>
+      <p class="footer-legal-line"><span class="footer-copy">© 2026 JANEDORE LTD. All rights reserved.</span><span class="footer-disclaimer">Independent brands featured on JANEDORE remain the property of their respective owners.</span></p>
     </div>
   `;
 
@@ -96,7 +97,7 @@ function buildFooter(id) {
   if (footerLogoMark && headerLogoText) {
     const logoText = headerLogoText.cloneNode(true);
     logoText.removeAttribute("id");
-    logoText.style.color = "#fff";
+    logoText.style.color = "#111";
     const computed = window.getComputedStyle(headerLogoText);
     logoText.style.fontSize = computed.fontSize;
     logoText.style.fontFamily = computed.fontFamily;
