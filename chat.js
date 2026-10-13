@@ -1601,14 +1601,33 @@ async function sendChatMessage() {
       const aiText = await getAIReply(text);
 
       if (aiText) {
-        _ScreenDebug.info('SEND', 'AI returned text; rendering reply immediately');
+        _ScreenDebug.info('SEND', 'Writing AI reply to RTDB');
         const { mood, text: cleanedAiText } = parseMoodTag(aiText);
+
+        // Success — clear any prior cooldown so AI keeps responding normally
         _aiLockedUntil = 0;
         rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').remove().catch(() => {});
 
         const aiRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
-        loadedMessageKeys.add(aiRef.key);
         const aiTs = firebase.database.ServerValue.TIMESTAMP;
+        loadedMessageKeys.add(aiRef.key);
+
+        // Computed BEFORE the write (not after, like before) so the
+        // product snapshots can be saved on the message itself — see
+        // buildProductCardSnapshot()'s own comment for why. Reuses the
+        // exact same matched-products data already given to the AI
+        // (see buildProductsContextForAI()/getAIReply()) rather than
+        // trying to parse product names out of its reply text, so
+        // there's no risk of a card mismatching or a hallucinated item.
+        let matchedForCards = [];
+        try {
+          const productsForCards = await getActiveProductsForAI();
+          matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
+        } catch (e) {
+          _ScreenDebug.err('AI', 'Failed to match products for cards: ' + e.message);
+        }
+        const productSnapshots = matchedForCards.map(buildProductCardSnapshot);
+
         const aiMessage = {
           text: cleanedAiText,
           sender: 'admin',
@@ -1619,51 +1638,27 @@ async function sendChatMessage() {
           delivered: true,
           sessionId: chatSessionId
         };
+        if (productSnapshots.length) aiMessage.products = productSnapshots;
 
-        // Show the model's text before doing optional product matching or
-        // waiting for the RTDB write. Neither slow product data nor a failed
-        // persistence request should make a successful answer disappear.
-        appendMessage({
-          text: cleanedAiText,
-          sender: 'admin',
-          senderName: 'JAI',
-          mood: mood,
-          createdAt: Date.now()
+        await rtdb.ref('/').update({
+          ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: aiMessage,
+          ['chat_inbox/' + chatSessionId + '/lastMessage']: cleanedAiText,
+          ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
         });
+        _ScreenDebug.ok('SEND', 'AI reply written to RTDB (mood=' + mood + ')');
+
+        // The key was pre-added above to avoid a duplicate render from the
+        // live listener, but that means nothing else ever displays it —
+        // render it locally now, right after the write confirms.
+        appendMessage({ text: cleanedAiText, sender: 'admin', senderName: 'JAI', mood: mood, createdAt: Date.now() });
+
+        if (matchedForCards.length) renderAIProductSuggestions(matchedForCards);
+
         showUnreadBadgeIfClosed();
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
         hideTypingIndicator();
         setJAIState(mood === 'happy' ? 'happy' : 'responding', 1200);
-
-        try {
-          await rtdb.ref('/').update({
-            ['live_chat/' + chatSessionId + '/messages/' + aiRef.key]: aiMessage,
-            ['chat_inbox/' + chatSessionId + '/lastMessage']: cleanedAiText,
-            ['chat_inbox/' + chatSessionId + '/lastMessageAt']: aiTs
-          });
-          _ScreenDebug.ok('SEND', 'AI reply rendered and saved to RTDB (mood=' + mood + ')');
-        } catch (saveError) {
-          _ScreenDebug.err('RTDB', 'AI reply displayed but could not be saved: ' + (saveError.code || '') + ' ' + saveError.message);
-        }
-
-        // Product cards are an enhancement to the text reply, not a
-        // prerequisite for displaying it. Failures here must never hide JAI's answer.
-        try {
-          const productsForCards = await getActiveProductsForAI();
-          const matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
-          const productSnapshots = matchedForCards.map(buildProductCardSnapshot);
-          if (matchedForCards.length) {
-            renderAIProductSuggestions(matchedForCards);
-          }
-          if (productSnapshots.length) {
-            await rtdb.ref('live_chat/' + chatSessionId + '/messages/' + aiRef.key)
-              .update({ products: productSnapshots })
-              .catch(e => _ScreenDebug.err('RTDB', 'Reply shown, but product-card history could not be saved: ' + (e.code || '') + ' ' + e.message));
-          }
-        } catch (e) {
-          _ScreenDebug.err('AI', 'Product suggestions failed; text reply is already visible: ' + e.message);
-        }
       } else {
         _ScreenDebug.warn('SEND', 'No AI reply — message already saved, leaving for admin');
 
