@@ -2,25 +2,7 @@ function buildFooter(id) {
   const el = document.getElementById(id);
   if (!el) return;
 
-  // Keep the existing footer presentation; this changes only its information
-  // architecture and makes the links use existing storefront destinations.
   const sections = [
-    {
-      id: "shop",
-      title: "Shop",
-      links: [
-        { label: "New Arrivals", action: "navigateToNewIn()" },
-        { label: "All Products", action: "navigateTo('products')" },
-        { label: "Sale", action: "navigateToSale()" }
-      ]
-    },
-    {
-      id: "brands",
-      title: "Brands",
-      links: [
-        { label: "Discover All Brands", action: "navigateTo('brands')" }
-      ]
-    },
     {
       id: "the-house",
       title: "The House",
@@ -69,7 +51,7 @@ function buildFooter(id) {
           <ul class="footer-links">
             ${section.links.map(link => `
               <li>
-                <a${link.action ? ` onclick="${link.action}"` : ` onclick="navigateToContentPage('${link.slug}')"`}>${link.label}</a>
+                <a onclick="navigateToContentPage('${link.slug}')">${link.label}</a>
               </li>
             `).join("")}
           </ul>
@@ -79,14 +61,20 @@ function buildFooter(id) {
   }).join("");
 
   el.innerHTML = `
-    <div class="footer-top">
-      ${collapseHTML}
-    </div>
-
     <div class="footer-bottom">
       <div class="footer-copy">
         © 2026 JANEDORE. ALL RIGHTS RESERVED.
       </div>
+    </div>
+
+    <div class="footer-socials" aria-label="Social media">
+      <i class="ph-fill ph-facebook-logo" aria-label="Facebook" role="img"></i>
+      <i class="ph-bold ph-instagram-logo" aria-label="Instagram" role="img"></i>
+      <i class="ph-bold ph-tiktok-logo" aria-label="TikTok" role="img"></i>
+    </div>
+
+    <div class="footer-top">
+      ${collapseHTML}
     </div>
   `;
 }
