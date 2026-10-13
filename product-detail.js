@@ -313,7 +313,8 @@ async function renderProductPage(product) {
   // old thumbnail strip entirely.
   const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
 
-  const categoryLabel = String(product.category||'').replace(/-/g,' ').replace(/\\b\\w/g,l=>l.toUpperCase());
+  const titleCaseBreadcrumb = value => String(value || '').replace(/[-_]+/g, ' ').trim().toLowerCase().replace(/(^|\\s)\\S/g, letter => letter.toUpperCase());
+  const categoryLabel = titleCaseBreadcrumb(product.category);
   const productCollectionValues = (Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(','))
     .map(value => String(value || '').trim().toLowerCase()).filter(Boolean);
   const publishedCollections = typeof window._loadPublishedCollections === 'function'
@@ -325,17 +326,19 @@ async function renderProductPage(product) {
     return productCollectionValues.some(value => value === handle || value === title);
   });
   const collectionHandle = productCollection && (productCollection.handle || productCollection.slug || productCollection.id);
-  const collectionLabel = productCollection && (productCollection.title || productCollection.name || collectionHandle);
-  const brandLabel = String(product.brand || productVendor?.brand || productVendor?.name || '').trim();
+  const collectionLabel = titleCaseBreadcrumb(productCollection && (productCollection.title || productCollection.name || collectionHandle));
+  const brandLabel = titleCaseBreadcrumb(product.brand || productVendor?.brand || productVendor?.name || '');
+  // Use an explicit product type when one exists; never substitute the full product name.
+  const productTypeLabel = titleCaseBreadcrumb(product.productType || product.product_type || product.type || product.category || '');
+  const breadcrumbSeparator = '<span class="page-breadcrumb-sep" aria-hidden="true"> &gt; </span>';
   const breadcrumbHtml = `<div class="product-breadcrumb-bar">
     <button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button>
     <nav class="page-breadcrumb" aria-label="Breadcrumb">
       <span onclick="navigateTo('home')">Home</span>
-      ${product.category ? `<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCategory('${escapeJSString(product.category)}')">${escapeHTML(categoryLabel)}</span>` : ''}
-      ${productCollection && collectionHandle ? `<span class="page-breadcrumb-sep">/</span><span onclick="navigateToCollection('${escapeJSString(collectionHandle)}')">${escapeHTML(collectionLabel)}</span>` : ''}
-      ${brandLabel ? `<span class="page-breadcrumb-sep">/</span>${productVendor ? `<span onclick="navigateToVendor('${escapeJSString(productVendor.slug || productVendor.id)}')">${escapeHTML(brandLabel)}</span>` : `<span>${escapeHTML(brandLabel)}</span>`}` : ''}
-      <span class="page-breadcrumb-sep">/</span>
-      <span class="page-breadcrumb-current">${escapeHTML(product.name||'')}</span>
+      ${product.category ? `${breadcrumbSeparator}<span onclick="navigateToCategory('${escapeJSString(product.category)}')">${escapeHTML(categoryLabel)}</span>` : ''}
+      ${productCollection && collectionHandle ? `${breadcrumbSeparator}<span onclick="navigateToCollection('${escapeJSString(collectionHandle)}')">${escapeHTML(collectionLabel)}</span>` : ''}
+      ${brandLabel ? `${breadcrumbSeparator}${productVendor ? `<span onclick="navigateToVendor('${escapeJSString(productVendor.slug || productVendor.id)}')">${escapeHTML(brandLabel)}</span>` : `<span>${escapeHTML(brandLabel)}</span>`}` : ''}
+      ${productTypeLabel ? `${breadcrumbSeparator}<span class="page-breadcrumb-current">${escapeHTML(productTypeLabel)}</span>` : ''}
     </nav>
     <button class="product-breadcrumb-share" type="button" onclick="shareCurrentProduct('${escapeJSString(product.id)}')" aria-label="Share product"><i class="ph ph-share-network"></i></button>
   </div>`;
