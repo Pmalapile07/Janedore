@@ -81,7 +81,7 @@ function buildFooter(id) {
     </div>
 
     <div class="footer-socials" aria-label="Social media">
-      <i class="ph-fill ph-facebook-logo" aria-label="Facebook" role="img"></i>
+      <i class="ph ph-facebook-logo" aria-label="Facebook" role="img"></i>
       <i class="ph-bold ph-instagram-logo" aria-label="Instagram" role="img"></i>
       <i class="ph-bold ph-tiktok-logo" aria-label="TikTok" role="img"></i>
     </div>
