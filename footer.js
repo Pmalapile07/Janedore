@@ -2,49 +2,62 @@ function buildFooter(id) {
   const el = document.getElementById(id);
   if (!el) return;
 
-  const sections = ["shop", "brands", "policies", "help"];
-
-  const collapseHTML = sections.map(sec => {
-    const links = {
-      shop: [
-        { label: "New In" },
-        { label: "Dresses" },
-        { label: "Tops" },
-        { label: "Bottoms" },
-        { label: "Jackets" },
-        { label: "Sets" },
-        { label: "Bags" },
-        { label: "Jewelry" },
-        { label: "Scent" },
-        { label: "Sale" }
-      ],
-
-      brands: [],
-
-      policies: [
-        { label: "About", slug: "about" },
-        { label: "Shipping Policy", slug: "shipping-policy" },
-        { label: "Return Policy", slug: "return-policy" },
-        { label: "Privacy Policy", slug: "privacy-policy" },
-        { label: "Terms & Conditions", slug: "terms-conditions" }
-      ],
-
-      help: [
-        { label: "FAQ", slug: "faq" },
-        { label: "Size Guide", slug: "size-guide" },
-        { label: "Shipping", slug: "shipping" },
-        { label: "Returns", slug: "returns" },
-        { label: "Contact", slug: "contact" }
+  // Keep the existing footer presentation; this changes only its information
+  // architecture and makes the links use existing storefront destinations.
+  const sections = [
+    {
+      id: "shop",
+      title: "Shop",
+      links: [
+        { label: "New Arrivals", action: "navigateToNewIn()" },
+        { label: "All Products", action: "navigateTo('products')" },
+        { label: "Sale", action: "navigateToSale()" }
       ]
-    }[sec];
+    },
+    {
+      id: "brands",
+      title: "Brands",
+      links: [
+        { label: "Discover All Brands", action: "navigateTo('brands')" }
+      ]
+    },
+    {
+      id: "the-house",
+      title: "The House",
+      links: [
+        { label: "About JANEDORE", slug: "about" },
+        { label: "Brand Partnerships", slug: "contact" }
+      ]
+    },
+    {
+      id: "client-services",
+      title: "Client Services",
+      links: [
+        { label: "Frequently Asked Questions", slug: "faq" },
+        { label: "Delivery & Collection", slug: "shipping-policy" },
+        { label: "Returns & Refunds", slug: "return-policy" },
+        { label: "Client Support", slug: "contact" }
+      ]
+    },
+    {
+      id: "legal-governance",
+      title: "Legal & Governance",
+      links: [
+        { label: "Terms of Use", slug: "terms-conditions" },
+        { label: "Privacy & POPIA", slug: "privacy-policy" }
+      ]
+    }
+  ];
 
+  const collapseHTML = sections.map(section => {
+    const sectionId = section.id.replace(/[^a-z0-9-]/gi, "");
     return `
-      <div class="footer-collapse" id="footer-collapse-${sec}-${id}">
+      <div class="footer-collapse" id="footer-collapse-${sectionId}-${id}">
         <div
           class="footer-collapse-header"
-          onclick="toggleFooterCollapse('${sec}-${id}')"
+          onclick="toggleFooterCollapse('${sectionId}-${id}')"
         >
-          ${sec.charAt(0).toUpperCase() + sec.slice(1)}
+          ${section.title}
 
           <svg viewBox="0 0 24 24">
             <line x1="12" y1="5" x2="12" y2="19"/>
@@ -54,9 +67,9 @@ function buildFooter(id) {
 
         <div class="footer-collapse-body">
           <ul class="footer-links">
-            ${links.map(l => `
+            ${section.links.map(link => `
               <li>
-                <a${l.slug ? ` onclick="navigateToContentPage('${l.slug}')"` : ''}>${l.label}</a>
+                <a${link.action ? ` onclick="${link.action}"` : ` onclick="navigateToContentPage('${link.slug}')"`}>${link.label}</a>
               </li>
             `).join("")}
           </ul>
@@ -72,7 +85,7 @@ function buildFooter(id) {
 
     <div class="footer-bottom">
       <div class="footer-copy">
-        © 2025 JANEDORE. ALL RIGHTS RESERVED.
+        © 2026 JANEDORE. ALL RIGHTS RESERVED.
       </div>
     </div>
   `;
