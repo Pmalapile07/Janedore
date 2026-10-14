@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'HelveticaBold';
+  src: url('./Helvetica-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Always solid white/black — no more transparent-over-hero state that
    swaps in once scrolled. The .scrolled rules below are now no-ops
    (every state already matches them) rather than being ripped out,
@@ -206,24 +214,15 @@ body.on-brands-page .nav-quick-links {
 .nav-logo { cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center; margin-left: 4px; }
 
 .nav-logo-text {
-  font-family: 'Telegraf', sans-serif;
+  font-family: 'HelveticaBold', Helvetica, Arial, sans-serif;
   font-size: 17px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #111;
   white-space: nowrap;
 }
 
-/* Uploaded logo image (admin Homepage tab > Site Logo) — replaces
-   .nav-logo-text entirely when set; see site-content.js's renderLogo()
-   and server.js's applyLogoImage() for the swap. */
-.nav-logo-img {
-  height: 29px;
-  width: auto;
-  display: block;
-  object-fit: contain;
-}
 
 .nav-right { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; justify-content: flex-end; }
 
