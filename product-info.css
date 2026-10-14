@@ -83,13 +83,13 @@
 .product-name-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 .product-title-main {
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 20px;
-  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
   color: #111;
   line-height: 1.15;
   letter-spacing: 0.02em;
@@ -108,10 +108,65 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 .product-by-brand-name i {
-  font-size: 11px;
+  display: none;
+}
+
+/* Quantity control follows the product/brand heading, like a classic
+   fashion product detail page. */
+.product-quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0 24px;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 4px;
+  font-family: 'Inter', sans-serif;
+}
+.product-quantity-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111;
+}
+.product-quantity-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0;
+  width: 152px;
+}
+.product-quantity-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #111;
+  font-family: 'Inter', sans-serif;
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+}
+.product-quantity-btn:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+.product-quantity-value {
+  min-width: 24px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 400;
+  color: #111;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Brand on the left, price on the right — opposite ends of the same row. */
@@ -410,7 +465,7 @@
 
 @media (min-width: 768px) {
   .product-info { padding: 24px 16px 40px; }
-  .product-title-main { font-size: 26px; }
+  .product-title-main { font-size: 28px; }
   .info-accordion-body p,
   .info-accordion-body > div { font-size: 14px; }
 }
