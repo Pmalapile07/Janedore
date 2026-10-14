@@ -226,19 +226,11 @@ function renderEditorialBanner(banner) {
 // Homepage tab > Site Logo) once one's set — server.js's SSR already
 // does this for the very first paint (applyLogoImage()), this just
 // keeps it current if admin changes it after that response was cached.
-function renderLogo(logoUrl) {
-  const imgEl = document.getElementById('nav-logo-img');
+function renderLogo() {
+  // The header now always uses the Helvetica Bold text wordmark.
+  // Homepage logo uploads no longer replace the navigation wordmark.
   const textEl = document.getElementById('nav-logo-text');
-  if (!imgEl || !textEl) return;
-  if (logoUrl) {
-    const sized = contentImageURL(logoUrl, 200);
-    if (imgEl.src !== sized) imgEl.src = sized;
-    imgEl.style.display = 'block';
-    textEl.style.display = 'none';
-  } else {
-    imgEl.style.display = 'none';
-    textEl.style.display = '';
-  }
+  if (textEl) textEl.style.display = '';
 }
 
 function renderShopByBrandHeader(shopByBrand) {

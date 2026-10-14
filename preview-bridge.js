@@ -39,11 +39,10 @@
   function applyBackgroundImage(el, url) { el.style.backgroundImage = "url('" + url + "')"; }
 
   var FIELDS = [
-    { inputName: 'logoImage', type: 'image', selector: '.nav-logo', apply: function (el, url) {
-      var img = el.querySelector('#nav-logo-img');
+    { inputName: 'logoImage', type: 'image', selector: '.nav-logo', apply: function (el) {
+      // Keep the text wordmark visible; uploaded images no longer replace it.
       var text = el.querySelector('#nav-logo-text');
-      if (img) { img.src = url; img.style.display = 'block'; }
-      if (text) text.style.display = 'none';
+      if (text) text.style.display = '';
     } },
     { inputName: 'heroImage', type: 'image', selector: '#hero-bg', apply: applyBackgroundImage },
     { inputName: 'heroHeading', type: 'text', selector: '#hero-heading' },
