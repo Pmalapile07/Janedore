@@ -648,7 +648,7 @@ const PRODUCTS_PER_PAGE = 6;
 const _gridCurrentPage = {};
 
 // Flat #f4f4f4 box, no shimmer (nothing is ever going to load into it),
-// literal "Brand"/"Product Name"/"00" text — shown instead of a real
+// literal "Brand"/"Product name"/"00" text — shown instead of a real
 // card wherever a grid has no products at all, so an empty catalog
 // never looks broken or blank. Same count (6) as a full page of
 // PRODUCTS_PER_PAGE above. Clickable through to a placeholder product
@@ -659,7 +659,7 @@ function placeholderProductCard() {
     <div class="product-card product-card-placeholder" onclick="previewPlaceholderProduct()">
       <div class="product-img-wrap"></div>
       <div class="product-brand">Brand</div>
-      <div class="product-card-name-row"><div class="product-title">Product Name</div></div>
+      <div class="product-card-name-row"><div class="product-title">Product name</div></div>
       <div class="product-price-row"><span class="product-price">00</span></div>
     </div>`;
 }
@@ -669,7 +669,7 @@ function placeholderProductCardHome() {
       <div class="product-img-wrap"></div>
       <div class="product-home-meta">
         <div class="product-brand">Brand</div>
-        <div class="product-home-name-row"><div class="product-title">Product Name</div></div>
+        <div class="product-home-name-row"><div class="product-title">Product name</div></div>
         <div class="product-home-price-row"><span class="product-home-price">00</span></div>
       </div>
     </div>`;
@@ -681,7 +681,7 @@ function placeholderProductCards(count, home) {
 
 // A synthetic, never-saved product — exists only so the real product
 // page template (renderProductPage(), product-detail.js) has something
-// to render for the "Brand"/"Product Name" cards above. stock:1 keeps
+// to render for the "Brand"/"Product name" cards above. stock:1 keeps
 // it out of the sold-out treatment (that's not what's being previewed
 // here); empty variant images fall through to PLACEHOLDER_IMAGE
 // (app.js), which is the same #f4f4f4 box now. Never written to
@@ -690,7 +690,7 @@ function placeholderProductCards(count, home) {
 // point instead of just calling goToProduct() with a fake id.
 const PLACEHOLDER_PRODUCT = {
   id: '__placeholder__',
-  name: 'Product Name',
+  name: 'Product name',
   brand: 'Brand',
   category: '',
   price: 0,
