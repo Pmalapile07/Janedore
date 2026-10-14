@@ -8,7 +8,7 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
 .footer-top { display: flex; flex-direction: column; gap: 0; margin-bottom: 30px; }
 .footer-collapse { border-bottom: none; }
 .footer-collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; cursor: pointer; user-select: none; font-family: 'Inter', sans-serif; font-size: 13px !important; letter-spacing: 0; font-weight: 400; text-transform: none; color: #fff; }
-.footer-collapse-header svg { width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.3s; }
+.footer-collapse-header svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.3s; }
 .footer-collapse.open .footer-collapse-header svg { transform: rotate(180deg); }
 .footer-collapse-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease; }
 .footer-collapse.open .footer-collapse-body { max-height: 400px; padding-bottom: 18px; }
