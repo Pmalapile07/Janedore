@@ -201,6 +201,21 @@ function selectProductSize(btn, size) {
   updateAddToCartState();
 }
 
+function changeProductQuantity(delta) {
+  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
+  const current = Math.max(1, Number(S.productQuantity) || 1);
+  const stock = Number(product?.stock);
+  const next = current + delta;
+  const max = Number.isFinite(stock) && stock > 0 ? stock : Infinity;
+  S.productQuantity = Math.min(max, Math.max(1, next));
+  const value = document.getElementById('product-quantity-value');
+  if (value) value.textContent = String(S.productQuantity);
+  const minus = document.getElementById('product-quantity-minus');
+  const plus = document.getElementById('product-quantity-plus');
+  if (minus) minus.disabled = S.productQuantity <= 1;
+  if (plus) plus.disabled = S.productQuantity >= max;
+}
+
 /* ============================================================
    SWIPE SECTION — Recently Viewed / You May Also Like / Complete the Look
    ============================================================ */
@@ -351,6 +366,14 @@ async function renderProductPage(product) {
         <div class="product-brand-price-row">
           <p class="product-by-brand-name"${productVendor?` onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')"`:''}>${product.brand||'JANEDORE'}${productVendor?' <i class="ph ph-arrow-right"></i>':''}</p>
           <div class="product-price-top">${originalPrice?`<span class="price-current price-sale">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
+        </div>
+      </div>
+      <div class="product-quantity-row" aria-label="Quantity selector">
+        <span class="product-quantity-label">Quantity</span>
+        <div class="product-quantity-control">
+          <button class="product-quantity-btn" id="product-quantity-minus" type="button" aria-label="Decrease quantity" onclick="changeProductQuantity(-1)" disabled>−</button>
+          <span class="product-quantity-value" id="product-quantity-value" aria-live="polite">1</span>
+          <button class="product-quantity-btn" id="product-quantity-plus" type="button" aria-label="Increase quantity" onclick="changeProductQuantity(1)" ${product.stock <= 1 ? 'disabled' : ''}>+</button>
         </div>
       </div>
       <div class="product-size-color-group">
