@@ -219,7 +219,7 @@ body.on-brands-page .nav-quick-links {
    .nav-logo-text entirely when set; see site-content.js's renderLogo()
    and server.js's applyLogoImage() for the swap. */
 .nav-logo-img {
-  height: 36px;
+  height: 30px;
   width: auto;
   display: block;
   object-fit: contain;
