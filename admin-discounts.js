@@ -168,8 +168,12 @@
 
     var modalHTML = '<div class="modal modal-sm">' +
       '<div class="modal-handle"></div>' +
-      '<button class="modal-close" onclick="window._closeModal()">&#x2715;</button>' +
-      '<div class="modal-title">Create Discount</div>' +
+      // Save sits at the top right, always in view while scrolling the form.
+      '<div class="modal-head-bar">' +
+        '<div class="modal-title">Create Discount</div>' +
+        '<button type="submit" form="discount-form" class="btn btn-sm btn-primary">Save</button>' +
+        '<button type="button" class="modal-close" onclick="window._closeModal()" aria-label="Close">&#x2715;</button>' +
+      '</div>' +
       '<form id="discount-form" onsubmit="window._handleDiscountSubmit(event)">' +
 
         '<div class="form-group">' +

@@ -59,6 +59,25 @@ app.get('/api/cloudinary-config', (req, res) => {
   });
 });
 
+// ==================== VAT RATE FOR CHECKOUT ====================
+// settings/platform isn't readable by shoppers (staff-only rule), so the
+// one value checkout needs — the VAT rate set in admin Settings ("VAT
+// Rate") — is passed through here. 0 (the default) means not
+// VAT-registered: checkout shows no VAT line. Cached for 5 minutes.
+let vatRateCache = { value: 0, at: 0 };
+app.get('/api/store-settings', async (req, res) => {
+  if (adminDb && Date.now() - vatRateCache.at > 5 * 60 * 1000) {
+    try {
+      const doc = await adminDb.collection('settings').doc('platform').get();
+      const rate = Number(doc.exists && doc.data().taxRate);
+      vatRateCache = { value: Number.isFinite(rate) && rate > 0 && rate < 100 ? rate : 0, at: Date.now() };
+    } catch (e) {
+      console.warn('[STORE_SETTINGS] Could not read VAT rate:', e.message);
+    }
+  }
+  res.json({ vatRate: vatRateCache.value });
+});
+
 // ==================== ONLINE STORE GATE ====================
 // The "Coming Soon" on/off flag and the visitor password that bypasses
 // it both live in Firestore, but neither is read by the public client

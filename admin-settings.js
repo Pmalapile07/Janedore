@@ -134,8 +134,9 @@
                 '</select>' +
               '</div>' +
               '<div class="form-group" style="padding:0;">' +
-                '<label>Tax Rate (%)</label>' +
-                '<input name="taxRate" type="number" min="0" max="100" step="0.1" value="' + esc(String(s.taxRate || 0)) + '">' +
+                '<label>VAT Rate (%)</label>' +
+                '<input name="taxRate" type="number" min="0" max="99" step="0.1" value="' + esc(String(s.taxRate || 0)) + '">' +
+                '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Shown at checkout as "Includes VAT of R…". Leave at 0 if not VAT-registered.</div>' +
               '</div>' +
             '</div>' +
 
