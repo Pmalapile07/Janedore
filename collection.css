@@ -579,3 +579,27 @@ body.on-collection-page .collection-filter-bar {
 .featured-brand-heading {
   margin-bottom: 14px;
 }
+
+/* ---- Report this brand (bottom panel) ---- */
+body.brand-report-open { overflow: hidden; }
+.brand-report-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; justify-content: center; }
+.brand-report-sheet { background: #fff; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.brand-report-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand-report-head h2 { font-size: 17px; font-weight: 600; margin: 0; color: #111; }
+.brand-report-close { background: none; border: 0; padding: 4px; font-size: 20px; color: #111; cursor: pointer; line-height: 1; }
+.brand-report-intro { font-size: 13px; color: #555; line-height: 1.5; margin: 8px 0 16px; }
+.brand-report-reasons { display: flex; flex-direction: column; border-top: 1px solid #eee; }
+.brand-report-reason { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid #eee; font-size: 14px; color: #111; cursor: pointer; }
+.brand-report-reason input { width: 18px; height: 18px; margin: 0; accent-color: #111; flex: 0 0 auto; }
+.brand-report-label { display: block; font-size: 13px; font-weight: 600; color: #111; margin: 18px 0 6px; }
+.brand-report-label span { font-weight: 400; color: #888; }
+.brand-report-sheet textarea, .brand-report-sheet input[type="email"] { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 0; padding: 12px; font: inherit; font-size: 16px; color: #111; background: #fff; }
+.brand-report-sheet textarea { resize: vertical; min-height: 96px; }
+.brand-report-msg { font-size: 13px; color: #c0392b; min-height: 18px; margin-top: 10px; }
+.brand-report-submit { width: 100%; height: 46px; margin-top: 6px; background: #111; color: #fff; border: 0; border-radius: 0; font-size: calc(var(--ui-font-size) + 1px); font-weight: 500; letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; cursor: pointer; }
+.brand-report-submit:disabled { opacity: 0.6; cursor: default; }
+.brand-report-done { text-align: center; padding: 12px 0 4px; font-size: 14px; color: #555; line-height: 1.5; }
+.brand-report-done i { font-size: 36px; color: #111; }
+.brand-report-done p { margin: 6px 0; }
+.brand-report-done strong { color: #111; }
+.brand-report-done .brand-report-submit { margin-top: 16px; }

@@ -1159,20 +1159,44 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
     if (vendorId && (!Array.isArray(order.vendorIds) || order.vendorIds.indexOf(vendorId) === -1)) {
       return res.status(400).json({ error: 'That vendor is not part of this order' });
     }
-    if (!order.customerEmail) return res.json({ ok: true, skipped: 'No customer email on file' });
-
     const status = computeOrderFulfillment(order);
     if (status === 'unfulfilled') return res.json({ ok: true, skipped: 'Nothing shipped yet' });
 
-    const email = buildShipmentEmail(order, vendorId || null, status, await buildOrderEmailContext(order));
-    await sendResendEmail({
-      from: 'Janedore <noreply@janedore.co.za>',
-      replyTo: 'support@janedore.co.za',
-      to: order.customerEmail,
-      subject: email.subject,
-      html: email.html,
-      text: email.text
+    // Customer gets "on its way"; the Janedore team gets a copy saying
+    // which brand shipped. The brand itself is not emailed.
+    const ctx = await buildOrderEmailContext(order);
+    const jobs = [];
+    if (order.customerEmail) {
+      const email = buildShipmentEmail(order, vendorId || null, status, ctx);
+      jobs.push(sendResendEmail({
+        from: 'Janedore <noreply@janedore.co.za>',
+        replyTo: 'support@janedore.co.za',
+        to: order.customerEmail,
+        subject: email.subject,
+        html: email.html,
+        text: email.text
+      }));
+    }
+    const allItems = order.items || [];
+    const shippedItems = vendorId ? allItems.filter((i) => i.vendorId === vendorId) : allItems;
+    const vendorIds = Array.isArray(order.vendorIds) ? order.vendorIds : [];
+    const tracking = vendorId ? (order.vendorTracking || {})[vendorId] : { trackingNumber: order.trackingNumber, courier: order.courier };
+    const adminEmail = orderEmails.adminShipped(order, ctx, shippedItems, {
+      brand: (shippedItems[0] && shippedItems[0].brand) || 'JANEDORE',
+      tracking: tracking || {},
+      complete: status === 'fulfilled',
+      totalBrands: vendorIds.length,
+      shippedBrands: vendorIds.filter((vid) => (order.vendorTracking || {})[vid] && order.vendorTracking[vid].trackingNumber).length
     });
+    jobs.push(sendResendEmail({
+      from: 'Janedore Orders <noreply@janedore.co.za>',
+      to: ORDER_ALERT_EMAIL,
+      subject: adminEmail.subject,
+      html: adminEmail.html,
+      text: adminEmail.text
+    }));
+    const results = await Promise.allSettled(jobs);
+    results.filter((r) => r.status === 'rejected').forEach((r) => console.error('[NOTIFY_SHIPPED] Send failed:', r.reason && r.reason.message));
 
     res.json({ ok: true, status });
   } catch (e) {
@@ -1380,6 +1404,63 @@ function injectCacheBust(html) {
 }
 
 // Read by index.html's stale-tab check. Never cached.
+// ==================== REPORT A BRAND ====================
+// The "more" button on a brand page opens a short form; reports are
+// saved to brandReports and emailed to the Janedore team (never to the
+// brand). Limited to 5 reports an hour per IP address.
+const REPORT_REASONS = ['Counterfeit or fake product', 'Item not as described', 'Problem with an order', 'Offensive or misleading content', 'Something else'];
+const reportHits = new Map();
+app.post('/api/report-brand', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  const ip = String(req.ip || '');
+  const now = Date.now();
+  const hits = (reportHits.get(ip) || []).filter((t) => now - t < 60 * 60 * 1000);
+  if (hits.length >= 5) return res.status(429).json({ error: 'Too many reports. Please try again later.' });
+
+  const body = req.body || {};
+  const vendorId = String(body.vendorId || '').replace(/[^A-Za-z0-9_-]/g, '').substring(0, 100);
+  const reason = REPORT_REASONS.indexOf(body.reason) !== -1 ? body.reason : '';
+  const details = String(body.details || '').trim().substring(0, 2000);
+  const email = String(body.email || '').trim().substring(0, 200);
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+  if (!vendorId || !reason) return res.status(400).json({ error: 'Please choose a reason.' });
+  if (reason === 'Something else' && !details) return res.status(400).json({ error: 'Please tell us what happened.' });
+
+  try {
+    const vendorDoc = await adminDb.collection('vendors').doc(vendorId).get();
+    if (!vendorDoc.exists) return res.status(404).json({ error: 'Brand not found' });
+    const brand = vendorDoc.data().brand || vendorDoc.data().name || 'A brand';
+    hits.push(now);
+    reportHits.set(ip, hits);
+
+    const ref = await adminDb.collection('brandReports').add({
+      vendorId, brand, reason, details, email: validEmail,
+      status: 'new',
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    const html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#111;max-width:560px;">' +
+      '<h2 style="font-size:20px;margin:0 0 12px;">Brand reported: ' + escapeHtml(brand) + '</h2>' +
+      '<p style="margin:0 0 6px;"><strong>Reason:</strong> ' + escapeHtml(reason) + '</p>' +
+      (details ? '<p style="margin:0 0 6px;white-space:pre-wrap;"><strong>Details:</strong> ' + escapeHtml(details) + '</p>' : '') +
+      '<p style="margin:0 0 6px;"><strong>Reported by:</strong> ' + (validEmail ? escapeHtml(validEmail) : 'Anonymous') + '</p>' +
+      '<p style="margin:16px 0 0;color:#777;font-size:12px;">Report ' + escapeHtml(ref.id) + '. The brand has not been told.</p></div>';
+    sendResendEmail({
+      from: 'Janedore Reports <noreply@janedore.co.za>',
+      replyTo: validEmail || undefined,
+      to: ORDER_ALERT_EMAIL,
+      subject: 'Brand reported: ' + brand + ' (' + reason + ')',
+      html,
+      text: 'Brand reported: ' + brand + '\nReason: ' + reason + (details ? '\nDetails: ' + details : '') + '\nReported by: ' + (validEmail || 'Anonymous') + '\nReport ' + ref.id
+    }).catch((e) => console.error('[REPORT_BRAND] Email failed:', e.message));
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[REPORT_BRAND] Error:', e.message);
+    res.status(500).json({ error: 'Could not send your report. Please try again.' });
+  }
+});
+
 app.get('/api/build-id', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({ buildId: String(BUILD_ID) });
