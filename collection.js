@@ -713,7 +713,6 @@ function previewPlaceholderProduct() {
   closeSearch();
   S.saleMode = false;
   S.newInMode = false;
-  if (typeof closeCart === 'function') closeCart();
   if (DOM.mainNav) { DOM.mainNav.classList.add('product-page'); DOM.mainNav.classList.remove('collection-page'); }
   document.body.classList.remove('on-collection-page');
   renderProductPage(PLACEHOLDER_PRODUCT);
@@ -742,7 +741,6 @@ function previewPlaceholderVendor() {
   closeSearch();
   S.saleMode = false;
   S.newInMode = false;
-  if (typeof closeCart === 'function') closeCart();
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page-vendor").classList.add("active");
   S.currentPage = "vendor";

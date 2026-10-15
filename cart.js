@@ -1,7 +1,7 @@
 /* ============================================================
    CART DATA LAYER — single source of truth is S.cart
-   All shared calculations live here so renderCart() and
-   renderCartPage() never duplicate logic.
+   All shared calculations live here so renderCartPage() and checkout
+   never duplicate logic.
    ============================================================ */
 
 function loadCartFromStorage() { try { const saved = localStorage.getItem('janedore_cart'); if (saved) S.cart = JSON.parse(saved); } catch(e) { S.cart = []; } }
@@ -74,7 +74,6 @@ function handleCheckoutClick() {
     alert('Please remove the sold out item(s) from your bag before checking out.');
     return;
   }
-  closeCart();
   navigateTo('checkout');
 }
 
@@ -170,7 +169,6 @@ function truncateNameTwoWords(name) {
 function commitCartChange() {
   saveCartToStorage();
   updateBadges();
-  renderCart();
   renderCartPage();
 }
 
@@ -342,7 +340,6 @@ function applyPromoCode() {
 
     saveAppliedDiscount();
     showPromoMessage('Discount applied: ' + appliedDiscount.description, 'success');
-    renderCart();
     renderCartPage();
 
   }).catch(function(err) {
@@ -358,7 +355,6 @@ function removePromoCode() {
   const input = document.getElementById('cart-promo-input');
   if (input) input.value = '';
   
-  renderCart();
   renderCartPage();
 }
 
@@ -420,57 +416,6 @@ function recordDiscountUsage() {
    now shared via the helpers above.
    ============================================================ */
 
-function renderCart() {
-  if (!DOM.cartBody || !DOM.cartFoot) return;
-  const total = getCartTotalQty();
-  if (DOM.cartItemCount) DOM.cartItemCount.textContent = total;
-
-  if (!S.cart.length) {
-    DOM.cartBody.innerHTML = '<div class="cart-empty-state"><div class="cart-empty-msg">Your bag is empty</div><button class="btn-continue-shopping" onclick="closeCart();navigateTo(\'products\');">Continue Shopping</button></div>';
-    DOM.cartFoot.innerHTML = '';
-    return;
-  }
-
-  let html = S.cart.map(item => {
-    const thumbnail = getCartItemThumbnail(item);
-    const itemName = sanitizeHTML(item.name || '');
-    const itemBrand = sanitizeHTML(item.brand || '');
-    const itemColor = sanitizeHTML(item.color || '');
-    const itemSize = sanitizeHTML(item.size || '');
-    const itemSizeDisplay = itemSize !== 'OS' ? itemSize : '';
-    const itemMeta = [itemColor, itemSizeDisplay].filter(Boolean).join(' · ');
-    const productId = sanitizeHTML(item.productId || '');
-    const soldOut = getCartItemStock(item) <= 0;
-
-    return `<div class="cart-item-row${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${productId}')"><div class="cart-item-img-placeholder" style="background-image:url('${thumbnail}');"></div><div style="flex:1"><div class="ci-brand">${itemBrand}</div><div class="ci-name">${truncateNameTwoWords(itemName)}</div><div class="ci-meta">${itemMeta}</div>${soldOut ? '<div class="ci-sold-out-badge">Sold Out</div>' : ''}<div class="ci-qty"><button class="ci-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex})">−</button><span class="ci-qty-num">${item.qty}</span><button class="ci-qty-btn"${soldOut ? ' disabled' : ''} onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex})">+</button></div></div><span class="ci-price">${formatPrice(getCartItemLineTotal(item))}</span><button class="ci-remove" onclick="event.stopPropagation();removeFromCart('${productId}','${itemSize}',${item.variantIndex})">×</button></div>`;
-  }).join("");
-
-  if (hasSunglassesInCart() && !pouchAlreadyInCart()) {
-    const pouch = getCartProduct('janedore-leather-pouch');
-    if (pouch) html += `<div class="cart-addon-section"><div class="cart-addon-title">ADD-ON</div><div class="cart-addon-item"><div class="cart-addon-img" style="background-image:url('${getProductThumbnail(pouch)}');"></div><div class="cart-addon-info"><div class="cart-addon-name">${sanitizeHTML(pouch.name)}</div><div class="cart-addon-price">${formatPrice(pouch.price)}</div></div><button class="cart-addon-btn" onclick="event.stopPropagation();addPouchToCart();">Add</button></div></div>`;
-  }
-
-  DOM.cartBody.innerHTML = html;
-  
-  const sub = getCartSubtotal();
-  const discountAmount = getDiscountAmount();
-  const finalTotal = getCartTotalAfterDiscount();
-  const shipping = getCartShippingStatus(finalTotal);
-  
-  let discountHtml = '';
-  if (appliedDiscount) {
-    const safeCode = sanitizeHTML(appliedDiscount.code);
-    discountHtml = `<div class="cart-discount-row">
-      <span class="cart-discount-label">Discount (${safeCode})</span>
-      <span class="cart-discount-val">-${formatPrice(discountAmount)}</span>
-      <button class="cart-discount-remove" onclick="event.stopPropagation();removePromoCode();">×</button>
-    </div>`;
-  }
-  
-  const hasSoldOut = cartHasSoldOutItem();
-  DOM.cartFoot.innerHTML = `${discountHtml}<div class="cart-subtotal"><span class="cart-subtotal-label">${appliedDiscount ? 'Total' : 'Subtotal'}</span><span class="cart-subtotal-val">${formatPrice(finalTotal)}</span></div>${appliedDiscount && discountAmount > 0 ? `<div class="cart-original-price" style="text-decoration:line-through;color:var(--muted);font-size:12px;">${formatPrice(sub)}</div>` : ''}<div class="cart-ship-note">${shipping.message}</div>${cartHasMultipleTypes() ? '<div class="cart-multi-package-note">contents may arrive in multiple packages</div>' : ''}<button class="btn-view-cart" onclick="closeCart();navigateTo('cart');">View Bag</button><button class="btn-checkout-main"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout</button><div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>`;
-}
-
 function renderCartPage() {
   if (!DOM.cartPageContent) return;
 
@@ -479,7 +424,7 @@ function renderCartPage() {
     return;
   }
 
-  let html = `<div class="cart-page-title">Your Bag (${getCartTotalQty()} items)</div>`;
+  let html = `<div class="cart-page-title">Your Bag (${getCartTotalQty()} ${getCartTotalQty() === 1 ? 'item' : 'items'})</div>`;
   S.cart.forEach(item => {
     const thumbnail = getCartItemThumbnail(item);
     const lineTotal = getCartItemLineTotal(item);
@@ -510,21 +455,35 @@ function renderCartPage() {
     </div>`;
   });
 
-  const sub = getCartSubtotal();
+  if (hasSunglassesInCart() && !pouchAlreadyInCart()) {
+    const pouch = getCartProduct('janedore-leather-pouch');
+    if (pouch) html += `<div class="cart-addon-section"><div class="cart-addon-title">ADD-ON</div><div class="cart-addon-item"><div class="cart-addon-img" style="background-image:url('${getProductThumbnail(pouch)}');"></div><div class="cart-addon-info"><div class="cart-addon-name">${sanitizeHTML(pouch.name)}</div><div class="cart-addon-price">${formatPrice(pouch.price)}</div></div><button class="cart-addon-btn" onclick="event.stopPropagation();addPouchToCart();">Add</button></div></div>`;
+  }
+
+  const discountAmount = getDiscountAmount();
+  const finalTotal = getCartTotalAfterDiscount();
+  const shipping = getCartShippingStatus(finalTotal);
   const hasSoldOut = cartHasSoldOutItem();
+  const discountHtml = appliedDiscount
+    ? `<div class="cart-page-subtotal">Discount (${sanitizeHTML(appliedDiscount.code)}) <strong>-${formatPrice(discountAmount)}</strong> <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></div>`
+    : '';
 
   html += `<div class="cart-page-summary">
-    <div class="cart-page-subtotal">Subtotal <strong>${formatPrice(sub)}</strong></div>
+    ${discountHtml}
+    <div class="cart-page-subtotal">${appliedDiscount ? 'Total' : 'Subtotal'} <strong>${formatPrice(finalTotal)}</strong></div>
+    <div class="cart-page-ship-note">${shipping.message}</div>
+    ${cartHasMultipleTypes() ? '<div class="cart-page-multi-package-note">contents may arrive in multiple packages</div>' : ''}
     <div class="cart-page-actions">
       <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
       <button class="cart-page-btn primary"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout</button>
     </div>
+    <div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>
   </div>`;
   DOM.cartPageContent.innerHTML = html;
 }
 
-function openCart() { DOM.cartBackdrop.classList.add("open"); DOM.cartPanel.classList.add("open"); renderCart(); }
-function closeCart() { DOM.cartBackdrop.classList.remove("open"); DOM.cartPanel.classList.remove("open"); }
+// The cart is a normal page (#page-cart, /cart), not a slide-out panel.
+function openCart() { hideAddedToCartToast(); navigateTo('cart'); }
 
 function updateBadges() {
   const cc = getCartTotalQty();

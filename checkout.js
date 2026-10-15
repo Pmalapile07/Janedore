@@ -451,7 +451,7 @@ async function pollPaymentStatus(orderId, attempt) {
     if (data.paymentStatus === 'paid') {
       S.cart = [];
       updateBadges();
-      renderCart();
+      renderCartPage();
       saveCartToStorage();
 
       lastConfirmedOrderNumber = data.orderNumber || orderId;

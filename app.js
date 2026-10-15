@@ -5,22 +5,17 @@ window.resetScrollToTop = window.resetScrollToTop || function () { window.scroll
 const DOM = {
   get cartBadge() { return document.getElementById("cart-badge"); },
   get wishBadge() { return document.getElementById("wish-badge"); },
-  get cartItemCount() { return document.getElementById("cart-item-count"); },
   get searchOverlay() { return document.getElementById("search-overlay"); },
   get searchInput() { return document.getElementById("search-input"); },
   get searchBody() { return document.getElementById("search-body"); },
   get menuBackdrop() { return document.getElementById("menu-backdrop"); },
   get menuDrawer() { return document.getElementById("menu-drawer"); },
-  get cartBackdrop() { return document.getElementById("cart-backdrop"); },
-  get cartPanel() { return document.getElementById("cart-panel"); },
   get arrivalsGrid() { return document.getElementById("arrivals-grid"); },
   get allProductsGrid() { return document.getElementById("all-products-grid"); },
   get categoryProductsGrid() { return document.getElementById("category-products-grid"); },
   get categoryNameTag() { return document.getElementById("category-name-tag"); },
   get categoryDescriptionWrap() { return document.getElementById("category-description-wrap"); },
   get productDetail() { return document.getElementById("page-product-detail"); },
-  get cartBody() { return document.getElementById("cart-body"); },
-  get cartFoot() { return document.getElementById("cart-foot"); },
   get cartPageContent() { return document.getElementById("cart-page-content"); },
   get wishPageContent() { return document.getElementById("wish-page-content"); },
   get campaignSlides() { return document.getElementById("campaign-slides"); },
@@ -212,7 +207,6 @@ window.goBackHome = goBackHome;
 window.openMenu = openMenu;
 window.closeMenu = closeMenu;
 window.openCart = openCart;
-window.closeCart = closeCart;
 window.openSearch = openSearch;
 window.closeSearch = closeSearch;
 window.toggleSubmenuCollapse = toggleSubmenuCollapse;
@@ -616,7 +610,7 @@ function goToProduct(productId, replaceUrl) {
   ++pageNavGeneration;
   closeFilterPanel();
   closeSearch();
-  S.saleMode = false; S.newInMode = false; S.filter.vendor = []; closeCart();
+  S.saleMode = false; S.newInMode = false; S.filter.vendor = [];
   const product=PRODUCTS.find(p=>p.id===productId); if(!product) return;
   updateProductUrl(product, replaceUrl);
   S.recentlyViewed=S.recentlyViewed.filter(p=>p.id!==productId); S.recentlyViewed.unshift(product); if(S.recentlyViewed.length>6) S.recentlyViewed.pop();
