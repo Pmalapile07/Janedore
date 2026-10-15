@@ -789,6 +789,23 @@ function renderAIGreeting() {
   }
 }
 
+// Once the customer actually sends something — text or an image — the
+// starter welcome screen (greeting + quick-action cards) has done its
+// job and just takes up space above the real conversation, so it's
+// removed outright rather than left to scroll past. Also clears the
+// IntersectionObserver's job: with the screen gone, the header's own
+// Track Order button must fall back to visible immediately rather than
+// waiting on an observer callback that will now never fire again.
+function removeWelcomeScreen() {
+  const screen = document.getElementById('jai-welcome-screen');
+  if (!screen) return;
+  screen.remove();
+  if (_greetingTrackBtnVisible) {
+    _greetingTrackBtnVisible = false;
+    updateHeaderTrackBtnVisibility();
+  }
+}
+
 // Detects a customer asking to track an order in plain text (e.g. "track
 // order", "track my order", "where is my order") and brings the same
 // button back into the conversation — no AI round-trip needed, this is
@@ -1445,6 +1462,8 @@ async function sendChatMessage() {
   }
   if (!text) return;
 
+  removeWelcomeScreen();
+
   // FIX #9: don't log full text — log length only
   _ScreenDebug.info('SEND', 'User sent message (length=' + text.length + ')');
 
@@ -1775,6 +1794,8 @@ async function sendChatImage(file) {
   const rtdb = getRTDB();
   if (!rtdb || _imageUploadInFlight) return;
   _imageUploadInFlight = true;
+
+  removeWelcomeScreen();
 
   const attachBtn = safeEl('chat-attach-btn');
   if (attachBtn) attachBtn.disabled = true;
