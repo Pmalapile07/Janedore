@@ -77,6 +77,7 @@ function navigateToCheckout(replaceUrl) {
 
     if (!S.cart.length && lastConfirmedOrderNumber) {
       document.getElementById('checkout-form-view').style.display = 'none';
+      document.getElementById('checkout-payment-view').style.display = 'none';
       document.getElementById('checkout-confirmation-view').style.display = 'block';
       if (confirmingView) confirmingView.style.display = 'none';
       if (lastConfirmedOrderDetails) {
@@ -89,51 +90,82 @@ function navigateToCheckout(replaceUrl) {
       return;
     }
 
-    document.getElementById('checkout-form-view').style.display = 'block';
-    document.getElementById('checkout-confirmation-view').style.display = 'none';
-    if (confirmingView) confirmingView.style.display = 'none';
+    showCheckoutStep(2);
 
     const placeOrderBtn = document.getElementById('checkout-place-order-btn');
-    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Place Order'; }
+    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Pay Now'; }
 
-    if (user && user.email) {
-      document.getElementById('checkout-email').value = user.email;
-      if (user.displayName) {
-        document.getElementById('checkout-name').value = user.displayName;
-      }
-      prefillCheckoutFromProfile(user.uid);
-    } else if (checkoutEmail) {
-      document.getElementById('checkout-email').value = checkoutEmail;
-    }
+    if (checkoutEmail) fillCheckoutFieldIfEmpty('checkout-email', checkoutEmail);
+    prefillCheckoutForSignedInCustomer();
 
     renderCheckoutSummary();
   }
 }
 
-// Fills in a returning signed-in customer's saved address — written to
-// their profile the first time they complete an order while logged in
-// (see placeOrder() below) — so they don't retype it on every visit.
-// Guarded per field so it only fills in blanks, never overwrites
-// something already typed this session.
-async function prefillCheckoutFromProfile(uid) {
-  try {
-    const doc = await db.collection('customers').doc(uid).get();
-    if (!doc.exists) return;
-    const c = doc.data();
-    const fillIfEmpty = (id, value) => {
-      const el = document.getElementById(id);
-      if (el && !el.value && value) el.value = value;
-    };
-    fillIfEmpty('checkout-phone', c.phone);
-    fillIfEmpty('checkout-address', c.address);
-    fillIfEmpty('checkout-city', c.city);
-    fillIfEmpty('checkout-province', c.province);
-    fillIfEmpty('checkout-postal', c.postalCode);
-    fillIfEmpty('checkout-country', c.country);
-  } catch (e) {
-    console.warn('[CHECKOUT] Could not load saved address:', e.message);
-  }
+// Only ever fills a blank field — never overwrites something the
+// customer has already typed this visit.
+function fillCheckoutFieldIfEmpty(id, value) {
+  const el = document.getElementById(id);
+  if (el && !el.value && value) el.value = value;
 }
+
+// Prefills checkout for a logged-in customer (a real account, not the
+// anonymous session every visitor gets): email and name from the
+// account, then phone and address from their profile — saved there each
+// time they place an order while logged in (see placeOrder()). If the
+// profile has no address yet, their most recent order's details are used
+// instead. Waits for Firebase to restore the login first, so this also
+// works when the page is reloaded straight onto /checkout.
+async function prefillCheckoutForSignedInCustomer() {
+  await (window.authReady || Promise.resolve());
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous || !user.email) return;
+
+  fillCheckoutFieldIfEmpty('checkout-email', user.email);
+  fillCheckoutFieldIfEmpty('checkout-name', user.displayName);
+
+  let saved = {};
+  try {
+    const doc = await db.collection('customers').doc(user.uid).get();
+    if (doc.exists) saved = doc.data() || {};
+  } catch (e) {
+    console.warn('[CHECKOUT] Could not load saved profile:', e.message);
+  }
+
+  if (!saved.address) {
+    try {
+      const snap = await db.collection('orders')
+        .where('customerEmail', '==', user.email)
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+      if (!snap.empty) {
+        const o = snap.docs[0].data();
+        saved = Object.assign({
+          name: o.customerName, phone: o.customerPhone, address: o.shippingAddress,
+          city: o.city, province: o.province, postalCode: o.postalCode
+        }, saved);
+      }
+    } catch (e) {
+      console.warn('[CHECKOUT] Could not load last order details:', e.message);
+    }
+  }
+
+  fillCheckoutFieldIfEmpty('checkout-name', saved.name);
+  fillCheckoutFieldIfEmpty('checkout-phone', saved.phone);
+  fillCheckoutFieldIfEmpty('checkout-address', saved.address);
+  fillCheckoutFieldIfEmpty('checkout-city', saved.city);
+  fillCheckoutFieldIfEmpty('checkout-province', saved.province);
+  fillCheckoutFieldIfEmpty('checkout-postal', saved.postalCode);
+}
+
+// Logging in while already on checkout (e.g. in another tab) fills the
+// form in too.
+firebase.auth().onAuthStateChanged(function () {
+  if (S.currentPage === 'checkout' && document.getElementById('checkout-form-view')) {
+    prefillCheckoutForSignedInCustomer();
+  }
+});
 
 // Same price / discount / delivery rules as the cart page (cart.js), so
 // the bag and checkout always show the same total.
@@ -145,30 +177,99 @@ function getCheckoutTotals() {
   return { subtotal, discountAmount, shipping, total: afterDiscount + shipping };
 }
 
+// Opens/closes a collapsible checkout card (Order summary, Apply a code).
+function toggleCheckoutCard(btn) {
+  const body = btn && document.getElementById(btn.getAttribute('aria-controls'));
+  if (!body) return;
+  const expand = btn.getAttribute('aria-expanded') !== 'true';
+  btn.setAttribute('aria-expanded', String(expand));
+  body.hidden = !expand;
+}
+
+// Step 2 (details + shipping) → step 3 (payment). The details form is
+// checked first; nothing is created or charged until Pay Now on step 3.
+function goToPaymentStep(e) {
+  if (e) e.preventDefault();
+  const form = document.getElementById('checkout-form');
+  if (form && !form.reportValidity()) return;
+  showCheckoutStep(3);
+}
+
+// Shows step 2 (details) or step 3 (payment) of the checkout page.
+function showCheckoutStep(step) {
+  const formView = document.getElementById('checkout-form-view');
+  const paymentView = document.getElementById('checkout-payment-view');
+  if (!formView || !paymentView) return;
+  formView.style.display = step === 3 ? 'none' : 'block';
+  paymentView.style.display = step === 3 ? 'block' : 'none';
+  ['checkout-confirmation-view', 'checkout-confirming-view'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  renderCheckoutSummary();
+  resetScrollToTop();
+}
+
+// Radio cards (shipping / payment method): outline the chosen one.
+document.addEventListener('change', function (e) {
+  const input = e.target;
+  if (!input.matches || !input.matches('.checkout-option input[type="radio"]')) return;
+  document.querySelectorAll('.checkout-option input[name="' + input.name + '"]').forEach(r => {
+    r.closest('.checkout-option').classList.toggle('is-selected', r.checked);
+  });
+});
+
 function renderCheckoutSummary() {
-  // The checkout page no longer lists the items (the bag, one step back,
-  // already does) — it only shows the totals card above Place Order.
-  if (!document.getElementById('checkout-total') || !S.cart.length) return;
+  if (!document.getElementById('checkout-form-view') || !S.cart.length) return;
 
   const { subtotal, discountAmount, shipping, total } = getCheckoutTotals();
 
-  const subtotalEl = document.getElementById('checkout-subtotal');
-  if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
-  
-  const discountRow = document.getElementById('checkout-discount-row');
-  if (discountRow) {
-    discountRow.style.display = discountAmount > 0 ? '' : 'none';
-    const label = document.getElementById('checkout-discount-label');
-    if (label) label.textContent = appliedDiscount ? 'Discount (' + appliedDiscount.code + ')' : 'Discount';
-    const val = document.getElementById('checkout-discount');
-    if (val) val.textContent = '-' + formatPrice(discountAmount);
+  // "Your order" card: the bag's item layout, read-only — no wishlist
+  // heart or remove button; changes are made one step back, in the bag.
+  const itemCount = S.cart.reduce((a, i) => a + i.qty, 0);
+  const countEl = document.getElementById('checkout-order-count');
+  if (countEl) countEl.textContent = '(' + itemCount + ')';
+  const orderTotalEl = document.getElementById('checkout-order-total');
+  if (orderTotalEl) orderTotalEl.textContent = formatPrice(subtotal);
+  const itemsEl = document.getElementById('checkout-items');
+  if (itemsEl) {
+    itemsEl.innerHTML = S.cart.map(item => {
+      const color = item.color && item.color !== 'Default' ? ' · ' + sanitizeHTML(item.color) : '';
+      // 'OS' is a placeholder sentinel, not a real size — never display it.
+      const size = item.size && item.size !== 'OS' ? sanitizeHTML(item.size) : '';
+      return `<div class="checkout-order-item">
+        <div class="cart-item-top">
+          <div class="cart-item-img" style="background-image:url('${getCartItemThumbnail(item)}');"></div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${sanitizeHTML(item.name || '')}</div>
+            <div class="cart-item-brand">${sanitizeHTML(item.brand || '')}${color}</div>
+          </div>
+        </div>
+        <div class="cart-item-attrs">
+          <span>Quantity: <strong>${item.qty}</strong></span>
+          ${size ? `<span class="cart-item-size">Size: <strong>${size}</strong></span>` : ''}
+        </div>
+        <div class="cart-item-bottom">
+          <span class="cart-item-returns">Free exchange or return within 30 days</span>
+          <span class="cart-item-price">${formatPrice(getCartItemLineTotal(item))}</span>
+        </div>
+      </div>`;
+    }).join('');
   }
 
-  const shippingEl = document.getElementById('checkout-shipping');
-  if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
-  
-  const totalEl = document.getElementById('checkout-total');
-  if (totalEl) totalEl.textContent = formatPrice(total);
+  const discountRow = discountAmount > 0
+    ? `<div class="checkout-totals-row discount"><span>Discount${appliedDiscount ? ' (' + sanitizeHTML(appliedDiscount.code) + ')' : ''} <button type="button" class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>`
+    : '';
+  const totalsHtml = `<div class="checkout-totals-head"><span>Total to pay</span><span>${formatPrice(total)}</span></div>
+    <div class="checkout-totals-row"><span>Cart Total</span><span>${formatPrice(subtotal)}</span></div>
+    ${discountRow}
+    <div class="checkout-totals-row"><span>Delivery Fee</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
+  document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
+
+  const shippingPriceEl = document.getElementById('checkout-shipping-price');
+  if (shippingPriceEl) shippingPriceEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
+  const estimateEl = document.getElementById('checkout-delivery-estimate');
+  if (estimateEl) estimateEl.textContent = 'Delivery between ' + formatDeliveryEstimate().replace(' – ', ' and ') + '.';
 }
 
 async function placeOrder(e) {
@@ -197,9 +298,9 @@ async function placeOrder(e) {
   const country = document.getElementById('checkout-country').value.trim();
   const phone = document.getElementById('checkout-phone').value.trim();
   
-  if (!email || !name || !address || !city || !country) {
+  if (!email || !name || !address || !city || !province || !postal || !country) {
     alert('Please fill in all required fields.');
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay Now'; }
     return;
   }
   
@@ -356,9 +457,10 @@ async function placeOrder(e) {
     // profile so it's there to prefill next visit. The order is already
     // placed, so a failure here should never block or undo any of
     // that, just get logged.
-    if (user) {
+    if (user && !user.isAnonymous) {
       db.collection('customers').doc(user.uid).set({
         name,
+        email: user.email || email,
         phone,
         address,
         city,
@@ -384,7 +486,7 @@ async function placeOrder(e) {
   } catch (e) {
     console.warn('Order error:', e);
     alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay Now'; }
   }
   // No restore on success: redirectToPayFast() navigates the browser
   // away, so the button stays disabled/"Please wait…" until that
@@ -397,10 +499,13 @@ async function placeOrder(e) {
 // /api/payfast/initiate in server.js) and submits it as a real form
 // POST, which navigates the browser away to PayFast's payment page.
 async function redirectToPayFast(orderId) {
+  // The method picked on step 3 ('cc' card, 'ef' Instant EFT, or '' for
+  // PayFast's full list). The server only accepts known values.
+  const picked = document.querySelector('input[name="checkout-payment-method"]:checked');
   const res = await fetch('/api/payfast/initiate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ orderId })
+    body: JSON.stringify({ orderId, paymentMethod: picked ? picked.value : '' })
   });
   if (!res.ok) {
     const body = await res.json().catch(function () { return {}; });
@@ -508,69 +613,72 @@ function renderOrderConfirmation(order) {
   if (statusDot && statusText) {
     if (order.paymentStatus === 'paid') {
       statusDot.classList.remove('danger');
-      statusText.textContent = 'Payment Confirmed';
+      statusText.textContent = 'Confirmed';
     } else {
       statusDot.classList.add('danger');
-      statusText.textContent = order.paymentStatus === 'refunded' ? 'Refunded' : 'Payment Pending';
+      statusText.textContent = order.paymentStatus === 'refunded' ? 'Refunded' : 'Pending';
     }
+  }
+
+  const thanksText = document.getElementById('confirmation-thanks-text');
+  if (thanksText) {
+    thanksText.textContent = order.paymentStatus === 'paid'
+      ? 'Your payment went through and your order is in. A confirmation email is on its way.'
+      : "Your order is in. We'll email your confirmation as soon as your payment clears.";
   }
 
   const items = order.items || [];
   const itemCount = items.reduce((a, i) => a + (i.qty || 0), 0);
   const countEl = document.getElementById('confirmation-item-count');
-  if (countEl) countEl.textContent = itemCount + (itemCount === 1 ? ' Item' : ' Items');
-
-  const brandGroups = {};
-  items.forEach(item => {
-    const brand = item.brand || 'Unknown';
-    (brandGroups[brand] = brandGroups[brand] || []).push(item);
-  });
+  if (countEl) countEl.textContent = '(' + itemCount + ')';
 
   const itemsEl = document.getElementById('confirmation-items');
   if (itemsEl) {
-    itemsEl.innerHTML = Object.keys(brandGroups).map(brand => {
-      const groupItems = brandGroups[brand];
-      const groupCount = groupItems.reduce((a, i) => a + (i.qty || 0), 0);
-      const rows = groupItems.map(item => {
-        const product = PRODUCTS.find(p => p.id === item.productId);
-        const thumbnail = product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE;
-        const sizeDisplay = item.size && item.size !== 'OS' ? item.size : '';
-        return `<div class="checkout-item">
-          <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
-          <div class="checkout-item-info">
-            <div class="checkout-item-name">${item.name}</div>
-            <div class="checkout-item-meta">${item.color || ''}${item.color && sizeDisplay ? ' · ' : ''}${sizeDisplay}</div>
-          </div>
-          <div class="checkout-item-qty">Qty: ${item.qty}</div>
-          <div class="checkout-item-price">${formatPrice((item.price || 0) * item.qty)}</div>
-        </div>`;
-      }).join('');
-      return `<div class="checkout-confirmation-brand-group">
-        <div class="checkout-confirmation-brand-head"><span>${brand}</span><span>${groupCount + (groupCount === 1 ? ' Item' : ' Items')}</span></div>
-        ${rows}
+    const brands = [...new Set(items.map(i => i.brand).filter(Boolean))];
+    itemsEl.innerHTML = items.map(item => {
+      const product = PRODUCTS.find(p => p.id === item.productId);
+      const thumbnail = product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE;
+      // 'OS' is a placeholder sentinel, not a real size — never display it.
+      const sizeDisplay = item.size && item.size !== 'OS' ? item.size : '';
+      const brandLine = [item.brand, item.color].filter(Boolean).map(escapeHTML).join(' · ');
+      return `<div class="checkout-item">
+        <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
+        <div class="checkout-item-info">
+          <div class="checkout-item-name">${escapeHTML(item.name)}</div>
+          ${brandLine ? `<div class="checkout-item-brand">${brandLine}</div>` : ''}
+          <div class="checkout-item-meta">Qty: <strong>${item.qty}</strong>${sizeDisplay ? ` &nbsp; Size: <strong>${escapeHTML(sizeDisplay)}</strong>` : ''}</div>
+        </div>
+        <div class="checkout-item-price">${formatPrice((item.price || 0) * item.qty)}</div>
       </div>`;
-    }).join('');
+    }).join('') + (brands.length > 1
+      ? `<p class="checkout-packages-note">Ships in ${brands.length} packages, one from each brand.</p>`
+      : '');
   }
 
   const addressEl = document.getElementById('confirmation-address');
   if (addressEl) {
-    const line2 = [order.city, order.province].filter(Boolean).join(', ');
-    const line3 = [order.postalCode, order.country].filter(Boolean).join(', ');
-    addressEl.innerHTML =
-      '<strong>' + (order.customerName || '') + '</strong>' +
-      (order.shippingAddress || '') + '<br>' +
-      line2 + '<br>' +
-      line3;
+    const lines = [
+      order.shippingAddress,
+      [order.city, order.province].filter(Boolean).join(', '),
+      [order.postalCode, order.country].filter(Boolean).join(', ')
+    ].filter(Boolean).map(escapeHTML);
+    addressEl.innerHTML = '<strong>' + escapeHTML(order.customerName) + '</strong>' + lines.join('<br>');
   }
 
   const summaryEl = document.getElementById('confirmation-summary');
   if (summaryEl) {
+    const discount = Number(order.discountAmount) || 0;
     summaryEl.innerHTML =
-      '<div class="checkout-total-row"><span>Items (' + itemCount + ')</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
-      '<div class="checkout-total-row"><span>Shipping</span><span>' + (order.shipping === 0 ? 'Free' : formatPrice(order.shipping || 0)) + '</span></div>' +
-      '<div class="checkout-total-divider"></div>' +
-      '<div class="checkout-total-final"><strong>Total</strong><strong>' + formatPrice(order.total || 0) + '</strong></div>';
+      '<div class="checkout-totals-head"><span>Total paid</span><span>' + formatPrice(order.total || 0) + '</span></div>' +
+      '<div class="checkout-totals-row"><span>Cart Total</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
+      (discount > 0
+        ? '<div class="checkout-totals-row discount"><span>Discount' + (order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : '') + '</span><span>-' + formatPrice(discount) + '</span></div>'
+        : '') +
+      '<div class="checkout-totals-row"><span>Delivery Fee</span><span>' + (order.shipping === 0 ? 'Free' : formatPrice(order.shipping || 0)) + '</span></div>';
   }
+
+  const view = document.getElementById('checkout-confirmation-view');
+  if (view) view.classList.add('has-details');
 }
 
 function showPayFastConfirmingView() {
@@ -591,6 +699,8 @@ function showPayFastConfirmingView() {
   const confirmationView = document.getElementById('checkout-confirmation-view');
   const confirmingView = document.getElementById('checkout-confirming-view');
   if (formView) formView.style.display = 'none';
+  const paymentView = document.getElementById('checkout-payment-view');
+  if (paymentView) paymentView.style.display = 'none';
   if (confirmationView) confirmationView.style.display = 'none';
   if (confirmingView) confirmingView.style.display = 'block';
 }

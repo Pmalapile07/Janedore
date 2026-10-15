@@ -579,6 +579,13 @@ app.post('/api/payfast/initiate', async (req, res) => {
       amount: Number(order.total || 0).toFixed(2),
       item_name: 'Janedore Order #' + (order.orderNumber || orderId)
     };
+    // The method the customer picked on checkout step 3. With it set,
+    // PayFast opens straight on that method; left out, PayFast lists every
+    // method enabled on the account (Apple Pay, SnapScan, …). Signed, so it
+    // must sit here — after the transaction details, before the signature.
+    const PAYFAST_METHODS = ['cc', 'ef'];
+    const paymentMethod = req.body && req.body.paymentMethod;
+    if (PAYFAST_METHODS.includes(paymentMethod)) data.payment_method = paymentMethod;
 
     // Split Payments can only target ONE third-party merchant per
     // transaction (PayFast's own constraint, not ours) — only attach a
@@ -617,11 +624,6 @@ app.post('/api/payfast/initiate', async (req, res) => {
   }
 });
 
-// Called by checkout.js when the customer lands back on cancel_url —
-// the only signal we get for an explicit cancel, since PayFast's ITN
-// only fires for an actual payment attempt. Guarded against the order
-// having been paid in the meantime (e.g. the ITN winning a race against
-// this call) so a cancel report can never downgrade a real payment.
 // ==================== STOCK RETURN FOR UNPAID ORDERS ====================
 // Stock is taken off when the order is created (checkout.js, in the same
 // transaction as the order) so two customers can't both buy the last unit.
@@ -740,6 +742,11 @@ async function expireAbandonedOrders() {
 setTimeout(expireAbandonedOrders, 60 * 1000);
 setInterval(expireAbandonedOrders, 15 * 60 * 1000).unref();
 
+// Called by checkout.js when the customer lands back on cancel_url —
+// the only signal we get for an explicit cancel, since PayFast's ITN
+// only fires for an actual payment attempt. Guarded against the order
+// having been paid in the meantime (e.g. the ITN winning a race against
+// this call) so a cancel report can never downgrade a real payment.
 app.post('/api/payfast/order/:id/cancel', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   try {

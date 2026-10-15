@@ -282,15 +282,17 @@ function addPouchToCart() {
    DISCOUNT CODE APPLICATION
    ============================================================ */
 
-function applyPromoCode() {
-  const input = document.getElementById('cart-promo-input');
+// inputId: the bag's box by default, or one of checkout's two code boxes.
+function applyPromoCode(inputId) {
+  inputId = inputId || 'cart-promo-input';
+  const input = document.getElementById(inputId);
   if (!input) return;
   
   // Sanitize the code before processing
   const code = sanitizeDiscountCode(input.value);
   
   if (!code) {
-    showPromoMessage('Please enter a valid discount code (letters, numbers, underscores, hyphens only)', 'error');
+    showPromoMessage(inputId, 'Please enter a valid discount code (letters, numbers, underscores, hyphens only)', 'error');
     return;
   }
 
@@ -299,7 +301,7 @@ function applyPromoCode() {
   // Query Firestore for the discount code (Firestore handles this safely)
   DISCOUNTS_REF.where('code', '==', code).get().then(function(snapshot) {
     if (snapshot.empty) {
-      showPromoMessage('Invalid discount code', 'error');
+      showPromoMessage(inputId, 'Invalid discount code', 'error');
       return;
     }
 
@@ -308,32 +310,32 @@ function applyPromoCode() {
 
     // Check if discount is active
     if (!discount.active) {
-      showPromoMessage('This discount is no longer active', 'error');
+      showPromoMessage(inputId, 'This discount is no longer active', 'error');
       return;
     }
 
     // Check date validity
     const now = new Date();
     if (discount.startDate && new Date(discount.startDate) > now) {
-      showPromoMessage('This discount is not yet active', 'error');
+      showPromoMessage(inputId, 'This discount is not yet active', 'error');
       return;
     }
     if (discount.endDate && new Date(discount.endDate) < now) {
-      showPromoMessage('This discount has expired', 'error');
+      showPromoMessage(inputId, 'This discount has expired', 'error');
       return;
     }
 
     // Check usage limit
     if (discount.usageLimit !== null && discount.usageLimit !== undefined) {
       if ((discount.usageCount || 0) >= discount.usageLimit) {
-        showPromoMessage('This discount has reached its usage limit', 'error');
+        showPromoMessage(inputId, 'This discount has reached its usage limit', 'error');
         return;
       }
     }
 
     // Check minimum purchase
     if (discount.minimumPurchase && subtotal < discount.minimumPurchase) {
-      showPromoMessage('Minimum purchase of ' + formatPrice(discount.minimumPurchase) + ' required', 'error');
+      showPromoMessage(inputId, 'Minimum purchase of ' + formatPrice(discount.minimumPurchase) + ' required', 'error');
       return;
     }
 
@@ -347,12 +349,13 @@ function applyPromoCode() {
     };
 
     saveAppliedDiscount();
-    showPromoMessage('Discount applied: ' + appliedDiscount.description, 'success');
+    showPromoMessage(inputId, 'Discount applied: ' + appliedDiscount.description, 'success');
     renderCartPage();
+    refreshCheckoutTotals();
 
   }).catch(function(err) {
     console.error('[APPLY_DISCOUNT]', err);
-    showPromoMessage('Error applying discount: ' + sanitizeHTML(err.message), 'error');
+    showPromoMessage(inputId, 'Error applying discount: ' + sanitizeHTML(err.message), 'error');
   });
 }
 
@@ -360,10 +363,20 @@ function removePromoCode() {
   appliedDiscount = null;
   saveAppliedDiscount();
   
-  const input = document.getElementById('cart-promo-input');
-  if (input) input.value = '';
-  
+  ['cart-promo-input', 'checkout-promo-input-2', 'checkout-promo-input-3'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.value = '';
+  });
+  document.querySelectorAll('.cart-promo-message').forEach(el => el.remove());
+
   renderCartPage();
+  refreshCheckoutTotals();
+}
+
+// Checkout shows the same totals as the bag; refresh them after a code
+// is applied or removed from either page.
+function refreshCheckoutTotals() {
+  if (typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
 }
 
 function getDiscountDescription(discount) {
@@ -381,12 +394,11 @@ function getDiscountDescription(discount) {
   }
 }
 
-function showPromoMessage(message, type) {
+function showPromoMessage(inputId, message, type) {
   // Remove existing message
-  const existing = document.querySelector('.cart-promo-message');
-  if (existing) existing.remove();
+  document.querySelectorAll('.cart-promo-message').forEach(el => el.remove());
 
-  const input = document.getElementById('cart-promo-input');
+  const input = document.getElementById(inputId);
   if (!input) return;
 
   const msgDiv = document.createElement('div');
@@ -514,7 +526,7 @@ function renderCartPage() {
   html += `<div class="cart-card cart-totals">
     <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + (shipping.freeShipping ? 0 : SHIPPING_FEE))}</span></div>
     <div class="cart-totals-row"><span>Cart Total</span><span>${formatPrice(getCartSubtotal())}</span></div>
-    ${appliedDiscount ? `<div class="cart-totals-row"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
+    ${appliedDiscount ? `<div class="cart-totals-row discount"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
     <div class="cart-totals-row"><span>Delivery Fee</span><span>${shipping.freeShipping ? 'Free' : formatPrice(SHIPPING_FEE)}</span></div>
     <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout Now</button>
   </div></div>`;
@@ -590,22 +602,24 @@ function updateCheckoutSteps() {
   const shown = (id) => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
   let current = 0, doneUpTo = 0;
   if (document.getElementById('page-checkout')?.classList.contains('active')) {
-    if (shown('checkout-confirmation-view')) doneUpTo = 3;
-    else if (shown('checkout-confirming-view')) { doneUpTo = 2; current = 3; }
+    // PayFast itself isn't a step: once the customer is back from it
+    // (confirming or confirmed), all three circles are done.
+    if (shown('checkout-confirmation-view') || shown('checkout-confirming-view')) doneUpTo = 3;
+    else if (shown('checkout-payment-view')) { doneUpTo = 2; current = 3; }
     else { doneUpTo = 1; current = 2; }
   } else if (document.getElementById('page-cart')?.classList.contains('active')) {
     current = 1;
   }
-  // Tappable: one step back from the checkout form (to the bag), or one
-  // step forward from the bag (to checkout). Payment is only ever reached
-  // by placing the order, and nothing is tappable once payment is under
-  // way or done — going back then could create a duplicate order.
-  const clickable = current === 2 ? 1 : current === 1 ? 2 : 0;
+  // Tappable: the steps either side of the current one, never skipping
+  // (bag ↔ checkout ↔ payment). Going forward to payment still checks the
+  // details form first. Nothing is tappable once the customer is back
+  // from PayFast — going back then could create a duplicate order.
+  const clickable = current === 1 ? [2] : current === 2 ? [1, 3] : current === 3 ? [2] : [];
   steps.forEach(step => {
     const n = Number(step.dataset.step);
     step.classList.toggle('is-done', n <= doneUpTo);
     step.classList.toggle('is-current', n === current);
-    const canClick = n === clickable;
+    const canClick = clickable.includes(n);
     step.classList.toggle('is-clickable', canClick);
     if (canClick) { step.setAttribute('role', 'button'); step.tabIndex = 0; }
     else { step.removeAttribute('role'); step.removeAttribute('tabindex'); }
@@ -613,8 +627,10 @@ function updateCheckoutSteps() {
 }
 function goToCheckoutStep(step) {
   if (!step || !step.classList.contains('is-clickable')) return;
+  const onCheckout = document.getElementById('page-checkout')?.classList.contains('active');
   if (step.dataset.step === '1') openCart();
-  else if (step.dataset.step === '2') handleCheckoutClick();
+  else if (step.dataset.step === '2') { if (onCheckout) showCheckoutStep(2); else handleCheckoutClick(); }
+  else if (step.dataset.step === '3') goToPaymentStep();
 }
 (function watchCheckoutSteps() {
   const observer = new MutationObserver(updateCheckoutSteps);
