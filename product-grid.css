@@ -316,7 +316,7 @@
 }
 .product-wish-btn:hover { opacity: 0.75; }
 .product-wish-btn:active { opacity: 0.55; }
-/* Black everywhere — green is only ever for .product-price-sale (an
+/* Black everywhere, sale prices included (.product-price-sale is just bolder) — (an
    actual discounted price), never tied to which page a card appears
    on. */
 .product-home-price,
@@ -338,9 +338,10 @@
   display: flex;
   flex-direction: column;
 }
-/* Sale price: the site green (same as discount lines), a step bolder. */
+/* Sale price: black like every price, but bolder than the struck-through
+   original so it reads as the price to pay. */
 .product-price-sale {
-  color: #b8cc87;
+  color: #111;
   font-weight: 600;
 }
 .product-price-original {

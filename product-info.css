@@ -198,7 +198,7 @@
 }
 /* Matches .product-price-sale on the grid cards (product-grid.css). */
 .price-sale {
-  color: #b8cc87;
+  color: #111;
   font-weight: 700;
 }
 
