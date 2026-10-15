@@ -228,8 +228,6 @@ window.handleReviewImage = handleReviewImage;
 window.toggleWish = toggleWish;
 window.addPouchToCart = addPouchToCart;
 window.moveCampaignSlider = moveCampaignSlider;
-window.selectStickySize = selectStickySize;
-window.handleStickyAddClick = handleStickyAddClick;
 window.subscribeNewsletter = subscribeNewsletter;
 
 // ==================== CLOSE FILTER PANEL HELPER ====================
@@ -754,7 +752,10 @@ function toggleBrandsCollapse() { const el = document.getElementById('brands-col
 function updateChatVisibility() {
   if (!DOM.chatBubble) return;
   const hiddenPages = ['product-detail', 'products', 'category', 'wishlist', 'cart'];
-  DOM.chatBubble.style.display = hiddenPages.includes(S.currentPage) ? 'none' : 'flex';
+  // 'important' is required: chat-widget.html styles the bubble with
+  // display:flex !important, which a plain inline display:none can't beat.
+  if (hiddenPages.includes(S.currentPage)) DOM.chatBubble.style.setProperty('display', 'none', 'important');
+  else DOM.chatBubble.style.removeProperty('display');
 }
 // ==================== IMAGE PROTECTION ====================
 // Prevent long-press/right-click saving of product images

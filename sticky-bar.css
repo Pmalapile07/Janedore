@@ -44,47 +44,69 @@
  display: none;
 }
 
-/* PRODUCT NAME */
-.sticky-add-bar .sticky-name {
- font-family: 'Inter', sans-serif;
+/* PRICE — standalone, above button in default state. 3px larger and a
+   touch heavier than the bar's base UI type (500 vs the usual 400) so
+   it reads as the bar's main content, not a caption. */
+.sticky-add-bar .sticky-price {
+ font-size: calc(var(--ui-font-size) + 3px);
 
- font-size: var(--ui-font-size);
- font-weight: var(--ui-font-weight);
+ font-weight: 500;
 
  letter-spacing: var(--ui-letter-spacing);
 
  text-transform: uppercase;
 
  color: #111;
-
- line-height: 1.3;
 }
 
-/* PRICE — standalone, above button in default state */
-.sticky-add-bar .sticky-price {
- font-size: var(--ui-font-size);
-
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- color: #111;
-
+/* TOP ROW — price on the left, wishlist heart on the right */
+.sticky-add-bar .sticky-top-row {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 12px;
  margin-bottom: 4px;
 }
 
-/* MAIN BUTTON */
+.sticky-add-bar .sticky-wish-btn {
+ flex-shrink: 0;
+ width: 32px;
+ height: 32px;
+ margin-right: -6px;
+ padding: 0;
+ border: none;
+ background: none;
+ color: #111;
+ font-size: 20px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ -webkit-tap-highlight-color: transparent;
+}
+
+.sticky-add-bar .sticky-price-sale {
+ color: #c0392b;
+}
+
+.sticky-add-bar .sticky-price-original {
+ margin-left: 8px;
+ color: #999;
+ text-decoration: line-through;
+}
+
+/* MAIN BUTTON — the only black element in the bar: a solid black box
+   with white text, same house CTA treatment as .product-add-row-btn,
+   sitting on the bar's own white background. */
 .sticky-add-bar .sticky-add-btn {
  width: 100%;
 
  height: 46px;
 
- border: 0.8px solid #111;
+ border: none;
 
- background: #fff;
- color: #111;
+ background: #111;
+ color: #fff;
 
  display: flex;
  align-items: center;
@@ -117,14 +139,14 @@
 }
 
 .sticky-add-bar .sticky-add-btn:hover {
- background: #f7f7f7;
+ background: #333;
 }
 
 .sticky-add-bar .sticky-add-btn:disabled {
- color: #999;
- border-color: #ddd;
+ color: #fff;
+ border-color: transparent;
  cursor: not-allowed;
- background: #fafafa;
+ background: #ccc;
 }
 
 .sticky-add-bar .sticky-btn-price {
@@ -157,13 +179,14 @@
  box-shadow: none;
 }
 
-/* Minimized: hide standalone price and name */
-.sticky-add-bar.minimized .sticky-name,
-.sticky-add-bar.minimized .sticky-price {
+/* Minimized: hide the price/heart row (price moves into the button) */
+.sticky-add-bar.minimized .sticky-top-row {
  display: none;
 }
 
-/* Minimized: slim borderless full-width button */
+/* Minimized: slim full-width button — still the solid black box, just
+   shorter, with its own side padding since it's no longer flush with
+   the bar's edges. */
 .sticky-add-bar.minimized .sticky-add-btn {
  flex: 1;
  min-width: 0;
@@ -177,14 +200,14 @@
 
  border: none;
 
- background: transparent;
+ background: #111;
 
- padding-left: 0;
- padding-right: 0;
+ padding-left: 16px;
+ padding-right: 16px;
 }
 
 .sticky-add-bar.minimized .sticky-add-btn:hover {
- background: transparent;
+ background: #333;
 }
 
 /* Show the price span in minimized */
@@ -194,176 +217,21 @@
  flex-shrink: 0;
 }
 
-/* Hide extras in minimized */
-.sticky-add-bar.minimized .sticky-extras {
- display: none;
-}
-
-/* =========================================
-  EXTENDED STATE — SIZE SELECTION
-  ========================================= */
-
-.sticky-add-bar.extended {
- padding: 16px;
- padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-
- gap: 0;
-
- background: #fff;
-
- border-top: none;
-}
-
-/* In extended: hide name, price, and CTA button */
-.sticky-add-bar.extended .sticky-name,
-.sticky-add-bar.extended .sticky-price,
-.sticky-add-bar.extended .sticky-add-btn {
- display: none;
-}
-
-/* =========================================
-  EXTRA OPTIONS (sizes + swatches)
-  ========================================= */
-
-.sticky-add-bar .sticky-extras {
- display: none;
-}
-
-.sticky-add-bar.extended .sticky-extras {
- display: flex;
- flex-direction: column;
-
- gap: 0;
-}
-
-/* SIZES — vertical list, centered */
-.sticky-add-bar .sticky-extras .sticky-sizes {
- display: flex;
- flex-direction: column;
-
- align-items: center;
-
- gap: 0;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn {
- border: none;
- border-bottom: 0.5px solid rgba(0,0,0,0.06);
-
- background: none;
-
- padding: 13px 0;
-
- text-align: center;
- width: 100%;
-
- cursor: pointer;
-
- color: #888;
-
- font-size: var(--ui-font-size);
-
- font-weight: var(--ui-font-weight);
-
- letter-spacing: var(--ui-letter-spacing);
-
- text-transform: uppercase;
-
- transition: color 0.15s ease, background 0.15s ease;
-
- -webkit-tap-highlight-color: transparent;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn:last-child {
- border-bottom: none;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn:hover,
-.sticky-add-bar .sticky-extras .sticky-size-btn:active {
- color: #111;
-}
-
-.sticky-add-bar .sticky-extras .sticky-size-btn.sel {
- color: #111;
- font-weight: 600;
-}
-
-/* SWATCHES — centered */
-.sticky-add-bar .sticky-extras .sticky-swatches {
- display: flex;
- align-items: center;
- justify-content: center;
-
- gap: 8px;
-
- order: 10;
-
- padding-top: 10px;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch {
- width: 18px;
- height: 18px;
-
- position: relative;
-
- display: inline-block;
-
- cursor: pointer;
-
- background: #ccc;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.selected::after {
- content: '';
-
- position: absolute;
-
- left: 0;
- right: 0;
- bottom: -4px;
-
- height: 0.5px;
-
- background: #111;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.sold-out {
- overflow: hidden;
- background: #aaa;
-}
-
-.sticky-add-bar .sticky-extras .sticky-swatch.sold-out::before {
- content: '';
-
- position: absolute;
-
- top: 50%;
- left: -3px;
- right: -3px;
-
- height: 0.8px;
-
- background: #fff;
-
- transform: rotate(-45deg);
-}
-
 /* =========================================
   ADDED FEEDBACK STATE
   ========================================= */
 
 .sticky-add-bar.added-feedback .sticky-add-btn {
- color: #555;
- border-color: #bbb;
- background: #fafafa;
+ color: rgba(255, 255, 255, 0.6);
+ border-color: transparent;
+ background: #111;
  pointer-events: none;
 }
 
 .sticky-add-bar.minimized.added-feedback .sticky-add-btn {
- background: transparent;
+ background: #111;
  border: none;
- color: #555;
+ color: rgba(255, 255, 255, 0.6);
 }
 
 /* =========================================
@@ -372,8 +240,7 @@
 
 @supports (padding: max(0px)) {
 
- .sticky-add-bar,
- .sticky-add-bar.extended {
+ .sticky-add-bar {
    padding-bottom: max(14px, env(safe-area-inset-bottom));
  }
 

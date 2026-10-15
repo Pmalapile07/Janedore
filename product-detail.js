@@ -55,8 +55,24 @@ function updateAddToCartState() {
   const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
   const needsSize = hasSizes && !S.selectedSize;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
-  addBtn.disabled = (needsSize || sizeOutOfStock || soldOut) && !isPreorder;
+  const disabled = (needsSize || sizeOutOfStock || soldOut) && !isPreorder;
+  addBtn.disabled = disabled;
   addBtn.textContent = isPreorder ? 'Pre-order' : (needsSize ? 'Select a Size' : ((sizeOutOfStock || soldOut) ? 'Sold Out' : 'Add to Cart'));
+
+  // The sticky bar's own Add to Bag button mirrors this same
+  // disabled/label state — same size/stock rules, it just reads "Add to
+  // Bag" (or "Add" once minimized) where the main button reads "Add to
+  // Cart", and never overwrites the transient "Added" feedback.
+  const stickyBtn = document.getElementById('sticky-add-btn');
+  if (stickyBtn) {
+    const bar = document.getElementById('sticky-add-bar');
+    stickyBtn.disabled = disabled;
+    if (!bar || !bar.classList.contains('added-feedback')) {
+      const stickyLabel = stickyBtn.querySelector('.sticky-btn-label');
+      const stickyDefault = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to Bag';
+      if (stickyLabel) stickyLabel.textContent = isPreorder ? 'Pre-order' : (needsSize ? 'Select a Size' : ((sizeOutOfStock || soldOut) ? 'Sold Out' : stickyDefault));
+    }
+  }
 }
 function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; }
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
@@ -164,7 +180,6 @@ function selectVariant(productId, variantIndex, evt) {
     const sizeRow = document.getElementById('product-size-row');
     if (sizeRow) sizeRow.outerHTML = buildSizeRowHtml(product, variantIndex);
     updateAddToCartState();
-    if (typeof updateStickyBar === 'function') updateStickyBar(product);
   }
 }
 
@@ -200,7 +215,6 @@ function selectProductSize(btn, size) {
   btn.classList.add('sel');
   S.selectedSize = size;
   updateAddToCartState();
-  document.querySelectorAll('#sticky-sizes .sticky-size-btn').forEach(b => b.classList.toggle('sel', b.textContent === size));
 }
 
 function changeProductQuantity(delta) {
@@ -308,7 +322,6 @@ async function renderProductPage(product) {
   // 'OS' is a placeholder sentinel, not a real size — never show it as
   // a selectable "size" (there's nothing to actually select).
   const sizes=(product.sizes||[]).filter(s=>s!=='OS');
-  const price=product.salePrice||product.price; const originalPrice=product.salePrice?product.price:null;
   const productBadges=getProductBadges(product);
   const isWished=S.wishlist.some(w=>w.id===product.id);
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
@@ -367,7 +380,6 @@ async function renderProductPage(product) {
         <h1 class="product-title-main">${product.name||''}</h1>
         <div class="product-brand-price-row">
           <p class="product-by-brand-name"${productVendor?` onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')"`:''}>${product.brand||'JANEDORE'}${productVendor?' <i class="ph ph-arrow-right"></i>':''}</p>
-          <div class="product-price-top">${originalPrice?`<span class="price-current price-sale">${formatPrice(price)}</span><span class="price-original">${formatPrice(originalPrice)}</span>`:`<span class="price-current">${formatPrice(price)}</span>`}</div>
         </div>
       </div>
       <div class="product-quantity-row" aria-label="Quantity selector">
@@ -383,7 +395,7 @@ async function renderProductPage(product) {
         ${buildSizeRowHtml(product,vi)}
       </div>
       <div class="product-add-row">
-        <button class="product-wish-row-btn${isWished?' wished':''}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-light'} ph-heart"></i></button>
+        <button class="product-wish-row-btn${isWished?' wished':''}" data-wish-id="${escapeHTML(product.id)}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-light'} ph-heart"></i></button>
         <button class="product-add-row-btn" id="product-add-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Cart')}</button>
       </div>
       <div class="info-accordion-wrap">
@@ -414,7 +426,7 @@ async function renderProductPage(product) {
   buildFooter("product-footer");
   if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
   ensureNavScrolled();
-  updateAddToCartState();
   if (typeof createStickyBar === 'function') createStickyBar(product);
+  updateAddToCartState();
   setTimeout(() => initProductSwipe(images), 100);
 }

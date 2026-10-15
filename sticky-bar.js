@@ -1,150 +1,64 @@
 // =========================================
 //  STICKY ADD TO CART — JANEDORE
-//  Zara-style UX: tap size → instant add
+//  Just price + a single Add to Bag button.
+//  Size/color are picked on the page itself (the
+//  size row above) — this bar only acts on whatever's
+//  already selected there, same as the main Add to
+//  Cart button.
 //  Permanently glued to bottom:0
 //  NO translateY transforms ever
 // =========================================
 
-// Mirrors variantSwatchesHtml() (product-detail.js) but renders into the
-// sticky bar's own smaller .sticky-swatch markup, and reuses the exact
-// same selectVariant() handler so picking a color here stays in sync
-// with the main page's swatch row automatically.
-function stickySwatchesHtml(product, selectedIndex) {
-  const variants = product?.variants || [];
-  if (variants.length <= 1) return '';
-  const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0);
-  const soldOut = isProductSoldOut(product);
-  return variants.slice(0, 2).map((v, i) => {
-    const cls = `sticky-swatch${i === si ? ' selected' : ''}${soldOut ? ' sold-out' : ''}`;
-    return `<span class="${cls}" style="background:${v.swatch || '#ccc'};" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`;
-  }).join('') + (variants.length > 2 ? `<span class="variant-plus">+${variants.length - 2}</span>` : '');
+function stickyPriceHtml(product) {
+ const price = product.salePrice ? product.salePrice : product.price;
+ const originalPrice = product.salePrice ? product.price : null;
+ return originalPrice
+   ? `<span class="sticky-price-current sticky-price-sale">${formatPrice(price)}</span><span class="sticky-price-original">${formatPrice(originalPrice)}</span>`
+   : `<span class="sticky-price-current">${formatPrice(price)}</span>`;
 }
 
 function removeStickyBar() {
  const e = document.getElementById('sticky-add-bar');
  if (e) e.remove();
- S.stickyExtended = false;
- _stickyRemoveOutsideListener();
 }
 
 function createStickyBar(product) {
  removeStickyBar();
  const soldOut = isProductSoldOut(product);
- const vi = S.productVariantSelections[product.id] ?? 0;
  const price = product.salePrice ? product.salePrice : product.price;
  const bar = document.createElement('div');
  bar.id = 'sticky-add-bar';
  bar.className = 'sticky-add-bar';
+ const isWished = S.wishlist.some(w => w.id === product.id);
  bar.innerHTML = `
-   <div class="sticky-name">${product.name || ''}</div>
-   <div class="sticky-price">${formatPrice(price)}</div>
-   <div class="sticky-extras">
-     <div class="sticky-sizes" id="sticky-sizes">
-       ${(product.sizes || []).map(s =>
-         `<button class="sticky-size-btn${S.selectedSize === s ? ' sel' : ''}"
-           onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
-         >${s}</button>`
-       ).join('')}
-     </div>
-     <div class="sticky-swatches" id="sticky-swatches">${stickySwatchesHtml(product, vi)}</div>
+   <div class="sticky-top-row">
+     <div class="sticky-price">${stickyPriceHtml(product)}</div>
+     <button class="sticky-wish-btn${isWished ? ' wished' : ''}" type="button" data-wish-id="${escapeHTML(product.id)}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button>
    </div>
-   <button class="sticky-add-btn"
-     onclick="handleStickyAddClick('${product.id}')"
+   <button class="sticky-add-btn" id="sticky-add-btn"
+     onclick="addToCartFromDetailSticky('${product.id}')"
      ${soldOut ? ' disabled' : ''}
    ><span class="sticky-btn-label">${soldOut ? 'Sold Out' : 'Add to Bag'}</span><span class="sticky-btn-price">${formatPrice(price)}</span></button>`;
  document.body.appendChild(bar);
- S.stickyExtended = false;
  updateStickyBarOnScroll();
 }
 
-// ─── Outside tap listener refs (so we can remove cleanly) ──
-function _stickyOutsideTap(e) {
- const bar = document.getElementById('sticky-add-bar');
- if (!bar) {
-   _stickyRemoveOutsideListener();
-   return;
- }
-
- // Tap was inside the bar — re-attach and ignore
- if (bar.contains(e.target)) {
-   _stickyRemoveOutsideListener();
-   setTimeout(() => _stickyAttachOutsideListener(), 0);
-   return;
- }
-
- // Tap was outside — collapse without adding anything
- bar.classList.remove('extended');
- S.stickyExtended = false;
- _stickyRemoveOutsideListener();
-}
-
-function _stickyAttachOutsideListener() {
- document.addEventListener('touchstart', _stickyOutsideTap, { capture: true });
- document.addEventListener('mousedown', _stickyOutsideTap, { capture: true });
-}
-
-function _stickyRemoveOutsideListener() {
- document.removeEventListener('touchstart', _stickyOutsideTap, { capture: true });
- document.removeEventListener('mousedown', _stickyOutsideTap, { capture: true });
-}
-
-// ─── Open size panel ───────────────────────────────────────
-function handleStickyAddClick(productId) {
- const bar = document.getElementById('sticky-add-bar');
- if (!bar) return;
-
- // Already extended — do nothing (sizes handle their own tap)
- if (S.stickyExtended) return;
-
- // Expand to show sizes — bar stays glued to bottom:0
- bar.classList.add('extended');
- S.stickyExtended = true;
-
- // Attach outside tap listener after a short delay so the
- // current tap that opened the panel doesn't immediately close it
- setTimeout(() => _stickyAttachOutsideListener(), 50);
-}
-
-// ─── Tap size → instant add ────────────────────────────────
-function onStickySelectSize(btn, size, productId) {
- // Visual selection
- document.querySelectorAll('#sticky-sizes .sticky-size-btn')
-   .forEach(b => b.classList.remove('sel'));
- btn.classList.add('sel');
- S.selectedSize = size;
-
- const product = PRODUCTS.find(p => p.id === productId);
+// ─── Direct add — uses whatever size/qty are already selected on the
+// page itself, same pipeline the main Add to Cart button uses. The
+// button is disabled (via updateAddToCartState(), product-detail.js)
+// whenever a size still needs picking, so this never fires without one.
+function addToCartFromDetailSticky(id) {
+ const product = PRODUCTS.find(p => p.id === id);
  if (!product || isProductSoldOut(product)) return;
-
- // Instant add
- addToCart(productId, size, S.productQuantity);
-
- // Luxury feedback — no aggressive cart drawer
- _stickyAddedFeedback(productId, product);
+ addToCart(id, S.selectedSize, S.productQuantity);
+ _stickyAddedFeedback(product);
 }
 
-// ─── "Added" feedback then collapse ───────────────────────
-function _stickyAddedFeedback(productId, product) {
+// ─── "Added" feedback then restore ─────────────────────────
+function _stickyAddedFeedback(product) {
  const bar = document.getElementById('sticky-add-bar');
  if (!bar) return;
 
- // Collapse extended panel — bar stays glued to bottom:0
- bar.classList.remove('extended');
- S.stickyExtended = false;
- S.selectedSize = null;
- _stickyRemoveOutsideListener();
-
- // Reset size button states
- const sizesEl = bar.querySelector('#sticky-sizes');
- if (sizesEl && product) {
-   sizesEl.innerHTML = (product.sizes || []).map(s =>
-     `<button class="sticky-size-btn"
-       onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
-     >${s}</button>`
-   ).join('');
- }
-
- // Brief "Added" state on the button — then restore
  const btn = bar.querySelector('.sticky-add-btn');
  const label = bar.querySelector('.sticky-btn-label');
  if (btn && label) {
@@ -157,15 +71,6 @@ function _stickyAddedFeedback(productId, product) {
      label.textContent = isMin ? 'Add' : 'Add to Bag';
    }, 1600);
  }
-}
-
-// ─── Legacy: size chosen via selectStickySize ─────────────
-// Kept for any direct call sites outside the bar
-function selectStickySize(btn, size) {
- document.querySelectorAll('#sticky-sizes .sticky-size-btn')
-   .forEach(b => b.classList.remove('sel'));
- btn.classList.add('sel');
- S.selectedSize = size;
 }
 
 // ─── Scroll state: full → minimized ───────────────────────
@@ -192,66 +97,4 @@ function updateStickyBarOnScroll() {
      label.textContent = 'Add to Bag';
    }
  }
-}
-
-// ─── Update swatches only ──────────────────────────────────
-function updateStickyBarExtras() {
- const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
- if (!product) return;
- const vi = S.productVariantSelections[product.id] ?? 0;
- const se = document.getElementById('sticky-swatches');
- if (se) se.innerHTML = stickySwatchesHtml(product, vi);
-}
-
-// ─── Full bar update (variant/price change) ────────────────
-function updateStickyBar(product) {
- const bar = document.getElementById('sticky-add-bar');
- if (!bar) { createStickyBar(product); return; }
-
- const soldOut = isProductSoldOut(product);
- const vi = S.productVariantSelections[product.id] ?? 0;
- const price = product.salePrice ? product.salePrice : product.price;
-
- bar.querySelector('.sticky-name').textContent = product.name || '';
-
- // Update standalone price (visible in default state)
- const priceEl = bar.querySelector('.sticky-price');
- if (priceEl) priceEl.textContent = formatPrice(price);
-
- // Update price inside button (visible in minimized state)
- const btnPriceEl = bar.querySelector('.sticky-btn-price');
- if (btnPriceEl) btnPriceEl.textContent = formatPrice(price);
-
- const se = bar.querySelector('#sticky-sizes');
- if (se) se.innerHTML = (product.sizes || []).map(s =>
-   `<button class="sticky-size-btn${S.selectedSize === s ? ' sel' : ''}"
-     onclick="event.stopPropagation(); onStickySelectSize(this, '${s}', '${product.id}')"
-   >${s}</button>`
- ).join('');
-
- const sw = bar.querySelector('#sticky-swatches');
- if (sw) sw.innerHTML = stickySwatchesHtml(product, vi);
-
- const btn = bar.querySelector('.sticky-add-btn');
- const label = bar.querySelector('.sticky-btn-label');
- if (btn && label) {
-   btn.disabled = soldOut;
-   if (soldOut) {
-     label.textContent = 'Sold Out';
-   } else if (label.textContent !== 'Added') {
-     label.textContent = bar.classList.contains('minimized') ? 'Add' : 'Add to Bag';
-   }
- }
-}
-
-// ─── Legacy shim — kept for any existing call sites ────────
-function addToCartFromDetailSticky(id) {
- if (!S.selectedSize) {
-   handleStickyAddClick(id);
-   return;
- }
- const product = PRODUCTS.find(p => p.id === id);
- if (product && isProductSoldOut(product)) return;
- addToCart(id, S.selectedSize, S.productQuantity);
- _stickyAddedFeedback(id, product);
 }
