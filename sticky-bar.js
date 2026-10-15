@@ -102,7 +102,7 @@ function onStickySelectSize(btn, size, productId) {
  if (!product || isProductSoldOut(product)) return;
 
  // Instant add
- addToCart(productId, size);
+ addToCart(productId, size, S.productQuantity);
 
  // Luxury feedback — no aggressive cart drawer
  _stickyAddedFeedback(productId, product);
@@ -237,6 +237,6 @@ function addToCartFromDetailSticky(id) {
  }
  const product = PRODUCTS.find(p => p.id === id);
  if (product && isProductSoldOut(product)) return;
- addToCart(id, S.selectedSize);
+ addToCart(id, S.selectedSize, S.productQuantity);
  _stickyAddedFeedback(id, product);
 }
