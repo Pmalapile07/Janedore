@@ -1611,27 +1611,6 @@ function applyShopByCategoryTiles(html, tiles) {
   );
 }
 
-// Swaps the header's text wordmark for the uploaded logo image before
-// the response is even sent — same reasoning as the rest of this file's
-// SSR: without it, every fresh page load would flash "JANEDORE" as text
-// for a moment before site-content.js's own fetch resolves and swaps
-// it to the image. No logoUrl set leaves the markup untouched (image
-// stays display:none, text wordmark shows as normal).
-function applyLogoImage(html, logoUrl) {
-  const url = adminImageURL(logoUrl, 200);
-  if (!url) return html;
-  const safeUrl = url.replace(/['"\\]/g, '');
-  html = html.replace(
-    /(<img\b[^>]*\bid="nav-logo-img"[^>]*)\sstyle="display:none;"([^>]*>)/,
-    '$1 style="display:block;" src="' + safeUrl + '"$2'
-  );
-  html = html.replace(
-    /(<span\b[^>]*\bid="nav-logo-text"[^>]*)(>)/,
-    '$1 style="display:none;"$2'
-  );
-  return html;
-}
-
 function applyHomepageContent(html, homepage) {
   const hero = homepage.hero || {};
   const arrivals = homepage.newArrivals || {};
@@ -1640,7 +1619,9 @@ function applyHomepageContent(html, homepage) {
   const banner = homepage.editorialBanner || {};
   const shopByBrand = homepage.shopByBrand || {};
 
-  html = applyLogoImage(html, homepage.logoUrl);
+  // The header always shows the Unbounded JANEDORE wordmark. An uploaded
+  // Site Logo used to hide it here in favour of an image the header no
+  // longer has, which left the logo blank on every page.
 
   html = fillTextElement(html, 'hero-heading', hero.heading);
   html = fillTextElement(html, 'hero-shop-btn', hero.buttonText);
