@@ -23,6 +23,10 @@ body {
   background: #fff;
   color: #111;
   overflow-x: hidden;
+  /* clip (where supported) stops sideways scrolling without turning the
+     body into a scroll container, which on iPhone makes fixed bottom
+     bars (sticky Add to Bag, chat bubble) lag behind the page. */
+  overflow-x: clip;
   max-width: 100%;
   font-weight: 400;
 }
