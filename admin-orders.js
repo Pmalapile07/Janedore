@@ -365,6 +365,15 @@
         '<button class="orders-sort-btn" aria-label="Sort" title="Sort">' +
           '<i class="ph ph-arrows-down-up"></i>' +
         '</button>' +
+        '<div class="orders-actions-menu-wrap">' +
+          '<button class="orders-filter-btn" onclick="window._toggleOrdersPrintMenu(event)" aria-label="Print" title="Print">' +
+            '<i class="ph ph-printer"></i>' +
+          '</button>' +
+          '<div class="orders-actions-popover" id="orders-print-popover" onclick="event.stopPropagation()">' +
+            '<button class="orders-actions-item" onclick="window._printOrders(\'list\')"><i class="ph ph-list-bullets"></i> Print order list</button>' +
+            '<button class="orders-actions-item" onclick="window._printOrders(\'slips\')"><i class="ph ph-package"></i> Print packing slips</button>' +
+          '</div>' +
+        '</div>' +
         '<div class="orders-filter-menu-wrap">' +
           '<button class="orders-filter-btn" id="orders-filter-btn" onclick="window._toggleOrdersFilterPopover(event)" aria-label="Filter">' +
             '<i class="ph ph-funnel-simple"></i>' +
@@ -426,6 +435,15 @@
     if (!isOpen) pop.classList.add('open');
   };
 
+  window._toggleOrdersPrintMenu = function (e) {
+    if (e) e.stopPropagation();
+    var pop = safeEl('orders-print-popover');
+    if (!pop) return;
+    var isOpen = pop.classList.contains('open');
+    closeAllOrderPopovers();
+    if (!isOpen) pop.classList.add('open');
+  };
+
   window._toggleOrdersFilterPopover = function (e) {
     if (e) e.stopPropagation();
     var pop = safeEl('orders-filter-popover');
@@ -481,6 +499,8 @@
       }
       return true;
     });
+
+    window._ordersVisible = filtered;
 
     var wrap = safeEl('orders-table-wrap');
     if (!wrap) return;
@@ -1309,53 +1329,126 @@
     '</div>';
   }
 
-  // ─── PACKING SLIP ────────────────────────────────────────────
+  // ─── PRINTING ────────────────────────────────────────────────
+  // Order list (one table row per order) or packing slips (one order per
+  // page), for whichever orders are ticked, else everything the list is
+  // showing. A brand only ever sees its own items, and no customer email.
 
-  window._printPackingSlip = function (orderId) {
-    var o = (window._ordersData || []).find(function (x) { return x.id === orderId; });
-    if (!o) { showToast('Order not found', 'error'); return; }
+  function ordersForPrint() {
+    var selected = Object.keys(window._selectedOrders || {}).filter(function (id) { return window._selectedOrders[id]; });
+    var all = window._ordersData || [];
+    if (selected.length) return all.filter(function (o) { return selected.indexOf(o.id) !== -1; });
+    return window._ordersVisible || all;
+  }
 
-    var itemsHTML = (o.items || []).map(function (item) {
-      return '<tr>' +
-        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;">' + esc(item.name) + '</td>' +
-        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;text-align:center;">' + esc(item.size || '-') + '</td>' +
-        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;text-align:center;">' + item.qty + '</td>' +
-      '</tr>';
-    }).join('');
+  function printableItems(o) {
+    var items = o.items || [];
+    if (window._currentUserRole === 'VENDOR') {
+      items = items.filter(function (i) { return i.vendorId && i.vendorId === window._currentVendorId; });
+    }
+    return items;
+  }
 
-    var win = window.open('', '_blank', 'width=680,height=700');
+  function printDate(ts) {
+    if (!ts) return '';
+    var d = ts.toDate ? ts.toDate() : new Date(ts.seconds ? ts.seconds * 1000 : ts);
+    return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function itemDetail(i) {
+    return [i.color && i.color !== 'Default' ? i.color : '', i.size && i.size !== 'OS' ? 'Size ' + i.size : ''].filter(Boolean).join(' · ');
+  }
+
+  function addressHtml(o, isVendor) {
+    return '<strong>' + esc(o.customerName || 'Customer') + '</strong><br>' +
+      [o.shippingAddress, [o.city, o.province].filter(Boolean).join(', '), [o.postalCode, o.country || 'South Africa'].filter(Boolean).join(', ')]
+        .filter(Boolean).map(esc).join('<br>') +
+      (o.customerPhone ? '<br>' + esc(o.customerPhone) : '') +
+      (!isVendor && o.customerEmail ? '<br>' + esc(o.customerEmail) : '');
+  }
+
+  function openPrintWindow(title, bodyHtml) {
+    var win = window.open('', '_blank', 'width=820,height=900');
+    if (!win) { showToast('Allow pop-ups for this site to print', 'error'); return; }
     win.document.write(
-      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Packing Slip #' + esc(o.orderNumber || orderId) + '</title>' +
-      '<style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:40px;color:#222;}' +
-      'h1{font-size:22px;font-weight:300;margin:0 0 4px;}' +
-      '.order-num{font-size:13px;color:#888;margin-bottom:24px;}' +
-      'h2{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#aaa;margin:20px 0 8px;border-bottom:0.5px solid #eee;padding-bottom:4px;}' +
-      'p{font-size:13px;margin:3px 0;color:#444;}' +
-      'table{width:100%;border-collapse:collapse;margin-top:8px;}' +
-      'th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;border-bottom:0.5px solid #ddd;}' +
-      '@media print{body{padding:20px;}}' +
-      '</style></head><body>' +
-      '<h1>Janedore</h1>' +
-      '<div class="order-num">Order #' + esc(o.orderNumber || orderId) + ' · ' + fmtDate(o.createdAt) + '</div>' +
-      '<h2>Customer</h2>' +
-      '<p>' + esc(o.customerName || 'Guest') + '</p>' +
-      '<p>' + esc(o.customerEmail || '') + '</p>' +
-      '<p>' + esc(o.customerPhone || '') + '</p>' +
-      '<h2>Shipping Address</h2>' +
-      '<p>' + esc(o.shippingAddress || '') + '</p>' +
-      '<p>' + esc(o.city || '') + (o.province ? ', ' + esc(o.province) : '') + (o.postalCode ? ' ' + esc(o.postalCode) : '') + '</p>' +
-      '<p>' + esc(o.country || 'South Africa') + '</p>' +
-      (o.trackingNumber ? '<h2>Tracking</h2><p>' + esc(o.courier || '') + ': ' + esc(o.trackingNumber) + '</p>' : '') +
-      '<h2>Items</h2>' +
-      '<table><thead><tr><th>Product</th><th>Size</th><th>Qty</th></tr></thead><tbody>' +
-      itemsHTML +
-      '</tbody></table>' +
-      '<div style="margin-top:24px;font-size:11px;color:#aaa;text-align:center;">Thank you for shopping with Janedore</div>' +
-      '</body></html>'
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + esc(title) + '</title><style>' +
+      '*{box-sizing:border-box;}body{margin:0;padding:32px;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#111;font-size:13px;}' +
+      '.bar{display:flex;justify-content:space-between;align-items:baseline;background:#111;color:#fff;padding:14px 18px;margin-bottom:18px;}' +
+      '.logo{letter-spacing:.22em;text-transform:uppercase;font-size:14px;}.bar-sub{font-size:12px;color:#ccc;}' +
+      '.card{border:1px solid #ddd;padding:16px 18px;margin-bottom:14px;break-inside:avoid;}' +
+      '.title{font-size:16px;font-weight:700;margin:0 0 10px;}.muted{color:#777;}' +
+      'table{width:100%;border-collapse:collapse;}th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#777;padding:8px 6px;border-bottom:1px solid #ddd;}' +
+      'td{padding:9px 6px;border-bottom:1px solid #eee;vertical-align:top;}td.n{text-align:center;white-space:nowrap;}' +
+      '.check{width:16px;height:16px;border:1.5px solid #111;display:inline-block;}' +
+      '.cols{display:flex;gap:24px;}.cols>div{flex:1;}.addr{line-height:1.6;}' +
+      '.slip{page-break-after:always;}.slip:last-child{page-break-after:auto;}' +
+      '.foot{margin-top:18px;font-size:11px;color:#777;text-align:center;}' +
+      '@media print{body{padding:12mm;}.bar{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}' +
+      '</style></head><body>' + bodyHtml + '</body></html>'
     );
     win.document.close();
-    setTimeout(function () { win.print(); }, 300);
+    setTimeout(function () { win.focus(); win.print(); }, 350);
+  }
+
+  function slipHtml(o, isVendor, brandLabel) {
+    var items = printableItems(o);
+    var count = items.reduce(function (a, i) { return a + (Number(i.qty) || 1); }, 0);
+    return '<div class="slip">' +
+      '<div class="bar"><span class="logo">Janedore</span><span class="bar-sub">Packing slip' + (brandLabel ? ' · ' + esc(brandLabel) : '') + '</span></div>' +
+      '<div class="card"><div class="cols">' +
+        '<div><div class="title">Order #' + esc(o.orderNumber || o.id) + '</div><div class="muted">' + esc(printDate(o.createdAt)) + ' · ' + count + (count === 1 ? ' item' : ' items') + '</div></div>' +
+        '<div class="addr"><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ship to</div>' + addressHtml(o, isVendor) + '</div>' +
+      '</div></div>' +
+      '<div class="card"><div class="title">Items to pack</div><table><thead><tr><th style="width:28px;"></th><th>Product</th><th>Details</th><th class="n">Qty</th></tr></thead><tbody>' +
+        items.map(function (i) {
+          return '<tr><td><span class="check"></span></td><td><strong>' + esc(i.name || 'Item') + '</strong>' +
+            (!isVendor && i.brand ? '<br><span class="muted">' + esc(i.brand) + '</span>' : '') + '</td>' +
+            '<td>' + esc(itemDetail(i)) + '</td><td class="n">' + (Number(i.qty) || 1) + '</td></tr>';
+        }).join('') +
+      '</tbody></table></div>' +
+      (o.trackingNumber ? '<div class="card"><div class="title">Tracking</div>' + esc(o.courier || '') + ' ' + esc(o.trackingNumber) + '</div>' : '') +
+      '<div class="foot">Thank you for shopping with Janedore · janedore.co.za</div>' +
+    '</div>';
+  }
+
+  window._printOrders = function (mode, onlyOrderId) {
+    closeAllOrderPopovers();
+    var isVendor = window._currentUserRole === 'VENDOR';
+    var orders = onlyOrderId
+      ? (window._ordersData || []).filter(function (o) { return o.id === onlyOrderId; })
+      : ordersForPrint();
+    orders = orders.filter(function (o) { return printableItems(o).length; });
+    if (!orders.length) { showToast('No orders to print', 'info'); return; }
+    var brandLabel = isVendor ? (printableItems(orders[0])[0].brand || '') : '';
+
+    if (mode === 'slips') {
+      openPrintWindow(orders.length === 1 ? 'Packing slip #' + (orders[0].orderNumber || orders[0].id) : 'Packing slips',
+        orders.map(function (o) { return slipHtml(o, isVendor, brandLabel); }).join(''));
+      return;
+    }
+
+    var totalItems = 0;
+    var rowsHtml = orders.map(function (o) {
+      var items = printableItems(o);
+      totalItems += items.reduce(function (a, i) { return a + (Number(i.qty) || 1); }, 0);
+      return '<tr><td><span class="check"></span></td>' +
+        '<td><strong>#' + esc(o.orderNumber || o.id) + '</strong><br><span class="muted">' + esc(printDate(o.createdAt)) + '</span></td>' +
+        '<td class="addr">' + addressHtml(o, isVendor) + '</td>' +
+        '<td>' + items.map(function (i) {
+          var d = itemDetail(i);
+          return (Number(i.qty) || 1) + ' × ' + esc(i.name || 'Item') + (d ? ' <span class="muted">(' + esc(d) + ')</span>' : '') +
+            (!isVendor && i.brand ? ' <span class="muted">· ' + esc(i.brand) + '</span>' : '');
+        }).join('<br>') + '</td></tr>';
+    }).join('');
+
+    openPrintWindow('Orders',
+      '<div class="bar"><span class="logo">Janedore</span><span class="bar-sub">' + (brandLabel ? esc(brandLabel) + ' · ' : '') + 'Orders · printed ' + esc(printDate(new Date())) + '</span></div>' +
+      '<div class="card"><div class="title">' + orders.length + (orders.length === 1 ? ' order' : ' orders') + ' · ' + totalItems + (totalItems === 1 ? ' item' : ' items') + '</div>' +
+      '<table><thead><tr><th style="width:28px;"></th><th>Order</th><th>Ship to</th><th>Items</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>');
   };
+
+  // The printer button on an open order: that order's packing slip.
+  window._printPackingSlip = function (orderId) { window._printOrders('slips', orderId); };
 
   // ─── ORDER ACTIONS ───────────────────────────────────────────
 
