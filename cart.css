@@ -38,8 +38,8 @@
 .btn-view-cart:hover { background: #f5f5f5; }
 .btn-checkout-main { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; transition: background 0.2s; cursor: pointer; }
 .btn-checkout-main:hover { background: #333; }
-/* Same grey/not-allowed treatment as .product-add-row-btn:disabled on
-   the product page's own Sold Out button — a black button here reads
+/* Same grey/not-allowed treatment as the product page's disabled
+   Add to Bag button (.sticky-add-btn:disabled) — a black button here reads
    as fully clickable, which this one deliberately isn't. */
 .btn-checkout-main:disabled { background: #ccc; cursor: not-allowed; }
 .btn-checkout-main:disabled:hover { background: #ccc; }

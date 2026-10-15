@@ -39,7 +39,8 @@ function buildSizeRowHtml(product, variantIndex) {
   return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Size</div><div class="sizes-row">${buttons}</div><div class="size-guide-note">Need help with sizing? <span>View our size guide</span></div></div>`;
 }
 
-// Re-evaluates the Add to Cart button's label/disabled state against
+// Re-evaluates the sticky bar's Add to Bag button (the page's only add
+// button) label/disabled state against
 // whatever's currently selected (size, color). Called after both size
 // and color selection rather than duplicating this logic at each call
 // site — S.currentReviewProductId doubles as "the product currently on
@@ -47,32 +48,23 @@ function buildSizeRowHtml(product, variantIndex) {
 function updateAddToCartState() {
   if (S.currentPage !== 'product-detail') return;
   const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
-  const addBtn = document.getElementById('product-add-btn');
-  if (!product || !addBtn) return;
+  const stickyBtn = document.getElementById('sticky-add-btn');
+  if (!product || !stickyBtn) return;
   const vi = S.productVariantSelections[product.id] ?? 0;
   const isPreorder = product.badge === 'pre-order';
   const soldOut = isProductSoldOut(product);
   const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
   const needsSize = hasSizes && !S.selectedSize;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
-  const disabled = (needsSize || sizeOutOfStock || soldOut) && !isPreorder;
-  addBtn.disabled = disabled;
-  addBtn.textContent = isPreorder ? 'Pre-order' : (needsSize ? 'Select a Size' : ((sizeOutOfStock || soldOut) ? 'Sold Out' : 'Add to Cart'));
+  stickyBtn.disabled = (needsSize || sizeOutOfStock || soldOut) && !isPreorder;
 
-  // The sticky bar's own Add to Bag button mirrors this same
-  // disabled/label state — same size/stock rules, it just reads "Add to
-  // Bag" (or "Add" once minimized) where the main button reads "Add to
-  // Cart", and never overwrites the transient "Added" feedback.
-  const stickyBtn = document.getElementById('sticky-add-btn');
-  if (stickyBtn) {
-    const bar = document.getElementById('sticky-add-bar');
-    stickyBtn.disabled = disabled;
-    if (!bar || !bar.classList.contains('added-feedback')) {
-      const stickyLabel = stickyBtn.querySelector('.sticky-btn-label');
-      const stickyDefault = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to Bag';
-      if (stickyLabel) stickyLabel.textContent = isPreorder ? 'Pre-order' : (needsSize ? 'Select a Size' : ((sizeOutOfStock || soldOut) ? 'Sold Out' : stickyDefault));
-    }
-  }
+  // Never overwrite the transient "Added" feedback; "Add" instead of
+  // "Add to Bag" once the bar is minimized.
+  const bar = document.getElementById('sticky-add-bar');
+  if (bar && bar.classList.contains('added-feedback')) return;
+  const label = stickyBtn.querySelector('.sticky-btn-label');
+  const defaultLabel = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to Bag';
+  if (label) label.textContent = isPreorder ? 'Pre-order' : (needsSize ? 'Select a Size' : ((sizeOutOfStock || soldOut) ? 'Sold Out' : defaultLabel));
 }
 function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; }
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
@@ -316,14 +308,12 @@ async function renderProductPage(product) {
     S.productVariantSelections[product.id] = 0;
   }
 
-  const vi=S.productVariantSelections[product.id]; const images=getAllProductImages(product,vi); const soldOut=isProductSoldOut(product);
-  const isPreorder=product.badge==='pre-order';
+  const vi=S.productVariantSelections[product.id]; const images=getAllProductImages(product,vi);
   const variants=product.variants||[];
   // 'OS' is a placeholder sentinel, not a real size — never show it as
   // a selectable "size" (there's nothing to actually select).
   const sizes=(product.sizes||[]).filter(s=>s!=='OS');
   const productBadges=getProductBadges(product);
-  const isWished=S.wishlist.some(w=>w.id===product.id);
   const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
   // Same-brand picks first, then site-wide featured products, then
   // whatever's left — works for every category, unlike the old
@@ -393,10 +383,6 @@ async function renderProductPage(product) {
       <div class="product-size-color-group">
         ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
         ${buildSizeRowHtml(product,vi)}
-      </div>
-      <div class="product-add-row">
-        <button class="product-wish-row-btn${isWished?' wished':''}" data-wish-id="${escapeHTML(product.id)}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished?'ph-fill':'ph-light'} ph-heart"></i></button>
-        <button class="product-add-row-btn" id="product-add-btn" onclick="addToCart('${product.id}',S.selectedSize,S.productQuantity)" ${(soldOut&&!isPreorder)?'disabled':''}>${isPreorder?'Pre-order':(soldOut?'Sold Out':'Add to Cart')}</button>
       </div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
