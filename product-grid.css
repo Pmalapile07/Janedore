@@ -203,8 +203,8 @@
   gap: 4px;
 }
 /* Same badge on cards and the product page (product-info.css): black
-   with white text. SALE is the free-delivery banner's green with black
-   text. */
+   with white text. SALE is red with white text, matching the red sale
+   price. */
 .product-badge {
   font-size: 8px;
   font-weight: 600;
@@ -214,7 +214,7 @@
   background: #111;
   color: #fff;
 }
-.product-badge.badge-sale { background: #e6edd5; color: #111; }
+.product-badge.badge-sale { background: #c0392b; color: #fff; }
 
 /* ============================================
    PRODUCT CARD — info block
@@ -316,7 +316,7 @@
 }
 .product-wish-btn:hover { opacity: 0.75; }
 .product-wish-btn:active { opacity: 0.55; }
-/* Black everywhere, sale prices included (.product-price-sale is just bolder) — (an
+/* Black everywhere — red is only ever for .product-price-sale (an
    actual discounted price), never tied to which page a card appears
    on. */
 .product-home-price,
@@ -338,10 +338,10 @@
   display: flex;
   flex-direction: column;
 }
-/* Sale price: black like every price, but bolder than the struck-through
-   original so it reads as the price to pay. */
+/* Sale price: red (same as the SALE badge) and bolder than the
+   struck-through original so it reads as the price to pay. */
 .product-price-sale {
-  color: #111;
+  color: #c0392b;
   font-weight: 600;
 }
 .product-price-original {
