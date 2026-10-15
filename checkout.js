@@ -145,12 +145,53 @@ function getCheckoutTotals() {
   return { subtotal, discountAmount, shipping, total: afterDiscount + shipping };
 }
 
+// Opens/closes the "Your order" card at the top of the checkout form.
+function toggleCheckoutOrder(open) {
+  const btn = document.getElementById('checkout-order-toggle');
+  const list = document.getElementById('checkout-items');
+  if (!btn || !list) return;
+  const expand = typeof open === 'boolean' ? open : btn.getAttribute('aria-expanded') !== 'true';
+  btn.setAttribute('aria-expanded', String(expand));
+  list.hidden = !expand;
+}
+
 function renderCheckoutSummary() {
-  // The checkout page no longer lists the items (the bag, one step back,
-  // already does) — it only shows the totals card above Place Order.
   if (!document.getElementById('checkout-total') || !S.cart.length) return;
 
   const { subtotal, discountAmount, shipping, total } = getCheckoutTotals();
+
+  // "Your order" card: the bag's item layout, read-only — no wishlist
+  // heart or remove button; changes are made one step back, in the bag.
+  const itemCount = S.cart.reduce((a, i) => a + i.qty, 0);
+  const countEl = document.getElementById('checkout-order-count');
+  if (countEl) countEl.textContent = '(' + itemCount + ')';
+  const orderTotalEl = document.getElementById('checkout-order-total');
+  if (orderTotalEl) orderTotalEl.textContent = formatPrice(subtotal);
+  const itemsEl = document.getElementById('checkout-items');
+  if (itemsEl) {
+    itemsEl.innerHTML = S.cart.map(item => {
+      const color = item.color && item.color !== 'Default' ? ' · ' + sanitizeHTML(item.color) : '';
+      // 'OS' is a placeholder sentinel, not a real size — never display it.
+      const size = item.size && item.size !== 'OS' ? sanitizeHTML(item.size) : '';
+      return `<div class="checkout-order-item">
+        <div class="cart-item-top">
+          <div class="cart-item-img" style="background-image:url('${getCartItemThumbnail(item)}');"></div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${sanitizeHTML(item.name || '')}</div>
+            <div class="cart-item-brand">${sanitizeHTML(item.brand || '')}${color}</div>
+          </div>
+        </div>
+        <div class="cart-item-attrs">
+          <span>Quantity: <strong>${item.qty}</strong></span>
+          ${size ? `<span class="cart-item-size">Size: <strong>${size}</strong></span>` : ''}
+        </div>
+        <div class="cart-item-bottom">
+          <span class="cart-item-returns">Free exchange or return within 30 days</span>
+          <span class="cart-item-price">${formatPrice(getCartItemLineTotal(item))}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
 
   const subtotalEl = document.getElementById('checkout-subtotal');
   if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
@@ -197,7 +238,7 @@ async function placeOrder(e) {
   const country = document.getElementById('checkout-country').value.trim();
   const phone = document.getElementById('checkout-phone').value.trim();
   
-  if (!email || !name || !address || !city || !country) {
+  if (!email || !name || !address || !city || !province || !postal || !country) {
     alert('Please fill in all required fields.');
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
     return;

@@ -247,6 +247,8 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
   font-size: 14px;
   margin: 10px 0;
 }
+/* Discounts always show in the site green. */
+.cart-totals-row.discount { color: #b8cc87; font-weight: 600; }
 .cart-page-remove-discount { background: none; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 0 4px; }
 .cart-checkout-btn {
   width: 100%;

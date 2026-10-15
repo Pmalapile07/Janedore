@@ -514,7 +514,7 @@ function renderCartPage() {
   html += `<div class="cart-card cart-totals">
     <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + (shipping.freeShipping ? 0 : SHIPPING_FEE))}</span></div>
     <div class="cart-totals-row"><span>Cart Total</span><span>${formatPrice(getCartSubtotal())}</span></div>
-    ${appliedDiscount ? `<div class="cart-totals-row"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
+    ${appliedDiscount ? `<div class="cart-totals-row discount"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
     <div class="cart-totals-row"><span>Delivery Fee</span><span>${shipping.freeShipping ? 'Free' : formatPrice(SHIPPING_FEE)}</span></div>
     <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout Now</button>
   </div></div>`;
