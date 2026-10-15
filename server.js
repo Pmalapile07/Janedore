@@ -329,14 +329,14 @@ app.post('/api/send-welcome-email', (req, res) => {
 // The logos chosen in admin's Content section (settings/contentLibrary):
 // siteLogo replaces the header wordmark, emailLogo goes in the black bar
 // of every order email. Cached for a minute.
-let brandAssetsCache = { value: { siteLogo: '', emailLogo: '' }, at: 0 };
+let brandAssetsCache = { value: { siteLogo: '', emailLogo: '', logoFont: '', logoFontFormat: '' }, at: 0 };
 async function getBrandAssets() {
   if (!adminDb || Date.now() - brandAssetsCache.at < 60 * 1000) return brandAssetsCache.value;
   try {
     const doc = await adminDb.collection('settings').doc('contentLibrary').get();
     const d = doc.exists ? doc.data() : {};
     const pick = (slot) => (slot && /^https:\/\//.test(slot.url || '') ? slot.url : '');
-    brandAssetsCache = { value: { siteLogo: pick(d.siteLogo), emailLogo: pick(d.emailLogo) }, at: Date.now() };
+    brandAssetsCache = { value: { siteLogo: pick(d.siteLogo), emailLogo: pick(d.emailLogo), logoFont: pick(d.logoFont), logoFontFormat: (d.logoFont && d.logoFont.format) || '' }, at: Date.now() };
   } catch (e) {
     console.warn('[BRAND_ASSETS] Could not read content library:', e.message);
     brandAssetsCache.at = Date.now();
@@ -384,6 +384,7 @@ async function buildOrderEmailContext(order) {
   return {
     siteUrl: SITE_URL,
     logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : '',
+    logoFontUrl: assets.logoFont || '',
     products,
     vendorIdFor: item => (products[item.productId] && products[item.productId].vendorId) || item.vendorId || null,
     imageFor: item => emailImageUrl(products[item.productId], item.variantIndex)
@@ -1691,9 +1692,28 @@ async function renderIndexHtml(headTransform) {
   let html = fs.readFileSync(indexPath, 'utf8');
   if (headTransform) html = headTransform(html);
   html = await injectHomepageContent(html);
-  html = injectLogoFont(html);
+  html = await injectCustomLogoFont(html);
   html = await injectSiteLogo(html);
   return injectCacheBust(html);
+}
+
+// Logo font from admin > Content: the JANEDORE wordmark is set in the
+// uploaded font instead of Unbounded, still as text (sharp at any size).
+// The file is preloaded so the logo doesn't flash in a fallback font.
+// Not set: the Unbounded setup above (injectLogoFont) is used.
+async function injectCustomLogoFont(html) {
+  const { logoFont, logoFontFormat } = await getBrandAssets();
+  if (!logoFont) return injectLogoFont(html);
+  const fmt = String(logoFontFormat || logoFont.split('.').pop() || '').toLowerCase();
+  const cssFormat = { woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype' }[fmt] || 'truetype';
+  const mime = { woff2: 'font/woff2', woff: 'font/woff', ttf: 'font/ttf', otf: 'font/otf' }[fmt] || 'font/ttf';
+  const url = escapeHtml(logoFont);
+  return html.replace(
+    /<link id="logo-font-css"[^>]*>/,
+    () => '<link rel="preload" as="font" type="' + mime + '" href="' + url + '" crossorigin>\n' +
+      '  <style id="logo-font-css">@font-face{font-family:"Janedore Logo";src:url("' + url + '") format("' + cssFormat + '");font-weight:400;font-style:normal;font-display:block;}' +
+      '.nav-logo-text,.footer-logo-fallback{font-family:"Janedore Logo",Helvetica,Arial,sans-serif !important;}</style>'
+  );
 }
 
 // Website logo from admin > Content: swaps the header's text wordmark for
