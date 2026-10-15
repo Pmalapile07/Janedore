@@ -135,14 +135,14 @@ function getAllProductImages(product, variantIndex) {
 }
 
 // Each color box shows that color's own product photo (product-on-white
-// shot first, then model, then detail), cropped small by Cloudinary. The
-// flat swatch color stays underneath as a fallback while it loads or if
-// a color has no photos yet.
+// shot first, then model, then detail), scaled by Cloudinary to fit the
+// box without cropping (c_fit). A color with no photos shows its flat
+// swatch color instead.
 function variantSwatchThumb(variant) {
   const imgs = variant?.images || {};
   const url = [imgs.ghost, imgs.model, imgs.detail].map(a => (a || []).filter(Boolean)[0]).find(Boolean);
   if (!url) return '';
-  return escapeForCssUrl(safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fill,g_auto,w_144,h_120/'));
+  return escapeForCssUrl(safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fit,w_144,h_192/'));
 }
 function variantSwatchesHtml(product, selectedIndex) {
   const variants = product?.variants || [];
@@ -151,7 +151,7 @@ function variantSwatchesHtml(product, selectedIndex) {
   return variants.map((v, i) => {
     const thumb = variantSwatchThumb(v);
     const cls = `variant-swatch${i === si ? ' selected' : ''}${soldOut ? ' sold-out' : ''}${thumb ? ' has-image' : ''}`;
-    const style = `background-color:${escapeHTML(v.swatch || '#ccc')};` + (thumb ? `background-image:url('${thumb}');` : '');
+    const style = thumb ? `background-image:url('${thumb}');` : `background-color:${escapeHTML(v.swatch || '#ccc')};`;
     const label = escapeHTML(v.color || `Color ${i + 1}`);
     return `<span class="${cls}" style="${style}" role="button" aria-label="${label}" title="${label}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`;
   }).join('');
