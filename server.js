@@ -1359,7 +1359,9 @@ app.post('/api/chat-ai-reply', async (req, res) => {
 const BUILD_ID = Date.now();
 
 function injectCacheBust(html) {
-  return html.replace(/\b(href|src)="([^"]+\.(?:css|js))"/g, (match, attr, filePath) => {
+  // Also matches files that already carry a query string (e.g. a
+  // hand-written "?v=3"), which used to be skipped and so never refreshed.
+  return html.replace(/\b(href|src)="([^"?]+\.(?:css|js)(?:\?[^"]*)?)"/g, (match, attr, filePath) => {
     if (/^(?:https?:)?\/\//.test(filePath)) return match; // external CDN URL — leave alone
     const sep = filePath.includes('?') ? '&' : '?';
     return attr + '="' + filePath + sep + 'v=' + BUILD_ID + '"';
