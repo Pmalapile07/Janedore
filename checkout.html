@@ -101,18 +101,19 @@
   #checkout-payment-view .checkout-place-order-btn { margin-top: 20px; }
   .checkout-order-item { padding: 16px 0; border-top: 1px solid #eee; }
   .checkout-order-item .cart-item-img { cursor: default; }
+  /* Same type as the product page's sticky Add to Bag / Pre-order button. */
   .checkout-place-order-btn {
     width: 100%;
-    height: 52px;
+    height: 46px;
     margin-top: 16px;
     border: none;
     background: #111;
     color: #fff;
     font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--ui-font-size);
+    font-weight: var(--ui-font-weight);
+    letter-spacing: var(--ui-letter-spacing);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
     cursor: pointer;
   }
   .checkout-place-order-btn:hover { background: #333; }
