@@ -532,9 +532,8 @@ body.on-collection-page .collection-filter-bar {
    BADGES
    ========================================= */
 
-.badge-sale { background: #FFFFFF; color: #000000; padding: 4px 8px; }
-.badge-sold { background: #FFFFFF; color: #000000; padding: 4px 8px; }
-.badge-preorder { background: #FFFFFF; color: #000000; padding: 4px 8px; }
+/* Badge colours live with .product-badge (product-grid.css) and
+   .product-badge-detail (product-info.css). */
 
 /* =========================================
    FEATURED BRAND SECTIONS - FIXES

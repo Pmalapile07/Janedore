@@ -94,6 +94,12 @@ function isProductNew(product) {
   return ageMs >= 0 && ageMs <= PRODUCT_NEW_DAYS * 24 * 60 * 60 * 1000;
 }
 
+// "SALE" → "badge-sale", "SOLD OUT" → "badge-sold-out": lets each badge
+// be styled on its own (product-grid.css / product-info.css).
+function badgeClass(label) {
+  return 'badge-' + String(label || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 function getProductBadges(product) {
   if (!product) return [];
   if (isProductSoldOut(product)) return ['SOLD OUT'];
@@ -389,7 +395,7 @@ async function renderProductPage(product) {
     ${breadcrumbHtml}
     <div class="product-slider" id="product-slider">
       <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');">
-        ${productBadges.length?`<div class="product-badge-detail-stack">${productBadges.map(b=>`<span class="product-badge-detail">${escapeHTML(b)}</span>`).join('')}</div>`:''}
+        ${productBadges.length?`<div class="product-badge-detail-stack">${productBadges.map(b=>`<span class="product-badge-detail ${badgeClass(b)}">${escapeHTML(b)}</span>`).join('')}</div>`:''}
       </div>
       ${imageBarsHtml}
     </div>

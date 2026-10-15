@@ -202,15 +202,19 @@
   align-items: flex-start;
   gap: 4px;
 }
+/* Same badge on cards and the product page (product-info.css): black
+   with white text. SALE is the free-delivery banner's green with black
+   text. */
 .product-badge {
   font-size: 8px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 4px 8px;
-  background: #FFFFFF;
-  color: #000000;
+  background: #111;
+  color: #fff;
 }
+.product-badge.badge-sale { background: #e6edd5; color: #111; }
 
 /* ============================================
    PRODUCT CARD — info block
@@ -312,7 +316,7 @@
 }
 .product-wish-btn:hover { opacity: 0.75; }
 .product-wish-btn:active { opacity: 0.55; }
-/* Black everywhere — red is only ever for .product-price-sale (an
+/* Black everywhere — green is only ever for .product-price-sale (an
    actual discounted price), never tied to which page a card appears
    on. */
 .product-home-price,
@@ -334,8 +338,10 @@
   display: flex;
   flex-direction: column;
 }
+/* Sale price: the site green (same as discount lines), a step bolder. */
 .product-price-sale {
-  color: #c0392b;
+  color: #b8cc87;
+  font-weight: 600;
 }
 .product-price-original {
   font-family: 'Inter', sans-serif;
