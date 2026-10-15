@@ -282,8 +282,8 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
   min-height: 62svh;
   padding: 40px 16px;
 }
-.cart-empty-icon { font-size: 44px; color: #111; }
-.cart-empty-title { font-size: 17px; font-weight: 600; margin-top: 16px; }
+.cart-empty-icon { font-size: 20px; color: #111; } /* same as the header bag icon */
+.cart-empty-title { font-size: 17px; font-weight: 600; margin-top: 10px; }
 .cart-empty-btn {
   margin-top: 24px;
   height: 46px;

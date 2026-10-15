@@ -1462,6 +1462,8 @@ function renderVendorPage(vendor) {
   const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
   const brandName = vendor?.brand || vendor?.name || '';
   const desc = vendor?.description || '';
+  // The brand's logo replaces its name in the hero; the name stays as alt text.
+  const logoUrl = /^https:\/\//i.test(String(vendor?.logoUrl || '').trim()) ? vendor.logoUrl.trim() : '';
 
   const products = merchandiseProducts(getVendorFilteredProducts(vendor), 'vendor', S.sortBy);
   const expanded = expandProductVariants(products);
@@ -1470,7 +1472,9 @@ function renderVendorPage(vendor) {
     <section class="vendor-hero-section">
       <div class="vendor-hero-img" style="background-image:url('${escapeForCssUrl(heroImg)}');">
         <div class="vendor-hero-content">
-          <div class="vendor-hero-name">${escapeHTML(brandName)}</div>
+          ${logoUrl
+            ? `<h1 class="vendor-hero-name vendor-hero-logo-wrap"><img class="vendor-hero-logo" src="${escapeHTML(logoUrl)}" alt="${escapeHTML(brandName)}"></h1>`
+            : `<div class="vendor-hero-name">${escapeHTML(brandName)}</div>`}
           <p class="vendor-hero-desc">${escapeHTML(desc)}</p>
         </div>
       </div>
