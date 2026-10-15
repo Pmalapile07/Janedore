@@ -388,7 +388,7 @@ async function renderProductPage(product) {
         <div class="info-accordion-item open" id="info-accordion-description">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('description')">
             Product Information
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="info-accordion-body">
             <div>${product.description||'No description available.'}</div>
@@ -399,7 +399,7 @@ async function renderProductPage(product) {
         <div class="info-accordion-item" id="info-accordion-shipping">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('shipping')">
             Shipping &amp; Returns
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="info-accordion-body"><p>${product.shippingReturns||'No shipping details available.'}</p></div>
         </div>

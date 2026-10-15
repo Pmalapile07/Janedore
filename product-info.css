@@ -344,18 +344,22 @@
   color: #111;
 }
 
+/* Same chevron as the footer's collapsible lists (footer.css), in the
+   heading's own color since this sits on white, not the black footer. */
 .info-accordion-header svg {
-  width: 14px;
-  height: 14px;
-  stroke: #888;
+  width: 18px;
+  height: 18px;
+  stroke: #111;
   fill: none;
   stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   transition: transform 0.3s;
   flex-shrink: 0;
 }
 
 .info-accordion-item.open .info-accordion-header svg {
-  transform: rotate(45deg);
+  transform: rotate(180deg);
 }
 
 .info-accordion-body {
