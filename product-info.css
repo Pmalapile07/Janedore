@@ -214,23 +214,24 @@
    product-grid.css, and a bare .variant-swatch here would silently
    override the grid cards' own smaller borderless swatches everywhere
    else on the site, since both are plain single-class selectors. */
-/* Same width and gap as the size buttons (48px, 8px), in the same 3:4
-   shape as the main product photo so its thumbnail isn't cropped. */
+/* Same width and gap as the size buttons (48px, 8px). 1px shorter than
+   the main photo's 3:4 shape so the thumbnail is trimmed evenly off the
+   top and bottom. */
 .variants-row .variant-swatch {
   box-sizing: border-box;
   width: 48px;
-  height: 64px;
+  height: 63px;
   border-radius: 0%;
   display: inline-block;
   cursor: pointer;
   position: relative;
   border: 1px solid #ddd;
 }
-/* contain, not cover: the whole photo always shows; any mismatch in
-   shape becomes a thin edge in the same grey the main image sits on. */
+/* Full width, natural height, centered: the photo is never squeezed or
+   cut at the sides; any extra height is trimmed equally top and bottom. */
 .variants-row .variant-swatch.has-image {
   background-color: #f4f4f4;
-  background-size: contain;
+  background-size: 100% auto;
   background-position: center;
   background-repeat: no-repeat;
 }
