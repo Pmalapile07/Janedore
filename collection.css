@@ -35,6 +35,10 @@
 body.on-collection-page #collection-page-breadcrumb {
   display: flex;
 }
+/* Brand page: back arrow + trail + more button, laid out like the
+   product page's .product-breadcrumb-bar. */
+#collection-page-breadcrumb.has-icons { align-items: center; gap: 10px; padding: 12px 12px 10px; }
+#collection-page-breadcrumb.has-icons .page-breadcrumb-trail { flex: 1 1 auto; min-width: 0; }
 
 /* =========================================
    COLLECTION DESCRIPTION - ABOVE FILTER BAR
@@ -502,7 +506,7 @@ body.on-collection-page .collection-filter-bar {
 }
 
 .vendor-hero-logo-wrap { margin: 0 0 12px; line-height: 0; }
-.vendor-hero-logo { display: inline-block; max-height: 72px; max-width: 60%; object-fit: contain; }
+.vendor-hero-logo { display: inline-block; max-height: 69px; max-width: 60%; object-fit: contain; }
 
 .vendor-hero-desc {
   font-size: 13px;
@@ -522,7 +526,7 @@ body.on-collection-page .collection-filter-bar {
     font-size: 22px;
   }
 
-  .vendor-hero-logo { max-height: 56px; }
+  .vendor-hero-logo { max-height: 53px; }
   
   .vendor-hero-desc {
     font-size: 11px;
