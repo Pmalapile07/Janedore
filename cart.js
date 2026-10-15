@@ -83,7 +83,14 @@ function getCartItemThumbnail(item) {
   if (!item.productId) return PLACEHOLDER_IMAGE;
   return getProductThumbnail(getCartProduct(item.productId), item.variantIndex);
 }
-function getCartItemUnitPrice(item) { return item.salePrice ?? item.price ?? 0; }
+// Live product price when the catalogue has loaded (so a price change in
+// admin reaches bags that already hold the item), the price saved with the
+// cart line otherwise. Same sale rule as hasSalePrice() and the server.
+function getCartItemUnitPrice(item) {
+  const product = PRODUCTS.find(p => p.id === item.productId);
+  if (product) return hasSalePrice(product) ? Number(product.salePrice) : (Number(product.price) || 0);
+  return item.salePrice ?? item.price ?? 0;
+}
 function getCartItemLineTotal(item) { return getCartItemUnitPrice(item) * item.qty; }
 
 // --- Aggregate cart calculations ---

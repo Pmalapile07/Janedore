@@ -128,6 +128,16 @@ async function prefillCheckoutFromProfile(uid) {
   }
 }
 
+// Same price / discount / delivery rules as the cart page (cart.js), so
+// the bag and checkout always show the same total.
+function getCheckoutTotals() {
+  const subtotal = getCartSubtotal();
+  const discountAmount = getDiscountAmount();
+  const afterDiscount = getCartTotalAfterDiscount();
+  const shipping = getCartShippingStatus(afterDiscount).freeShipping ? 0 : SHIPPING_FEE;
+  return { subtotal, discountAmount, shipping, total: afterDiscount + shipping };
+}
+
 function renderCheckoutSummary() {
   const itemsContainer = document.getElementById('checkout-items');
   if (!itemsContainer || !S.cart.length) {
@@ -135,10 +145,8 @@ function renderCheckoutSummary() {
     return;
   }
   
-  const subtotal = S.cart.reduce((a, i) => a + (i.salePrice ?? i.price ?? 0) * i.qty, 0);
-  const shipping = subtotal >= 1500 ? 0 : 150;
-  const total = subtotal + shipping;
-  
+  const { subtotal, discountAmount, shipping, total } = getCheckoutTotals();
+
   let itemsHTML = S.cart.map(item => {
     const product = PRODUCTS.find(p => p.id === item.productId);
     const thumbnail = item.thumbnail && item.thumbnail !== PLACEHOLDER_IMAGE 
@@ -154,7 +162,7 @@ function renderCheckoutSummary() {
         <div class="checkout-item-name">${item.name}</div>
         <div class="checkout-item-meta">${item.color || ''}${item.color && itemSizeDisplay ? ' · ' : ''}${itemSizeDisplay} · Qty: ${item.qty}</div>
       </div>
-      <div class="checkout-item-price">${formatPrice((item.salePrice ?? item.price ?? 0) * item.qty)}</div>
+      <div class="checkout-item-price">${formatPrice(getCartItemLineTotal(item))}</div>
     </div>`;
   }).join('');
   
@@ -182,6 +190,15 @@ function renderCheckoutSummary() {
   const subtotalEl = document.getElementById('checkout-subtotal');
   if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
   
+  const discountRow = document.getElementById('checkout-discount-row');
+  if (discountRow) {
+    discountRow.style.display = discountAmount > 0 ? '' : 'none';
+    const label = document.getElementById('checkout-discount-label');
+    if (label) label.textContent = appliedDiscount ? 'Discount (' + appliedDiscount.code + ')' : 'Discount';
+    const val = document.getElementById('checkout-discount');
+    if (val) val.textContent = '-' + formatPrice(discountAmount);
+  }
+
   const shippingEl = document.getElementById('checkout-shipping');
   if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
   
@@ -224,10 +241,12 @@ async function placeOrder(e) {
   checkoutEmail = email;
   localStorage.setItem('janedore_checkout_email', email);
   
-  const subtotal = S.cart.reduce((a, i) => a + (i.salePrice ?? i.price ?? 0) * i.qty, 0);
-  const shipping = subtotal >= 1500 ? 0 : 150;
-  const total = subtotal + shipping;
-  
+  // Shown to the customer and stored as their expected total — the server
+  // re-prices the order from live product/discount data before charging
+  // (priceOrder() in server.js), so these numbers are never trusted for
+  // payment on their own.
+  const { subtotal, discountAmount, shipping, total } = getCheckoutTotals();
+
   const brandGroups = {};
   const vendorIdSet = new Set();
   S.cart.forEach(item => {
@@ -266,7 +285,7 @@ async function placeOrder(e) {
         size: item.size,
         color: item.color,
         qty: item.qty,
-        price: item.salePrice || item.price,
+        price: getCartItemUnitPrice(item),
         variantIndex: item.variantIndex
       };
     }),
@@ -274,6 +293,8 @@ async function placeOrder(e) {
     brands: Object.keys(brandGroups),
     vendorIds: Array.from(vendorIdSet),
     subtotal,
+    discountCode: appliedDiscount ? appliedDiscount.code : null,
+    discountAmount,
     shipping,
     total,
     currency: S.currency,
