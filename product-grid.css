@@ -327,16 +327,16 @@
   letter-spacing: var(--ui-letter-spacing);
   color: #000;
 }
-/* On-sale price pair — original (struck through, gray) stacked above
-   the sale price (red), in the same left-hand slot the single regular
-   price normally occupies. Stacking them vertically, instead of
-   side by side, keeps the row's right-hand slot free for swatches —
-   two prices sitting inline there would crowd a product that also
-   has color variants. Only rendered when hasSalePrice(p) is true
+/* On-sale price pair: struck-through original and the red sale price
+   side by side, in the left-hand slot of the price row (swatches stay
+   on the right). Only rendered when hasSalePrice(p) is true
    (collection.js). */
 .product-price-stack {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 /* Sale price: red (same as the SALE badge) and bolder than the
    struck-through original so it reads as the price to pay. */
