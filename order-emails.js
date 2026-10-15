@@ -339,4 +339,41 @@ function shipped(order, ctx, items, opts) {
   return { subject: (opts.heading || 'Your order is on its way') + ' (order #' + num + ')', html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, money };
+// Janedore team copy of a shipment: which brand shipped, its tracking,
+// and how much of the order is still waiting on other brands.
+function adminShipped(order, ctx, items, opts) {
+  opts = opts || {};
+  const num = order.orderNumber || '';
+  const brand = opts.brand || 'A brand';
+  const tracking = opts.tracking || {};
+  const progress = opts.totalBrands > 1
+    ? opts.shippedBrands + ' of ' + opts.totalBrands + ' brands shipped' + (opts.complete ? ', order complete.' : '.')
+    : 'Order complete.';
+
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'Order shipped',
+    preheader: brand + ' shipped order #' + num + '. ' + progress,
+    bannerHtml: '<strong>' + esc(brand) + ' shipped order #' + esc(num) + '</strong><br>' + esc(progress),
+    cards: [
+      title('Tracking') + rows(
+        row('Brand', esc(brand), { semi: true }) +
+        (tracking.courier ? row('Courier', esc(tracking.courier), { semi: true }) : '') +
+        row('Tracking number', esc(tracking.trackingNumber || 'Not given'), { semi: true })),
+      title('Shipped') + itemsBlock(items, ctx, { hidePrice: true }),
+      title('Customer') + addressBlock(order, { phone: true, email: true }) +
+        button('Open Orders in Admin', ctx.siteUrl + '/admin')
+    ],
+    footerHtml: 'Sent to the Janedore team whenever a brand adds tracking.'
+  });
+
+  const text = brand + ' shipped order #' + num + '. ' + progress +
+    '\n\n' + (tracking.courier ? tracking.courier + ': ' : '') + (tracking.trackingNumber || 'No tracking number') +
+    '\n\n' + textItems(items, true) + '\n\nCustomer: ' + (order.customerName || '') + ', ' + (order.customerEmail || '') +
+    '\n\nAdmin: ' + ctx.siteUrl + '/admin';
+
+  return { subject: brand + ' shipped order #' + num, html, text };
+}
+
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, money };

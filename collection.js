@@ -477,11 +477,11 @@ function updateCollectionTitle() {
   if (bcEl) {
     const trail = `<span onclick="navigateTo('home')">Home</span><span class="page-breadcrumb-sep">/</span><span class="page-breadcrumb-current">${escapeHTML(bcLabel)}</span>`;
     // Brand pages get the product page's back arrow on the left, and a
-    // "more" button on the right (its panel is still to be decided).
+    // "more" button on the right that opens the report-this-brand panel.
     const onBrand = S.currentPage === 'vendor';
     bcEl.classList.toggle('has-icons', onBrand);
     bcEl.innerHTML = onBrand
-      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail">${trail}</span><button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="More"><i class="ph ph-dots-three-circle"></i></button>`
+      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail">${trail}</span><button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
       : trail;
   }
 }
@@ -1512,3 +1512,72 @@ function renderVendorPage(vendor) {
 }
 
 window.navigateToVendor = navigateToVendor;
+
+
+// ---- Report this brand ----
+// Bottom panel opened from the brand page's "more" button. Reports go to
+// server.js /api/report-brand, which saves them and emails the
+// Janedore team; the brand is never told who reported them.
+const BRAND_REPORT_REASONS = ['Counterfeit or fake product', 'Item not as described', 'Problem with an order', 'Offensive or misleading content', 'Something else'];
+
+function openBrandReport() {
+  const vendor = S.currentVendor;
+  if (!vendor || !vendor.id) return;
+  closeBrandReport();
+  const brandName = vendor.brand || vendor.name || 'this brand';
+  let email = '';
+  try { email = (firebase.auth().currentUser && firebase.auth().currentUser.email) || ''; } catch (e) {}
+  const wrap = document.createElement('div');
+  wrap.id = 'brand-report';
+  wrap.className = 'brand-report-overlay';
+  wrap.innerHTML = `<div class="brand-report-sheet" role="dialog" aria-modal="true" aria-labelledby="brand-report-title">
+    <div class="brand-report-head">
+      <h2 id="brand-report-title">Report ${escapeHTML(brandName)}</h2>
+      <button type="button" class="brand-report-close" onclick="closeBrandReport()" aria-label="Close"><i class="ph ph-x"></i></button>
+    </div>
+    <form id="brand-report-form" onsubmit="submitBrandReport(event)">
+      <p class="brand-report-intro">Tell us what's wrong. Your report goes to the JANEDORE team, not to the brand.</p>
+      <div class="brand-report-reasons">${BRAND_REPORT_REASONS.map((r, i) => `<label class="brand-report-reason"><input type="radio" name="reason" value="${escapeHTML(r)}"${i === 0 ? ' required' : ''}><span>${escapeHTML(r)}</span></label>`).join('')}</div>
+      <label class="brand-report-label" for="brand-report-details">Details <span>(optional)</span></label>
+      <textarea id="brand-report-details" name="details" rows="4" maxlength="2000" placeholder="What happened? Include an order number if you have one."></textarea>
+      <label class="brand-report-label" for="brand-report-email">Your email <span>(optional, so we can follow up)</span></label>
+      <input id="brand-report-email" name="email" type="email" maxlength="200" autocomplete="email" value="${escapeHTML(email)}">
+      <div class="brand-report-msg" id="brand-report-msg" role="status"></div>
+      <button type="submit" class="brand-report-submit">Send Report</button>
+    </form>
+  </div>`;
+  wrap.addEventListener('click', e => { if (e.target === wrap) closeBrandReport(); });
+  document.body.appendChild(wrap);
+  document.addEventListener('keydown', brandReportEsc);
+  document.body.classList.add('brand-report-open');
+}
+
+function brandReportEsc(e) { if (e.key === 'Escape') closeBrandReport(); }
+
+function closeBrandReport() {
+  const el = document.getElementById('brand-report');
+  if (el) el.remove();
+  document.removeEventListener('keydown', brandReportEsc);
+  document.body.classList.remove('brand-report-open');
+}
+
+async function submitBrandReport(e) {
+  e.preventDefault();
+  const form = e.target;
+  const msg = document.getElementById('brand-report-msg');
+  const btn = form.querySelector('.brand-report-submit');
+  const reason = (form.querySelector('input[name="reason"]:checked') || {}).value || '';
+  const details = form.details.value.trim();
+  if (reason === 'Something else' && !details) { msg.textContent = 'Please tell us what happened.'; form.details.focus(); return; }
+  btn.disabled = true; btn.textContent = 'Sending...'; msg.textContent = '';
+  try {
+    const res = await fetch('/api/report-brand', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendorId: S.currentVendor && S.currentVendor.id, reason, details, email: form.email.value.trim() }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Could not send your report. Please try again.');
+    form.innerHTML = `<div class="brand-report-done"><i class="ph ph-check-circle"></i><p><strong>Thank you. We've received your report.</strong></p><p>Our team will look into it. The brand won't be told who sent it.</p><button type="button" class="brand-report-submit" onclick="closeBrandReport()">Done</button></div>`;
+  } catch (err) {
+    msg.textContent = err.message;
+    btn.disabled = false; btn.textContent = 'Send Report';
+  }
+}
