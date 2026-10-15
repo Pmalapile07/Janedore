@@ -33,7 +33,7 @@ function createStickyBar(product) {
  bar.innerHTML = `
    <div class="sticky-top-row">
      <div class="sticky-price">${stickyPriceHtml(product)}</div>
-     <button class="sticky-wish-btn${isWished ? ' wished' : ''}" type="button" data-wish-id="${escapeHTML(product.id)}" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished ? 'ph-fill' : 'ph-light'} ph-heart"></i></button>
+     <button class="sticky-wish-btn${isWished ? ' wished' : ''}" type="button" data-wish-id="${escapeHTML(product.id)}" data-wish-weight="ph" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished ? 'ph-fill' : 'ph'} ph-heart"></i></button>
    </div>
    <button class="sticky-add-btn" id="sticky-add-btn"
      onclick="addToCartFromDetailSticky('${product.id}')"

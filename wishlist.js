@@ -37,7 +37,7 @@ function toggleWish(productId, btnEl) {
   if (btnEl) hearts.add(btnEl);
   hearts.forEach(b => {
     const icon = b.querySelector('i');
-    if (icon) icon.className = nowWished ? 'ph-fill ph-heart' : 'ph-light ph-heart';
+    if (icon) icon.className = nowWished ? 'ph-fill ph-heart' : (b.dataset.wishWeight || 'ph-light') + ' ph-heart';
     b.classList.toggle('wished', nowWished);
   });
   updateBadges();
