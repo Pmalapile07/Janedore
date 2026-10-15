@@ -608,7 +608,9 @@ async function priceOrder(order) {
 
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   const freeShipping = (discount && discount.type === 'free_shipping') || afterDiscount >= FREE_SHIPPING_THRESHOLD;
-  const shipping = freeShipping ? 0 : SHIPPING_FEE;
+  // One parcel per brand: JANEDORE's own stock (no vendorId) is one package.
+  const packages = new Set(pricedItems.map(i => products[String(i.productId || '')].vendorId || 'janedore')).size;
+  const shipping = freeShipping ? 0 : SHIPPING_FEE * packages;
   const total = Math.round((afterDiscount + shipping) * 100) / 100;
 
   return {
@@ -618,6 +620,7 @@ async function priceOrder(order) {
     discountId: discount ? discount.id : null,
     discountAmount,
     shipping,
+    shippingPackages: packages,
     total,
     itemCount,
     pricedAt: admin.firestore.FieldValue.serverTimestamp()

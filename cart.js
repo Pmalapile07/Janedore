@@ -138,20 +138,24 @@ function getCartTotalAfterDiscount() {
 
 const FREE_SHIPPING_THRESHOLD = 1500;
 const SHIPPING_FEE = 150;
+// Each brand ships its own parcel, so delivery is charged per brand
+// (SHIPPING_FEE x packages). Products with no vendorId are JANEDORE's
+// own stock and travel together as one package. Mirrors server.js
+// priceOrder(), which is what actually gets charged.
+function getCartShipments() {
+  const groups = new Map();
+  S.cart.forEach(item => {
+    const product = getCartProduct(item.productId);
+    const key = (product && product.vendorId) || 'janedore';
+    if (!groups.has(key)) groups.set(key, { key, brand: (product && product.brand) || item.brand || 'JANEDORE' });
+  });
+  return [...groups.values()];
+}
+
 function getCartShippingStatus(subtotal) {
-  // Check if free shipping discount is applied
-  if (appliedDiscount && appliedDiscount.type === 'free_shipping') {
-    return {
-      freeShipping: true,
-      message: "Free shipping applied via discount code"
-    };
-  }
-  
-  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-  return {
-    freeShipping,
-    message: freeShipping ? "Free shipping applied" : `${formatPrice(SHIPPING_FEE)} shipping · Free over ${formatPrice(FREE_SHIPPING_THRESHOLD)}`
-  };
+  const packages = Math.max(1, getCartShipments().length);
+  const freeShipping = (appliedDiscount && appliedDiscount.type === 'free_shipping') || subtotal >= FREE_SHIPPING_THRESHOLD;
+  return { freeShipping, packages, fee: freeShipping ? 0 : SHIPPING_FEE * packages };
 }
 
 function cartHasMultipleTypes() {
@@ -524,10 +528,10 @@ function renderCartPage() {
   const discountAmount = getDiscountAmount();
   const hasSoldOut = cartHasSoldOutItem();
   html += `<div class="cart-card cart-totals">
-    <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + (shipping.freeShipping ? 0 : SHIPPING_FEE))}</span></div>
+    <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + shipping.fee)}</span></div>
     <div class="cart-totals-row"><span>Cart Total</span><span>${formatPrice(getCartSubtotal())}</span></div>
     ${appliedDiscount ? `<div class="cart-totals-row discount"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
-    <div class="cart-totals-row"><span>Delivery Fee</span><span>${shipping.freeShipping ? 'Free' : formatPrice(SHIPPING_FEE)}</span></div>
+    <div class="cart-totals-row"><span>Delivery Fee${shipping.packages > 1 ? ` (${shipping.packages} packages)` : ''}</span><span>${shipping.freeShipping ? 'Free' : formatPrice(shipping.fee)}</span></div>
     <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout Now</button>
   </div></div>`;
   const inspired = cartInspiredProducts();
