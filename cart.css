@@ -258,8 +258,8 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
   background: #111;
   color: #fff;
   font-family: inherit;
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: calc(var(--ui-font-size) + 1px);
+  font-weight: 500;
   letter-spacing: var(--ui-letter-spacing);
   text-transform: uppercase;
   cursor: pointer;
@@ -293,8 +293,8 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
   background: #111;
   color: #fff;
   font-family: inherit;
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: calc(var(--ui-font-size) + 1px);
+  font-weight: 500;
   letter-spacing: var(--ui-letter-spacing);
   text-transform: uppercase;
   cursor: pointer;

@@ -30,6 +30,13 @@
     transitions: on iPhone they put the bar on its own layer that trails
     the page while Safari's toolbar slides, which is the lag. */
  touch-action: manipulation;
+
+ /* iOS 26 Safari won't draw a fully opaque fixed element below its
+    floating bottom controls, so the white skirt below (::after) was
+    being cut off and the page showed through under the bar. At 0.999
+    Safari treats the bar as see-through and draws it, skirt included,
+    all the way to the bottom of the screen. Visually identical. */
+ opacity: 0.999;
 }
 
 /* White skirt below the bar. When Safari's bottom toolbar slides away
@@ -137,9 +144,9 @@
 
  font-family: inherit;
 
- font-size: var(--ui-font-size);
+ font-size: calc(var(--ui-font-size) + 1px);
 
- font-weight: var(--ui-font-weight);
+ font-weight: 500;
 
  letter-spacing: var(--ui-letter-spacing);
 
