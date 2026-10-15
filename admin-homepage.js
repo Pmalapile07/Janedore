@@ -165,7 +165,7 @@
     var c = safeEl('category-tiles-container');
     if (!c) return;
     c.innerHTML = _tilesState.map(function (t, i) { return tileRowHtml(t, i); }).join('') ||
-      '<p class="account-muted" style="font-size:11px;">No tiles yet — click "Add tile" below.</p>';
+      '<p class="account-muted" style="font-size:11px;">No tiles yet. Click "Add tile" below.</p>';
   }
 
   function _syncTilesFromDOM() {
@@ -319,7 +319,7 @@
 
       accordionSectionHtml('ph-handshake', 'Shop by Brand',
         '<span>' + esc(brand.heading || 'Heading') + '</span>',
-        '<p class="account-muted" style="font-size:11px;margin:0;">The brand tiles themselves come from Vendors — add or edit a brand\'s logo there. Only the section heading is set here.</p>' +
+        '<p class="account-muted" style="font-size:11px;margin:0;">The brand tiles themselves come from Vendors. Add or edit a brand\'s logo there. Only the section heading is set here.</p>' +
         '<div class="form-group" style="padding:0;"><label>Heading</label><input name="brandHeading" value="' + esc(brand.heading || '') + '" placeholder="Heading"></div>',
         'brand'
       ) +

@@ -271,7 +271,7 @@
     updates[window._CHAT_ROOT + '/' + sessionId + '/meta/invites/' + uid + '/status']  = timedOut ? 'timed_out' : 'declined';
     rtdb.ref('/').update(updates).catch(function () {});
     if (window._showToast) {
-      window._showToast(timedOut ? 'Chat invite expired — Janedore has been notified.' : 'Chat declined.', 'info');
+      window._showToast(timedOut ? 'Chat invite expired. Janedore has been notified.' : 'Chat declined.', 'info');
     }
   }
 
@@ -817,7 +817,7 @@
           + '</div>'
         + '</div>'
         + '<div id="chat-offline-banner" style="display:none;background:var(--warning,#f59e0b);color:#fff;font-size:11px;padding:6px 12px;border-radius:4px;margin-bottom:8px;">'
-          + '<i class="ph-light ph-warning" style="margin-right:4px;"></i> Offline — showing cached data'
+          + '<i class="ph-light ph-warning" style="margin-right:4px;"></i> Offline, showing cached data'
         + '</div>'
         + '<div style="display:flex;gap:6px;margin-bottom:12px;" id="chat-tab-bar">'
           + '<button class="btn btn-sm btn-primary" data-tab="all"      id="chat-tab-all">All</button>'
@@ -961,7 +961,7 @@
           + '<div id="chat-load-more-wrap" style="text-align:center;padding:6px;display:none;">'
             + '<button class="btn btn-sm btn-ghost" id="chat-load-more-btn">Load older messages</button>'
           + '</div>'
-          + '<div id="chat-history-start" style="display:none;text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0;">— Beginning of conversation —</div>'
+          + '<div id="chat-history-start" style="display:none;text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0;">Beginning of conversation</div>'
           + '<div class="chat-messages-panel" id="chat-messages-panel">'
             + '<div style="text-align:center;color:var(--muted);font-size:11px;padding:24px;">Loading...</div>'
           + '</div>'
@@ -987,11 +987,11 @@
           + '<div style="padding:12px 14px;">'
             + '<div class="info-row" style="background:none;border:none;padding:6px 0;display:flex;flex-direction:column;gap:2px;">'
               + '<span class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Name</span>'
-              + '<span id="cinfo-name" style="font-size:12px;font-weight:400;word-break:break-all;">—</span>'
+              + '<span id="cinfo-name" style="font-size:12px;font-weight:400;word-break:break-all;">-</span>'
             + '</div>'
             + '<div class="info-row" style="background:none;border:none;padding:6px 0;display:flex;flex-direction:column;gap:2px;">'
               + '<span class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Email</span>'
-              + '<span id="cinfo-email" style="font-size:12px;font-weight:400;word-break:break-all;">—</span>'
+              + '<span id="cinfo-email" style="font-size:12px;font-weight:400;word-break:break-all;">-</span>'
             + '</div>'
             + '<div class="info-row" style="background:none;border:none;padding:6px 0;display:flex;flex-direction:column;gap:2px;">'
               + '<span class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Session</span>'
@@ -1106,7 +1106,7 @@
       var custEmail = (sessionData.customerEmail || '').trim().toLowerCase();
 
       if (nameEl)  nameEl.textContent  = sessionData.customerName  || 'Guest';
-      if (emailEl) emailEl.textContent = sessionData.customerEmail || '—';
+      if (emailEl) emailEl.textContent = sessionData.customerEmail || '-';
 
       if (cartEl) {
         var cart = sessionData.cart;
@@ -1146,7 +1146,7 @@
                 var status  = o.status || 'pending';
                 var raw     = o.createdAt;
                 var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
-                var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+                var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '-';
                 var total   = 'R' + Number(o.subtotal || o.total || 0).toLocaleString('en-ZA');
                 return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
                   + '<div style="display:flex;justify-content:space-between;font-size:10.5px;">'
@@ -1164,7 +1164,7 @@
               if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load orders</span>';
             });
         } else {
-          ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Guest — not signed in</span>';
+          ordersEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Guest, not signed in</span>';
         }
       }
 
@@ -1183,7 +1183,7 @@
                 var r       = d.data();
                 var raw     = r.createdAt;
                 var date    = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
-                var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+                var dateStr = date ? date.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' }) : '-';
                 var stars   = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
                 return '<div style="padding:4px 0;border-bottom:0.5px solid var(--border);">'
                   + '<div style="font-size:10.5px;">' + stars + '</div>'
@@ -1198,7 +1198,7 @@
               if (el) el.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Could not load reviews</span>';
             });
         } else {
-          reviewsEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Guest — not signed in</span>';
+          reviewsEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Guest, not signed in</span>';
         }
       }
 
@@ -1691,7 +1691,7 @@
       // behind the chat; guests have nothing to match against.
       var emailEl = safeEl('cinfo-email');
       var email   = emailEl ? emailEl.textContent.trim() : '';
-      if (!email || email === '—') { showToast('No account email for this chat', 'info'); return; }
+      if (!email || email === '-') { showToast('No account email for this chat', 'info'); return; }
       ChatDB.lookupOrders(email.toLowerCase()).then(function (snap) { showToast(snap.empty ? 'No orders found' : 'Found ' + snap.size + ' order(s)', 'info'); }).catch(function () {});
     },
     setFilterTab:    function (tab) { ChatState.setFilterTab(tab); ChatRenderer.setTabActive(tab); ChatRenderer.renderSessionsList(ChatState.getSessions()); },

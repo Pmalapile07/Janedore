@@ -657,7 +657,7 @@ function quickActionDiscoverProduct() {
   disableQuickActionCards();
   const input = safeEl('chat-input');
   if (!input) { enableQuickActionCards(); return; }
-  input.value = "I'm looking for something new — can you help me find the right piece?";
+  input.value = "I'm looking for something new. Can you help me find the right piece?";
   Promise.resolve(sendChatMessage()).finally(enableQuickActionCards);
 }
 
@@ -828,7 +828,7 @@ function renderTrackOrderPrompt() {
   bubble.className = 'chat-msg admin jai-msg';
   const textNode = document.createElement('div');
   textNode.style.marginBottom = '10px';
-  textNode.textContent = 'Sure — you can track your order below.';
+  textNode.textContent = 'Sure, you can track your order below.';
   bubble.appendChild(textNode);
   bubble.appendChild(cloneTrackOrderButton());
 
@@ -996,7 +996,7 @@ async function buildProductsContextForAI(messageText) {
   const products = await getActiveProductsForAI();
   const matches = findRelevantProductsForAI(products, messageText, 6);
   if (!matches.length) {
-    return "No specific products matched this message yet. If the customer is looking for something, ask a short clarifying question (what they're after, size, occasion) before recommending anything — don't invent products.";
+    return "No specific products matched this message yet. If the customer is looking for something, ask a short clarifying question (what they're after, size, occasion) before recommending anything, and don't invent products.";
   }
   return matches.map(describeProductForAI).join('\n');
 }
@@ -1112,7 +1112,8 @@ async function getAIReply(customerText) {
         }
 
         _ScreenDebug.ok('AI', 'Reply in ' + dt + 'ms (' + reply.length + ' chars)');
-        return reply;
+        // No em dashes anywhere on the site, AI replies included.
+        return typeof reply === 'string' ? reply.replace(/\s*\u2014\s*/g, ', ') : reply;
 
       } catch (e) {
         const msg  = (e && e.message) || String(e);
@@ -1860,7 +1861,7 @@ async function sendChatImage(file) {
       delivered: true,
       sessionId: chatSessionId
     };
-    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = '📷 Photo — human assistance requested';
+    updates['chat_inbox/' + chatSessionId + '/lastMessage'] = '📷 Photo, human assistance requested';
     updates['chat_inbox/' + chatSessionId + '/lastMessageAt'] = ts;
     updates['chat_inbox/' + chatSessionId + '/customerEmail'] = customerEmail;
     updates['chat_inbox/' + chatSessionId + '/customerName'] = customerName || 'Guest';

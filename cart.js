@@ -200,7 +200,7 @@ function addToCart(productId, size, qty) {
     return;
   }
   const addQty = Math.min(q, room);
-  if (addQty < q) alert('Only ' + available + ' of ' + (product.name || 'this item') + ' (' + resolvedSize + ') left — added what’s available.');
+  if (addQty < q) alert('Only ' + available + ' of ' + (product.name || 'this item') + ' (' + resolvedSize + ') left, so we added what’s available.');
 
   if (existing) existing.qty += addQty;
   else S.cart.push({ productId, variantIndex: vi, size: resolvedSize, qty: addQty, name: sanitizeHTML(product.name), brand: sanitizeHTML(product.brand), price: product.price, salePrice: product.salePrice, color: sanitizeHTML(variant.color || 'Default'), thumbnail: getProductThumbnail(product, vi) });

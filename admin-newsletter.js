@@ -99,9 +99,9 @@
       '<tbody>' +
       filtered.map(function(s) {
         return '<tr>' +
-          '<td style="font-weight:400;">' + esc(s.email || '—') + '</td>' +
+          '<td style="font-weight:400;">' + esc(s.email || '-') + '</td>' +
           '<td class="cell-muted">' + fmtDate(s.subscribedAt) + '</td>' +
-          '<td><span style="font-size:10px;color:var(--muted);">' + esc((s.tags || []).join(', ') || '—') + '</span></td>' +
+          '<td><span style="font-size:10px;color:var(--muted);">' + esc((s.tags || []).join(', ') || '-') + '</span></td>' +
         '</tr>';
       }).join('') +
       '</tbody></table></div>' +
@@ -147,7 +147,7 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('CSV exported — ' + subs.length + ' subscribers');
+    showToast('CSV exported: ' + subs.length + ' subscribers');
   };
 
 })();

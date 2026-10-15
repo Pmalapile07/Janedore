@@ -75,12 +75,12 @@
           '<div style="font-size:11px;color:var(--muted);">' + new Date().toLocaleDateString('en-ZA', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + '</div>' +
         '</div>' +
         '<div class="dash-stat-grid" id="dash-stat-grid">' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Revenue</div><div class="dash-stat-value" id="stat-revenue">—</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Orders</div><div class="dash-stat-value" id="stat-orders">—</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Products</div><div class="dash-stat-value" id="stat-products">—</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Unread Messages</div><div class="dash-stat-value" id="stat-unread">—</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Reviews</div><div class="dash-stat-value" id="stat-reviews">—</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Commission</div><div class="dash-stat-value" id="stat-commission">—</div></div>' +
+          '<div class="dash-stat-card"><div class="dash-stat-label">Your Revenue</div><div class="dash-stat-value" id="stat-revenue">-</div></div>' +
+          '<div class="dash-stat-card"><div class="dash-stat-label">Your Orders</div><div class="dash-stat-value" id="stat-orders">-</div></div>' +
+          '<div class="dash-stat-card"><div class="dash-stat-label">Your Products</div><div class="dash-stat-value" id="stat-products">-</div></div>' +
+          '<div class="dash-stat-card"><div class="dash-stat-label">Unread Messages</div><div class="dash-stat-value" id="stat-unread">-</div></div>' +
+          '<div class="dash-stat-card"><div class="dash-stat-label">Your Reviews</div><div class="dash-stat-value" id="stat-reviews">-</div></div>' +
+          '<div class="dash-stat-card"><div class="dash-stat-label">Commission</div><div class="dash-stat-value" id="stat-commission">-</div></div>' +
         '</div>' +
         '<div class="card" style="margin-bottom:16px;">' +
           '<div class="card-header"><span class="card-title">Recent Orders</span></div>' +
@@ -187,8 +187,8 @@
     }).catch(function (e) {
       console.error('[DASHBOARD VENDOR]', e);
       // Still show basic stats even if vendor_sales fails
-      setStat('stat-revenue',  '—');
-      setStat('stat-orders',   '—');
+      setStat('stat-revenue',  '-');
+      setStat('stat-orders',   '-');
       showToast('Could not load full dashboard. Some data may be unavailable.', 'error');
     });
   }
@@ -213,11 +213,11 @@
   function dashOverviewHTML() {
     return '<div class="dash-overview">' +
       '<div class="dash-overview-stats">' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label"><span class="dash-live-dot"></span>Live</span><span class="dash-overview-stat-value" id="ov-live">—</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Sessions</span><span class="dash-overview-stat-value" id="ov-sessions">—</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Total sales</span><span class="dash-overview-stat-value" id="ov-sales">—</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Orders</span><span class="dash-overview-stat-value" id="ov-orders">—</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Conversion</span><span class="dash-overview-stat-value" id="ov-conversion">—</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label"><span class="dash-live-dot"></span>Live</span><span class="dash-overview-stat-value" id="ov-live">-</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Sessions</span><span class="dash-overview-stat-value" id="ov-sessions">-</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Total sales</span><span class="dash-overview-stat-value" id="ov-sales">-</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Orders</span><span class="dash-overview-stat-value" id="ov-orders">-</span></div>' +
+        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Conversion</span><span class="dash-overview-stat-value" id="ov-conversion">-</span></div>' +
       '</div>' +
       '<div class="dash-overview-chart-wrap"><canvas id="dash-overview-chart"></canvas></div>' +
       '<div class="dash-overview-controls">' +

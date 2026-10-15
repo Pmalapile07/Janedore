@@ -170,7 +170,7 @@ function textTotals(order) {
 function textItems(items, hidePrice) {
   return items.map(i => '- ' + (i.name || 'Item') + (i.brand ? ' (' + i.brand + ')' : '') +
     (i.color && i.color !== 'Default' ? ', ' + i.color : '') + (sizeOf(i) ? ', size ' + sizeOf(i) : '') +
-    ' x' + (Number(i.qty) || 1) + (hidePrice ? '' : ' — ' + money(itemLine(i)))).join('\n');
+    ' x' + (Number(i.qty) || 1) + (hidePrice ? '' : ', ' + money(itemLine(i)))).join('\n');
 }
 
 // ---------- the emails ----------
@@ -200,7 +200,7 @@ function customerConfirmation(order, ctx) {
 
   const html = shell({
     title: 'Order confirmed',
-    preheader: 'Order #' + num + ' is confirmed — ' + money(order.total) + '.',
+    preheader: 'Order #' + num + ' is confirmed: ' + money(order.total) + '.',
     cards: [
       thanks,
       status,
@@ -235,7 +235,7 @@ function adminNewOrder(order, ctx) {
 
   const html = shell({
     title: 'New order',
-    preheader: 'New order #' + num + ' — ' + money(order.total) + ' from ' + (order.customerName || 'a customer'),
+    preheader: 'New order #' + num + ': ' + money(order.total) + ' from ' + (order.customerName || 'a customer'),
     bannerHtml: banner,
     cards: [
       title('Customer') + addressBlock(order, { phone: true, email: true }),
@@ -248,13 +248,13 @@ function adminNewOrder(order, ctx) {
     footerHtml: 'Sent to the Janedore team for every paid order.'
   });
 
-  const text = 'New order #' + num + ' — ' + money(order.total) + ' (' + count + ' items)' +
+  const text = 'New order #' + num + ': ' + money(order.total) + ' (' + count + ' items)' +
     (order.needsAttention ? '\nNEEDS ATTENTION: ' + order.needsAttention : '') +
     '\n\nCustomer: ' + (order.customerName || '') + ', ' + (order.customerEmail || '') + ', ' + (order.customerPhone || '') +
     '\n' + addressLines(order).join('\n') + '\n\n' + textItems(items) + '\n\n' + textTotals(order) +
     '\n\nAdmin: ' + ctx.siteUrl + '/admin';
 
-  return { subject: 'New order #' + num + ' — ' + money(order.total), html, text };
+  return { subject: 'New order #' + num + ', ' + money(order.total), html, text };
 }
 
 function vendorNewOrder(order, ctx, vendor, items) {
@@ -266,23 +266,23 @@ function vendorNewOrder(order, ctx, vendor, items) {
   const html = shell({
     title: 'New order to ship',
     preheader: 'New Janedore order #' + num + ': ' + count + (count === 1 ? ' item' : ' items') + ' to ship.',
-    bannerHtml: '<strong>You have a new order to ship.</strong> The customer has paid — please pack and send the items below.',
+    bannerHtml: '<strong>You have a new order to ship.</strong> The customer has paid. Please pack and send the items below.',
     cards: [
       title('Order #' + esc(num), esc(orderDate(order))) +
         '<div style="font-size:14px;line-height:1.5;color:#555555;">Only the ' + esc(brandName) + ' items on this order are listed. Anything from other brands is shipped separately by them.</div>',
       title('Items to ship', '(' + count + ')') + itemsBlock(items, ctx, { showBrand: false }) +
         rows(divider() + row('Items total', money(value), { semi: true })),
       title('Ship to') + addressBlock(order, { phone: true }) +
-        button('Add Tracking in Janedore Studio', ctx.siteUrl + '/admin')
+        button('Add Tracking', ctx.siteUrl + '/admin')
     ],
     footerHtml: 'Questions about this order? Write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
 
   const text = 'New Janedore order #' + num + ' to ship (' + count + ' items).\n\n' + textItems(items) +
     '\nItems total: ' + money(value) + '\n\nShip to:\n' + [order.customerName].concat(addressLines(order), [order.customerPhone || '']).filter(Boolean).join('\n') +
-    '\n\nAdd tracking in Janedore Studio: ' + ctx.siteUrl + '/admin';
+    '\n\nAdd tracking: ' + ctx.siteUrl + '/admin';
 
-  return { subject: 'New order #' + num + ' to ship — ' + count + (count === 1 ? ' item' : ' items'), html, text };
+  return { subject: 'New order #' + num + ' to ship, ' + count + (count === 1 ? ' item' : ' items'), html, text };
 }
 
 function shipped(order, ctx, items, opts) {
@@ -290,8 +290,8 @@ function shipped(order, ctx, items, opts) {
   const num = order.orderNumber || '';
   const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
   const intro = opts.complete
-    ? 'Good news — everything in your order is now on its way.'
-    : 'Good news — part of your order is now on its way. The rest follows separately, as each brand ships from its own warehouse.';
+    ? 'Good news: everything in your order is now on its way.'
+    : 'Good news: part of your order is now on its way. The rest follows separately, as each brand ships from its own warehouse.';
   const tracking = opts.tracking || {};
   const trackingCard = tracking.trackingNumber
     ? title('Tracking') + rows(
@@ -314,10 +314,10 @@ function shipped(order, ctx, items, opts) {
   });
 
   const text = (opts.heading || 'Your order is on its way') + '\n\nHi ' + first + ', ' + intro + '\n\n' + textItems(items, true) +
-    (tracking.trackingNumber ? '\n\n' + (tracking.courier ? tracking.courier + ' — ' : '') + tracking.trackingNumber : '') +
+    (tracking.trackingNumber ? '\n\n' + (tracking.courier ? tracking.courier + ': ' : '') + tracking.trackingNumber : '') +
     '\n\nOrder #' + num + '\n\nQuestions? support@janedore.co.za';
 
-  return { subject: (opts.heading || 'Your order is on its way') + ' — Order #' + num, html, text };
+  return { subject: (opts.heading || 'Your order is on its way') + ' (order #' + num + ')', html, text };
 }
 
 module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, money };

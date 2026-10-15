@@ -757,7 +757,7 @@
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>Product status</label><select name="status" style="width:100%;">' + STATUSES.map(function(s){ return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select></div>' +
           '<div class="form-group" style="padding:0;">' +
-            '<label>Badge <span style="font-size:10px;color:var(--muted);">— New, Sale &amp; Sold Out show automatically based on date added, sale price &amp; stock. Use this only for Pre-order or a custom label.</span></label>' +
+            '<label>Badge <span style="font-size:10px;color:var(--muted);">New, Sale &amp; Sold Out show automatically based on date added, sale price &amp; stock. Use this only for Pre-order or a custom label.</span></label>' +
             '<select name="badge" id="pf-badge-select" style="width:100%;" onchange="window._pfToggleCustomBadge()">' +
               '<option value=""' + (badgeSelectValue === '' ? ' selected' : '') + '>None</option>' +
               BADGE_PRESETS.map(function(b){ var label = b.replace(/\b\w/g,function(l){return l.toUpperCase();}); return '<option value="'+esc(b)+'"'+(badgeSelectValue===b?' selected':'')+'>'+label+'</option>'; }).join('') +
@@ -780,7 +780,7 @@
         '<div class="card-header"><span class="card-title">Product</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>Title</label><input name="name" value="' + esc(p.name) + '" placeholder="e.g. Raffle Brandy Dress" required oninput="window._updateSeoPreview()"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Description <span style="font-size:10px;color:var(--muted);">— supports * bullets and **bold**</span></label><textarea name="description" style="min-height:80px;">' + esc(p.description||'') + '</textarea></div>' +
+          '<div class="form-group" style="padding:0;"><label>Description <span style="font-size:10px;color:var(--muted);">(supports * bullets and **bold**)</span></label><textarea name="description" style="min-height:80px;">' + esc(p.description||'') + '</textarea></div>' +
           '<div class="form-group" style="padding:0;"><label>Product features</label><textarea name="productFeatures" style="min-height:60px;">' + esc(p.productFeatures||'') + '</textarea></div>' +
           '<div class="form-group" style="padding:0;"><label>Composition &amp; care</label><textarea name="compositionCare" style="min-height:60px;">' + esc(p.compositionCare||'') + '</textarea></div>' +
           '<div class="form-group" style="padding:0;"><label>Measurements</label><input name="measurements" value="' + esc(p.measurements||'') + '" placeholder="e.g. Model wears size S. Length: 98cm."></div>' +
@@ -794,7 +794,7 @@
           '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;">' + catOptions + '</select></div>' +
           '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
           renderProductCollectionOptions(p) +
-          '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">— comma separated</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
+          '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">(comma separated)</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
         '</div>' +
       '</div>' +
 
@@ -803,7 +803,7 @@
         '<div class="card-header"><span class="card-title">Pricing</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>Price (R)</label><input name="price" type="number" min="0" step="0.01" value="' + esc(String(p.price||0)) + '" required oninput="window._pfUpdateMargin()"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Sale price (R) <span style="font-size:10px;color:var(--muted);">— leave blank if not on sale</span></label><input name="salePrice" type="number" min="0" step="0.01" value="' + esc(String(p.salePrice||'')) + '" oninput="window._pfUpdateMargin()"></div>' +
+          '<div class="form-group" style="padding:0;"><label>Sale price (R) <span style="font-size:10px;color:var(--muted);">(leave blank if not on sale)</span></label><input name="salePrice" type="number" min="0" step="0.01" value="' + esc(String(p.salePrice||'')) + '" oninput="window._pfUpdateMargin()"></div>' +
           '<div id="pf-margin-display" style="background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none;"></div>' +
         '</div>' +
       '</div>' +
@@ -827,7 +827,7 @@
             '</select>' +
           '</div>' +
           '<div class="form-group" style="padding:0;">' +
-            '<label>Sizes <span style="font-size:10px;color:var(--muted);">— comma separated</span></label>' +
+            '<label>Sizes <span style="font-size:10px;color:var(--muted);">(comma separated)</span></label>' +
             '<input id="pf-sizes-input" name="sizes" value="' + esc(currentSizes) + '" placeholder="e.g. UK 3, UK 4, UK 5 or XS, S, M, L" oninput="window._updateSizePreview()">' +
           '</div>' +
           '<div class="form-group" style="padding:0;">' +
@@ -848,7 +848,7 @@
         '<div class="card-header"><span class="card-title">Inventory</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>SKU</label><input name="sku" value="' + esc(p.sku||'') + '" placeholder="e.g. DRS-RBB-001"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Total stock <span style="font-size:10px;color:var(--muted);">— set per size, per color above</span></label><div style="display:flex;align-items:center;gap:10px;"><span id="pf-stock-total" style="font-size:20px;font-weight:500;">' + esc(String(p.stock||0)) + '</span><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
+          '<div class="form-group" style="padding:0;"><label>Total stock <span style="font-size:10px;color:var(--muted);">(set per size, per color above)</span></label><div style="display:flex;align-items:center;gap:10px;"><span id="pf-stock-total" style="font-size:20px;font-weight:500;">' + esc(String(p.stock||0)) + '</span><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
         '</div>' +
       '</div>' +
 
@@ -977,7 +977,7 @@
     grandEl.textContent = total;
     if (!labelEl) return;
     if (total === 0)     labelEl.textContent = 'Out of stock';
-    else if (total <= 3) labelEl.textContent = total + ' left — low stock';
+    else if (total <= 3) labelEl.textContent = total + ' left, low stock';
     else                  labelEl.textContent = total + ' in stock';
   };
 
@@ -1199,7 +1199,7 @@
     }
 
     if (!data.vendorId) {
-      showToast('No vendor found for brand "' + data.brand + '" — product saved without a brand link', 'error');
+      showToast('No vendor found for brand "' + data.brand + '". Product saved without a brand link.', 'error');
     }
 
     saveProduct(data);

@@ -145,7 +145,7 @@
           '<div class="card-header"><span class="card-title">Content</span></div>' +
           '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
             '<div class="form-group" style="padding:0;"><label>Title</label><input name="title" value="' + esc(data.title || '') + '" placeholder="' + esc(item.label.toUpperCase()) + '"></div>' +
-            '<div class="form-group" style="padding:0;"><label>Description <span style="font-size:10px;color:var(--muted);">— shown under the title, optional</span></label><textarea name="description" style="min-height:120px;">' + esc(data.description || '') + '</textarea></div>' +
+            '<div class="form-group" style="padding:0;"><label>Description <span style="font-size:10px;color:var(--muted);">(shown under the title, optional)</span></label><textarea name="description" style="min-height:120px;">' + esc(data.description || '') + '</textarea></div>' +
           '</div>' +
         '</div>' +
       '</form>';
@@ -190,7 +190,7 @@
           '<div class="card-header"><span class="card-title">Content</span></div>' +
           '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
             '<div class="form-group" style="padding:0;"><label>Title</label><input name="title" value="' + esc(data.title || item.label) + '" required></div>' +
-            '<div class="form-group" style="padding:0;"><label>Body <span style="font-size:10px;color:var(--muted);">— HTML supported</span></label><textarea name="content" style="min-height:280px;">' + esc(data.content || '') + '</textarea></div>' +
+            '<div class="form-group" style="padding:0;"><label>Body <span style="font-size:10px;color:var(--muted);">(HTML supported)</span></label><textarea name="content" style="min-height:280px;">' + esc(data.content || '') + '</textarea></div>' +
           '</div>' +
         '</div>' +
       '</form>';

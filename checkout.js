@@ -739,7 +739,7 @@ function showPayFastConfirmTimeout(orderId) {
     retryBtn.onclick = function () {
       retryBtn.style.display = 'none';
       if (spinner) spinner.style.display = 'block';
-      if (text) text.textContent = 'This usually only takes a few seconds — please don\'t close this page.';
+      if (text) text.textContent = 'This usually only takes a few seconds. Please don\'t close this page.';
       pollPaymentStatus(orderId, 0);
     };
   }

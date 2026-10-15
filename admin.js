@@ -123,14 +123,14 @@
   window._fmt = fmt;
 
   function fmtDate(ts) {
-    if (!ts) return '—';
+    if (!ts) return '-';
     var d = ts.toDate ? ts.toDate() : new Date(ts);
     return d.toLocaleDateString('en-ZA', {day:'2-digit',month:'short',year:'numeric'});
   }
   window._fmtDate = fmtDate;
 
   function fmtDateShort(ts) {
-    if (!ts) return '—';
+    if (!ts) return '-';
     var d = ts.toDate ? ts.toDate() : new Date(ts);
     return d.toLocaleDateString('en-ZA', {day:'2-digit',month:'short'});
   }
@@ -294,7 +294,7 @@
         window._currentUserRole = 'VIEWER';
         window._roleResolved = true;
         safeSetDisplay('admin-panel', 'block');
-        showToast('Could not verify your role — limited access. Reload to retry.', 'error');
+        showToast('Could not verify your role, so access is limited. Reload to retry.', 'error');
         window._applyRoleUI();
         loadProducts();
       });
