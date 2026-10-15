@@ -67,8 +67,9 @@ function _stickyAddedFeedback(product) {
 
    setTimeout(() => {
      bar.classList.remove('added-feedback');
-     const isMin = bar.classList.contains('minimized');
-     label.textContent = isMin ? 'Add' : 'Add to Bag';
+     // Recompute rather than assume "Add to Bag" — the color/size may
+     // have changed to something sold out while "Added" was showing.
+     updateAddToCartState();
    }, 1600);
  }
 }
