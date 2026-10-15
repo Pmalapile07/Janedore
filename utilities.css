@@ -12,6 +12,11 @@
    grid, etc.) already asks for it explicitly via behavior:"smooth" on
    that specific call, so nothing relies on this default. */
 html { font-size: 13.6px; }
+/* No scroll anchoring: this is a single-page app, so content swaps in
+   above the viewport on every page change, and the browser's automatic
+   "keep what you were looking at in place" adjustment would push the
+   freshly reset page down under the sticky header. */
+html, body { overflow-anchor: none; }
 @media (min-width: 769px) { html { font-size: 10.88px; } }
 body {
   font-family: 'Inter', sans-serif;

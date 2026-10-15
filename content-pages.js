@@ -38,7 +38,7 @@ async function navigateToContentPage(slug, replaceUrl) {
   }
   if (myNavGen !== pageNavGeneration) return;
 
-  window.scrollTo({ top: 0, behavior: "instant" });
+  resetScrollToTop();
   ensureNavScrolled();
   updateChatVisibility();
 }

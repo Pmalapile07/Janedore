@@ -757,7 +757,7 @@ function previewPlaceholderVendor() {
   restoreCollectionFilterBar();
   S.currentVendor = PLACEHOLDER_VENDOR;
   renderVendorPage(PLACEHOLDER_VENDOR);
-  window.scrollTo({top:0,behavior:"instant"});
+  resetScrollToTop();
   ensureNavScrolled();
   updateChatVisibility();
 }
@@ -1226,7 +1226,7 @@ function selectSortTab(cat) {
   if (cat === 'all') { navigateTo('products'); return; }
   navigateToCategory(cat);
   renderCollectionSortingTabs();
-  window.scrollTo({top:0,behavior:"instant"});
+  resetScrollToTop();
   updateCollectionGridIcon();
 }
 
@@ -1385,7 +1385,7 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
     renderVendorPage(null);
   }
   if (myNavGen !== pageNavGeneration) return;
-  window.scrollTo({top:0,behavior:"instant"});
+  resetScrollToTop();
   ensureNavScrolled();
   updateChatVisibility();
   updateCollectionTitle();

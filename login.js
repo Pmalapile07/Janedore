@@ -14,7 +14,7 @@ function navigateToLogin() {
     loginPage.classList.add("active");
     S.currentPage = "login";
     updateHash('login');
-    window.scrollTo({ top: 0, behavior: "instant" });
+    resetScrollToTop();
     ensureNavScrolled();
     // This function (not app.js's same-named one, which it shadows —
     // see the file-level comment) is what actually runs, so the
@@ -41,7 +41,7 @@ function navigateToAccount() {
     accountPage.classList.add("active");
     S.currentPage = "account";
     updateHash('account');
-    window.scrollTo({ top: 0, behavior: "instant" });
+    resetScrollToTop();
     ensureNavScrolled();
     // Account page isn't one of the pages the quick-links row is
     // hidden on — clear the marker login set, in case this redirects

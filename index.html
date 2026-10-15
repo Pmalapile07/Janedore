@@ -39,6 +39,23 @@
   // string before a deferred script would ever get to read it.
   // preview-bridge.js reads this flag instead of location.search.
   window.__adminPreview = (window.self !== window.top) && /[?&]adminPreview=1\b/.test(location.search);
+
+  // Shared by every page change (product, collection, home, checkout…).
+  // A plain scrollTo(0,0) isn't enough on iPhone: if the customer tapped
+  // while a flick was still gliding, Safari keeps applying that leftover
+  // momentum to the NEW page, leaving it scrolled a little way down with
+  // its top hidden under the sticky header. Briefly switching the page's
+  // overflow off cancels the glide; the reset is then repeated on the
+  // next frame in case anything else nudged it while the page rendered.
+  window.resetScrollToTop = function () {
+    var root = document.documentElement;
+    var prev = root.style.overflow;
+    root.style.overflow = 'hidden';
+    window.scrollTo(0, 0);
+    root.style.overflow = prev;
+    window.scrollTo(0, 0);
+    requestAnimationFrame(function () { if (window.scrollY !== 0) window.scrollTo(0, 0); });
+  };
   </script>
   <script>
   // A logo-triggered homepage reload must behave like a fresh visit at scrollY=0.
@@ -61,6 +78,10 @@
   })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <!-- Safari/Chrome tint their own top bar from this. Without it Safari
+       samples whatever is under the bar, flipping between the black header
+       and the white page as you scroll (seen as the header flashing white). -->
+  <meta name="theme-color" content="#111111">
   <title>JANEDORE | Curated Fashion</title>
   <link rel="icon" type="image/png" href="Janedore.png">
   <link rel="shortcut icon" type="image/png" href="Janedore.png">

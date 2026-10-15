@@ -1,3 +1,7 @@
+// Defined in index.html's <head>; plain fallback for any page that loads
+// this script without it (e.g. debugger.html).
+window.resetScrollToTop = window.resetScrollToTop || function () { window.scrollTo(0, 0); };
+
 const DOM = {
   get cartBadge() { return document.getElementById("cart-badge"); },
   get wishBadge() { return document.getElementById("wish-badge"); },
@@ -520,10 +524,8 @@ function navigateTo(page, replaceUrl) {
   // Reset scroll after switching the destination page and nav classes.
   // On iOS Safari, scrolling before these layout changes can leave the
   // sticky header visually out of sync with the non-sticky quick-links row.
-  const resetPageScroll = () => window.scrollTo(0, 0);
-  resetPageScroll();
+  resetScrollToTop();
   requestAnimationFrame(() => {
-    resetPageScroll();
     // Re-resolve the sticky header against the destination page layout.
     // The quick-links row remains in normal document flow.
     if (DOM.mainNav) DOM.mainNav.getBoundingClientRect();
@@ -582,7 +584,7 @@ function navigateToCategory(cat, replaceUrl) {
   S.activeSortTab = cat;
   renderCollectionSortingTabs();
   if(DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
-  renderCategoryProducts(); window.scrollTo({top:0,behavior:"instant"}); ensureNavScrolled(); updateChatVisibility();
+  renderCategoryProducts(); resetScrollToTop(); ensureNavScrolled(); updateChatVisibility();
 }
 
 // Resolve /collections/:handle from published Firestore records first.
@@ -606,7 +608,7 @@ async function navigateToCollection(handle, replaceUrl) {
     setNavForPage('category'); S.activeSortTab = S.currentCollectionHandle;
     if (DOM.categoryNameTag) DOM.categoryNameTag.textContent = '';
     renderCollectionSortingTabs(); renderCategoryProducts();
-    window.scrollTo({top:0,behavior:'instant'}); ensureNavScrolled(); updateChatVisibility();
+    resetScrollToTop(); ensureNavScrolled(); updateChatVisibility();
   } catch (error) { console.error('[COLLECTIONS] Could not resolve collection route:', error); navigateToCategory(handle, replaceUrl); }
 }
 
@@ -638,7 +640,7 @@ function goBackFromProduct() { closeFilterPanel(); removeStickyBar(); if(DOM.mai
 
 function goBackHome() { closeFilterPanel(); removeStickyBar(); if(DOM.mainNav) DOM.mainNav.classList.remove("product-page","collection-page"); document.body.classList.remove('on-collection-page'); navigateTo('home'); }
 
-function navigateToSaleLegacy() { S.currentCollectionHandle = null; S.currentCollectionData = null; ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.newInMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToSaleLegacy() { S.currentCollectionHandle = null; S.currentCollectionData = null; ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = true; S.newInMode = false; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'sale'; renderCollectionSortingTabs(); renderSaleProducts(); resetScrollToTop(); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToSale() {
   if (window._publishedCollections) {
@@ -664,7 +666,7 @@ function navigateToSale() {
 // called renderAllProducts(), which sorted the WHOLE catalog
 // newest-first without filtering anything out — indistinguishable
 // from All Products once you scrolled past the first few items.
-function navigateToNewInLegacy() { S.currentCollectionHandle = null; S.currentCollectionData = null; ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.newInMode = true; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'newin'; renderCollectionSortingTabs(); renderNewInProducts(); window.scrollTo({top:0,behavior:"instant"}); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
+function navigateToNewInLegacy() { S.currentCollectionHandle = null; S.currentCollectionData = null; ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.newInMode = true; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'newin'; renderCollectionSortingTabs(); renderNewInProducts(); resetScrollToTop(); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToNewIn() {
   if (window._publishedCollections) {
@@ -689,7 +691,7 @@ function navigateToLogin(replaceUrl) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-login").classList.add("active");
   S.currentPage = "login"; updateCleanUrl('login', replaceUrl);
-  window.scrollTo({top:0,behavior:"instant"}); setNavForPage('login'); ensureNavScrolled();
+  resetScrollToTop(); setNavForPage('login'); ensureNavScrolled();
 }
 
 function navigateToAccount(replaceUrl) {
@@ -698,7 +700,7 @@ function navigateToAccount(replaceUrl) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-account").classList.add("active");
   S.currentPage = "account"; updateCleanUrl('account', replaceUrl);
-  window.scrollTo({top:0,behavior:"instant"}); setNavForPage('account'); ensureNavScrolled();
+  resetScrollToTop(); setNavForPage('account'); ensureNavScrolled();
 }
 
 function navigateToCheckout(replaceUrl) {
@@ -707,7 +709,7 @@ function navigateToCheckout(replaceUrl) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-checkout").classList.add("active");
   S.currentPage = "checkout"; updateCleanUrl('checkout', replaceUrl);
-  window.scrollTo({top:0,behavior:"instant"}); setNavForPage('checkout'); ensureNavScrolled();
+  resetScrollToTop(); setNavForPage('checkout'); ensureNavScrolled();
 }
 
 function ensureNavScrolled() { if (DOM.mainNav) DOM.mainNav.classList.add("scrolled"); }
