@@ -1,7 +1,7 @@
 <style>
   /* Form view: same language as the cart page (cart.css) — grey page,
      white cards, bold 17px titles, black full-width button. */
-  #checkout-loaded:has(#checkout-form-view:not([style*="none"])) { background: #f2f2f2; }
+  #checkout-loaded { background: #f2f2f2; }
   .checkout-container { color: #111; font-family: 'Inter', sans-serif; }
   .checkout-cards {
     display: flex;
@@ -90,250 +90,57 @@
     width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px;
     stroke: #777; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
   }
-  .checkout-item {
-    display: flex;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 0.5px solid #e5e5e5;
-    font-size: 11px;
-  }
-  .checkout-item:last-child { border-bottom: none; }
-  .checkout-item-img {
-    width: 48px;
-    height: 60px;
-    background-size: cover;
-    background-position: center;
-    background-color: #f4f4f4;
-    flex-shrink: 0;
-  }
-  .checkout-item-info { flex: 1; font-size: 10px; }
-  .checkout-item-brand {
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    color: #888;
-    text-transform: uppercase;
-  }
-  .checkout-item-name {
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    margin-bottom: 2px;
-    line-height: 1.2;
-  }
-  .checkout-item-meta {
-    font-size: 9px;
-    color: #aaa;
-    letter-spacing: 0.04em;
-  }
-  .checkout-item-price {
-    font-size: 11px;
-    font-weight: 400;
-    color: #111;
-    flex-shrink: 0;
-    align-self: flex-start;
-  }
-  .checkout-package-note {
-    margin-top: 12px;
-    padding: 10px 12px;
-    background: #fff;
-    font-size: var(--ui-font-size, 9px);
-    color: #888;
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    text-transform: uppercase;
-    text-align: center;
-    border: 0.5px solid #e5e5e5;
-    line-height: 1.4;
-  }
-  .checkout-total-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    font-size: 11px;
-    color: #555;
-  }
-  .checkout-total-row.discount {
-    color: #c00;
-  }
-  .checkout-total-divider {
-    border-top: 0.5px solid #e5e5e5;
-    margin: 8px 0;
-  }
-  .checkout-total-row strong {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #111;
-  }
-  .checkout-total-final {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0 6px;
-    font-size: 13px;
-  }
-  .checkout-total-final strong {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #111;
-  }
-  .checkout-confirmation {
-    text-align: center;
-    padding: 60px 20px;
-  }
-  .checkout-confirmation-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    color: #111;
-    font-weight: 100;
-  }
-  .checkout-confirmation-title {
-    font-family: 'Inter', sans-serif;
+  /* Confirmation + confirming views: same cards as the form above. */
+  .checkout-thanks { text-align: center; padding: 28px 16px; }
+  .checkout-thanks-icon {
+    width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 50%;
+    background: #b8cc87; color: #111; display: flex; align-items: center; justify-content: center;
     font-size: 28px;
-    font-weight: 300;
-    margin-bottom: 8px;
   }
-  .checkout-confirmation-order {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 24px;
+  .checkout-thanks-title { font-size: 22px; font-weight: 600; margin: 0 0 8px; line-height: 1.3; }
+  .checkout-thanks-text { font-size: 14px; color: #555; line-height: 1.5; margin: 0 auto; max-width: 340px; }
+  .checkout-thanks-number { margin-top: 20px; font-size: 15px; font-weight: 600; }
+  .checkout-thanks-date { margin-top: 4px; font-size: 13px; color: #777; }
+  .checkout-thanks .checkout-place-order-btn { margin-top: 20px; }
+  .checkout-card-count { font-weight: 400; color: #777; font-size: 15px; }
+  .checkout-info-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    font-size: 14px; margin: 10px 0;
   }
-  .checkout-confirmation-page { padding: 60px 12px 80px; max-width: 1000px; margin: 0 auto; }
-  .checkout-confirmation-header { text-align: center; margin-bottom: 40px; }
-  .checkout-confirmation-subtitle {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: 500;
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 20px;
-  }
-  .checkout-confirmation-body { font-size: 12px; color: #555; line-height: 1.7; margin-bottom: 24px; }
-  .checkout-confirmation-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    background: #fafaf9;
-    border: 0.5px solid #e5e5e5;
-    margin-bottom: 32px;
-  }
-  .checkout-confirmation-stat {
-    padding: 22px 24px;
-    text-align: center;
-    border-left: 0.5px solid #e5e5e5;
-  }
-  .checkout-confirmation-stat:first-child { border-left: none; }
-  .checkout-confirmation-stat-label {
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    text-transform: uppercase;
-    color: #aaa;
-    margin-bottom: 8px;
-  }
-  .checkout-confirmation-stat-value {
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    color: #111;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-  .checkout-confirmation-stat-sub { font-size: 10px; color: #999; margin-top: 6px; line-height: 1.4; }
-  .checkout-confirmation-status-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: #2e8b57; flex-shrink: 0;
-  }
+  .checkout-info-row strong { font-weight: 600; }
+  .checkout-status { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+  .checkout-confirmation-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #2e8b57; flex-shrink: 0; }
   .checkout-confirmation-status-dot.danger { background: #c00; }
-  .checkout-confirmation-section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    color: #111;
-    padding-bottom: 8px;
-    border-bottom: 0.5px solid #e5e5e5;
-    margin-bottom: 4px;
+  .checkout-card-note { margin: 12px 0 0; font-size: 12px; color: #777; line-height: 1.5; }
+  .checkout-item { display: flex; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid #eee; }
+  .checkout-item:first-child { border-top: none; padding-top: 0; }
+  .checkout-item:last-child { padding-bottom: 0; }
+  .checkout-item-img {
+    width: 64px; aspect-ratio: 3 / 4; flex-shrink: 0;
+    background-color: #f4f4f4; background-size: cover; background-position: center;
   }
-  .checkout-confirmation-section-head span:last-child { color: #aaa; }
-  .checkout-confirmation-brand-group { margin-top: 20px; }
-  .checkout-confirmation-brand-head {
-    display: flex;
-    justify-content: space-between;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    text-transform: uppercase;
-    color: #111;
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
-  .checkout-confirmation-brand-head span:last-child { color: #aaa; font-weight: 400; }
-  .checkout-confirmation-items .checkout-item { font-size: 12px; }
-  .checkout-confirmation-items .checkout-item-img { width: 64px; height: 78px; }
-  .checkout-confirmation-items .checkout-item-qty { color: #888; font-size: 11px; min-width: 50px; text-align: center; }
-  .checkout-confirmation-footer {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 24px;
-    margin-top: 36px;
-  }
-  .checkout-confirmation-footer-box {
-    background: #fafaf9;
-    border: 0.5px solid #e5e5e5;
-    padding: 22px 24px;
-  }
-  .checkout-confirmation-footer-left { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  .checkout-confirmation-footer-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #111;
-    margin-bottom: 10px;
-  }
-  .checkout-confirmation-address { font-size: 12px; color: #555; line-height: 1.7; }
-  .checkout-confirmation-address strong { color: #111; font-weight: 500; display: block; margin-bottom: 2px; }
-  .checkout-confirmation-payment { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #111; }
-  .checkout-confirmation-payment svg { width: 20px; height: 20px; stroke: #111; fill: none; stroke-width: 1.5; flex-shrink: 0; }
-  .checkout-confirmation-btn {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    color: #111;
-    border-bottom: 0.8px solid #111;
-    background: none;
-    padding-bottom: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .checkout-confirmation-btn:hover { color: #555; border-color: #555; }
+  .checkout-item-info { flex: 1; min-width: 0; }
+  .checkout-item-name { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .checkout-item-brand { font-size: 13px; color: #777; margin-top: 2px; }
+  .checkout-item-meta { font-size: 13px; margin-top: 6px; }
+  .checkout-item-price { font-size: 15px; font-weight: 600; white-space: nowrap; align-self: flex-end; }
+  .checkout-packages-note { margin: 12px 0 0; font-size: 12px; color: #777; }
+  .checkout-confirmation-address { font-size: 14px; line-height: 1.6; color: #555; }
+  .checkout-confirmation-address strong { display: block; color: #111; font-weight: 600; }
+  .checkout-paid-with { margin-top: 14px; padding-top: 14px; border-top: 1px solid #eee; margin-bottom: 0; }
+  .checkout-continue-btn { margin-top: 0; }
+  /* Order number only (details couldn't be loaded): hide the empty cards. */
+  #checkout-confirmation-view:not(.has-details) .checkout-detail-card { display: none; }
   .checkout-confirming-spinner {
     width: 32px;
     height: 32px;
-    margin: 0 auto 20px;
+    margin: 4px auto 20px;
     border: 1.5px solid #e5e5e5;
     border-top-color: #111;
     border-radius: 50%;
     animation: checkout-spin 0.8s linear infinite;
   }
   @keyframes checkout-spin { to { transform: rotate(360deg); } }
-  @media (max-width: 768px) {
-    .checkout-confirmation-stats { grid-template-columns: 1fr; }
-    .checkout-confirmation-stat { border-left: none; border-top: 0.5px solid #e5e5e5; }
-    .checkout-confirmation-stat:first-child { border-top: none; }
-    .checkout-confirmation-footer { grid-template-columns: 1fr; }
-    .checkout-confirmation-footer-left { grid-template-columns: 1fr; gap: 20px; }
-  }
 </style>
 
 <div id="checkout-page-content">
@@ -411,67 +218,60 @@
     </form>
   </div>
   
-  <div id="checkout-confirmation-view" class="checkout-confirmation-page" style="display:none;">
-    <div class="checkout-confirmation-header">
-      <div class="checkout-confirmation-icon">&#10003;</div>
-      <div class="checkout-confirmation-title">Order Confirmed</div>
-      <div class="checkout-confirmation-subtitle">Thank You For Shopping With Us</div>
-      <p class="checkout-confirmation-body">Your payment was successful and your order has been received.<br>You'll receive a confirmation email shortly.</p>
-      <button class="checkout-confirmation-btn" onclick="navigateTo('home')">Continue Shopping &#8594;</button>
-    </div>
+  <div id="checkout-confirmation-view" class="checkout-container" style="display:none;">
+    <div class="checkout-cards">
 
-    <div class="checkout-confirmation-stats">
-      <div class="checkout-confirmation-stat">
-        <div class="checkout-confirmation-stat-label">Order Number</div>
-        <div class="checkout-confirmation-stat-value" id="confirmation-order-number"></div>
-        <div class="checkout-confirmation-stat-sub" id="confirmation-order-date"></div>
-      </div>
-      <div class="checkout-confirmation-stat">
-        <div class="checkout-confirmation-stat-label">Order Status</div>
-        <div class="checkout-confirmation-stat-value">
-          <span class="checkout-confirmation-status-dot" id="confirmation-status-dot"></span>
-          <span id="confirmation-status-text">Payment Confirmed</span>
-        </div>
-        <div class="checkout-confirmation-stat-sub">We'll email you once your order has been packed and shipped.</div>
-      </div>
-      <div class="checkout-confirmation-stat">
-        <div class="checkout-confirmation-stat-label">Estimated Delivery</div>
-        <div class="checkout-confirmation-stat-value" id="confirmation-delivery-estimate"></div>
-        <div class="checkout-confirmation-stat-sub">You'll receive a tracking number once your order is on the way.</div>
-      </div>
-    </div>
+      <section class="checkout-card checkout-thanks">
+        <div class="checkout-thanks-icon"><i class="ph ph-check" aria-hidden="true"></i></div>
+        <h2 class="checkout-thanks-title">Thank you for your order</h2>
+        <p class="checkout-thanks-text" id="confirmation-thanks-text">Your payment went through and your order is in. A confirmation email is on its way.</p>
+        <div class="checkout-thanks-number">Order <span id="confirmation-order-number"></span></div>
+        <div class="checkout-thanks-date" id="confirmation-order-date"></div>
+      </section>
 
-    <div class="checkout-confirmation-section-head">
-      <span>Items In Your Order</span>
-      <span id="confirmation-item-count"></span>
-    </div>
-    <div id="confirmation-items" class="checkout-confirmation-items"></div>
+      <section class="checkout-card checkout-detail-card">
+        <h2 class="checkout-card-title">Order status</h2>
+        <div class="checkout-info-row">
+          <span>Payment</span>
+          <span class="checkout-status"><span class="checkout-confirmation-status-dot" id="confirmation-status-dot"></span><span id="confirmation-status-text">Confirmed</span></span>
+        </div>
+        <div class="checkout-info-row">
+          <span>Estimated delivery</span>
+          <strong id="confirmation-delivery-estimate"></strong>
+        </div>
+        <p class="checkout-card-note">We'll email you a tracking number once your order is on its way.</p>
+      </section>
 
-    <div class="checkout-confirmation-footer">
-      <div class="checkout-confirmation-footer-box checkout-confirmation-footer-left">
-        <div>
-          <div class="checkout-confirmation-footer-label">Delivery Details</div>
-          <div class="checkout-confirmation-address" id="confirmation-address"></div>
+      <section class="checkout-card checkout-detail-card">
+        <h2 class="checkout-card-title">Your items <span class="checkout-card-count" id="confirmation-item-count"></span></h2>
+        <div id="confirmation-items" class="checkout-confirmation-items"></div>
+      </section>
+
+      <section class="checkout-card checkout-detail-card">
+        <h2 class="checkout-card-title">Delivery details</h2>
+        <div class="checkout-confirmation-address" id="confirmation-address"></div>
+        <div class="checkout-info-row checkout-paid-with">
+          <span>Paid with</span>
+          <strong>PayFast</strong>
         </div>
-        <div>
-          <div class="checkout-confirmation-footer-label">Payment Method</div>
-          <div class="checkout-confirmation-payment">
-            <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            PayFast
-          </div>
-        </div>
-      </div>
-      <div class="checkout-confirmation-footer-box">
-        <div class="checkout-confirmation-footer-label">Order Summary</div>
+      </section>
+
+      <section class="checkout-card checkout-detail-card">
         <div id="confirmation-summary"></div>
-      </div>
+      </section>
+
+      <button type="button" class="checkout-place-order-btn checkout-continue-btn" onclick="navigateTo('home')">Continue Shopping</button>
     </div>
   </div>
 
-  <div id="checkout-confirming-view" class="checkout-confirmation" style="display:none;">
-    <div class="checkout-confirming-spinner" id="checkout-confirming-spinner"></div>
-    <div class="checkout-confirmation-title">Confirming your payment</div>
-    <p id="checkout-confirming-text" style="font-size:12px;color:#888;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;">This usually only takes a few seconds — please don't close this page.</p>
-    <button class="checkout-confirmation-btn" id="checkout-confirming-retry" style="display:none;">Check Again</button>
+  <div id="checkout-confirming-view" class="checkout-container" style="display:none;">
+    <div class="checkout-cards">
+      <section class="checkout-card checkout-thanks">
+        <div class="checkout-confirming-spinner" id="checkout-confirming-spinner"></div>
+        <h2 class="checkout-thanks-title">Confirming your payment</h2>
+        <p class="checkout-thanks-text" id="checkout-confirming-text">This usually only takes a few seconds — please don't close this page.</p>
+        <button type="button" class="checkout-place-order-btn" id="checkout-confirming-retry" style="display:none;">Check Again</button>
+      </section>
+    </div>
   </div>
 </div>

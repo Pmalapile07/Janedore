@@ -508,69 +508,72 @@ function renderOrderConfirmation(order) {
   if (statusDot && statusText) {
     if (order.paymentStatus === 'paid') {
       statusDot.classList.remove('danger');
-      statusText.textContent = 'Payment Confirmed';
+      statusText.textContent = 'Confirmed';
     } else {
       statusDot.classList.add('danger');
-      statusText.textContent = order.paymentStatus === 'refunded' ? 'Refunded' : 'Payment Pending';
+      statusText.textContent = order.paymentStatus === 'refunded' ? 'Refunded' : 'Pending';
     }
+  }
+
+  const thanksText = document.getElementById('confirmation-thanks-text');
+  if (thanksText) {
+    thanksText.textContent = order.paymentStatus === 'paid'
+      ? 'Your payment went through and your order is in. A confirmation email is on its way.'
+      : "Your order is in. We'll email your confirmation as soon as your payment clears.";
   }
 
   const items = order.items || [];
   const itemCount = items.reduce((a, i) => a + (i.qty || 0), 0);
   const countEl = document.getElementById('confirmation-item-count');
-  if (countEl) countEl.textContent = itemCount + (itemCount === 1 ? ' Item' : ' Items');
-
-  const brandGroups = {};
-  items.forEach(item => {
-    const brand = item.brand || 'Unknown';
-    (brandGroups[brand] = brandGroups[brand] || []).push(item);
-  });
+  if (countEl) countEl.textContent = '(' + itemCount + ')';
 
   const itemsEl = document.getElementById('confirmation-items');
   if (itemsEl) {
-    itemsEl.innerHTML = Object.keys(brandGroups).map(brand => {
-      const groupItems = brandGroups[brand];
-      const groupCount = groupItems.reduce((a, i) => a + (i.qty || 0), 0);
-      const rows = groupItems.map(item => {
-        const product = PRODUCTS.find(p => p.id === item.productId);
-        const thumbnail = product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE;
-        const sizeDisplay = item.size && item.size !== 'OS' ? item.size : '';
-        return `<div class="checkout-item">
-          <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
-          <div class="checkout-item-info">
-            <div class="checkout-item-name">${item.name}</div>
-            <div class="checkout-item-meta">${item.color || ''}${item.color && sizeDisplay ? ' · ' : ''}${sizeDisplay}</div>
-          </div>
-          <div class="checkout-item-qty">Qty: ${item.qty}</div>
-          <div class="checkout-item-price">${formatPrice((item.price || 0) * item.qty)}</div>
-        </div>`;
-      }).join('');
-      return `<div class="checkout-confirmation-brand-group">
-        <div class="checkout-confirmation-brand-head"><span>${brand}</span><span>${groupCount + (groupCount === 1 ? ' Item' : ' Items')}</span></div>
-        ${rows}
+    const brands = [...new Set(items.map(i => i.brand).filter(Boolean))];
+    itemsEl.innerHTML = items.map(item => {
+      const product = PRODUCTS.find(p => p.id === item.productId);
+      const thumbnail = product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE;
+      // 'OS' is a placeholder sentinel, not a real size — never display it.
+      const sizeDisplay = item.size && item.size !== 'OS' ? item.size : '';
+      const brandLine = [item.brand, item.color].filter(Boolean).map(escapeHTML).join(' · ');
+      return `<div class="checkout-item">
+        <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
+        <div class="checkout-item-info">
+          <div class="checkout-item-name">${escapeHTML(item.name)}</div>
+          ${brandLine ? `<div class="checkout-item-brand">${brandLine}</div>` : ''}
+          <div class="checkout-item-meta">Qty: <strong>${item.qty}</strong>${sizeDisplay ? ` &nbsp; Size: <strong>${escapeHTML(sizeDisplay)}</strong>` : ''}</div>
+        </div>
+        <div class="checkout-item-price">${formatPrice((item.price || 0) * item.qty)}</div>
       </div>`;
-    }).join('');
+    }).join('') + (brands.length > 1
+      ? `<p class="checkout-packages-note">Ships in ${brands.length} packages, one from each brand.</p>`
+      : '');
   }
 
   const addressEl = document.getElementById('confirmation-address');
   if (addressEl) {
-    const line2 = [order.city, order.province].filter(Boolean).join(', ');
-    const line3 = [order.postalCode, order.country].filter(Boolean).join(', ');
-    addressEl.innerHTML =
-      '<strong>' + (order.customerName || '') + '</strong>' +
-      (order.shippingAddress || '') + '<br>' +
-      line2 + '<br>' +
-      line3;
+    const lines = [
+      order.shippingAddress,
+      [order.city, order.province].filter(Boolean).join(', '),
+      [order.postalCode, order.country].filter(Boolean).join(', ')
+    ].filter(Boolean).map(escapeHTML);
+    addressEl.innerHTML = '<strong>' + escapeHTML(order.customerName) + '</strong>' + lines.join('<br>');
   }
 
   const summaryEl = document.getElementById('confirmation-summary');
   if (summaryEl) {
+    const discount = Number(order.discountAmount) || 0;
     summaryEl.innerHTML =
-      '<div class="checkout-total-row"><span>Items (' + itemCount + ')</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
-      '<div class="checkout-total-row"><span>Shipping</span><span>' + (order.shipping === 0 ? 'Free' : formatPrice(order.shipping || 0)) + '</span></div>' +
-      '<div class="checkout-total-divider"></div>' +
-      '<div class="checkout-total-final"><strong>Total</strong><strong>' + formatPrice(order.total || 0) + '</strong></div>';
+      '<div class="checkout-totals-head"><span>Total paid</span><span>' + formatPrice(order.total || 0) + '</span></div>' +
+      '<div class="checkout-totals-row"><span>Cart Total</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
+      (discount > 0
+        ? '<div class="checkout-totals-row discount"><span>Discount' + (order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : '') + '</span><span>-' + formatPrice(discount) + '</span></div>'
+        : '') +
+      '<div class="checkout-totals-row"><span>Delivery Fee</span><span>' + (order.shipping === 0 ? 'Free' : formatPrice(order.shipping || 0)) + '</span></div>';
   }
+
+  const view = document.getElementById('checkout-confirmation-view');
+  if (view) view.classList.add('has-details');
 }
 
 function showPayFastConfirmingView() {
