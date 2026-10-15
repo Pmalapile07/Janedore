@@ -1029,3 +1029,22 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 /* Dark checkerboard behind images: white logos stay visible and transparent areas show. */
 .content-kind-image{background-color:#2b2b2b;background-image:linear-gradient(45deg,#353535 25%,transparent 25%),linear-gradient(-45deg,#353535 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#353535 75%),linear-gradient(-45deg,transparent 75%,#353535 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;}
 .content-slot-font{color:#fff;font-size:18px;letter-spacing:.12em;}
+
+/* ── Reports (brand reports from the storefront) ── */
+.reports-page { display: flex; flex-direction: column; gap: 12px; }
+.reports-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.reports-filter { border: 1px solid var(--border, #e3e3e3); background: #fff; color: var(--text, #111); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
+.reports-filter span { color: var(--muted, #888); margin-left: 4px; }
+.reports-filter.active { background: #111; border-color: #111; color: #fff; }
+.reports-filter.active span { color: rgba(255,255,255,0.7); }
+.report-card { padding: 16px; }
+.report-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.report-brand { font-size: 15px; font-weight: 600; color: var(--text, #111); }
+.report-reason { font-size: 13px; color: var(--text, #111); margin-top: 2px; }
+.report-status { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #e6edd5; color: #111; white-space: nowrap; }
+.report-card.is-reviewed .report-status { background: #f1f1f1; color: #777; }
+.report-details { font-size: 13px; line-height: 1.5; color: #444; margin-top: 10px; white-space: pre-wrap; word-break: break-word; }
+.report-meta { font-size: 12px; color: var(--muted, #888); margin-top: 10px; }
+.report-meta a { color: inherit; }
+.report-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.report-actions a.btn { text-decoration: none; }
