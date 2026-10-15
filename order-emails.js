@@ -63,7 +63,11 @@ function shell(opts) {
   return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
     '<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">' +
-    '<title>' + esc(opts.title) + '</title></head>' +
+    '<title>' + esc(opts.title) + '</title>' +
+    // Logo font from admin > Content. Apple Mail shows it; Gmail and
+    // Outlook ignore web fonts and use the Helvetica fallback.
+    (opts.logoFontUrl ? '<style>@font-face{font-family:"Janedore Logo";src:url("' + esc(opts.logoFontUrl) + '");font-weight:400;}</style>' : '') +
+    '</head>' +
     '<body style="margin:0;padding:0;background:#f2f2f2;font-family:' + FONT + ';color:#111111;-webkit-font-smoothing:antialiased;">' +
     // Inbox preview line (hidden in the email itself).
     '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f2f2f2;">' + esc(opts.preheader || '') + '</div>' +
@@ -75,7 +79,10 @@ function shell(opts) {
         // the site's Unbounded font, so text is only the fallback.
         (opts.logoUrl
           ? '<img src="' + esc(opts.logoUrl) + '" alt="JANEDORE" height="22" style="display:block;height:22px;width:auto;border:0;">'
-          : '<span style="font-family:' + FONT + ';font-size:16px;letter-spacing:0.22em;color:#ffffff;text-transform:uppercase;">Janedore</span>') +
+          : '<span style="font-family:' + (opts.logoFontUrl ? '\'Janedore Logo\', ' : '') + FONT + ';font-size:16px;' +
+              // A bold logo font falls back to bold Helvetica where web fonts don't load.
+              (/bold/i.test(opts.logoFontUrl || '') ? 'font-weight:700;' : '') +
+              'letter-spacing:0.22em;color:#ffffff;text-transform:uppercase;">Janedore</span>') +
       '</td></tr>' +
       (opts.bannerHtml ? '<tr><td style="background:' + GREEN_TINT + ';padding:16px 24px;font-size:14px;line-height:1.5;color:#111111;">' + opts.bannerHtml + '</td></tr>' : '') +
       '<tr><td style="padding:16px;">' +
@@ -204,6 +211,7 @@ function customerConfirmation(order, ctx) {
 
   const html = shell({
     logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
     title: 'Order confirmed',
     preheader: 'Order #' + num + ' is confirmed: ' + money(order.total) + '.',
     cards: [
@@ -240,6 +248,7 @@ function adminNewOrder(order, ctx) {
 
   const html = shell({
     logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
     title: 'New order',
     preheader: 'New order #' + num + ': ' + money(order.total) + ' from ' + (order.customerName || 'a customer'),
     bannerHtml: banner,
@@ -271,6 +280,7 @@ function vendorNewOrder(order, ctx, vendor, items) {
 
   const html = shell({
     logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
     title: 'New order to ship',
     preheader: 'New Janedore order #' + num + ': ' + count + (count === 1 ? ' item' : ' items') + ' to ship.',
     bannerHtml: '<strong>You have a new order to ship.</strong> The customer has paid. Please pack and send the items below.',
@@ -308,6 +318,7 @@ function shipped(order, ctx, items, opts) {
 
   const html = shell({
     logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
     title: opts.heading || 'Your order is on its way',
     preheader: intro,
     bannerHtml: '<strong>' + esc(opts.heading || 'Your order is on its way') + '</strong>',

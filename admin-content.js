@@ -22,12 +22,13 @@
   var showToast = window._showToast;
   var libraryRef = db.collection('settings').doc('contentLibrary');
 
-  var library = { items: [], siteLogo: null, emailLogo: null };
+  var library = { items: [], siteLogo: null, emailLogo: null, logoFont: null };
   var uploading = 0;
 
   var SLOTS = [
-    { key: 'siteLogo',  label: 'Website logo', hint: 'Replaces the JANEDORE text at the top of every page. Use a white logo on a transparent background.' },
-    { key: 'emailLogo', label: 'Email logo',   hint: 'Shown in the black bar at the top of every order email. Use a white PNG on a transparent background.' }
+    { key: 'logoFont',  kind: 'font',  label: 'Logo font',    hint: 'The JANEDORE text at the top of every page is set in this font. Not set: Unbounded.' },
+    { key: 'siteLogo',  kind: 'image', label: 'Website logo', hint: 'Replaces the JANEDORE text at the top of every page with an image. Use a white logo on a transparent background.' },
+    { key: 'emailLogo', kind: 'image', label: 'Email logo',   hint: 'Shown in the black bar at the top of every order email. Use a white PNG on a transparent background.' }
   ];
 
   function kindOf(result, file) {
@@ -55,7 +56,7 @@
   function load() {
     return libraryRef.get().then(function (doc) {
       var d = doc.exists ? doc.data() : {};
-      library = { items: Array.isArray(d.items) ? d.items : [], siteLogo: d.siteLogo || null, emailLogo: d.emailLogo || null };
+      library = { items: Array.isArray(d.items) ? d.items : [], siteLogo: d.siteLogo || null, emailLogo: d.emailLogo || null, logoFont: d.logoFont || null };
     });
   }
 
@@ -85,7 +86,9 @@
     return '<div class="card content-slot">' +
       '<div class="content-slot-preview">' +
         (current && current.url
-          ? '<img src="' + esc(thumbUrl(current.url)) + '" alt="">'
+          ? (slot.kind === 'font'
+              ? '<style>@font-face{font-family:"cf-slot-' + slot.key + '";src:url("' + esc(current.url) + '");}</style><span class="content-slot-font" style="font-family:\'cf-slot-' + slot.key + '\',sans-serif;">JANEDORE</span>'
+              : '<img src="' + esc(thumbUrl(current.url)) + '" alt="">')
           : '<span>Not set</span>') +
       '</div>' +
       '<div class="content-slot-body">' +
@@ -93,7 +96,7 @@
         '<div class="content-slot-hint">' + esc(slot.hint) + '</div>' +
         (current && current.url
           ? '<button class="btn btn-xs btn-ghost" onclick="window._clearContentSlot(\'' + slot.key + '\')">Remove</button>'
-          : '<div class="content-slot-hint" style="margin-top:6px;">Pick an image below and tap "Use as ' + esc(slot.label.toLowerCase()) + '".</div>') +
+          : '<div class="content-slot-hint" style="margin-top:6px;">Pick ' + (slot.kind === 'font' ? 'a font' : 'an image') + ' below and tap "Use as ' + esc(slot.label.toLowerCase()) + '".</div>') +
       '</div>' +
     '</div>';
   }
@@ -122,9 +125,9 @@
         (usedAs.length ? '<div class="content-item-used">' + esc(usedAs.join(', ')) + '</div>' : '') +
         '<div class="content-item-actions">' +
           '<button class="btn btn-xs btn-ghost" onclick="window._copyContentLink(\'' + esc(item.id) + '\')"><i class="ph-light ph-link"></i> Copy link</button>' +
-          (item.kind === 'image' ? SLOTS.map(function (s) {
+          SLOTS.filter(function (s) { return s.kind === item.kind; }).map(function (s) {
             return '<button class="btn btn-xs btn-ghost" onclick="window._setContentSlot(\'' + s.key + '\',\'' + esc(item.id) + '\')">Use as ' + esc(s.label.toLowerCase()) + '</button>';
-          }).join('') : '') +
+          }).join('') +
           '<button class="btn btn-xs btn-ghost" style="color:var(--danger);" onclick="window._removeContentItem(\'' + esc(item.id) + '\')">Remove</button>' +
         '</div>' +
       '</div>' +
@@ -213,7 +216,7 @@
   window._setContentSlot = function (slotKey, id) {
     var item = findItem(id);
     if (!item) return;
-    var patch = {}; patch[slotKey] = { url: item.url, itemId: item.id };
+    var patch = {}; patch[slotKey] = { url: item.url, itemId: item.id, format: item.format || '' };
     save(patch).then(function () {
       var slot = SLOTS.filter(function (s) { return s.key === slotKey; })[0];
       showToast((slot ? slot.label : 'Logo') + ' updated. It can take up to a minute to show.');
