@@ -71,6 +71,12 @@
        before first paint, and preload Telegraf below for its local use.
        This avoids an unintended fallback-font appearance at startup. -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Logo font (Unbounded 400), capital letters only so the file is tiny.
+       display=block: the logo waits for its real font rather than painting
+       a fallback and swapping. server.js replaces this tag with the same
+       @font-face inlined plus a preload of the exact font file, so it's
+       already downloaded by first paint; this tag is just the fallback. -->
+  <link id="logo-font-css" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400&text=ABCDEFGHIJKLMNOPQRSTUVWXYZ&display=block" rel="stylesheet">
   <!-- Same-origin + preloaded so Telegraf is ready before first paint
        instead of swapping in after a visible flash (was fetched from
        raw.githubusercontent.com, which isn't a real asset CDN). -->
