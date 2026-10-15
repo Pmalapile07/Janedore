@@ -5,6 +5,21 @@
 //  NO translateY transforms ever
 // =========================================
 
+// Mirrors variantSwatchesHtml() (product-detail.js) but renders into the
+// sticky bar's own smaller .sticky-swatch markup, and reuses the exact
+// same selectVariant() handler so picking a color here stays in sync
+// with the main page's swatch row automatically.
+function stickySwatchesHtml(product, selectedIndex) {
+  const variants = product?.variants || [];
+  if (variants.length <= 1) return '';
+  const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0);
+  const soldOut = isProductSoldOut(product);
+  return variants.slice(0, 2).map((v, i) => {
+    const cls = `sticky-swatch${i === si ? ' selected' : ''}${soldOut ? ' sold-out' : ''}`;
+    return `<span class="${cls}" style="background:${v.swatch || '#ccc'};" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`;
+  }).join('') + (variants.length > 2 ? `<span class="variant-plus">+${variants.length - 2}</span>` : '');
+}
+
 function removeStickyBar() {
  const e = document.getElementById('sticky-add-bar');
  if (e) e.remove();
