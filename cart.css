@@ -335,3 +335,5 @@ body:has(#page-checkout.active) .checkout-steps { display: flex; }
 .checkout-step.is-done { background: #b8cc87; border: 2px solid #b8cc87; color: #111; }
 .checkout-step.is-done .checkout-step-num { display: none; }
 .checkout-step.is-done i { display: block; }
+.checkout-step.is-clickable { cursor: pointer; transition: opacity 0.2s ease; }
+.checkout-step.is-clickable:hover { opacity: 0.8; }

@@ -589,11 +589,25 @@ function updateCheckoutSteps() {
   } else if (document.getElementById('page-cart')?.classList.contains('active')) {
     current = 1;
   }
+  // Tappable: one step back from the checkout form (to the bag), or one
+  // step forward from the bag (to checkout). Payment is only ever reached
+  // by placing the order, and nothing is tappable once payment is under
+  // way or done — going back then could create a duplicate order.
+  const clickable = current === 2 ? 1 : current === 1 ? 2 : 0;
   steps.forEach(step => {
     const n = Number(step.dataset.step);
     step.classList.toggle('is-done', n <= doneUpTo);
     step.classList.toggle('is-current', n === current);
+    const canClick = n === clickable;
+    step.classList.toggle('is-clickable', canClick);
+    if (canClick) { step.setAttribute('role', 'button'); step.tabIndex = 0; }
+    else { step.removeAttribute('role'); step.removeAttribute('tabindex'); }
   });
+}
+function goToCheckoutStep(step) {
+  if (!step || !step.classList.contains('is-clickable')) return;
+  if (step.dataset.step === '1') openCart();
+  else if (step.dataset.step === '2') handleCheckoutClick();
 }
 (function watchCheckoutSteps() {
   const observer = new MutationObserver(updateCheckoutSteps);
@@ -603,5 +617,12 @@ function updateCheckoutSteps() {
   // subtree here: checkout switches between its form / confirming /
   // confirmation views with inline display styles.
   if (checkoutPage) observer.observe(checkoutPage, { attributes: true, attributeFilter: ['class', 'style'], subtree: true });
+  const bar = document.querySelector('.checkout-steps');
+  if (bar) {
+    bar.addEventListener('click', (e) => goToCheckoutStep(e.target.closest('.checkout-step')));
+    bar.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToCheckoutStep(e.target.closest('.checkout-step')); }
+    });
+  }
   updateCheckoutSteps();
 })();
