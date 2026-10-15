@@ -260,20 +260,6 @@
 }
 .product-size-btn.out-of-stock:hover { background: #f4f4f4; }
 
-/* Placeholder entry point — no size-guide content exists yet, so this
-   is inert (no click handler) until there's somewhere for it to go. */
-.size-guide-note {
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 300;
-  color: #888;
-  margin-top: 10px;
-}
-.size-guide-note span {
-  color: #111;
-  border-bottom: 1px solid #111;
-}
-
 .size-guide-row {
   padding-top: 14px;
   cursor: pointer;
