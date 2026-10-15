@@ -36,7 +36,7 @@ function buildSizeRowHtml(product, variantIndex) {
     const cls = 'product-size-btn' + (S.selectedSize === s ? ' sel' : '') + (inStock ? '' : ' out-of-stock');
     return `<button class="${cls}" ${inStock ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')">${escapeHTML(s)}</button>`;
   }).join('');
-  return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Size</div><div class="sizes-row">${buttons}</div><div class="size-guide-note">Need help with sizing? <span>View our size guide</span></div></div>`;
+  return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Size</div><div class="sizes-row">${buttons}</div></div>`;
 }
 
 // Re-evaluates the sticky bar's Add to Bag button (the page's only add
