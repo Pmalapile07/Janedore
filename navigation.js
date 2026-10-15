@@ -123,5 +123,6 @@ function toggleBrandsCollapse() { const el = document.getElementById('brands-col
 function updateChatVisibility() {
   if (!DOM.chatBubble) return;
   const hiddenPages = ['product-detail', 'products', 'category', 'wishlist', 'cart'];
-  DOM.chatBubble.style.display = hiddenPages.includes(S.currentPage) ? 'none' : 'flex';
+  if (hiddenPages.includes(S.currentPage)) DOM.chatBubble.style.setProperty('display', 'none', 'important');
+  else DOM.chatBubble.style.removeProperty('display');
 }

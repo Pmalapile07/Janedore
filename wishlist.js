@@ -31,11 +31,15 @@ function toggleWish(productId, btnEl) {
   // (only the wishlist page does, below), so flip this specific
   // button's icon directly rather than requiring a full grid rebuild
   // to see the change.
-  if (btnEl) {
-    const icon = btnEl.querySelector('i');
+  // Also flips any other heart tagged for this product (the product
+  // page's own heart and the sticky bar's), so they never disagree.
+  const hearts = new Set(document.querySelectorAll(`[data-wish-id="${CSS.escape(productId)}"]`));
+  if (btnEl) hearts.add(btnEl);
+  hearts.forEach(b => {
+    const icon = b.querySelector('i');
     if (icon) icon.className = nowWished ? 'ph-fill ph-heart' : 'ph-light ph-heart';
-    btnEl.classList.toggle('wished', nowWished);
-  }
+    b.classList.toggle('wished', nowWished);
+  });
   updateBadges();
   renderWishlistPage();
   saveWishlistToStorage();
