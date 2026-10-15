@@ -213,6 +213,7 @@
     pages:      'pages',
     homepage:   'homepage',
     content:    'homepage',
+    reports:    'vendors',
     onlineStore: 'settings',
     analytics:  'analytics',
     devtools:   'devtools'
@@ -260,6 +261,8 @@
       'homepage-tab-btn',  // sidebar homepage tab
       'content-tab-btn',   // sidebar content library
       'content-more-item', // more menu content library
+      'reports-tab-btn',   // sidebar brand reports
+      'reports-more-item', // more menu brand reports
       // more menu homepage/pages items are folded into the
       // online-store-more-item accordion wrapper (see admin.html),
       // so they no longer have separate ids to gate here.

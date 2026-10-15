@@ -1461,6 +1461,52 @@ app.post('/api/report-brand', async (req, res) => {
   }
 });
 
+// Admin > Reports: list brand reports and mark them reviewed. Super
+// Admin and Admin only (checked against admins/{uid}, like shipments).
+async function verifyPlatformStaff(req) {
+  const match = (req.headers.authorization || '').match(/^Bearer (.+)$/);
+  if (!match) return false;
+  try {
+    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const doc = await adminDb.collection('admins').doc(decoded.uid).get();
+    return doc.exists && (doc.data().role === 'SUPER_ADMIN' || doc.data().role === 'ADMIN');
+  } catch (e) {
+    return false;
+  }
+}
+
+app.get('/api/admin/brand-reports', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (!(await verifyPlatformStaff(req))) return res.status(403).json({ error: 'Not authorized' });
+  try {
+    const snap = await adminDb.collection('brandReports').orderBy('createdAt', 'desc').limit(200).get();
+    res.json({ reports: snap.docs.map((d) => {
+      const r = d.data();
+      return { id: d.id, vendorId: r.vendorId, brand: r.brand, reason: r.reason, details: r.details || '', email: r.email || '',
+        status: r.status || 'new', createdAt: r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toISOString() : null };
+    }) });
+  } catch (e) {
+    console.error('[BRAND_REPORTS] List failed:', e.message);
+    res.status(500).json({ error: 'Could not load reports' });
+  }
+});
+
+app.post('/api/admin/brand-reports/:id', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (!(await verifyPlatformStaff(req))) return res.status(403).json({ error: 'Not authorized' });
+  const status = req.body && req.body.status;
+  if (['new', 'reviewed'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid status' });
+  try {
+    const ref = adminDb.collection('brandReports').doc(String(req.params.id));
+    if (!(await ref.get()).exists) return res.status(404).json({ error: 'Report not found' });
+    await ref.update({ status, statusUpdatedAt: admin.firestore.FieldValue.serverTimestamp() });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[BRAND_REPORTS] Update failed:', e.message);
+    res.status(500).json({ error: 'Could not update report' });
+  }
+});
+
 app.get('/api/build-id', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({ buildId: String(BUILD_ID) });
