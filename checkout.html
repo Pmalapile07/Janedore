@@ -98,6 +98,10 @@
   .checkout-option-head { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
   .checkout-option-head strong { font-weight: 600; }
   .checkout-option-note { display: block; margin-top: 6px; font-size: 13px; color: #555; line-height: 1.5; }
+  .checkout-option-note strong { color: #111; font-weight: 600; }
+  .checkout-ships-list { display: block; margin-top: 10px; border-top: 1px solid #eee; }
+  .checkout-ships-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #eee; color: #111; }
+  .checkout-ships-row:last-child { border-bottom: none; padding-bottom: 0; }
   #checkout-payment-view .checkout-place-order-btn { margin-top: 20px; }
   .checkout-order-item { padding: 16px 0; border-top: 1px solid #eee; }
   .checkout-order-item .cart-item-img { cursor: default; }
@@ -245,8 +249,8 @@
           <input type="radio" name="checkout-shipping-method" value="standard" checked>
           <span class="checkout-option-radio" aria-hidden="true"></span>
           <span class="checkout-option-body">
-            <span class="checkout-option-head"><span>Standard</span><strong id="checkout-shipping-price">R150</strong></span>
-            <span class="checkout-option-note" id="checkout-delivery-estimate"></span>
+            <span class="checkout-option-head"><span id="checkout-shipping-name">Standard</span><strong id="checkout-shipping-price">R150</strong></span>
+            <span class="checkout-option-note" id="checkout-ships-from"></span>
           </span>
         </label>
       </section>

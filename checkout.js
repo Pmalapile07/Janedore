@@ -192,8 +192,9 @@ function getCheckoutTotals() {
   const subtotal = getCartSubtotal();
   const discountAmount = getDiscountAmount();
   const afterDiscount = getCartTotalAfterDiscount();
-  const shipping = getCartShippingStatus(afterDiscount).freeShipping ? 0 : SHIPPING_FEE;
-  return { subtotal, discountAmount, shipping, total: afterDiscount + shipping };
+  const status = getCartShippingStatus(afterDiscount);
+  const shipping = status.fee;
+  return { subtotal, discountAmount, shipping, packages: status.packages, total: afterDiscount + shipping };
 }
 
 // Opens/closes a collapsible checkout card (Order summary, Apply a code).
@@ -241,7 +242,7 @@ document.addEventListener('change', function (e) {
 function renderCheckoutSummary() {
   if (!document.getElementById('checkout-form-view') || !S.cart.length) return;
 
-  const { subtotal, discountAmount, shipping, total } = getCheckoutTotals();
+  const { subtotal, discountAmount, shipping, packages, total } = getCheckoutTotals();
 
   // "Your order" card: the bag's item layout, read-only — no wishlist
   // heart or remove button; changes are made one step back, in the bag.
@@ -286,13 +287,28 @@ function renderCheckoutSummary() {
     ${vatLine}
     <div class="checkout-totals-row"><span>Cart Total</span><span>${formatPrice(subtotal)}</span></div>
     ${discountRow}
-    <div class="checkout-totals-row"><span>Delivery Fee</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
+    <div class="checkout-totals-row"><span>Delivery Fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
   document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
 
+  renderShippingMethod(shipping, packages);
+}
+
+// Shipping method card: one parcel per brand, each from its own brand.
+function renderShippingMethod(shipping, packages) {
+  const nameEl = document.getElementById('checkout-shipping-name');
+  if (nameEl) nameEl.textContent = packages > 1 ? 'Standard, ' + packages + ' packages' : 'Standard';
   const shippingPriceEl = document.getElementById('checkout-shipping-price');
   if (shippingPriceEl) shippingPriceEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
-  const estimateEl = document.getElementById('checkout-delivery-estimate');
-  if (estimateEl) estimateEl.textContent = 'Delivery between ' + formatDeliveryEstimate().replace(' – ', ' and ') + '.';
+  const fromEl = document.getElementById('checkout-ships-from');
+  if (!fromEl) return;
+  const shipments = getCartShipments();
+  if (shipments.length <= 1) {
+    fromEl.innerHTML = `Ships from <strong>${sanitizeHTML(shipments[0] ? shipments[0].brand : 'JANEDORE')}</strong>.`;
+    return;
+  }
+  const each = shipping === 0 ? 'Free' : formatPrice(SHIPPING_FEE);
+  fromEl.innerHTML = `Your order ships in ${packages} separate packages, one from each brand.` +
+    `<span class="checkout-ships-list">${shipments.map(s => `<span class="checkout-ships-row"><span>${sanitizeHTML(s.brand)}</span><span>${each}</span></span>`).join('')}</span>`;
 }
 
 async function placeOrder(e) {
