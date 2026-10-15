@@ -363,7 +363,7 @@
     messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
     admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
-    homepage: 'Homepage', onlineStore: 'Online Store',
+    homepage: 'Homepage', onlineStore: 'Online Store', content: 'Content',
     analytics: 'Analytics', devtools: 'Developer Tools'
   };
 
@@ -418,7 +418,7 @@
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
       vendors: 'vendors', customers: 'customers', settings: 'settings',
       admins: 'admins', pages: 'pages', discounts: 'discounts',
-      onlineStore: 'settings', homepage: 'homepage',
+      onlineStore: 'settings', homepage: 'homepage', content: 'homepage',
       analytics: 'analytics', devtools: 'devtools'
     };
 
@@ -474,6 +474,7 @@
       case 'admins':      if (window._renderAdminsTab)      window._renderAdminsTab();      break;
       case 'pages':       if (window._renderPagesTab)       window._renderPagesTab();       break;
       case 'homepage':    if (window._renderHomepageTab)    window._renderHomepageTab();    break;
+      case 'content':     if (window._renderContentTab)     window._renderContentTab();     break;
       case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;
       case 'analytics':   if (window._renderAnalyticsTab)   window._renderAnalyticsTab();   break;
       case 'devtools':    if (window._renderDevtoolsTab)    window._renderDevtoolsTab();    break;
