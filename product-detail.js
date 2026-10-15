@@ -164,6 +164,7 @@ function selectVariant(productId, variantIndex, evt) {
     const sizeRow = document.getElementById('product-size-row');
     if (sizeRow) sizeRow.outerHTML = buildSizeRowHtml(product, variantIndex);
     updateAddToCartState();
+    if (typeof updateStickyBar === 'function') updateStickyBar(product);
   }
 }
 
@@ -199,6 +200,7 @@ function selectProductSize(btn, size) {
   btn.classList.add('sel');
   S.selectedSize = size;
   updateAddToCartState();
+  document.querySelectorAll('#sticky-sizes .sticky-size-btn').forEach(b => b.classList.toggle('sel', b.textContent === size));
 }
 
 function changeProductQuantity(delta) {
@@ -413,5 +415,6 @@ async function renderProductPage(product) {
   if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
   ensureNavScrolled();
   updateAddToCartState();
+  if (typeof createStickyBar === 'function') createStickyBar(product);
   setTimeout(() => initProductSwipe(images), 100);
 }
