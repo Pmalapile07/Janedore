@@ -77,14 +77,20 @@
 /* ============================================
    CART PAGE (renderCartPage(), cart.js)
    Grey page, white cards: delivery banner, one card per item, promo
-   code, totals. While the bag has items the header is reduced to just
-   the logo; an empty bag keeps the full header.
+   code, totals. While the bag has items (and throughout checkout) the
+   header is reduced to the logo plus the 1-2-3 steps; an empty bag keeps
+   the full header.
    ============================================ */
 body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .nav-left > .nav-icon-btn,
 body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .desktop-nav-links,
 body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .nav-right,
 body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .search-bar-row,
-body:has(#page-cart.active .cart-page:not(.is-empty)) .nav-quick-links-wrap {
+body:has(#page-cart.active .cart-page:not(.is-empty)) .nav-quick-links-wrap,
+body:has(#page-checkout.active) #main-nav .nav-left > .nav-icon-btn,
+body:has(#page-checkout.active) #main-nav .desktop-nav-links,
+body:has(#page-checkout.active) #main-nav .nav-right,
+body:has(#page-checkout.active) #main-nav .search-bar-row,
+body:has(#page-checkout.active) .nav-quick-links-wrap {
   display: none !important;
 }
 .cart-page {
@@ -214,6 +220,7 @@ body:has(#page-cart.active .cart-page:not(.is-empty)) .nav-quick-links-wrap {
   border: none;
   background: #e2e4e6;
   color: #555;
+  transition: background 0.2s ease, color 0.2s ease;
   padding: 0 20px;
   font-family: inherit;
   font-size: 14px;
@@ -259,7 +266,7 @@ body:has(#page-cart.active .cart-page:not(.is-empty)) .nav-quick-links-wrap {
 .cart-checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
 
 /* Empty bag: plain white page, no cards — bag icon, message, a black
-   Continue Shopping button, then a product slider (#cart-empty-grid
+   Continue Shopping button, then a product slider (#cart-slider-grid
    shares the New Arrivals slider rules in product-grid.css). */
 .cart-page.is-empty { background: #fff; }
 .cart-empty {
@@ -286,11 +293,45 @@ body:has(#page-cart.active .cart-page:not(.is-empty)) .nav-quick-links-wrap {
   cursor: pointer;
 }
 .cart-empty-btn:hover { background: #333; }
-.cart-empty-suggestions { padding-bottom: 8px; }
-.cart-empty-suggestions-title {
+/* Product slider on both cart states ("Recently Viewed" / "New Arrivals"
+   when empty, "Inspired by your bag" under the totals when not). */
+.cart-suggestions { background: #fff; padding: 24px 0 8px; }
+.cart-page.is-empty .cart-suggestions { padding-top: 0; }
+.cart-suggestions-title {
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 8px 8px 12px;
 }
+
+/* Apply stays grey until a code is typed, then turns black — it reads
+   as "ready" only when there's something to apply. */
+.cart-code-row input:not(:placeholder-shown) + button { background: #111; color: #fff; }
+
+/* ============================================
+   CHECKOUT STEPS (header, index.html): 1 Bag · 2 Checkout · 3 Payment
+   Current step: brand-green ring. Finished: filled green with a check.
+   State comes from which page / checkout view is showing.
+   ============================================ */
+.checkout-steps { display: none; align-items: center; gap: 8px; margin-left: auto; }
+body:has(#page-cart.active .cart-page:not(.is-empty)) .checkout-steps,
+body:has(#page-checkout.active) .checkout-steps { display: flex; }
+.checkout-step {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.checkout-step i { display: none; font-size: 16px; }
+.checkout-step.is-current { border: 2px solid #b8cc87; }
+.checkout-step.is-done { background: #b8cc87; border: 2px solid #b8cc87; color: #111; }
+.checkout-step.is-done .checkout-step-num { display: none; }
+.checkout-step.is-done i { display: block; }
