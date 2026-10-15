@@ -77,6 +77,7 @@ function navigateToCheckout(replaceUrl) {
 
     if (!S.cart.length && lastConfirmedOrderNumber) {
       document.getElementById('checkout-form-view').style.display = 'none';
+      document.getElementById('checkout-payment-view').style.display = 'none';
       document.getElementById('checkout-confirmation-view').style.display = 'block';
       if (confirmingView) confirmingView.style.display = 'none';
       if (lastConfirmedOrderDetails) {
@@ -89,12 +90,10 @@ function navigateToCheckout(replaceUrl) {
       return;
     }
 
-    document.getElementById('checkout-form-view').style.display = 'block';
-    document.getElementById('checkout-confirmation-view').style.display = 'none';
-    if (confirmingView) confirmingView.style.display = 'none';
+    showCheckoutStep(2);
 
     const placeOrderBtn = document.getElementById('checkout-place-order-btn');
-    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Place Order'; }
+    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Pay Now'; }
 
     if (checkoutEmail) fillCheckoutFieldIfEmpty('checkout-email', checkoutEmail);
     prefillCheckoutForSignedInCustomer();
@@ -178,18 +177,50 @@ function getCheckoutTotals() {
   return { subtotal, discountAmount, shipping, total: afterDiscount + shipping };
 }
 
-// Opens/closes the "Your order" card at the top of the checkout form.
-function toggleCheckoutOrder(open) {
-  const btn = document.getElementById('checkout-order-toggle');
-  const list = document.getElementById('checkout-items');
-  if (!btn || !list) return;
-  const expand = typeof open === 'boolean' ? open : btn.getAttribute('aria-expanded') !== 'true';
+// Opens/closes a collapsible checkout card (Order summary, Apply a code).
+function toggleCheckoutCard(btn) {
+  const body = btn && document.getElementById(btn.getAttribute('aria-controls'));
+  if (!body) return;
+  const expand = btn.getAttribute('aria-expanded') !== 'true';
   btn.setAttribute('aria-expanded', String(expand));
-  list.hidden = !expand;
+  body.hidden = !expand;
 }
 
+// Step 2 (details + shipping) → step 3 (payment). The details form is
+// checked first; nothing is created or charged until Pay Now on step 3.
+function goToPaymentStep(e) {
+  if (e) e.preventDefault();
+  const form = document.getElementById('checkout-form');
+  if (form && !form.reportValidity()) return;
+  showCheckoutStep(3);
+}
+
+// Shows step 2 (details) or step 3 (payment) of the checkout page.
+function showCheckoutStep(step) {
+  const formView = document.getElementById('checkout-form-view');
+  const paymentView = document.getElementById('checkout-payment-view');
+  if (!formView || !paymentView) return;
+  formView.style.display = step === 3 ? 'none' : 'block';
+  paymentView.style.display = step === 3 ? 'block' : 'none';
+  ['checkout-confirmation-view', 'checkout-confirming-view'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  renderCheckoutSummary();
+  resetScrollToTop();
+}
+
+// Radio cards (shipping / payment method): outline the chosen one.
+document.addEventListener('change', function (e) {
+  const input = e.target;
+  if (!input.matches || !input.matches('.checkout-option input[type="radio"]')) return;
+  document.querySelectorAll('.checkout-option input[name="' + input.name + '"]').forEach(r => {
+    r.closest('.checkout-option').classList.toggle('is-selected', r.checked);
+  });
+});
+
 function renderCheckoutSummary() {
-  if (!document.getElementById('checkout-total') || !S.cart.length) return;
+  if (!document.getElementById('checkout-form-view') || !S.cart.length) return;
 
   const { subtotal, discountAmount, shipping, total } = getCheckoutTotals();
 
@@ -226,23 +257,19 @@ function renderCheckoutSummary() {
     }).join('');
   }
 
-  const subtotalEl = document.getElementById('checkout-subtotal');
-  if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
-  
-  const discountRow = document.getElementById('checkout-discount-row');
-  if (discountRow) {
-    discountRow.style.display = discountAmount > 0 ? '' : 'none';
-    const label = document.getElementById('checkout-discount-label');
-    if (label) label.textContent = appliedDiscount ? 'Discount (' + appliedDiscount.code + ')' : 'Discount';
-    const val = document.getElementById('checkout-discount');
-    if (val) val.textContent = '-' + formatPrice(discountAmount);
-  }
+  const discountRow = discountAmount > 0
+    ? `<div class="checkout-totals-row discount"><span>Discount${appliedDiscount ? ' (' + sanitizeHTML(appliedDiscount.code) + ')' : ''} <button type="button" class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>`
+    : '';
+  const totalsHtml = `<div class="checkout-totals-head"><span>Total to pay</span><span>${formatPrice(total)}</span></div>
+    <div class="checkout-totals-row"><span>Cart Total</span><span>${formatPrice(subtotal)}</span></div>
+    ${discountRow}
+    <div class="checkout-totals-row"><span>Delivery Fee</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
+  document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
 
-  const shippingEl = document.getElementById('checkout-shipping');
-  if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
-  
-  const totalEl = document.getElementById('checkout-total');
-  if (totalEl) totalEl.textContent = formatPrice(total);
+  const shippingPriceEl = document.getElementById('checkout-shipping-price');
+  if (shippingPriceEl) shippingPriceEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
+  const estimateEl = document.getElementById('checkout-delivery-estimate');
+  if (estimateEl) estimateEl.textContent = 'Delivery between ' + formatDeliveryEstimate().replace(' – ', ' and ') + '.';
 }
 
 async function placeOrder(e) {
@@ -273,7 +300,7 @@ async function placeOrder(e) {
   
   if (!email || !name || !address || !city || !province || !postal || !country) {
     alert('Please fill in all required fields.');
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay Now'; }
     return;
   }
   
@@ -459,7 +486,7 @@ async function placeOrder(e) {
   } catch (e) {
     console.warn('Order error:', e);
     alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place Order'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay Now'; }
   }
   // No restore on success: redirectToPayFast() navigates the browser
   // away, so the button stays disabled/"Please wait…" until that
@@ -472,10 +499,13 @@ async function placeOrder(e) {
 // /api/payfast/initiate in server.js) and submits it as a real form
 // POST, which navigates the browser away to PayFast's payment page.
 async function redirectToPayFast(orderId) {
+  // The method picked on step 3 ('cc' card, 'ef' Instant EFT, or '' for
+  // PayFast's full list). The server only accepts known values.
+  const picked = document.querySelector('input[name="checkout-payment-method"]:checked');
   const res = await fetch('/api/payfast/initiate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ orderId })
+    body: JSON.stringify({ orderId, paymentMethod: picked ? picked.value : '' })
   });
   if (!res.ok) {
     const body = await res.json().catch(function () { return {}; });
@@ -669,6 +699,8 @@ function showPayFastConfirmingView() {
   const confirmationView = document.getElementById('checkout-confirmation-view');
   const confirmingView = document.getElementById('checkout-confirming-view');
   if (formView) formView.style.display = 'none';
+  const paymentView = document.getElementById('checkout-payment-view');
+  if (paymentView) paymentView.style.display = 'none';
   if (confirmationView) confirmationView.style.display = 'none';
   if (confirmingView) confirmingView.style.display = 'block';
 }

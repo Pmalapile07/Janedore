@@ -74,6 +74,29 @@
   }
   .checkout-order-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
   .checkout-order-items { padding: 0 16px 16px; }
+  .checkout-collapsible { padding: 0; }
+  .checkout-code-body { padding: 0 16px 16px; }
+  .checkout-code-body .cart-code-label { margin-top: 0; }
+  /* Radio cards (shipping and payment method), site green when chosen. */
+  .checkout-options { display: flex; flex-direction: column; gap: 12px; }
+  .checkout-option {
+    display: flex; gap: 14px; align-items: flex-start; padding: 16px;
+    border: 1px solid #d0d0d0; cursor: pointer;
+  }
+  .checkout-option.is-selected { border: 2px solid #b8cc87; padding: 15px; }
+  .checkout-option input { position: absolute; opacity: 0; pointer-events: none; }
+  .checkout-option-radio {
+    width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #999; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; margin-top: -2px;
+  }
+  .checkout-option.is-selected .checkout-option-radio { border: none; background: #b8cc87; }
+  .checkout-option.is-selected .checkout-option-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+  .checkout-option input:focus-visible + .checkout-option-radio { outline: 2px solid #111; outline-offset: 2px; }
+  .checkout-option-body { flex: 1; min-width: 0; }
+  .checkout-option-head { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+  .checkout-option-head strong { font-weight: 600; }
+  .checkout-option-note { display: block; margin-top: 6px; font-size: 13px; color: #555; line-height: 1.5; }
+  #checkout-payment-view .checkout-place-order-btn { margin-top: 20px; }
   .checkout-order-item { padding: 16px 0; border-top: 1px solid #eee; }
   .checkout-order-item .cart-item-img { cursor: default; }
   .checkout-place-order-btn {
@@ -160,18 +183,8 @@
 
 <div id="checkout-page-content">
   <div id="checkout-form-view" class="checkout-container">
-    <form id="checkout-form" class="checkout-cards" onsubmit="placeOrder(event)">
 
-      <section class="checkout-card checkout-order">
-        <button type="button" class="checkout-order-toggle" id="checkout-order-toggle" aria-expanded="false" aria-controls="checkout-items" onclick="toggleCheckoutOrder()">
-          <span class="checkout-card-title">Your order <span class="checkout-card-count" id="checkout-order-count"></span></span>
-          <span class="checkout-order-right">
-            <span id="checkout-order-total"></span>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </span>
-        </button>
-        <div class="checkout-order-items" id="checkout-items" hidden></div>
-      </section>
+    <form id="checkout-form" class="checkout-cards" onsubmit="goToPaymentStep(event)" novalidate>
 
       <section class="checkout-card">
         <h2 class="checkout-card-title">Contact details</h2>
@@ -224,18 +237,108 @@
       </section>
 
       <section class="checkout-card">
-        <div class="checkout-totals-head"><span>Total to pay</span><span id="checkout-total">R0</span></div>
-        <div class="checkout-totals-row"><span>Cart Total</span><span id="checkout-subtotal">R0</span></div>
-        <div class="checkout-totals-row discount" id="checkout-discount-row" style="display:none;"><span id="checkout-discount-label">Discount</span><span id="checkout-discount">-R0</span></div>
-        <div class="checkout-totals-row"><span>Delivery Fee</span><span id="checkout-shipping">—</span></div>
-        <button type="submit" class="checkout-place-order-btn" id="checkout-place-order-btn">Place Order</button>
-        <p class="checkout-payment-note">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-          You'll pay securely on PayFast. Your confirmation follows once it clears.
-        </p>
+        <h2 class="checkout-card-title">Shipping method</h2>
+        <label class="checkout-option is-selected">
+          <input type="radio" name="checkout-shipping-method" value="standard" checked>
+          <span class="checkout-option-radio" aria-hidden="true"></span>
+          <span class="checkout-option-body">
+            <span class="checkout-option-head"><span>Standard</span><strong id="checkout-shipping-price">R150</strong></span>
+            <span class="checkout-option-note" id="checkout-delivery-estimate"></span>
+          </span>
+        </label>
+      </section>
+
+      <section class="checkout-card checkout-collapsible">
+        <button type="button" class="checkout-order-toggle" aria-expanded="false" aria-controls="checkout-code-body-2" onclick="toggleCheckoutCard(this)">
+          <span class="checkout-card-title">Apply a code</span>
+          <span class="checkout-order-right"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
+        <div class="checkout-code-body" id="checkout-code-body-2" hidden>
+          <label class="cart-code-label" for="checkout-promo-input-2">Enter a promo code</label>
+          <div class="cart-code-row">
+            <input id="checkout-promo-input-2" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode('checkout-promo-input-2')}">
+            <button type="button" onclick="applyPromoCode('checkout-promo-input-2')">Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="checkout-card">
+        <div data-checkout-totals></div>
+        <button type="submit" class="checkout-place-order-btn" id="checkout-continue-btn">Continue to Payment</button>
       </section>
 
     </form>
+  </div>
+
+  <div id="checkout-payment-view" class="checkout-container" style="display:none;">
+    <div class="checkout-cards">
+
+      <section class="checkout-card checkout-order">
+        <button type="button" class="checkout-order-toggle" id="checkout-order-toggle" aria-expanded="false" aria-controls="checkout-items" onclick="toggleCheckoutCard(this)">
+          <span class="checkout-card-title">Order summary <span class="checkout-card-count" id="checkout-order-count"></span></span>
+          <span class="checkout-order-right">
+            <span id="checkout-order-total"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="checkout-order-items" id="checkout-items" hidden></div>
+      </section>
+
+      <section class="checkout-card checkout-collapsible">
+        <button type="button" class="checkout-order-toggle" aria-expanded="false" aria-controls="checkout-code-body-3" onclick="toggleCheckoutCard(this)">
+          <span class="checkout-card-title">Apply a code</span>
+          <span class="checkout-order-right"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
+        <div class="checkout-code-body" id="checkout-code-body-3" hidden>
+          <label class="cart-code-label" for="checkout-promo-input-3">Enter a promo code</label>
+          <div class="cart-code-row">
+            <input id="checkout-promo-input-3" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode('checkout-promo-input-3')}">
+            <button type="button" onclick="applyPromoCode('checkout-promo-input-3')">Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="checkout-card">
+        <div data-checkout-totals></div>
+      </section>
+
+      <section class="checkout-card">
+        <h2 class="checkout-card-title">Choose a payment method</h2>
+        <div class="checkout-options">
+          <label class="checkout-option is-selected">
+            <input type="radio" name="checkout-payment-method" value="cc" checked>
+            <span class="checkout-option-radio" aria-hidden="true"></span>
+            <span class="checkout-option-body">
+              <span class="checkout-option-head"><span>Credit or debit card</span></span>
+              <span class="checkout-option-note">Visa or Mastercard. You'll enter your card details on PayFast's secure page.</span>
+            </span>
+          </label>
+          <label class="checkout-option">
+            <input type="radio" name="checkout-payment-method" value="ef">
+            <span class="checkout-option-radio" aria-hidden="true"></span>
+            <span class="checkout-option-body">
+              <span class="checkout-option-head"><span>Instant EFT</span></span>
+              <span class="checkout-option-note">Pay straight from your bank account.</span>
+            </span>
+          </label>
+          <label class="checkout-option">
+            <input type="radio" name="checkout-payment-method" value="">
+            <span class="checkout-option-radio" aria-hidden="true"></span>
+            <span class="checkout-option-body">
+              <span class="checkout-option-head"><span>Other ways to pay</span></span>
+              <span class="checkout-option-note">Apple Pay, SnapScan and more, on PayFast.</span>
+            </span>
+          </label>
+        </div>
+        <button type="button" class="checkout-place-order-btn" id="checkout-place-order-btn" onclick="placeOrder(event)">Pay Now</button>
+        <p class="checkout-payment-note">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          You'll finish paying on PayFast's secure page. Your confirmation follows once it clears.
+        </p>
+      </section>
+
+    </div>
+  </div>
   </div>
   
   <div id="checkout-confirmation-view" class="checkout-container" style="display:none;">
