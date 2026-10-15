@@ -325,6 +325,7 @@ function buildOrderConfirmationEmail(order) {
     '<table class="items">' + itemsRowsHtml + '</table>' +
     '<table class="totals">' +
       '<tr><td class="label">Subtotal</td><td class="value">' + fmt(order.subtotal) + '</td></tr>' +
+      (order.discountAmount > 0 ? '<tr><td class="label">Discount' + (order.discountCode ? ' (' + escapeHtml(order.discountCode) + ')' : '') + '</td><td class="value">-' + fmt(order.discountAmount) + '</td></tr>' : '') +
       '<tr><td class="label">Shipping</td><td class="value">' + (order.shipping ? fmt(order.shipping) : 'Free') + '</td></tr>' +
       '<tr class="grand"><td class="label" style="color:#1a1a1a;">Total</td><td class="value">' + fmt(order.total) + '</td></tr>' +
     '</table>' +
@@ -338,7 +339,7 @@ function buildOrderConfirmationEmail(order) {
 
   const text = 'Order confirmed.\n\nHi ' + (order.customerName || 'there') + ', thank you for your order.\n\n' +
     itemsTextLines +
-    '\n\nSubtotal: ' + fmt(order.subtotal) + '\nShipping: ' + (order.shipping ? fmt(order.shipping) : 'Free') + '\nTotal: ' + fmt(order.total) +
+    '\n\nSubtotal: ' + fmt(order.subtotal) + (order.discountAmount > 0 ? '\nDiscount: -' + fmt(order.discountAmount) : '') + '\nShipping: ' + (order.shipping ? fmt(order.shipping) : 'Free') + '\nTotal: ' + fmt(order.total) +
     '\n\nOrder #' + order.orderNumber + '\n\n— Janedore\nsupport@janedore.co.za';
 
   return { html, text, subject: 'Order confirmed — #' + order.orderNumber };
@@ -436,6 +437,89 @@ function generatePayFastSignature(data, passphrase, includeBlanks) {
   return crypto.createHash('md5').update(getString).digest('hex');
 }
 
+// ==================== ORDER PRICING (server-side, authoritative) ====================
+// The browser builds the order (items, sizes, quantities), but it must
+// never decide what it costs: the order doc is created client-side, so a
+// total written there is whatever the visitor's browser says. Before
+// PayFast is ever asked to charge anything, this re-prices the order from
+// the live product records and the discount code's own record, and that
+// result — not the browser's — is what gets charged and what the ITN
+// later checks the payment against. Mirrors cart.js's rules exactly:
+// sale price only when 0 < salePrice < price, discount validated the same
+// way applyPromoCode() does, and free delivery from R1,500 after discount.
+const FREE_SHIPPING_THRESHOLD = 1500;
+const SHIPPING_FEE = 150;
+
+function serverUnitPrice(product) {
+  const price = Number(product.price) || 0;
+  const sale = Number(product.salePrice);
+  return (Number.isFinite(sale) && sale > 0 && sale < price) ? sale : price;
+}
+
+async function priceOrder(order) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  if (!items.length) throw Object.assign(new Error('Order has no items'), { status: 400 });
+
+  const ids = [...new Set(items.map(i => String(i.productId || '')))];
+  const docs = await Promise.all(ids.map(id => adminDb.collection('products').doc(id).get()));
+  const products = {};
+  docs.forEach((d, i) => { if (d.exists) products[ids[i]] = d.data(); });
+
+  let subtotal = 0;
+  let itemCount = 0;
+  let cheapestUnit = Infinity;
+  const pricedItems = items.map(item => {
+    const product = products[String(item.productId || '')];
+    if (!product) throw Object.assign(new Error('A product in this order is no longer available'), { status: 409 });
+    const qty = Math.floor(Number(item.qty));
+    if (!(qty > 0)) throw Object.assign(new Error('Invalid quantity'), { status: 400 });
+    const unit = serverUnitPrice(product);
+    subtotal += unit * qty;
+    itemCount += qty;
+    cheapestUnit = Math.min(cheapestUnit, unit);
+    return Object.assign({}, item, { qty, price: unit });
+  });
+
+  let discount = null;
+  let discountAmount = 0;
+  const code = String(order.discountCode || '').replace(/[^A-Za-z0-9_-]/g, '').substring(0, 20);
+  if (code) {
+    const snap = await adminDb.collection('discounts').where('code', '==', code).limit(1).get();
+    const d = snap.empty ? null : Object.assign({ id: snap.docs[0].id }, snap.docs[0].data());
+    const now = new Date();
+    const usable = d && d.active &&
+      !(d.startDate && new Date(d.startDate) > now) &&
+      !(d.endDate && new Date(d.endDate) < now) &&
+      !(d.usageLimit !== null && d.usageLimit !== undefined && (d.usageCount || 0) >= d.usageLimit) &&
+      !(d.minimumPurchase && subtotal < Number(d.minimumPurchase));
+    if (usable) {
+      const value = Number(d.value) || 0;
+      if (d.type === 'percentage') discountAmount = subtotal * value / 100;
+      else if (d.type === 'fixed_amount') discountAmount = Math.min(value, subtotal);
+      else if (d.type === 'buy_x_get_y') discountAmount = itemCount >= value && Number.isFinite(cheapestUnit) ? cheapestUnit : 0;
+      discountAmount = Math.round(Math.max(0, Math.min(discountAmount, subtotal)) * 100) / 100;
+      discount = { id: d.id, code: d.code, type: d.type };
+    }
+  }
+
+  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const freeShipping = (discount && discount.type === 'free_shipping') || afterDiscount >= FREE_SHIPPING_THRESHOLD;
+  const shipping = freeShipping ? 0 : SHIPPING_FEE;
+  const total = Math.round((afterDiscount + shipping) * 100) / 100;
+
+  return {
+    items: pricedItems,
+    subtotal: Math.round(subtotal * 100) / 100,
+    discountCode: discount ? discount.code : null,
+    discountId: discount ? discount.id : null,
+    discountAmount,
+    shipping,
+    total,
+    itemCount,
+    pricedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+}
+
 app.post('/api/payfast/initiate', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   if (!PAYFAST_MERCHANT_ID || !PAYFAST_MERCHANT_KEY) return res.status(503).json({ error: 'PayFast not configured' });
@@ -449,6 +533,21 @@ app.post('/api/payfast/initiate', async (req, res) => {
     if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
     const order = orderDoc.data();
     if (order.paymentStatus === 'paid') return res.status(400).json({ error: 'Order already paid' });
+    if (order.paymentStatus === 'cancelled') return res.status(400).json({ error: 'Order was cancelled' });
+
+    // Charge what the order really costs, never what the browser wrote.
+    let priced;
+    try {
+      priced = await priceOrder(order);
+    } catch (pe) {
+      return res.status(pe.status || 500).json({ error: pe.message || 'Could not price order' });
+    }
+    if (!(priced.total > 0)) return res.status(400).json({ error: 'Order total must be more than R0' });
+    if (Math.abs(Number(order.total || 0) - priced.total) > 0.01) {
+      console.warn('[PAYFAST_INIT] Order', orderId, 'browser total', order.total, 'repriced to', priced.total);
+    }
+    await orderRef.update(priced);
+    Object.assign(order, priced);
 
     const nameParts = (order.customerName || '').trim().split(/\s+/).filter(Boolean);
     const nameFirst = nameParts[0] || 'Customer';
@@ -654,6 +753,13 @@ app.post('/api/payfast/notify', async (req, res) => {
       paidAt: admin.firestore.FieldValue.serverTimestamp(),
       pfPaymentId: pfData.pf_payment_id || null
     });
+
+    // A discount only counts as "used" once it's actually been paid for.
+    if (order.discountId) {
+      adminDb.collection('discounts').doc(order.discountId)
+        .update({ usageCount: admin.firestore.FieldValue.increment(1) })
+        .catch(err => console.warn('[PAYFAST_ITN] Could not count discount use for', orderId, ':', err.message));
+    }
 
     sendOrderConfirmationEmail(Object.assign({}, order, { orderNumber: order.orderNumber || orderId })).catch((err) => {
       console.warn('[PAYFAST_ITN] Confirmation email failed for', orderId, ':', err.message);
