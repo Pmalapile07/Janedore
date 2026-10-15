@@ -158,7 +158,7 @@
         '</div>' +
       '</div>' +
       notAvailableBlock([
-        'Failed admin request tracking — no client-side error handler writes failures anywhere yet',
+        'Failed admin request tracking: no client-side error handler writes failures anywhere yet',
         'Runtime JavaScript error capture',
         'Historical data-loading failure log',
         'Authentication/permission error history beyond the current session'
@@ -187,11 +187,11 @@
         '</div>' +
       '</div>' +
       notAvailableBlock([
-        'A persisted log of PayFast ITN notifications — server.js only console-logs these today, nothing is written to Firestore/RTDB',
+        'A persisted log of PayFast ITN notifications: server.js only console-logs these today, nothing is written to Firestore/RTDB',
         'Raw ITN payload history for a given order',
         'A stored signature/source-IP/amount verification audit trail (the checks run live on every notification, but the result isn’t saved anywhere)'
       ]) +
-      '<div style="padding:10px 2px;color:var(--muted2);font-size:var(--font-scale-xs);">This panel is read-only — it cannot initiate a charge or mark an order paid. <strong>paidAt</strong> is set only by the server-side PayFast notification handler, after its signature, source-IP, amount-match, and PayFast server-confirmation checks all pass — never by a browser redirect or client-side claim.</div>';
+      '<div style="padding:10px 2px;color:var(--muted2);font-size:var(--font-scale-xs);">This panel is read-only. It cannot initiate a charge or mark an order paid. <strong>paidAt</strong> is set only by the server-side PayFast notification handler, after its signature, source-IP, amount-match, and PayFast server-confirmation checks all pass, never by a browser redirect or client-side claim.</div>';
   }
 
   function renderOrderResult(o) {
@@ -211,13 +211,13 @@
       '<div style="padding-top:4px;display:flex;flex-direction:column;gap:6px;font-size:var(--font-scale-sm);">' +
         '<div><strong>#' + esc(o.orderNumber || o.id) + '</strong> &nbsp;<span class="badge badge-' + esc(ps) + '">' + esc(ps) + '</span> <span class="badge">' + esc(status) + '</span></div>' +
         '<div>Total: ' + fmt(o.total) + ' · Created: ' + fmtDate(o.createdAt) + ' ' + fmtTime(o.createdAt) + '</div>' +
-        '<div>Paid at: ' + (o.paidAt ? (fmtDate(o.paidAt) + ' ' + fmtTime(o.paidAt)) : '—') + ' · PayFast payment ID: ' + esc(o.pfPaymentId || '—') + '</div>' +
+        '<div>Paid at: ' + (o.paidAt ? (fmtDate(o.paidAt) + ' ' + fmtTime(o.paidAt)) : '-') + ' · PayFast payment ID: ' + esc(o.pfPaymentId || '-') + '</div>' +
       '</div>' +
       '<div style="margin-top:12px;">' +
         '<div class="card-title" style="margin-bottom:6px;">Timeline</div>' +
         (timeline.length
           ? timeline.map(function (e) {
-              return '<div style="padding:6px 0;border-bottom:0.5px solid var(--border);font-size:var(--font-scale-sm);"><span style="color:var(--muted2);">' + fmtDate(e.at) + ' ' + fmtTime(e.at) + '</span> — ' + esc(e.text || '') + '</div>';
+              return '<div style="padding:6px 0;border-bottom:0.5px solid var(--border);font-size:var(--font-scale-sm);"><span style="color:var(--muted2);">' + fmtDate(e.at) + ' ' + fmtTime(e.at) + '</span> ' + esc(e.text || '') + '</div>';
             }).join('')
           : '<div style="color:var(--muted2);font-size:var(--font-scale-sm);">No recorded activity on this order.</div>') +
       '</div>';
@@ -304,7 +304,7 @@
             '<div class="empty-state-text">Not available yet</div>' +
           '</div>' +
           '<div style="color:var(--muted2);font-size:var(--font-scale-sm);line-height:1.7;">' +
-            'There is no stored admin-activity or error log anywhere in this app today — only console output on the server, plus each order’s own activity timeline (visible under Payment Diagnostics, scoped to that one order). Adding a real log would need a new, dedicated Firestore collection written to from server.js (API and auth failures) and from this admin client (permission denials), with secrets and payment details redacted before anything is written, plus search/filter here to query it.' +
+            'There is no stored admin-activity or error log anywhere in this app today, only console output on the server, plus each order’s own activity timeline (visible under Payment Diagnostics, scoped to that one order). Adding a real log would need a new, dedicated Firestore collection written to from server.js (API and auth failures) and from this admin client (permission denials), with secrets and payment details redacted before anything is written, plus search/filter here to query it.' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -317,7 +317,7 @@
       '<div class="card">' +
         '<div class="card-header"><span class="card-title">Seed Data &amp; Utilities</span></div>' +
         '<div style="padding:16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div style="font-size:var(--font-scale-sm);color:var(--muted2);">Writes 3 default brand/vendor records (JANEDORE, NIRIUS CO, THATO) into the vendors collection. Safe to run more than once — it upserts and never deletes existing vendors, products, or orders. Does not run automatically; only runs when you click the button below.</div>' +
+          '<div style="font-size:var(--font-scale-sm);color:var(--muted2);">Writes 3 default brand/vendor records (JANEDORE, NIRIUS CO, THATO) into the vendors collection. Safe to run more than once: it upserts and never deletes existing vendors, products, or orders. Does not run automatically; only runs when you click the button below.</div>' +
           '<button class="btn btn-sm" style="align-self:flex-start;" onclick="if(window._seedDefaultVendors){window._seedDefaultVendors();}else{window._showToast(\'Seed function unavailable\',\'error\');}">Seed Default Vendors</button>' +
         '</div>' +
       '</div>';

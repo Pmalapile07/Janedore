@@ -171,7 +171,7 @@
             (isRepeat ? ' <span class="badge badge-paid" style="font-size:8px;margin-left:4px;">Repeat</span>' : '') +
           '</td>' +
           '<td class="cell-muted">' + esc(c.email) + '</td>' +
-          '<td class="cell-muted">' + esc(c.phone || '—') + '</td>' +
+          '<td class="cell-muted">' + esc(c.phone || '-') + '</td>' +
           '<td>' + c.orders + '</td>' +
           '<td style="font-weight:400;">' + fmt(c.spent) + '</td>' +
           '<td class="cell-muted">' + fmtDate(c.lastOrder) + '</td>' +
@@ -207,7 +207,7 @@
 
     var address = c.shippingAddress || {};
     var addressStr = [address.address, address.city, address.postal, address.country]
-      .filter(Boolean).join(', ') || '—';
+      .filter(Boolean).join(', ') || '-';
 
     var panelHTML =
       '<div class="slide-panel">' +
@@ -236,7 +236,7 @@
         '<div class="card-title" style="margin-bottom:7px;">Contact</div>' +
         '<div class="info-panel" style="margin-bottom:14px;">' +
           '<div class="info-row"><span class="label">Email</span><span>' + esc(c.email) + '</span></div>' +
-          '<div class="info-row"><span class="label">Phone</span><span>' + esc(c.phone || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Phone</span><span>' + esc(c.phone || '-') + '</span></div>' +
           '<div class="info-row"><span class="label">Shipping Address</span><span>' + esc(addressStr) + '</span></div>' +
         '</div>' +
 

@@ -181,7 +181,7 @@
         return '<tr data-catalog-id="' + esc(v.id) + '" class="admin-selectable-row" onclick="window._catalogBulkToggle(event,\'brands\',\'' + esc(v.id) + '\',function(){window._openVendorDetail(\'' + esc(v.id) + '\')})" style="cursor:pointer;">' +
           '<td class="admin-select-check-cell"><span class="admin-select-check"><i class="ph ph-check"></i></span></td>' +
           '<td style="font-weight:500;">' + esc(v.name || v.id) + '</td>' +
-          '<td>' + esc(v.brand || '—') + '</td>' +
+          '<td>' + esc(v.brand || '-') + '</td>' +
           '<td>' + productCount + '</td>' +
           '<td>' + orderCount + '</td>' +
           '<td>' + fmt(revenue) + '</td>' +
@@ -243,10 +243,10 @@
 
         '<div class="card-title" style="margin-bottom:7px;">Details</div>' +
         '<div class="info-panel" style="margin-bottom:14px;">' +
-          '<div class="info-row"><span class="label">Name</span><span>' + esc(v.name || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Brand</span><span>' + esc(v.brand || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Email</span><span>' + esc(v.email || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Description</span><span>' + esc(v.description || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Name</span><span>' + esc(v.name || '-') + '</span></div>' +
+          '<div class="info-row"><span class="label">Brand</span><span>' + esc(v.brand || '-') + '</span></div>' +
+          '<div class="info-row"><span class="label">Email</span><span>' + esc(v.email || '-') + '</span></div>' +
+          '<div class="info-row"><span class="label">Description</span><span>' + esc(v.description || '-') + '</span></div>' +
           (v.accountEmail ? '<div class="info-row"><span class="label">Login Email</span><span>' + esc(v.accountEmail) + '</span></div>' : '') +
           '<div class="info-row"><span class="label">Created</span><span>' + fmtDate(v.createdAt) + '</span></div>' +
           (v.notes ? '<div class="info-row"><span class="label">Notes</span><span>' + esc(v.notes) + '</span></div>' : '') +
@@ -617,7 +617,7 @@
           '<div class="form-group"><label>Status</label><select name="status"><option value="active"' + (v.status === 'active' ? ' selected' : '') + '>Active</option><option value="suspended"' + (v.status === 'suspended' ? ' selected' : '') + '>Suspended</option><option value="inactive"' + (v.status === 'inactive' ? ' selected' : '') + '>Inactive</option></select></div>' +
         '</div>' +
 
-        '<div class="form-group"><label>PayFast Merchant ID</label><input name="payfastMerchantId" value="' + esc(v.payfastMerchantId || '') + '" placeholder="e.g. 10000105" inputmode="numeric"><div style="font-size:10px;color:var(--muted);margin-top:4px;">From the vendor\'s own PayFast account settings page — only the ID, never their key or passphrase. Lets checkout automatically split their share of a sale straight to them.</div></div>' +
+        '<div class="form-group"><label>PayFast Merchant ID</label><input name="payfastMerchantId" value="' + esc(v.payfastMerchantId || '') + '" placeholder="e.g. 10000105" inputmode="numeric"><div style="font-size:10px;color:var(--muted);margin-top:4px;">From the vendor\'s own PayFast account settings page. Only the ID, never their key or passphrase. Lets checkout automatically split their share of a sale straight to them.</div></div>' +
 
         '<div class="form-group"><label>Internal Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
 
@@ -695,7 +695,7 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Seeding...'; }
 
     var defaults = [
-      { id: 'vendor-janedore', name: 'JANEDORE', brand: 'JANEDORE', email: '', commissionRate: 0, status: 'active', description: 'House label — Janedore original pieces.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: 'House brand — 0% commission' },
+      { id: 'vendor-janedore', name: 'JANEDORE', brand: 'JANEDORE', email: '', commissionRate: 0, status: 'active', description: 'House label: Janedore original pieces.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: 'House brand — 0% commission' },
       { id: 'uf1c4uBKwmCAVafjEdRL', name: 'NIRIUS CO', brand: 'NIRIUS CO', email: '', commissionRate: 15, status: 'active', description: 'Contemporary jewelry and accessories.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: '' },
       { id: 'vendor-thato', name: 'THATO', brand: 'THATO', email: '', commissionRate: 15, status: 'active', description: 'Curated parfum collection.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: '' }
     ];

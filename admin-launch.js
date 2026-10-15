@@ -147,7 +147,7 @@
         console.error('[LAUNCH] Firestore save FAILED:', e.code, e.message);
         var el = safeEl('lc-save-status');
         if (el) {
-          el.textContent = 'Save failed — check Firestore rules';
+          el.textContent = 'Save failed. Check Firestore rules.';
           el.style.color = 'var(--danger)';
           el.style.display = 'block';
           setTimeout(function () { el.style.display = 'none'; }, 4000);

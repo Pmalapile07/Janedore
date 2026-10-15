@@ -143,13 +143,13 @@
         var roleLabel  = ROLE_LABELS[a.role] || a.role;
 
         return '<tr>' +
-          '<td style="font-weight:500;">' + esc(a.name || '—') +
+          '<td style="font-weight:500;">' + esc(a.name || '-') +
             (isSelf ? ' <span class="badge badge-muted" style="font-size:9px;">You</span>' : '') +
           '</td>' +
-          '<td>' + esc(a.title || '—') + '</td>' +
-          '<td>' + esc(a.email || '—') + '</td>' +
+          '<td>' + esc(a.title || '-') + '</td>' +
+          '<td>' + esc(a.email || '-') + '</td>' +
           '<td><span class="badge ' + roleClass + '">' + esc(roleLabel) + '</span></td>' +
-          '<td>' + (a.lastLogin ? fmtDate(a.lastLogin) : '—') + '</td>' +
+          '<td>' + (a.lastLogin ? fmtDate(a.lastLogin) : '-') + '</td>' +
           '<td>' + fmtDate(a.createdAt) + '</td>' +
           '<td style="display:flex;gap:6px;">' +
             '<button class="btn btn-xs btn-ghost" onclick="window._openAdminModal(\'' + esc(a.id) + '\')">Edit</button>' +
@@ -178,7 +178,7 @@
     if (!map) {
       return '<div class="info-panel"><div class="info-row">' +
         '<span class="label" style="color:var(--danger);">No access</span>' +
-        '<span style="color:var(--danger);">This role has no permissions defined in permissions.js — accounts with this role cannot access any section right now.</span>' +
+        '<span style="color:var(--danger);">This role has no permissions defined in permissions.js, so accounts with this role cannot access any section right now.</span>' +
       '</div></div>';
     }
 
@@ -395,7 +395,7 @@
     var a = (window._adminsData || []).find(function(x) { return x.id === adminId; });
     var label = a ? (a.name || a.email || adminId) : adminId;
 
-    if (!confirm('Remove ' + label + '\'s access? This deletes their permissions record. Their login credentials will still exist — to remove those too, use the Firebase Console.')) return;
+    if (!confirm('Remove ' + label + '\'s access? This deletes their permissions record. Their login credentials will still exist. To remove those too, use the Firebase Console.')) return;
 
     adminsRef.doc(adminId).delete().then(function() {
       if (rtdb) {

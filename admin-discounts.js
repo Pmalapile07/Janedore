@@ -84,7 +84,7 @@
         var typeLabel = discountTypeLabels[d.type] || d.type;
         var typeIcon = discountTypeIcons[d.type] || 'ph-tag';
         
-        var valueDisplay = '—';
+        var valueDisplay = '-';
         if (d.type === 'percentage') valueDisplay = d.value + '% off';
         else if (d.type === 'fixed_amount') valueDisplay = fmt(d.value) + ' off';
         else if (d.type === 'buy_x_get_y') valueDisplay = 'Buy ' + d.value + ' Get 1';
@@ -98,7 +98,7 @@
           '<span class="badge badge-active" style="background:var(--success-soft);color:var(--success);">Active</span>' : 
           '<span class="badge badge-inactive" style="background:var(--surface3);color:var(--muted);">Inactive</span>';
 
-        var datesDisplay = '—';
+        var datesDisplay = '-';
         if (d.startDate && d.endDate) {
           datesDisplay = fmtDate(d.startDate) + ' - ' + fmtDate(d.endDate);
         } else if (d.startDate) {

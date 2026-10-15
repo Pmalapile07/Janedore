@@ -58,11 +58,11 @@
             '<div class="form-group" style="padding:0;">' +
               '<label>Status</label>' +
               '<select name="comingSoonEnabled">' +
-                '<option value="true"' + (comingSoonEnabled ? ' selected' : '') + '>On — Visitors see the Coming Soon page</option>' +
-                '<option value="false"' + (!comingSoonEnabled ? ' selected' : '') + '>Off — Store is live to everyone</option>' +
+                '<option value="true"' + (comingSoonEnabled ? ' selected' : '') + '>On: visitors see the Coming Soon page</option>' +
+                '<option value="false"' + (!comingSoonEnabled ? ' selected' : '') + '>Off: store is live to everyone</option>' +
               '</select>' +
               '<div style="font-size:10px;color:var(--muted);margin-top:4px;">' +
-                'While on, only you (signed in as Super Admin) or someone with the visitor password below can see the actual site — everyone else lands on the Coming Soon page.' +
+                'While on, only you (signed in as Super Admin) or someone with the visitor password below can see the actual site. Everyone else lands on the Coming Soon page.' +
               '</div>' +
             '</div>' +
 
@@ -70,7 +70,7 @@
               '<label>Visitor Password</label>' +
               '<input name="visitorPassword" value="' + esc(visitorPassword) + '" placeholder="e.g. a word only people you tell can use">' +
               '<div style="font-size:10px;color:var(--muted);margin-top:4px;">' +
-                'Share this with anyone you want to preview the live site before launch (an investor, a friend) — they enter it on the Coming Soon page to get in, without needing an admin account.' +
+                'Share this with anyone you want to preview the live site before launch (an investor, a friend). They enter it on the Coming Soon page to get in, without needing an admin account.' +
               '</div>' +
             '</div>' +
 

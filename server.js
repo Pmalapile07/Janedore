@@ -4,6 +4,7 @@ const https = require('https');
 const fs = require('fs');
 const admin = require('firebase-admin');
 const { GoogleGenAI } = require('@google/genai');
+const orderEmails = require('./order-emails');
 
 const app = express();
 
@@ -138,7 +139,7 @@ app.post('/api/verify-visitor-password', async (req, res) => {
 function emailLayout(opts) {
   const heading = opts.heading;
   const bodyHtml = opts.bodyHtml;
-  const signature = opts.signature || '— Janedore';
+  const signature = opts.signature || 'Janedore';
   const footerHtml = opts.footerHtml ||
     'You’re receiving this because you have an account or placed an order at janedore.co.za.<br>' +
     '<a href="mailto:support@janedore.co.za">support@janedore.co.za</a>';
@@ -305,9 +306,9 @@ app.post('/api/send-welcome-email', (req, res) => {
 
   const html = emailLayout({
     heading: 'You’re on the list.',
-    bodyHtml: '<p class="body-text">We’re not quite ready yet — but when we are,<br>you’ll be the first to know.</p>'
+    bodyHtml: '<p class="body-text">We’re not quite ready yet, but when we are,<br>you’ll be the first to know.</p>'
   });
-  const text = 'You’re on the list.\n\nWe’re not quite ready yet — but when we are, you’ll be the first to know.\n\n— Janedore\n\nsupport@janedore.co.za';
+  const text = 'You’re on the list.\n\nWe’re not quite ready yet, but when we are, you’ll be the first to know.\n\nJanedore\n\nsupport@janedore.co.za';
 
   sendResendEmail({
     from: 'Janedore <support@janedore.co.za>',
@@ -324,67 +325,113 @@ app.post('/api/send-welcome-email', (req, res) => {
   });
 });
 
-// Order confirmation email via Resend. Used to be fired by checkout.js
-// the instant an order was created — before any payment had actually
-// happened. Now built here as a plain function and called only from
-// the PayFast ITN handler below, once a payment is genuinely confirmed
-// (see "PAYFAST INTEGRATION").
-function buildOrderConfirmationEmail(order) {
-  const symbol = (!order.currency || order.currency === 'ZAR') ? 'R' : (order.currency + ' ');
-  const fmt = (n) => symbol + Number(n || 0).toFixed(2);
-  const items = order.items || [];
+// ==================== ORDER NOTIFICATIONS ====================
+// Sent once an order is paid (PayFast ITN below). Designs live in
+// order-emails.js. Who gets what:
+//   customer — one confirmation for the whole order
+//   Janedore — every order, all brands (ORDER_ALERT_EMAIL, default support@)
+//   each brand — only its own items and where to ship them. Products with
+//     no brand profile, or whose brand email is a janedore.co.za address,
+//     are Janedore's own: they're in the Janedore email, nothing extra sent.
+const ORDER_ALERT_EMAIL = process.env.ORDER_ALERT_EMAIL || 'support@janedore.co.za';
 
-  const itemsRowsHtml = items.map((item) => {
-    const details = [item.color, item.size].filter(Boolean).join(' / ');
-    return '<tr>' +
-      '<td>' + escapeHtml(item.name || 'Item') +
-        (item.brand ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(item.brand) + '</span>' : '') +
-        (details ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(details) + '</span>' : '') +
-      '</td>' +
-      '<td class="qty">x' + (item.qty || 1) + '</td>' +
-      '<td class="price">' + fmt(item.price) + '</td>' +
-      '</tr>';
-  }).join('');
-
-  const itemsTextLines = items.map((item) =>
-    (item.name || 'Item') + ' x' + (item.qty || 1) + ' — ' + fmt(item.price)
-  ).join('\n');
-
-  const bodyHtml =
-    '<p class="body-text">Hi ' + escapeHtml(order.customerName || 'there') + ', thank you for your order — here’s what we’ve got.</p>' +
-    '<table class="items">' + itemsRowsHtml + '</table>' +
-    '<table class="totals">' +
-      '<tr><td class="label">Subtotal</td><td class="value">' + fmt(order.subtotal) + '</td></tr>' +
-      (order.discountAmount > 0 ? '<tr><td class="label">Discount' + (order.discountCode ? ' (' + escapeHtml(order.discountCode) + ')' : '') + '</td><td class="value">-' + fmt(order.discountAmount) + '</td></tr>' : '') +
-      '<tr><td class="label">Shipping</td><td class="value">' + (order.shipping ? fmt(order.shipping) : 'Free') + '</td></tr>' +
-      '<tr class="grand"><td class="label" style="color:#1a1a1a;">Total</td><td class="value">' + fmt(order.total) + '</td></tr>' +
-    '</table>' +
-    '<p class="body-text" style="margin-top:32px;">Order #' + escapeHtml(order.orderNumber) + '</p>';
-
-  const html = emailLayout({
-    heading: 'Order confirmed.',
-    bodyHtml: bodyHtml,
-    footerHtml: 'Questions about your order? <a href="mailto:support@janedore.co.za">support@janedore.co.za</a>'
-  });
-
-  const text = 'Order confirmed.\n\nHi ' + (order.customerName || 'there') + ', thank you for your order.\n\n' +
-    itemsTextLines +
-    '\n\nSubtotal: ' + fmt(order.subtotal) + (order.discountAmount > 0 ? '\nDiscount: -' + fmt(order.discountAmount) : '') + '\nShipping: ' + (order.shipping ? fmt(order.shipping) : 'Free') + '\nTotal: ' + fmt(order.total) +
-    '\n\nOrder #' + order.orderNumber + '\n\n— Janedore\nsupport@janedore.co.za';
-
-  return { html, text, subject: 'Order confirmed — #' + order.orderNumber };
+// Product photo for an email: the item's colour's first photo, resized and
+// as JPEG (some email apps can't show WebP).
+function emailImageUrl(product, variantIndex) {
+  const variants = (product && product.variants) || [];
+  const v = variants[variantIndex || 0] || variants[0] || {};
+  const imgs = v.images || {};
+  const url = (imgs.ghost && imgs.ghost[0]) || (imgs.model && imgs.model[0]) || '';
+  if (!/^https:\/\//.test(url)) return '';
+  return url.includes('/upload/') ? url.replace('/upload/', '/upload/c_fill,w_144,h_192,q_auto,f_jpg/') : url;
 }
 
-function sendOrderConfirmationEmail(order) {
-  const email = buildOrderConfirmationEmail(order);
-  return sendResendEmail({
-    from: 'Janedore <noreply@janedore.co.za>',
+// Loads each item's product (for its photo and its brand — taken from the
+// product itself, not from what the browser wrote on the order).
+async function buildOrderEmailContext(order) {
+  const items = order.items || [];
+  const ids = [...new Set(items.map(i => String(i.productId || '')).filter(Boolean))];
+  const products = {};
+  if (ids.length) {
+    const docs = await adminDb.getAll(...ids.map(id => adminDb.collection('products').doc(id)));
+    docs.forEach(d => { if (d.exists) products[d.id] = d.data(); });
+  }
+  return {
+    siteUrl: SITE_URL,
+    products,
+    vendorIdFor: item => (products[item.productId] && products[item.productId].vendorId) || item.vendorId || null,
+    imageFor: item => emailImageUrl(products[item.productId], item.variantIndex)
+  };
+}
+
+// Random order numbers (JD-483920) that say nothing about how many orders
+// the shop gets. Reserved in orderNumbers/{number} so no two orders can
+// ever share one. Given out when the order is paid, so abandoned
+// checkouts never use one up.
+async function assignOrderNumber(orderRef) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const number = 'JD-' + crypto.randomInt(100000, 1000000);
+    try {
+      await adminDb.collection('orderNumbers').doc(number).create({ orderId: orderRef.id, at: admin.firestore.FieldValue.serverTimestamp() });
+    } catch (e) {
+      if (e.code === 6 || /already exists/i.test(e.message)) continue; // taken — draw again
+      throw e;
+    }
+    return number;
+  }
+  throw new Error('Could not find a free order number');
+}
+
+async function sendPaidOrderEmails(orderId, order) {
+  const ctx = await buildOrderEmailContext(order);
+  const sent = { customer: false, janedore: false, brands: [] };
+  const send = (to, email, from) => sendResendEmail({
+    from: from || 'Janedore <noreply@janedore.co.za>',
     replyTo: 'support@janedore.co.za',
-    to: order.customerEmail,
-    subject: email.subject,
-    html: email.html,
-    text: email.text
+    to, subject: email.subject, html: email.html, text: email.text
   });
+
+  // Group the items by brand, and look up each brand's email.
+  const byVendor = {};
+  (order.items || []).forEach(item => {
+    const vid = ctx.vendorIdFor(item);
+    if (vid) (byVendor[vid] = byVendor[vid] || []).push(item);
+  });
+  const vendorIds = Object.keys(byVendor);
+  const vendorDocs = vendorIds.length ? await adminDb.getAll(...vendorIds.map(id => adminDb.collection('vendors').doc(id))) : [];
+  const brandSends = [];
+  const notes = [];
+  vendorDocs.forEach((doc, i) => {
+    const vendor = doc.exists ? doc.data() : null;
+    const label = (vendor && (vendor.brand || vendor.name)) || 'A brand';
+    const to = vendor && String(vendor.email || vendor.accountEmail || '').trim();
+    if (!to) { notes.push(escapeHtml(label) + ' has no email on file, so they were not emailed.'); return; }
+    if (/@janedore\.co\.za$/i.test(to)) return; // Janedore's own brand
+    brandSends.push({ id: vendorIds[i], label, to, items: byVendor[vendorIds[i]], vendor });
+  });
+  if (brandSends.length) notes.unshift('Emailed ' + brandSends.map(b => escapeHtml(b.label)).join(', ') + ' with their items.');
+  ctx.vendorEmailNote = notes.join(' ');
+
+  const jobs = [];
+  if (order.customerEmail) {
+    jobs.push(send(order.customerEmail, orderEmails.customerConfirmation(order, ctx))
+      .then(() => { sent.customer = true; })
+      .catch(err => console.warn('[ORDER_EMAIL] Customer email failed for', orderId, ':', err.message)));
+  }
+  jobs.push(send(ORDER_ALERT_EMAIL, orderEmails.adminNewOrder(order, ctx), 'Janedore Orders <noreply@janedore.co.za>')
+    .then(() => { sent.janedore = true; })
+    .catch(err => console.warn('[ORDER_EMAIL] Janedore alert failed for', orderId, ':', err.message)));
+  brandSends.forEach(b => {
+    jobs.push(send(b.to, orderEmails.vendorNewOrder(order, ctx, b.vendor, b.items))
+      .then(() => { sent.brands.push(b.id); })
+      .catch(err => console.warn('[ORDER_EMAIL] Brand email failed for', orderId, b.id, ':', err.message)));
+  });
+  await Promise.all(jobs);
+
+  // Kept on the order so admin can see what went out.
+  await adminDb.collection('orders').doc(orderId).update({
+    emailsSent: Object.assign(sent, { at: admin.firestore.FieldValue.serverTimestamp() })
+  }).catch(() => {});
 }
 
 // ==================== PAYFAST INTEGRATION ====================
@@ -563,7 +610,7 @@ app.post('/api/payfast/initiate', async (req, res) => {
     if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
     const order = orderDoc.data();
     if (order.paymentStatus === 'paid') return res.status(400).json({ error: 'Order already paid' });
-    if (['cancelled', 'failed', 'expired'].includes(order.paymentStatus)) return res.status(400).json({ error: 'This order is no longer open — please check out again' });
+    if (['cancelled', 'failed', 'expired'].includes(order.paymentStatus)) return res.status(400).json({ error: 'This order is no longer open. Please check out again.' });
 
     // Charge what the order really costs, never what the browser wrote.
     let priced;
@@ -904,12 +951,34 @@ app.post('/api/payfast/notify', async (req, res) => {
       if (shortfalls.length) console.error('[PAYFAST_ITN] Order', orderId, 'paid after its stock was released; now short on:', shortfalls.join(', '));
     }
 
-    await orderRef.update({
-      paymentStatus: 'paid',
-      status: 'processing',
-      paidAt: admin.firestore.FieldValue.serverTimestamp(),
-      pfPaymentId: pfData.pf_payment_id || null
+    // Short random order number, saved in the same write that marks the
+    // order paid, so the confirmation page never shows the old one.
+    let orderNumber = order.orderNumber || orderId;
+    try {
+      orderNumber = await assignOrderNumber(orderRef);
+    } catch (err) {
+      console.warn('[PAYFAST_ITN] Could not assign order number for', orderId, ':', err.message);
+    }
+
+    // In a transaction: if two copies of this notice arrive together, only
+    // one marks the order paid and sends the emails.
+    const markedNow = await adminDb.runTransaction(async (tx) => {
+      const fresh = await tx.get(orderRef);
+      if (!fresh.exists || fresh.data().paymentStatus === 'paid') return false;
+      tx.update(orderRef, {
+        orderNumber,
+        checkoutRef: order.orderNumber || null,
+        paymentStatus: 'paid',
+        status: 'processing',
+        paidAt: admin.firestore.FieldValue.serverTimestamp(),
+        pfPaymentId: pfData.pf_payment_id || null
+      });
+      return true;
     });
+    if (!markedNow) {
+      console.log('[PAYFAST_ITN] Order', orderId, 'was marked paid by a parallel notification — skipping');
+      return;
+    }
 
     // A discount only counts as "used" once it's actually been paid for.
     if (order.discountId) {
@@ -918,8 +987,11 @@ app.post('/api/payfast/notify', async (req, res) => {
         .catch(err => console.warn('[PAYFAST_ITN] Could not count discount use for', orderId, ':', err.message));
     }
 
-    sendOrderConfirmationEmail(Object.assign({}, order, { orderNumber: order.orderNumber || orderId })).catch((err) => {
-      console.warn('[PAYFAST_ITN] Confirmation email failed for', orderId, ':', err.message);
+    // Emails: customer, Janedore, each brand. A failure here never undoes
+    // the payment above.
+    const paidOrder = Object.assign({}, order, { orderNumber, paymentStatus: 'paid', pfPaymentId: pfData.pf_payment_id || null });
+    sendPaidOrderEmails(orderId, paidOrder).catch(err => {
+      console.warn('[PAYFAST_ITN] Order emails failed for', orderId, ':', err.message);
     });
 
     console.log('[PAYFAST_ITN] Order', orderId, 'marked paid.');
@@ -963,6 +1035,8 @@ app.get('/api/orders/:id', async (req, res) => {
       items: order.items || [],
       subtotal: order.subtotal || 0,
       shipping: order.shipping || 0,
+      discountCode: order.discountCode || null,
+      discountAmount: order.discountAmount || 0,
       total: order.total || 0,
       currency: order.currency || 'ZAR',
       customerName: order.customerName || '',
@@ -1028,50 +1102,15 @@ async function authorizeShipmentRequest(req, vendorId) {
   return { ok: false, reason: 'Not authorized for this vendor' };
 }
 
-function buildShipmentEmail(order, vendorId, status) {
-  const symbol = (!order.currency || order.currency === 'ZAR') ? 'R' : (order.currency + ' ');
-  const fmt = (n) => symbol + Number(n || 0).toFixed(2);
+function buildShipmentEmail(order, vendorId, status, ctx) {
   const allItems = order.items || [];
   const shippedItems = vendorId ? allItems.filter((i) => i.vendorId === vendorId) : allItems;
   const tracking = vendorId ? (order.vendorTracking || {})[vendorId] : { trackingNumber: order.trackingNumber, courier: order.courier };
-
-  const heading = status === 'fulfilled' ? 'Your order has shipped.' : 'Part of your order has shipped.';
-  const intro = status === 'fulfilled'
-    ? 'Good news — everything in your order is now on its way.'
-    : 'Good news — part of your order is now on its way. The rest will follow in a separate shipment as each brand ships from its own warehouse.';
-
-  const itemsRowsHtml = shippedItems.map((item) => {
-    const details = [item.color, item.size].filter(Boolean).join(' / ');
-    return '<tr>' +
-      '<td>' + escapeHtml(item.name || 'Item') +
-        (item.brand ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(item.brand) + '</span>' : '') +
-        (details ? '<br><span style="color:#aaa;font-size:11px;">' + escapeHtml(details) + '</span>' : '') +
-      '</td>' +
-      '<td class="qty">x' + (item.qty || 1) + '</td>' +
-      '</tr>';
-  }).join('');
-
-  const trackingHtml = tracking && tracking.trackingNumber
-    ? '<p class="body-text">' +
-        (tracking.courier ? escapeHtml(tracking.courier) + ' — ' : '') +
-        escapeHtml(tracking.trackingNumber) +
-      '</p>'
-    : '';
-
-  const bodyHtml =
-    '<p class="body-text">Hi ' + escapeHtml(order.customerName || 'there') + ', ' + intro + '</p>' +
-    '<table class="items">' + itemsRowsHtml + '</table>' +
-    trackingHtml +
-    '<p class="body-text" style="margin-top:32px;">Order #' + escapeHtml(order.orderNumber || '') + '</p>';
-
-  const html = emailLayout({ heading, bodyHtml, footerHtml: 'Questions about your order? <a href="mailto:support@janedore.co.za">support@janedore.co.za</a>' });
-
-  const text = heading + '\n\nHi ' + (order.customerName || 'there') + ', ' + intro + '\n\n' +
-    shippedItems.map((i) => (i.name || 'Item') + ' x' + (i.qty || 1)).join('\n') +
-    (tracking && tracking.trackingNumber ? '\n\n' + (tracking.courier || '') + ' — ' + tracking.trackingNumber : '') +
-    '\n\nOrder #' + (order.orderNumber || '') + '\n\n— Janedore\nsupport@janedore.co.za';
-
-  return { html, text, subject: heading + ' — Order #' + (order.orderNumber || '') };
+  return orderEmails.shipped(order, ctx, shippedItems, {
+    complete: status === 'fulfilled',
+    heading: status === 'fulfilled' ? 'Your order is on its way' : 'Part of your order is on its way',
+    tracking: tracking || {}
+  });
 }
 
 app.post('/api/orders/:id/notify-shipped', async (req, res) => {
@@ -1095,7 +1134,7 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
     const status = computeOrderFulfillment(order);
     if (status === 'unfulfilled') return res.json({ ok: true, skipped: 'Nothing shipped yet' });
 
-    const email = buildShipmentEmail(order, vendorId || null, status);
+    const email = buildShipmentEmail(order, vendorId || null, status, await buildOrderEmailContext(order));
     await sendResendEmail({
       from: 'Janedore <noreply@janedore.co.za>',
       replyTo: 'support@janedore.co.za',
@@ -1246,7 +1285,7 @@ if (process.env.GEMINI_API_KEY) {
   console.warn('[GEMINI] GEMINI_API_KEY not set — /api/chat-ai-reply will return an error until it is');
 }
 
-const CHAT_SYSTEM_PROMPT = `You are the JANEDORE customer support assistant. JANEDORE is a multi-brand store — every brand it stocks has been vetted for quality and a strong identity. You help customers with sizing, shipping, returns, and finding the right piece. Keep replies short (2-4 sentences), warm, and direct — this is a small chat bubble, not an email. If you don't know the answer, or the question needs a human (an order-specific issue, a complaint, anything you're not confident about), say so plainly and suggest they ask to speak with a person.`;
+const CHAT_SYSTEM_PROMPT = `You are the JANEDORE customer support assistant. JANEDORE is a multi-brand store, and every brand it stocks has been vetted for quality and a strong identity. You help customers with sizing, shipping, returns, and finding the right piece. Keep replies short (2-4 sentences), warm, and direct: this is a small chat bubble, not an email. Never use em dashes (—); use commas, colons or full stops instead. If you don't know the answer, or the question needs a human (an order-specific issue, a complaint, anything you're not confident about), say so plainly and suggest they ask to speak with a person.`;
 
 app.post('/api/chat-ai-reply', async (req, res) => {
   const message = req.body && req.body.message;
@@ -1442,14 +1481,14 @@ function injectProductMeta(html, product, slug) {
 // No Firestore lookup needed since categories are a fixed, known set.
 
 const CATEGORY_META = {
-  'all-clothing': { label: 'All Clothing', description: 'Our complete clothing edit — refined silhouettes for the modern wardrobe.' },
+  'all-clothing': { label: 'All Clothing', description: 'Our complete clothing edit: refined silhouettes for the modern wardrobe.' },
   'dresses':      { label: 'Dresses', description: 'Effortless dresses that balance structure and fluidity.' },
   'tops':         { label: 'Tops', description: 'Elevated essentials, from sculptural blouses to relaxed knits.' },
   'bottoms':      { label: 'Bottoms', description: 'Tailored trousers and fluid skirts with quiet intention.' },
-  'jackets':      { label: 'Jackets', description: 'Outerwear that defines the silhouette — sharp, soft, and considered.' },
+  'jackets':      { label: 'Jackets', description: 'Outerwear that defines the silhouette: sharp, soft, and considered.' },
   'sets':         { label: 'Sets', description: 'Coordinated pieces designed to be worn together or styled apart.' },
   'bags':         { label: 'Bags', description: 'Understated accessories that complete the look without saying too much.' },
-  'jewelry':      { label: 'Jewelry', description: 'Sculptural adornments — timeless pieces with modern sensibility.' },
+  'jewelry':      { label: 'Jewelry', description: 'Sculptural adornments: timeless pieces with modern sensibility.' },
   'sunglasses':   { label: 'Sunglasses', description: 'Bold yet refined eyewear for the discerning gaze.' },
   'parfum':       { label: 'Scent', description: 'A study in scent. THATO parfums are crafted for the considered wearer.' }
 };

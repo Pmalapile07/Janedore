@@ -187,7 +187,7 @@
     }
     if (window._currentUserRole === 'VENDOR' && !window._currentVendorId) {
       var wrap0 = safeEl('orders-table-wrap');
-      if (wrap0) wrap0.innerHTML = '<p style="padding:16px;color:var(--danger);font-size:12px;">No vendor account linked — contact support.</p>';
+      if (wrap0) wrap0.innerHTML = '<p style="padding:16px;color:var(--danger);font-size:12px;">No vendor account linked. Contact support.</p>';
       return;
     }
 
@@ -649,7 +649,7 @@
                 ' data-price="'    + price                 + '"' +
                 ' data-brand="'    + esc(p.brand    || '') + '"' +
                 ' data-vendor-id="' + esc(p.vendorId || '') + '">' +
-                esc(p.name || 'Unnamed') + ' — ' + fmt(price) +
+                esc(p.name || 'Unnamed') + ', ' + fmt(price) +
               '</option>';
             }).join('') +
           '</select>' +
@@ -728,7 +728,7 @@
         '<div class="card-header"><span class="card-title">Internal Notes</span></div>' +
         '<div class="form-group">' +
           '<label>Notes</label>' +
-          '<textarea id="no-notes" placeholder="Internal notes — not visible to customer...">' +
+          '<textarea id="no-notes" placeholder="Internal notes, not visible to the customer...">' +
             esc(d.internalNotes || '') +
           '</textarea>' +
         '</div>' +
@@ -1044,7 +1044,7 @@
       html +=
         '<div class="orders-abandoned-banner" style="margin-bottom:14px;cursor:default;">' +
           '<i class="ph-light ph-warning-circle" style="font-size:15px;flex-shrink:0;"></i>' +
-          '<span>This order was abandoned — payment was never confirmed.</span>' +
+          '<span>This order was abandoned. Payment was never confirmed.</span>' +
         '</div>';
     }
     if (o.archived) {
@@ -1079,9 +1079,9 @@
     html +=
       '<div class="card-title" style="margin-bottom:7px;">Customer</div>' +
       '<div class="info-panel" style="margin-bottom:8px;">' +
-        '<div class="info-row"><span class="label">Name</span><span>'  + esc(o.customerName  || '—') + '</span></div>' +
-        '<div class="info-row"><span class="label">Email</span><span>' + esc(o.customerEmail || '—') + '</span></div>' +
-        '<div class="info-row"><span class="label">Phone</span><span>' + esc(o.customerPhone || '—') + '</span></div>' +
+        '<div class="info-row"><span class="label">Name</span><span>'  + esc(o.customerName  || '-') + '</span></div>' +
+        '<div class="info-row"><span class="label">Email</span><span>' + esc(o.customerEmail || '-') + '</span></div>' +
+        '<div class="info-row"><span class="label">Phone</span><span>' + esc(o.customerPhone || '-') + '</span></div>' +
       '</div>';
     if (o.customerPhone) {
       html +=
@@ -1167,9 +1167,9 @@
       html +=
         '<div class="card-title" style="margin-bottom:7px;">Shipping address</div>' +
         '<div class="info-panel" style="margin-bottom:18px;">' +
-          '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">City</span><span>'     + esc(o.city || '—') + '</span></div>' +
-          '<div class="info-row"><span class="label">Province</span><span>' + esc(o.province || '—') + '</span></div>' +
+          '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress || '-') + '</span></div>' +
+          '<div class="info-row"><span class="label">City</span><span>'     + esc(o.city || '-') + '</span></div>' +
+          '<div class="info-row"><span class="label">Province</span><span>' + esc(o.province || '-') + '</span></div>' +
         '</div>';
     }
 
@@ -1318,7 +1318,7 @@
     var itemsHTML = (o.items || []).map(function (item) {
       return '<tr>' +
         '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;">' + esc(item.name) + '</td>' +
-        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;text-align:center;">' + esc(item.size || '—') + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;text-align:center;">' + esc(item.size || '-') + '</td>' +
         '<td style="padding:8px 12px;border-bottom:0.5px solid #ddd;font-size:12px;text-align:center;">' + item.qty + '</td>' +
       '</tr>';
     }).join('');
@@ -1345,7 +1345,7 @@
       '<p>' + esc(o.shippingAddress || '') + '</p>' +
       '<p>' + esc(o.city || '') + (o.province ? ', ' + esc(o.province) : '') + (o.postalCode ? ' ' + esc(o.postalCode) : '') + '</p>' +
       '<p>' + esc(o.country || 'South Africa') + '</p>' +
-      (o.trackingNumber ? '<h2>Tracking</h2><p>' + esc(o.courier || '') + ' — ' + esc(o.trackingNumber) + '</p>' : '') +
+      (o.trackingNumber ? '<h2>Tracking</h2><p>' + esc(o.courier || '') + ': ' + esc(o.trackingNumber) + '</p>' : '') +
       '<h2>Items</h2>' +
       '<table><thead><tr><th>Product</th><th>Size</th><th>Qty</th></tr></thead><tbody>' +
       itemsHTML +

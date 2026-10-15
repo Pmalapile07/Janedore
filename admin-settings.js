@@ -49,7 +49,7 @@
       defaultCommissionRate: 15,
       instagramUrl: '',
       tiktokUrl: '',
-      metaTitle: 'Janedore — Curated Fashion',
+      metaTitle: 'Janedore | Curated Fashion',
       metaDescription: 'A curated multi-brand fashion house.',
       updatedAt: null
     };
@@ -172,7 +172,7 @@
 
             '<div class="form-group" style="padding:0;">' +
               '<label>Meta Title (SEO)</label>' +
-              '<input name="metaTitle" value="' + esc(s.metaTitle || '') + '" placeholder="Janedore — Curated Fashion">' +
+              '<input name="metaTitle" value="' + esc(s.metaTitle || '') + '" placeholder="Janedore | Curated Fashion">' +
             '</div>' +
 
             '<div class="form-group" style="padding:0;">' +
