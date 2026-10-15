@@ -688,41 +688,33 @@ function renderAIGreeting() {
   const screen = document.createElement('div');
   screen.id = 'jai-welcome-screen';
 
-  const card = document.createElement('div');
-  card.className = 'jai-welcome-card';
+  // A single grey bubble: small "Welcome to JAI" over the question,
+  // then the time underneath, outside the bubble.
+  const bubble = document.createElement('div');
+  bubble.className = 'jai-welcome-bubble';
 
-  const greetingLine = document.createElement('div');
-  greetingLine.className = 'jai-welcome-greeting';
-  greetingLine.textContent = 'Hi, welcome to JANEDORE.';
-
-  const roleLine = document.createElement('div');
-  roleLine.className = 'jai-welcome-role';
-  roleLine.textContent = "I'm JAI, your personal shopping assistant.";
-
-  const bodyLine = document.createElement('div');
-  bodyLine.className = 'jai-welcome-body';
-  bodyLine.textContent = "Whether you're discovering something new, choosing the perfect piece, or need help with an order, I'm here to help.";
+  const kicker = document.createElement('div');
+  kicker.className = 'jai-welcome-kicker';
+  kicker.textContent = 'Welcome to JAI';
 
   const questionLine = document.createElement('div');
   questionLine.className = 'jai-welcome-question';
-  questionLine.textContent = 'How can I assist you today?';
+  questionLine.textContent = 'How can I help you today?';
+
+  bubble.appendChild(kicker);
+  bubble.appendChild(questionLine);
 
   const timeLine = document.createElement('div');
   timeLine.className = 'jai-welcome-time';
-  timeLine.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  timeLine.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-  card.appendChild(greetingLine);
-  card.appendChild(roleLine);
-  card.appendChild(bodyLine);
-  card.appendChild(questionLine);
-  card.appendChild(timeLine);
+  screen.appendChild(bubble);
+  screen.appendChild(timeLine);
 
-  // JAI is greeting the customer here — smiles permanently on this one.
-  const row = document.createElement('div');
-  row.className = 'jai-msg-row jai-welcome-row';
-  row.appendChild(buildJAIAvatarEl('happy'));
-  row.appendChild(card);
-  screen.appendChild(row);
+  const label = document.createElement('div');
+  label.className = 'jai-quick-label';
+  label.textContent = 'Quick help';
+  screen.appendChild(label);
 
   const actions = document.createElement('div');
   actions.className = 'jai-quick-actions';
@@ -732,10 +724,10 @@ function renderAIGreeting() {
   // (chat-widget.html), reused verbatim below rather than visually
   // similar substitutes, by request.
   const QUICK_ACTION_CARDS = [
-    { icon: 'ph ph-tote-simple', title: 'Find my next piece', desc: 'Get help discovering something new',          onClick: quickActionDiscoverProduct },
-    { icon: 'ph ph-package',     title: 'Track my order',     desc: 'Check the status of an existing order',       onClick: quickActionTrackOrder },
-    { icon: 'ph ph-truck',       title: 'Shipping & returns', desc: 'Delivery times, costs and how returns work',  onClick: quickActionShippingReturns },
-    { icon: 'ph ph-chat',        title: 'Ask JAI anything',   desc: 'Type your own question',                     onClick: quickActionAskAnything }
+    { icon: 'ph ph-tote-simple', title: 'Find something new',  onClick: quickActionDiscoverProduct },
+    { icon: 'ph ph-package',     title: 'Track an order',      onClick: quickActionTrackOrder },
+    { icon: 'ph ph-truck',       title: 'Shipping & returns',  onClick: quickActionShippingReturns },
+    { icon: 'ph ph-chat',        title: 'Ask a question',      onClick: quickActionAskAnything }
   ];
 
   QUICK_ACTION_CARDS.forEach(c => {
@@ -754,11 +746,7 @@ function renderAIGreeting() {
     const titleEl = document.createElement('div');
     titleEl.className = 'jai-card-title';
     titleEl.textContent = c.title;
-    const descEl = document.createElement('div');
-    descEl.className = 'jai-card-desc';
-    descEl.textContent = c.desc;
     textWrap.appendChild(titleEl);
-    textWrap.appendChild(descEl);
 
     const chevron = document.createElement('i');
     chevron.className = 'ph-light ph-caret-right jai-card-chevron';

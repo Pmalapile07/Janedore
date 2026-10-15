@@ -233,7 +233,7 @@
     align-items: center !important;
     justify-content: space-between !important;
     gap: 12px !important;
-    border-bottom: 1px solid #e5e5e5 !important;
+    border-bottom: none !important;
     flex-shrink: 0 !important;
   }
   #chat-window .chat-header-identity {
@@ -448,68 +448,63 @@
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
-    gap: 18px !important;
+    gap: 0 !important;
+    padding-top: 6px !important;
   }
-  #chat-window .jai-msg-row.jai-welcome-row {
-    max-width: 92% !important;
-    align-items: flex-start !important;
+  /* Greeting: one soft grey bubble, no mascot, time underneath. */
+  #chat-window .jai-welcome-bubble {
+    align-self: flex-start !important;
+    max-width: 82% !important;
+    background: #f1f1f1 !important;
+    border-radius: 18px !important;
+    padding: 14px 18px !important;
+    font-family: 'Inter', sans-serif !important;
   }
-  #chat-window .jai-welcome-card {
-    background: #fff !important;
-    border: 1px solid #e1e1e1 !important;
-    border-radius: 26px !important;
-    padding: 18px 18px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    flex: 1 !important;
+  #chat-window .jai-welcome-kicker {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    color: #888 !important;
+    margin-bottom: 4px !important;
   }
-  #chat-window .jai-welcome-greeting,
   #chat-window .jai-welcome-question {
-    font-family: 'Inter', sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
     color: #111 !important;
-    line-height: 1.4 !important;
-    letter-spacing: 0.01em !important;
-  }
-  #chat-window .jai-welcome-role {
-    font-family: 'Inter', sans-serif !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: #111 !important;
-    line-height: 1.5 !important;
-  }
-  #chat-window .jai-welcome-body {
-    font-family: 'Inter', sans-serif !important;
-    font-size: 12.5px !important;
-    font-weight: 300 !important;
-    color: #666 !important;
-    line-height: 1.6 !important;
-    letter-spacing: 0.01em !important;
+    line-height: 1.35 !important;
   }
   #chat-window .jai-welcome-time {
     font-family: 'Inter', sans-serif !important;
     font-size: 10px !important;
-    font-weight: 300 !important;
+    font-weight: 400 !important;
     color: #aaa !important;
-    margin-top: 4px !important;
+    margin: 6px 0 0 2px !important;
   }
+  #chat-window .jai-quick-label {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 9.5px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.22em !important;
+    text-transform: uppercase !important;
+    color: #777 !important;
+    margin: 40px 0 6px 2px !important;
+  }
+  /* Quick help: plain rows (icon, title, chevron) split by hairlines. */
   #chat-window .jai-quick-actions {
     display: flex !important;
     flex-direction: column !important;
-    gap: 9px !important;
+    gap: 0 !important;
     width: 100% !important;
   }
   #chat-window .jai-quick-card {
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 18px !important;
     width: 100% !important;
-    background: #fff !important;
-    border: 1px solid #e5e5e5 !important;
-    border-radius: 16px !important;
-    padding: 14px 16px !important;
+    background: none !important;
+    border: none !important;
+    border-bottom: 1px solid #e8e8e8 !important;
+    border-radius: 0 !important;
+    padding: 20px 4px !important;
     font-family: 'Inter', sans-serif !important;
     text-align: left !important;
     cursor: pointer !important;
@@ -517,12 +512,10 @@
     -webkit-appearance: none !important;
     appearance: none !important;
     -webkit-tap-highlight-color: transparent !important;
-    transition: background 0.2s, border-color 0.2s, opacity 0.2s !important;
+    transition: opacity 0.2s !important;
   }
-  #chat-window .jai-quick-card:hover {
-    background: #fafaf9 !important;
-    border-color: #d8d8d8 !important;
-  }
+  #chat-window .jai-quick-card:last-child { border-bottom: none !important; }
+  #chat-window .jai-quick-card:active { opacity: 0.6 !important; }
   /* Disabled only for the brief window a card's own click is actually
      in flight (see disableQuickActionCards()/enableQuickActionCards()
      in chat.js) — never a permanent state once one card has been used. */
@@ -532,38 +525,29 @@
     pointer-events: none !important;
   }
   #chat-window .jai-card-icon {
-    width: 46px !important;
-    height: 46px !important;
+    width: 24px !important;
+    height: 24px !important;
     flex-shrink: 0 !important;
-    border-radius: 50% !important;
-    background: #f4f4f4 !important;
+    background: none !important;
     color: #111 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 18px !important;
+    font-size: 21px !important;
   }
   #chat-window .jai-card-text {
     flex: 1 !important;
     min-width: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 2px !important;
   }
   #chat-window .jai-card-title {
-    font-size: 12.5px !important;
-    font-weight: 600 !important;
-    color: #111111 !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #111 !important;
     letter-spacing: 0.01em !important;
-  }
-  #chat-window .jai-card-desc {
-    font-size: 11px !important;
-    font-weight: 300 !important;
-    color: #666666 !important;
   }
   #chat-window .jai-card-chevron {
     flex-shrink: 0 !important;
-    color: #111111 !important;
+    color: #111 !important;
     font-size: 15px !important;
   }
 
@@ -645,13 +629,14 @@
     display: flex !important;
     align-items: center !important;
     width: 100% !important;
-    background: #f4f4f2 !important;
-    border-radius: 24px !important;
+    background: #fff !important;
+    border: 1px solid #dcdcdc !important;
+    border-radius: 30px !important;
     padding: 4px !important;
-    transition: background 0.2s !important;
+    transition: border-color 0.2s !important;
   }
   #chat-window .chat-input-pill:focus-within {
-    background: #eeeeec !important;
+    border-color: #b5b5b5 !important;
   }
   #chat-window .chat-input {
     flex: 1 !important;
@@ -660,8 +645,8 @@
     background: transparent !important;
     padding: 10px 8px 10px 6px !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 300 !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
     letter-spacing: 0.02em !important;
     color: #111 !important;
     border-bottom: none !important;
@@ -710,7 +695,7 @@
     min-width: 44px !important;
     min-height: 44px !important;
     border-radius: 50% !important;
-    background: #f4f4f4 !important;
+    background: none !important;
     color: #111 !important;
     border: none !important;
     padding: 0 !important;
@@ -722,7 +707,7 @@
     font-size: 17px !important;
     transition: background 0.2s, color 0.2s !important;
   }
-  #chat-window .chat-attach-btn:hover { background: #eeeeec !important; }
+  #chat-window .chat-attach-btn:hover { background: #f4f4f4 !important; }
   #chat-window .chat-attach-btn:disabled { opacity: 0.4 !important; cursor: default !important; }
   /* Phosphor only ships a horizontal paperclip — rotated 90deg to read
      as the vertical orientation instead. */
