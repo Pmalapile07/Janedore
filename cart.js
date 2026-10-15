@@ -393,7 +393,8 @@ function showPromoMessage(message, type) {
     display: block;
   `;
 
-  input.parentNode.appendChild(msgDiv);
+  // Below the whole input + Apply row, not squeezed in beside the button.
+  (input.closest('.cart-code-row') || input).insertAdjacentElement('afterend', msgDiv);
 
   // Auto-remove after 4 seconds
   setTimeout(function() {
@@ -426,19 +427,15 @@ function renderCartPage() {
   if (!S.cart.length) {
     // Recently viewed first; fall back to newest arrivals so the slider
     // is never empty for a first-time visitor.
-    const active = PRODUCTS.filter(p => p.status === 'active');
     const recent = S.recentlyViewed.filter(p => p && p.status === 'active');
     const useRecent = recent.length >= 2;
-    const picks = (useRecent ? recent : merchandiseProducts(active, undefined, 'newest')).slice(0, 8);
+    const picks = (useRecent ? recent : newestActiveProducts()).slice(0, 8);
     DOM.cartPageContent.innerHTML = `<div class="cart-empty">
       <i class="ph ph-tote-simple cart-empty-icon" aria-hidden="true"></i>
       <div class="cart-empty-title">Your bag is empty</div>
       <button class="cart-empty-btn" onclick="navigateTo('products')">Continue Shopping</button>
-    </div>${picks.length ? `<section class="cart-empty-suggestions">
-      <div class="cart-empty-suggestions-title">${useRecent ? 'Recently Viewed' : 'New Arrivals'}</div>
-      <div class="product-grid" id="cart-empty-grid">${picks.map(p => productCardHome(p)).join('')}</div>
-    </section>` : ''}`;
-    if (picks.length) initSliderLeadingTracking('cart-empty-grid');
+    </div>${cartSliderHtml(useRecent ? 'Recently Viewed' : 'New Arrivals', picks)}`;
+    if (picks.length) initSliderLeadingTracking('cart-slider-grid');
     return;
   }
 
@@ -514,7 +511,41 @@ function renderCartPage() {
     <div class="cart-totals-row"><span>Delivery Fee</span><span>${shipping.freeShipping ? 'Free' : formatPrice(SHIPPING_FEE)}</span></div>
     <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout Now</button>
   </div></div>`;
+  const inspired = cartInspiredProducts();
+  html += cartSliderHtml('Inspired by your bag', inspired);
   DOM.cartPageContent.innerHTML = html;
+  if (inspired.length) initSliderLeadingTracking('cart-slider-grid');
+}
+
+function newestActiveProducts() {
+  return merchandiseProducts(PRODUCTS.filter(p => p.status === 'active'), undefined, 'newest');
+}
+
+// Same brand or category as what's already in the bag (never the bag's own
+// items), topped up with the newest arrivals if that's not enough.
+function cartInspiredProducts() {
+  const inCart = new Set(S.cart.map(i => i.productId));
+  const cartProducts = S.cart.map(i => getCartProduct(i.productId)).filter(Boolean);
+  const brands = new Set(cartProducts.map(p => p.brand).filter(Boolean));
+  const cats = new Set(cartProducts.map(p => p.category).filter(Boolean));
+  const active = PRODUCTS.filter(p => p.status === 'active' && !inCart.has(p.id));
+  const related = merchandiseProducts(active.filter(p => brands.has(p.brand) || cats.has(p.category)));
+  const picks = related.slice(0, 8);
+  for (const p of newestActiveProducts()) {
+    if (picks.length >= 8) break;
+    if (!inCart.has(p.id) && !picks.includes(p)) picks.push(p);
+  }
+  return picks;
+}
+
+// Horizontal product slider used on both cart states; #cart-slider-grid
+// shares the New Arrivals slider rules in product-grid.css.
+function cartSliderHtml(title, products) {
+  if (!products.length) return '';
+  return `<section class="cart-suggestions">
+    <div class="cart-suggestions-title">${title}</div>
+    <div class="product-grid" id="cart-slider-grid">${products.map(p => productCardHome(p)).join('')}</div>
+  </section>`;
 }
 
 // Quantity dropdown on the cart page — capped at what's actually in stock
@@ -541,3 +572,36 @@ function updateBadges() {
 
 // Initialize discount from storage on page load
 loadAppliedDiscount();
+
+// Header progress circles (index.html .checkout-steps; styled in cart.css):
+// 1 Bag · 2 Checkout · 3 Payment. Derived from what's actually on screen
+// so every path into a checkout view (PayFast return, retries, a reload
+// on the confirmation) is covered without each one remembering to call it.
+function updateCheckoutSteps() {
+  const steps = document.querySelectorAll('.checkout-step');
+  if (!steps.length) return;
+  const shown = (id) => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
+  let current = 0, doneUpTo = 0;
+  if (document.getElementById('page-checkout')?.classList.contains('active')) {
+    if (shown('checkout-confirmation-view')) doneUpTo = 3;
+    else if (shown('checkout-confirming-view')) { doneUpTo = 2; current = 3; }
+    else { doneUpTo = 1; current = 2; }
+  } else if (document.getElementById('page-cart')?.classList.contains('active')) {
+    current = 1;
+  }
+  steps.forEach(step => {
+    const n = Number(step.dataset.step);
+    step.classList.toggle('is-done', n <= doneUpTo);
+    step.classList.toggle('is-current', n === current);
+  });
+}
+(function watchCheckoutSteps() {
+  const observer = new MutationObserver(updateCheckoutSteps);
+  const cartPage = document.getElementById('page-cart');
+  const checkoutPage = document.getElementById('page-checkout');
+  if (cartPage) observer.observe(cartPage, { attributes: true, attributeFilter: ['class'] });
+  // subtree here: checkout switches between its form / confirming /
+  // confirmation views with inline display styles.
+  if (checkoutPage) observer.observe(checkoutPage, { attributes: true, attributeFilter: ['class', 'style'], subtree: true });
+  updateCheckoutSteps();
+})();
