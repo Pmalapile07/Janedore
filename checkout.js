@@ -96,44 +96,77 @@ function navigateToCheckout(replaceUrl) {
     const placeOrderBtn = document.getElementById('checkout-place-order-btn');
     if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Place Order'; }
 
-    if (user && user.email) {
-      document.getElementById('checkout-email').value = user.email;
-      if (user.displayName) {
-        document.getElementById('checkout-name').value = user.displayName;
-      }
-      prefillCheckoutFromProfile(user.uid);
-    } else if (checkoutEmail) {
-      document.getElementById('checkout-email').value = checkoutEmail;
-    }
+    if (checkoutEmail) fillCheckoutFieldIfEmpty('checkout-email', checkoutEmail);
+    prefillCheckoutForSignedInCustomer();
 
     renderCheckoutSummary();
   }
 }
 
-// Fills in a returning signed-in customer's saved address — written to
-// their profile the first time they complete an order while logged in
-// (see placeOrder() below) — so they don't retype it on every visit.
-// Guarded per field so it only fills in blanks, never overwrites
-// something already typed this session.
-async function prefillCheckoutFromProfile(uid) {
-  try {
-    const doc = await db.collection('customers').doc(uid).get();
-    if (!doc.exists) return;
-    const c = doc.data();
-    const fillIfEmpty = (id, value) => {
-      const el = document.getElementById(id);
-      if (el && !el.value && value) el.value = value;
-    };
-    fillIfEmpty('checkout-phone', c.phone);
-    fillIfEmpty('checkout-address', c.address);
-    fillIfEmpty('checkout-city', c.city);
-    fillIfEmpty('checkout-province', c.province);
-    fillIfEmpty('checkout-postal', c.postalCode);
-    fillIfEmpty('checkout-country', c.country);
-  } catch (e) {
-    console.warn('[CHECKOUT] Could not load saved address:', e.message);
-  }
+// Only ever fills a blank field — never overwrites something the
+// customer has already typed this visit.
+function fillCheckoutFieldIfEmpty(id, value) {
+  const el = document.getElementById(id);
+  if (el && !el.value && value) el.value = value;
 }
+
+// Prefills checkout for a logged-in customer (a real account, not the
+// anonymous session every visitor gets): email and name from the
+// account, then phone and address from their profile — saved there each
+// time they place an order while logged in (see placeOrder()). If the
+// profile has no address yet, their most recent order's details are used
+// instead. Waits for Firebase to restore the login first, so this also
+// works when the page is reloaded straight onto /checkout.
+async function prefillCheckoutForSignedInCustomer() {
+  await (window.authReady || Promise.resolve());
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous || !user.email) return;
+
+  fillCheckoutFieldIfEmpty('checkout-email', user.email);
+  fillCheckoutFieldIfEmpty('checkout-name', user.displayName);
+
+  let saved = {};
+  try {
+    const doc = await db.collection('customers').doc(user.uid).get();
+    if (doc.exists) saved = doc.data() || {};
+  } catch (e) {
+    console.warn('[CHECKOUT] Could not load saved profile:', e.message);
+  }
+
+  if (!saved.address) {
+    try {
+      const snap = await db.collection('orders')
+        .where('customerEmail', '==', user.email)
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+      if (!snap.empty) {
+        const o = snap.docs[0].data();
+        saved = Object.assign({
+          name: o.customerName, phone: o.customerPhone, address: o.shippingAddress,
+          city: o.city, province: o.province, postalCode: o.postalCode
+        }, saved);
+      }
+    } catch (e) {
+      console.warn('[CHECKOUT] Could not load last order details:', e.message);
+    }
+  }
+
+  fillCheckoutFieldIfEmpty('checkout-name', saved.name);
+  fillCheckoutFieldIfEmpty('checkout-phone', saved.phone);
+  fillCheckoutFieldIfEmpty('checkout-address', saved.address);
+  fillCheckoutFieldIfEmpty('checkout-city', saved.city);
+  fillCheckoutFieldIfEmpty('checkout-province', saved.province);
+  fillCheckoutFieldIfEmpty('checkout-postal', saved.postalCode);
+}
+
+// Logging in while already on checkout (e.g. in another tab) fills the
+// form in too.
+firebase.auth().onAuthStateChanged(function () {
+  if (S.currentPage === 'checkout' && document.getElementById('checkout-form-view')) {
+    prefillCheckoutForSignedInCustomer();
+  }
+});
 
 // Same price / discount / delivery rules as the cart page (cart.js), so
 // the bag and checkout always show the same total.
@@ -397,9 +430,10 @@ async function placeOrder(e) {
     // profile so it's there to prefill next visit. The order is already
     // placed, so a failure here should never block or undo any of
     // that, just get logged.
-    if (user) {
+    if (user && !user.isAnonymous) {
       db.collection('customers').doc(user.uid).set({
         name,
+        email: user.email || email,
         phone,
         address,
         city,
