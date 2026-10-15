@@ -1037,6 +1037,52 @@ function injectCacheBust(html) {
   });
 }
 
+// ==================== LOGO FONT (no flash) ====================
+// The logo's Unbounded font comes from Google, but a plain <link> means
+// the browser only discovers the font file after downloading Google's
+// CSS, so it arrives after first paint and the logo flashes. Instead the
+// server fetches that CSS itself (refreshed daily, since Google's file
+// URLs can change) and swaps index.html's #logo-font-css <link> for the
+// same @font-face inlined plus a <link rel="preload"> of the exact font
+// file — still served by Google, but downloading from the very start of
+// the page load. If Google can't be reached, the <link> stays as-is.
+const LOGO_FONT_CSS_URL = 'https://fonts.googleapis.com/css2?family=Unbounded:wght@400&text=ABCDEFGHIJKLMNOPQRSTUVWXYZ&display=block';
+let logoFontCss = null;
+let logoFontFileUrl = null;
+
+function refreshLogoFont() {
+  const req = https.get(LOGO_FONT_CSS_URL, {
+    // Google picks the font format from the user agent; a current browser
+    // UA gets woff2, which every browser this site supports can use.
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' }
+  }, (res) => {
+    let body = '';
+    res.setEncoding('utf8');
+    res.on('data', (c) => { body += c; });
+    res.on('end', () => {
+      const file = body.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)\s"']+)\)/);
+      if (res.statusCode !== 200 || !body.includes('@font-face') || body.includes('<') || !file) {
+        console.warn('[LOGO FONT] Unexpected response from Google Fonts (' + res.statusCode + ') — keeping the plain <link>');
+        return;
+      }
+      logoFontCss = body.trim();
+      logoFontFileUrl = file[1];
+    });
+  });
+  req.setTimeout(10000, () => req.destroy(new Error('timeout')));
+  req.on('error', (e) => console.warn('[LOGO FONT] Could not reach Google Fonts:', e.message));
+}
+refreshLogoFont();
+setInterval(refreshLogoFont, 24 * 60 * 60 * 1000).unref();
+
+function injectLogoFont(html) {
+  if (!logoFontCss || !logoFontFileUrl) return html;
+  return html.replace(
+    /<link id="logo-font-css"[^>]*>/,
+    () => '<link rel="preload" as="font" type="font/woff2" href="' + logoFontFileUrl.replace(/&/g, '&amp;') + '" crossorigin>\n  <style id="logo-font-css">' + logoFontCss + '</style>'
+  );
+}
+
 // ==================== SEO HELPERS ====================
 
 function escapeHtml(str) {
@@ -1322,6 +1368,7 @@ async function renderIndexHtml(headTransform) {
   let html = fs.readFileSync(indexPath, 'utf8');
   if (headTransform) html = headTransform(html);
   html = await injectHomepageContent(html);
+  html = injectLogoFont(html);
   return injectCacheBust(html);
 }
 

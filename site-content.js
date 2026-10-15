@@ -227,7 +227,7 @@ function renderEditorialBanner(banner) {
 // does this for the very first paint (applyLogoImage()), this just
 // keeps it current if admin changes it after that response was cached.
 function renderLogo() {
-  // The header now always uses the Helvetica Bold text wordmark.
+  // The header now always uses the Unbounded text wordmark.
   // Homepage logo uploads no longer replace the navigation wordmark.
   const textEl = document.getElementById('nav-logo-text');
   if (textEl) textEl.style.display = '';
