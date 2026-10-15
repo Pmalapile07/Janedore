@@ -9,8 +9,6 @@
 .cart-addon-btn { background: #fff; color: #111; border: 0.8px solid #111; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 7px 12px; cursor: pointer; transition: all 0.2s; }
 .cart-addon-btn:hover { background: #111; color: #fff; }
 .cart-page-sold-out-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #b3261e; margin-bottom: 10px; }
-.cart-page-empty { text-align: center; padding: 60px 0; }
-.cart-page-empty-title { font-family: 'Inter', sans-serif; font-size: var(--body-font-size); font-weight: 500; color: #111; letter-spacing: var(--body-letter-spacing); margin-bottom: 24px; }
 
 /* "Added to cart" bar (showAddedToCartToast(), cart.js). Pale tint of
    the brand green behind it; a stronger #B8CC87 strip along the top
@@ -79,13 +77,14 @@
 /* ============================================
    CART PAGE (renderCartPage(), cart.js)
    Grey page, white cards: delivery banner, one card per item, promo
-   code, totals. Header is reduced to just the logo on this page.
+   code, totals. While the bag has items the header is reduced to just
+   the logo; an empty bag keeps the full header.
    ============================================ */
-body:has(#page-cart.active) #main-nav .nav-left > .nav-icon-btn,
-body:has(#page-cart.active) #main-nav .desktop-nav-links,
-body:has(#page-cart.active) #main-nav .nav-right,
-body:has(#page-cart.active) #main-nav .search-bar-row,
-body:has(#page-cart.active) .nav-quick-links-wrap {
+body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .nav-left > .nav-icon-btn,
+body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .desktop-nav-links,
+body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .nav-right,
+body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .search-bar-row,
+body:has(#page-cart.active .cart-page:not(.is-empty)) .nav-quick-links-wrap {
   display: none !important;
 }
 .cart-page {
@@ -258,3 +257,40 @@ body:has(#page-cart.active) .nav-quick-links-wrap {
 }
 .cart-checkout-btn:hover { background: #333; }
 .cart-checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+/* Empty bag: plain white page, no cards — bag icon, message, a black
+   Continue Shopping button, then a product slider (#cart-empty-grid
+   shares the New Arrivals slider rules in product-grid.css). */
+.cart-page.is-empty { background: #fff; }
+.cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 16px 40px;
+}
+.cart-empty-icon { font-size: 44px; color: #111; }
+.cart-empty-title { font-size: 17px; font-weight: 600; margin-top: 16px; }
+.cart-empty-btn {
+  margin-top: 24px;
+  height: 48px;
+  padding: 0 32px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.cart-empty-btn:hover { background: #333; }
+.cart-empty-suggestions { padding-bottom: 8px; }
+.cart-empty-suggestions-title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 8px 12px;
+}

@@ -419,9 +419,26 @@ function recordDiscountUsage() {
 
 function renderCartPage() {
   if (!DOM.cartPageContent) return;
+  // The logo-only header (cart.css) applies only while the bag has items;
+  // an empty bag keeps the full header so the customer can browse on.
+  DOM.cartPageContent.classList.toggle('is-empty', !S.cart.length);
 
   if (!S.cart.length) {
-    DOM.cartPageContent.innerHTML = '<div class="cart-cards"><div class="cart-card cart-page-empty"><div class="cart-page-empty-title">Your bag is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div></div>';
+    // Recently viewed first; fall back to newest arrivals so the slider
+    // is never empty for a first-time visitor.
+    const active = PRODUCTS.filter(p => p.status === 'active');
+    const recent = S.recentlyViewed.filter(p => p && p.status === 'active');
+    const useRecent = recent.length >= 2;
+    const picks = (useRecent ? recent : merchandiseProducts(active, undefined, 'newest')).slice(0, 8);
+    DOM.cartPageContent.innerHTML = `<div class="cart-empty">
+      <i class="ph ph-tote-simple cart-empty-icon" aria-hidden="true"></i>
+      <div class="cart-empty-title">Your bag is empty</div>
+      <button class="cart-empty-btn" onclick="navigateTo('products')">Continue Shopping</button>
+    </div>${picks.length ? `<section class="cart-empty-suggestions">
+      <div class="cart-empty-suggestions-title">${useRecent ? 'Recently Viewed' : 'New Arrivals'}</div>
+      <div class="product-grid" id="cart-empty-grid">${picks.map(p => productCardHome(p)).join('')}</div>
+    </section>` : ''}`;
+    if (picks.length) initSliderLeadingTracking('cart-empty-grid');
     return;
   }
 
