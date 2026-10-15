@@ -167,6 +167,25 @@ firebase.auth().onAuthStateChanged(function () {
   }
 });
 
+// VAT rate from admin Settings (0 = not VAT-registered, no VAT line).
+// Prices on the site already include VAT, so the line shows the VAT
+// part of the total rather than adding anything to it.
+let checkoutVatRate = 0;
+fetch('/api/store-settings')
+  .then(r => r.ok ? r.json() : null)
+  .then(d => {
+    const rate = Number(d && d.vatRate);
+    if (!(rate > 0 && rate < 100)) return;
+    checkoutVatRate = rate;
+    renderCheckoutSummary();
+  })
+  .catch(() => {});
+
+function formatVatAmount(total) {
+  const vat = Math.round(total * checkoutVatRate / (100 + checkoutVatRate) * 100) / 100;
+  return 'R' + vat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // Same price / discount / delivery rules as the cart page (cart.js), so
 // the bag and checkout always show the same total.
 function getCheckoutTotals() {
@@ -260,7 +279,11 @@ function renderCheckoutSummary() {
   const discountRow = discountAmount > 0
     ? `<div class="checkout-totals-row discount"><span>Discount${appliedDiscount ? ' (' + sanitizeHTML(appliedDiscount.code) + ')' : ''} <button type="button" class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>`
     : '';
-  const totalsHtml = `<div class="checkout-totals-head"><span>Total to pay</span><span>${formatPrice(total)}</span></div>
+  const vatLine = checkoutVatRate > 0
+    ? `<div class="checkout-vat-note">Includes VAT of ${formatVatAmount(total)}</div>`
+    : '';
+  const totalsHtml = `<div class="checkout-totals-head${vatLine ? ' has-vat' : ''}"><span>Total to pay</span><span>${formatPrice(total)}</span></div>
+    ${vatLine}
     <div class="checkout-totals-row"><span>Cart Total</span><span>${formatPrice(subtotal)}</span></div>
     ${discountRow}
     <div class="checkout-totals-row"><span>Delivery Fee</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
