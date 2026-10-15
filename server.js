@@ -15,6 +15,17 @@ app.set('trust proxy', true);
 
 app.use(express.json());
 
+// Page HTML (/, /cart, /checkout, /products/... — any path without a file
+// extension) must be re-checked on every load. Without a Cache-Control
+// header, a phone restoring a tab after a while can reuse an old copy
+// that still points at the previous deploy's scripts and checkout.
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api/') && !req.path.includes('.')) {
+    res.set('Cache-Control', 'no-cache');
+  }
+  next();
+});
+
 // ==================== FIREBASE ADMIN INIT ====================
 // Uses the existing FIREBASE_SERVICE_ACCOUNT env var already set on Render.
 // If it's missing or invalid, we fail gracefully — the /products/:slug
@@ -1260,8 +1271,22 @@ function injectCacheBust(html) {
     if (/^(?:https?:)?\/\//.test(filePath)) return match; // external CDN URL — leave alone
     const sep = filePath.includes('?') ? '&' : '?';
     return attr + '="' + filePath + sep + 'v=' + BUILD_ID + '"';
-  });
+  })
+    // The page fragments index.html fetches at runtime (checkout.html,
+    // chat-widget.html, login.html…) need the same treatment, or a cached
+    // copy of an old fragment can show up inside a freshly deployed page —
+    // e.g. the previous checkout design.
+    .replace(/fetch\('([\w-]+\.html)'\)/g, (m, file) => "fetch('" + file + "?v=" + BUILD_ID + "')")
+    // Lets the page notice, after a tab has sat in the background, that a
+    // newer deploy exists (see the stale-tab check in index.html).
+    .replace('<head>', '<head>\n  <meta name="build-id" content="' + BUILD_ID + '">');
 }
+
+// Read by index.html's stale-tab check. Never cached.
+app.get('/api/build-id', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ buildId: String(BUILD_ID) });
+});
 
 // ==================== LOGO FONT (no flash) ====================
 // The logo's Unbounded font comes from Google, but a plain <link> means
@@ -1710,6 +1735,8 @@ app.use(express.static(path.join(__dirname), {
     if (filePath.endsWith('.otf') || filePath.endsWith('.ttf') || filePath.endsWith('.woff2')) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }
+    // Page fragments: always check with the server before reusing a copy.
+    if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
   }
 }));
 

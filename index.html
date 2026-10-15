@@ -58,6 +58,32 @@
   };
   </script>
   <script>
+  // Stale-tab check. A phone can keep this page open (or frozen in the
+  // back/forward cache) for hours; if a new version of the site went live
+  // in the meantime, the tab would keep showing the old one — old
+  // checkout included. When the tab comes back after 10+ minutes away,
+  // or is restored from that cache, ask the server which deploy is live
+  // and reload if it isn't this one. The bag is in localStorage, so it
+  // survives the reload.
+  (function () {
+    var meta = document.querySelector('meta[name="build-id"]');
+    if (!meta) return;
+    var current = meta.getAttribute('content');
+    var hiddenAt = 0;
+    function check() {
+      fetch('/api/build-id', { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (d && d.buildId && d.buildId !== current) location.reload(); })
+        .catch(function () {});
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+      if (hiddenAt && Date.now() - hiddenAt > 10 * 60 * 1000) check();
+    });
+    window.addEventListener('pageshow', function (e) { if (e.persisted) check(); });
+  })();
+  </script>
+  <script>
   // A logo-triggered homepage reload must behave like a fresh visit at scrollY=0.
   // The browser can otherwise restore the old footer position after the first paint.
   (function () {
