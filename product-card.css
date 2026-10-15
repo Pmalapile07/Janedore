@@ -44,8 +44,4 @@
   background-position: center;
 }
 
-.product-card.sold-out .product-img-wrap img,
-.product-card.sold-out .product-card-slide {
-  opacity: 0.75;
-  filter: grayscale(35%);
-}
+/* Sold-out images show as normal; the SOLD OUT badge says it. */

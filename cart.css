@@ -139,7 +139,6 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
   background-position: center;
   cursor: pointer;
 }
-.cart-item.sold-out .cart-item-img { opacity: 0.75; filter: grayscale(35%); }
 .cart-item-info { flex: 1; min-width: 0; }
 .cart-item-name { font-size: 15px; font-weight: 600; line-height: 1.3; cursor: pointer; }
 .cart-item-brand { font-size: 13px; font-weight: 400; color: #777; margin-top: 4px; }
