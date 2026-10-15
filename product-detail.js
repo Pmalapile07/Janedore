@@ -326,7 +326,7 @@ async function renderProductPage(product) {
   // that old offset — before snapping to top, which is exactly what
   // looked like "the page slides up under the header as if someone
   // scrolled."
-  window.scrollTo({top:0,behavior:"instant"});
+  resetScrollToTop();
   document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active")); DOM.productDetail.classList.add("active"); S.currentPage="product-detail"; S.selectedSize=null; S.productQuantity=1;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   showLoading(DOM.productDetail);

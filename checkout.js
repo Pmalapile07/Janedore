@@ -33,7 +33,7 @@ function activateCheckoutPage() {
   checkoutPage.classList.add("active");
   S.currentPage = "checkout";
   updateHash('checkout');
-  window.scrollTo({ top: 0, behavior: "instant" });
+  resetScrollToTop();
   ensureNavScrolled();
   return checkoutPage;
 }
