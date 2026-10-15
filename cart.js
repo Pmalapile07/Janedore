@@ -130,6 +130,7 @@ function getCartTotalAfterDiscount() {
 }
 
 const FREE_SHIPPING_THRESHOLD = 1500;
+const SHIPPING_FEE = 150;
 function getCartShippingStatus(subtotal) {
   // Check if free shipping discount is applied
   if (appliedDiscount && appliedDiscount.type === 'free_shipping') {
@@ -142,7 +143,7 @@ function getCartShippingStatus(subtotal) {
   const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
   return {
     freeShipping,
-    message: freeShipping ? "Free shipping applied" : `R150 shipping · Free over ${formatPrice(FREE_SHIPPING_THRESHOLD)}`
+    message: freeShipping ? "Free shipping applied" : `${formatPrice(SHIPPING_FEE)} shipping · Free over ${formatPrice(FREE_SHIPPING_THRESHOLD)}`
   };
 }
 
@@ -420,66 +421,96 @@ function renderCartPage() {
   if (!DOM.cartPageContent) return;
 
   if (!S.cart.length) {
-    DOM.cartPageContent.innerHTML = '<div class="cart-page-empty"><div class="cart-page-empty-title">Your bag is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div>';
+    DOM.cartPageContent.innerHTML = '<div class="cart-cards"><div class="cart-card cart-page-empty"><div class="cart-page-empty-title">Your bag is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div></div>';
     return;
   }
 
-  let html = `<div class="cart-page-title">Your Bag (${getCartTotalQty()} ${getCartTotalQty() === 1 ? 'item' : 'items'})</div>`;
+  const finalTotal = getCartTotalAfterDiscount();
+  const shipping = getCartShippingStatus(finalTotal);
+  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - finalTotal);
+  const bannerText = shipping.freeShipping
+    ? 'You’ve earned <strong>FREE</strong> delivery.'
+    : `You’re ${formatPrice(remaining)} away from <strong>FREE</strong> delivery.`;
+  let html = `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div><div class="cart-cards">`;
+
   S.cart.forEach(item => {
     const thumbnail = getCartItemThumbnail(item);
-    const lineTotal = getCartItemLineTotal(item);
     const itemName = sanitizeHTML(item.name || '');
     const itemBrand = sanitizeHTML(item.brand || '');
     const itemColor = sanitizeHTML(item.color || '');
     const itemSize = sanitizeHTML(item.size || '');
-    const itemSizeDisplay = itemSize !== 'OS' ? itemSize : '';
-    const itemMeta = [itemColor, itemSizeDisplay].filter(Boolean).join(' · ');
     const productId = sanitizeHTML(item.productId || '');
-    const soldOut = getCartItemStock(item) <= 0;
+    const stock = getCartItemStock(item);
+    const soldOut = stock <= 0;
+    const wished = S.wishlist.some(w => w.id === item.productId);
+    const maxQty = Math.max(item.qty, Math.min(10, stock));
+    let qtyOptions = '';
+    for (let n = 1; n <= maxQty; n++) qtyOptions += `<option value="${n}"${n === item.qty ? ' selected' : ''}>${n}</option>`;
 
-    html += `<div class="cart-page-item${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${productId}')">
-      <div class="cart-page-img" style="background-image:url('${thumbnail}');"></div>
-      <div class="cart-page-details">
-        <div class="cart-page-brand">${itemBrand}</div>
-        <div class="cart-page-name">${itemName}</div>
-        <div class="cart-page-meta">${itemMeta}</div>
-        ${soldOut ? '<div class="cart-page-sold-out-badge">Sold Out</div>' : ''}
-        <div class="cart-page-qty-wrap">
-          <button class="cart-page-qty-btn" onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',-1,${item.variantIndex});">−</button>
-          <span class="cart-page-qty-num">${item.qty}</span>
-          <button class="cart-page-qty-btn"${soldOut ? ' disabled' : ''} onclick="event.stopPropagation();changeQty('${productId}','${itemSize}',1,${item.variantIndex});">+</button>
+    html += `<div class="cart-card cart-item${soldOut ? ' sold-out' : ''}">
+      <div class="cart-item-top">
+        <div class="cart-item-img" style="background-image:url('${thumbnail}');" onclick="goToProduct('${productId}')"></div>
+        <div class="cart-item-info">
+          <div class="cart-item-name" onclick="goToProduct('${productId}')">${itemName}</div>
+          <div class="cart-item-brand">${itemBrand}${itemColor && itemColor !== 'Default' ? ' · ' + itemColor : ''}</div>
+          ${soldOut ? '<div class="cart-page-sold-out-badge">Sold Out</div>' : ''}
+        </div>
+        <div class="cart-item-actions">
+          <button class="cart-item-icon-btn${wished ? ' wished' : ''}" type="button" data-wish-id="${productId}" data-wish-weight="ph" onclick="toggleWish('${productId}',this)" aria-label="Save to wishlist"><i class="${wished ? 'ph-fill' : 'ph'} ph-heart"></i></button>
+          <button class="cart-item-icon-btn" type="button" onclick="removeFromCart('${productId}','${itemSize}',${item.variantIndex})" aria-label="Remove from bag"><i class="ph ph-x"></i></button>
         </div>
       </div>
-      <div class="cart-page-price">${formatPrice(lineTotal)}</div>
-      <button class="cart-page-remove" onclick="event.stopPropagation();removeFromCart('${productId}','${itemSize}',${item.variantIndex});">×</button>
+      <div class="cart-item-attrs">
+        <label class="cart-item-qty">Quantity:
+          <select onchange="setCartQty('${productId}','${itemSize}',${item.variantIndex},this.value)"${soldOut ? ' disabled' : ''} aria-label="Quantity">${qtyOptions}</select>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </label>
+        ${itemSize && itemSize !== 'OS' ? `<span class="cart-item-size">Size: <strong>${itemSize}</strong></span>` : ''}
+      </div>
+      <div class="cart-item-bottom">
+        <span class="cart-item-returns">Free exchange or return within 30 days</span>
+        <span class="cart-item-price">${formatPrice(getCartItemLineTotal(item))}</span>
+      </div>
     </div>`;
   });
 
   if (hasSunglassesInCart() && !pouchAlreadyInCart()) {
     const pouch = getCartProduct('janedore-leather-pouch');
-    if (pouch) html += `<div class="cart-addon-section"><div class="cart-addon-title">ADD-ON</div><div class="cart-addon-item"><div class="cart-addon-img" style="background-image:url('${getProductThumbnail(pouch)}');"></div><div class="cart-addon-info"><div class="cart-addon-name">${sanitizeHTML(pouch.name)}</div><div class="cart-addon-price">${formatPrice(pouch.price)}</div></div><button class="cart-addon-btn" onclick="event.stopPropagation();addPouchToCart();">Add</button></div></div>`;
+    if (pouch) html += `<div class="cart-card cart-addon-item"><div class="cart-addon-img" style="background-image:url('${getProductThumbnail(pouch)}');"></div><div class="cart-addon-info"><div class="cart-addon-title">ADD-ON</div><div class="cart-addon-name">${sanitizeHTML(pouch.name)}</div><div class="cart-addon-price">${formatPrice(pouch.price)}</div></div><button class="cart-addon-btn" onclick="addPouchToCart();">Add</button></div>`;
   }
 
-  const discountAmount = getDiscountAmount();
-  const finalTotal = getCartTotalAfterDiscount();
-  const shipping = getCartShippingStatus(finalTotal);
-  const hasSoldOut = cartHasSoldOutItem();
-  const discountHtml = appliedDiscount
-    ? `<div class="cart-page-subtotal">Discount (${sanitizeHTML(appliedDiscount.code)}) <strong>-${formatPrice(discountAmount)}</strong> <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></div>`
-    : '';
-
-  html += `<div class="cart-page-summary">
-    ${discountHtml}
-    <div class="cart-page-subtotal">${appliedDiscount ? 'Total' : 'Subtotal'} <strong>${formatPrice(finalTotal)}</strong></div>
-    <div class="cart-page-ship-note">${shipping.message}</div>
-    ${cartHasMultipleTypes() ? '<div class="cart-page-multi-package-note">contents may arrive in multiple packages</div>' : ''}
-    <div class="cart-page-actions">
-      <button class="cart-page-btn secondary" onclick="navigateTo('products')">Continue Shopping</button>
-      <button class="cart-page-btn primary"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout</button>
+  html += `<div class="cart-card cart-code">
+    <div class="cart-card-title">Apply a code <i class="ph ph-info" title="Promo and discount codes are applied to your bag total."></i></div>
+    <label class="cart-code-label" for="cart-promo-input">Enter a promo code</label>
+    <div class="cart-code-row">
+      <input id="cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')applyPromoCode()">
+      <button type="button" onclick="applyPromoCode()">Apply</button>
     </div>
-    <div class="cart-security-note"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure & Encrypted Payment</div>
   </div>`;
+
+  const discountAmount = getDiscountAmount();
+  const hasSoldOut = cartHasSoldOutItem();
+  html += `<div class="cart-card cart-totals">
+    <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + (shipping.freeShipping ? 0 : SHIPPING_FEE))}</span></div>
+    <div class="cart-totals-row"><span>Cart Total</span><span>${formatPrice(getCartSubtotal())}</span></div>
+    ${appliedDiscount ? `<div class="cart-totals-row"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
+    <div class="cart-totals-row"><span>Delivery Fee</span><span>${shipping.freeShipping ? 'Free' : formatPrice(SHIPPING_FEE)}</span></div>
+    <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout Now</button>
+  </div></div>`;
   DOM.cartPageContent.innerHTML = html;
+}
+
+// Quantity dropdown on the cart page — capped at what's actually in stock
+// for that exact color/size, same rule changeQty() applies.
+function setCartQty(productId, size, vi, value) {
+  const item = S.cart.find(i => i.productId === productId && i.size === size && i.variantIndex === vi);
+  if (!item) return;
+  const product = getCartProduct(productId);
+  const available = product ? getVariantSizeStock(product, vi, size) : Number(value);
+  const qty = Math.max(1, Math.min(Number(value) || 1, available || 1));
+  if (qty < Number(value)) alert('Only ' + available + ' left in stock.');
+  item.qty = qty;
+  commitCartChange();
 }
 
 // The cart is a normal page (#page-cart, /cart), not a slide-out panel.
