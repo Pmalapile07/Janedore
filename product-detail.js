@@ -410,7 +410,7 @@ async function renderProductPage(product) {
       </div>
       <div class="product-size-color-group">
         ${buildSizeRowHtml(product,vi)}
-        ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select a Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
+        ${variants.length?`<div class="product-variants"><div class="sizes-label">Select a Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
       </div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
