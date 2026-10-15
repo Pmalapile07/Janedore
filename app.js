@@ -746,12 +746,11 @@ function toggleSubmenuCollapse(section) { const el = document.getElementById(sec
 function toggleBrandsCollapse() { const el = document.getElementById('brands-collapse'); if (el) el.classList.toggle('open'); }
 
 function updateChatVisibility() {
-  if (!DOM.chatBubble) return;
-  const hiddenPages = ['product-detail', 'products', 'category', 'wishlist', 'cart', 'checkout'];
-  // 'important' is required: chat-widget.html styles the bubble with
-  // display:flex !important, which a plain inline display:none can't beat.
-  if (hiddenPages.includes(S.currentPage)) DOM.chatBubble.style.setProperty('display', 'none', 'important');
-  else DOM.chatBubble.style.removeProperty('display');
+  // Where the bubble shows is decided in CSS (chat-widget.html): hidden
+  // only while the product page is open, visible on every other page.
+  // Deriving it from the active page means no navigation path can leave
+  // it stuck hidden; this just clears any inline style left by older code.
+  if (DOM.chatBubble) DOM.chatBubble.style.removeProperty('display');
 }
 // ==================== IMAGE PROTECTION ====================
 // Prevent long-press/right-click saving of product images

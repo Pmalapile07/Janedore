@@ -26,18 +26,25 @@
 
  box-shadow: none;
 
- transition:
-   padding 0.3s ease,
-   gap 0.3s ease,
-   background 0.25s ease;
-
- -webkit-transform: translateZ(0);
- transform: translateZ(0);
-
+ /* No translateZ / backface-visibility and no padding or gap
+    transitions: on iPhone they put the bar on its own layer that trails
+    the page while Safari's toolbar slides, which is the lag. */
  touch-action: manipulation;
+}
 
- backface-visibility: hidden;
- -webkit-backface-visibility: hidden;
+/* White skirt below the bar. When Safari's bottom toolbar slides away
+   mid-scroll, a fixed bar can trail by a frame; this covers that strip
+   so the page underneath never shows through. */
+#sticky-add-bar::after,
+.sticky-add-bar::after {
+ content: '';
+ position: absolute;
+ left: 0;
+ right: 0;
+ top: 100%;
+ height: 120px;
+ background: #fff;
+ pointer-events: none;
 }
 
 .sticky-add-bar .sticky-brand {
@@ -263,10 +270,4 @@
   PREVENT IOS JITTER / GAP BUGS
   ========================================= */
 
-body {
- overflow-x: hidden;
-}
-
-body {
- -webkit-overflow-scrolling: touch;
-}
+/* (body overflow is set once in utilities.css) */
