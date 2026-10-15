@@ -39,7 +39,7 @@ function buildSizeRowHtml(product, variantIndex) {
     const cls = 'product-size-btn' + (S.selectedSize === s ? ' sel' : '') + (inStock ? '' : ' out-of-stock');
     return `<button class="${cls}" ${inStock ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')">${escapeHTML(s)}</button>`;
   }).join('');
-  return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Size</div><div class="sizes-row">${buttons}</div></div>`;
+  return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Select a Size</div><div class="sizes-row">${buttons}</div></div>`;
 }
 
 // Re-evaluates the sticky bar's Add to Bag button (the page's only add
@@ -134,7 +134,28 @@ function getAllProductImages(product, variantIndex) {
   return all.length ? all : [PLACEHOLDER_IMAGE];
 }
 
-function variantSwatchesHtml(product, selectedIndex) { const variants = product?.variants || []; const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0); const soldOut = isProductSoldOut(product); return variants.slice(0,2).map((v,i)=>{ let cls = `variant-swatch${i===si?" selected":""}${soldOut?" sold-out":""}`; let style = v.dualColor ? `--swatch-color1:${v.swatch||'#ccc'};--swatch-color2:${v.swatchColor2||'#999'};` : `background:${v.swatch||'#ccc'};`; if(v.dualColor) cls += ' dual-color'; return `<span class="${cls}" style="${style}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`; }).join("") + (variants.length>2?`<span class="variant-plus">+${variants.length-2}</span>`:''); }
+// Each color box shows that color's own product photo (product-on-white
+// shot first, then model, then detail), cropped small by Cloudinary. The
+// flat swatch color stays underneath as a fallback while it loads or if
+// a color has no photos yet.
+function variantSwatchThumb(variant) {
+  const imgs = variant?.images || {};
+  const url = [imgs.ghost, imgs.model, imgs.detail].map(a => (a || []).filter(Boolean)[0]).find(Boolean);
+  if (!url) return '';
+  return escapeForCssUrl(safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fill,g_auto,w_144,h_120/'));
+}
+function variantSwatchesHtml(product, selectedIndex) {
+  const variants = product?.variants || [];
+  const si = selectedIndex !== undefined ? selectedIndex : (S.productVariantSelections[product.id] ?? 0);
+  const soldOut = isProductSoldOut(product);
+  return variants.map((v, i) => {
+    const thumb = variantSwatchThumb(v);
+    const cls = `variant-swatch${i === si ? ' selected' : ''}${soldOut ? ' sold-out' : ''}${thumb ? ' has-image' : ''}`;
+    const style = `background-color:${escapeHTML(v.swatch || '#ccc')};` + (thumb ? `background-image:url('${thumb}');` : '');
+    const label = escapeHTML(v.color || `Color ${i + 1}`);
+    return `<span class="${cls}" style="${style}" role="button" aria-label="${label}" title="${label}" onclick="event.stopPropagation();selectVariant('${product.id}',${i},event)"></span>`;
+  }).join('');
+}
 
 function selectVariant(productId, variantIndex, evt) {
   if(evt){evt.stopPropagation();evt.preventDefault();}
@@ -388,8 +409,8 @@ async function renderProductPage(product) {
         </div>
       </div>
       <div class="product-size-color-group">
-        ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
         ${buildSizeRowHtml(product,vi)}
+        ${variants.length>1?`<div class="product-variants"><div class="sizes-label">Select a Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
       </div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
