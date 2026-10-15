@@ -28,9 +28,12 @@ function isSizeInStock(product, variantIndex, size) {
 function buildSizeRowHtml(product, variantIndex) {
   const sizes = (product.sizes || []).filter(s => s !== 'OS');
   if (!sizes.length) return '';
-  // A single size isn't a choice — select it automatically instead of
-  // making the customer click the one option there is.
-  if (sizes.length === 1 && S.selectedSize !== sizes[0]) S.selectedSize = sizes[0];
+  // Default to the first size actually in stock for this color, so the
+  // customer can add straight away instead of being told to pick one
+  // (and a product with only one available size never asks at all).
+  if (!S.selectedSize || !sizes.includes(S.selectedSize) || !isSizeInStock(product, variantIndex, S.selectedSize)) {
+    S.selectedSize = sizes.find(s => isSizeInStock(product, variantIndex, s)) || null;
+  }
   const buttons = sizes.map(s => {
     const inStock = isSizeInStock(product, variantIndex, s);
     const cls = 'product-size-btn' + (S.selectedSize === s ? ' sel' : '') + (inStock ? '' : ' out-of-stock');
@@ -53,8 +56,12 @@ function updateAddToCartState() {
   const vi = S.productVariantSelections[product.id] ?? 0;
   const isPreorder = product.badge === 'pre-order';
   const soldOut = isProductSoldOut(product);
-  const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
-  const needsSize = hasSizes && !S.selectedSize;
+  const realSizes = (product.sizes || []).filter(s => s !== 'OS');
+  const hasSizes = realSizes.length > 0;
+  // A size is auto-selected whenever one is in stock (buildSizeRowHtml),
+  // so no selection here means this color has none left.
+  const noSizeInStock = hasSizes && !realSizes.some(s => isSizeInStock(product, vi, s));
+  const needsSize = hasSizes && !S.selectedSize && !noSizeInStock;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
   stickyBtn.disabled = (needsSize || sizeOutOfStock || soldOut) && !isPreorder;
 
