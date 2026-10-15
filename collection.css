@@ -501,6 +501,9 @@ body.on-collection-page .collection-filter-bar {
   margin-bottom: 8px;
 }
 
+.vendor-hero-logo-wrap { margin: 0 0 12px; line-height: 0; }
+.vendor-hero-logo { display: inline-block; max-height: 72px; max-width: 60%; object-fit: contain; }
+
 .vendor-hero-desc {
   font-size: 13px;
   color: rgba(255,255,255,0.85);
@@ -518,6 +521,8 @@ body.on-collection-page .collection-filter-bar {
   .vendor-hero-name {
     font-size: 22px;
   }
+
+  .vendor-hero-logo { max-height: 56px; }
   
   .vendor-hero-desc {
     font-size: 11px;
