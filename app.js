@@ -747,7 +747,7 @@ function toggleBrandsCollapse() { const el = document.getElementById('brands-col
 
 function updateChatVisibility() {
   if (!DOM.chatBubble) return;
-  const hiddenPages = ['product-detail', 'products', 'category', 'wishlist', 'cart'];
+  const hiddenPages = ['product-detail', 'products', 'category', 'wishlist', 'cart', 'checkout'];
   // 'important' is required: chat-widget.html styles the bubble with
   // display:flex !important, which a plain inline display:none can't beat.
   if (hiddenPages.includes(S.currentPage)) DOM.chatBubble.style.setProperty('display', 'none', 'important');

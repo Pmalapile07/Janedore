@@ -26,19 +26,23 @@ let payFastConfirmPending = false;
 // Shared by navigateToCheckout() and the PayFast-return flow below —
 // both need to force the checkout page active regardless of whatever
 // page the router's own startup logic landed on.
-function activateCheckoutPage() {
+function activateCheckoutPage(replaceUrl) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const checkoutPage = document.getElementById("page-checkout");
   if (!checkoutPage) return null;
   checkoutPage.classList.add("active");
   S.currentPage = "checkout";
-  updateHash('checkout');
+  // Same clean /checkout URL and header state as every other page —
+  // this used to push "/#checkout" instead, a second address for the
+  // same page that a reloaded or restored tab could come back to.
+  updateCleanUrl('checkout', replaceUrl);
   resetScrollToTop();
+  setNavForPage('checkout');
   ensureNavScrolled();
   return checkoutPage;
 }
 
-function navigateToCheckout() {
+function navigateToCheckout(replaceUrl) {
   // Participates in app.js's shared pageNavGeneration counter (see the
   // comment there) even though this function has no async fetch of its
   // own — bumping it here still invalidates any OTHER page's in-flight
@@ -47,12 +51,15 @@ function navigateToCheckout() {
   ++pageNavGeneration;
   const user = firebase.auth().currentUser;
 
-  if (!S.cart.length && !user && !lastConfirmedOrderNumber) {
-    alert('Your cart is empty');
+  // Nothing to pay for and no order just placed: the checkout form would
+  // only show R0 totals, so land on the bag instead — the first link in
+  // the bag → checkout → payment chain.
+  if (!S.cart.length && !lastConfirmedOrderNumber && !payFastConfirmPending) {
+    navigateTo('cart', replaceUrl);
     return;
   }
 
-  const checkoutPage = activateCheckoutPage();
+  const checkoutPage = activateCheckoutPage(replaceUrl);
   if (checkoutPage) {
     if (payFastConfirmPending) return;
 
@@ -139,54 +146,12 @@ function getCheckoutTotals() {
 }
 
 function renderCheckoutSummary() {
-  const itemsContainer = document.getElementById('checkout-items');
-  if (!itemsContainer || !S.cart.length) {
-    if (itemsContainer) itemsContainer.innerHTML = '<p style="text-align:center;padding:20px;color:#888;font-size:11px;">Your cart is empty.</p>';
-    return;
-  }
-  
+  // The checkout page no longer lists the items (the bag, one step back,
+  // already does) — it only shows the totals card above Place Order.
+  if (!document.getElementById('checkout-total') || !S.cart.length) return;
+
   const { subtotal, discountAmount, shipping, total } = getCheckoutTotals();
 
-  let itemsHTML = S.cart.map(item => {
-    const product = PRODUCTS.find(p => p.id === item.productId);
-    const thumbnail = item.thumbnail && item.thumbnail !== PLACEHOLDER_IMAGE 
-      ? item.thumbnail 
-      : (product ? getProductThumbnail(product, item.variantIndex) : PLACEHOLDER_IMAGE);
-    
-    // 'OS' is a placeholder sentinel, not a real size — never display it.
-    const itemSizeDisplay = item.size && item.size !== 'OS' ? item.size : '';
-    return `<div class="checkout-item">
-      <div class="checkout-item-img" style="background-image:url('${thumbnail}');"></div>
-      <div class="checkout-item-info">
-        <div class="checkout-item-brand">${item.brand || ''}</div>
-        <div class="checkout-item-name">${item.name}</div>
-        <div class="checkout-item-meta">${item.color || ''}${item.color && itemSizeDisplay ? ' · ' : ''}${itemSizeDisplay} · Qty: ${item.qty}</div>
-      </div>
-      <div class="checkout-item-price">${formatPrice(getCartItemLineTotal(item))}</div>
-    </div>`;
-  }).join('');
-  
-  const brandGroups = {};
-  S.cart.forEach(item => {
-    const product = PRODUCTS.find(p => p.id === item.productId);
-    const brand = product?.brand || 'Unknown';
-    if (!brandGroups[brand]) brandGroups[brand] = [];
-    brandGroups[brand].push(item);
-  });
-  
-  const brandNames = Object.keys(brandGroups);
-  const totalItems = S.cart.reduce((a, i) => a + i.qty, 0);
-  
-  let packagesHTML = '';
-  if (brandNames.length > 1) {
-    packagesHTML = `<div class="checkout-package-note">${brandNames.length} packages · Ships from ${brandNames.join(', ')}</div>`;
-  }
-  
-  itemsContainer.innerHTML = itemsHTML;
-  
-  const packagesEl = document.getElementById('checkout-packages');
-  if (packagesEl) packagesEl.innerHTML = packagesHTML;
-  
   const subtotalEl = document.getElementById('checkout-subtotal');
   if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
   
@@ -610,7 +575,7 @@ function renderOrderConfirmation(order) {
 
 function showPayFastConfirmingView() {
   payFastConfirmPending = true;
-  activateCheckoutPage();
+  activateCheckoutPage(true);
 
   // This runs at script-load time, right as the PayFast redirect lands
   // — almost certainly before checkout.html's own independent fetch

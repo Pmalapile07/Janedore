@@ -15,6 +15,17 @@ app.set('trust proxy', true);
 
 app.use(express.json());
 
+// Page HTML (/, /cart, /checkout, /products/... — any path without a file
+// extension) must be re-checked on every load. Without a Cache-Control
+// header, a phone restoring a tab after a while can reuse an old copy
+// that still points at the previous deploy's scripts and checkout.
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api/') && !req.path.includes('.')) {
+    res.set('Cache-Control', 'no-cache');
+  }
+  next();
+});
+
 // ==================== FIREBASE ADMIN INIT ====================
 // Uses the existing FIREBASE_SERVICE_ACCOUNT env var already set on Render.
 // If it's missing or invalid, we fail gracefully — the /products/:slug
@@ -533,7 +544,7 @@ app.post('/api/payfast/initiate', async (req, res) => {
     if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
     const order = orderDoc.data();
     if (order.paymentStatus === 'paid') return res.status(400).json({ error: 'Order already paid' });
-    if (order.paymentStatus === 'cancelled') return res.status(400).json({ error: 'Order was cancelled' });
+    if (['cancelled', 'failed', 'expired'].includes(order.paymentStatus)) return res.status(400).json({ error: 'This order is no longer open — please check out again' });
 
     // Charge what the order really costs, never what the browser wrote.
     let priced;
@@ -611,16 +622,131 @@ app.post('/api/payfast/initiate', async (req, res) => {
 // only fires for an actual payment attempt. Guarded against the order
 // having been paid in the meantime (e.g. the ITN winning a race against
 // this call) so a cancel report can never downgrade a real payment.
+// ==================== STOCK RETURN FOR UNPAID ORDERS ====================
+// Stock is taken off when the order is created (checkout.js, in the same
+// transaction as the order) so two customers can't both buy the last unit.
+// If that order then never gets paid — cancelled on PayFast, payment
+// failed, or the customer simply left — the units go back here. Runs in a
+// transaction and records stockRestored on the order, so it can only ever
+// happen once per order, and never to a paid one. Mirrors checkout.js's
+// decrement exactly: per color/size when the product tracks stock that
+// way (stockByVariant), otherwise the flat product total.
+function applyStockChange(tx, productDocs, productRefs, itemsByProduct, sign) {
+  const shortfalls = [];
+  productDocs.forEach((doc, i) => {
+    if (!doc.exists) return;
+    const data = doc.data();
+    const items = itemsByProduct[productRefs[i].id];
+    const byVariant = (data.stockByVariant && typeof data.stockByVariant === 'object') ? JSON.parse(JSON.stringify(data.stockByVariant)) : null;
+    if (byVariant) {
+      items.forEach(item => {
+        const vi = item.variantIndex ?? 0;
+        const key = item.size || 'OS';
+        const sizes = byVariant[vi] || {};
+        const current = typeof sizes[key] === 'number' ? sizes[key] : 0;
+        const next = current + sign * item.qty;
+        if (next < 0) shortfalls.push((item.name || productRefs[i].id) + ' (' + key + ')');
+        sizes[key] = Math.max(0, next);
+        byVariant[vi] = sizes;
+      });
+      const total = Object.values(byVariant).reduce((sum, sizes) =>
+        sum + Object.values(sizes).reduce((a, n) => a + (typeof n === 'number' ? n : 0), 0), 0);
+      tx.update(productRefs[i], { stockByVariant: byVariant, stock: total });
+    } else {
+      const qty = items.reduce((a, it) => a + it.qty, 0);
+      const next = (data.stock || 0) + sign * qty;
+      if (next < 0) shortfalls.push(items[0].name || productRefs[i].id);
+      tx.update(productRefs[i], { stock: Math.max(0, next) });
+    }
+  });
+  return shortfalls;
+}
+
+function groupOrderItems(order) {
+  const itemsByProduct = {};
+  (order.items || []).forEach(item => {
+    const id = String(item.productId || '');
+    const qty = Math.floor(Number(item.qty));
+    if (!id || !(qty > 0)) return;
+    (itemsByProduct[id] = itemsByProduct[id] || []).push(Object.assign({}, item, { qty }));
+  });
+  return itemsByProduct;
+}
+
+// Marks an unpaid order with `paymentStatus` (cancelled/failed/expired)
+// and puts its stock back. Returns false if there was nothing to do.
+async function releaseUnpaidOrder(orderRef, paymentStatus) {
+  return adminDb.runTransaction(async (tx) => {
+    const orderDoc = await tx.get(orderRef);
+    if (!orderDoc.exists) return false;
+    const order = orderDoc.data();
+    const current = order.paymentStatus || 'unpaid';
+    if (current === 'paid' || order.stockRestored) {
+      if (current === 'unpaid') tx.update(orderRef, { paymentStatus });
+      return false;
+    }
+    const itemsByProduct = groupOrderItems(order);
+    const productRefs = Object.keys(itemsByProduct).map(id => adminDb.collection('products').doc(id));
+    const productDocs = await Promise.all(productRefs.map(ref => tx.get(ref)));
+    applyStockChange(tx, productDocs, productRefs, itemsByProduct, +1);
+    tx.update(orderRef, {
+      paymentStatus: current === 'unpaid' ? paymentStatus : current,
+      stockRestored: true,
+      stockRestoredAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return true;
+  });
+}
+
+// Payment arrived for an order whose stock was already given back (it
+// expired or was cancelled first). The customer has paid, so the sale
+// stands: take the stock again, and flag the order for the team if any
+// of it has sold out in the meantime.
+async function reclaimStockForLatePayment(orderRef) {
+  return adminDb.runTransaction(async (tx) => {
+    const orderDoc = await tx.get(orderRef);
+    if (!orderDoc.exists || !orderDoc.data().stockRestored) return [];
+    const itemsByProduct = groupOrderItems(orderDoc.data());
+    const productRefs = Object.keys(itemsByProduct).map(id => adminDb.collection('products').doc(id));
+    const productDocs = await Promise.all(productRefs.map(ref => tx.get(ref)));
+    const shortfalls = applyStockChange(tx, productDocs, productRefs, itemsByProduct, -1);
+    tx.update(orderRef, Object.assign({ stockRestored: false },
+      shortfalls.length ? { needsAttention: 'Paid after expiry; out of stock: ' + shortfalls.join(', ') } : {}));
+    return shortfalls;
+  });
+}
+
+// Abandoned checkouts: anything still unpaid 2 hours after it was placed
+// is expired and its stock returned. Queried on paymentStatus alone (a
+// single-field index Firestore has by default) and filtered by age here.
+const UNPAID_ORDER_TTL_MS = 2 * 60 * 60 * 1000;
+async function expireAbandonedOrders() {
+  if (!adminDb) return;
+  try {
+    const cutoff = Date.now() - UNPAID_ORDER_TTL_MS;
+    const snap = await adminDb.collection('orders').where('paymentStatus', '==', 'unpaid').get();
+    let released = 0;
+    for (const doc of snap.docs) {
+      const created = doc.data().createdAt;
+      const createdMs = created && typeof created.toMillis === 'function' ? created.toMillis() : 0;
+      if (!createdMs || createdMs > cutoff) continue;
+      if (await releaseUnpaidOrder(doc.ref, 'expired')) released++;
+    }
+    if (released) console.log('[ORDERS] Expired', released, 'abandoned unpaid order(s) and returned their stock');
+  } catch (e) {
+    console.error('[ORDERS] Abandoned-order sweep failed:', e.message);
+  }
+}
+setTimeout(expireAbandonedOrders, 60 * 1000);
+setInterval(expireAbandonedOrders, 15 * 60 * 1000).unref();
+
 app.post('/api/payfast/order/:id/cancel', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   try {
     const orderRef = adminDb.collection('orders').doc(req.params.id);
     const orderDoc = await orderRef.get();
     if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
-    const order = orderDoc.data();
-    if ((order.paymentStatus || 'unpaid') === 'unpaid') {
-      await orderRef.update({ paymentStatus: 'cancelled' });
-    }
+    await releaseUnpaidOrder(orderRef, 'cancelled');
     res.json({ ok: true });
   } catch (e) {
     console.error('[PAYFAST_CANCEL] Error:', e.message);
@@ -738,13 +864,18 @@ app.post('/api/payfast/notify', async (req, res) => {
       // methods) may still resolve to COMPLETE on a later ITN, so it's
       // left alone rather than being recorded as a failure prematurely.
       if (pfData.payment_status === 'FAILED' && order.paymentStatus === 'unpaid') {
-        await orderRef.update({ paymentStatus: 'failed' });
+        await releaseUnpaidOrder(orderRef, 'failed');
       }
       return;
     }
     if (order.paymentStatus === 'paid') {
       console.log('[PAYFAST_ITN] Order', orderId, 'already marked paid — ignoring duplicate notification');
       return;
+    }
+
+    if (order.stockRestored) {
+      const shortfalls = await reclaimStockForLatePayment(orderRef);
+      if (shortfalls.length) console.error('[PAYFAST_ITN] Order', orderId, 'paid after its stock was released; now short on:', shortfalls.join(', '));
     }
 
     await orderRef.update({
@@ -1140,8 +1271,22 @@ function injectCacheBust(html) {
     if (/^(?:https?:)?\/\//.test(filePath)) return match; // external CDN URL — leave alone
     const sep = filePath.includes('?') ? '&' : '?';
     return attr + '="' + filePath + sep + 'v=' + BUILD_ID + '"';
-  });
+  })
+    // The page fragments index.html fetches at runtime (checkout.html,
+    // chat-widget.html, login.html…) need the same treatment, or a cached
+    // copy of an old fragment can show up inside a freshly deployed page —
+    // e.g. the previous checkout design.
+    .replace(/fetch\('([\w-]+\.html)'\)/g, (m, file) => "fetch('" + file + "?v=" + BUILD_ID + "')")
+    // Lets the page notice, after a tab has sat in the background, that a
+    // newer deploy exists (see the stale-tab check in index.html).
+    .replace('<head>', '<head>\n  <meta name="build-id" content="' + BUILD_ID + '">');
 }
+
+// Read by index.html's stale-tab check. Never cached.
+app.get('/api/build-id', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ buildId: String(BUILD_ID) });
+});
 
 // ==================== LOGO FONT (no flash) ====================
 // The logo's Unbounded font comes from Google, but a plain <link> means
@@ -1590,6 +1735,8 @@ app.use(express.static(path.join(__dirname), {
     if (filePath.endsWith('.otf') || filePath.endsWith('.ttf') || filePath.endsWith('.woff2')) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }
+    // Page fragments: always check with the server before reusing a copy.
+    if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
   }
 }));
 
