@@ -586,6 +586,14 @@ body.on-collection-page .collection-filter-bar {
 body.brand-report-open { overflow: hidden; }
 body.brand-report-open #live-chat-bubble { display: none !important; }
 .brand-report-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; height: 100vh; height: 100dvh; z-index: 10000; background: #fff; display: flex; justify-content: center; }
+/* iOS 26 Safari skips painting opaque fixed layers under its floating
+   toolbar, so the page showed through at the bottom. Same fix as the
+   sticky Add to Bag bar (sticky-bar.css): 0.999 opacity plus a white
+   skirt below the panel. */
+@media (max-width: 768px) {
+  .brand-report-overlay { opacity: 0.999; }
+  .brand-report-overlay::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 120px; background: #fff; }
+}
 .brand-report-sheet { background: #fff; width: 100%; max-width: 520px; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 0 16px calc(32px + env(safe-area-inset-bottom)); box-sizing: border-box; }
 .brand-report-head { position: sticky; top: 0; z-index: 1; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(16px + env(safe-area-inset-top)) 0 12px; border-bottom: 1px solid #eee; }
 .brand-report-head h2 { font-size: 17px; font-weight: 600; margin: 0; color: #111; }
@@ -600,7 +608,7 @@ body.brand-report-open #live-chat-bubble { display: none !important; }
 .brand-report-reason input { width: 18px; height: 18px; margin: 0; accent-color: #111; flex: 0 0 auto; }
 .brand-report-label { display: block; font-size: 13px; font-weight: 600; color: #111; margin: 18px 0 6px; }
 .brand-report-label span { font-weight: 400; color: #888; }
-.brand-report-sheet textarea, .brand-report-sheet input[type="email"] { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 0; padding: 12px; font: inherit; font-size: 16px; color: #111; background: #fff; }
+.brand-report-sheet textarea, .brand-report-sheet input[type="email"] { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 0; padding: 12px; font: inherit; font-size: 13px; line-height: 1.5; color: #111; background: #fff; }
 .brand-report-sheet textarea { resize: vertical; min-height: 96px; }
 .brand-report-msg { font-size: 13px; color: #c0392b; min-height: 18px; margin-top: 10px; }
 .brand-report-submit { width: 100%; height: 46px; margin-top: 6px; background: #111; color: #fff; border: 0; border-radius: 0; font-size: calc(var(--ui-font-size) + 1px); font-weight: 500; letter-spacing: var(--ui-letter-spacing); text-transform: uppercase; cursor: pointer; }
