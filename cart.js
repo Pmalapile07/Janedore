@@ -203,7 +203,50 @@ function addToCart(productId, size, qty) {
     sessionStorage.removeItem('janedore_last_order_number');
   }
   commitCartChange();
-  openCart();
+  showAddedToCartToast();
+}
+
+// "Added to cart" bar: stays where the customer is (no cart panel), with a
+// strip along its top that shrinks to nothing; the bar leaves when it
+// does. Adding again while it's showing restarts the countdown.
+const ADDED_TOAST_MS = 3000;
+let _addedToastTimer = null;
+function showAddedToCartToast() {
+  let toast = document.getElementById('added-to-cart-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'added-to-cart-toast';
+    toast.className = 'added-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.innerHTML =
+      '<div class="added-toast-progress"></div>' +
+      '<i class="ph ph-check-circle added-toast-icon" aria-hidden="true"></i>' +
+      '<span class="added-toast-text">Added to cart</span>' +
+      '<button type="button" class="added-toast-close" aria-label="Dismiss"><i class="ph ph-x"></i></button>';
+    toast.querySelector('.added-toast-close').addEventListener('click', hideAddedToCartToast);
+    document.body.appendChild(toast);
+  }
+  // Sit just above the product page's sticky Add to Bag bar when it's there.
+  const sticky = document.getElementById('sticky-add-bar');
+  toast.style.bottom = (sticky ? sticky.getBoundingClientRect().height : 0) + 16 + 'px';
+
+  // Restart the shrinking strip from full width.
+  const progress = toast.querySelector('.added-toast-progress');
+  progress.style.transition = 'none';
+  progress.style.transform = 'scaleX(1)';
+  void progress.offsetWidth;
+  progress.style.transition = 'transform ' + ADDED_TOAST_MS + 'ms linear';
+  progress.style.transform = 'scaleX(0)';
+
+  toast.classList.add('show');
+  clearTimeout(_addedToastTimer);
+  _addedToastTimer = setTimeout(hideAddedToCartToast, ADDED_TOAST_MS);
+}
+function hideAddedToCartToast() {
+  clearTimeout(_addedToastTimer);
+  const toast = document.getElementById('added-to-cart-toast');
+  if (toast) toast.classList.remove('show');
 }
 
 function removeFromCart(productId, size, vi) {
