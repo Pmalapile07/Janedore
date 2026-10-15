@@ -325,6 +325,30 @@ app.post('/api/send-welcome-email', (req, res) => {
   });
 });
 
+// ==================== BRAND ASSETS (admin > Content) ====================
+// The logos chosen in admin's Content section (settings/contentLibrary):
+// siteLogo replaces the header wordmark, emailLogo goes in the black bar
+// of every order email. Cached for a minute.
+let brandAssetsCache = { value: { siteLogo: '', emailLogo: '' }, at: 0 };
+async function getBrandAssets() {
+  if (!adminDb || Date.now() - brandAssetsCache.at < 60 * 1000) return brandAssetsCache.value;
+  try {
+    const doc = await adminDb.collection('settings').doc('contentLibrary').get();
+    const d = doc.exists ? doc.data() : {};
+    const pick = (slot) => (slot && /^https:\/\//.test(slot.url || '') ? slot.url : '');
+    brandAssetsCache = { value: { siteLogo: pick(d.siteLogo), emailLogo: pick(d.emailLogo) }, at: Date.now() };
+  } catch (e) {
+    console.warn('[BRAND_ASSETS] Could not read content library:', e.message);
+    brandAssetsCache.at = Date.now();
+  }
+  return brandAssetsCache.value;
+}
+
+// Cloudinary resize that keeps transparency (PNG), for logos.
+function logoImageUrl(url, width) {
+  return url.includes('/image/upload/') ? url.replace('/upload/', '/upload/c_limit,w_' + width + ',f_png/') : url;
+}
+
 // ==================== ORDER NOTIFICATIONS ====================
 // Sent once an order is paid (PayFast ITN below). Designs live in
 // order-emails.js. Who gets what:
@@ -356,8 +380,10 @@ async function buildOrderEmailContext(order) {
     const docs = await adminDb.getAll(...ids.map(id => adminDb.collection('products').doc(id)));
     docs.forEach(d => { if (d.exists) products[d.id] = d.data(); });
   }
+  const assets = await getBrandAssets();
   return {
     siteUrl: SITE_URL,
+    logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : '',
     products,
     vendorIdFor: item => (products[item.productId] && products[item.productId].vendorId) || item.vendorId || null,
     imageFor: item => emailImageUrl(products[item.productId], item.variantIndex)
@@ -1666,7 +1692,20 @@ async function renderIndexHtml(headTransform) {
   if (headTransform) html = headTransform(html);
   html = await injectHomepageContent(html);
   html = injectLogoFont(html);
+  html = await injectSiteLogo(html);
   return injectCacheBust(html);
+}
+
+// Website logo from admin > Content: swaps the header's text wordmark for
+// the image. Not set: the Unbounded JANEDORE wordmark stays.
+async function injectSiteLogo(html) {
+  const { siteLogo } = await getBrandAssets();
+  if (!siteLogo) return html;
+  const src = escapeHtml(logoImageUrl(siteLogo, 480));
+  return html.replace(
+    /<span class="nav-logo-text" id="nav-logo-text">JANEDORE<\/span>/,
+    '<img class="nav-logo-img" id="nav-logo-img" src="' + src + '" alt="JANEDORE">'
+  );
 }
 
 // ==================== PRODUCT SEO ROUTE ====================

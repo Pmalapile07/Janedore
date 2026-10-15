@@ -93,7 +93,12 @@ function buildFooter(id) {
   const headerLogo = document.querySelector(".nav-logo");
   const footerLogoMark = el.querySelector(".footer-brand-mark");
   const headerLogoText = headerLogo?.querySelector(".nav-logo-text");
-  if (footerLogoMark && headerLogoText) {
+  const headerLogoImg = headerLogo?.querySelector(".nav-logo-img");
+  if (footerLogoMark && headerLogoImg) {
+    const img = headerLogoImg.cloneNode(true);
+    img.removeAttribute("id");
+    footerLogoMark.replaceChildren(img);
+  } else if (footerLogoMark && headerLogoText) {
     const logoText = headerLogoText.cloneNode(true);
     logoText.removeAttribute("id");
     logoText.style.color = "#fff";

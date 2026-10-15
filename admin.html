@@ -77,6 +77,7 @@
 
     <div class="sidebar-section-label">Content</div>
     <button class="sidebar-btn" id="homepage-tab-btn" data-tab="homepage" onclick="switchTab('homepage')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-browser"></i></span>Homepage</button>
+    <button class="sidebar-btn" id="content-tab-btn" data-tab="content" onclick="switchTab('content')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-folder-simple"></i></span>Content</button>
     <button class="sidebar-btn" id="pages-tab-btn" data-tab="pages" onclick="switchTab('pages')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-file-text"></i></span>Pages</button>
     <button class="sidebar-btn" id="online-store-tab-btn" data-tab="onlineStore" onclick="switchTab('onlineStore')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-storefront"></i></span>Online Store</button>
 
@@ -187,6 +188,7 @@
         <button class="more-menu-subitem" onclick="closeMoreMenu();switchTab('onlineStore')">Preferences</button>
       </div>
     </div>
+    <button class="more-menu-item" data-tab="content" id="content-more-item" onclick="closeMoreMenu();switchTab('content')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-folder-simple"></i></div><div style="flex:1"><div class="more-menu-item-label">Content</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <div class="more-divider"></div>
 
     <div class="more-menu-item has-children" data-tab="analytics">
@@ -252,6 +254,7 @@ fetch('/api/cloudinary-config')
 <script src="admin-settings.js"></script>
 <script src="admin-online-store.js"></script>
 <script src="admin-discounts.js"></script>
+<script src="admin-content.js"></script>
 <script src="admin-devtools.js"></script>
 
 </body>

@@ -71,7 +71,11 @@ function shell(opts) {
     '<tr><td align="center" style="padding:0;">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">' +
       '<tr><td style="background:#111111;padding:22px 24px;">' +
-        '<span style="font-family:' + FONT + ';font-size:16px;letter-spacing:0.22em;color:#ffffff;text-transform:uppercase;">Janedore</span>' +
+        // Logo image from admin > Content when set; email apps can't load
+        // the site's Unbounded font, so text is only the fallback.
+        (opts.logoUrl
+          ? '<img src="' + esc(opts.logoUrl) + '" alt="JANEDORE" height="22" style="display:block;height:22px;width:auto;border:0;">'
+          : '<span style="font-family:' + FONT + ';font-size:16px;letter-spacing:0.22em;color:#ffffff;text-transform:uppercase;">Janedore</span>') +
       '</td></tr>' +
       (opts.bannerHtml ? '<tr><td style="background:' + GREEN_TINT + ';padding:16px 24px;font-size:14px;line-height:1.5;color:#111111;">' + opts.bannerHtml + '</td></tr>' : '') +
       '<tr><td style="padding:16px;">' +
@@ -199,6 +203,7 @@ function customerConfirmation(order, ctx) {
     : '');
 
   const html = shell({
+    logoUrl: ctx.logoUrl,
     title: 'Order confirmed',
     preheader: 'Order #' + num + ' is confirmed: ' + money(order.total) + '.',
     cards: [
@@ -234,6 +239,7 @@ function adminNewOrder(order, ctx) {
     (ctx.vendorEmailNote ? '<div style="font-size:12px;color:#777777;margin-top:10px;line-height:1.5;">' + ctx.vendorEmailNote + '</div>' : '');
 
   const html = shell({
+    logoUrl: ctx.logoUrl,
     title: 'New order',
     preheader: 'New order #' + num + ': ' + money(order.total) + ' from ' + (order.customerName || 'a customer'),
     bannerHtml: banner,
@@ -264,6 +270,7 @@ function vendorNewOrder(order, ctx, vendor, items) {
   const brandName = vendor.brand || vendor.name || 'your brand';
 
   const html = shell({
+    logoUrl: ctx.logoUrl,
     title: 'New order to ship',
     preheader: 'New Janedore order #' + num + ': ' + count + (count === 1 ? ' item' : ' items') + ' to ship.',
     bannerHtml: '<strong>You have a new order to ship.</strong> The customer has paid. Please pack and send the items below.',
@@ -300,6 +307,7 @@ function shipped(order, ctx, items, opts) {
     : '';
 
   const html = shell({
+    logoUrl: ctx.logoUrl,
     title: opts.heading || 'Your order is on its way',
     preheader: intro,
     bannerHtml: '<strong>' + esc(opts.heading || 'Your order is on its way') + '</strong>',
