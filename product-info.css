@@ -79,7 +79,7 @@
   background: #111;
   color: #fff;
 }
-.product-badge-detail.badge-sale { background: #e6edd5; color: #111; }
+.product-badge-detail.badge-sale { background: #c0392b; color: #fff; }
 
 .product-name-group {
   display: flex;
@@ -198,7 +198,7 @@
 }
 /* Matches .product-price-sale on the grid cards (product-grid.css). */
 .price-sale {
-  color: #111;
+  color: #c0392b;
   font-weight: 700;
 }
 
