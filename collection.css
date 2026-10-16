@@ -580,20 +580,15 @@ body.on-collection-page .collection-filter-bar {
   margin-bottom: 14px;
 }
 
-/* ---- Report this brand (bottom panel) ---- */
-/* Full screen on phones (a bottom sheet got cut off under Safari's
-   toolbar and couldn't scroll); a centred panel on wider screens. */
-body.brand-report-open { overflow: hidden; }
+/* ---- Report this brand ---- */
+/* Full screen on phones, set up the same way as the chat widget
+   (chat.js lockPageScroll + forceFullScreen): the page behind is frozen
+   with position:fixed so Safari's toolbar stops moving, and the panel is
+   pinned top:0/bottom:0 with no fixed height, so the browser itself
+   keeps it filling the visible area (100vh/100dvh left a strip at the
+   bottom where the page showed through). A centred panel on desktop. */
 body.brand-report-open #live-chat-bubble { display: none !important; }
-.brand-report-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; height: 100vh; height: 100dvh; z-index: 10000; background: #fff; display: flex; justify-content: center; }
-/* iOS 26 Safari skips painting opaque fixed layers under its floating
-   toolbar, so the page showed through at the bottom. Same fix as the
-   sticky Add to Bag bar (sticky-bar.css): 0.999 opacity plus a white
-   skirt below the panel. */
-@media (max-width: 768px) {
-  .brand-report-overlay { opacity: 0.999; }
-  .brand-report-overlay::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 120px; background: #fff; }
-}
+.brand-report-overlay { position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 10000; background: #fff; display: flex; justify-content: center; }
 .brand-report-sheet { background: #fff; width: 100%; max-width: 520px; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 0 16px calc(32px + env(safe-area-inset-bottom)); box-sizing: border-box; }
 .brand-report-head { position: sticky; top: 0; z-index: 1; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(16px + env(safe-area-inset-top)) 0 12px; border-bottom: 1px solid #eee; }
 .brand-report-head h2 { font-size: 17px; font-weight: 600; margin: 0; color: #111; }

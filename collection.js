@@ -1550,15 +1550,39 @@ function openBrandReport() {
   document.body.appendChild(wrap);
   document.addEventListener('keydown', brandReportEsc);
   document.body.classList.add('brand-report-open');
+  lockBrandReportScroll();
+}
+
+// Same page freeze as the chat widget (chat.js lockPageScroll): pinning
+// the body stops iOS Safari's toolbar moving, which is what let the page
+// show through under the panel.
+let brandReportScrollY = 0;
+function lockBrandReportScroll() {
+  brandReportScrollY = window.scrollY || window.pageYOffset || 0;
+  const b = document.body.style;
+  b.setProperty('position', 'fixed', 'important');
+  b.setProperty('top', -brandReportScrollY + 'px', 'important');
+  b.setProperty('left', '0', 'important');
+  b.setProperty('right', '0', 'important');
+  b.setProperty('width', '100%', 'important');
+  b.setProperty('overflow', 'hidden', 'important');
+  document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+}
+function unlockBrandReportScroll() {
+  ['position', 'top', 'left', 'right', 'width', 'overflow'].forEach(p => document.body.style.removeProperty(p));
+  document.documentElement.style.removeProperty('overflow');
+  window.scrollTo(0, brandReportScrollY);
 }
 
 function brandReportEsc(e) { if (e.key === 'Escape') closeBrandReport(); }
 
 function closeBrandReport() {
   const el = document.getElementById('brand-report');
-  if (el) el.remove();
+  if (!el) return;
+  el.remove();
   document.removeEventListener('keydown', brandReportEsc);
   document.body.classList.remove('brand-report-open');
+  unlockBrandReportScroll();
 }
 
 async function submitBrandReport(e) {
@@ -1575,7 +1599,8 @@ async function submitBrandReport(e) {
       body: JSON.stringify({ vendorId: S.currentVendor && S.currentVendor.id, reason, details, email: form.email.value.trim() }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Could not send your report. Please try again.');
-    form.innerHTML = `<div class="brand-report-done"><i class="ph ph-check-circle"></i><p><strong>Thank you. We've received your report.</strong></p><p>Our team will look into it. The brand won't be told who sent it.</p><button type="button" class="brand-report-submit" onclick="closeBrandReport()">Done</button></div>`;
+    const sentTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.value.trim()) ? form.email.value.trim() : '';
+    form.innerHTML = `<div class="brand-report-done"><i class="ph ph-check-circle"></i><p><strong>Thank you. We've received your report.</strong></p><p>Our team will look into it. The brand won't be told who sent it.${sentTo ? ' We\'ve sent a copy to ' + escapeHTML(sentTo) + '.' : ''}</p><button type="button" class="brand-report-submit" onclick="closeBrandReport()">Done</button></div>`;
   } catch (err) {
     msg.textContent = err.message;
     btn.disabled = false; btn.textContent = 'Send Report';
