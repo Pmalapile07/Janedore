@@ -162,6 +162,7 @@
         '<th>Display Name</th>' +
         '<th>Products</th>' +
         '<th>Orders</th>' +
+        '<th title="Signed-in customers who saved this brand to their wishlist">Followers</th>' +
         '<th>Revenue</th>' +
         '<th>Commission</th>' +
         '<th>Account</th>' +
@@ -184,6 +185,7 @@
           '<td>' + esc(v.brand || '-') + '</td>' +
           '<td>' + productCount + '</td>' +
           '<td>' + orderCount + '</td>' +
+          '<td class="vendor-followers" data-vendor-id="' + esc(v.id) + '">…</td>' +
           '<td>' + fmt(revenue) + '</td>' +
           '<td>' + commission + '%</td>' +
           '<td>' +
@@ -205,6 +207,27 @@
         '</tr>';
       }).join('') +
       '</tbody></table></div>';
+    loadVendorFollowerCounts(vendors);
+  }
+
+  // Followers: signed-in customers with the brand in their favourite
+  // brands (customers/{uid}.favouriteBrands, set from the shop's wishlist).
+  // Guests' favourites stay on their phone, so they aren't counted.
+  function loadVendorFollowerCounts(vendors) {
+    var customers = window._adminDB.collection('customers');
+    vendors.forEach(function(v) {
+      var q = customers.where('favouriteBrands', 'array-contains', v.id);
+      var run = typeof q.count === 'function'
+        ? q.count().get().then(function(snap) { return snap.data().count; })
+        : q.get().then(function(snap) { return snap.size; });
+      run.then(function(n) {
+        var cell = document.querySelector('.vendor-followers[data-vendor-id="' + CSS.escape(v.id) + '"]');
+        if (cell) cell.textContent = n;
+      }).catch(function() {
+        var cell = document.querySelector('.vendor-followers[data-vendor-id="' + CSS.escape(v.id) + '"]');
+        if (cell) cell.textContent = '-';
+      });
+    });
   }
 
   /* ─────────────────────────────────────────────────────────

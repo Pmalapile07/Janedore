@@ -477,12 +477,13 @@ function updateCollectionTitle() {
 
   if (bcEl) {
     const trail = `<span onclick="navigateTo('home')">Home</span><span class="page-breadcrumb-sep">/</span><span class="page-breadcrumb-current">${escapeHTML(bcLabel)}</span>`;
-    // Brand pages get the product page's back arrow on the left, and a
-    // "more" button on the right that opens the report-this-brand panel.
+    // Brand pages get the product page's back arrow on the left, and on
+    // the right a heart (favourite brand) and a "more" button that opens
+    // the report-this-brand panel.
     const onBrand = S.currentPage === 'vendor';
     bcEl.classList.toggle('has-icons', onBrand);
     bcEl.innerHTML = onBrand
-      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail">${trail}</span><button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
+      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail">${trail}</span>${S.currentVendorId ? favBrandButtonHtml(S.currentVendorId, 'product-breadcrumb-share brand-fav-btn') : ''}<button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
       : trail;
   }
 }
