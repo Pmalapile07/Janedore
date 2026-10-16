@@ -180,21 +180,6 @@ function getCartShippingStatus() {
 
 // Same badges as the product cards (NEW, SALE, SOLD OUT, a manual badge),
 // and the sale price in red, on bag and checkout items.
-// Header back arrow on the bag and checkout. Checkout's payment step goes
-// back to details, details goes back to the bag, and the bag goes back
-// to wherever the shopper was (home if they landed straight on the bag).
-const SITE_ENTRY_HISTORY_LENGTH = history.length;
-function goBackFromBag() {
-  if (S.currentPage === 'checkout') {
-    const payment = document.getElementById('checkout-payment-view');
-    if (payment && payment.style.display === 'block' && typeof showCheckoutStep === 'function') showCheckoutStep(2);
-    else navigateTo('cart');
-    return;
-  }
-  if (history.length > SITE_ENTRY_HISTORY_LENGTH) history.back();
-  else navigateTo('home');
-}
-
 function cartBadgesHtml(item) {
   const product = getCartProduct(item.productId);
   const badges = product && typeof getProductBadges === 'function' ? getProductBadges(product) : [];
