@@ -1454,6 +1454,23 @@ app.post('/api/report-brand', async (req, res) => {
       text: 'Brand reported: ' + brand + '\nReason: ' + reason + (details ? '\nDetails: ' + details : '') + '\nReported by: ' + (validEmail || 'Anonymous') + '\nReport ' + ref.id
     }).catch((e) => console.error('[REPORT_BRAND] Email failed:', e.message));
 
+    if (validEmail) {
+      const assets = await getBrandAssets().catch(() => ({}));
+      const confirm = orderEmails.reportReceived({ brand, reason, details }, {
+        siteUrl: SITE_URL,
+        logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : '',
+        logoFontUrl: assets.logoFont || ''
+      });
+      sendResendEmail({
+        from: 'Janedore <noreply@janedore.co.za>',
+        replyTo: 'support@janedore.co.za',
+        to: validEmail,
+        subject: confirm.subject,
+        html: confirm.html,
+        text: confirm.text
+      }).catch((e) => console.error('[REPORT_BRAND] Confirmation email failed:', e.message));
+    }
+
     res.json({ ok: true });
   } catch (e) {
     console.error('[REPORT_BRAND] Error:', e.message);
