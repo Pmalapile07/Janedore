@@ -11,5 +11,6 @@
   font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
   text-transform: uppercase; white-space: nowrap;
 }
-.wish-page-empty { text-align: center; padding: 60px 0; }
-.wish-page-empty-title { font-family: 'Inter', sans-serif; font-size: var(--body-font-size); font-weight: 500; color: #111; letter-spacing: var(--body-letter-spacing); margin-bottom: 24px; }
+/* Empty wishlist uses the empty bag's layout (.cart-empty, cart.css). */
+.wish-page.is-empty { max-width: none; padding-top: 0; }
+.wish-page.is-empty .cart-suggestions { padding-top: 0; }

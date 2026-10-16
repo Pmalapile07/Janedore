@@ -618,13 +618,14 @@ function cartInspiredProducts() {
   return picks;
 }
 
-// Horizontal product slider used on both cart states; #cart-slider-grid
+// Horizontal product slider used on both cart states and the empty
+// wishlist (#wish-slider-grid there); #cart-slider-grid
 // shares the New Arrivals slider rules in product-grid.css.
-function cartSliderHtml(title, products) {
+function cartSliderHtml(title, products, gridId) {
   if (!products.length) return '';
   return `<section class="cart-suggestions">
     <div class="cart-suggestions-title">${title}</div>
-    <div class="product-grid" id="cart-slider-grid">${products.map(p => productCardHome(p)).join('')}</div>
+    <div class="product-grid" id="${gridId || 'cart-slider-grid'}">${products.map(p => productCardHome(p)).join('')}</div>
   </section>`;
 }
 

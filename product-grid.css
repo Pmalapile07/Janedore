@@ -426,6 +426,7 @@
 #arrivals-grid .product-card.slide-leading .product-home-meta,
 #clothing-grid .product-card.slide-leading .product-home-meta,
 #cart-slider-grid .product-card.slide-leading .product-home-meta,
+#wish-slider-grid .product-card.slide-leading .product-home-meta,
 .swipe-track .product-card:first-child .product-home-meta {
   padding-left: 18px;
   padding-right: 18px;
@@ -491,7 +492,7 @@ body .site-collection-layout {
    own separate working layout from sliders.css. */
 #arrivals-grid,
 #clothing-grid,
-#cart-slider-grid {
+#cart-slider-grid, #wish-slider-grid {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -517,13 +518,13 @@ body .site-collection-layout {
 }
 #arrivals-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar,
-#cart-slider-grid::-webkit-scrollbar { display: none; }
+#cart-slider-grid::-webkit-scrollbar, #wish-slider-grid::-webkit-scrollbar { display: none; }
 #arrivals-grid::after,
 #clothing-grid::after,
-#cart-slider-grid::after { content: ''; flex: 0 0 8px; }
+#cart-slider-grid::after, #wish-slider-grid::after { content: ''; flex: 0 0 8px; }
 #arrivals-grid .product-card,
 #clothing-grid .product-card,
-#cart-slider-grid .product-card {
+#cart-slider-grid .product-card, #wish-slider-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
   max-width: 300px;
@@ -532,20 +533,20 @@ body .site-collection-layout {
 @media (min-width: 640px) {
   #arrivals-grid,
   #clothing-grid,
-  #cart-slider-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
+  #cart-slider-grid, #wish-slider-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
   #arrivals-grid::after,
   #clothing-grid::after,
-  #cart-slider-grid::after { flex: 0 0 10px; }
+  #cart-slider-grid::after, #wish-slider-grid::after { flex: 0 0 10px; }
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
   #clothing-grid .product-card,
-  #cart-slider-grid .product-card { width: 28vw; max-width: 300px; }
+  #cart-slider-grid .product-card, #wish-slider-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
   #arrivals-grid,
   #clothing-grid,
-  #cart-slider-grid {
+  #cart-slider-grid, #wish-slider-grid {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
@@ -554,7 +555,7 @@ body .site-collection-layout {
   }
   #arrivals-grid::after,
   #clothing-grid::after,
-  #cart-slider-grid::after { flex: 0 0 12px; }
+  #cart-slider-grid::after, #wish-slider-grid::after { flex: 0 0 12px; }
 }
 
 /* --- Shop by Brand slider — same slider mechanics as #arrivals-grid/
