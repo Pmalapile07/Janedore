@@ -192,7 +192,7 @@ function shipByDate(d) {
 }
 function preorderLine(item) {
   const d = shipByDate(item.preorderShipDate);
-  return 'Pre-order' + (d ? ', expected to ship by ' + d : '');
+  return 'Pre-order' + (d ? ' · Estimated dispatch: ' + d : '');
 }
 
 // ---------- the emails ----------
@@ -208,7 +208,7 @@ function customerConfirmation(order, ctx) {
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:8px 0 4px;">' +
       '<div style="width:56px;height:56px;line-height:56px;border-radius:28px;background:' + GREEN + ';color:#111111;font-size:28px;text-align:center;margin:0 auto 16px;">&#10003;</div>' +
       '<div style="font-size:22px;font-weight:700;line-height:1.3;color:#111111;">Thank you, ' + esc(first) + '</div>' +
-      '<div style="font-size:14px;line-height:1.5;color:#555555;margin:8px auto 0;max-width:380px;">Your payment went through and your order is in. We\'ll email you again when it\'s on its way.</div>' +
+      '<div style="font-size:14px;line-height:1.5;color:#555555;margin:8px auto 0;max-width:380px;">Your payment was successful and your order has been confirmed. We\'ll send a shipping confirmation once your order has been dispatched.</div>' +
       '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:20px;">Order #' + esc(num) + '</div>' +
       '<div style="font-size:13px;color:#777777;margin-top:4px;">' + esc(orderDate(order)) + '</div>' +
     '</td></tr></table>';
@@ -318,8 +318,8 @@ function shipped(order, ctx, items, opts) {
   const num = order.orderNumber || '';
   const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
   const intro = opts.complete
-    ? 'Good news: everything in your order is now on its way.'
-    : 'Good news: part of your order is now on its way. The rest follows separately, as each brand ships from its own warehouse.';
+    ? 'good news: your order has been dispatched.'
+    : 'good news: part of your order has been dispatched. The remaining items will ship separately, as each brand dispatches from its own warehouse.';
   const tracking = opts.tracking || {};
   const trackingCard = tracking.trackingNumber
     ? title('Tracking') + rows(
@@ -331,9 +331,9 @@ function shipped(order, ctx, items, opts) {
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
-    title: opts.heading || 'Your order is on its way',
+    title: opts.heading || 'Your order has shipped',
     preheader: intro,
-    bannerHtml: '<strong>' + esc(opts.heading || 'Your order is on its way') + '</strong>',
+    bannerHtml: '<strong>' + esc(opts.heading || 'Your order has shipped') + '</strong>',
     cards: [
       '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + intro + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
@@ -344,11 +344,11 @@ function shipped(order, ctx, items, opts) {
     footerHtml: SUPPORT_FOOTER
   });
 
-  const text = (opts.heading || 'Your order is on its way') + '\n\nHi ' + first + ', ' + intro + '\n\n' + textItems(items, true) +
+  const text = (opts.heading || 'Your order has shipped') + '\n\nHi ' + first + ', ' + intro + '\n\n' + textItems(items, true) +
     (tracking.trackingNumber ? '\n\n' + (tracking.courier ? tracking.courier + ': ' : '') + tracking.trackingNumber : '') +
     '\n\nOrder #' + num + '\nTrack your order: ' + trackUrl + '\n\nQuestions? support@janedore.co.za';
 
-  return { subject: (opts.heading || 'Your order is on its way') + ' (order #' + num + ')', html, text };
+  return { subject: (opts.heading || 'Your order has shipped') + ' (order #' + num + ')', html, text };
 }
 
 // Janedore team copy of a shipment: which brand shipped, its tracking,
@@ -396,30 +396,30 @@ function preorderDateChanged(order, ctx, items, opts) {
   const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
   const newDate = shipByDate(opts.newDate);
   const oldDate = shipByDate(opts.oldDate);
-  const intro = (opts.brand || 'The brand') + ' has updated when your pre-order is expected to ship' +
-    (newDate ? ': it is now expected to ship by ' + newDate + '.' : '.');
+  const intro = 'the estimated dispatch date for your pre-order from ' + (opts.brand || 'the brand') + ' has been updated' +
+    (newDate ? ' to ' + newDate + '.' : '.');
   const trackUrl = ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num);
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
-    title: 'Your pre-order has a new ship date',
+    title: 'Update to your pre-order',
     preheader: intro,
-    bannerHtml: '<strong>Your pre-order has a new ship date</strong>',
+    bannerHtml: '<strong>Update to your pre-order</strong>',
     cards: [
       '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
-      title('Ship date') + rows(
-        (oldDate ? row('Was', esc(oldDate), { semi: true }) : '') +
-        row('Now', esc(newDate || 'To be confirmed'), { semi: true, bold: true })) + button('Track your order', trackUrl),
+      title('Estimated dispatch') + rows(
+        (oldDate ? row('Previous', esc(oldDate), { semi: true }) : '') +
+        row('Updated', esc(newDate || 'To be confirmed'), { semi: true, bold: true })) + button('Track your order', trackUrl),
       title('Your pre-order') + itemsBlock(items, ctx, { hidePrice: true }),
-      '<div style="font-size:13px;line-height:1.6;color:#555555;">Nothing else changes: you don’t need to do anything. If the new date doesn’t work for you, reply to this email and we’ll help.</div>'
+      '<div style="font-size:13px;line-height:1.6;color:#555555;">No action is required. If the revised date doesn’t suit you, reply to this email and our team will assist you.</div>'
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = 'Your pre-order has a new ship date\n\nHi ' + first + ', ' + intro + (oldDate ? '\nWas: ' + oldDate : '') +
+  const text = 'Update to your pre-order\n\nHi ' + first + ', ' + intro + (oldDate ? '\nPrevious: ' + oldDate : '') +
     '\n\n' + textItems(items, true) + '\n\nOrder #' + num + '\nTrack your order: ' + trackUrl +
-    '\n\nIf the new date doesn’t work for you, reply to this email and we’ll help.';
-  return { subject: 'Your pre-order has a new ship date (order #' + num + ')', html, text };
+    '\n\nNo action is required. If the revised date doesn’t suit you, reply to this email and our team will assist you.';
+  return { subject: 'Update to your pre-order (order #' + num + ')', html, text };
 }
 
 // Customer copy when they report a brand and leave an email: we got it,

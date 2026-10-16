@@ -1124,8 +1124,8 @@ app.post('/api/track-order', async (req, res) => {
 
   const orderNumber = String((req.body && req.body.orderNumber) || '').trim().toUpperCase().replace(/^#/, '').replace(/\s+/g, '').slice(0, 40);
   const email = String((req.body && req.body.email) || '').trim().toLowerCase().slice(0, 200);
-  const notFound = () => res.status(404).json({ error: 'We couldn’t find an order with that number and email. Check both and try again.' });
-  if (!orderNumber || !email) return res.status(400).json({ error: 'Please enter your order number and email.' });
+  const notFound = () => res.status(404).json({ error: 'We couldn’t find an order matching those details. Please check your order number and email address.' });
+  if (!orderNumber || !email) return res.status(400).json({ error: 'Please enter your order number and email address.' });
 
   try {
     let doc = null;
@@ -1258,7 +1258,7 @@ function findShipment(order, vendorId, preorder) {
 function buildShipmentEmail(order, shipment, status, ctx) {
   return orderEmails.shipped(order, ctx, shipment ? shipment.items : (order.items || []), {
     complete: status === 'fulfilled',
-    heading: status === 'fulfilled' ? 'Your order is on its way' : 'Part of your order is on its way',
+    heading: status === 'fulfilled' ? 'Your order has shipped' : 'Part of your order has shipped',
     tracking: shipment ? shipment.tracking : {}
   });
 }

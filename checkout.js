@@ -304,7 +304,7 @@ function renderShippingMethod(shipping, packages) {
   if (!fromEl) return;
   const shipments = getCartShipments();
   // Pre-orders ship on their own once ready, inside the same fee.
-  const preorderNote = cartHasPreorder() ? ' <span class="checkout-preorder-note">Pre-order items ship separately when they’re ready, at no extra cost.</span>' : '';
+  const preorderNote = cartHasPreorder() ? ' <span class="checkout-preorder-note">Pre-order items are dispatched separately once available, at no additional shipping cost.</span>' : '';
   if (shipments.length <= 1) {
     fromEl.innerHTML = `Ships from <strong>${sanitizeHTML(shipments[0] ? shipments[0].brand : 'JANEDORE')}</strong>.` + preorderNote;
     return;

@@ -1141,7 +1141,7 @@
         return (
           '<div class="order-vendor-group">' +
             '<div class="order-vendor-group-header">' +
-              '<span class="order-vendor-group-brand">' + esc(group.brand) + (group.preorder ? ' · Pre-order' + (group.shipBy ? ', ships by ' + esc(group.shipBy) : '') : '') + '</span>' +
+              '<span class="order-vendor-group-brand">' + esc(group.brand) + (group.preorder ? ' · Pre-order' + (group.shipBy ? ', est. dispatch ' + esc(group.shipBy) : '') : '') + '</span>' +
               statusBadge(shipped ? 'fulfilled' : 'unfulfilled') +
             '</div>' +
             '<div class="info-panel order-items-panel" style="margin-bottom:' + (canEditGroup ? '8px' : '14px') + ';">' +

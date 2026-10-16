@@ -23,7 +23,7 @@ function renderTrackOrderPage() {
   el.innerHTML = `
     <section class="track-page">
       <h1 class="track-title">Track Your Order</h1>
-      <p class="track-intro">Enter your order number and the email you used at checkout.</p>
+      <p class="track-intro">Enter your order number and the email address used at checkout.</p>
       <form class="track-form" id="track-form" onsubmit="submitTrackOrder(event)" novalidate>
         <label class="track-label" for="track-number">Order number</label>
         <input class="track-input" id="track-number" type="text" placeholder="JD-123456" autocomplete="off" autocapitalize="characters" value="${escapeHTML(number)}" required>
@@ -31,7 +31,7 @@ function renderTrackOrderPage() {
         <input class="track-input" id="track-email" type="email" placeholder="you@example.com" autocomplete="email" value="${escapeHTML(email)}" required>
         <div class="track-error" id="track-error" role="alert"></div>
         <button class="track-btn" id="track-btn" type="submit">Track Order</button>
-        <p class="track-hint">Your order number starts with JD- and is in your order confirmation email.</p>
+        <p class="track-hint">Your order number begins with JD- and can be found in your order confirmation email.</p>
       </form>
       <div id="track-result"></div>
     </section>`;
@@ -49,9 +49,9 @@ async function submitTrackOrder(e) {
   const email = emailEl.value.trim();
   const showError = (msg) => { errorEl.textContent = msg; errorEl.style.display = msg ? 'block' : 'none'; };
   showError('');
-  if (!orderNumber || !email) { showError('Please enter your order number and email.'); return; }
+  if (!orderNumber || !email) { showError('Please enter your order number and email address.'); return; }
 
-  btn.disabled = true; btn.textContent = 'Finding your order…';
+  btn.disabled = true; btn.textContent = 'Searching…';
   try {
     const res = await fetch('/api/track-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderNumber, email }) });
     const data = await res.json().catch(() => ({}));
@@ -98,17 +98,17 @@ function trackResultHtml(o) {
 
   let notice = '';
   if (o.cancelled) {
-    notice = `<div class="track-notice">This order was cancelled. If you have questions, <span class="track-link" onclick="navigateToContentPage('client-support')">contact us</span>.</div>`;
+    notice = `<div class="track-notice">This order has been cancelled. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span>.</div>`;
   } else if (!o.paid) {
-    notice = `<div class="track-notice">We haven’t received payment for this order, so it hasn’t been sent to the brands. If money left your account, <span class="track-link" onclick="navigateToContentPage('client-support')">contact us</span> with your order number.</div>`;
+    notice = `<div class="track-notice">Payment for this order has not been received, so it has not been processed. If you have been charged, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span> and quote your order number.</div>`;
   }
   const allPreorder = packages.length > 0 && packages.every(p => p.preorder);
-  const heading = o.cancelled ? 'Cancelled' : !o.paid ? 'Awaiting payment' : allShipped ? (packages.length > 1 ? 'All packages are on their way' : 'Your order is on its way')
-    : shippedCount ? `${shippedCount} of ${packages.length} packages on their way` : allPreorder ? 'Your pre-order is confirmed' : 'Your order is being prepared';
+  const heading = o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending' : allShipped ? (packages.length > 1 ? 'All packages have shipped' : 'Your order has shipped')
+    : shippedCount ? `Partially shipped: ${shippedCount} of ${packages.length} packages` : allPreorder ? 'Pre-order confirmed' : 'Your order is being processed';
 
-  // Each package has its own steps: a pre-order is made after you order.
+  // Each package has its own steps; a pre-order is produced after purchase.
   const stepsHtml = (p) => {
-    const labels = p.preorder ? ['Pre-ordered', 'Being made', 'Shipped'] : ['Order placed', 'Preparing', 'Shipped'];
+    const labels = p.preorder ? ['Pre-order confirmed', 'In production', 'Shipped'] : ['Order confirmed', 'Processing', 'Shipped'];
     return `<div class="track-steps">${labels.map((label, i) => {
       const state = i === 0 || p.shipped ? 'done' : i === 1 ? 'current' : '';
       return `<div class="track-step ${state}"><span class="track-step-dot">${state === 'done' ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}</span><span class="track-step-label">${label}</span></div>`;
@@ -124,18 +124,18 @@ function trackResultHtml(o) {
         <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(it.name))}</div><div class="track-item-meta">${details}</div></div></div>`;
     }).join('');
     const live = !o.cancelled && o.paid;
-    const status = live ? `<span class="track-pill${p.shipped ? ' shipped' : ''}">${p.shipped ? 'Shipped' : p.preorder ? 'Pre-order' : 'Preparing'}</span>` : '';
+    const status = live ? `<span class="track-pill${p.shipped ? ' shipped' : ''}">${p.shipped ? 'Shipped' : p.preorder ? 'In production' : 'Processing'}</span>` : '';
     const shipBy = p.preorder && p.shipBy ? preorderShipText(p.shipBy) : '';
     const body = o.cancelled || !o.paid ? '' : p.shipped
       ? `<div class="track-ship">
           ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
           <div class="track-ship-row"><span>Tracking number</span><strong>${escapeHTML(p.trackingNumber)}</strong>
             <button type="button" class="track-copy" onclick="copyTrackingNumber(this,'${escapeJSString(p.trackingNumber)}')">Copy</button></div>
-          ${p.shippedAt ? `<div class="track-ship-row"><span>Shipped</span><strong>${escapeHTML(trackDate(p.shippedAt))}</strong></div>` : ''}
+          ${p.shippedAt ? `<div class="track-ship-row"><span>Dispatched</span><strong>${escapeHTML(trackDate(p.shippedAt))}</strong></div>` : ''}
         </div>`
       : p.preorder
-        ? `<p class="track-wait">${shipBy ? `<strong>Expected to ship by ${escapeHTML(shipBy)}.</strong> ` : ''}${escapeHTML(trackPlainText(p.brand))} is making your pre-order. We’ll email you if the date changes, and again with the tracking number when it ships.</p>`
-        : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is getting your items ready. We’ll email you the tracking number as soon as it ships.</p>`;
+        ? `<p class="track-wait">${shipBy ? `<strong>Estimated dispatch: ${escapeHTML(shipBy)}.</strong> ` : ''}This item is in production with ${escapeHTML(trackPlainText(p.brand))}. We will notify you of any change to the estimated dispatch date, and send tracking details once it has shipped.</p>`
+        : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is processing this package. You will receive a shipping confirmation with tracking details once it has been dispatched.</p>`;
     return `<div class="track-card">
       <div class="track-card-head"><div><div class="track-card-label">${packages.length > 1 ? `Package ${i + 1} of ${packages.length}` : 'Your package'}</div><div class="track-card-brand">${escapeHTML(trackPlainText(p.brand))}</div></div>${status}</div>
       ${live ? stepsHtml(p) : ''}${items}${body}</div>`;
