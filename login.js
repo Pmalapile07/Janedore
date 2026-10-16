@@ -4,7 +4,7 @@
 // via user.isAnonymous checks throughout — so chat auth never triggers
 // account redirects or page state changes.
 
-let loginMode = 'signin'; // 'signin' or 'signup'
+let loginMode = 'signin'; // 'signin', 'signup' or 'reset'
 
 function navigateToLogin() {
   ++pageNavGeneration;
@@ -77,7 +77,12 @@ function showAccountView() {
 }
 
 function toggleLoginMode() {
-  loginMode = loginMode === 'signin' ? 'signup' : 'signin';
+  setLoginMode(loginMode === 'signin' ? 'signup' : 'signin');
+}
+
+// 'signin', 'signup' or 'reset' (forgot password: email only).
+function setLoginMode(mode) {
+  loginMode = mode;
   updateLoginModeUI();
 }
 
@@ -86,21 +91,68 @@ function updateLoginModeUI() {
   const submitBtn = document.getElementById('login-submit-btn');
   const toggleBtn = document.getElementById('toggle-mode-btn');
   const nameGroup = document.getElementById('name-group');
+  const passwordGroup = document.getElementById('password-group');
+  const passwordInput = document.getElementById('login-password');
+  const forgotBtn = document.getElementById('forgot-password-btn');
+  const social = document.getElementById('login-social');
   const errorEl = document.getElementById('login-error');
 
   if (errorEl) errorEl.style.display = 'none';
+  showLoginNotice('');
 
-  if (loginMode === 'signin') {
-    if (title) title.textContent = 'Sign In';
-    if (submitBtn) submitBtn.textContent = 'Sign In';
-    if (toggleBtn) toggleBtn.textContent = 'Create an account';
-    if (nameGroup) nameGroup.style.display = 'none';
-  } else {
-    if (title) title.textContent = 'Create Account';
-    if (submitBtn) submitBtn.textContent = 'Create Account';
-    if (toggleBtn) toggleBtn.textContent = 'Already have an account? Sign in';
-    if (nameGroup) nameGroup.style.display = 'block';
-  }
+  const labels = {
+    signin: ['Sign In', 'Sign In', 'Create an account'],
+    signup: ['Create Account', 'Create Account', 'Already have an account? Sign in'],
+    reset: ['Reset Password', 'Send Reset Link', 'Back to sign in']
+  }[loginMode];
+  if (title) title.textContent = labels[0];
+  if (submitBtn) submitBtn.textContent = labels[1];
+  if (toggleBtn) toggleBtn.textContent = labels[2];
+  if (nameGroup) nameGroup.style.display = loginMode === 'signup' ? 'block' : 'none';
+  if (passwordGroup) passwordGroup.style.display = loginMode === 'reset' ? 'none' : 'block';
+  if (passwordInput) passwordInput.required = loginMode !== 'reset';
+  if (forgotBtn) forgotBtn.style.display = loginMode === 'signin' ? 'block' : 'none';
+  if (social) social.style.display = loginMode === 'reset' ? 'none' : 'block';
+  if (toggleBtn) toggleBtn.onclick = loginMode === 'reset' ? () => setLoginMode('signin') : toggleLoginMode;
+}
+
+function showLoginNotice(text) {
+  const el = document.getElementById('login-notice');
+  if (!el) return;
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
+// Firebase's own messages read like "Firebase: Error (auth/invalid-credential)."
+function friendlyAuthError(error) {
+  const code = (error && error.code) || '';
+  const messages = {
+    'auth/invalid-credential': 'That email and password don’t match. Try again, or reset your password.',
+    'auth/wrong-password': 'That email and password don’t match. Try again, or reset your password.',
+    'auth/user-not-found': 'That email and password don’t match. Try again, or reset your password.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/email-already-in-use': 'There’s already an account with this email. Sign in instead.',
+    'auth/weak-password': 'Please choose a password of at least 6 characters.',
+    'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
+    'auth/network-request-failed': 'No connection. Check your internet and try again.',
+    'auth/popup-closed-by-user': '',
+    'auth/cancelled-popup-request': '',
+    'auth/account-exists-with-different-credential': 'This email is already registered. Sign in with your email and password.',
+    'auth/operation-not-allowed': 'This sign-in option isn’t available yet. Please use your email and password.',
+    'auth/unauthorized-domain': 'This sign-in option isn’t available yet. Please use your email and password.',
+    'auth/operation-not-supported-in-this-environment': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.',
+    'auth/web-storage-unsupported': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.'
+  };
+  if (code in messages) return messages[code];
+  return (error && error.message && !/firebase/i.test(error.message)) ? error.message : 'Something went wrong. Please try again.';
+}
+
+function showLoginError(error) {
+  const errorEl = document.getElementById('login-error');
+  const text = typeof error === 'string' ? error : friendlyAuthError(error);
+  if (!errorEl || !text) return;
+  errorEl.textContent = text;
+  errorEl.style.display = 'block';
 }
 
 async function handleLoginSubmit(e) {
@@ -117,11 +169,22 @@ async function handleLoginSubmit(e) {
   const email = emailInput.value.trim().toLowerCase();
   const password = passwordInput.value;
   const name = nameInput ? nameInput.value.trim() : '';
+  const label = submitBtn ? submitBtn.textContent : '';
 
   if (errorEl) errorEl.style.display = 'none';
+  showLoginNotice('');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Please wait…'; }
 
   try {
+    if (loginMode === 'reset') {
+      // Firebase emails a link to its own reset page; after choosing a new
+      // password the customer is sent back to sign in here. The same
+      // message shows whether or not the email has an account, so the
+      // form can't be used to find out who shops here.
+      await firebase.auth().sendPasswordResetEmail(email, { url: window.location.origin + '/login' });
+      showLoginNotice('If there’s an account for ' + email + ', we’ve sent a link to reset your password. Check your inbox and spam folder.');
+      return;
+    }
     if (loginMode === 'signup') {
       if (!name) throw new Error('Please enter your full name.');
       const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
@@ -139,12 +202,47 @@ async function handleLoginSubmit(e) {
     updateHash('account');
 
   } catch (error) {
-    if (errorEl) { errorEl.textContent = error.message; errorEl.style.display = 'block'; }
+    if (loginMode === 'reset' && error && error.code === 'auth/user-not-found') {
+      showLoginNotice('If there’s an account for ' + email + ', we’ve sent a link to reset your password. Check your inbox and spam folder.');
+    } else {
+      showLoginError(error);
+    }
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = loginMode === 'signin' ? 'Sign In' : 'Create Account';
+      submitBtn.textContent = label;
     }
+  }
+}
+
+// "Continue with Google": a popup, so the customer stays on the page.
+// First-time Google customers get the same customers/{uid} record an
+// email sign-up creates.
+async function handleGoogleSignIn() {
+  const btn = document.getElementById('google-signin-btn');
+  const errorEl = document.getElementById('login-error');
+  if (errorEl) errorEl.style.display = 'none';
+  showLoginNotice('');
+  if (btn) btn.disabled = true;
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const result = await firebase.auth().signInWithPopup(provider);
+    const user = result.user;
+    if (result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
+      await db.collection('customers').doc(user.uid).set({
+        name: user.displayName || '',
+        email: (user.email || '').toLowerCase(),
+        provider: 'google',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+    showAccountView();
+    updateHash('account');
+  } catch (error) {
+    showLoginError(error);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
