@@ -96,17 +96,27 @@ function trackResultHtml(o, opts) {
   const packages = o.packages || [];
   const shippedCount = packages.filter(p => p.shipped).length;
   const allShipped = packages.length > 0 && shippedCount === packages.length;
-  const meta = [o.createdAt ? 'Placed ' + trackDate(o.createdAt, true) : '', packages.length > 1 ? packages.length + ' packages' : ''].filter(Boolean).join(' · ');
+  // One package per brand. A brand's pre-order is a second shipment of
+  // that same package (it ships when ready), never a package of its own.
+  const brandKeys = [...new Set(packages.map(p => p.brand))];
+  const brandCount = brandKeys.length;
+  const split = packages.length > brandCount;
+  const unit = split ? 'shipments' : 'packages';
+  const meta = [o.createdAt ? 'Placed ' + trackDate(o.createdAt, true) : '', brandCount > 1 ? brandCount + ' packages' : ''].filter(Boolean).join(' · ');
 
   let notice = '';
-  if (o.cancelled) {
+  if (o.refundPending) {
+    notice = `<div class="track-notice">We’re processing a refund for this order. You’ll receive an email as soon as it has been completed. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span>.</div>`;
+  } else if (o.refunded) {
+    notice = `<div class="track-notice">Your refund has been completed and returned to your original payment method. Depending on your bank, it can take up to 10 business days to reflect. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span>.</div>`;
+  } else if (o.cancelled) {
     notice = `<div class="track-notice">This order has been cancelled. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span>.</div>`;
   } else if (!o.paid) {
     notice = `<div class="track-notice">Payment for this order has not been received, so it has not been processed. If you have been charged, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span> and quote your order number.</div>`;
   }
   const allPreorder = packages.length > 0 && packages.every(p => p.preorder);
-  const heading = o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending' : allShipped ? (packages.length > 1 ? 'All packages have shipped' : 'Your order has shipped')
-    : shippedCount ? `Partially shipped: ${shippedCount} of ${packages.length} packages` : allPreorder ? 'Pre-order confirmed' : 'Your order is being processed';
+  const heading = o.refundPending ? 'Refund in progress' : o.refunded ? 'Refunded' : o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending' : allShipped ? (packages.length > 1 ? `All ${unit} have shipped` : 'Your order has shipped')
+    : shippedCount ? `Partially shipped: ${shippedCount} of ${packages.length} ${unit}` : allPreorder ? 'Pre-order confirmed' : 'Your order is being processed';
 
   // Each package has its own steps; a pre-order is produced after purchase.
   const stepsHtml = (p) => {
@@ -117,6 +127,12 @@ function trackResultHtml(o, opts) {
     }).join('<div class="track-step-line"></div>')}</div>`;
   };
 
+  const cardLabel = (p) => {
+    const n = brandKeys.indexOf(p.brand) + 1;
+    const pkg = brandCount > 1 ? `Package ${n} of ${brandCount}` : 'Your package';
+    const brandSplit = packages.filter(x => x.brand === p.brand).length > 1;
+    return brandSplit ? `${brandCount > 1 ? pkg + ' · ' : ''}${p.preorder ? 'Pre-order shipment' : 'In-stock shipment'}` : pkg;
+  };
   const cards = packages.map((p, i) => {
     const items = p.items.map(it => {
       const product = PRODUCTS.find(x => x.id === it.productId);
@@ -125,10 +141,10 @@ function trackResultHtml(o, opts) {
       return `<div class="track-item"><div class="track-item-img" style="background-image:url('${escapeForCssUrl(thumb)}')"></div>
         <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(it.name))}</div><div class="track-item-meta">${details}</div></div></div>`;
     }).join('');
-    const live = !o.cancelled && o.paid;
+    const live = !o.cancelled && !o.refunded && !o.refundPending && o.paid;
     const status = live ? `<span class="track-pill${p.shipped ? ' shipped' : ''}">${p.shipped ? 'Shipped' : p.preorder ? 'In production' : 'Processing'}</span>` : '';
     const shipBy = p.preorder && p.shipBy ? preorderShipText(p.shipBy) : '';
-    const body = o.cancelled || !o.paid ? '' : p.shipped
+    const body = !live ? '' : p.shipped
       ? `<div class="track-ship">
           ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
           <div class="track-ship-row"><span>Tracking number</span><strong>${escapeHTML(p.trackingNumber)}</strong>
@@ -139,7 +155,7 @@ function trackResultHtml(o, opts) {
         ? `<p class="track-wait">${shipBy ? `<strong>Estimated dispatch: ${escapeHTML(shipBy)}.</strong> ` : ''}This item is in production with ${escapeHTML(trackPlainText(p.brand))}. We will notify you of any change to the estimated dispatch date, and send tracking details once it has shipped.</p>`
         : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is processing this package. You will receive a shipping confirmation with tracking details once it has been dispatched.</p>`;
     return `<div class="track-card">
-      <div class="track-card-head"><div><div class="track-card-label">${packages.length > 1 ? `Package ${i + 1} of ${packages.length}` : 'Your package'}</div><div class="track-card-brand">${escapeHTML(trackPlainText(p.brand))}</div></div>${status}</div>
+      <div class="track-card-head"><div><div class="track-card-label">${cardLabel(p)}</div><div class="track-card-brand">${escapeHTML(trackPlainText(p.brand))}</div></div>${status}</div>
       ${live ? stepsHtml(p) : ''}${items}${body}</div>`;
   }).join('');
 

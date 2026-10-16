@@ -66,13 +66,16 @@ async function loadAccountOrders() {
   const snap = await db.collection('orders').where('customerEmail', '==', (user.email || '').trim().toLowerCase()).limit(100).get();
   const seconds = (o) => (o.createdAt && o.createdAt.seconds) || (o.createdAt ? new Date(o.createdAt).getTime() / 1000 : 0);
   _accountOrders = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
-    .filter(o => o.paymentStatus === 'paid' || accountOrderCancelled(o))
+    .filter(o => o.paymentStatus === 'paid' || o.paymentStatus === 'refund_pending' || accountOrderCancelled(o))
     .sort((a, b) => seconds(b) - seconds(a));
   return _accountOrders;
 }
 
 function accountOrderCancelled(o) {
   return ['cancelled', 'refunded'].includes(String(o.status || '').toLowerCase()) || o.paymentStatus === 'refunded';
+}
+function accountOrderRefunded(o) {
+  return o.paymentStatus === 'refunded' || String(o.status || '').toLowerCase() === 'refunded';
 }
 
 function accountOrderDate(o) {
@@ -106,6 +109,8 @@ function accountOrderPackages(order) {
 }
 
 function accountOrderStatus(o) {
+  if (o.paymentStatus === 'refund_pending') return { label: 'Refund in progress', cls: '' };
+  if (accountOrderRefunded(o)) return { label: 'Refunded', cls: '' };
   if (accountOrderCancelled(o)) return { label: 'Cancelled', cls: '' };
   const pk = accountOrderPackages(o);
   const shipped = pk.filter(p => p.shipped).length;
@@ -186,8 +191,10 @@ async function renderAccountOrder(orderNumber) {
   const tracking = trackResultHtml({
     orderNumber: order.orderNumber || order.id,
     createdAt: accountOrderDate(order),
-    paid: order.paymentStatus === 'paid',
-    cancelled: accountOrderCancelled(order),
+    paid: ['paid', 'refund_pending'].includes(order.paymentStatus) || accountOrderRefunded(order),
+    refundPending: order.paymentStatus === 'refund_pending',
+    refunded: accountOrderRefunded(order),
+    cancelled: accountOrderCancelled(order) && !accountOrderRefunded(order),
     packages
   }, { hideAnother: true });
 
@@ -205,9 +212,10 @@ async function renderAccountOrder(orderNumber) {
     <div class="track-card account-detail">
       <div class="account-detail-title">Payment summary</div>
       <div class="account-row big"><span>Total paid</span><span>${formatPrice(order.total || 0)}</span></div>
+      ${accountOrderRefunded(order) ? `<div class="account-row"><span>Refunded</span><span>-${formatPrice(order.refundAmount || order.total || 0)}</span></div>` : ''}
       <div class="account-row"><span>Cart total</span><span>${formatPrice(order.subtotal || 0)}</span></div>
       ${discount > 0 ? `<div class="account-row"><span>Discount${order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : ''}</span><span>-${formatPrice(discount)}</span></div>` : ''}
-      <div class="account-row"><span>Delivery fee${packages.length > 1 ? ' (' + packages.length + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
+      <div class="account-row"><span>Delivery fee${new Set(packages.map(p => p.brand)).size > 1 ? ' (' + new Set(packages.map(p => p.brand)).size + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
     </div>
     <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('client-support')">Contact Client Support</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>

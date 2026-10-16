@@ -660,7 +660,7 @@ function renderOrderConfirmation(order) {
       statusText.textContent = 'Confirmed';
     } else {
       statusDot.classList.add('danger');
-      statusText.textContent = order.paymentStatus === 'refunded' ? 'Refunded' : 'Pending';
+      statusText.textContent = order.paymentStatus === 'refunded' ? 'Refunded' : order.paymentStatus === 'refund_pending' ? 'Refund in progress' : 'Pending';
     }
   }
 

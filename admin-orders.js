@@ -404,6 +404,7 @@
               '<option value="unpaid">Unpaid</option>' +
               '<option value="cancelled">Cancelled</option>' +
               '<option value="failed">Failed</option>' +
+              '<option value="refund_pending">Refund in progress</option>' +
               '<option value="refunded">Refunded</option>' +
             '</select>' +
           '</div>' +
@@ -1040,9 +1041,17 @@
                 '<i class="ph-light ph-' + (archived ? 'tray-arrow-up' : 'archive') + '"></i> ' + (archived ? 'Unarchive' : 'Archive') +
               '</button>'
             : '') +
-          (canRefund
-            ? '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._quickRefund(\'' + esc(orderId) + '\')">' +
-                '<i class="ph-light ph-arrow-counter-clockwise"></i> Refund' +
+          // Two honest steps: Start refund (customer told it's in
+          // progress), then Confirm refund completed once the money has
+          // actually been refunded in PayFast.
+          (canRefund && o && o.paymentStatus === 'paid'
+            ? '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._startRefund(\'' + esc(orderId) + '\')">' +
+                '<i class="ph-light ph-arrow-counter-clockwise"></i> Start refund' +
+              '</button>'
+            : '') +
+          (canRefund && o && o.paymentStatus === 'refund_pending'
+            ? '<button class="orders-actions-item" onclick="window._toggleOrderDetailMenu();window._confirmRefund(\'' + esc(orderId) + '\')">' +
+                '<i class="ph-light ph-check-circle"></i> Confirm refund completed' +
               '</button>'
             : '') +
           (canDelete
@@ -1213,6 +1222,9 @@
           ? '<div class="info-row"><span class="label" style="color:var(--success);">Paid</span><span style="color:var(--success);">' + fmt(o.total || 0) + '</span></div>'
           : o.paymentStatus === 'refunded'
             ? '<div class="info-row"><span class="label" style="color:var(--muted);">Refunded</span><span>' + fmt(o.total || 0) + '</span></div>'
+          : o.paymentStatus === 'refund_pending'
+            ? '<div class="info-row"><span class="label" style="color:var(--warning);">Refund in progress</span><span style="color:var(--warning);">' + fmt(o.total || 0) + '</span></div>' +
+              '<div class="info-row"><span class="label" style="color:var(--muted);">Next step</span><span style="text-align:right;">Refund it in PayFast, then use ⋯ → Confirm refund completed</span></div>'
             : '<div class="info-row"><span class="label" style="color:var(--warning);">Outstanding</span><span style="color:var(--warning);">' + fmt(o.total || 0) + '</span></div>') +
       '</div>';
 
@@ -1473,22 +1485,41 @@
     if (sanitized) window.open('https://wa.me/' + sanitized, '_blank', 'noopener,noreferrer');
   };
 
-  window._quickRefund = function (orderId) {
+  // Step 1: the customer is told a refund is in progress. No money moves
+  // here; the refund itself is done in the PayFast dashboard.
+  window._startRefund = function (orderId) {
     if (!window._guard('orders', 'approve')) return;
     var existing = window._ordersData ? window._ordersData.filter(function (x) { return x.id === orderId; })[0] : null;
-    if (!confirm('Mark order #' + ((existing && existing.orderNumber) || orderId) + ' as refunded?')) return;
-    ordersRef.doc(orderId)
-      .update({ paymentStatus: 'refunded', updatedAt: new Date().toISOString() })
-      .then(function () {
-        showToast('Order marked as refunded');
-        logOrderTimelineEvent(orderId, 'You refunded this order.');
-        if (window._ordersData) {
-          var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
-          if (o) o.paymentStatus = 'refunded';
-        }
-        closePanel();
-      }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+    var label = '#' + ((existing && existing.orderNumber) || orderId);
+    if (!confirm('Start a refund for order ' + label + '?\n\nThe customer will be emailed that their refund is being processed. Next, refund them in your PayFast dashboard, then come back and choose "Confirm refund completed".')) return;
+    setRefundStage(orderId, 'refund_pending', 'You started a refund. The customer was told it is being processed.');
   };
+
+  // Step 2: only once the money has really been refunded in PayFast.
+  window._confirmRefund = function (orderId) {
+    if (!window._guard('orders', 'approve')) return;
+    var existing = window._ordersData ? window._ordersData.filter(function (x) { return x.id === orderId; })[0] : null;
+    var label = '#' + ((existing && existing.orderNumber) || orderId);
+    var amount = existing ? fmt(existing.total || 0) : 'the order total';
+    if (!confirm('Have you refunded ' + amount + ' for order ' + label + ' in your PayFast dashboard?\n\nOnly confirm once PayFast shows the refund. The customer will be emailed that their refund has been processed.')) return;
+    setRefundStage(orderId, 'refunded', 'You confirmed the refund was completed in PayFast. The customer was emailed.');
+  };
+
+  function setRefundStage(orderId, stage, timelineText) {
+    var now = new Date().toISOString();
+    var patch = { paymentStatus: stage, updatedAt: now };
+    patch[stage === 'refunded' ? 'refundedAt' : 'refundStartedAt'] = now;
+    ordersRef.doc(orderId).update(patch).then(function () {
+      showToast(stage === 'refunded' ? 'Refund confirmed. Customer emailed.' : 'Refund started. Customer emailed.');
+      logOrderTimelineEvent(orderId, timelineText);
+      notifyRefunded(orderId);
+      if (window._ordersData) {
+        var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
+        if (o) o.paymentStatus = stage;
+      }
+      window._openOrderDetail(orderId);
+    }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+  }
 
   window._deleteOrder = function (orderId) {
     if (!window._guard('orders', 'delete')) return;
@@ -1546,6 +1577,15 @@
   // succeeded by the time this runs — if the email fails (no network,
   // Resend down, token issue) that's logged but never surfaces as an
   // error to the admin/vendor, since the real action already worked.
+  function notifyRefunded(orderId) {
+    if (!window._currentUser || !window._currentUser.getIdToken) return;
+    window._currentUser.getIdToken().then(function (token) {
+      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-refunded', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: '{}'
+      });
+    }).catch(function (e) { console.warn('[NOTIFY_REFUNDED]', e.message); });
+  }
+
   function notifyShipped(orderId, vendorId, preorder) {
     if (!window._currentUser || !window._currentUser.getIdToken) return;
     window._currentUser.getIdToken().then(function (token) {
