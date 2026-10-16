@@ -1157,8 +1157,9 @@ app.post('/api/track-order', async (req, res) => {
     res.json({
       orderNumber: order.orderNumber || orderNumber,
       createdAt: order.createdAt && order.createdAt.toDate ? order.createdAt.toDate().toISOString() : null,
-      paid: order.paymentStatus === 'paid',
-      cancelled: ['cancelled', 'refunded'].includes(String(order.status || '').toLowerCase()),
+      paid: order.paymentStatus === 'paid' || order.paymentStatus === 'refunded',
+      refunded: order.paymentStatus === 'refunded' || String(order.status || '').toLowerCase() === 'refunded',
+      cancelled: String(order.status || '').toLowerCase() === 'cancelled',
       packages
     });
   } catch (e) {
@@ -1323,6 +1324,35 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
   } catch (e) {
     console.error('[NOTIFY_SHIPPED] Error:', e.message);
     res.status(500).json({ error: 'Could not send shipping notification' });
+  }
+});
+
+// ==================== REFUND EMAIL ====================
+// admin-orders.js calls this after staff mark an order refunded. The
+// money itself is refunded in the PayFast dashboard; this only tells the
+// customer (once) and copies the team.
+app.post('/api/orders/:id/notify-refunded', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const auth = await authorizeShipmentRequest(req, '');
+    if (!auth.ok) return res.status(403).json({ error: auth.reason || 'Not authorized' });
+    const orderRef = adminDb.collection('orders').doc(req.params.id);
+    const doc = await orderRef.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Order not found' });
+    const order = doc.data();
+    if (order.paymentStatus !== 'refunded') return res.status(400).json({ error: 'Order is not marked refunded' });
+    if (order.refundEmailSentAt) return res.json({ ok: true, skipped: 'Already emailed' });
+    if (!order.customerEmail) return res.json({ ok: true, skipped: 'No customer email' });
+    const ctx = await buildOrderEmailContext(order);
+    const email = orderEmails.refunded(order, ctx);
+    await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: email.subject, html: email.html, text: email.text });
+    await orderRef.update({ refundEmailSentAt: admin.firestore.FieldValue.serverTimestamp() });
+    sendResendEmail({ from: 'Janedore Orders <noreply@janedore.co.za>', to: ORDER_ALERT_EMAIL, subject: 'Refund emailed: order #' + (order.orderNumber || req.params.id), html: email.html, text: email.text })
+      .catch((e) => console.warn('[NOTIFY_REFUNDED] Team copy failed:', e.message));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[NOTIFY_REFUNDED]', e.message);
+    res.status(500).json({ error: 'Could not send refund email' });
   }
 });
 

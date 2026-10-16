@@ -388,6 +388,37 @@ function adminShipped(order, ctx, items, opts) {
   return { subject: brand + ' shipped order #' + num, html, text };
 }
 
+// Sent when Janedore marks an order refunded in admin (after refunding it
+// in PayFast). server.js /api/orders/:id/notify-refunded.
+function refunded(order, ctx) {
+  const num = order.orderNumber || '';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const amount = Number(order.refundAmount || order.total) || 0;
+  const intro = 'we’ve processed a refund of ' + money(amount) + ' for your order #' + num + '. It will be returned to your original payment method, and depending on your bank, it can take up to 10 business days to reflect.';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'Your refund has been processed',
+    preheader: 'A refund of ' + money(amount) + ' for order #' + num + ' has been processed.',
+    bannerHtml: '<strong>Your refund has been processed</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
+      title('Refund summary') + rows(
+        row('Refund amount', money(amount), { big: true, bold: true }) +
+        divider() +
+        row('Original order total', money(order.total)) +
+        row('Refunded to', 'Original payment method (PayFast)')),
+      title('Refunded items') + itemsBlock(order.items || [], ctx, {}),
+      '<div style="font-size:13px;line-height:1.6;color:#555555;">If the refund hasn’t reflected after 10 business days, reply to this email with your order number and our team will follow up with you.</div>'
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = 'Your refund has been processed\n\nHi ' + first + ', ' + intro + '\n\nRefund amount: ' + money(amount) +
+    '\n\n' + textItems(order.items || [], false) + '\n\nQuestions? support@janedore.co.za';
+  return { subject: 'Your refund has been processed (order #' + num + ')', html, text };
+}
+
 // A brand moved the expected ship date of a pre-order the customer paid
 // for. Sent once per order from server.js /api/preorder-date-changed.
 function preorderDateChanged(order, ctx, items, opts) {
@@ -454,4 +485,4 @@ function reportReceived(report, ctx) {
   return { subject: 'We received your report about ' + brand, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refunded, money };

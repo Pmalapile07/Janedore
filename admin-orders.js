@@ -1476,12 +1476,15 @@
   window._quickRefund = function (orderId) {
     if (!window._guard('orders', 'approve')) return;
     var existing = window._ordersData ? window._ordersData.filter(function (x) { return x.id === orderId; })[0] : null;
-    if (!confirm('Mark order #' + ((existing && existing.orderNumber) || orderId) + ' as refunded?')) return;
+    // Refunding here records it and emails the customer; the money itself
+    // is refunded in the PayFast dashboard first.
+    if (!confirm('Mark order #' + ((existing && existing.orderNumber) || orderId) + ' as refunded?\n\nRefund the customer in your PayFast dashboard first. This records the refund and emails the customer that it has been processed.')) return;
     ordersRef.doc(orderId)
-      .update({ paymentStatus: 'refunded', updatedAt: new Date().toISOString() })
+      .update({ paymentStatus: 'refunded', refundedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
       .then(function () {
-        showToast('Order marked as refunded');
-        logOrderTimelineEvent(orderId, 'You refunded this order.');
+        showToast('Order marked as refunded. Customer emailed.');
+        logOrderTimelineEvent(orderId, 'You refunded this order and the customer was emailed.');
+        notifyRefunded(orderId);
         if (window._ordersData) {
           var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
           if (o) o.paymentStatus = 'refunded';
@@ -1546,6 +1549,15 @@
   // succeeded by the time this runs — if the email fails (no network,
   // Resend down, token issue) that's logged but never surfaces as an
   // error to the admin/vendor, since the real action already worked.
+  function notifyRefunded(orderId) {
+    if (!window._currentUser || !window._currentUser.getIdToken) return;
+    window._currentUser.getIdToken().then(function (token) {
+      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-refunded', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: '{}'
+      });
+    }).catch(function (e) { console.warn('[NOTIFY_REFUNDED]', e.message); });
+  }
+
   function notifyShipped(orderId, vendorId, preorder) {
     if (!window._currentUser || !window._currentUser.getIdToken) return;
     window._currentUser.getIdToken().then(function (token) {

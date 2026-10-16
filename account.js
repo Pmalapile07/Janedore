@@ -74,6 +74,9 @@ async function loadAccountOrders() {
 function accountOrderCancelled(o) {
   return ['cancelled', 'refunded'].includes(String(o.status || '').toLowerCase()) || o.paymentStatus === 'refunded';
 }
+function accountOrderRefunded(o) {
+  return o.paymentStatus === 'refunded' || String(o.status || '').toLowerCase() === 'refunded';
+}
 
 function accountOrderDate(o) {
   const ts = o.createdAt;
@@ -106,6 +109,7 @@ function accountOrderPackages(order) {
 }
 
 function accountOrderStatus(o) {
+  if (accountOrderRefunded(o)) return { label: 'Refunded', cls: '' };
   if (accountOrderCancelled(o)) return { label: 'Cancelled', cls: '' };
   const pk = accountOrderPackages(o);
   const shipped = pk.filter(p => p.shipped).length;
@@ -186,8 +190,9 @@ async function renderAccountOrder(orderNumber) {
   const tracking = trackResultHtml({
     orderNumber: order.orderNumber || order.id,
     createdAt: accountOrderDate(order),
-    paid: order.paymentStatus === 'paid',
-    cancelled: accountOrderCancelled(order),
+    paid: order.paymentStatus === 'paid' || accountOrderRefunded(order),
+    refunded: accountOrderRefunded(order),
+    cancelled: accountOrderCancelled(order) && !accountOrderRefunded(order),
     packages
   }, { hideAnother: true });
 
@@ -205,6 +210,7 @@ async function renderAccountOrder(orderNumber) {
     <div class="track-card account-detail">
       <div class="account-detail-title">Payment summary</div>
       <div class="account-row big"><span>Total paid</span><span>${formatPrice(order.total || 0)}</span></div>
+      ${accountOrderRefunded(order) ? `<div class="account-row"><span>Refunded</span><span>-${formatPrice(order.refundAmount || order.total || 0)}</span></div>` : ''}
       <div class="account-row"><span>Cart total</span><span>${formatPrice(order.subtotal || 0)}</span></div>
       ${discount > 0 ? `<div class="account-row"><span>Discount${order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : ''}</span><span>-${formatPrice(discount)}</span></div>` : ''}
       <div class="account-row"><span>Delivery fee${packages.length > 1 ? ' (' + packages.length + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>

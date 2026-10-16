@@ -99,13 +99,15 @@ function trackResultHtml(o, opts) {
   const meta = [o.createdAt ? 'Placed ' + trackDate(o.createdAt, true) : '', packages.length > 1 ? packages.length + ' packages' : ''].filter(Boolean).join(' · ');
 
   let notice = '';
-  if (o.cancelled) {
+  if (o.refunded) {
+    notice = `<div class="track-notice">This order has been refunded to your original payment method. Depending on your bank, it can take up to 10 business days to reflect. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span>.</div>`;
+  } else if (o.cancelled) {
     notice = `<div class="track-notice">This order has been cancelled. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span>.</div>`;
   } else if (!o.paid) {
     notice = `<div class="track-notice">Payment for this order has not been received, so it has not been processed. If you have been charged, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span> and quote your order number.</div>`;
   }
   const allPreorder = packages.length > 0 && packages.every(p => p.preorder);
-  const heading = o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending' : allShipped ? (packages.length > 1 ? 'All packages have shipped' : 'Your order has shipped')
+  const heading = o.refunded ? 'Refunded' : o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending' : allShipped ? (packages.length > 1 ? 'All packages have shipped' : 'Your order has shipped')
     : shippedCount ? `Partially shipped: ${shippedCount} of ${packages.length} packages` : allPreorder ? 'Pre-order confirmed' : 'Your order is being processed';
 
   // Each package has its own steps; a pre-order is produced after purchase.
@@ -125,10 +127,10 @@ function trackResultHtml(o, opts) {
       return `<div class="track-item"><div class="track-item-img" style="background-image:url('${escapeForCssUrl(thumb)}')"></div>
         <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(it.name))}</div><div class="track-item-meta">${details}</div></div></div>`;
     }).join('');
-    const live = !o.cancelled && o.paid;
+    const live = !o.cancelled && !o.refunded && o.paid;
     const status = live ? `<span class="track-pill${p.shipped ? ' shipped' : ''}">${p.shipped ? 'Shipped' : p.preorder ? 'In production' : 'Processing'}</span>` : '';
     const shipBy = p.preorder && p.shipBy ? preorderShipText(p.shipBy) : '';
-    const body = o.cancelled || !o.paid ? '' : p.shipped
+    const body = !live ? '' : p.shipped
       ? `<div class="track-ship">
           ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
           <div class="track-ship-row"><span>Tracking number</span><strong>${escapeHTML(p.trackingNumber)}</strong>
