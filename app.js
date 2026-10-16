@@ -392,6 +392,9 @@ function getRouteFromPath() {
 }
 
 window.addEventListener('popstate', async () => {
+  // In-page anchors (e.g. an old #brands-letter-A link) are scroll
+  // targets, not routes; never treat them as a page change.
+  if (/^#brands-letter-/.test(window.location.hash)) return;
   closeFilterPanel();
   const pathRoute = getRouteFromPath();
   if (pathRoute) {

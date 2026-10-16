@@ -259,7 +259,7 @@ function renderCheckoutSummary() {
       const size = item.size && item.size !== 'OS' ? sanitizeHTML(item.size) : '';
       return `<div class="checkout-order-item">
         <div class="cart-item-top">
-          <div class="cart-item-img" style="background-image:url('${getCartItemThumbnail(item)}');"></div>
+          <div class="cart-item-img" style="background-image:url('${getCartItemThumbnail(item)}');">${cartBadgesHtml(item)}</div>
           <div class="cart-item-info">
             <div class="cart-item-name">${sanitizeHTML(item.name || '')}</div>
             <div class="cart-item-brand">${sanitizeHTML(item.brand || '')}${color}</div>
@@ -271,7 +271,7 @@ function renderCheckoutSummary() {
         </div>
         <div class="cart-item-bottom">
           <span class="cart-item-returns">Free exchange or return within 30 days</span>
-          <span class="cart-item-price">${formatPrice(getCartItemLineTotal(item))}</span>
+          <span class="cart-item-price${cartItemOnSale(item) ? ' is-sale' : ''}">${formatPrice(getCartItemLineTotal(item))}</span>
         </div>
       </div>`;
     }).join('');

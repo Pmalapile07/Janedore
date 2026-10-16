@@ -178,6 +178,33 @@ function getCartShippingStatus() {
   return { shipments, packages: Math.max(1, shipments.length), fee, freeShipping: shipments.length > 0 && fee === 0 };
 }
 
+// Same badges as the product cards (NEW, SALE, SOLD OUT, a manual badge),
+// and the sale price in red, on bag and checkout items.
+// Header back arrow on the bag and checkout. Checkout's payment step goes
+// back to details, details goes back to the bag, and the bag goes back
+// to wherever the shopper was (home if they landed straight on the bag).
+const SITE_ENTRY_HISTORY_LENGTH = history.length;
+function goBackFromBag() {
+  if (S.currentPage === 'checkout') {
+    const payment = document.getElementById('checkout-payment-view');
+    if (payment && payment.style.display === 'block' && typeof showCheckoutStep === 'function') showCheckoutStep(2);
+    else navigateTo('cart');
+    return;
+  }
+  if (history.length > SITE_ENTRY_HISTORY_LENGTH) history.back();
+  else navigateTo('home');
+}
+
+function cartBadgesHtml(item) {
+  const product = getCartProduct(item.productId);
+  const badges = product && typeof getProductBadges === 'function' ? getProductBadges(product) : [];
+  return badges.length ? `<div class="product-badge-stack cart-badge-stack">${badges.map(b => `<span class="product-badge ${badgeClass(b)}">${sanitizeHTML(b)}</span>`).join('')}</div>` : '';
+}
+function cartItemOnSale(item) {
+  const product = getCartProduct(item.productId);
+  return !!product && typeof hasSalePrice === 'function' && hasSalePrice(product);
+}
+
 function cartHasMultipleTypes() {
   const types = new Set(S.cart.map(i => getCartProduct(i.productId)?.category).filter(Boolean));
   return types.size > 1;
@@ -509,7 +536,7 @@ function renderCartPage() {
 
     html += `<div class="cart-card cart-item${soldOut ? ' sold-out' : ''}">
       <div class="cart-item-top">
-        <div class="cart-item-img" style="background-image:url('${thumbnail}');" onclick="goToProduct('${productId}')"></div>
+        <div class="cart-item-img" style="background-image:url('${thumbnail}');" onclick="goToProduct('${productId}')">${cartBadgesHtml(item)}</div>
         <div class="cart-item-info">
           <div class="cart-item-name" onclick="goToProduct('${productId}')">${itemName}</div>
           <div class="cart-item-brand">${itemBrand}${itemColor && itemColor !== 'Default' ? ' · ' + itemColor : ''}</div>
@@ -529,7 +556,7 @@ function renderCartPage() {
       </div>
       <div class="cart-item-bottom">
         <span class="cart-item-returns">Free exchange or return within 30 days</span>
-        <span class="cart-item-price">${formatPrice(getCartItemLineTotal(item))}</span>
+        <span class="cart-item-price${cartItemOnSale(item) ? ' is-sale' : ''}">${formatPrice(getCartItemLineTotal(item))}</span>
       </div>
     </div>`;
   });
