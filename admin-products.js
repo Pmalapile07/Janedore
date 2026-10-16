@@ -286,7 +286,7 @@
         body: JSON.stringify({ productId: productId, oldDate: oldDate })
       });
     }).then(function(r) { return r && r.json(); }).then(function(d) {
-      if (d && d.sent) showToast('New ship date emailed to ' + d.sent + ' customer' + (d.sent === 1 ? '' : 's'));
+      if (d && d.sent) showToast('Updated dispatch date emailed to ' + d.sent + ' customer' + (d.sent === 1 ? '' : 's'));
     }).catch(function(e) { console.warn('[PREORDER_DATE]', e.message); });
   }
 
@@ -787,7 +787,7 @@
           // Pre-order: when it's expected to ship. Stock below is how many
           // pre-orders the brand will take.
           '<div class="form-group" id="pf-preorder-group" style="padding:0;display:' + (badgeSelectValue === 'pre-order' ? 'block' : 'none') + ';">' +
-            '<label>Expected to ship by <span style="font-size:10px;color:var(--muted);">Shown on the product, bag, checkout, emails and tracking page. Changing it emails everyone who has pre-ordered. Stock = how many pre-orders you will accept.</span></label>' +
+            '<label>Estimated dispatch date <span style="font-size:10px;color:var(--muted);">Shown on the product, bag, checkout, emails and tracking page. Changing it emails every customer awaiting this pre-order. Stock = the number of pre-orders you will accept.</span></label>' +
             '<input type="date" name="preorderShipDate" value="' + esc(p.preorderShipDate || '') + '" style="width:100%;">' +
           '</div>' +
           '<div class="form-group" style="padding:0;"><label>Featured on homepage</label><select name="featured" style="width:100%;"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div>' +
@@ -1239,7 +1239,7 @@
 
     var isPreorder = badgeValue === 'pre-order';
     data.preorderShipDate = isPreorder && form.preorderShipDate ? (form.preorderShipDate.value || null) : null;
-    if (isPreorder && !data.preorderShipDate) { showToast('Add the date this pre-order is expected to ship.', 'error'); return; }
+    if (isPreorder && !data.preorderShipDate) { showToast('Add the estimated dispatch date for this pre-order.', 'error'); return; }
     var oldShipDate = existingProduct && String(existingProduct.badge || '').toLowerCase() === 'pre-order' ? (existingProduct.preorderShipDate || '') : '';
 
     if (!data.vendorId) {

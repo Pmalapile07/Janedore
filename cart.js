@@ -185,7 +185,7 @@ function cartBadgesHtml(item) {
   const badges = product && typeof getProductBadges === 'function' ? getProductBadges(product) : [];
   return badges.length ? `<div class="product-badge-stack cart-badge-stack">${badges.map(b => `<span class="product-badge ${badgeClass(b)}">${sanitizeHTML(b)}</span>`).join('')}</div>` : '';
 }
-// "Pre-order · ships by 15 Mar" under the brand on bag, checkout and
+// "Pre-order · Est. dispatch 15 Mar" under the brand on bag, checkout and
 // confirmation lines. Order lines carry the flag the server stamped
 // (priceOrder(), server.js); bag lines read the live product.
 function cartItemPreorderDate(item) {
@@ -197,7 +197,7 @@ function cartPreorderHtml(item) {
   const date = cartItemPreorderDate(item);
   if (date === null) return '';
   const when = date ? preorderShipText(date, true) : '';
-  return `<div class="cart-item-preorder">Pre-order${when ? ' · ships by ' + escapeHTML(when) : ''}</div>`;
+  return `<div class="cart-item-preorder">Pre-order${when ? ' · Est. dispatch ' + escapeHTML(when) : ''}</div>`;
 }
 function cartHasPreorder() { return S.cart.some(item => cartItemPreorderDate(item) !== null); }
 
