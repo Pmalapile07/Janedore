@@ -27,8 +27,8 @@ body.on-brands-page .search-bar-row {
   cursor: pointer;
 }
 .search-bar-trigger i {
-  font-size: 16px;
-  color: #999;
+  font-size: 20px; /* same as the header icons (.nav-icon-btn) */
+  color: #fff;
   flex-shrink: 0;
 }
 .search-bar-trigger span {

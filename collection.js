@@ -107,6 +107,7 @@ function productBelongsToCollection(product, collection) {
   if (collection.collectionType === 'automated') {
     if (collection.automatedRule === 'sale') return hasSalePrice(product);
     if (collection.automatedRule === 'newin') return typeof isProductNew === 'function' && isProductNew(product);
+    if (collection.automatedRule === 'freedelivery') return typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product);
   }
   const values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
   const handle = String(collection.handle || collection.slug || collection.id || '').trim().toLowerCase();

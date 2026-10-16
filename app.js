@@ -591,11 +591,17 @@ function navigateToCategory(cat, replaceUrl) {
 
 // Resolve /collections/:handle from published Firestore records first.
 // If the handle is not a collection, retain the existing category route.
+// Collections that exist without being created in admin. One with the
+// same handle made in admin > Collections takes over.
+const BUILTIN_COLLECTIONS = {
+  'free-delivery': { id: 'free-delivery', handle: 'free-delivery', title: 'Free Delivery', collectionType: 'automated', automatedRule: 'freedelivery' }
+};
+
 async function navigateToCollection(handle, replaceUrl) {
   if (typeof window._loadPublishedCollections !== 'function') { navigateToCategory(handle, replaceUrl); return; }
   try {
     const items = await window._loadPublishedCollections();
-    const collection = (items || []).find(function (item) { return String(item.handle || item.slug || item.id) === String(handle); });
+    const collection = (items || []).find(function (item) { return String(item.handle || item.slug || item.id) === String(handle); }) || BUILTIN_COLLECTIONS[handle];
     if (!collection) { navigateToCategory(handle, replaceUrl); return; }
     ++pageNavGeneration; closeFilterPanel(); closeSearch();
     S.saleMode = false; S.newInMode = false;

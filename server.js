@@ -550,9 +550,18 @@ function generatePayFastSignature(data, passphrase, includeBlanks) {
 // result — not the browser's — is what gets charged and what the ITN
 // later checks the payment against. Mirrors cart.js's rules exactly:
 // sale price only when 0 < salePrice < price, discount validated the same
-// way applyPromoCode() does, and free delivery from R1,500 after discount.
-const FREE_SHIPPING_THRESHOLD = 1500;
+// way applyPromoCode() does, and delivery per brand package: R150, or
+// free when every item in it is marked Free delivery and the package
+// comes to R750 or more (cart.js getCartShipments()).
 const SHIPPING_FEE = 150;
+const FREE_DELIVERY_MIN = 750;
+const HOUSE_VENDOR_ID = 'vendor-janedore';
+function isHouseProduct(p) {
+  return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
+}
+function isFreeDeliveryProduct(p) {
+  return !!p && (typeof p.freeDelivery === 'boolean' ? p.freeDelivery : isHouseProduct(p));
+}
 
 function serverUnitPrice(product) {
   const price = Number(product.price) || 0;
@@ -607,10 +616,22 @@ async function priceOrder(order) {
   }
 
   const afterDiscount = Math.max(0, subtotal - discountAmount);
-  const freeShipping = (discount && discount.type === 'free_shipping') || afterDiscount >= FREE_SHIPPING_THRESHOLD;
-  // One parcel per brand: JANEDORE's own stock (no vendorId) is one package.
-  const packages = new Set(pricedItems.map(i => products[String(i.productId || '')].vendorId || 'janedore')).size;
-  const shipping = freeShipping ? 0 : SHIPPING_FEE * packages;
+  // One parcel per brand; JANEDORE's own stock is one package.
+  const codeFree = !!(discount && discount.type === 'free_shipping');
+  const packageMap = new Map();
+  pricedItems.forEach((i) => {
+    const product = products[String(i.productId || '')];
+    const key = isHouseProduct(product) ? 'janedore' : product.vendorId;
+    if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true });
+    const pkg = packageMap.get(key);
+    pkg.subtotal += i.price * i.qty;
+    if (!isFreeDeliveryProduct(product)) pkg.eligible = false;
+  });
+  const packages = packageMap.size;
+  let shipping = 0;
+  packageMap.forEach((pkg) => {
+    if (!(codeFree || (pkg.eligible && pkg.subtotal >= FREE_DELIVERY_MIN))) shipping += SHIPPING_FEE;
+  });
   const total = Math.round((afterDiscount + shipping) * 100) / 100;
 
   return {

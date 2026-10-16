@@ -306,9 +306,8 @@ function renderShippingMethod(shipping, packages) {
     fromEl.innerHTML = `Ships from <strong>${sanitizeHTML(shipments[0] ? shipments[0].brand : 'JANEDORE')}</strong>.`;
     return;
   }
-  const each = shipping === 0 ? 'Free' : formatPrice(SHIPPING_FEE);
   fromEl.innerHTML = `Your order ships in ${packages} separate packages, one from each brand.` +
-    `<span class="checkout-ships-list">${shipments.map(s => `<span class="checkout-ships-row"><span>${sanitizeHTML(s.brand)}</span><span>${each}</span></span>`).join('')}</span>`;
+    `<span class="checkout-ships-list">${shipments.map(s => `<span class="checkout-ships-row"><span>${sanitizeHTML(s.brand)}</span><span>${s.free ? 'Free' : formatPrice(s.fee)}</span></span>`).join('')}</span>`;
 }
 
 async function placeOrder(e) {

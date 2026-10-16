@@ -110,6 +110,7 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
 }
 .cart-delivery-banner i { font-size: 22px; flex-shrink: 0; }
 .cart-delivery-banner strong { font-weight: 600; }
+.cart-delivery-link { text-decoration: underline; cursor: pointer; white-space: nowrap; }
 .cart-cards {
   display: flex;
   flex-direction: column;

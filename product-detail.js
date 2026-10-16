@@ -406,6 +406,7 @@ async function renderProductPage(product) {
           <p class="product-by-brand-name"${productVendor?` onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')"`:''}>${product.brand||'JANEDORE'}${productVendor?' <i class="ph ph-arrow-right"></i>':''}</p>
         </div>
       </div>
+      ${typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product) ? `<button type="button" class="product-free-delivery" onclick="navigateToCollection('free-delivery')"><i class="ph ph-truck" aria-hidden="true"></i><span>Free delivery on ${escapeHTML(product.brand || 'JANEDORE')} orders over ${formatPrice(FREE_DELIVERY_MIN)}</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>` : ''}
       <div class="product-quantity-row" aria-label="Quantity selector">
         <span class="product-quantity-label">Quantity</span>
         <div class="product-quantity-control">
