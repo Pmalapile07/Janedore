@@ -184,6 +184,7 @@
   <link rel="stylesheet" href="cart.css">
   <link rel="stylesheet" href="wishlist.css">
   <link rel="stylesheet" href="track-order.css">
+  <link rel="stylesheet" href="account.css">
   <link rel="stylesheet" href="search.css">
   <link rel="stylesheet" href="modals.css">
   <link rel="stylesheet" href="campaign.css">
@@ -278,10 +279,10 @@
       </div>
     </div>
     <div class="nav-right">
-      <button class="nav-icon-btn nav-user-icon" onclick="navigateTo('login')" title="Sign In"><i class="ph ph-user"></i></button>
+      <button class="nav-icon-btn nav-user-icon" onclick="navigateToLogin()" title="My Account"><i class="ph ph-user"></i></button>
       <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')" title="Wishlist"><i class="ph ph-heart"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
       <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph ph-tote-simple"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
-      <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateTo('login')">Login</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
+      <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateToLogin()">Account</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
     </div>
     <!-- Cart → Checkout → Payment progress; only shown on the cart (with
          items) and checkout pages, state driven entirely by cart.css. -->
@@ -730,6 +731,7 @@
 </script>
 
 <script src="checkout.js" defer></script>
+<script src="account.js" defer></script>
 <script src="login.js" defer></script>
 
 <div class="page" id="page-login">
@@ -748,11 +750,6 @@
   });
 </script>
 
-<script>
-  fetch('login.html').then(r => r.text()).then(html => {
-    document.getElementById('account-loaded').innerHTML = html;
-  });
-</script>
 
 <script>
   fetch('products.html').then(r => r.text()).then(html => {

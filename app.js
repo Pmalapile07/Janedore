@@ -386,6 +386,8 @@ function getRouteFromPath() {
   if (m) return { page: 'content', slug: decodeURIComponent(m[1]) };
   m = path.match(/^\/brands\/([^\/]+)\/?$/);
   if (m) return { page: 'vendor', slug: decodeURIComponent(m[1]) };
+  m = path.match(/^\/account\/orders\/[^\/]+\/?$/);
+  if (m) return { page: 'account' };
   m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial|brands|categories|gift-cards)\/?$/);
   if (m) return { page: URL_TO_PAGE_MAP[m[1]] || m[1] };
   return null;

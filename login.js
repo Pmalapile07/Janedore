@@ -6,74 +6,53 @@
 
 let loginMode = 'signin'; // 'signin', 'signup' or 'reset'
 
-function navigateToLogin() {
-  ++pageNavGeneration;
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const loginPage = document.getElementById("page-login");
-  if (loginPage) {
-    loginPage.classList.add("active");
-    S.currentPage = "login";
-    updateHash('login');
-    resetScrollToTop();
-    ensureNavScrolled();
-    // This function (not app.js's same-named one, which it shadows —
-    // see the file-level comment) is what actually runs, so the
-    // quick-links row's login-page hide (navigation.css) has to be
-    // set here directly; setNavForPage() (app.js) is never reached on
-    // this path.
-    document.body.classList.add('on-login-page');
-
-    // Only treat as signed in if this is a real (non-anonymous) user
-    const user = firebase.auth().currentUser;
-    if (user && !user.isAnonymous) {
-      showAccountView();
-    } else {
-      showLoginView();
-    }
-  }
+// Signed-in customers never see the sign-in form: the account icon,
+// /login and a fresh sign-in all land on My Account (account.js).
+function realUser() {
+  const user = firebase.auth().currentUser;
+  return user && !user.isAnonymous ? user : null;
 }
 
-function navigateToAccount() {
+function showPage(id, page) {
   ++pageNavGeneration;
+  if (typeof closeFilterPanel === 'function') closeFilterPanel();
+  if (typeof closeSearch === 'function') closeSearch();
+  if (typeof removeStickyBar === 'function') removeStickyBar();
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const accountPage = document.getElementById("page-account");
-  if (accountPage) {
-    accountPage.classList.add("active");
-    S.currentPage = "account";
-    updateHash('account');
-    resetScrollToTop();
-    ensureNavScrolled();
-    // Account page isn't one of the pages the quick-links row is
-    // hidden on — clear the marker login set, in case this redirects
-    // anywhere other than back into navigateToLogin() below.
-    document.body.classList.remove('on-login-page');
+  document.getElementById(id)?.classList.add("active");
+  S.currentPage = page;
+  if (typeof setNavForPage === 'function') setNavForPage(page);
+  resetScrollToTop();
+  ensureNavScrolled();
+  if (typeof updateChatVisibility === 'function') updateChatVisibility();
+}
 
-    const user = firebase.auth().currentUser;
-    if (user && !user.isAnonymous) {
-      showAccountView();
-      loadAccountData();
-    } else {
-      // Anonymous or signed-out — redirect to login
-      navigateToLogin();
-    }
-  }
+function setPath(path, replaceUrl) {
+  if (window.location.pathname === path && !window.location.hash) return;
+  replaceUrl ? history.replaceState(null, null, path) : history.pushState(null, null, path);
+}
+
+function navigateToLogin(replaceUrl) {
+  if (realUser()) { navigateToAccount(replaceUrl); return; }
+  showPage('page-login', 'login');
+  // The quick-links row hides on the login page (navigation.css).
+  document.body.classList.add('on-login-page');
+  setPath('/login', replaceUrl);
+  showLoginView();
+}
+
+// replaceUrl comes from the router (load / back / forward): keep the URL,
+// so /account/orders/JD-123456 opens that order.
+function navigateToAccount(replaceUrl) {
+  if (!realUser()) { navigateToLogin(replaceUrl); return; }
+  showPage('page-account', 'account');
+  document.body.classList.remove('on-login-page');
+  if (!(replaceUrl && /^\/account(\/|$)/.test(window.location.pathname))) setPath('/account', replaceUrl);
+  if (typeof renderAccountPage === 'function') renderAccountPage();
 }
 
 function showLoginView() {
-  const loginView = document.getElementById('login-view');
-  const accountView = document.getElementById('account-view');
-  if (loginView) loginView.style.display = 'block';
-  if (accountView) accountView.style.display = 'none';
-  loginMode = 'signin';
-  updateLoginModeUI();
-}
-
-function showAccountView() {
-  const loginView = document.getElementById('login-view');
-  const accountView = document.getElementById('account-view');
-  if (loginView) loginView.style.display = 'none';
-  if (accountView) accountView.style.display = 'block';
-  loadAccountData();
+  setLoginMode('signin');
 }
 
 function toggleLoginMode() {
@@ -198,8 +177,7 @@ async function handleLoginSubmit(e) {
       await firebase.auth().signInWithEmailAndPassword(email, password);
     }
 
-    showAccountView();
-    updateHash('account');
+    navigateToAccount();
 
   } catch (error) {
     if (loginMode === 'reset' && error && error.code === 'auth/user-not-found') {
@@ -237,8 +215,7 @@ async function handleGoogleSignIn() {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
-    showAccountView();
-    updateHash('account');
+    navigateToAccount();
   } catch (error) {
     showLoginError(error);
   } finally {
@@ -248,93 +225,12 @@ async function handleGoogleSignIn() {
 
 async function handleLogout() {
   try {
-    // Sign out the real account user.
-    // The chat module will re-establish anonymous auth on its next Firestore access.
+    // The chat module re-establishes anonymous auth on its next Firestore access.
     await firebase.auth().signOut();
-    showLoginView();
-    updateHash('login');
+    if (typeof clearAccountCache === 'function') clearAccountCache();
+    navigateToLogin();
   } catch (e) {
     console.warn('Logout error:', e);
-  }
-}
-
-async function loadAccountData() {
-  const user = firebase.auth().currentUser;
-  // Guard: never load account data for anonymous (chat) users
-  if (!user || user.isAnonymous) return;
-
-  const nameEl = document.getElementById('account-name');
-  const emailEl = document.getElementById('account-email');
-  if (nameEl) nameEl.textContent = user.displayName || 'Customer';
-  if (emailEl) emailEl.textContent = user.email;
-
-  const userEmail = user.email.trim().toLowerCase();
-
-  // Load orders — secure exact-match query, no full collection scan
-  const ordersContainer = document.getElementById('account-orders');
-  if (ordersContainer) {
-    try {
-      const ordersSnap = await db.collection('orders')
-        .where('customerEmail', '==', userEmail)
-        .orderBy('createdAt', 'desc')
-        .limit(20)
-        .get();
-
-      if (ordersSnap.empty) {
-        ordersContainer.innerHTML = '<p class="account-muted">No orders yet.</p>';
-      } else {
-        let ordersHTML = '';
-        ordersSnap.docs.forEach(d => {
-          const o = d.data();
-          const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-          ordersHTML += `<div class="account-order-card">
-            <div class="account-order-number">Order #${o.orderNumber || d.id.substring(0, 12)}</div>
-            <div style="margin-top:4px;">${o.itemCount || 0} items · R${o.total || o.subtotal || 0}</div>
-            <div style="margin-top:2px;display:flex;justify-content:space-between;">
-              <span class="account-order-status" style="color:${o.status === 'pending' ? '#e65100' : '#0a0'};">${o.status || 'pending'}</span>
-              <span style="font-size:10px;color:#aaa;">${date}</span>
-            </div>
-          </div>`;
-        });
-        ordersContainer.innerHTML = ordersHTML;
-      }
-    } catch (e) {
-      ordersContainer.innerHTML = '<p class="account-muted">Unable to load orders.</p><p class="account-muted" style="font-size:10px;word-break:break-word;"></p>';
-      ordersContainer.querySelector('p:last-child').textContent = (e && (e.message || e.code)) || '';
-      console.error('[ACCOUNT_ORDERS]', e);
-    }
-  }
-
-  // Load reviews — exact-match query
-  const reviewsContainer = document.getElementById('account-reviews');
-  if (reviewsContainer) {
-    try {
-      const reviewsSnap = await db.collection('reviews')
-        .where('email', '==', userEmail)
-        .orderBy('createdAt', 'desc')
-        .limit(10)
-        .get();
-
-      if (reviewsSnap.empty) {
-        reviewsContainer.innerHTML = '<p class="account-muted">No reviews yet.</p>';
-      } else {
-        let reviewsHTML = '';
-        reviewsSnap.docs.forEach(d => {
-          const r = d.data();
-          const date = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-          reviewsHTML += `<div class="account-order-card">
-            <div>${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</div>
-            <div style="margin-top:2px;font-size:12px;">${r.text || 'No comment'}</div>
-            <div style="margin-top:2px;font-size:10px;color:#aaa;">${date}</div>
-          </div>`;
-        });
-        reviewsContainer.innerHTML = reviewsHTML;
-      }
-    } catch (e) {
-      reviewsContainer.innerHTML = '<p class="account-muted">Unable to load reviews.</p><p class="account-muted" style="font-size:10px;word-break:break-word;"></p>';
-      reviewsContainer.querySelector('p:last-child').textContent = (e && (e.message || e.code)) || '';
-      console.error('[ACCOUNT_REVIEWS]', e);
-    }
   }
 }
 
@@ -349,23 +245,13 @@ firebase.auth().onAuthStateChanged(user => {
   if (user) {
     // Real signed-in user
     if (typeof syncWishlistOnLogin === 'function') syncWishlistOnLogin(user.uid);
-    if (S.currentPage === 'login') {
-      showAccountView();
-      updateHash('account');
-    }
-    if (S.currentPage === 'account') {
-      showAccountView();
-      loadAccountData();
-    }
+    if (S.currentPage === 'login') navigateToAccount(true);
+    else if (S.currentPage === 'account' && typeof renderAccountPage === 'function') renderAccountPage();
   } else {
     // Signed out (real user)
     if (typeof clearWishlistOnLogout === 'function') clearWishlistOnLogout();
     if (typeof clearChatIdentityOnLogout === 'function') clearChatIdentityOnLogout();
-    if (S.currentPage === 'login') {
-      showLoginView();
-    }
-    if (S.currentPage === 'account') {
-      navigateToLogin();
-    }
+    if (typeof clearAccountCache === 'function') clearAccountCache();
+    if (S.currentPage === 'account') navigateToLogin(true);
   }
 });
