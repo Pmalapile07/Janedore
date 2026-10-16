@@ -168,7 +168,7 @@ function renderBrandsPage(vendors) {
     }
     const has = !!groups[letter];
     return has
-      ? `<a class="brands-az-letter" href="#brands-letter-${letter}">${letter}</a>`
+      ? `<a class="brands-az-letter" href="#brands-letter-${letter}" onclick="return jumpToBrandLetter(event,'${letter}')">${letter}</a>`
       : `<span class="brands-az-letter disabled">${letter}</span>`;
   }).join('');
 
@@ -187,6 +187,20 @@ function renderBrandsPage(vendors) {
     }).join('');
     return `<div class="brands-az-group" id="brands-letter-${letter}"><div class="brands-az-heading">${letter}</div><ul class="brands-az-items">${items}</ul></div>`;
   }).join('');
+}
+
+// A-Z index: scroll to the letter without touching the URL. Following
+// the #brands-letter-X link fired popstate, which the router read as an
+// unknown hash and sent the shopper to the home page (on Android the
+// same tap then landed on a home page product).
+function jumpToBrandLetter(e, letter) {
+  if (e) e.preventDefault();
+  const target = document.getElementById('brands-letter-' + letter);
+  if (!target) return false;
+  const nav = document.getElementById('main-nav');
+  const offset = (nav ? nav.getBoundingClientRect().height : 0) + 12;
+  window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+  return false;
 }
 
 async function initVendors() {

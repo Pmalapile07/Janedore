@@ -93,6 +93,11 @@ body:has(#page-checkout.active) #main-nav .search-bar-row,
 body:has(#page-checkout.active) .nav-quick-links-wrap {
   display: none !important;
 }
+/* Back arrow in place of the menu button on the bag (with items) and
+   checkout, where the rest of the header is hidden. */
+.nav-bag-back { display: none; background: none; border: 0; padding: 6px; margin-right: 2px; color: #fff; font-size: 20px; line-height: 1; cursor: pointer; align-items: center; }
+body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .nav-bag-back,
+body:has(#page-checkout.active) #main-nav .nav-bag-back { display: flex; }
 .cart-page {
   background: #f2f2f2;
   padding-bottom: 32px;
@@ -132,6 +137,7 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
 /* Item */
 .cart-item-top { display: flex; gap: 16px; align-items: center; }
 .cart-item-img {
+  position: relative;
   width: 96px;
   aspect-ratio: 3 / 4;
   flex-shrink: 0;
@@ -344,3 +350,9 @@ body:has(#page-checkout.active) .checkout-steps { display: flex; }
 .checkout-step.is-done i { display: block; }
 .checkout-step.is-clickable { cursor: pointer; transition: opacity 0.2s ease; }
 .checkout-step.is-clickable:hover { opacity: 0.8; }
+
+/* Product badges on bag/checkout thumbnails (sized down for the 96px
+   image), and the sale price in the same red as the SALE badge. */
+.cart-badge-stack { top: 5px; left: 5px; gap: 3px; }
+.cart-badge-stack .product-badge { font-size: 7px; padding: 3px 5px; }
+.cart-item-price.is-sale { color: #c0392b; }
