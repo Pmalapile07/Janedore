@@ -1103,6 +1103,75 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 });
 
+// ==================== TRACK YOUR ORDER ====================
+// The /pages/track-your-order form (track-order.js). The customer gives
+// their order number and the email they checked out with; both have to
+// match before anything is returned, and a wrong pair gets the same
+// answer as an order that doesn't exist. One package per brand, each
+// with its own tracking once that brand has shipped.
+const trackHits = new Map();
+app.post('/api/track-order', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  const ip = String(req.ip || '');
+  const now = Date.now();
+  const hits = (trackHits.get(ip) || []).filter((t) => now - t < 15 * 60 * 1000);
+  if (hits.length >= 15) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+  hits.push(now);
+  trackHits.set(ip, hits);
+
+  const orderNumber = String((req.body && req.body.orderNumber) || '').trim().toUpperCase().replace(/^#/, '').replace(/\s+/g, '').slice(0, 40);
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase().slice(0, 200);
+  const notFound = () => res.status(404).json({ error: 'We couldn’t find an order with that number and email. Check both and try again.' });
+  if (!orderNumber || !email) return res.status(400).json({ error: 'Please enter your order number and email.' });
+
+  try {
+    let doc = null;
+    const numberDoc = /^[A-Z0-9-]+$/.test(orderNumber) ? await adminDb.collection('orderNumbers').doc(orderNumber).get() : null;
+    if (numberDoc && numberDoc.exists && numberDoc.data().orderId) {
+      doc = await adminDb.collection('orders').doc(numberDoc.data().orderId).get();
+    } else {
+      const snap = await adminDb.collection('orders').where('orderNumber', '==', orderNumber).limit(1).get();
+      doc = snap.empty ? null : snap.docs[0];
+    }
+    if (!doc || !doc.exists) return notFound();
+    const order = doc.data();
+    if (String(order.customerEmail || '').trim().toLowerCase() !== email) return notFound();
+
+    const vendorTracking = order.vendorTracking || {};
+    const groups = new Map();
+    (order.items || []).forEach((item) => {
+      const key = item.vendorId || 'janedore';
+      if (!groups.has(key)) groups.set(key, { brand: item.brand || 'JANEDORE', items: [] });
+      groups.get(key).items.push({
+        productId: item.productId || '', variantIndex: item.variantIndex || 0, name: item.name || '',
+        size: item.size || '', color: item.color || '', qty: item.qty || 1
+      });
+    });
+    const packages = [...groups.entries()].map(([key, g]) => {
+      const t = vendorTracking[key] || (key === 'janedore' || groups.size === 1 ? (order.trackingNumber ? { trackingNumber: order.trackingNumber, courier: order.courier } : null) : null);
+      return {
+        brand: g.brand,
+        items: g.items,
+        shipped: !!(t && t.trackingNumber),
+        courier: (t && t.courier) || '',
+        trackingNumber: (t && t.trackingNumber) || '',
+        shippedAt: (t && t.addedAt) || null
+      };
+    });
+
+    res.json({
+      orderNumber: order.orderNumber || orderNumber,
+      createdAt: order.createdAt && order.createdAt.toDate ? order.createdAt.toDate().toISOString() : null,
+      paid: order.paymentStatus === 'paid',
+      cancelled: ['cancelled', 'refunded'].includes(String(order.status || '').toLowerCase()),
+      packages
+    });
+  } catch (e) {
+    console.error('[TRACK_ORDER]', e.message);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
+  }
+});
+
 // ==================== SHIPPING NOTIFICATION ====================
 // Fired from the admin order-detail page the moment a vendor (or staff)
 // successfully saves tracking for their own line items on an order.

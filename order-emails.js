@@ -315,6 +315,7 @@ function shipped(order, ctx, items, opts) {
         (tracking.courier ? row('Courier', esc(tracking.courier), { semi: true }) : '') +
         row('Tracking number', esc(tracking.trackingNumber), { semi: true }))
     : '';
+  const trackUrl = ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num);
 
   const html = shell({
     logoUrl: ctx.logoUrl,
@@ -325,7 +326,7 @@ function shipped(order, ctx, items, opts) {
     cards: [
       '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + intro + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
-      trackingCard,
+      trackingCard + button('Track your order', trackUrl),
       title('On its way') + itemsBlock(items, ctx, { hidePrice: true }),
       title('Delivering to') + addressBlock(order)
     ].filter(Boolean),
@@ -334,7 +335,7 @@ function shipped(order, ctx, items, opts) {
 
   const text = (opts.heading || 'Your order is on its way') + '\n\nHi ' + first + ', ' + intro + '\n\n' + textItems(items, true) +
     (tracking.trackingNumber ? '\n\n' + (tracking.courier ? tracking.courier + ': ' : '') + tracking.trackingNumber : '') +
-    '\n\nOrder #' + num + '\n\nQuestions? support@janedore.co.za';
+    '\n\nOrder #' + num + '\nTrack your order: ' + trackUrl + '\n\nQuestions? support@janedore.co.za';
 
   return { subject: (opts.heading || 'Your order is on its way') + ' (order #' + num + ')', html, text };
 }

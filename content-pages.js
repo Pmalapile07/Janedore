@@ -27,6 +27,15 @@ async function navigateToContentPage(slug, replaceUrl) {
   const el = document.getElementById('content-page-body');
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
+  // Track Your Order is a form, not a Firestore page (track-order.js).
+  if (slug === TRACK_ORDER_SLUG && typeof renderTrackOrderPage === 'function') {
+    renderTrackOrderPage();
+    resetScrollToTop();
+    ensureNavScrolled();
+    updateChatVisibility();
+    return;
+  }
+
   try {
     const doc = await db.collection('pages').doc(slug).get();
     if (myNavGen !== pageNavGeneration) return;
