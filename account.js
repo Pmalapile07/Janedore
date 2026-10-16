@@ -66,7 +66,7 @@ async function loadAccountOrders() {
   const snap = await db.collection('orders').where('customerEmail', '==', (user.email || '').trim().toLowerCase()).limit(100).get();
   const seconds = (o) => (o.createdAt && o.createdAt.seconds) || (o.createdAt ? new Date(o.createdAt).getTime() / 1000 : 0);
   _accountOrders = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
-    .filter(o => o.paymentStatus === 'paid' || accountOrderCancelled(o))
+    .filter(o => o.paymentStatus === 'paid' || o.paymentStatus === 'refund_pending' || accountOrderCancelled(o))
     .sort((a, b) => seconds(b) - seconds(a));
   return _accountOrders;
 }
@@ -109,6 +109,7 @@ function accountOrderPackages(order) {
 }
 
 function accountOrderStatus(o) {
+  if (o.paymentStatus === 'refund_pending') return { label: 'Refund in progress', cls: '' };
   if (accountOrderRefunded(o)) return { label: 'Refunded', cls: '' };
   if (accountOrderCancelled(o)) return { label: 'Cancelled', cls: '' };
   const pk = accountOrderPackages(o);
@@ -190,7 +191,8 @@ async function renderAccountOrder(orderNumber) {
   const tracking = trackResultHtml({
     orderNumber: order.orderNumber || order.id,
     createdAt: accountOrderDate(order),
-    paid: order.paymentStatus === 'paid' || accountOrderRefunded(order),
+    paid: ['paid', 'refund_pending'].includes(order.paymentStatus) || accountOrderRefunded(order),
+    refundPending: order.paymentStatus === 'refund_pending',
     refunded: accountOrderRefunded(order),
     cancelled: accountOrderCancelled(order) && !accountOrderRefunded(order),
     packages

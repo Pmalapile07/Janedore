@@ -388,13 +388,44 @@ function adminShipped(order, ctx, items, opts) {
   return { subject: brand + ' shipped order #' + num, html, text };
 }
 
-// Sent when Janedore marks an order refunded in admin (after refunding it
-// in PayFast). server.js /api/orders/:id/notify-refunded.
+// Step 1 of a refund: staff chose "Start refund" in admin. Says only that
+// it is being processed; nothing claims the money has moved yet.
+function refundStarted(order, ctx) {
+  const num = order.orderNumber || '';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const amount = Number(order.refundAmount || order.total) || 0;
+  const intro = 'we’re processing a refund of ' + money(amount) + ' for your order #' + num + '. We’ll email you again as soon as the refund has been completed.';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'We’re processing your refund',
+    preheader: 'Your refund of ' + money(amount) + ' for order #' + num + ' is being processed.',
+    bannerHtml: '<strong>We’re processing your refund</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
+      title('Refund summary') + rows(
+        row('Refund amount', money(amount), { big: true, bold: true }) +
+        divider() +
+        row('Status', 'In progress', { semi: true }) +
+        row('Refund to', 'Original payment method (PayFast)')),
+      title('Items') + itemsBlock(order.items || [], ctx, {}),
+      '<div style="font-size:13px;line-height:1.6;color:#555555;">No action is required from you. If you have any questions in the meantime, reply to this email and our team will assist you.</div>'
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = 'We’re processing your refund\n\nHi ' + first + ', ' + intro + '\n\nRefund amount: ' + money(amount) + '\nStatus: In progress' +
+    '\n\n' + textItems(order.items || [], false) + '\n\nQuestions? support@janedore.co.za';
+  return { subject: 'We’re processing your refund (order #' + num + ')', html, text };
+}
+
+// Step 2: staff confirmed in admin that the refund was completed in
+// PayFast. server.js /api/orders/:id/notify-refunded sends both.
 function refunded(order, ctx) {
   const num = order.orderNumber || '';
   const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
   const amount = Number(order.refundAmount || order.total) || 0;
-  const intro = 'we’ve processed a refund of ' + money(amount) + ' for your order #' + num + '. It will be returned to your original payment method, and depending on your bank, it can take up to 10 business days to reflect.';
+  const intro = 'your refund of ' + money(amount) + ' for order #' + num + ' has been completed and returned to your original payment method. Depending on your bank, it can take up to 10 business days to reflect in your account.';
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
@@ -485,4 +516,4 @@ function reportReceived(report, ctx) {
   return { subject: 'We received your report about ' + brand, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refunded, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, money };
