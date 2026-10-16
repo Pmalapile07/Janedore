@@ -185,6 +185,22 @@ function cartBadgesHtml(item) {
   const badges = product && typeof getProductBadges === 'function' ? getProductBadges(product) : [];
   return badges.length ? `<div class="product-badge-stack cart-badge-stack">${badges.map(b => `<span class="product-badge ${badgeClass(b)}">${sanitizeHTML(b)}</span>`).join('')}</div>` : '';
 }
+// "Pre-order · ships by 15 Mar" under the brand on bag, checkout and
+// confirmation lines. Order lines carry the flag the server stamped
+// (priceOrder(), server.js); bag lines read the live product.
+function cartItemPreorderDate(item) {
+  if (typeof item.preorder === 'boolean') return item.preorder ? (item.preorderShipDate || '') : null;
+  const product = getCartProduct(item.productId);
+  return product && isPreorderProduct(product) ? (product.preorderShipDate || '') : null;
+}
+function cartPreorderHtml(item) {
+  const date = cartItemPreorderDate(item);
+  if (date === null) return '';
+  const when = date ? preorderShipText(date, true) : '';
+  return `<div class="cart-item-preorder">Pre-order${when ? ' · ships by ' + escapeHTML(when) : ''}</div>`;
+}
+function cartHasPreorder() { return S.cart.some(item => cartItemPreorderDate(item) !== null); }
+
 function cartItemOnSale(item) {
   const product = getCartProduct(item.productId);
   return !!product && typeof hasSalePrice === 'function' && hasSalePrice(product);
@@ -547,6 +563,7 @@ function renderCartPage() {
         <div class="cart-item-info">
           <div class="cart-item-name" onclick="goToProduct('${productId}')">${itemName}</div>
           <div class="cart-item-brand">${itemBrand}${itemColor && itemColor !== 'Default' ? ' · ' + itemColor : ''}</div>
+          ${cartPreorderHtml(item)}
           ${soldOut ? '<div class="cart-page-sold-out-badge">Sold Out</div>' : ''}
         </div>
         <div class="cart-item-actions">

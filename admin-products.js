@@ -277,7 +277,20 @@
     input.click();
   };
 
-  function saveProduct(productData) {
+  function notifyPreorderDateChanged(productId, oldDate) {
+    if (!window._currentUser || !window._currentUser.getIdToken) return;
+    window._currentUser.getIdToken().then(function(token) {
+      return fetch('/api/preorder-date-changed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ productId: productId, oldDate: oldDate })
+      });
+    }).then(function(r) { return r && r.json(); }).then(function(d) {
+      if (d && d.sent) showToast('New ship date emailed to ' + d.sent + ' customer' + (d.sent === 1 ? '' : 's'));
+    }).catch(function(e) { console.warn('[PREORDER_DATE]', e.message); });
+  }
+
+  function saveProduct(productData, onSaved) {
     if (!window._currentUser || !window._roleResolved) { showToast('Not authenticated', 'error'); return; }
     if (!isSuperAdmin()) {
       if (!window._currentVendorId) { showToast('No vendor scope. Cannot save product.', 'error'); return; }
@@ -287,6 +300,7 @@
     productData.id = ref.id;
     ref.set(productData, { merge: true }).then(function() {
       showToast('Product saved');
+      if (onSaved) onSaved();
       window._loadProducts();
       window._renderProductsTab();
     }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
@@ -770,6 +784,12 @@
             '</select>' +
             '<input name="badgeCustom" id="pf-badge-custom" value="' + esc(badgeCustomValue) + '" placeholder="Type your own badge text" style="width:100%;margin-top:6px;display:' + (badgeSelectValue === '__custom__' ? 'block' : 'none') + ';">' +
           '</div>' +
+          // Pre-order: when it's expected to ship. Stock below is how many
+          // pre-orders the brand will take.
+          '<div class="form-group" id="pf-preorder-group" style="padding:0;display:' + (badgeSelectValue === 'pre-order' ? 'block' : 'none') + ';">' +
+            '<label>Expected to ship by <span style="font-size:10px;color:var(--muted);">Shown on the product, bag, checkout, emails and tracking page. Changing it emails everyone who has pre-ordered. Stock = how many pre-orders you will accept.</span></label>' +
+            '<input type="date" name="preorderShipDate" value="' + esc(p.preorderShipDate || '') + '" style="width:100%;">' +
+          '</div>' +
           '<div class="form-group" style="padding:0;"><label>Featured on homepage</label><select name="featured" style="width:100%;"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div>' +
         '</div>' +
       '</div>' +
@@ -918,6 +938,8 @@
     var custom = safeEl('pf-badge-custom');
     if (!sel || !custom) return;
     custom.style.display = sel.value === '__custom__' ? 'block' : 'none';
+    var pre = safeEl('pf-preorder-group');
+    if (pre) pre.style.display = sel.value === 'pre-order' ? 'block' : 'none';
   };
 
   // ── VARIANT BLOCK ─────────────────────────────────────────────
@@ -1215,11 +1237,19 @@
     if (form.freeDelivery) data.freeDelivery = form.freeDelivery.value === 'true';
     else if (existingProduct && typeof existingProduct.freeDelivery === 'boolean') data.freeDelivery = existingProduct.freeDelivery;
 
+    var isPreorder = badgeValue === 'pre-order';
+    data.preorderShipDate = isPreorder && form.preorderShipDate ? (form.preorderShipDate.value || null) : null;
+    if (isPreorder && !data.preorderShipDate) { showToast('Add the date this pre-order is expected to ship.', 'error'); return; }
+    var oldShipDate = existingProduct && String(existingProduct.badge || '').toLowerCase() === 'pre-order' ? (existingProduct.preorderShipDate || '') : '';
+
     if (!data.vendorId) {
       showToast('No vendor found for brand "' + data.brand + '". Product saved without a brand link.', 'error');
     }
 
-    saveProduct(data);
+    saveProduct(data, function() {
+      // A pre-order's ship date moved: tell everyone who has paid for it.
+      if (isPreorder && oldShipDate && oldShipDate !== data.preorderShipDate) notifyPreorderDateChanged(data.id, oldShipDate);
+    });
   };
 
 

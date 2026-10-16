@@ -263,6 +263,7 @@ function renderCheckoutSummary() {
           <div class="cart-item-info">
             <div class="cart-item-name">${sanitizeHTML(item.name || '')}</div>
             <div class="cart-item-brand">${sanitizeHTML(item.brand || '')}${color}</div>
+            ${cartPreorderHtml(item)}
           </div>
         </div>
         <div class="cart-item-attrs">
@@ -302,11 +303,13 @@ function renderShippingMethod(shipping, packages) {
   const fromEl = document.getElementById('checkout-ships-from');
   if (!fromEl) return;
   const shipments = getCartShipments();
+  // Pre-orders ship on their own once ready, inside the same fee.
+  const preorderNote = cartHasPreorder() ? ' <span class="checkout-preorder-note">Pre-order items ship separately when they’re ready, at no extra cost.</span>' : '';
   if (shipments.length <= 1) {
-    fromEl.innerHTML = `Ships from <strong>${sanitizeHTML(shipments[0] ? shipments[0].brand : 'JANEDORE')}</strong>.`;
+    fromEl.innerHTML = `Ships from <strong>${sanitizeHTML(shipments[0] ? shipments[0].brand : 'JANEDORE')}</strong>.` + preorderNote;
     return;
   }
-  fromEl.innerHTML = `Your order ships in ${packages} separate packages, one from each brand.` +
+  fromEl.innerHTML = `Your order ships in ${packages} separate packages, one from each brand.` + preorderNote +
     `<span class="checkout-ships-list">${shipments.map(s => `<span class="checkout-ships-row"><span>${sanitizeHTML(s.brand)}</span><span>${s.free ? 'Free' : formatPrice(s.fee)}</span></span>`).join('')}</span>`;
 }
 
@@ -390,7 +393,10 @@ async function placeOrder(e) {
         color: item.color,
         qty: item.qty,
         price: getCartItemUnitPrice(item),
-        variantIndex: item.variantIndex
+        variantIndex: item.variantIndex,
+        // The server re-stamps both from the product (priceOrder()).
+        preorder: !!product && isPreorderProduct(product),
+        preorderShipDate: product && isPreorderProduct(product) ? (product.preorderShipDate || null) : null
       };
     }),
     packageCount: Object.keys(brandGroups).length,
@@ -684,6 +690,7 @@ function renderOrderConfirmation(order) {
         <div class="checkout-item-info">
           <div class="checkout-item-name">${escapeHTML(item.name)}</div>
           ${brandLine ? `<div class="checkout-item-brand">${brandLine}</div>` : ''}
+          ${cartPreorderHtml(item)}
           <div class="checkout-item-meta">Qty: <strong>${item.qty}</strong>${sizeDisplay ? ` &nbsp; Size: <strong>${escapeHTML(sizeDisplay)}</strong>` : ''}</div>
         </div>
         <div class="checkout-item-price">${formatPrice((item.price || 0) * item.qty)}</div>

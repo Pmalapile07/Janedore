@@ -63,17 +63,26 @@
   //   - a manually-created order with no vendor split (admin's own "New
   //     Order" form): falls back to the single legacy trackingNumber
   //     field, same as before this existed.
+  //   - pre-order lines are their own package per brand (they ship later),
+  //     tracked at o.vendorTracking[vid].preorder; see server.js
+  //     orderShipments(), which this mirrors.
+  function groupTracking(o, group) {
+    if (!group.vendorId) return o.trackingNumber ? { trackingNumber: o.trackingNumber, courier: o.courier } : null;
+    var entry = (o.vendorTracking && o.vendorTracking[group.vendorId]) || null;
+    if (group.preorder) return (entry && entry.preorder) || null;
+    return entry;
+  }
+
   function computeFulfillmentStatus(o) {
     var vendorIds = Array.isArray(o.vendorIds) ? o.vendorIds : [];
     if (!vendorIds.length) {
       return o.trackingNumber ? 'fulfilled' : 'unfulfilled';
     }
-    var tracking = o.vendorTracking || {};
-    var shipped = vendorIds.filter(function (vid) {
-      return tracking[vid] && tracking[vid].trackingNumber;
-    });
+    var groups = groupOrderItemsByVendor(o.items || []).filter(function (g) { return g.vendorId && vendorIds.indexOf(g.vendorId) !== -1; });
+    if (!groups.length) return 'unfulfilled';
+    var shipped = groups.filter(function (g) { var t = groupTracking(o, g); return t && t.trackingNumber; });
     if (shipped.length === 0) return 'unfulfilled';
-    if (shipped.length === vendorIds.length) return 'fulfilled';
+    if (shipped.length === groups.length) return 'fulfilled';
     return 'partial';
   }
 
@@ -87,11 +96,13 @@
     var groups = [];
     var byVendor = {};
     items.forEach(function (item, idx) {
-      var key = item.vendorId || '__none__';
+      var pre = !!item.preorder;
+      var key = (item.vendorId || '__none__') + (pre ? '__preorder' : '');
       if (!byVendor[key]) {
-        byVendor[key] = { vendorId: item.vendorId || null, brand: item.brand || 'Items', items: [] };
+        byVendor[key] = { vendorId: item.vendorId || null, preorder: pre, shipBy: null, brand: item.brand || 'Items', items: [] };
         groups.push(byVendor[key]);
       }
+      if (pre && item.preorderShipDate && (!byVendor[key].shipBy || item.preorderShipDate > byVendor[key].shipBy)) byVendor[key].shipBy = item.preorderShipDate;
       byVendor[key].items.push({ item: item, idx: idx });
     });
     return groups;
@@ -1121,17 +1132,16 @@
     if (o.items && o.items.length > 0) {
       html += '<div class="card-title" style="margin-bottom:7px;">Items</div>';
       html += groupOrderItemsByVendor(o.items).map(function (group) {
-        var groupTracking = group.vendorId
-          ? (o.vendorTracking && o.vendorTracking[group.vendorId]) || null
-          : (o.trackingNumber ? { trackingNumber: o.trackingNumber, courier: o.courier } : null);
-        var shipped = !!(groupTracking && groupTracking.trackingNumber);
+        var tracking = groupTracking(o, group);
+        var shipped = !!(tracking && tracking.trackingNumber);
+        var pkgKey = (group.vendorId || '') + (group.preorder ? '__preorder' : '');
         var canEditGroup = canUpdate ||
           (group.vendorId && window._can('orders', 'update_own_tracking', { vendorId: group.vendorId }));
 
         return (
           '<div class="order-vendor-group">' +
             '<div class="order-vendor-group-header">' +
-              '<span class="order-vendor-group-brand">' + esc(group.brand) + '</span>' +
+              '<span class="order-vendor-group-brand">' + esc(group.brand) + (group.preorder ? ' · Pre-order' + (group.shipBy ? ', ships by ' + esc(group.shipBy) : '') : '') + '</span>' +
               statusBadge(shipped ? 'fulfilled' : 'unfulfilled') +
             '</div>' +
             '<div class="info-panel order-items-panel" style="margin-bottom:' + (canEditGroup ? '8px' : '14px') + ';">' +
@@ -1158,22 +1168,22 @@
             (canEditGroup
               ? '<div style="margin-bottom:18px;">' +
                   '<label class="card-title" style="display:block;margin-bottom:6px;">' + (shipped ? 'Tracking' : 'Add tracking') + '</label>' +
-                  '<select class="filter-select order-group-courier" data-vendor="' + esc(group.vendorId || '') + '" style="width:100%;margin-bottom:6px;">' +
+                  '<select class="filter-select order-group-courier" data-vendor="' + esc(pkgKey) + '" style="width:100%;margin-bottom:6px;">' +
                     '<option value="">Select courier...</option>' +
                     COURIERS.map(function (c) {
-                      return '<option value="' + c + '"' + ((groupTracking && groupTracking.courier === c) ? ' selected' : '') + '>' + c + '</option>';
+                      return '<option value="' + c + '"' + ((tracking && tracking.courier === c) ? ' selected' : '') + '>' + c + '</option>';
                     }).join('') +
                   '</select>' +
                   '<div style="display:flex;gap:6px;">' +
-                    '<input class="order-tracking-input order-group-tracking" data-vendor="' + esc(group.vendorId || '') + '"' +
-                      ' value="' + esc((groupTracking && groupTracking.trackingNumber) || '') + '"' +
+                    '<input class="order-tracking-input order-group-tracking" data-vendor="' + esc(pkgKey) + '"' +
+                      ' value="' + esc((tracking && tracking.trackingNumber) || '') + '"' +
                       ' placeholder="Tracking number" style="flex:1;">' +
-                    '<button class="btn btn-sm" onclick="window._saveVendorTracking(\'' + esc(orderId) + '\',\'' + esc(group.vendorId || '') + '\')">Save</button>' +
+                    '<button class="btn btn-sm" onclick="window._saveVendorTracking(\'' + esc(orderId) + '\',\'' + esc(group.vendorId || '') + '\',' + (group.preorder ? 'true' : 'false') + ')">Save</button>' +
                   '</div>' +
                 '</div>'
               : '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
                   (shipped
-                    ? esc(groupTracking.trackingNumber) + (groupTracking.courier ? ' via ' + esc(groupTracking.courier) : '')
+                    ? esc(tracking.trackingNumber) + (tracking.courier ? ' via ' + esc(tracking.courier) : '')
                     : 'Not shipped yet') +
                 '</div>')
         );
@@ -1536,13 +1546,13 @@
   // succeeded by the time this runs — if the email fails (no network,
   // Resend down, token issue) that's logged but never surfaces as an
   // error to the admin/vendor, since the real action already worked.
-  function notifyShipped(orderId, vendorId) {
+  function notifyShipped(orderId, vendorId, preorder) {
     if (!window._currentUser || !window._currentUser.getIdToken) return;
     window._currentUser.getIdToken().then(function (token) {
       return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-shipped', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ vendorId: vendorId || '' })
+        body: JSON.stringify({ vendorId: vendorId || '', preorder: !!preorder })
       });
     }).catch(function (e) { console.warn('[NOTIFY_SHIPPED]', e.message); });
   }
@@ -1554,9 +1564,13 @@
   // update, so Firestore only touches that single map key — sibling
   // vendors' tracking is untouched both in the write itself and in
   // what the security rules allow a vendor to change).
-  window._saveVendorTracking = function (orderId, vendorId) {
-    var trackingEl = document.querySelector('.order-group-tracking[data-vendor="' + vendorId + '"]');
-    var courierEl  = document.querySelector('.order-group-courier[data-vendor="' + vendorId + '"]');
+  // preorder: the brand's pre-order package, saved at
+  // vendorTracking[vid].preorder. Both are written as dot paths so saving
+  // one package never wipes the other.
+  window._saveVendorTracking = function (orderId, vendorId, preorder) {
+    var pkgKey = vendorId + (preorder ? '__preorder' : '');
+    var trackingEl = document.querySelector('.order-group-tracking[data-vendor="' + pkgKey + '"]');
+    var courierEl  = document.querySelector('.order-group-courier[data-vendor="' + pkgKey + '"]');
     if (!trackingEl) return;
 
     var trackingNumber = trackingEl.value.trim();
@@ -1587,7 +1601,10 @@
 
     var entry = { trackingNumber: trackingNumber, courier: courier, addedAt: new Date().toISOString() };
     var patch = { updatedAt: new Date().toISOString() };
-    patch['vendorTracking.' + vendorId] = entry;
+    var base = 'vendorTracking.' + vendorId + (preorder ? '.preorder' : '');
+    patch[base + '.trackingNumber'] = entry.trackingNumber;
+    patch[base + '.courier'] = entry.courier;
+    patch[base + '.addedAt'] = entry.addedAt;
 
     ordersRef.doc(orderId).update(patch).then(function () {
       showToast('Tracking saved');
@@ -1595,12 +1612,15 @@
       var brand = 'A vendor';
       if (o) {
         o.vendorTracking = o.vendorTracking || {};
-        o.vendorTracking[vendorId] = entry;
+        var current = o.vendorTracking[vendorId] || {};
+        if (preorder) current.preorder = entry;
+        else Object.assign(current, entry);
+        o.vendorTracking[vendorId] = current;
         var ownItem = (o.items || []).filter(function (it) { return it.vendorId === vendorId; })[0];
         if (ownItem && ownItem.brand) brand = ownItem.brand;
       }
-      logOrderTimelineEvent(orderId, brand + ' added tracking number ' + trackingNumber + (courier ? ' via ' + courier : '') + '.');
-      notifyShipped(orderId, vendorId);
+      logOrderTimelineEvent(orderId, brand + ' added tracking number ' + trackingNumber + (courier ? ' via ' + courier : '') + (preorder ? ' for the pre-order package' : '') + '.');
+      notifyShipped(orderId, vendorId, preorder);
       window._openOrderDetail(orderId);
     }).catch(function (e) { showToast('Error: ' + e.message, 'error'); });
   };

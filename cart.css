@@ -364,3 +364,6 @@ body:has(#page-checkout.active) .checkout-steps { display: flex; }
 .cart-badge-stack { top: 5px; left: 5px; gap: 3px; }
 .cart-badge-stack .product-badge { font-size: 7px; padding: 3px 5px; }
 .cart-item-price.is-sale { color: #c0392b; }
+
+/* Pre-order line on bag, checkout and confirmation items (cartPreorderHtml(), cart.js). */
+.cart-item-preorder { display: inline-block; white-space: nowrap; margin-top: 6px; padding: 3px 8px; background: #f4f4f4; color: #111; font-size: 11px; font-weight: 600; }
