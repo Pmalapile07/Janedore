@@ -219,7 +219,7 @@ async function renderAccountOrder(orderNumber) {
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
     </div>
     ${order.paymentStatus === 'paid' && packages.some(p => p.shipped) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return Items</button>` : ''}
-    <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('client-support')">Contact Client Support</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
+    <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact Customer Care</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
   </section>`;
 }
 
@@ -253,7 +253,7 @@ async function renderAccountProfile() {
     ${field('acc-phone', 'Phone number', p.phone, 'type="tel" autocomplete="tel" placeholder="+27 81 234 5678"')}
     <label class="track-label" for="acc-email">Email address</label>
     <input class="track-input" id="acc-email" value="${escapeHTML(user.email || '')}" disabled>
-    <p class="account-note">To change your email address, please contact Client Support.</p>
+    <p class="account-note">To change your email address, please contact Customer Care.</p>
 
     <div class="account-section-title">Default delivery address</div>
     ${field('acc-address', 'Street address', p.address, 'autocomplete="street-address" placeholder="House number and street name"')}

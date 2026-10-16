@@ -163,7 +163,7 @@ function renderReturnForm() {
     <div class="track-error" id="rsub-error" role="alert"></div>
     <button type="button" class="track-btn" id="rsub-btn" onclick="submitReturnRequest()">Submit Return Request</button>
     <p class="track-hint">Please don’t send anything back yet. We’ll email you instructions once your request has been reviewed.</p>`
-    : `<div class="track-notice">None of the items on this order can be returned at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('client-support')">contact Client Support</span>.</div>`}
+    : `<div class="track-notice">None of the items on this order can be returned at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span>.</div>`}
     <button type="button" class="track-another" onclick="renderReturnsPage('start')">Use a different order</button>`;
   drawReturnPhotos();
 }
@@ -294,7 +294,7 @@ function returnStatusHtml(r) {
     received: `We’ve received your item and will process your refund of ${amount}. We’ll email you once it has been completed.`,
     refund_pending: `We’re processing your refund of ${amount}. We’ll email you as soon as it has been completed.`,
     refunded: `Your refund of ${amount} has been completed and returned to your original payment method. It can take up to 10 business days to reflect.`,
-    closed: 'This return has been closed. If you have any questions, please contact Client Support.'
+    closed: 'This return has been closed. If you have any questions, please contact Customer Care.'
   }[r.status] || '';
   const items = (r.items || []).map(it => {
     const product = PRODUCTS.find(p => p.id === it.productId);
@@ -315,6 +315,6 @@ function returnStatusHtml(r) {
     <div class="track-card"><div class="account-detail-title">Items</div>${items}
       ${['received', 'refund_pending', 'refunded'].includes(r.status) ? `<div class="account-row big return-refund-row"><span>Refund amount</span><span>${amount}</span></div>` : ''}
     </div>
-    <p class="account-help">Questions about your return? <span class="track-link" onclick="navigateToContentPage('client-support')">Contact Client Support</span> and quote ${escapeHTML(r.returnNumber)}.</p>
+    <p class="account-help">Questions about your return? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact Customer Care</span> and quote ${escapeHTML(r.returnNumber)}.</p>
   </div>`;
 }

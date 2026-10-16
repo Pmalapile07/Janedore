@@ -637,4 +637,57 @@ function reportReceived(report, ctx) {
   return { subject: 'We received your report about ' + brand, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, money };
+// Customer Care contact form (/api/contact): the team's copy and the
+// customer's copy.
+function contactForStaff(m, ctx) {
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'New Customer Care message',
+    preheader: m.topic + ' from ' + m.name,
+    bannerHtml: '<strong>New Customer Care message</strong>',
+    cards: [
+      title('From') + rows(
+        row('Name', esc(m.name), { semi: true }) +
+        row('Email', esc(m.email), { semi: true }) +
+        (m.orderNumber ? row('Order', esc(m.orderNumber), { semi: true }) : '') +
+        row('Topic', esc(m.topic), { semi: true })),
+      title('Message') + '<div style="font-size:14px;line-height:1.6;color:#111111;white-space:pre-wrap;">' + esc(m.message) + '</div>'
+    ],
+    footerHtml: 'Reply to this email to answer ' + esc(m.name) + ' directly.<br>Message ' + esc(m.id)
+  });
+  const text = 'New Customer Care message\n\nName: ' + m.name + '\nEmail: ' + m.email + (m.orderNumber ? '\nOrder: ' + m.orderNumber : '') +
+    '\nTopic: ' + m.topic + '\n\n' + m.message + '\n\nReply to this email to answer ' + m.name + ' directly.\nMessage ' + m.id;
+  return { subject: 'Customer Care: ' + m.topic + (m.orderNumber ? ' (' + m.orderNumber + ')' : '') + ' from ' + m.name, html, text };
+}
+
+function contactReceived(m, ctx) {
+  const first = String(m.name || '').split(' ')[0];
+  const link = (label, path) => '<a href="' + esc(ctx.siteUrl + path) + '" style="color:#111111;font-weight:700;">' + label + '</a>';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'We received your message',
+    preheader: 'Thank you for contacting Janedore Customer Care. We’ll reply to you at this email address.',
+    bannerHtml: '<strong>We received your message</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', thank you for contacting Janedore Customer Care. We’ll reply to you at this email address.</div>',
+      title('Your message') + rows(
+        (m.orderNumber ? row('Order', esc(m.orderNumber), { semi: true }) : '') +
+        row('Topic', esc(m.topic), { semi: true })) +
+        '<div style="font-size:14px;line-height:1.6;color:#555555;margin-top:12px;white-space:pre-wrap;">' + esc(m.message) + '</div>',
+      title('In the meantime') +
+        '<div style="font-size:14px;line-height:1.8;color:#555555;">' +
+        link('Track your order', '/pages/track-your-order') + '<br>' +
+        link('Log a return', '/pages/log-a-return') + '<br>' +
+        link('Frequently Asked Questions', '/pages/faq') + '</div>'
+    ],
+    footerHtml: 'Anything to add? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
+  });
+  const text = 'We received your message\n\nHi ' + first + ', thank you for contacting Janedore Customer Care. We’ll reply to you at this email address.\n\n' +
+    (m.orderNumber ? 'Order: ' + m.orderNumber + '\n' : '') + 'Topic: ' + m.topic + '\n\n' + m.message +
+    '\n\nTrack your order: ' + ctx.siteUrl + '/pages/track-your-order\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently Asked Questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
+  return { subject: 'We received your message', html, text };
+}
+
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, money };

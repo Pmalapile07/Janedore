@@ -1604,6 +1604,56 @@ function injectCacheBust(html) {
 }
 
 // Read by index.html's stale-tab check. Never cached.
+// ==================== CUSTOMER CARE ====================
+// The contact form on /pages/customer-care (customer-care.js). Saved to
+// contactMessages and emailed to the team with reply-to set to the
+// customer, so a reply from the inbox goes straight to them. The customer
+// gets a copy. Limited to 5 messages an hour per IP address; the hidden
+// "website" field catches bots.
+const CONTACT_TOPICS = ['An order', 'Delivery', 'Returns and refunds', 'A product', 'Payment', 'My account', 'Something else'];
+const contactHits = new Map();
+app.post('/api/contact', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  const body = req.body || {};
+  if (body.website) return res.json({ ok: true });
+  const ip = String(req.ip || '');
+  const now = Date.now();
+  const hits = (contactHits.get(ip) || []).filter((t) => now - t < 60 * 60 * 1000);
+  if (hits.length >= 5) return res.status(429).json({ error: 'You’ve sent a few messages already. Please try again later, or email us at support@janedore.co.za.' });
+
+  const name = String(body.name || '').trim().substring(0, 100);
+  const email = String(body.email || '').trim().toLowerCase().substring(0, 200);
+  const orderNumber = String(body.orderNumber || '').trim().toUpperCase().replace(/[^A-Z0-9#-]/g, '').substring(0, 40);
+  const topic = CONTACT_TOPICS.indexOf(body.topic) !== -1 ? body.topic : '';
+  const message = String(body.message || '').trim().substring(0, 3000);
+  if (!name) return res.status(400).json({ error: 'Please enter your name.' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+  if (!topic) return res.status(400).json({ error: 'Please choose a topic.' });
+  if (!message) return res.status(400).json({ error: 'Please write your message.' });
+  hits.push(now);
+  contactHits.set(ip, hits);
+
+  try {
+    const ref = await adminDb.collection('contactMessages').add({
+      name, email, orderNumber, topic, message, status: 'new',
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    const msg = { name, email, orderNumber, topic, message, id: ref.id };
+    const assets = await getBrandAssets().catch(() => ({}));
+    const ctx = { siteUrl: SITE_URL, logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : '', logoFontUrl: assets.logoFont || '' };
+    const team = orderEmails.contactForStaff(msg, ctx);
+    const copy = orderEmails.contactReceived(msg, ctx);
+    // The team email must go out, or the message is only in Firestore.
+    await sendResendEmail({ from: 'Janedore Customer Care <noreply@janedore.co.za>', replyTo: email, to: ORDER_ALERT_EMAIL, subject: team.subject, html: team.html, text: team.text });
+    sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: email, subject: copy.subject, html: copy.html, text: copy.text })
+      .catch((e) => console.error('[CONTACT] Copy to customer failed:', e.message));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[CONTACT] Error:', e.message);
+    res.status(500).json({ error: 'We couldn’t send your message. Please try again, or email us at support@janedore.co.za.' });
+  }
+});
+
 // ==================== REPORT A BRAND ====================
 // The "more" button on a brand page opens a short form; reports are
 // saved to brandReports and emailed to the Janedore team (never to the
