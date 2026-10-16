@@ -218,8 +218,15 @@ async function renderAccountOrder(orderNumber) {
       <div class="account-row"><span>Delivery fee${new Set(packages.map(p => p.brand)).size > 1 ? ' (' + new Set(packages.map(p => p.brand)).size + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
     </div>
+    ${order.paymentStatus === 'paid' && packages.some(p => p.shipped) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return Items</button>` : ''}
     <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('client-support')">Contact Client Support</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
   </section>`;
+}
+
+// Opens Log a Return with this order already filled in.
+function startAccountReturn(orderNumber) {
+  history.pushState(null, null, '/pages/log-a-return?order=' + encodeURIComponent(orderNumber));
+  navigateToContentPage('log-a-return', true);
 }
 
 // ---------- Profile ----------

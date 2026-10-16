@@ -63,3 +63,36 @@
   display: block; margin: 24px auto 0; background: none; border: none; cursor: pointer; padding: 4px;
   font-family: inherit; font-size: 13px; color: #111; text-decoration: underline; text-underline-offset: 3px;
 }
+
+/* Returns (returns.js) share the tracking page's look. */
+.returns-page .account-tabs { margin-bottom: 20px; }
+.returns-policy { margin-top: 28px; line-height: 1.7; }
+.return-item { border: 1px solid #e5e5e5; padding: 12px 14px; margin: 0 0 10px; }
+.return-item.is-selected { border-color: #111; }
+.return-item.is-blocked { opacity: 0.55; }
+.return-item-row { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.return-item.is-blocked .return-item-row { cursor: default; }
+.return-item-row input { width: 18px; height: 18px; accent-color: #111; flex-shrink: 0; }
+.return-item-row .track-item-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.return-item-row .track-item-meta { margin-top: 0; }
+.return-blocked { font-size: 12px; color: #111; font-weight: 500; }
+.return-item-fields { padding-top: 14px; margin-top: 12px; border-top: 1px solid #eee; }
+.return-item-fields .track-input:last-child { margin-bottom: 0; }
+.return-textarea { height: 96px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
+.return-photos-title { margin-top: 24px; }
+.return-note { margin: -8px 0 12px; }
+.return-photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.return-photo, .return-photo-add { width: 80px; height: 80px; flex-shrink: 0; }
+.return-photo { position: relative; background: #f4f4f4 center / cover no-repeat; }
+.return-photo button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; border: none; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; padding: 0; }
+.return-photo.is-loading { display: flex; align-items: center; justify-content: center; }
+.return-photo-add {
+  border: 1px dashed #bbb; background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-family: inherit; font-size: 11px; color: #111;
+}
+.return-photo-add i { font-size: 20px; }
+.returns-done { text-align: center; padding: 8px 0; }
+.returns-done .track-intro { margin-top: 12px; }
+.returns-done-icon { margin: 0 auto 16px; width: 52px; height: 52px; border-radius: 50%; background: #b8cc87; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.return-instructions { border-top: 1px solid #eee; margin-top: 12px; padding-top: 12px; font-size: 13px; line-height: 1.6; white-space: pre-line; }
+.return-refund-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; border-bottom: 0; }

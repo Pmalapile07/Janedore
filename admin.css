@@ -1049,3 +1049,28 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .report-meta a { color: inherit; }
 .report-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .report-actions a.btn { text-decoration: none; }
+
+/* ── Returns (admin-returns.js) ── */
+.return-card-head { cursor: pointer; }
+.return-flag { color: var(--danger); font-weight: 600; }
+.return-help { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+.return-admin-body { border-top: 1px solid var(--border, #e3e3e3); margin-top: 12px; padding-top: 4px; }
+.return-admin-section { padding: 12px 0; border-bottom: 1px solid var(--border, #eee); }
+.return-admin-section:last-child { border-bottom: none; }
+.return-admin-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+.return-admin-item { margin-bottom: 10px; }
+.return-admin-item-name { font-size: 13px; font-weight: 600; }
+.return-admin-item-name span { font-weight: 400; color: var(--muted); }
+.return-admin-reason { font-size: 13px; line-height: 1.5; margin-top: 3px; }
+.return-admin-photos { display: flex; flex-wrap: wrap; gap: 8px; }
+.return-admin-photo { width: 84px; height: 84px; border-radius: 6px; background: #f2f2f2 center / cover no-repeat; display: block; }
+.return-admin-response { font-size: 13px; line-height: 1.5; margin-bottom: 6px; }
+.return-admin-response span { color: var(--muted); font-size: 11px; }
+.return-admin-form { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.return-admin-input { width: 100%; min-height: 84px; box-sizing: border-box; border: 1px solid var(--border, #ddd); border-radius: 6px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; }
+.return-admin-radio { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.return-admin-log { font-size: 12px; line-height: 1.5; margin-bottom: 4px; }
+.return-admin-log span { color: var(--muted); }
+.return-admin-log em { color: var(--muted); font-style: normal; }
+.return-pre { white-space: pre-line; }
+.return-close { margin-top: 8px; }
