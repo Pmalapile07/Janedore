@@ -280,6 +280,7 @@ async function init() {
   if (window.__payfastReturnActive) {
     navigateTo('checkout', true);
     updateChatVisibility();
+    routeReady();
     return;
   }
 
@@ -324,6 +325,13 @@ async function init() {
     else navigateTo('home');
   }
   updateChatVisibility();
+  routeReady();
+}
+
+// Shows the page again once init() has picked it (see the route-pending
+// script in index.html's <head>, which hides the home page until then).
+function routeReady() {
+  document.documentElement.classList.remove('route-pending');
 }
 
 window.addEventListener('DOMContentLoaded', init);

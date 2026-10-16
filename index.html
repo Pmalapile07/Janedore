@@ -103,6 +103,26 @@
     }
   })();
   </script>
+  <!-- Deep links and reloads (/pages/faq, /products/..., /cart, #cart):
+       #page-home is the page marked active in the HTML, and app.js only
+       picks the real page after products have loaded, so home used to
+       flash first. Hide it until init() has routed (route-pending is
+       cleared in app.js), with an 8s safety net in case init() fails. -->
+  <script>
+  (function () {
+    var p = location.pathname, h = location.hash.replace('#', '');
+    var home = (p === '/' || p === '/index.html') && (!h || h === 'home') && !/payfast_return/.test(location.search);
+    if (home) return;
+    var root = document.documentElement;
+    root.classList.add('route-pending');
+    setTimeout(function () { root.classList.remove('route-pending'); }, 8000);
+  })();
+  </script>
+  <style>
+    html.route-pending #page-home { display: none !important; }
+    html.route-pending body::after { content: ''; position: fixed; top: 50%; left: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: route-spin 0.8s linear infinite; z-index: 5; }
+    @keyframes route-spin { to { transform: rotate(360deg); } }
+  </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <!-- Safari/Chrome tint their own top bar from this. Without it Safari
        samples whatever is under the bar, flipping between the black header
