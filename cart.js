@@ -250,10 +250,12 @@ function addToCart(productId, size, qty) {
 
 // "Added to cart" bar: stays where the customer is (no cart panel), with a
 // strip along its top that shrinks to nothing; the bar leaves when it
-// does. Adding again while it's showing restarts the countdown.
+// does. Adding again while it's showing restarts the countdown. Removing
+// an item from the bag uses the same bar, with an Undo.
 const ADDED_TOAST_MS = 3000;
 let _addedToastTimer = null;
-function showAddedToCartToast() {
+let _toastUndo = null;
+function showAddedToCartToast(text, icon, undo) {
   let toast = document.getElementById('added-to-cart-toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -265,10 +267,21 @@ function showAddedToCartToast() {
       '<div class="added-toast-progress"></div>' +
       '<i class="ph ph-check-circle added-toast-icon" aria-hidden="true"></i>' +
       '<span class="added-toast-text">Added to cart</span>' +
+      '<button type="button" class="added-toast-undo">Undo</button>' +
       '<button type="button" class="added-toast-close" aria-label="Dismiss"><i class="ph ph-x"></i></button>';
     toast.querySelector('.added-toast-close').addEventListener('click', hideAddedToCartToast);
+    toast.querySelector('.added-toast-undo').addEventListener('click', () => {
+      const fn = _toastUndo;
+      hideAddedToCartToast();
+      if (fn) fn();
+    });
     document.body.appendChild(toast);
   }
+  toast.querySelector('.added-toast-text').textContent = text || 'Added to cart';
+  const iconEl = toast.querySelector('.added-toast-icon');
+  if (iconEl) iconEl.className = 'ph ' + (icon || 'ph-check-circle') + ' added-toast-icon';
+  _toastUndo = typeof undo === 'function' ? undo : null;
+  toast.querySelector('.added-toast-undo').style.display = _toastUndo ? '' : 'none';
   // Sit just above the product page's sticky Add to Bag bar when it's there.
   const sticky = document.getElementById('sticky-add-bar');
   toast.style.bottom = (sticky ? sticky.getBoundingClientRect().height : 0) + 16 + 'px';
@@ -287,13 +300,22 @@ function showAddedToCartToast() {
 }
 function hideAddedToCartToast() {
   clearTimeout(_addedToastTimer);
+  _toastUndo = null;
   const toast = document.getElementById('added-to-cart-toast');
   if (toast) toast.classList.remove('show');
 }
 
 function removeFromCart(productId, size, vi) {
-  S.cart = S.cart.filter(i => !(i.productId === productId && i.size === size && i.variantIndex === vi));
+  const index = S.cart.findIndex(i => i.productId === productId && i.size === size && i.variantIndex === vi);
+  if (index < 0) return;
+  const [removed] = S.cart.splice(index, 1);
   commitCartChange();
+  // Undo puts the line back where it was, unless it's already back.
+  showAddedToCartToast('Removed from bag', 'ph-trash', () => {
+    if (S.cart.some(i => i.productId === removed.productId && i.size === removed.size && i.variantIndex === removed.variantIndex)) return;
+    S.cart.splice(Math.min(index, S.cart.length), 0, removed);
+    commitCartChange();
+  });
 }
 
 function changeQty(productId, size, delta, vi) {

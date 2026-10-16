@@ -57,6 +57,19 @@
   font-size: 14px;
   font-weight: 500;
 }
+.added-toast-undo {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  color: #111;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
 .added-toast-close {
   flex-shrink: 0;
   width: 32px;
