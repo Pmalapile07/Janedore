@@ -22,6 +22,15 @@ function returnsSavedEmail() {
   return (user && !user.isAnonymous && user.email) || _returnEmail || saved;
 }
 
+// Shown under both the Start a return and Check return status tabs.
+const RETURNS_POLICY_HTML = `<div class="track-notice returns-policy">
+      <strong>How returns work</strong><br>
+      1. Tell us what you’d like to return, why, and add photos.<br>
+      2. We review your request, together with the brand, and email you our decision.<br>
+      3. If approved, we’ll explain how to send the item back. Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.<br>
+      4. Once we’ve received and checked the item, we refund you to your original payment method.
+    </div>`;
+
 function renderReturnsPage(tab) {
   const el = document.getElementById('content-page-body');
   if (!el) return;
@@ -53,7 +62,8 @@ function renderReturnsPage(tab) {
         <button class="track-btn" id="rs-btn" type="submit">Check Status</button>
         <p class="track-hint">Your return number begins with RT- and can be found in your return confirmation email.</p>
       </form>
-      <div id="rs-result"></div>`;
+      <div id="rs-result"></div>
+      ${RETURNS_POLICY_HTML}`;
     if (ret && email) submitReturnStatus();
     return;
   }
@@ -68,13 +78,7 @@ function renderReturnsPage(tab) {
       <button class="track-btn" id="rl-btn" type="submit">Find Order</button>
     </form>
     <div id="rl-result"></div>
-    <div class="track-notice returns-policy">
-      <strong>How returns work</strong><br>
-      1. Tell us what you’d like to return, why, and add photos.<br>
-      2. We review your request, together with the brand, and email you our decision.<br>
-      3. If approved, we’ll explain how to send the item back. Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.<br>
-      4. Once we’ve received and checked the item, we refund you to your original payment method.
-    </div>`;
+    ${RETURNS_POLICY_HTML}`;
   if (order && email) submitReturnLookup();
 }
 

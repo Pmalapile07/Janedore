@@ -56,6 +56,7 @@ body.on-login-page .nav-quick-links-wrap,
 body.on-vendor-page .nav-quick-links-wrap,
 body.on-collection-page .nav-quick-links-wrap,
 body:has(.page.active .page-breadcrumb) .nav-quick-links-wrap,
+body:has(#page-content.active) .nav-quick-links-wrap,
 #main-nav.product-page ~ .nav-quick-links-wrap {
   display: none;
 }
