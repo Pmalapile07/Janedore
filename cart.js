@@ -138,6 +138,8 @@ function getCartTotalAfterDiscount() {
 
 const FREE_SHIPPING_THRESHOLD = 1500;
 const SHIPPING_FEE = 150;
+// Home page delivery banner reads the same threshold the bag charges by.
+document.querySelectorAll('[data-free-delivery-threshold]').forEach(el => { el.textContent = 'R' + FREE_SHIPPING_THRESHOLD.toLocaleString('en-US'); });
 // Each brand ships its own parcel, so delivery is charged per brand
 // (SHIPPING_FEE x packages). Products with no vendorId are JANEDORE's
 // own stock and travel together as one package. Mirrors server.js
