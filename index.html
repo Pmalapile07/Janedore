@@ -414,13 +414,14 @@
 </div>
 
 <div class="page active" id="page-home">
-  <div class="home-delivery-banner">
+  <button type="button" class="home-delivery-banner" onclick="navigateToCollection('free-delivery')">
     <i class="ph ph-truck" aria-hidden="true"></i>
-    <div>
-      <div class="home-delivery-title">Free delivery</div>
-      <div class="home-delivery-sub">On orders over <span data-free-delivery-threshold>R1,500</span></div>
-    </div>
-  </div>
+    <span class="home-delivery-text">
+      <span class="home-delivery-title">Free delivery</span>
+      <span class="home-delivery-sub">On selected items over <span data-free-delivery-min>R750</span></span>
+    </span>
+    <i class="ph ph-caret-right home-delivery-arrow" aria-hidden="true"></i>
+  </button>
   <section id="hero">
   <div class="hero-bg-placeholder content-shimmer" id="hero-bg"></div>
   <div class="hero-overlay"></div>

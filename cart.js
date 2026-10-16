@@ -136,28 +136,46 @@ function getCartTotalAfterDiscount() {
   return Math.max(0, subtotal - discountAmount);
 }
 
-const FREE_SHIPPING_THRESHOLD = 1500;
 const SHIPPING_FEE = 150;
-// Home page delivery banner reads the same threshold the bag charges by.
-document.querySelectorAll('[data-free-delivery-threshold]').forEach(el => { el.textContent = 'R' + FREE_SHIPPING_THRESHOLD.toLocaleString('en-US'); });
-// Each brand ships its own parcel, so delivery is charged per brand
-// (SHIPPING_FEE x packages). Products with no vendorId are JANEDORE's
-// own stock and travel together as one package. Mirrors server.js
-// priceOrder(), which is what actually gets charged.
+// Free delivery (v1): only products marked "Free delivery" in admin
+// (product.freeDelivery; JANEDORE's own products default to on) ship free,
+// and only once that brand's package reaches FREE_DELIVERY_MIN. Every
+// other package is SHIPPING_FEE. Mirrors server.js priceOrder(), which is
+// what actually gets charged.
+const FREE_DELIVERY_MIN = 750;
+const HOUSE_VENDOR_ID = 'vendor-janedore';
+function isHouseProduct(p) {
+  return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
+}
+function isFreeDeliveryProduct(p) {
+  if (!p) return false;
+  return typeof p.freeDelivery === 'boolean' ? p.freeDelivery : isHouseProduct(p);
+}
+// Home banner and product pages read the same minimum the bag charges by.
+document.querySelectorAll('[data-free-delivery-min]').forEach(el => { el.textContent = 'R' + FREE_DELIVERY_MIN.toLocaleString('en-US'); });
+
+// One package per brand; JANEDORE's own stock travels as one package.
 function getCartShipments() {
   const groups = new Map();
   S.cart.forEach(item => {
     const product = getCartProduct(item.productId);
-    const key = (product && product.vendorId) || 'janedore';
-    if (!groups.has(key)) groups.set(key, { key, brand: (product && product.brand) || item.brand || 'JANEDORE' });
+    const key = isHouseProduct(product || item) ? 'janedore' : ((product && product.vendorId) || 'unknown');
+    if (!groups.has(key)) groups.set(key, { key, brand: (product && product.brand) || item.brand || 'JANEDORE', subtotal: 0, eligible: true });
+    const g = groups.get(key);
+    g.subtotal += getCartItemLineTotal(item);
+    if (!isFreeDeliveryProduct(product)) g.eligible = false;
   });
-  return [...groups.values()];
+  const codeFree = !!(appliedDiscount && appliedDiscount.type === 'free_shipping');
+  return [...groups.values()].map(g => {
+    const free = codeFree || (g.eligible && g.subtotal >= FREE_DELIVERY_MIN);
+    return Object.assign(g, { free, fee: free ? 0 : SHIPPING_FEE, remaining: g.eligible && !free ? FREE_DELIVERY_MIN - g.subtotal : 0 });
+  });
 }
 
-function getCartShippingStatus(subtotal) {
-  const packages = Math.max(1, getCartShipments().length);
-  const freeShipping = (appliedDiscount && appliedDiscount.type === 'free_shipping') || subtotal >= FREE_SHIPPING_THRESHOLD;
-  return { freeShipping, packages, fee: freeShipping ? 0 : SHIPPING_FEE * packages };
+function getCartShippingStatus() {
+  const shipments = getCartShipments();
+  const fee = shipments.reduce((a, s) => a + s.fee, 0);
+  return { shipments, packages: Math.max(1, shipments.length), fee, freeShipping: shipments.length > 0 && fee === 0 };
 }
 
 function cartHasMultipleTypes() {
@@ -465,11 +483,14 @@ function renderCartPage() {
   }
 
   const finalTotal = getCartTotalAfterDiscount();
-  const shipping = getCartShippingStatus(finalTotal);
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - finalTotal);
-  const bannerText = shipping.freeShipping
-    ? 'You’ve earned <strong>FREE</strong> delivery.'
-    : `You’re ${formatPrice(remaining)} away from <strong>FREE</strong> delivery.`;
+  const shipping = getCartShippingStatus();
+  const eligible = shipping.shipments.filter(s => s.eligible);
+  const pending = eligible.find(s => !s.free);
+  const bannerText = pending
+    ? `You’re ${formatPrice(pending.remaining)} away from <strong>FREE</strong> delivery on ${sanitizeHTML(pending.brand)}.`
+    : eligible.length
+      ? `Your ${sanitizeHTML(eligible[0].brand)} items ship <strong>FREE</strong>.`
+      : `<strong>FREE</strong> delivery on selected items over ${formatPrice(FREE_DELIVERY_MIN)}. <span class="cart-delivery-link" onclick="navigateToCollection('free-delivery')">Shop now</span>`;
   let html = `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div><div class="cart-cards">`;
 
   S.cart.forEach(item => {

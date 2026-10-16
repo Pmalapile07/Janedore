@@ -1,6 +1,11 @@
 (function () {
   'use strict';
 
+  // Same rule as the storefront's isHouseProduct() (cart.js).
+  function isHouseProductAdmin(p) {
+    return !!p && (!p.vendorId || p.vendorId === 'vendor-janedore' || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
+  }
+
   if (!window._adminDB) return;
 
   var esc               = window._esc;
@@ -859,6 +864,13 @@
           '<div class="form-group" style="padding:0;"><label>Weight (kg)</label><input name="shippingWeight" type="number" min="0" step="0.01" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5"></div>' +
           '<div class="form-group" style="padding:0;"><label>Shipping &amp; returns note</label><input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000"></div>' +
           '<div class="form-group" style="padding:0;"><label>International shipping</label><select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select></div>' +
+          // Free delivery is Janedore's call (it pays the courier), so
+          // brands don't see it. Not set yet: on for JANEDORE's own products.
+          (window._currentUserRole === 'VENDOR' ? '' : (function () {
+            var fd = typeof p.freeDelivery === 'boolean' ? p.freeDelivery : isHouseProductAdmin(p);
+            return '<div class="form-group" style="padding:0;"><label>Free delivery</label><select name="freeDelivery" style="width:100%;"><option value="true"' + (fd ? ' selected' : '') + '>Yes</option><option value="false"' + (fd ? '' : ' selected') + '>No</option></select>' +
+              '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Yes: this product ships free when the customer\'s ' + esc(p.brand || 'brand') + ' items come to R750 or more, and it shows in the Free Delivery collection.</div></div>';
+          })()) +
         '</div>' +
       '</div>' +
 
@@ -1198,6 +1210,11 @@
       data.variants.push({ color:'Default', swatch:'#111', images:{ model:[], ghost:[], detail:[] } });
     }
 
+    // Brands never see the Free delivery field; their saves keep whatever
+    // Janedore set.
+    if (form.freeDelivery) data.freeDelivery = form.freeDelivery.value === 'true';
+    else if (existingProduct && typeof existingProduct.freeDelivery === 'boolean') data.freeDelivery = existingProduct.freeDelivery;
+
     if (!data.vendorId) {
       showToast('No vendor found for brand "' + data.brand + '". Product saved without a brand link.', 'error');
     }
@@ -1313,6 +1330,7 @@
           if (collection.collectionType === 'automated') {
             if (collection.automatedRule === 'sale') return typeof window._hasSalePrice === 'function' ? window._hasSalePrice(product) : Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.price || 0);
             if (collection.automatedRule === 'newin') return false;
+            if (collection.automatedRule === 'freedelivery') return typeof product.freeDelivery === 'boolean' ? product.freeDelivery : (!product.vendorId || product.vendorId === 'vendor-janedore' || String(product.brand || '').trim().toUpperCase() === 'JANEDORE');
           }
           var values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
           var handle = String(collection.handle || collection.slug || collection.id).toLowerCase();
