@@ -131,9 +131,21 @@ function toggleGridWish() {
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
   if (!S.wishlist.length) {
-    DOM.wishPageContent.innerHTML = '<div class="wish-page-empty"><div class="wish-page-empty-title">Your wishlist is empty</div><button class="btn-continue-shopping" onclick="navigateTo(\'products\')">Continue Shopping</button></div>';
+    // Same as the empty bag (renderCartPage(), cart.js): icon, message,
+    // black button, then Recently Viewed or New Arrivals.
+    const recent = S.recentlyViewed.filter(p => p && p.status === 'active');
+    const useRecent = recent.length >= 2;
+    const picks = (useRecent ? recent : newestActiveProducts()).slice(0, 8);
+    DOM.wishPageContent.classList.add('is-empty');
+    DOM.wishPageContent.innerHTML = `<div class="cart-empty">
+      <i class="ph ph-heart cart-empty-icon" aria-hidden="true"></i>
+      <div class="cart-empty-title">Your wishlist is empty</div>
+      <button class="cart-empty-btn" onclick="navigateTo('products')">Continue Shopping</button>
+    </div>${cartSliderHtml(useRecent ? 'Recently Viewed' : 'New Arrivals', picks, 'wish-slider-grid')}`;
+    if (picks.length) initSliderLeadingTracking('wish-slider-grid');
     return;
   }
+  DOM.wishPageContent.classList.remove('is-empty');
   const cols = S.gridColsWish;
   const cards = S.wishlist.map(p => productCard(p, cols === 3, true, S.productVariantSelections[p.id] ?? 0)).join('');
   DOM.wishPageContent.innerHTML = `<div class="wish-page-header">
