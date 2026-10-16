@@ -97,22 +97,23 @@ function trackResultHtml(o) {
   const meta = [o.createdAt ? 'Placed ' + trackDate(o.createdAt, true) : '', packages.length > 1 ? packages.length + ' packages' : ''].filter(Boolean).join(' · ');
 
   let notice = '';
-  let step = 1;
   if (o.cancelled) {
     notice = `<div class="track-notice">This order was cancelled. If you have questions, <span class="track-link" onclick="navigateToContentPage('client-support')">contact us</span>.</div>`;
   } else if (!o.paid) {
     notice = `<div class="track-notice">We haven’t received payment for this order, so it hasn’t been sent to the brands. If money left your account, <span class="track-link" onclick="navigateToContentPage('client-support')">contact us</span> with your order number.</div>`;
-  } else {
-    step = allShipped ? 3 : shippedCount ? 2.5 : 2;
   }
+  const allPreorder = packages.length > 0 && packages.every(p => p.preorder);
   const heading = o.cancelled ? 'Cancelled' : !o.paid ? 'Awaiting payment' : allShipped ? (packages.length > 1 ? 'All packages are on their way' : 'Your order is on its way')
-    : shippedCount ? `${shippedCount} of ${packages.length} packages on their way` : 'Your order is being prepared';
+    : shippedCount ? `${shippedCount} of ${packages.length} packages on their way` : allPreorder ? 'Your pre-order is confirmed' : 'Your order is being prepared';
 
-  const steps = ['Order placed', 'Preparing', 'Shipped'].map((label, i) => {
-    // step 2: preparing; 2.5: some packages shipped; 3: all shipped.
-    const state = i === 0 ? 'done' : i === 1 ? (step > 2 ? 'done' : 'current') : (step === 3 ? 'done' : step === 2.5 ? 'current' : '');
-    return `<div class="track-step ${state}"><span class="track-step-dot">${state === 'done' ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}</span><span class="track-step-label">${label}</span></div>`;
-  }).join('<div class="track-step-line"></div>');
+  // Each package has its own steps: a pre-order is made after you order.
+  const stepsHtml = (p) => {
+    const labels = p.preorder ? ['Pre-ordered', 'Being made', 'Shipped'] : ['Order placed', 'Preparing', 'Shipped'];
+    return `<div class="track-steps">${labels.map((label, i) => {
+      const state = i === 0 || p.shipped ? 'done' : i === 1 ? 'current' : '';
+      return `<div class="track-step ${state}"><span class="track-step-dot">${state === 'done' ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}</span><span class="track-step-label">${label}</span></div>`;
+    }).join('<div class="track-step-line"></div>')}</div>`;
+  };
 
   const cards = packages.map((p, i) => {
     const items = p.items.map(it => {
@@ -122,7 +123,9 @@ function trackResultHtml(o) {
       return `<div class="track-item"><div class="track-item-img" style="background-image:url('${escapeForCssUrl(thumb)}')"></div>
         <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(it.name))}</div><div class="track-item-meta">${details}</div></div></div>`;
     }).join('');
-    const status = o.cancelled || !o.paid ? '' : `<span class="track-pill${p.shipped ? ' shipped' : ''}">${p.shipped ? 'Shipped' : 'Preparing'}</span>`;
+    const live = !o.cancelled && o.paid;
+    const status = live ? `<span class="track-pill${p.shipped ? ' shipped' : ''}">${p.shipped ? 'Shipped' : p.preorder ? 'Pre-order' : 'Preparing'}</span>` : '';
+    const shipBy = p.preorder && p.shipBy ? preorderShipText(p.shipBy) : '';
     const body = o.cancelled || !o.paid ? '' : p.shipped
       ? `<div class="track-ship">
           ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
@@ -130,17 +133,19 @@ function trackResultHtml(o) {
             <button type="button" class="track-copy" onclick="copyTrackingNumber(this,'${escapeJSString(p.trackingNumber)}')">Copy</button></div>
           ${p.shippedAt ? `<div class="track-ship-row"><span>Shipped</span><strong>${escapeHTML(trackDate(p.shippedAt))}</strong></div>` : ''}
         </div>`
-      : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is getting your items ready. We’ll email you the tracking number as soon as it ships.</p>`;
+      : p.preorder
+        ? `<p class="track-wait">${shipBy ? `<strong>Expected to ship by ${escapeHTML(shipBy)}.</strong> ` : ''}${escapeHTML(trackPlainText(p.brand))} is making your pre-order. We’ll email you if the date changes, and again with the tracking number when it ships.</p>`
+        : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is getting your items ready. We’ll email you the tracking number as soon as it ships.</p>`;
     return `<div class="track-card">
       <div class="track-card-head"><div><div class="track-card-label">${packages.length > 1 ? `Package ${i + 1} of ${packages.length}` : 'Your package'}</div><div class="track-card-brand">${escapeHTML(trackPlainText(p.brand))}</div></div>${status}</div>
-      ${items}${body}</div>`;
+      ${live ? stepsHtml(p) : ''}${items}${body}</div>`;
   }).join('');
 
   return `<div class="track-result">
     <div class="track-order-number">Order ${escapeHTML(o.orderNumber)}</div>
     ${meta ? `<div class="track-order-meta">${escapeHTML(meta)}</div>` : ''}
     <div class="track-heading">${escapeHTML(heading)}</div>
-    ${o.cancelled || !o.paid ? notice : `<div class="track-steps">${steps}</div>`}
+    ${notice}
     ${cards}
     <button type="button" class="track-another" onclick="trackAnotherOrder()">Track another order</button>
   </div>`;

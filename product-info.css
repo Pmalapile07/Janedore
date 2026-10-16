@@ -440,3 +440,6 @@
 .product-free-delivery span { flex: 1; }
 .product-free-delivery i { font-size: 18px; flex-shrink: 0; }
 .product-free-delivery i.ph-caret-right { font-size: 14px; }
+.product-preorder-note { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 4px; padding: 10px 12px; border-radius: 6px; background: #f4f4f4; color: #111; font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.5; }
+.product-preorder-note i { font-size: 18px; flex-shrink: 0; }
+.product-preorder-note strong { font-weight: 600; }

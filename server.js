@@ -590,7 +590,10 @@ async function priceOrder(order) {
     subtotal += unit * qty;
     itemCount += qty;
     cheapestUnit = Math.min(cheapestUnit, unit);
-    return Object.assign({}, item, { qty, price: unit });
+    // Pre-order comes from the product, never the browser: those lines
+    // ship later as their own package (orderShipments()).
+    const preorder = isPreorderProduct(product);
+    return Object.assign({}, item, { qty, price: unit, preorder, preorderShipDate: preorder ? (product.preorderShipDate || null) : null });
   });
 
   let discount = null;
@@ -1137,27 +1140,19 @@ app.post('/api/track-order', async (req, res) => {
     const order = doc.data();
     if (String(order.customerEmail || '').trim().toLowerCase() !== email) return notFound();
 
-    const vendorTracking = order.vendorTracking || {};
-    const groups = new Map();
-    (order.items || []).forEach((item) => {
-      const key = item.vendorId || 'janedore';
-      if (!groups.has(key)) groups.set(key, { brand: item.brand || 'JANEDORE', items: [] });
-      groups.get(key).items.push({
+    const packages = orderShipments(order).map((g) => ({
+      brand: g.brand,
+      preorder: g.preorder,
+      shipBy: g.shipBy,
+      items: g.items.map((item) => ({
         productId: item.productId || '', variantIndex: item.variantIndex || 0, name: item.name || '',
         size: item.size || '', color: item.color || '', qty: item.qty || 1
-      });
-    });
-    const packages = [...groups.entries()].map(([key, g]) => {
-      const t = vendorTracking[key] || (key === 'janedore' || groups.size === 1 ? (order.trackingNumber ? { trackingNumber: order.trackingNumber, courier: order.courier } : null) : null);
-      return {
-        brand: g.brand,
-        items: g.items,
-        shipped: !!(t && t.trackingNumber),
-        courier: (t && t.courier) || '',
-        trackingNumber: (t && t.trackingNumber) || '',
-        shippedAt: (t && t.addedAt) || null
-      };
-    });
+      })),
+      shipped: !!g.tracking.trackingNumber,
+      courier: g.tracking.courier,
+      trackingNumber: g.tracking.trackingNumber,
+      shippedAt: g.tracking.addedAt
+    }));
 
     res.json({
       orderNumber: order.orderNumber || orderNumber,
@@ -1184,15 +1179,49 @@ app.post('/api/track-order', async (req, res) => {
 // just re-derived here from the order doc read fresh via firebase-admin
 // so it can't be spoofed by whatever a client happens to send.
 
-function computeOrderFulfillment(order) {
+// A product is on pre-order when its badge is "pre-order" (admin's Badge
+// field); preorderShipDate is the brand's expected ship date.
+function isPreorderProduct(p) {
+  return String((p && p.badge) || '').trim().toLowerCase() === 'pre-order';
+}
+
+// One package per brand, plus a separate one for that brand's pre-order
+// lines (they ship later; the customer still paid one delivery fee).
+// Tracking: vendorTracking[vid] for the in-stock package and
+// vendorTracking[vid].preorder for the pre-order one, so a brand only
+// ever writes its own vendorTracking entry (firestore.rules). Orders
+// with no vendor split use the old flat trackingNumber/courier.
+function orderShipments(order) {
+  const vt = order.vendorTracking || {};
   const vendorIds = Array.isArray(order.vendorIds) ? order.vendorIds : [];
-  if (!vendorIds.length) {
-    return (order.trackingNumber ? 'fulfilled' : 'unfulfilled');
-  }
-  const tracking = order.vendorTracking || {};
-  const shipped = vendorIds.filter((vid) => tracking[vid] && tracking[vid].trackingNumber);
-  if (shipped.length === 0) return 'unfulfilled';
-  if (shipped.length === vendorIds.length) return 'fulfilled';
+  const map = new Map();
+  (order.items || []).forEach((item) => {
+    const vid = item.vendorId || null;
+    const pre = !!item.preorder;
+    const key = (vid || '__none__') + (pre ? '__preorder' : '');
+    if (!map.has(key)) map.set(key, { key, vendorId: vid, preorder: pre, brand: item.brand || 'JANEDORE', items: [], shipBy: null });
+    const g = map.get(key);
+    g.items.push(item);
+    if (pre && item.preorderShipDate && (!g.shipBy || item.preorderShipDate > g.shipBy)) g.shipBy = item.preorderShipDate;
+  });
+  return [...map.values()]
+    // Orders with a vendor split have always ignored lines without a vendor.
+    .filter((g) => !vendorIds.length || (g.vendorId && vendorIds.includes(g.vendorId)))
+    .map((g) => {
+      const entry = g.vendorId ? (vt[g.vendorId] || {}) : null;
+      const t = g.vendorId
+        ? (g.preorder ? (entry.preorder || {}) : entry)
+        : { trackingNumber: order.trackingNumber, courier: order.courier };
+      return Object.assign(g, { tracking: { trackingNumber: t.trackingNumber || '', courier: t.courier || '', addedAt: t.addedAt || null } });
+    });
+}
+
+function computeOrderFulfillment(order) {
+  const shipments = orderShipments(order);
+  if (!shipments.length) return (order.trackingNumber ? 'fulfilled' : 'unfulfilled');
+  const shipped = shipments.filter((s) => s.tracking.trackingNumber).length;
+  if (shipped === 0) return 'unfulfilled';
+  if (shipped === shipments.length) return 'fulfilled';
   return 'partial';
 }
 
@@ -1222,14 +1251,15 @@ async function authorizeShipmentRequest(req, vendorId) {
   return { ok: false, reason: 'Not authorized for this vendor' };
 }
 
-function buildShipmentEmail(order, vendorId, status, ctx) {
-  const allItems = order.items || [];
-  const shippedItems = vendorId ? allItems.filter((i) => i.vendorId === vendorId) : allItems;
-  const tracking = vendorId ? (order.vendorTracking || {})[vendorId] : { trackingNumber: order.trackingNumber, courier: order.courier };
-  return orderEmails.shipped(order, ctx, shippedItems, {
+function findShipment(order, vendorId, preorder) {
+  return orderShipments(order).find((s) => (s.vendorId || '') === (vendorId || '') && s.preorder === !!preorder) || null;
+}
+
+function buildShipmentEmail(order, shipment, status, ctx) {
+  return orderEmails.shipped(order, ctx, shipment ? shipment.items : (order.items || []), {
     complete: status === 'fulfilled',
     heading: status === 'fulfilled' ? 'Your order is on its way' : 'Part of your order is on its way',
-    tracking: tracking || {}
+    tracking: shipment ? shipment.tracking : {}
   });
 }
 
@@ -1237,6 +1267,7 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   try {
     const vendorId = req.body && req.body.vendorId ? String(req.body.vendorId) : '';
+    const preorder = !!(req.body && req.body.preorder);
 
     const auth = await authorizeShipmentRequest(req, vendorId);
     if (!auth.ok) return res.status(403).json({ error: auth.reason || 'Not authorized' });
@@ -1251,13 +1282,15 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
     }
     const status = computeOrderFulfillment(order);
     if (status === 'unfulfilled') return res.json({ ok: true, skipped: 'Nothing shipped yet' });
+    const shipment = findShipment(order, vendorId, preorder);
+    if (shipment && !shipment.tracking.trackingNumber) return res.json({ ok: true, skipped: 'That package has no tracking yet' });
 
     // Customer gets "on its way"; the Janedore team gets a copy saying
     // which brand shipped. The brand itself is not emailed.
     const ctx = await buildOrderEmailContext(order);
     const jobs = [];
     if (order.customerEmail) {
-      const email = buildShipmentEmail(order, vendorId || null, status, ctx);
+      const email = buildShipmentEmail(order, shipment, status, ctx);
       jobs.push(sendResendEmail({
         from: 'Janedore <noreply@janedore.co.za>',
         replyTo: 'support@janedore.co.za',
@@ -1267,16 +1300,14 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
         text: email.text
       }));
     }
-    const allItems = order.items || [];
-    const shippedItems = vendorId ? allItems.filter((i) => i.vendorId === vendorId) : allItems;
-    const vendorIds = Array.isArray(order.vendorIds) ? order.vendorIds : [];
-    const tracking = vendorId ? (order.vendorTracking || {})[vendorId] : { trackingNumber: order.trackingNumber, courier: order.courier };
+    const shippedItems = shipment ? shipment.items : (order.items || []);
+    const shipments = orderShipments(order);
     const adminEmail = orderEmails.adminShipped(order, ctx, shippedItems, {
-      brand: (shippedItems[0] && shippedItems[0].brand) || 'JANEDORE',
-      tracking: tracking || {},
+      brand: ((shippedItems[0] && shippedItems[0].brand) || 'JANEDORE') + (shipment && shipment.preorder ? ' (pre-order)' : ''),
+      tracking: shipment ? shipment.tracking : {},
       complete: status === 'fulfilled',
-      totalBrands: vendorIds.length,
-      shippedBrands: vendorIds.filter((vid) => (order.vendorTracking || {})[vid] && order.vendorTracking[vid].trackingNumber).length
+      totalPackages: shipments.length,
+      shippedPackages: shipments.filter((s) => s.tracking.trackingNumber).length
     });
     jobs.push(sendResendEmail({
       from: 'Janedore Orders <noreply@janedore.co.za>',
@@ -1292,6 +1323,51 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
   } catch (e) {
     console.error('[NOTIFY_SHIPPED] Error:', e.message);
     res.status(500).json({ error: 'Could not send shipping notification' });
+  }
+});
+
+// ==================== PRE-ORDER DATE CHANGED ====================
+// admin-products.js calls this after a brand (or staff) saves a new
+// "Expected to ship" date on a pre-order product. Every paid order still
+// waiting on that product's pre-order package gets one email.
+app.post('/api/preorder-date-changed', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const productId = String((req.body && req.body.productId) || '');
+    const oldDate = String((req.body && req.body.oldDate) || '').slice(0, 10);
+    if (!productId) return res.status(400).json({ error: 'Missing productId' });
+    const productDoc = await adminDb.collection('products').doc(productId).get();
+    if (!productDoc.exists) return res.status(404).json({ error: 'Product not found' });
+    const product = productDoc.data();
+    const auth = await authorizeShipmentRequest(req, product.vendorId || '');
+    if (!auth.ok) return res.status(403).json({ error: auth.reason || 'Not authorized' });
+    if (!isPreorderProduct(product) || !product.preorderShipDate || product.preorderShipDate === oldDate) return res.json({ ok: true, sent: 0 });
+
+    // paymentStatus alone, like the expiry sweep: no composite index needed.
+    const snap = await adminDb.collection('orders').where('paymentStatus', '==', 'paid').limit(1000).get();
+    let sent = 0;
+    for (const doc of snap.docs) {
+      const order = doc.data();
+      if (!order.customerEmail || ['cancelled', 'refunded'].includes(String(order.status || '').toLowerCase())) continue;
+      const pkg = orderShipments(order).find((s) => s.preorder && !s.tracking.trackingNumber && s.items.some((i) => i.productId === productId));
+      if (!pkg) continue;
+      const items = pkg.items.filter((i) => i.productId === productId);
+      const previous = (items[0] && items[0].preorderShipDate) || oldDate;
+      if (previous === product.preorderShipDate) continue; // already told
+      await doc.ref.update({ items: (order.items || []).map((i) => (i.productId === productId && i.preorder ? Object.assign({}, i, { preorderShipDate: product.preorderShipDate }) : i)) });
+      const ctx = await buildOrderEmailContext(order);
+      const email = orderEmails.preorderDateChanged(order, ctx, items.map((i) => Object.assign({}, i, { preorderShipDate: product.preorderShipDate })), {
+        brand: product.brand || pkg.brand, oldDate: previous, newDate: product.preorderShipDate
+      });
+      try {
+        await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: email.subject, html: email.html, text: email.text });
+        sent++;
+      } catch (e) { console.error('[PREORDER_DATE] Email failed for', doc.id, e.message); }
+    }
+    res.json({ ok: true, sent });
+  } catch (e) {
+    console.error('[PREORDER_DATE]', e.message);
+    res.status(500).json({ error: 'Could not notify customers' });
   }
 });
 

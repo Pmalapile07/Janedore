@@ -141,6 +141,7 @@ function itemsBlock(items, ctx, opts) {
         '<div style="font-size:15px;font-weight:700;line-height:1.3;color:#111111;">' + esc(item.name || 'Item') + '</div>' +
         (meta ? '<div style="font-size:13px;color:#777777;margin-top:3px;">' + meta + '</div>' : '') +
         '<div style="font-size:13px;color:#111111;margin-top:8px;">' + attrs + '</div>' +
+        (item.preorder ? '<div style="font-size:13px;font-weight:600;color:#111111;margin-top:6px;">' + esc(preorderLine(item)) + '</div>' : '') +
         (opts.hidePrice ? '' : '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:8px;">' + money(itemLine(item)) + '</div>') +
       '</td></tr></table>';
   }).join('');
@@ -181,7 +182,17 @@ function textTotals(order) {
 function textItems(items, hidePrice) {
   return items.map(i => '- ' + (i.name || 'Item') + (i.brand ? ' (' + i.brand + ')' : '') +
     (i.color && i.color !== 'Default' ? ', ' + i.color : '') + (sizeOf(i) ? ', size ' + sizeOf(i) : '') +
-    ' x' + (Number(i.qty) || 1) + (hidePrice ? '' : ', ' + money(itemLine(i)))).join('\n');
+    ' x' + (Number(i.qty) || 1) + (hidePrice ? '' : ', ' + money(itemLine(i))) + (i.preorder ? ' [' + preorderLine(i) + ']' : '')).join('\n');
+}
+
+// "15 March 2027" from the brand's YYYY-MM-DD expected ship date.
+function shipByDate(d) {
+  const date = d ? new Date(String(d).slice(0, 10) + 'T12:00:00Z') : null;
+  return date && !isNaN(date) ? date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Johannesburg' }) : '';
+}
+function preorderLine(item) {
+  const d = shipByDate(item.preorderShipDate);
+  return 'Pre-order' + (d ? ', expected to ship by ' + d : '');
 }
 
 // ---------- the emails ----------
@@ -347,8 +358,8 @@ function adminShipped(order, ctx, items, opts) {
   const num = order.orderNumber || '';
   const brand = opts.brand || 'A brand';
   const tracking = opts.tracking || {};
-  const progress = opts.totalBrands > 1
-    ? opts.shippedBrands + ' of ' + opts.totalBrands + ' brands shipped' + (opts.complete ? ', order complete.' : '.')
+  const progress = opts.totalPackages > 1
+    ? opts.shippedPackages + ' of ' + opts.totalPackages + ' packages shipped' + (opts.complete ? ', order complete.' : '.')
     : 'Order complete.';
 
   const html = shell({
@@ -375,6 +386,40 @@ function adminShipped(order, ctx, items, opts) {
     '\n\nAdmin: ' + ctx.siteUrl + '/admin';
 
   return { subject: brand + ' shipped order #' + num, html, text };
+}
+
+// A brand moved the expected ship date of a pre-order the customer paid
+// for. Sent once per order from server.js /api/preorder-date-changed.
+function preorderDateChanged(order, ctx, items, opts) {
+  opts = opts || {};
+  const num = order.orderNumber || '';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const newDate = shipByDate(opts.newDate);
+  const oldDate = shipByDate(opts.oldDate);
+  const intro = (opts.brand || 'The brand') + ' has updated when your pre-order is expected to ship' +
+    (newDate ? ': it is now expected to ship by ' + newDate + '.' : '.');
+  const trackUrl = ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num);
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'Your pre-order has a new ship date',
+    preheader: intro,
+    bannerHtml: '<strong>Your pre-order has a new ship date</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
+      title('Ship date') + rows(
+        (oldDate ? row('Was', esc(oldDate), { semi: true }) : '') +
+        row('Now', esc(newDate || 'To be confirmed'), { semi: true, bold: true })) + button('Track your order', trackUrl),
+      title('Your pre-order') + itemsBlock(items, ctx, { hidePrice: true }),
+      '<div style="font-size:13px;line-height:1.6;color:#555555;">Nothing else changes: you don’t need to do anything. If the new date doesn’t work for you, reply to this email and we’ll help.</div>'
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = 'Your pre-order has a new ship date\n\nHi ' + first + ', ' + intro + (oldDate ? '\nWas: ' + oldDate : '') +
+    '\n\n' + textItems(items, true) + '\n\nOrder #' + num + '\nTrack your order: ' + trackUrl +
+    '\n\nIf the new date doesn’t work for you, reply to this email and we’ll help.';
+  return { subject: 'Your pre-order has a new ship date (order #' + num + ')', html, text };
 }
 
 // Customer copy when they report a brand and leave an email: we got it,
@@ -409,4 +454,4 @@ function reportReceived(report, ctx) {
   return { subject: 'We received your report about ' + brand, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, money };

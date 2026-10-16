@@ -2,6 +2,16 @@ function safeImage(url) { return url || PLACEHOLDER_IMAGE; }
 function formatPrice(amount) { return `${CURRENCIES[S.currency]?.symbol??"R"}${(amount??0).toFixed(2)}`; }
 function isProductSoldOut(product) { return (product?.stock??0)<=0; }
 
+// Pre-order: the Badge field set to "pre-order" in admin, with the brand's
+// expected ship date (YYYY-MM-DD). Stock caps how many can be pre-ordered.
+// Mirrors server.js isPreorderProduct().
+function isPreorderProduct(product) { return String(product?.badge || '').trim().toLowerCase() === 'pre-order'; }
+function preorderShipText(dateStr, short) {
+  const d = dateStr ? new Date(String(dateStr).slice(0, 10) + 'T12:00:00') : null;
+  if (!d || isNaN(d)) return '';
+  return d.toLocaleDateString('en-ZA', short ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 // Stock is tracked per size within each color variant, in a separate
 // stockByVariant map keyed by variant index then size (e.g.
 // {"0":{S:5,M:0,L:2}, "1":{S:1}}) — kept apart from the variants array
@@ -54,7 +64,7 @@ function updateAddToCartState() {
   const stickyBtn = document.getElementById('sticky-add-btn');
   if (!product || !stickyBtn) return;
   const vi = S.productVariantSelections[product.id] ?? 0;
-  const isPreorder = product.badge === 'pre-order';
+  const isPreorder = isPreorderProduct(product);
   const soldOut = isProductSoldOut(product);
   const realSizes = (product.sizes || []).filter(s => s !== 'OS');
   const hasSizes = realSizes.length > 0;
@@ -63,7 +73,7 @@ function updateAddToCartState() {
   const noSizeInStock = hasSizes && !realSizes.some(s => isSizeInStock(product, vi, s));
   const needsSize = hasSizes && !S.selectedSize && !noSizeInStock;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
-  stickyBtn.disabled = (needsSize || sizeOutOfStock || soldOut) && !isPreorder;
+  stickyBtn.disabled = needsSize || sizeOutOfStock || soldOut;
 
   // Never overwrite the transient "Added" feedback; "Add" instead of
   // "Add to Bag" once the bar is minimized.
@@ -71,7 +81,8 @@ function updateAddToCartState() {
   if (bar && bar.classList.contains('added-feedback')) return;
   const label = stickyBtn.querySelector('.sticky-btn-label');
   const defaultLabel = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to Bag';
-  if (label) label.textContent = isPreorder ? 'Pre-order' : (needsSize ? 'Select a Size' : ((sizeOutOfStock || soldOut) ? 'Sold Out' : defaultLabel));
+  const unavailable = (sizeOutOfStock || soldOut) ? (isPreorder ? 'Pre-orders Full' : 'Sold Out') : '';
+  if (label) label.textContent = needsSize ? 'Select a Size' : (unavailable || (isPreorder ? 'Pre-order' : defaultLabel));
 }
 function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; }
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
@@ -406,6 +417,7 @@ async function renderProductPage(product) {
           <p class="product-by-brand-name"${productVendor?` onclick="navigateToVendor('${escapeJSString(productVendor.slug||productVendor.id)}')"`:''}>${product.brand||'JANEDORE'}${productVendor?' <i class="ph ph-arrow-right"></i>':''}</p>
         </div>
       </div>
+      ${isPreorderProduct(product) ? `<div class="product-preorder-note"><i class="ph ph-calendar-blank" aria-hidden="true"></i><span><strong>Pre-order.</strong> ${product.preorderShipDate ? `Expected to ship by ${escapeHTML(preorderShipText(product.preorderShipDate))}. ` : ''}Pay now, and it ships on its own as soon as it’s ready.</span></div>` : ''}
       ${typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product) ? `<button type="button" class="product-free-delivery" onclick="navigateToCollection('free-delivery')"><i class="ph ph-truck" aria-hidden="true"></i><span>Free delivery on ${escapeHTML(product.brand || 'JANEDORE')} orders over ${formatPrice(FREE_DELIVERY_MIN)}</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>` : ''}
       <div class="product-quantity-row" aria-label="Quantity selector">
         <span class="product-quantity-label">Quantity</span>
