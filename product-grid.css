@@ -762,8 +762,6 @@ body .site-collection-layout {
   transition: color 0.2s;
 }
 .brands-az-items li:hover { color: #111; }
-.brands-az-items li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.brands-az-fav { background: none; border: none; padding: 0 2px; cursor: pointer; font-size: 17px; color: #111; line-height: 1; display: flex; }
 
 .brands-empty {
   text-align: center;

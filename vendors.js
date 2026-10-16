@@ -183,7 +183,7 @@ function renderBrandsPage(vendors) {
   listEl.innerHTML = LETTERS.filter(letter => groups[letter]).map(letter => {
     const items = groups[letter].map(v => {
       const name = v.name || v.brandName || 'Unknown Brand';
-      return `<li onclick="navigateToVendor('${escapeJSString(v.slug || v.id)}')"><span>${escapeHTML(name)}</span>${favBrandButtonHtml(v.id, 'brands-az-fav')}</li>`;
+      return `<li onclick="navigateToVendor('${escapeJSString(v.slug || v.id)}')">${escapeHTML(name)}</li>`;
     }).join('');
     return `<div class="brands-az-group" id="brands-letter-${letter}"><div class="brands-az-heading">${letter}</div><ul class="brands-az-items">${items}</ul></div>`;
   }).join('');

@@ -15,15 +15,17 @@
 .wish-page.is-empty { max-width: none; padding-top: 0; }
 .wish-page.is-empty .cart-suggestions { padding-top: 0; }
 
-/* Products | Brands tabs (renderWishlistPage(), wishlist.js). */
-.wish-tabs { position: relative; display: flex; justify-content: center; gap: 28px; margin: 0 0 24px; border-bottom: 0.5px solid #e5e5e5; }
+/* Products | Brands switch (renderWishlistPage(), wishlist.js): the
+   quick links' pills (.nav-quick-link, navigation.css), black when active. */
+.wish-tabs { position: relative; display: flex; justify-content: center; align-items: center; gap: 4px; margin: 0 0 24px; }
 .wish-tab {
-  background: none; border: none; padding: 0 2px 12px; margin-bottom: -0.5px; cursor: pointer;
-  font-family: 'Inter', sans-serif; font-size: calc(var(--ui-font-size) + 1px); letter-spacing: var(--ui-letter-spacing);
-  font-weight: 500; text-transform: uppercase; color: #888; border-bottom: 1.5px solid transparent;
+  display: inline-flex; align-items: center; line-height: 1; background: none; border: none; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: #888;
+  padding: 8px 16px; border-radius: 999px; white-space: nowrap; transition: background 0.2s ease, color 0.2s ease;
 }
-.wish-grid-toggle { position: absolute; left: 8px; top: -4px; }
-.wish-tab.active { color: #111; border-bottom-color: #111; }
+.wish-tab:hover { color: #111; }
+.wish-grid-toggle { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); }
+.wish-tab.active { background: #111; color: #fff; font-weight: 700; }
 .wish-tabs ~ .cart-empty { min-height: 50vh; min-height: 50svh; }
 .wish-empty-sub { font-size: 13px; color: #666; margin-top: 8px; }
 
