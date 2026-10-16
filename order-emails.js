@@ -359,7 +359,7 @@ function adminShipped(order, ctx, items, opts) {
   const brand = opts.brand || 'A brand';
   const tracking = opts.tracking || {};
   const progress = opts.totalPackages > 1
-    ? opts.shippedPackages + ' of ' + opts.totalPackages + ' packages shipped' + (opts.complete ? ', order complete.' : '.')
+    ? opts.shippedPackages + ' of ' + opts.totalPackages + ' shipments sent' + (opts.complete ? ', order complete.' : '.')
     : 'Order complete.';
 
   const html = shell({

@@ -215,7 +215,7 @@ async function renderAccountOrder(orderNumber) {
       ${accountOrderRefunded(order) ? `<div class="account-row"><span>Refunded</span><span>-${formatPrice(order.refundAmount || order.total || 0)}</span></div>` : ''}
       <div class="account-row"><span>Cart total</span><span>${formatPrice(order.subtotal || 0)}</span></div>
       ${discount > 0 ? `<div class="account-row"><span>Discount${order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : ''}</span><span>-${formatPrice(discount)}</span></div>` : ''}
-      <div class="account-row"><span>Delivery fee${packages.length > 1 ? ' (' + packages.length + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
+      <div class="account-row"><span>Delivery fee${new Set(packages.map(p => p.brand)).size > 1 ? ' (' + new Set(packages.map(p => p.brand)).size + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
     </div>
     <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('client-support')">Contact Client Support</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
