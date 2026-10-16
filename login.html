@@ -1,95 +1,84 @@
 <style>
+  /* Same type, inputs and buttons as Track Your Order and My Account. */
   .login-page-container {
     display: flex;
-    align-items: center;
     justify-content: center;
-    min-height: 80vh;
-    padding: 40px 16px;
+    padding: 40px 16px 64px;
   }
   .login-box {
     background: #fff;
-    padding: 40px 32px;
     width: 100%;
-    max-width: 400px;
+    max-width: 560px;
+    font-family: 'Inter', sans-serif;
   }
   .login-title {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
+    font-size: 28px;
+    font-weight: 600;
     color: #111;
-    margin-bottom: 32px;
-    text-align: center;
+    margin-bottom: 24px;
   }
   .login-form-group {
-    margin-bottom: 24px;
+    margin-bottom: 14px;
   }
   .login-form-group input {
     width: 100%;
-    padding: 10px 0;
-    border: none;
-    border-bottom: 0.5px solid #ccc;
+    height: 46px;
+    box-sizing: border-box;
+    padding: 0 14px;
+    border: 1px solid #d5d5d5;
+    border-radius: 0;
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 300;
+    font-size: 14px;
     outline: none;
-    background: transparent;
+    background: #fff;
     color: #111;
-    letter-spacing: 0.04em;
   }
   .login-form-group input:focus {
-    border-bottom-color: #111;
+    border-color: #111;
   }
   .login-form-group input::placeholder {
-    color: #aaa;
+    color: #999;
   }
   .login-btn {
     width: 100%;
+    height: 46px;
     background: #111;
     color: #fff;
     border: none;
-    padding: 15px;
     font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
+    font-size: calc(var(--ui-font-size, 9px) + 1px);
     letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
+    font-weight: 500;
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s;
-    margin-top: 8px;
+    margin-top: 6px;
   }
   .login-btn:hover { background: #333; }
   .login-btn:disabled { background: #888; cursor: not-allowed; }
   .login-error {
-    color: #c00;
-    font-size: 10px;
-    text-align: center;
-    margin-bottom: 12px;
+    color: #c0392b;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 14px;
     display: none;
     font-family: 'Inter', sans-serif;
   }
   .login-link-wrap {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 24px;
   }
   .login-link {
     font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    color: #888;
-    border-bottom: 0.8px solid #888;
+    font-size: 13px;
+    color: #111;
     background: none;
-    padding-bottom: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-block;
     border: none;
-    border-bottom: 0.8px solid #888;
+    padding: 4px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
-  .login-link:hover { color: #111; border-color: #111; }
   .login-form-group#password-group { position: relative; }
   .login-forgot {
     display: block;
@@ -145,82 +134,6 @@
   .login-google-btn:hover { background: #f4f4f4; }
   .login-google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  /* Account Dashboard */
-  .account-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 40px 16px;
-  }
-  .account-title {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    margin-bottom: 32px;
-  }
-  .account-section {
-    margin-bottom: 32px;
-    padding-bottom: 32px;
-    border-bottom: 0.5px solid #e5e5e5;
-  }
-  .account-section:last-child { border-bottom: none; }
-  .account-section-title {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 12px;
-  }
-  .account-info {
-    font-size: 13px;
-    color: #111;
-    margin-bottom: 4px;
-  }
-  .account-muted {
-    font-size: 10px;
-    color: #aaa;
-  }
-  .account-logout-btn {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    font-weight: var(--ui-font-weight, 400);
-    text-transform: uppercase;
-    color: #c00;
-    border-bottom: 0.8px solid #c00;
-    background: none;
-    padding-bottom: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-block;
-    border: none;
-    border-bottom: 0.8px solid #c00;
-  }
-  .account-logout-btn:hover { opacity: 0.7; }
-  .account-order-card {
-    padding: 12px 0;
-    border-bottom: 0.5px solid #e5e5e5;
-    font-size: 11px;
-  }
-  .account-order-card:last-child { border-bottom: none; }
-  .account-order-number {
-    font-family: 'Inter', sans-serif;
-    font-size: var(--ui-font-size, 9px);
-    letter-spacing: var(--ui-letter-spacing, 0.2em);
-    text-transform: uppercase;
-    color: #888;
-  }
-  .account-order-status {
-    font-size: 10px;
-    text-transform: uppercase;
-  }
-  @media (max-width: 480px) {
-    .login-box { padding: 24px 16px; }
-    .account-container { padding: 24px 12px; }
-  }
 </style>
 
 <!-- LOGIN / REGISTER VIEW -->
@@ -259,279 +172,3 @@
     </div>
   </div>
 </div>
-
-<!-- ACCOUNT DASHBOARD VIEW -->
-<div id="account-view" style="display:none;">
-  <div class="account-container">
-    <div class="account-title">My Account</div>
-    
-    <div class="account-section">
-      <div class="account-section-title">Profile</div>
-      <div class="account-info" id="account-name">-</div>
-      <div class="account-muted" id="account-email">-</div>
-    </div>
-    
-    <div class="account-section">
-      <div class="account-section-title">My Orders</div>
-      <div id="account-orders">
-        <p class="account-muted">Loading orders...</p>
-      </div>
-    </div>
-    
-    <div class="account-section">
-      <div class="account-section-title">My Reviews</div>
-      <div id="account-reviews">
-        <p class="account-muted">Loading reviews...</p>
-      </div>
-    </div>
-    
-    <button class="account-logout-btn" onclick="handleLogout()">Sign Out</button>
-  </div>
-</div>
-
-<script>
-// ==================== LOGIN SYSTEM ====================
-
-let loginMode = 'signin';
-
-function navigateToLogin() {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const loginPage = document.getElementById("page-login");
-  if (loginPage) {
-    loginPage.classList.add("active");
-    S.currentPage = "login";
-    updateHash('login');
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    ensureNavScrolled();
-    
-    const user = firebase.auth().currentUser;
-    if (user) {
-      showAccountView();
-    } else {
-      showLoginView();
-    }
-  }
-}
-
-function navigateToAccount() {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const accountPage = document.getElementById("page-account");
-  if (accountPage) {
-    accountPage.classList.add("active");
-    S.currentPage = "account";
-    updateHash('account');
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    ensureNavScrolled();
-    
-    const user = firebase.auth().currentUser;
-    if (user) {
-      showAccountView();
-      loadAccountData();
-    } else {
-      navigateToLogin();
-    }
-  }
-}
-
-function showLoginView() {
-  const loginView = document.getElementById('login-view');
-  const accountView = document.getElementById('account-view');
-  if (loginView) loginView.style.display = 'block';
-  if (accountView) accountView.style.display = 'none';
-  loginMode = 'signin';
-  updateLoginModeUI();
-}
-
-function showAccountView() {
-  const loginView = document.getElementById('login-view');
-  const accountView = document.getElementById('account-view');
-  if (loginView) loginView.style.display = 'none';
-  if (accountView) accountView.style.display = 'block';
-  loadAccountData();
-}
-
-function toggleLoginMode() {
-  loginMode = loginMode === 'signin' ? 'signup' : 'signin';
-  updateLoginModeUI();
-}
-
-function updateLoginModeUI() {
-  const title = document.getElementById('login-mode-title');
-  const submitBtn = document.getElementById('login-submit-btn');
-  const toggleBtn = document.getElementById('toggle-mode-btn');
-  const nameGroup = document.getElementById('name-group');
-  const errorEl = document.getElementById('login-error');
-  
-  if (errorEl) errorEl.style.display = 'none';
-  
-  if (loginMode === 'signin') {
-    if (title) title.textContent = 'Sign In';
-    if (submitBtn) submitBtn.textContent = 'Sign In';
-    if (toggleBtn) toggleBtn.textContent = 'Create an account';
-    if (nameGroup) nameGroup.style.display = 'none';
-  } else {
-    if (title) title.textContent = 'Create Account';
-    if (submitBtn) submitBtn.textContent = 'Create Account';
-    if (toggleBtn) toggleBtn.textContent = 'Already have an account? Sign in';
-    if (nameGroup) nameGroup.style.display = 'block';
-  }
-}
-
-async function handleLoginSubmit(e) {
-  e.preventDefault();
-  
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const name = document.getElementById('login-name').value.trim();
-  const errorEl = document.getElementById('login-error');
-  const submitBtn = document.getElementById('login-submit-btn');
-  
-  if (errorEl) errorEl.style.display = 'none';
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Please wait...';
-  }
-  
-  try {
-    if (loginMode === 'signup') {
-      if (!name) {
-        throw new Error('Please enter your full name.');
-      }
-      const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-      await userCredential.user.updateProfile({ displayName: name });
-      await db.collection('customers').doc(userCredential.user.uid).set({
-        name: name,
-        email: email,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    } else {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
-    }
-    
-    showAccountView();
-    updateHash('account');
-    
-  } catch (error) {
-    if (errorEl) {
-      errorEl.textContent = error.message;
-      errorEl.style.display = 'block';
-    }
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = loginMode === 'signin' ? 'Sign In' : 'Create Account';
-    }
-  }
-}
-
-async function handleLogout() {
-  try {
-    await firebase.auth().signOut();
-    showLoginView();
-    updateHash('login');
-  } catch (e) {
-    console.warn('Logout error:', e);
-  }
-}
-
-async function loadAccountData() {
-  const user = firebase.auth().currentUser;
-  if (!user) return;
-  
-  const nameEl = document.getElementById('account-name');
-  const emailEl = document.getElementById('account-email');
-  if (nameEl) nameEl.textContent = user.displayName || 'Customer';
-  if (emailEl) emailEl.textContent = user.email;
-  
-  // Load orders (no composite index required)
-  try {
-    const ordersSnap = await db.collection('orders')
-      .where('customerEmail', '==', user.email)
-      .limit(50)
-      .get();
-    
-    const ordersContainer = document.getElementById('account-orders');
-    if (!ordersContainer) return;
-    
-    if (ordersSnap.empty) {
-      ordersContainer.innerHTML = '<p class="account-muted">No orders yet.</p>';
-    } else {
-      // Sort manually instead of using orderBy
-      const orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-      
-      let ordersHTML = '';
-      orders.forEach(o => {
-        const date = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-        ordersHTML += `<div class="account-order-card">
-          <div class="account-order-number">Order #${o.orderNumber || o.id.substring(0, 12)}</div>
-          <div style="margin-top:4px;">${o.itemCount || 0} items · ${formatPrice(o.total || o.subtotal || 0)}</div>
-          <div style="margin-top:2px;display:flex;justify-content:space-between;">
-            <span class="account-order-status" style="color:${o.status === 'pending' ? '#e65100' : '#0a0'};">${o.status || 'pending'}</span>
-            <span style="font-size:10px;color:#aaa;">${date}</span>
-          </div>
-        </div>`;
-      });
-      ordersContainer.innerHTML = ordersHTML;
-    }
-  } catch (e) {
-    console.warn('Orders load error:', e);
-    const ordersContainer = document.getElementById('account-orders');
-    if (ordersContainer) ordersContainer.innerHTML = '<p class="account-muted">Unable to load orders.</p>';
-  }
-  
-  // Load reviews (no composite index required)
-  try {
-    const reviewsSnap = await db.collection('reviews')
-      .where('name', '==', user.displayName || '')
-      .limit(20)
-      .get();
-    
-    const reviewsContainer = document.getElementById('account-reviews');
-    if (!reviewsContainer) return;
-    
-    if (reviewsSnap.empty) {
-      reviewsContainer.innerHTML = '<p class="account-muted">No reviews yet.</p>';
-    } else {
-      const reviews = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-      
-      let reviewsHTML = '';
-      reviews.forEach(r => {
-        const date = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-        reviewsHTML += `<div class="account-order-card">
-          <div>${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</div>
-          <div style="margin-top:2px;font-size:12px;">${r.text || 'No comment'}</div>
-          <div style="margin-top:2px;font-size:10px;color:#aaa;">${date}</div>
-        </div>`;
-      });
-      reviewsContainer.innerHTML = reviewsHTML;
-    }
-  } catch (e) {
-    console.warn('Reviews load error:', e);
-    const reviewsContainer = document.getElementById('account-reviews');
-    if (reviewsContainer) reviewsContainer.innerHTML = '<p class="account-muted">Unable to load reviews.</p>';
-  }
-}
-
-// Auth state listener
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    if (S.currentPage === 'login') {
-      showAccountView();
-      updateHash('account');
-    }
-    if (S.currentPage === 'account') {
-      showAccountView();
-      loadAccountData();
-    }
-  } else {
-    if (S.currentPage === 'login') {
-      showLoginView();
-    }
-    if (S.currentPage === 'account') {
-      navigateToLogin();
-    }
-  }
-});
-</script>

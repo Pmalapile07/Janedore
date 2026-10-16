@@ -90,7 +90,9 @@ function trackDate(iso, withYear) {
   return d.toLocaleDateString('en-ZA', withYear ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' });
 }
 
-function trackResultHtml(o) {
+// opts.hideAnother: the My Account order page (account.js) has its own way back.
+function trackResultHtml(o, opts) {
+  opts = opts || {};
   const packages = o.packages || [];
   const shippedCount = packages.filter(p => p.shipped).length;
   const allShipped = packages.length > 0 && shippedCount === packages.length;
@@ -147,7 +149,7 @@ function trackResultHtml(o) {
     <div class="track-heading">${escapeHTML(heading)}</div>
     ${notice}
     ${cards}
-    <button type="button" class="track-another" onclick="trackAnotherOrder()">Track another order</button>
+    ${opts.hideAnother ? '' : '<button type="button" class="track-another" onclick="trackAnotherOrder()">Track another order</button>'}
   </div>`;
 }
 
