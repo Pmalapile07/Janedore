@@ -131,7 +131,8 @@
 
 /* Free delivery banner above the hero (layout after Bash's homepage
    banner, in the site green). Side margins match #hero's padding so it
-   lines up with the hero image. Opens the Free Delivery collection. */
+   lines up with the hero image. Opens the Delivery & Collection page
+   (shipping-policy), which explains the asterisk. */
 .home-delivery-banner {
   display: flex;
   width: calc(100% - 16px);
