@@ -388,6 +388,127 @@ function adminShipped(order, ctx, items, opts) {
   return { subject: brand + ' shipped order #' + num, html, text };
 }
 
+// ---------- returns (returns-api.js) ----------
+
+function returnItemsBlock(ret, ctx) {
+  return (ret.items || []).map((item, i) => {
+    const img = ctx.imageFor ? ctx.imageFor(item) : '';
+    const meta = [item.brand, item.color && item.color !== 'Default' ? item.color : '', sizeOf(item) ? 'Size ' + sizeOf(item) : '', 'Qty ' + (Number(item.qty) || 1)].filter(Boolean).map(esc).join(' · ');
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="' + (i ? 'border-top:1px solid #eeeeee;' : '') + '"><tr>' +
+      '<td width="72" valign="top" style="padding:' + (i ? '14px' : '0') + ' 14px 14px 0;">' +
+        (img ? '<img src="' + esc(img) + '" width="72" height="96" alt="" style="display:block;width:72px;height:96px;object-fit:cover;background:#f4f4f4;border:0;">' : '<div style="width:72px;height:96px;background:#f4f4f4;"></div>') +
+      '</td><td valign="top" style="padding:' + (i ? '14px' : '0') + ' 0 14px;">' +
+        '<div style="font-size:15px;font-weight:700;line-height:1.3;color:#111111;">' + esc(item.name || 'Item') + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:3px;">' + meta + '</div>' +
+        (item.reason ? '<div style="font-size:13px;color:#111111;margin-top:8px;"><strong>Reason:</strong> ' + esc(item.reason) + '</div>' : '') +
+        (item.details ? '<div style="font-size:13px;line-height:1.5;color:#555555;margin-top:4px;">' + esc(item.details) + '</div>' : '') +
+      '</td></tr></table>';
+  }).join('');
+}
+function returnTextItems(ret) {
+  return (ret.items || []).map(i => '- ' + (i.name || 'Item') + ' (' + (i.brand || '') + ') x' + (Number(i.qty) || 1) + (i.reason ? ': ' + i.reason : '')).join('\n');
+}
+function returnStatusUrl(ctx, ret) {
+  return ctx.siteUrl + '/pages/log-a-return?return=' + encodeURIComponent(ret.returnNumber || '');
+}
+
+// Customer: we have your request.
+function returnRequested(ret, ctx) {
+  const first = String(ret.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const intro = 'we’ve received your return request for order #' + (ret.orderNumber || '') + '. Our team will review it and email you with the next steps. Please keep the item, with its tags and packaging, until then.';
+  const html = shell({
+    logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
+    title: 'Return request received',
+    preheader: 'Return ' + ret.returnNumber + ' for order #' + ret.orderNumber + ' is under review.',
+    bannerHtml: '<strong>Return request received</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Return ' + esc(ret.returnNumber) + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ret.orderNumber) + '</div>' +
+        button('Check return status', returnStatusUrl(ctx, ret)),
+      title('Items to return') + returnItemsBlock(ret, ctx),
+      '<div style="font-size:13px;line-height:1.6;color:#555555;">Please don’t send anything back yet. We’ll email you once your return has been reviewed, with instructions for sending it.</div>'
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = 'Return request received\n\nHi ' + first + ', ' + intro + '\n\nReturn ' + ret.returnNumber + '\nOrder #' + ret.orderNumber + '\n\n' + returnTextItems(ret) +
+    '\n\nCheck return status: ' + returnStatusUrl(ctx, ret);
+  return { subject: 'Return request received (' + ret.returnNumber + ')', html, text };
+}
+
+// Team and brand copy of a request (and of a brand's dispute).
+function returnForStaff(ret, ctx, opts) {
+  opts = opts || {};
+  const heading = opts.heading || 'Return request';
+  const intro = opts.dispute
+    ? opts.dispute + ' Review it in Admin → Returns before deciding.'
+    : (opts.brand ? 'A customer has asked to return the item(s) below from your brand. Please review the reason and photos in Admin → Returns and accept or dispute the return. Janedore will make the final decision.'
+      : 'A customer has asked to return the item(s) below. Review the photos and the brand’s response in Admin → Returns, then approve or decline.');
+  const photos = (ret.photos || []).slice(0, 6).map(u => '<a href="' + esc(u) + '" style="display:inline-block;margin:0 8px 8px 0;"><img src="' + esc(u) + '" width="88" height="88" alt="Customer photo" style="display:block;width:88px;height:88px;object-fit:cover;background:#f4f4f4;border:0;"></a>').join('');
+  const html = shell({
+    logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
+    title: heading,
+    preheader: heading + ': ' + ret.returnNumber + ' for order #' + ret.orderNumber,
+    bannerHtml: '<strong>' + esc(heading) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Return ' + esc(ret.returnNumber) + ' · Order #' + esc(ret.orderNumber) + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:4px;">' + esc(ret.customerName || '') + '</div>' +
+        button('Open Returns in Admin', ctx.siteUrl + '/admin'),
+      title('Items') + returnItemsBlock(ret, ctx),
+      photos ? title('Customer photos') + '<div>' + photos + '</div>' : '',
+      ret.note ? title('Customer note') + '<div style="font-size:13px;line-height:1.6;color:#555555;">' + esc(ret.note) + '</div>' : ''
+    ].filter(Boolean),
+    footerHtml: 'Sent by Janedore Returns.'
+  });
+  const text = heading + '\n\n' + intro + '\n\nReturn ' + ret.returnNumber + ', order #' + ret.orderNumber + '\n\n' + returnTextItems(ret) + '\n\nAdmin: ' + ctx.siteUrl + '/admin';
+  return { subject: heading + ' (' + ret.returnNumber + ')', html, text };
+}
+
+// Customer: each step after review.
+function returnUpdate(ret, ctx, stage) {
+  const first = String(ret.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const amount = money(ret.refundAmount || 0);
+  const shipping = ret.approval && ret.approval.shipping;
+  const copy = {
+    approved: ['Your return has been approved', 'your return ' + ret.returnNumber + ' has been approved.' +
+      (shipping === 'collection'
+        ? ' We’ll arrange a courier to collect the item from you at no cost, and contact you to confirm a collection date.'
+        : ' Please send the item back at your own cost, using a tracked delivery service, to the address in the instructions below. Keep your proof of postage.') +
+      ' Once we’ve received and checked the item, we’ll process your refund.'],
+    declined: ['Update on your return', 'after reviewing your return ' + ret.returnNumber + ', we’re unable to approve it. Please see the reason below. If you have any questions, reply to this email and our team will assist you.'],
+    received: ['We’ve received your return', 'we’ve received the item(s) for return ' + ret.returnNumber + '. We’ll now process your refund of ' + amount + ' and email you as soon as it has been completed.'],
+    refund_pending: ['We’re processing your refund', 'we’re processing a refund of ' + amount + ' for return ' + ret.returnNumber + '. We’ll email you again as soon as the refund has been completed.'],
+    refunded: ['Your refund has been processed', 'your refund of ' + amount + ' for return ' + ret.returnNumber + ' has been completed and returned to your original payment method. Depending on your bank, it can take up to 10 business days to reflect in your account.']
+  }[stage];
+  const extra = stage === 'declined'
+    ? title('Reason') + '<div style="font-size:14px;line-height:1.6;color:#111111;">' + esc(ret.declineReason || '') + '</div>'
+    : stage === 'approved' && ret.approval && ret.approval.message
+      ? title(shipping === 'collection' ? 'Collection details' : 'Return instructions') + '<div style="font-size:14px;line-height:1.6;color:#111111;white-space:pre-line;">' + esc(ret.approval.message) + '</div>'
+      : '';
+  const html = shell({
+    logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
+    title: copy[0],
+    preheader: copy[0] + ' (' + ret.returnNumber + ')',
+    bannerHtml: '<strong>' + esc(copy[0]) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(copy[1]) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Return ' + esc(ret.returnNumber) + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ret.orderNumber) + '</div>' +
+        button('Check return status', returnStatusUrl(ctx, ret)),
+      extra,
+      ['received', 'refund_pending', 'refunded'].includes(stage) ? title('Refund') + rows(row('Refund amount', amount, { big: true, bold: true }) + row('Refund to', 'Original payment method (PayFast)')) : '',
+      title('Items') + returnItemsBlock(ret, ctx)
+    ].filter(Boolean),
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = copy[0] + '\n\nHi ' + first + ', ' + copy[1] +
+    (stage === 'declined' ? '\n\nReason: ' + (ret.declineReason || '') : '') +
+    (stage === 'approved' && ret.approval && ret.approval.message ? '\n\n' + ret.approval.message : '') +
+    '\n\nReturn ' + ret.returnNumber + '\n' + returnTextItems(ret) + '\n\nCheck return status: ' + returnStatusUrl(ctx, ret);
+  return { subject: copy[0] + ' (' + ret.returnNumber + ')', html, text };
+}
+
 // Step 1 of a refund: staff chose "Start refund" in admin. Says only that
 // it is being processed; nothing claims the money has moved yet.
 function refundStarted(order, ctx) {
@@ -516,4 +637,4 @@ function reportReceived(report, ctx) {
   return { subject: 'We received your report about ' + brand, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, money };

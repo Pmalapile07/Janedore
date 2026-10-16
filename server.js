@@ -2194,6 +2194,9 @@ app.use(express.static(path.join(__dirname), {
   }
 }));
 
+// Returns: /api/returns* and /api/admin/returns* (returns-api.js).
+require('./returns-api')(app, { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL });
+
 // Catch-all for HTML routing — only sends index.html for clean URLs
 app.get('*', async (req, res) => {
   // If it looks like a file request (.css, .js, .png etc), let it 404

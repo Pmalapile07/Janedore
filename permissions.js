@@ -214,6 +214,7 @@
     homepage:   'homepage',
     content:    'homepage',
     reports:    'vendors',
+    returns:    'orders',
     onlineStore: 'settings',
     analytics:  'analytics',
     devtools:   'devtools'

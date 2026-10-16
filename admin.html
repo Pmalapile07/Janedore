@@ -59,6 +59,7 @@
     <div class="sidebar-section-label">Main</div>
     <button class="sidebar-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="sidebar-icon"><i class="ph-light ph-chart-line"></i></span>Home</button>
     <button class="sidebar-btn" data-tab="orders" onclick="switchTab('orders')"><span class="sidebar-icon"><i class="ph-light ph-folders"></i></span>Orders</button>
+    <button class="sidebar-btn" data-tab="returns" onclick="switchTab('returns')"><span class="sidebar-icon"><i class="ph-light ph-arrow-u-up-left"></i></span>Returns</button>
 
     <div class="sidebar-section-label">Products</div>
     <button class="sidebar-btn" data-tab="products" onclick="switchTab('products')"><span class="sidebar-icon"><i class="ph-light ph-barcode"></i></span>Products</button>
@@ -137,6 +138,8 @@
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._orderTab='draft';switchTab('orders')">Draft orders</button>
       <button class="more-menu-subitem" onclick="closeMoreMenu();window._orderTab='abandoned';switchTab('orders')">Abandoned checkouts</button>
     </div>
+
+    <button class="more-menu-item" data-tab="returns" onclick="closeMoreMenu();switchTab('returns')"><div class="more-menu-icon"><i class="ph-bold ph-arrow-u-up-left"></i></div><div style="flex:1"><div class="more-menu-item-label">Returns</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
 
     <div class="more-menu-item has-children" data-tab="products">
       <button class="more-menu-item-main" onclick="closeMoreMenu();switchTab('products')"><div class="more-menu-icon"><i class="ph-bold ph-tag"></i></div><div style="flex:1"><div class="more-menu-item-label">Products</div></div></button>
@@ -258,6 +261,7 @@ fetch('/api/cloudinary-config')
 <script src="admin-discounts.js"></script>
 <script src="admin-content.js"></script>
 <script src="admin-reports.js"></script>
+<script src="admin-returns.js"></script>
 <script src="admin-devtools.js"></script>
 
 </body>
