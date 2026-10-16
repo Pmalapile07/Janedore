@@ -213,4 +213,5 @@ async function initVendors() {
   renderHomeBrandSpotlight(vendors);
   buildShopByBrand(vendors);
   renderBrandsPage(vendors);
+  if (S.currentPage === 'wishlist' && typeof renderWishlistPage === 'function') renderWishlistPage();
 }
