@@ -1,4 +1,7 @@
 :root {
+  /* Page heading size: the product name on the product page, which every
+     page title and product page / bag section heading follows. */
+  --heading-size: 22px;
   --ui-font-size: 10px !important;
   --ui-letter-spacing: 0.1em;
   --ui-font-weight: 400;
@@ -7,3 +10,5 @@
   --body-font-weight: 300;
   --body-line-height: 1.6;
 }
+
+@media (min-width: 768px) { :root { --heading-size: 28px; } }

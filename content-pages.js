@@ -62,7 +62,7 @@ function renderContentPage(data, slug) {
   if (!data) {
     el.innerHTML = `
       <section style="padding:60px 18px;max-width:800px;margin:0 auto;">
-        <div style="font-family:'Inter',sans-serif;font-size:26px;font-weight:600;margin-bottom:20px;">Page not found</div>
+        <div style="font-family:'Inter',sans-serif;font-size:var(--heading-size);font-weight:600;margin-bottom:20px;">Page not found</div>
         <p style="font-family:'Inter',sans-serif;font-size:12px;line-height:var(--body-line-height);letter-spacing:var(--body-letter-spacing);color:#666;">This page hasn't been added yet.</p>
       </section>
     `;
@@ -74,7 +74,7 @@ function renderContentPage(data, slug) {
 
   el.innerHTML = `
     <section style="padding:60px 18px;max-width:800px;margin:0 auto;">
-      <div style="font-family:'Inter',sans-serif;font-size:26px;font-weight:600;margin-bottom:24px;">${escapeHTML(title)}</div>
+      <div style="font-family:'Inter',sans-serif;font-size:var(--heading-size);font-weight:600;margin-bottom:24px;">${escapeHTML(title)}</div>
       <div style="font-family:'Inter',sans-serif;font-size:12px;line-height:var(--body-line-height);letter-spacing:var(--body-letter-spacing);color:#333;">${content}</div>
     </section>
   `;

@@ -89,7 +89,7 @@
 
 .product-title-main {
   font-family: 'Inter', sans-serif;
-  font-size: 22px;
+  font-size: var(--heading-size);
   font-weight: 600;
   color: #111;
   line-height: 1.15;
@@ -429,7 +429,6 @@
 
 @media (min-width: 768px) {
   .product-info { padding: 24px 16px 40px; }
-  .product-title-main { font-size: 28px; }
   .info-accordion-body p,
   .info-accordion-body > div { font-size: 14px; }
 }
