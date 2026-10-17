@@ -208,9 +208,7 @@
   var PAGE_IMAGE_SLOTS = [
     { key: 'heroVideoUrl', label: 'Hero video', ratio: '16/9', video: true, help: 'Plays silently on a loop behind the headline. Keep it short (around 10 to 20 seconds), landscape and under 100 MB; sound is removed. When set, it replaces the hero image, which is then used as the still frame for visitors with reduced motion or data saver on.' },
     { key: 'heroImageUrl', label: 'Hero image', ratio: '4/5', help: 'At the top of the page, beside the headline on desktop and above it on mobile. A portrait image works best. Without one, the hero is text only.' },
-    { key: 'propositionImageUrl', label: 'Why brands join JANEDORE', ratio: '16/9', help: 'Under the paragraph that introduces why brands join. A landscape image works best.' },
     { key: 'selectionImageUrl', label: 'What we look for', ratio: '16/9', help: 'Under the paragraph that introduces what we look for. A landscape image works best.' },
-    { key: 'termsImageUrl', label: 'Clear terms, agreed first', ratio: '16/9', help: 'Under the paragraph that introduces the commercial terms. A landscape image works best.' }
   ];
 
   function pageImagePreviewHtml(url, ratio, video) {

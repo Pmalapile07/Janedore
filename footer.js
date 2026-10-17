@@ -8,7 +8,8 @@ function buildFooter(id) {
       title: "The Company",
       links: [
         { label: "About JANEDORE Ltd.", slug: "about" },
-        { label: "Brand Partnerships", slug: "brand-partnerships" },
+        // Hidden while BRAND_PARTNERSHIPS_LIVE is false (brand-partnerships.js).
+        { label: "Brand Partnerships", slug: "brand-partnerships", hidden: typeof BRAND_PARTNERSHIPS_LIVE !== 'undefined' && !BRAND_PARTNERSHIPS_LIVE },
         { label: "Sustainability", slug: "sustainability" }
       ]
     },
@@ -48,7 +49,7 @@ function buildFooter(id) {
 
         <div class="footer-collapse-body">
           <ul class="footer-links">
-            ${section.links.map(link => `
+            ${section.links.filter(link => !link.hidden).map(link => `
               <li>
                 <a onclick="navigateToContentPage(\'${link.slug}\')">${link.label}</a>
               </li>

@@ -28,7 +28,9 @@ function renderPartnerApplicationPage(tab) {
   if (!el) return;
   const params = new URLSearchParams(window.location.search);
   const ref = (params.get('ref') || (window._paOpenStatus && _paRef) || '').trim();
-  const wantsStatus = tab === 'status' || (!tab && (ref || window._paOpenStatus));
+  // While Brand Partnerships is hidden, only the status check is offered.
+  const live = typeof BRAND_PARTNERSHIPS_LIVE === 'undefined' || BRAND_PARTNERSHIPS_LIVE;
+  const wantsStatus = !live || tab === 'status' || (!tab && (ref || window._paOpenStatus));
   window._paOpenStatus = false;
   if (wantsStatus) { renderPartnerStatus(el, ref); return; }
   // The application form is part of Brand Partnerships now.
@@ -131,6 +133,7 @@ function initPartnerForm() {
 }
 
 function partnerTabsHtml(tab) {
+  if (typeof BRAND_PARTNERSHIPS_LIVE !== 'undefined' && !BRAND_PARTNERSHIPS_LIVE) return '';
   return `<div class="wish-tabs account-tabs" role="tablist">
     <button type="button" role="tab" class="wish-tab${tab === 'apply' ? ' active' : ''}" onclick="renderPartnerApplicationPage('apply')">Apply</button>
     <button type="button" role="tab" class="wish-tab${tab === 'status' ? ' active' : ''}" onclick="renderPartnerApplicationPage('status')">Check application status</button>
@@ -148,7 +151,7 @@ function renderPartnerStatus(el, ref) {
   const email = _paEmail || (user && !user.isAnonymous && user.email) || '';
   el.innerHTML = `
     <section class="track-page pa-page">
-      <span class="track-link pa-back" onclick="navigateToContentPage('brand-partnerships')">Brand Partnerships</span>
+      ${typeof BRAND_PARTNERSHIPS_LIVE === 'undefined' || BRAND_PARTNERSHIPS_LIVE ? `<span class="track-link pa-back" onclick="navigateToContentPage('brand-partnerships')">Brand Partnerships</span>` : ''}
       <h1 class="track-title">Partner Application</h1>
       ${partnerTabsHtml('status')}
       <p class="track-intro">Enter your application reference and the email address you applied with.</p>
