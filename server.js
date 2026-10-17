@@ -1604,80 +1604,6 @@ function injectCacheBust(html) {
 }
 
 // Read by index.html's stale-tab check. Never cached.
-// ==================== PARTNER APPLICATIONS ====================
-// /pages/partner-application (partner-application.js). Saved to
-// partnerApplications, emailed to the team with reply-to set to the
-// applicant, and confirmed to the applicant. Images must be on our own
-// Cloudinary account. 3 applications an hour per IP; the hidden "hp"
-// field catches bots.
-const PA_LISTS = {
-  categories: ['Clothing', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Fragrance and beauty', 'Homeware', 'Other'],
-  priceBand: ['Under R500', 'R500 to R1,500', 'R1,500 to R5,000', 'Over R5,000'],
-  channels: ['Own website', 'Social media', 'Own store or studio', 'Other retailers or stockists', 'Markets and pop-ups', 'Not selling yet'],
-  rangeSize: ['1 to 10 products', '11 to 50 products', '51 to 200 products', 'More than 200 products'],
-  fulfilment: ['We pack and ship orders ourselves', 'We use a fulfilment or courier partner', 'We are still setting this up']
-};
-const partnerHits = new Map();
-app.post('/api/partner-applications', async (req, res) => {
-  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-  const b = req.body || {};
-  if (b.hp) return res.json({ ok: true, reference: '' });
-  const ip = String(req.ip || '');
-  const now = Date.now();
-  const hits = (partnerHits.get(ip) || []).filter((t) => now - t < 60 * 60 * 1000);
-  if (hits.length >= 3) return res.status(429).json({ error: 'Too many applications from this connection. Please try again later.' });
-
-  const str = (v, n) => String(v || '').trim().substring(0, n);
-  const pick = (v, list) => list.indexOf(v) !== -1 ? v : '';
-  const pickMany = (v, list) => (Array.isArray(v) ? v : []).filter((x) => list.indexOf(x) !== -1).filter((x, i, a) => a.indexOf(x) === i);
-  const cloud = process.env.CLOUDINARY_CLOUD_NAME || '';
-  const a = {
-    brandName: str(b.brandName, 100), website: str(b.website, 200), instagram: str(b.instagram, 100),
-    location: str(b.location, 100), founded: /^\d{4}$/.test(str(b.founded, 4)) ? str(b.founded, 4) : '',
-    categories: pickMany(b.categories, PA_LISTS.categories), priceBand: pick(b.priceBand, PA_LISTS.priceBand), story: str(b.story, 3000),
-    channels: pickMany(b.channels, PA_LISTS.channels), rangeSize: pick(b.rangeSize, PA_LISTS.rangeSize), fulfilment: pick(b.fulfilment, PA_LISTS.fulfilment), goals: str(b.goals, 1500),
-    images: (Array.isArray(b.images) ? b.images : []).map(String).filter((u) => /^https:\/\/res\.cloudinary\.com\//.test(u) && (!cloud || u.indexOf('/' + cloud + '/') !== -1)).slice(0, 6),
-    contactName: str(b.contactName, 100), role: str(b.role, 100), email: str(b.email, 200).toLowerCase(), phone: str(b.phone, 30)
-  };
-  if (a.website && !/^https?:\/\//i.test(a.website)) a.website = 'https://' + a.website;
-  const missing =
-    !a.brandName ? 'Please enter your brand name.' :
-    !a.location ? 'Please tell us where your brand is based.' :
-    !a.categories.length ? 'Please choose at least one product category.' :
-    !a.priceBand ? 'Please choose your average retail price.' :
-    !a.story ? 'Please give us an overview of your brand.' :
-    !a.channels.length ? 'Please choose your current sales channels.' :
-    !a.rangeSize ? 'Please choose the size of your current range.' :
-    !a.fulfilment ? 'Please tell us how you fulfil orders.' :
-    !a.images.length ? 'Please add at least one product image.' :
-    !a.contactName ? 'Please enter your full name.' :
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email) ? 'Please enter a valid email address.' :
-    !a.phone ? 'Please enter your phone number.' :
-    b.consent !== true ? 'Please confirm the declaration at the bottom of the form.' : '';
-  if (missing) return res.status(400).json({ error: missing });
-  hits.push(now);
-  partnerHits.set(ip, hits);
-
-  try {
-    a.reference = 'PA-' + String(Math.floor(100000 + Math.random() * 900000));
-    await adminDb.collection('partnerApplications').add(Object.assign({}, a, {
-      status: 'new', consent: true, createdAt: admin.firestore.FieldValue.serverTimestamp()
-    }));
-    const assets = await getBrandAssets().catch(() => ({}));
-    const ctx = { siteUrl: SITE_URL, logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : '', logoFontUrl: assets.logoFont || '' };
-    const team = orderEmails.partnerApplicationForStaff(a, ctx);
-    const copy = orderEmails.partnerApplicationReceived(a, ctx);
-    // No admin screen for applications yet, so the team email must go out.
-    await sendResendEmail({ from: 'Janedore Partnerships <noreply@janedore.co.za>', replyTo: a.email, to: ORDER_ALERT_EMAIL, subject: team.subject, html: team.html, text: team.text });
-    sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: a.email, subject: copy.subject, html: copy.html, text: copy.text })
-      .catch((e) => console.error('[PARTNER_APP] Confirmation failed:', e.message));
-    res.json({ ok: true, reference: a.reference });
-  } catch (e) {
-    console.error('[PARTNER_APP] Error:', e.message);
-    res.status(500).json({ error: 'We couldn’t submit your application. Please try again.' });
-  }
-});
-
 // ==================== CUSTOMER CARE ====================
 // The contact form on /pages/customer-care (customer-care.js). Saved to
 // contactMessages and emailed to the team with reply-to set to the
@@ -2320,6 +2246,7 @@ app.use(express.static(path.join(__dirname), {
 
 // Returns: /api/returns* and /api/admin/returns* (returns-api.js).
 require('./returns-api')(app, { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL });
+require('./partner-applications-api')(app, { adminDb, admin, sendResendEmail, orderEmails, ORDER_ALERT_EMAIL, SITE_URL, getBrandAssets, logoImageUrl });
 
 // Catch-all for HTML routing — only sends index.html for clean URLs
 app.get('*', async (req, res) => {

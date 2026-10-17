@@ -731,6 +731,13 @@ function partnerApplicationForStaff(a, ctx) {
   return { subject: 'Partner application: ' + a.brandName + ' (' + a.reference + ')', html, text };
 }
 
+function partnerStatusUrl(a, ctx) {
+  return ctx.siteUrl + '/pages/partner-application?ref=' + encodeURIComponent(a.reference);
+}
+
+const PARTNER_FOOTER = (a) => 'Questions about your application? Reply to this email and quote ' + esc(a.reference) + '.<br>Janedore · janedore.co.za';
+const para = (html) => '<div style="font-size:14px;line-height:1.7;color:#555555;">' + html + '</div>';
+
 function partnerApplicationReceived(a, ctx) {
   const first = String(a.contactName || '').split(' ')[0];
   const html = shell({
@@ -740,19 +747,72 @@ function partnerApplicationReceived(a, ctx) {
     preheader: 'Thank you for applying to partner with Janedore. Your reference is ' + a.reference + '.',
     bannerHtml: '<strong>Application received</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Dear ' + esc(first) + ',<br><br>Thank you for your interest in partnering with JANEDORE. We have received the application for <strong style="color:#111111;">' + esc(a.brandName) +
-        '</strong>.<br><br>Our partnerships team reviews every application carefully against our partnership criteria. If your brand is shortlisted, we will contact you to discuss the next steps.</div>',
+      para('Dear ' + esc(first) + ',<br><br>Thank you for your interest in partnering with JANEDORE. We have received the application for <strong style="color:#111111;">' + esc(a.brandName) +
+        '</strong>.<br><br>Our partnerships team reviews every application carefully against our partnership criteria, and we will email you as soon as a decision has been made.'),
       title('Your application') + rows(
         row('Reference', esc(a.reference), { semi: true }) +
         row('Brand', esc(a.brandName), { semi: true }) +
-        row('Categories', esc(a.categories.join(', ')), { semi: true }))
+        row('Categories', esc((a.categories || []).join(', ')), { semi: true })) +
+        button('Check application status', partnerStatusUrl(a, ctx))
     ],
-    footerHtml: 'Questions about your application? Reply to this email and quote ' + esc(a.reference) + '.<br>Janedore · janedore.co.za'
+    footerHtml: PARTNER_FOOTER(a)
   });
   const text = 'Application received\n\nDear ' + first + ',\n\nThank you for your interest in partnering with JANEDORE. We have received the application for ' + a.brandName +
-    '.\n\nOur partnerships team reviews every application carefully against our partnership criteria. If your brand is shortlisted, we will contact you to discuss the next steps.\n\nReference: ' + a.reference +
-    '\n\nQuestions? Reply to this email and quote ' + a.reference + '.';
+    '.\n\nOur partnerships team reviews every application carefully against our partnership criteria, and we will email you as soon as a decision has been made.\n\nReference: ' + a.reference +
+    '\nCheck your application status: ' + partnerStatusUrl(a, ctx) + '\n\nQuestions? Reply to this email and quote ' + a.reference + '.';
   return { subject: 'Your JANEDORE partner application (' + a.reference + ')', html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, money };
+// Decision emails: accepted, conditional (Accepted with conditions), declined.
+function partnerApplicationUpdate(a, ctx) {
+  const first = String(a.contactName || '').split(' ')[0];
+  const brand = esc(a.brandName);
+  const note = a.decisionMessage ? '<div style="font-size:14px;line-height:1.7;color:#111111;white-space:pre-wrap;border-left:3px solid ' + GREEN + ';padding:4px 0 4px 14px;margin-top:16px;">' + esc(a.decisionMessage) + '</div>' : '';
+  const conditions = (a.conditions || []);
+  const copy = {
+    accepted: {
+      subject: 'Welcome to JANEDORE: your application has been accepted (' + a.reference + ')',
+      banner: 'Your application has been accepted',
+      body: 'Dear ' + esc(first) + ',<br><br>We are delighted to confirm that <strong style="color:#111111;">' + brand + '</strong> has been accepted as a JANEDORE brand partner.' +
+        '<br><br>Your brand reflects the quality, design integrity and point of view we look for, and we look forward to presenting it to our customers.',
+      next: 'A member of our partnerships team will be in touch shortly to agree commercial terms and begin onboarding, including setting up your brand page, your partner dashboard and your first product listings.',
+      textBody: 'We are delighted to confirm that ' + a.brandName + ' has been accepted as a JANEDORE brand partner.\n\nYour brand reflects the quality, design integrity and point of view we look for, and we look forward to presenting it to our customers.'
+    },
+    conditional: {
+      subject: 'Your JANEDORE application: accepted with conditions (' + a.reference + ')',
+      banner: 'Accepted with conditions',
+      body: 'Dear ' + esc(first) + ',<br><br>Thank you for your patience while we reviewed the application for <strong style="color:#111111;">' + brand + '</strong>.' +
+        '<br><br>We see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, we ask that you address the points below, so that your brand is presented to the standard our customers expect.',
+      next: 'Once you have made these changes, simply reply to this email with an update, including any new photography or details. Our team will review your update and confirm the next steps.',
+      textBody: 'Thank you for your patience while we reviewed the application for ' + a.brandName + '.\n\nWe see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, we ask that you address the points below, so that your brand is presented to the standard our customers expect.'
+    },
+    declined: {
+      subject: 'An update on your JANEDORE application (' + a.reference + ')',
+      banner: 'An update on your application',
+      body: 'Dear ' + esc(first) + ',<br><br>Thank you for applying to partner with JANEDORE, and for the time you took to share <strong style="color:#111111;">' + brand + '</strong> with us.' +
+        '<br><br>After careful consideration, we are unable to offer a partnership at this time. We receive many strong applications and can only onboard a limited number of brands, so this decision is not always a reflection of the quality of your work.',
+      next: 'As your brand grows, you are very welcome to apply again in the future. We wish you every success.',
+      textBody: 'Thank you for applying to partner with JANEDORE, and for the time you took to share ' + a.brandName + ' with us.\n\nAfter careful consideration, we are unable to offer a partnership at this time. We receive many strong applications and can only onboard a limited number of brands, so this decision is not always a reflection of the quality of your work.'
+    }
+  }[a.status];
+  const conditionsCard = a.status === 'conditional'
+    ? title('What we ask you to address') + '<ol style="margin:0;padding:0 0 0 20px;font-size:14px;line-height:1.7;color:#111111;">' + conditions.map((c) => '<li style="margin:0 0 8px;">' + esc(c) + '</li>').join('') + '</ol>'
+    : '';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: copy.banner,
+    preheader: copy.banner + ' (' + a.reference + ')',
+    bannerHtml: '<strong>' + esc(copy.banner) + '</strong>',
+    cards: [para(copy.body) + note]
+      .concat(conditionsCard ? [conditionsCard] : [])
+      .concat([title(a.status === 'declined' ? 'Looking ahead' : 'Next steps') + para(esc(copy.next)) + button('View application status', partnerStatusUrl(a, ctx))]),
+    footerHtml: PARTNER_FOOTER(a)
+  });
+  const text = copy.banner + '\n\nDear ' + first + ',\n\n' + copy.textBody + (a.decisionMessage ? '\n\n' + a.decisionMessage : '') +
+    (a.status === 'conditional' ? '\n\nWhat we ask you to address:\n' + conditions.map((c, i) => (i + 1) + '. ' + c).join('\n') : '') +
+    '\n\n' + copy.next + '\n\nReference: ' + a.reference + '\nApplication status: ' + partnerStatusUrl(a, ctx) + '\n\nQuestions? Reply to this email and quote ' + a.reference + '.';
+  return { subject: copy.subject, html, text };
+}
+
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, money };

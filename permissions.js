@@ -215,6 +215,7 @@
     content:    'homepage',
     reports:    'vendors',
     returns:    'orders',
+    applications: 'vendors',
     onlineStore: 'settings',
     analytics:  'analytics',
     devtools:   'devtools'
@@ -264,6 +265,8 @@
       'content-more-item', // more menu content library
       'reports-tab-btn',   // sidebar brand reports
       'reports-more-item', // more menu brand reports
+      'applications-tab-btn',  // sidebar partner applications
+      'applications-more-item',// more menu partner applications
       // more menu homepage/pages items are folded into the
       // online-store-more-item accordion wrapper (see admin.html),
       // so they no longer have separate ids to gate here.

@@ -72,3 +72,8 @@
 .pa-consent { border-top: 1px solid #e5e5e5; padding: 24px 0 18px; color: #555; }
 .pa-done .track-intro { margin-bottom: 16px; }
 .pa-done .track-btn { margin-top: 12px; }
+.pa-page .account-tabs { margin: 0 0 24px; }
+.pa-conditions { margin: 0; padding: 0 0 0 20px; font-size: 13px; line-height: 1.7; }
+.pa-conditions li { margin: 0 0 8px; }
+.track-step.is-declined .track-step-dot { background: #111; border-color: #111; color: #fff; }
+.pa-page #ps-result:not(:empty) { margin-top: 36px; }

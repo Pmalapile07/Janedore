@@ -19,9 +19,12 @@ const PA_FULFILMENT = ['We pack and ship orders ourselves', 'We use a fulfilment
 let _paImages = [];
 let _paUploading = 0;
 
-function renderPartnerApplicationPage() {
+function renderPartnerApplicationPage(tab) {
   const el = document.getElementById('content-page-body');
   if (!el) return;
+  const ref = (new URLSearchParams(window.location.search).get('ref') || '').trim();
+  tab = tab || (ref ? 'status' : 'apply');
+  if (tab === 'status') { renderPartnerStatus(el, ref); return; }
   _paImages = [];
   _paUploading = 0;
   const user = firebase.auth().currentUser;
@@ -34,6 +37,7 @@ function renderPartnerApplicationPage() {
     <section class="track-page pa-page">
       <span class="track-link pa-back" onclick="navigateToContentPage('brand-partnerships')">Brand Partnerships</span>
       <h1 class="track-title">Partner Application</h1>
+      ${partnerTabsHtml('apply')}
       <p class="track-intro">Tell us about your brand. Our partnerships team reviews every application against our partnership criteria and will contact shortlisted brands to discuss terms. Fields marked * are required.</p>
 
       <form id="pa-form" onsubmit="submitPartnerApplication(event)" oninput="partnerError('')" onchange="partnerError('')" novalidate>
@@ -90,6 +94,103 @@ function renderPartnerApplicationPage() {
       </form>
     </section>`;
   drawPartnerImages();
+}
+
+function partnerTabsHtml(tab) {
+  return `<div class="wish-tabs account-tabs" role="tablist">
+    <button type="button" role="tab" class="wish-tab${tab === 'apply' ? ' active' : ''}" onclick="renderPartnerApplicationPage('apply')">Apply</button>
+    <button type="button" role="tab" class="wish-tab${tab === 'status' ? ' active' : ''}" onclick="renderPartnerApplicationPage('status')">Check application status</button>
+  </div>`;
+}
+
+let _paEmail = '';
+let _paRef = '';
+
+// From the Application received screen straight to its status.
+function openPartnerStatus() {
+  history.replaceState(null, null, '/pages/partner-application?ref=' + encodeURIComponent(_paRef));
+  renderPartnerApplicationPage('status');
+}
+
+function renderPartnerStatus(el, ref) {
+  const user = firebase.auth().currentUser;
+  const email = _paEmail || (user && !user.isAnonymous && user.email) || '';
+  el.innerHTML = `
+    <section class="track-page pa-page">
+      <span class="track-link pa-back" onclick="navigateToContentPage('brand-partnerships')">Brand Partnerships</span>
+      <h1 class="track-title">Partner Application</h1>
+      ${partnerTabsHtml('status')}
+      <p class="track-intro">Enter your application reference and the email address you applied with.</p>
+      <form class="track-form" onsubmit="submitPartnerStatus(event)" novalidate>
+        <label class="track-label" for="ps-ref">Reference</label>
+        <input class="track-input" id="ps-ref" placeholder="PA-123456" autocomplete="off" autocapitalize="characters" value="${escapeHTML(ref || '')}">
+        <label class="track-label" for="ps-email">Email address</label>
+        <input class="track-input" id="ps-email" type="email" placeholder="you@yourbrand.com" autocomplete="email" value="${escapeHTML(email)}">
+        <div class="track-error" id="ps-error" role="alert"></div>
+        <button class="track-btn" id="ps-btn" type="submit">Check Status</button>
+        <p class="track-hint">Your reference begins with PA- and can be found in your confirmation email.</p>
+      </form>
+      <div id="ps-result"></div>
+    </section>`;
+  if (ref && email) submitPartnerStatus();
+}
+
+async function submitPartnerStatus(ev) {
+  if (ev) ev.preventDefault();
+  const reference = document.getElementById('ps-ref').value.trim();
+  const email = document.getElementById('ps-email').value.trim();
+  const err = document.getElementById('ps-error');
+  const showError = msg => { err.textContent = msg || ''; err.style.display = msg ? 'block' : 'none'; };
+  showError('');
+  if (!reference || !email) return showError('Please enter your reference and email address.');
+  const btn = document.getElementById('ps-btn');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const res = await fetch('/api/partner-applications/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reference, email }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    _paEmail = email;
+    document.getElementById('ps-result').innerHTML = partnerStatusHtml(data);
+  } catch (e) {
+    showError(e.message);
+    document.getElementById('ps-result').innerHTML = '';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Check Status';
+  }
+}
+
+const PA_STATUS_COPY = {
+  received: ['Application received', 'Thank you for applying. Your application is in the queue and will be reviewed by our partnerships team.'],
+  under_review: ['Your application is under review', 'Our partnerships team is reviewing your application against our partnership criteria. We will email you as soon as a decision has been made.'],
+  accepted: ['Your application has been accepted', 'Welcome to JANEDORE. A member of our partnerships team will be in touch to agree commercial terms and begin onboarding.'],
+  conditional: ['Accepted with conditions', 'We see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, we ask that you address the points below. Once you have made these changes, reply to your decision email with an update.'],
+  declined: ['An update on your application', 'After careful consideration, we are unable to offer a partnership at this time. As your brand grows, you are very welcome to apply again in the future.']
+};
+
+function partnerStatusHtml(a) {
+  const decided = ['accepted', 'conditional', 'declined'].includes(a.status);
+  const reached = { received: 0, under_review: 1 }[a.status] ?? 2;
+  const outcome = { accepted: 'Accepted', conditional: 'Accepted with conditions', declined: 'Declined' }[a.status] || 'Decision';
+  const steps = ['Application received', 'Under review', outcome].map((label, i) => {
+    const state = i <= reached ? 'done' : i === reached + 1 ? 'current' : '';
+    const declinedStep = i === 2 && a.status === 'declined';
+    return `<div class="track-step ${state}${declinedStep ? ' is-declined' : ''}"><span class="track-step-dot">${state === 'done' ? `<i class="ph ${declinedStep ? 'ph-x' : 'ph-check'}" aria-hidden="true"></i>` : ''}</span><span class="track-step-label">${escapeHTML(label)}</span></div>`;
+  }).join('<div class="track-step-line"></div>');
+  const copy = PA_STATUS_COPY[a.status] || PA_STATUS_COPY.received;
+  const conditions = (a.conditions || []).length
+    ? `<div class="track-card"><div class="account-detail-title">What we ask you to address</div><ol class="pa-conditions">${a.conditions.map(c => `<li>${escapeHTML(c)}</li>`).join('')}</ol></div>` : '';
+  return `<div class="track-result">
+    <div class="track-order-number">${escapeHTML(a.brandName || '')} · ${escapeHTML(a.reference || '')}</div>
+    ${a.createdAt ? `<div class="track-order-meta">Applied ${escapeHTML(trackDate(a.createdAt, true))}${decided && a.decidedAt ? ` · Decision ${escapeHTML(trackDate(a.decidedAt, true))}` : ''}</div>` : ''}
+    <div class="track-heading">${escapeHTML(copy[0])}</div>
+    <div class="track-card">
+      <div class="track-steps">${steps}</div>
+      <p class="track-wait">${escapeHTML(copy[1])}</p>
+      ${a.message ? `<div class="return-instructions"><div class="account-detail-title">A note from our team</div>${escapeHTML(a.message)}</div>` : ''}
+    </div>
+    ${conditions}
+    <p class="account-help">Questions about your application? Email <a class="track-link" href="mailto:support@janedore.co.za">support@janedore.co.za</a> and quote ${escapeHTML(a.reference || '')}.</p>
+  </div>`;
 }
 
 function drawPartnerImages() {
@@ -162,13 +263,16 @@ async function submitPartnerApplication(ev) {
     const res = await fetch('/api/partner-applications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'We couldn’t submit your application. Please try again.');
+    _paEmail = p.email;
+    _paRef = data.reference || '';
     const page = document.querySelector('.pa-page');
     page.innerHTML = `<div class="returns-done pa-done">
       <div class="returns-done-icon"><i class="ph ph-check" aria-hidden="true"></i></div>
       <h1 class="track-title">Application received</h1>
       <p class="track-intro">Thank you for your interest in partnering with JANEDORE. Your reference is <strong>${escapeHTML(data.reference || '')}</strong>, and we’ve sent a confirmation to ${escapeHTML(p.email)}.</p>
       <p class="track-intro">Our partnerships team reviews every application carefully. If your brand is shortlisted, we will contact you to discuss the next steps.</p>
-      <button class="track-btn" type="button" onclick="navigateToContentPage('brand-partnerships')">Back to Brand Partnerships</button>
+      <button class="track-btn" type="button" onclick="openPartnerStatus()">Check Application Status</button>
+      <p class="track-hint"><span class="track-link" onclick="navigateToContentPage('brand-partnerships')">Back to Brand Partnerships</span></p>
     </div>`;
     window.scrollTo(0, 0);
   } catch (e) {
@@ -182,3 +286,5 @@ window.submitPartnerApplication = submitPartnerApplication;
 window.pickPartnerImages = pickPartnerImages;
 window.removePartnerImage = removePartnerImage;
 window.partnerError = partnerError;
+window.submitPartnerStatus = submitPartnerStatus;
+window.openPartnerStatus = openPartnerStatus;
