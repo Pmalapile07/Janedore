@@ -78,3 +78,10 @@
 .track-step.is-declined .track-step-dot { background: #111; border-color: #111; color: #fff; }
 .pa-page #ps-result:not(:empty) { margin-top: 36px; }
 .pa-help { background: #e6edd5; font-size: 13px; line-height: 1.6; padding: 14px 16px; margin-top: 14px; }
+.bp-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 22px; }
+.bp-tags span { font-size: 12px; padding: 7px 14px; border: 1px solid #111; border-radius: 999px; }
+.bp-list-no li::before { background: #111; border-radius: 0; width: 8px; height: 2px; top: 11px; }
+.pa-before { margin: 0 0 28px; line-height: 1.6; }
+.pa-before .track-link { display: inline-block; margin-top: 8px; }
+.pa-support-toggle { margin: 0 0 20px; }
+.pa-consent { display: flex; flex-direction: column; gap: 14px; }

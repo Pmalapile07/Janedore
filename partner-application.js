@@ -10,7 +10,11 @@
 
 const PARTNER_APPLICATION_SLUG = 'partner-application';
 const PA_IMAGE_MAX = 6;
-const PA_CATEGORIES = ['Clothing', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Fragrance and beauty', 'Homeware', 'Other'];
+// Keep in sync with partner-applications-api.js LISTS and the What we
+// carry section on brand-partnerships.js.
+const PA_CATEGORIES = ['Clothing', 'Kidswear', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Beauty', 'Fragrance', 'Homeware'];
+const PA_PRODUCTION = ['Made in advance and held in stock', 'Made to order', 'Both'];
+const PA_SUPPORT_AREAS = ['Product photography', 'Packaging', 'Brand identity', 'Product descriptions', 'Pricing', 'Fulfilment and shipping', 'Something else'];
 const PA_PRICE_BANDS = ['Under R500', 'R500 to R1,500', 'R1,500 to R5,000', 'Over R5,000'];
 const PA_CHANNELS = ['Own website', 'Social media', 'Own store or studio', 'Other retailers or stockists', 'Markets and pop-ups', 'Not selling yet'];
 const PA_RANGE_SIZES = ['1 to 10 products', '11 to 50 products', '51 to 200 products', 'More than 200 products'];
@@ -39,6 +43,11 @@ function renderPartnerApplicationPage(tab) {
       <h1 class="track-title">Partner Application</h1>
       ${partnerTabsHtml('apply')}
       <p class="track-intro">Tell us about your brand. Our partnerships team reviews every application against our partnership criteria and will contact shortlisted brands to discuss terms. Fields marked * are required.</p>
+      <div class="track-notice pa-before">
+        <strong>Before you apply</strong><br>
+        JANEDORE partners only with brands that design their own products. We do not accept dropshipping businesses, resellers of other brands, or counterfeit and replica goods, and we only carry clothing, kidswear, accessories, jewellery, bags, footwear, beauty, fragrance and homeware. Made-to-order brands are welcome, and their products are sold as pre-orders.
+        <span class="track-link" onclick="openPartnershipCarry()">See what we carry and do not accept</span>
+      </div>
 
       <form id="pa-form" onsubmit="submitPartnerApplication(event)" oninput="partnerError('')" onchange="partnerError('')" novalidate>
         <div class="pa-section">
@@ -52,6 +61,9 @@ function renderPartnerApplicationPage(tab) {
           </div>
           <label class="track-label">Product categories *</label>
           ${checks('pa-category', PA_CATEGORIES)}
+          <label class="track-label" for="pa-production">How are your products made? *</label>
+          <select class="track-input" id="pa-production"><option value="">Choose one</option>${opts(PA_PRODUCTION)}</select>
+          <p class="pa-hint">Made-to-order products are sold on JANEDORE as pre-orders, with an estimated dispatch date.</p>
           <label class="track-label" for="pa-price">Average retail price *</label>
           <select class="track-input" id="pa-price"><option value="">Choose a price range</option>${opts(PA_PRICE_BANDS)}</select>
           <label class="track-label" for="pa-story">Brand overview *</label>
@@ -77,7 +89,19 @@ function renderPartnerApplicationPage(tab) {
         </div>
 
         <div class="pa-section">
-          <h2 class="pa-section-title"><span>4</span>Contact details</h2>
+          <h2 class="pa-section-title"><span>4</span>Support to meet our standards</h2>
+          <p class="pa-hint pa-hint-top">Already selling, with customers who love your product, but your presentation is not yet at the standard of our platform? You can still apply. Tell us where you would like support, and we will take it into account when we review your application.</p>
+          <label class="pa-check pa-support-toggle"><input type="checkbox" id="pa-support" onchange="document.getElementById('pa-support-fields').hidden = !this.checked"><span>I would like support from JANEDORE to meet your brand standards</span></label>
+          <div id="pa-support-fields" hidden>
+            <label class="track-label">Where would you like support? *</label>
+            ${checks('pa-support-area', PA_SUPPORT_AREAS)}
+            <label class="track-label" for="pa-support-details">Tell us more</label>
+            <textarea class="track-input return-textarea" id="pa-support-details" maxlength="1500" placeholder="For example, your current customer base and sales, and what you would like help with."></textarea>
+          </div>
+        </div>
+
+        <div class="pa-section">
+          <h2 class="pa-section-title"><span>5</span>Contact details</h2>
           <div class="pa-row">
             <div>${field('pa-name', 'Full name *', `maxlength="100" autocomplete="name" value="${escapeHTML((signedIn && user.displayName) || '')}"`)}</div>
             <div>${field('pa-role', 'Role', 'maxlength="100" placeholder="Founder, Director"')}</div>
@@ -86,7 +110,10 @@ function renderPartnerApplicationPage(tab) {
           ${field('pa-phone', 'Phone number *', 'type="tel" maxlength="30" autocomplete="tel"')}
         </div>
 
-        <label class="pa-check pa-consent"><input type="checkbox" id="pa-consent"><span>I confirm that the information provided is accurate, and I agree to JANEDORE contacting me about this application.</span></label>
+        <div class="pa-consent">
+          <label class="pa-check"><input type="checkbox" id="pa-own-products"><span>I confirm that my brand designs its own products, and that we are not a dropshipping business, a reseller of other brands, or a seller of counterfeit or replica goods. *</span></label>
+          <label class="pa-check"><input type="checkbox" id="pa-consent"><span>I confirm that the information provided is accurate, and I agree to JANEDORE contacting me about this application. *</span></label>
+        </div>
         <input type="text" id="pa-website-hp" class="care-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="track-error" id="pa-error" role="alert"></div>
         <button class="track-btn" id="pa-btn" type="submit">Submit Application</button>
@@ -94,6 +121,12 @@ function renderPartnerApplicationPage(tab) {
       </form>
     </section>`;
   drawPartnerImages();
+}
+
+// Brand Partnerships, scrolled to What we carry / What we do not accept.
+function openPartnershipCarry() {
+  navigateToContentPage('brand-partnerships');
+  setTimeout(() => { const el = document.getElementById('bp-carry'); if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 140); }, 50);
 }
 
 function partnerTabsHtml(tab) {
@@ -234,7 +267,9 @@ async function submitPartnerApplication(ev) {
   const checked = name => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(c => c.value);
   const p = {
     brandName: val('pa-brand'), website: val('pa-website'), instagram: val('pa-instagram'), location: val('pa-location'), founded: val('pa-founded'),
-    categories: checked('pa-category'), priceBand: val('pa-price'), story: val('pa-story'),
+    categories: checked('pa-category'), production: val('pa-production'), priceBand: val('pa-price'), story: val('pa-story'),
+    supportRequested: document.getElementById('pa-support').checked, supportAreas: checked('pa-support-area'), supportDetails: val('pa-support-details'),
+    ownProducts: document.getElementById('pa-own-products').checked,
     channels: checked('pa-channel'), rangeSize: val('pa-range'), fulfilment: val('pa-fulfilment'), goals: val('pa-goals'),
     images: _paImages.slice(),
     contactName: val('pa-name'), role: val('pa-role'), email: val('pa-email'), phone: val('pa-phone'),
@@ -245,6 +280,7 @@ async function submitPartnerApplication(ev) {
     !p.brandName ? 'Please enter your brand name.' :
     !p.location ? 'Please tell us where your brand is based.' :
     !p.categories.length ? 'Please choose at least one product category.' :
+    !p.production ? 'Please tell us how your products are made.' :
     !p.priceBand ? 'Please choose your average retail price.' :
     !p.story ? 'Please give us an overview of your brand.' :
     !p.channels.length ? 'Please choose your current sales channels.' :
@@ -255,6 +291,8 @@ async function submitPartnerApplication(ev) {
     !p.contactName ? 'Please enter your full name.' :
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email) ? 'Please enter a valid email address.' :
     !p.phone ? 'Please enter your phone number.' :
+    p.supportRequested && !p.supportAreas.length ? 'Please choose where you would like support.' :
+    !p.ownProducts ? 'Please confirm that your brand designs its own products and does not dropship.' :
     !p.consent ? 'Please confirm the declaration at the bottom of the form.' : '';
   if (missing) { partnerError(missing); return; }
 
@@ -289,3 +327,4 @@ window.removePartnerImage = removePartnerImage;
 window.partnerError = partnerError;
 window.submitPartnerStatus = submitPartnerStatus;
 window.openPartnerStatus = openPartnerStatus;
+window.openPartnershipCarry = openPartnershipCarry;

@@ -11,7 +11,9 @@
 // and writes them, so no Firestore rules change is needed.
 
 const LISTS = {
-  categories: ['Clothing', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Fragrance and beauty', 'Homeware', 'Other'],
+  categories: ['Clothing', 'Kidswear', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Beauty', 'Fragrance', 'Homeware'],
+  production: ['Made in advance and held in stock', 'Made to order', 'Both'],
+  supportAreas: ['Product photography', 'Packaging', 'Brand identity', 'Product descriptions', 'Pricing', 'Fulfilment and shipping', 'Something else'],
   priceBand: ['Under R500', 'R500 to R1,500', 'R1,500 to R5,000', 'Over R5,000'],
   channels: ['Own website', 'Social media', 'Own store or studio', 'Other retailers or stockists', 'Markets and pop-ups', 'Not selling yet'],
   rangeSize: ['1 to 10 products', '11 to 50 products', '51 to 200 products', 'More than 200 products'],
@@ -67,7 +69,9 @@ module.exports = function registerPartnerApplications(app, deps) {
     const a = {
       brandName: str(b.brandName, 100), website: str(b.website, 200), instagram: str(b.instagram, 100),
       location: str(b.location, 100), founded: /^\d{4}$/.test(str(b.founded, 4)) ? str(b.founded, 4) : '',
-      categories: pickMany(b.categories, LISTS.categories), priceBand: pick(b.priceBand, LISTS.priceBand), story: str(b.story, 3000),
+      categories: pickMany(b.categories, LISTS.categories), production: pick(b.production, LISTS.production), priceBand: pick(b.priceBand, LISTS.priceBand), story: str(b.story, 3000),
+      supportRequested: b.supportRequested === true, supportAreas: b.supportRequested === true ? pickMany(b.supportAreas, LISTS.supportAreas) : [],
+      supportDetails: b.supportRequested === true ? str(b.supportDetails, 1500) : '',
       channels: pickMany(b.channels, LISTS.channels), rangeSize: pick(b.rangeSize, LISTS.rangeSize), fulfilment: pick(b.fulfilment, LISTS.fulfilment), goals: str(b.goals, 1500),
       images: (Array.isArray(b.images) ? b.images : []).map(String).filter((u) => /^https:\/\/res\.cloudinary\.com\//.test(u) && (!cloud || u.indexOf('/' + cloud + '/') !== -1)).slice(0, 6),
       contactName: str(b.contactName, 100), role: str(b.role, 100), email: str(b.email, 200).toLowerCase(), phone: str(b.phone, 30)
@@ -77,6 +81,7 @@ module.exports = function registerPartnerApplications(app, deps) {
       !a.brandName ? 'Please enter your brand name.' :
       !a.location ? 'Please tell us where your brand is based.' :
       !a.categories.length ? 'Please choose at least one product category.' :
+      !a.production ? 'Please tell us how your products are made.' :
       !a.priceBand ? 'Please choose your average retail price.' :
       !a.story ? 'Please give us an overview of your brand.' :
       !a.channels.length ? 'Please choose your current sales channels.' :
@@ -86,6 +91,8 @@ module.exports = function registerPartnerApplications(app, deps) {
       !a.contactName ? 'Please enter your full name.' :
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email) ? 'Please enter a valid email address.' :
       !a.phone ? 'Please enter your phone number.' :
+      a.supportRequested && !a.supportAreas.length ? 'Please choose where you would like support.' :
+      b.ownProducts !== true ? 'Please confirm that your brand designs its own products and does not dropship.' :
       b.consent !== true ? 'Please confirm the declaration at the bottom of the form.' : '';
     if (missing) return res.status(400).json({ error: missing });
 
@@ -96,7 +103,7 @@ module.exports = function registerPartnerApplications(app, deps) {
         a.reference = 'PA-' + String(Math.floor(100000 + Math.random() * 900000));
         try {
           await col().doc(a.reference).create(Object.assign({}, a, {
-            status: 'received', consent: true, createdAt: nowIso(),
+            status: 'received', consent: true, ownProductsConfirmed: true, createdAt: nowIso(),
             timeline: [{ at: nowIso(), status: 'received', text: 'Application received.' }]
           }));
           saved = true;

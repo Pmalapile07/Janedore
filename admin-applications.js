@@ -95,7 +95,8 @@
     var head = '<div class="report-card-head return-card-head" onclick="window._toggleApplication(\'' + esc(a.id) + '\')">' +
       '<div><div class="report-brand">' + esc(a.brandName) + ' · ' + esc(a.reference || a.id) + '</div>' +
       '<div class="report-reason">' + esc((a.categories || []).join(', ')) + ' · ' + esc(a.priceBand || '') + ' · ' + esc(a.location || '') + '</div>' +
-      '<div class="report-meta">' + esc(fmtDate(a.createdAt)) + ' · ' + esc(a.contactName || '') + '</div></div>' +
+      '<div class="report-meta">' + esc(fmtDate(a.createdAt)) + ' · ' + esc(a.contactName || '') +
+        (a.supportRequested ? ' · <strong class="return-flag">Support requested</strong>' : '') + '</div></div>' +
       '<span class="badge badge-' + esc(st[1]) + '">' + esc(st[0]) + '</span>' +
     '</div>';
     if (!expanded) return '<div class="card report-card return-card">' + head + '</div>';
@@ -106,7 +107,9 @@
       (a.website ? 'Website: ' + link(a.website) + '<br>' : '') +
       (ig ? 'Instagram: ' + link('https://instagram.com/' + ig, '@' + ig) + '<br>' : '') +
       'Based in: ' + esc(a.location || '') + (a.founded ? ' · Founded ' + esc(a.founded) : '') + '<br>' +
-      'Categories: ' + esc((a.categories || []).join(', ')) + '<br>Average price: ' + esc(a.priceBand || '') +
+      'Categories: ' + esc((a.categories || []).join(', ')) + '<br>' +
+      (a.production ? 'Production: ' + esc(a.production) + (a.production !== 'Made in advance and held in stock' ? ' (sold as pre-orders)' : '') + '<br>' : '') +
+      'Average price: ' + esc(a.priceBand || '') +
       '<br><br><span class="return-pre">' + esc(a.story || '') + '</span></div>';
     var ops = '<div class="report-details">Channels: ' + esc((a.channels || []).join(', ')) + '<br>Range: ' + esc(a.rangeSize || '') + '<br>Fulfilment: ' + esc(a.fulfilment || '') +
       (a.goals ? '<br><br><span class="return-pre">' + esc(a.goals) + '</span>' : '') + '</div>';
@@ -130,6 +133,8 @@
       '<div class="return-admin-body">' +
         section('Brand', brand) +
         section('Sales and operations', ops) +
+        (a.supportRequested ? section('Support requested', '<div class="report-details">' + esc((a.supportAreas || []).join(', ')) +
+          (a.supportDetails ? '<br><br><span class="return-pre">' + esc(a.supportDetails) + '</span>' : '') + '</div>') : '') +
         (images ? section('Product imagery', '<div class="return-admin-photos">' + images + '</div>') : '') +
         section('Contact', contact) +
         decision +

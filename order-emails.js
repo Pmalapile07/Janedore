@@ -86,7 +86,7 @@ function shell(opts) {
       '</td></tr>' +
       (opts.bannerHtml ? '<tr><td style="background:' + GREEN_TINT + ';padding:16px 24px;font-size:14px;line-height:1.5;color:#111111;">' + opts.bannerHtml + '</td></tr>' : '') +
       '<tr><td style="padding:16px;">' +
-        opts.cards.map(c => '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;margin:0 0 16px;"><tr><td style="padding:20px;">' + c + '</td></tr></table>').join('') +
+        opts.cards.filter(Boolean).map(c => '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;margin:0 0 16px;"><tr><td style="padding:20px;">' + c + '</td></tr></table>').join('') +
       '</td></tr>' +
       '<tr><td style="padding:4px 24px 40px;font-size:12px;line-height:1.7;color:#888888;text-align:center;">' +
         (opts.footerHtml || '') +
@@ -709,6 +709,7 @@ function partnerApplicationForStaff(a, ctx) {
         (a.website ? row('Website', link(a.website), { semi: true }) : '') +
         (ig ? row('Instagram', link('https://instagram.com/' + ig, '@' + ig), { semi: true }) : '') +
         row('Categories', esc(a.categories.join(', ')), { semi: true }) +
+        row('Production', esc(a.production || ''), { semi: true }) +
         row('Average price', esc(a.priceBand), { semi: true })) +
         '<div style="font-size:14px;line-height:1.6;color:#111111;margin-top:12px;white-space:pre-wrap;">' + esc(a.story) + '</div>',
       title('Sales and operations') + rows(
@@ -716,6 +717,8 @@ function partnerApplicationForStaff(a, ctx) {
         row('Range', esc(a.rangeSize), { semi: true }) +
         row('Fulfilment', esc(a.fulfilment), { semi: true })) +
         (a.goals ? '<div style="font-size:14px;line-height:1.6;color:#111111;margin-top:12px;white-space:pre-wrap;"><strong>Goals:</strong> ' + esc(a.goals) + '</div>' : ''),
+      (a.supportRequested ? title('Support requested') + rows(row('Areas', esc((a.supportAreas || []).join(', ')), { semi: true })) +
+        (a.supportDetails ? '<div style="font-size:14px;line-height:1.6;color:#111111;margin-top:12px;white-space:pre-wrap;">' + esc(a.supportDetails) + '</div>' : '') : ''),
       title('Imagery') + '<div>' + a.images.map((u) => '<a href="' + esc(u) + '"><img src="' + esc(u) + '" width="120" height="120" alt="" style="width:120px;height:120px;object-fit:cover;margin:0 6px 6px 0;border:0;"></a>').join('') + '</div>',
       title('Contact') + rows(
         row('Name', esc(a.contactName) + (a.role ? ', ' + esc(a.role) : ''), { semi: true }) +
@@ -725,8 +728,9 @@ function partnerApplicationForStaff(a, ctx) {
     footerHtml: 'Reply to this email to contact ' + esc(a.contactName) + ' directly.<br>Reference ' + esc(a.reference)
   });
   const text = 'New partner application: ' + a.brandName + ' (' + a.reference + ')\n\nBased in: ' + a.location + (a.founded ? '\nFounded: ' + a.founded : '') +
-    (a.website ? '\nWebsite: ' + a.website : '') + (ig ? '\nInstagram: @' + ig : '') + '\nCategories: ' + a.categories.join(', ') + '\nAverage price: ' + a.priceBand +
+    (a.website ? '\nWebsite: ' + a.website : '') + (ig ? '\nInstagram: @' + ig : '') + '\nCategories: ' + a.categories.join(', ') + '\nProduction: ' + (a.production || '') + '\nAverage price: ' + a.priceBand +
     '\n\n' + a.story + '\n\nChannels: ' + a.channels.join(', ') + '\nRange: ' + a.rangeSize + '\nFulfilment: ' + a.fulfilment + (a.goals ? '\nGoals: ' + a.goals : '') +
+    (a.supportRequested ? '\n\nSupport requested: ' + (a.supportAreas || []).join(', ') + (a.supportDetails ? '\n' + a.supportDetails : '') : '') +
     '\n\nImages:\n' + a.images.join('\n') + '\n\nContact: ' + a.contactName + (a.role ? ', ' + a.role : '') + '\n' + a.email + '\n' + a.phone;
   return { subject: 'Partner application: ' + a.brandName + ' (' + a.reference + ')', html, text };
 }
