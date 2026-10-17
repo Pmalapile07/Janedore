@@ -243,15 +243,68 @@ body.on-brands-page .nav-quick-links {
   .nav-right .nav-icon-btn { display: none; }
 }
 
-#menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 950; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-#menu-backdrop.open { opacity: 1; pointer-events: all; }
-#menu-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 85vw); background: #fff; z-index: 951; transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.08); }
-#menu-drawer.open { transform: translateX(0); }
-.drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; }
-.drawer-close { background: none; border: none; padding: 4px; display: flex; align-items: center; cursor: pointer; }
-.drawer-close svg { width: 18px; height: 18px; stroke: #111; fill: none; stroke-width: 1.5; }
-.drawer-body { flex: 1; overflow-y: auto; padding: 0 24px 20px; display: flex; flex-direction: column; gap: 0; }
-.drawer-spacer { height: 36px; }
+/* ---------- FULL-SCREEN MENU (index.html #menu-drawer) ----------
+   Covers the whole screen like the chat widget. Black header bar matching
+   #main-nav (64px, logo and close), white body with sections, account,
+   wishlist and bag pinned to the bottom. */
+#menu-backdrop { display: none; }
+#menu-drawer {
+  position: fixed; inset: 0; z-index: 1200; background: #fff;
+  display: flex; flex-direction: column; font-family: 'Inter', sans-serif; color: #111;
+  opacity: 0; visibility: hidden; transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+}
+#menu-drawer.open { opacity: 1; visibility: visible; transform: none; transition: opacity 0.25s ease, transform 0.3s ease, visibility 0s; }
+.menu-head {
+  flex-shrink: 0; height: 64px; background: #111; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 12px; padding-top: env(safe-area-inset-top, 0);
+}
+.menu-logo { margin-left: 6px; }
+.menu-logo .nav-logo-text { color: #fff; }
+.menu-close { background: none; border: none; padding: 6px; display: flex; align-items: center; cursor: pointer; }
+.menu-close svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; }
+.menu-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 20px 24px 32px; }
+.menu-search {
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #f4f4f4; border-radius: 24px;
+  font-size: 13px; color: #888; cursor: pointer; margin: 0 0 8px;
+}
+.menu-search i { font-size: 18px; color: #111; }
+.menu-section { padding: 24px 0 8px; border-bottom: 1px solid #eee; }
+.menu-section:last-child { border-bottom: none; }
+.menu-section-title { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #888; margin: 0 0 8px; }
+.menu-link {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 11px 0;
+  background: none; border: none; text-align: left; cursor: pointer; color: #111;
+  font-family: inherit; font-size: 20px; font-weight: 400; letter-spacing: normal; line-height: 1.25;
+}
+.menu-link:active { opacity: 0.6; }
+.menu-link-sm { font-size: 14px; padding: 9px 0; }
+.menu-link-sale { color: #c0392b; }
+.menu-plus { position: relative; width: 12px; height: 12px; flex-shrink: 0; }
+.menu-plus::before, .menu-plus::after { content: ''; position: absolute; left: 0; top: 5px; width: 12px; height: 1.5px; background: #111; transition: transform 0.2s ease; }
+.menu-plus::after { transform: rotate(90deg); }
+.menu-group.open .menu-plus::after { transform: rotate(0deg); }
+.menu-sub { display: none; padding: 2px 0 10px 14px; border-left: 1px solid #e5e5e5; margin: 0 0 6px 2px; }
+.menu-group.open .menu-sub { display: block; }
+.menu-sublink { display: block; padding: 8px 0; font-size: 14px; color: #555; cursor: pointer; }
+.menu-sublink:active { color: #111; }
+.menu-foot {
+  flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #e5e5e5; background: #fff;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.menu-foot-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 4px;
+  background: none; border: none; cursor: pointer; font-family: inherit; font-size: 12px; color: #111;
+}
+.menu-foot-btn + .menu-foot-btn { border-left: 1px solid #eee; }
+.menu-foot-btn i { font-size: 20px; }
+.menu-count { margin-left: 4px; color: #888; }
+@media (min-width: 768px) {
+  .menu-head { padding: 0 16px; }
+  .menu-body { padding: 32px 0 48px; }
+  .menu-body > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+  .menu-foot { max-width: none; }
+}
 
 /* Inter typography for all nav elements */
 .drawer-link, .drawer-section-title, .desktop-nav-link, .utility-text-link, .drawer-title {

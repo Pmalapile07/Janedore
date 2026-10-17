@@ -759,8 +759,31 @@ function initNavScroll() {
 // handles desktop/mobile responsively, so there's no more desktop/mobile
 // URL switching to do here.
 
-function openMenu() { closeFilterPanel(); DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open"); }
-function closeMenu() { DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open"); }
+// Full-screen menu (index.html #menu-drawer). Refreshes the account label
+// and wishlist/bag counts each time it opens, and freezes the page behind
+// it the same way the chat widget does (lockPageScroll, chat.js).
+function openMenu() {
+  closeFilterPanel();
+  const user = typeof firebase !== 'undefined' && firebase.auth ? firebase.auth().currentUser : null;
+  const label = document.getElementById('menu-account-label');
+  if (label) label.textContent = user && !user.isAnonymous ? 'My Account' : 'Sign In';
+  const count = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n > 0 ? '(' + n + ')' : ''; };
+  count('menu-wish-count', (S.wishlist || []).length);
+  count('menu-bag-count', (S.cart || []).reduce((a, i) => a + (Number(i.qty) || 1), 0));
+  if (typeof lockPageScroll === 'function' && !DOM.menuDrawer.classList.contains('open')) lockPageScroll();
+  DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open");
+}
+function closeMenu() {
+  const wasOpen = DOM.menuDrawer.classList.contains('open');
+  DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open");
+  if (wasOpen && typeof unlockPageScroll === 'function') unlockPageScroll();
+}
+function toggleMenuGroup(name) {
+  const el = document.getElementById('menu-group-' + name);
+  if (!el) return;
+  const open = el.classList.toggle('open');
+  const btn = el.querySelector('.menu-toggle'); if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
 function toggleSubmenuCollapse(section) { const el = document.getElementById(section + '-collapse'); if (el) el.classList.toggle('open'); }
 function toggleBrandsCollapse() { const el = document.getElementById('brands-collapse'); if (el) el.classList.toggle('open'); }
 
