@@ -632,7 +632,10 @@
     background: #fff !important;
     border: 1px solid #dcdcdc !important;
     border-radius: 30px !important;
-    padding: 4px !important;
+    /* 41px tall in all: 1px border + 3px padding + 33px buttons, a pixel
+       taller than the header's Search products or brands bar
+       (.search-bar-trigger, search.css), whose text size it also uses. */
+    padding: 3px !important;
     transition: border-color 0.2s !important;
   }
   #chat-window .chat-input-pill:focus-within {
@@ -643,15 +646,15 @@
     border: none !important;
     outline: none !important;
     background: transparent !important;
-    padding: 10px 8px 10px 6px !important;
+    padding: 8px 8px 8px 6px !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 400 !important;
-    letter-spacing: 0.02em !important;
+    letter-spacing: normal !important;
     color: #111 !important;
     border-bottom: none !important;
   }
-  #chat-window .chat-input::placeholder { color: #aaa !important; }
+  #chat-window .chat-input::placeholder { color: #999 !important; }
 
   /* Send button — circular, arrow icon, inside pill, far right */
   #chat-window .chat-send-btn {
@@ -661,10 +664,10 @@
     bottom: auto !important;
     left: auto !important;
     flex-shrink: 0 !important;
-    width: 43px !important;
-    height: 43px !important;
-    min-width: 43px !important;
-    min-height: 43px !important;
+    width: 33px !important;
+    height: 33px !important;
+    min-width: 33px !important;
+    min-height: 33px !important;
     border-radius: 50% !important;
     background: #111 !important;
     color: #fff !important;
@@ -678,7 +681,7 @@
     transition: background 0.2s, transform 0.2s !important;
   }
   #chat-window .chat-send-btn i {
-    font-size: 16px !important;
+    font-size: 15px !important;
     line-height: 1 !important;
   }
   #chat-window .chat-send-btn:hover { background: #333 !important; }
@@ -690,10 +693,10 @@
      transparent icon. */
   #chat-window .chat-attach-btn {
     flex-shrink: 0 !important;
-    width: 43px !important;
-    height: 43px !important;
-    min-width: 43px !important;
-    min-height: 43px !important;
+    width: 33px !important;
+    height: 33px !important;
+    min-width: 33px !important;
+    min-height: 33px !important;
     border-radius: 50% !important;
     background: none !important;
     color: #111 !important;
@@ -704,7 +707,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 17px !important;
+    font-size: 16px !important;
     transition: background 0.2s, color 0.2s !important;
   }
   #chat-window .chat-attach-btn:hover { background: #f4f4f4 !important; }
@@ -741,16 +744,6 @@
     border: none !important;
     color: #888 !important;
   }
-  /* Order lookup's Track button: the same circle as the send button,
-     with its label inside. */
-  #chat-window .chat-send-btn.wide {
-    padding: 0 !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 300 !important;
-    letter-spacing: 0.02em !important;
-  }
-
   /* ---------- ORDER LOOKUP ---------- */
   #chat-window .order-lookup {
     padding: 32px 28px !important;
@@ -928,7 +921,7 @@
       <input class="chat-input" id="order-lookup-input"
              placeholder="Order number (e.g. JD-123456)"
              onkeypress="if(event.key==='Enter')lookupOrder()">
-      <button class="chat-send-btn wide" id="order-track-btn" onclick="lookupOrder()">Track</button>
+      <button class="chat-send-btn" id="order-track-btn" onclick="lookupOrder()" aria-label="Track order"><i class="ph-light ph-arrow-right"></i></button>
     </div>
     <div class="order-result" id="order-result"></div>
   </div>
