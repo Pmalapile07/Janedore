@@ -11,7 +11,8 @@
 // and writes them, so no Firestore rules change is needed.
 
 const LISTS = {
-  categories: ['Clothing', 'Kidswear', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Beauty', 'Fragrance', 'Homeware'],
+  // Keep in sync with PA_CATEGORIES in partner-application.js.
+  categories: ['Clothing', 'Kidswear', 'Jewellery', 'Bags', 'Footwear', 'Accessories', 'Homeware', 'Beauty', 'Fragrance and candles'],
   production: ['Made in advance and held in stock', 'Made to order', 'Both'],
   supportAreas: ['Product photography', 'Packaging', 'Brand identity', 'Product descriptions', 'Pricing', 'Fulfilment and shipping', 'Something else'],
   priceBand: ['Under R500', 'R500 to R1,500', 'R1,500 to R5,000', 'Over R5,000'],
@@ -19,6 +20,9 @@ const LISTS = {
   rangeSize: ['1 to 10 products', '11 to 50 products', '51 to 200 products', 'More than 200 products'],
   fulfilment: ['We pack and ship orders ourselves', 'We use a fulfilment or courier partner', 'We are still setting this up']
 };
+// The form on Brand Partnerships no longer asks for location, price band,
+// channels, range size, fulfilment, goals or role; they are still accepted
+// (and shown in admin) so older applications keep their details.
 const DECIDED = ['accepted', 'declined'];
 
 module.exports = function registerPartnerApplications(app, deps) {
@@ -67,8 +71,10 @@ module.exports = function registerPartnerApplications(app, deps) {
     const pickMany = (v, list) => (Array.isArray(v) ? v : []).filter((x) => list.indexOf(x) !== -1).filter((x, i, a) => a.indexOf(x) === i);
     const cloud = process.env.CLOUDINARY_CLOUD_NAME || '';
     const a = {
-      brandName: str(b.brandName, 100), website: str(b.website, 200), instagram: str(b.instagram, 100),
+      brandName: str(b.brandName, 100), website: str(b.website, 200), instagram: str(b.instagram, 100), social: str(b.social, 200),
+      lookbookUrl: str(b.lookbook, 300), distinctive: str(b.distinctive, 1000), whyJanedore: str(b.whyJanedore, 1000),
       location: str(b.location, 100), founded: /^\d{4}$/.test(str(b.founded, 4)) ? str(b.founded, 4) : '',
+      primaryCategory: pick(b.primaryCategory, LISTS.categories),
       categories: pickMany(b.categories, LISTS.categories), production: pick(b.production, LISTS.production), priceBand: pick(b.priceBand, LISTS.priceBand), story: str(b.story, 3000),
       supportRequested: b.supportRequested === true, supportAreas: b.supportRequested === true ? pickMany(b.supportAreas, LISTS.supportAreas) : [],
       supportDetails: b.supportRequested === true ? str(b.supportDetails, 1500) : '',
@@ -76,21 +82,25 @@ module.exports = function registerPartnerApplications(app, deps) {
       images: (Array.isArray(b.images) ? b.images : []).map(String).filter((u) => /^https:\/\/res\.cloudinary\.com\//.test(u) && (!cloud || u.indexOf('/' + cloud + '/') !== -1)).slice(0, 6),
       contactName: str(b.contactName, 100), role: str(b.role, 100), email: str(b.email, 200).toLowerCase(), phone: str(b.phone, 30)
     };
-    if (a.website && !/^https?:\/\//i.test(a.website)) a.website = 'https://' + a.website;
+    const asUrl = (u) => (u && !/^https?:\/\//i.test(u) ? 'https://' + u : u);
+    a.website = asUrl(a.website);
+    a.lookbookUrl = asUrl(a.lookbookUrl);
+    if (a.primaryCategory && a.categories.indexOf(a.primaryCategory) === -1) a.categories.unshift(a.primaryCategory);
+    if (!a.primaryCategory) a.primaryCategory = a.categories[0] || '';
+    const badUrl = (u) => u && !/^https?:\/\/[^\s/]+\.[^\s]{2,}$/i.test(u);
     const missing =
-      !a.brandName ? 'Please enter your brand name.' :
-      !a.location ? 'Please tell us where your brand is based.' :
-      !a.categories.length ? 'Please choose at least one product category.' :
-      !a.production ? 'Please tell us how your products are made.' :
-      !a.priceBand ? 'Please choose your average retail price.' :
-      !a.story ? 'Please give us an overview of your brand.' :
-      !a.channels.length ? 'Please choose your current sales channels.' :
-      !a.rangeSize ? 'Please choose the size of your current range.' :
-      !a.fulfilment ? 'Please tell us how you fulfil orders.' :
-      !a.images.length ? 'Please add at least one product image.' :
       !a.contactName ? 'Please enter your full name.' :
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email) ? 'Please enter a valid email address.' :
-      !a.phone ? 'Please enter your phone number.' :
+      a.phone.replace(/\D/g, '').length < 7 ? 'Please enter a contact number we can reach you on.' :
+      !a.brandName ? 'Please enter your brand name.' :
+      badUrl(a.website) ? 'Please check your website address.' :
+      !a.primaryCategory ? 'Please choose your primary product category.' :
+      !a.production ? 'Please tell us how your products are made.' :
+      !a.story ? 'Please add a short introduction to your brand.' :
+      !a.distinctive ? 'Please tell us what makes your brand distinctive.' :
+      !a.whyJanedore ? 'Please tell us why you would like to partner with JANEDORE.' :
+      badUrl(a.lookbookUrl) ? 'Please check your lookbook link.' :
+      !a.images.length && !a.lookbookUrl ? 'Please add product images or a lookbook link so we can see your work.' :
       a.supportRequested && !a.supportAreas.length ? 'Please choose where you would like support.' :
       b.ownProducts !== true ? 'Please confirm that your brand designs its own products and does not dropship.' :
       b.consent !== true ? 'Please confirm the declaration at the bottom of the form.' : '';
