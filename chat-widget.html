@@ -645,7 +645,7 @@
     background: transparent !important;
     padding: 10px 8px 10px 6px !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 15px !important;
+    font-size: 14px !important;
     font-weight: 400 !important;
     letter-spacing: 0.02em !important;
     color: #111 !important;
@@ -661,10 +661,10 @@
     bottom: auto !important;
     left: auto !important;
     flex-shrink: 0 !important;
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
+    width: 43px !important;
+    height: 43px !important;
+    min-width: 43px !important;
+    min-height: 43px !important;
     border-radius: 50% !important;
     background: #111 !important;
     color: #fff !important;
@@ -690,10 +690,10 @@
      transparent icon. */
   #chat-window .chat-attach-btn {
     flex-shrink: 0 !important;
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
+    width: 43px !important;
+    height: 43px !important;
+    min-width: 43px !important;
+    min-height: 43px !important;
     border-radius: 50% !important;
     background: none !important;
     color: #111 !important;
@@ -741,10 +741,10 @@
     border: none !important;
     color: #888 !important;
   }
+  /* Order lookup's Track button: the same circle as the send button,
+     with its label inside. */
   #chat-window .chat-send-btn.wide {
-    width: auto !important;
-    min-width: auto !important;
-    padding: 0 18px !important;
+    padding: 0 !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 11px !important;
     font-weight: 300 !important;
@@ -926,7 +926,7 @@
     <div class="order-lookup-subtitle">Enter your order number to check its status</div>
     <div class="chat-input-pill">
       <input class="chat-input" id="order-lookup-input"
-             placeholder="Order number (e.g. ORD-12345)"
+             placeholder="Order number (e.g. JD-123456)"
              onkeypress="if(event.key==='Enter')lookupOrder()">
       <button class="chat-send-btn wide" id="order-track-btn" onclick="lookupOrder()">Track</button>
     </div>
