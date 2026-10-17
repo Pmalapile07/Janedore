@@ -310,13 +310,14 @@
   #chat-window .chat-header-track-btn {
     background: #fff !important;
     color: #111 !important;
-    border: 1px solid #e5e5e5 !important;
-    border-radius: 20px !important;
-    padding: 7px 14px !important;
+    border: 1px solid #dcdcdc !important;
+    border-radius: 24px !important;
+    height: 33px !important;
+    padding: 0 16px !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     font-weight: 400 !important;
-    letter-spacing: 0.02em !important;
+    letter-spacing: normal !important;
     cursor: pointer !important;
     transition: opacity 0.2s, background 0.2s !important;
   }
@@ -410,15 +411,19 @@
   }
 
   /* ---------- PILL BUTTONS ---------- */
+  /* Every button in the chat is a 33px pill (the send button's height)
+     with 12px regular Inter: these, the header's Track Order button and
+     the satisfaction Yes/No buttons. */
   #chat-window .chat-pill-btn {
     background: none !important;
-    border: 0.5px solid currentColor !important;
-    padding: 8px 18px !important;
+    border: 1px solid #dcdcdc !important;
+    height: 33px !important;
+    padding: 0 18px !important;
     border-radius: 24px !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 300 !important;
-    letter-spacing: 0.02em !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    letter-spacing: normal !important;
     cursor: pointer !important;
     transition: all 0.2s !important;
   }
@@ -433,14 +438,6 @@
   }
   #chat-window .chat-pill-btn.filled:hover { background: #333 !important; }
 
-  /* Track Order button specifically — 2px taller (padding, since the
-     shared .chat-pill-btn has no explicit height) and square (no
-     rounding), unlike the shared pill style used elsewhere (e.g. the
-     satisfaction Yes/No buttons), which is untouched. */
-  #chat-window .chat-pill-btn.jai-track-order-btn {
-    padding: 9px 18px !important;
-    border-radius: 0 !important;
-  }
 
   /* ---------- WELCOME SCREEN (greeting card + quick-action cards) ----------
      Built by renderAIGreeting() (chat.js). Separate from the old
@@ -757,19 +754,21 @@
     align-items: center !important;
     justify-content: center !important;
   }
+  /* Same sizes as the welcome bubble (How can I help you today? and
+     Welcome to JAI). */
   #chat-window .order-lookup-title {
     font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
+    font-size: 14px !important;
     font-weight: 400 !important;
-    letter-spacing: 0.02em !important;
+    letter-spacing: normal !important;
     color: #111 !important;
     margin-bottom: 12px !important;
   }
   #chat-window .order-lookup-subtitle {
     font-family: 'Inter', sans-serif !important;
     font-size: 11px !important;
-    font-weight: 300 !important;
-    letter-spacing: 0.02em !important;
+    font-weight: 400 !important;
+    letter-spacing: normal !important;
     color: #888 !important;
     margin-bottom: 28px !important;
     text-align: center !important;
