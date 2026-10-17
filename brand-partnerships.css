@@ -36,7 +36,7 @@
   background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; color: #111;
   font-size: 13px; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px;
 }
-.bp-btn:focus-visible, .bp-link:focus-visible, .bp-faq-item summary:focus-visible, .bp-featured-item:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
+.bp-btn:focus-visible, .bp-link:focus-visible, .bp-faq-item summary:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
 
 /* A. Hero: typographic on the tint; with an image, image first on
    mobile and side by side on desktop. */
@@ -72,36 +72,21 @@
 .bp-hero-pause.is-paused span { width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #fff; margin-left: 3px; }
 .bp-hero-pause:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
-/* B. Proposition */
-.bp-benefits { display: grid; gap: 0; border-top: 1px solid #ddd; }
-.bp-benefit { padding: 22px 0; border-bottom: 1px solid #ddd; }
-.bp-benefit h3 { margin-bottom: 8px; }
-.bp-featured { margin-top: 48px; }
-.bp-featured-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #666; margin: 0 0 16px; }
-.bp-featured-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.bp-featured-item { display: block; color: #111; text-decoration: none; }
-.bp-featured-item img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; background: #f4f4f4; }
-.bp-featured-item span { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 10px; }
-
-/* C. Criteria */
+/* What we look for */
 .bp-criteria { border-top: 1px solid #ddd; }
 .bp-criterion { padding: 18px 0; border-bottom: 1px solid #ddd; }
-.bp-criterion dt, .bp-term dt { font-size: 14px; font-weight: 600; line-height: 1.4; margin: 0 0 6px; }
-.bp-scope { display: grid; gap: 28px; margin-top: 40px; }
-.bp-scope h3 { margin-bottom: 10px; }
-.bp-cats { color: #111 !important; margin-bottom: 8px !important; }
-.bp-cats span { color: #999; }
+.bp-criterion dt { font-size: 14px; font-weight: 600; line-height: 1.4; margin: 0 0 6px; }
 
-/* D. Process */
+.bp-scope-line { margin-top: 20px; max-width: 720px; }
+.bp-scope-line + .bp-scope-line { margin-top: 8px; }
+.bp-scope-line strong { color: #111; font-weight: 600; }
+
+/* How it works */
 .bp-steps { list-style: none; padding: 0; border-top: 1px solid #ddd; }
 .bp-step { padding: 22px 0; border-bottom: 1px solid #ddd; }
 .bp-step h3 { margin-bottom: 6px; }
 
-/* E. Terms */
-.bp-terms { border-top: 1px solid #ddd; }
-.bp-term { padding: 20px 0; border-bottom: 1px solid #ddd; }
-
-/* F. FAQ */
+/* Questions */
 .bp-faq { border-top: 1px solid #ddd; }
 .bp-faq-item { border-bottom: 1px solid #ddd; }
 .bp-faq-item summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; font-size: 14px; font-weight: 600; line-height: 1.4; }
@@ -112,7 +97,8 @@
 .bp-faq-item[open] .bp-faq-icon::after { transform: rotate(0deg); }
 .bp-faq-item p { padding: 0 28px 20px 0; }
 
-/* G. Application */
+/* Application */
+.bp-apply-head { margin-top: 64px; }
 .bp-apply { border-top: 1px solid #ddd; padding-bottom: 72px; }
 .bp-status-link { margin-top: 32px; padding-top: 20px; border-top: 1px solid #ddd; }
 
@@ -160,7 +146,6 @@ select.pa-input {
 @media (min-width: 600px) {
   .pa-row { grid-template-columns: 1fr 1fr; }
   .pa-checks { grid-template-columns: 1fr 1fr; }
-  .bp-scope { grid-template-columns: 1fr 1fr; gap: 40px; }
 }
 
 @media (min-width: 900px) {
@@ -181,18 +166,12 @@ select.pa-input {
   .bp-hero.has-video .bp-hero-copy { padding-bottom: 96px; }
   .bp-hero-pause { right: 32px; bottom: 32px; }
 
-  .bp-benefits { grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: none; }
-  .bp-benefit { border-bottom: none; border-top: 1px solid #111; padding: 20px 0 0; }
-  .bp-featured-grid { gap: 16px; max-width: 720px; }
-
   .bp-criteria { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 48px; border-top: none; }
   .bp-criterion { border-top: 1px solid #ddd; border-bottom: none; padding: 20px 0 24px; }
 
+  .bp-apply-head { margin-top: 88px; }
   .bp-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: none; }
   .bp-step { border-bottom: none; border-top: 2px solid #b8cc87; padding: 20px 0 0; }
-
-  .bp-terms { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 48px; border-top: none; }
-  .bp-term { border-top: 1px solid #ddd; border-bottom: none; padding: 20px 0 24px; }
 
   .bp-apply { padding-bottom: 120px; }
 }

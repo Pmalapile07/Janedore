@@ -1,15 +1,12 @@
 /* ============================================================
    BRAND PARTNERSHIPS: /pages/brand-partnerships (footer link)
    content-pages.js hands this slug to renderBrandPartnershipsPage()
-   instead of a Firestore page. One journey: hero, proposition, what we
-   look for, how it works, commercial terms, FAQ, then the application
-   form itself (partner-application.js, which also submits it to
-   /api/partner-applications). The hero image is set in admin > Pages >
-   Brand Partnerships (pages/brand-partnerships.heroImageUrl); without
-   one the hero is typographic; a hero video, when set, plays behind the
-   headline instead. The same screen sets optional images
-   under the proposition, selection and terms intros. Featured brands
-   only appear when real, active brands exist.
+   instead of a Firestore page. Kept deliberately short: hero, what we
+   look for, how it works, a few questions, then the application form
+   itself (partner-application.js, which also submits it to
+   /api/partner-applications). The hero image, hero video and the
+   selection image are set in admin > Pages > Brand Partnerships
+   (pages/brand-partnerships); without them the page is typographic.
 
    Copy rule: say only what JANEDORE actually offers today. Commission
    rate, courier costs, payout timing and a review timeframe are not set
@@ -18,23 +15,15 @@
 
 const BRAND_PARTNERSHIPS_SLUG = 'brand-partnerships';
 
-const BP_CATEGORIES = ['Clothing', 'Kidswear', 'Jewellery', 'Bags', 'Footwear', 'Accessories', 'Homeware', 'Beauty', 'Fragrance and candles'];
+const BP_CATEGORIES = ['clothing', 'kidswear', 'jewellery', 'bags', 'footwear', 'accessories', 'homeware', 'beauty', 'fragrance and candles'];
 
 const BP_FAQ = [
-  ['Who can apply?', 'Independent brands that design their own products, from emerging labels to established names. Every application is assessed on its own merits.'],
-  ['Which categories are considered?', 'Clothing and kidswear, jewellery, bags, footwear and accessories, homeware, beauty, and scent, including perfume and candles.'],
-  ['Is there an application fee?', 'No. There is no fee to apply, and no listing or monthly fees. Commission on sales is agreed with each brand before onboarding.'],
-  ['Does applying guarantee acceptance?', 'No. We work with a limited number of brands and review every application against the same criteria. Applying is the start of a conversation, not a commitment on either side.'],
-  ['Who handles shipping and fulfilment?', 'Partners keep their own stock and ship orders from their own studio or warehouse, adding tracking for each order so the customer can follow it. Delivery costs and dispatch times are agreed before onboarding.'],
-  ['Can I keep selling elsewhere?', 'Yes. Partnerships are non-exclusive, so you can continue selling through your own website, store and other stockists.'],
-  ['Do you work with made-to-order brands?', 'Yes. Made-to-order pieces are sold as pre-orders with an estimated dispatch date, and shipped once they are ready.'],
-  ['What happens after I apply?', 'You will receive a confirmation email with your reference. Our team reviews your application and emails you once a decision has been made. You can check your application status at any time using your reference.']
+  ['Is there a fee?', 'No. There is no fee to apply and no listing or monthly fees. We earn a commission on sales, agreed with each brand before onboarding.'],
+  ['Who handles shipping?', 'You keep your own stock and ship each order with tracking. Delivery terms are agreed before onboarding.'],
+  ['Can I keep selling elsewhere?', 'Yes. Partnerships are non-exclusive.'],
+  ['Do you work with made-to-order brands?', 'Yes. Made-to-order pieces are sold as pre-orders.'],
+  ['What happens after I apply?', 'You will receive a confirmation email with your reference, and we will email you once a decision has been made. Acceptance is not guaranteed.']
 ];
-
-function partnershipFeaturedBrands() {
-  const all = typeof getFeaturedBrands === 'function' ? getFeaturedBrands(S.vendors || []) : [];
-  return all.filter(v => (!v.status || v.status === 'active') && v.heroImageUrl).slice(0, 2);
-}
 
 // Cloudinary delivery: right-sized, modern format.
 function bpImageUrl(url, width) {
@@ -76,50 +65,19 @@ function renderBrandPartnershipsPage() {
       ${intro ? `<p class="bp-intro">${intro}</p>` : ''}
     </div>`;
 
-  const benefits = [
-    ['An additional retail channel', 'Sell alongside your own website and stockists, through a storefront with secure checkout, order confirmations and customer care already in place.'],
-    ['A considered setting for your work', 'A dedicated brand page for your story, imagery and collection, presented with the same care as everything else on JANEDORE.'],
-    ['Another route to discovery', 'Your pieces appear across our collections, brand directory and search, where customers browse by category as well as by brand.'],
-    ['Good company', 'A selection of independent brands chosen to complement one another, so your work is seen in the context it deserves.']
-  ];
-
   const criteria = [
-    ['Identity and originality', 'A clear point of view and products you design yourselves.'],
-    ['Product quality and presentation', 'Considered materials, a high standard of finish, and photography that does the work justice.'],
-    ['Relevance to our categories', 'Pieces that sit naturally within fashion, accessories, homeware, beauty or scent.'],
-    ['Operational readiness', 'Accurate stock, reliable dispatch and the capacity to fulfil orders on time.'],
-    ['Communication and service', 'Prompt, professional communication with our team and a shared care for the customer.']
+    ['Originality', 'Products you design yourselves, with a clear point of view.'],
+    ['Quality', 'Considered materials, a high standard of finish and strong photography.'],
+    ['Reliability', 'Accurate stock and orders dispatched on time.'],
+    ['Communication', 'Prompt, professional and caring towards customers.']
   ];
 
   const steps = [
-    ['Introduce your brand', 'Tell us who you are, what you make and why JANEDORE.'],
-    ['We review your application', 'Our team assesses every brand against the same criteria.'],
-    ['We discuss the details', 'Suitable brands talk through commercial and operational arrangements with us.'],
-    ['Terms, then onboarding', 'Once both parties agree the terms, we set up your brand page and collection.']
+    ['Apply', 'Tell us about your brand below.'],
+    ['Review', 'We assess every application individually.'],
+    ['Agree terms', 'Suitable brands agree terms with us.'],
+    ['Onboard', 'We set up your brand page and collection.']
   ];
-
-  const terms = [
-    ['Commission and fees', 'There are no application, listing or monthly fees. JANEDORE earns a commission on sales, agreed with each brand.'],
-    ['Pricing and listings', 'Retail pricing and how your products are listed are agreed upfront. Partners manage products, stock and pre-orders in their partner dashboard.'],
-    ['Inventory and fulfilment', 'You hold your own stock and ship orders from your studio or warehouse, adding tracking so the customer can follow each parcel.'],
-    ['Shipping and delivery', 'Customers pay a delivery fee at checkout. How courier costs are handled and the dispatch times you commit to are agreed with each brand.'],
-    ['Returns, refunds and service', 'Customers may request a return within 30 days of dispatch. You review each request, JANEDORE makes the final decision and processes refunds, and our Customer Care team handles customer queries.'],
-    ['Payment schedules', 'When and how you are paid for your sales is agreed before onboarding.'],
-    ['Brand assets and imagery', 'You supply product photography and brand assets to an agreed standard. How they are used on JANEDORE is part of the agreement.']
-  ];
-
-  const featured = partnershipFeaturedBrands();
-  const featuredHtml = featured.length === 2 ? `
-    <div class="bp-featured">
-      <div class="bp-featured-label">Among the brands on JANEDORE</div>
-      <div class="bp-featured-grid">${featured.map(v => {
-        const name = v.name || v.brandName || v.brand || '';
-        return `<a class="bp-featured-item" href="/brands/${encodeURIComponent(v.slug || v.id)}" onclick="event.preventDefault();navigateToVendor('${escapeJSString(v.slug || v.id)}')">
-          <img src="${escapeHTML(bpImageUrl(v.heroImageUrl, 720))}" alt="${escapeHTML(name)}" loading="lazy" decoding="async">
-          <span>${escapeHTML(name)}</span>
-        </a>`;
-      }).join('')}</div>
-    </div>` : '';
 
   el.innerHTML = `
     <div class="bp">
@@ -129,77 +87,41 @@ function renderBrandPartnershipsPage() {
         <div class="bp-hero-copy">
           <div class="bp-eyebrow">Brand Partnerships</div>
           <h1 class="bp-hero-title" id="bp-hero-title">A considered home for distinctive brands.</h1>
-          <p class="bp-hero-text">JANEDORE brings together a selection of independent fashion, accessories, homeware and scent brands in one carefully edited retail destination. We are looking for brands with a point of view to join it.</p>
+          <p class="bp-hero-text">We work with a small selection of independent brands. If yours has a point of view, we would like to hear from you.</p>
           <div class="bp-hero-actions">
             <button type="button" class="bp-btn" onclick="bpScrollTo('bp-apply')">Apply to partner</button>
-            <button type="button" class="bp-link" onclick="bpScrollTo('bp-process')">How it works</button>
           </div>
-        </div>
-      </section>
-
-      <section class="bp-section" aria-labelledby="bp-s1">
-        <div class="bp-wrap">
-          ${head('The proposition', '<span id="bp-s1">Why brands join JANEDORE</span>', 'A partnership is a second home for your work: a place where it is presented with care, alongside brands that share your standards.')}
-          <div class="bp-figure" id="bp-img-propositionImageUrl" hidden></div>
-          <div class="bp-benefits">
-            ${benefits.map(([t, d]) => `<div class="bp-benefit"><h3>${t}</h3><p>${d}</p></div>`).join('')}
-          </div>
-          ${featuredHtml}
         </div>
       </section>
 
       <section class="bp-section bp-tint" aria-labelledby="bp-s2">
         <div class="bp-wrap">
-          ${head('Selection', '<span id="bp-s2">What we look for</span>', 'Every application is considered individually. We welcome emerging and established brands alike; what matters is the work and how it is run.')}
+          ${head('Selection', '<span id="bp-s2">What we look for</span>', 'Emerging or established, every brand is considered individually.')}
           <div class="bp-figure" id="bp-img-selectionImageUrl" hidden></div>
           <dl class="bp-criteria">
             ${criteria.map(([t, d]) => `<div class="bp-criterion"><dt>${t}</dt><dd>${d}</dd></div>`).join('')}
           </dl>
-          <div class="bp-scope">
-            <div class="bp-scope-col">
-              <h3>Categories we consider</h3>
-              <p class="bp-cats">${BP_CATEGORIES.join('<span aria-hidden="true"> / </span>')}</p>
-              <p>Made-to-order pieces are welcome and sold as pre-orders.</p>
-            </div>
-            <div class="bp-scope-col">
-              <h3>What we do not take on</h3>
-              <p>Dropshipping businesses, resellers of other brands, counterfeit or replica goods, and products outside our categories.</p>
-            </div>
-          </div>
-          <p class="bp-note">Already selling well but your presentation is not quite there yet? You can still apply and tell us where you would like support. We take it into account when we review your application.</p>
+          <p class="bp-scope-line"><strong>Categories:</strong> ${BP_CATEGORIES.join(', ').replace(/^./, c => c.toUpperCase())}.</p>
+          <p class="bp-scope-line"><strong>Not accepted:</strong> dropshipping, resellers, counterfeit or replica goods.</p>
         </div>
       </section>
 
       <section class="bp-section" id="bp-process" aria-labelledby="bp-s3">
         <div class="bp-wrap">
-          ${head('The process', '<span id="bp-s3">How partnerships work</span>', '')}
+          ${head('The process', '<span id="bp-s3">How it works</span>', '')}
           <ol class="bp-steps">
             ${steps.map(([t, d]) => `<li class="bp-step"><h3>${t}</h3><p>${d}</p></li>`).join('')}
           </ol>
         </div>
       </section>
 
-      <section class="bp-section bp-tint" aria-labelledby="bp-s4">
-        <div class="bp-wrap">
-          ${head('Commercial terms', '<span id="bp-s4">Clear terms, agreed first</span>', 'The details of every partnership are discussed and agreed before it begins. These are the areas we cover with each brand.')}
-          <div class="bp-figure" id="bp-img-termsImageUrl" hidden></div>
-          <dl class="bp-terms">
-            ${terms.map(([t, d]) => `<div class="bp-term"><dt>${t}</dt><dd>${d}</dd></div>`).join('')}
-          </dl>
-          <p class="bp-note">Nothing is final until both parties have agreed the terms.</p>
-        </div>
-      </section>
-
-      <section class="bp-section" aria-labelledby="bp-s5">
-        <div class="bp-wrap bp-narrow">
-          ${head('Questions', '<span id="bp-s5">Frequently asked</span>', '')}
-          <div class="bp-faq">${BP_FAQ.map(([q, a]) => `<details class="bp-faq-item"><summary>${q}<span class="bp-faq-icon" aria-hidden="true"></span></summary><p>${a}</p></details>`).join('')}</div>
-        </div>
-      </section>
-
       <section class="bp-section bp-apply" id="bp-apply" aria-labelledby="bp-s6">
         <div class="bp-wrap bp-narrow">
-          ${head('Apply', '<span id="bp-s6">Partner application</span>', 'Tell us about your brand. It takes around ten minutes. Fields marked * are required.')}
+          ${head('Questions', '<span id="bp-s5">Before you apply</span>', '')}
+          <div class="bp-faq">${BP_FAQ.map(([q, a]) => `<details class="bp-faq-item"><summary>${q}<span class="bp-faq-icon" aria-hidden="true"></span></summary><p>${a}</p></details>`).join('')}</div>
+          <div class="bp-apply-head">
+            ${head('Apply', '<span id="bp-s6">Partner application</span>', 'Fields marked * are required.')}
+          </div>
           <div id="pa-form-wrap">${typeof partnerFormHtml === 'function' ? partnerFormHtml() : ''}</div>
           <p class="bp-status-link">Already applied? <button type="button" class="bp-link" onclick="openPartnerStatusPage()">Check your application status</button></p>
         </div>
@@ -230,7 +152,7 @@ function renderBrandPartnershipsPage() {
       hero.classList.add('has-image');
     }
     // Section images, each optional (admin > Pages > Brand Partnerships).
-    ['propositionImageUrl', 'selectionImageUrl', 'termsImageUrl'].forEach(key => {
+    ['selectionImageUrl'].forEach(key => {
       const box = document.getElementById('bp-img-' + key);
       if (!data[key] || !box) return;
       box.innerHTML = `<img src="${escapeHTML(bpImageUrl(data[key], 1600))}" srcset="${escapeHTML(bpImageUrl(data[key], 800))} 800w, ${escapeHTML(bpImageUrl(data[key], 1600))} 1600w, ${escapeHTML(bpImageUrl(data[key], 2160))} 2160w" sizes="(min-width: 1080px) 1016px, calc(100vw - 32px)" alt="" loading="lazy" decoding="async">`;
