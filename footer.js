@@ -8,7 +8,7 @@ function buildFooter(id) {
       title: "The Company",
       links: [
         { label: "About JANEDORE Ltd.", slug: "about" },
-        { label: "Brand Partnerships", slug: "contact" },
+        { label: "Brand Partnerships", slug: "brand-partnerships" },
         { label: "Sustainability", slug: "sustainability" }
       ]
     },

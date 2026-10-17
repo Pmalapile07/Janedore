@@ -29,11 +29,12 @@ async function navigateToContentPage(slug, replaceUrl) {
   const el = document.getElementById('content-page-body');
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
-  // Track Your Order, Log a Return and Customer Care are forms, not Firestore pages
+  // Track Your Order, Log a Return, Customer Care and Brand Partnerships are built in code, not Firestore pages
   // (track-order.js, returns.js).
   const formPage = slug === TRACK_ORDER_SLUG ? (typeof renderTrackOrderPage === 'function' && renderTrackOrderPage)
     : slug === 'log-a-return' ? (typeof renderReturnsPage === 'function' && renderReturnsPage)
-    : slug === 'customer-care' ? (typeof renderCustomerCarePage === 'function' && renderCustomerCarePage) : null;
+    : slug === 'customer-care' ? (typeof renderCustomerCarePage === 'function' && renderCustomerCarePage)
+    : slug === 'brand-partnerships' ? (typeof renderBrandPartnershipsPage === 'function' && renderBrandPartnershipsPage) : null;
   if (formPage) {
     formPage();
     resetScrollToTop();
