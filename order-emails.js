@@ -841,11 +841,11 @@ function bagReminder(items, ctx, links) {
         button('Return to your bag', links.bagUrl)
     ],
     footerHtml: 'Questions? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>' +
-      '<a href="' + esc(links.stopUrl) + '" style="color:#888888;">Stop bag reminders</a> · Janedore · janedore.co.za'
+      '<a href="' + esc(links.stopUrl) + '" style="color:#888888;">Unsubscribe</a> · Janedore · janedore.co.za'
   });
   const text = 'You left something in your bag\n\nYour pieces are still waiting for you. Stock is limited and items are not reserved until your order is placed.\n\n' +
     items.map((i) => '- ' + (i.name || 'Item') + (i.brand ? ' (' + i.brand + ')' : '') + (i.size && i.size !== 'OS' ? ', size ' + i.size : '') + ', qty ' + (i.qty || 1) + ': ' + money(itemLine(i))).join('\n') +
-    '\n\nSubtotal: ' + money(total) + '\n\nReturn to your bag: ' + links.bagUrl + '\n\nStop bag reminders: ' + links.stopUrl;
+    '\n\nSubtotal: ' + money(total) + '\n\nReturn to your bag: ' + links.bagUrl + '\n\nUnsubscribe: ' + links.stopUrl;
   return { subject: 'You left something in your bag', html, text };
 }
 

@@ -1258,7 +1258,7 @@ app.post('/api/discounts/lookup', async (req, res) => {
 // unpaid for 3 hours, sweepBagReminders() sends one reminder with a
 // "Return to your bag" link (/cart?bag=ID refills it). Never sent if the
 // order was paid, the bag is empty or older than 3 days, or the shopper
-// turned reminders off (link in every email). bags/{id} and bagOptOut are
+// unsubscribed (link in every email). bags/{id} and bagOptOut are
 // server-only (no Firestore rule allows them).
 const BAG_REMINDER_DELAY = 3 * 60 * 60 * 1000;
 const BAG_MAX_AGE = 3 * 24 * 60 * 60 * 1000;
@@ -1317,7 +1317,7 @@ app.get('/api/bag/:id', async (req, res) => {
   }
 });
 
-// "Stop bag reminders" link in the email.
+// The email's Unsubscribe link.
 app.get('/bag-reminders/stop', async (req, res) => {
   const bagId = String(req.query.bag || '');
   let done = false;
@@ -1334,8 +1334,8 @@ app.get('/bag-reminders/stop', async (req, res) => {
   res.set('Content-Type', 'text/html; charset=utf-8').send('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>JANEDORE</title></head>' +
     '<body style="margin:0;font-family:Inter,Helvetica,Arial,sans-serif;color:#111;background:#fff;"><div style="max-width:480px;margin:0 auto;padding:80px 24px;text-align:center;">' +
     '<div style="letter-spacing:0.12em;font-size:15px;margin:0 0 40px;">JANEDORE</div>' +
-    '<h1 style="font-size:22px;font-weight:600;margin:0 0 12px;">' + (done ? 'Bag reminders turned off' : 'Link not recognised') + '</h1>' +
-    '<p style="font-size:14px;line-height:1.6;color:#555;margin:0 0 28px;">' + (done ? 'You will no longer receive emails about items left in your bag. Order emails are not affected.' : 'This link is no longer valid. If you keep receiving bag reminders, please contact support@janedore.co.za.') + '</p>' +
+    '<h1 style="font-size:22px;font-weight:600;margin:0 0 12px;">' + (done ? 'You have been unsubscribed' : 'Link not recognised') + '</h1>' +
+    '<p style="font-size:14px;line-height:1.6;color:#555;margin:0 0 28px;">' + (done ? 'You will no longer receive reminder emails about items left in your bag. You will still receive emails about your orders.' : 'This link is no longer valid. If you keep receiving these emails, please contact support@janedore.co.za.') + '</p>' +
     '<a href="/" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:14px 28px;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;">Continue shopping</a>' +
     '</div></body></html>');
 });
