@@ -63,6 +63,10 @@ input, select, textarea { font-size:16px !important; }
 .login-error{background:rgba(192,57,43,0.18);border:0.5px solid rgba(192,57,43,0.35);border-radius:var(--r-xs);padding:var(--space-2) var(--space-4);font-size:var(--font-scale-sm);color:#f08070;margin-bottom:var(--space-3);display:none;letter-spacing:.01em;}
 .login-btn{width:100%;background:#fff;color:#0d0d0d;border:none;border-radius:var(--r-sm);padding:var(--space-4);font-family:var(--font);font-size:var(--font-scale-md);font-weight:600;letter-spacing:.03em;cursor:pointer;margin-top:var(--space-2);transition:opacity var(--duration-base),transform 0.1s;}
 .login-btn:active{opacity:.82;transform:scale(0.99);}
+.login-btn:disabled{opacity:.6;cursor:default;}
+.login-notice{background:rgba(230,237,213,0.12);border:0.5px solid rgba(230,237,213,0.3);border-radius:var(--r-xs);padding:var(--space-2) var(--space-4);font-size:var(--font-scale-sm);line-height:1.5;color:#e6edd5;margin-bottom:var(--space-3);display:none;}
+.login-forgot{display:block;margin:var(--space-4) auto 0;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.55);font-family:var(--font);font-size:var(--font-scale-sm);text-decoration:underline;text-underline-offset:3px;padding:var(--space-1);}
+.login-forgot:hover{color:#fff;}
 
 /* ── ADMIN PANEL ───────────────────────────────────────────────────────────── */
 #admin-panel{display:none;flex-direction:column;min-height:100vh;}

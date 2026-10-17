@@ -807,13 +807,37 @@
     auth.signInWithEmailAndPassword(email, password).catch(function(err) {
       logError('LOGIN', err);
       if (errorEl) {
-        var msg = 'Invalid credentials. Please try again.';
-        if (err.code === 'auth/too-many-requests') msg = 'Too many failed attempts. Please wait and try again.';
+        var msg = 'That email and password don\u2019t match. If you have also signed in to the shop with Google using this email, use Forgot password to set a new one.';
+        if (err.code === 'auth/too-many-requests') msg = 'Too many failed attempts. Please wait a few minutes, or use Forgot password.';
+        if (err.code === 'auth/network-request-failed') msg = 'No connection. Check your internet and try again.';
         errorEl.textContent = msg; errorEl.style.display = 'block';
       }
       if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Sign In'; }
     });
     return false;
+  };
+
+  // Firebase emails a reset link. Staff and shop accounts are the same
+  // Firebase accounts, so this also restores a password that was dropped
+  // when the same email signed in to the shop with Google. The same
+  // message shows whether or not the email has an account.
+  window.handleAdminPasswordReset = function() {
+    var emailEl = safeEl('login-email'), errorEl = safeEl('login-error'), noticeEl = safeEl('login-notice');
+    var email = emailEl ? emailEl.value.trim().toLowerCase() : '';
+    if (errorEl) errorEl.style.display = 'none';
+    if (noticeEl) noticeEl.style.display = 'none';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (errorEl) { errorEl.textContent = 'Enter your email address above, then press Forgot password.'; errorEl.style.display = 'block'; }
+      return;
+    }
+    var done = function() {
+      if (noticeEl) { noticeEl.textContent = 'If there\u2019s an account for ' + email + ', we\u2019ve sent a link to set a new password. Check your inbox and spam folder.'; noticeEl.style.display = 'block'; }
+    };
+    auth.sendPasswordResetEmail(email, { url: window.location.origin + '/admin' }).then(done).catch(function(err) {
+      if (err && err.code === 'auth/user-not-found') return done();
+      logError('PASSWORD_RESET', err);
+      if (errorEl) { errorEl.textContent = err && err.code === 'auth/too-many-requests' ? 'Too many requests. Please wait a few minutes and try again.' : 'We couldn\u2019t send the email. Please try again.'; errorEl.style.display = 'block'; }
+    });
   };
 
   window.handleLogout = function() { auth.signOut().catch(function(err){ logError('LOGOUT', err); }); };

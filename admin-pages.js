@@ -202,17 +202,19 @@
       '</form>';
   };
 
-  // Images only (Brand Partnerships): the page text is part of the site
+  // Images and a hero video only (Brand Partnerships): the page text is part of the site
   // design; each slot is optional and the page leaves it out when empty
   // (brand-partnerships.js reads the same keys).
   var PAGE_IMAGE_SLOTS = [
+    { key: 'heroVideoUrl', label: 'Hero video', ratio: '16/9', video: true, help: 'Plays silently on a loop behind the headline. Keep it short (around 10 to 20 seconds), landscape and under 100 MB; sound is removed. When set, it replaces the hero image, which is then used as the still frame for visitors with reduced motion or data saver on.' },
     { key: 'heroImageUrl', label: 'Hero image', ratio: '4/5', help: 'At the top of the page, beside the headline on desktop and above it on mobile. A portrait image works best. Without one, the hero is text only.' },
     { key: 'propositionImageUrl', label: 'Why brands join JANEDORE', ratio: '16/9', help: 'Under the paragraph that introduces why brands join. A landscape image works best.' },
     { key: 'selectionImageUrl', label: 'What we look for', ratio: '16/9', help: 'Under the paragraph that introduces what we look for. A landscape image works best.' },
     { key: 'termsImageUrl', label: 'Clear terms, agreed first', ratio: '16/9', help: 'Under the paragraph that introduces the commercial terms. A landscape image works best.' }
   ];
 
-  function pageImagePreviewHtml(url, ratio) {
+  function pageImagePreviewHtml(url, ratio, video) {
+    if (video && url) return '<video src="' + esc(url) + '" muted loop autoplay playsinline style="display:block;width:100%;aspect-ratio:' + ratio + ';max-height:320px;object-fit:cover;background:#111;border-radius:6px;"></video>';
     return url
       ? '<div style="aspect-ratio:' + ratio + ';max-height:320px;background:#f4f4f4 center/cover no-repeat;background-image:url(\'' + esc(url) + '\');border-radius:6px;"></div>'
       : '<div style="aspect-ratio:' + ratio + ';max-height:320px;background:#f4f4f4;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;">No image. This spot is left out of the page.</div>';
@@ -224,10 +226,10 @@
       return '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">' + esc(sl.label) + '</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div id="page-img-preview-' + sl.key + '">' + pageImagePreviewHtml(url, sl.ratio) + '</div>' +
+          '<div id="page-img-preview-' + sl.key + '">' + pageImagePreviewHtml(url, sl.ratio, sl.video) + '</div>' +
           '<input type="hidden" id="page-img-' + sl.key + '" value="' + esc(url) + '">' +
           '<div style="display:flex;gap:8px;">' +
-            '<button type="button" class="btn btn-ghost" onclick="window._uploadPageImage(\'' + sl.key + '\')"><i class="ph-light ph-upload-simple" style="margin-right:4px;"></i> Upload image</button>' +
+            '<button type="button" class="btn btn-ghost" id="page-img-btn-' + sl.key + '" onclick="window.' + (sl.video ? '_uploadPageVideo' : '_uploadPageImage') + '(\'' + sl.key + '\')"><i class="ph-light ph-upload-simple" style="margin-right:4px;"></i> Upload ' + (sl.video ? 'video' : 'image') + '</button>' +
             '<button type="button" class="btn btn-ghost" onclick="window._setPageImage(\'' + sl.key + '\',\'\')">Remove</button>' +
           '</div>' +
           '<div style="font-size:11px;color:var(--muted);">' + esc(sl.help) + '</div>' +
@@ -246,7 +248,37 @@
     var sl = PAGE_IMAGE_SLOTS.find(function (x) { return x.key === key; });
     var input = safeEl('page-img-' + key), prev = safeEl('page-img-preview-' + key);
     if (input) input.value = url;
-    if (prev && sl) prev.innerHTML = pageImagePreviewHtml(url, sl.ratio);
+    if (prev && sl) prev.innerHTML = pageImagePreviewHtml(url, sl.ratio, sl.video);
+  };
+
+  // Videos go to Cloudinary's video endpoint with the same unsigned preset.
+  window._uploadPageVideo = function(key) {
+    var cloudName = window.CLOUDINARY_CLOUD_NAME, uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) { showToast('Cloudinary is not configured.', 'error'); return; }
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/mp4,video/webm,video/quicktime';
+    input.onchange = function() {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (!/^video\/(mp4|webm|quicktime)$/.test(file.type)) { showToast('Please choose an MP4, WebM or MOV video.', 'error'); return; }
+      if (file.size > 100 * 1024 * 1024) { showToast('That video is over 100 MB. Please use a shorter or smaller file.', 'error'); return; }
+      var btn = safeEl('page-img-btn-' + key);
+      if (btn) { btn.disabled = true; btn.textContent = 'Uploading…'; }
+      var formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+      fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/video/upload', { method: 'POST', body: formData })
+        .then(function(res) { return res.json(); })
+        .then(function(result) {
+          if (!result || !result.secure_url) throw new Error(result && result.error ? result.error.message : 'Unknown error');
+          window._setPageImage(key, result.secure_url);
+          showToast('Video uploaded. Press Save to publish it.');
+        })
+        .catch(function(e) { showToast('Upload failed: ' + e.message, 'error'); })
+        .then(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph-light ph-upload-simple" style="margin-right:4px;"></i> Upload video'; } });
+    };
+    input.click();
   };
 
   window._uploadPageImage = function(key) {
