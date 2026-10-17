@@ -2246,6 +2246,7 @@ app.use(express.static(path.join(__dirname), {
 
 // Returns: /api/returns* and /api/admin/returns* (returns-api.js).
 require('./returns-api')(app, { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL });
+require('./partner-applications-api')(app, { adminDb, admin, sendResendEmail, orderEmails, ORDER_ALERT_EMAIL, SITE_URL, getBrandAssets, logoImageUrl });
 
 // Catch-all for HTML routing — only sends index.html for clean URLs
 app.get('*', async (req, res) => {

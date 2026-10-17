@@ -5,8 +5,8 @@
    > Brand Partnerships (pages/brand-partnerships.heroImageUrl); the
    copy lives here. Two featured brands come from the live brand list
    (S.vendors), preferring ones with a cover image; grey placeholders
-   show until brands exist. The Apply button has no destination yet
-   (applyForBrandPartnership()).
+   show until brands exist. Apply to Partner opens
+   /pages/partner-application (partner-application.js).
    ============================================================ */
 
 const BRAND_PARTNERSHIPS_SLUG = 'brand-partnerships';
@@ -92,6 +92,30 @@ function renderBrandPartnershipsPage() {
         </ul>
       </div>
 
+      <div class="bp-section" id="bp-carry">
+        <h2 class="track-heading">What we carry</h2>
+        <p class="bp-text">JANEDORE is a fashion and lifestyle destination. We partner with brands that design their own products in the following categories:</p>
+        <div class="bp-tags">${['Clothing', 'Kidswear', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Beauty', 'Fragrance', 'Homeware'].map(c => `<span>${c}</span>`).join('')}</div>
+        <p class="bp-text"><strong>Made to order.</strong> Brands that make their products to order are welcome. These products are sold on JANEDORE as pre-orders, with a clear estimated dispatch date for the customer.</p>
+      </div>
+
+      <div class="bp-section">
+        <h2 class="track-heading">What we do not accept</h2>
+        <p class="bp-text">To protect our customers and the brands we work with, applications from the following will not be considered:</p>
+        <ul class="bp-list bp-list-no">
+          <li><strong>Dropshipping.</strong> Businesses that sell products sourced from third-party suppliers and shipped directly to the customer.</li>
+          <li><strong>Resellers.</strong> Businesses selling products designed by other brands. We partner directly with the brand that creates the product.</li>
+          <li><strong>Counterfeit and replica goods.</strong> Copies of, or products closely imitating, another brand’s designs or trademarks.</li>
+          <li><strong>Products outside our categories.</strong> Including food and drink, alcohol, tobacco and vaping products, supplements and medicines, electronics, and adult products.</li>
+        </ul>
+      </div>
+
+      <div class="bp-section">
+        <h2 class="track-heading">Support for growing brands</h2>
+        <p class="bp-text">Some of the brands we admire most already have a loyal customer base and strong sales, but their presentation is not yet at the standard of our platform. If that sounds like your brand, you are still welcome to apply.</p>
+        <p class="bp-text">In your application, tell us where you would like support, whether that is product photography, packaging, brand identity or fulfilment. Our team will take this into account when reviewing your application, and where we see the potential, we will work with you on the changes needed to join JANEDORE.</p>
+      </div>
+
       <div class="bp-section">
         <h2 class="track-heading">The onboarding process</h2>
         <div class="bp-steps">
@@ -116,9 +140,9 @@ function renderBrandPartnershipsPage() {
   }).catch(() => {});
 }
 
-// Destination still to be decided (an application form, email, etc.).
+// Opens the Partner Application form (partner-application.js).
 function applyForBrandPartnership() {
-  if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Applications open soon');
+  navigateToContentPage('partner-application');
 }
 
 window.renderBrandPartnershipsPage = renderBrandPartnershipsPage;

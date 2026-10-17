@@ -55,3 +55,33 @@
   .bp-brands { gap: 16px; }
   .bp-benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 32px; }
 }
+
+/* Partner Application (partner-application.js); form fields reuse the
+   Track Your Order and returns styles. */
+.pa-back { display: inline-block; font-size: 12px; color: #666; margin: 0 0 18px; }
+.pa-section { border-top: 1px solid #e5e5e5; padding: 28px 0 8px; }
+.pa-section-title { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 600; margin: 0 0 20px; }
+.pa-section-title span { width: 28px; height: 28px; border-radius: 50%; background: #e6edd5; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.pa-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.pa-hint { font-size: 12px; color: #888; margin: -12px 0 18px; line-height: 1.5; }
+.pa-hint-top { margin: -8px 0 16px; }
+.pa-textarea { height: 150px; }
+.pa-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin: 4px 0 20px; }
+.pa-check { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.4; cursor: pointer; }
+.pa-check input { width: 16px; height: 16px; margin: 1px 0 0; accent-color: #111; flex-shrink: 0; }
+.pa-consent { border-top: 1px solid #e5e5e5; padding: 24px 0 18px; color: #555; }
+.pa-done .track-intro { margin-bottom: 16px; }
+.pa-done .track-btn { margin-top: 12px; }
+.pa-page .account-tabs { margin: 0 0 24px; }
+.pa-conditions { margin: 0; padding: 0 0 0 20px; font-size: 13px; line-height: 1.7; }
+.pa-conditions li { margin: 0 0 8px; }
+.track-step.is-declined .track-step-dot { background: #111; border-color: #111; color: #fff; }
+.pa-page #ps-result:not(:empty) { margin-top: 36px; }
+.pa-help { background: #e6edd5; font-size: 13px; line-height: 1.6; padding: 14px 16px; margin-top: 14px; }
+.bp-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 22px; }
+.bp-tags span { font-size: 12px; padding: 7px 14px; border: 1px solid #111; border-radius: 999px; }
+.bp-list-no li::before { background: #111; border-radius: 0; width: 8px; height: 2px; top: 11px; }
+.pa-before { margin: 0 0 28px; line-height: 1.6; }
+.pa-before .track-link { display: inline-block; margin-top: 8px; }
+.pa-support-toggle { margin: 0 0 20px; }
+.pa-consent { display: flex; flex-direction: column; gap: 14px; }

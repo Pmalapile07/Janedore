@@ -1074,3 +1074,5 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .return-admin-log em { color: var(--muted); font-style: normal; }
 .return-pre { white-space: pre-line; }
 .return-close { margin-top: 8px; }
+.app-admin-conditions { margin: 0 0 8px; padding: 0 0 0 20px; font-size: 13px; line-height: 1.6; }
+.app-admin-conditions li { margin: 0 0 4px; }

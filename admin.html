@@ -70,6 +70,7 @@
     <button class="sidebar-btn" data-tab="messages" onclick="switchTab('messages')"><span class="sidebar-icon"><i class="ph-light ph-chat"></i></span>Inbox</button>
     <button class="sidebar-btn" id="reports-tab-btn" data-tab="reports" onclick="switchTab('reports')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-flag"></i></span>Reports</button>
 
+    <button class="sidebar-btn" id="applications-tab-btn" data-tab="applications" onclick="switchTab('applications')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-file-text"></i></span>Applications</button>
     <button class="sidebar-btn" id="vendors-tab-btn" data-tab="vendors" onclick="switchTab('vendors')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-handshake"></i></span>Vendors</button>
     <button class="sidebar-btn" id="admins-tab-btn" data-tab="admins" onclick="switchTab('admins')" style="display:none;"><span class="sidebar-icon"><i class="ph-light ph-users-three"></i></span>Admins</button>
 
@@ -163,6 +164,7 @@
     </div>
 
     <button class="more-menu-item" data-tab="messages" onclick="closeMoreMenu();switchTab('messages')"><div class="more-menu-icon"><i class="ph-bold ph-chat"></i></div><div style="flex:1"><div class="more-menu-item-label">Inbox</div></div><span class="bnav-badge" id="more-msg-badge" style="position:static;border:none;margin-right:2px;"></span><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
+    <button class="more-menu-item" data-tab="applications" id="applications-more-item" onclick="closeMoreMenu();switchTab('applications')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-file-text"></i></div><div style="flex:1"><div class="more-menu-item-label">Applications</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <button class="more-menu-item" data-tab="reports" id="reports-more-item" onclick="closeMoreMenu();switchTab('reports')" style="display:none;"><div class="more-menu-icon"><i class="ph-bold ph-flag"></i></div><div style="flex:1"><div class="more-menu-item-label">Reports</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <button class="more-menu-item" data-tab="reviews" onclick="closeMoreMenu();switchTab('reviews')"><div class="more-menu-icon"><i class="ph-bold ph-star"></i></div><div style="flex:1"><div class="more-menu-item-label">Reviews</div></div><span class="more-menu-arrow"><i class="ph-bold ph-caret-right"></i></span></button>
     <div class="more-divider"></div>
@@ -262,6 +264,7 @@ fetch('/api/cloudinary-config')
 <script src="admin-content.js"></script>
 <script src="admin-reports.js"></script>
 <script src="admin-returns.js"></script>
+<script src="admin-applications.js"></script>
 <script src="admin-devtools.js"></script>
 
 </body>
