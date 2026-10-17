@@ -15,6 +15,13 @@
 
 const BRAND_PARTNERSHIPS_SLUG = 'brand-partnerships';
 
+// Hidden for now: set to true to bring the page back. While false, the
+// menu and footer links are hidden and /pages/brand-partnerships goes to
+// the homepage. The application status check (/pages/partner-application)
+// and admin > Applications keep working for brands that already applied.
+const BRAND_PARTNERSHIPS_LIVE = false;
+if (!BRAND_PARTNERSHIPS_LIVE) document.querySelectorAll('[data-bp-link]').forEach(a => { a.style.display = 'none'; });
+
 const BP_CATEGORIES = ['clothing', 'kidswear', 'jewellery', 'bags', 'footwear', 'accessories', 'homeware', 'beauty', 'fragrance and candles'];
 
 const BP_FAQ = [
@@ -55,6 +62,7 @@ function bpScrollTo(id, instant) {
 }
 
 function renderBrandPartnershipsPage() {
+  if (!BRAND_PARTNERSHIPS_LIVE) { navigateTo('home', true); return; }
   const el = document.getElementById('content-page-body');
   if (!el) return;
 
@@ -166,6 +174,7 @@ function applyForBrandPartnership() {
   bpScrollTo('bp-apply');
 }
 
+window.BRAND_PARTNERSHIPS_LIVE = BRAND_PARTNERSHIPS_LIVE;
 window.renderBrandPartnershipsPage = renderBrandPartnershipsPage;
 window.applyForBrandPartnership = applyForBrandPartnership;
 window.bpScrollTo = bpScrollTo;
