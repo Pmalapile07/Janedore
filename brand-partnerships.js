@@ -1,5 +1,5 @@
 /* ============================================================
-   BRAND PARTNERSHIPS — /pages/brand-partnerships (footer link)
+   BRAND PARTNERSHIPS: /pages/brand-partnerships (footer link)
    content-pages.js hands this slug to renderBrandPartnershipsPage()
    instead of a Firestore page. One journey: hero, proposition, what we
    look for, how it works, commercial terms, FAQ, then the application
@@ -48,9 +48,9 @@ function renderBrandPartnershipsPage() {
   const el = document.getElementById('content-page-body');
   if (!el) return;
 
-  const head = (num, label, title, intro) => `
+  const head = (label, title, intro) => `
     <div class="bp-head">
-      <div class="bp-kicker"><span>${num}</span>${label}</div>
+      <div class="bp-kicker">${label}</div>
       <h2 class="bp-title">${title}</h2>
       ${intro ? `<p class="bp-intro">${intro}</p>` : ''}
     </div>`;
@@ -117,7 +117,7 @@ function renderBrandPartnershipsPage() {
 
       <section class="bp-section" aria-labelledby="bp-s1">
         <div class="bp-wrap">
-          ${head('01', 'The proposition', '<span id="bp-s1">Why brands join JANEDORE</span>', 'A partnership is a second home for your work: a place where it is presented with care, alongside brands that share your standards.')}
+          ${head('The proposition', '<span id="bp-s1">Why brands join JANEDORE</span>', 'A partnership is a second home for your work: a place where it is presented with care, alongside brands that share your standards.')}
           <div class="bp-benefits">
             ${benefits.map(([t, d]) => `<div class="bp-benefit"><h3>${t}</h3><p>${d}</p></div>`).join('')}
           </div>
@@ -127,7 +127,7 @@ function renderBrandPartnershipsPage() {
 
       <section class="bp-section bp-tint" aria-labelledby="bp-s2">
         <div class="bp-wrap">
-          ${head('02', 'Selection', '<span id="bp-s2">What we look for</span>', 'Every application is considered individually. We welcome emerging and established brands alike; what matters is the work and how it is run.')}
+          ${head('Selection', '<span id="bp-s2">What we look for</span>', 'Every application is considered individually. We welcome emerging and established brands alike; what matters is the work and how it is run.')}
           <dl class="bp-criteria">
             ${criteria.map(([t, d]) => `<div class="bp-criterion"><dt>${t}</dt><dd>${d}</dd></div>`).join('')}
           </dl>
@@ -148,16 +148,16 @@ function renderBrandPartnershipsPage() {
 
       <section class="bp-section" id="bp-process" aria-labelledby="bp-s3">
         <div class="bp-wrap">
-          ${head('03', 'The process', '<span id="bp-s3">How partnerships work</span>', '')}
+          ${head('The process', '<span id="bp-s3">How partnerships work</span>', '')}
           <ol class="bp-steps">
-            ${steps.map(([t, d], i) => `<li class="bp-step"><span class="bp-step-num">${String(i + 1).padStart(2, '0')}</span><div><h3>${t}</h3><p>${d}</p></div></li>`).join('')}
+            ${steps.map(([t, d]) => `<li class="bp-step"><h3>${t}</h3><p>${d}</p></li>`).join('')}
           </ol>
         </div>
       </section>
 
       <section class="bp-section bp-tint" aria-labelledby="bp-s4">
         <div class="bp-wrap">
-          ${head('04', 'Commercial terms', '<span id="bp-s4">Clear terms, agreed first</span>', 'The details of every partnership are discussed and agreed before it begins. These are the areas we cover with each brand.')}
+          ${head('Commercial terms', '<span id="bp-s4">Clear terms, agreed first</span>', 'The details of every partnership are discussed and agreed before it begins. These are the areas we cover with each brand.')}
           <dl class="bp-terms">
             ${terms.map(([t, d]) => `<div class="bp-term"><dt>${t}</dt><dd>${d}</dd></div>`).join('')}
           </dl>
@@ -167,14 +167,14 @@ function renderBrandPartnershipsPage() {
 
       <section class="bp-section" aria-labelledby="bp-s5">
         <div class="bp-wrap bp-narrow">
-          ${head('05', 'Questions', '<span id="bp-s5">Frequently asked</span>', '')}
+          ${head('Questions', '<span id="bp-s5">Frequently asked</span>', '')}
           <div class="bp-faq">${BP_FAQ.map(([q, a]) => `<details class="bp-faq-item"><summary>${q}<span class="bp-faq-icon" aria-hidden="true"></span></summary><p>${a}</p></details>`).join('')}</div>
         </div>
       </section>
 
       <section class="bp-section bp-apply" id="bp-apply" aria-labelledby="bp-s6">
         <div class="bp-wrap bp-narrow">
-          ${head('06', 'Apply', '<span id="bp-s6">Partner application</span>', 'Tell us about your brand. It takes around ten minutes. Fields marked * are required.')}
+          ${head('Apply', '<span id="bp-s6">Partner application</span>', 'Tell us about your brand. It takes around ten minutes. Fields marked * are required.')}
           <div id="pa-form-wrap">${typeof partnerFormHtml === 'function' ? partnerFormHtml() : ''}</div>
           <p class="bp-status-link">Already applied? <button type="button" class="bp-link" onclick="openPartnerStatusPage()">Check your application status</button></p>
         </div>

@@ -11,9 +11,7 @@
 
 /* Shared type */
 .bp-eyebrow, .bp-kicker { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #666; }
-.bp-kicker { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
-.bp-kicker span { color: #111; }
-.bp-kicker span::after { content: ''; display: inline-block; width: 24px; height: 1px; background: #111; vertical-align: middle; margin-left: 12px; }
+.bp-kicker { margin: 0 0 14px; }
 .bp-head { margin: 0 0 32px; max-width: 620px; }
 .bp-title { font-size: var(--heading-size); font-weight: 600; line-height: 1.2; }
 .bp-intro { font-size: 14px; line-height: 1.7; color: #555; margin-top: 14px; }
@@ -68,8 +66,7 @@
 
 /* D. Process */
 .bp-steps { list-style: none; padding: 0; border-top: 1px solid #ddd; }
-.bp-step { display: flex; gap: 20px; padding: 22px 0; border-bottom: 1px solid #ddd; }
-.bp-step-num { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; color: #666; min-width: 24px; padding-top: 2px; }
+.bp-step { padding: 22px 0; border-bottom: 1px solid #ddd; }
 .bp-step h3 { margin-bottom: 6px; }
 
 /* E. Terms */
@@ -160,7 +157,7 @@ select.pa-input {
   .bp-criterion { border-top: 1px solid #ddd; border-bottom: none; padding: 20px 0 24px; }
 
   .bp-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: none; }
-  .bp-step { flex-direction: column; gap: 18px; border-bottom: none; border-top: 1px solid #111; padding: 20px 0 0; }
+  .bp-step { border-bottom: none; border-top: 1px solid #111; padding: 20px 0 0; }
 
   .bp-terms { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 48px; border-top: none; }
   .bp-term { border-top: 1px solid #ddd; border-bottom: none; padding: 20px 0 24px; }
