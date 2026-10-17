@@ -684,7 +684,9 @@
     .then(function (res) { return res.json(); })
     .then(function (config) {
       window.CLOUDINARY_CLOUD_NAME = config.cloudName;
-      window.CLOUDINARY_UPLOAD_PRESET = config.uploadPreset;
+      // The storefront only uploads customer photos, so it uses the
+      // images-only preset (see /api/cloudinary-config in server.js).
+      window.CLOUDINARY_UPLOAD_PRESET = config.publicUploadPreset || config.uploadPreset;
     })
     .catch(function (err) {
       console.error('Cloudinary config failed to load', err);
