@@ -17,7 +17,7 @@ const REASONS = ['Doesn’t fit', 'Not as described', 'Damaged or faulty', 'Wron
 const OPEN = ['submitted', 'approved', 'received', 'refund_pending'];
 
 module.exports = function registerReturns(app, deps) {
-  const { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL } = deps;
+  const { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL, getVendors } = deps;
   const ts = () => admin.firestore.FieldValue.serverTimestamp();
   const iso = (t) => (t && t.toDate ? t.toDate().toISOString() : (t || null));
 
@@ -114,9 +114,9 @@ module.exports = function registerReturns(app, deps) {
 
   async function brandContacts(vendorIds) {
     if (!vendorIds.length) return [];
-    const docs = await adminDb.getAll(...vendorIds.map((id) => adminDb.collection('vendors').doc(id)));
-    return docs.map((d, i) => {
-      const v = d.exists ? d.data() : {};
+    const vendors = await getVendors(vendorIds);
+    return vendors.map((found, i) => {
+      const v = found || {};
       return { id: vendorIds[i], label: v.brand || v.name || 'A brand', to: String(v.email || v.accountEmail || '').trim() };
     });
   }

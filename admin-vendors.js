@@ -13,6 +13,32 @@
   var mountModal   = window._mountModal;
   var closeModal   = window._closeModal;
   var vendorsRef   = window._adminDB.collection('vendors');
+
+  // A brand's private details live in vendorPrivate/{vendorId}, readable
+  // only by staff and the brand itself (firestore.rules). vendors/{id} is
+  // public, because the storefront reads it, so it only keeps what shoppers
+  // see. server.js moves any of these still on a vendors doc on start-up.
+  var privateRef = window._adminDB.collection('vendorPrivate');
+  var PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes'];
+
+  function saveVendor(id, data) {
+    var pub = {}, priv = {};
+    Object.keys(data).forEach(function(k) {
+      if (PRIVATE_FIELDS.indexOf(k) !== -1) { priv[k] = data[k]; pub[k] = firebase.firestore.FieldValue.delete(); }
+      else pub[k] = data[k];
+    });
+    if (data.updatedAt) priv.updatedAt = data.updatedAt;
+    // Private first, so a failure never drops a value from both places.
+    var first = Object.keys(priv).length ? privateRef.doc(id).set(priv, { merge: true }) : Promise.resolve();
+    return first.then(function() { return vendorsRef.doc(id).set(pub, { merge: true }); });
+  }
+
+  function withPrivate(vendor) {
+    return privateRef.doc(vendor.id).get().then(function(doc) {
+      return doc.exists ? Object.assign(vendor, doc.data(), { id: vendor.id }) : vendor;
+    }).catch(function() { return vendor; });
+  }
+  window._vendorWithPrivate = withPrivate;
   var ordersRef    = window._ordersRef;
   var productsRef  = window._productsRef;
   var adminsRef    = window._adminsRef;
@@ -105,11 +131,13 @@
       ordersRef.orderBy('createdAt', 'desc').limit(200).get()
     ]).then(function(results) {
       var brandsSnap = results[0];
-      var ordersSnap  = results[1];
 
       window._vendorsData = brandsSnap.docs.map(function(d) {
         return Object.assign({ id: d.id }, d.data());
       });
+      return Promise.all(window._vendorsData.map(withPrivate)).then(function() { return results; });
+    }).then(function(results) {
+      var ordersSnap = results[1];
       _mergeLegacyBrandsData();
 
       var orders = ordersSnap.docs.map(function(d) {
@@ -368,7 +396,7 @@
           createdBy: window._currentUser.uid
         });
       }).then(function() {
-        return vendorsRef.doc(vendorId).update({
+        return saveVendor(vendorId, {
           accountEmail: email,
           accountUid: uid,
           updatedAt: new Date().toISOString()
@@ -482,12 +510,13 @@
     mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Loading your brand profile...</div></div>';
 
     vendorsRef.doc(vendorId).get().then(function(doc) {
-      if (!doc.exists) {
+      if (!doc.exists) return null;
+      return withPrivate(Object.assign({ id: doc.id }, doc.data()));
+    }).then(function(v) {
+      if (!v) {
         mc.innerHTML = '<div class="empty-state"><div class="empty-state-text">Brand profile not found.</div></div>';
         return;
       }
-
-      var v = Object.assign({ id: doc.id }, doc.data());
 
       var allProducts = window._allProducts || [];
       var vendorProducts = allProducts.filter(function(p) { return p.vendorId === vendorId; });
@@ -602,7 +631,7 @@
       updatedAt:     new Date().toISOString()
     };
 
-    vendorsRef.doc(vendorId).update(data).then(function() {
+    saveVendor(vendorId, data).then(function() {
       showToast('Brand profile updated');
     }).catch(function(e) {
       console.error('[VENDOR_PROFILE_UPDATE]', e);
@@ -686,7 +715,7 @@
       data.createdAt = new Date().toISOString();
     }
 
-    vendorsRef.doc(brandId).set(data, { merge: true }).then(function() {
+    saveVendor(brandId, data).then(function() {
       showToast('Brand saved');
       closeModal();
       window._renderVendorsTab();
@@ -700,6 +729,7 @@
     if (!isSuperAdmin()) return;
     if (!confirm('Delete this brand? This cannot be undone.')) return;
     vendorsRef.doc(vendorId).delete().then(function() {
+      privateRef.doc(vendorId).delete().catch(function() {});
       showToast('Brand deleted');
       closeModal();
       window._renderVendorsTab();
@@ -724,7 +754,7 @@
     ];
 
     var promises = defaults.map(function(v) {
-      return vendorsRef.doc(v.id).set(v, { merge: true });
+      return saveVendor(v.id, v);
     });
 
     Promise.all(promises).then(function() {

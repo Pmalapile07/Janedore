@@ -9,7 +9,8 @@
 
 S.accountTab = 'orders';
 let _accountOrders = null;   // paid/cancelled orders, newest first
-let _accountProfile = null;  // customers/{uid}
+let _accountProfile = null;
+let _accountNeedsVerify = false;  // customers/{uid}
 let _accountUid = null;
 
 function accountUser() {
@@ -61,11 +62,24 @@ function setAccountTab(tab) {
 async function loadAccountOrders() {
   if (_accountOrders) return _accountOrders;
   const user = accountUser();
-  // customerEmail alone (no orderBy), so no composite index is needed;
-  // sorted here instead. Unpaid orders that never went through are left out.
-  const snap = await db.collection('orders').where('customerEmail', '==', (user.email || '').trim().toLowerCase()).limit(100).get();
+  // Orders placed while signed in are found by account. Orders placed with
+  // this email as a guest are only shown once the email is verified
+  // (firestore.rules), so nobody can sign up with someone else's email and
+  // see their orders. Single-field queries (no orderBy), so no composite
+  // index is needed; sorted here instead. Unpaid orders that never went
+  // through are left out.
+  if (!user.emailVerified) {
+    await user.reload().catch(() => {});
+    if (user.emailVerified) await user.getIdToken(true).catch(() => {});
+  }
+  _accountNeedsVerify = !user.emailVerified;
+  const queries = [db.collection('orders').where('customerId', '==', user.uid).limit(100).get()];
+  if (user.emailVerified) queries.push(db.collection('orders').where('customerEmail', '==', (user.email || '').trim().toLowerCase()).limit(100).get());
+  const snaps = await Promise.all(queries);
+  const byId = {};
+  snaps.forEach(snap => snap.docs.forEach(d => { byId[d.id] = Object.assign({ id: d.id }, d.data()); }));
   const seconds = (o) => (o.createdAt && o.createdAt.seconds) || (o.createdAt ? new Date(o.createdAt).getTime() / 1000 : 0);
-  _accountOrders = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
+  _accountOrders = Object.values(byId)
     .filter(o => o.paymentStatus === 'paid' || o.paymentStatus === 'refund_pending' || accountOrderCancelled(o))
     .sort((a, b) => seconds(b) - seconds(a));
   return _accountOrders;
@@ -130,8 +144,9 @@ async function renderAccountOrders() {
     return;
   }
   if (!body || S.accountTab !== 'orders') return;
+  const verify = _accountNeedsVerify ? `<div class="track-notice account-verify">Placed an order as a guest with this email address? <span class="track-link" onclick="sendAccountVerification(this)">Verify your email</span> to see it here.</div>` : '';
   if (!orders.length) {
-    body.innerHTML = `<div class="cart-empty account-empty">
+    body.innerHTML = verify + `<div class="cart-empty account-empty">
       <i class="ph ph-package cart-empty-icon" aria-hidden="true"></i>
       <div class="cart-empty-title">No orders yet</div>
       <div class="wish-empty-sub">When you place an order, it will appear here.</div>
@@ -139,7 +154,7 @@ async function renderAccountOrders() {
     </div>`;
     return;
   }
-  body.innerHTML = orders.map(o => {
+  body.innerHTML = verify + orders.map(o => {
     const status = accountOrderStatus(o);
     const items = o.items || [];
     const count = items.reduce((a, i) => a + (Number(i.qty) || 1), 0);
@@ -350,4 +365,16 @@ async function renderAccountReviews() {
 }
 
 // A different customer signing in on this device starts clean.
+function sendAccountVerification(el) {
+  const user = accountUser();
+  if (!user) return;
+  if (el) el.style.pointerEvents = 'none';
+  user.sendEmailVerification().then(() => {
+    showAddedToCartToast('Verification email sent to ' + user.email);
+  }).catch(e => {
+    if (el) el.style.pointerEvents = '';
+    showAddedToCartToast(e && e.code === 'auth/too-many-requests' ? 'Please wait a few minutes before trying again' : 'Could not send the email. Please try again.');
+  });
+}
+
 function clearAccountCache() { _accountOrders = null; _accountProfile = null; _accountUid = null; S.accountTab = 'orders'; }

@@ -372,15 +372,21 @@ function applyPromoCode(inputId) {
 
   const subtotal = getCartSubtotal();
 
-  // Query Firestore for the discount code (Firestore handles this safely)
-  DISCOUNTS_REF.where('code', '==', code).get().then(function(snapshot) {
-    if (snapshot.empty) {
+  // Checked on the server (server.js /api/discounts/lookup): shoppers
+  // can't read the discounts collection, so codes can't be listed.
+  fetch('/api/discounts/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
+    .then(function(res) {
+      return res.json().catch(function() { return {}; }).then(function(data) {
+        if (!res.ok) throw new Error(data.error || 'Could not check that code');
+        return data;
+      });
+    }).then(function(data) {
+    if (!data.found) {
       showPromoMessage(inputId, 'Invalid discount code', 'error');
       return;
     }
 
-    const discountDoc = snapshot.docs[0];
-    const discount = Object.assign({ id: discountDoc.id }, discountDoc.data());
+    const discount = data.discount;
 
     // Check if discount is active
     if (!discount.active) {

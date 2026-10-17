@@ -104,7 +104,10 @@
         var title = safeEl('vendor-dash-title');
         if (title) title.textContent = vendorName + ' Dashboard';
       }
-      return doc.exists ? doc.data() : {};
+      // Commission lives in vendorPrivate (see admin-vendors.js).
+      return db.collection('vendorPrivate').doc(vendorId).get().then(function (p) {
+        return Object.assign({}, doc.exists ? doc.data() : {}, p.exists ? p.data() : {});
+      }).catch(function () { return doc.exists ? doc.data() : {}; });
     }).catch(function () { return {}; });
 
     Promise.all([

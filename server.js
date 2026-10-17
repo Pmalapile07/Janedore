@@ -16,6 +16,55 @@ app.set('trust proxy', true);
 
 app.use(express.json());
 
+// ==================== SECURITY ====================
+// Browser security headers on every response. frame-ancestors/X-Frame-
+// Options 'self' still allow admin's homepage preview (a same-site
+// iframe) but stop other sites framing the shop (clickjacking).
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Content-Security-Policy': "frame-ancestors 'self'",
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
+  });
+  if (req.secure) res.set('Strict-Transport-Security', 'max-age=15552000');
+  next();
+});
+
+// Server-side code and config sit in the same folder that express.static
+// serves the site from. They hold no secrets, but there is no reason for
+// anyone to download them, so they 404 like any missing file.
+const PRIVATE_FILES = new Set([
+  '/server.js', '/returns-api.js', '/partner-applications-api.js', '/order-emails.js',
+  '/firestore.rules', '/firestore.indexes.json', '/package.json', '/package-lock.json',
+  '/debugger.html'
+]);
+app.use((req, res, next) => {
+  let p = req.path;
+  try { p = decodeURIComponent(p); } catch (e) {}
+  if (PRIVATE_FILES.has(p.toLowerCase()) || /^\/node_modules(\/|$)/i.test(p)) return res.status(404).send('Not found');
+  next();
+});
+
+// Simple per-IP limiter for public endpoints: true once an IP has made
+// `max` requests to this bucket within `windowMs`.
+const rateBuckets = new Map();
+function rateLimited(req, bucket, max, windowMs) {
+  const key = bucket + ':' + String(req.ip || '');
+  const now = Date.now();
+  const hits = (rateBuckets.get(key) || []).filter((t) => now - t < windowMs);
+  if (hits.length >= max) { rateBuckets.set(key, hits); return true; }
+  hits.push(now);
+  rateBuckets.set(key, hits);
+  return false;
+}
+// Drop old entries every 30 minutes so the map can't grow without limit.
+setInterval(() => {
+  const now = Date.now();
+  rateBuckets.forEach((hits, key) => { if (!hits.some((t) => now - t < 24 * 60 * 60 * 1000)) rateBuckets.delete(key); });
+}, 30 * 60 * 1000).unref();
+
 // Page HTML (/, /cart, /checkout, /products/... — any path without a file
 // extension) must be re-checked on every load. Without a Cache-Control
 // header, a phone restoring a tab after a while can reuse an old copy
@@ -105,6 +154,7 @@ app.get('/api/online-store-status', async (req, res) => {
 });
 
 app.post('/api/verify-visitor-password', async (req, res) => {
+  if (rateLimited(req, 'visitor-password', 10, 15 * 60 * 1000)) return res.status(429).json({ ok: false, error: 'Too many tries. Please wait a few minutes.' });
   const password = req.body && req.body.password;
   if (!password || typeof password !== 'string') {
     return res.status(400).json({ ok: false });
@@ -297,12 +347,20 @@ function sendResendEmail(opts) {
 }
 
 // Newsletter welcome email via Resend
+// Each address gets this email at most once a day, and each IP can
+// trigger it 3 times an hour, so it can't be used to spam people.
+const welcomeSentTo = new Map();
 app.post('/api/send-welcome-email', (req, res) => {
-  const email = req.body && req.body.email;
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase().slice(0, 200);
 
-  if (!email || !email.includes('@')) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Invalid email' });
   }
+  const last = welcomeSentTo.get(email);
+  if (last && Date.now() - last < 24 * 60 * 60 * 1000) return res.json({ success: true });
+  if (rateLimited(req, 'welcome-email', 3, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests' });
+  welcomeSentTo.set(email, Date.now());
+  if (welcomeSentTo.size > 5000) welcomeSentTo.clear();
 
   const html = emailLayout({
     heading: 'You’re on the list.',
@@ -330,6 +388,50 @@ app.post('/api/send-welcome-email', (req, res) => {
 // siteLogo replaces the header wordmark, emailLogo goes in the black bar
 // of every order email. Cached for a minute.
 let brandAssetsCache = { value: { siteLogo: '', emailLogo: '', logoFont: '', logoFontFormat: '' }, at: 0 };
+// ==================== BRAND PRIVATE DETAILS ====================
+// vendors/{id} is public (the storefront reads it), so a brand's contact
+// and login email, commission, PayFast merchant ID and internal notes live
+// in vendorPrivate/{id} instead (admin-vendors.js, firestore.rules).
+// getVendors() returns both merged. migrateVendorPrivate() moves any of
+// these fields still on a vendors doc, once, on start-up.
+const VENDOR_PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes'];
+
+async function getVendors(ids) {
+  if (!ids.length) return [];
+  const pubs = await adminDb.getAll(...ids.map((id) => adminDb.collection('vendors').doc(id)));
+  const privs = await adminDb.getAll(...ids.map((id) => adminDb.collection('vendorPrivate').doc(id)));
+  return pubs.map((d, i) => d.exists ? Object.assign({}, d.data(), privs[i].exists ? privs[i].data() : {}) : null);
+}
+
+async function migrateVendorPrivate() {
+  if (!adminDb) return;
+  try {
+    const snap = await adminDb.collection('vendors').get();
+    let moved = 0;
+    for (const doc of snap.docs) {
+      const d = doc.data();
+      const priv = {};
+      const del = {};
+      VENDOR_PRIVATE_FIELDS.forEach((f) => {
+        if (f in d) { priv[f] = d[f]; del[f] = admin.firestore.FieldValue.delete(); }
+      });
+      if (!Object.keys(priv).length) continue;
+      const privRef = adminDb.collection('vendorPrivate').doc(doc.id);
+      const existing = await privRef.get();
+      // A value already in vendorPrivate is newer; never overwrite it.
+      const keep = existing.exists ? existing.data() : {};
+      Object.keys(keep).forEach((k) => { if (k in priv) delete priv[k]; });
+      if (Object.keys(priv).length) await privRef.set(priv, { merge: true });
+      await doc.ref.update(del);
+      moved++;
+    }
+    if (moved) console.log('[VENDOR_PRIVATE] Moved private details for ' + moved + ' brand(s)');
+  } catch (e) {
+    console.error('[VENDOR_PRIVATE] Migration failed:', e.message);
+  }
+}
+migrateVendorPrivate();
+
 async function getBrandAssets() {
   if (!adminDb || Date.now() - brandAssetsCache.at < 60 * 1000) return brandAssetsCache.value;
   try {
@@ -425,11 +527,10 @@ async function sendPaidOrderEmails(orderId, order) {
     if (vid) (byVendor[vid] = byVendor[vid] || []).push(item);
   });
   const vendorIds = Object.keys(byVendor);
-  const vendorDocs = vendorIds.length ? await adminDb.getAll(...vendorIds.map(id => adminDb.collection('vendors').doc(id))) : [];
+  const vendorList = await getVendors(vendorIds);
   const brandSends = [];
   const notes = [];
-  vendorDocs.forEach((doc, i) => {
-    const vendor = doc.exists ? doc.data() : null;
+  vendorList.forEach((vendor, i) => {
     const label = (vendor && (vendor.brand || vendor.name)) || 'A brand';
     const to = vendor && String(vendor.email || vendor.accountEmail || '').trim();
     if (!to) { notes.push(escapeHtml(label) + ' has no email on file, so they were not emailed.'); return; }
@@ -716,8 +817,7 @@ app.post('/api/payfast/initiate', async (req, res) => {
     // way, the payout is just manual for that order instead.
     let setupField = null;
     if (Array.isArray(order.vendorIds) && order.vendorIds.length === 1) {
-      const vendorDoc = await adminDb.collection('vendors').doc(order.vendorIds[0]).get();
-      const vendor = vendorDoc.exists ? vendorDoc.data() : null;
+      const vendor = (await getVendors([order.vendorIds[0]]))[0];
       if (vendor && vendor.payfastMerchantId) {
         const commission = Number(vendor.commissionRate);
         const vendorPercentage = Number.isFinite(commission)
@@ -1103,6 +1203,37 @@ app.get('/api/orders/:id', async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ error: 'Could not load order' });
+  }
+});
+
+// ==================== DISCOUNT LOOKUP ====================
+// The bag's promo code box (cart.js applyPromoCode). Discounts are no
+// longer readable by shoppers in Firestore (so nobody can list every
+// code), so the bag asks here for one code at a time. Returns only what
+// the bag needs to check and show it; checkout still re-prices on the
+// server (priceOrder). 30 tries per 15 minutes per IP.
+const discountHits = new Map();
+app.post('/api/discounts/lookup', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  const ip = String(req.ip || '');
+  const now = Date.now();
+  const hits = (discountHits.get(ip) || []).filter((t) => now - t < 15 * 60 * 1000);
+  if (hits.length >= 30) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+  hits.push(now);
+  discountHits.set(ip, hits);
+  const code = String((req.body && req.body.code) || '').replace(/[^A-Za-z0-9_-]/g, '').substring(0, 20);
+  if (!code) return res.status(400).json({ error: 'Please enter a discount code.' });
+  try {
+    const snap = await adminDb.collection('discounts').where('code', '==', code).limit(1).get();
+    if (snap.empty) return res.json({ found: false });
+    const d = snap.docs[0].data();
+    const pick = ['code', 'type', 'value', 'active', 'startDate', 'endDate', 'usageLimit', 'usageCount', 'minimumPurchase', 'buyQuantity', 'getQuantity', 'description', 'title'];
+    const out = { id: snap.docs[0].id };
+    pick.forEach((k) => { if (d[k] !== undefined) out[k] = d[k] && d[k].toDate ? d[k].toDate().toISOString() : d[k]; });
+    res.json({ found: true, discount: out });
+  } catch (e) {
+    console.error('[DISCOUNT_LOOKUP] Error:', e.message);
+    res.status(500).json({ error: 'Could not check that code. Please try again.' });
   }
 });
 
@@ -1542,7 +1673,9 @@ if (process.env.GEMINI_API_KEY) {
 const CHAT_SYSTEM_PROMPT = `You are the JANEDORE customer support assistant. JANEDORE is a multi-brand store, and every brand it stocks has been vetted for quality and a strong identity. You help customers with sizing, shipping, returns, and finding the right piece. Keep replies short (2-4 sentences), warm, and direct: this is a small chat bubble, not an email. Never use em dashes (—); use commas, colons or full stops instead. If you don't know the answer, or the question needs a human (an order-specific issue, a complaint, anything you're not confident about), say so plainly and suggest they ask to speak with a person.`;
 
 app.post('/api/chat-ai-reply', async (req, res) => {
-  const message = req.body && req.body.message;
+  // Each reply costs a Gemini call: 20 per 10 minutes per IP.
+  if (rateLimited(req, 'chat-ai', 20, 10 * 60 * 1000)) return res.status(429).json({ error: 'Too many messages. Please wait a few minutes.' });
+  const message = req.body && typeof req.body.message === 'string' ? req.body.message.slice(0, 2000) : req.body && req.body.message;
 
   if (!message || typeof message !== 'string' || !message.trim()) {
     return res.status(400).json({ error: 'Missing message' });
@@ -2245,7 +2378,7 @@ app.use(express.static(path.join(__dirname), {
 }));
 
 // Returns: /api/returns* and /api/admin/returns* (returns-api.js).
-require('./returns-api')(app, { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL });
+require('./returns-api')(app, { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL, getVendors });
 require('./partner-applications-api')(app, { adminDb, admin, sendResendEmail, orderEmails, ORDER_ALERT_EMAIL, SITE_URL, getBrandAssets, logoImageUrl });
 
 // Catch-all for HTML routing — only sends index.html for clean URLs
