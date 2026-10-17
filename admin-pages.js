@@ -28,6 +28,11 @@
       { slug: 'shipping',    label: 'Shipping' },
       { slug: 'returns',     label: 'Returns' },
       { slug: 'contact',     label: 'Contact' }
+    ]},
+    // Text is built into the page (brand-partnerships.js); only the hero
+    // image is set here.
+    { group: 'Brand Partnerships', items: [
+      { slug: 'brand-partnerships', label: 'Brand Partnerships', heroOnly: true }
     ]}
   ];
 
@@ -84,7 +89,7 @@
     var groupsHtml = PAGE_GROUPS.map(function(g) {
       var rowsHtml = g.items.map(function(item) {
         var data = _pagesData[item.slug];
-        var hasContent = !!(data && data.content && data.content.trim());
+        var hasContent = item.heroOnly ? !!(data && data.heroImageUrl) : !!(data && data.content && data.content.trim());
         return '<div class="product-row" onclick="window._openPageForm(\'' + esc(item.slug) + '\')" style="cursor:pointer;">' +
           '<div style="flex:1;min-width:0;">' +
             '<div class="pi-name">' + esc(item.label) + '</div>' +
@@ -177,6 +182,7 @@
 
     var mc = safeEl('main-content');
     if (!mc) return;
+    if (item.heroOnly) { renderHeroPageForm(mc, item, data); return; }
 
     mc.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
@@ -194,6 +200,57 @@
           '</div>' +
         '</div>' +
       '</form>';
+  };
+
+  // Hero image only (Brand Partnerships).
+  function heroPreviewHtml(url) {
+    return url
+      ? '<div style="aspect-ratio:16/9;background:#111 center/cover no-repeat;background-image:url(\'' + esc(url) + '\');border-radius:6px;"></div>'
+      : '<div style="aspect-ratio:16/9;background:#111;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;">No image. The hero shows plain black.</div>';
+  }
+
+  function renderHeroPageForm(mc, item, data) {
+    var url = data.heroImageUrl || '';
+    mc.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+        '<button type="button" class="btn btn-ghost" onclick="window._renderPagesTab()"><i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Cancel</button>' +
+        '<div style="font-size:13px;font-weight:500;color:var(--text);">' + esc(item.label) + '</div>' +
+        '<button type="button" class="btn btn-primary" onclick="window._saveHeroPage(\'' + esc(item.slug) + '\')"><i class="ph-light ph-check" style="margin-right:4px;"></i> Save</button>' +
+      '</div>' +
+      '<div class="card" style="margin-bottom:12px;">' +
+        '<div class="card-header"><span class="card-title">Hero image</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div id="hero-page-preview">' + heroPreviewHtml(url) + '</div>' +
+          '<input type="hidden" id="hero-page-url" value="' + esc(url) + '">' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button type="button" class="btn btn-ghost" onclick="window._uploadHeroPageImage()"><i class="ph-light ph-upload-simple" style="margin-right:4px;"></i> Upload image</button>' +
+            '<button type="button" class="btn btn-ghost" onclick="window._setHeroPageImage(\'\')">Remove</button>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--muted);">Shown full width at the top of /pages/' + esc(item.slug) + ', with the page title over the bottom of it. A landscape image works best. The page text is part of the site design.</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  window._setHeroPageImage = function(url) {
+    var input = safeEl('hero-page-url'), prev = safeEl('hero-page-preview');
+    if (input) input.value = url;
+    if (prev) prev.innerHTML = heroPreviewHtml(url);
+  };
+
+  window._uploadHeroPageImage = function() {
+    if (!window._uploadToCloudinary) { showToast('Image upload is not available', 'error'); return; }
+    window._uploadToCloudinary(function(url) { window._setHeroPageImage(url); showToast('Image uploaded. Press Save to publish it.'); }, false);
+  };
+
+  window._saveHeroPage = function(slug) {
+    if (!window._guard('pages', 'update')) return;
+    var input = safeEl('hero-page-url');
+    var data = { heroImageUrl: input ? input.value : '', updatedAt: new Date().toISOString() };
+    pagesRef.doc(slug).set(data, { merge: true }).then(function() {
+      _pagesData[slug] = Object.assign({}, _pagesData[slug], data);
+      showToast('Page saved');
+      window._renderPagesTab();
+    }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
   };
 
   window._handlePageSubmit = function(e, slug) {

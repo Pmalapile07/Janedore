@@ -1,12 +1,28 @@
 /* Brand Partnerships (brand-partnerships.js). Uses the Track Your Order
    title/heading styles and the Customer Care icon circles. */
-.bp-page { max-width: 760px; margin: 0 auto; padding: 48px 16px 64px; font-family: 'Inter', sans-serif; color: #111; }
-.bp-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #666; margin: 0 0 12px; }
-.bp-hero .track-title { line-height: 1.2; margin-bottom: 14px; }
-.bp-lead { font-size: 15px; line-height: 1.6; color: #333; margin: 0; }
-.bp-section { margin-top: 48px; }
-.bp-section > .track-heading { margin: 0 0 12px; }
-.bp-text { font-size: 13px; line-height: 1.6; color: #555; margin: 0; }
+/* Full-width hero: the image from admin > Pages > Brand Partnerships,
+   plain black until one is set. */
+.bp-hero {
+  position: relative; min-height: 72vh; display: flex; align-items: flex-end;
+  background: #111 center / cover no-repeat; color: #fff; font-family: 'Inter', sans-serif;
+}
+.bp-hero.has-image::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.05) 65%); }
+.bp-hero-inner { position: relative; width: 100%; max-width: 760px; margin: 0 auto; padding: 40px 16px 44px; box-sizing: border-box; }
+.bp-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.8); margin: 0 0 14px; }
+.bp-hero-title { font-size: var(--heading-size); font-weight: 600; line-height: 1.2; margin: 0 0 14px; max-width: 560px; }
+.bp-hero-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.85); margin: 0; max-width: 520px; }
+
+.bp-page { max-width: 760px; margin: 0 auto; padding: 0 16px 64px; font-family: 'Inter', sans-serif; color: #111; }
+.bp-lead { font-size: 15px; line-height: 1.7; color: #222; margin: 0 0 16px; }
+.bp-section { margin-top: 56px; }
+.bp-section.bp-first { margin-top: 48px; }
+.bp-section > .track-heading { margin: 0 0 16px; }
+.bp-text { font-size: 13px; line-height: 1.7; color: #555; margin: 0 0 14px; }
+.bp-text:last-child { margin-bottom: 0; }
+.bp-list { margin: 18px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.bp-list li { font-size: 13px; line-height: 1.7; color: #555; padding-left: 18px; position: relative; }
+.bp-list li::before { content: ''; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: #b8cc87; }
+.bp-list strong { color: #111; font-weight: 600; }
 
 .bp-brands { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 24px 0 18px; }
 .bp-brand { cursor: pointer; }
@@ -19,7 +35,8 @@
 
 .bp-benefits, .bp-steps { display: flex; flex-direction: column; gap: 22px; margin-top: 22px; }
 .bp-benefit, .bp-step { display: flex; align-items: flex-start; gap: 16px; }
-.bp-benefit-title { font-size: 14px; font-weight: 600; margin: 2px 0 4px; }
+.bp-benefit-title { font-size: 14px; font-weight: 600; margin: 2px 0 6px; }
+.bp-benefit .bp-text, .bp-step .bp-text { margin: 0; }
 .bp-step-num { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #111; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
 
 .bp-cta { margin-top: 56px; background: #111; color: #fff; padding: 36px 24px; text-align: center; }
@@ -33,7 +50,8 @@
 .bp-cta-btn:hover { background: #e6edd5; }
 
 @media (min-width: 768px) {
-  .bp-page { padding-top: 72px; }
+  .bp-hero { min-height: 78vh; }
+  .bp-hero-inner { padding-bottom: 64px; }
   .bp-brands { gap: 16px; }
   .bp-benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 32px; }
 }
