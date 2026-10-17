@@ -5,8 +5,8 @@
    > Brand Partnerships (pages/brand-partnerships.heroImageUrl); the
    copy lives here. Two featured brands come from the live brand list
    (S.vendors), preferring ones with a cover image; grey placeholders
-   show until brands exist. The Apply button has no destination yet
-   (applyForBrandPartnership()).
+   show until brands exist. Apply to Partner opens
+   /pages/partner-application (partner-application.js).
    ============================================================ */
 
 const BRAND_PARTNERSHIPS_SLUG = 'brand-partnerships';
@@ -116,9 +116,9 @@ function renderBrandPartnershipsPage() {
   }).catch(() => {});
 }
 
-// Destination still to be decided (an application form, email, etc.).
+// Opens the Partner Application form (partner-application.js).
 function applyForBrandPartnership() {
-  if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Applications open soon');
+  navigateToContentPage('partner-application');
 }
 
 window.renderBrandPartnershipsPage = renderBrandPartnershipsPage;

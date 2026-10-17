@@ -690,4 +690,69 @@ function contactReceived(m, ctx) {
   return { subject: 'We received your message', html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, money };
+// Partner Application (/api/partner-applications): the team's copy and
+// the applicant's confirmation.
+function partnerApplicationForStaff(a, ctx) {
+  const link = (url, label) => '<a href="' + esc(url) + '" style="color:#111111;">' + esc(label || url) + '</a>';
+  const ig = a.instagram ? a.instagram.replace(/^@/, '') : '';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'New partner application',
+    preheader: a.brandName + ' has applied to partner with Janedore.',
+    bannerHtml: '<strong>New partner application: ' + esc(a.brandName) + '</strong>',
+    cards: [
+      title('Brand') + rows(
+        row('Brand', esc(a.brandName), { semi: true }) +
+        row('Based in', esc(a.location), { semi: true }) +
+        (a.founded ? row('Founded', esc(a.founded), { semi: true }) : '') +
+        (a.website ? row('Website', link(a.website), { semi: true }) : '') +
+        (ig ? row('Instagram', link('https://instagram.com/' + ig, '@' + ig), { semi: true }) : '') +
+        row('Categories', esc(a.categories.join(', ')), { semi: true }) +
+        row('Average price', esc(a.priceBand), { semi: true })) +
+        '<div style="font-size:14px;line-height:1.6;color:#111111;margin-top:12px;white-space:pre-wrap;">' + esc(a.story) + '</div>',
+      title('Sales and operations') + rows(
+        row('Channels', esc(a.channels.join(', ')), { semi: true }) +
+        row('Range', esc(a.rangeSize), { semi: true }) +
+        row('Fulfilment', esc(a.fulfilment), { semi: true })) +
+        (a.goals ? '<div style="font-size:14px;line-height:1.6;color:#111111;margin-top:12px;white-space:pre-wrap;"><strong>Goals:</strong> ' + esc(a.goals) + '</div>' : ''),
+      title('Imagery') + '<div>' + a.images.map((u) => '<a href="' + esc(u) + '"><img src="' + esc(u) + '" width="120" height="120" alt="" style="width:120px;height:120px;object-fit:cover;margin:0 6px 6px 0;border:0;"></a>').join('') + '</div>',
+      title('Contact') + rows(
+        row('Name', esc(a.contactName) + (a.role ? ', ' + esc(a.role) : ''), { semi: true }) +
+        row('Email', esc(a.email), { semi: true }) +
+        row('Phone', esc(a.phone), { semi: true }))
+    ],
+    footerHtml: 'Reply to this email to contact ' + esc(a.contactName) + ' directly.<br>Reference ' + esc(a.reference)
+  });
+  const text = 'New partner application: ' + a.brandName + ' (' + a.reference + ')\n\nBased in: ' + a.location + (a.founded ? '\nFounded: ' + a.founded : '') +
+    (a.website ? '\nWebsite: ' + a.website : '') + (ig ? '\nInstagram: @' + ig : '') + '\nCategories: ' + a.categories.join(', ') + '\nAverage price: ' + a.priceBand +
+    '\n\n' + a.story + '\n\nChannels: ' + a.channels.join(', ') + '\nRange: ' + a.rangeSize + '\nFulfilment: ' + a.fulfilment + (a.goals ? '\nGoals: ' + a.goals : '') +
+    '\n\nImages:\n' + a.images.join('\n') + '\n\nContact: ' + a.contactName + (a.role ? ', ' + a.role : '') + '\n' + a.email + '\n' + a.phone;
+  return { subject: 'Partner application: ' + a.brandName + ' (' + a.reference + ')', html, text };
+}
+
+function partnerApplicationReceived(a, ctx) {
+  const first = String(a.contactName || '').split(' ')[0];
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'Application received',
+    preheader: 'Thank you for applying to partner with Janedore. Your reference is ' + a.reference + '.',
+    bannerHtml: '<strong>Application received</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Dear ' + esc(first) + ',<br><br>Thank you for your interest in partnering with JANEDORE. We have received the application for <strong style="color:#111111;">' + esc(a.brandName) +
+        '</strong>.<br><br>Our partnerships team reviews every application carefully against our partnership criteria. If your brand is shortlisted, we will contact you to discuss the next steps.</div>',
+      title('Your application') + rows(
+        row('Reference', esc(a.reference), { semi: true }) +
+        row('Brand', esc(a.brandName), { semi: true }) +
+        row('Categories', esc(a.categories.join(', ')), { semi: true }))
+    ],
+    footerHtml: 'Questions about your application? Reply to this email and quote ' + esc(a.reference) + '.<br>Janedore · janedore.co.za'
+  });
+  const text = 'Application received\n\nDear ' + first + ',\n\nThank you for your interest in partnering with JANEDORE. We have received the application for ' + a.brandName +
+    '.\n\nOur partnerships team reviews every application carefully against our partnership criteria. If your brand is shortlisted, we will contact you to discuss the next steps.\n\nReference: ' + a.reference +
+    '\n\nQuestions? Reply to this email and quote ' + a.reference + '.';
+  return { subject: 'Your JANEDORE partner application (' + a.reference + ')', html, text };
+}
+
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, money };
