@@ -13,7 +13,7 @@
 .bp-hero-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.85); margin: 0; max-width: 520px; }
 
 .bp-page { max-width: 760px; margin: 0 auto; padding: 0 16px 64px; font-family: 'Inter', sans-serif; color: #111; }
-.bp-lead { font-size: 15px; line-height: 1.7; color: #222; margin: 0 0 16px; }
+.bp-lead { font-size: 13px; line-height: 1.7; color: #555; margin: 0 0 14px; }
 .bp-section { margin-top: 56px; }
 .bp-section.bp-first { margin-top: 48px; }
 .bp-section > .track-heading { margin: 0 0 16px; }
