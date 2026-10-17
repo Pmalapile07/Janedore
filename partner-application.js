@@ -1,132 +1,133 @@
 /* ============================================================
-   PARTNER APPLICATION — /pages/partner-application
-   Opened from Apply to Partner on /pages/brand-partnerships.
-   content-pages.js hands this slug to renderPartnerApplicationPage().
-   server.js /api/partner-applications saves the application to
-   partnerApplications, emails the team (reply goes to the applicant)
-   and sends the applicant a confirmation. Images use the same unsigned
-   Cloudinary upload as returns and the chat (chat.js).
+   PARTNER APPLICATION
+   The form lives in the Apply section of /pages/brand-partnerships
+   (brand-partnerships.js renders partnerFormHtml() and calls
+   initPartnerForm()). /pages/partner-application now only hosts the
+   status check; its Apply tab goes back to that section.
+   submitPartnerApplication() posts to /api/partner-applications
+   (partner-applications-api.js), which validates again, saves the
+   application, emails the team and sends the applicant a confirmation.
+   The success message only shows once the server has confirmed it.
+   Images use the same unsigned Cloudinary upload as returns and chat.
    ============================================================ */
 
 const PARTNER_APPLICATION_SLUG = 'partner-application';
 const PA_IMAGE_MAX = 6;
-// Keep in sync with partner-applications-api.js LISTS and the What we
-// carry section on brand-partnerships.js.
-const PA_CATEGORIES = ['Clothing', 'Kidswear', 'Accessories', 'Jewellery', 'Bags', 'Footwear', 'Beauty', 'Fragrance', 'Homeware'];
+// Keep in sync with partner-applications-api.js LISTS.
+const PA_CATEGORIES = ['Clothing', 'Kidswear', 'Jewellery', 'Bags', 'Footwear', 'Accessories', 'Homeware', 'Beauty', 'Fragrance and candles'];
 const PA_PRODUCTION = ['Made in advance and held in stock', 'Made to order', 'Both'];
 const PA_SUPPORT_AREAS = ['Product photography', 'Packaging', 'Brand identity', 'Product descriptions', 'Pricing', 'Fulfilment and shipping', 'Something else'];
-const PA_PRICE_BANDS = ['Under R500', 'R500 to R1,500', 'R1,500 to R5,000', 'Over R5,000'];
-const PA_CHANNELS = ['Own website', 'Social media', 'Own store or studio', 'Other retailers or stockists', 'Markets and pop-ups', 'Not selling yet'];
-const PA_RANGE_SIZES = ['1 to 10 products', '11 to 50 products', '51 to 200 products', 'More than 200 products'];
-const PA_FULFILMENT = ['We pack and ship orders ourselves', 'We use a fulfilment or courier partner', 'We are still setting this up'];
 
 let _paImages = [];
 let _paUploading = 0;
+let _paEmail = '';
+let _paRef = '';
 
 function renderPartnerApplicationPage(tab) {
   const el = document.getElementById('content-page-body');
   if (!el) return;
-  const ref = (new URLSearchParams(window.location.search).get('ref') || '').trim();
-  tab = tab || (ref ? 'status' : 'apply');
-  if (tab === 'status') { renderPartnerStatus(el, ref); return; }
-  _paImages = [];
-  _paUploading = 0;
+  const params = new URLSearchParams(window.location.search);
+  const ref = (params.get('ref') || (window._paOpenStatus && _paRef) || '').trim();
+  const wantsStatus = tab === 'status' || (!tab && (ref || window._paOpenStatus));
+  window._paOpenStatus = false;
+  if (wantsStatus) { renderPartnerStatus(el, ref); return; }
+  // The application form is part of Brand Partnerships now.
+  window._bpScrollToApply = true;
+  navigateToContentPage('brand-partnerships', true);
+}
+
+// From Brand Partnerships to the status check.
+function openPartnerStatusPage() {
+  _paRef = '';
+  window._paOpenStatus = true;
+  navigateToContentPage(PARTNER_APPLICATION_SLUG);
+}
+
+function partnerFormHtml() {
   const user = firebase.auth().currentUser;
   const signedIn = user && !user.isAnonymous;
   const opts = list => list.map(v => `<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`).join('');
   const checks = (name, list) => `<div class="pa-checks">${list.map(v => `<label class="pa-check"><input type="checkbox" name="${name}" value="${escapeHTML(v)}"><span>${escapeHTML(v)}</span></label>`).join('')}</div>`;
-  const field = (id, label, attrs = '', hint = '') => `<label class="track-label" for="${id}">${label}</label><input class="track-input" id="${id}" ${attrs}>${hint ? `<p class="pa-hint">${hint}</p>` : ''}`;
+  const req = '<span class="pa-req" aria-hidden="true">*</span>';
+  const field = (id, label, attrs, required, hint) => `<div class="pa-field">
+      <label class="pa-label" for="${id}">${label}${required ? ' ' + req : ''}</label>
+      <input class="pa-input" id="${id}" ${attrs}${required ? ' required aria-required="true"' : ''}${hint ? ` aria-describedby="${id}-hint"` : ''}>
+      ${hint ? `<p class="pa-hint" id="${id}-hint">${hint}</p>` : ''}
+    </div>`;
+  const area = (id, label, max, placeholder, required) => `<div class="pa-field">
+      <label class="pa-label" for="${id}">${label}${required ? ' ' + req : ''}</label>
+      <textarea class="pa-input pa-area" id="${id}" maxlength="${max}" placeholder="${placeholder}"${required ? ' required aria-required="true"' : ''}></textarea>
+    </div>`;
 
-  el.innerHTML = `
-    <section class="track-page pa-page">
-      <span class="track-link pa-back" onclick="navigateToContentPage('brand-partnerships')">Brand Partnerships</span>
-      <h1 class="track-title">Partner Application</h1>
-      ${partnerTabsHtml('apply')}
-      <p class="track-intro">Tell us about your brand. Our partnerships team reviews every application against our partnership criteria and will contact shortlisted brands to discuss terms. Fields marked * are required.</p>
-      <div class="track-notice pa-before">
-        <strong>Before you apply</strong><br>
-        JANEDORE partners only with brands that design their own products. We do not accept dropshipping businesses, resellers of other brands, or counterfeit and replica goods, and we only carry clothing, kidswear, accessories, jewellery, bags, footwear, beauty, fragrance and homeware. Made-to-order brands are welcome, and their products are sold as pre-orders.
-        <span class="track-link" onclick="openPartnershipCarry()">See what we carry and do not accept</span>
+  return `
+    <form id="pa-form" class="pa-form" onsubmit="submitPartnerApplication(event)" oninput="partnerError('')" onchange="partnerError('')" novalidate>
+      <fieldset class="pa-group">
+        <legend>About you</legend>
+        ${field('pa-name', 'Full name', `type="text" maxlength="100" autocomplete="name" value="${escapeHTML((signedIn && user.displayName) || '')}"`, true)}
+        <div class="pa-row">
+          ${field('pa-email', 'Business email', `type="email" maxlength="200" autocomplete="email" inputmode="email" value="${escapeHTML((signedIn && user.email) || '')}"`, true)}
+          ${field('pa-phone', 'Contact number', 'type="tel" maxlength="30" autocomplete="tel" inputmode="tel"', true)}
+        </div>
+      </fieldset>
+
+      <fieldset class="pa-group">
+        <legend>Your brand</legend>
+        ${field('pa-brand', 'Brand name', 'type="text" maxlength="100" autocomplete="organization"', true)}
+        <div class="pa-row">
+          ${field('pa-website', 'Website or online store', 'type="url" maxlength="200" inputmode="url" placeholder="yourbrand.com"', false)}
+          ${field('pa-social', 'Social media profile', 'type="text" maxlength="200" placeholder="@yourbrand"', false)}
+        </div>
+        <div class="pa-row">
+          <div class="pa-field">
+            <label class="pa-label" for="pa-category">Primary product category ${req}</label>
+            <select class="pa-input" id="pa-category" required aria-required="true"><option value="">Choose a category</option>${opts(PA_CATEGORIES)}</select>
+          </div>
+          <div class="pa-field">
+            <label class="pa-label" for="pa-production">How are your products made? ${req}</label>
+            <select class="pa-input" id="pa-production" required aria-required="true" aria-describedby="pa-production-hint"><option value="">Choose one</option>${opts(PA_PRODUCTION)}</select>
+            <p class="pa-hint" id="pa-production-hint">Made-to-order pieces are sold as pre-orders.</p>
+          </div>
+        </div>
+        ${area('pa-intro', 'Short brand introduction', 1500, 'Who you are, what you make and where.', true)}
+        ${area('pa-distinctive', 'What makes your brand distinctive?', 1000, 'Your design point of view, materials, craft or story.', true)}
+        ${area('pa-why', 'Why would you like to partner with JANEDORE?', 1000, 'What you hope a partnership would bring your brand.', true)}
+      </fieldset>
+
+      <fieldset class="pa-group">
+        <legend>Your work</legend>
+        <p class="pa-hint pa-hint-top" id="pa-work-hint">Share product images, a lookbook link, or both, so we can see your product and presentation.</p>
+        ${field('pa-lookbook', 'Catalogue or lookbook link', 'type="url" maxlength="300" inputmode="url" placeholder="Optional"', false)}
+        <div class="pa-field">
+          <span class="pa-label" id="pa-images-label">Product images <span class="pa-optional">(up to ${PA_IMAGE_MAX})</span></span>
+          <div class="return-photos pa-photos" id="pa-images" role="group" aria-labelledby="pa-images-label" aria-describedby="pa-work-hint"></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="pa-group">
+        <legend>Support <span class="pa-optional">(optional)</span></legend>
+        <label class="pa-check"><input type="checkbox" id="pa-support" aria-controls="pa-support-fields" onchange="document.getElementById('pa-support-fields').hidden = !this.checked"><span>We would like support from JANEDORE to meet your brand standards</span></label>
+        <div id="pa-support-fields" class="pa-support-fields" hidden>
+          <span class="pa-label">Where would you like support? ${req}</span>
+          ${checks('pa-support-area', PA_SUPPORT_AREAS)}
+          ${area('pa-support-details', 'Tell us more', 1500, 'For example, your current customers and sales, and what you would like help with.', false)}
+        </div>
+      </fieldset>
+
+      <div class="pa-declare">
+        <label class="pa-check"><input type="checkbox" id="pa-own-products" required aria-required="true"><span>My brand designs its own products. We are not a dropshipping business, a reseller of other brands, or a seller of counterfeit or replica goods. ${req}</span></label>
+        <label class="pa-check"><input type="checkbox" id="pa-consent" required aria-required="true"><span>The information provided is accurate, and JANEDORE may contact me about this application. ${req}</span></label>
       </div>
-
-      <form id="pa-form" onsubmit="submitPartnerApplication(event)" oninput="partnerError('')" onchange="partnerError('')" novalidate>
-        <div class="pa-section">
-          <h2 class="pa-section-title"><span>1</span>Your brand</h2>
-          ${field('pa-brand', 'Brand name *', 'maxlength="100" autocomplete="organization"')}
-          ${field('pa-website', 'Website', 'type="url" maxlength="200" placeholder="https://"')}
-          ${field('pa-instagram', 'Instagram', 'maxlength="100" placeholder="@yourbrand"')}
-          <div class="pa-row">
-            <div>${field('pa-location', 'Based in *', 'maxlength="100" placeholder="City, country"')}</div>
-            <div>${field('pa-founded', 'Year founded', 'inputmode="numeric" maxlength="4" placeholder="2021"')}</div>
-          </div>
-          <label class="track-label">Product categories *</label>
-          ${checks('pa-category', PA_CATEGORIES)}
-          <label class="track-label" for="pa-production">How are your products made? *</label>
-          <select class="track-input" id="pa-production"><option value="">Choose one</option>${opts(PA_PRODUCTION)}</select>
-          <p class="pa-hint">Made-to-order products are sold on JANEDORE as pre-orders, with an estimated dispatch date.</p>
-          <label class="track-label" for="pa-price">Average retail price *</label>
-          <select class="track-input" id="pa-price"><option value="">Choose a price range</option>${opts(PA_PRICE_BANDS)}</select>
-          <label class="track-label" for="pa-story">Brand overview *</label>
-          <textarea class="track-input return-textarea pa-textarea" id="pa-story" maxlength="3000" placeholder="Your brand story, design philosophy, materials and production, and what sets your brand apart."></textarea>
-        </div>
-
-        <div class="pa-section">
-          <h2 class="pa-section-title"><span>2</span>Sales and operations</h2>
-          <label class="track-label">Current sales channels *</label>
-          ${checks('pa-channel', PA_CHANNELS)}
-          <label class="track-label" for="pa-range">Size of your current range *</label>
-          <select class="track-input" id="pa-range"><option value="">Choose a range size</option>${opts(PA_RANGE_SIZES)}</select>
-          <label class="track-label" for="pa-fulfilment">Order fulfilment *</label>
-          <select class="track-input" id="pa-fulfilment"><option value="">Choose one</option>${opts(PA_FULFILMENT)}</select>
-          <label class="track-label" for="pa-goals">What would you like to achieve with JANEDORE?</label>
-          <textarea class="track-input return-textarea" id="pa-goals" maxlength="1500" placeholder="For example, reaching new customers, launching a new category or growing online sales."></textarea>
-        </div>
-
-        <div class="pa-section">
-          <h2 class="pa-section-title"><span>3</span>Product imagery *</h2>
-          <p class="pa-hint pa-hint-top">Add up to ${PA_IMAGE_MAX} images of your products or campaign. These help us understand your product quality and brand presentation.</p>
-          <div class="return-photos" id="pa-images"></div>
-        </div>
-
-        <div class="pa-section">
-          <h2 class="pa-section-title"><span>4</span>Support to meet our standards</h2>
-          <p class="pa-hint pa-hint-top">Already selling, with customers who love your product, but your presentation is not yet at the standard of our platform? You can still apply. Tell us where you would like support, and we will take it into account when we review your application.</p>
-          <label class="pa-check pa-support-toggle"><input type="checkbox" id="pa-support" onchange="document.getElementById('pa-support-fields').hidden = !this.checked"><span>I would like support from JANEDORE to meet your brand standards</span></label>
-          <div id="pa-support-fields" hidden>
-            <label class="track-label">Where would you like support? *</label>
-            ${checks('pa-support-area', PA_SUPPORT_AREAS)}
-            <label class="track-label" for="pa-support-details">Tell us more</label>
-            <textarea class="track-input return-textarea" id="pa-support-details" maxlength="1500" placeholder="For example, your current customer base and sales, and what you would like help with."></textarea>
-          </div>
-        </div>
-
-        <div class="pa-section">
-          <h2 class="pa-section-title"><span>5</span>Contact details</h2>
-          <div class="pa-row">
-            <div>${field('pa-name', 'Full name *', `maxlength="100" autocomplete="name" value="${escapeHTML((signedIn && user.displayName) || '')}"`)}</div>
-            <div>${field('pa-role', 'Role', 'maxlength="100" placeholder="Founder, Director"')}</div>
-          </div>
-          ${field('pa-email', 'Email address *', `type="email" maxlength="200" autocomplete="email" value="${escapeHTML((signedIn && user.email) || '')}"`)}
-          ${field('pa-phone', 'Phone number *', 'type="tel" maxlength="30" autocomplete="tel"')}
-        </div>
-
-        <div class="pa-consent">
-          <label class="pa-check"><input type="checkbox" id="pa-own-products"><span>I confirm that my brand designs its own products, and that we are not a dropshipping business, a reseller of other brands, or a seller of counterfeit or replica goods. *</span></label>
-          <label class="pa-check"><input type="checkbox" id="pa-consent"><span>I confirm that the information provided is accurate, and I agree to JANEDORE contacting me about this application. *</span></label>
-        </div>
-        <input type="text" id="pa-website-hp" class="care-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <div class="track-error" id="pa-error" role="alert"></div>
-        <button class="track-btn" id="pa-btn" type="submit">Submit Application</button>
-        <p class="track-hint">You’ll receive a confirmation email once your application has been submitted.</p>
-      </form>
-    </section>`;
-  drawPartnerImages();
+      <input type="text" id="pa-website-hp" class="care-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="pa-error" id="pa-error" role="alert" aria-live="assertive"></div>
+      <button class="bp-btn pa-submit" id="pa-btn" type="submit">Submit application</button>
+      <p class="pa-hint">We will email you a confirmation and your reference once your application has been received.</p>
+    </form>`;
 }
 
-// Brand Partnerships, scrolled to What we carry / What we do not accept.
-function openPartnershipCarry() {
-  navigateToContentPage('brand-partnerships');
-  setTimeout(() => { const el = document.getElementById('bp-carry'); if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 140); }, 50);
+function initPartnerForm() {
+  _paImages = [];
+  _paUploading = 0;
+  drawPartnerImages();
 }
 
 function partnerTabsHtml(tab) {
@@ -136,13 +137,10 @@ function partnerTabsHtml(tab) {
   </div>`;
 }
 
-let _paEmail = '';
-let _paRef = '';
-
 // From the Application received screen straight to its status.
 function openPartnerStatus() {
-  history.replaceState(null, null, '/pages/partner-application?ref=' + encodeURIComponent(_paRef));
-  renderPartnerApplicationPage('status');
+  window._paOpenStatus = true;
+  navigateToContentPage(PARTNER_APPLICATION_SLUG);
 }
 
 function renderPartnerStatus(el, ref) {
@@ -237,9 +235,12 @@ function drawPartnerImages() {
 
 function removePartnerImage(i) { _paImages.splice(i, 1); drawPartnerImages(); }
 
-function partnerError(msg) {
+function partnerError(msg, fieldId) {
   const e = document.getElementById('pa-error');
   if (e) { e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
+  document.querySelectorAll('#pa-form [aria-invalid="true"]').forEach(f => f.removeAttribute('aria-invalid'));
+  const f = fieldId && document.getElementById(fieldId);
+  if (f) { f.setAttribute('aria-invalid', 'true'); f.focus({ preventScroll: true }); f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 }
 
 function pickPartnerImages() {
@@ -263,60 +264,63 @@ function pickPartnerImages() {
 
 async function submitPartnerApplication(ev) {
   if (ev) ev.preventDefault();
-  const val = id => (document.getElementById(id).value || '').trim();
+  const val = id => ((document.getElementById(id) || {}).value || '').trim();
   const checked = name => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(c => c.value);
+  const primary = val('pa-category');
   const p = {
-    brandName: val('pa-brand'), website: val('pa-website'), instagram: val('pa-instagram'), location: val('pa-location'), founded: val('pa-founded'),
-    categories: checked('pa-category'), production: val('pa-production'), priceBand: val('pa-price'), story: val('pa-story'),
+    contactName: val('pa-name'), email: val('pa-email'), phone: val('pa-phone'),
+    brandName: val('pa-brand'), website: val('pa-website'), social: val('pa-social'),
+    primaryCategory: primary, categories: primary ? [primary] : [], production: val('pa-production'),
+    story: val('pa-intro'), distinctive: val('pa-distinctive'), whyJanedore: val('pa-why'),
+    lookbook: val('pa-lookbook'), images: _paImages.slice(),
     supportRequested: document.getElementById('pa-support').checked, supportAreas: checked('pa-support-area'), supportDetails: val('pa-support-details'),
     ownProducts: document.getElementById('pa-own-products').checked,
-    channels: checked('pa-channel'), rangeSize: val('pa-range'), fulfilment: val('pa-fulfilment'), goals: val('pa-goals'),
-    images: _paImages.slice(),
-    contactName: val('pa-name'), role: val('pa-role'), email: val('pa-email'), phone: val('pa-phone'),
     consent: document.getElementById('pa-consent').checked, hp: val('pa-website-hp')
   };
+  const looksLikeUrl = v => !v || /^(https?:\/\/)?[^\s.]+\.[^\s]{2,}$/i.test(v);
   partnerError('');
-  const missing =
-    !p.brandName ? 'Please enter your brand name.' :
-    !p.location ? 'Please tell us where your brand is based.' :
-    !p.categories.length ? 'Please choose at least one product category.' :
-    !p.production ? 'Please tell us how your products are made.' :
-    !p.priceBand ? 'Please choose your average retail price.' :
-    !p.story ? 'Please give us an overview of your brand.' :
-    !p.channels.length ? 'Please choose your current sales channels.' :
-    !p.rangeSize ? 'Please choose the size of your current range.' :
-    !p.fulfilment ? 'Please tell us how you fulfil orders.' :
-    _paUploading ? 'Please wait for your images to finish uploading.' :
-    !p.images.length ? 'Please add at least one product image.' :
-    !p.contactName ? 'Please enter your full name.' :
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email) ? 'Please enter a valid email address.' :
-    !p.phone ? 'Please enter your phone number.' :
-    p.supportRequested && !p.supportAreas.length ? 'Please choose where you would like support.' :
-    !p.ownProducts ? 'Please confirm that your brand designs its own products and does not dropship.' :
-    !p.consent ? 'Please confirm the declaration at the bottom of the form.' : '';
-  if (missing) { partnerError(missing); return; }
+  const problem =
+    !p.contactName ? ['Please enter your full name.', 'pa-name'] :
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email) ? ['Please enter a valid business email address.', 'pa-email'] :
+    p.phone.replace(/\D/g, '').length < 7 ? ['Please enter a contact number we can reach you on.', 'pa-phone'] :
+    !p.brandName ? ['Please enter your brand name.', 'pa-brand'] :
+    !looksLikeUrl(p.website) ? ['Please check your website address.', 'pa-website'] :
+    !p.primaryCategory ? ['Please choose your primary product category.', 'pa-category'] :
+    !p.production ? ['Please tell us how your products are made.', 'pa-production'] :
+    !p.story ? ['Please add a short introduction to your brand.', 'pa-intro'] :
+    !p.distinctive ? ['Please tell us what makes your brand distinctive.', 'pa-distinctive'] :
+    !p.whyJanedore ? ['Please tell us why you would like to partner with JANEDORE.', 'pa-why'] :
+    !looksLikeUrl(p.lookbook) ? ['Please check your lookbook link.', 'pa-lookbook'] :
+    _paUploading ? ['Please wait for your images to finish uploading.', null] :
+    !p.images.length && !p.lookbook ? ['Please add product images or a lookbook link so we can see your work.', 'pa-lookbook'] :
+    p.supportRequested && !p.supportAreas.length ? ['Please choose where you would like support.', null] :
+    !p.ownProducts ? ['Please confirm that your brand designs its own products.', 'pa-own-products'] :
+    !p.consent ? ['Please confirm the declaration above.', 'pa-consent'] : null;
+  if (problem) { partnerError(problem[0], problem[1]); return; }
 
   const btn = document.getElementById('pa-btn');
   btn.disabled = true; btn.textContent = 'Submitting…';
   try {
     const res = await fetch('/api/partner-applications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'We couldn’t submit your application. Please try again.');
+    if (!res.ok || !data.reference) throw new Error(data.error || 'We couldn’t submit your application. Please try again, or email support@janedore.co.za.');
     _paEmail = p.email;
-    _paRef = data.reference || '';
-    const page = document.querySelector('.pa-page');
-    page.innerHTML = `<div class="returns-done pa-done">
-      <div class="returns-done-icon"><i class="ph ph-check" aria-hidden="true"></i></div>
-      <h1 class="track-title">Application received</h1>
-      <p class="track-intro">Thank you for your interest in partnering with JANEDORE. Your reference is <strong>${escapeHTML(data.reference || '')}</strong>, and we’ve sent a confirmation to ${escapeHTML(p.email)}.</p>
-      <p class="track-intro">Our partnerships team reviews every application carefully. If your brand is shortlisted, we will contact you to discuss the next steps.</p>
-      <button class="track-btn" type="button" onclick="openPartnerStatus()">Check Application Status</button>
-      <p class="track-hint"><span class="track-link" onclick="navigateToContentPage('brand-partnerships')">Back to Brand Partnerships</span></p>
+    _paRef = data.reference;
+    const wrap = document.getElementById('pa-form-wrap');
+    wrap.innerHTML = `<div class="pa-done" role="status" tabindex="-1" id="pa-done">
+      <div class="bp-kicker">Application received</div>
+      <h3 class="pa-done-title">Thank you, ${escapeHTML(p.contactName.split(' ')[0])}.</h3>
+      <p>Your application for <strong>${escapeHTML(p.brandName)}</strong> has been received. Your reference is <strong>${escapeHTML(data.reference)}</strong>, and a confirmation has been sent to ${escapeHTML(p.email)}.</p>
+      <p>Our team reviews every application individually and will email you once a decision has been made.</p>
+      <button class="bp-btn" type="button" onclick="openPartnerStatus()">Check application status</button>
     </div>`;
-    window.scrollTo(0, 0);
+    document.querySelectorAll('#bp-apply .bp-intro, #bp-apply .bp-status-link').forEach(n => n.remove());
+    const done = document.getElementById('pa-done');
+    done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    done.focus({ preventScroll: true });
   } catch (e) {
     partnerError(e.message);
-    btn.disabled = false; btn.textContent = 'Submit Application';
+    btn.disabled = false; btn.textContent = 'Submit application';
   }
 }
 
@@ -327,4 +331,6 @@ window.removePartnerImage = removePartnerImage;
 window.partnerError = partnerError;
 window.submitPartnerStatus = submitPartnerStatus;
 window.openPartnerStatus = openPartnerStatus;
-window.openPartnershipCarry = openPartnershipCarry;
+window.openPartnerStatusPage = openPartnerStatusPage;
+window.partnerFormHtml = partnerFormHtml;
+window.initPartnerForm = initPartnerForm;

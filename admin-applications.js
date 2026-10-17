@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
-   APPLICATIONS — brand partner applications from
-   /pages/partner-application. Read and updated through
+   APPLICATIONS — brand partner applications from the
+   Apply section of /pages/brand-partnerships. Read and updated through
    partner-applications-api.js (/api/admin/partner-applications), which
    checks the caller's role, so no Firestore rules change is needed.
    Only Super Admin sees this tab and decides:
@@ -94,7 +94,7 @@
     var expanded = openId === a.id;
     var head = '<div class="report-card-head return-card-head" onclick="window._toggleApplication(\'' + esc(a.id) + '\')">' +
       '<div><div class="report-brand">' + esc(a.brandName) + ' · ' + esc(a.reference || a.id) + '</div>' +
-      '<div class="report-reason">' + esc((a.categories || []).join(', ')) + ' · ' + esc(a.priceBand || '') + ' · ' + esc(a.location || '') + '</div>' +
+      '<div class="report-reason">' + esc([a.primaryCategory || (a.categories || [])[0], a.production, a.priceBand, a.location].filter(Boolean).join(' · ')) + '</div>' +
       '<div class="report-meta">' + esc(fmtDate(a.createdAt)) + ' · ' + esc(a.contactName || '') +
         (a.supportRequested ? ' · <strong class="return-flag">Support requested</strong>' : '') + '</div></div>' +
       '<span class="badge badge-' + esc(st[1]) + '">' + esc(st[0]) + '</span>' +
@@ -103,16 +103,21 @@
 
     var link = function (url, label) { return '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(label || url) + '</a>'; };
     var ig = (a.instagram || '').replace(/^@/, '');
+    var para = function (label, v) { return v ? '<br><br><strong>' + esc(label) + '</strong><br><span class="return-pre">' + esc(v) + '</span>' : ''; };
+    // Older applications also have location, price band, channels, range,
+    // fulfilment and goals; newer ones have distinctive, why and lookbook.
     var brand = '<div class="report-details">' +
       (a.website ? 'Website: ' + link(a.website) + '<br>' : '') +
+      (a.social ? 'Social: ' + esc(a.social) + '<br>' : '') +
       (ig ? 'Instagram: ' + link('https://instagram.com/' + ig, '@' + ig) + '<br>' : '') +
-      'Based in: ' + esc(a.location || '') + (a.founded ? ' · Founded ' + esc(a.founded) : '') + '<br>' +
+      (a.location ? 'Based in: ' + esc(a.location) + (a.founded ? ' · Founded ' + esc(a.founded) : '') + '<br>' : '') +
       'Categories: ' + esc((a.categories || []).join(', ')) + '<br>' +
       (a.production ? 'Production: ' + esc(a.production) + (a.production !== 'Made in advance and held in stock' ? ' (sold as pre-orders)' : '') + '<br>' : '') +
-      'Average price: ' + esc(a.priceBand || '') +
-      '<br><br><span class="return-pre">' + esc(a.story || '') + '</span></div>';
-    var ops = '<div class="report-details">Channels: ' + esc((a.channels || []).join(', ')) + '<br>Range: ' + esc(a.rangeSize || '') + '<br>Fulfilment: ' + esc(a.fulfilment || '') +
-      (a.goals ? '<br><br><span class="return-pre">' + esc(a.goals) + '</span>' : '') + '</div>';
+      (a.priceBand ? 'Average price: ' + esc(a.priceBand) : '') +
+      para('Introduction', a.story) + para('What makes it distinctive', a.distinctive) + para('Why JANEDORE', a.whyJanedore) + '</div>';
+    var opsRows = [['Channels', (a.channels || []).join(', ')], ['Range', a.rangeSize], ['Fulfilment', a.fulfilment]].filter(function (r) { return r[1]; });
+    var ops = opsRows.length || a.goals ? '<div class="report-details">' + opsRows.map(function (r) { return esc(r[0]) + ': ' + esc(r[1]); }).join('<br>') +
+      (a.goals ? '<br><br><span class="return-pre">' + esc(a.goals) + '</span>' : '') + '</div>' : '';
     var images = (a.images || []).map(function (u) {
       return '<a href="' + esc(u) + '" target="_blank" rel="noopener" class="return-admin-photo" style="background-image:url(\'' + esc(u) + '\')"></a>';
     }).join('');
@@ -132,9 +137,10 @@
     return '<div class="card report-card return-card is-open">' + head +
       '<div class="return-admin-body">' +
         section('Brand', brand) +
-        section('Sales and operations', ops) +
+        (ops ? section('Sales and operations', ops) : '') +
         (a.supportRequested ? section('Support requested', '<div class="report-details">' + esc((a.supportAreas || []).join(', ')) +
           (a.supportDetails ? '<br><br><span class="return-pre">' + esc(a.supportDetails) + '</span>' : '') + '</div>') : '') +
+        (a.lookbookUrl ? section('Lookbook', '<div class="report-details">' + link(a.lookbookUrl) + '</div>') : '') +
         (images ? section('Product imagery', '<div class="return-admin-photos">' + images + '</div>') : '') +
         section('Contact', contact) +
         decision +
