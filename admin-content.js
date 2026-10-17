@@ -154,9 +154,7 @@
   // ─── ACTIONS ────────────────────────────────────────────────
 
   window._uploadContent = function () {
-    var cloudName    = window.CLOUDINARY_CLOUD_NAME;
-    var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !uploadPreset) { showToast('Cloudinary is not configured.', 'error'); return; }
+    if (!window.CLOUDINARY_CLOUD_NAME) { showToast('Cloudinary is not configured.', 'error'); return; }
 
     var input = document.createElement('input');
     input.type = 'file';
@@ -169,15 +167,11 @@
       files.forEach(function (file) {
         if (file.size > 100000000) { showToast(file.name + ' is too large (max 100MB)', 'error'); return; }
         uploading++; draw();
-        var form = new FormData();
-        form.append('file', file);
-        form.append('upload_preset', uploadPreset);
         // "auto" lets Cloudinary take any file: images, video and sound,
-        // and everything else (fonts, PDFs) as a raw file.
-        fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/auto/upload', { method: 'POST', body: form })
-          .then(function (r) { return r.json(); })
+        // and everything else (fonts, PDFs) as a raw file. Signed when the
+        // server is set up for it (window._cloudinaryUpload, admin.js).
+        window._cloudinaryUpload(file, 'auto')
           .then(function (result) {
-            if (!result || !result.secure_url) throw new Error(result && result.error ? result.error.message : 'Unknown error');
             // arrayUnion: several uploads finishing together can't
             // overwrite each other's entries.
             return libraryRef.set({

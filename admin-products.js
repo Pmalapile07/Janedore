@@ -222,15 +222,12 @@
   // Skips Cloudinary's upload widget (its own popup UI on top of the
   // device file picker) and instead opens the native file picker
   // directly, then uploads each file straight to Cloudinary's REST
-  // endpoint. onSuccess fires once per file, as soon as that file is done,
+  // endpoint (signed, via window._cloudinaryUpload in admin.js). onSuccess fires once per file, as soon as that file is done,
   // so images appear one by one instead of waiting for a batch to finish.
   // multiple defaults to true (the product media pool's own behavior);
   // pass false for a single-image field like a vendor's logo/hero image.
   window._uploadToCloudinary = function(onSuccess, multiple) {
-    var cloudName    = window.CLOUDINARY_CLOUD_NAME;
-    var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName)    { showToast('Cloudinary cloud name not configured.', 'error'); return; }
-    if (!uploadPreset) { showToast('Cloudinary upload preset not configured.', 'error'); return; }
+    if (!window.CLOUDINARY_CLOUD_NAME) { showToast('Cloudinary cloud name not configured.', 'error'); return; }
 
     var input = document.createElement('input');
     input.type = 'file';
@@ -253,21 +250,9 @@
           showToast(file.name + ' is too large (max 20MB)', 'error');
           return;
         }
-        var formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', uploadPreset);
-        fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload', {
-          method: 'POST',
-          body: formData
-        })
-          .then(function(res) { return res.json(); })
-          .then(function(result) {
-            if (result && result.secure_url) {
-              onSuccess(result.secure_url);
-            } else {
-              showToast('Upload failed: ' + (result && result.error ? result.error.message : 'Unknown error'), 'error');
-            }
-          })
+        // Signed when the server is set up for it (admin.js).
+        window._cloudinaryUpload(file, 'image')
+          .then(function(result) { onSuccess(result.secure_url); })
           .catch(function(err) {
             showToast('Upload failed: ' + err.message, 'error');
           });

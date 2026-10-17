@@ -2010,6 +2010,38 @@ app.post('/api/report-brand', async (req, res) => {
   }
 });
 
+// Signed Cloudinary uploads for admin. The browser asks for a signature
+// before every upload; only signed-in staff (Super Admin, Admin or a
+// brand) get one, so once the main preset (CLOUDINARY_UPLOAD_PRESET) is
+// set to Signed in Cloudinary, nobody else can upload with it. The API
+// secret stays on the server. Until CLOUDINARY_API_KEY and
+// CLOUDINARY_API_SECRET are set on Render this answers 503 and admin
+// falls back to the unsigned upload it used before.
+app.post('/api/admin/cloudinary-signature', async (req, res) => {
+  const apiKey = process.env.CLOUDINARY_API_KEY, secret = process.env.CLOUDINARY_API_SECRET;
+  if (!apiKey || !secret || !process.env.CLOUDINARY_CLOUD_NAME) return res.status(503).json({ error: 'Signed uploads are not configured', unsigned: true });
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (rateLimited(req, 'cloudinary-sign', 300, 10 * 60 * 1000)) return res.status(429).json({ error: 'Too many uploads. Please wait a few minutes.' });
+  const match = (req.headers.authorization || '').match(/^Bearer (.+)$/);
+  if (!match) return res.status(401).json({ error: 'Not signed in' });
+  try {
+    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const doc = await adminDb.collection('admins').doc(decoded.uid).get();
+    const role = doc.exists ? String(doc.data().role || '').toUpperCase() : '';
+    if (['SUPER_ADMIN', 'ADMIN', 'VENDOR'].indexOf(role) === -1) return res.status(403).json({ error: 'Not authorized to upload' });
+  } catch (e) {
+    return res.status(401).json({ error: 'Not signed in' });
+  }
+  // Cloudinary signs every parameter except file, cloud_name,
+  // resource_type and api_key: sorted key=value pairs joined with &,
+  // then the secret, hashed with SHA-1.
+  const params = { timestamp: Math.floor(Date.now() / 1000) };
+  if (process.env.CLOUDINARY_UPLOAD_PRESET) params.upload_preset = process.env.CLOUDINARY_UPLOAD_PRESET;
+  const toSign = Object.keys(params).sort().map((k) => k + '=' + params[k]).join('&');
+  const signature = crypto.createHash('sha1').update(toSign + secret).digest('hex');
+  res.json({ cloudName: process.env.CLOUDINARY_CLOUD_NAME, apiKey, timestamp: params.timestamp, uploadPreset: params.upload_preset || '', signature });
+});
+
 // Admin > Reports: list brand reports and mark them reviewed. Super
 // Admin and Admin only (checked against admins/{uid}, like shipments).
 async function verifyPlatformStaff(req) {
