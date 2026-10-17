@@ -1,11 +1,14 @@
 /* Brand Partnerships (brand-partnerships.js) and the partner
    application form inside it (partner-application.js). Editorial and
-   restrained: #F4F4F4 tint bands, thin rules, no cards or shadows.
+   restrained: #F4F4F4 hero, the brand's light green (#e6edd5) for the
+   tinted bands and its green (#b8cc87) for accent rules. Thin rules,
+   no cards or shadows.
    Mobile first; the desktop layout starts at 900px. */
 .bp { font-family: 'Inter', sans-serif; color: #111; overflow-x: clip; }
 :where(.bp) :where(h1, h2, h3, p, dl, dd, ol) { margin: 0; }
 .bp-section { padding: 56px 0; scroll-margin-top: 120px; }
-.bp-tint { background: #f4f4f4; }
+.bp-tint { background: #e6edd5; }
+.bp-tint .bp-criteria, .bp-tint .bp-criterion, .bp-tint .bp-terms, .bp-tint .bp-term, .bp-tint .bp-note { border-color: rgba(17, 17, 17, 0.14); }
 .bp-wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; box-sizing: border-box; }
 .bp-narrow { max-width: 680px; }
 
@@ -150,14 +153,14 @@ select.pa-input {
   .bp-hero.has-image .bp-hero-title { font-size: 44px; }
 
   .bp-benefits { grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: none; }
-  .bp-benefit { border-bottom: none; border-top: 1px solid #111; padding: 20px 0 0; }
+  .bp-benefit { border-bottom: none; border-top: 2px solid #b8cc87; padding: 20px 0 0; }
   .bp-featured-grid { gap: 16px; max-width: 720px; }
 
   .bp-criteria { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 48px; border-top: none; }
   .bp-criterion { border-top: 1px solid #ddd; border-bottom: none; padding: 20px 0 24px; }
 
   .bp-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: none; }
-  .bp-step { border-bottom: none; border-top: 1px solid #111; padding: 20px 0 0; }
+  .bp-step { border-bottom: none; border-top: 2px solid #b8cc87; padding: 20px 0 0; }
 
   .bp-terms { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 48px; border-top: none; }
   .bp-term { border-top: 1px solid #ddd; border-bottom: none; padding: 20px 0 24px; }
