@@ -759,17 +759,27 @@ function initNavScroll() {
 // handles desktop/mobile responsively, so there's no more desktop/mobile
 // URL switching to do here.
 
-// Full-screen menu (index.html #menu-drawer). Refreshes the account label
-// and wishlist/bag counts each time it opens, and freezes the page behind
-// it the same way the chat widget does (lockPageScroll, chat.js).
+// Full-screen menu (index.html #menu-drawer). Refreshes the account row
+// and the wishlist/bag badges each time it opens, and freezes the page
+// behind it the same way the chat widget does (lockPageScroll, chat.js).
 function openMenu() {
   closeFilterPanel();
+  closeMenuPanel(true);
   const user = typeof firebase !== 'undefined' && firebase.auth ? firebase.auth().currentUser : null;
+  const signedIn = user && !user.isAnonymous;
   const label = document.getElementById('menu-account-label');
-  if (label) label.textContent = user && !user.isAnonymous ? 'My Account' : 'Sign In';
-  const count = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n > 0 ? '(' + n + ')' : ''; };
-  count('menu-wish-count', (S.wishlist || []).length);
-  count('menu-bag-count', (S.cart || []).reduce((a, i) => a + (Number(i.qty) || 1), 0));
+  if (label) label.textContent = signedIn ? 'My Account' : 'Sign In';
+  const avatar = document.getElementById('menu-avatar');
+  if (avatar) {
+    const name = signedIn ? (user.displayName || user.email || '').trim() : '';
+    const parts = name.split(/[\s@.]+/).filter(Boolean);
+    const initials = (parts[0] ? parts[0][0] : '') + (user && user.displayName && parts[1] ? parts[1][0] : '');
+    avatar.innerHTML = initials ? '' : '<i class="ph ph-user"></i>';
+    if (initials) avatar.textContent = initials.toUpperCase();
+  }
+  const badge = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n; el.style.display = n > 0 ? 'flex' : 'none'; } };
+  badge('menu-wish-badge', (S.wishlist || []).length);
+  badge('menu-bag-badge', (S.cart || []).reduce((a, i) => a + (Number(i.qty) || 1), 0));
   if (typeof lockPageScroll === 'function' && !DOM.menuDrawer.classList.contains('open')) lockPageScroll();
   DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open");
 }
@@ -778,11 +788,18 @@ function closeMenu() {
   DOM.menuBackdrop.classList.remove("open"); DOM.menuDrawer.classList.remove("open");
   if (wasOpen && typeof unlockPageScroll === 'function') unlockPageScroll();
 }
-function toggleMenuGroup(name) {
-  const el = document.getElementById('menu-group-' + name);
-  if (!el) return;
-  const open = el.classList.toggle('open');
-  const btn = el.querySelector('.menu-toggle'); if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+// Slides to a category's own list (Clothing, Accessories) and back.
+function openMenuPanel(name) {
+  const panel = document.getElementById('menu-panel-' + name);
+  if (!panel) return;
+  panel.scrollTop = 0;
+  panel.classList.add('active');
+  DOM.menuDrawer.classList.add('sub-open');
+}
+function closeMenuPanel(instant) {
+  if (!DOM.menuDrawer) return;
+  DOM.menuDrawer.classList.remove('sub-open');
+  document.querySelectorAll('.menu-subpanel.active').forEach(p => p.classList.remove('active'));
 }
 function toggleSubmenuCollapse(section) { const el = document.getElementById(section + '-collapse'); if (el) el.classList.toggle('open'); }
 function toggleBrandsCollapse() { const el = document.getElementById('brands-collapse'); if (el) el.classList.toggle('open'); }

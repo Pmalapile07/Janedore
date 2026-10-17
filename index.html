@@ -369,67 +369,70 @@
 <div id="search-overlay"><div class="search-overlay-header"><div class="search-input-wrap"><i class="ph ph-magnifying-glass"></i><input id="search-input" type="text" placeholder="Search products or brands" autocomplete="off" oninput="handleSearch(this.value)"></div><button class="search-close-btn" onclick="closeSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="search-body" id="search-body"></div></div>
 
 <div id="menu-backdrop" onclick="closeMenu()"></div>
-<!-- Full-screen menu (navigation.js openMenu/closeMenu). Same black header
-     bar as #main-nav: logo and close button. Sections below, account,
-     wishlist and bag pinned to the bottom. -->
+<!-- Full-screen menu (app.js openMenu/closeMenu/openMenuPanel). Black
+     header: close and "Menu" on the left, search, wishlist and bag on the
+     right. My Account, bold categories that open their own list (› ), then
+     plain links, a Track Your Order button and the help links. -->
 <div id="menu-drawer" role="dialog" aria-modal="true" aria-label="Menu">
   <div class="menu-head">
-    <div class="nav-logo menu-logo" onclick="closeMenu();navigateTo('home');" role="link" tabindex="0" aria-label="JANEDORE home"><span class="nav-logo-text">JANEDORE</span></div>
-    <button class="menu-close" onclick="closeMenu()" aria-label="Close menu"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-  </div>
-  <div class="menu-body">
-    <div class="menu-search" onclick="closeMenu();openSearch();"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><span>Search products or brands</span></div>
-
-    <div class="menu-section">
-      <div class="menu-section-title">Shop</div>
-      <a class="menu-link" onclick="closeMenu();navigateToNewIn();">New In</a>
-      <div class="menu-group" id="menu-group-clothing">
-        <button class="menu-link menu-toggle" onclick="toggleMenuGroup('clothing')" aria-expanded="false">Clothing<span class="menu-plus" aria-hidden="true"></span></button>
-        <div class="menu-sub">
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('all-clothing');">All Clothing</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('dresses');">Dresses</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('tops');">Tops</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('bottoms');">Bottoms</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('jackets');">Jackets</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('sets');">Sets</a>
-        </div>
-      </div>
-      <div class="menu-group" id="menu-group-accessories">
-        <button class="menu-link menu-toggle" onclick="toggleMenuGroup('accessories')" aria-expanded="false">Accessories<span class="menu-plus" aria-hidden="true"></span></button>
-        <div class="menu-sub">
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('all-accessories');">All Accessories</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('bags');">Bags</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('jewelry');">Jewellery</a>
-          <a class="menu-sublink" onclick="closeMenu();navigateToCategory('sunglasses');">Sunglasses</a>
-        </div>
-      </div>
-      <a class="menu-link" onclick="closeMenu();navigateToCategory('parfum');">Scent</a>
-      <a class="menu-link" onclick="closeMenu();navigateToCategory('homeware');">Homeware</a>
-      <a class="menu-link menu-link-sale" onclick="closeMenu();navigateToSale();">Sale</a>
-      <a class="menu-link" onclick="closeMenu();navigateTo('products');">Shop All</a>
+    <div class="menu-head-left">
+      <button class="menu-head-btn" onclick="closeMenu()" aria-label="Close menu"><svg class="menu-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <span class="menu-head-title">Menu</span>
     </div>
-
-    <div class="menu-section">
-      <div class="menu-section-title">Discover</div>
-      <a class="menu-link" onclick="closeMenu();navigateTo('brands');">Brands A&#8211;Z</a>
-      <a class="menu-link" onclick="closeMenu();navigateTo('home');">The Understated</a>
-      <a class="menu-link" onclick="closeMenu();navigateTo('editorial');">Editorial</a>
-      <a class="menu-link" onclick="closeMenu();navigateTo('giftcards');">Gift Cards</a>
-    </div>
-
-    <div class="menu-section">
-      <div class="menu-section-title">Help</div>
-      <a class="menu-link menu-link-sm" onclick="closeMenu();navigateToContentPage('track-your-order');">Track Your Order</a>
-      <a class="menu-link menu-link-sm" onclick="closeMenu();navigateToContentPage('log-a-return');">Log a Return</a>
-      <a class="menu-link menu-link-sm" onclick="closeMenu();navigateToContentPage('customer-care');">Customer Care</a>
-      <a class="menu-link menu-link-sm" onclick="closeMenu();navigateToContentPage('faq');">Frequently Asked Questions</a>
-      <a class="menu-link menu-link-sm" onclick="closeMenu();navigateToContentPage('brand-partnerships');">Brand Partnerships</a>
+    <div class="menu-head-right">
+      <button class="menu-head-btn" onclick="closeMenu();openSearch();" aria-label="Search"><i class="ph ph-magnifying-glass"></i></button>
+      <button class="menu-head-btn" onclick="closeMenu();navigateTo('wishlist');" aria-label="Wishlist"><i class="ph ph-heart"></i><span class="badge" id="menu-wish-badge" style="display:none">0</span></button>
+      <button class="menu-head-btn" onclick="closeMenu();openCart();" aria-label="Bag"><i class="ph ph-tote-simple"></i><span class="badge" id="menu-bag-badge" style="display:none">0</span></button>
     </div>
   </div>
-  <div class="menu-foot">
-    <button class="menu-foot-btn" onclick="closeMenu();navigateToLogin();"><i class="ph ph-user" aria-hidden="true"></i><span id="menu-account-label">Sign In</span></button>
-    <button class="menu-foot-btn" onclick="closeMenu();navigateTo('wishlist');"><i class="ph ph-heart" aria-hidden="true"></i><span>Wishlist<span class="menu-count" id="menu-wish-count"></span></span></button>
-    <button class="menu-foot-btn" onclick="closeMenu();openCart();"><i class="ph ph-tote-simple" aria-hidden="true"></i><span>Bag<span class="menu-count" id="menu-bag-count"></span></span></button>
+
+  <div class="menu-panels">
+    <div class="menu-panel" id="menu-panel-main">
+      <button class="menu-row menu-account" onclick="closeMenu();navigateToLogin();">
+        <span class="menu-account-left"><span class="menu-avatar" id="menu-avatar"><i class="ph ph-user"></i></span><span id="menu-account-label">Sign In</span></span>
+        <i class="ph ph-caret-right menu-chev"></i>
+      </button>
+      <a class="menu-row menu-cat" onclick="closeMenu();navigateToNewIn();">New In<i class="ph ph-caret-right menu-chev"></i></a>
+      <button class="menu-row menu-cat" onclick="openMenuPanel('clothing')">Clothing<i class="ph ph-caret-right menu-chev"></i></button>
+      <button class="menu-row menu-cat" onclick="openMenuPanel('accessories')">Accessories<i class="ph ph-caret-right menu-chev"></i></button>
+      <a class="menu-row menu-cat" onclick="closeMenu();navigateToCategory('parfum');">Scent<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-cat" onclick="closeMenu();navigateToCategory('homeware');">Homeware<i class="ph ph-caret-right menu-chev"></i></a>
+
+      <div class="menu-links">
+        <a class="menu-plain" onclick="closeMenu();navigateTo('brands');">Brands</a>
+        <a class="menu-plain" onclick="closeMenu();navigateTo('home');">The Understated</a>
+        <a class="menu-plain" onclick="closeMenu();navigateTo('editorial');">Editorial</a>
+        <a class="menu-plain menu-sale" onclick="closeMenu();navigateToSale();">Sale</a>
+        <a class="menu-plain" onclick="closeMenu();navigateTo('giftcards');">Gift Cards</a>
+      </div>
+
+      <button class="menu-cta" onclick="closeMenu();navigateToContentPage('track-your-order');">Track Your Order</button>
+
+      <div class="menu-help">
+        <a onclick="closeMenu();navigateToContentPage('log-a-return');">Log a Return</a>
+        <a onclick="closeMenu();navigateToContentPage('customer-care');">Customer Care</a>
+        <a onclick="closeMenu();navigateToContentPage('faq');">Frequently Asked Questions</a>
+        <a onclick="closeMenu();navigateToContentPage('brand-partnerships');">Brand Partnerships</a>
+      </div>
+    </div>
+
+    <div class="menu-panel menu-subpanel" id="menu-panel-clothing">
+      <button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>Clothing</button>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('all-clothing');">Shop All Clothing<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('dresses');">Dresses<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('tops');">Tops<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('bottoms');">Bottoms<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('jackets');">Jackets<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('sets');">Sets<i class="ph ph-caret-right menu-chev"></i></a>
+    </div>
+
+    <div class="menu-panel menu-subpanel" id="menu-panel-accessories">
+      <button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>Accessories</button>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('all-accessories');">Shop All Accessories<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('bags');">Bags<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('jewelry');">Jewellery<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('sunglasses');">Sunglasses<i class="ph ph-caret-right menu-chev"></i></a>
+    </div>
   </div>
 </div>
 
