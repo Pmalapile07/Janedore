@@ -163,7 +163,7 @@ const PA_STATUS_COPY = {
   received: ['Application received', 'Thank you for applying. Your application is in the queue and will be reviewed by our partnerships team.'],
   under_review: ['Your application is under review', 'Our partnerships team is reviewing your application against our partnership criteria. We will email you as soon as a decision has been made.'],
   accepted: ['Your application has been accepted', 'Welcome to JANEDORE. A member of our partnerships team will be in touch to agree commercial terms and begin onboarding.'],
-  conditional: ['Accepted with conditions', 'We see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, we ask that you address the points below. Once you have made these changes, reply to your decision email with an update.'],
+  conditional: ['Accepted with conditions', 'We see real potential in your brand and would like to welcome you to JANEDORE. The changes below are required before we can begin onboarding. Once you have made them, reply to your decision email with an update and our team will review it.'],
   declined: ['An update on your application', 'After careful consideration, we are unable to offer a partnership at this time. As your brand grows, you are very welcome to apply again in the future.']
 };
 
@@ -178,7 +178,8 @@ function partnerStatusHtml(a) {
   }).join('<div class="track-step-line"></div>');
   const copy = PA_STATUS_COPY[a.status] || PA_STATUS_COPY.received;
   const conditions = (a.conditions || []).length
-    ? `<div class="track-card"><div class="account-detail-title">What we ask you to address</div><ol class="pa-conditions">${a.conditions.map(c => `<li>${escapeHTML(c)}</li>`).join('')}</ol></div>` : '';
+    ? `<div class="track-card"><div class="account-detail-title">Required changes</div><ol class="pa-conditions">${a.conditions.map(c => `<li>${escapeHTML(c)}</li>`).join('')}</ol>
+        <div class="pa-help"><strong>Need help?</strong> If you would like support in making any of these changes, please contact a member of our partnerships team at <a class="track-link" href="mailto:support@janedore.co.za">support@janedore.co.za</a>, quoting ${escapeHTML(a.reference || '')}. We will get back to you to discuss how we can help.</div></div>` : '';
   return `<div class="track-result">
     <div class="track-order-number">${escapeHTML(a.brandName || '')} · ${escapeHTML(a.reference || '')}</div>
     ${a.createdAt ? `<div class="track-order-meta">Applied ${escapeHTML(trackDate(a.createdAt, true))}${decided && a.decidedAt ? ` · Decision ${escapeHTML(trackDate(a.decidedAt, true))}` : ''}</div>` : ''}

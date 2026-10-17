@@ -782,9 +782,10 @@ function partnerApplicationUpdate(a, ctx) {
       subject: 'Your JANEDORE application: accepted with conditions (' + a.reference + ')',
       banner: 'Accepted with conditions',
       body: 'Dear ' + esc(first) + ',<br><br>Thank you for your patience while we reviewed the application for <strong style="color:#111111;">' + brand + '</strong>.' +
-        '<br><br>We see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, we ask that you address the points below, so that your brand is presented to the standard our customers expect.',
-      next: 'Once you have made these changes, simply reply to this email with an update, including any new photography or details. Our team will review your update and confirm the next steps.',
-      textBody: 'Thank you for your patience while we reviewed the application for ' + a.brandName + '.\n\nWe see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, we ask that you address the points below, so that your brand is presented to the standard our customers expect.'
+        '<br><br>We see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, you will need to make the changes set out below, so that your brand is presented to the standard our customers expect.',
+      next: 'These changes are required before we can begin onboarding. Once you have made them, reply to this email with an update, including any new photography or details, and our team will review it and confirm the next steps.',
+      help: 'Need help making these changes? Please contact a member of our partnerships team by replying to this email or writing to support@janedore.co.za, quoting your reference ' + a.reference + '. We will get back to you to discuss how we can support you.',
+      textBody: 'Thank you for your patience while we reviewed the application for ' + a.brandName + '.\n\nWe see real potential in your brand and would like to welcome you to JANEDORE. Before we can move to onboarding, you will need to make the changes set out below, so that your brand is presented to the standard our customers expect.'
     },
     declined: {
       subject: 'An update on your JANEDORE application (' + a.reference + ')',
@@ -796,7 +797,7 @@ function partnerApplicationUpdate(a, ctx) {
     }
   }[a.status];
   const conditionsCard = a.status === 'conditional'
-    ? title('What we ask you to address') + '<ol style="margin:0;padding:0 0 0 20px;font-size:14px;line-height:1.7;color:#111111;">' + conditions.map((c) => '<li style="margin:0 0 8px;">' + esc(c) + '</li>').join('') + '</ol>'
+    ? title('Required changes') + '<ol style="margin:0;padding:0 0 0 20px;font-size:14px;line-height:1.7;color:#111111;">' + conditions.map((c) => '<li style="margin:0 0 8px;">' + esc(c) + '</li>').join('') + '</ol>'
     : '';
   const html = shell({
     logoUrl: ctx.logoUrl,
@@ -806,12 +807,14 @@ function partnerApplicationUpdate(a, ctx) {
     bannerHtml: '<strong>' + esc(copy.banner) + '</strong>',
     cards: [para(copy.body) + note]
       .concat(conditionsCard ? [conditionsCard] : [])
-      .concat([title(a.status === 'declined' ? 'Looking ahead' : 'Next steps') + para(esc(copy.next)) + button('View application status', partnerStatusUrl(a, ctx))]),
+      .concat([title(a.status === 'declined' ? 'Looking ahead' : 'Next steps') + para(esc(copy.next)) +
+        (copy.help ? '<div style="font-size:14px;line-height:1.7;color:#111111;background:' + GREEN_TINT + ';padding:14px 16px;margin-top:16px;"><strong>Need help?</strong> ' + esc(copy.help.replace(/^Need help making these changes\? /, '')) + '</div>' : '') +
+        button('View application status', partnerStatusUrl(a, ctx))]),
     footerHtml: PARTNER_FOOTER(a)
   });
   const text = copy.banner + '\n\nDear ' + first + ',\n\n' + copy.textBody + (a.decisionMessage ? '\n\n' + a.decisionMessage : '') +
-    (a.status === 'conditional' ? '\n\nWhat we ask you to address:\n' + conditions.map((c, i) => (i + 1) + '. ' + c).join('\n') : '') +
-    '\n\n' + copy.next + '\n\nReference: ' + a.reference + '\nApplication status: ' + partnerStatusUrl(a, ctx) + '\n\nQuestions? Reply to this email and quote ' + a.reference + '.';
+    (a.status === 'conditional' ? '\n\nRequired changes:\n' + conditions.map((c, i) => (i + 1) + '. ' + c).join('\n') : '') +
+    '\n\n' + copy.next + (copy.help ? '\n\n' + copy.help : '') + '\n\nReference: ' + a.reference + '\nApplication status: ' + partnerStatusUrl(a, ctx) + '\n\nQuestions? Reply to this email and quote ' + a.reference + '.';
   return { subject: copy.subject, html, text };
 }
 

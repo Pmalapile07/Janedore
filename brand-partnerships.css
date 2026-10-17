@@ -77,3 +77,4 @@
 .pa-conditions li { margin: 0 0 8px; }
 .track-step.is-declined .track-step-dot { background: #111; border-color: #111; color: #fff; }
 .pa-page #ps-result:not(:empty) { margin-top: 36px; }
+.pa-help { background: #e6edd5; font-size: 13px; line-height: 1.6; padding: 14px 16px; margin-top: 14px; }
