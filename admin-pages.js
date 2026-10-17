@@ -32,7 +32,7 @@
     // Text is built into the page (brand-partnerships.js); only the hero
     // image is set here.
     { group: 'Brand Partnerships', items: [
-      { slug: 'brand-partnerships', label: 'Brand Partnerships', heroOnly: true }
+      { slug: 'brand-partnerships', label: 'Brand Partnerships', imagesOnly: true }
     ]}
   ];
 
@@ -89,7 +89,7 @@
     var groupsHtml = PAGE_GROUPS.map(function(g) {
       var rowsHtml = g.items.map(function(item) {
         var data = _pagesData[item.slug];
-        var hasContent = item.heroOnly ? !!(data && data.heroImageUrl) : !!(data && data.content && data.content.trim());
+        var hasContent = item.imagesOnly ? PAGE_IMAGE_SLOTS.some(function (sl) { return !!(data && data[sl.key]); }) : !!(data && data.content && data.content.trim());
         return '<div class="product-row" onclick="window._openPageForm(\'' + esc(item.slug) + '\')" style="cursor:pointer;">' +
           '<div style="flex:1;min-width:0;">' +
             '<div class="pi-name">' + esc(item.label) + '</div>' +
@@ -182,7 +182,7 @@
 
     var mc = safeEl('main-content');
     if (!mc) return;
-    if (item.heroOnly) { renderHeroPageForm(mc, item, data); return; }
+    if (item.imagesOnly) { renderImagesPageForm(mc, item, data); return; }
 
     mc.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
@@ -202,50 +202,62 @@
       '</form>';
   };
 
-  // Hero image only (Brand Partnerships).
-  function heroPreviewHtml(url) {
+  // Images only (Brand Partnerships): the page text is part of the site
+  // design; each slot is optional and the page leaves it out when empty
+  // (brand-partnerships.js reads the same keys).
+  var PAGE_IMAGE_SLOTS = [
+    { key: 'heroImageUrl', label: 'Hero image', ratio: '4/5', help: 'At the top of the page, beside the headline on desktop and above it on mobile. A portrait image works best. Without one, the hero is text only.' },
+    { key: 'propositionImageUrl', label: 'Why brands join JANEDORE', ratio: '16/9', help: 'Under the paragraph that introduces why brands join. A landscape image works best.' },
+    { key: 'selectionImageUrl', label: 'What we look for', ratio: '16/9', help: 'Under the paragraph that introduces what we look for. A landscape image works best.' },
+    { key: 'termsImageUrl', label: 'Clear terms, agreed first', ratio: '16/9', help: 'Under the paragraph that introduces the commercial terms. A landscape image works best.' }
+  ];
+
+  function pageImagePreviewHtml(url, ratio) {
     return url
-      ? '<div style="aspect-ratio:16/9;background:#111 center/cover no-repeat;background-image:url(\'' + esc(url) + '\');border-radius:6px;"></div>'
-      : '<div style="aspect-ratio:16/9;background:#111;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;">No image. The hero shows plain black.</div>';
+      ? '<div style="aspect-ratio:' + ratio + ';max-height:320px;background:#f4f4f4 center/cover no-repeat;background-image:url(\'' + esc(url) + '\');border-radius:6px;"></div>'
+      : '<div style="aspect-ratio:' + ratio + ';max-height:320px;background:#f4f4f4;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;">No image. This spot is left out of the page.</div>';
   }
 
-  function renderHeroPageForm(mc, item, data) {
-    var url = data.heroImageUrl || '';
+  function renderImagesPageForm(mc, item, data) {
+    var cards = PAGE_IMAGE_SLOTS.map(function (sl) {
+      var url = data[sl.key] || '';
+      return '<div class="card" style="margin-bottom:12px;">' +
+        '<div class="card-header"><span class="card-title">' + esc(sl.label) + '</span></div>' +
+        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+          '<div id="page-img-preview-' + sl.key + '">' + pageImagePreviewHtml(url, sl.ratio) + '</div>' +
+          '<input type="hidden" id="page-img-' + sl.key + '" value="' + esc(url) + '">' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button type="button" class="btn btn-ghost" onclick="window._uploadPageImage(\'' + sl.key + '\')"><i class="ph-light ph-upload-simple" style="margin-right:4px;"></i> Upload image</button>' +
+            '<button type="button" class="btn btn-ghost" onclick="window._setPageImage(\'' + sl.key + '\',\'\')">Remove</button>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--muted);">' + esc(sl.help) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
     mc.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
         '<button type="button" class="btn btn-ghost" onclick="window._renderPagesTab()"><i class="ph-light ph-arrow-left" style="margin-right:4px;"></i> Cancel</button>' +
         '<div style="font-size:13px;font-weight:500;color:var(--text);">' + esc(item.label) + '</div>' +
-        '<button type="button" class="btn btn-primary" onclick="window._saveHeroPage(\'' + esc(item.slug) + '\')"><i class="ph-light ph-check" style="margin-right:4px;"></i> Save</button>' +
-      '</div>' +
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Hero image</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div id="hero-page-preview">' + heroPreviewHtml(url) + '</div>' +
-          '<input type="hidden" id="hero-page-url" value="' + esc(url) + '">' +
-          '<div style="display:flex;gap:8px;">' +
-            '<button type="button" class="btn btn-ghost" onclick="window._uploadHeroPageImage()"><i class="ph-light ph-upload-simple" style="margin-right:4px;"></i> Upload image</button>' +
-            '<button type="button" class="btn btn-ghost" onclick="window._setHeroPageImage(\'\')">Remove</button>' +
-          '</div>' +
-          '<div style="font-size:11px;color:var(--muted);">Shown full width at the top of /pages/' + esc(item.slug) + ', with the page title over the bottom of it. A landscape image works best. The page text is part of the site design.</div>' +
-        '</div>' +
-      '</div>';
+        '<button type="button" class="btn btn-primary" onclick="window._saveImagesPage(\'' + esc(item.slug) + '\')"><i class="ph-light ph-check" style="margin-right:4px;"></i> Save</button>' +
+      '</div>' + cards;
   }
 
-  window._setHeroPageImage = function(url) {
-    var input = safeEl('hero-page-url'), prev = safeEl('hero-page-preview');
+  window._setPageImage = function(key, url) {
+    var sl = PAGE_IMAGE_SLOTS.find(function (x) { return x.key === key; });
+    var input = safeEl('page-img-' + key), prev = safeEl('page-img-preview-' + key);
     if (input) input.value = url;
-    if (prev) prev.innerHTML = heroPreviewHtml(url);
+    if (prev && sl) prev.innerHTML = pageImagePreviewHtml(url, sl.ratio);
   };
 
-  window._uploadHeroPageImage = function() {
+  window._uploadPageImage = function(key) {
     if (!window._uploadToCloudinary) { showToast('Image upload is not available', 'error'); return; }
-    window._uploadToCloudinary(function(url) { window._setHeroPageImage(url); showToast('Image uploaded. Press Save to publish it.'); }, false);
+    window._uploadToCloudinary(function(url) { window._setPageImage(key, url); showToast('Image uploaded. Press Save to publish it.'); }, false);
   };
 
-  window._saveHeroPage = function(slug) {
+  window._saveImagesPage = function(slug) {
     if (!window._guard('pages', 'update')) return;
-    var input = safeEl('hero-page-url');
-    var data = { heroImageUrl: input ? input.value : '', updatedAt: new Date().toISOString() };
+    var data = { updatedAt: new Date().toISOString() };
+    PAGE_IMAGE_SLOTS.forEach(function (sl) { var input = safeEl('page-img-' + sl.key); data[sl.key] = input ? input.value : ''; });
     pagesRef.doc(slug).set(data, { merge: true }).then(function() {
       _pagesData[slug] = Object.assign({}, _pagesData[slug], data);
       showToast('Page saved');

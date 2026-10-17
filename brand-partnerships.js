@@ -6,8 +6,9 @@
    form itself (partner-application.js, which also submits it to
    /api/partner-applications). The hero image is set in admin > Pages >
    Brand Partnerships (pages/brand-partnerships.heroImageUrl); without
-   one the hero is typographic. Featured brands only appear when real,
-   active brands exist.
+   one the hero is typographic. The same screen sets optional images
+   under the proposition, selection and terms intros. Featured brands
+   only appear when real, active brands exist.
 
    Copy rule: say only what JANEDORE actually offers today. Commission
    rate, courier costs, payout timing and a review timeframe are not set
@@ -118,6 +119,7 @@ function renderBrandPartnershipsPage() {
       <section class="bp-section" aria-labelledby="bp-s1">
         <div class="bp-wrap">
           ${head('The proposition', '<span id="bp-s1">Why brands join JANEDORE</span>', 'A partnership is a second home for your work: a place where it is presented with care, alongside brands that share your standards.')}
+          <div class="bp-figure" id="bp-img-propositionImageUrl" hidden></div>
           <div class="bp-benefits">
             ${benefits.map(([t, d]) => `<div class="bp-benefit"><h3>${t}</h3><p>${d}</p></div>`).join('')}
           </div>
@@ -128,6 +130,7 @@ function renderBrandPartnershipsPage() {
       <section class="bp-section bp-tint" aria-labelledby="bp-s2">
         <div class="bp-wrap">
           ${head('Selection', '<span id="bp-s2">What we look for</span>', 'Every application is considered individually. We welcome emerging and established brands alike; what matters is the work and how it is run.')}
+          <div class="bp-figure" id="bp-img-selectionImageUrl" hidden></div>
           <dl class="bp-criteria">
             ${criteria.map(([t, d]) => `<div class="bp-criterion"><dt>${t}</dt><dd>${d}</dd></div>`).join('')}
           </dl>
@@ -158,6 +161,7 @@ function renderBrandPartnershipsPage() {
       <section class="bp-section bp-tint" aria-labelledby="bp-s4">
         <div class="bp-wrap">
           ${head('Commercial terms', '<span id="bp-s4">Clear terms, agreed first</span>', 'The details of every partnership are discussed and agreed before it begins. These are the areas we cover with each brand.')}
+          <div class="bp-figure" id="bp-img-termsImageUrl" hidden></div>
           <dl class="bp-terms">
             ${terms.map(([t, d]) => `<div class="bp-term"><dt>${t}</dt><dd>${d}</dd></div>`).join('')}
           </dl>
@@ -185,12 +189,21 @@ function renderBrandPartnershipsPage() {
   if (window._bpScrollToApply) { window._bpScrollToApply = false; setTimeout(() => bpScrollTo('bp-apply', true), 60); }
 
   db.collection('pages').doc(BRAND_PARTNERSHIPS_SLUG).get().then(doc => {
-    const url = doc.exists && doc.data().heroImageUrl;
+    const data = (doc.exists && doc.data()) || {};
+    const url = data.heroImageUrl;
     const media = document.getElementById('bp-hero-media');
-    if (!url || !media) return;
-    media.innerHTML = `<img src="${escapeHTML(bpImageUrl(url, 1600))}" srcset="${escapeHTML(bpImageUrl(url, 800))} 800w, ${escapeHTML(bpImageUrl(url, 1600))} 1600w" sizes="(min-width: 900px) 55vw, 100vw" alt="" fetchpriority="high" decoding="async">`;
-    media.hidden = false;
-    document.getElementById('bp-hero').classList.add('has-image');
+    if (url && media) {
+      media.innerHTML = `<img src="${escapeHTML(bpImageUrl(url, 1600))}" srcset="${escapeHTML(bpImageUrl(url, 800))} 800w, ${escapeHTML(bpImageUrl(url, 1600))} 1600w" sizes="(min-width: 900px) 55vw, 100vw" alt="" fetchpriority="high" decoding="async">`;
+      media.hidden = false;
+      document.getElementById('bp-hero').classList.add('has-image');
+    }
+    // Section images, each optional (admin > Pages > Brand Partnerships).
+    ['propositionImageUrl', 'selectionImageUrl', 'termsImageUrl'].forEach(key => {
+      const box = document.getElementById('bp-img-' + key);
+      if (!data[key] || !box) return;
+      box.innerHTML = `<img src="${escapeHTML(bpImageUrl(data[key], 1600))}" srcset="${escapeHTML(bpImageUrl(data[key], 800))} 800w, ${escapeHTML(bpImageUrl(data[key], 1600))} 1600w, ${escapeHTML(bpImageUrl(data[key], 2160))} 2160w" sizes="(min-width: 1080px) 1016px, calc(100vw - 32px)" alt="" loading="lazy" decoding="async">`;
+      box.hidden = false;
+    });
   }).catch(() => {});
 }
 
