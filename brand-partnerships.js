@@ -6,7 +6,8 @@
    form itself (partner-application.js, which also submits it to
    /api/partner-applications). The hero image is set in admin > Pages >
    Brand Partnerships (pages/brand-partnerships.heroImageUrl); without
-   one the hero is typographic. The same screen sets optional images
+   one the hero is typographic; a hero video, when set, plays behind the
+   headline instead. The same screen sets optional images
    under the proposition, selection and terms intros. Featured brands
    only appear when real, active brands exist.
 
@@ -38,6 +39,25 @@ function partnershipFeaturedBrands() {
 // Cloudinary delivery: right-sized, modern format.
 function bpImageUrl(url, width) {
   return /res\.cloudinary\.com\/.+\/upload\//.test(url) ? url.replace('/upload/', '/upload/f_auto,q_auto,c_limit,w_' + width + '/') : url;
+}
+
+// Cloudinary video delivery: 1280 wide, compressed, no audio, MP4; or
+// its first frame as the poster.
+function bpCloudinaryVideo(url) {
+  return /^https:\/\/res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(url);
+}
+function bpVideoUrl(url, poster) {
+  const t = poster ? 'so_0,f_jpg,q_auto,w_1600,c_limit' : 'q_auto,w_1280,c_limit,ac_none';
+  return url.replace('/video/upload/', '/video/upload/' + t + '/').replace(/\.[a-z0-9]+$/i, poster ? '.jpg' : '.mp4');
+}
+
+function bpToggleHeroVideo() {
+  const v = document.querySelector('#bp-hero-media video');
+  const btn = document.getElementById('bp-hero-pause');
+  if (!v || !btn) return;
+  if (v.paused) v.play().catch(() => {}); else v.pause();
+  btn.classList.toggle('is-paused', v.paused);
+  btn.setAttribute('aria-label', v.paused ? 'Play background video' : 'Pause background video');
 }
 
 function bpScrollTo(id, instant) {
@@ -105,6 +125,7 @@ function renderBrandPartnershipsPage() {
     <div class="bp">
       <section class="bp-hero" id="bp-hero" aria-labelledby="bp-hero-title">
         <div class="bp-hero-media" id="bp-hero-media" hidden></div>
+        <button type="button" class="bp-hero-pause" id="bp-hero-pause" hidden aria-label="Pause background video" onclick="bpToggleHeroVideo()"><span aria-hidden="true"></span></button>
         <div class="bp-hero-copy">
           <div class="bp-eyebrow">Brand Partnerships</div>
           <h1 class="bp-hero-title" id="bp-hero-title">A considered home for distinctive brands.</h1>
@@ -192,10 +213,21 @@ function renderBrandPartnershipsPage() {
     const data = (doc.exists && doc.data()) || {};
     const url = data.heroImageUrl;
     const media = document.getElementById('bp-hero-media');
-    if (url && media) {
+    const hero = document.getElementById('bp-hero');
+    if (data.heroVideoUrl && media && bpCloudinaryVideo(data.heroVideoUrl)) {
+      // Muted background loop. Reduced motion or data saver: still frame only.
+      const poster = url ? bpImageUrl(url, 1600) : bpVideoUrl(data.heroVideoUrl, 'poster');
+      const still = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || (navigator.connection && navigator.connection.saveData);
+      media.innerHTML = still
+        ? `<img src="${escapeHTML(poster)}" alt="" fetchpriority="high" decoding="async">`
+        : `<video src="${escapeHTML(bpVideoUrl(data.heroVideoUrl))}" poster="${escapeHTML(poster)}" autoplay muted loop playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>`;
+      media.hidden = false;
+      hero.classList.add('has-video');
+      if (!still) document.getElementById('bp-hero-pause').hidden = false;
+    } else if (url && media) {
       media.innerHTML = `<img src="${escapeHTML(bpImageUrl(url, 1600))}" srcset="${escapeHTML(bpImageUrl(url, 800))} 800w, ${escapeHTML(bpImageUrl(url, 1600))} 1600w" sizes="(min-width: 900px) 55vw, 100vw" alt="" fetchpriority="high" decoding="async">`;
       media.hidden = false;
-      document.getElementById('bp-hero').classList.add('has-image');
+      hero.classList.add('has-image');
     }
     // Section images, each optional (admin > Pages > Brand Partnerships).
     ['propositionImageUrl', 'selectionImageUrl', 'termsImageUrl'].forEach(key => {
@@ -215,3 +247,4 @@ function applyForBrandPartnership() {
 window.renderBrandPartnershipsPage = renderBrandPartnershipsPage;
 window.applyForBrandPartnership = applyForBrandPartnership;
 window.bpScrollTo = bpScrollTo;
+window.bpToggleHeroVideo = bpToggleHeroVideo;
