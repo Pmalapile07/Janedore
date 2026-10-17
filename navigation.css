@@ -243,15 +243,77 @@ body.on-brands-page .nav-quick-links {
   .nav-right .nav-icon-btn { display: none; }
 }
 
-#menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 950; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-#menu-backdrop.open { opacity: 1; pointer-events: all; }
-#menu-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 85vw); background: #fff; z-index: 951; transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.08); }
-#menu-drawer.open { transform: translateX(0); }
-.drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; }
-.drawer-close { background: none; border: none; padding: 4px; display: flex; align-items: center; cursor: pointer; }
-.drawer-close svg { width: 18px; height: 18px; stroke: #111; fill: none; stroke-width: 1.5; }
-.drawer-body { flex: 1; overflow-y: auto; padding: 0 24px 20px; display: flex; flex-direction: column; gap: 0; }
-.drawer-spacer { height: 36px; }
+/* ---------- FULL-SCREEN MENU (index.html #menu-drawer) ----------
+   Covers the whole screen like the chat widget. Black 64px header like
+   #main-nav: close and "Menu" left, search/wishlist/bag right. The main
+   list and each category's own list (Clothing, Accessories) are panels
+   side by side; openMenuPanel() slides to one, the back row returns. */
+#menu-backdrop { display: none; }
+#menu-drawer {
+  position: fixed; inset: 0; z-index: 1200; background: #fff;
+  display: flex; flex-direction: column; font-family: 'Inter', sans-serif; color: #111;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+#menu-drawer.open { opacity: 1; visibility: visible; transition: opacity 0.25s ease, visibility 0s; }
+.menu-head {
+  flex-shrink: 0; height: 64px; background: #111; color: #fff; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 12px;
+}
+.menu-head-left, .menu-head-right { display: flex; align-items: center; gap: 4px; }
+.menu-head-btn { position: relative; background: none; border: none; color: #fff; padding: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; }
+.menu-head-btn .badge { position: absolute; top: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; font-size: 7px; font-weight: 600; display: flex; align-items: center; justify-content: center; background: #fff; color: #111; }
+.menu-x { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; }
+.menu-head-title { font-size: 16px; font-weight: 600; margin-left: 10px; }
+
+.menu-panels { position: relative; flex: 1; overflow: hidden; }
+.menu-panel {
+  position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  padding: 8px 16px calc(32px + env(safe-area-inset-bottom, 0)); background: #fff;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.menu-subpanel { transform: translateX(100%); }
+#menu-drawer.sub-open #menu-panel-main { transform: translateX(-30%); }
+.menu-subpanel.active { transform: translateX(0); }
+
+.menu-row {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 16px 0;
+  background: none; border: none; text-align: left; cursor: pointer; color: #111; font-family: inherit;
+}
+.menu-row:active { opacity: 0.6; }
+.menu-chev { font-size: 20px; flex-shrink: 0; }
+.menu-account { font-size: 15px; font-weight: 400; padding-top: 14px; }
+.menu-account-left { display: flex; align-items: center; gap: 12px; }
+.menu-avatar {
+  width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #111; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.02em; flex-shrink: 0;
+}
+.menu-avatar i { font-size: 15px; }
+.menu-cat { font-size: 19px; font-weight: 600; }
+.menu-subcat { font-size: 17px; font-weight: 400; border-bottom: 1px solid #eee; }
+
+.menu-links { margin-top: 20px; }
+.menu-plain { display: block; padding: 18px 0; font-size: 15px; color: #111; border-bottom: 1px solid #d5d5d5; cursor: pointer; }
+.menu-plain:last-child { border-bottom: none; }
+.menu-sale { color: #c0392b; }
+
+.menu-cta {
+  display: block; width: 100%; height: 46px; margin: 12px 0 24px; background: #111; color: #fff; border: none; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.menu-help { display: flex; flex-direction: column; gap: 14px; }
+.menu-help a { font-size: 13px; color: #666; cursor: pointer; }
+
+.menu-back {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 16px 0; margin: 0 0 4px; background: none; border: none;
+  border-bottom: 1px solid #111; font-family: inherit; font-size: 19px; font-weight: 600; color: #111; cursor: pointer; text-align: left;
+}
+.menu-back i { font-size: 20px; }
+
+@media (min-width: 768px) {
+  .menu-head { padding: 0 16px; }
+  .menu-panel { padding-left: calc(50% - 280px); padding-right: calc(50% - 280px); }
+}
 
 /* Inter typography for all nav elements */
 .drawer-link, .drawer-section-title, .desktop-nav-link, .utility-text-link, .drawer-title {
