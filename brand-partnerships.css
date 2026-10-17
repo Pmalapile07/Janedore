@@ -20,6 +20,10 @@
 .bp-section p, .bp dd { font-size: 13px; line-height: 1.7; color: #555; }
 .bp-note { margin-top: 28px; padding-top: 20px; border-top: 1px solid #ddd; max-width: 620px; }
 
+/* Optional section images, under the section intro */
+.bp-figure { margin: -8px 0 40px; aspect-ratio: 3 / 2; overflow: hidden; background: #e8e8e8; }
+.bp-figure img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 /* Buttons */
 .bp-btn {
   display: inline-flex; align-items: center; justify-content: center; height: 46px; padding: 0 28px;
@@ -140,6 +144,7 @@ select.pa-input {
   .bp-section { padding: 96px 0; }
   .bp-wrap, .bp-hero-copy { padding-left: 32px; padding-right: 32px; }
   .bp-head { margin-bottom: 48px; }
+  .bp-figure { aspect-ratio: 21 / 9; margin: -16px 0 56px; }
   .bp-intro { font-size: 15px; }
 
   .bp-hero-copy { padding-top: 112px; padding-bottom: 120px; }
