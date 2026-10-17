@@ -102,10 +102,16 @@ if (serviceAccount) {
 const SITE_URL = 'https://janedore.co.za';
 
 // Cloudinary config endpoint — MUST be first
+// publicUploadPreset (CLOUDINARY_PUBLIC_UPLOAD_PRESET on Render) is a
+// locked-down, images-only preset for customer uploads: chat photos,
+// return photos and partner application images. Until it's set, the
+// storefront falls back to the main preset. Admin keeps uploadPreset,
+// which also takes fonts, sounds and videos for the Content Library.
 app.get('/api/cloudinary-config', (req, res) => {
   res.json({
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET
+    uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET,
+    publicUploadPreset: process.env.CLOUDINARY_PUBLIC_UPLOAD_PRESET || process.env.CLOUDINARY_UPLOAD_PRESET
   });
 });
 
