@@ -162,7 +162,14 @@ async function handleLoginSubmit(e) {
       // password the customer is sent back to sign in here. The same
       // message shows whether or not the email has an account, so the
       // form can't be used to find out who shops here.
-      await firebase.auth().sendPasswordResetEmail(email, { url: window.location.origin + '/login' });
+      // The link back to /login needs this domain in Firebase's authorised
+      // domains; if it isn't, send the plain reset email instead.
+      try {
+        await firebase.auth().sendPasswordResetEmail(email, { url: window.location.origin + '/login' });
+      } catch (err) {
+        if (!['auth/unauthorized-continue-uri', 'auth/invalid-continue-uri', 'auth/unauthorized-domain', 'auth/missing-continue-uri'].includes(err && err.code)) throw err;
+        await firebase.auth().sendPasswordResetEmail(email);
+      }
       showLoginNotice('If there’s an account for ' + email + ', we’ve sent a link to reset your password. Check your inbox and spam folder.');
       return;
     }

@@ -833,10 +833,22 @@
     var done = function() {
       if (noticeEl) { noticeEl.textContent = 'If there\u2019s an account for ' + email + ', we\u2019ve sent a link to set a new password. Check your inbox and spam folder.'; noticeEl.style.display = 'block'; }
     };
-    auth.sendPasswordResetEmail(email, { url: window.location.origin + '/admin' }).then(done).catch(function(err) {
+    // The link back to /admin needs this domain in Firebase's authorised
+    // domains; if it isn't, send the plain reset email instead.
+    var CONTINUE_ERRORS = ['auth/unauthorized-continue-uri', 'auth/invalid-continue-uri', 'auth/unauthorized-domain', 'auth/missing-continue-uri'];
+    auth.sendPasswordResetEmail(email, { url: window.location.origin + '/admin' }).catch(function(err) {
+      if (err && CONTINUE_ERRORS.indexOf(err.code) !== -1) return auth.sendPasswordResetEmail(email);
+      throw err;
+    }).then(done).catch(function(err) {
       if (err && err.code === 'auth/user-not-found') return done();
       logError('PASSWORD_RESET', err);
-      if (errorEl) { errorEl.textContent = err && err.code === 'auth/too-many-requests' ? 'Too many requests. Please wait a few minutes and try again.' : 'We couldn\u2019t send the email. Please try again.'; errorEl.style.display = 'block'; }
+      var code = (err && err.code) || 'unknown';
+      if (errorEl) {
+        errorEl.textContent = code === 'auth/too-many-requests' ? 'Too many requests. Please wait a few minutes and try again.'
+          : code === 'auth/network-request-failed' ? 'No connection. Check your internet and try again.'
+          : 'We couldn\u2019t send the email (' + code + '). Please try again, or send this message to your developer.';
+        errorEl.style.display = 'block';
+      }
     });
   };
 
