@@ -591,6 +591,10 @@ body .site-collection-layout {
    keeps its original padding below. */
 #brand-grid { padding: 0 0 0 8px !important; scroll-padding-left: 8px; }
 #brand-grid::after { flex: 0 0 8px; }
+/* Product page Shop by Brand: lines up with the section heading and the
+   product info above it (12px, .swipe-section-title / .product-info). */
+.brand-grid-scroll { padding: 0 0 0 12px !important; scroll-padding-left: 12px; }
+.brand-grid-scroll::after { flex: 0 0 12px; }
 @media (min-width: 640px) {
   #brand-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
   #brand-grid::after { flex: 0 0 10px; }
