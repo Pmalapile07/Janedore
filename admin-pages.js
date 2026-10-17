@@ -249,10 +249,9 @@
     if (prev && sl) prev.innerHTML = pageImagePreviewHtml(url, sl.ratio, sl.video);
   };
 
-  // Videos go to Cloudinary's video endpoint with the same unsigned preset.
+  // Videos go to Cloudinary's video endpoint (signed via admin.js).
   window._uploadPageVideo = function(key) {
-    var cloudName = window.CLOUDINARY_CLOUD_NAME, uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !uploadPreset) { showToast('Cloudinary is not configured.', 'error'); return; }
+    if (!window.CLOUDINARY_CLOUD_NAME) { showToast('Cloudinary is not configured.', 'error'); return; }
     var input = document.createElement('input');
     input.type = 'file';
     input.accept = 'video/mp4,video/webm,video/quicktime';
@@ -263,13 +262,8 @@
       if (file.size > 100 * 1024 * 1024) { showToast('That video is over 100 MB. Please use a shorter or smaller file.', 'error'); return; }
       var btn = safeEl('page-img-btn-' + key);
       if (btn) { btn.disabled = true; btn.textContent = 'Uploading…'; }
-      var formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', uploadPreset);
-      fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/video/upload', { method: 'POST', body: formData })
-        .then(function(res) { return res.json(); })
+      window._cloudinaryUpload(file, 'video')
         .then(function(result) {
-          if (!result || !result.secure_url) throw new Error(result && result.error ? result.error.message : 'Unknown error');
           window._setPageImage(key, result.secure_url);
           showToast('Video uploaded. Press Save to publish it.');
         })

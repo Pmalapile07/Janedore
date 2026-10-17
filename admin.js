@@ -856,33 +856,45 @@
 
   // ─── CLOUDINARY UPLOAD ───────────────────────────────────────
 
-  window.uploadToCloudinary = function(inputElement, variantIndex) {
-    var cloudName    = window.CLOUDINARY_CLOUD_NAME;
-    var uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName)    { showToast('Cloudinary still loading, try again...', 'error'); return; }
-    if (!uploadPreset) { showToast('Cloudinary upload preset not configured.', 'error'); return; }
-    var widget = window.cloudinary.createUploadWidget(
-      {
-        cloudName: cloudName, uploadPreset: uploadPreset,
-        sources: ['local','url','camera'], multiple: false, maxFiles: 1,
-        clientAllowedFormats: ['png','jpg','jpeg','gif','webp','svg','bmp'],
-        maxFileSize: 20000000
-      },
-      function(error, result) {
-        if (error) { logError('CLOUDINARY_UPLOAD', error); showToast('Upload failed.', 'error'); return; }
-        if (result && result.event === 'success') {
-          var secureUrl = result.info.secure_url;
-          if (inputElement) {
-            inputElement.value = secureUrl;
-            inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-            if (window._updateImagePreview) window._updateImagePreview(inputElement);
-            if (variantIndex !== undefined && window._updateVariantPreview) window._updateVariantPreview(variantIndex);
-          }
-          showToast('Image uploaded!');
-        }
+  // Every admin upload goes through here (product and site images, the
+  // Content library, the Brand Partnerships video). It asks the server
+  // for a signature first (/api/admin/cloudinary-signature, staff only);
+  // if signing isn't configured on the server yet, it uploads unsigned
+  // with the preset, as before. resourceType: 'image', 'video' or 'auto'.
+  // Resolves with Cloudinary's upload result (secure_url, public_id...).
+  window._cloudinaryUpload = function(file, resourceType) {
+    var cloudName = window.CLOUDINARY_CLOUD_NAME, uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+    var user = window._currentUser;
+    var signing = user && user.getIdToken
+      ? user.getIdToken().then(function(token) {
+          return fetch('/api/admin/cloudinary-signature', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+        }).then(function(res) {
+          return res.json().catch(function() { return {}; }).then(function(data) {
+            if (res.ok) return data;
+            if (res.status === 503 && data.unsigned) return null;
+            throw new Error(data.error || 'Could not authorise the upload');
+          });
+        })
+      : Promise.reject(new Error('Please sign in again.'));
+    return signing.then(function(sig) {
+      var form = new FormData();
+      form.append('file', file);
+      if (sig) {
+        cloudName = sig.cloudName || cloudName;
+        form.append('api_key', sig.apiKey);
+        form.append('timestamp', sig.timestamp);
+        form.append('signature', sig.signature);
+        if (sig.uploadPreset) form.append('upload_preset', sig.uploadPreset);
+      } else {
+        if (!uploadPreset) throw new Error('Cloudinary upload preset not configured.');
+        form.append('upload_preset', uploadPreset);
       }
-    );
-    widget.open();
+      if (!cloudName) throw new Error('Cloudinary cloud name not configured.');
+      return fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/' + (resourceType || 'image') + '/upload', { method: 'POST', body: form });
+    }).then(function(res) { return res.json(); }).then(function(result) {
+      if (!result || !result.secure_url) throw new Error(result && result.error ? result.error.message : 'Unknown error');
+      return result;
+    });
   };
 
   // ─── CLEANUP ─────────────────────────────────────────────────
