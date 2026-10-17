@@ -1154,6 +1154,14 @@ app.post('/api/payfast/notify', async (req, res) => {
       console.warn('[PAYFAST_ITN] Order emails failed for', orderId, ':', err.message);
     });
 
+    // No bag reminder for anything this customer just bought.
+    const paidEmail = String(order.customerEmail || '').trim().toLowerCase();
+    if (paidEmail) {
+      adminDb.collection('bags').where('email', '==', paidEmail).limit(20).get()
+        .then((snap) => Promise.all(snap.docs.map((d) => d.ref.update({ reminderDue: null, converted: true }))))
+        .catch((err) => console.warn('[PAYFAST_ITN] Could not clear bag reminders for', orderId, ':', err.message));
+    }
+
     console.log('[PAYFAST_ITN] Order', orderId, 'marked paid.');
   } catch (e) {
     console.error('[PAYFAST_ITN] Unhandled error:', e.message);
@@ -1242,6 +1250,141 @@ app.post('/api/discounts/lookup', async (req, res) => {
     res.status(500).json({ error: 'Could not check that code. Please try again.' });
   }
 });
+
+// ==================== BAG REMINDERS ====================
+// The abandoned bag email. cart.js sends the bag here (product ids, sizes
+// and quantities only) whenever it changes, but only once we know the
+// shopper's email: signed in, or typed at checkout. If the bag sits
+// unpaid for 3 hours, sweepBagReminders() sends one reminder with a
+// "Return to your bag" link (/cart?bag=ID refills it). Never sent if the
+// order was paid, the bag is empty or older than 3 days, or the shopper
+// turned reminders off (link in every email). bags/{id} and bagOptOut are
+// server-only (no Firestore rule allows them).
+const BAG_REMINDER_DELAY = 3 * 60 * 60 * 1000;
+const BAG_MAX_AGE = 3 * 24 * 60 * 60 * 1000;
+const emailKey = (email) => crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex');
+
+function cleanBagItems(items) {
+  return (Array.isArray(items) ? items : []).slice(0, 30).map((i) => ({
+    productId: String((i && i.productId) || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 100),
+    variantIndex: Math.max(0, Math.min(50, Math.floor(Number(i && i.variantIndex) || 0))),
+    size: String((i && i.size) || 'OS').slice(0, 20),
+    qty: Math.max(1, Math.min(20, Math.floor(Number(i && i.qty) || 1)))
+  })).filter((i) => i.productId);
+}
+
+app.post('/api/bag', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (rateLimited(req, 'bag-save', 60, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests' });
+  const b = req.body || {};
+  const bagId = String(b.bagId || '');
+  const email = String(b.email || '').trim().toLowerCase().slice(0, 200);
+  if (!/^[a-f0-9]{24}$/.test(bagId)) return res.status(400).json({ error: 'Invalid bag' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email' });
+  const items = cleanBagItems(b.items);
+  const sig = JSON.stringify(items);
+  try {
+    const ref = adminDb.collection('bags').doc(bagId);
+    const doc = await ref.get();
+    const old = doc.exists ? doc.data() : null;
+    if (old && old.sig === sig && old.email === email) return res.json({ ok: true });
+    const now = Date.now();
+    const optOut = await adminDb.collection('bagOptOut').doc(emailKey(email)).get();
+    await ref.set({
+      email, items, sig, updatedAt: now,
+      reminderDue: items.length && !optOut.exists ? now + BAG_REMINDER_DELAY : null,
+      reminderSentAt: null
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[BAG] Save error:', e.message);
+    res.status(500).json({ error: 'Could not save bag' });
+  }
+});
+
+// Refills the bag from a reminder link. Returns products only, never the email.
+app.get('/api/bag/:id', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (rateLimited(req, 'bag-read', 30, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many requests' });
+  const bagId = String(req.params.id || '');
+  if (!/^[a-f0-9]{24}$/.test(bagId)) return res.status(404).json({ error: 'Not found' });
+  try {
+    const doc = await adminDb.collection('bags').doc(bagId).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Not found' });
+    res.json({ items: doc.data().items || [] });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not load bag' });
+  }
+});
+
+// "Stop bag reminders" link in the email.
+app.get('/bag-reminders/stop', async (req, res) => {
+  const bagId = String(req.query.bag || '');
+  let done = false;
+  if (adminDb && /^[a-f0-9]{24}$/.test(bagId)) {
+    try {
+      const doc = await adminDb.collection('bags').doc(bagId).get();
+      if (doc.exists && doc.data().email) {
+        await adminDb.collection('bagOptOut').doc(emailKey(doc.data().email)).set({ at: Date.now() });
+        await doc.ref.update({ reminderDue: null });
+        done = true;
+      }
+    } catch (e) { console.error('[BAG] Opt-out error:', e.message); }
+  }
+  res.set('Content-Type', 'text/html; charset=utf-8').send('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>JANEDORE</title></head>' +
+    '<body style="margin:0;font-family:Inter,Helvetica,Arial,sans-serif;color:#111;background:#fff;"><div style="max-width:480px;margin:0 auto;padding:80px 24px;text-align:center;">' +
+    '<div style="letter-spacing:0.12em;font-size:15px;margin:0 0 40px;">JANEDORE</div>' +
+    '<h1 style="font-size:22px;font-weight:600;margin:0 0 12px;">' + (done ? 'Bag reminders turned off' : 'Link not recognised') + '</h1>' +
+    '<p style="font-size:14px;line-height:1.6;color:#555;margin:0 0 28px;">' + (done ? 'You will no longer receive emails about items left in your bag. Order emails are not affected.' : 'This link is no longer valid. If you keep receiving bag reminders, please contact support@janedore.co.za.') + '</p>' +
+    '<a href="/" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:14px 28px;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;">Continue shopping</a>' +
+    '</div></body></html>');
+});
+
+async function sweepBagReminders() {
+  if (!adminDb) return;
+  const now = Date.now();
+  let snap;
+  try {
+    snap = await adminDb.collection('bags').where('reminderDue', '<=', now).limit(50).get();
+  } catch (e) { console.error('[BAG] Sweep query failed:', e.message); return; }
+  for (const doc of snap.docs) {
+    const bag = doc.data();
+    const done = (fields) => doc.ref.update(Object.assign({ reminderDue: null }, fields || {})).catch(() => {});
+    try {
+      if (!bag.items || !bag.items.length || !bag.email || now - (bag.updatedAt || 0) > BAG_MAX_AGE) { await done(); continue; }
+      const optOut = await adminDb.collection('bagOptOut').doc(emailKey(bag.email)).get();
+      if (optOut.exists) { await done(); continue; }
+      // Paid since the bag last changed? Then it was ordered, no reminder.
+      const orders = await adminDb.collection('orders').where('customerEmail', '==', bag.email).limit(20).get();
+      const paidSince = orders.docs.some((o) => {
+        const d = o.data();
+        const at = d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : new Date(d.createdAt || 0).getTime();
+        return ['paid', 'refund_pending', 'refunded'].includes(d.paymentStatus) && at >= (bag.updatedAt || 0) - 60 * 60 * 1000;
+      });
+      if (paidSince) { await done({ converted: true }); continue; }
+
+      const ctx = await buildOrderEmailContext({ items: bag.items });
+      const items = bag.items.map((i) => {
+        const p = ctx.products[i.productId];
+        if (!p || p.status !== 'active') return null;
+        const v = (p.variants || [])[i.variantIndex] || (p.variants || [])[0] || {};
+        return Object.assign({}, i, { name: p.name || 'Item', brand: p.brand || '', color: v.color || '', price: serverUnitPrice(p) });
+      }).filter(Boolean);
+      if (!items.length) { await done(); continue; }
+      const email = orderEmails.bagReminder(items, ctx, {
+        bagUrl: SITE_URL + '/cart?bag=' + doc.id,
+        stopUrl: SITE_URL + '/bag-reminders/stop?bag=' + doc.id
+      });
+      await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: bag.email, subject: email.subject, html: email.html, text: email.text });
+      await done({ reminderSentAt: now });
+      console.log('[BAG] Reminder sent for bag', doc.id);
+    } catch (e) {
+      console.error('[BAG] Reminder failed for', doc.id, ':', e.message);
+      await done({ reminderError: String(e.message).slice(0, 200) });
+    }
+  }
+}
+setInterval(sweepBagReminders, 15 * 60 * 1000).unref();
 
 // ==================== TRACK YOUR ORDER ====================
 // The /pages/track-your-order form (track-order.js). The customer gives

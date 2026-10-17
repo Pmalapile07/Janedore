@@ -248,6 +248,7 @@ async function init() {
   PRODUCTS = await fetchProducts();
   _resolveProductsReady();
   cleanCartOrphans();
+  if (typeof restoreBagFromLink === 'function') restoreBagFromLink();
   loadRecentlyViewedFromStorage();
   loadWishlistFromStorage();
   updateBadges();

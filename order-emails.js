@@ -822,4 +822,31 @@ function partnerApplicationUpdate(a, ctx) {
   return { subject: copy.subject, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, money };
+// Abandoned bag reminder (server.js sweepBagReminders). One email, sent
+// about 3 hours after the bag was last changed.
+function bagReminder(items, ctx, links) {
+  const total = items.reduce((a, i) => a + itemLine(i), 0);
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'You left something in your bag',
+    preheader: 'Your pieces are still waiting for you. Complete your order while they are available.',
+    bannerHtml: '<strong>You left something in your bag</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.7;color:#555555;">Your pieces are still waiting for you. Stock is limited and items are not reserved until your order is placed, so complete your order while they are still available.</div>',
+      title('Your bag') + itemsBlock(items, ctx) +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #eeeeee;margin-top:4px;"><tr>' +
+        '<td style="padding-top:14px;font-size:15px;font-weight:700;color:#111111;">Subtotal</td>' +
+        '<td align="right" style="padding-top:14px;font-size:15px;font-weight:700;color:#111111;">' + money(total) + '</td></tr></table>' +
+        button('Return to your bag', links.bagUrl)
+    ],
+    footerHtml: 'Questions? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>' +
+      '<a href="' + esc(links.stopUrl) + '" style="color:#888888;">Stop bag reminders</a> · Janedore · janedore.co.za'
+  });
+  const text = 'You left something in your bag\n\nYour pieces are still waiting for you. Stock is limited and items are not reserved until your order is placed.\n\n' +
+    items.map((i) => '- ' + (i.name || 'Item') + (i.brand ? ' (' + i.brand + ')' : '') + (i.size && i.size !== 'OS' ? ', size ' + i.size : '') + ', qty ' + (i.qty || 1) + ': ' + money(itemLine(i))).join('\n') +
+    '\n\nSubtotal: ' + money(total) + '\n\nReturn to your bag: ' + links.bagUrl + '\n\nStop bag reminders: ' + links.stopUrl;
+  return { subject: 'You left something in your bag', html, text };
+}
+
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, money };

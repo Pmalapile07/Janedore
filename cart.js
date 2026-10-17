@@ -5,7 +5,76 @@
    ============================================================ */
 
 function loadCartFromStorage() { try { const saved = localStorage.getItem('janedore_cart'); if (saved) S.cart = JSON.parse(saved); } catch(e) { S.cart = []; } }
-function saveCartToStorage() { try { localStorage.setItem('janedore_cart', JSON.stringify(S.cart)); } catch(e) {} }
+function saveCartToStorage() { try { localStorage.setItem('janedore_cart', JSON.stringify(S.cart)); } catch(e) {} scheduleBagSync(); }
+
+// ---------- Bag reminders (server.js /api/bag) ----------
+// Once we know the shopper's email (signed in, or typed at checkout), the
+// bag's products, sizes and quantities are sent to the server, which emails
+// one reminder if it's left unpaid for 3 hours. /cart?bag=ID (the link in
+// that email) refills an empty bag on any device.
+let _bagSyncTimer = null;
+let _bagSyncedSig = '';
+function bagReminderEmail() {
+  try { const u = firebase.auth().currentUser; if (u && !u.isAnonymous && u.email) return u.email; } catch (e) {}
+  try { return localStorage.getItem('janedore_checkout_email') || ''; } catch (e) { return ''; }
+}
+function bagReminderId() {
+  let id = '';
+  try { id = localStorage.getItem('janedore_bag_id') || ''; } catch (e) {}
+  if (!/^[a-f0-9]{24}$/.test(id)) {
+    const bytes = new Uint8Array(12);
+    (window.crypto || window.msCrypto).getRandomValues(bytes);
+    id = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    try { localStorage.setItem('janedore_bag_id', id); } catch (e) {}
+  }
+  return id;
+}
+function scheduleBagSync() {
+  clearTimeout(_bagSyncTimer);
+  _bagSyncTimer = setTimeout(syncBagToServer, 3000);
+}
+function syncBagToServer() {
+  const email = String(bagReminderEmail() || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  const items = (S.cart || []).map(i => ({ productId: i.productId, variantIndex: i.variantIndex || 0, size: i.size, qty: i.qty }));
+  const sig = email.toLowerCase() + '|' + JSON.stringify(items);
+  if (sig === _bagSyncedSig) return;
+  fetch('/api/bag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bagId: bagReminderId(), email, items }) })
+    .then(res => { if (res.ok) _bagSyncedSig = sig; })
+    .catch(() => {});
+}
+// The email typed at checkout counts as soon as it's entered.
+document.addEventListener('change', e => {
+  if (!e.target || e.target.id !== 'checkout-email') return;
+  const email = String(e.target.value || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  try { localStorage.setItem('janedore_checkout_email', email); } catch (err) {}
+  scheduleBagSync();
+});
+// Called once products have loaded (app.js). Refills an empty bag from a
+// reminder link; a bag that already has items is left as it is.
+function restoreBagFromLink() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('bag');
+  if (!id) return;
+  params.delete('bag');
+  const qs = params.toString();
+  history.replaceState(null, null, window.location.pathname + (qs ? '?' + qs : ''));
+  if (!/^[a-f0-9]{24}$/.test(id)) return;
+  fetch('/api/bag/' + id).then(res => res.ok ? res.json() : null).then(data => {
+    if (!data || !Array.isArray(data.items)) return;
+    try { localStorage.setItem('janedore_bag_id', id); } catch (e) {}
+    if (!S.cart.length) {
+      data.items.forEach(it => {
+        if (!PRODUCTS.some(p => p.id === it.productId)) return;
+        S.productVariantSelections[it.productId] = it.variantIndex || 0;
+        addToCart(it.productId, it.size, it.qty);
+      });
+      if (typeof hideAddedToCartToast === 'function') hideAddedToCartToast();
+    }
+    if (S.currentPage !== 'cart') navigateTo('cart');
+  }).catch(() => {});
+}
 function cleanCartOrphans() { S.cart = S.cart.filter(item => PRODUCTS.some(p => p.id === item.productId)); saveCartToStorage(); }
 
 // --- HTML Sanitizer ---
