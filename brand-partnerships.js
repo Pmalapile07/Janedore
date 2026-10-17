@@ -11,6 +11,23 @@
 
 const BRAND_PARTNERSHIPS_SLUG = 'brand-partnerships';
 
+// Brand Partnerships FAQ. Delivery costs and payouts are still being
+// decided, so those answers stay neutral until they are.
+const BP_FAQ = [
+  ['Who can apply?', 'Independent brands that design their own products in our categories: clothing, kidswear, accessories, jewellery, bags, footwear, beauty, fragrance and homeware. We do not accept dropshipping businesses, resellers of other brands, or counterfeit and replica goods.'],
+  ['Is there a fee to join?', 'No. There are no sign-up, listing or monthly fees to partner with JANEDORE. We only earn when you make a sale.'],
+  ['Can I keep selling on my own website and elsewhere?', 'Yes. Partnerships with JANEDORE are non-exclusive, so you are free to continue selling through your own website, social media, store and other stockists.'],
+  ['Do you work with made-to-order brands?', 'Yes. Made-to-order products are sold on JANEDORE as pre-orders. You set an estimated dispatch date for each product, customers pay in full at checkout, and pre-orders are shipped separately once they are ready.'],
+  ['Who ships the orders?', 'You do. Orders for your products appear in your partner dashboard, and you pack and ship them from your own studio or warehouse. Once you add the tracking number, the customer is notified and can follow their parcel.'],
+  ['Who pays for delivery?', 'Customers pay a delivery fee at checkout. How courier costs are handled between JANEDORE and your brand is confirmed with each brand during onboarding.'],
+  ['How are payments handled?', 'Customers pay JANEDORE securely at checkout. Payout terms, including timing, are confirmed with each brand during onboarding.'],
+  ['How do returns work?', 'Customers can request a return within 30 days of dispatch, with photos and a reason. You are notified and can accept or dispute each request, and JANEDORE makes the final decision and manages the refund.'],
+  ['Who looks after customer service?', 'JANEDORE Customer Care handles customer queries, order tracking and returns on your behalf, and we involve your team whenever your input is needed.'],
+  ['My brand does not yet meet your standards. Can I still apply?', 'Yes. If you already have customers and sales but need help with photography, packaging, branding or fulfilment, you can request support in your application, and we will take this into account when reviewing it.'],
+  ['How will I know the outcome of my application?', 'You will receive an email confirming your application, and another once a decision has been made. You can also check your application status at any time using your reference and email address.'],
+  ['Can I apply again if my application is declined?', 'Yes. As your brand grows, you are very welcome to apply again in the future.']
+];
+
 function partnershipFeaturedBrands() {
   const all = typeof getFeaturedBrands === 'function' ? getFeaturedBrands(S.vendors || []) : [];
   const live = all.filter(v => !v.status || v.status === 'active');
@@ -124,6 +141,11 @@ function renderBrandPartnershipsPage() {
           ${step(3, 'Onboarding', 'Once terms are agreed, we work with you to build your brand page, list your collection and configure your partner dashboard.')}
           ${step(4, 'Launch', 'Your brand goes live on JANEDORE, with orders routed directly to your dashboard for fulfilment.')}
         </div>
+      </div>
+
+      <div class="bp-section">
+        <h2 class="track-heading">Frequently asked questions</h2>
+        <div class="bp-faq">${BP_FAQ.map(([q, a]) => `<details class="bp-faq-item"><summary>${q}<span class="bp-faq-icon" aria-hidden="true"></span></summary><p class="bp-text">${a}</p></details>`).join('')}</div>
       </div>
 
       <div class="bp-cta">
