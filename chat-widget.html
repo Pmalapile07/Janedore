@@ -344,11 +344,13 @@
   #chat-window .chat-msg {
     max-width: 80% !important;
     padding: 12px 16px !important;
+    /* Same type as the header's Search products or brands text
+       (.search-bar-trigger span, search.css) and the chat input. */
     font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 300 !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
     line-height: 1.6 !important;
-    letter-spacing: 0.02em !important;
+    letter-spacing: normal !important;
     animation: chatFadeIn 0.3s ease !important;
     border-radius: 24px !important;
   }
@@ -370,7 +372,7 @@
     border-bottom-left-radius: 4px !important;
   }
   #chat-window .chat-msg-time {
-    font-size: 10px !important;
+    font-size: 9px !important;
     opacity: 0.5 !important;
     margin-top: 6px !important;
     font-family: 'Inter', sans-serif !important;
@@ -461,27 +463,27 @@
     font-family: 'Inter', sans-serif !important;
   }
   #chat-window .jai-welcome-kicker {
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 400 !important;
     color: #888 !important;
     margin-bottom: 4px !important;
   }
   #chat-window .jai-welcome-question {
-    font-size: 15px !important;
+    font-size: 14px !important;
     font-weight: 400 !important;
     color: #111 !important;
     line-height: 1.35 !important;
   }
   #chat-window .jai-welcome-time {
     font-family: 'Inter', sans-serif !important;
-    font-size: 10px !important;
+    font-size: 9px !important;
     font-weight: 400 !important;
     color: #aaa !important;
     margin: 6px 0 0 2px !important;
   }
   #chat-window .jai-quick-label {
     font-family: 'Inter', sans-serif !important;
-    font-size: 9.5px !important;
+    font-size: 8.5px !important;
     font-weight: 500 !important;
     letter-spacing: 0.22em !important;
     text-transform: uppercase !important;
@@ -533,14 +535,14 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 21px !important;
+    font-size: 20px !important;
   }
   #chat-window .jai-card-text {
     flex: 1 !important;
     min-width: 0 !important;
   }
   #chat-window .jai-card-title {
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 400 !important;
     color: #111 !important;
     letter-spacing: 0.01em !important;
@@ -548,7 +550,7 @@
   #chat-window .jai-card-chevron {
     flex-shrink: 0 !important;
     color: #111 !important;
-    font-size: 15px !important;
+    font-size: 14px !important;
   }
 
   /* ---------- AI-SUGGESTED PRODUCT CARDS ----------
@@ -698,7 +700,7 @@
     min-width: 33px !important;
     min-height: 33px !important;
     border-radius: 50% !important;
-    background: none !important;
+    background: #f4f4f4 !important;
     color: #111 !important;
     border: none !important;
     padding: 0 !important;
@@ -710,7 +712,7 @@
     font-size: 16px !important;
     transition: background 0.2s, color 0.2s !important;
   }
-  #chat-window .chat-attach-btn:hover { background: #f4f4f4 !important; }
+  #chat-window .chat-attach-btn:hover { background: #ebebeb !important; }
   #chat-window .chat-attach-btn:disabled { opacity: 0.4 !important; cursor: default !important; }
   /* Phosphor only ships a horizontal paperclip — rotated 90deg to read
      as the vertical orientation instead. */
