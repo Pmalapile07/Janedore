@@ -300,29 +300,6 @@
   }
   #chat-window .chat-header-close:hover { color: #111 !important; }
 
-  /* Header's own Track Order button — only visible once the greeting's
-     welcome screen (see #jai-welcome-screen) has scrolled out of view,
-     via the IntersectionObserver set up in renderAIGreeting() (chat.js).
-     Defaults to visible so it's never lost entirely if that observer has
-     nothing to watch (e.g. a returning visitor whose recent history
-     renders instead of a fresh greeting) — chat.js hides it explicitly
-     while the welcome screen (or the order-lookup screen) is on screen. */
-  #chat-window .chat-header-track-btn {
-    background: #fff !important;
-    color: #111 !important;
-    border: 1px solid #dcdcdc !important;
-    border-radius: 24px !important;
-    height: 33px !important;
-    padding: 0 16px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 400 !important;
-    letter-spacing: normal !important;
-    cursor: pointer !important;
-    transition: opacity 0.2s, background 0.2s !important;
-  }
-  #chat-window .chat-header-track-btn:hover { background: #f4f4f2 !important; }
-
   /* ---------- MESSAGES ---------- */
   #chat-window .chat-body {
     flex: 1 !important;
@@ -902,7 +879,6 @@
       </div>
     </div>
     <div class="chat-header-right">
-      <button class="chat-header-track-btn" id="chat-header-track-btn" onclick="showOrderLookup()">Track Order</button>
       <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()">
         <i class="ph-light ph-x" id="chat-header-icon"></i>
       </button>

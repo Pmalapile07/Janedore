@@ -525,7 +525,6 @@ function showOrderLookup() {
   if (resultEl) resultEl.innerHTML = '';
   const input = safeEl('order-lookup-input');
   if (input) setTimeout(() => input.focus(), 100);
-  updateHeaderTrackBtnVisibility();
 }
 
 function setHeaderIcon(iconClass) {
@@ -548,22 +547,6 @@ function backToChat() {
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'flex';
   setHeaderIcon('ph-light ph-x');
-  updateHeaderTrackBtnVisibility();
-}
-
-// The header's own Track Order button (chat-widget.html) stays visible
-// by default — that's what carries the feature for a returning visitor
-// whose recent history renders instead of a fresh greeting, since there's
-// no greeting button in that case to ever hide it. It's only hidden
-// while the greeting's own inline button is genuinely on screen (no
-// need for two), or while already on the order-lookup screen itself.
-let _greetingTrackBtnVisible = false;
-function updateHeaderTrackBtnVisibility() {
-  const btn = safeEl('chat-header-track-btn');
-  if (!btn) return;
-  const orderLookup = safeEl('order-lookup');
-  const onOrderScreen = !!(orderLookup && orderLookup.style.display !== 'none');
-  btn.style.display = (!onOrderScreen && !_greetingTrackBtnVisible) ? '' : 'none';
 }
 
 function clearChatSession() {
@@ -761,37 +744,15 @@ function renderAIGreeting() {
 
   screen.appendChild(actions);
   el.appendChild(screen);
-
-  // Once this welcome screen scrolls out of view, the header's own
-  // Track Order button (hidden by default while this one is visible —
-  // see updateHeaderTrackBtnVisibility()) takes over so the action
-  // stays reachable without scrolling back up.
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        _greetingTrackBtnVisible = entry.isIntersecting;
-        updateHeaderTrackBtnVisibility();
-      });
-    }, { root: el, threshold: 0.01 });
-    observer.observe(screen);
-  }
 }
 
 // Once the customer actually sends something — text or an image — the
 // starter welcome screen (greeting + quick-action cards) has done its
 // job and just takes up space above the real conversation, so it's
-// removed outright rather than left to scroll past. Also clears the
-// IntersectionObserver's job: with the screen gone, the header's own
-// Track Order button must fall back to visible immediately rather than
-// waiting on an observer callback that will now never fire again.
+// removed outright rather than left to scroll past.
 function removeWelcomeScreen() {
   const screen = document.getElementById('jai-welcome-screen');
-  if (!screen) return;
-  screen.remove();
-  if (_greetingTrackBtnVisible) {
-    _greetingTrackBtnVisible = false;
-    updateHeaderTrackBtnVisibility();
-  }
+  if (screen) screen.remove();
 }
 
 // Detects a customer asking to track an order in plain text (e.g. "track
