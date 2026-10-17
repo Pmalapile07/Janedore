@@ -148,6 +148,8 @@ service cloud.firestore {
     // VENDORS
     // =========================================================
 
+    // Public brand page details only. Contact/login email, commission,
+    // PayFast merchant ID and notes live in vendorPrivate below.
     match /vendors/{vendorId} {
       allow read: if true;
 
@@ -157,6 +159,18 @@ service cloud.firestore {
       allow update: if isSuperAdmin() ||
         (isOwnVendor(vendorId) && vendorProfileFieldsOnly());
 
+      allow delete: if isSuperAdmin();
+    }
+
+    // A brand's private details (admin-vendors.js, server.js getVendors).
+    // Staff and the brand itself can read them; only Super Admin writes,
+    // except a brand may update its own contact email.
+    match /vendorPrivate/{vendorId} {
+      allow read: if isPlatformStaff() || isOwnVendor(vendorId);
+      allow create: if isSuperAdmin() ||
+        (isOwnVendor(vendorId) && request.resource.data.keys().hasOnly(['email', 'updatedAt']));
+      allow update: if isSuperAdmin() ||
+        (isOwnVendor(vendorId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'updatedAt']));
       allow delete: if isSuperAdmin();
     }
 
@@ -185,16 +199,18 @@ service cloud.firestore {
       // server.js, kept in sync with their admins/{uid} doc) — no lookup
       // needed, so Firestore can actually evaluate it for a query. `get`
       // keeps using adminDoc() as before, which is fine for a single doc.
+      // Matching by email needs a verified email, so nobody can sign up
+      // with someone else's address and read their guest orders.
       allow get: if isPlatformStaff() ||
         (isSignedIn() &&
          (resource.data.customerId == request.auth.uid ||
-          resource.data.customerEmail == request.auth.token.email)) ||
+          (request.auth.token.email_verified == true && resource.data.customerEmail == request.auth.token.email))) ||
         (isVendor() && resource.data.vendorIds is list && adminDoc().vendorId in resource.data.vendorIds);
 
       allow list: if isPlatformStaff() ||
         (isSignedIn() &&
          (resource.data.customerId == request.auth.uid ||
-          resource.data.customerEmail == request.auth.token.email)) ||
+          (request.auth.token.email_verified == true && resource.data.customerEmail == request.auth.token.email))) ||
         (request.auth.token.role == 'VENDOR' && request.auth.token.vendorId is string &&
          resource.data.vendorIds is list && request.auth.token.vendorId in resource.data.vendorIds);
 
@@ -274,7 +290,7 @@ service cloud.firestore {
     // =========================================================
 
     match /customers/{userId} {
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
 
       allow read, update: if isPlatformStaff() ||
         (isSignedIn() && request.auth.uid == userId);
@@ -397,8 +413,9 @@ service cloud.firestore {
     // =========================================================
 
     match /discounts/{discountId} {
-      // Anyone can read discounts (customers need this to validate codes at checkout)
-      allow read: if true;
+      // Staff only, so nobody can list every code. Shoppers check one code
+      // at a time through server.js /api/discounts/lookup.
+      allow read: if isPlatformStaff() || isVendor();
 
       // Platform staff can create discounts
       allow create: if isPlatformStaff();
@@ -415,8 +432,8 @@ service cloud.firestore {
     // =========================================================
 
     match /discountCodes/{codeId} {
-      // Anyone can read discount codes (customers need this to validate codes)
-      allow read: if true;
+      // Staff only (not used by the storefront).
+      allow read: if isPlatformStaff();
 
       // Platform staff can create discount codes
       allow create: if isPlatformStaff();
@@ -448,8 +465,10 @@ service cloud.firestore {
     // CHAT FALLBACK (Firestore legacy — real chat is in RTDB)
     // =========================================================
 
-    match /chats/{docId}    { allow create: if true; allow read, update, delete: if isPlatformStaff(); }
-    match /messages/{docId} { allow create: if true; allow read, update, delete: if isPlatformStaff(); }
+    // Old chat collections: live chat now runs on the Realtime Database
+    // (chat.js), so nothing creates these any more.
+    match /chats/{docId}    { allow read, update, delete: if isPlatformStaff(); }
+    match /messages/{docId} { allow read, update, delete: if isPlatformStaff(); }
 
     // =========================================================
     // HEALTH CHECK
