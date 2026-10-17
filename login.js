@@ -106,9 +106,11 @@ function showLoginNotice(text) {
 function friendlyAuthError(error) {
   const code = (error && error.code) || '';
   const messages = {
-    'auth/invalid-credential': 'That email and password don’t match. Try again, or reset your password.',
-    'auth/wrong-password': 'That email and password don’t match. Try again, or reset your password.',
-    'auth/user-not-found': 'That email and password don’t match. Try again, or reset your password.',
+    // Signing in with Google on an email that has an unverified password
+    // makes Firebase drop that password, so point people to both ways back in.
+    'auth/invalid-credential': 'That email and password don’t match. If you signed up with Google, use Continue with Google, or reset your password to add one.',
+    'auth/wrong-password': 'That email and password don’t match. If you signed up with Google, use Continue with Google, or reset your password to add one.',
+    'auth/user-not-found': 'That email and password don’t match. If you signed up with Google, use Continue with Google, or reset your password to add one.',
     'auth/invalid-email': 'Please enter a valid email address.',
     'auth/email-already-in-use': 'There’s already an account with this email. Sign in instead.',
     'auth/weak-password': 'Please choose a password of at least 6 characters.',
@@ -117,7 +119,7 @@ function friendlyAuthError(error) {
     'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': '',
     'auth/account-exists-with-different-credential': 'This email is already registered. Sign in with your email and password.',
-    'auth/operation-not-allowed': 'This sign-in option isn’t available yet. Please use your email and password.',
+    'auth/operation-not-allowed': 'This sign-in option isn’t available right now. Please try another way to sign in, or contact Customer Care.',
     'auth/unauthorized-domain': 'This sign-in option isn’t available yet. Please use your email and password.',
     'auth/operation-not-supported-in-this-environment': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.',
     'auth/web-storage-unsupported': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.'
