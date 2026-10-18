@@ -624,14 +624,14 @@ function renderCartPage() {
   const shipping = getCartShippingStatus();
   const eligible = shipping.shipments.filter(s => s.eligible);
   const pending = eligible.find(s => !s.free);
-  // Only shown when a brand in the bag offers free delivery. A bag that
-  // mixes in other brands refers to the items tagged Free delivery.
+  // Only shown when a brand in the bag offers free delivery. Free delivery
+  // is per brand, so a bag that mixes in other brands names the brand.
   const mixed = eligible.length > 0 && eligible.length < shipping.shipments.length;
-  const pendingWhat = mixed && eligible.length === 1 ? 'eligible items' : sanitizeHTML(pending ? pending.brand : '');
+  const names = list => list.map(s => sanitizeHTML(s.brand)).join(' and ');
   const bannerText = pending
-    ? `Spend ${formatPrice(pending.remaining)} more on ${pendingWhat} for <strong>FREE</strong> delivery.`
+    ? `Spend ${formatPrice(pending.remaining)} more on ${sanitizeHTML(pending.brand)} for <strong>FREE</strong> delivery${mixed ? ' on ' + sanitizeHTML(pending.brand) + ' items' : ''}.`
     : eligible.length
-      ? (mixed ? 'Your eligible items qualify for <strong>FREE</strong> delivery.' : `You qualify for <strong>FREE</strong> delivery on ${sanitizeHTML(eligible[0].brand)}.`)
+      ? (mixed ? `Your ${names(eligible)} items qualify for <strong>FREE</strong> delivery.` : `You qualify for <strong>FREE</strong> delivery on ${names(eligible)}.`)
       : '';
   let html = `${bannerText ? `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div>` : ''}<div class="cart-cards">`;
 
