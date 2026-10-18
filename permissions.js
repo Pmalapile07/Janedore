@@ -215,6 +215,7 @@
     content:    'homepage',
     reports:    'vendors',
     returns:    'orders',
+    exchanges:  'orders',
     applications: 'vendors',
     onlineStore: 'settings',
     analytics:  'analytics',

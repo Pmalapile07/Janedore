@@ -29,10 +29,11 @@ async function navigateToContentPage(slug, replaceUrl) {
   const el = document.getElementById('content-page-body');
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
-  // Track Your Order, Log a Return, Customer Care, Brand Partnerships and the Partner Application are built in code, not Firestore pages
+  // Track Your Order, Log a Return, Exchange an Item, Customer Care, Brand Partnerships and the Partner Application are built in code, not Firestore pages
   // (track-order.js, returns.js).
   const formPage = slug === TRACK_ORDER_SLUG ? (typeof renderTrackOrderPage === 'function' && renderTrackOrderPage)
     : slug === 'log-a-return' ? (typeof renderReturnsPage === 'function' && renderReturnsPage)
+    : slug === 'exchange-an-item' ? (typeof renderExchangesPage === 'function' && renderExchangesPage)
     : slug === 'customer-care' ? (typeof renderCustomerCarePage === 'function' && renderCustomerCarePage)
     : slug === 'brand-partnerships' ? (typeof renderBrandPartnershipsPage === 'function' && renderBrandPartnershipsPage)
     : slug === 'partner-application' ? (typeof renderPartnerApplicationPage === 'function' && renderPartnerApplicationPage) : null;

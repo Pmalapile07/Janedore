@@ -233,7 +233,8 @@ async function renderAccountOrder(orderNumber) {
       <div class="account-row"><span>Delivery fee${new Set(packages.map(p => p.brand)).size > 1 ? ' (' + new Set(packages.map(p => p.brand)).size + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
     </div>
-    ${order.paymentStatus === 'paid' && packages.some(p => p.shipped) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return Items</button>` : ''}
+    ${order.paymentStatus === 'paid' && packages.some(p => p.shipped) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return Items</button>
+      <button type="button" class="account-outline-btn account-return-btn" onclick="startAccountExchange('${escapeJSString(order.orderNumber || order.id)}')">Exchange Items</button>` : ''}
     <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact Customer Care</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
   </section>`;
 }
@@ -242,6 +243,12 @@ async function renderAccountOrder(orderNumber) {
 function startAccountReturn(orderNumber) {
   history.pushState(null, null, '/pages/log-a-return?order=' + encodeURIComponent(orderNumber));
   navigateToContentPage('log-a-return', true);
+}
+
+// Opens Exchange an Item with this order already filled in.
+function startAccountExchange(orderNumber) {
+  history.pushState(null, null, '/pages/exchange-an-item?order=' + encodeURIComponent(orderNumber));
+  navigateToContentPage('exchange-an-item', true);
 }
 
 // ---------- Profile ----------

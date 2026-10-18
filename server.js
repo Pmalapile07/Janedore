@@ -36,7 +36,7 @@ app.use((req, res, next) => {
 // serves the site from. They hold no secrets, but there is no reason for
 // anyone to download them, so they 404 like any missing file.
 const PRIVATE_FILES = new Set([
-  '/server.js', '/returns-api.js', '/partner-applications-api.js', '/order-emails.js',
+  '/server.js', '/returns-api.js', '/exchanges-api.js', '/partner-applications-api.js', '/order-emails.js',
   '/firestore.rules', '/firestore.indexes.json', '/package.json', '/package-lock.json',
   '/debugger.html'
 ]);
@@ -2559,7 +2559,11 @@ app.use(express.static(path.join(__dirname), {
 }));
 
 // Returns: /api/returns* and /api/admin/returns* (returns-api.js).
-require('./returns-api')(app, { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL, getVendors });
+// Exchanges: /api/exchanges* and /api/admin/exchanges* (exchanges-api.js),
+// sharing the returns order lookup.
+const returnsDeps = { adminDb, admin, orderShipments, sendResendEmail, buildOrderEmailContext, orderEmails, ORDER_ALERT_EMAIL, getVendors };
+const returnsShared = require('./returns-api')(app, returnsDeps);
+require('./exchanges-api')(app, returnsDeps, returnsShared);
 require('./partner-applications-api')(app, { adminDb, admin, sendResendEmail, orderEmails, ORDER_ALERT_EMAIL, SITE_URL, getBrandAssets, logoImageUrl });
 
 // Catch-all for HTML routing — only sends index.html for clean URLs

@@ -68,7 +68,7 @@ function renderReturnsPage(tab) {
     return;
   }
 
-  body.innerHTML = `<p class="track-intro">You can return items within 30 days of dispatch. Find your order to choose what you’d like to return.</p>
+  body.innerHTML = `<p class="track-intro">You can return items within 30 days of dispatch. Find your order to choose what you’d like to return. Need a different size or colour instead? <span class="track-link" onclick="navigateToContentPage('exchange-an-item')">Exchange an item</span>.</p>
     <form class="track-form" id="rl-form" onsubmit="submitReturnLookup(event)" novalidate>
       <label class="track-label" for="rl-number">Order number</label>
       <input class="track-input" id="rl-number" placeholder="JD-123456" autocomplete="off" autocapitalize="characters" value="${escapeHTML(order)}">

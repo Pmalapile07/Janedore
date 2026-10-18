@@ -271,7 +271,7 @@ function renderCheckoutSummary() {
           ${size ? `<span class="cart-item-size">Size: <strong>${size}</strong></span>` : ''}
         </div>
         <div class="cart-item-bottom">
-          <span class="cart-item-returns">Returnable within 30 days of dispatch</span>
+          <span class="cart-item-returns">Exchange or return within 30 days of dispatch</span>
           <span class="cart-item-price${cartItemOnSale(item) ? ' is-sale' : ''}">${formatPrice(getCartItemLineTotal(item))}</span>
         </div>
       </div>`;
