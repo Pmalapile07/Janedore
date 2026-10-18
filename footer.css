@@ -35,6 +35,9 @@ footer { background: #111; color: #fff; padding: 60px 12px 32px; max-width: 1400
 .footer-legal-line { margin: 0; color: #888; font-family: 'Inter', sans-serif; font-size: var(--ui-font-size); letter-spacing: 0; font-weight: var(--ui-font-weight); line-height: 1.6; text-align: left; }
 .footer-copy { font-size: inherit; letter-spacing: inherit; font-weight: inherit; text-transform: none; color: #888; line-height: inherit; }
 .footer-disclaimer { display: inline; margin: 0; color: #888; font-family: inherit; font-size: inherit; letter-spacing: 0; font-weight: inherit; line-height: inherit; }
+/* Payment methods taken through PayFast (checkout.html), under the legal line. */
+.footer-payments { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.footer-payments img { display: block; width: 38px; height: 24px; background: #fff; border-radius: 3px; }
 .brand-quote {
   font-size: var(--body-font-size); font-weight: var(--body-font-weight);
   line-height: var(--body-line-height); letter-spacing: var(--body-letter-spacing);
