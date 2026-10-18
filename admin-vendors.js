@@ -669,6 +669,11 @@
           '<div class="form-group"><label>Status</label><select name="status"><option value="active"' + (v.status === 'active' ? ' selected' : '') + '>Active</option><option value="suspended"' + (v.status === 'suspended' ? ' selected' : '') + '>Suspended</option><option value="inactive"' + (v.status === 'inactive' ? ' selected' : '') + '>Inactive</option></select></div>' +
         '</div>' +
 
+        (function() {
+          var fd = typeof v.freeDelivery === 'boolean' ? v.freeDelivery : v.id === 'vendor-janedore';
+          return '<div class="form-group"><label>Free delivery</label><select name="freeDelivery"><option value="true"' + (fd ? ' selected' : '') + '>Yes, on orders over R750</option><option value="false"' + (fd ? '' : ' selected') + '>No</option></select><div style="font-size:10px;color:var(--muted);margin-top:4px;">Yes: this brand\'s items ship free once a customer\'s order from this brand reaches R750, and the bag shows how far they are from it. Janedore pays the courier.</div></div>';
+        })() +
+
         '<div class="form-group"><label>PayFast Merchant ID</label><input name="payfastMerchantId" value="' + esc(v.payfastMerchantId || '') + '" placeholder="e.g. 10000105" inputmode="numeric"><div style="font-size:10px;color:var(--muted);margin-top:4px;">From the vendor\'s own PayFast account settings page. Only the ID, never their key or passphrase. Lets checkout automatically split their share of a sale straight to them.</div></div>' +
 
         '<div class="form-group"><label>Internal Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
@@ -707,6 +712,7 @@
       heroImageUrl:   form.heroImageUrl.value.trim(),
       commissionRate: commission,
       payfastMerchantId: form.payfastMerchantId.value.trim(),
+      freeDelivery:   form.freeDelivery.value === 'true',
       status:         form.status.value,
       notes:          form.notes.value.trim(),
       updatedAt:      new Date().toISOString()

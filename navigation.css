@@ -220,7 +220,7 @@ body.on-brands-page .nav-quick-links {
   color: #111;
   white-space: nowrap;
 }
-#main-nav .nav-logo-text { font-size: 16px; }
+#main-nav .nav-logo-text { font-size: 17px; }
 
 
 .nav-right { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; justify-content: flex-end; }

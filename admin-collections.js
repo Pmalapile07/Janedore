@@ -23,7 +23,7 @@
   function hasMember(product, collection) {
     if (collection && collection.collectionType === 'automated') {
       if (collection.automatedRule === 'sale') return typeof window._hasSalePrice === 'function' ? window._hasSalePrice(product) : Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.price || 0);
-      if (collection.automatedRule === 'freedelivery') return typeof product.freeDelivery === 'boolean' ? product.freeDelivery : (!product.vendorId || product.vendorId === 'vendor-janedore' || String(product.brand || '').trim().toUpperCase() === 'JANEDORE');
+      if (collection.automatedRule === 'freedelivery') return window._isFreeDeliveryBrandProduct(product);
       if (collection.automatedRule === 'newin') {
         var created = product.createdAt && typeof product.createdAt.toDate === 'function' ? product.createdAt.toDate() : new Date(product.createdAt || 0);
         return !!created && !isNaN(created.getTime()) && Date.now() - created.getTime() <= 5 * 24 * 60 * 60 * 1000;
