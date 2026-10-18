@@ -615,7 +615,7 @@ function renderCartPage() {
     ? `You’re ${formatPrice(pending.remaining)} away from <strong>FREE</strong> delivery on ${sanitizeHTML(pending.brand)}.`
     : eligible.length
       ? `Your ${sanitizeHTML(eligible[0].brand)} items ship <strong>FREE</strong>.`
-      : `<strong>FREE</strong> delivery on selected items over ${formatPrice(FREE_DELIVERY_MIN)}. <span class="cart-delivery-link" onclick="navigateToCollection('free-delivery')">Shop now</span>`;
+      : `<strong>FREE</strong> delivery on selected items over ${formatPrice(FREE_DELIVERY_MIN)}.`;
   let html = `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div><div class="cart-cards">`;
 
   S.cart.forEach(item => {
