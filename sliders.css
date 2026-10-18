@@ -120,13 +120,13 @@
 }
 
 /* Product page and bag section headings (You May Also Like, Recently
-   Viewed): Inter, regular weight, 22px on every screen, no capitals.
-   The home page's section headings match (index.html). */
+   Viewed): the home page's section heading size and weight (13px,
+   medium, index.html), with no capitals. */
 #page-product-detail .swipe-section-title,
 .cart-suggestions-title {
   font-family: 'Inter', sans-serif;
-  font-size: 22px;
-  font-weight: 400;
+  font-size: 13px;
+  font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
   line-height: 1.3;
