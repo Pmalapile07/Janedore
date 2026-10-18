@@ -67,6 +67,12 @@ body.on-collection-page #collection-page-breadcrumb {
 body.on-collection-page .collection-top-description {
   display: block;
 }
+/* Off collection pages it stays hidden, even with the inline display
+   updateCollectionTitle() left on it (e.g. tapping the logo from the
+   All Products page used to leave its description on the home page). */
+body:not(.on-collection-page) .collection-top-description {
+  display: none !important;
+}
 
 .collection-top-description p {
   font-family: 'Inter', sans-serif;
