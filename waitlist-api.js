@@ -124,7 +124,7 @@ module.exports = function registerWaitlist(app, deps) {
         if (stockOf(p, w.variantIndex, w.size) <= 0) continue;
         const ctx = await buildOrderEmailContext({ items: [{ productId: w.productId, variantIndex: w.variantIndex }] });
         const v = (p.variants || [])[w.variantIndex] || {};
-        const item = { productId: w.productId, variantIndex: w.variantIndex, name: p.name || w.name, brand: p.brand || w.brand, color: v.color || w.color, size: w.size, qty: 1 };
+        const item = { productId: w.productId, variantIndex: w.variantIndex, name: p.name || w.name, brand: p.brand || w.brand, color: v.color || w.color, size: w.size, qty: 1, preorder: String(p.badge || '').trim().toLowerCase() === 'pre-order' };
         const email = orderEmails.backInStock(item, ctx, { productUrl: SITE_URL + '/products/' + encodeURIComponent(p.slug || w.productId) });
         await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: w.email, subject: email.subject, html: email.html, text: email.text });
         await doc.ref.update({ status: 'notified', notifiedAt: Date.now() });

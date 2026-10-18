@@ -247,11 +247,11 @@ function getCartShippingStatus() {
   return { shipments, packages: Math.max(1, shipments.length), fee, freeShipping: shipments.length > 0 && fee === 0 };
 }
 
-// Same badges as the product cards (NEW, SALE, SOLD OUT, a manual badge),
-// and the sale price in red, on bag and checkout items.
+// The product card's badge (one, getCardBadges()), and the sale price in
+// red, on bag and checkout items.
 function cartBadgesHtml(item) {
   const product = getCartProduct(item.productId);
-  const badges = product && typeof getProductBadges === 'function' ? getProductBadges(product) : [];
+  const badges = product && typeof getCardBadges === 'function' ? getCardBadges(product) : [];
   return badges.length ? `<div class="product-badge-stack cart-badge-stack">${badges.map(b => `<span class="product-badge ${badgeClass(b)}">${sanitizeHTML(b)}</span>`).join('')}</div>` : '';
 }
 // "Pre-order · Est. dispatch 15 Mar" under the brand on bag, checkout and

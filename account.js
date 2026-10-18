@@ -444,7 +444,7 @@ async function renderAccountWaitlist() {
     body.innerHTML = `<div class="cart-empty account-empty">
       <i class="ph ph-bell cart-empty-icon" aria-hidden="true"></i>
       <div class="cart-empty-title">Your waitlist is empty</div>
-      <div class="wish-empty-sub">When a size you love is sold out, join its waitlist on the product page and we’ll email you when it’s back.</div>
+      <div class="wish-empty-sub">When a size you love is sold out or its pre-orders are full, join its waitlist on the product page and we’ll email you when it’s available again.</div>
     </div>`;
     return;
   }
@@ -456,7 +456,7 @@ async function renderAccountWaitlist() {
       <div class="track-item-img"${product ? ` onclick="goToProduct('${escapeJSString(product.id)}')"` : ''} style="background-image:url('${escapeForCssUrl(thumb)}')"></div>
       <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(w.name || (product && product.name) || ''))}</div>
         <div class="track-item-meta">${meta}</div>
-        <div class="track-item-meta">${w.status === 'notified' ? 'Back in stock: we emailed you' : 'Waiting for restock'}</div>
+        <div class="track-item-meta">${w.status === 'notified' ? 'Available again: we emailed you' : 'Waiting for restock'}</div>
         <button type="button" class="track-link account-waitlist-remove" onclick="removeAccountWaitlist('${escapeJSString(w.id)}', this)">Remove</button>
       </div>
     </div>`;

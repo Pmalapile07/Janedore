@@ -859,6 +859,10 @@
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
           '<div class="form-group" style="padding:0;"><label>SKU</label><input name="sku" value="' + esc(p.sku||'') + '" placeholder="e.g. DRS-RBB-001"></div>' +
           '<div class="form-group" style="padding:0;"><label>Total stock <span style="font-size:10px;color:var(--muted);">(set per size, per color above)</span></label><div style="display:flex;align-items:center;gap:10px;"><span id="pf-stock-total" style="font-size:20px;font-weight:500;">' + esc(String(p.stock||0)) + '</span><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
+          // Restocking (stored as product.waitlist): when a size or the
+          // whole product sells out, Add to Bag becomes Add to Waitlist.
+          '<div class="form-group" style="padding:0;"><label>When it sells out</label><select name="waitlist" style="width:100%;"><option value="false"' + (p.waitlist ? '' : ' selected') + '>Not restocking</option><option value="true"' + (p.waitlist ? ' selected' : '') + '>Restocking (waitlist)</option></select>' +
+            '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Restocking: sold-out sizes and colours show Add to Waitlist, and customers are emailed once when you add stock. For a pre-order, selling out means the pre-order limit is reached: choose Restocking to take a waitlist for the next batch.</div></div>' +
         '</div>' +
       '</div>' +
 
@@ -869,10 +873,6 @@
           '<div class="form-group" style="padding:0;"><label>Weight (kg)</label><input name="shippingWeight" type="number" min="0" step="0.01" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5"></div>' +
           '<div class="form-group" style="padding:0;"><label>Shipping &amp; returns note</label><input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000"></div>' +
           '<div class="form-group" style="padding:0;"><label>International shipping</label><select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select></div>' +
-          // Waitlist: when a size or the whole product sells out, the
-          // storefront's Add to Bag button becomes Add to Waitlist.
-          '<div class="form-group" style="padding:0;"><label>Waitlist when sold out</label><select name="waitlist" style="width:100%;"><option value="false"' + (p.waitlist ? '' : ' selected') + '>No</option><option value="true"' + (p.waitlist ? ' selected' : '') + '>Yes</option></select>' +
-            '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Yes: when a size or the whole product sells out, customers can join its waitlist and are emailed once it is back in stock.</div></div>' +
           // Free delivery is Janedore's call (it pays the courier), so
           // brands don't see it. Not set yet: on for JANEDORE's own products.
           (window._currentUserRole === 'VENDOR' ? '' : (function () {
