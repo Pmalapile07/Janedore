@@ -253,6 +253,7 @@ function renderCheckoutSummary() {
   if (orderTotalEl) orderTotalEl.textContent = formatPrice(subtotal);
   const itemsEl = document.getElementById('checkout-items');
   if (itemsEl) {
+    const mixedDelivery = cartHasMixedDelivery();
     itemsEl.innerHTML = S.cart.map(item => {
       const color = item.color && item.color !== 'Default' ? ' · ' + sanitizeHTML(item.color) : '';
       // 'OS' is a placeholder sentinel, not a real size — never display it.
@@ -263,7 +264,7 @@ function renderCheckoutSummary() {
           <div class="cart-item-info">
             <div class="cart-item-name">${sanitizeHTML(item.name || '')}</div>
             <div class="cart-item-brand">${sanitizeHTML(item.brand || '')}${color}</div>
-            ${cartPreorderHtml(item)}
+            ${cartPreorderHtml(item)}${cartFreeDeliveryHtml(item, mixedDelivery)}
           </div>
         </div>
         <div class="cart-item-attrs">
