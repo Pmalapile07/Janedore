@@ -38,16 +38,6 @@ function orderDate(order) {
   return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Johannesburg' });
 }
 
-function deliveryWindow(order) {
-  const ts = order.createdAt;
-  const base = ts && typeof ts.toDate === 'function' ? ts.toDate() : (ts ? new Date(ts) : new Date());
-  const fmt = (days) => {
-    const d = new Date(base); d.setDate(d.getDate() + days);
-    return d.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Africa/Johannesburg' });
-  };
-  return fmt(5) + ' and ' + fmt(9);
-}
-
 function addressLines(order) {
   return [
     order.shippingAddress,
@@ -214,8 +204,7 @@ function customerConfirmation(order, ctx) {
     '</td></tr></table>';
 
   const status = title('Order status') + rows(
-    row('Payment', '<span style="color:#2e8b57;">&#9679;</span> Confirmed', { semi: true }) +
-    row('Estimated delivery', esc(deliveryWindow(order)), { semi: true })
+    row('Payment', '<span style="color:#2e8b57;">&#9679;</span> Confirmed', { semi: true })
   ) + (brands.length > 1
     ? '<div style="font-size:12px;color:#777777;margin-top:10px;line-height:1.5;">Your order ships in ' + brands.length + ' packages, one from each brand, so they may arrive on different days.</div>'
     : '');
@@ -236,7 +225,7 @@ function customerConfirmation(order, ctx) {
   });
 
   const text = 'Thank you, ' + first + '. Your order is confirmed.\n\nOrder #' + num + ' · ' + orderDate(order) +
-    '\nEstimated delivery: ' + deliveryWindow(order) + '\n\n' + textItems(items) + '\n\n' + textTotals(order) +
+    '\n\n' + textItems(items) + '\n\n' + textTotals(order) +
     '\n\nDelivering to:\n' + [order.customerName].concat(addressLines(order)).join('\n') +
     '\n\nQuestions? support@janedore.co.za';
 

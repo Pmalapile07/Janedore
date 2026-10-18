@@ -654,7 +654,7 @@ function renderCartPage() {
         ${itemSize && itemSize !== 'OS' ? `<span class="cart-item-size">Size: <strong>${itemSize}</strong></span>` : ''}
       </div>
       <div class="cart-item-bottom">
-        <span class="cart-item-returns">Free exchange or return within 30 days</span>
+        <span class="cart-item-returns">Returnable within 30 days of dispatch</span>
         <span class="cart-item-price${cartItemOnSale(item) ? ' is-sale' : ''}">${formatPrice(getCartItemLineTotal(item))}</span>
       </div>
     </div>`;
