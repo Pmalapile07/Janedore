@@ -47,9 +47,48 @@ function buildSizeRowHtml(product, variantIndex) {
   const buttons = sizes.map(s => {
     const inStock = isSizeInStock(product, variantIndex, s);
     const cls = 'product-size-btn' + (S.selectedSize === s ? ' sel' : '') + (inStock ? '' : ' out-of-stock');
-    return `<button class="${cls}" ${inStock ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')">${escapeHTML(s)}</button>`;
+    const selectable = inStock || product.waitlist;
+    return `<button class="${cls}" ${selectable ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')"${inStock ? '' : ' aria-label="' + escapeHTML(s) + ', sold out"'}>${escapeHTML(s)}</button>`;
   }).join('');
   return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Select a Size</div><div class="sizes-row">${buttons}</div></div>`;
+}
+
+// Waitlist (waitlist-api.js): products with "Waitlist when sold out"
+// on in admin keep their sold-out sizes selectable, and the Add to Bag
+// button reads Add to Waitlist for them (updateAddToCartState). Signed-in
+// customers join straight away; guests are asked to sign in first, since
+// the waitlist lives in My Account.
+function productWaitlistMode(product) {
+  if (!product || !product.waitlist) return false;
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
+  if (hasSizes) return !!S.selectedSize && !isSizeInStock(product, vi, S.selectedSize);
+  return isProductSoldOut(product) || !isSizeInStock(product, vi, 'OS');
+}
+
+async function joinProductWaitlist(product, btn) {
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous) {
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Sign in to join the waitlist', 'ph-user');
+    navigateToLogin();
+    return;
+  }
+  const label = btn && btn.querySelector('.sticky-btn-label');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await user.getIdToken() },
+      body: JSON.stringify({ productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: S.selectedSize || 'OS' }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    if (label) label.textContent = 'Added';
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Added to your waitlist', 'ph-check-circle');
+    setTimeout(updateAddToCartState, 1600);
+  } catch (e) {
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast(e.message, 'ph-warning-circle');
+    updateAddToCartState();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 // Re-evaluates the sticky bar's Add to Bag button (the page's only add
@@ -73,7 +112,10 @@ function updateAddToCartState() {
   const noSizeInStock = hasSizes && !realSizes.some(s => isSizeInStock(product, vi, s));
   const needsSize = hasSizes && !S.selectedSize && !noSizeInStock;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
-  stickyBtn.disabled = needsSize || sizeOutOfStock || soldOut;
+  const waitlist = productWaitlistMode(product);
+  // Waitlist on and every size of this colour sold out: pick one first.
+  const pickForWaitlist = !!product.waitlist && hasSizes && !S.selectedSize;
+  stickyBtn.disabled = waitlist ? false : (pickForWaitlist || needsSize || sizeOutOfStock || soldOut);
 
   // Never overwrite the transient "Added" feedback; "Add" instead of
   // "Add to Bag" once the bar is minimized.
@@ -81,6 +123,8 @@ function updateAddToCartState() {
   if (bar && bar.classList.contains('added-feedback')) return;
   const label = stickyBtn.querySelector('.sticky-btn-label');
   const defaultLabel = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to Bag';
+  if (waitlist) { if (label) label.textContent = bar && bar.classList.contains('minimized') ? 'Waitlist' : 'Add to Waitlist'; return; }
+  if (pickForWaitlist) { if (label) label.textContent = 'Select a Size'; return; }
   const unavailable = (sizeOutOfStock || soldOut) ? (isPreorder ? 'Pre-orders Full' : 'Sold Out') : '';
   if (label) label.textContent = needsSize ? 'Select a Size' : (unavailable || (isPreorder ? 'Pre-order' : defaultLabel));
 }

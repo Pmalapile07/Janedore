@@ -53,6 +53,8 @@
    existed before this as the marker product-detail.css itself uses). */
 body.on-editorial-page .nav-quick-links-wrap,
 body.on-login-page .nav-quick-links-wrap,
+body:has(#page-login.active) .nav-quick-links-wrap,
+body:has(#page-account.active) .nav-quick-links-wrap,
 body.on-vendor-page .nav-quick-links-wrap,
 body.on-collection-page .nav-quick-links-wrap,
 body:has(.page.active .page-breadcrumb) .nav-quick-links-wrap,

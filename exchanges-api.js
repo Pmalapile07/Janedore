@@ -238,6 +238,40 @@ module.exports = function registerExchanges(app, deps, shared) {
     }
   });
 
+  // ---- signed-in customer: their returns and exchanges (My Account) ----
+  // Same rule as orders in My Account: those on orders placed while signed
+  // in, plus those under the account's email once it is verified.
+  app.get('/api/account/returns-exchanges', async (req, res) => {
+    if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+    const match = (req.headers.authorization || '').match(/^Bearer (.+)$/);
+    if (!match) return res.status(401).json({ error: 'Please sign in.' });
+    let decoded;
+    try { decoded = await admin.auth().verifyIdToken(match[1]); } catch (e) { return res.status(401).json({ error: 'Please sign in.' }); }
+    try {
+      const email = String(decoded.email || '').trim().toLowerCase();
+      const own = await adminDb.collection('orders').where('customerId', '==', decoded.uid).limit(100).get();
+      const orderIds = own.docs.map((d) => d.id);
+      const lists = {};
+      for (const kind of ['returns', 'exchanges']) {
+        const found = {};
+        const add = (snap) => snap.docs.forEach((d) => { found[d.id] = d.data(); });
+        if (decoded.email_verified && email) add(await adminDb.collection(kind).where('customerEmail', '==', email).limit(100).get());
+        for (let i = 0; i < orderIds.length; i += 10) {
+          add(await adminDb.collection(kind).where('orderId', 'in', orderIds.slice(i, i + 10)).get());
+        }
+        lists[kind] = Object.values(found).map((x) => ({
+          number: x.returnNumber || x.exchangeNumber, orderNumber: x.orderNumber, status: x.status, createdAt: iso(x.createdAt),
+          items: (x.items || []).map((i) => ({ productId: i.productId, variantIndex: i.variantIndex, name: i.name, brand: i.brand, qty: i.qty,
+            wantSize: i.wantSize, wantColor: i.wantColor }))
+        })).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      }
+      res.json({ returns: lists.returns, exchanges: lists.exchanges });
+    } catch (e) {
+      console.error('[ACCOUNT_RETURNS_EXCHANGES]', e.message);
+      res.status(500).json({ error: 'Could not load your returns and exchanges.' });
+    }
+  });
+
   // ---- admin: list ----
   app.get('/api/admin/exchanges', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });

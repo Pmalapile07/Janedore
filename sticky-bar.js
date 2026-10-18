@@ -49,7 +49,10 @@ function createStickyBar(product) {
 // whenever a size still needs picking, so this never fires without one.
 function addToCartFromDetailSticky(id) {
  const product = PRODUCTS.find(p => p.id === id);
- if (!product || isProductSoldOut(product)) return;
+ if (!product) return;
+ // Sold out with the waitlist on: the same button joins the waitlist.
+ if (typeof productWaitlistMode === 'function' && productWaitlistMode(product)) { joinProductWaitlist(product, document.getElementById('sticky-add-btn')); return; }
+ if (isProductSoldOut(product)) return;
  addToCart(id, S.selectedSize, S.productQuantity);
  _stickyAddedFeedback(product);
 }
@@ -88,14 +91,14 @@ function updateStickyBarOnScroll() {
    const label = bar.querySelector('.sticky-btn-label');
    const btn = bar.querySelector('.sticky-add-btn');
    if (label && btn && !btn.disabled && label.textContent !== 'Added') {
-     label.textContent = 'Add';
+     label.textContent = label.textContent === 'Add to Waitlist' ? 'Waitlist' : 'Add';
    }
  } else {
    bar.classList.remove('minimized');
    const label = bar.querySelector('.sticky-btn-label');
    const btn = bar.querySelector('.sticky-add-btn');
    if (label && btn && !btn.disabled && label.textContent !== 'Added') {
-     label.textContent = 'Add to Bag';
+     label.textContent = label.textContent === 'Waitlist' ? 'Add to Waitlist' : 'Add to Bag';
    }
  }
 }

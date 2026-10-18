@@ -979,4 +979,24 @@ function bagReminder(items, ctx, links) {
   return { subject: 'You left something in your bag', html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, money };
+// A waitlisted item is back in stock (waitlist-api.js). Sent once.
+function backInStock(item, ctx, links) {
+  const what = [item.color && item.color !== 'Default' ? item.color : '', item.size && item.size !== 'OS' ? 'size ' + item.size : ''].filter(Boolean).join(', ');
+  const intro = 'good news: ' + (item.name || 'the item you were waiting for') + (what ? ' in ' + what : '') + ' is back in stock. Stock is limited and isn’t reserved for you, so order soon if you’d still like it.';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'Back in stock',
+    preheader: (item.name || 'Your item') + ' is back in stock.',
+    bannerHtml: '<strong>Back in stock</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.7;color:#555555;">Hi, ' + esc(intro) + '</div>',
+      title('Your waitlist item') + itemsBlock([item], ctx, { hidePrice: true }) + button('View item', links.productUrl)
+    ],
+    footerHtml: 'You’re receiving this because you joined the waitlist for this item. We only email once per waitlist.<br>Janedore · janedore.co.za'
+  });
+  const text = 'Back in stock\n\nHi, ' + intro + '\n\n' + (item.name || '') + (item.brand ? ' (' + item.brand + ')' : '') + (what ? ', ' + what : '') + '\n\nView item: ' + links.productUrl;
+  return { subject: (item.name || 'Your item') + ' is back in stock', html, text };
+}
+
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, money };

@@ -275,6 +275,10 @@
   cursor: not-allowed;
 }
 .product-size-btn.out-of-stock:hover { background: #f4f4f4; }
+/* Waitlist on: sold-out sizes can be picked (product-detail.js); picked,
+   they look selected and stay crossed out. */
+.product-size-btn.out-of-stock:not([disabled]) { cursor: pointer; }
+.product-size-btn.out-of-stock.sel, .product-size-btn.out-of-stock.sel:hover { background: #111; color: #fff; }
 
 .size-guide-row {
   padding-top: 14px;
