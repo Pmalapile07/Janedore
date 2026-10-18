@@ -206,11 +206,10 @@ function getCartTotalAfterDiscount() {
 }
 
 const SHIPPING_FEE = 150;
-// Free delivery (v1): only products marked "Free delivery" in admin
-// (product.freeDelivery; JANEDORE's own products default to on) ship free,
-// and only once that brand's package reaches FREE_DELIVERY_MIN. Every
-// other package is SHIPPING_FEE. Mirrors server.js priceOrder(), which is
-// what actually gets charged.
+// Free delivery is set per brand (Admin > Brands, vendor.freeDelivery;
+// JANEDORE itself defaults to on): that brand's package ships free once it
+// reaches FREE_DELIVERY_MIN. Every other package is SHIPPING_FEE. Mirrors
+// server.js priceOrder(), which is what actually gets charged.
 const FREE_DELIVERY_MIN = 750;
 const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
@@ -218,7 +217,9 @@ function isHouseProduct(p) {
 }
 function isFreeDeliveryProduct(p) {
   if (!p) return false;
-  return typeof p.freeDelivery === 'boolean' ? p.freeDelivery : isHouseProduct(p);
+  const house = isHouseProduct(p);
+  const vendor = (S.vendors || []).find(v => v.id === (house ? HOUSE_VENDOR_ID : p.vendorId));
+  return vendor && typeof vendor.freeDelivery === 'boolean' ? vendor.freeDelivery : house;
 }
 // Home banner and product pages read the same minimum the bag charges by.
 document.querySelectorAll('[data-free-delivery-min]').forEach(el => { el.textContent = 'R' + FREE_DELIVERY_MIN.toLocaleString('en-US'); });
@@ -261,6 +262,17 @@ function cartItemPreorderDate(item) {
   if (typeof item.preorder === 'boolean') return item.preorder ? (item.preorderShipDate || '') : null;
   const product = getCartProduct(item.productId);
   return product && isPreorderProduct(product) ? (product.preorderShipDate || '') : null;
+}
+// "Free delivery" tag on bag and checkout lines, only when the bag mixes
+// free-delivery brands with others (all-free or none-free bags say it in
+// the delivery bar instead). Never on product cards or product pages.
+function cartHasMixedDelivery() {
+  const shipments = getCartShipments();
+  return shipments.some(s => s.eligible) && shipments.some(s => !s.eligible);
+}
+function cartFreeDeliveryHtml(item, mixed) {
+  if (!mixed || !isFreeDeliveryProduct(getCartProduct(item.productId))) return '';
+  return '<div class="cart-item-free">Free delivery</div>';
 }
 function cartPreorderHtml(item) {
   const date = cartItemPreorderDate(item);
@@ -611,12 +623,16 @@ function renderCartPage() {
   const shipping = getCartShippingStatus();
   const eligible = shipping.shipments.filter(s => s.eligible);
   const pending = eligible.find(s => !s.free);
+  // Only shown when a brand in the bag offers free delivery. A bag that
+  // mixes in other brands points to the items tagged Free delivery.
+  const mixed = eligible.length > 0 && eligible.length < shipping.shipments.length;
+  const pendingWhat = mixed && eligible.length === 1 ? 'items marked Free delivery' : sanitizeHTML(pending ? pending.brand : '');
   const bannerText = pending
-    ? `You’re ${formatPrice(pending.remaining)} away from <strong>FREE</strong> delivery on ${sanitizeHTML(pending.brand)}.`
+    ? `You’re ${formatPrice(pending.remaining)} away from <strong>FREE</strong> delivery on ${pendingWhat}.`
     : eligible.length
-      ? `Your ${sanitizeHTML(eligible[0].brand)} items ship <strong>FREE</strong>.`
-      : `<strong>FREE</strong> delivery on selected items over ${formatPrice(FREE_DELIVERY_MIN)}.`;
-  let html = `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div><div class="cart-cards">`;
+      ? (mixed ? 'Items marked Free delivery ship <strong>FREE</strong>.' : `Your ${sanitizeHTML(eligible[0].brand)} items ship <strong>FREE</strong>.`)
+      : '';
+  let html = `${bannerText ? `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div>` : ''}<div class="cart-cards">`;
 
   S.cart.forEach(item => {
     const thumbnail = getCartItemThumbnail(item);
@@ -638,7 +654,7 @@ function renderCartPage() {
         <div class="cart-item-info">
           <div class="cart-item-name" onclick="goToProduct('${productId}')">${itemName}</div>
           <div class="cart-item-brand">${itemBrand}${itemColor && itemColor !== 'Default' ? ' · ' + itemColor : ''}</div>
-          ${cartPreorderHtml(item)}
+          ${cartPreorderHtml(item)}${cartFreeDeliveryHtml(item, mixed)}
           ${soldOut ? '<div class="cart-page-sold-out-badge">Sold Out</div>' : ''}
         </div>
         <div class="cart-item-actions">

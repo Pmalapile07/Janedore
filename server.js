@@ -666,8 +666,13 @@ const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
   return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
 }
-function isFreeDeliveryProduct(p) {
-  return !!p && (typeof p.freeDelivery === 'boolean' ? p.freeDelivery : isHouseProduct(p));
+// Per brand (vendors/{id}.freeDelivery, set in Admin > Brands); JANEDORE
+// itself defaults to on. freeVendors: vendorId -> that flag.
+function isFreeDeliveryProduct(p, freeVendors) {
+  if (!p) return false;
+  const house = isHouseProduct(p);
+  const flag = freeVendors && freeVendors[house ? HOUSE_VENDOR_ID : p.vendorId];
+  return typeof flag === 'boolean' ? flag : house;
 }
 
 function serverUnitPrice(product) {
@@ -728,6 +733,10 @@ async function priceOrder(order) {
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   // One parcel per brand; JANEDORE's own stock is one package.
   const codeFree = !!(discount && discount.type === 'free_shipping');
+  const vendorIds = [...new Set([HOUSE_VENDOR_ID].concat(Object.values(products).map((p) => p.vendorId).filter(Boolean)))];
+  const vendorDocs = await adminDb.getAll(...vendorIds.map((id) => adminDb.collection('vendors').doc(id)));
+  const freeVendors = {};
+  vendorDocs.forEach((d, i) => { if (d.exists && typeof d.data().freeDelivery === 'boolean') freeVendors[vendorIds[i]] = d.data().freeDelivery; });
   const packageMap = new Map();
   pricedItems.forEach((i) => {
     const product = products[String(i.productId || '')];
@@ -735,7 +744,7 @@ async function priceOrder(order) {
     if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true });
     const pkg = packageMap.get(key);
     pkg.subtotal += i.price * i.qty;
-    if (!isFreeDeliveryProduct(product)) pkg.eligible = false;
+    if (!isFreeDeliveryProduct(product, freeVendors)) pkg.eligible = false;
   });
   const packages = packageMap.size;
   let shipping = 0;
