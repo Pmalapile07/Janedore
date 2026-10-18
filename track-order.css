@@ -114,3 +114,6 @@
 .care-textarea { height: 140px; }
 .care-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .care-shortcuts { margin-top: 32px; line-height: 2; }
+/* Exchange an Item (exchanges.js): who pays postage, under the reason. */
+.exchange-postage { margin: -8px 0 18px; }
+.exchange-postage:empty { display: none; }

@@ -51,14 +51,20 @@ module.exports = function registerReturns(app, deps) {
     return { id: doc.id, ref: doc.ref, order };
   }
 
-  // Every order line, with how many can still be returned and why not.
-  async function returnableItems(orderId, order) {
+  // Every order line, with how many can still be returned (or exchanged,
+  // exchanges-api.js) and why not. An item already returned or exchanged
+  // counts against both.
+  async function returnableItems(orderId, order, kind) {
+    const noun = kind === 'exchange' ? 'Exchange' : 'Return';
     const shipments = orderShipments(order);
-    const open = await adminDb.collection('returns').where('orderId', '==', orderId).get();
+    const [returnsSnap, exchangesSnap] = await Promise.all([
+      adminDb.collection('returns').where('orderId', '==', orderId).get(),
+      adminDb.collection('exchanges').where('orderId', '==', orderId).get()
+    ]);
     const used = {};
-    open.docs.forEach((d) => {
+    returnsSnap.docs.concat(exchangesSnap.docs).forEach((d) => {
       const r = d.data();
-      if (r.status === 'declined') return;
+      if (r.status === 'declined' || r.status === 'closed') return;
       (r.items || []).forEach((i) => { used[i.index] = (used[i.index] || 0) + (Number(i.qty) || 0); });
     });
     return (order.items || []).map((item, index) => {
@@ -67,10 +73,10 @@ module.exports = function registerReturns(app, deps) {
       const deadline = shippedAt ? new Date(new Date(shippedAt).getTime() + RETURN_DAYS * 86400000) : null;
       const remaining = Math.max(0, (Number(item.qty) || 1) - (used[index] || 0));
       let blocked = '';
-      if (order.paymentStatus !== 'paid') blocked = 'This order can’t be returned.';
+      if (order.paymentStatus !== 'paid') blocked = 'This order can’t be ' + (kind === 'exchange' ? 'exchanged.' : 'returned.');
       else if (!shippedAt) blocked = 'Not shipped yet';
-      else if (deadline < new Date()) blocked = 'Return window closed on ' + deadline.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' });
-      else if (!remaining) blocked = 'Already returned';
+      else if (deadline < new Date()) blocked = noun + ' window closed on ' + deadline.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' });
+      else if (!remaining) blocked = 'Already returned or exchanged';
       return {
         index, productId: item.productId || '', variantIndex: item.variantIndex || 0, name: item.name || '', brand: item.brand || 'JANEDORE',
         vendorId: item.vendorId || null, size: item.size || '', color: item.color || '', price: Number(item.price) || 0,
@@ -340,6 +346,9 @@ module.exports = function registerReturns(app, deps) {
       res.status(500).json({ error: 'Could not update the return' });
     }
   });
+
+  // Shared with exchanges-api.js.
+  return { limited, cleanNumber, cleanEmail, findOrder, returnableItems, staff, brandContacts, send, RETURN_DAYS };
 };
 
 module.exports.OPEN_STATUSES = OPEN;

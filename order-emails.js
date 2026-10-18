@@ -498,6 +498,138 @@ function returnUpdate(ret, ctx, stage) {
   return { subject: copy[0] + ' (' + ret.returnNumber + ')', html, text };
 }
 
+// ---------- exchanges (exchanges-api.js) ----------
+// Never mentions refunds: an exchange only ever ends in a new item.
+
+function exchangeWant(item) {
+  return [item.wantColor && item.wantColor !== 'Default' ? item.wantColor : '', item.wantSize && item.wantSize !== 'OS' ? 'Size ' + item.wantSize : ''].filter(Boolean).join(', ') || 'A replacement';
+}
+function exchangeItemsBlock(ex, ctx) {
+  return (ex.items || []).map((item, i) => {
+    const img = ctx.imageFor ? ctx.imageFor(item) : '';
+    const meta = [item.brand, item.color && item.color !== 'Default' ? item.color : '', sizeOf(item) ? 'Size ' + sizeOf(item) : '', 'Qty ' + (Number(item.qty) || 1)].filter(Boolean).map(esc).join(' · ');
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="' + (i ? 'border-top:1px solid #eeeeee;' : '') + '"><tr>' +
+      '<td width="72" valign="top" style="padding:' + (i ? '14px' : '0') + ' 14px 14px 0;">' +
+        (img ? '<img src="' + esc(img) + '" width="72" height="96" alt="" style="display:block;width:72px;height:96px;object-fit:cover;background:#f4f4f4;border:0;">' : '<div style="width:72px;height:96px;background:#f4f4f4;"></div>') +
+      '</td><td valign="top" style="padding:' + (i ? '14px' : '0') + ' 0 14px;">' +
+        '<div style="font-size:15px;font-weight:700;line-height:1.3;color:#111111;">' + esc(item.name || 'Item') + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:3px;">' + meta + '</div>' +
+        '<div style="font-size:13px;color:#111111;margin-top:8px;"><strong>Exchange for:</strong> ' + esc(exchangeWant(item)) + '</div>' +
+        (item.reason ? '<div style="font-size:13px;color:#555555;margin-top:4px;">Reason: ' + esc(item.reason) + '</div>' : '') +
+      '</td></tr></table>';
+  }).join('');
+}
+function exchangeTextItems(ex) {
+  return (ex.items || []).map((i) => '- ' + (i.name || 'Item') + ' (' + (i.brand || '') + ') x' + (Number(i.qty) || 1) + ': ' + (i.reason || '') + '. Exchanging for: ' + exchangeWant(i)).join('\n');
+}
+function exchangeStatusUrl(ctx, ex) {
+  return ctx.siteUrl + '/pages/exchange-an-item?exchange=' + encodeURIComponent(ex.exchangeNumber || '');
+}
+function exchangePostageLine(postage) {
+  return postage === 'janedore'
+    ? 'Postage for this exchange is on us: we’ll arrange collection of the item and send your new one at no cost to you.'
+    : 'Postage for this exchange is at your cost: sending the item back, and delivery of your new item.';
+}
+
+// Customer: we have your request.
+function exchangeRequested(ex, ctx) {
+  const first = String(ex.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const intro = 'we’ve received your exchange request for order #' + (ex.orderNumber || '') + '. Our team will review it with the brand and email you with the next steps. Please keep the item, with its tags and packaging, until then.';
+  const postage = ex.postage === 'janedore'
+    ? 'As the reason you gave is on our side, postage for this exchange should be on us. We’ll confirm this when we review your request.'
+    : 'As the item was sent as ordered, postage for this exchange is at your cost. We’ll confirm the details when we review your request.';
+  const html = shell({
+    logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
+    title: 'Exchange request received',
+    preheader: 'Exchange ' + ex.exchangeNumber + ' for order #' + ex.orderNumber + ' is under review.',
+    bannerHtml: '<strong>Exchange request received</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Exchange ' + esc(ex.exchangeNumber) + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ex.orderNumber) + '</div>' +
+        button('Check exchange status', exchangeStatusUrl(ctx, ex)),
+      title('Items to exchange') + exchangeItemsBlock(ex, ctx),
+      '<div style="font-size:13px;line-height:1.6;color:#555555;">' + esc(postage) + ' Please don’t send anything back yet.</div>'
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = 'Exchange request received\n\nHi ' + first + ', ' + intro + '\n\nExchange ' + ex.exchangeNumber + '\nOrder #' + ex.orderNumber + '\n\n' + exchangeTextItems(ex) +
+    '\n\n' + postage + ' Please don’t send anything back yet.\n\nCheck exchange status: ' + exchangeStatusUrl(ctx, ex);
+  return { subject: 'Exchange request received (' + ex.exchangeNumber + ')', html, text };
+}
+
+// Team and brand copy of a request (and of a brand's dispute).
+function exchangeForStaff(ex, ctx, opts) {
+  opts = opts || {};
+  const heading = opts.heading || 'Exchange request';
+  const intro = opts.dispute
+    ? opts.dispute + ' Review it in Admin → Exchanges before deciding.'
+    : (opts.brand ? 'A customer has asked to exchange the item(s) below from your brand. Please check that you can supply what they want instead, then confirm or dispute the exchange in Admin → Exchanges. Janedore will make the final decision.'
+      : 'A customer has asked to exchange the item(s) below. Check the brand’s response in Admin → Exchanges, then approve or decline. Postage proposed from the reason: ' + (ex.postage === 'janedore' ? 'JANEDORE pays.' : 'the customer pays.'));
+  const photos = (ex.photos || []).slice(0, 6).map(u => '<a href="' + esc(u) + '" style="display:inline-block;margin:0 8px 8px 0;"><img src="' + esc(u) + '" width="88" height="88" alt="Customer photo" style="display:block;width:88px;height:88px;object-fit:cover;background:#f4f4f4;border:0;"></a>').join('');
+  const html = shell({
+    logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
+    title: heading,
+    preheader: heading + ': ' + ex.exchangeNumber + ' for order #' + ex.orderNumber,
+    bannerHtml: '<strong>' + esc(heading) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Exchange ' + esc(ex.exchangeNumber) + ' · Order #' + esc(ex.orderNumber) + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:4px;">' + esc(ex.customerName || '') + '</div>' +
+        button('Open Exchanges in Admin', ctx.siteUrl + '/admin'),
+      title('Items') + exchangeItemsBlock(ex, ctx) +
+        (ex.items || []).filter((i) => i.details).map((i) => '<div style="font-size:13px;line-height:1.5;color:#555555;margin-top:8px;"><strong>' + esc(i.name) + ':</strong> ' + esc(i.details) + '</div>').join(''),
+      photos ? title('Customer photos') + '<div>' + photos + '</div>' : '',
+      ex.note ? title('Customer note') + '<div style="font-size:13px;line-height:1.6;color:#555555;">' + esc(ex.note) + '</div>' : ''
+    ].filter(Boolean),
+    footerHtml: 'Sent by Janedore Exchanges.'
+  });
+  const text = heading + '\n\n' + intro + '\n\nExchange ' + ex.exchangeNumber + ', order #' + ex.orderNumber + '\n\n' + exchangeTextItems(ex) + '\n\nAdmin: ' + ctx.siteUrl + '/admin';
+  return { subject: heading + ' (' + ex.exchangeNumber + ')', html, text };
+}
+
+// Customer: each step after review.
+function exchangeUpdate(ex, ctx, stage) {
+  const first = String(ex.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const postage = ex.approval && ex.approval.postage;
+  const copy = {
+    approved: ['Your exchange has been approved', 'your exchange ' + ex.exchangeNumber + ' has been approved and your new item has been set aside for you. ' +
+      exchangePostageLine(postage) + ' Please follow the instructions below. Once the brand has received the item, we’ll send your new one.'],
+    declined: ['Update on your exchange', 'after reviewing your exchange ' + ex.exchangeNumber + ', we’re unable to approve it. Please see the reason below. If you have any questions, reply to this email and our team will assist you.'],
+    received: ['We’ve received your item', 'the brand has received the item(s) for exchange ' + ex.exchangeNumber + '. We’ll email you as soon as your new item is on its way.'],
+    dispatched: ['Your new item is on its way', 'your new item for exchange ' + ex.exchangeNumber + ' has been dispatched. You can follow it with the tracking details below.']
+  }[stage];
+  const d = ex.dispatch || {};
+  const extra = stage === 'declined'
+    ? title('Reason') + '<div style="font-size:14px;line-height:1.6;color:#111111;">' + esc(ex.declineReason || '') + '</div>'
+    : stage === 'approved' && ex.approval && ex.approval.message
+      ? title('Instructions') + '<div style="font-size:14px;line-height:1.6;color:#111111;white-space:pre-line;">' + esc(ex.approval.message) + '</div>'
+      : stage === 'dispatched'
+        ? title('Tracking') + rows(row('Courier', esc(d.courier || ''), { semi: true }) + row('Tracking number', esc(d.trackingNumber || ''), { semi: true, bold: true }))
+        : '';
+  const html = shell({
+    logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
+    title: copy[0],
+    preheader: copy[0] + ' (' + ex.exchangeNumber + ')',
+    bannerHtml: '<strong>' + esc(copy[0]) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(copy[1]) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Exchange ' + esc(ex.exchangeNumber) + '</div>' +
+        '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ex.orderNumber) + '</div>' +
+        button('Check exchange status', exchangeStatusUrl(ctx, ex)),
+      extra,
+      title('Items') + exchangeItemsBlock(ex, ctx)
+    ].filter(Boolean),
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = copy[0] + '\n\nHi ' + first + ', ' + copy[1] +
+    (stage === 'declined' ? '\n\nReason: ' + (ex.declineReason || '') : '') +
+    (stage === 'approved' && ex.approval && ex.approval.message ? '\n\n' + ex.approval.message : '') +
+    (stage === 'dispatched' ? '\n\nCourier: ' + (d.courier || '') + '\nTracking number: ' + (d.trackingNumber || '') : '') +
+    '\n\nExchange ' + ex.exchangeNumber + '\n' + exchangeTextItems(ex) + '\n\nCheck exchange status: ' + exchangeStatusUrl(ctx, ex);
+  return { subject: copy[0] + ' (' + ex.exchangeNumber + ')', html, text };
+}
+
 // Step 1 of a refund: staff chose "Start refund" in admin. Says only that
 // it is being processed; nothing claims the money has moved yet.
 function refundStarted(order, ctx) {
@@ -847,4 +979,4 @@ function bagReminder(items, ctx, links) {
   return { subject: 'You left something in your bag', html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, money };

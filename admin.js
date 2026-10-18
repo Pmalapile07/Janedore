@@ -363,7 +363,7 @@
     messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
     admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
-    homepage: 'Homepage', onlineStore: 'Online Store', content: 'Content', reports: 'Reports', returns: 'Returns', applications: 'Applications',
+    homepage: 'Homepage', onlineStore: 'Online Store', content: 'Content', reports: 'Reports', returns: 'Returns', exchanges: 'Exchanges', applications: 'Applications',
     analytics: 'Analytics', devtools: 'Developer Tools'
   };
 
@@ -418,7 +418,7 @@
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
       vendors: 'vendors', customers: 'customers', settings: 'settings',
       admins: 'admins', pages: 'pages', discounts: 'discounts',
-      onlineStore: 'settings', homepage: 'homepage', content: 'homepage', reports: 'vendors', returns: 'orders', applications: 'vendors',
+      onlineStore: 'settings', homepage: 'homepage', content: 'homepage', reports: 'vendors', returns: 'orders', exchanges: 'orders', applications: 'vendors',
       analytics: 'analytics', devtools: 'devtools'
     };
 
@@ -477,6 +477,7 @@
       case 'content':     if (window._renderContentTab)     window._renderContentTab();     break;
       case 'reports':     if (window._renderReportsTab)     window._renderReportsTab();     break;
       case 'returns':     if (window._renderReturnsTab)     window._renderReturnsTab();     break;
+      case 'exchanges':   if (window._renderExchangesTab)   window._renderExchangesTab();   break;
       case 'applications': if (window._renderApplicationsTab) window._renderApplicationsTab(); break;
       case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;
       case 'analytics':   if (window._renderAnalyticsTab)   window._renderAnalyticsTab();   break;
