@@ -1,7 +1,10 @@
+// Rounded to the cent: whole rands show as R1,299, anything else with
+// two decimals (R894.99, never R894.992 or R499.9).
 function formatPrice(price) {
   const n = Number(price);
-  const safe = Number.isFinite(n) ? n : 0;
-  return 'R' + safe.toLocaleString('en-US');
+  const cents = Math.round((Number.isFinite(n) ? n : 0) * 100);
+  const digits = cents % 100 === 0 ? 0 : 2;
+  return 'R' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
 function hasSalePrice(p) {

@@ -173,7 +173,8 @@ function getDiscountAmount() {
   
   switch(appliedDiscount.type) {
     case 'percentage':
-      return (subtotal * appliedDiscount.value) / 100;
+      // Rounded to the cent, as server.js priceOrder() charges it.
+      return Math.round(subtotal * appliedDiscount.value) / 100;
     case 'fixed_amount':
       return Math.min(appliedDiscount.value, subtotal);
     case 'free_shipping':
