@@ -64,31 +64,67 @@ function buildWaitlistHtml(product, variantIndex) {
   const out = waitlistSoldOutSizes(product, variantIndex);
   if (!out.length) return '';
   const allOut = out.length === Math.max(1, (product.sizes || []).filter(s => s !== 'OS').length);
-  return `<button type="button" class="product-waitlist-open" onclick="openProductWaitlist()"><i class="ph ph-bell" aria-hidden="true"></i><span>${allOut ? 'Sold out? Join the waitlist' : 'Size sold out? Join the waitlist'}</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
+  return `<button type="button" class="product-waitlist-open" onclick="openProductWaitlist()"><i class="ph ph-bell" aria-hidden="true"></i><span>${allOut ? 'Sold out? Join the waitlist' : 'Size sold out? Join the waitlist'}</span></button>`;
 }
 
+// A panel that slides up from the bottom: the sold-out sizes, an email
+// field for guests, and Notify Me. Same page freeze as the brand report
+// panel (collection.js).
+let _waitlistSize = '';
 function openProductWaitlist() {
-  const box = document.getElementById('product-waitlist');
   const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
-  if (!box || !product) return;
+  if (!product) return;
+  closeProductWaitlist(true);
   const vi = S.productVariantSelections[product.id] ?? 0;
   const out = waitlistSoldOutSizes(product, vi);
+  _waitlistSize = out.length === 1 ? out[0] : '';
   const user = firebase.auth().currentUser;
   const signedIn = user && !user.isAnonymous && user.email;
   let saved = '';
   try { saved = localStorage.getItem('janedore_checkout_email') || ''; } catch (e) {}
-  const sizeField = out.length === 1
-    ? `<input type="hidden" id="wl-size" value="${escapeHTML(out[0])}">${out[0] !== 'OS' ? `<p class="product-waitlist-text">Size ${escapeHTML(out[0])}</p>` : ''}`
-    : `<label class="track-label" for="wl-size">Size</label><select class="track-input" id="wl-size">${out.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('')}</select>`;
-  box.innerHTML = `<div class="product-waitlist-form">
-    <div class="product-waitlist-title">Join the waitlist</div>
-    <p class="product-waitlist-text">We’ll email you once when it’s back in stock.</p>
-    ${sizeField}
-    ${signedIn ? `<p class="product-waitlist-text">We’ll email ${escapeHTML(user.email)}.</p>`
-      : `<label class="track-label" for="wl-email">Email address</label><input class="track-input" id="wl-email" type="email" autocomplete="email" placeholder="you@example.com" value="${escapeHTML(saved)}">`}
+  const sizes = out.length === 1 && out[0] === 'OS' ? ''
+    : `<div class="sizes-label">Select a Size</div><div class="sizes-row waitlist-sizes">${out.map(s => `<button type="button" class="product-size-btn${s === _waitlistSize ? ' sel' : ''}" onclick="selectWaitlistSize(this,'${escapeJSString(s)}')">${escapeHTML(s)}</button>`).join('')}</div>`;
+  const wrap = document.createElement('div');
+  wrap.id = 'waitlist-sheet';
+  wrap.className = 'waitlist-overlay';
+  wrap.innerHTML = `<div class="waitlist-sheet" role="dialog" aria-modal="true" aria-labelledby="waitlist-title">
+    <div class="waitlist-head">
+      <h2 id="waitlist-title">Join the waitlist</h2>
+      <button type="button" class="waitlist-close" onclick="closeProductWaitlist()" aria-label="Close"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="waitlist-product">${escapeHTML(product.name || '')}${product.variants && product.variants[vi] && product.variants[vi].color && product.variants[vi].color !== 'Default' ? ' · ' + escapeHTML(product.variants[vi].color) : ''}</div>
+    ${sizes}
+    ${signedIn ? '' : `<label class="track-label" for="wl-email">Email address</label><input class="track-input" id="wl-email" type="email" autocomplete="email" placeholder="you@example.com" value="${escapeHTML(saved)}">`}
     <div class="track-error" id="wl-error" role="alert"></div>
     <button type="button" class="track-btn" id="wl-btn" onclick="submitProductWaitlist()">Notify Me</button>
   </div>`;
+  wrap.addEventListener('click', e => { if (e.target === wrap) closeProductWaitlist(); });
+  document.body.appendChild(wrap);
+  document.addEventListener('keydown', waitlistEsc);
+  document.body.classList.add('waitlist-open');
+  if (typeof lockBrandReportScroll === 'function') lockBrandReportScroll();
+  requestAnimationFrame(() => wrap.classList.add('is-open'));
+}
+
+function selectWaitlistSize(btn, size) {
+  document.querySelectorAll('.waitlist-sizes .product-size-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  _waitlistSize = size;
+  const err = document.getElementById('wl-error');
+  if (err) err.style.display = 'none';
+}
+
+function waitlistEsc(e) { if (e.key === 'Escape') closeProductWaitlist(); }
+
+function closeProductWaitlist(instant) {
+  const el = document.getElementById('waitlist-sheet');
+  if (!el) return;
+  document.removeEventListener('keydown', waitlistEsc);
+  document.body.classList.remove('waitlist-open');
+  if (typeof unlockBrandReportScroll === 'function') unlockBrandReportScroll();
+  if (instant) { el.remove(); return; }
+  el.classList.remove('is-open');
+  setTimeout(() => el.remove(), 250);
 }
 
 async function submitProductWaitlist() {
@@ -102,17 +138,19 @@ async function submitProductWaitlist() {
   const emailEl = document.getElementById('wl-email');
   const email = signedIn ? user.email : (emailEl ? emailEl.value.trim() : '');
   showError('');
+  if (!_waitlistSize) { showError('Please select a size.'); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Please enter a valid email address.'); return; }
   btn.disabled = true; btn.textContent = 'Joining…';
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (signedIn) headers.Authorization = 'Bearer ' + await user.getIdToken();
     const res = await fetch('/api/waitlist', { method: 'POST', headers, body: JSON.stringify({
-      productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: document.getElementById('wl-size').value, email
+      productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: _waitlistSize, email
     }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
-    document.getElementById('product-waitlist').innerHTML = `<div class="product-waitlist-done"><i class="ph ph-check-circle" aria-hidden="true"></i><span>You’re on the waitlist. We’ll email ${escapeHTML(email)} when it’s back in stock.${signedIn ? ' You can see it in My Account, under Waitlist.' : ''}</span></div>`;
+    closeProductWaitlist();
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('You’re on the waitlist', 'ph-bell');
   } catch (e) {
     showError(e.message);
     btn.disabled = false; btn.textContent = 'Notify Me';
