@@ -44,6 +44,7 @@
   var COLLECTION_PAGE_ITEMS = [
     { slug: 'all',             label: 'All Products' },
     { slug: 'sale',            label: 'Sale' },
+    { slug: 'newin',           label: 'New In' },
     { slug: 'all-clothing',    label: 'Clothing' },
     { slug: 'all-accessories', label: 'Accessories' },
     { slug: 'homeware',        label: 'Homeware' },
