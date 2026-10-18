@@ -39,7 +39,6 @@ body.on-collection-page #collection-page-breadcrumb {
    product page's .product-breadcrumb-bar. */
 #collection-page-breadcrumb.has-icons { align-items: center; gap: 10px; padding: 12px 12px 10px; }
 #collection-page-breadcrumb.has-icons .page-breadcrumb-trail { flex: 1 1 auto; min-width: 0; }
-#collection-page-breadcrumb .brand-fav-btn + .brand-more-btn { margin-left: 0; }
 
 /* =========================================
    COLLECTION DESCRIPTION - ABOVE FILTER BAR

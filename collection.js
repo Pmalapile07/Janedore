@@ -483,7 +483,7 @@ function updateCollectionTitle() {
     const onBrand = S.currentPage === 'vendor';
     bcEl.classList.toggle('has-icons', onBrand);
     bcEl.innerHTML = onBrand
-      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail">${trail}</span>${S.currentVendorId ? favBrandButtonHtml(S.currentVendorId, 'product-breadcrumb-share brand-fav-btn') : ''}<button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
+      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail">${trail}</span><button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
       : trail;
   }
 }
