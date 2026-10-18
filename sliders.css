@@ -119,14 +119,14 @@
   justify-content: center;
 }
 
-/* Product page and bag section headings use the Track Your Order heading
-   style (track-order.css): Inter, semibold, no capitals. The home page
-   keeps its own uppercase headings. */
+/* Product page and bag section headings (You May Also Like, Recently
+   Viewed): Inter, regular weight, 22px on every screen, no capitals.
+   The home page's section headings match (index.html). */
 #page-product-detail .swipe-section-title,
 .cart-suggestions-title {
   font-family: 'Inter', sans-serif;
-  font-size: var(--heading-size);
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
   line-height: 1.3;
