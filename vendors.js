@@ -205,8 +205,13 @@ function jumpToBrandLetter(e, letter) {
 
 async function initVendors() {
   const vendors = await fetchVendors();
-  await backfillMissingVendorSlugs(vendors);
+  // Set before the slug backfill: the bag and checkout read each brand's
+  // free delivery setting from here, and re-render once it has arrived
+  // (a bag or checkout opened straight from a link renders before it).
   S.vendors = vendors;
+  if (S.currentPage === 'cart' && typeof renderCartPage === 'function') renderCartPage();
+  if (S.currentPage === 'checkout' && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
+  await backfillMissingVendorSlugs(vendors);
   renderVendorsDesktop(vendors);
   renderVendorsMobile(vendors);
   renderVendorsFooter(vendors);
