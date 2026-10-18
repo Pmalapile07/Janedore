@@ -171,6 +171,20 @@ function getProductBadges(product) {
   return badges;
 }
 
+// Product cards and bag thumbnails are too small for a stack, so they
+// show one badge: the one that matters most to buying it. The product
+// page's larger image keeps every badge (getProductBadges()).
+var CARD_BADGE_PRIORITY = ['SOLD OUT', 'PRE-ORDER', 'SALE'];
+function getCardBadges(product) {
+  var badges = getProductBadges(product);
+  if (badges.length <= 1) return badges;
+  for (var i = 0; i < CARD_BADGE_PRIORITY.length; i++) {
+    if (badges.indexOf(CARD_BADGE_PRIORITY[i]) !== -1) return [CARD_BADGE_PRIORITY[i]];
+  }
+  var custom = badges.filter(function (b) { return b !== 'NEW'; });
+  return [custom[0] || badges[0]];
+}
+
 function getProductImages(product, variantIndex) {
   const idx = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[product.id] ?? 0);
   const variant = product?.variants?.[idx] ?? product?.variants?.[0] ?? {};
