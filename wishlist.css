@@ -15,8 +15,16 @@
 .wish-page.is-empty { max-width: none; padding-top: 0; }
 .wish-page.is-empty .cart-suggestions { padding-top: 0; }
 
-/* Products | Brands switch (renderWishlistPage(), wishlist.js): the
-   quick links' pills (.nav-quick-link, navigation.css), black when active. */
+/* Wishlist list (Products, Brands) and each view's back link
+   (renderWishlistPage(), wishlist.js); the list is .jd-list
+   (track-order.css), like My Account. The pill styles below are kept
+   for the Partner Application status tabs. */
+.wish-menu { max-width: 560px; margin: 0 auto; padding: 0 16px 48px; font-family: 'Inter', sans-serif; color: #111; }
+.wish-menu .account-heading { margin-bottom: 24px; }
+.wish-subhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; margin: 0 0 20px; }
+.wish-subhead .account-back { margin: 0; }
+.wish-subhead .wish-grid-toggle { position: static; transform: none; }
+.wish-subhead ~ .cart-empty { min-height: 50vh; min-height: 50svh; }
 .wish-tabs { position: relative; display: flex; justify-content: center; align-items: center; gap: 4px; margin: 0 0 24px; }
 .wish-tab {
   display: inline-flex; align-items: center; line-height: 1; background: none; border: none; cursor: pointer;

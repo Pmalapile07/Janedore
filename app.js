@@ -522,6 +522,8 @@ function navigateTo(page, replaceUrl) {
   // Editorial); /campaign and old links land on the homepage. The page
   // markup stays in index.html for reference.
   if (page === 'campaign') { page = 'home'; replaceUrl = true; }
+  // A fresh visit to the wishlist opens on its list (wishlist.js).
+  if (page === 'wishlist' && !replaceUrl) S.wishTab = '';
   S.currentCollectionHandle = null;
   S.currentCollectionData = null;
   ++pageNavGeneration;

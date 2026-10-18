@@ -194,7 +194,8 @@ function setWishTab(tab) {
   renderWishlistPage();
 }
 
-// Products | Brands tabs once either list has something in it; the empty
+// A list like My Account (Products, Brands, with counts) once either has
+// something in it; each opens its own view with a back link. The empty
 // bag look (renderCartPage(), cart.js) when both are empty.
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
@@ -206,7 +207,15 @@ function renderWishlistPage() {
     return;
   }
   DOM.wishPageContent.classList.remove('is-empty');
-  const tab = S.wishTab === 'brands' ? 'brands' : 'products';
+  const tab = S.wishTab === 'brands' || S.wishTab === 'products' ? S.wishTab : '';
+  if (!tab) {
+    const row = (key, label, count) => `<button type="button" class="jd-list-row" onclick="setWishTab('${key}')"><span>${label} (${count})</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
+    DOM.wishPageContent.innerHTML = `<section class="wish-menu">
+      <h1 class="account-heading">Wishlist</h1>
+      <nav class="jd-list" aria-label="Wishlist">${row('products', 'Products', S.wishlist.length)}${row('brands', 'Brands', brands.length)}</nav>
+    </section>`;
+    return;
+  }
   const cols = S.gridColsWish;
   const gridToggle = tab === 'products' && S.wishlist.length ? `<button class="col-grid-toggle-btn wish-grid-toggle" onclick="toggleGridWish()" title="Change grid layout">
       <div class="col-grid-icon cols-${cols}">
@@ -215,9 +224,9 @@ function renderWishlistPage() {
         <div class="col-grid-bar"></div>
       </div>
     </button>` : '';
-  const tabs = `<div class="wish-tabs" role="tablist">${gridToggle}
-    <button type="button" role="tab" class="wish-tab${tab === 'products' ? ' active' : ''}" aria-selected="${tab === 'products'}" onclick="setWishTab('products')">Products (${S.wishlist.length})</button>
-    <button type="button" role="tab" class="wish-tab${tab === 'brands' ? ' active' : ''}" aria-selected="${tab === 'brands'}" onclick="setWishTab('brands')">Brands (${brands.length})</button>
+  const tabs = `<div class="wish-subhead">
+    <button type="button" class="account-back" onclick="setWishTab('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> Wishlist</button>
+    ${gridToggle}
   </div>`;
 
   if (tab === 'brands') {
