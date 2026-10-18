@@ -869,6 +869,10 @@
           '<div class="form-group" style="padding:0;"><label>Weight (kg)</label><input name="shippingWeight" type="number" min="0" step="0.01" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5"></div>' +
           '<div class="form-group" style="padding:0;"><label>Shipping &amp; returns note</label><input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000"></div>' +
           '<div class="form-group" style="padding:0;"><label>International shipping</label><select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select></div>' +
+          // Waitlist: when a size or the whole product sells out, the
+          // storefront's Add to Bag button becomes Add to Waitlist.
+          '<div class="form-group" style="padding:0;"><label>Waitlist when sold out</label><select name="waitlist" style="width:100%;"><option value="false"' + (p.waitlist ? '' : ' selected') + '>No</option><option value="true"' + (p.waitlist ? ' selected' : '') + '>Yes</option></select>' +
+            '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Yes: when a size or the whole product sells out, customers can join its waitlist and are emailed once it is back in stock.</div></div>' +
           // Free delivery is Janedore's call (it pays the courier), so
           // brands don't see it. Not set yet: on for JANEDORE's own products.
           (window._currentUserRole === 'VENDOR' ? '' : (function () {
@@ -1219,6 +1223,7 @@
 
     // Brands never see the Free delivery field; their saves keep whatever
     // Janedore set.
+    if (form.waitlist) data.waitlist = form.waitlist.value === 'true';
     if (form.freeDelivery) data.freeDelivery = form.freeDelivery.value === 'true';
     else if (existingProduct && typeof existingProduct.freeDelivery === 'boolean') data.freeDelivery = existingProduct.freeDelivery;
 

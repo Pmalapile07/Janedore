@@ -1,6 +1,7 @@
 // ==================== WAITLIST ====================
-// When a size, colour or whole product is sold out, the product page lets
-// a customer join its waitlist (product-detail.js). sweepWaitlist() checks
+// Products with "Waitlist when sold out" on in admin: when a size or the
+// whole product is sold out, the product page's Add to Bag button reads
+// Add to Waitlist and joins it (product-detail.js). sweepWaitlist() checks
 // every 15 minutes and emails each customer once when their exact item is
 // back in stock, then marks the entry notified. Signed-in customers see
 // and remove their entries in My Account > Waitlist (account.js).
@@ -47,6 +48,7 @@ module.exports = function registerWaitlist(app, deps) {
       const doc = productId ? await adminDb.collection('products').doc(productId).get() : null;
       if (!doc || !doc.exists || doc.data().status !== 'active') return res.status(404).json({ error: 'This product is no longer available.' });
       const p = doc.data();
+      if (!p.waitlist) return res.status(400).json({ error: 'This product doesn’t have a waitlist.' });
       const sizes = p.sizes && p.sizes.length ? p.sizes : ['OS'];
       if (!sizes.includes(size) || variantIndex >= Math.max(1, (p.variants || []).length)) return res.status(400).json({ error: 'Please choose a size.' });
       if (stockOf(p, variantIndex, size) > 0) return res.status(400).json({ error: 'Good news: this is in stock. You can add it to your bag now.' });

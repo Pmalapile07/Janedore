@@ -47,113 +47,47 @@ function buildSizeRowHtml(product, variantIndex) {
   const buttons = sizes.map(s => {
     const inStock = isSizeInStock(product, variantIndex, s);
     const cls = 'product-size-btn' + (S.selectedSize === s ? ' sel' : '') + (inStock ? '' : ' out-of-stock');
-    return `<button class="${cls}" ${inStock ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')">${escapeHTML(s)}</button>`;
+    const selectable = inStock || product.waitlist;
+    return `<button class="${cls}" ${selectable ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')"${inStock ? '' : ' aria-label="' + escapeHTML(s) + ', sold out"'}>${escapeHTML(s)}</button>`;
   }).join('');
   return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Select a Size</div><div class="sizes-row">${buttons}</div></div>`;
 }
 
-// Waitlist (waitlist-api.js): when sizes of this colour, or the whole
-// item, are sold out, the customer can ask to be emailed once it's back.
-function waitlistSoldOutSizes(product, variantIndex) {
-  const sizes = (product.sizes || []).filter(s => s !== 'OS');
-  if (!sizes.length) return isSizeInStock(product, variantIndex, 'OS') && !isProductSoldOut(product) ? [] : ['OS'];
-  return sizes.filter(s => !isSizeInStock(product, variantIndex, s));
-}
-
-function buildWaitlistHtml(product, variantIndex) {
-  const out = waitlistSoldOutSizes(product, variantIndex);
-  if (!out.length) return '';
-  const allOut = out.length === Math.max(1, (product.sizes || []).filter(s => s !== 'OS').length);
-  return `<button type="button" class="product-waitlist-open" onclick="openProductWaitlist()"><i class="ph ph-bell" aria-hidden="true"></i><span>${allOut ? 'Sold out? Join the waitlist' : 'Size sold out? Join the waitlist'}</span></button>`;
-}
-
-// A panel that slides up from the bottom: the sold-out sizes, an email
-// field for guests, and Notify Me. Same page freeze as the brand report
-// panel (collection.js).
-let _waitlistSize = '';
-function openProductWaitlist() {
-  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
-  if (!product) return;
-  closeProductWaitlist(true);
+// Waitlist (waitlist-api.js): products with "Waitlist when sold out"
+// on in admin keep their sold-out sizes selectable, and the Add to Bag
+// button reads Add to Waitlist for them (updateAddToCartState). Signed-in
+// customers join straight away; guests are asked to sign in first, since
+// the waitlist lives in My Account.
+function productWaitlistMode(product) {
+  if (!product || !product.waitlist) return false;
   const vi = S.productVariantSelections[product.id] ?? 0;
-  const out = waitlistSoldOutSizes(product, vi);
-  _waitlistSize = out.length === 1 ? out[0] : '';
+  const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
+  if (hasSizes) return !!S.selectedSize && !isSizeInStock(product, vi, S.selectedSize);
+  return isProductSoldOut(product) || !isSizeInStock(product, vi, 'OS');
+}
+
+async function joinProductWaitlist(product, btn) {
   const user = firebase.auth().currentUser;
-  const signedIn = user && !user.isAnonymous && user.email;
-  let saved = '';
-  try { saved = localStorage.getItem('janedore_checkout_email') || ''; } catch (e) {}
-  const sizes = out.length === 1 && out[0] === 'OS' ? ''
-    : `<div class="sizes-label">Select a Size</div><div class="sizes-row waitlist-sizes">${out.map(s => `<button type="button" class="product-size-btn${s === _waitlistSize ? ' sel' : ''}" onclick="selectWaitlistSize(this,'${escapeJSString(s)}')">${escapeHTML(s)}</button>`).join('')}</div>`;
-  const wrap = document.createElement('div');
-  wrap.id = 'waitlist-sheet';
-  wrap.className = 'waitlist-overlay';
-  wrap.innerHTML = `<div class="waitlist-sheet" role="dialog" aria-modal="true" aria-labelledby="waitlist-title">
-    <div class="waitlist-head">
-      <h2 id="waitlist-title">Join the waitlist</h2>
-      <button type="button" class="waitlist-close" onclick="closeProductWaitlist()" aria-label="Close"><i class="ph ph-x"></i></button>
-    </div>
-    <div class="waitlist-product">${escapeHTML(product.name || '')}${product.variants && product.variants[vi] && product.variants[vi].color && product.variants[vi].color !== 'Default' ? ' · ' + escapeHTML(product.variants[vi].color) : ''}</div>
-    ${sizes}
-    ${signedIn ? '' : `<label class="track-label" for="wl-email">Email address</label><input class="track-input" id="wl-email" type="email" autocomplete="email" placeholder="you@example.com" value="${escapeHTML(saved)}">`}
-    <div class="track-error" id="wl-error" role="alert"></div>
-    <button type="button" class="track-btn" id="wl-btn" onclick="submitProductWaitlist()">Notify Me</button>
-  </div>`;
-  wrap.addEventListener('click', e => { if (e.target === wrap) closeProductWaitlist(); });
-  document.body.appendChild(wrap);
-  document.addEventListener('keydown', waitlistEsc);
-  document.body.classList.add('waitlist-open');
-  if (typeof lockBrandReportScroll === 'function') lockBrandReportScroll();
-  requestAnimationFrame(() => wrap.classList.add('is-open'));
-}
-
-function selectWaitlistSize(btn, size) {
-  document.querySelectorAll('.waitlist-sizes .product-size-btn').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
-  _waitlistSize = size;
-  const err = document.getElementById('wl-error');
-  if (err) err.style.display = 'none';
-}
-
-function waitlistEsc(e) { if (e.key === 'Escape') closeProductWaitlist(); }
-
-function closeProductWaitlist(instant) {
-  const el = document.getElementById('waitlist-sheet');
-  if (!el) return;
-  document.removeEventListener('keydown', waitlistEsc);
-  document.body.classList.remove('waitlist-open');
-  if (typeof unlockBrandReportScroll === 'function') unlockBrandReportScroll();
-  if (instant) { el.remove(); return; }
-  el.classList.remove('is-open');
-  setTimeout(() => el.remove(), 250);
-}
-
-async function submitProductWaitlist() {
-  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
-  const btn = document.getElementById('wl-btn');
-  const err = document.getElementById('wl-error');
-  if (!product || !btn) return;
-  const showError = (m) => { err.textContent = m; err.style.display = m ? 'block' : 'none'; };
-  const user = firebase.auth().currentUser;
-  const signedIn = user && !user.isAnonymous && user.email;
-  const emailEl = document.getElementById('wl-email');
-  const email = signedIn ? user.email : (emailEl ? emailEl.value.trim() : '');
-  showError('');
-  if (!_waitlistSize) { showError('Please select a size.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Please enter a valid email address.'); return; }
-  btn.disabled = true; btn.textContent = 'Joining…';
+  if (!user || user.isAnonymous) {
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Sign in to join the waitlist', 'ph-user');
+    navigateToLogin();
+    return;
+  }
+  const label = btn && btn.querySelector('.sticky-btn-label');
+  if (btn) btn.disabled = true;
   try {
-    const headers = { 'Content-Type': 'application/json' };
-    if (signedIn) headers.Authorization = 'Bearer ' + await user.getIdToken();
-    const res = await fetch('/api/waitlist', { method: 'POST', headers, body: JSON.stringify({
-      productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: _waitlistSize, email
-    }) });
+    const res = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await user.getIdToken() },
+      body: JSON.stringify({ productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: S.selectedSize || 'OS' }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
-    closeProductWaitlist();
-    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('You’re on the waitlist', 'ph-bell');
+    if (label) label.textContent = 'Added';
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Added to your waitlist', 'ph-check-circle');
+    setTimeout(updateAddToCartState, 1600);
   } catch (e) {
-    showError(e.message);
-    btn.disabled = false; btn.textContent = 'Notify Me';
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast(e.message, 'ph-warning-circle');
+    updateAddToCartState();
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -178,7 +112,10 @@ function updateAddToCartState() {
   const noSizeInStock = hasSizes && !realSizes.some(s => isSizeInStock(product, vi, s));
   const needsSize = hasSizes && !S.selectedSize && !noSizeInStock;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
-  stickyBtn.disabled = needsSize || sizeOutOfStock || soldOut;
+  const waitlist = productWaitlistMode(product);
+  // Waitlist on and every size of this colour sold out: pick one first.
+  const pickForWaitlist = !!product.waitlist && hasSizes && !S.selectedSize;
+  stickyBtn.disabled = waitlist ? false : (pickForWaitlist || needsSize || sizeOutOfStock || soldOut);
 
   // Never overwrite the transient "Added" feedback; "Add" instead of
   // "Add to Bag" once the bar is minimized.
@@ -186,6 +123,8 @@ function updateAddToCartState() {
   if (bar && bar.classList.contains('added-feedback')) return;
   const label = stickyBtn.querySelector('.sticky-btn-label');
   const defaultLabel = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to Bag';
+  if (waitlist) { if (label) label.textContent = bar && bar.classList.contains('minimized') ? 'Waitlist' : 'Add to Waitlist'; return; }
+  if (pickForWaitlist) { if (label) label.textContent = 'Select a Size'; return; }
   const unavailable = (sizeOutOfStock || soldOut) ? (isPreorder ? 'Pre-orders Full' : 'Sold Out') : '';
   if (label) label.textContent = needsSize ? 'Select a Size' : (unavailable || (isPreorder ? 'Pre-order' : defaultLabel));
 }
@@ -321,8 +260,6 @@ function selectVariant(productId, variantIndex, evt) {
     S.selectedSize = null;
     const sizeRow = document.getElementById('product-size-row');
     if (sizeRow) sizeRow.outerHTML = buildSizeRowHtml(product, variantIndex);
-    const waitlist = document.getElementById('product-waitlist');
-    if (waitlist) waitlist.innerHTML = buildWaitlistHtml(product, variantIndex);
     updateAddToCartState();
   }
 }
@@ -538,7 +475,6 @@ async function renderProductPage(product) {
         ${buildSizeRowHtml(product,vi)}
         ${variants.length?`<div class="product-variants"><div class="sizes-label">Select a Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
       </div>
-      <div id="product-waitlist">${buildWaitlistHtml(product,vi)}</div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('description')">
