@@ -629,9 +629,9 @@ function renderCartPage() {
   const mixed = eligible.length > 0 && eligible.length < shipping.shipments.length;
   const names = list => list.map(s => sanitizeHTML(s.brand)).join(' and ');
   const bannerText = pending
-    ? `Spend ${formatPrice(pending.remaining)} more on ${sanitizeHTML(pending.brand)} for <strong>FREE</strong> delivery${mixed ? ' on ' + sanitizeHTML(pending.brand) + ' items' : ''}.`
+    ? `Add ${formatPrice(pending.remaining)} more from ${sanitizeHTML(pending.brand)} to qualify for <strong>free delivery</strong>.`
     : eligible.length
-      ? (mixed ? `Your ${names(eligible)} items qualify for <strong>FREE</strong> delivery.` : `You qualify for <strong>FREE</strong> delivery on ${names(eligible)}.`)
+      ? (mixed ? `Your ${names(eligible)} items qualify for <strong>free delivery</strong>.` : 'Your order qualifies for <strong>free delivery</strong>.')
       : '';
   let html = `${bannerText ? `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div>` : ''}<div class="cart-cards">`;
 
