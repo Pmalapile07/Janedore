@@ -1,5 +1,4 @@
 function loadWishlistFromStorage() {
-  loadFavBrandsFromStorage();
   try {
     const saved = localStorage.getItem('janedore_wishlist');
     if (saved) {
@@ -16,51 +15,6 @@ function saveWishlistToStorage() {
     const ids = S.wishlist.map(p => p.id);
     localStorage.setItem('janedore_wishlist', JSON.stringify(ids));
   } catch(e) {}
-}
-
-// ==================== FAVOURITE BRANDS ====================
-// Vendor ids, kept beside the product wishlist: localStorage for guests,
-// customers/{uid}.favouriteBrands once signed in (synced with the
-// wishlist below). Hearts on brand pages and the Brands A-Z list.
-// S (app.js) loads after this file, so this runs from
-// loadWishlistFromStorage() rather than at the top level.
-function loadFavBrandsFromStorage() {
-  try { const saved = JSON.parse(localStorage.getItem('janedore_fav_brands') || '[]'); S.favBrands = Array.isArray(saved) ? saved : []; }
-  catch (e) { S.favBrands = []; }
-}
-function saveFavBrandsToStorage() {
-  try { localStorage.setItem('janedore_fav_brands', JSON.stringify(S.favBrands)); } catch (e) {}
-}
-function isFavBrand(vendorId) { return (S.favBrands || []).includes(vendorId); }
-
-function favBrandButtonHtml(vendorId, className) {
-  const on = isFavBrand(vendorId);
-  const id = escapeHTML(vendorId);
-  return `<button type="button" class="${className}${on ? ' wished' : ''}" data-fav-brand="${id}" aria-pressed="${on}" aria-label="${on ? 'Remove from favourite brands' : 'Add to favourite brands'}" onclick="event.stopPropagation();toggleFavBrand('${escapeJSString(vendorId)}')"><i class="${on ? 'ph-fill' : 'ph'} ph-heart"></i></button>`;
-}
-
-function toggleFavBrand(vendorId) {
-  if (!vendorId) return;
-  const on = !isFavBrand(vendorId);
-  S.favBrands = on ? (S.favBrands || []).concat(vendorId) : S.favBrands.filter(id => id !== vendorId);
-  document.querySelectorAll(`[data-fav-brand="${CSS.escape(vendorId)}"]`).forEach(b => {
-    const icon = b.querySelector('i');
-    if (icon) icon.className = (on ? 'ph-fill' : 'ph') + ' ph-heart';
-    b.classList.toggle('wished', on);
-    b.setAttribute('aria-pressed', String(on));
-    b.setAttribute('aria-label', on ? 'Remove from favourite brands' : 'Add to favourite brands');
-  });
-  saveFavBrandsToStorage();
-  syncWishlistToAccount();
-  if (S.currentPage === 'wishlist') renderWishlistPage();
-  if (typeof showAddedToCartToast === 'function') {
-    showAddedToCartToast(on ? 'Added to favourite brands' : 'Removed from favourite brands', on ? 'ph-heart' : 'ph-heart-break',
-      on ? null : () => { if (!isFavBrand(vendorId)) toggleFavBrand(vendorId); });
-  }
-}
-
-function favBrandVendors() {
-  return (S.favBrands || []).map(id => (S.vendors || []).find(v => v.id === id)).filter(Boolean);
 }
 
 function toggleWish(productId, btnEl) {
@@ -111,7 +65,6 @@ function syncWishlistToAccount() {
   if (!user || user.isAnonymous) return;
   db.collection('customers').doc(user.uid).set({
     wishlist: S.wishlist.map(p => p.id),
-    favouriteBrands: S.favBrands || [],
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true }).catch(function(err) {
     console.warn('[WISHLIST] Could not save to account:', err.message);
@@ -136,24 +89,12 @@ async function syncWishlistOnLogin(uid) {
 
     // Only write back if the merge actually changed something — avoids
     // a pointless write on every login when nothing local was added.
-    const remoteBrands = (doc.exists && Array.isArray(doc.data().favouriteBrands)) ? doc.data().favouriteBrands : [];
-    const mergedBrands = Array.from(new Set(remoteBrands.concat(S.favBrands || [])));
-    S.favBrands = mergedBrands;
-    saveFavBrandsToStorage();
-
-    if (mergedIds.length !== remoteIds.length || mergedBrands.length !== remoteBrands.length) {
+    if (mergedIds.length !== remoteIds.length) {
       await db.collection('customers').doc(uid).set({
         wishlist: mergedIds,
-        favouriteBrands: mergedBrands,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
-    document.querySelectorAll('[data-fav-brand]').forEach(b => {
-      const on = isFavBrand(b.dataset.favBrand);
-      b.classList.toggle('wished', on);
-      const icon = b.querySelector('i');
-      if (icon) icon.className = (on ? 'ph-fill' : 'ph') + ' ph-heart';
-    });
 
     updateBadges();
     if (S.currentPage === 'wishlist') renderWishlistPage();
@@ -169,9 +110,7 @@ function clearWishlistOnLogout() {
   if (!_wishlistSyncedUid) return; // was never a signed-in wishlist to begin with
   _wishlistSyncedUid = null;
   S.wishlist = [];
-  S.favBrands = [];
   saveWishlistToStorage();
-  saveFavBrandsToStorage();
   updateBadges();
   if (S.currentPage === 'wishlist') renderWishlistPage();
 }
@@ -189,59 +128,31 @@ function toggleGridWish() {
 // silently drifting out of sync with the real card markup every time
 // productCard() changed. Same function, same structure, same page as
 // All Products, permanently.
-function setWishTab(tab) {
-  S.wishTab = tab;
-  renderWishlistPage();
-}
-
-// A list like My Account (Products, Brands, with counts) once either has
-// something in it; each opens its own view with a back link. The empty
-// bag look (renderCartPage(), cart.js) when both are empty.
+// Saved products, straight away: the grid toggle on the left and the
+// title centred (.wish-page-header). The empty bag look
+// (renderCartPage(), cart.js) when there are none.
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
-  const brands = favBrandVendors();
-  if (!S.wishlist.length && !brands.length) {
+  if (!S.wishlist.length) {
     DOM.wishPageContent.classList.add('is-empty');
     DOM.wishPageContent.innerHTML = wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
     if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
     return;
   }
   DOM.wishPageContent.classList.remove('is-empty');
-  const tab = S.wishTab === 'brands' || S.wishTab === 'products' ? S.wishTab : '';
-  if (!tab) {
-    const row = (key, label, count) => `<button type="button" class="jd-list-row" onclick="setWishTab('${key}')"><span>${label} (${count})</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
-    DOM.wishPageContent.innerHTML = `<section class="wish-menu">
-      <h1 class="account-heading">Wishlist</h1>
-      <nav class="jd-list" aria-label="Wishlist">${row('products', 'Products', S.wishlist.length)}${row('brands', 'Brands', brands.length)}</nav>
-    </section>`;
-    return;
-  }
   const cols = S.gridColsWish;
-  const gridToggle = tab === 'products' && S.wishlist.length ? `<button class="col-grid-toggle-btn wish-grid-toggle" onclick="toggleGridWish()" title="Change grid layout">
+  const header = `<div class="wish-page-header">
+    <button class="col-grid-toggle-btn" onclick="toggleGridWish()" title="Change grid layout">
       <div class="col-grid-icon cols-${cols}">
         <div class="col-grid-bar"></div>
         <div class="col-grid-bar"></div>
         <div class="col-grid-bar"></div>
       </div>
-    </button>` : '';
-  const tabs = `<div class="wish-subhead">
-    <button type="button" class="account-back" onclick="setWishTab('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> Wishlist</button>
-    ${gridToggle}
+    </button>
+    <h1 class="wish-page-title">Wishlist (${S.wishlist.length})</h1>
   </div>`;
-
-  if (tab === 'brands') {
-    DOM.wishPageContent.innerHTML = tabs + (brands.length ? favBrandsHtml(brands)
-      : wishEmptyHtml('ph-storefront', 'No favourite brands yet', 'Browse Brands', "navigateTo('brands')", 'Tap the heart on any brand to keep it here.'));
-    if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
-    return;
-  }
-  if (!S.wishlist.length) {
-    DOM.wishPageContent.innerHTML = tabs + wishEmptyHtml('ph-heart', 'No saved products yet', 'Continue Shopping', "navigateTo('products')");
-    if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
-    return;
-  }
   const cards = S.wishlist.map(p => productCard(p, cols === 3, true, S.productVariantSelections[p.id] ?? 0)).join('');
-  DOM.wishPageContent.innerHTML = tabs + `<div class="product-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${cards}</div>`;
+  DOM.wishPageContent.innerHTML = header + `<div class="product-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${cards}</div>`;
 }
 
 // Same block as the empty bag: icon, message, black button, then Recently
@@ -256,24 +167,4 @@ function wishEmptyHtml(icon, title, btnLabel, btnAction, sub) {
       ${sub ? `<div class="wish-empty-sub">${sub}</div>` : ''}
       <button class="cart-empty-btn" onclick="${btnAction}">${btnLabel}</button>
     </div>${cartSliderHtml(useRecent ? 'Recently Viewed' : 'New Arrivals', picks, 'wish-slider-grid')}`;
-}
-
-// One row per brand (logo, name, what's new), then the newest pieces
-// from all of them.
-function favBrandsHtml(brands) {
-  const rows = brands.map(v => {
-    const name = v.brand || v.name || v.brandName || '';
-    const products = getVendorBaseProducts(v);
-    const fresh = products.filter(p => isProductNew(p)).length;
-    const logo = /^https:\/\//i.test(String(v.logoUrl || '').trim()) ? v.logoUrl.trim() : '';
-    const meta = fresh ? `<span class="fav-brand-new">${fresh} new</span>` : `${products.length} ${products.length === 1 ? 'piece' : 'pieces'}`;
-    return `<div class="fav-brand-row" onclick="navigateToVendor('${escapeJSString(v.slug || v.id)}')">
-      <div class="fav-brand-logo">${logo ? `<img src="${escapeHTML(logo)}" alt="">` : escapeHTML(name.charAt(0).toUpperCase())}</div>
-      <div class="fav-brand-info"><div class="fav-brand-name">${escapeHTML(name)}</div><div class="fav-brand-meta">${meta}</div></div>
-      ${favBrandButtonHtml(v.id, 'fav-brand-heart')}
-      <i class="ph ph-caret-right fav-brand-caret" aria-hidden="true"></i>
-    </div>`;
-  }).join('');
-  const newest = merchandiseProducts(brands.flatMap(v => getVendorBaseProducts(v)), undefined, 'newest').slice(0, 8);
-  return `<div class="fav-brand-list">${rows}</div>${cartSliderHtml('New from your brands', newest, 'wish-slider-grid')}`;
 }
