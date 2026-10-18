@@ -52,6 +52,73 @@ function buildSizeRowHtml(product, variantIndex) {
   return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Select a Size</div><div class="sizes-row">${buttons}</div></div>`;
 }
 
+// Waitlist (waitlist-api.js): when sizes of this colour, or the whole
+// item, are sold out, the customer can ask to be emailed once it's back.
+function waitlistSoldOutSizes(product, variantIndex) {
+  const sizes = (product.sizes || []).filter(s => s !== 'OS');
+  if (!sizes.length) return isSizeInStock(product, variantIndex, 'OS') && !isProductSoldOut(product) ? [] : ['OS'];
+  return sizes.filter(s => !isSizeInStock(product, variantIndex, s));
+}
+
+function buildWaitlistHtml(product, variantIndex) {
+  const out = waitlistSoldOutSizes(product, variantIndex);
+  if (!out.length) return '';
+  const allOut = out.length === Math.max(1, (product.sizes || []).filter(s => s !== 'OS').length);
+  return `<button type="button" class="product-waitlist-open" onclick="openProductWaitlist()"><i class="ph ph-bell" aria-hidden="true"></i><span>${allOut ? 'Sold out? Join the waitlist' : 'Size sold out? Join the waitlist'}</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
+}
+
+function openProductWaitlist() {
+  const box = document.getElementById('product-waitlist');
+  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
+  if (!box || !product) return;
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const out = waitlistSoldOutSizes(product, vi);
+  const user = firebase.auth().currentUser;
+  const signedIn = user && !user.isAnonymous && user.email;
+  let saved = '';
+  try { saved = localStorage.getItem('janedore_checkout_email') || ''; } catch (e) {}
+  const sizeField = out.length === 1
+    ? `<input type="hidden" id="wl-size" value="${escapeHTML(out[0])}">${out[0] !== 'OS' ? `<p class="product-waitlist-text">Size ${escapeHTML(out[0])}</p>` : ''}`
+    : `<label class="track-label" for="wl-size">Size</label><select class="track-input" id="wl-size">${out.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('')}</select>`;
+  box.innerHTML = `<div class="product-waitlist-form">
+    <div class="product-waitlist-title">Join the waitlist</div>
+    <p class="product-waitlist-text">We’ll email you once when it’s back in stock.</p>
+    ${sizeField}
+    ${signedIn ? `<p class="product-waitlist-text">We’ll email ${escapeHTML(user.email)}.</p>`
+      : `<label class="track-label" for="wl-email">Email address</label><input class="track-input" id="wl-email" type="email" autocomplete="email" placeholder="you@example.com" value="${escapeHTML(saved)}">`}
+    <div class="track-error" id="wl-error" role="alert"></div>
+    <button type="button" class="track-btn" id="wl-btn" onclick="submitProductWaitlist()">Notify Me</button>
+  </div>`;
+}
+
+async function submitProductWaitlist() {
+  const product = PRODUCTS.find(p => p.id === S.currentReviewProductId);
+  const btn = document.getElementById('wl-btn');
+  const err = document.getElementById('wl-error');
+  if (!product || !btn) return;
+  const showError = (m) => { err.textContent = m; err.style.display = m ? 'block' : 'none'; };
+  const user = firebase.auth().currentUser;
+  const signedIn = user && !user.isAnonymous && user.email;
+  const emailEl = document.getElementById('wl-email');
+  const email = signedIn ? user.email : (emailEl ? emailEl.value.trim() : '');
+  showError('');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Please enter a valid email address.'); return; }
+  btn.disabled = true; btn.textContent = 'Joining…';
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (signedIn) headers.Authorization = 'Bearer ' + await user.getIdToken();
+    const res = await fetch('/api/waitlist', { method: 'POST', headers, body: JSON.stringify({
+      productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: document.getElementById('wl-size').value, email
+    }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    document.getElementById('product-waitlist').innerHTML = `<div class="product-waitlist-done"><i class="ph ph-check-circle" aria-hidden="true"></i><span>You’re on the waitlist. We’ll email ${escapeHTML(email)} when it’s back in stock.${signedIn ? ' You can see it in My Account, under Waitlist.' : ''}</span></div>`;
+  } catch (e) {
+    showError(e.message);
+    btn.disabled = false; btn.textContent = 'Notify Me';
+  }
+}
+
 // Re-evaluates the sticky bar's Add to Bag button (the page's only add
 // button) label/disabled state against
 // whatever's currently selected (size, color). Called after both size
@@ -216,6 +283,8 @@ function selectVariant(productId, variantIndex, evt) {
     S.selectedSize = null;
     const sizeRow = document.getElementById('product-size-row');
     if (sizeRow) sizeRow.outerHTML = buildSizeRowHtml(product, variantIndex);
+    const waitlist = document.getElementById('product-waitlist');
+    if (waitlist) waitlist.innerHTML = buildWaitlistHtml(product, variantIndex);
     updateAddToCartState();
   }
 }
@@ -431,6 +500,7 @@ async function renderProductPage(product) {
         ${buildSizeRowHtml(product,vi)}
         ${variants.length?`<div class="product-variants"><div class="sizes-label">Select a Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
       </div>
+      <div id="product-waitlist">${buildWaitlistHtml(product,vi)}</div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('description')">

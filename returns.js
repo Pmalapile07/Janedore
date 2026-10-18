@@ -37,20 +37,26 @@ function renderReturnsPage(tab) {
   const params = new URLSearchParams(window.location.search);
   const ret = (params.get('return') || '').trim();
   const order = (params.get('order') || '').trim();
-  tab = tab || (ret ? 'status' : 'start');
+  tab = tab || (ret ? 'status' : order ? 'start' : '');
   const email = returnsSavedEmail();
   _returnLookup = null; _returnPhotos = [];
 
   el.innerHTML = `<section class="track-page returns-page">
+    ${tab ? `<button type="button" class="account-back" onclick="history.replaceState(null, null, location.pathname); renderReturnsPage('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> Returns</button>` : ''}
     <h1 class="track-title">Returns</h1>
-    <div class="wish-tabs account-tabs" role="tablist">
-      <button type="button" role="tab" class="wish-tab${tab === 'start' ? ' active' : ''}" onclick="renderReturnsPage('start')">Start a return</button>
-      <button type="button" role="tab" class="wish-tab${tab === 'status' ? ' active' : ''}" onclick="renderReturnsPage('status')">Check return status</button>
-    </div>
     <div id="returns-body"></div>
   </section>`;
 
   const body = document.getElementById('returns-body');
+  if (!tab) {
+    body.innerHTML = `<nav class="jd-list" aria-label="Returns">
+        <button type="button" class="jd-list-row" onclick="renderReturnsPage('start')"><span>Start a return</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+        <button type="button" class="jd-list-row" onclick="renderReturnsPage('status')"><span>Check return status</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+        <button type="button" class="jd-list-row" onclick="navigateToContentPage('exchange-an-item')"><span>Exchange an item instead</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+      </nav>
+      ${RETURNS_POLICY_HTML}`;
+    return;
+  }
   if (tab === 'status') {
     body.innerHTML = `<p class="track-intro">Enter your return number and the email address used at checkout.</p>
       <form class="track-form" onsubmit="submitReturnStatus(event)" novalidate>

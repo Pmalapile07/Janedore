@@ -1,17 +1,19 @@
 /* ============================================================
-   MY ACCOUNT — /account and /account/orders/{JD-number}
+   MY ACCOUNT: /account, /account/{section} and /account/orders/{JD-number}
    Rendered into #account-loaded (index.html) by navigateToAccount()
-   (login.js). Three pill tabs like the wishlist: Orders, Profile and
-   Reviews. An order opens its own page with the same packages, steps and
-   tracking as Track Your Order (track-order.js), plus delivery and
-   payment details.
+   (login.js). /account is a list like the navigation menu (Account Info,
+   Orders, Returns & Exchanges, Wallet, Wishlist, Waitlist, Reviews) with
+   Sign Out; each opens its own page at /account/{section}. An order opens
+   its own page with the same packages, steps and tracking as Track Your
+   Order (track-order.js), plus delivery and payment details.
    ============================================================ */
 
-S.accountTab = 'orders';
+S.accountTab = '';
 let _accountOrders = null;   // paid/cancelled orders, newest first
 let _accountProfile = null;
 let _accountNeedsVerify = false;  // customers/{uid}
 let _accountUid = null;
+let _accountServices = null;  // { returns, exchanges } from /api/account/returns-exchanges
 
 function accountUser() {
   const user = firebase.auth().currentUser;
@@ -26,6 +28,16 @@ function accountOrderFromPath() {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+const ACCOUNT_SECTIONS = {
+  info: 'Account Info', orders: 'Orders', returns: 'Returns & Exchanges', wallet: 'Wallet', waitlist: 'Waitlist', reviews: 'Reviews'
+};
+
+// From the URL: /account/orders, /account/info and so on.
+function accountSectionFromPath() {
+  const m = window.location.pathname.match(/^\/account\/([a-z]+)\/?$/);
+  return m && ACCOUNT_SECTIONS[m[1]] ? m[1] : '';
+}
+
 async function renderAccountPage() {
   const el = accountRoot();
   const user = accountUser();
@@ -35,27 +47,51 @@ async function renderAccountPage() {
   const orderNumber = accountOrderFromPath();
   if (orderNumber) return renderAccountOrder(orderNumber);
 
-  const first = (user.displayName || (_accountProfile && _accountProfile.name) || '').trim().split(/\s+/)[0];
-  const tab = ['orders', 'profile', 'reviews'].includes(S.accountTab) ? S.accountTab : 'orders';
+  const section = accountSectionFromPath();
+  S.accountTab = section;
+  if (!section) {
+    const first = (user.displayName || (_accountProfile && _accountProfile.name) || '').trim().split(/\s+/)[0];
+    const row = (label, onclick) => `<button type="button" class="jd-list-row" onclick="${onclick}"><span>${label}</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
+    el.innerHTML = `<section class="account-page">
+      <h1 class="account-heading">${first ? 'Hi, ' + escapeHTML(first) : 'My Account'}</h1>
+      <p class="account-hello">${escapeHTML(user.email || '')}</p>
+      <nav class="jd-list" aria-label="My Account">
+        ${row('Account Info', "openAccountSection('info')")}
+        ${row('Orders', "openAccountSection('orders')")}
+        ${row('Returns &amp; Exchanges', "openAccountSection('returns')")}
+        ${row('Wallet', "openAccountSection('wallet')")}
+        ${row('Wishlist', "navigateTo('wishlist')")}
+        ${row('Waitlist', "openAccountSection('waitlist')")}
+        ${row('Reviews', "openAccountSection('reviews')")}
+      </nav>
+      <button type="button" class="account-outline-btn account-signout-btn" onclick="handleLogout()">Sign Out</button>
+      <button type="button" class="account-help-link" onclick="navigateToContentPage('customer-care')"><i class="ph ph-question" aria-hidden="true"></i><span>Customer Care</span></button>
+    </section>`;
+    return;
+  }
+
   el.innerHTML = `<section class="account-page">
-    <h1 class="account-heading">My Account</h1>
-    <p class="account-hello">${first ? 'Hi ' + escapeHTML(first) + ' · ' : ''}${escapeHTML(user.email || '')}</p>
-    <div class="wish-tabs account-tabs" role="tablist">
-      ${[['orders', 'Orders'], ['profile', 'Profile'], ['reviews', 'Reviews']].map(([k, label]) =>
-        `<button type="button" role="tab" class="wish-tab${tab === k ? ' active' : ''}" aria-selected="${tab === k}" onclick="setAccountTab('${k}')">${label}</button>`).join('')}
-    </div>
+    <button type="button" class="account-back" onclick="openAccountSection('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button>
+    <h1 class="account-heading account-section-heading">${ACCOUNT_SECTIONS[section]}</h1>
     <div id="account-tab-body"><div class="loading-spinner"><div class="spinner"></div></div></div>
   </section>`;
-
-  if (tab === 'orders') renderAccountOrders();
-  else if (tab === 'profile') renderAccountProfile();
+  if (section === 'orders') renderAccountOrders();
+  else if (section === 'info') renderAccountProfile();
+  else if (section === 'returns') renderAccountReturns();
+  else if (section === 'wallet') renderAccountWallet();
+  else if (section === 'waitlist') renderAccountWaitlist();
   else renderAccountReviews();
 }
 
-function setAccountTab(tab) {
-  S.accountTab = tab;
+// '' is the account list itself.
+function openAccountSection(section) {
+  history.pushState(null, null, '/account' + (section ? '/' + section : ''));
   renderAccountPage();
+  resetScrollToTop();
 }
+
+// Kept for older calls.
+function setAccountTab(tab) { openAccountSection(tab === 'profile' ? 'info' : tab); }
 
 // ---------- Orders ----------
 
@@ -180,10 +216,7 @@ function openAccountOrder(orderNumber) {
 }
 
 function backToAccountOrders() {
-  S.accountTab = 'orders';
-  history.pushState(null, null, '/account');
-  renderAccountPage();
-  resetScrollToTop();
+  openAccountSection('orders');
 }
 
 async function renderAccountOrder(orderNumber) {
@@ -265,7 +298,7 @@ async function renderAccountProfile() {
   const user = accountUser();
   let p = {};
   try { p = await loadAccountProfile(); } catch (e) { console.warn('[ACCOUNT_PROFILE]', e.message); }
-  if (!body || S.accountTab !== 'profile') return;
+  if (!body || S.accountTab !== 'info') return;
   const usesPassword = (user.providerData || []).some(x => x && x.providerId === 'password');
   const usesGoogle = (user.providerData || []).some(x => x && x.providerId === 'google.com');
   const field = (id, label, value, attrs) => `<label class="track-label" for="${id}">${label}</label><input class="track-input" id="${id}" value="${escapeHTML(value || '')}" ${attrs || ''}>`;
@@ -292,8 +325,7 @@ async function renderAccountProfile() {
   <div class="account-section-title">Sign-in &amp; security</div>
   ${usesPassword ? `<p class="account-note">We’ll email you a secure link to set a new password.</p>
     <button type="button" class="account-outline-btn" id="acc-password" onclick="sendAccountPasswordReset()">Change Password</button>` : ''}
-  ${usesGoogle ? `<p class="account-note">You sign in with your Google account.</p>` : ''}
-  <button type="button" class="account-signout" onclick="handleLogout()">Sign Out</button>`;
+  ${usesGoogle ? `<p class="account-note">You sign in with your Google account.</p>` : ''}`;
 }
 
 async function saveAccountProfile(e) {
@@ -313,8 +345,6 @@ async function saveAccountProfile(e) {
     if (name !== user.displayName) await user.updateProfile({ displayName: name });
     _accountProfile = Object.assign({}, _accountProfile, data);
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Your details have been saved', 'ph-check-circle');
-    const hello = document.querySelector('.account-hello');
-    if (hello) hello.textContent = 'Hi ' + name.split(/\s+/)[0] + ' · ' + (user.email || '');
   } catch (ex) {
     console.error('[ACCOUNT_SAVE]', ex);
     err.textContent = 'We couldn’t save your details. Please try again.';
@@ -336,6 +366,111 @@ async function sendAccountPasswordReset() {
   } catch (e) {
     btn.disabled = false;
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Something went wrong. Please try again.', 'ph-warning-circle');
+  }
+}
+
+// ---------- Returns & Exchanges, Wallet, Waitlist ----------
+
+// GET/POST to an /api/account/* endpoint as the signed-in customer.
+async function accountApi(path, method) {
+  const token = await accountUser().getIdToken();
+  const res = await fetch(path, { method: method || 'GET', headers: { 'Authorization': 'Bearer ' + token } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  return data;
+}
+
+const ACCOUNT_SERVICE_STATUS = {
+  submitted: ['Under review', ''], approved: ['Approved', 'shipped'], received: ['Item received', 'shipped'], declined: ['Not approved', 'cancelled'],
+  refund_pending: ['Refund in progress', 'shipped'], refunded: ['Refunded', 'delivered'], dispatched: ['New item sent', 'delivered'], closed: ['Closed', 'cancelled']
+};
+
+async function renderAccountReturns() {
+  const body = document.getElementById('account-tab-body');
+  let data = _accountServices;
+  if (!data) {
+    try { data = _accountServices = await accountApi('/api/account/returns-exchanges'); }
+    catch (e) {
+      if (body && S.accountTab === 'returns') body.innerHTML = `<p class="account-note">${escapeHTML(e.message)}</p>`;
+      return;
+    }
+  }
+  if (!body || S.accountTab !== 'returns') return;
+  const card = (x, kind) => {
+    const st = ACCOUNT_SERVICE_STATUS[x.status] || [x.status, ''];
+    const slug = kind === 'return' ? 'log-a-return?return=' : 'exchange-an-item?exchange=';
+    const names = (x.items || []).map(i => trackPlainText(i.name) + (kind === 'exchange' && (i.wantSize || i.wantColor) ? ' for ' + [i.wantColor, i.wantSize && i.wantSize !== 'OS' ? 'size ' + i.wantSize : ''].filter(Boolean).join(', ') : '')).join(', ');
+    return `<button type="button" class="account-order" onclick="openAccountService('${escapeJSString(slug + encodeURIComponent(x.number))}')">
+      <span class="account-order-top"><span class="account-order-num">${kind === 'return' ? 'Return' : 'Exchange'} ${escapeHTML(x.number)}</span><span class="track-pill${st[1] ? ' ' + st[1] : ''}">${escapeHTML(st[0])}</span></span>
+      <span class="account-order-meta">Order ${escapeHTML(x.orderNumber || '')}${x.createdAt ? ' · ' + escapeHTML(trackDate(x.createdAt, true)) : ''}</span>
+      <span class="account-order-meta">${escapeHTML(names)}</span>
+      <span class="account-order-view">View status <i class="ph ph-caret-right" aria-hidden="true"></i></span>
+    </button>`;
+  };
+  const list = data.returns.map(x => card(x, 'return')).concat(data.exchanges.map(x => card(x, 'exchange')));
+  body.innerHTML = `<nav class="jd-list account-service-list" aria-label="Returns and exchanges">
+      <button type="button" class="jd-list-row" onclick="navigateToContentPage('log-a-return')"><span>Start a return</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+      <button type="button" class="jd-list-row" onclick="navigateToContentPage('exchange-an-item')"><span>Exchange an item</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+    </nav>
+    ${list.length ? `<div class="account-section-title">Your returns and exchanges</div>${list.join('')}`
+      : `<p class="account-note account-empty-note">You haven’t returned or exchanged anything yet. Items can be returned or exchanged within 30 days of dispatch.</p>`}`;
+}
+
+function openAccountService(path) {
+  history.pushState(null, null, '/pages/' + path);
+  navigateToContentPage(path.split('?')[0], true);
+}
+
+function renderAccountWallet() {
+  const body = document.getElementById('account-tab-body');
+  if (!body || S.accountTab !== 'wallet') return;
+  body.innerHTML = `<div class="cart-empty account-empty">
+    <i class="ph ph-wallet cart-empty-icon" aria-hidden="true"></i>
+    <div class="cart-empty-title">Your wallet is coming soon</div>
+    <div class="wish-empty-sub">Gift card and store credit balances will appear here once they’re available.</div>
+  </div>`;
+}
+
+async function renderAccountWaitlist() {
+  const body = document.getElementById('account-tab-body');
+  let items;
+  try { items = (await accountApi('/api/account/waitlist')).items || []; }
+  catch (e) {
+    if (body && S.accountTab === 'waitlist') body.innerHTML = `<p class="account-note">${escapeHTML(e.message)}</p>`;
+    return;
+  }
+  if (!body || S.accountTab !== 'waitlist') return;
+  if (!items.length) {
+    body.innerHTML = `<div class="cart-empty account-empty">
+      <i class="ph ph-bell cart-empty-icon" aria-hidden="true"></i>
+      <div class="cart-empty-title">Your waitlist is empty</div>
+      <div class="wish-empty-sub">When a size you love is sold out, join its waitlist on the product page and we’ll email you when it’s back.</div>
+    </div>`;
+    return;
+  }
+  body.innerHTML = items.map(w => {
+    const product = PRODUCTS.find(p => p.id === w.productId);
+    const thumb = product ? getProductThumbnail(product, w.variantIndex) : PLACEHOLDER_IMAGE;
+    const meta = [w.brand, w.color && w.color !== 'Default' ? w.color : '', w.size && w.size !== 'OS' ? 'Size ' + w.size : ''].filter(Boolean).map(escapeHTML).join(' · ');
+    return `<div class="track-item account-waitlist-item" id="wl-${escapeHTML(w.id)}">
+      <div class="track-item-img"${product ? ` onclick="goToProduct('${escapeJSString(product.id)}')"` : ''} style="background-image:url('${escapeForCssUrl(thumb)}')"></div>
+      <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(w.name || (product && product.name) || ''))}</div>
+        <div class="track-item-meta">${meta}</div>
+        <div class="track-item-meta">${w.status === 'notified' ? 'Back in stock: we emailed you' : 'Waiting for restock'}</div>
+        <button type="button" class="track-link account-waitlist-remove" onclick="removeAccountWaitlist('${escapeJSString(w.id)}', this)">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function removeAccountWaitlist(id, el) {
+  if (el) el.disabled = true;
+  try {
+    await accountApi('/api/account/waitlist/' + encodeURIComponent(id) + '/remove', 'POST');
+    renderAccountWaitlist();
+  } catch (e) {
+    if (el) el.disabled = false;
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast(e.message, 'ph-warning-circle');
   }
 }
 
@@ -384,4 +519,4 @@ function sendAccountVerification(el) {
   });
 }
 
-function clearAccountCache() { _accountOrders = null; _accountProfile = null; _accountUid = null; S.accountTab = 'orders'; }
+function clearAccountCache() { _accountOrders = null; _accountProfile = null; _accountUid = null; _accountServices = null; S.accountTab = ''; }

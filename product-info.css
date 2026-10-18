@@ -442,3 +442,19 @@
 .product-preorder-note { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 4px; padding: 10px 12px; border-radius: 6px; background: #f4f4f4; color: #111; font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.5; }
 .product-preorder-note i { font-size: 18px; flex-shrink: 0; }
 .product-preorder-note strong { font-weight: 600; }
+
+/* Waitlist for sold-out sizes (product-detail.js, waitlist-api.js).
+   Styled like the pre-order note: light grey, no green (green is for
+   delivery offers). */
+#product-waitlist:empty { display: none; }
+#product-waitlist { margin-top: 16px; font-family: 'Inter', sans-serif; }
+.product-waitlist-open { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; padding: 10px 12px; border: 0; border-radius: 6px; background: #f4f4f4; color: #111; font-family: inherit; font-size: 12px; font-weight: 500; text-align: left; cursor: pointer; }
+.product-waitlist-open span { flex: 1; }
+.product-waitlist-open i { font-size: 18px; flex-shrink: 0; }
+.product-waitlist-open i.ph-caret-right { font-size: 14px; }
+.product-waitlist-form { padding: 16px; border-radius: 6px; background: #f4f4f4; }
+.product-waitlist-title { font-size: 14px; font-weight: 600; color: #111; margin: 0 0 4px; }
+.product-waitlist-text { font-size: 12px; line-height: 1.5; color: #555; margin: 0 0 14px; }
+.product-waitlist-form .track-btn { margin-top: 2px; }
+.product-waitlist-done { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 6px; background: #f4f4f4; font-size: 12px; line-height: 1.5; color: #111; }
+.product-waitlist-done i { font-size: 18px; flex-shrink: 0; }

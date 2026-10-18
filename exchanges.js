@@ -33,20 +33,26 @@ function renderExchangesPage(tab) {
   const params = new URLSearchParams(window.location.search);
   const ex = (params.get('exchange') || '').trim();
   const order = (params.get('order') || '').trim();
-  tab = tab || (ex ? 'status' : 'start');
+  tab = tab || (ex ? 'status' : order ? 'start' : '');
   const email = (typeof returnsSavedEmail === 'function' ? returnsSavedEmail() : '') || _exchangeEmail;
   _exchangeLookup = null; _exchangePhotos = [];
 
   el.innerHTML = `<section class="track-page returns-page exchanges-page">
+    ${tab ? `<button type="button" class="account-back" onclick="history.replaceState(null, null, location.pathname); renderExchangesPage('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> Exchanges</button>` : ''}
     <h1 class="track-title">Exchanges</h1>
-    <div class="wish-tabs account-tabs" role="tablist">
-      <button type="button" role="tab" class="wish-tab${tab === 'start' ? ' active' : ''}" onclick="renderExchangesPage('start')">Exchange an item</button>
-      <button type="button" role="tab" class="wish-tab${tab === 'status' ? ' active' : ''}" onclick="renderExchangesPage('status')">Check exchange status</button>
-    </div>
     <div id="exchanges-body"></div>
   </section>`;
 
   const body = document.getElementById('exchanges-body');
+  if (!tab) {
+    body.innerHTML = `<nav class="jd-list" aria-label="Exchanges">
+        <button type="button" class="jd-list-row" onclick="renderExchangesPage('start')"><span>Exchange an item</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+        <button type="button" class="jd-list-row" onclick="renderExchangesPage('status')"><span>Check exchange status</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+        <button type="button" class="jd-list-row" onclick="navigateToContentPage('log-a-return')"><span>Return an item instead</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+      </nav>
+      ${EXCHANGE_POLICY_HTML}`;
+    return;
+  }
   if (tab === 'status') {
     body.innerHTML = `<p class="track-intro">Enter your exchange number and the email address used at checkout.</p>
       <form class="track-form" onsubmit="submitExchangeStatus(event)" novalidate>
