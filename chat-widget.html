@@ -47,9 +47,12 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
   }
   body.chat-is-open #live-chat-bubble { display: none !important; }
-  /* Hidden on the product page only (its sticky Add to Bag bar sits at
-     the bottom); shown on every other page. */
-  body:has(#page-product-detail.active) #live-chat-bubble { display: none !important; }
+  /* Hidden on the product page (its sticky Add to Bag bar sits at the
+     bottom) and on the bag and checkout, where it would cover the totals
+     and the pay button; shown on every other page. */
+  body:has(#page-product-detail.active) #live-chat-bubble,
+  body:has(#page-cart.active) #live-chat-bubble,
+  body:has(#page-checkout.active) #live-chat-bubble { display: none !important; }
 
   /* Bubble is #111 on #111 — invisible once the black footer scrolls
      behind it. Toggled by the IntersectionObserver in chat.js while

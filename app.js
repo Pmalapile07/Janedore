@@ -518,6 +518,10 @@ function scrollNavQuickLinks(direction) {
 }
 
 function navigateTo(page, replaceUrl) {
+  // The Understated campaign page is retired (its idea moves to
+  // Editorial); /campaign and old links land on the homepage. The page
+  // markup stays in index.html for reference.
+  if (page === 'campaign') { page = 'home'; replaceUrl = true; }
   S.currentCollectionHandle = null;
   S.currentCollectionData = null;
   ++pageNavGeneration;
@@ -807,7 +811,7 @@ function toggleBrandsCollapse() { const el = document.getElementById('brands-col
 
 function updateChatVisibility() {
   // Where the bubble shows is decided in CSS (chat-widget.html): hidden
-  // only while the product page is open, visible on every other page.
+  // on the product page, bag and checkout, visible on every other page.
   // Deriving it from the active page means no navigation path can leave
   // it stuck hidden; this just clears any inline style left by older code.
   if (DOM.chatBubble) DOM.chatBubble.style.removeProperty('display');

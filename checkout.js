@@ -630,18 +630,6 @@ function formatConfirmationDate(iso) {
     ', ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
 }
 
-// No courier/logistics integration exists yet, so this is a generic
-// estimate (order date + 5-9 days), not a real tracked delivery window —
-// matches how most storefronts show a delivery estimate before a
-// tracking number actually exists.
-function formatDeliveryEstimate(iso) {
-  const base = iso ? new Date(iso) : new Date();
-  const start = new Date(base); start.setDate(start.getDate() + 5);
-  const end = new Date(base); end.setDate(end.getDate() + 9);
-  const fmt = (d) => d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' });
-  return fmt(start) + ' – ' + fmt(end);
-}
-
 function renderOrderConfirmation(order) {
   const numberEl = document.getElementById('confirmation-order-number');
   if (numberEl) numberEl.textContent = '#' + (order.orderNumber || '');
@@ -649,8 +637,6 @@ function renderOrderConfirmation(order) {
   const dateEl = document.getElementById('confirmation-order-date');
   if (dateEl) dateEl.textContent = formatConfirmationDate(order.createdAt);
 
-  const deliveryEl = document.getElementById('confirmation-delivery-estimate');
-  if (deliveryEl) deliveryEl.textContent = formatDeliveryEstimate(order.createdAt);
 
   const statusDot = document.getElementById('confirmation-status-dot');
   const statusText = document.getElementById('confirmation-status-text');
