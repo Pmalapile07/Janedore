@@ -373,7 +373,7 @@
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
     admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
     homepage: 'Homepage', onlineStore: 'Online Store', content: 'Content', reports: 'Reports', returns: 'Returns', exchanges: 'Exchanges', applications: 'Applications',
-    analytics: 'Analytics', devtools: 'Developer Tools'
+    analytics: 'Analytics', seo: 'SEO', devtools: 'Developer Tools'
   };
 
   // Exactly one bottom-nav element reads as "selected" at a time —
@@ -428,7 +428,7 @@
       vendors: 'vendors', customers: 'customers', settings: 'settings',
       admins: 'admins', pages: 'pages', discounts: 'discounts',
       onlineStore: 'settings', homepage: 'homepage', content: 'homepage', reports: 'vendors', returns: 'orders', exchanges: 'orders', applications: 'vendors',
-      analytics: 'analytics', devtools: 'devtools'
+      analytics: 'analytics', seo: 'seo', devtools: 'devtools'
     };
 
     var module = TAB_MODULE_MAP[tab];
@@ -479,6 +479,7 @@
       case 'customers':   if (window._renderCustomersTab)   window._renderCustomersTab();   break;
       case 'vendors':     if (window._renderVendorsTab)     window._renderVendorsTab();     break;
       case 'settings':    if (window._renderSettingsTab)    window._renderSettingsTab();    break;
+      case 'seo':         if (window._renderSeoTab)         window._renderSeoTab();         break;
       case 'onlineStore': if (window._renderOnlineStoreTab) window._renderOnlineStoreTab(); break;
       case 'admins':      if (window._renderAdminsTab)      window._renderAdminsTab();      break;
       case 'pages':       if (window._renderPagesTab)       window._renderPagesTab();       break;

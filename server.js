@@ -175,6 +175,123 @@ app.use(async (req, res, next) => {
 
 const SITE_URL = 'https://janedore.co.za';
 
+// ==================== SEARCH ENGINE DISCOVERY ====================
+// SEO settings are editable in Admin > SEO and cached briefly to avoid
+// a Firestore read on every HTML request.
+let seoSettingsCache = { at: 0, value: null };
+async function getSeoSettings() {
+  if (!adminDb) return {};
+  if (seoSettingsCache.value && Date.now() - seoSettingsCache.at < 60000) return seoSettingsCache.value;
+  try {
+    const doc = await adminDb.collection('settings').doc('seo').get();
+    seoSettingsCache = { at: Date.now(), value: doc.exists ? (doc.data() || {}) : {} };
+    return seoSettingsCache.value;
+  } catch (e) {
+    console.warn('[SEO] Settings unavailable:', e.message);
+    return seoSettingsCache.value || {};
+  }
+}
+function injectHomepageSeo(html, seo) {
+  const title = String(seo.metaTitle || 'JANEDORE | Curated Fashion & Independent Brands').trim().slice(0, 120);
+  let description = String(seo.metaDescription || 'Discover considered fashion, accessories, homeware and scent from JANEDORE and independent brands, curated in South Africa.').trim().slice(0, 320);
+  const canonicalHost = /^https:\/\/[a-z0-9.-]+(?::\d+)?$/i.test(String(seo.canonicalHost || '')) ? String(seo.canonicalHost).replace(/\/$/, '') : SITE_URL;
+  const canonicalUrl = canonicalHost + '/';
+  const verification = seo.googleSiteVerification
+    ? '<meta name="google-site-verification" content="' + escapeHtml(String(seo.googleSiteVerification).trim()) + '">'
+    : '';
+  const sameAs = [seo.instagramUrl, seo.tiktokUrl].filter(url => /^https:\/\//i.test(String(url || ''))).map(url => String(url));
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'JANEDORE',
+    url: canonicalUrl,
+    description,
+    ...(sameAs.length ? { sameAs } : {})
+  };
+  const block = '<title>' + escapeHtml(title) + '</title>' +
+    '<meta name="description" content="' + escapeHtml(description) + '">' +
+    '<link rel="canonical" href="' + escapeHtml(canonicalUrl) + '">' +
+    '<meta property="og:type" content="website">' +
+    '<meta property="og:site_name" content="JANEDORE">' +
+    '<meta property="og:title" content="' + escapeHtml(title) + '">' +
+    '<meta property="og:description" content="' + escapeHtml(description) + '">' +
+    '<meta property="og:url" content="' + escapeHtml(canonicalUrl) + '">' +
+    '<meta property="og:image" content="' + SITE_URL + '/share-card.png">' +
+    '<meta name="twitter:card" content="summary_large_image">' +
+    '<meta name="twitter:title" content="' + escapeHtml(title) + '">' +
+    '<meta name="twitter:description" content="' + escapeHtml(description) + '">' +
+    '<meta name="twitter:image" content="' + SITE_URL + '/share-card.png">' +
+    verification +
+    '<script type="application/ld+json">' + JSON.stringify(jsonLd).replace(/</g, '\\u003c') + '</script></head>';
+  return replaceHeadTags(html, block);
+}
+
+function xmlEscape(value) {
+  return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+app.get('/robots.txt', async (req, res) => {
+  res.type('text/plain; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.send([
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api/',
+    'Disallow: /cart',
+    'Disallow: /checkout',
+    'Disallow: /account',
+    'Disallow: /wishlist',
+    'Disallow: /search',
+    'Disallow: /*?*',
+    'Sitemap: ' + SITE_URL + '/sitemap.xml',
+    ''
+  ].join('\n'));
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+  res.type('application/xml; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=1800');
+  const urls = new Map();
+  urls.set(SITE_URL + '/', new Date().toISOString().slice(0, 10));
+  try {
+    const gate = await getGateState();
+    if (adminDb && !gate.comingSoon) {
+      const [productSnap, collectionSnap, vendorSnap] = await Promise.all([
+        adminDb.collection('products').get(),
+        adminDb.collection('collections').where('status', '==', 'active').get(),
+        adminDb.collection('vendors').get()
+      ]);
+      const vendorStatus = new Map(vendorSnap.docs.map(doc => [doc.id, String((doc.data() || {}).status || '').toLowerCase()]));
+      productSnap.docs.forEach(doc => {
+        const p = doc.data() || {};
+        const slug = String(p.slug || '').trim();
+        const status = String(p.status || '').toLowerCase();
+        if (!slug || status !== 'active' || p.published === false) return;
+        if (p.vendorId && ['suspended', 'inactive'].includes(vendorStatus.get(p.vendorId))) return;
+        const url = SITE_URL + '/products/' + encodeURIComponent(slug);
+        const updated = p.updatedAt && p.updatedAt.toDate ? p.updatedAt.toDate().toISOString().slice(0, 10) : '';
+        urls.set(url, updated || new Date().toISOString().slice(0, 10));
+      });
+      collectionSnap.docs.forEach(doc => {
+        const c = doc.data() || {};
+        const handle = String(c.handle || c.slug || doc.id).trim();
+        if (!handle || c.published === false) return;
+        const url = SITE_URL + '/collections/' + encodeURIComponent(handle);
+        const updated = c.updatedAt && c.updatedAt.toDate ? c.updatedAt.toDate().toISOString().slice(0, 10) : '';
+        urls.set(url, updated || new Date().toISOString().slice(0, 10));
+      });
+      Object.keys(CATEGORY_META).forEach(cat => urls.set(SITE_URL + '/collections/' + encodeURIComponent(cat), new Date().toISOString().slice(0, 10)));
+    }
+  } catch (e) {
+    console.error('[SITEMAP] Could not build dynamic URLs:', e.message);
+  }
+  const body = Array.from(urls.entries()).map(([loc, lastmod]) =>
+    '<url><loc>' + xmlEscape(loc) + '</loc>' + (lastmod ? '<lastmod>' + xmlEscape(lastmod) + '</lastmod>' : '') + '</url>'
+  ).join('');
+  res.send('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + body + '</urlset>');
+});
+
 // Cloudinary config endpoint — MUST be first
 // Public uploads must use a dedicated, restricted Cloudinary preset.
 // Never fall back to the admin preset: it may permit non-image assets.
@@ -2765,7 +2882,9 @@ app.get('*', async (req, res) => {
   // Otherwise send index.html for client-side routing, with the current
   // homepage content already spliced in — see renderIndexHtml() above.
   try {
-    res.send(await renderIndexHtml());
+    const seo = await getSeoSettings();
+    const transform = req.path === '/' ? (html) => injectHomepageSeo(html, seo) : null;
+    res.send(await renderIndexHtml(transform));
   } catch (e) {
     console.error('[CATCH-ALL] Error:', e.message);
     const rawHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');

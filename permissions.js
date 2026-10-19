@@ -208,6 +208,7 @@
     vendors:    'vendors',
     customers:  'customers',
     settings:   'settings',
+    seo:         'seo',
     admins:     'admins',
     discounts:  'discounts',
     pages:      'pages',
@@ -256,6 +257,7 @@
       'vendors-more-item', // more menu vendors item
       'settings-tab-btn',  // sidebar settings tab
       'settings-more-item',// more menu settings item
+      'seo-tab-btn',       // dedicated SEO tools
       'online-store-tab-btn',  // sidebar online store tab
       'online-store-more-item',// more menu online store item
       'admins-tab-btn',    // sidebar admins tab
