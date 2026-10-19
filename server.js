@@ -778,6 +778,103 @@ async function priceOrder(order) {
   };
 }
 
+// Trusted checkout endpoint: the browser may submit a cart and delivery
+// details, but only this server creates the order and reserves inventory.
+// Firestore Admin SDK writes bypass client rules; stock is never decremented
+// directly by an anonymous browser.
+app.post('/api/orders/create', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Checkout is not configured' });
+  if (rateLimited(req, 'order-create', 12, 15 * 60 * 1000)) {
+    return res.status(429).json({ error: 'Too many checkout attempts. Please try again shortly.' });
+  }
+  const body = req.body || {};
+  const input = body.orderData || {};
+  const items = Array.isArray(input.items) ? input.items.slice(0, 30) : [];
+  if (!items.length) return res.status(400).json({ error: 'Your bag is empty.' });
+  if (items.some(i => !i || typeof i.productId !== 'string' || !i.productId || !Number.isInteger(Number(i.qty)) || Number(i.qty) < 1 || Number(i.qty) > 20)) {
+    return res.status(400).json({ error: 'One or more items or quantities are invalid.' });
+  }
+  const customerEmail = String(input.customerEmail || '').trim().toLowerCase().slice(0, 200);
+  const customerName = String(input.customerName || '').trim().slice(0, 120);
+  const customerPhone = String(input.customerPhone || '').trim().slice(0, 40);
+  const shippingAddress = String(input.shippingAddress || '').trim().slice(0, 300);
+  const city = String(input.city || '').trim().slice(0, 100);
+  const province = String(input.province || '').trim().slice(0, 100);
+  const postalCode = String(input.postalCode || '').trim().slice(0, 30);
+  const country = String(input.country || '').trim().slice(0, 100);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || !customerName || !shippingAddress || !city || !province || !postalCode || !country) {
+    return res.status(400).json({ error: 'Please provide valid customer and delivery details.' });
+  }
+
+  let customerId = null;
+  const bearer = String(req.headers.authorization || '').match(/^Bearer (.+)$/);
+  if (bearer) {
+    try { customerId = (await admin.auth().verifyIdToken(bearer[1])).uid; }
+    catch (e) { return res.status(401).json({ error: 'Your sign-in session expired. Please sign in again.' }); }
+  }
+
+  try {
+    const orderRef = adminDb.collection('orders').doc();
+    const orderNumber = 'ORD-' + Date.now();
+    const accessToken = require('crypto').randomBytes(32).toString('hex');
+    const inputItems = items.map(i => ({
+      productId: String(i.productId).slice(0, 150),
+      qty: Math.floor(Number(i.qty)),
+      size: String(i.size || 'OS').slice(0, 30),
+      color: String(i.color || '').slice(0, 80),
+      variantIndex: Math.max(0, Math.min(50, Math.floor(Number(i.variantIndex) || 0)))
+    }));
+    const priced = await priceOrder({ items: inputItems, discountCode: String(input.discountCode || '').slice(0, 40) });
+    const itemsByProduct = {};
+    priced.items.forEach(i => { (itemsByProduct[i.productId] = itemsByProduct[i.productId] || []).push(i); });
+    const productIds = Object.keys(itemsByProduct);
+    const productRefs = productIds.map(id => adminDb.collection('products').doc(id));
+
+    await adminDb.runTransaction(async (tx) => {
+      const productDocs = await Promise.all(productRefs.map(ref => tx.get(ref)));
+      const productsById = {};
+      productDocs.forEach((doc, i) => {
+        if (!doc.exists) throw Object.assign(new Error('A product in your bag is no longer available.'), { status: 409 });
+        const product = doc.data();
+        productsById[productIds[i]] = product;
+        const expected = itemsByProduct[productIds[i]][0].price;
+        if (Math.abs(serverUnitPrice(product) - expected) > 0.001) {
+          throw Object.assign(new Error('A product price just changed. Please review your bag and try again.'), { status: 409 });
+        }
+      });
+      const shortfalls = applyStockChange(tx, productDocs, productRefs, itemsByProduct, -1);
+      if (shortfalls.length) {
+        throw Object.assign(new Error('Some items have just sold out or no longer have enough stock: ' + shortfalls.join(', ')), { status: 409 });
+      }
+      const canonicalItems = priced.items.map(item => {
+        const product = productsById[item.productId];
+        return Object.assign({}, item, {
+          name: String(product.name || item.name || 'Product').slice(0, 200),
+          brand: String(product.brand || 'JANEDORE').slice(0, 120),
+          vendorId: product.vendorId || null
+        });
+      });
+      const vendorIds = [...new Set(canonicalItems.map(i => i.vendorId).filter(Boolean))];
+      const brands = [...new Set(canonicalItems.map(i => i.brand).filter(Boolean))];
+      tx.set(orderRef, {
+        orderNumber, customerEmail, customerName, customerPhone, customerId,
+        shippingAddress, city, province, postalCode, country,
+        items: canonicalItems, packageCount: priced.shippingPackages, brands, vendorIds,
+        subtotal: priced.subtotal, discountCode: priced.discountCode,
+        discountAmount: priced.discountAmount, shipping: priced.shipping,
+        total: priced.total, currency: 'ZAR', itemCount: priced.itemCount,
+        status: 'pending', paymentStatus: 'unpaid',
+        orderAccessTokenHash: orderAccessTokenHash(accessToken),
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    res.status(201).json({ orderId: orderRef.id, orderAccessToken: accessToken, orderNumber });
+  } catch (e) {
+    console.error('[ORDER_CREATE] Error:', e.message);
+    res.status(e.status || 500).json({ error: e.status ? e.message : 'Could not create your order. Please try again.' });
+  }
+});
+
 app.post('/api/payfast/initiate', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   if (!PAYFAST_MERCHANT_ID || !PAYFAST_MERCHANT_KEY) return res.status(503).json({ error: 'PayFast not configured' });
