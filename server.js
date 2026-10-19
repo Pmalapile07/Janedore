@@ -102,16 +102,14 @@ if (serviceAccount) {
 const SITE_URL = 'https://janedore.co.za';
 
 // Cloudinary config endpoint — MUST be first
-// publicUploadPreset (CLOUDINARY_PUBLIC_UPLOAD_PRESET on Render) is a
-// locked-down, images-only preset for customer uploads: chat photos,
-// return photos and partner application images. Until it's set, the
-// storefront falls back to the main preset. Admin keeps uploadPreset,
-// which also takes fonts, sounds and videos for the Content Library.
+// Public uploads must use a dedicated, restricted Cloudinary preset.
+// Never fall back to the admin preset: it may permit non-image assets.
 app.get('/api/cloudinary-config', (req, res) => {
+  res.set('Cache-Control', 'no-store');
   res.json({
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET,
-    publicUploadPreset: process.env.CLOUDINARY_PUBLIC_UPLOAD_PRESET || process.env.CLOUDINARY_UPLOAD_PRESET
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+    uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET || '',
+    publicUploadPreset: process.env.CLOUDINARY_PUBLIC_UPLOAD_PRESET || ''
   });
 });
 
@@ -457,6 +455,19 @@ function logoImageUrl(url, width) {
   return url.includes('/image/upload/') ? url.replace('/upload/', '/upload/c_limit,w_' + width + ',f_png/') : url;
 }
 
+// Guest-order access tokens are generated in checkout, stored as a SHA-256
+// hash on the order, and never returned by order APIs. An order ID alone
+// must not grant access to customer details or payment initiation.
+function orderAccessTokenHash(token) {
+  return crypto.createHash('sha256').update(String(token || '')).digest('hex');
+}
+function hasOrderAccess(req, order) {
+  const token = String(req.headers['x-order-access-token'] || '');
+  const storedHash = String(order && order.orderAccessTokenHash || '');
+  if (!token || !/^[a-f0-9]{64}$/i.test(storedHash)) return false;
+  return orderAccessTokenHash(token) === storedHash;
+}
+
 // ==================== ORDER NOTIFICATIONS ====================
 // Sent once an order is paid (PayFast ITN below). Designs live in
 // order-emails.js. Who gets what:
@@ -779,6 +790,7 @@ app.post('/api/payfast/initiate', async (req, res) => {
     const orderDoc = await orderRef.get();
     if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
     const order = orderDoc.data();
+    if (!hasOrderAccess(req, order)) return res.status(403).json({ error: 'Order access could not be verified' });
     if (order.paymentStatus === 'paid') return res.status(400).json({ error: 'Order already paid' });
     if (['cancelled', 'failed', 'expired'].includes(order.paymentStatus)) return res.status(400).json({ error: 'This order is no longer open. Please check out again.' });
 
@@ -988,6 +1000,7 @@ app.post('/api/payfast/order/:id/cancel', async (req, res) => {
     const orderRef = adminDb.collection('orders').doc(req.params.id);
     const orderDoc = await orderRef.get();
     if (!orderDoc.exists) return res.status(404).json({ error: 'Order not found' });
+    if (!hasOrderAccess(req, orderDoc.data())) return res.status(403).json({ error: 'Order access could not be verified' });
     await releaseUnpaidOrder(orderRef, 'cancelled');
     res.json({ ok: true });
   } catch (e) {
@@ -1186,6 +1199,7 @@ app.get('/api/orders/:id/status', async (req, res) => {
     const doc = await adminDb.collection('orders').doc(req.params.id).get();
     if (!doc.exists) return res.status(404).json({ error: 'Not found' });
     const order = doc.data();
+    if (!hasOrderAccess(req, order)) return res.status(403).json({ error: 'Order access could not be verified' });
     res.json({ paymentStatus: order.paymentStatus || 'unpaid', orderNumber: order.orderNumber || req.params.id });
   } catch (e) {
     res.status(500).json({ error: 'Could not check order status' });
@@ -1205,6 +1219,7 @@ app.get('/api/orders/:id', async (req, res) => {
     const doc = await adminDb.collection('orders').doc(req.params.id).get();
     if (!doc.exists) return res.status(404).json({ error: 'Not found' });
     const order = doc.data();
+    if (!hasOrderAccess(req, order)) return res.status(403).json({ error: 'Order access could not be verified' });
     res.json({
       orderNumber: order.orderNumber || req.params.id,
       status: order.status || 'pending',
