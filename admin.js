@@ -332,6 +332,15 @@
           : null;
         console.log('[JANEDORE AUTH] Role resolved:', window._currentUserRole);
 
+        // Lets a Super Admin see the shop (and admin's preview of it)
+        // while Coming Soon is on: server.js only sends storefront pages
+        // to a browser holding this signed pass.
+        if (window._currentUserRole === 'SUPER_ADMIN' && user.getIdToken) {
+          user.getIdToken().then(function (token) {
+            return fetch('/api/admin-gate-pass', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+          }).catch(function (e) { console.warn('[GATE_PASS]', e); });
+        }
+
         // Firestore's security rules check request.auth.token.vendorId
         // (a custom claim, stamped on by /api/admin/sync-staff-claims)
         // for a vendor's own list queries, like "every order I'm part
