@@ -24,13 +24,14 @@
 <meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0705/5615/6145/files/1B332189-93D3-46B2-A719-F5CCBAEAF139.png?v=1778858287">
 
 <link rel="canonical" href="https://janedore.co.za">
-<meta name="theme-color" content="#F7F5F1">
+<meta name="theme-color" content="#111111">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=optional" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400&text=ADEJNOR&display=swap" rel="stylesheet">
 
 <style>
   @font-face {
@@ -52,405 +53,59 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:      #F7F5F1;
-    --paper:   #FFFFFF;
-    --ink:     #121212;
-    --text:    #141414;
-    --muted:   #8C877E;
-    --border:  #E4E0D8;
+    --bg:     #FFFFFF;
+    --ink:    #111111;
+    --text:   #111111;
+    --muted:  #6B6B6B;
+    --border: #E5E5E5;
+    --green:  #b8cc87;
   }
 
-  html {
-    font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-size: 16px;
-  }
+  html { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; font-size: 16px; }
+  body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  body {
-    min-height: 100dvh;
-    background: var(--bg);
-    color: var(--text);
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-  }
+  /* Header: the shop's black bar with the JANEDORE wordmark. */
+  .site-header { background: var(--ink); padding: 20px 16px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); display: flex; justify-content: center; }
+  .header-logo-text { font-family: 'Unbounded', Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 400; letter-spacing: 0.12em; color: #fff; }
 
-  .sr-only {
-    position: absolute; width: 1px; height: 1px;
-    padding: 0; margin: -1px; overflow: hidden;
-    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-  }
+  .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 64px 20px; }
+  .eyebrow { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); background: #e6edd5; padding: 6px 12px; margin-bottom: 24px; }
+  .headline { font-size: 32px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 14px; }
+  .subhead { font-size: 15px; font-weight: 400; line-height: 1.6; color: var(--muted); max-width: 440px; margin-bottom: 32px; }
 
-  .site-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 44px 60px;
-    background: transparent;
-  }
-
-  .header-logo {
-    display: block;
-    line-height: 1;
-    text-decoration: none;
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .header-logo-text {
-    font-family: 'Telegraf', 'Inter', sans-serif;
-    font-size: 1.3rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text);
-    display: block;
-  }
-
-  .main-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    align-self: stretch;
-    width: 100%;
-    padding: 40px 60px 60px;
-    max-width: 760px;
-    margin: 0 auto;
-  }
-
-  .eyebrow {
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 24px;
-  }
-
-  .headline {
-    font-family: 'Inter', sans-serif;
-    font-weight: 400;
-    font-style: normal;
-    font-size: clamp(28px, 5.2vw, 60px);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: var(--text);
-    margin-bottom: 44px;
-    text-align: center;
-    white-space: nowrap;
-    animation: subhead-shift 13s infinite backwards;
-    animation-delay: 1.1s;
-  }
-
-  .headline-line { display: block; }
-
-  .subhead {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 300;
-    line-height: 1.8;
-    color: var(--muted);
-    max-width: 360px;
-    margin: 0 auto 52px;
-    text-align: center;
-    letter-spacing: 0.01em;
-    animation: subhead-shift 13s infinite backwards;
-    animation-delay: 1.1s;
-  }
-
-  @keyframes subhead-shift {
-    0%   { transform: translateY(26px); animation-timing-function: cubic-bezier(.3,.9,.3,1); }
-    7%   { transform: translateY(0); animation-timing-function: linear; }
-    75%  { transform: translateY(0); animation-timing-function: cubic-bezier(.3,.9,.3,1); }
-    83%  { transform: translateY(26px); }
-    100% { transform: translateY(26px); }
-  }
-
-  .signup-wrapper { width: 100%; max-width: 480px; }
-
-  .envelope {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 480 / 400;
-    filter: drop-shadow(0 22px 30px rgba(18,18,18,0.22));
-    perspective: 1000px;
-  }
-
-  .envelope-back {
-    position: absolute;
-    left: 0; right: 0;
-    top: 30%;
-    bottom: 0;
-    z-index: 1;
-    background: var(--ink);
-  }
-  .envelope-back::before {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    top: 0;
-    height: 1px;
-    background: rgba(255,255,255,0.14);
-    opacity: 0;
-    animation: hairline-cycle 13s infinite backwards;
-    animation-delay: 1.1s;
-  }
-
-  @keyframes hairline-cycle {
-    0%   { opacity: 0; }
-    7%   { opacity: 0; }
-    9%   { opacity: 1; }
-    73%  { opacity: 1; }
-    78%  { opacity: 0; }
-    100% { opacity: 0; }
-  }
-
-  .envelope-flap-top {
-    position: absolute;
-    left: 0; right: 0;
-    top: 0;
-    height: 30%;
-    z-index: 2;
-    background: linear-gradient(165deg, #202020 0%, #101010 60%, #060606 100%);
-    clip-path: polygon(0 100%, 50% 13%, 100% 100%);
-    transform-origin: bottom center;
-    transform: scaleY(0);
-    opacity: 0;
-    animation: flap-cycle 13s infinite backwards;
-    animation-delay: 1.1s;
-  }
-
-  @keyframes flap-cycle {
-    0%   { transform: scaleY(0); opacity: 0; animation-timing-function: cubic-bezier(.3,.9,.3,1); }
-    5%   { opacity: 1; }
-    7%   { transform: scaleY(1); opacity: 1; animation-timing-function: linear; }
-    73%  { transform: scaleY(1); opacity: 1; animation-timing-function: cubic-bezier(.3,.9,.3,1); }
-    76%  { opacity: 0.4; }
-    78%  { transform: scaleY(0); opacity: 0; animation-timing-function: linear; }
-    100% { transform: scaleY(0); opacity: 0; }
-  }
-
-  .envelope-paper {
-    position: absolute;
-    left: 4%;
-    right: 4%;
-    top: 30%;
-    bottom: 6%;
-    z-index: 3;
-    background: var(--paper);
-    padding: 22px 22px 0;
-    display: flex;
-    align-items: flex-start;
-    box-shadow: 0 10px 20px -14px rgba(18,18,18,0.4);
-    animation: paper-cycle 13s infinite backwards;
-    animation-delay: 1.5s;
-  }
-  .envelope-paper .signup-row { width: 100%; }
-
-  .envelope-fold-left {
-    position: absolute;
-    left: 0; right: 0;
-    top: 58%;
-    bottom: 0;
-    z-index: 4;
-    background: linear-gradient(100deg, #1c1c1c 0%, #101010 45%, #0a0a0a 100%);
-    clip-path: polygon(0% 0%, 62% 0%, 24% 100%, 0% 100%);
-  }
-  .envelope-fold-right {
-    position: absolute;
-    left: 0; right: 0;
-    top: 58%;
-    bottom: 0;
-    z-index: 4;
-    background: linear-gradient(260deg, #1c1c1c 0%, #101010 45%, #0a0a0a 100%);
-    clip-path: polygon(100% 0%, 38% 0%, 76% 100%, 100% 100%);
-  }
-
-  .envelope-front-flap {
-    position: absolute;
-    left: 0; right: 0;
-    top: 58%;
-    bottom: 0;
-    z-index: 4;
-    background: linear-gradient(175deg, #1f1f1f 0%, #111111 55%, #060606 100%);
-    clip-path: polygon(0% 100%, 50% 20%, 100% 100%);
-  }
-
-  body.env-locked .envelope-lid       { animation: none; opacity: 0; pointer-events: none; }
-  body.env-locked .envelope-flap-top  { animation: none; transform: scaleY(1); opacity: 1; }
-  body.env-locked .envelope-paper     { animation: none; transform: translateY(-16px) scale(1); opacity: 1; }
-  body.env-locked .envelope-back::before { animation: none; opacity: 1; }
-  body.env-locked .subhead            { animation: none; transform: translateY(0); }
-  body.env-locked .headline           { animation: none; transform: translateY(0); }
-
-  .envelope-lid {
-    position: absolute;
-    left: 0; right: 0;
-    top: 30%;
-    bottom: 0;
-    z-index: 10;
-    background: linear-gradient(165deg, #202020 0%, #101010 55%, #060606 100%);
-    clip-path: polygon(0% 0%, 100% 0%, 50% 60%);
-    transform-origin: top center;
-    pointer-events: none;
-    animation: lid-cycle 13s infinite backwards;
-    animation-delay: 1.1s;
-  }
-
-  @keyframes lid-cycle {
-    0%   { transform: rotateX(0deg);    opacity: 1; animation-timing-function: cubic-bezier(.3,.9,.3,1); }
-    5%   { transform: rotateX(-112deg); opacity: 1; }
-    7%   { transform: rotateX(-128deg); opacity: 0; animation-timing-function: linear; }
-    75%  { transform: rotateX(-128deg); opacity: 0; animation-timing-function: cubic-bezier(.3,.9,.3,1); }
-    78%  { transform: rotateX(-112deg); opacity: 1; }
-    83%  { transform: rotateX(0deg);    opacity: 1; animation-timing-function: linear; }
-    100% { transform: rotateX(0deg);    opacity: 1; }
-  }
-
-  @keyframes paper-cycle {
-    0%   { transform: translateY(16px)  scale(0.94); opacity: 0; animation-timing-function: linear; }
-    8%   { transform: translateY(16px)  scale(0.94); opacity: 0; animation-timing-function: cubic-bezier(.34,1.56,.64,1); }
-    11%  { transform: translateY(-22px) scale(1.03); opacity: 1; }
-    14%  { transform: translateY(-16px) scale(1);    opacity: 1; animation-timing-function: linear; }
-    72%  { transform: translateY(-16px) scale(1);    opacity: 1; animation-timing-function: ease-in; }
-    75%  { transform: translateY(16px)  scale(0.94); opacity: 0; animation-timing-function: linear; }
-    100% { transform: translateY(16px)  scale(0.94); opacity: 0; }
-  }
-
-  .signup-row {
-    display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 12px;
-    transition: border-color 0.3s;
-  }
-  .signup-row:focus-within { border-color: var(--text); }
-
-  .signup-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    padding: 8px 0;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 300;
-    color: var(--text);
-    outline: none;
-    -webkit-appearance: none;
-    letter-spacing: 0.02em;
-  }
-  .signup-input::placeholder { color: var(--muted); }
-  .signup-input:-webkit-autofill,
-  .signup-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px var(--paper) inset !important;
-    -webkit-text-fill-color: var(--text) !important;
-  }
-
-  .signup-submit {
-    background: transparent;
-    border: none;
-    padding: 8px 0 8px 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .signup-submit:hover { color: var(--muted); }
-  .signup-submit:disabled { opacity: 0.25; cursor: not-allowed; }
-
-  .signup-spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 1px solid var(--border);
-    border-top-color: var(--text);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
+  .signup-wrapper { width: 100%; max-width: 440px; }
+  .signup-row, .visitor-access-row { display: flex; width: 100%; }
+  .signup-input { flex: 1; min-width: 0; height: 48px; padding: 0 14px; border: 1px solid #cfcfcf; border-right: none; border-radius: 0; font-family: inherit; font-size: 15px; color: var(--text); background: #fff; outline: none; -webkit-appearance: none; }
+  .signup-input:focus { border-color: var(--ink); }
+  .signup-input::placeholder { color: #999; }
+  .signup-submit { flex: 0 0 auto; height: 48px; padding: 0 22px; border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .signup-submit:disabled { opacity: 0.6; cursor: default; }
+  .signup-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .signup-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .signup-msg { font-size: 13px; line-height: 1.5; margin-top: 10px; min-height: 0; }
+  .signup-msg.error { color: #c0392b; }
+  .signup-msg.success { color: var(--ink); }
 
-  .signup-msg {
-    font-size: 11px;
-    font-weight: 300;
-    color: var(--text);
-    margin-top: 16px;
-    min-height: 18px;
-    transition: color 0.2s;
-    letter-spacing: 0.01em;
-  }
-  .signup-msg.success { color: #5a8a5a; }
-  .signup-msg.error   { color: #c0392b; }
+  .visitor-access-wrap { width: 100%; max-width: 440px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .visitor-access-link { font-size: 13px; color: var(--muted); cursor: pointer; }
+  .visitor-access-link-em { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
-  .visitor-access-wrap {
-    width: 100%;
-    max-width: 480px;
-    margin: 28px auto 0;
-    text-align: center;
-  }
-  .visitor-access-link {
-    font-size: 11px;
-    font-weight: 300;
-    color: var(--muted);
-    letter-spacing: 0.01em;
-    cursor: pointer;
-  }
-  .visitor-access-link-em {
-    color: var(--text);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .visitor-access-row {
-    display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 12px;
-    max-width: 320px;
-    margin: 0 auto;
-    transition: border-color 0.3s;
-  }
-  .visitor-access-row:focus-within { border-color: var(--text); }
-  .visitor-access-wrap .signup-msg { text-align: center; }
+  .site-footer { padding: 24px 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 12px; border-top: 1px solid var(--border); }
+  .footer-social { display: flex; gap: 20px; font-size: 20px; color: var(--ink); }
+  .footer-social a { color: inherit; text-decoration: none; }
+  .footer-copy { font-size: 12px; color: var(--muted); cursor: default; user-select: none; }
 
-  @media (prefers-reduced-motion: reduce) {
-    .envelope-paper { animation: none; transform: translateY(-16px) scale(1); opacity: 1; }
-    .envelope-lid { display: none; }
-    .envelope-flap-top { animation: none; transform: scaleY(1); opacity: 1; }
-    .envelope-back::before { animation: none; opacity: 1; }
-    .subhead { animation: none; transform: translateY(0); }
-    .headline { animation: none; transform: translateY(0); }
-  }
-
-  .site-footer {
-    padding: 40px 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-
-  .footer-copy {
-    font-size: 10px;
-    font-weight: 300;
-    color: var(--muted);
-    letter-spacing: 0.03em;
-    cursor: default;
-    user-select: none;
+  @media (min-width: 768px) {
+    .headline { font-size: 44px; }
+    .subhead { font-size: 16px; }
   }
 
   .admin-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(247,245,241,0.98);
+    background: rgba(255,255,255,0.98);
     z-index: 100;
     display: flex;
     align-items: center;
@@ -513,7 +168,7 @@
   .admin-field::placeholder { color: var(--text); opacity: 0.5; }
   .admin-field:-webkit-autofill,
   .admin-field:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px rgba(247,245,241,0.98) inset !important;
+    -webkit-box-shadow: 0 0 0 30px rgba(255,255,255,0.98) inset !important;
     -webkit-text-fill-color: var(--text) !important;
   }
 
@@ -560,22 +215,6 @@
     line-height: 1;
   }
 
-  @media (max-width: 768px) {
-    .site-header { padding: 28px 24px; }
-    .header-logo-text { font-size: 1.1rem; }
-    .main-content { padding: 32px 24px 40px; }
-    .headline { font-size: clamp(24px, 8vw, 56px); margin-bottom: 32px; white-space: normal; }
-    .subhead { margin-bottom: 40px; }
-    .envelope-paper { padding: 18px 18px 0; }
-    .site-footer { padding: 24px 24px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
 </style>
 </head>
 <body>
@@ -587,36 +226,25 @@
 </header>
 
 <main id="main" class="main-content">
-  <h1 class="headline">
-    <span class="headline-line">You found us early.</span>
-  </h1>
+  <span class="eyebrow">Pre-launch</span>
+  <h1 class="headline">You found us early.</h1>
   <p class="subhead">
-    We're taking our time. Good things usually do.<br>Sign up and you'll be first to know when we launch.
+    JANEDORE is a curated home for independent brands. We're getting ready to open. Sign up and you'll be the first to know when we launch.
   </p>
   <div class="signup-wrapper">
-    <div class="envelope">
-      <div class="envelope-back" aria-hidden="true"></div>
-      <div class="envelope-flap-top" aria-hidden="true"></div>
-      <div class="envelope-paper">
-        <div class="signup-row">
-          <label for="email-input" class="sr-only">Email address</label>
-          <input type="email"
-                 class="signup-input"
-                 id="email-input"
-                 placeholder="Enter your email"
-                 autocomplete="email"
-                 aria-describedby="signup-msg"
-                 required>
-          <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
-            <span id="btn-text">Notify me</span>
-            <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
-          </button>
-        </div>
-      </div>
-      <div class="envelope-fold-left" aria-hidden="true"></div>
-      <div class="envelope-fold-right" aria-hidden="true"></div>
-      <div class="envelope-front-flap" aria-hidden="true"></div>
-      <div class="envelope-lid" aria-hidden="true"></div>
+    <div class="signup-row">
+      <label for="email-input" class="sr-only">Email address</label>
+      <input type="email"
+             class="signup-input"
+             id="email-input"
+             placeholder="Enter your email"
+             autocomplete="email"
+             aria-describedby="signup-msg"
+             required>
+      <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
+        <span id="btn-text">Notify me</span>
+        <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
+      </button>
     </div>
     <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
   </div>
