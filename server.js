@@ -2641,6 +2641,16 @@ app.get('/products/:slug', async (req, res, next) => {
     }
 
     if (!product) return next();
+    // A product whose brand is suspended or inactive (Admin > Brands) is
+    // hidden from the storefront, so a direct link gets the plain SPA
+    // (no product SEO meta) and the client won't render it either.
+    if (!isHouseProduct(product) && product.vendorId) {
+      try {
+        const vdoc = await adminDb.collection('vendors').doc(product.vendorId).get();
+        const vst = vdoc.exists ? String(vdoc.data().status || '').toLowerCase() : '';
+        if (vst === 'suspended' || vst === 'inactive') return next();
+      } catch (e) {}
+    }
 
     const finalHtml = await renderIndexHtml(h => injectProductMeta(h, product, product.slug || slug));
     res.send(finalHtml);
