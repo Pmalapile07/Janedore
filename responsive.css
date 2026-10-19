@@ -11,7 +11,7 @@
      (hero.css loads earlier, so this rule's padding-bottom silently
      won and made the hero's bottom edge ~36px deeper than its top).
      Leaving height/min-height alone; only the padding was asymmetric. */
-  #hero { height: calc(47.6vh + 2px); min-height: 294px; } /* 30% shorter now the delivery banner sits above it */
+  #hero { height: calc((47.6vh + 2px) * 1.1); min-height: 323px; } /* 10% taller (was 47.6vh + 2px / 294px) */
   .campaign-heading { font-size: 48px; margin-bottom: 40px; }
   .search-results-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-currency-lang { gap: 16px; }
@@ -28,7 +28,7 @@
 }
 @media (max-width: 480px) {
   .nav-top-row { height: 52px; }
-  #hero { height: calc(45.5vh + 2px); min-height: 274px; } /* 30% shorter now the delivery banner sits above it */
+  #hero { height: calc((45.5vh + 2px) * 1.1); min-height: 301px; } /* 10% taller (was 45.5vh + 2px / 274px) */
   .footer-currency-lang { flex-direction: row; justify-content: center; gap: 20px; }
   .collection-toolbar { top: 52px; }
   .collection-sorting-tabs { top: 90px; }
