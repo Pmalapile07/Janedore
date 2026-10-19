@@ -198,6 +198,24 @@ async function fetchProducts() {
   }
 }
 
+// A brand set to Suspended or Inactive in Admin > Brands is hidden from
+// the whole storefront, products and all. fetchVendors() returns only
+// active brands, so a product from another brand shows only when its
+// brand is in that set. JANEDORE's own products always show. Skipped
+// when the brand list is empty (a read error), so a hiccup loading
+// brands never empties the catalogue.
+function filterProductsByActiveVendors(products, vendors) {
+  if (!Array.isArray(vendors) || !vendors.length) return products;
+  const house = (typeof isHouseProduct === 'function') ? isHouseProduct : (p => !p.vendorId || String(p.brand||'').trim().toUpperCase()==='JANEDORE');
+  const activeIds = new Set(vendors.map(v => v.id));
+  const activeNames = new Set(vendors.map(v => String(v.name || v.brand || '').trim().toUpperCase()).filter(Boolean));
+  return products.filter(p => {
+    if (house(p)) return true;
+    if (p.vendorId) return activeIds.has(p.vendorId);
+    return activeNames.has(String(p.brand || '').trim().toUpperCase());
+  });
+}
+
 window.navigateTo = navigateTo;
 window.navigateToCategory = navigateToCategory;
 window.navigateToSale = navigateToSale;
@@ -245,7 +263,15 @@ async function init() {
   // behind it. The two read unrelated Firestore documents; nothing
   // here depends on PRODUCTS being ready first.
   if (typeof renderSiteContent === 'function') renderSiteContent();
+  // Load brands alongside products so inactive/suspended brands' products
+  // can be filtered out before anything renders (no flash of a hidden
+  // brand's items). initVendors() below reuses this same list.
+  const vendorsPromise = (typeof fetchVendors === 'function') ? fetchVendors().catch(() => []) : Promise.resolve([]);
   PRODUCTS = await fetchProducts();
+  try {
+    const vendors = await vendorsPromise;
+    if (vendors && vendors.length) { S.vendors = vendors; PRODUCTS = filterProductsByActiveVendors(PRODUCTS, vendors); }
+  } catch (e) {}
   _resolveProductsReady();
   cleanCartOrphans();
   if (typeof restoreBagFromLink === 'function') restoreBagFromLink();
@@ -256,7 +282,7 @@ async function init() {
   const footerIds = ["main-footer","products-footer","category-footer","campaign-footer","cart-footer","wishlist-footer","editorial-footer","brands-footer","categories-footer","giftcards-footer","checkout-footer","login-footer","account-footer","vendor-footer","content-footer"];
   footerIds.forEach(id => { const el = document.getElementById(id); if (el) buildFooter(id); });
   buildCampaignSlider();
-  initVendors();
+  initVendors(S.vendors);
   initNavScroll();
   const navQuickLinksRow = document.getElementById('nav-quick-links');
   if (navQuickLinksRow) {

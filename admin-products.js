@@ -426,8 +426,20 @@
   var PRODUCT_STATUS_BADGE_STYLE = {
     active:   'background:var(--success-soft);color:var(--success);',
     draft:    'background:var(--accent-soft);color:var(--accent);',
-    archived: 'background:var(--surface3);color:var(--muted);'
+    archived: 'background:var(--surface3);color:var(--muted);',
+    // Brand suspended or inactive (Admin > Brands): product is hidden
+    // from the storefront, flagged here regardless of its own status.
+    inactive: 'background:#fbeaea;color:#c0392b;'
   };
+
+  function brandInactiveForProduct(p) {
+    if (isHouseProductAdmin(p)) return false;
+    var list = window._vendorsData || [];
+    var v = list.find(function (x) { return x.id === p.vendorId; });
+    if (!v && p.brand) v = list.find(function (x) { return String(x.name || x.brand || '').trim().toUpperCase() === String(p.brand).trim().toUpperCase(); });
+    var st = v ? String(v.status || '').toLowerCase() : '';
+    return st === 'suspended' || st === 'inactive';
+  }
 
   function renderProductRow(p) {
     var firstVariant = (p.variants && p.variants[0]) || {};
@@ -437,7 +449,8 @@
       : [].concat(firstImages.ghost||[], firstImages.model||[], firstImages.detail||[]);
     var thumb = safeUrl(allImages[0] || '');
     var stockLabel = esc(String(p.stock)) + ' available';
-    var status = p.status || 'draft';
+    var inactive = brandInactiveForProduct(p);
+    var status = inactive ? 'inactive' : (p.status || 'draft');
     var badgeStyle = PRODUCT_STATUS_BADGE_STYLE[status] || PRODUCT_STATUS_BADGE_STYLE.draft;
     return '<div class="products-row" onclick="window._openProductForm(\'' + esc(p.id) + '\')">' +
         (thumb ? '<img src="'+esc(thumb)+'" class="pi-thumb" onerror="this.style.display=\'none\'" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:12px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;"></div>') +
