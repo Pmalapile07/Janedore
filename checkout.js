@@ -314,6 +314,13 @@ function renderShippingMethod(shipping, packages) {
     `<span class="checkout-ships-list">${shipments.map(s => `<span class="checkout-ships-row"><span>${sanitizeHTML(s.brand)}</span><span>${s.free ? 'Free' : formatPrice(s.fee)}</span></span>`).join('')}</span>`;
 }
 
+// Guest-order access token stays in this tab's session storage. Only its
+// SHA-256 hash is written to the order document.
+function orderAccessHeaders(orderId) {
+  const token = sessionStorage.getItem('janedore_order_access_' + orderId) || '';
+  return token ? { 'X-Order-Access-Token': token } : {};
+}
+
 async function placeOrder(e) {
   e.preventDefault();
 
@@ -366,7 +373,6 @@ async function placeOrder(e) {
   });
 
   const user = firebase.auth().currentUser;
-
   const orderData = {
     orderNumber: 'ORD-' + Date.now(),
     customerEmail: email,
@@ -415,88 +421,27 @@ async function placeOrder(e) {
   };
   
   try {
-    // Order creation and the stock decrement happen in a single
-    // transaction — both succeed together or neither does. Previously
-    // these were two separate steps: the order was always created, and
-    // stock was decremented afterward on a best-effort basis (a failure
-    // there was just logged, leaving the order and the inventory count
-    // out of sync forever). That separate step also read-then-wrote
-    // stock non-atomically, so two customers checking out the last unit
-    // at the same moment could both succeed and oversell it.
-    // Firestore transactions serialize against each other on the same
-    // document, so this closes both problems at once: every read happens
-    // before any write (required by the API), stock sufficiency is
-    // checked for the whole cart before anything is committed, and a
-    // product that sells out between two concurrent checkouts correctly
-    // fails the second one instead of letting it through.
-    const orderRef = db.collection('orders').doc();
-
-    // Group cart lines by product — the same product can appear twice
-    // (two different sizes/colors of one item), and each product must be
-    // read and written only once in this transaction: writing it twice
-    // would have the second write silently clobber the first's stock
-    // change, since each write replaces that product's whole stock state.
-    const itemsByProduct = {};
-    S.cart.forEach(item => {
-      (itemsByProduct[item.productId] = itemsByProduct[item.productId] || []).push(item);
+    // The server validates the cart, recalculates prices, reserves stock
+    // atomically and creates the order. The browser never writes inventory.
+    const authHeaders = { 'Content-Type': 'application/json' };
+    if (user && !user.isAnonymous) {
+      try { authHeaders.Authorization = 'Bearer ' + await user.getIdToken(); }
+      catch (authError) { throw new Error('Your sign-in session expired. Please sign in again.'); }
+    }
+    const createResponse = await fetch('/api/orders/create', {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ orderData })
     });
-    const productIds = Object.keys(itemsByProduct);
-    const productRefs = productIds.map(id => db.collection('products').doc(id));
-
-    await db.runTransaction(async (transaction) => {
-      const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
-
-      // Validate every line first — nothing gets written until the whole
-      // cart is confirmed to fit, same as before.
-      const updates = [];
-      for (let p = 0; p < productIds.length; p++) {
-        const doc = productDocs[p];
-        if (!doc.exists) continue;
-        const data = doc.data();
-        const items = itemsByProduct[productIds[p]];
-        const stockByVariant = (data.stockByVariant && typeof data.stockByVariant === 'object') ? data.stockByVariant : null;
-
-        if (stockByVariant) {
-          // Stock is tracked per size per color — check/decrement each
-          // line against its own (variant, size) bucket, not the product
-          // as a whole, so selling out Size S doesn't block Size M.
-          const nextByVariant = JSON.parse(JSON.stringify(stockByVariant));
-          for (const item of items) {
-            const vi = item.variantIndex ?? 0;
-            const key = item.size || 'OS';
-            const sizeStock = nextByVariant[vi] || {};
-            const current = typeof sizeStock[key] === 'number' ? sizeStock[key] : 0;
-            if (current < item.qty) {
-              const err = new Error((item.name || 'An item') + ' (' + key + ') only has ' + current + ' left in stock.');
-              err.outOfStock = true;
-              throw err;
-            }
-            sizeStock[key] = current - item.qty;
-            nextByVariant[vi] = sizeStock;
-          }
-          const newTotal = Object.values(nextByVariant).reduce((sum, sizes) =>
-            sum + Object.values(sizes).reduce((a, n) => a + (typeof n === 'number' ? n : 0), 0), 0);
-          updates.push({ ref: productRefs[p], data: { stockByVariant: nextByVariant, stock: newTotal } });
-        } else {
-          // Not yet broken down by size/color — same flat check as before.
-          const currentStock = data.stock || 0;
-          const totalQty = items.reduce((a, it) => a + it.qty, 0);
-          if (currentStock < totalQty) {
-            const err = new Error((items[0].name || 'An item') + ' only has ' + currentStock + ' left in stock.');
-            err.outOfStock = true;
-            throw err;
-          }
-          updates.push({ ref: productRefs[p], data: { stock: currentStock - totalQty } });
-        }
-      }
-
-      transaction.set(orderRef, {
-        ...orderData,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      updates.forEach(u => transaction.update(u.ref, u.data));
-    });
+    const created = await createResponse.json().catch(() => ({}));
+    if (!createResponse.ok) {
+      const err = new Error(created.error || 'Could not create your order. Please try again.');
+      err.outOfStock = createResponse.status === 409;
+      throw err;
+    }
+    const orderId = created.orderId;
+    if (!orderId || !created.orderAccessToken) throw new Error('The server did not return a secure order confirmation. Please contact support before retrying.');
+    sessionStorage.setItem('janedore_order_access_' + orderId, created.orderAccessToken);
 
     // Fire-and-forget — save this address to the signed-in customer's
     // profile so it's there to prefill next visit. The order is already
@@ -526,7 +471,7 @@ async function placeOrder(e) {
     // sending the confirmation email, and showing the confirmation
     // screen all now happen only once handlePayFastReturn() below
     // confirms the order actually got paid.
-    await redirectToPayFast(orderRef.id);
+    await redirectToPayFast(orderId);
 
   } catch (e) {
     console.warn('Order error:', e);
@@ -549,7 +494,7 @@ async function redirectToPayFast(orderId) {
   const picked = document.querySelector('input[name="checkout-payment-method"]:checked');
   const res = await fetch('/api/payfast/initiate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: Object.assign({ 'Content-Type': 'application/json' }, orderAccessHeaders(orderId)),
     body: JSON.stringify({ orderId, paymentMethod: picked ? picked.value : '' })
   });
   if (!res.ok) {
@@ -582,7 +527,9 @@ const PAYFAST_POLL_DELAYS_MS = [1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000];
 
 async function pollPaymentStatus(orderId, attempt) {
   try {
-    const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status');
+    const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
+      headers: orderAccessHeaders(orderId)
+    });
     const data = await res.json();
     if (data.paymentStatus === 'paid') {
       S.cart = [];
@@ -615,7 +562,9 @@ async function pollPaymentStatus(orderId, attempt) {
 // falls back to showing just the order number.
 async function loadConfirmedOrderDetails(orderId) {
   try {
-    const res = await fetch('/api/orders/' + encodeURIComponent(orderId));
+    const res = await fetch('/api/orders/' + encodeURIComponent(orderId), {
+      headers: orderAccessHeaders(orderId)
+    });
     if (!res.ok) return;
     lastConfirmedOrderDetails = await res.json();
     sessionStorage.setItem('janedore_last_order_details', JSON.stringify(lastConfirmedOrderDetails));
@@ -790,7 +739,10 @@ function handlePayFastReturn() {
     // Best-effort — the customer's bag is already intact regardless of
     // whether this call succeeds, so a network failure here shouldn't
     // block showing them the message below.
-    fetch('/api/payfast/order/' + encodeURIComponent(orderId) + '/cancel', { method: 'POST' })
+    fetch('/api/payfast/order/' + encodeURIComponent(orderId) + '/cancel', {
+      method: 'POST',
+      headers: orderAccessHeaders(orderId)
+    })
       .catch(function (e) { console.warn('[PAYFAST_CANCEL] Could not record cancellation:', e.message); });
     alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
     return;
