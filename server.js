@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const https = require('https');
 const fs = require('fs');
+const crypto = require('crypto');
 const admin = require('firebase-admin');
 const { GoogleGenAI } = require('@google/genai');
 const orderEmails = require('./order-emails');
@@ -108,8 +109,8 @@ if (serviceAccount) {
 // working when the visitor password changes. Everyone else is sent to
 // the Coming Soon page. Product data itself stays guarded by
 // firestore.rules either way; this only decides who sees the shop.
-const gateSecret = require('crypto').createHash('sha256')
-  .update('jd-gate|' + (process.env.GATE_SECRET || (serviceAccount && serviceAccount.private_key) || require('crypto').randomBytes(32).toString('hex')))
+const gateSecret = crypto.createHash('sha256')
+  .update('jd-gate|' + (process.env.GATE_SECRET || (serviceAccount && serviceAccount.private_key) || crypto.randomBytes(32).toString('hex')))
   .digest();
 const GATE_PASS_MS = 7 * 24 * 60 * 60 * 1000;
 let gateCache = { at: 0, comingSoon: true, visitorPassword: null };
@@ -689,7 +690,6 @@ async function sendPaidOrderEmails(orderId, order) {
 //      before trusting it, then marks the order paid and sends the
 //      confirmation email — this is now the ONLY place that happens.
 
-const crypto = require('crypto');
 
 // Defaults to sandbox — PAYFAST_SANDBOX must be explicitly set to the
 // literal string 'false' to process real payments. A missing or
@@ -912,7 +912,7 @@ app.post('/api/orders/create', async (req, res) => {
 
   try {
     const orderRef = adminDb.collection('orders').doc();
-    const accessToken = require('crypto').randomBytes(32).toString('hex');
+    const accessToken = crypto.randomBytes(32).toString('hex');
     const orderNumber = 'ORD-' + Date.now() + '-' + accessToken.slice(0, 4).toUpperCase();
     const inputItems = items.map(i => ({
       productId: String(i.productId).slice(0, 150),
