@@ -65,7 +65,7 @@ service cloud.firestore {
     // their new map to contain only their own key; every write after
     // that diffs the new map against the real existing one. The fields
     // *inside* that one entry aren't deep-validated (same accepted
-    // bounded risk as isVariantStockDecrementOnly() below) — the worst
+    // bounded risk in the earlier stock-only rule) — the worst
     // case is a vendor writing junk into their own tracking entry,
     // never touching another vendor's data, the order total, or
     // payment/status.
