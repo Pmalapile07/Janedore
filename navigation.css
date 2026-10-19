@@ -212,9 +212,10 @@ body.on-brands-page .nav-quick-links {
 .footer-brand-mark .nav-logo-img { height: 24px; max-width: 240px; }
 
 .nav-logo-text {
-  font-family: 'Unbounded', Helvetica, Arial, sans-serif;
+  /* Inter SemiBold, the same font as the Logo font uploaded in admin. */
+  font-family: 'Inter', Helvetica, Arial, sans-serif;
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #111;

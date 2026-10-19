@@ -26,7 +26,7 @@
   var uploading = 0;
 
   var SLOTS = [
-    { key: 'logoFont',  kind: 'font',  label: 'Logo font',    hint: 'The JANEDORE text at the top of every page is set in this font. Not set: Unbounded.' },
+    { key: 'logoFont',  kind: 'font',  label: 'Logo font',    hint: 'The JANEDORE text at the top of every page is set in this font. Not set: Inter SemiBold.' },
     { key: 'siteLogo',  kind: 'image', label: 'Website logo', hint: 'Replaces the JANEDORE text at the top of every page with an image. Use a white logo on a transparent background.' },
     { key: 'emailLogo', kind: 'image', label: 'Email logo',   hint: 'Shown in the black bar at the top of every order email. Use a white PNG on a transparent background.' }
   ];

@@ -66,7 +66,7 @@ function shell(opts) {
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">' +
       '<tr><td style="background:#111111;padding:22px 24px;">' +
         // Logo image from admin > Content when set; email apps can't load
-        // the site's Unbounded font, so text is only the fallback.
+        // the site's logo font, so text is only the fallback.
         (opts.logoUrl
           ? '<img src="' + esc(opts.logoUrl) + '" alt="JANEDORE" height="22" style="display:block;height:22px;width:auto;border:0;">'
           : '<span style="font-family:' + (opts.logoFontUrl ? '\'Janedore Logo\', ' : '') + FONT + ';font-size:16px;' +
