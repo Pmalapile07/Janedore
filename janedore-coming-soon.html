@@ -65,41 +65,42 @@
   body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* Header: the shop's black bar with the JANEDORE wordmark. */
-  .site-header { background: var(--ink); padding: 20px 16px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); display: flex; justify-content: center; }
+  /* Header: the shop's black bar, wordmark left, preview password (•••) right. */
+  .site-header { position: sticky; top: 0; z-index: 10; background: var(--ink); height: 60px; padding: 0 12px 0 20px; padding-top: env(safe-area-inset-top, 0px); display: flex; align-items: center; justify-content: space-between; }
   .header-logo-text { font-family: 'Unbounded', Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 400; letter-spacing: 0.12em; color: #fff; }
+  .header-more { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; }
+  .header-more svg { width: 22px; height: 22px; fill: #fff; }
 
-  .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 64px 20px; }
-  .eyebrow { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); background: #e6edd5; padding: 6px 12px; margin-bottom: 24px; }
-  .headline { font-size: 32px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 14px; }
-  .subhead { font-size: 15px; font-weight: 400; line-height: 1.6; color: var(--muted); max-width: 440px; margin-bottom: 32px; }
+  .preview-panel { background: #fff; border-bottom: 1px solid var(--border); }
+  .preview-panel[hidden] { display: none; }
+  .preview-inner { max-width: 440px; margin: 0 auto; padding: 20px; }
+  .preview-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+
+  .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 72px 20px 96px; }
+  .headline { font-size: 34px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .subhead { font-size: 15px; font-weight: 400; line-height: 1.6; color: var(--muted); max-width: 380px; margin-bottom: 32px; }
 
   .signup-wrapper { width: 100%; max-width: 440px; }
-  .signup-row, .visitor-access-row { display: flex; width: 100%; }
-  .signup-input { flex: 1; min-width: 0; height: 48px; padding: 0 14px; border: 1px solid #cfcfcf; border-right: none; border-radius: 0; font-family: inherit; font-size: 15px; color: var(--text); background: #fff; outline: none; -webkit-appearance: none; }
+  .signup-row { display: flex; width: 100%; }
+  .signup-input { flex: 1; min-width: 0; height: 50px; padding: 0 16px; border: 1px solid #d4d4d4; border-right: none; border-radius: 0; font-family: inherit; font-size: 15px; color: var(--text); background: #fff; outline: none; -webkit-appearance: none; }
   .signup-input:focus { border-color: var(--ink); }
-  .signup-input::placeholder { color: #999; }
-  .signup-submit { flex: 0 0 auto; height: 48px; padding: 0 22px; border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .signup-input::placeholder { color: #9a9a9a; }
+  .signup-submit { flex: 0 0 auto; min-width: 116px; height: 50px; padding: 0 20px; border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
   .signup-submit:disabled { opacity: 0.6; cursor: default; }
   .signup-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .signup-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
-  .signup-msg { font-size: 13px; line-height: 1.5; margin-top: 10px; min-height: 0; }
+  .signup-msg { font-size: 13px; line-height: 1.5; margin-top: 10px; text-align: left; }
+  .signup-msg:empty { display: none; }
   .signup-msg.error { color: #c0392b; }
   .signup-msg.success { color: var(--ink); }
 
-  .visitor-access-wrap { width: 100%; max-width: 440px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
-  .visitor-access-link { font-size: 13px; color: var(--muted); cursor: pointer; }
-  .visitor-access-link-em { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
-
-  .site-footer { padding: 24px 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 12px; border-top: 1px solid var(--border); }
-  .footer-social { display: flex; gap: 20px; font-size: 20px; color: var(--ink); }
-  .footer-social a { color: inherit; text-decoration: none; }
+  .site-footer { padding: 20px 16px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; }
   .footer-copy { font-size: 12px; color: var(--muted); cursor: default; user-select: none; }
 
   @media (min-width: 768px) {
-    .headline { font-size: 44px; }
-    .subhead { font-size: 16px; }
+    .site-header { padding: 0 20px 0 32px; }
+    .headline { font-size: 48px; }
+    .subhead { font-size: 16px; max-width: 420px; }
   }
 
   .admin-overlay {
@@ -220,24 +221,41 @@
 <body>
 
 <header class="site-header">
-  <a aria-label="Janedore" class="header-logo">
-    <span class="header-logo-text">JANEDORE</span>
-  </a>
+  <span class="header-logo-text" aria-label="Janedore">JANEDORE</span>
+  <button type="button" class="header-more" id="visitor-access-link" aria-label="Enter preview password" aria-expanded="false" aria-controls="visitor-access-row">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+  </button>
 </header>
 
+<div class="preview-panel" id="visitor-access-row" hidden>
+  <div class="preview-inner">
+    <label for="visitor-password-input" class="preview-label">Preview password</label>
+    <div class="signup-row">
+      <input type="password"
+             class="signup-input"
+             id="visitor-password-input"
+             placeholder="Enter password"
+             autocomplete="off"
+             aria-describedby="visitor-msg">
+      <button type="button" class="signup-submit" id="visitor-submit-btn" aria-label="Enter">
+        <span id="visitor-btn-text">Enter</span>
+        <span id="visitor-btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="signup-msg" id="visitor-msg" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
 <main id="main" class="main-content">
-  <span class="eyebrow">Pre-launch</span>
   <h1 class="headline">You found us early.</h1>
-  <p class="subhead">
-    JANEDORE is a curated home for independent brands. We're getting ready to open. Sign up and you'll be the first to know when we launch.
-  </p>
+  <p class="subhead">We're getting ready to open. Leave your email and you'll be the first to know when we launch.</p>
   <div class="signup-wrapper">
     <div class="signup-row">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email"
              class="signup-input"
              id="email-input"
-             placeholder="Enter your email"
+             placeholder="Email address"
              autocomplete="email"
              aria-describedby="signup-msg"
              required>
@@ -247,23 +265,6 @@
       </button>
     </div>
     <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
-  </div>
-  <div class="visitor-access-wrap">
-    <span class="visitor-access-link" id="visitor-access-link">Have a preview password? <span class="visitor-access-link-em">Enter it</span></span>
-    <div class="visitor-access-row" id="visitor-access-row" style="display:none;">
-      <label for="visitor-password-input" class="sr-only">Password</label>
-      <input type="password"
-             class="signup-input"
-             id="visitor-password-input"
-             placeholder="Password"
-             autocomplete="off"
-             aria-describedby="visitor-msg">
-      <button type="button" class="signup-submit" id="visitor-submit-btn" aria-label="Enter">
-        <span id="visitor-btn-text">Enter</span>
-        <span id="visitor-btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
-      </button>
-    </div>
-    <div class="signup-msg" id="visitor-msg" role="status" aria-live="polite"></div>
   </div>
 </main>
 
@@ -356,9 +357,12 @@
       visitorMsg.className   = 'signup-msg ' + type;
     }
 
+    // The ••• button in the header opens and closes the password panel.
     visitorLink.addEventListener('click', function() {
-      visitorLink.style.display = 'none';
-      visitorRow.style.display  = 'flex';
+      var open = visitorRow.hidden;
+      visitorRow.hidden = !open;
+      visitorLink.setAttribute('aria-expanded', String(open));
+      if (!open) return;
       visitorInput.focus();
     });
 
