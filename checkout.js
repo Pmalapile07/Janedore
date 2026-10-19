@@ -314,6 +314,13 @@ function renderShippingMethod(shipping, packages) {
     `<span class="checkout-ships-list">${shipments.map(s => `<span class="checkout-ships-row"><span>${sanitizeHTML(s.brand)}</span><span>${s.free ? 'Free' : formatPrice(s.fee)}</span></span>`).join('')}</span>`;
 }
 
+// Guest-order access token stays in this tab's session storage. Only its
+// SHA-256 hash is written to the order document.
+function orderAccessHeaders(orderId) {
+  const token = sessionStorage.getItem('janedore_order_access_' + orderId) || '';
+  return token ? { 'X-Order-Access-Token': token } : {};
+}
+
 async function placeOrder(e) {
   e.preventDefault();
 
@@ -366,6 +373,11 @@ async function placeOrder(e) {
   });
 
   const user = firebase.auth().currentUser;
+  const tokenBytes = new Uint8Array(32);
+  window.crypto.getRandomValues(tokenBytes);
+  const orderAccessToken = Array.from(tokenBytes, b => b.toString(16).padStart(2, '0')).join('');
+  const tokenDigest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(orderAccessToken));
+  const orderAccessTokenHash = Array.from(new Uint8Array(tokenDigest), b => b.toString(16).padStart(2, '0')).join('');
 
   const orderData = {
     orderNumber: 'ORD-' + Date.now(),
@@ -411,7 +423,8 @@ async function placeOrder(e) {
     currency: S.currency,
     itemCount: S.cart.reduce((a, i) => a + i.qty, 0),
     status: 'pending',
-    paymentStatus: 'unpaid'
+    paymentStatus: 'unpaid',
+    orderAccessTokenHash
   };
   
   try {
@@ -430,6 +443,7 @@ async function placeOrder(e) {
     // product that sells out between two concurrent checkouts correctly
     // fails the second one instead of letting it through.
     const orderRef = db.collection('orders').doc();
+    sessionStorage.setItem('janedore_order_access_' + orderRef.id, orderAccessToken);
 
     // Group cart lines by product — the same product can appear twice
     // (two different sizes/colors of one item), and each product must be
@@ -549,7 +563,7 @@ async function redirectToPayFast(orderId) {
   const picked = document.querySelector('input[name="checkout-payment-method"]:checked');
   const res = await fetch('/api/payfast/initiate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: Object.assign({ 'Content-Type': 'application/json' }, orderAccessHeaders(orderId)),
     body: JSON.stringify({ orderId, paymentMethod: picked ? picked.value : '' })
   });
   if (!res.ok) {
@@ -582,7 +596,9 @@ const PAYFAST_POLL_DELAYS_MS = [1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000];
 
 async function pollPaymentStatus(orderId, attempt) {
   try {
-    const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status');
+    const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
+      headers: orderAccessHeaders(orderId)
+    });
     const data = await res.json();
     if (data.paymentStatus === 'paid') {
       S.cart = [];
@@ -615,7 +631,9 @@ async function pollPaymentStatus(orderId, attempt) {
 // falls back to showing just the order number.
 async function loadConfirmedOrderDetails(orderId) {
   try {
-    const res = await fetch('/api/orders/' + encodeURIComponent(orderId));
+    const res = await fetch('/api/orders/' + encodeURIComponent(orderId), {
+      headers: orderAccessHeaders(orderId)
+    });
     if (!res.ok) return;
     lastConfirmedOrderDetails = await res.json();
     sessionStorage.setItem('janedore_last_order_details', JSON.stringify(lastConfirmedOrderDetails));
@@ -790,7 +808,10 @@ function handlePayFastReturn() {
     // Best-effort — the customer's bag is already intact regardless of
     // whether this call succeeds, so a network failure here shouldn't
     // block showing them the message below.
-    fetch('/api/payfast/order/' + encodeURIComponent(orderId) + '/cancel', { method: 'POST' })
+    fetch('/api/payfast/order/' + encodeURIComponent(orderId) + '/cancel', {
+      method: 'POST',
+      headers: orderAccessHeaders(orderId)
+    })
       .catch(function (e) { console.warn('[PAYFAST_CANCEL] Could not record cancellation:', e.message); });
     alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
     return;
