@@ -99,6 +99,79 @@ if (serviceAccount) {
   console.warn('[FIREBASE-ADMIN] Not initialized — /products/:slug will serve plain index.html');
 }
 
+// ==================== COMING SOON GATE ====================
+// While Coming Soon is on, storefront pages are only sent to a browser
+// holding a pass this server signed: jd_visitor after the visitor
+// password (/api/verify-visitor-password) or jd_admin after a Super
+// Admin signs in (/api/admin-gate-pass). Both are HttpOnly and HMAC-
+// signed, so a browser can't make one up, and a visitor pass stops
+// working when the visitor password changes. Everyone else is sent to
+// the Coming Soon page. Product data itself stays guarded by
+// firestore.rules either way; this only decides who sees the shop.
+const gateSecret = require('crypto').createHash('sha256')
+  .update('jd-gate|' + (process.env.GATE_SECRET || (serviceAccount && serviceAccount.private_key) || require('crypto').randomBytes(32).toString('hex')))
+  .digest();
+const GATE_PASS_MS = 7 * 24 * 60 * 60 * 1000;
+let gateCache = { at: 0, comingSoon: true, visitorPassword: null };
+async function getGateState() {
+  if (!adminDb) return { comingSoon: true, visitorPassword: null };
+  if (Date.now() - gateCache.at < 15000) return gateCache;
+  const [settings, secrets] = await Promise.all([
+    adminDb.collection('settings').doc('onlineStore').get(),
+    adminDb.collection('settings').doc('onlineStoreSecrets').get()
+  ]);
+  gateCache = {
+    at: Date.now(),
+    // Unset counts as gated, same as /api/online-store-status.
+    comingSoon: !(settings.exists && settings.data().comingSoonEnabled === false),
+    visitorPassword: (secrets.exists && secrets.data().visitorPassword) || null
+  };
+  return gateCache;
+}
+function gateSignature(kind, exp, visitorPassword) {
+  return crypto.createHmac('sha256', gateSecret)
+    .update(kind + '|' + exp + '|' + (kind === 'visitor' ? String(visitorPassword || '') : ''))
+    .digest('hex');
+}
+function readCookie(req, name) {
+  const m = String(req.headers.cookie || '').match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+function hasGatePass(req, state) {
+  const check = (name, kind) => {
+    const [exp, sig] = readCookie(req, name).split('.');
+    if (!exp || !sig || !(Number(exp) > Date.now())) return false;
+    if (kind === 'visitor' && !state.visitorPassword) return false;
+    const want = Buffer.from(gateSignature(kind, exp, state.visitorPassword));
+    const got = Buffer.from(sig);
+    return got.length === want.length && crypto.timingSafeEqual(got, want);
+  };
+  return check('jd_admin', 'admin') || check('jd_visitor', 'visitor');
+}
+function setGatePass(req, res, name, kind, visitorPassword) {
+  const exp = String(Date.now() + GATE_PASS_MS);
+  res.cookie(name, exp + '.' + gateSignature(kind, exp, visitorPassword), {
+    httpOnly: true, secure: req.secure, sameSite: 'lax', path: '/', maxAge: GATE_PASS_MS
+  });
+}
+// Full storefront pages only; files, the API, admin, Coming Soon itself
+// and the bag reminder unsubscribe link are always served.
+const GATED_HTML = new Set(['/index.html', '/store.html', '/products.html', '/category.html']);
+app.use(async (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const p = req.path;
+  const page = GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && p !== '/admin' && !p.startsWith('/bag-reminders/'));
+  if (!page) return next();
+  try {
+    const state = await getGateState();
+    if (!state.comingSoon || hasGatePass(req, state)) return next();
+  } catch (e) {
+    console.error('[GATE] Status check failed:', e.message);
+  }
+  res.set('Cache-Control', 'no-store');
+  res.redirect(302, '/janedore-coming-soon.html');
+});
+
 const SITE_URL = 'https://janedore.co.za';
 
 // Cloudinary config endpoint — MUST be first
@@ -150,7 +223,11 @@ app.get('/api/online-store-status', async (req, res) => {
     // before this toggle existed, so a fresh/unconfigured doc never
     // accidentally exposes the site.
     const comingSoonEnabled = doc.exists && doc.data().comingSoonEnabled === false ? false : true;
-    res.json({ comingSoonEnabled });
+    // unlocked: this browser holds a valid pass (Coming Soon page skips
+    // itself and goes to the shop).
+    let unlocked = false;
+    try { unlocked = hasGatePass(req, await getGateState()); } catch (e) {}
+    res.json({ comingSoonEnabled, unlocked });
   } catch (e) {
     console.error('[ONLINE_STORE_STATUS] Error:', e.message);
     res.json({ comingSoonEnabled: true });
@@ -168,11 +245,31 @@ app.post('/api/verify-visitor-password', async (req, res) => {
   try {
     const doc = await adminDb.collection('settings').doc('onlineStoreSecrets').get();
     const storedPassword = doc.exists ? doc.data().visitorPassword : null;
-    const ok = !!storedPassword && password === storedPassword;
+    const hash = (v) => crypto.createHash('sha256').update(String(v)).digest();
+    const ok = !!storedPassword && crypto.timingSafeEqual(hash(password), hash(storedPassword));
+    if (ok) setGatePass(req, res, 'jd_visitor', 'visitor', storedPassword);
     res.json({ ok });
   } catch (e) {
     console.error('[VERIFY_VISITOR_PASSWORD] Error:', e.message);
     res.status(500).json({ ok: false });
+  }
+});
+
+// Super Admins get a jd_admin pass so they can see the shop while it's
+// behind Coming Soon (the Coming Soon admin sign-in and admin.html call
+// this once signed in).
+app.post('/api/admin-gate-pass', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ ok: false });
+  const match = (req.headers.authorization || '').match(/^Bearer (.+)$/);
+  if (!match) return res.status(401).json({ ok: false });
+  try {
+    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const doc = await adminDb.collection('admins').doc(decoded.uid).get();
+    if (!doc.exists || String(doc.data().role || '').toUpperCase() !== 'SUPER_ADMIN') return res.status(403).json({ ok: false });
+    setGatePass(req, res, 'jd_admin', 'admin');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(401).json({ ok: false });
   }
 });
 

@@ -565,86 +565,9 @@
   <footer id="content-footer"></footer>
 </div>
 <script src="firebase.js"></script>
-<script>
-  var _authResolved = false;
-
-  function hasAdminCookie() {
-    return document.cookie.indexOf('jd_admin=1') !== -1;
-  }
-  // Set after a visitor enters the correct password on the Coming Soon
-  // page — a separate, lower-privilege cookie from jd_admin, so a
-  // visitor only ever gets to browse the live site, never into /admin.
-  function hasVisitorCookie() {
-    return document.cookie.indexOf('jd_visitor=1') !== -1;
-  }
-
-  // The public storefront paints immediately — it is never hidden while
-  // this resolves. This gate only decides whether to redirect AWAY from
-  // the storefront (the Coming Soon password lock, below); it never
-  // decides whether to show it, so there's no visibility toggle left
-  // here to flip. revealSite() just marks the check as settled so a
-  // slower branch (e.g. the Firestore admin-role read in runAuthGate())
-  // can't redirect after a faster branch already cleared the visitor.
-  function revealSite() {
-    _authResolved = true;
-  }
-
-  if (hasAdminCookie() || hasVisitorCookie()) {
-    revealSite();
-  } else {
-    // Online Store "Coming Soon" toggle (admin-online-store.js /
-    // server.js) — when it's off (the normal, launched state), this
-    // resolves to revealSite() and nothing further happens. When it's
-    // on, a visitor with neither cookie gets redirected to the password
-    // page below as soon as this and the Firebase Auth check resolve —
-    // same redirect as before, just no longer blocking paint while it
-    // runs. A failed status check falls through to the same gate
-    // (runAuthGate) rather than assuming the site should stay open.
-    fetch('/api/online-store-status').then(function(r) { return r.json(); }).then(function(data) {
-      if (data && data.comingSoonEnabled === false) {
-        revealSite();
-      } else {
-        runAuthGate();
-      }
-    }).catch(function() {
-      runAuthGate();
-    });
-  }
-
-  function runAuthGate() {
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (_authResolved) return;
-
-      if (!user) {
-        if (hasAdminCookie() || hasVisitorCookie()) {
-          revealSite();
-          return;
-        }
-        _authResolved = true;
-        window.location.replace('janedore-coming-soon.html');
-        return;
-      }
-
-      firebase.firestore().collection('admins').doc(user.uid).get()
-        .then(function(doc) {
-          if (_authResolved) return;
-          var role = doc.exists ? (doc.data().role || '').toUpperCase() : '';
-          if (role !== 'SUPER_ADMIN') {
-            _authResolved = true;
-            firebase.auth().signOut().then(function() {
-              window.location.replace('janedore-coming-soon.html');
-            });
-            return;
-          }
-          revealSite();
-        })
-        .catch(function() {
-          if (_authResolved) return;
-          revealSite();
-        });
-    });
-  }
-</script>
+<!-- Coming Soon gate: enforced by server.js before this page is sent
+     (a signed jd_visitor / jd_admin pass is required while Coming Soon
+     is on), so there is nothing left for the browser to check here. -->
 <script src="vendors.js" defer></script>
 <script src="cart.js" defer></script>
 <script src="wishlist.js" defer></script>
