@@ -1,0 +1,22 @@
+name: Pre-launch checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [prelaunch/security-hardening]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check server JavaScript syntax
+        run: node --check server.js
+      - name: Check checkout JavaScript syntax
+        run: node --check checkout.js
+      - name: Check patch whitespace
+        run: git diff --check
