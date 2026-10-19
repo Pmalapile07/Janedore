@@ -2314,51 +2314,6 @@ app.get('/api/build-id', (req, res) => {
   res.json({ buildId: String(BUILD_ID) });
 });
 
-// ==================== LOGO FONT (no flash) ====================
-// The logo's Unbounded font comes from Google, but a plain <link> means
-// the browser only discovers the font file after downloading Google's
-// CSS, so it arrives after first paint and the logo flashes. Instead the
-// server fetches that CSS itself (refreshed daily, since Google's file
-// URLs can change) and swaps index.html's #logo-font-css <link> for the
-// same @font-face inlined plus a <link rel="preload"> of the exact font
-// file — still served by Google, but downloading from the very start of
-// the page load. If Google can't be reached, the <link> stays as-is.
-const LOGO_FONT_CSS_URL = 'https://fonts.googleapis.com/css2?family=Unbounded:wght@400&text=ABCDEFGHIJKLMNOPQRSTUVWXYZ&display=block';
-let logoFontCss = null;
-let logoFontFileUrl = null;
-
-function refreshLogoFont() {
-  const req = https.get(LOGO_FONT_CSS_URL, {
-    // Google picks the font format from the user agent; a current browser
-    // UA gets woff2, which every browser this site supports can use.
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' }
-  }, (res) => {
-    let body = '';
-    res.setEncoding('utf8');
-    res.on('data', (c) => { body += c; });
-    res.on('end', () => {
-      const file = body.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)\s"']+)\)/);
-      if (res.statusCode !== 200 || !body.includes('@font-face') || body.includes('<') || !file) {
-        console.warn('[LOGO FONT] Unexpected response from Google Fonts (' + res.statusCode + ') — keeping the plain <link>');
-        return;
-      }
-      logoFontCss = body.trim();
-      logoFontFileUrl = file[1];
-    });
-  });
-  req.setTimeout(10000, () => req.destroy(new Error('timeout')));
-  req.on('error', (e) => console.warn('[LOGO FONT] Could not reach Google Fonts:', e.message));
-}
-refreshLogoFont();
-setInterval(refreshLogoFont, 24 * 60 * 60 * 1000).unref();
-
-function injectLogoFont(html) {
-  if (!logoFontCss || !logoFontFileUrl) return html;
-  return html.replace(
-    /<link id="logo-font-css"[^>]*>/,
-    () => '<link rel="preload" as="font" type="font/woff2" href="' + logoFontFileUrl.replace(/&/g, '&amp;') + '" crossorigin>\n  <style id="logo-font-css">' + logoFontCss + '</style>'
-  );
-}
 
 // ==================== SEO HELPERS ====================
 
@@ -2580,7 +2535,7 @@ function applyHomepageContent(html, homepage) {
   const banner = homepage.editorialBanner || {};
   const shopByBrand = homepage.shopByBrand || {};
 
-  // The header always shows the Unbounded JANEDORE wordmark. An uploaded
+  // The header always shows the JANEDORE text wordmark. An uploaded
   // Site Logo used to hide it here in favour of an image the header no
   // longer has, which left the logo blank on every page.
 
@@ -2632,12 +2587,12 @@ async function renderIndexHtml(headTransform) {
 }
 
 // Logo font from admin > Content: the JANEDORE wordmark is set in the
-// uploaded font instead of Unbounded, still as text (sharp at any size).
-// The file is preloaded so the logo doesn't flash in a fallback font.
-// Not set: the Unbounded setup above (injectLogoFont) is used.
+// uploaded font, still as text (sharp at any size), preloaded so it's
+// ready by first paint. Its fallback is Inter SemiBold (navigation.css),
+// the same face, so there's nothing to swap. Not set: Inter SemiBold.
 async function injectCustomLogoFont(html) {
   const { logoFont, logoFontFormat } = await getBrandAssets();
-  if (!logoFont) return injectLogoFont(html);
+  if (!logoFont) return html;
   const fmt = String(logoFontFormat || logoFont.split('.').pop() || '').toLowerCase();
   const cssFormat = { woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype' }[fmt] || 'truetype';
   const mime = { woff2: 'font/woff2', woff: 'font/woff', ttf: 'font/ttf', otf: 'font/otf' }[fmt] || 'font/ttf';
@@ -2646,12 +2601,12 @@ async function injectCustomLogoFont(html) {
     /<link id="logo-font-css"[^>]*>/,
     () => '<link rel="preload" as="font" type="' + mime + '" href="' + url + '" crossorigin>\n' +
       '  <style id="logo-font-css">@font-face{font-family:"Janedore Logo";src:url("' + url + '") format("' + cssFormat + '");font-weight:400;font-style:normal;font-display:block;}' +
-      '.nav-logo-text,.footer-logo-fallback{font-family:"Janedore Logo",Helvetica,Arial,sans-serif !important;}</style>'
+      '.nav-logo-text,.footer-logo-fallback{font-family:"Janedore Logo","Inter",Helvetica,Arial,sans-serif !important;font-weight:400 !important;}</style>'
   );
 }
 
 // Website logo from admin > Content: swaps the header's text wordmark for
-// the image. Not set: the Unbounded JANEDORE wordmark stays.
+// the image. Not set: the JANEDORE text wordmark stays.
 async function injectSiteLogo(html) {
   const { siteLogo } = await getBrandAssets();
   if (!siteLogo) return html;

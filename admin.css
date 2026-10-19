@@ -48,7 +48,7 @@ input, select, textarea { font-size:16px !important; }
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:100vh;min-height:100dvh;background:#080808;padding:0;position:relative;overflow:hidden;}
 #login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 90% 55% at 50% -5%,rgba(255,255,255,0.035) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 20% 100%,rgba(26,86,219,0.04) 0%,transparent 60%);pointer-events:none;}
 .login-brand{position:fixed;top:50%;left:50%;transform:translate(-50%,-62%);text-align:center;pointer-events:none;z-index:1;}
-.login-logo{font-family:var(--font);font-size:var(--font-scale-3xl);font-weight:200;letter-spacing:.38em;color:#fff;display:block;opacity:.92;}
+.login-logo{font-family:'Inter',Helvetica,Arial,sans-serif;font-size:var(--font-scale-3xl);font-weight:600;letter-spacing:.12em;color:#fff;display:block;opacity:.92;}
 .login-sub{font-size:var(--font-scale-xs);letter-spacing:.38em;color:rgba(255,255,255,0.28);margin-top:var(--space-2);text-transform:uppercase;font-weight:500;}
 .login-card{position:relative;z-index:2;width:100%;max-width:460px;background:rgba(18,18,18,0.82);backdrop-filter:blur(32px) saturate(1.2);-webkit-backdrop-filter:blur(32px) saturate(1.2);border:0.5px solid rgba(255,255,255,0.08);border-bottom:none;border-radius:var(--r-lg) var(--r-lg) 0 0;padding:var(--space-6) 26px calc(30px + env(safe-area-inset-bottom,0));}
 .login-card-title{font-family:var(--font);font-size:var(--font-scale-2xl);font-weight:200;color:rgba(255,255,255,0.88);margin-bottom:var(--space-5);letter-spacing:.04em;}
