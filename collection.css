@@ -125,7 +125,10 @@ body.on-collection-page .collection-filter-bar {
    used by New Arrivals and Shop by Category on the homepage. */
 .collection-page-heading {
   display: none;
-  padding: 0 12px 10px;
+  /* Match the shared 20px horizontal content inset used by the
+     collection breadcrumb, description, and Sort/Filter toolbar. */
+  padding: 0 20px 10px;
+  box-sizing: border-box;
   font-family: 'Inter', sans-serif;
   font-size: var(--heading-size);
   font-weight: 600;
