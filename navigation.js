@@ -22,7 +22,21 @@ function navigateTo(page) {
   S.saleMode = false; S.filter.vendor = null; updateHash(page === 'home' ? '' : page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(`page-${page}`)?.classList.add("active");
-  S.currentPage = page; window.scrollTo({top:0,behavior:"smooth"}); removeStickyBar();
+  S.currentPage = page;
+  // Collection chrome is mounted outside the individual page containers.
+  // Explicitly hide it when returning home so the collection heading never
+  // remains above the homepage announcement/free-delivery banner.
+  if (page === "home") {
+    const collectionHeading = document.getElementById("collection-page-heading");
+    const collectionDescription = document.getElementById("collection-top-description");
+    const collectionBreadcrumb = document.getElementById("collection-page-breadcrumb");
+    const collectionCount = document.getElementById("collection-product-count");
+    if (collectionHeading) collectionHeading.style.display = "none";
+    if (collectionDescription) collectionDescription.style.display = "none";
+    if (collectionBreadcrumb) collectionBreadcrumb.innerHTML = "";
+    if (collectionCount) collectionCount.textContent = "";
+  }
+  window.scrollTo({top:0,behavior:"smooth"}); removeStickyBar();
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page","collection-page"); }
   setNavForPage(page);
   if(page==="products"){ DOM.mainNav?.classList.add("collection-page"); S.activeSortTab = 'all'; renderCollectionSortingTabs(); renderAllProducts(); ensureNavScrolled(); S.previousCollectionPage='products'; }
