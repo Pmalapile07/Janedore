@@ -253,7 +253,7 @@
   font-size: 10px;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: normal;
+  letter-spacing: 0.08em;
   color: #111;
   margin-top: 10px;
   margin-bottom: 4px;
@@ -417,7 +417,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 400;
-  letter-spacing: normal;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #111;
 }
