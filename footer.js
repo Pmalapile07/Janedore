@@ -89,12 +89,6 @@ function buildFooter(id) {
 
     <div class="footer-bottom">
       <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span> <span class="footer-disclaimer">Independent brands featured on this platform remain the property of their respective owners.</span></p>
-      <div class="footer-payments" aria-label="Payment methods">
-        <img src="/payment-visa.svg" alt="Visa" width="38" height="24" loading="lazy">
-        <img src="/payment-mastercard.svg" alt="Mastercard" width="38" height="24" loading="lazy">
-        <img src="/payment-apple-pay.svg" alt="Apple Pay" width="38" height="24" loading="lazy">
-        <img src="/payment-instant-eft.svg" alt="PayFast Instant EFT" width="38" height="24" loading="lazy">
-      </div>
     </div>
   `;
 
