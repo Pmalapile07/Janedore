@@ -322,11 +322,14 @@
 /* Black everywhere — red is only ever for .product-price-sale (an
    actual discounted price), never tied to which page a card appears
    on. */
+/* Regular product-card prices use the same size and weight as the
+   sale price, consistently across collections, homepage sections,
+   recently viewed, and recommended-product cards. */
 .product-home-price,
 .product-price {
   font-family: 'Inter', sans-serif;
   font-size: 10px;
-  font-weight: 300;
+  font-weight: 600;
   letter-spacing: var(--ui-letter-spacing);
   color: #000;
 }
