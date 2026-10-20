@@ -47,7 +47,7 @@
   padding: 0;
 }
 .page-breadcrumb {
-  font-size: 9px;
+  font-size: 10px;
 }
 .page-breadcrumb span { color: #888; font-weight: 300; }
 .page-breadcrumb .page-breadcrumb-link { cursor: pointer; font-weight: 300; }
