@@ -348,6 +348,33 @@ function toggleFilterDropdown(source) {
   setTimeout(() => document.addEventListener("click", handler), 10);
 }
 
+function toggleCollectionSort() {
+  const panel = document.getElementById('collection-sort-options');
+  const trigger = document.getElementById('collection-sort-trigger');
+  if (!panel || !trigger) return;
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open', opening);
+  trigger.setAttribute('aria-expanded', String(opening));
+}
+
+function chooseCollectionSort(value) {
+  setSortBy(value);
+  const panel = document.getElementById('collection-sort-options');
+  const trigger = document.getElementById('collection-sort-trigger');
+  if (panel) panel.classList.remove('open');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('click', function (event) {
+  const dropdown = document.querySelector('.collection-sort-dropdown');
+  const panel = document.getElementById('collection-sort-options');
+  const trigger = document.getElementById('collection-sort-trigger');
+  if (dropdown && panel && !dropdown.contains(event.target)) {
+    panel.classList.remove('open');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  }
+});
+
 function toggleCollectionFilter() {
   const el = document.getElementById('collection-filter-options');
   const backdrop = document.getElementById('collection-filter-backdrop');
@@ -390,9 +417,11 @@ function updateCollectionGridIcon() {
 
 function updateCollectionTitle() {
   const titleEl = document.getElementById('collection-filter-title-display');
+  const headingEl = document.getElementById('collection-page-heading');
+  const countEl = document.getElementById('collection-product-count');
   const descEl = document.getElementById('collection-top-description');
   const bcEl = document.getElementById('collection-page-breadcrumb');
-  if (!titleEl) return;
+  if (!titleEl && !headingEl) return;
 
   let title = 'ALL PRODUCTS';
   let description = '';
@@ -463,8 +492,25 @@ function updateCollectionTitle() {
   }
 
   if (titleEl) {
-    titleEl.style.display = 'block';
+    titleEl.style.display = 'none';
     titleEl.textContent = title;
+  }
+  if (headingEl) {
+    headingEl.textContent = title === 'ALL PRODUCTS' ? 'All Products' : title.toLowerCase().replace(/\\b\\w/g, function (char) { return char.toUpperCase(); });
+    headingEl.style.display = 'block';
+  }
+  if (countEl) {
+    let countProducts = [];
+    if (S.currentPage === 'vendor') countProducts = getVendorFilteredProducts(S.currentVendor);
+    else if (S.currentPage === 'category') countProducts = getCatFilteredProducts();
+    else {
+      countProducts = getFilteredProducts();
+      if (S.saleMode) countProducts = countProducts.filter(hasSalePrice);
+      else if (S.newInMode) countProducts = countProducts.filter(function (p) { return typeof isProductNew === 'function' && isProductNew(p); });
+    }
+    countProducts = merchandiseProducts(countProducts, S.currentPage === 'category' ? S.currentCategoryPage : (S.currentPage === 'vendor' ? 'vendor' : undefined));
+    const count = countProducts.length;
+    countEl.textContent = count + (count === 1 ? ' product' : ' products');
   }
 
   if (descEl) {
