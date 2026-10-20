@@ -486,6 +486,8 @@ function updateCollectionTitle() {
     bcLabel = title.charAt(0) + title.slice(1).toLowerCase();
   } else {
     if (titleEl) titleEl.style.display = 'none';
+    if (headingEl) headingEl.style.display = 'none';
+    if (countEl) countEl.textContent = '';
     if (descEl) descEl.style.display = 'none';
     if (bcEl) bcEl.innerHTML = '';
     return;
