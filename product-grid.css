@@ -258,16 +258,19 @@
   margin-top: 10px;
   margin-bottom: 4px;
 }
-/* Base product-card title style for contexts outside the homepage and
-   collection pages. Those page types explicitly match the search prompt
-   below; product-detail-page title styling is unaffected. */
+/* One shared product-name style for product cards everywhere:
+   homepage, collections, search results, recently viewed, suggested /
+   related products, wishlist/cart cards, and AI chat suggestions.
+   The product detail page's main heading uses .product-title-main and
+   intentionally keeps its separate display-title styling. */
 .product-title {
-  text-transform: none;
-  font-weight: 400;
-  font-size: 11px;
-  letter-spacing: normal;
-  color: #111;
   font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: normal;
+  text-transform: none;
+  color: #111;
 }
 .product-wish-btn {
   position: absolute;

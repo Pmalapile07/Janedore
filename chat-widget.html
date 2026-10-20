@@ -555,7 +555,17 @@
     width: 140px !important;
     cursor: pointer !important;
   }
-  #chat-window .jai-product-row .product-title,
+  /* Suggested product names use the same typography as the search
+     prompt, even inside the narrower chat product cards. Keep supporting
+     brand/price metadata compact so the name remains the visual anchor. */
+  #chat-window .jai-product-row .product-title {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    letter-spacing: normal !important;
+    line-height: normal !important;
+    text-transform: none !important;
+  }
   #chat-window .jai-product-row .product-brand,
   #chat-window .jai-product-row .product-price,
   #chat-window .jai-product-row .product-home-price,
