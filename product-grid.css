@@ -407,6 +407,18 @@
   background: #111;
 }
 
+/* Collection-page brand names match the collection FILTER trigger typography. */
+#all-products-grid .product-card .product-brand,
+#category-products-grid .product-card .product-brand,
+#vendor-products-grid .product-card .product-brand {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #111;
+}
+
 /* Homepage and collection product names match the typography of the
    always-visible homepage search prompt (.search-bar-trigger span).
    Keep the scope limited to these grids so product-detail pages and
