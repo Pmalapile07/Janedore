@@ -138,6 +138,13 @@ body.on-collection-page .collection-filter-bar {
   color: #111;
 }
 
+/* The heading is mounted globally, outside page-specific containers.
+   Keep it hidden on every non-collection page even if JavaScript previously
+   set its inline display to block while rendering a collection. */
+body:not(.on-collection-page) .collection-page-heading {
+  display: none !important;
+}
+
 /* The old grid toggle and centered toolbar title remain in the markup/code
    for compatibility, but are intentionally disabled in the storefront UI. */
 .col-grid-toggle-btn,
