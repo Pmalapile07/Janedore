@@ -31,10 +31,17 @@ body.on-brands-page .search-bar-row {
   color: #fff;
   flex-shrink: 0;
 }
+/* Match the typography of .product-title on homepage and collection
+   cards: Inter, 11px, regular weight, normal tracking, no transform.
+   Keep the search prompt muted grey; product names remain black.
+   This does not target .product-title-main on product detail pages. */
 .search-bar-trigger span {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: normal;
   color: #999;
 }
 @media (min-width: 768px) {
