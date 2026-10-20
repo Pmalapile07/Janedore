@@ -258,9 +258,9 @@
   margin-top: 10px;
   margin-bottom: 4px;
 }
-/* Font/size/weight match .search-bar-trigger span ("Search products or
-   brands"), but black rather than that span's grey — product names
-   need to read as real content, not muted placeholder-style text. */
+/* Base product-card title style for contexts outside the homepage and
+   collection pages. Those page types explicitly match the search prompt
+   below; product-detail-page title styling is unaffected. */
 .product-title {
   text-transform: none;
   font-weight: 400;
@@ -405,6 +405,23 @@
   right: 0;
   height: 0.5px;
   background: #111;
+}
+
+/* Homepage and collection product names match the typography of the
+   always-visible homepage search prompt (.search-bar-trigger span).
+   Keep the scope limited to these grids so product-detail pages and
+   their related-product cards retain their existing typography. */
+#arrivals-grid .product-title,
+#clothing-grid .product-title,
+#all-products-grid .product-title,
+#category-products-grid .product-title,
+#vendor-products-grid .product-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: normal;
 }
 
 /* --- SLIDER layout: New Arrivals (#arrivals-grid), Shop by Clothing
