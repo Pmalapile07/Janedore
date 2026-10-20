@@ -194,7 +194,7 @@
 
 .product-badge-stack {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   left: 8px;
   z-index: 2;
   display: flex;
