@@ -534,7 +534,11 @@ function updateNavQuickLinksChevrons() {
   if (!row || !left || !right) return;
   const maxScroll = row.scrollWidth - row.clientWidth;
   left.classList.toggle('hidden', row.scrollLeft <= 2);
-  right.classList.toggle('hidden', maxScroll <= 2 || row.scrollLeft >= maxScroll - 2);
+  // Keep the right chevron visible as an immediately available affordance.
+  // It only scrolls the quick links when the user explicitly clicks/taps it.
+  right.classList.remove('hidden');
+  right.disabled = maxScroll <= 2 || row.scrollLeft >= maxScroll - 2;
+  right.setAttribute('aria-disabled', String(right.disabled));
 }
 
 function scrollNavQuickLinks(direction) {
