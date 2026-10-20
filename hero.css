@@ -150,7 +150,7 @@
   border-radius: 6px;
   color: #111;
 }
-.home-delivery-banner i { font-size: 34px; flex-shrink: 0; }
+.home-delivery-banner > .ph-truck { width: 30px; height: 21px; font-size: 30px; line-height: 21px; flex: 0 0 30px; }
 .home-delivery-text { display: block; flex: 1; min-width: 0; }
 .home-delivery-title, .home-delivery-sub { display: block; }
 .home-delivery-banner .home-delivery-arrow { font-size: 18px; }
