@@ -115,6 +115,14 @@
 @media (min-width: 640px) { .home-categories-grid { padding: 0 10px; } }
 @media (min-width: 1024px) { .home-categories-grid { padding: 0 12px; } }
 .home-category-card { cursor: pointer; width: 100%; }
+/* Cards are <button>s: clear the browser's own button border, padding
+   and background (Android Chrome draws a frame around them; Safari
+   doesn't), keeping a focus ring for keyboard users. */
+button.home-category-card {
+  display: block; padding: 0; margin: 0; border: none; border-radius: 0; background: none;
+  font: inherit; color: inherit; text-align: inherit; -webkit-appearance: none; appearance: none;
+}
+button.home-category-card:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
 /* Product card image ratio is 5/6 (≈0.833); height reduced another
    10% from 0.78 (aspect-ratio is width/height, so shrinking height by
    10% at the same width means dividing the ratio by 0.9: 0.78/0.9 ≈ 0.87). */
