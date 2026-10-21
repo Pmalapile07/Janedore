@@ -52,7 +52,8 @@
      and the pay button; shown on every other page. */
   body:has(#page-product-detail.active) #live-chat-bubble,
   body:has(#page-cart.active) #live-chat-bubble,
-  body:has(#page-checkout.active) #live-chat-bubble { display: none !important; }
+  body:has(#page-checkout.active) #live-chat-bubble,
+  body:has(#collection-filter-options.open) #live-chat-bubble { display: none !important; }
 
   /* Bubble is #111 on #111 — invisible once the black footer scrolls
      behind it. Toggled by the IntersectionObserver in chat.js while

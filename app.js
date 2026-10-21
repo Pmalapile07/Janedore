@@ -249,9 +249,10 @@ window.subscribeNewsletter = subscribeNewsletter;
 // ==================== CLOSE FILTER PANEL HELPER ====================
 function closeFilterPanel() {
   const filterPanel = document.getElementById('collection-filter-options');
-  const filterBackdrop = document.getElementById('collection-filter-backdrop');
-  if (filterPanel) filterPanel.classList.remove('open');
-  if (filterBackdrop) filterBackdrop.classList.remove('open');
+  if (filterPanel && filterPanel.classList.contains('open')) {
+    filterPanel.classList.remove('open');
+    document.body.style.overflow = '';
+  }
 }
 
 async function init() {

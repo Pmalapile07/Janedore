@@ -221,6 +221,8 @@ function showLoading(container) { if(container) container.innerHTML = '<div clas
 
 function passesCommonFilters(p, f) {
   if (f.size && f.size !== 'all' && !(p.sizes || []).includes(f.size)) return false;
+  if (f.sizes && f.sizes.length && !(p.sizes || []).some(s => f.sizes.includes(s))) return false;
+  if (f.colors && f.colors.length && !productColors(p).some(c => f.colors.includes(c))) return false;
   if (f.onSale && !hasSalePrice(p)) return false;
   if (f.inStock && (Number(p.stock) || 0) <= 0) return false;
   return true;
@@ -298,14 +300,16 @@ function getVendorFilteredProducts(vendor) {
 // than one value per facet — e.g. two brands at once — rather than
 // forcing an either/or choice, so category/brand are toggled in and
 // out of a list instead of being replaced by a single value.
+// Facets picked from a list (several at once); the rest are on/off.
+const ARRAY_FILTERS = ['cat', 'vendor', 'sizes', 'colors'];
 function toggleArrayFilter(filterObj, type, value) {
-  const arr = filterObj[type];
+  const arr = filterObj[type] || (filterObj[type] = []);
   const idx = arr.indexOf(value);
   if (idx === -1) arr.push(value); else arr.splice(idx, 1);
 }
 
 function applyFilter(type, value) {
-  if (type === 'cat' || type === 'vendor') toggleArrayFilter(S.filter, type, value);
+  if (ARRAY_FILTERS.includes(type)) toggleArrayFilter(S.filter, type, value);
   else S.filter[type] = value;
   if (S.saleMode) renderSaleProducts();
   else if (S.newInMode) renderNewInProducts();
@@ -313,13 +317,13 @@ function applyFilter(type, value) {
 }
 
 function applyCatFilter(type, value) {
-  if (type === 'cat' || type === 'vendor') toggleArrayFilter(S.catFilter, type, value);
+  if (ARRAY_FILTERS.includes(type)) toggleArrayFilter(S.catFilter, type, value);
   else S.catFilter[type] = value;
   renderCategoryProducts();
 }
 
 function applyVendorFilter(type, value) {
-  if (type === 'cat' || type === 'vendor') toggleArrayFilter(S.vendorFilter, type, value);
+  if (ARRAY_FILTERS.includes(type)) toggleArrayFilter(S.vendorFilter, type, value);
   else S.vendorFilter[type] = value;
   renderVendorPage(S.currentVendor);
 }
@@ -401,19 +405,20 @@ document.addEventListener('click', function (event) {
   }
 });
 
+// Opens the full-screen filters with the sections that have picks (or
+// the first one) open; Done or × closes them.
 function toggleCollectionFilter() {
   const el = document.getElementById('collection-filter-options');
-  const backdrop = document.getElementById('collection-filter-backdrop');
   if(!el) return;
-  const isOpen = el.classList.toggle("open");
-  if(backdrop) backdrop.classList.toggle("open", isOpen);
+  const opening = !el.classList.contains('open');
+  if (opening) { _filterOpenSections = null; renderFilterPanel(); }
+  el.classList.toggle('open', opening);
+  document.body.style.overflow = opening ? 'hidden' : '';
 }
 
+// Products update behind the filters as options are picked; the panel
+// stays open until Done.
 function applyCollectionFilter(type, value) {
-  const el = document.getElementById('collection-filter-options');
-  const backdrop = document.getElementById('collection-filter-backdrop');
-  if(el) el.classList.remove("open");
-  if(backdrop) backdrop.classList.remove("open");
   if (S.currentPage === 'products') { applyFilter(type, value); }
   else if (S.currentPage === 'category') { applyCatFilter(type, value); }
   else if (S.currentPage === 'vendor') { applyVendorFilter(type, value); }
@@ -559,92 +564,125 @@ function updateCollectionTitle() {
 }
 
 // Standard faceted-search behavior (ASOS, Superbalist, COS): each facet
-// is multi-select (checkboxes, OR within the facet), option counts are
-// computed against every OTHER active filter so a shopper can see what
-// picking one would actually do, and any option that would return zero
-// results is hidden outright rather than shown as a dead end.
-function buildCategoryFilterOptions() {
-  const filterContainer = document.getElementById('collection-filter-categories');
-  if (!filterContainer) return;
+// is multi-select (OR within the facet), option counts are computed
+// against every OTHER active filter so a shopper can see what picking one
+// would actually do, and any option that would return zero results is
+// hidden outright rather than shown as a dead end.
 
-  const isCategoryPage = S.currentPage === 'category';
-  const isVendorPage = S.currentPage === 'vendor';
-  const f = isVendorPage ? S.vendorFilter : (isCategoryPage ? S.catFilter : S.filter);
-  const scope = getCategoryFilterScope();
-  // Restricts counts to just this brand's own products, same as
-  // getVendorFilteredProducts() — otherwise a vendor page's category
-  // counts would show site-wide totals instead of this brand's.
-  const vendorIds = isVendorPage ? new Set(getVendorBaseProducts(S.currentVendor).map(p => p.id)) : null;
-
-  let categories = [...new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category).filter(Boolean))];
-  if (scope) categories = categories.filter(c => scope.includes(c));
-
-  categories.sort((a, b) => {
-    const oA = CATEGORY_ORDER[a] ?? 99;
-    const oB = CATEGORY_ORDER[b] ?? 99;
-    if (oA !== oB) return oA - oB;
-    return String(a).localeCompare(String(b));
-  });
-
-  const countFor = cat => PRODUCTS.filter(p => {
-    if (p.status !== 'active' || p.category !== cat) return false;
-    if (isVendorPage) return vendorIds.has(p.id) && passesCommonFilters(p, f);
-    if (isCategoryPage && p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses') return false;
-    if (f.vendor.length && !f.vendor.includes(p.brand)) return false;
-    return passesCommonFilters(p, f);
-  }).length;
-
-  let html = '';
-  categories.forEach(cat => {
-    const count = countFor(cat);
-    if (count === 0 && !f.cat.includes(cat)) return;
-    const label = String(cat).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const checked = f.cat.includes(cat) ? 'checked' : '';
-    html += `<label class="filter-option"><input type="checkbox" ${checked} onchange="applyCollectionFilter('cat','${escapeJSString(cat)}')"> ${escapeHTML(label)} <span class="filter-option-count">(${count})</span></label>`;
-  });
-
-  filterContainer.innerHTML = html || '<div class="filter-empty-note">No filters available</div>';
+function currentFilterState() {
+  return S.currentPage === 'vendor' ? S.vendorFilter : (S.currentPage === 'category' ? S.catFilter : S.filter);
 }
 
-function buildBrandFilterOptions() {
-  const filterContainer = document.getElementById('collection-filter-brands');
-  if (!filterContainer) return;
-
-  // Every product on a vendor page is already that one brand, so a
-  // brand filter has nothing to do there — hide the whole group
-  // instead of showing it with a single, always-checked option.
-  const filterGroup = filterContainer.closest('.filter-group');
-  if (S.currentPage === 'vendor') {
-    if (filterGroup) filterGroup.style.display = 'none';
-    return;
+// Every product the current page lists before any filter is picked.
+function filterPagePool() {
+  if (S.currentPage === 'vendor') return getVendorBaseProducts(S.currentVendor);
+  const empty = { cat: [], size: 'all', vendor: [], onSale: false, inStock: false };
+  if (S.currentPage === 'category') {
+    const saved = S.catFilter; S.catFilter = empty;
+    try { return getCatFilteredProducts(); } finally { S.catFilter = saved; }
   }
-  if (filterGroup) filterGroup.style.display = '';
+  const saved = S.filter; S.filter = empty;
+  let pool;
+  try { pool = getFilteredProducts(); } finally { S.filter = saved; }
+  if (S.saleMode) pool = pool.filter(hasSalePrice);
+  else if (S.newInMode) pool = pool.filter(p => typeof isProductNew === 'function' && isProductNew(p));
+  return pool;
+}
 
-  const isCategoryPage = S.currentPage === 'category';
-  const f = isCategoryPage ? S.catFilter : S.filter;
-  const scope = getCategoryFilterScope();
+// Passes every picked filter except `skip` (the facet being counted).
+function passesFacets(p, f, skip) {
+  if (skip !== 'cat' && f.cat.length && !f.cat.includes(p.category)) return false;
+  if (skip !== 'vendor' && f.vendor.length && !f.vendor.includes(p.brand)) return false;
+  if (skip !== 'sizes' && f.sizes && f.sizes.length && !(p.sizes || []).some(s => f.sizes.includes(s))) return false;
+  if (skip !== 'colors' && f.colors && f.colors.length && !productColors(p).some(c => f.colors.includes(c))) return false;
+  if (skip !== 'onSale' && f.onSale && !hasSalePrice(p)) return false;
+  if (skip !== 'inStock' && f.inStock && (Number(p.stock) || 0) <= 0) return false;
+  return true;
+}
 
-  let pool = PRODUCTS.filter(p => p.status === 'active');
-  if (scope) pool = pool.filter(p => scope.includes(p.category));
-  if (isCategoryPage) pool = pool.filter(p => p.id !== LEATHER_POUCH_ID || S.currentCategoryPage === 'sunglasses');
+// A product's colours, from its variants ("Default" is no colour).
+function productColors(p) {
+  return [...new Set((p.variants || []).map(v => String(v.color || '').trim()).filter(c => c && c.toLowerCase() !== 'default'))];
+}
 
-  const brands = [...new Set(pool.map(p => p.brand).filter(Boolean))].sort();
+function filterCategoryLabel(cat) {
+  const names = { parfum: 'Scent', jewelry: 'Jewellery' };
+  return names[cat] || String(cat).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
 
-  const countFor = brand => pool.filter(p => {
-    if (p.brand !== brand) return false;
-    if (f.cat.length && !f.cat.includes(p.category)) return false;
-    return passesCommonFilters(p, f);
-  }).length;
+const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+function compareSizes(a, b) {
+  const ia = SIZE_ORDER.indexOf(String(a).toUpperCase()), ib = SIZE_ORDER.indexOf(String(b).toUpperCase());
+  if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  const na = parseFloat(String(a).replace(/[^\d.]/g, '')), nb = parseFloat(String(b).replace(/[^\d.]/g, ''));
+  if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return na - nb;
+  return String(a).localeCompare(String(b));
+}
 
-  let html = '';
-  brands.forEach(brand => {
-    const count = countFor(brand);
-    if (count === 0 && !f.vendor.includes(brand)) return;
-    const checked = f.vendor.includes(brand) ? 'checked' : '';
-    html += `<label class="filter-option"><input type="checkbox" ${checked} onchange="applyCollectionFilter('vendor','${escapeJSString(brand)}')"> ${escapeHTML(brand)} <span class="filter-option-count">(${count})</span></label>`;
-  });
+// Which sections are open; null means "work it out" (on opening).
+let _filterOpenSections = null;
+function toggleFilterSection(key) {
+  if (_filterOpenSections.has(key)) _filterOpenSections.delete(key); else _filterOpenSections.add(key);
+  renderFilterPanel();
+}
 
-  filterContainer.innerHTML = html || '<div class="filter-empty-note">No filters available</div>';
+function renderFilterPanel() {
+  const body = document.getElementById('collection-filter-sections');
+  if (!body) return;
+  const f = currentFilterState();
+  const pool = filterPagePool();
+  const count = (skip, test) => pool.filter(p => test(p) && passesFacets(p, f, skip)).length;
+  const sections = [];
+
+  // Category: the categories this page covers.
+  let cats = [...new Set(pool.map(p => p.category).filter(Boolean))];
+  cats.sort((a, b) => ((CATEGORY_ORDER[a] ?? 99) - (CATEGORY_ORDER[b] ?? 99)) || String(a).localeCompare(String(b)));
+  sections.push({ key: 'cat', title: 'Category', options: cats.map(c => ({ value: c, label: filterCategoryLabel(c), picked: f.cat.includes(c), count: count('cat', p => p.category === c) })) });
+
+  // Brands: not on a brand's own page.
+  if (S.currentPage !== 'vendor') {
+    const brands = [...new Set(pool.map(p => p.brand).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    sections.push({ key: 'vendor', title: 'Brands', options: brands.map(b => ({ value: b, label: b, picked: f.vendor.includes(b), count: count('vendor', p => p.brand === b) })) });
+  }
+
+  // 'OS' is the one-size placeholder, never a real size.
+  const sizes = [...new Set(pool.flatMap(p => p.sizes || []).filter(s => s && s !== 'OS'))].sort(compareSizes);
+  sections.push({ key: 'sizes', title: 'Size', options: sizes.map(sz => ({ value: sz, label: sz, picked: (f.sizes || []).includes(sz), count: count('sizes', p => (p.sizes || []).includes(sz)) })) });
+
+  const swatches = {};
+  pool.forEach(p => (p.variants || []).forEach(v => { const c = String(v.color || '').trim(); if (c && !swatches[c] && v.swatch) swatches[c] = v.swatch; }));
+  const colors = [...new Set(pool.flatMap(productColors))].sort((a, b) => a.localeCompare(b));
+  sections.push({ key: 'colors', title: 'Colour', options: colors.map(c => ({ value: c, label: c, swatch: swatches[c], picked: (f.colors || []).includes(c), count: count('colors', p => productColors(p).includes(c)) })) });
+
+  sections.push({ key: 'availability', title: 'Availability', options: [
+    { type: 'onSale', label: 'On sale', picked: !!f.onSale, count: count('onSale', hasSalePrice) },
+    { type: 'inStock', label: 'In stock', picked: !!f.inStock, count: count('inStock', p => (Number(p.stock) || 0) > 0) }
+  ] });
+
+  // Hide options (and whole sections) that would show nothing.
+  sections.forEach(sec => { sec.options = sec.options.filter(o => o.picked || o.count > 0); });
+  const shown = sections.filter(sec => sec.options.length);
+
+  if (!_filterOpenSections) {
+    _filterOpenSections = new Set(shown.filter(sec => sec.options.some(o => o.picked)).map(sec => sec.key));
+    if (!_filterOpenSections.size && shown[0]) _filterOpenSections.add(shown[0].key);
+  }
+
+  body.innerHTML = shown.length ? shown.map(sec => {
+    const open = _filterOpenSections.has(sec.key);
+    const picked = sec.options.filter(o => o.picked).length;
+    return `<div class="filter-section${open ? ' open' : ''}">
+      <button type="button" class="filter-section-head" aria-expanded="${open}" onclick="toggleFilterSection('${sec.key}')">
+        <span>${escapeHTML(sec.title)}${picked ? ` <span class="filter-section-picked">(${picked})</span>` : ''}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      ${open ? `<div class="filter-section-options">${sec.options.map(o => {
+        const action = o.type ? `applyCollectionFilter('${o.type}', ${!o.picked})` : `applyCollectionFilter('${sec.key}','${escapeJSString(o.value)}')`;
+        const swatch = o.swatch ? `<span class="filter-swatch" style="background:${escapeHTML(o.swatch)}"></span>` : '';
+        return `<button type="button" class="filter-choice${o.picked ? ' picked' : ''}" aria-pressed="${o.picked}" onclick="${escapeHTML(action)}"><span class="filter-tick" aria-hidden="true"></span>${swatch}<span class="filter-choice-label">${escapeHTML(o.label)}</span><span class="filter-option-count">${o.count}</span></button>`;
+      }).join('')}</div>` : ''}
+    </div>`;
+  }).join('') : '<div class="filter-empty-note">No filters available</div>';
 }
 
 // Chips for every active filter value, shown above the grid (outside
@@ -661,11 +699,17 @@ function renderActiveFilterChips() {
 
   const chips = [];
   f.cat.forEach(cat => {
-    const label = String(cat).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const label = filterCategoryLabel(cat);
     chips.push({ label, onclick: `applyCollectionFilter('cat','${escapeJSString(cat)}')` });
   });
   f.vendor.forEach(brand => {
     chips.push({ label: brand, onclick: `applyCollectionFilter('vendor','${escapeJSString(brand)}')` });
+  });
+  (f.sizes || []).forEach(size => {
+    chips.push({ label: 'Size ' + size, onclick: `applyCollectionFilter('sizes','${escapeJSString(size)}')` });
+  });
+  (f.colors || []).forEach(color => {
+    chips.push({ label: color, onclick: `applyCollectionFilter('colors','${escapeJSString(color)}')` });
   });
   if (f.onSale) chips.push({ label: 'On Sale', onclick: `applyCollectionFilter('onSale', false)` });
   if (f.inStock) chips.push({ label: 'In Stock', onclick: `applyCollectionFilter('inStock', false)` });
@@ -1069,8 +1113,7 @@ function renderAllProducts() {
   renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
-  buildCategoryFilterOptions();
-  buildBrandFilterOptions();
+  renderFilterPanel();
   renderActiveFilterChips();
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
@@ -1098,8 +1141,7 @@ function renderCategoryProducts() {
   if(DOM.categoryDescriptionWrap){DOM.categoryDescriptionWrap.innerHTML='';}
   renderCollectionSortingTabs();
   updateCollectionTitle();
-  buildCategoryFilterOptions();
-  buildBrandFilterOptions();
+  renderFilterPanel();
   renderActiveFilterChips();
   injectToolbarExtras('page-category', 'cat-grid-toggle-svg');
 }
@@ -1138,8 +1180,7 @@ function renderNewInProducts() {
   renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
-  buildCategoryFilterOptions();
-  buildBrandFilterOptions();
+  renderFilterPanel();
   renderActiveFilterChips();
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
@@ -1170,8 +1211,7 @@ function renderSaleProducts() {
   renderPaginatedGrid(DOM.allProductsGrid, expanded, S.gridCols);
   updateGridToggleSVG("grid-toggle-svg", S.gridCols);
   updateCollectionTitle();
-  buildCategoryFilterOptions();
-  buildBrandFilterOptions();
+  renderFilterPanel();
   renderActiveFilterChips();
   injectToolbarExtras('page-products', 'grid-toggle-svg');
 }
@@ -1179,14 +1219,6 @@ function renderSaleProducts() {
 function injectToolbarExtras(pageId, gridSvgId) {
   const page = document.getElementById(pageId);
   if (!page) return;
-
-  // #collection-filter-options is a single global panel shared by every
-  // page (it sits outside all .page containers in index.html), not
-  // nested inside whichever page is currently active — page.querySelector
-  // here always came back empty, so the On Sale/In Stock checkboxes
-  // this builds were never actually appended anywhere, on any page.
-  const oldExtras = document.querySelector('.filter-extras-injected');
-  if (oldExtras) oldExtras.remove();
 
   const toolbar = page.querySelector('.collection-toolbar');
   if (toolbar) {
@@ -1205,13 +1237,6 @@ function injectToolbarExtras(pageId, gridSvgId) {
     }
   }
 
-  const panel = document.getElementById('collection-filter-options');
-  if (panel) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'filter-extras-injected';
-    wrapper.innerHTML = buildFilterExtras();
-    panel.appendChild(wrapper);
-  }
 }
 
 function buildSortControl() {
@@ -1219,19 +1244,6 @@ function buildSortControl() {
   return `<select id="sort-by" class="filter-select sort-by-select" onchange="setSortBy(this.value)">` +
     SORT_OPTIONS.map(o => `<option value="${o.v}"${current === o.v ? ' selected' : ''}>${escapeHTML(o.l)}</option>`).join('') +
   `</select>`;
-}
-
-function buildFilterExtras() {
-  const f = S.currentPage === 'vendor' ? S.vendorFilter : (S.currentPage === 'category' ? S.catFilter : S.filter);
-  const onSale = f.onSale ? 'checked' : '';
-  const inStock = f.inStock ? 'checked' : '';
-  return `
-    <div class="filter-group">
-      <div class="filter-group-title">Availability</div>
-      <label class="filter-option"><input type="checkbox" ${onSale} onchange="applyCollectionFilter('onSale', this.checked)"> On sale only</label>
-      <label class="filter-option"><input type="checkbox" ${inStock} onchange="applyCollectionFilter('inStock', this.checked)"> In stock only</label>
-    </div>
-  `;
 }
 
 function toggleGrid() { S.gridCols = S.gridCols === 1 ? 2 : S.gridCols === 2 ? 3 : 1; if(S.saleMode) renderSaleProducts(); else if (S.newInMode) renderNewInProducts(); else renderAllProducts(); updateGridToggleSVG("grid-toggle-svg", S.gridCols); updateCollectionGridIcon(); }
@@ -1561,8 +1573,7 @@ function renderVendorPage(vendor) {
   renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
   updateCollectionGridIcon();
   updateCollectionTitle();
-  buildCategoryFilterOptions();
-  buildBrandFilterOptions();
+  renderFilterPanel();
   renderActiveFilterChips();
   injectToolbarExtras('page-vendor', 'col-grid-icon');
 

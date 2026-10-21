@@ -352,136 +352,101 @@ body:not(.on-collection-page) .collection-page-heading {
 }
 
 /* =========================================
-   FILTER PANEL - FIXED POSITION, SLIDES FROM RIGHT
+   FILTER PANEL - FULL SCREEN, LIKE THE MENU
+   Black header with close and "Filters" (as #menu-drawer, navigation.css),
+   sections that open and close, Reset/Done pinned to the bottom.
    ========================================= */
-
-.collection-filter-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.25);
-  z-index: 950;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-
-.collection-filter-backdrop.open {
-  opacity: 1;
-  pointer-events: all;
-}
 
 .collection-filter-options {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(320px, 85vw);
+  inset: 0;
+  z-index: 1200;
   background: #fff;
-  z-index: 951;
-  transform: translateX(100%);
-  transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.08);
-  padding: 24px;
-  overflow-y: auto;
+  font-family: 'Inter', sans-serif;
+  color: #111;
+  opacity: 0;
   visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
 }
+.collection-filter-options.open { opacity: 1; visibility: visible; transition: opacity 0.25s ease, visibility 0s; }
 
-.collection-filter-options.open {
-  transform: translateX(0);
-  visibility: visible;
-}
-
-/* Filter panel header */
 .collection-filter-header {
+  flex-shrink: 0;
+  height: 64px;
+  background: #111;
+  color: #fff;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
+  gap: 4px;
+  padding: 0 12px;
+}
+.collection-filter-title { font-size: 16px; font-weight: 600; margin-left: 6px; }
+.collection-filter-close { background: none; border: none; padding: 6px; display: flex; align-items: center; cursor: pointer; }
+.collection-filter-close svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; }
+
+.collection-filter-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0 16px 16px;
 }
 
-.collection-filter-title {
-  font-family: 'Inter', sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  color: #111;
-  letter-spacing: 0.02em;
+.filter-section { border-bottom: 1px solid #d5d5d5; }
+.filter-section-head {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 20px 0;
+  background: none; border: 0; font-family: inherit; font-size: 16px; font-weight: 500; color: #111; text-align: left; cursor: pointer;
 }
+.filter-section-picked { font-weight: 400; color: #888; }
+.filter-section-head svg { width: 18px; height: 18px; stroke: #111; fill: none; stroke-width: 1.5; flex-shrink: 0; transition: transform 0.2s ease; }
+.filter-section.open .filter-section-head svg { transform: rotate(180deg); }
+.filter-section-options { padding: 0 0 12px 8px; }
 
-.collection-filter-close {
-  background: none;
-  border: none;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
+.filter-choice {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 10px 0;
+  background: none; border: 0; font-family: inherit; font-size: 15px; font-weight: 400; color: #111; text-align: left; cursor: pointer;
 }
-
-.collection-filter-close svg {
-  width: 18px;
-  height: 18px;
-  stroke: #111;
-  fill: none;
-  stroke-width: 1.5;
+/* Tick circle: empty until picked, then black with a white tick. */
+.filter-tick { position: relative; width: 24px; height: 24px; flex-shrink: 0; box-sizing: border-box; border: 1.5px solid #111; border-radius: 50%; }
+.filter-choice.picked .filter-tick { background: #111; }
+.filter-choice.picked .filter-tick::after {
+  content: ''; position: absolute; left: 7px; top: 3.5px; width: 5px; height: 10px;
+  border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
-
-/* =========================================
-   FILTER GROUP STYLES
-   ========================================= */
-
-.filter-group {
-  margin-bottom: 24px;
-}
-
-.filter-group:last-child {
-  margin-bottom: 0;
-}
-
-.filter-group-title {
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #888;
-  margin-bottom: 12px;
-}
-
-.filter-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  color: #111;
-  padding: 8px 0;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  letter-spacing: 0.02em;
-}
-
-.filter-option:hover {
-  opacity: 0.6;
-}
-
-.filter-option input {
-  margin: 0;
-  accent-color: #111;
-}
-
-.filter-option-count {
-  color: #999;
-  font-size: 12px;
-}
+.filter-swatch { width: 14px; height: 14px; flex-shrink: 0; border-radius: 50%; border: 1px solid #ddd; }
+.filter-choice-label { flex: 1; min-width: 0; }
+.filter-option-count { color: #999; font-size: 12px; }
 
 .filter-empty-note {
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   color: #999;
-  padding: 4px 0;
+  padding: 24px 0;
 }
+
+.collection-filter-footer {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0));
+  background: #fff;
+  border-top: 1px solid #eee;
+}
+.collection-filter-reset,
+.collection-filter-done {
+  height: 50px;
+  font-family: inherit;
+  font-size: calc(var(--ui-font-size) + 1px);
+  font-weight: 500;
+  letter-spacing: var(--ui-letter-spacing);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.collection-filter-reset { background: #fff; color: #111; border: 1.5px solid #111; }
+.collection-filter-done { background: #111; color: #fff; border: 1.5px solid #111; }
 
 /* =========================================
    ACTIVE FILTER CHIPS - ABOVE THE GRID
