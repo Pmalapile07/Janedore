@@ -58,9 +58,9 @@ body.on-collection-page #collection-page-breadcrumb.has-icons {
    the fallback for the moment before that JS runs. */
 .collection-top-description {
   display: none;
-  /* Right under the breadcrumb and lined up with it (same 20px side
-     padding, left-aligned). */
-  padding: 0 20px 14px;
+  /* Right under the heading and lined up with it and the product cards'
+     text (same 8px side padding, left-aligned). */
+  padding: 0 8px 14px;
   text-align: left;
   max-width: 640px;
   margin: 0;
@@ -127,11 +127,10 @@ body.on-collection-page .collection-filter-bar {
    used by New Arrivals and Shop by Category on the homepage. */
 .collection-page-heading {
   display: none;
-  /* Match the shared 20px horizontal content inset used by the
-     collection breadcrumb, description, and Sort/Filter toolbar. */
-  /* The top padding stands in for the breadcrumb that used to sit above;
+  /* Sides line up with the product cards' text (8px, product-grid.css).
+     The top padding stands in for the breadcrumb that used to sit above;
      brand pages still have their icon bar there instead. */
-  padding: 22px 20px 10px;
+  padding: 22px 8px 10px;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
   font-size: var(--heading-size);

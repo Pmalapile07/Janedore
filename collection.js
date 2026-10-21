@@ -492,7 +492,7 @@ function updateCollectionTitle() {
     titleEl.textContent = title;
   }
   if (headingEl) {
-    headingEl.textContent = title === 'ALL PRODUCTS' ? 'All Products' : title.toLowerCase().replace(/\\b\\w/g, function (char) { return char.toUpperCase(); });
+    headingEl.textContent = title === 'ALL PRODUCTS' ? 'All Products' : title.toLowerCase().replace(/\b\w/g, function (char) { return char.toUpperCase(); });
     headingEl.style.display = 'block';
   }
   if (countEl) {
