@@ -1,21 +1,9 @@
-.wish-page { max-width: 1000px; margin: 0 auto; padding: 60px 0 0; }
-/* Same layout technique as #collection-filter-bar on All Products:
-   grid-toggle sits in normal flow on the left, title is absolutely
-   centered regardless of what's beside it (not flex space-between,
-   which would push it off-center once there's only one other element). */
-/* "My Account" back link for signed-in customers: same spacing as on
-   the account sections (.account-page, account.css), empty or not. */
-.wish-account-back { max-width: 1000px; margin: 0 auto; padding: 40px 16px 0; box-sizing: border-box; }
-.wish-page:has(.wish-account-back) { padding-top: 0; }
+.wish-page { max-width: 1000px; margin: 0 auto; padding: 0; }
+/* Heading (and, signed in, the "My Account" back link): same spacing and
+   type as the account sections (.account-page, account.css), empty or
+   not. */
+.wish-head { max-width: 1000px; margin: 0 auto; padding: 40px 16px 0; box-sizing: border-box; }
 body.wish-signed-in:has(#page-wishlist.active) .nav-quick-links-wrap { display: none; }
-.wish-page-header { position: relative; display: flex; align-items: center; min-height: 24px; padding: 0 8px; margin-bottom: 24px; }
-@media (min-width: 640px) { .wish-page-header { padding: 0 10px; } }
-@media (min-width: 1024px) { .wish-page-header { padding: 0 12px; } }
-.wish-page-title {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight);
-  text-transform: uppercase; white-space: nowrap; margin: 0;
-}
 /* Empty wishlist uses the empty bag's layout (.cart-empty, cart.css). */
 .wish-page.is-empty { max-width: none; padding-top: 0; }
 .wish-page.is-empty .cart-suggestions { padding-top: 0; }

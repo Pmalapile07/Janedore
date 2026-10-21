@@ -37,7 +37,7 @@ function toggleWish(productId, btnEl) {
   if (btnEl) hearts.add(btnEl);
   hearts.forEach(b => {
     const icon = b.querySelector('i');
-    if (icon) icon.className = nowWished ? 'ph-fill ph-heart' : (b.dataset.wishWeight || 'ph-light') + ' ph-heart';
+    if (icon) icon.className = nowWished ? 'ph-fill ph-heart' : (b.dataset.wishWeight || 'ph') + ' ph-heart';
     b.classList.toggle('wished', nowWished);
   });
   updateBadges();
@@ -128,42 +128,33 @@ function toggleGridWish() {
 // silently drifting out of sync with the real card markup every time
 // productCard() changed. Same function, same structure, same page as
 // All Products, permanently.
-// Saved products, straight away: the grid toggle on the left and the
-// title centred (.wish-page-header). The empty bag look
+// Saved products under the heading, or the empty bag look
 // (renderCartPage(), cart.js) when there are none.
-// Signed-in customers reach the wishlist from My Account, so it gets the
-// same way back as the account sections (account.js) and no quick links
+// The "Wishlist" heading, styled like the My Account sections (account.js,
+// .account-heading). Signed-in customers reach the wishlist from My
+// Account, so they also get the same way back above it and no quick links
 // (body.wish-signed-in, wishlist.css).
-function wishAccountBackHtml() {
+function wishHeadHtml() {
   const user = firebase.auth().currentUser;
   const signedIn = !!(user && !user.isAnonymous);
   document.body.classList.toggle('wish-signed-in', signedIn);
-  return signedIn ? `<div class="wish-account-back"><button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button></div>` : '';
+  const back = signedIn ? `<button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button>` : '';
+  return `<div class="wish-head">${back}<h1 class="account-heading account-section-heading">Wishlist</h1></div>`;
 }
 
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
-  const back = wishAccountBackHtml();
+  const head = wishHeadHtml();
   if (!S.wishlist.length) {
     DOM.wishPageContent.classList.add('is-empty');
-    DOM.wishPageContent.innerHTML = back + wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
+    DOM.wishPageContent.innerHTML = head + wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
     if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
     return;
   }
   DOM.wishPageContent.classList.remove('is-empty');
   const cols = S.gridColsWish;
-  const header = `<div class="wish-page-header">
-    <button class="col-grid-toggle-btn" onclick="toggleGridWish()" title="Change grid layout">
-      <div class="col-grid-icon cols-${cols}">
-        <div class="col-grid-bar"></div>
-        <div class="col-grid-bar"></div>
-        <div class="col-grid-bar"></div>
-      </div>
-    </button>
-    <h1 class="wish-page-title">Wishlist (${S.wishlist.length})</h1>
-  </div>`;
   const cards = S.wishlist.map(p => productCard(p, cols === 3, true, S.productVariantSelections[p.id] ?? 0)).join('');
-  DOM.wishPageContent.innerHTML = back + header + `<div class="product-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${cards}</div>`;
+  DOM.wishPageContent.innerHTML = head + `<div class="product-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${cards}</div>`;
 }
 
 // Same block as the empty bag: icon, message, black button, then Recently
