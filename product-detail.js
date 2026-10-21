@@ -140,7 +140,7 @@ function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' 
 // every other badge — a product that can't be bought shouldn't also be
 // advertised as new or on sale.
 var PRODUCT_NEW_DAYS = 5;
-var RESERVED_BADGE_VALUES = ['new', 'sale', 'sold out', 'sold', 'free shipping'];
+var RESERVED_BADGE_VALUES = ['new', 'sale', 'sold out', 'sold', 'free delivery'];
 
 function isProductNew(product) {
   var created = product && product.createdAt ? new Date(product.createdAt).getTime() : NaN;
@@ -169,7 +169,7 @@ function getProductBadges(product) {
   }
   // Brands with free delivery (Admin > Brands; cart.js), same products
   // as the Free Delivery collection the home banner links to.
-  if (typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product)) badges.push('FREE SHIPPING');
+  if (typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product)) badges.push('FREE DELIVERY');
 
   return badges;
 }
@@ -177,7 +177,7 @@ function getProductBadges(product) {
 // Product cards and bag thumbnails are too small for a stack, so they
 // show one badge: the one that matters most to buying it. The product
 // page's larger image keeps every badge (getProductBadges()). Order:
-// sold out, pre-order, sale, a custom admin badge, free shipping, new.
+// sold out, pre-order, sale, a custom admin badge, free delivery, new.
 var CARD_BADGE_PRIORITY = ['SOLD OUT', 'PRE-ORDER', 'SALE'];
 function getCardBadges(product) {
   var badges = getProductBadges(product);
@@ -185,9 +185,9 @@ function getCardBadges(product) {
   for (var i = 0; i < CARD_BADGE_PRIORITY.length; i++) {
     if (badges.indexOf(CARD_BADGE_PRIORITY[i]) !== -1) return [CARD_BADGE_PRIORITY[i]];
   }
-  var custom = badges.filter(function (b) { return b !== 'NEW' && b !== 'FREE SHIPPING'; });
+  var custom = badges.filter(function (b) { return b !== 'NEW' && b !== 'FREE DELIVERY'; });
   if (custom.length) return [custom[0]];
-  return [badges.indexOf('FREE SHIPPING') !== -1 ? 'FREE SHIPPING' : badges[0]];
+  return [badges.indexOf('FREE DELIVERY') !== -1 ? 'FREE DELIVERY' : badges[0]];
 }
 
 function getProductImages(product, variantIndex) {
