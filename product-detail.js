@@ -140,7 +140,7 @@ function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' 
 // every other badge — a product that can't be bought shouldn't also be
 // advertised as new or on sale.
 var PRODUCT_NEW_DAYS = 5;
-var RESERVED_BADGE_VALUES = ['new', 'sale', 'sold out', 'sold'];
+var RESERVED_BADGE_VALUES = ['new', 'sale', 'sold out', 'sold', 'free shipping'];
 
 function isProductNew(product) {
   var created = product && product.createdAt ? new Date(product.createdAt).getTime() : NaN;
@@ -167,13 +167,17 @@ function getProductBadges(product) {
   if (manual && RESERVED_BADGE_VALUES.indexOf(manual.toLowerCase()) === -1) {
     badges.push(manual.toUpperCase());
   }
+  // Brands with free delivery (Admin > Brands; cart.js), same products
+  // as the Free Delivery collection the home banner links to.
+  if (typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product)) badges.push('FREE SHIPPING');
 
   return badges;
 }
 
 // Product cards and bag thumbnails are too small for a stack, so they
 // show one badge: the one that matters most to buying it. The product
-// page's larger image keeps every badge (getProductBadges()).
+// page's larger image keeps every badge (getProductBadges()). Order:
+// sold out, pre-order, sale, a custom admin badge, free shipping, new.
 var CARD_BADGE_PRIORITY = ['SOLD OUT', 'PRE-ORDER', 'SALE'];
 function getCardBadges(product) {
   var badges = getProductBadges(product);
@@ -181,8 +185,9 @@ function getCardBadges(product) {
   for (var i = 0; i < CARD_BADGE_PRIORITY.length; i++) {
     if (badges.indexOf(CARD_BADGE_PRIORITY[i]) !== -1) return [CARD_BADGE_PRIORITY[i]];
   }
-  var custom = badges.filter(function (b) { return b !== 'NEW'; });
-  return [custom[0] || badges[0]];
+  var custom = badges.filter(function (b) { return b !== 'NEW' && b !== 'FREE SHIPPING'; });
+  if (custom.length) return [custom[0]];
+  return [badges.indexOf('FREE SHIPPING') !== -1 ? 'FREE SHIPPING' : badges[0]];
 }
 
 function getProductImages(product, variantIndex) {
