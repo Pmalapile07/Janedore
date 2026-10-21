@@ -380,3 +380,8 @@ body.on-brands-page .nav-quick-links {
   transition: color 0.2s;
 }
 .brand-logo-placeholder:hover { color: #111; }
+
+
+/* Signed-in customers can return to My Account from their wishlist;
+   hide the collection quick-links row only in that specific context. */
+body.on-signed-in-wishlist:has(#page-wishlist.active) .nav-quick-links-wrap { display: none; }

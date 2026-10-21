@@ -158,6 +158,33 @@ function accountOrderPackages(order) {
     });
 }
 
+// Customer-facing order progress follows the same fulfilment statuses
+// staff can set in admin.js. Cancellation is a terminal state, not a step
+// after delivery. Shipment-level tracking remains separate for split orders.
+function accountOrderProgressHtml(order) {
+  const status = String(order.status || 'pending').toLowerCase();
+  if (status === 'cancelled') {
+    return '<div class="track-notice account-order-cancelled">This order has been cancelled.</div>';
+  }
+  const stages = [
+    { key: 'pending', label: 'Order placed' },
+    { key: 'processing', label: 'Processing' },
+    { key: 'packed', label: 'Packed' },
+    { key: 'shipped', label: 'Shipped' },
+    { key: 'delivered', label: 'Delivered' }
+  ];
+  let current = stages.findIndex(stage => stage.key === status);
+  if (current < 0) current = 1;
+  return '<div class="account-order-progress" aria-label="Order progress">' +
+    '<div class="account-order-progress-title">Order progress</div>' +
+    '<div class="track-steps">' + stages.map((stage, i) => {
+      const state = i < current ? 'done' : i === current ? 'current' : '';
+      return '<div class="track-step ' + state + '"><span class="track-step-dot">' +
+        (state === 'done' ? '<i class="ph ph-check" aria-hidden="true"></i>' : '') +
+        '</span><span class="track-step-label">' + stage.label + '</span></div>';
+    }).join('<div class="track-step-line"></div>') + '</div></div>';
+}
+
 function accountOrderStatus(o) {
   if (o.paymentStatus === 'refund_pending') return { label: 'Refund in progress', cls: '' };
   if (accountOrderRefunded(o)) return { label: 'Refunded', cls: '' };
@@ -244,7 +271,7 @@ async function renderAccountOrder(orderNumber) {
     refunded: accountOrderRefunded(order),
     cancelled: accountOrderCancelled(order) && !accountOrderRefunded(order),
     packages
-  }, { hideAnother: true });
+  }, { hideAnother: true, hideSteps: true });
 
   const address = [order.shippingAddress, [order.city, order.province].filter(Boolean).join(', '), [order.postalCode, order.country].filter(Boolean).join(', ')]
     .filter(Boolean).map(escapeHTML).join('<br>');
@@ -252,6 +279,7 @@ async function renderAccountOrder(orderNumber) {
   const shipping = Number(order.shipping) || 0;
   el.innerHTML = `<section class="account-page">
     ${back}
+    ${accountOrderProgressHtml(order)}
     ${tracking}
     <div class="track-card account-detail">
       <div class="account-detail-title">Delivery details</div>

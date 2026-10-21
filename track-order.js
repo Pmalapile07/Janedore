@@ -156,7 +156,7 @@ function trackResultHtml(o, opts) {
         : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is processing this package. You will receive a shipping confirmation with tracking details once it has been dispatched.</p>`;
     return `<div class="track-card">
       <div class="track-card-head"><div><div class="track-card-label">${cardLabel(p)}</div><div class="track-card-brand">${escapeHTML(trackPlainText(p.brand))}</div></div>${status}</div>
-      ${live ? stepsHtml(p) : ''}${items}${body}</div>`;
+      ${live && !opts.hideSteps ? stepsHtml(p) : ''}${items}${body}</div>`;
   }).join('');
 
   return `<div class="track-result">

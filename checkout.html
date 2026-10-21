@@ -96,6 +96,11 @@
   .checkout-option input:focus-visible + .checkout-option-radio { outline: 2px solid #111; outline-offset: 2px; }
   .checkout-option-body { flex: 1; min-width: 0; }
   .checkout-option-head { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+  .checkout-option-head { align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  .checkout-option-head > i { font-size: 18px; flex-shrink: 0; }
+  .checkout-option-head > span:first-of-type { flex: 1; }
+  .checkout-payment-brands { margin-left: auto; color: #555; font-size: 10px; font-weight: 600; letter-spacing: .03em; white-space: nowrap; }
+  .checkout-continue-note { margin-top: 12px; }
   .checkout-option-head strong { font-weight: 600; }
   .checkout-option-note { display: block; margin-top: 6px; font-size: 13px; color: #555; line-height: 1.5; }
   .checkout-option-note strong { color: #111; font-weight: 600; }
@@ -272,6 +277,7 @@
       <section class="checkout-card">
         <div data-checkout-totals></div>
         <button type="submit" class="checkout-place-order-btn" id="checkout-continue-btn">Continue to Payment</button>
+        <p class="checkout-payment-note checkout-continue-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Secure checkout. Your payment details are handled by PayFast.</p>
       </section>
 
     </form>
@@ -316,7 +322,7 @@
             <input type="radio" name="checkout-payment-method" value="cc" checked>
             <span class="checkout-option-radio" aria-hidden="true"></span>
             <span class="checkout-option-body">
-              <span class="checkout-option-head"><span>Credit or debit card</span></span>
+              <span class="checkout-option-head"><i class="ph ph-credit-card" aria-hidden="true"></i><span>Credit or debit card</span><span class="checkout-payment-brands" aria-label="Visa and Mastercard">VISA · Mastercard</span></span>
               <span class="checkout-option-note">Visa or Mastercard. You'll enter your card details on PayFast's secure page.</span>
             </span>
           </label>
@@ -324,7 +330,7 @@
             <input type="radio" name="checkout-payment-method" value="ef">
             <span class="checkout-option-radio" aria-hidden="true"></span>
             <span class="checkout-option-body">
-              <span class="checkout-option-head"><span>Instant EFT</span></span>
+              <span class="checkout-option-head"><i class="ph ph-bank" aria-hidden="true"></i><span>Instant EFT</span></span>
               <span class="checkout-option-note">Pay straight from your bank account.</span>
             </span>
           </label>
@@ -332,7 +338,7 @@
             <input type="radio" name="checkout-payment-method" value="">
             <span class="checkout-option-radio" aria-hidden="true"></span>
             <span class="checkout-option-body">
-              <span class="checkout-option-head"><span>Other ways to pay</span></span>
+              <span class="checkout-option-head"><i class="ph ph-wallet" aria-hidden="true"></i><span>Other ways to pay</span></span>
               <span class="checkout-option-note">Apple Pay, SnapScan and more, on PayFast.</span>
             </span>
           </label>
@@ -386,7 +392,7 @@
         <div id="confirmation-summary"></div>
       </section>
 
-      <button type="button" class="checkout-place-order-btn checkout-continue-btn" onclick="navigateTo('home')">Continue Shopping</button>
+      <button type="button" class="checkout-place-order-btn checkout-continue-btn" onclick="viewConfirmedOrder()">View Order</button>
     </div>
   </div>
 
