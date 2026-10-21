@@ -132,14 +132,16 @@ function toggleGridWish() {
 // (renderCartPage(), cart.js) when there are none.
 // The "Wishlist" heading, styled like the My Account sections (account.js,
 // .account-heading). Signed-in customers reach the wishlist from My
-// Account, so they also get the same way back above it and no quick links
-// (body.wish-signed-in, wishlist.css).
+// Account, so they get the same way back above it; everyone else gets a
+// prompt to sign in under it.
 function wishHeadHtml() {
   const user = firebase.auth().currentUser;
   const signedIn = !!(user && !user.isAnonymous);
-  document.body.classList.toggle('wish-signed-in', signedIn);
-  const back = signedIn ? `<button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button>` : '';
-  return `<div class="wish-head">${back}<h1 class="account-heading account-section-heading">Wishlist</h1></div>`;
+  if (signedIn) {
+    return `<div class="wish-head"><button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button><h1 class="account-heading account-section-heading">Wishlist</h1></div>`;
+  }
+  return `<div class="wish-head"><h1 class="account-heading">Wishlist</h1>
+    <p class="wish-signin-note"><button type="button" class="wish-signin-link" onclick="navigateToLogin()">Sign in</button> to save your wishlist and view it on any device.</p></div>`;
 }
 
 function renderWishlistPage() {
