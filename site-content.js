@@ -109,43 +109,34 @@ function renderNewArrivalsHeader(arrivals) {
   }
 }
 
-function renderCollectionQuickLinks() {
-  const row = document.getElementById('nav-quick-links');
-  if (!row || typeof window._loadPublishedCollections !== 'function') return;
-  row.querySelectorAll('[data-dynamic-collection-link]').forEach(function (el) { el.remove(); });
+// Collections ticked "Show in the menu" (Admin > Collections) are listed
+// in the menu's links, ahead of Gift Cards. Sale and New In already have
+// their own menu entries, so a collection with either handle is skipped.
+function renderMenuCollectionLinks() {
+  const links = document.querySelector('#menu-panel-main .menu-links');
+  if (!links || typeof window._loadPublishedCollections !== 'function') return;
+  links.querySelectorAll('[data-dynamic-collection-link]').forEach(function (el) { el.remove(); });
   window._loadPublishedCollections().then(function (collections) {
-    if (!row.isConnected) return;
-    const published = collections || [];
-    ['sale', 'newin'].forEach(function (handle) {
-      const staticLink = row.querySelector('[data-nav-page="' + handle + '"]');
-      const dynamicRecord = published.some(function (item) { return String(item.handle || item.slug || item.id) === handle; });
-      if (staticLink) staticLink.style.display = dynamicRecord ? 'none' : '';
-    });
-    const visible = published.filter(function (item) { return item.visibleInNavigation === true; })
+    if (!links.isConnected) return;
+    const giftCards = document.getElementById('menu-giftcards-link');
+    (collections || []).filter(function (item) { return item.visibleInNavigation === true; })
       .sort(function (a, b) {
         return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
           String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
+      })
+      .forEach(function (item) {
+        const handle = String(item.handle || item.slug || item.id || '');
+        if (!handle || handle === 'sale' || handle === 'newin') return;
+        const link = document.createElement('a');
+        link.className = 'menu-plain';
+        link.setAttribute('data-dynamic-collection-link', 'true');
+        link.textContent = item.title || item.name || handle;
+        link.addEventListener('click', function () {
+          if (typeof closeMenu === 'function') closeMenu();
+          if (typeof window.navigateToCollection === 'function') window.navigateToCollection(handle);
+        });
+        links.insertBefore(link, giftCards && giftCards.parentNode === links ? giftCards : null);
       });
-    // Built-in links are ordered by importance in index.html. A Sale or
-    // New In collection takes its built-in link's place; any other
-    // collection goes after Categories, ahead of Gift Cards.
-    const giftCards = row.querySelector('[data-nav-page="giftcards"]');
-    visible.forEach(function (item) {
-      const handle = String(item.handle || item.slug || item.id || '');
-      if (!handle) return;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'nav-quick-link';
-      button.setAttribute('data-dynamic-collection-link', 'true');
-      button.setAttribute('data-nav-page', 'collection-' + handle);
-      button.textContent = item.title || item.name || handle;
-      button.addEventListener('click', function () {
-        if (typeof window.navigateToCollection === 'function') window.navigateToCollection(handle);
-      });
-      const builtIn = row.querySelector('[data-nav-page="' + handle + '"]:not([data-dynamic-collection-link])');
-      row.insertBefore(button, builtIn || giftCards);
-    });
-    if (typeof window.updateNavQuickLinksChevrons === 'function') window.updateNavQuickLinksChevrons();
   });
 }
 
@@ -280,7 +271,7 @@ async function renderSiteContent() {
     window._siteContent = { homepage, collectionPages };
 
     renderLogo(homepage.logoUrl);
-    renderCollectionQuickLinks();
+    renderMenuCollectionLinks();
     renderHero(homepage.hero);
     renderNewArrivalsHeader(homepage.newArrivals);
     renderShopByCategory(homepage.shopByCategory);

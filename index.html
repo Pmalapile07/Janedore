@@ -309,26 +309,6 @@
   </div>
 </nav>
 
-<!-- Lives outside #main-nav on purpose — #main-nav is position:sticky
-     (pinned while scrolling), but this row is meant to scroll away
-     with the page content below it (the hero image on home, the A-Z
-     index on brands, etc.), not stay pinned with the header. Sits
-     outside every .page div too (same pattern as
-     #collection-page-breadcrumb above), so it's a single persistent
-     element shown on every page rather than something each page
-     re-renders. */ -->
-<div class="nav-quick-links-wrap" id="nav-quick-links-wrap">
-  <button class="nav-quick-chevron nav-quick-chevron-left hidden" id="nav-quick-chevron-left" aria-label="Scroll left" onclick="scrollNavQuickLinks(-1)"><i class="ph-bold ph-caret-left"></i></button>
-  <div class="nav-quick-links" id="nav-quick-links">
-    <button class="nav-quick-link" data-nav-page="home" onclick="navigateTo('home')">All</button>
-    <button class="nav-quick-link" data-nav-page="brands" onclick="navigateTo('brands')">Brands</button>
-    <button class="nav-quick-link" data-nav-page="newin" onclick="navigateToNewIn()">New In</button>
-    <button class="nav-quick-link" data-nav-page="sale" onclick="navigateToSale()">Sale</button>
-    <button class="nav-quick-link" data-nav-page="categories" onclick="navigateTo('categories')">Categories</button>
-    <button class="nav-quick-link" data-nav-page="giftcards" onclick="navigateTo('giftcards')">Gift Cards</button>
-  </div>
-  <button class="nav-quick-chevron nav-quick-chevron-right" id="nav-quick-chevron-right" aria-label="Scroll quick links right" onclick="scrollNavQuickLinks(1)"><i class="ph-bold ph-caret-right"></i></button>
-</div>
 
 <nav class="page-breadcrumb" id="collection-page-breadcrumb" aria-label="Breadcrumb"></nav>
 
@@ -426,7 +406,7 @@
       <div class="menu-links">
         <a class="menu-plain" onclick="closeMenu();navigateTo('brands');">Brands</a>
         <a class="menu-plain menu-sale" onclick="closeMenu();navigateToSale();">Sale</a>
-        <a class="menu-plain" onclick="closeMenu();navigateTo('giftcards');">Gift Cards</a>
+        <a class="menu-plain" id="menu-giftcards-link" onclick="closeMenu();navigateTo('giftcards');">Gift Cards</a>
       </div>
 
       <button class="menu-cta" onclick="closeMenu();navigateToContentPage('track-your-order');">Track Your Order</button>
@@ -581,7 +561,7 @@
 <div class="page" id="page-editorial"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Editorial</div></div></section><footer id="editorial-footer"></footer></div>
 <div class="page" id="page-categories"><section id="categories-page-section" style="padding:24px 0 60px"><div class="home-categories-grid" id="categories-page-grid" aria-label="Categories"><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div></div></section><footer id="categories-footer"></footer></div>
 <div class="page" id="page-giftcards"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Gift Cards</div></div></section><footer id="giftcards-footer"></footer></div>
-<div class="page" id="page-brands"><section style="padding:12px 12px 60px"><div class="brands-page-heading" style="text-align:left;margin-bottom:16px"><div style="font-family:'Inter',sans-serif;font-size:var(--heading-size);font-weight:400">A&#8211;Z <span style="font-weight:600">Brands</span></div></div><div class="brands-page-grid" id="brands-page-grid"></div><div class="brands-az-index" id="brands-az-index"></div><div class="brands-az-list" id="brands-az-list"></div></section><footer id="brands-footer"></footer></div>
+<div class="page" id="page-brands"><section style="padding:22px 12px 60px"><div class="brands-page-heading" style="text-align:left;margin-bottom:16px"><div style="font-family:'Inter',sans-serif;font-size:var(--heading-size);font-weight:400">A&#8211;Z <span style="font-weight:600">Brands</span></div></div><div class="brands-page-grid" id="brands-page-grid"></div><div class="brands-az-index" id="brands-az-index"></div><div class="brands-az-list" id="brands-az-list"></div></section><footer id="brands-footer"></footer></div>
 <div class="page" id="page-cart"><div class="cart-page" id="cart-page-content"></div><footer id="cart-footer"></footer></div>
 <div class="page" id="page-wishlist"><div class="wish-page" id="wish-page-content"></div><footer id="wishlist-footer"></footer></div>
 <div class="page" id="page-product-detail"></div>

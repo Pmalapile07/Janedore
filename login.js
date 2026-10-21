@@ -35,8 +35,6 @@ function setPath(path, replaceUrl) {
 function navigateToLogin(replaceUrl) {
   if (realUser()) { navigateToAccount(replaceUrl); return; }
   showPage('page-login', 'login');
-  // The quick-links row hides on the login page (navigation.css).
-  document.body.classList.add('on-login-page');
   setPath('/login', replaceUrl);
   showLoginView();
 }
@@ -46,7 +44,6 @@ function navigateToLogin(replaceUrl) {
 function navigateToAccount(replaceUrl) {
   if (!realUser()) { navigateToLogin(replaceUrl); return; }
   showPage('page-account', 'account');
-  document.body.classList.remove('on-login-page');
   if (!(replaceUrl && /^\/account(\/|$)/.test(window.location.pathname))) setPath('/account', replaceUrl);
   if (typeof renderAccountPage === 'function') renderAccountPage();
 }

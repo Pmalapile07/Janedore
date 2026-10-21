@@ -98,12 +98,10 @@ body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .nav-left > .nav
 body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .desktop-nav-links,
 body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .nav-right,
 body:has(#page-cart.active .cart-page:not(.is-empty)) #main-nav .search-bar-row,
-body:has(#page-cart.active .cart-page:not(.is-empty)) .nav-quick-links-wrap,
 body:has(#page-checkout.active) #main-nav .nav-left > .nav-icon-btn,
 body:has(#page-checkout.active) #main-nav .desktop-nav-links,
 body:has(#page-checkout.active) #main-nav .nav-right,
-body:has(#page-checkout.active) #main-nav .search-bar-row,
-body:has(#page-checkout.active) .nav-quick-links-wrap {
+body:has(#page-checkout.active) #main-nav .search-bar-row {
   display: none !important;
 }
 .cart-page {

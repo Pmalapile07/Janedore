@@ -401,7 +401,7 @@ async function renderProductPage(product) {
   // before the real content (the big innerHTML write further down),
   // but before even showLoading()'s placeholder. Product pages are
   // almost always opened from partway down a scrolled grid (unlike
-  // quick-link taps, which happen near the top already), so there's
+  // menu taps, which happen near the top already), so there's
   // real scrollY to carry over. Doing this at the end of the function
   // (where it used to be) left a window where the browser could paint
   // a frame of the new, tall content at the OLD scroll position —

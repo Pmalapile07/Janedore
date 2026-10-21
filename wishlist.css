@@ -3,7 +3,6 @@
    type as the account sections (.account-page, account.css), empty or
    not. */
 .wish-head { max-width: 1000px; margin: 0 auto; padding: 40px 16px 0; box-sizing: border-box; }
-body:has(#page-wishlist.active) .nav-quick-links-wrap { display: none; }
 /* Signed out: "Sign in to save your wishlist..." under the heading, in
    the account page's subtitle style (.account-hello). */
 .wish-signin-note { font-family: 'Inter', sans-serif; font-size: 13px; color: #666; line-height: 1.5; margin: 0 0 24px; }

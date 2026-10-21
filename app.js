@@ -284,11 +284,6 @@ async function init() {
   buildCampaignSlider();
   initVendors(S.vendors);
   initNavScroll();
-  const navQuickLinksRow = document.getElementById('nav-quick-links');
-  if (navQuickLinksRow) {
-    navQuickLinksRow.addEventListener('scroll', updateNavQuickLinksChevrons, { passive: true });
-    updateNavQuickLinksChevrons();
-  }
 
   // PayFast redirects the customer back to "/?payfast_return=1&order=..."
   // (a bare path with query params, no hash), so without this check the
@@ -477,74 +472,6 @@ function setNavForPage(page) {
   // heading, matching the reference layout; every other page keeps the
   // search bar exactly as before.
   document.body.classList.toggle('on-brands-page', page === 'brands');
-
-  // Hides the quick-links row (All/Brands/Categories/Editorial/Gift
-  // Cards/New In/Sale) on the editorial and login pages, per explicit
-  // request — every other page routed through here keeps it. The
-  // product detail and vendor/brand pages are hidden too, but via
-  // their own markers (navigation.css) since goToProduct() (app.js)
-  // and navigateToVendor()/previewPlaceholderVendor() (collection.js)
-  // don't route through this function at all.
-  document.body.classList.toggle('on-editorial-page', page === 'editorial');
-  document.body.classList.toggle('on-login-page', page === 'login');
-  // Every page that DOES route through here is, by definition, not the
-  // vendor page — goToProduct() (the other path that bypasses this
-  // function) clears this same class itself.
-  document.body.classList.remove('on-vendor-page');
-
-  updateNavQuickLinks(page);
-}
-
-// Highlights whichever .nav-quick-link (the New In/Categories/Brands/
-// Editorial/Sale row under the search bar, index.html) matches the
-// page just navigated to. Both New In and Sale land on the same
-// #page-products — which tab lights up depends on S.saleMode /
-// S.newInMode, which navigateToNewIn()/navigateToSale() both already
-// set before calling setNavForPage() — reading it here rather than
-// passing a separate flag through every call site. A manual sort
-// change via the dropdown (or any other path onto #page-products)
-// just leaves the row unhighlighted, same as the reference. Pages
-// with no matching tab at all (cart, product detail, a vendor page,
-// etc.) behave the same way.
-function updateNavQuickLinks(page) {
-  let key = page;
-  if (page === 'category' && S.currentCollectionHandle) key = 'collection-' + S.currentCollectionHandle;
-  if (page === 'products') key = S.saleMode ? 'sale' : (S.newInMode ? 'newin' : null);
-  document.querySelectorAll('.nav-quick-link').forEach(el => {
-    const isActive = el.dataset.navPage === key;
-    el.classList.toggle('active', isActive);
-    // Same behavior as the bash.com reference: clicking a tab further
-    // down the row scrolls it into view instead of leaving it partly
-    // clipped at the edge.
-    if (isActive) el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
-  });
-}
-
-// Scroll affordance for the quick-links row — a floating left/right
-// caret, shown only when there's actually more row to scroll to in
-// that direction (bash.com reference shows the same pattern: no left
-// caret at the start of the row, no right caret once scrolled all the
-// way to the end). Bound to the row's own 'scroll' event in init()
-// below, plus called once up front so the initial state is correct
-// even before the user has scrolled at all.
-function updateNavQuickLinksChevrons() {
-  const row = document.getElementById('nav-quick-links');
-  const left = document.getElementById('nav-quick-chevron-left');
-  const right = document.getElementById('nav-quick-chevron-right');
-  if (!row || !left || !right) return;
-  const maxScroll = row.scrollWidth - row.clientWidth;
-  left.classList.toggle('hidden', row.scrollLeft <= 2);
-  // Keep the right chevron visible as an immediately available affordance.
-  // It only scrolls the quick links when the user explicitly clicks/taps it.
-  right.classList.remove('hidden');
-  right.disabled = maxScroll <= 2 || row.scrollLeft >= maxScroll - 2;
-  right.setAttribute('aria-disabled', String(right.disabled));
-}
-
-function scrollNavQuickLinks(direction) {
-  const row = document.getElementById('nav-quick-links');
-  if (!row) return;
-  row.scrollBy({ left: direction * 160, behavior: 'smooth' });
 }
 
 function navigateTo(page, replaceUrl) {
@@ -565,11 +492,10 @@ function navigateTo(page, replaceUrl) {
   if(DOM.mainNav) { DOM.mainNav.classList.remove("product-page","collection-page"); }
   // Reset scroll after switching the destination page and nav classes.
   // On iOS Safari, scrolling before these layout changes can leave the
-  // sticky header visually out of sync with the non-sticky quick-links row.
+  // sticky header visually out of sync with the page below it.
   resetScrollToTop();
   requestAnimationFrame(() => {
     // Re-resolve the sticky header against the destination page layout.
-    // The quick-links row remains in normal document flow.
     if (DOM.mainNav) DOM.mainNav.getBoundingClientRect();
   });
   setNavForPage(page);
@@ -674,13 +600,6 @@ function goToProduct(productId, replaceUrl) {
   S.stickyWishHidden = false;
   if(DOM.mainNav) { DOM.mainNav.classList.add("product-page"); DOM.mainNav.classList.remove("collection-page"); }
   document.body.classList.remove('on-collection-page');
-  // setNavForPage() isn't called on this path, so stale markers from
-  // it need clearing here too — the quick-links row's product-page
-  // hide rule (navigation.css) keys off #main-nav.product-page above,
-  // not these, but leaving one around would wrongly hide the row on
-  // whatever page comes next, until that page happens to clear it.
-  document.body.classList.remove('on-vendor-page');
-  document.body.classList.remove('on-login-page');
   renderProductPage(product); updateChatVisibility();
 }
 
