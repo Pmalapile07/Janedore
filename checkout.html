@@ -272,6 +272,7 @@
       <section class="checkout-card">
         <div data-checkout-totals></div>
         <button type="submit" class="checkout-place-order-btn" id="checkout-continue-btn">Continue to Payment</button>
+        <p class="checkout-payment-note checkout-continue-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Secure checkout. Your payment details are handled by PayFast.</p>
       </section>
 
     </form>
@@ -316,7 +317,7 @@
             <input type="radio" name="checkout-payment-method" value="cc" checked>
             <span class="checkout-option-radio" aria-hidden="true"></span>
             <span class="checkout-option-body">
-              <span class="checkout-option-head"><span>Credit or debit card</span></span>
+              <span class="checkout-option-head"><i class="ph ph-credit-card" aria-hidden="true"></i><span>Credit or debit card</span><span class="checkout-payment-brands" aria-label="Visa and Mastercard">VISA · Mastercard</span></span>
               <span class="checkout-option-note">Visa or Mastercard. You'll enter your card details on PayFast's secure page.</span>
             </span>
           </label>
@@ -324,7 +325,7 @@
             <input type="radio" name="checkout-payment-method" value="ef">
             <span class="checkout-option-radio" aria-hidden="true"></span>
             <span class="checkout-option-body">
-              <span class="checkout-option-head"><span>Instant EFT</span></span>
+              <span class="checkout-option-head"><i class="ph ph-bank" aria-hidden="true"></i><span>Instant EFT</span></span>
               <span class="checkout-option-note">Pay straight from your bank account.</span>
             </span>
           </label>
@@ -332,7 +333,7 @@
             <input type="radio" name="checkout-payment-method" value="">
             <span class="checkout-option-radio" aria-hidden="true"></span>
             <span class="checkout-option-body">
-              <span class="checkout-option-head"><span>Other ways to pay</span></span>
+              <span class="checkout-option-head"><i class="ph ph-wallet" aria-hidden="true"></i><span>Other ways to pay</span></span>
               <span class="checkout-option-note">Apple Pay, SnapScan and more, on PayFast.</span>
             </span>
           </label>
@@ -386,7 +387,7 @@
         <div id="confirmation-summary"></div>
       </section>
 
-      <button type="button" class="checkout-place-order-btn checkout-continue-btn" onclick="navigateTo('home')">Continue Shopping</button>
+      <button type="button" class="checkout-place-order-btn checkout-continue-btn" onclick="viewConfirmedOrder()">View Order</button>
     </div>
   </div>
 
