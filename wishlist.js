@@ -131,11 +131,22 @@ function toggleGridWish() {
 // Saved products, straight away: the grid toggle on the left and the
 // title centred (.wish-page-header). The empty bag look
 // (renderCartPage(), cart.js) when there are none.
+// Signed-in customers reach the wishlist from My Account, so it gets the
+// same way back as the account sections (account.js) and no quick links
+// (body.wish-signed-in, wishlist.css).
+function wishAccountBackHtml() {
+  const user = firebase.auth().currentUser;
+  const signedIn = !!(user && !user.isAnonymous);
+  document.body.classList.toggle('wish-signed-in', signedIn);
+  return signedIn ? `<div class="wish-account-back"><button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button></div>` : '';
+}
+
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
+  const back = wishAccountBackHtml();
   if (!S.wishlist.length) {
     DOM.wishPageContent.classList.add('is-empty');
-    DOM.wishPageContent.innerHTML = wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
+    DOM.wishPageContent.innerHTML = back + wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
     if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
     return;
   }
@@ -152,7 +163,7 @@ function renderWishlistPage() {
     <h1 class="wish-page-title">Wishlist (${S.wishlist.length})</h1>
   </div>`;
   const cards = S.wishlist.map(p => productCard(p, cols === 3, true, S.productVariantSelections[p.id] ?? 0)).join('');
-  DOM.wishPageContent.innerHTML = header + `<div class="product-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${cards}</div>`;
+  DOM.wishPageContent.innerHTML = back + header + `<div class="product-grid" style="grid-template-columns:${gridTemplateFor(cols)}">${cards}</div>`;
 }
 
 // Same block as the empty bag: icon, message, black button, then Recently

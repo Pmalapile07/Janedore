@@ -225,21 +225,35 @@ function isFreeDeliveryProduct(p) {
 // Home banner and product pages read the same minimum the bag charges by.
 document.querySelectorAll('[data-free-delivery-min]').forEach(el => { el.textContent = 'R' + FREE_DELIVERY_MIN.toLocaleString('en-US'); });
 
-// One package per brand; JANEDORE's own stock travels as one package.
+// Brands that share a warehouse (Admin > Brands, vendor.warehouse) ship
+// together, so they're one package with one fee. Mirrors server.js
+// shippingPackageKey().
+function shippingPackageKey(product, item) {
+  const house = isHouseProduct(product || item);
+  const vid = house ? HOUSE_VENDOR_ID : ((product && product.vendorId) || 'unknown');
+  const vendor = (S.vendors || []).find(v => v.id === vid);
+  const warehouse = vendor && String(vendor.warehouse || '').trim().toLowerCase();
+  return warehouse ? 'warehouse:' + warehouse : (house ? 'janedore' : vid);
+}
+
+// One package per brand (or per shared warehouse); JANEDORE's own stock
+// travels as one package.
 function getCartShipments() {
   const groups = new Map();
   S.cart.forEach(item => {
     const product = getCartProduct(item.productId);
-    const key = isHouseProduct(product || item) ? 'janedore' : ((product && product.vendorId) || 'unknown');
-    if (!groups.has(key)) groups.set(key, { key, brand: (product && product.brand) || item.brand || 'JANEDORE', subtotal: 0, eligible: true });
+    const key = shippingPackageKey(product, item);
+    const brand = (product && product.brand) || item.brand || 'JANEDORE';
+    if (!groups.has(key)) groups.set(key, { key, brand, brands: [], warehouse: key.startsWith('warehouse:'), subtotal: 0, eligible: true });
     const g = groups.get(key);
+    if (!g.brands.includes(brand)) g.brands.push(brand);
     g.subtotal += getCartItemLineTotal(item);
     if (!isFreeDeliveryProduct(product)) g.eligible = false;
   });
   const codeFree = !!(appliedDiscount && appliedDiscount.type === 'free_shipping');
   return [...groups.values()].map(g => {
     const free = codeFree || (g.eligible && g.subtotal >= FREE_DELIVERY_MIN);
-    return Object.assign(g, { free, fee: free ? 0 : SHIPPING_FEE, remaining: g.eligible && !free ? FREE_DELIVERY_MIN - g.subtotal : 0 });
+    return Object.assign(g, { brand: g.brands.join(' & '), free, fee: free ? 0 : SHIPPING_FEE, remaining: g.eligible && !free ? FREE_DELIVERY_MIN - g.subtotal : 0 });
   });
 }
 

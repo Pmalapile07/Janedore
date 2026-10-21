@@ -164,8 +164,12 @@ function accountOrderStatus(o) {
   if (accountOrderCancelled(o)) return { label: 'Cancelled', cls: '' };
   const pk = accountOrderPackages(o);
   const shipped = pk.filter(p => p.shipped).length;
+  const status = String(o.status || '').toLowerCase();
+  if (status === 'delivered') return { label: 'Delivered', cls: 'delivered' };
   if (pk.length && shipped === pk.length) return { label: 'Shipped', cls: 'shipped' };
   if (shipped) return { label: 'Partially shipped', cls: 'shipped' };
+  if (status === 'shipped') return { label: 'Shipped', cls: 'shipped' };
+  if (status === 'packed') return { label: 'Packed', cls: '' };
   if (pk.length && pk.every(p => p.preorder)) return { label: 'Pre-order', cls: '' };
   return { label: 'Processing', cls: '' };
 }
@@ -243,6 +247,7 @@ async function renderAccountOrder(orderNumber) {
     refundPending: order.paymentStatus === 'refund_pending',
     refunded: accountOrderRefunded(order),
     cancelled: accountOrderCancelled(order) && !accountOrderRefunded(order),
+    status: String(order.status || 'pending').toLowerCase(),
     packages
   }, { hideAnother: true });
 

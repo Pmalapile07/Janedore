@@ -35,7 +35,35 @@ function renderTrackOrderPage() {
       </form>
       <div id="track-result"></div>
     </section>`;
-  if (number && email) submitTrackOrder();
+  if (params.get('view') && number) openViewOrderLink(number);
+  else if (number && email) submitTrackOrder();
+}
+
+// "View Order" in order emails links to ?order=JD-123456&view=1. A
+// signed-in customer who owns that order goes straight to it in My
+// Account; anyone else stays here with the number (and their email, when
+// we know it) filled in, and the order shows as soon as both are there.
+// Waits for the saved sign-in to load first: an email link is a fresh
+// page load, where currentUser is still null for a moment.
+async function openViewOrderLink(number) {
+  await (window.authReady || Promise.resolve());
+  if (S.currentContentSlug !== TRACK_ORDER_SLUG) return;
+  const user = firebase.auth().currentUser;
+  if (user && !user.isAnonymous) {
+    let owned = null;
+    try { owned = (await loadAccountOrders()).find(o => (o.orderNumber || o.id).toUpperCase() === number.toUpperCase()) || null; }
+    catch (e) { console.warn('[VIEW_ORDER]', e.message); }
+    if (S.currentContentSlug !== TRACK_ORDER_SLUG) return;
+    if (owned) {
+      history.replaceState(null, null, '/account/orders/' + encodeURIComponent(owned.orderNumber || owned.id));
+      navigateToAccount(true);
+      return;
+    }
+  }
+  const emailEl = document.getElementById('track-email');
+  if (emailEl && !emailEl.value && user && !user.isAnonymous && user.email) emailEl.value = user.email;
+  if (emailEl && emailEl.value) submitTrackOrder();
+  else if (emailEl) emailEl.focus();
 }
 
 async function submitTrackOrder(e) {
@@ -90,6 +118,39 @@ function trackDate(iso, withYear) {
   return d.toLocaleDateString('en-ZA', withYear ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' });
 }
 
+// The order statuses admin sets (admin.js _ORDER_STATUSES, minus
+// cancelled) in the order a package moves through them.
+const TRACK_STAGES = ['pending', 'processing', 'packed', 'shipped', 'delivered'];
+const TRACK_STAGE_LABELS = ['Order confirmed', 'Processing', 'Packed', 'Shipped', 'Delivered'];
+const TRACK_PREORDER_STAGE_LABELS = ['Pre-order confirmed', 'In production', 'Packed', 'Shipped', 'Delivered'];
+
+// How far one package has got: the order's status, or Shipped once the
+// package has tracking. On an order where some packages have tracking and
+// others don't, a "shipped" status doesn't move the rest past Packed.
+function trackPackageStage(o, p) {
+  let stage = Math.max(0, TRACK_STAGES.indexOf(String(o.status || '').toLowerCase()));
+  if (p.shipped) stage = Math.max(stage, 3);
+  else if (stage === 3 && (o.packages || []).some(x => x.shipped)) stage = 2;
+  return stage;
+}
+
+// Courier tracking pages that take the tracking number in the URL. Keys
+// are admin-orders.js COURIERS, lower-cased; same list as order-emails.js.
+const COURIER_TRACKING_URLS = {
+  'the courier guy': 'https://portal.thecourierguy.co.za/track?ref={n}',
+  'fastway': 'https://www.fastway.co.za/our-services/track-your-parcel?l={n}',
+  'dhl': 'https://www.dhl.com/za-en/home/tracking/tracking-express.html?submit=1&tracking-id={n}',
+  'aramex': 'https://www.aramex.com/za/en/track/results?ShipmentNumber={n}',
+  'dsv': 'https://www.dsv.com/en/tools/track-and-trace?reference={n}',
+  'internet express': 'https://www.internetexpress.co.za/track-and-trace?waybill={n}',
+  'mds collivery': 'https://collivery.net/tracking?waybill={n}',
+  'rhenus': 'https://www.rhenus.com/en/track-and-trace?number={n}'
+};
+function courierTrackingUrl(courier, trackingNumber) {
+  const tpl = COURIER_TRACKING_URLS[String(courier || '').trim().toLowerCase()];
+  return tpl && trackingNumber ? tpl.replace('{n}', encodeURIComponent(trackingNumber)) : '';
+}
+
 // opts.hideAnother: the My Account order page (account.js) has its own way back.
 function trackResultHtml(o, opts) {
   opts = opts || {};
@@ -115,14 +176,21 @@ function trackResultHtml(o, opts) {
     notice = `<div class="track-notice">Payment for this order has not been received, so it has not been processed. If you have been charged, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span> and quote your order number.</div>`;
   }
   const allPreorder = packages.length > 0 && packages.every(p => p.preorder);
-  const heading = o.refundPending ? 'Refund in progress' : o.refunded ? 'Refunded' : o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending' : allShipped ? (packages.length > 1 ? `All ${unit} have shipped` : 'Your order has shipped')
-    : shippedCount ? `Partially shipped: ${shippedCount} of ${packages.length} ${unit}` : allPreorder ? 'Pre-order confirmed' : 'Your order is being processed';
+  const stages = packages.map(p => trackPackageStage(o, p));
+  const allAt = (n) => stages.length > 0 && stages.every(s => s >= n);
+  const heading = o.refundPending ? 'Refund in progress' : o.refunded ? 'Refunded' : o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending'
+    : allAt(4) ? (packages.length > 1 ? `All ${unit} have been delivered` : 'Your order has been delivered')
+    : allShipped ? (packages.length > 1 ? `All ${unit} have shipped` : 'Your order has shipped')
+    : shippedCount ? `Partially shipped: ${shippedCount} of ${packages.length} ${unit}`
+    : allAt(2) ? (packages.length > 1 ? `All ${unit} are packed` : 'Your order has been packed')
+    : allPreorder ? 'Pre-order confirmed' : 'Your order is being processed';
 
   // Each package has its own steps; a pre-order is produced after purchase.
-  const stepsHtml = (p) => {
-    const labels = p.preorder ? ['Pre-order confirmed', 'In production', 'Shipped'] : ['Order confirmed', 'Processing', 'Shipped'];
+  // Steps up to the package's stage are done; the next one is in progress.
+  const stepsHtml = (p, stage) => {
+    const labels = p.preorder ? TRACK_PREORDER_STAGE_LABELS : TRACK_STAGE_LABELS;
     return `<div class="track-steps">${labels.map((label, i) => {
-      const state = i === 0 || p.shipped ? 'done' : i === 1 ? 'current' : '';
+      const state = i <= stage ? 'done' : i === stage + 1 ? 'current' : '';
       return `<div class="track-step ${state}"><span class="track-step-dot">${state === 'done' ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}</span><span class="track-step-label">${label}</span></div>`;
     }).join('<div class="track-step-line"></div>')}</div>`;
   };
@@ -142,13 +210,20 @@ function trackResultHtml(o, opts) {
         <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(it.name))}</div><div class="track-item-meta">${details}</div></div></div>`;
     }).join('');
     const live = !o.cancelled && !o.refunded && !o.refundPending && o.paid;
-    const status = live ? `<span class="track-pill${p.shipped ? ' shipped' : ''}">${p.shipped ? 'Shipped' : p.preorder ? 'In production' : 'Processing'}</span>` : '';
+    const stage = stages[i];
+    const pill = stage >= 2 ? (p.preorder ? TRACK_PREORDER_STAGE_LABELS : TRACK_STAGE_LABELS)[stage] : p.preorder ? 'In production' : 'Processing';
+    const status = live ? `<span class="track-pill${stage === 4 ? ' delivered' : stage === 3 ? ' shipped' : ''}">${pill}</span>` : '';
+    const courierUrl = courierTrackingUrl(p.courier, p.trackingNumber);
     const shipBy = p.preorder && p.shipBy ? preorderShipText(p.shipBy) : '';
-    const body = !live ? '' : p.shipped
+    const body = !live ? '' : stage === 4 && !p.shipped
+      ? `<p class="track-wait">This package has been delivered.</p>`
+      : p.shipped
       ? `<div class="track-ship">
           ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
           <div class="track-ship-row"><span>Tracking number</span><strong>${escapeHTML(p.trackingNumber)}</strong>
-            <button type="button" class="track-copy" onclick="copyTrackingNumber(this,'${escapeJSString(p.trackingNumber)}')">Copy</button></div>
+            ${courierUrl
+              ? `<a class="track-copy" href="${escapeHTML(courierUrl)}" target="_blank" rel="noopener" onclick="copyTrackingNumber(null,'${escapeJSString(p.trackingNumber)}')">Track <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>`
+              : `<button type="button" class="track-copy" onclick="copyTrackingNumber(this,'${escapeJSString(p.trackingNumber)}')">Copy</button>`}</div>
           ${p.shippedAt ? `<div class="track-ship-row"><span>Dispatched</span><strong>${escapeHTML(trackDate(p.shippedAt))}</strong></div>` : ''}
         </div>`
       : p.preorder
@@ -156,7 +231,7 @@ function trackResultHtml(o, opts) {
         : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is processing this package. You will receive a shipping confirmation with tracking details once it has been dispatched.</p>`;
     return `<div class="track-card">
       <div class="track-card-head"><div><div class="track-card-label">${cardLabel(p)}</div><div class="track-card-brand">${escapeHTML(trackPlainText(p.brand))}</div></div>${status}</div>
-      ${live ? stepsHtml(p) : ''}${items}${body}</div>`;
+      ${live ? stepsHtml(p, stage) : ''}${items}${body}</div>`;
   }).join('');
 
   return `<div class="track-result">
@@ -169,8 +244,10 @@ function trackResultHtml(o, opts) {
   </div>`;
 }
 
+// btn is null for the Track link: the number is copied too, in case the
+// courier's page doesn't fill it in by itself.
 function copyTrackingNumber(btn, value) {
-  const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); };
+  const done = () => { if (!btn) return; btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(value).then(done).catch(() => {});
   else {
     const t = document.createElement('textarea'); t.value = value; document.body.appendChild(t); t.select();

@@ -956,16 +956,30 @@ async function priceOrder(order) {
   }
 
   const afterDiscount = Math.max(0, subtotal - discountAmount);
-  // One parcel per brand; JANEDORE's own stock is one package.
+  // One parcel per brand (or per shared warehouse); JANEDORE's own stock
+  // is one package.
   const codeFree = !!(discount && discount.type === 'free_shipping');
   const vendorIds = [...new Set([HOUSE_VENDOR_ID].concat(Object.values(products).map((p) => p.vendorId).filter(Boolean)))];
   const vendorDocs = await adminDb.getAll(...vendorIds.map((id) => adminDb.collection('vendors').doc(id)));
   const freeVendors = {};
-  vendorDocs.forEach((d, i) => { if (d.exists && typeof d.data().freeDelivery === 'boolean') freeVendors[vendorIds[i]] = d.data().freeDelivery; });
+  const warehouses = {};
+  vendorDocs.forEach((d, i) => {
+    if (!d.exists) return;
+    if (typeof d.data().freeDelivery === 'boolean') freeVendors[vendorIds[i]] = d.data().freeDelivery;
+    const wh = String(d.data().warehouse || '').trim().toLowerCase();
+    if (wh) warehouses[vendorIds[i]] = wh;
+  });
+  // Brands sharing a warehouse (vendors/{id}.warehouse) ship as one
+  // package, so they pay one fee. Same as cart.js shippingPackageKey().
+  const shippingPackageKey = (product) => {
+    const house = isHouseProduct(product);
+    const vid = house ? HOUSE_VENDOR_ID : product.vendorId;
+    return warehouses[vid] ? 'warehouse:' + warehouses[vid] : (house ? 'janedore' : vid);
+  };
   const packageMap = new Map();
   pricedItems.forEach((i) => {
     const product = products[String(i.productId || '')];
-    const key = isHouseProduct(product) ? 'janedore' : product.vendorId;
+    const key = shippingPackageKey(product);
     if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true });
     const pkg = packageMap.get(key);
     pkg.subtotal += i.price * i.qty;
@@ -1779,6 +1793,7 @@ app.post('/api/track-order', async (req, res) => {
       refundPending: order.paymentStatus === 'refund_pending',
       refunded: order.paymentStatus === 'refunded' || String(order.status || '').toLowerCase() === 'refunded',
       cancelled: String(order.status || '').toLowerCase() === 'cancelled',
+      status: String(order.status || 'pending').toLowerCase(),
       packages
     });
   } catch (e) {
@@ -1943,6 +1958,41 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
   } catch (e) {
     console.error('[NOTIFY_SHIPPED] Error:', e.message);
     res.status(500).json({ error: 'Could not send shipping notification' });
+  }
+});
+
+// ==================== ORDER STATUS EMAIL ====================
+// admin-orders.js calls this after staff change an order's status. The
+// customer gets one email per stage (Processing, Packed, Shipped,
+// Delivered), never twice for the same stage, and only for paid orders.
+// Shipped here is the status alone; tracking emails come from
+// notify-shipped when a brand adds a tracking number.
+const STATUS_EMAIL_STAGES = ['processing', 'packed', 'shipped', 'delivered'];
+app.post('/api/orders/:id/notify-status', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  try {
+    const auth = await authorizeShipmentRequest(req, '');
+    if (!auth.ok) return res.status(403).json({ error: auth.reason || 'Not authorized' });
+    const orderRef = adminDb.collection('orders').doc(req.params.id);
+    const doc = await orderRef.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Order not found' });
+    const order = doc.data();
+    const status = String(order.status || '').toLowerCase();
+    if (!STATUS_EMAIL_STAGES.includes(status)) return res.json({ ok: true, skipped: 'No email for this status' });
+    if (order.paymentStatus !== 'paid') return res.json({ ok: true, skipped: 'Order is not paid' });
+    if (!order.customerEmail) return res.json({ ok: true, skipped: 'No customer email' });
+    // A shipped status after every package already sent its own tracking
+    // email would only repeat it.
+    if (status === 'shipped' && computeOrderFulfillment(order) === 'fulfilled') return res.json({ ok: true, skipped: 'Tracking already emailed' });
+    if (order.statusEmailsSent && order.statusEmailsSent[status]) return res.json({ ok: true, skipped: 'Already emailed' });
+    const ctx = await buildOrderEmailContext(order);
+    const email = orderEmails.statusUpdate(order, ctx, status, orderShipments(order).map((s) => s.tracking).filter((t) => t.trackingNumber));
+    await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: email.subject, html: email.html, text: email.text });
+    await orderRef.update({ ['statusEmailsSent.' + status]: admin.firestore.FieldValue.serverTimestamp() });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[NOTIFY_STATUS]', e.message);
+    res.status(500).json({ error: 'Could not send status email' });
   }
 });
 

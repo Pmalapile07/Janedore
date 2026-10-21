@@ -344,8 +344,16 @@ function waitForAIBridge(maxWaitMs = 8000) {
 // the abandoned uid (like a session's ownerId) then mismatches every
 // later read/write under the surviving uid. _authInFlight makes
 // concurrent callers share one sign-in attempt instead.
+//
+// It must also wait for window.authReady (firebase.js) before reading
+// currentUser. On a fresh page load currentUser reads null until the
+// persisted session has been restored from IndexedDB — calling
+// signInAnonymously() in that window replaced a logged-in customer's
+// real session with an anonymous one, so every page refresh looked
+// like a logout.
 let _authInFlight = null;
 async function ensureAuth() {
+  if (window.authReady && !firebase.auth().currentUser) await window.authReady;
   if (firebase.auth().currentUser) {
     _ScreenDebug.ok('AUTH', 'Already signed in: ' + firebase.auth().currentUser.uid.slice(0, 12));
     return firebase.auth().currentUser;

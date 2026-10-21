@@ -185,6 +185,29 @@ function preorderLine(item) {
   return 'Pre-order' + (d ? ' · Estimated dispatch: ' + d : '');
 }
 
+// "View order": signed-in customers land on their account's order page,
+// everyone else on Track Your Order with the number filled in
+// (track-order.js renderTrackOrderPage()).
+function viewOrderUrl(ctx, num) {
+  return ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num) + '&view=1';
+}
+
+// Same list as track-order.js COURIER_TRACKING_URLS.
+const COURIER_TRACKING_URLS = {
+  'the courier guy': 'https://portal.thecourierguy.co.za/track?ref={n}',
+  'fastway': 'https://www.fastway.co.za/our-services/track-your-parcel?l={n}',
+  'dhl': 'https://www.dhl.com/za-en/home/tracking/tracking-express.html?submit=1&tracking-id={n}',
+  'aramex': 'https://www.aramex.com/za/en/track/results?ShipmentNumber={n}',
+  'dsv': 'https://www.dsv.com/en/tools/track-and-trace?reference={n}',
+  'internet express': 'https://www.internetexpress.co.za/track-and-trace?waybill={n}',
+  'mds collivery': 'https://collivery.net/tracking?waybill={n}',
+  'rhenus': 'https://www.rhenus.com/en/track-and-trace?number={n}'
+};
+function courierTrackingUrl(courier, trackingNumber) {
+  const tpl = COURIER_TRACKING_URLS[String(courier || '').trim().toLowerCase()];
+  return tpl && trackingNumber ? tpl.replace('{n}', encodeURIComponent(trackingNumber)) : '';
+}
+
 // ---------- the emails ----------
 
 function customerConfirmation(order, ctx) {
@@ -219,7 +242,7 @@ function customerConfirmation(order, ctx) {
       status,
       title('Your items', '(' + count + ')') + itemsBlock(items, ctx),
       title('Delivery details') + addressBlock(order),
-      totalsBlock(order, 'Total paid') + button('Shop New Arrivals', ctx.siteUrl + '/shop')
+      totalsBlock(order, 'Total paid') + button('View Order', viewOrderUrl(ctx, num))
     ],
     footerHtml: SUPPORT_FOOTER
   });
@@ -227,6 +250,7 @@ function customerConfirmation(order, ctx) {
   const text = 'Thank you, ' + first + '. Your order is confirmed.\n\nOrder #' + num + ' · ' + orderDate(order) +
     '\n\n' + textItems(items) + '\n\n' + textTotals(order) +
     '\n\nDelivering to:\n' + [order.customerName].concat(addressLines(order)).join('\n') +
+    '\n\nView your order: ' + viewOrderUrl(ctx, num) +
     '\n\nQuestions? support@janedore.co.za';
 
   return { subject: 'Your Janedore order #' + num + ' is confirmed', html, text };
@@ -310,12 +334,16 @@ function shipped(order, ctx, items, opts) {
     ? 'good news: your order has been dispatched.'
     : 'good news: part of your order has been dispatched. The remaining items will ship separately, as each brand dispatches from its own warehouse.';
   const tracking = opts.tracking || {};
+  const courierUrl = courierTrackingUrl(tracking.courier, tracking.trackingNumber);
   const trackingCard = tracking.trackingNumber
     ? title('Tracking') + rows(
         (tracking.courier ? row('Courier', esc(tracking.courier), { semi: true }) : '') +
-        row('Tracking number', esc(tracking.trackingNumber), { semi: true }))
+        row('Tracking number', courierUrl
+          ? '<a href="' + esc(courierUrl) + '" style="color:#111111;">' + esc(tracking.trackingNumber) + '</a>'
+          : esc(tracking.trackingNumber), { semi: true }))
     : '';
-  const trackUrl = ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num);
+  // Straight to the courier's own tracking page when we know it.
+  const trackUrl = courierUrl || viewOrderUrl(ctx, num);
 
   const html = shell({
     logoUrl: ctx.logoUrl,
@@ -628,6 +656,48 @@ function exchangeUpdate(ex, ctx, stage) {
     (stage === 'dispatched' ? '\n\nCourier: ' + (d.courier || '') + '\nTracking number: ' + (d.trackingNumber || '') : '') +
     '\n\nExchange ' + ex.exchangeNumber + '\n' + exchangeTextItems(ex) + '\n\nCheck exchange status: ' + exchangeStatusUrl(ctx, ex);
   return { subject: copy[0] + ' (' + ex.exchangeNumber + ')', html, text };
+}
+
+// Admin moved the order to a new stage (server.js
+// /api/orders/:id/notify-status). trackings: packages that already have
+// a tracking number.
+const STATUS_EMAIL_COPY = {
+  processing: ['Your order is being processed', 'we’re getting your order ready. We’ll let you know when it has been packed.'],
+  packed: ['Your order has been packed', 'your order has been packed and is waiting for the courier. We’ll send tracking details once it has been dispatched.'],
+  shipped: ['Your order is on its way', 'your order has been handed to the courier and is on its way to you.'],
+  delivered: ['Your order has been delivered', 'your order has been delivered. We hope you love it. Items can be returned or exchanged within 30 days of dispatch.']
+};
+function statusUpdate(order, ctx, status, trackings) {
+  const copy = STATUS_EMAIL_COPY[status];
+  const num = order.orderNumber || '';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const tracked = (trackings || []).filter(t => t.trackingNumber);
+  const trackingCard = status === 'shipped' && tracked.length
+    ? title('Tracking') + rows(tracked.map(t => {
+        const url = courierTrackingUrl(t.courier, t.trackingNumber);
+        const value = url ? '<a href="' + esc(url) + '" style="color:#111111;">' + esc(t.trackingNumber) + '</a>' : esc(t.trackingNumber);
+        return row(esc(t.courier || 'Tracking number'), value, { semi: true });
+      }).join(''))
+    : '';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: copy[0],
+    preheader: 'Order #' + num + ': ' + copy[0].toLowerCase() + '.',
+    bannerHtml: '<strong>' + esc(copy[0]) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(copy[1]) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
+      trackingCard + button('View Order', viewOrderUrl(ctx, num)),
+      title('Your items') + itemsBlock(order.items || [], ctx, { hidePrice: true }),
+      status === 'delivered' ? '' : title('Delivering to') + addressBlock(order)
+    ].filter(Boolean),
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = copy[0] + '\n\nHi ' + first + ', ' + copy[1] + '\n\n' + textItems(order.items || [], true) +
+    tracked.map(t => '\n' + (t.courier ? t.courier + ': ' : '') + t.trackingNumber).join('') +
+    '\n\nOrder #' + num + '\nView your order: ' + viewOrderUrl(ctx, num) + '\n\nQuestions? support@janedore.co.za';
+  return { subject: copy[0] + ' (order #' + num + ')', html, text };
 }
 
 // Step 1 of a refund: staff chose "Start refund" in admin. Says only that
@@ -1002,4 +1072,4 @@ function backInStock(item, ctx, links) {
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, money };

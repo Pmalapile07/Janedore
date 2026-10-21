@@ -324,6 +324,7 @@
       showToast(ids.length + ' order' + (ids.length !== 1 ? 's' : '') + ' updated to ' + status);
       ids.forEach(function (id) {
         logOrderTimelineEvent(id, 'You changed the order status to ' + status.charAt(0).toUpperCase() + status.slice(1) + '.');
+        notifyStatus(id, status);
         var o = (window._ordersData || []).find(function (x) { return x.id === id; });
         if (o) o.status = status;
       });
@@ -1563,6 +1564,7 @@
       .then(function () {
         showToast('Status updated to ' + status);
         logOrderTimelineEvent(orderId, 'You changed the order status to ' + status.charAt(0).toUpperCase() + status.slice(1) + '.');
+        notifyStatus(orderId, status);
         if (window._ordersData) {
           var o = window._ordersData.filter(function (x) { return x.id === orderId; })[0];
           if (o) { o.status = status; renderOrdersTable(window._ordersData); }
@@ -1584,6 +1586,20 @@
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: '{}'
       });
     }).catch(function (e) { console.warn('[NOTIFY_REFUNDED]', e.message); });
+  }
+
+  // Emails the customer that their order moved to Processing, Packed,
+  // Shipped or Delivered. server.js sends each stage at most once per
+  // order and skips stages that don't apply (unpaid, cancelled, etc).
+  function notifyStatus(orderId, status) {
+    if (!window._currentUser || !window._currentUser.getIdToken) return;
+    window._currentUser.getIdToken().then(function (token) {
+      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ status: status })
+      });
+    }).catch(function (e) { console.warn('[NOTIFY_STATUS]', e.message); });
   }
 
   function notifyShipped(orderId, vendorId, preorder) {

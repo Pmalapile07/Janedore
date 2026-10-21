@@ -301,6 +301,8 @@ function renderShippingMethod(shipping, packages) {
   if (nameEl) nameEl.textContent = packages > 1 ? 'Standard, ' + packages + ' packages' : 'Standard';
   const shippingPriceEl = document.getElementById('checkout-shipping-price');
   if (shippingPriceEl) shippingPriceEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
+  const estimateEl = document.getElementById('checkout-delivery-estimate');
+  if (estimateEl) estimateEl.innerHTML = cartHasOnlyPreorder() ? '' : `Estimated delivery: <strong>${sanitizeHTML(deliveryEstimateText())}</strong>`;
   const fromEl = document.getElementById('checkout-ships-from');
   if (!fromEl) return;
   const shipments = getCartShipments();
@@ -310,8 +312,30 @@ function renderShippingMethod(shipping, packages) {
     fromEl.innerHTML = `Ships from <strong>${sanitizeHTML(shipments[0] ? shipments[0].brand : 'JANEDORE')}</strong>.` + preorderNote;
     return;
   }
-  fromEl.innerHTML = `Your order ships in ${packages} separate packages, one from each brand.` + preorderNote +
+  const sharedWarehouse = shipments.some(sh => sh.brands.length > 1);
+  fromEl.innerHTML = `Your order ships in ${packages} separate packages, ${sharedWarehouse ? 'one from each brand or shared warehouse' : 'one from each brand'}.` + preorderNote +
     `<span class="checkout-ships-list">${shipments.map(s => `<span class="checkout-ships-row"><span>${sanitizeHTML(s.brand)}</span><span>${s.free ? 'Free' : formatPrice(s.fee)}</span></span>`).join('')}</span>`;
+}
+
+// In-stock items: dispatched within DELIVERY_DAYS_MIN business days of
+// the order, delivered by DELIVERY_DAYS_MAX (Standard, South Africa).
+const DELIVERY_DAYS_MIN = 3;
+const DELIVERY_DAYS_MAX = 6;
+function addBusinessDays(date, days) {
+  const d = new Date(date);
+  while (days > 0) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() !== 0 && d.getDay() !== 6) days--;
+  }
+  return d;
+}
+function deliveryEstimateText() {
+  const fmt = (d) => d.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' });
+  const now = new Date();
+  return fmt(addBusinessDays(now, DELIVERY_DAYS_MIN)) + ' – ' + fmt(addBusinessDays(now, DELIVERY_DAYS_MAX));
+}
+function cartHasOnlyPreorder() {
+  return S.cart.length > 0 && S.cart.every(item => cartItemPreorderDate(item) !== null);
 }
 
 // Guest-order access token stays in this tab's session storage. Only its
