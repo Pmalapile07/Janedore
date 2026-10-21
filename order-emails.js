@@ -316,7 +316,7 @@ function statusUpdated(order, ctx, status) {
   const message = messages[status];
   if (!message) throw new Error('Unsupported order status');
   const num = order.orderNumber || '';
-  const first = String(order.customerName || '').trim().split(/\\s+/)[0] || 'there';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
   const trackUrl = ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num);
   const html = shell({
     logoUrl: ctx.logoUrl,
@@ -331,9 +331,9 @@ function statusUpdated(order, ctx, status) {
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = message.heading + '\\n\\nHi ' + first + ', ' + message.intro +
-    '\\n\\nOrder #' + num + '\\nView order status: ' + trackUrl +
-    '\\n\\nQuestions? support@janedore.co.za';
+  const text = message.heading + '\n\nHi ' + first + ', ' + message.intro +
+    '\n\nOrder #' + num + '\nView order status: ' + trackUrl +
+    '\n\nQuestions? support@janedore.co.za';
   return { subject: message.heading + ' (order #' + num + ')', html, text };
 }
 
