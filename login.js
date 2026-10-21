@@ -251,11 +251,13 @@ firebase.auth().onAuthStateChanged(user => {
   if (user) {
     // Real signed-in user
     if (typeof syncWishlistOnLogin === 'function') syncWishlistOnLogin(user.uid);
+    if (typeof syncRecentSearchesOnLogin === 'function') syncRecentSearchesOnLogin(user.uid);
     if (S.currentPage === 'login') navigateToAccount(true);
     else if (S.currentPage === 'account' && typeof renderAccountPage === 'function') renderAccountPage();
   } else {
     // Signed out (real user)
     if (typeof clearWishlistOnLogout === 'function') clearWishlistOnLogout();
+    if (typeof clearRecentSearchesOnLogout === 'function') clearRecentSearchesOnLogout();
     if (typeof clearChatIdentityOnLogout === 'function') clearChatIdentityOnLogout();
     if (typeof clearAccountCache === 'function') clearAccountCache();
     if (S.currentPage === 'account') navigateToLogin(true);

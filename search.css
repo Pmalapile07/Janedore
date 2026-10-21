@@ -61,3 +61,22 @@ body.on-brands-page .search-bar-row {
 .search-results-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; margin-bottom: 16px; }
 .search-results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .search-no-results { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300; color: #bbb; padding: 40px 0; text-align: center; }
+
+/* Suggestions while typing and Recent searches before (search.js). */
+.search-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.search-section-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; }
+.search-clear-btn { padding: 0; border: 0; background: none; font-family: 'Inter', sans-serif; font-size: 12px; color: #111; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.search-rows { list-style: none; padding: 0; margin: 8px 0 28px; }
+.search-row-wrap { display: flex; align-items: center; }
+.search-row {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0;
+  border: 0; background: none; font-family: 'Inter', sans-serif; font-size: 14px; color: #111; text-align: left; cursor: pointer;
+}
+.search-row-icon { width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f4f4f4; border-radius: 50%; }
+.search-row-icon i { font-size: 16px; color: #555; }
+.search-row-thumb { width: 36px; height: 44px; flex-shrink: 0; background: #f4f4f4 center / cover no-repeat; }
+.search-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; }
+.search-row-label strong { font-weight: 600; }
+.search-row-type { flex-shrink: 0; font-size: 12px; color: #888; }
+.search-row-remove { flex-shrink: 0; width: 32px; height: 32px; padding: 0; border: 0; background: none; color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.search-row-remove i { font-size: 14px; }
