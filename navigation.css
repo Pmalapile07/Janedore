@@ -75,7 +75,7 @@ body:has(#page-content.active) .nav-quick-links-wrap,
 .nav-quick-links {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   /* Left/right matches the site's own standard responsive inset
      (#hero, .product-grid — 8px/10px/12px) instead of a wider,
      header-specific value, so the row doesn't look like it's
