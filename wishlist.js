@@ -133,6 +133,7 @@ function toggleGridWish() {
 // (renderCartPage(), cart.js) when there are none.
 function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
+  document.body.classList.toggle('on-signed-in-wishlist', !!(typeof realUser === 'function' && realUser()));
   if (!S.wishlist.length) {
     DOM.wishPageContent.classList.add('is-empty');
     const accountBack = (typeof realUser === 'function' && realUser())
