@@ -109,15 +109,6 @@ function renderNewArrivalsHeader(arrivals) {
   }
 }
 
-// Quick links run shortest name to longest (letters only, ties A–Z), so
-// collections added from admin slot in among the built-in links.
-function sortQuickLinksByLength(row) {
-  const letters = function (el) { return (el.textContent || '').replace(/[^A-Za-z]/g, '').length; };
-  Array.from(row.querySelectorAll('.nav-quick-link'))
-    .sort(function (a, b) { return letters(a) - letters(b) || a.textContent.trim().localeCompare(b.textContent.trim()); })
-    .forEach(function (el) { row.appendChild(el); });
-}
-
 function renderCollectionQuickLinks() {
   const row = document.getElementById('nav-quick-links');
   if (!row || typeof window._loadPublishedCollections !== 'function') return;
@@ -135,6 +126,10 @@ function renderCollectionQuickLinks() {
         return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
           String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
       });
+    // Built-in links are ordered by importance in index.html. A Sale or
+    // New In collection takes its built-in link's place; any other
+    // collection goes after Categories, ahead of Gift Cards.
+    const giftCards = row.querySelector('[data-nav-page="giftcards"]');
     visible.forEach(function (item) {
       const handle = String(item.handle || item.slug || item.id || '');
       if (!handle) return;
@@ -147,9 +142,9 @@ function renderCollectionQuickLinks() {
       button.addEventListener('click', function () {
         if (typeof window.navigateToCollection === 'function') window.navigateToCollection(handle);
       });
-      row.appendChild(button);
+      const builtIn = row.querySelector('[data-nav-page="' + handle + '"]:not([data-dynamic-collection-link])');
+      row.insertBefore(button, builtIn || giftCards);
     });
-    sortQuickLinksByLength(row);
     if (typeof window.updateNavQuickLinksChevrons === 'function') window.updateNavQuickLinksChevrons();
   });
 }
