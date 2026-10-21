@@ -135,13 +135,19 @@ function renderWishlistPage() {
   if (!DOM.wishPageContent) return;
   if (!S.wishlist.length) {
     DOM.wishPageContent.classList.add('is-empty');
-    DOM.wishPageContent.innerHTML = wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
+    const accountBack = (typeof realUser === 'function' && realUser())
+      ? '<button type="button" class="account-back wishlist-account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button>'
+      : '';
+    DOM.wishPageContent.innerHTML = accountBack + wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
     if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
     return;
   }
   DOM.wishPageContent.classList.remove('is-empty');
   const cols = S.gridColsWish;
-  const header = `<div class="wish-page-header">
+  const accountBack = (typeof realUser === 'function' && realUser())
+    ? '<button type="button" class="account-back wishlist-account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button>'
+    : '';
+  const header = `${accountBack}<div class="wish-page-header">
     <button class="col-grid-toggle-btn" onclick="toggleGridWish()" title="Change grid layout">
       <div class="col-grid-icon cols-${cols}">
         <div class="col-grid-bar"></div>
