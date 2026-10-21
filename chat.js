@@ -346,6 +346,9 @@ function waitForAIBridge(maxWaitMs = 8000) {
 // concurrent callers share one sign-in attempt instead.
 let _authInFlight = null;
 async function ensureAuth() {
+  // Do not start anonymous auth while Firebase is still restoring a real
+  // persisted session after refresh.
+  if (window.authReady) await window.authReady;
   if (firebase.auth().currentUser) {
     _ScreenDebug.ok('AUTH', 'Already signed in: ' + firebase.auth().currentUser.uid.slice(0, 12));
     return firebase.auth().currentUser;
