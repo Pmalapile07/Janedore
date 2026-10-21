@@ -71,3 +71,10 @@
 .account-return-btn { margin-top: 20px; margin-bottom: 0; }
 .account-verify { margin: 0 0 20px; }
 .account-return-btn + .account-return-btn { margin-top: 10px; }
+
+
+/* Customer-facing order progress mirrors the fulfilment state selected in admin. */
+.account-order-progress { margin: 0 0 16px; padding: 16px; border: 1px solid #e8e8e8; border-radius: 8px; }
+.account-order-progress-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+.account-order-progress .track-steps { margin: 0; }
+.account-order-cancelled { margin: 0 0 16px; }
