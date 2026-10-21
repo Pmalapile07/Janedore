@@ -604,6 +604,30 @@ function formatConfirmationDate(iso) {
     ', ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Route the confirmation action to the signed-in account order page or
+// to guest tracking with the order number prefilled. Guest tracking still
+// asks for the checkout email; it does not require account creation.
+function viewConfirmedOrder() {
+  const orderNumber = lastConfirmedOrderNumber ||
+    (lastConfirmedOrderDetails && (lastConfirmedOrderDetails.orderNumber || lastConfirmedOrderDetails.id));
+  const user = firebase.auth().currentUser;
+
+  if (user && !user.isAnonymous && orderNumber) {
+    history.pushState(null, null, '/account/orders/' + encodeURIComponent(orderNumber));
+    if (typeof showPage === 'function') showPage('page-account', 'account');
+    if (typeof renderAccountPage === 'function') renderAccountPage();
+    return;
+  }
+
+  if (typeof navigateToContentPage === 'function') {
+    navigateToContentPage('track-your-order').then(function() {
+      if (!orderNumber) return;
+      history.replaceState(null, null, '/pages/track-your-order?order=' + encodeURIComponent(orderNumber));
+      if (typeof renderTrackOrderPage === 'function') renderTrackOrderPage();
+    });
+  }
+}
+
 function renderOrderConfirmation(order) {
   const numberEl = document.getElementById('confirmation-order-number');
   if (numberEl) numberEl.textContent = '#' + (order.orderNumber || '');
