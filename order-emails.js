@@ -302,6 +302,41 @@ function vendorNewOrder(order, ctx, vendor, items) {
   return { subject: 'New order #' + num + ' to ship, ' + count + (count === 1 ? ' item' : ' items'), html, text };
 }
 
+// Customer email sent when staff changes an order's fulfilment status.
+// This is separate from payment confirmation and shipment tracking emails.
+function statusUpdated(order, ctx, status) {
+  const messages = {
+    pending: { heading: 'Order received', intro: 'We have received your order and it is awaiting preparation.' },
+    processing: { heading: 'Your order is being prepared', intro: 'Your order is now being prepared.' },
+    packed: { heading: 'Your order is packed', intro: 'Your order has been packed and is getting ready for dispatch.' },
+    shipped: { heading: 'Your order is on its way', intro: 'Your order has been marked as shipped. Available tracking details are shown on the order-tracking page.' },
+    delivered: { heading: 'Your order has been delivered', intro: 'Your order has been marked as delivered.' },
+    cancelled: { heading: 'Your order was cancelled', intro: 'Your order has been marked as cancelled. If you believe this is a mistake, please contact Customer Care.' }
+  };
+  const message = messages[status];
+  if (!message) throw new Error('Unsupported order status');
+  const num = order.orderNumber || '';
+  const first = String(order.customerName || '').trim().split(/\\s+/)[0] || 'there';
+  const trackUrl = ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num);
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: message.heading,
+    preheader: message.intro,
+    bannerHtml: '<strong>' + esc(message.heading) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(message.intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
+      button('View order status', trackUrl)
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = message.heading + '\\n\\nHi ' + first + ', ' + message.intro +
+    '\\n\\nOrder #' + num + '\\nView order status: ' + trackUrl +
+    '\\n\\nQuestions? support@janedore.co.za';
+  return { subject: message.heading + ' (order #' + num + ')', html, text };
+}
+
 function shipped(order, ctx, items, opts) {
   opts = opts || {};
   const num = order.orderNumber || '';
@@ -1002,4 +1037,4 @@ function backInStock(item, ctx, links) {
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, statusUpdated, shipped, adminShipped, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, money };
