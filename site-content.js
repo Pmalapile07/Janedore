@@ -109,6 +109,15 @@ function renderNewArrivalsHeader(arrivals) {
   }
 }
 
+// Quick links run shortest name to longest (letters only, ties A–Z), so
+// collections added from admin slot in among the built-in links.
+function sortQuickLinksByLength(row) {
+  const letters = function (el) { return (el.textContent || '').replace(/[^A-Za-z]/g, '').length; };
+  Array.from(row.querySelectorAll('.nav-quick-link'))
+    .sort(function (a, b) { return letters(a) - letters(b) || a.textContent.trim().localeCompare(b.textContent.trim()); })
+    .forEach(function (el) { row.appendChild(el); });
+}
+
 function renderCollectionQuickLinks() {
   const row = document.getElementById('nav-quick-links');
   if (!row || typeof window._loadPublishedCollections !== 'function') return;
@@ -140,6 +149,7 @@ function renderCollectionQuickLinks() {
       });
       row.appendChild(button);
     });
+    sortQuickLinksByLength(row);
     if (typeof window.updateNavQuickLinksChevrons === 'function') window.updateNavQuickLinksChevrons();
   });
 }
