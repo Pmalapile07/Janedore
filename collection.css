@@ -32,7 +32,9 @@
   margin: 0 4px;
 }
 
-body.on-collection-page #collection-page-breadcrumb {
+/* Only brand pages use the bar now (back + report buttons); collection
+   pages have no breadcrumb. */
+body.on-collection-page #collection-page-breadcrumb.has-icons {
   display: flex;
 }
 /* Brand page: back arrow + trail + more button, laid out like the
@@ -127,7 +129,9 @@ body.on-collection-page .collection-filter-bar {
   display: none;
   /* Match the shared 20px horizontal content inset used by the
      collection breadcrumb, description, and Sort/Filter toolbar. */
-  padding: 0 20px 10px;
+  /* The top padding stands in for the breadcrumb that used to sit above;
+     brand pages still have their icon bar there instead. */
+  padding: 22px 20px 10px;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
   font-size: var(--heading-size);
@@ -141,6 +145,7 @@ body.on-collection-page .collection-filter-bar {
 /* The heading is mounted globally, outside page-specific containers.
    Keep it hidden on every non-collection page even if JavaScript previously
    set its inline display to block while rendering a collection. */
+#collection-page-breadcrumb.has-icons ~ .collection-page-heading { padding-top: 0; }
 body:not(.on-collection-page) .collection-page-heading {
   display: none !important;
 }

@@ -427,7 +427,6 @@ function updateCollectionTitle() {
   let description = '';
   let collectionImage = '';
   let showDesc = false;
-  let bcLabel = title;
 
   // catTitles is only the fallback shown before admin-homepage.js's
   // siteContent/collectionPages has loaded (or for a slug nobody's
@@ -465,25 +464,20 @@ function updateCollectionTitle() {
     description = String(collection.description || '');
     collectionImage = String(collection.imageUrl || '');
     showDesc = !!description || !!collectionImage;
-    bcLabel = collection.title || collection.name || collection.handle || S.currentCollectionHandle;
   } else if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = 'BRAND';
     showDesc = false;
-    const vendorName = S.currentVendor ? (S.currentVendor.name || S.currentVendor.brandName || S.currentVendor.brand) : null;
-    bcLabel = vendorName || 'Brand';
   } else if (S.currentPage === 'products') {
     const slug = S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all');
     const copy = collectionCopyFor(slug);
     title = copy.title;
     description = copy.description;
     showDesc = !!description;
-    bcLabel = S.saleMode ? 'Sale' : (S.newInMode ? 'New In' : 'All Products');
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
     const copy = collectionCopyFor(S.currentCategoryPage);
     title = copy.title;
     description = copy.description;
     showDesc = !!description;
-    bcLabel = title.charAt(0) + title.slice(1).toLowerCase();
   } else {
     if (titleEl) titleEl.style.display = 'none';
     if (headingEl) headingEl.style.display = 'none';
@@ -526,16 +520,15 @@ function updateCollectionTitle() {
     }
   }
 
+  // Collection pages have no breadcrumb trail. Brand pages keep this bar
+  // for the product page's back arrow on the left and, on the right, the
+  // "more" button that opens the report-this-brand panel.
   if (bcEl) {
-    const trail = `<span onclick="navigateTo('home')">Home</span><span class="page-breadcrumb-sep">/</span><span class="page-breadcrumb-current">${escapeHTML(bcLabel)}</span>`;
-    // Brand pages get the product page's back arrow on the left, and on
-    // the right a heart (favourite brand) and a "more" button that opens
-    // the report-this-brand panel.
     const onBrand = S.currentPage === 'vendor';
     bcEl.classList.toggle('has-icons', onBrand);
     bcEl.innerHTML = onBrand
-      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail">${trail}</span><button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
-      : trail;
+      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail"></span><button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
+      : '';
   }
 }
 
