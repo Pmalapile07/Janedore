@@ -327,18 +327,11 @@
   <div class="collection-product-count" id="collection-product-count">0 products</div>
   <div class="collection-toolbar-actions">
     <div class="collection-sort-dropdown">
-      <button class="collection-sort-trigger" id="collection-sort-trigger" type="button" onclick="toggleCollectionSort()" aria-expanded="false">
-        SORT
+      <button class="collection-sort-trigger" id="collection-sort-trigger" type="button" onclick="toggleCollectionSort()" aria-expanded="false" aria-label="Sort products">
+        <span id="collection-sort-label">NEWEST</span>
         <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <div class="collection-sort-options" id="collection-sort-options" role="group" aria-label="Sort products">
-        <button type="button" onclick="chooseCollectionSort('featured')">Featured</button>
-        <button type="button" onclick="chooseCollectionSort('best-selling')">Best selling</button>
-        <button type="button" onclick="chooseCollectionSort('newest')">Newest</button>
-        <button type="button" onclick="chooseCollectionSort('price-asc')">Price: low to high</button>
-        <button type="button" onclick="chooseCollectionSort('price-desc')">Price: high to low</button>
-        <button type="button" onclick="chooseCollectionSort('name-asc')">Name: A–Z</button>
-      </div>
+      <div class="collection-sort-options" id="collection-sort-options" role="group" aria-label="Sort products"></div>
     </div>
     <div class="collection-filter-dropdown">
       <button class="collection-filter-trigger" onclick="toggleCollectionFilter()">

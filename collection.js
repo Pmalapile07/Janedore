@@ -143,6 +143,14 @@ function isLeatherPouchAllowed(context) {
 // ── SORT ─────────────────────────────────────────────────────
 // Sorting never disables the editorial grid — the featured/tall card layout
 // still applies. Sort only reorders which products land in which position.
+// Newest is the default; the Sort button shows whichever is picked.
+const SORT_OPTIONS = [
+  { v: 'newest',     l: 'Newest' },
+  { v: 'price-desc', l: 'Price High to Low' },
+  { v: 'price-asc',  l: 'Price Low to High' },
+  { v: 'oldest',     l: 'Oldest' },
+  { v: 'discount',   l: 'Biggest Discount' }
+];
 
 function applySort(products, sortBy) {
   if (!sortBy || sortBy === 'featured') return products;
@@ -169,12 +177,19 @@ function applySort(products, sortBy) {
     case 'name-asc':   return arr.sort((a, b) =>
       String(a.name || '').localeCompare(String(b.name || ''))
     );
+    // Biggest percentage off first; full-price items after, newest first.
+    case 'discount': {
+      const off = (p) => hasSalePrice(p) ? (Number(p.price) - Number(p.salePrice)) / Number(p.price) : 0;
+      const time = (p) => new Date(p.createdAt || p.updatedAt || 0).getTime() || 0;
+      return arr.sort((a, b) => off(b) - off(a) || time(b) - time(a));
+    }
     default: return products;
   }
 }
 
 function setSortBy(value) {
   S.sortBy = value;
+  updateSortControl();
   if (S.saleMode) renderSaleProducts();
   else if (S.newInMode) renderNewInProducts();
   else if (S.currentPage === 'category') renderCategoryProducts();
@@ -356,6 +371,17 @@ function toggleCollectionSort() {
   panel.classList.toggle('open', opening);
   trigger.setAttribute('aria-expanded', String(opening));
 }
+
+// The Sort button's label and the menu's options, with the picked one
+// marked.
+function updateSortControl() {
+  const current = SORT_OPTIONS.some(o => o.v === S.sortBy) ? S.sortBy : 'newest';
+  const label = document.getElementById('collection-sort-label');
+  if (label) label.textContent = SORT_OPTIONS.find(o => o.v === current).l.toUpperCase();
+  const panel = document.getElementById('collection-sort-options');
+  if (panel) panel.innerHTML = SORT_OPTIONS.map(o => `<button type="button" class="${o.v === current ? 'is-selected' : ''}" aria-pressed="${o.v === current}" onclick="chooseCollectionSort('${o.v}')">${escapeHTML(o.l)}</button>`).join('');
+}
+document.addEventListener('DOMContentLoaded', updateSortControl);
 
 function chooseCollectionSort(value) {
   setSortBy(value);
@@ -1189,18 +1215,9 @@ function injectToolbarExtras(pageId, gridSvgId) {
 }
 
 function buildSortControl() {
-  const current = S.sortBy || 'featured';
-  const options = [
-    { v: 'featured',     l: 'Featured' },
-    { v: 'best-selling', l: 'Best Selling' },
-    { v: 'price-asc',    l: 'Price: Low to High' },
-    { v: 'price-desc',   l: 'Price: High to Low' },
-    { v: 'newest',       l: 'Newest first' },
-    { v: 'oldest',       l: 'Oldest first' },
-    { v: 'name-asc',     l: 'Name: A → Z' }
-  ];
+  const current = S.sortBy || 'newest';
   return `<select id="sort-by" class="filter-select sort-by-select" onchange="setSortBy(this.value)">` +
-    options.map(o => `<option value="${o.v}"${current === o.v ? ' selected' : ''}>${escapeHTML(o.l)}</option>`).join('') +
+    SORT_OPTIONS.map(o => `<option value="${o.v}"${current === o.v ? ' selected' : ''}>${escapeHTML(o.l)}</option>`).join('') +
   `</select>`;
 }
 
