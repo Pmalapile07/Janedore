@@ -1803,6 +1803,92 @@ app.post('/api/track-order', async (req, res) => {
   }
 });
 
+// ==================== TRENDING SEARCHES ====================
+// search.js posts what a shopper searched for (a typed term, or the
+// brand/product/category they opened from search) to /api/search-log,
+// and shows /api/trending-searches when they have no recent searches.
+// Only terms found in an active product's name, brand or category, or an
+// active brand's name, are counted, so made-up or offensive text can
+// never show up as trending. Counts are per day (searchTrends/{term}.days)
+// and trending is the last SEARCH_TREND_DAYS days.
+const SEARCH_TREND_DAYS = 30;
+let searchVocabCache = { at: 0, entries: [] };
+async function searchVocabulary() {
+  if (Date.now() - searchVocabCache.at < 10 * 60 * 1000) return searchVocabCache.entries;
+  const [productSnap, vendorSnap] = await Promise.all([adminDb.collection('products').where('status', '==', 'active').get(), adminDb.collection('vendors').get()]);
+  const entries = new Set();
+  productSnap.docs.forEach((doc) => {
+    const p = doc.data() || {};
+    [p.name, p.brand, p.category].forEach((v) => { if (v) entries.add(String(v).toLowerCase()); });
+  });
+  vendorSnap.docs.forEach((doc) => {
+    const v = doc.data() || {};
+    if (['suspended', 'inactive'].includes(String(v.status || '').toLowerCase())) return;
+    [v.name, v.brand].forEach((n) => { if (n) entries.add(String(n).toLowerCase()); });
+  });
+  searchVocabCache = { at: Date.now(), entries: [...entries] };
+  return searchVocabCache.entries;
+}
+
+function searchTrendDay(d) { return d.toISOString().slice(0, 10); }
+
+const searchLogHits = new Map();
+app.post('/api/search-log', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  const ip = String(req.ip || '');
+  const now = Date.now();
+  const hits = (searchLogHits.get(ip) || []).filter((t) => now - t < 10 * 60 * 1000);
+  if (hits.length >= 30) return res.status(429).json({ error: 'Too many searches' });
+  hits.push(now);
+  searchLogHits.set(ip, hits);
+
+  const label = String((req.body && req.body.term) || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  const term = label.toLowerCase();
+  if (term.length < 2) return res.json({ ok: true, skipped: 'Too short' });
+  try {
+    const vocab = await searchVocabulary();
+    if (!vocab.some((entry) => entry.includes(term))) return res.json({ ok: true, skipped: 'Not in the shop' });
+    await adminDb.collection('searchTrends').doc(encodeURIComponent(term)).set({
+      term,
+      label,
+      days: { [searchTrendDay(new Date())]: admin.firestore.FieldValue.increment(1) },
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    trendingCache.at = 0;
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[SEARCH_LOG]', e.message);
+    res.status(500).json({ error: 'Could not log search' });
+  }
+});
+
+let trendingCache = { at: 0, terms: [] };
+app.get('/api/trending-searches', async (req, res) => {
+  if (!adminDb) return res.json({ terms: [] });
+  try {
+    if (Date.now() - trendingCache.at > 10 * 60 * 1000) {
+      const since = searchTrendDay(new Date(Date.now() - SEARCH_TREND_DAYS * 24 * 60 * 60 * 1000));
+      const snap = await adminDb.collection('searchTrends').get();
+      const vocab = await searchVocabulary();
+      const terms = snap.docs.map((doc) => {
+        const t = doc.data() || {};
+        const count = Object.entries(t.days || {}).reduce((sum, [day, n]) => (day >= since ? sum + (Number(n) || 0) : sum), 0);
+        return { label: t.label || t.term, term: t.term, count };
+      })
+        // Still sold here (a product or brand may have gone since).
+        .filter((t) => t.count > 0 && t.term && vocab.some((entry) => entry.includes(t.term)))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8)
+        .map((t) => t.label);
+      trendingCache = { at: Date.now(), terms };
+    }
+    res.json({ terms: trendingCache.terms });
+  } catch (e) {
+    console.error('[TRENDING_SEARCHES]', e.message);
+    res.json({ terms: [] });
+  }
+});
+
 // ==================== SHIPPING NOTIFICATION ====================
 // Fired from the admin order-detail page the moment a vendor (or staff)
 // successfully saves tracking for their own line items on an order.

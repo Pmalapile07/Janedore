@@ -44,6 +44,16 @@ function addRecentSearch(entry) {
   const key = recentSearchKey(entry);
   const list = [entry].concat(loadRecentSearches().filter(e => recentSearchKey(e) !== key)).slice(0, RECENT_SEARCH_MAX);
   saveRecentSearches(list);
+  logSearchTerm(entry.label);
+}
+
+// Counts towards Trending searches (server.js /api/search-log, which
+// ignores anything not sold here). keepalive: opening a result navigates
+// away straight after.
+function logSearchTerm(term) {
+  try {
+    fetch('/api/search-log', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ term }) }).catch(() => {});
+  } catch (e) {}
 }
 
 function removeRecentSearch(index) {
@@ -200,12 +210,64 @@ function openRecentSearch(i) { const e = loadRecentSearches()[i]; if (e) openSea
 // Enter in the search box.
 function submitSearch() { rememberTypedSearch(); DOM.searchInput.blur(); }
 
-// Before anything's typed: Recent searches, or blank when there are none.
+// ==================== TRENDING SEARCHES ====================
+// What shoppers searched for most over the last 30 days (server.js
+// /api/trending-searches), shown when there are no recent searches.
+// While there's little search data yet, it's topped up with the brands
+// and categories with the most products, so it's never empty.
+
+let _trendingSearches = null;
+let _trendingPromise = null;
+
+function loadTrendingSearches() {
+  if (_trendingSearches) return Promise.resolve(_trendingSearches);
+  if (!_trendingPromise) {
+    _trendingPromise = fetch('/api/trending-searches').then(r => r.json()).catch(() => ({ terms: [] })).then(data => {
+      const entries = (data.terms || []).map(label => ({ type: 'query', label: String(label) }));
+      _trendingSearches = entries.concat(catalogueTrendingFill(entries)).slice(0, 8);
+      return _trendingSearches;
+    });
+  }
+  return _trendingPromise;
+}
+
+function catalogueTrendingFill(have) {
+  const taken = new Set(have.map(e => e.label.toLowerCase()));
+  const active = PRODUCTS.filter(p => p.status === 'active');
+  const count = (key) => { const m = new Map(); active.forEach(p => { const k = key(p); if (k) m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
+  const brands = count(p => p.vendorId || p.brand).map(([id]) => {
+    const vendor = (S.vendors || []).find(v => v.id === id);
+    const product = active.find(p => (p.vendorId || p.brand) === id);
+    const label = vendor ? (vendor.name || vendor.brandName || vendor.brand) : (product && product.brand);
+    return label && vendor ? { type: 'brand', label, value: vendor.slug || vendor.id } : (label ? { type: 'query', label } : null);
+  }).filter(Boolean);
+  const cats = count(p => p.category).map(([slug]) => ({ type: 'category', label: searchCategoryLabel(slug), value: slug }));
+  const fill = [];
+  for (let i = 0; fill.length < 8 && (i < brands.length || i < cats.length); i++) {
+    [brands[i], cats[i]].forEach(e => { if (e && !taken.has(e.label.toLowerCase())) { taken.add(e.label.toLowerCase()); fill.push(e); } });
+  }
+  return fill;
+}
+
+function openTrendingSearch(i) { if (_trendingSearches && _trendingSearches[i]) openSearchEntry(_trendingSearches[i]); }
+
+function renderTrendingSearches() {
+  DOM.searchBody.innerHTML = '';
+  loadTrendingSearches().then(list => {
+    // Still open, nothing typed and no recent searches since.
+    if (!list.length || !DOM.searchOverlay.classList.contains('open') || DOM.searchInput.value.trim() || loadRecentSearches().length) return;
+    DOM.searchBody.innerHTML = `<div class="search-section-head"><div class="search-section-title">Trending searches</div></div>
+      <ul class="search-rows">${list.map((e, i) => `<li><button type="button" class="search-row" onclick="openTrendingSearch(${i})"><span class="search-row-icon"><i class="ph ph-trend-up" aria-hidden="true"></i></span><span class="search-row-label">${escapeHTML(e.label)}</span>${e.type !== 'query' ? `<span class="search-row-type">${SEARCH_TYPE_LABEL[e.type]}</span>` : ''}</button></li>`).join('')}</ul>`;
+  });
+}
+
+// Before anything's typed: Recent searches, or Trending searches when
+// there are none.
 function renderSearchDefault() {
   // A product that's since been removed from the shop isn't shown.
   const all = loadRecentSearches();
   const recent = all.filter(e => e.type !== 'product' || PRODUCTS.some(p => p.id === e.value));
-  if (!recent.length) { DOM.searchBody.innerHTML = ''; return; }
+  if (!recent.length) { renderTrendingSearches(); return; }
   DOM.searchBody.innerHTML = `<div class="search-section-head"><div class="search-section-title">Recent searches</div><button type="button" class="search-clear-btn" onclick="clearRecentSearches()">Clear</button></div>
     <ul class="search-rows">${recent.map(e => {
       const i = all.indexOf(e);
