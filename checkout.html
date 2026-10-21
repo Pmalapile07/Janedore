@@ -185,6 +185,7 @@
   .checkout-confirmation-address strong { display: block; color: #111; font-weight: 600; }
   .checkout-paid-with { margin-top: 14px; padding-top: 14px; border-top: 1px solid #eee; margin-bottom: 0; }
   .checkout-continue-btn { margin-top: 0; }
+  .checkout-shop-btn { margin: 10px 0 0; }
   /* Order number only (details couldn't be loaded): hide the empty cards. */
   #checkout-confirmation-view:not(.has-details) .checkout-detail-card { display: none; }
   .checkout-confirming-spinner {
@@ -402,7 +403,8 @@
         <div id="confirmation-summary"></div>
       </section>
 
-      <button type="button" class="checkout-place-order-btn checkout-continue-btn" onclick="navigateTo('home')">Continue Shopping</button>
+      <button type="button" class="checkout-place-order-btn checkout-continue-btn" onclick="viewConfirmedOrder()">View Order</button>
+      <button type="button" class="account-outline-btn checkout-shop-btn" onclick="navigateTo('home')">Continue Shopping</button>
     </div>
   </div>
 

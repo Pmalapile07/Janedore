@@ -604,6 +604,17 @@ function formatConfirmationDate(iso) {
     ', ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Same as "View Order" in the confirmation email (order-emails.js): the
+// Track Your Order page sends a signed-in owner on to My Account and
+// shows guests the order with their checkout email filled in. The
+// account's cached order list predates this order, so it's cleared.
+function viewConfirmedOrder() {
+  if (!lastConfirmedOrderNumber) { navigateTo('home'); return; }
+  if (typeof clearAccountCache === 'function') clearAccountCache();
+  history.pushState(null, null, '/pages/track-your-order?order=' + encodeURIComponent(lastConfirmedOrderNumber) + '&view=1');
+  navigateToContentPage('track-your-order', true);
+}
+
 function renderOrderConfirmation(order) {
   const numberEl = document.getElementById('confirmation-order-number');
   if (numberEl) numberEl.textContent = '#' + (order.orderNumber || '');
