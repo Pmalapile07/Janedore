@@ -891,10 +891,11 @@ const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
   return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
 }
-// Per brand (vendors/{id}.freeDelivery, set in Admin > Brands); JANEDORE
-// itself defaults to on. freeVendors: vendorId -> that flag.
+// The product is marked Free delivery (Admin > Products) and its brand
+// offers it (vendors/{id}.freeDelivery, Admin > Brands; JANEDORE defaults
+// to on). freeVendors: vendorId -> that brand flag. Same as cart.js.
 function isFreeDeliveryProduct(p, freeVendors) {
-  if (!p) return false;
+  if (!p || p.freeDelivery !== true) return false;
   const house = isHouseProduct(p);
   const flag = freeVendors && freeVendors[house ? HOUSE_VENDOR_ID : p.vendorId];
   return typeof flag === 'boolean' ? flag : house;

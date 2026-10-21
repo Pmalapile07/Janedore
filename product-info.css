@@ -441,10 +441,6 @@
 
 /* "Free delivery on JANEDORE orders over R750" under the brand name, on
    products marked Free delivery in admin. Same green as the home banner. */
-.product-free-delivery { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; margin: 14px 0 4px; padding: 10px 12px; border: 0; border-radius: 6px; background: #e6edd5; color: #111; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; text-align: left; cursor: pointer; }
-.product-free-delivery span { flex: 1; }
-.product-free-delivery i { font-size: 18px; flex-shrink: 0; }
-.product-free-delivery i.ph-caret-right { font-size: 14px; }
 .product-preorder-note { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 4px; padding: 10px 12px; border-radius: 6px; background: #f4f4f4; color: #111; font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.5; }
 .product-preorder-note i { font-size: 18px; flex-shrink: 0; }
 .product-preorder-note strong { font-weight: 600; }

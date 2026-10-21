@@ -671,7 +671,7 @@
 
         (function() {
           var fd = typeof v.freeDelivery === 'boolean' ? v.freeDelivery : v.id === 'vendor-janedore';
-          return '<div class="form-group"><label>Free delivery</label><select name="freeDelivery"><option value="true"' + (fd ? ' selected' : '') + '>Yes, on orders over R750</option><option value="false"' + (fd ? '' : ' selected') + '>No</option></select><div style="font-size:10px;color:var(--muted);margin-top:4px;">Yes: this brand\'s items ship free once a customer\'s order from this brand reaches R750, and the bag shows how far they are from it. Janedore pays the courier.</div></div>';
+          return '<div class="form-group"><label>Free delivery</label><select name="freeDelivery"><option value="true"' + (fd ? ' selected' : '') + '>Yes, on orders over R750</option><option value="false"' + (fd ? '' : ' selected') + '>No</option></select><div style="font-size:10px;color:var(--muted);margin-top:4px;">Yes: this brand\'s products marked Free delivery (Admin &gt; Products) ship free once a customer\'s order of them reaches R750, and the bag shows how far they are from it. Janedore pays the courier.</div></div>';
         })() +
 
         '<div class="form-group"><label>Warehouse</label><input name="warehouse" value="' + esc(v.warehouse || '') + '" placeholder="e.g. Cape Town DC"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Leave empty if this brand ships from its own premises. Brands with the same warehouse name ship together: a customer ordering from both gets one package and pays one delivery fee.</div></div>' +

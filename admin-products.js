@@ -5,13 +5,18 @@
   function isHouseProductAdmin(p) {
     return !!p && (!p.vendorId || p.vendorId === 'vendor-janedore' || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
   }
-  // Free delivery is per brand (vendor.freeDelivery, Admin > Brands;
-  // JANEDORE defaults to on). Same rule as cart.js/server.js; used by the
-  // Free Delivery automated collection here and in admin-collections.js.
-  window._isFreeDeliveryBrandProduct = function(product) {
+  // Whether the product's brand offers free delivery (vendor.freeDelivery,
+  // Admin > Brands; JANEDORE defaults to on).
+  function brandOffersFreeDelivery(product) {
     var house = isHouseProductAdmin(product);
     var v = (window._vendorsData || []).find(function(x) { return x.id === (house ? 'vendor-janedore' : product.vendorId); });
     return v && typeof v.freeDelivery === 'boolean' ? v.freeDelivery : house;
+  }
+  // A product has free delivery when it's marked Free delivery here and
+  // its brand offers it. Same rule as cart.js/server.js; used by the Free
+  // Delivery automated collection here and in admin-collections.js.
+  window._isFreeDeliveryBrandProduct = function(product) {
+    return !!product && product.freeDelivery === true && brandOffersFreeDelivery(product);
   };
 
   if (!window._adminDB) return;
@@ -894,6 +899,16 @@
           '<div class="form-group" style="padding:0;"><label>Weight (kg)</label><input name="shippingWeight" type="number" min="0" step="0.01" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5"></div>' +
           '<div class="form-group" style="padding:0;"><label>Shipping &amp; returns note</label><input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000"></div>' +
           '<div class="form-group" style="padding:0;"><label>International shipping</label><select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select></div>' +
+          // Free delivery is Janedore's call (it pays the courier), so
+          // brands don't see it. Off unless set.
+          (window._currentUserRole === 'VENDOR' ? '' : (function () {
+            var fd = p.freeDelivery === true;
+            var offered = brandOffersFreeDelivery(p);
+            return '<div class="form-group" style="padding:0;"><label>Free delivery</label><select name="freeDelivery" style="width:100%;"><option value="false"' + (fd ? '' : ' selected') + '>No</option><option value="true"' + (fd ? ' selected' : '') + '>Yes</option></select>' +
+              '<div style="font-size:11px;color:var(--muted);margin-top:5px;">' + (offered
+                ? 'Yes: shows the Free Delivery badge and ships free once the customer\'s ' + esc(p.brand || 'brand') + ' items come to R750 or more.'
+                : esc(p.brand || 'This brand') + ' doesn\'t offer free delivery (Admin &gt; Brands), so this has no effect until it does.') + '</div></div>';
+          })()) +
         '</div>' +
       '</div>' +
 
@@ -1237,6 +1252,8 @@
 
     // Brands never see the Free delivery field; their saves keep whatever
     // Janedore set.
+    if (form.freeDelivery) data.freeDelivery = form.freeDelivery.value === 'true';
+    else if (existingProduct && typeof existingProduct.freeDelivery === 'boolean') data.freeDelivery = existingProduct.freeDelivery;
     if (form.waitlist) data.waitlist = form.waitlist.value === 'true';
 
     var isPreorder = badgeValue === 'pre-order';

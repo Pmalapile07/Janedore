@@ -167,8 +167,8 @@ function getProductBadges(product) {
   if (manual && RESERVED_BADGE_VALUES.indexOf(manual.toLowerCase()) === -1) {
     badges.push(manual.toUpperCase());
   }
-  // Brands with free delivery (Admin > Brands; cart.js), same products
-  // as the Free Delivery collection the home banner links to.
+  // Products marked Free delivery from brands that offer it (cart.js),
+  // the same products as the Free Delivery collection.
   if (typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product)) badges.push('FREE DELIVERY');
 
   return badges;
@@ -484,7 +484,6 @@ async function renderProductPage(product) {
         </div>
       </div>
       ${isPreorderProduct(product) ? `<div class="product-preorder-note"><i class="ph ph-calendar-blank" aria-hidden="true"></i><span><strong>Pre-order</strong>${product.preorderShipDate ? ` · Estimated dispatch: ${escapeHTML(preorderShipText(product.preorderShipDate))}` : ''}<br>Payment is taken at checkout. This item is dispatched separately once available.</span></div>` : ''}
-      ${typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product) ? `<button type="button" class="product-free-delivery" onclick="navigateToCollection('free-delivery')"><i class="ph ph-truck" aria-hidden="true"></i><span>Free delivery on ${escapeHTML(product.brand || 'JANEDORE')} orders over ${formatPrice(FREE_DELIVERY_MIN)}</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>` : ''}
       <div class="product-quantity-row" aria-label="Quantity selector">
         <span class="product-quantity-label">Quantity</span>
         <div class="product-quantity-control">

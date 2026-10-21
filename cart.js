@@ -207,9 +207,11 @@ function getCartTotalAfterDiscount() {
 }
 
 const SHIPPING_FEE = 150;
-// Free delivery is set per brand (Admin > Brands, vendor.freeDelivery;
-// JANEDORE itself defaults to on): that brand's package ships free once it
-// reaches FREE_DELIVERY_MIN. Every other package is SHIPPING_FEE. Mirrors
+// Free delivery is per product (Admin > Products, product.freeDelivery,
+// off unless set), and only counts when the product's brand offers it
+// (Admin > Brands, vendor.freeDelivery; JANEDORE defaults to on). A brand's
+// package ships free once it reaches FREE_DELIVERY_MIN (R750) and every
+// item in it qualifies. Every other package is SHIPPING_FEE. Mirrors
 // server.js priceOrder(), which is what actually gets charged.
 const FREE_DELIVERY_MIN = 750;
 const HOUSE_VENDOR_ID = 'vendor-janedore';
@@ -217,7 +219,7 @@ function isHouseProduct(p) {
   return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
 }
 function isFreeDeliveryProduct(p) {
-  if (!p) return false;
+  if (!p || p.freeDelivery !== true) return false;
   const house = isHouseProduct(p);
   const vendor = (S.vendors || []).find(v => v.id === (house ? HOUSE_VENDOR_ID : p.vendorId));
   return vendor && typeof vendor.freeDelivery === 'boolean' ? vendor.freeDelivery : house;
