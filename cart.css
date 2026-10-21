@@ -127,10 +127,13 @@ body:has(#page-checkout.active) .nav-quick-links-wrap {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
+  padding: 16px 8px;
   max-width: 640px;
   margin: 0 auto;
 }
+/* Side padding matches the home page hero (#hero, hero.css). */
+@media (min-width: 640px) { .cart-cards { padding-left: 10px; padding-right: 10px; } }
+@media (min-width: 1024px) { .cart-cards { padding-left: 12px; padding-right: 12px; } }
 .cart-card { background: #fff; padding: 16px; }
 .cart-card-title {
   display: flex;
