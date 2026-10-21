@@ -51,30 +51,13 @@ if (typeof firebase.appCheck === 'function') {
   console.warn('[FIREBASE.JS] App Check SDK not loaded — ensure firebase-app-check-compat.js is included in <head>');
 }
 
-// ==================== ANONYMOUS AUTH ====================
-// Required for RTDB reads on live_chat/ when rules require auth != null.
-// On the main site, an admin user is already signed in, so this is a no-op.
-// On the Coming Soon page, this establishes a session so chat RTDB reads succeed.
-
-// Wait for Firebase's initial persisted-session restoration before deciding
-// whether anonymous auth is needed. Starting signInAnonymously() from the
-// first transient null can overwrite a real customer's persisted session.
-window.authReady = new Promise(function(resolve) {
-  var unsubscribe = firebase.auth().onAuthStateChanged(function(user) {
-    unsubscribe();
-    resolve(user);
-  });
-});
-
-window.authReady.then(function(user) {
-  if (user || window.__adminPreview) return;
-  firebase.auth().signInAnonymously()
-    .then(function(result) {
-      console.log('[FIREBASE.JS] +' + (Date.now() - _fbT0) + 'ms — Anonymous auth established:', result.user.uid.slice(0, 12));
-    })
-    .catch(function(e) {
-      console.warn('[FIREBASE.JS] Anonymous auth failed:', e.message);
-    });
+// ==================== AUTH READY SIGNAL ====================
+// Wait for Firebase to finish restoring persisted auth before any module
+// decides whether the browser is signed out. Anonymous auth is requested
+// by chat.js only when chat actually needs it, avoiding a competing
+// signInAnonymously() call during customer-session restoration.
+window.authReady = firebase.auth().authStateReady().then(function() {
+  return firebase.auth().currentUser;
 });
 
 // ==================== FIREBASE FUNCTIONS ====================
