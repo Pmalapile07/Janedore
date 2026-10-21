@@ -219,7 +219,7 @@ function customerConfirmation(order, ctx) {
       status,
       title('Your items', '(' + count + ')') + itemsBlock(items, ctx),
       title('Delivery details') + addressBlock(order),
-      totalsBlock(order, 'Total paid') + button('Shop New Arrivals', ctx.siteUrl + '/shop')
+      totalsBlock(order, 'Total paid') + button('View Order', ctx.siteUrl + '/track-your-order?order=' + encodeURIComponent(num))
     ],
     footerHtml: SUPPORT_FOOTER
   });
@@ -227,6 +227,7 @@ function customerConfirmation(order, ctx) {
   const text = 'Thank you, ' + first + '. Your order is confirmed.\n\nOrder #' + num + ' · ' + orderDate(order) +
     '\n\n' + textItems(items) + '\n\n' + textTotals(order) +
     '\n\nDelivering to:\n' + [order.customerName].concat(addressLines(order)).join('\n') +
+    '\n\nView your order: ' + ctx.siteUrl + '/track-your-order?order=' + encodeURIComponent(num) +
     '\n\nQuestions? support@janedore.co.za';
 
   return { subject: 'Your Janedore order #' + num + ' is confirmed', html, text };
