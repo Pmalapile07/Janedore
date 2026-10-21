@@ -77,4 +77,6 @@
 .account-order-progress { margin: 0 0 16px; padding: 16px; border: 1px solid #e8e8e8; border-radius: 8px; }
 .account-order-progress-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
 .account-order-progress .track-steps { margin: 0; }
+.account-order-progress .track-step { width: auto; min-width: 0; flex: 1; }
+.account-order-progress .track-step-label { font-size: 10px; line-height: 1.25; overflow-wrap: anywhere; }
 .account-order-cancelled { margin: 0 0 16px; }
