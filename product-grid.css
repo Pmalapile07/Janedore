@@ -431,6 +431,7 @@
    their related-product cards retain their existing typography. */
 #arrivals-grid .product-title,
 #clothing-grid .product-title,
+#accessories-grid .product-title,
 #all-products-grid .product-title,
 #category-products-grid .product-title,
 #vendor-products-grid .product-title {
@@ -460,6 +461,7 @@
    rule. */
 #arrivals-grid .product-card.slide-leading .product-home-meta,
 #clothing-grid .product-card.slide-leading .product-home-meta,
+#accessories-grid .product-card.slide-leading .product-home-meta,
 #cart-slider-grid .product-card.slide-leading .product-home-meta,
 #wish-slider-grid .product-card.slide-leading .product-home-meta,
 .swipe-track .product-card:first-child .product-home-meta {
@@ -527,6 +529,7 @@ body .site-collection-layout {
    own separate working layout from sliders.css. */
 #arrivals-grid,
 #clothing-grid,
+#accessories-grid,
 #cart-slider-grid, #wish-slider-grid {
   display: flex;
   overflow-x: auto;
@@ -553,12 +556,15 @@ body .site-collection-layout {
 }
 #arrivals-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar,
+#accessories-grid::-webkit-scrollbar,
 #cart-slider-grid::-webkit-scrollbar, #wish-slider-grid::-webkit-scrollbar { display: none; }
 #arrivals-grid::after,
 #clothing-grid::after,
+#accessories-grid::after,
 #cart-slider-grid::after, #wish-slider-grid::after { content: ''; flex: 0 0 8px; }
 #arrivals-grid .product-card,
 #clothing-grid .product-card,
+#accessories-grid .product-card,
 #cart-slider-grid .product-card, #wish-slider-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
@@ -568,19 +574,23 @@ body .site-collection-layout {
 @media (min-width: 640px) {
   #arrivals-grid,
   #clothing-grid,
+  #accessories-grid,
   #cart-slider-grid, #wish-slider-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
   #arrivals-grid::after,
   #clothing-grid::after,
+  #accessories-grid::after,
   #cart-slider-grid::after, #wish-slider-grid::after { flex: 0 0 10px; }
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
   #clothing-grid .product-card,
+  #accessories-grid .product-card,
   #cart-slider-grid .product-card, #wish-slider-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
   #arrivals-grid,
   #clothing-grid,
+  #accessories-grid,
   #cart-slider-grid, #wish-slider-grid {
     justify-content: center;
     max-width: 1400px;
@@ -590,6 +600,7 @@ body .site-collection-layout {
   }
   #arrivals-grid::after,
   #clothing-grid::after,
+  #accessories-grid::after,
   #cart-slider-grid::after, #wish-slider-grid::after { flex: 0 0 12px; }
 }
 

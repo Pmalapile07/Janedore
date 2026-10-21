@@ -2699,6 +2699,7 @@ function applyHomepageContent(html, homepage) {
   const arrivals = homepage.newArrivals || {};
   const shopByCategory = homepage.shopByCategory || {};
   const clothing = homepage.shopByClothing || {};
+  const accessories = homepage.shopByAccessories || { heading: 'Shop by accessories', buttonText: 'Shop now' };
   const banner = homepage.editorialBanner || {};
   const shopByBrand = homepage.shopByBrand || {};
 
@@ -2718,6 +2719,9 @@ function applyHomepageContent(html, homepage) {
 
   html = fillTextElement(html, 'clothing-heading', clothing.heading);
   html = fillTextElement(html, 'clothing-view-all-btn', clothing.buttonText);
+
+  html = fillTextElement(html, 'accessories-heading', accessories.heading);
+  html = fillTextElement(html, 'accessories-view-all-btn', accessories.buttonText);
 
   html = fillTextElement(html, 'banner-heading', banner.heading);
   html = fillTextElement(html, 'banner-btn', banner.buttonText);

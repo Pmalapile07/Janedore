@@ -263,6 +263,8 @@
     var arrivals = h.newArrivals || {};
     var shopCat = h.shopByCategory || {};
     var clothing = h.shopByClothing || {};
+    // Defaults match site-content.js until the section is first saved.
+    var accessories = h.shopByAccessories || { heading: 'Shop by accessories', buttonText: 'Shop now', buttonLink: { type: 'category', value: 'all-accessories' } };
     var banner = h.editorialBanner || {};
     var brand = h.shopByBrand || {};
     var news = h.newsletter || {};
@@ -306,6 +308,14 @@
         '<div class="form-group" style="padding:0;"><label>Button Text</label><input name="clothingButtonText" value="' + esc(clothing.buttonText || '') + '" placeholder="Button"></div>' +
         linkFieldHtml('clothingButtonLink', clothing.buttonLink, 'Button Link'),
         'clothing'
+      ) +
+
+      accordionSectionHtml('ph-handbag', 'Shop by Accessories',
+        '<span>' + esc(accessories.heading || 'Heading') + '</span>',
+        '<div class="form-group" style="padding:0;"><label>Heading</label><input name="accessoriesHeading" value="' + esc(accessories.heading || '') + '" placeholder="Heading"></div>' +
+        '<div class="form-group" style="padding:0;"><label>Button Text</label><input name="accessoriesButtonText" value="' + esc(accessories.buttonText || '') + '" placeholder="Button"></div>' +
+        linkFieldHtml('accessoriesButtonLink', accessories.buttonLink, 'Button Link'),
+        'accessories'
       ) +
 
       accordionSectionHtml('ph-rectangle', 'Editorial Banner',
@@ -500,6 +510,11 @@
         heading: form.clothingHeading.value.trim(),
         buttonText: form.clothingButtonText.value.trim(),
         buttonLink: readLink('clothingButtonLink')
+      },
+      shopByAccessories: {
+        heading: form.accessoriesHeading.value.trim(),
+        buttonText: form.accessoriesButtonText.value.trim(),
+        buttonLink: readLink('accessoriesButtonLink')
       },
       editorialBanner: {
         imageUrl: form.bannerImage.value.trim(),

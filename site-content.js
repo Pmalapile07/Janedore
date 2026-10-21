@@ -207,6 +207,21 @@ function renderShopByClothingHeader(clothing) {
   }
 }
 
+// Shown until Shop by Accessories is first saved in admin (Homepage tab);
+// same defaults as admin-homepage.js and server.js.
+const SHOP_BY_ACCESSORIES_DEFAULTS = { heading: 'Shop by accessories', buttonText: 'Shop now', buttonLink: { type: 'category', value: 'all-accessories' } };
+function renderShopByAccessoriesHeader(accessories) {
+  accessories = Object.assign({}, SHOP_BY_ACCESSORIES_DEFAULTS, accessories || {});
+  const headingEl = document.getElementById('accessories-heading');
+  const btnEl = document.getElementById('accessories-view-all-btn');
+  if (headingEl) { headingEl.textContent = accessories.heading || ''; headingEl.classList.remove('skeleton-text'); }
+  if (btnEl) {
+    btnEl.textContent = accessories.buttonText || '';
+    btnEl.classList.remove('skeleton-text');
+    btnEl.onclick = function () { goToSiteLink(accessories.buttonLink); };
+  }
+}
+
 function renderEditorialBanner(banner) {
   banner = banner || {};
   const headingEl = document.getElementById('banner-heading');
@@ -265,6 +280,7 @@ async function renderSiteContent() {
     renderNewArrivalsHeader(homepage.newArrivals);
     renderShopByCategory(homepage.shopByCategory);
     renderShopByClothingHeader(homepage.shopByClothing);
+    renderShopByAccessoriesHeader(homepage.shopByAccessories);
     renderEditorialBanner(homepage.editorialBanner);
     renderShopByBrandHeader(homepage.shopByBrand);
     renderNewsletter(homepage.newsletter);

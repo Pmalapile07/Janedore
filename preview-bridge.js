@@ -29,6 +29,7 @@
     'home-all-products': 'arrivals',
     'home-categories': 'category',
     'home-shop-clothing': 'clothing',
+    'home-shop-accessories': 'accessories',
     'home-editorial-banner': 'banner',
     'home-shop-brand': 'brand'
   };
@@ -52,6 +53,8 @@
     { inputName: 'categoryHeading', type: 'text', selector: '#shop-by-category-heading' },
     { inputName: 'clothingHeading', type: 'text', selector: '#clothing-heading' },
     { inputName: 'clothingButtonText', type: 'text', selector: '#clothing-view-all-btn' },
+    { inputName: 'accessoriesHeading', type: 'text', selector: '#accessories-heading' },
+    { inputName: 'accessoriesButtonText', type: 'text', selector: '#accessories-view-all-btn' },
     { inputName: 'bannerImage', type: 'image', selector: '#editorial-banner-img', apply: applyBackgroundImage },
     { inputName: 'bannerHeading', type: 'text', selector: '#banner-heading' },
     { inputName: 'bannerButtonText', type: 'text', selector: '#banner-btn' },

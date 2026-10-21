@@ -1306,6 +1306,7 @@ function buildArrivals() {
     initSliderLeadingTracking('arrivals-grid');
   }
   buildShopByClothing();
+  buildShopByAccessories();
 }
 
 function buildShopByClothing() {
@@ -1317,7 +1318,16 @@ function buildShopByClothing() {
   initSliderLeadingTracking('clothing-grid');
 }
 
-// #arrivals-grid / #clothing-grid are horizontal scroll-snap sliders,
+function buildShopByAccessories() {
+  const grid = document.getElementById('accessories-grid');
+  if (!grid) return;
+  const active = PRODUCTS.filter(p => p.status === 'active' && ACCESSORY_CATEGORIES.includes(p.category));
+  const top = merchandiseProducts(active).slice(0, 8);
+  grid.innerHTML = top.length ? top.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true);
+  initSliderLeadingTracking('accessories-grid');
+}
+
+// #arrivals-grid / #clothing-grid / #accessories-grid are horizontal scroll-snap sliders,
 // so "the first card" isn't fixed — it's whichever card the user has
 // scrolled to the leading (left) edge. A plain :first-child selector
 // only ever matches the card that happened to render first in the DOM,

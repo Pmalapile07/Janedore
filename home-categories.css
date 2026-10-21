@@ -127,10 +127,10 @@ button.home-category-card:focus-visible { outline: 2px solid #111; outline-offse
    10% from 0.78 (aspect-ratio is width/height, so shrinking height by
    10% at the same width means dividing the ratio by 0.9: 0.78/0.9 ≈ 0.87). */
 .home-category-img { aspect-ratio: 0.87; background-color: #f4f4f4; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
-/* Centered over the category image itself instead of sitting below it. */
+/* Over the category image, a little below its centre. */
 .home-category-label {
   position: absolute;
-  top: 50%;
+  top: 62%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 90%;
