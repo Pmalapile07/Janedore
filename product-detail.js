@@ -174,20 +174,23 @@ function getProductBadges(product) {
   return badges;
 }
 
-// Product cards and bag thumbnails are too small for a stack, so they
-// show one badge: the one that matters most to buying it. The product
-// page's larger image keeps every badge (getProductBadges()). Order:
-// sold out, pre-order, sale, a custom admin badge, free delivery, new.
+// Product cards are too small for every badge, so they show the one that
+// matters most to buying it (sold out, pre-order, sale, a custom admin
+// badge, then new), plus FREE DELIVERY under it when it applies. Sold out
+// always shows alone. The product page's larger image keeps every badge
+// (getProductBadges()).
 var CARD_BADGE_PRIORITY = ['SOLD OUT', 'PRE-ORDER', 'SALE'];
 function getCardBadges(product) {
   var badges = getProductBadges(product);
-  if (badges.length <= 1) return badges;
-  for (var i = 0; i < CARD_BADGE_PRIORITY.length; i++) {
-    if (badges.indexOf(CARD_BADGE_PRIORITY[i]) !== -1) return [CARD_BADGE_PRIORITY[i]];
+  var free = badges.indexOf('FREE DELIVERY') !== -1;
+  var rest = badges.filter(function (b) { return b !== 'FREE DELIVERY'; });
+  var main = null;
+  for (var i = 0; i < CARD_BADGE_PRIORITY.length && !main; i++) {
+    if (rest.indexOf(CARD_BADGE_PRIORITY[i]) !== -1) main = CARD_BADGE_PRIORITY[i];
   }
-  var custom = badges.filter(function (b) { return b !== 'NEW' && b !== 'FREE DELIVERY'; });
-  if (custom.length) return [custom[0]];
-  return [badges.indexOf('FREE DELIVERY') !== -1 ? 'FREE DELIVERY' : badges[0]];
+  if (!main) main = rest.filter(function (b) { return b !== 'NEW'; })[0] || rest[0] || null;
+  if (main === 'SOLD OUT') return [main];
+  return (main ? [main] : []).concat(free ? ['FREE DELIVERY'] : []);
 }
 
 function getProductImages(product, variantIndex) {
