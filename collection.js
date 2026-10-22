@@ -1577,7 +1577,6 @@ function renderVendorPage(vendor) {
   // back to logoUrl — so a brand's image matches wherever it shows up.
   const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
   const brandName = vendor?.brand || vendor?.name || '';
-  const desc = vendor?.description || '';
   const logoUrl = /^https:\/\//i.test(String(vendor?.logoUrl || '').trim()) ? vendor.logoUrl.trim() : '';
   const initials = brandName.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
@@ -1588,13 +1587,15 @@ function renderVendorPage(vendor) {
   (getVendorFilteredProducts(vendor) || []).forEach(p => { const d = JDTaxonomy.departmentOf(p.category); if (d) depts[d] = (depts[d] || 0) + 1; });
   const mainDept = Object.keys(depts).sort((x, y) => depts[y] - depts[x])[0];
   const barLine = [vendor?.location, mainDept ? JDTaxonomy.label(mainDept) : ''].filter(Boolean).join(' · ');
-  const newest = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName), undefined, 'newest').slice(0, 8);
+  const brandProducts = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName);
+  const newest = merchandiseProducts(brandProducts, undefined, 'newest').slice(0, 8);
+  const hasSale = brandProducts.some(hasSalePrice);
   const sectionHead = (id, title, btn) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div>${btn || ''}</div>`;
   const emptyTile = '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
 
   // A brand's page is its own small homepage inside Janedore: a brand bar
   // (sticks, and takes the header's place while scrolling down, like the
-  // collection toolbar), their hero, Shop / Collections / About links,
+  // collection toolbar), their hero, Shop / Collections / Sale links,
   // their newest pieces, their collections and all their products. Built
   // from the homepage's own pieces (hero, section headers, slider, tiles).
   el.innerHTML = `
@@ -1612,11 +1613,10 @@ function renderVendorPage(vendor) {
       </div>
     </section>
     <div class="nav-quick-links brand-quick-links" role="tablist">
-      <button class="nav-quick-link active" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
+      <button class="nav-quick-link${S.vendorFilter.onSale ? '' : ' active'}" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
       <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
-      ${desc ? `<button class="nav-quick-link" data-brand-tab="about" onclick="showBrandSection('about')">About</button>` : ''}
+      ${hasSale ? `<button class="nav-quick-link${S.vendorFilter.onSale ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>` : ''}
     </div>
-    ${desc ? `<p class="track-intro brand-about" id="brand-about" hidden>${escapeHTML(desc)}</p>` : ''}
     <section class="brand-section" id="brand-new">
       ${sectionHead('brand-new-heading', '', `<button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="showBrandSection('shop')">View all</button>`)}
       <div class="product-grid" id="vendor-new-grid">${newest.length ? newest.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true)}</div>
@@ -1662,13 +1662,16 @@ function renderVendorPage(vendor) {
 
 window.navigateToVendor = navigateToVendor;
 
-// Brand page links: Shop and Collections scroll to their section (under
-// the sticky brand bar); About shows the brand's short description.
+// Brand page links: Shop shows all the brand's products and Sale only
+// their sale ones (the toolbar's own On sale filter), both scrolled to
+// All products under the sticky brand bar; Collections scrolls to the
+// collection tiles.
 function showBrandSection(key) {
+  if (key !== 'collections' && S.currentVendor) {
+    const onSale = key === 'sale';
+    if (S.vendorFilter.onSale !== onSale) { S.vendorFilter.onSale = onSale; renderVendorPage(S.currentVendor); }
+  }
   document.querySelectorAll('[data-brand-tab]').forEach(b => b.classList.toggle('active', b.dataset.brandTab === key));
-  const about = document.getElementById('brand-about');
-  if (about) about.hidden = key !== 'about';
-  if (key === 'about') return;
   const target = document.getElementById(key === 'collections' ? 'brand-collections' : 'brand-shop');
   const bar = document.getElementById('brand-bar');
   if (!target) return;

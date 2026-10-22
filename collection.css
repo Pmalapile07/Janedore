@@ -756,7 +756,7 @@ body.on-collection-page.collection-bar-stuck .brand-bar { top: 0; }
 body:has(#page-vendor.active).on-collection-page .collection-filter-bar { top: calc(var(--main-nav-sticky-height, 0px) + var(--brand-bar-height, 0px)); }
 body:has(#page-vendor.active).on-collection-page.collection-bar-stuck .collection-filter-bar { top: var(--brand-bar-height, 0px); }
 
-/* Shop / Collections / About: the quick-link pills the header used to
+/* Shop / Collections / Sale: the quick-link pills the header used to
    have (grey text, the picked one a black pill with white bold text). */
 .brand-quick-links { display: flex; align-items: center; gap: 3px; padding: 8px 8px 0; overflow-x: auto; scrollbar-width: none; }
 .brand-quick-links::-webkit-scrollbar { display: none; }
@@ -768,7 +768,6 @@ body:has(#page-vendor.active).on-collection-page.collection-bar-stuck .collectio
 }
 .nav-quick-link:hover { color: #111; }
 .nav-quick-link.active { background: #111; color: #fff; font-weight: 700; }
-.brand-about { padding: 16px 20px 0; margin: 0; }
 /* Same spacing as the homepage's product rows (#home-shop-clothing). */
 .brand-section { padding: 24px 0; }
 #brand-shop { padding-bottom: 0; }
