@@ -1592,7 +1592,7 @@ function renderVendorPage(vendor) {
   const mainDept = Object.keys(depts).sort((x, y) => depts[y] - depts[x])[0];
   const barLine = [vendor?.location, mainDept ? JDTaxonomy.label(mainDept) : ''].filter(Boolean).join(' · ');
   const newest = merchandiseProducts(brandProducts, undefined, 'newest').slice(0, 8);
-  const sectionHead = (id, title, btn) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div>${btn || ''}</div>`;
+  const sectionHead = (id) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div></div>`;
   const emptyTile = '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
 
   // A brand's page is its own small homepage inside Janedore: a brand bar
@@ -1634,8 +1634,9 @@ function renderVendorPage(vendor) {
     </section>
     ${pills}
     <section class="brand-section" id="brand-new">
-      ${sectionHead('brand-new-heading', '', `<button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="showBrandSection('shop')">View all</button>`)}
+      ${sectionHead('brand-new-heading')}
       <div class="product-grid" id="vendor-new-grid">${newest.length ? newest.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true)}</div>
+      <div class="home-section-btn-row"><button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="showBrandSection('shop')">View all</button></div>
     </section>
     <section class="brand-section" id="brand-collections">
       ${sectionHead('brand-collections-heading')}

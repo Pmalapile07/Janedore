@@ -888,16 +888,16 @@ body .site-collection-layout {
   opacity: 0.7;
 }
 /* Homepage section buttons (New arrivals, Shop clothing, Shop
-   accessories, Shop by brand): solid black with white text, the same
+   accessories, Shop by brand) and the brand page's New in: solid black with white text, the same
    weight and padding as the hero's Shop now button (hero.css). */
 #page-home .home-categories-header .initial-drop-view-all,
-#page-vendor .home-categories-header .initial-drop-view-all,
+#page-vendor .home-section-btn-row .initial-drop-view-all,
 #page-home .home-section-btn-row .initial-drop-view-all {
   background: #111; color: #fff; font-weight: 500; border: none; padding: 12px 32px;
   transition: background 0.2s;
 }
 #page-home .home-categories-header .initial-drop-view-all:hover,
-#page-vendor .home-categories-header .initial-drop-view-all:hover,
+#page-vendor .home-section-btn-row .initial-drop-view-all:hover,
 #page-home .home-section-btn-row .initial-drop-view-all:hover { opacity: 1; background: #333; }
 /* Narrow phones: the heading wraps onto a second line rather than
    running into the button, which keeps its size. */
@@ -906,15 +906,15 @@ body .site-collection-layout {
 #page-home .home-categories-header .home-categories-title,
 #page-vendor .home-categories-header .home-categories-title { min-width: 0; overflow-wrap: break-word; }
 #page-home .home-categories-header .initial-drop-view-all,
-#page-vendor .home-categories-header .initial-drop-view-all,
+#page-vendor .home-section-btn-row .initial-drop-view-all,
 #page-home .home-section-btn-row .initial-drop-view-all { flex-shrink: 0; white-space: nowrap; }
 @media (max-width: 400px) {
   #page-home .home-categories-header .initial-drop-view-all,
-  #page-vendor .home-categories-header .initial-drop-view-all,
+  #page-vendor .home-section-btn-row .initial-drop-view-all,
   #page-home .home-section-btn-row .initial-drop-view-all { padding: 12px 20px; }
 }
 
-/* Homepage rows: the button sits under the products on the right, the
+/* Homepage and brand page rows: the button sits under the products on the right, the
    same size and right edge as when it sat beside the heading (20px,
    24px from 768px, 27px desktop: home-categories.css). */
 .home-section-btn-row { display: flex; justify-content: flex-end; padding: 20px 20px 0; }
