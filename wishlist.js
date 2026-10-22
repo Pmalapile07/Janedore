@@ -141,7 +141,7 @@ function wishHeadHtml() {
     return `<div class="wish-head"><button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button><h1 class="account-heading account-section-heading">Wishlist</h1></div>`;
   }
   return `<div class="wish-head"><h1 class="account-heading">Wishlist</h1>
-    <p class="wish-signin-note"><button type="button" class="wish-signin-link" onclick="navigateToLogin()">Sign in</button> to save your wishlist and view it on any device.</p></div>`;
+    <p class="wish-signin-note"><button type="button" class="wish-signin-link" onclick="navigateToLogin()">Sign in</button> to save your favourites and shop your wishlist from any device.</p></div>`;
 }
 
 function renderWishlistPage() {

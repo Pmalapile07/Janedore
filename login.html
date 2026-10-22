@@ -64,21 +64,36 @@
     display: none;
     font-family: 'Inter', sans-serif;
   }
-  .login-link-wrap {
-    text-align: center;
-    margin-top: 24px;
-  }
-  .login-link {
+  /* Same type as the wishlist's sign-in line (wishlist.css). */
+  .login-switch {
     font-family: 'Inter', sans-serif;
     font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+    margin: -12px 0 24px;
+  }
+  .login-link {
+    font: inherit;
+    font-weight: 500;
     color: #111;
     background: none;
     border: none;
-    padding: 4px;
+    padding: 0;
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 3px;
   }
+  /* Same grey box as "How exchanges work" (track-order.css .track-notice). */
+  .login-legal {
+    background: #f4f4f4;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #444;
+    padding: 14px 16px;
+    margin-top: 24px;
+  }
+  .login-legal a { color: #111; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .login-form-group#password-group { position: relative; }
   .login-forgot {
     display: block;
@@ -141,6 +156,7 @@
   <div class="login-page-container">
     <div class="login-box">
       <div class="login-title" id="login-mode-title">Sign In</div>
+      <p class="login-switch"><span id="login-switch-text">New customer?</span> <button type="button" class="login-link" id="toggle-mode-btn" onclick="toggleLoginMode()">Create an account</button><span id="login-switch-after"> to save your wishlist, track your orders and check out faster.</span></p>
       <div class="login-error" id="login-error"></div>
       
       <form id="login-form" onsubmit="handleLoginSubmit(event)">
@@ -166,8 +182,8 @@
         </button>
       </div>
 
-      <div class="login-link-wrap">
-        <button class="login-link" id="toggle-mode-btn" onclick="toggleLoginMode()">Create an account</button>
+      <div class="login-legal" id="login-legal">
+        <span id="login-legal-lead">By signing in</span>, you agree to Janedore&rsquo;s <a onclick="navigateToContentPage('terms-conditions')">Terms &amp; Conditions</a> and acknowledge that your personal information will be processed in line with our <a onclick="navigateToContentPage('privacy-policy')">Privacy Policy</a>.
       </div>
     </div>
   </div>
