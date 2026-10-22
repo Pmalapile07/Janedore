@@ -2799,11 +2799,11 @@ function fillBackgroundElement(html, id, imageUrl, maxWidth) {
 // innerHTML from scratch regardless of what's here, so this only needs
 // to get the initial paint right (image + label), not full
 // interactivity (onclick) — the client overwrites it moments later
-// either way. Unconfigured (no tiles) leaves the 8 static neutral
+// either way. Unconfigured (no tiles) leaves the 4 static neutral
 // placeholder tiles already in index.html untouched.
 function applyShopByCategoryTiles(html, tiles) {
   if (!tiles.length) return html;
-  const inner = tiles.slice(0, 8).map(function (tile) {
+  const inner = tiles.slice(0, 4).map(function (tile) {
     const label = escapeHtml(tile.label || '');
     const url = adminImageURL(tile.imageUrl, 600);
     const safeUrl = url.replace(/['"\\]/g, '');
@@ -2836,7 +2836,7 @@ function applyHomepageContent(html, homepage) {
   html = fillSectionHeading(html, 'arrivals-heading', arrivals.heading);
   html = fillTextElement(html, 'arrivals-view-all-btn', arrivals.buttonText);
 
-  html = fillTextElement(html, 'shop-by-category-heading', shopByCategory.heading);
+  html = fillSectionHeading(html, 'shop-by-category-heading', shopByCategory.heading);
   html = applyShopByCategoryTiles(html, Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : []);
 
   html = fillSectionHeading(html, 'clothing-heading', clothing.heading);
