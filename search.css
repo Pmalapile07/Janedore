@@ -58,13 +58,13 @@ body.on-brands-page .search-bar-row {
 .search-close-btn:hover { color: #111; }
 .search-body { flex: 1; overflow-y: auto; padding: 32px 12px; }
 @media (min-width: 768px) { .search-body { padding: 32px 16px; } }
-.search-results-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; margin-bottom: 16px; }
+.search-results-title { font-size: 12px; letter-spacing: 0; font-weight: var(--ui-font-weight); text-transform: none; color: #888; margin-bottom: 16px; }
 .search-results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .search-no-results { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300; color: #bbb; padding: 40px 0; text-align: center; }
 
 /* Suggestions while typing and Recent searches before (search.js). */
 .search-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.search-section-title { font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; color: #888; }
+.search-section-title { font-size: 12px; letter-spacing: 0; font-weight: var(--ui-font-weight); text-transform: none; color: #888; }
 .search-clear-btn { padding: 0; border: 0; background: none; font-family: 'Inter', sans-serif; font-size: 12px; color: #111; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .search-rows { list-style: none; padding: 0; margin: 8px 0 28px; }
 .search-row-wrap { display: flex; align-items: center; }

@@ -519,7 +519,9 @@ function updateCollectionTitle() {
     titleEl.textContent = title;
   }
   if (headingEl) {
-    headingEl.textContent = title === 'ALL PRODUCTS' ? 'All products' : title.toLowerCase().replace(/\b\w/g, function (char) { return char.toUpperCase(); });
+    // Sentence case: only the first letter is a capital ("Free delivery").
+    const lower = title.toLowerCase();
+    headingEl.textContent = lower.charAt(0).toUpperCase() + lower.slice(1);
     headingEl.style.display = title ? 'block' : 'none';
   }
   if (countEl) {
