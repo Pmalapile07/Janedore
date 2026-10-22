@@ -624,7 +624,8 @@ async function loadProductReviewsSection(productId) {
   reviews.sort((a, b) => time(b) - time(a));
   const stars = n => Array.from({ length: 5 }, (_, i) => `<i class="${i < Math.round(n) ? 'ph-fill' : 'ph'} ph-star" aria-hidden="true"></i>`).join('');
   // Only shown to customers who bought it (filled in below).
-  const write = `<p id="product-review-write" hidden><span class="track-link" onclick="openReviewModal()">Write a review</span></p>`;
+  // Same black button as the empty bag's (.cart-empty-btn, cart.css).
+  const write = `<div id="product-review-write" hidden${reviews.length ? ' style="margin-bottom:24px;"' : ''}><button type="button" class="cart-empty-btn" onclick="openReviewModal()">Write a review</button></div>`;
   if (countEl) countEl.textContent = reviews.length ? '(' + reviews.length + ')' : '';
   if (!reviews.length) {
     body.innerHTML = `<p>No reviews yet.</p>${write}`;
