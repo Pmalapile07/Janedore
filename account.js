@@ -330,7 +330,7 @@ async function renderAccountProfile() {
   <div class="account-section-title">Sign-in &amp; security</div>
   ${usesPassword ? `<p class="account-note">We’ll email you a secure link to set a new password.</p>
     <button type="button" class="account-outline-btn" id="acc-password" onclick="sendAccountPasswordReset()">Change password</button>` : ''}
-  ${usesGoogle ? `<p class="account-note">You sign in with your Google account.</p>` : ''}`;
+  ${usesGoogle ? `<p class="account-note">You’re signed in with your Google account.</p>` : ''}`;
 }
 
 async function saveAccountProfile(e) {
