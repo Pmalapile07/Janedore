@@ -66,7 +66,7 @@
   margin-top: 0;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
 }
@@ -99,7 +99,9 @@
   max-width: 220px;
   min-width: 0;
   text-align: left;
-  margin: 0;
+  /* Pulls the space under the last line's letters away, so the words
+     and the Shop now button sit on the same bottom line. */
+  margin: 0 0 -0.29em;
 }
 @media (min-width: 768px) { .hero-heading { font-size: 32px; max-width: 420px; } }
 #hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
