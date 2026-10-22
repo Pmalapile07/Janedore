@@ -396,15 +396,15 @@
     <h2 class="cs-title">Good questions</h2>
     <p>A few things you might be wondering.</p>
     <details><summary>What is JANEDORE?<i class="ph ph-caret-down"></i></summary><p>JANEDORE is a curated destination for independent labels across clothing, accessories, home and living, and kids. Every brand is selected by our team, and pieces from several brands can be purchased in a single order.</p></details>
-    <details><summary>When does JANEDORE open?<i class="ph ph-caret-down"></i></summary><p>We are preparing for launch. Members of our list will be the first to know our opening date, with early access and 10% off their first order.</p></details>
-    <details><summary>What does early access include?<i class="ph ph-caret-down"></i></summary><p>Access to the store before it opens to the public, 10% off your first order, and a first look at the labels joining the collective.</p></details>
+    <details><summary>When does JANEDORE open?<i class="ph ph-caret-down"></i></summary><p>We are preparing for launch. Members of our list will be the first to know our opening date, with early access to the store and to our discounts.</p></details>
+    <details><summary>What does early access include?<i class="ph ph-caret-down"></i></summary><p>Access to the store before it opens to the public, early access to our discounts, and a first look at the labels joining the collective.</p></details>
     <details><summary>Which brands will be available?<i class="ph ph-caret-down"></i></summary><p>A considered edit of independent labels, from emerging designers to established names. Each brand will be introduced as we approach launch.</p></details>
     <details><summary>How can my brand be considered?<i class="ph ph-caret-down"></i></summary><p>We welcome enquiries from independent labels whose craft and values align with ours. Register your interest, and a member of our partnerships team will be in touch.</p></details>
   </section>
 
   <section class="cs-join" id="join">
-    <h2 class="cs-title">Early access, and 10% off your first order</h2>
-    <p>Join the list to shop before we open to everyone, and receive 10% off your first order at launch.</p>
+    <h2 class="cs-title">Join the list for early access</h2>
+    <p>Shop before we open to everyone, with early access to our discounts.</p>
     <button type="button" class="cs-btn" data-open="join-sheet">Join the list</button>
   </section>
 </main>
@@ -421,8 +421,8 @@
 <div class="cs-sheet-back" id="join-sheet" hidden>
   <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="join-title">
     <button type="button" class="cs-sheet-close" data-close aria-label="Close"><i class="ph ph-x"></i></button>
-    <h2 id="join-title">Get 10% off your first order</h2>
-    <p>Join the list for early access before we open to everyone, and 10% off your first order at launch.</p>
+    <h2 id="join-title">Get early access</h2>
+    <p>Join the list to shop before we open to everyone, with early access to our discounts.</p>
     <div class="cs-form">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email" class="signup-input" id="email-input" placeholder="Email address" autocomplete="email" aria-describedby="signup-msg" required>
@@ -698,7 +698,7 @@
         userAgent:    navigator.userAgent,
         referrer:     document.referrer || 'direct'
       }).then(function() {
-        showMsg("Thank you. You're on the list, and your 10% code will be emailed to you at launch.", 'success');
+        showMsg("Thank you. You're on the list, and we'll be in touch before we open.", 'success');
         emailEl.value = '';
         setLoading(false);
         fetch('/api/send-welcome-email', {

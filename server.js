@@ -595,9 +595,9 @@ app.post('/api/send-welcome-email', (req, res) => {
 
   const html = emailLayout({
     heading: 'Thank you for subscribing',
-    bodyHtml: '<p class="body-text">JANEDORE launches soon, and you’ll be among the first to know.<br>Your code for 10% off your first order will be emailed to you at launch.</p>'
+    bodyHtml: '<p class="body-text">JANEDORE launches soon, and you’ll be among the first to know.<br>You’ll also have early access to our discounts.</p>'
   });
-  const text = 'Thank you for subscribing\n\nJANEDORE launches soon, and you’ll be among the first to know. Your code for 10% off your first order will be emailed to you at launch.\n\nJanedore\n\nsupport@janedore.co.za';
+  const text = 'Thank you for subscribing\n\nJANEDORE launches soon, and you’ll be among the first to know. You’ll also have early access to our discounts.\n\nJanedore\n\nsupport@janedore.co.za';
 
   sendResendEmail({
     from: 'Janedore <support@janedore.co.za>',
