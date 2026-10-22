@@ -491,10 +491,9 @@ function updateCollectionTitle() {
     description = '';
     showDesc = false;
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
-    const copy = collectionCopyFor(S.currentCategoryPage);
-    title = copy.title;
-    description = copy.description;
-    showDesc = !!description;
+    // Department and category pages show no description, only a heading.
+    title = collectionCopyFor(S.currentCategoryPage).title;
+    showDesc = false;
   } else {
     if (titleEl) titleEl.style.display = 'none';
     if (headingEl) headingEl.style.display = 'none';
