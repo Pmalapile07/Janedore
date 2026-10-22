@@ -856,3 +856,11 @@ body .site-collection-layout {
   transition: background 0.2s;
 }
 #page-home .home-categories-header .initial-drop-view-all:hover { opacity: 1; background: #333; }
+/* Narrow phones: the heading wraps onto a second line rather than
+   running into the button, which keeps its size. */
+#page-home .home-categories-header { gap: 16px; }
+#page-home .home-categories-header .home-categories-title { min-width: 0; overflow-wrap: break-word; }
+#page-home .home-categories-header .initial-drop-view-all { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 400px) {
+  #page-home .home-categories-header .initial-drop-view-all { padding: 12px 20px; }
+}
