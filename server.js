@@ -3000,29 +3000,6 @@ app.get(['/admin', '/admin.html'], (req, res) => {
   }
 });
 
-// ==================== COMING SOON PAGE ====================
-// janedore-coming-soon.html with the homepage's four Shop by category
-// tiles (admin > Homepage). The hero and the two cards have their own
-// photos (coming-soon-*.jpg).
-// Without them the page still works (plain backgrounds).
-app.get('/janedore-coming-soon.html', async (req, res) => {
-  let html = fs.readFileSync(path.join(__dirname, 'janedore-coming-soon.html'), 'utf8');
-  try {
-    const homepage = adminDb ? await getCachedHomepage() : {};
-    const bg = (url, w) => {
-      const u = adminImageURL(url, w).replace(/['"\\]/g, '');
-      return u ? " style=\"background-image:url('" + u + "');\"" : '';
-    };
-    const tiles = Array.isArray((homepage.shopByCategory || {}).tiles) ? homepage.shopByCategory.tiles.slice(0, 4) : [];
-    html = html.replace('<div class="cs-cats" id="cs-cats"></div>', '<div class="cs-cats" id="cs-cats">' +
-      tiles.map((t) => '<div class="cs-cat"' + bg(t.imageUrl, 600) + '><span>' + escapeHtml(t.label || '') + '</span></div>').join('') + '</div>');
-  } catch (e) {
-    console.error('[COMING_SOON] Photos failed:', e.message);
-  }
-  res.set('Cache-Control', 'no-cache');
-  res.type('html').send(html);
-});
-
 // Coming soon: brands registering interest before launch. Saved to
 // brandInterest (server only; shown in Admin > Home) and emailed to the
 // team.
