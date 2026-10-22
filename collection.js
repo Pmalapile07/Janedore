@@ -1603,7 +1603,7 @@ function renderVendorPage(vendor) {
   const view = S.vendorView || 'home';
   const brandBar = `
     <div class="brand-bar" id="brand-bar">
-      <div class="brand-bar-logo">${logoUrl ? `<img src="${escapeHTML(logoUrl)}" alt="">` : escapeHTML(initials)}</div>
+      <button type="button" class="brand-bar-logo" aria-label="${escapeHTML(brandName)} home" onclick="openBrandView('home')">${logoUrl ? `<img src="${escapeHTML(logoUrl)}" alt="">` : escapeHTML(initials)}</button>
       <div class="brand-bar-text"><h1 class="brand-bar-name">${escapeHTML(brandName)}</h1>${barLine ? `<div class="brand-bar-line">${escapeHTML(barLine)}</div>` : ''}</div>
       <div class="brand-bar-menu">
         <button type="button" class="brand-bar-more" aria-label="More" aria-expanded="false" onclick="toggleBrandMenu(event)"><i class="ph ph-dots-three"></i></button>

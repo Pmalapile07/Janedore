@@ -744,6 +744,7 @@ body.on-collection-page.collection-bar-stuck .brand-bar { top: 0; }
   width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; overflow: hidden;
   background: #111; color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  border: none; padding: 0; cursor: pointer; font-family: inherit;
 }
 .brand-bar-logo img { width: 70%; height: 70%; object-fit: contain; }
 .brand-bar-text { min-width: 0; }
@@ -782,3 +783,7 @@ body:has(#page-vendor.active) #active-filter-chips { display: none !important; }
 @media (min-width: 640px) { .brand-hero .brand-hero-slogan { inset: 12px 10px; } }
 @media (min-width: 1024px) { .brand-hero .brand-hero-slogan { inset: 12px 12px; } }
 .brand-hero .hero-content-wrap { justify-content: flex-end; }
+/* Brand heroes are shorter than the homepage's: square on phones,
+   about two thirds of the screen on wider ones. */
+.brand-hero { height: 70vh; min-height: 420px; }
+@media (max-width: 768px) { .brand-hero { height: auto; min-height: 0; aspect-ratio: 1 / 1; } }
