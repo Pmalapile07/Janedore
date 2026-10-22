@@ -250,8 +250,8 @@ button.home-category-card:focus-visible { outline: 2px solid #111; outline-offse
 
 /* Homepage section headings and buttons line up with the header's
    outer icons: the menu icon's left edge and the bag icon's right edge
-   (the bar's 12px padding + the icon button's 6px + the icon's own ~3px
+   (the bar's 12px padding + the icon button's 6px + the icon's own ~2px
    inset; 16px bar padding from 768px). Desktop has no icons there. */
-#page-home .home-categories-header { padding-left: 21px; padding-right: 21px; }
-@media (min-width: 768px) { #page-home .home-categories-header { padding-left: 25px; padding-right: 25px; } }
+#page-home .home-categories-header { padding-left: 20px; padding-right: 20px; }
+@media (min-width: 768px) { #page-home .home-categories-header { padding-left: 24px; padding-right: 24px; } }
 @media (min-width: 1024px) { #page-home .home-categories-header { padding-left: 27px; padding-right: 27px; } }
