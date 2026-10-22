@@ -569,7 +569,7 @@ async function renderProductPage(product) {
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('description')">
-            Product Information
+            Product information
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="info-accordion-body">
@@ -585,6 +585,13 @@ async function renderProductPage(product) {
           </div>
           <div class="info-accordion-body"><p>${product.shippingReturns||'No shipping details available.'}</p></div>
         </div>
+        <div class="info-accordion-item" id="info-accordion-reviews">
+          <div class="info-accordion-header" onclick="toggleInfoAccordion('reviews')">
+            <span>Reviews <span id="product-review-count"></span></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="info-accordion-body" id="product-reviews-body"><p>Loading reviews…</p></div>
+        </div>
       </div>
     </div>
     <div style="max-width:720px;margin:0 auto;padding:0 0 32px;">
@@ -597,4 +604,37 @@ async function renderProductPage(product) {
   if (typeof createStickyBar === 'function') createStickyBar(product);
   updateAddToCartState();
   setTimeout(() => initProductSwipe(images), 100);
+  loadProductReviewsSection(product.id);
+}
+
+// Reviews accordion (under Shipping & returns): the average, each review
+// newest first, and Write a review (the review popup, modals.js).
+// Fetched by product only and sorted here, so it needs no extra index.
+async function loadProductReviewsSection(productId) {
+  let reviews = [];
+  try {
+    const snap = await db.collection('reviews').where('productId', '==', productId).limit(100).get();
+    reviews = snap.docs.map(d => d.data());
+  } catch (e) { console.warn('[REVIEWS]', e.message); }
+  if (S.currentReviewProductId !== productId) return;
+  const body = document.getElementById('product-reviews-body');
+  const countEl = document.getElementById('product-review-count');
+  if (!body) return;
+  const time = r => (r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().getTime() : 0);
+  reviews.sort((a, b) => time(b) - time(a));
+  const stars = n => Array.from({ length: 5 }, (_, i) => `<i class="${i < Math.round(n) ? 'ph-fill' : 'ph'} ph-star" aria-hidden="true"></i>`).join('');
+  const write = `<p><span class="track-link" onclick="openReviewModal()">Write a review</span></p>`;
+  if (countEl) countEl.textContent = reviews.length ? '(' + reviews.length + ')' : '';
+  if (!reviews.length) {
+    body.innerHTML = `<p>No reviews yet. Be the first to review it.</p>${write}`;
+    return;
+  }
+  const avg = reviews.reduce((n, r) => n + (Number(r.rating) || 0), 0) / reviews.length;
+  body.innerHTML = `<p class="product-review-stars" aria-label="${avg.toFixed(1)} out of 5">${stars(avg)} ${avg.toFixed(1)} · ${reviews.length} review${reviews.length === 1 ? '' : 's'}</p>${write}` +
+    reviews.map(r => {
+      const d = time(r) ? new Date(time(r)).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      return `<p class="info-sub-label">${escapeHTML(r.name || 'Anonymous')}${d ? ' · ' + d : ''}</p>
+        <p class="product-review-stars" aria-label="${Number(r.rating) || 0} out of 5">${stars(Number(r.rating) || 0)}</p>
+        ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}`;
+    }).join('');
 }
