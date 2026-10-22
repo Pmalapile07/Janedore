@@ -458,11 +458,19 @@ async function renderProductPage(product) {
   const collectionHandle = productCollection && (productCollection.handle || productCollection.slug || productCollection.id);
   const collectionLabel = titleCaseBreadcrumb(productCollection && (productCollection.title || productCollection.name || collectionHandle));
   const breadcrumbSeparator = '<span class="page-breadcrumb-sep" aria-hidden="true"> / </span>';
+  // Home / Department / Category / Product, from the category tree
+  // (taxonomy.js). A product saved straight to a department shows just
+  // that; one with no known category falls back to its collection.
+  const crumb = (slug, label) => `${breadcrumbSeparator}<span class="page-breadcrumb-link" onclick="navigateToCategory('${escapeJSString(slug)}')">${escapeHTML(label)}</span>`;
+  const deptSlug = window.JDTaxonomy ? JDTaxonomy.departmentOf(product.category) : null;
+  const categoryCrumbs = deptSlug
+    ? crumb(deptSlug, JDTaxonomy.label(deptSlug)) + (product.category !== deptSlug ? crumb(product.category, JDTaxonomy.label(product.category)) : '')
+    : '';
   const breadcrumbHtml = `<div class="product-breadcrumb-bar">
     <button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button>
     <nav class="page-breadcrumb" aria-label="Breadcrumb">
       <span class="page-breadcrumb-link" onclick="navigateTo('home')">Home</span>
-      ${productCollection && collectionHandle ? `${breadcrumbSeparator}<span class="page-breadcrumb-link" onclick="navigateToCollection('${escapeJSString(collectionHandle)}')">${escapeHTML(collectionLabel)}</span>` : ''}
+      ${categoryCrumbs || (productCollection && collectionHandle ? `${breadcrumbSeparator}<span class="page-breadcrumb-link" onclick="navigateToCollection('${escapeJSString(collectionHandle)}')">${escapeHTML(collectionLabel)}</span>` : '')}
       ${breadcrumbSeparator}<span class="page-breadcrumb-current">${escapeHTML(titleCaseBreadcrumb(product.name || ''))}</span>
     </nav>
     <button class="product-breadcrumb-share" type="button" onclick="shareCurrentProduct('${escapeJSString(product.id)}')" aria-label="Share product"><i class="ph ph-share-network"></i></button>
