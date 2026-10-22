@@ -62,15 +62,21 @@ async function navigateToContentPage(slug, replaceUrl) {
   updateChatVisibility();
 }
 
-// Menu > Download the app. There's no app yet.
+// Menu > Download the app. There's no app yet, so it shows an
+// error page (track-order.css .error-page) rather than an announcement.
 function renderAppPage() {
   const el = document.getElementById('content-page-body');
   if (!el) return;
   el.innerHTML = `
-    <section class="track-page">
-      <h1 class="track-title">The Janedore app</h1>
-      <p class="track-intro">Our app is coming soon. Until then, you can shop every brand, track your orders and manage your account right here on the website.</p>
-      <button type="button" class="track-btn" onclick="navigateTo('products')">Continue shopping</button>
+    <section class="error-page">
+      <i class="ph ph-device-mobile-slash error-page-icon" aria-hidden="true"></i>
+      <div class="error-page-code">Error 404</div>
+      <h1 class="error-page-title">Page unavailable</h1>
+      <p class="error-page-text">The page you’re looking for isn’t available right now. Please try again later.</p>
+      <div class="error-page-actions">
+        <button type="button" class="track-btn" onclick="navigateTo('home')">Back to homepage</button>
+        <button type="button" class="account-outline-btn" onclick="navigateTo('products')">Continue shopping</button>
+      </div>
     </section>`;
 }
 
