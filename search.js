@@ -122,11 +122,7 @@ function searchMatchRank(label, v) {
   return v.length >= 3 && s.includes(v) ? 2 : -1;
 }
 
-function searchCategoryLabel(slug) {
-  const names = { parfum: 'Scent', jewelry: 'Jewellery' };
-  const name = names[slug] || String(slug || '').replace(/-/g, ' ');
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
+function searchCategoryLabel(slug) { return JDTaxonomy.label(slug); }
 
 function getSearchSuggestions(v) {
   const found = [];

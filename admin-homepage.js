@@ -17,24 +17,17 @@
   var _vendorsCache = null;
   var _productsCache = null;
 
-  // Real, known category slugs only — "All Products" and "Sale" are
-  // their own separate link types below, not categories. Mirrors
-  // collection.js's catTitles; kept as its own small list here since
-  // this file doesn't share scope with that one.
-  var CATEGORY_SLUGS = [
-    { slug: 'all-clothing',    label: 'Clothing' },
-    { slug: 'all-accessories', label: 'Accessories' },
-    { slug: 'homeware',        label: 'Homeware' },
-    { slug: 'dresses',         label: 'Dresses' },
-    { slug: 'tops',            label: 'Tops' },
-    { slug: 'bottoms',         label: 'Bottoms' },
-    { slug: 'jackets',         label: 'Jackets' },
-    { slug: 'sets',            label: 'Sets' },
-    { slug: 'bags',            label: 'Bags' },
-    { slug: 'jewelry',         label: 'Jewelry' },
-    { slug: 'sunglasses',      label: 'Sunglasses' },
-    { slug: 'parfum',          label: 'Scent' }
-  ];
+  // Departments and categories from the category tree (taxonomy.js) —
+  // "All Products" and "Sale" are their own separate link types below,
+  // not categories.
+  var CATEGORY_SLUGS = (function () {
+    var list = [];
+    window.JDTaxonomy.DEPARTMENTS.forEach(function (d) {
+      list.push({ slug: d.slug, label: d.name });
+      d.categories.forEach(function (c) { list.push({ slug: c.slug, label: d.name + ' › ' + c.name }); });
+    });
+    return list;
+  })();
 
   // Mirrors admin-pages.js's PAGE_GROUPS slugs/labels exactly — keep
   // these two lists in sync if a policy/help page is ever renamed.
@@ -64,8 +57,11 @@
 
   function linkOptionsFor(type, currentValue) {
     if (type === 'category') {
+      // Links saved to all-clothing / all-accessories are those departments.
+      var dept = window.JDTaxonomy.department(currentValue);
+      var current = dept ? dept.slug : currentValue;
       return CATEGORY_SLUGS.map(function (c) {
-        return '<option value="' + c.slug + '"' + (c.slug === currentValue ? ' selected' : '') + '>' + esc(c.label) + '</option>';
+        return '<option value="' + c.slug + '"' + (c.slug === current ? ' selected' : '') + '>' + esc(c.label) + '</option>';
       }).join('');
     }
     if (type === 'vendor') {
@@ -264,7 +260,7 @@
     var shopCat = h.shopByCategory || {};
     var clothing = h.shopByClothing || {};
     // Defaults match site-content.js until the section is first saved.
-    var accessories = h.shopByAccessories || { heading: 'Shop by accessories', buttonText: 'Shop now', buttonLink: { type: 'category', value: 'all-accessories' } };
+    var accessories = h.shopByAccessories || { heading: 'Shop by accessories', buttonText: 'Shop now', buttonLink: { type: 'category', value: 'accessories' } };
     var banner = h.editorialBanner || {};
     var brand = h.shopByBrand || {};
     var news = h.newsletter || {};

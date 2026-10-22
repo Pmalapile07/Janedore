@@ -36,28 +36,26 @@
     ]}
   ];
 
-  // Mirrors collection.js's catTitles / admin-homepage.js's CATEGORY_SLUGS
-  // (plus 'all' and 'sale', the two non-category collection views) — keep
-  // these in sync if a category is ever renamed. Lives here, not in the
-  // Homepage tab, since editing one of these is the same list->form
-  // motion as every other page above, not a homepage section.
-  var COLLECTION_PAGE_ITEMS = [
-    { slug: 'all',             label: 'All Products' },
-    { slug: 'sale',            label: 'Sale' },
-    { slug: 'newin',           label: 'New In' },
-    { slug: 'all-clothing',    label: 'Clothing' },
-    { slug: 'all-accessories', label: 'Accessories' },
-    { slug: 'homeware',        label: 'Homeware' },
-    { slug: 'dresses',         label: 'Dresses' },
-    { slug: 'tops',            label: 'Tops' },
-    { slug: 'bottoms',         label: 'Bottoms' },
-    { slug: 'jackets',         label: 'Jackets' },
-    { slug: 'sets',            label: 'Sets' },
-    { slug: 'bags',            label: 'Bags' },
-    { slug: 'jewelry',         label: 'Jewelry' },
-    { slug: 'sunglasses',      label: 'Sunglasses' },
-    { slug: 'parfum',          label: 'Scent' }
-  ];
+  // All Products, Sale and New In, then every department and category in
+  // the category tree (taxonomy.js). Lives here, not in the Homepage tab,
+  // since editing one of these is the same list->form motion as every
+  // other page above, not a homepage section.
+  var COLLECTION_PAGE_ITEMS = (function () {
+    var list = [
+      { slug: 'all',   label: 'All Products' },
+      { slug: 'sale',  label: 'Sale' },
+      { slug: 'newin', label: 'New In' }
+    ];
+    window.JDTaxonomy.DEPARTMENTS.forEach(function (d) {
+      list.push({ slug: d.slug, label: d.name });
+      d.categories.forEach(function (c) { list.push({ slug: c.slug, label: d.name + ' › ' + c.name }); });
+    });
+    return list;
+  })();
+
+  // Clothing and Accessories text may still be saved under these keys.
+  var OLD_COLLECTION_KEYS = { clothing: 'all-clothing', accessories: 'all-accessories' };
+  function collectionPageData(slug) { return _collectionPagesData[slug] || _collectionPagesData[OLD_COLLECTION_KEYS[slug]]; }
 
   var _pagesData = {}; // slug -> { title, content, updatedAt }
   var _collectionPagesData = {}; // slug -> { title, description }
@@ -107,7 +105,7 @@
     }).join('');
 
     var collectionRowsHtml = COLLECTION_PAGE_ITEMS.map(function(item) {
-      var data = _collectionPagesData[item.slug];
+      var data = collectionPageData(item.slug);
       var hasContent = !!(data && ((data.title && data.title.trim()) || (data.description && data.description.trim())));
       return '<div class="product-row" onclick="window._openCollectionPageForm(\'' + esc(item.slug) + '\')" style="cursor:pointer;">' +
         '<div style="flex:1;min-width:0;">' +
@@ -134,7 +132,7 @@
   window._openCollectionPageForm = function(slug) {
     var item = COLLECTION_PAGE_ITEMS.find(function(i) { return i.slug === slug; });
     if (!item) { showToast('Collection page not found', 'error'); return; }
-    var data = _collectionPagesData[slug] || {};
+    var data = collectionPageData(slug) || {};
 
     var mc = safeEl('main-content');
     if (!mc) return;

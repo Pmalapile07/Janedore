@@ -59,13 +59,13 @@ function escapeForCssUrl(url) {
   return String(safe).replace(/['"\\\n\r]/g, '');
 }
 
-const CATEGORY_ORDER = { tops:1, bottoms:2, dresses:3, sets:4, jackets:5, bags:6, jewelry:7, sunglasses:8, parfum:9 };
-
-const CLOTHING_CATEGORIES = ['dresses','tops','bottoms','jackets','sets'];
-// Accessories bundles bags, jewelry, and sunglasses into one browsable
-// category — mirrors the exact same grouping technique CLOTHING_CATEGORIES
-// already uses below, just for a different set of categories.
-const ACCESSORY_CATEGORIES = ['bags','jewelry','sunglasses'];
+// Departments, categories, their names and order come from the category
+// tree (taxonomy.js). A category page lists one category; a department
+// page (Clothing, Accessories, Homeware, Beauty, Kids) lists all of its
+// categories.
+function isInDepartment(product, deptSlug) {
+  return JDTaxonomy.departmentOf(product.category) === deptSlug;
+}
 
 // The `category` values actually relevant to whatever the customer is
 // currently browsing. Returns null on the All Products / Sale pages
@@ -79,8 +79,8 @@ function getCategoryFilterScope() {
   }
   if (S.currentPage !== 'category' || !S.currentCategoryPage) return null;
   if (S.currentCollectionHandle) return [...new Set(PRODUCTS.filter(function (p) { return productBelongsToCollection(p, S.currentCollectionData); }).map(function (p) { return p.category; }).filter(Boolean))];
-  if (S.currentCategoryPage === 'all-clothing') return CLOTHING_CATEGORIES;
-  if (S.currentCategoryPage === 'all-accessories') return ACCESSORY_CATEGORIES;
+  const dept = JDTaxonomy.department(S.currentCategoryPage);
+  if (dept) return JDTaxonomy.categoriesIn(dept.slug);
   return [S.currentCategoryPage];
 }
 const LEATHER_POUCH_ID = 'janedore-leather-pouch';
@@ -201,8 +201,8 @@ function merchandiseProducts(products, context, sortBy) {
   if (!products || !products.length) return [];
   const filtered = products.filter(p => p.id !== LEATHER_POUCH_ID || isLeatherPouchAllowed(context));
   const sorted = [...filtered].sort((a, b) => {
-    const oA = CATEGORY_ORDER[a.category] ?? 99;
-    const oB = CATEGORY_ORDER[b.category] ?? 99;
+    const oA = JDTaxonomy.order(a.category);
+    const oB = JDTaxonomy.order(b.category);
     if (oA !== oB) return oA - oB;
     const pA = Number(hasSalePrice(a) ? a.salePrice : a.price);
     const pB = Number(hasSalePrice(b) ? b.salePrice : b.price);
@@ -223,6 +223,7 @@ function passesCommonFilters(p, f) {
   if (f.size && f.size !== 'all' && !(p.sizes || []).includes(f.size)) return false;
   if (f.sizes && f.sizes.length && !(p.sizes || []).some(s => f.sizes.includes(s))) return false;
   if (f.colors && f.colors.length && !productColors(p).some(c => f.colors.includes(c))) return false;
+  if (f.genders && f.genders.length && !f.genders.includes(JDTaxonomy.genderOf(p))) return false;
   if (f.onSale && !hasSalePrice(p)) return false;
   if (f.inStock && (Number(p.stock) || 0) <= 0) return false;
   return true;
@@ -238,8 +239,7 @@ function getFilteredProducts() {
 }
 
 function getCatFilteredProducts() {
-  const isAllClothing = S.currentCategoryPage === 'all-clothing';
-  const isAllAccessories = S.currentCategoryPage === 'all-accessories';
+  const dept = JDTaxonomy.department(S.currentCategoryPage);
   const isAll = S.currentCategoryPage === 'all';
 
   return PRODUCTS.filter(p => {
@@ -255,10 +255,8 @@ function getCatFilteredProducts() {
     if (S.catFilter.vendor.length && !S.catFilter.vendor.includes(p.brand)) return false;
 
     if (!S.currentCollectionHandle) {
-      if (isAllClothing) {
-        if (!CLOTHING_CATEGORIES.includes(p.category)) return false;
-      } else if (isAllAccessories) {
-        if (!ACCESSORY_CATEGORIES.includes(p.category)) return false;
+      if (dept) {
+        if (!isInDepartment(p, dept.slug)) return false;
       } else if (!isAll && S.currentCategoryPage && p.category !== S.currentCategoryPage) {
         return false;
       }
@@ -301,7 +299,7 @@ function getVendorFilteredProducts(vendor) {
 // forcing an either/or choice, so category/brand are toggled in and
 // out of a list instead of being replaced by a single value.
 // Facets picked from a list (several at once); the rest are on/off.
-const ARRAY_FILTERS = ['cat', 'vendor', 'sizes', 'colors'];
+const ARRAY_FILTERS = ['cat', 'vendor', 'sizes', 'colors', 'genders'];
 function toggleArrayFilter(filterObj, type, value) {
   const arr = filterObj[type] || (filterObj[type] = []);
   const idx = arr.indexOf(value);
@@ -459,32 +457,19 @@ function updateCollectionTitle() {
   let collectionImage = '';
   let showDesc = false;
 
-  // catTitles is only the fallback shown before admin-homepage.js's
-  // siteContent/collectionPages has loaded (or for a slug nobody's
-  // customized yet) — window._siteContent.collectionPages[slug].title
-  // overrides it once site-content.js's fetch resolves.
-  const catTitles = {
-    'all': 'ALL PRODUCTS',
-    'sale': 'SALE',
-    'newin': 'NEW IN',
-    'all-clothing': 'CLOTHING',
-    'all-accessories': 'ACCESSORIES',
-    'homeware': 'HOMEWARE',
-    'dresses': 'DRESSES',
-    'tops': 'TOPS',
-    'bottoms': 'BOTTOMS',
-    'jackets': 'JACKETS',
-    'sets': 'SETS',
-    'bags': 'BAGS',
-    'jewelry': 'JEWELRY',
-    'sunglasses': 'SUNGLASSES',
-    'parfum': 'SCENT'
-  };
+  // The category tree's name (taxonomy.js) is only the fallback shown
+  // before admin-pages.js's siteContent/collectionPages has loaded (or for
+  // a page nobody's customized) — window._siteContent.collectionPages[slug]
+  // overrides it once site-content.js's fetch resolves. Clothing and
+  // Accessories copy may still be saved under their old all-clothing /
+  // all-accessories keys.
+  const fixedTitles = { 'all': 'ALL PRODUCTS', 'sale': 'SALE', 'newin': 'NEW IN' };
+  const oldKeys = { clothing: 'all-clothing', accessories: 'all-accessories' };
   const collectionPages = (window._siteContent && window._siteContent.collectionPages) || {};
   function collectionCopyFor(slug) {
-    const custom = collectionPages[slug] || {};
+    const custom = collectionPages[slug] || collectionPages[oldKeys[slug]] || {};
     return {
-      title: (custom.title || '').trim() || catTitles[slug] || slug.toUpperCase(),
+      title: (custom.title || '').trim() || fixedTitles[slug] || JDTaxonomy.label(slug).toUpperCase(),
       description: (custom.description || '').trim()
     };
   }
@@ -595,6 +580,7 @@ function passesFacets(p, f, skip) {
   if (skip !== 'vendor' && f.vendor.length && !f.vendor.includes(p.brand)) return false;
   if (skip !== 'sizes' && f.sizes && f.sizes.length && !(p.sizes || []).some(s => f.sizes.includes(s))) return false;
   if (skip !== 'colors' && f.colors && f.colors.length && !productColors(p).some(c => f.colors.includes(c))) return false;
+  if (skip !== 'genders' && f.genders && f.genders.length && !f.genders.includes(JDTaxonomy.genderOf(p))) return false;
   if (skip !== 'onSale' && f.onSale && !hasSalePrice(p)) return false;
   if (skip !== 'inStock' && f.inStock && (Number(p.stock) || 0) <= 0) return false;
   return true;
@@ -605,10 +591,7 @@ function productColors(p) {
   return [...new Set((p.variants || []).map(v => String(v.color || '').trim()).filter(c => c && c.toLowerCase() !== 'default'))];
 }
 
-function filterCategoryLabel(cat) {
-  const names = { parfum: 'Scent', jewelry: 'Jewellery' };
-  return names[cat] || String(cat).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
+function filterCategoryLabel(cat) { return JDTaxonomy.label(cat); }
 
 const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 function compareSizes(a, b) {
@@ -636,8 +619,15 @@ function renderFilterPanel() {
 
   // Category: the categories this page covers.
   let cats = [...new Set(pool.map(p => p.category).filter(Boolean))];
-  cats.sort((a, b) => ((CATEGORY_ORDER[a] ?? 99) - (CATEGORY_ORDER[b] ?? 99)) || String(a).localeCompare(String(b)));
+  cats.sort((a, b) => (JDTaxonomy.order(a) - JDTaxonomy.order(b)) || String(a).localeCompare(String(b)));
   sections.push({ key: 'cat', title: 'Category', options: cats.map(c => ({ value: c, label: filterCategoryLabel(c), picked: f.cat.includes(c), count: count('cat', p => p.category === c) })) });
+
+  // Gender: only once the list has more than one (womenswear only so far
+  // needs no filter).
+  const genders = [...new Set(pool.map(p => JDTaxonomy.genderOf(p)))];
+  if (genders.length > 1 || (f.genders || []).length) {
+    sections.push({ key: 'genders', title: 'Gender', options: JDTaxonomy.GENDERS.filter(g => genders.includes(g[0])).map(([g, label]) => ({ value: g, label, picked: (f.genders || []).includes(g), count: count('genders', p => JDTaxonomy.genderOf(p) === g) })) });
+  }
 
   // Brands: not on a brand's own page.
   if (S.currentPage !== 'vendor') {
@@ -645,9 +635,24 @@ function renderFilterPanel() {
     sections.push({ key: 'vendor', title: 'Brands', options: brands.map(b => ({ value: b, label: b, picked: f.vendor.includes(b), count: count('vendor', p => p.brand === b) })) });
   }
 
-  // 'OS' is the one-size placeholder, never a real size.
-  const sizes = [...new Set(pool.flatMap(p => p.sizes || []).filter(s => s && s !== 'OS'))].sort(compareSizes);
-  sections.push({ key: 'sizes', title: 'Size', options: sizes.map(sz => ({ value: sz, label: sz, picked: (f.sizes || []).includes(sz), count: count('sizes', p => (p.sizes || []).includes(sz)) })) });
+  // One size section per kind of size (Clothing sizes, Shoe sizes, Kids'
+  // sizes; taxonomy.js), all picking from the same size filter. 'OS' is
+  // the one-size placeholder, never a real size.
+  const sizesByKind = new Map();
+  pool.forEach(p => {
+    const kind = JDTaxonomy.sizeSystem(p.category) || 'other';
+    (p.sizes || []).forEach(sz => {
+      if (!sz || sz === 'OS') return;
+      if (!sizesByKind.has(kind)) sizesByKind.set(kind, new Set());
+      sizesByKind.get(kind).add(sz);
+    });
+  });
+  const kinds = Object.keys(JDTaxonomy.SIZE_SYSTEMS).filter(k => sizesByKind.has(k)).concat(sizesByKind.has('other') ? ['other'] : []);
+  kinds.forEach(kind => {
+    const title = kinds.length === 1 ? 'Size' : (JDTaxonomy.SIZE_SYSTEMS[kind] ? JDTaxonomy.SIZE_SYSTEMS[kind].label : 'Other sizes');
+    const inKind = p => (JDTaxonomy.sizeSystem(p.category) || 'other') === kind;
+    sections.push({ key: 'sizes-' + kind, filter: 'sizes', title, options: [...sizesByKind.get(kind)].sort(compareSizes).map(sz => ({ value: sz, label: sz, picked: (f.sizes || []).includes(sz), count: count('sizes', p => inKind(p) && (p.sizes || []).includes(sz)) })) });
+  });
 
   const swatches = {};
   pool.forEach(p => (p.variants || []).forEach(v => { const c = String(v.color || '').trim(); if (c && !swatches[c] && v.swatch) swatches[c] = v.swatch; }));
@@ -677,7 +682,7 @@ function renderFilterPanel() {
         <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       ${open ? `<div class="filter-section-options">${sec.options.map(o => {
-        const action = o.type ? `applyCollectionFilter('${o.type}', ${!o.picked})` : `applyCollectionFilter('${sec.key}','${escapeJSString(o.value)}')`;
+        const action = o.type ? `applyCollectionFilter('${o.type}', ${!o.picked})` : `applyCollectionFilter('${sec.filter || sec.key}','${escapeJSString(o.value)}')`;
         const swatch = o.swatch ? `<span class="filter-swatch" style="background:${escapeHTML(o.swatch)}"></span>` : '';
         return `<button type="button" class="filter-choice${o.picked ? ' picked' : ''}" aria-pressed="${o.picked}" onclick="${escapeHTML(action)}"><span class="filter-tick" aria-hidden="true"></span>${swatch}<span class="filter-choice-label">${escapeHTML(o.label)}</span><span class="filter-option-count">${o.count}</span></button>`;
       }).join('')}</div>` : ''}
@@ -710,6 +715,9 @@ function renderActiveFilterChips() {
   });
   (f.colors || []).forEach(color => {
     chips.push({ label: color, onclick: `applyCollectionFilter('colors','${escapeJSString(color)}')` });
+  });
+  (f.genders || []).forEach(g => {
+    chips.push({ label: JDTaxonomy.genderLabel(g), onclick: `applyCollectionFilter('genders','${escapeJSString(g)}')` });
   });
   if (f.onSale) chips.push({ label: 'On Sale', onclick: `applyCollectionFilter('onSale', false)` });
   if (f.inStock) chips.push({ label: 'In Stock', onclick: `applyCollectionFilter('inStock', false)` });
@@ -1121,17 +1129,7 @@ function renderAllProducts() {
 function renderCategoryProducts() {
   if(!S.currentCategoryPage || !DOM.categoryProductsGrid) return;
   restoreCollectionFilterBar();
-  let cp;
-  if (S.currentCollectionHandle) cp=getCatFilteredProducts();
-  else if(S.currentCategoryPage==='parfum') cp=getCatFilteredProducts().filter(p=>p.category==='parfum');
-  else if(S.currentCategoryPage==='jewelry') cp=getCatFilteredProducts().filter(p=>p.category==='jewelry');
-  else if(S.currentCategoryPage==='sunglasses') cp=getCatFilteredProducts().filter(p=>p.category==='sunglasses'||p.id===LEATHER_POUCH_ID);
-  else if(S.currentCategoryPage==='all-clothing') cp=getCatFilteredProducts().filter(p=>CLOTHING_CATEGORIES.includes(p.category));
-  else if(S.currentCategoryPage==='all-accessories') cp=getCatFilteredProducts().filter(p=>ACCESSORY_CATEGORIES.includes(p.category));
-  else if(S.currentCategoryPage==='homeware') cp=getCatFilteredProducts().filter(p=>p.category==='homeware');
-  else if(CLOTHING_CATEGORIES.includes(S.currentCategoryPage)) cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage);
-  else if(S.currentCategoryPage==='bags') cp=getCatFilteredProducts().filter(p=>p.category===S.currentCategoryPage&&p.id!==LEATHER_POUCH_ID);
-  else cp=getCatFilteredProducts();
+  const cp = getCatFilteredProducts();
   let prods=merchandiseProducts(cp, S.currentCategoryPage, S.sortBy);
   const expanded = expandProductVariants(prods);
   DOM.categoryProductsGrid.style.gridTemplateColumns=gridTemplateFor(S.gridColsCat);
@@ -1332,7 +1330,7 @@ function buildArrivals() {
 function buildShopByClothing() {
   const grid = document.getElementById('clothing-grid');
   if (!grid) return;
-  const active = PRODUCTS.filter(p => p.status === 'active' && CLOTHING_CATEGORIES.includes(p.category));
+  const active = PRODUCTS.filter(p => p.status === 'active' && isInDepartment(p, 'clothing'));
   const top = merchandiseProducts(active).slice(0, 8);
   grid.innerHTML = top.length ? top.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true);
   initSliderLeadingTracking('clothing-grid');
@@ -1341,7 +1339,7 @@ function buildShopByClothing() {
 function buildShopByAccessories() {
   const grid = document.getElementById('accessories-grid');
   if (!grid) return;
-  const active = PRODUCTS.filter(p => p.status === 'active' && ACCESSORY_CATEGORIES.includes(p.category));
+  const active = PRODUCTS.filter(p => p.status === 'active' && isInDepartment(p, 'accessories'));
   const top = merchandiseProducts(active).slice(0, 8);
   grid.innerHTML = top.length ? top.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true);
   initSliderLeadingTracking('accessories-grid');

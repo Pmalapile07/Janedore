@@ -539,6 +539,10 @@ function renderDynamicCategoriesPage() {
 }
 
 function navigateToCategory(cat, replaceUrl) {
+  // Old department addresses (all-clothing, all-accessories) open the
+  // department (taxonomy.js).
+  const dept = window.JDTaxonomy && JDTaxonomy.department(cat);
+  if (dept) cat = dept.slug;
   S.currentCollectionHandle = null;
   S.currentCollectionData = null;
   ++pageNavGeneration;
@@ -751,6 +755,29 @@ function openMenuPanel(name) {
   panel.classList.add('active');
   DOM.menuDrawer.classList.add('sub-open');
 }
+// Menu rows for each department (taxonomy.js). Opening one lists "Shop
+// All" and the categories that have products right now, so the menu never
+// leads to an empty page.
+function renderMenuDepartments() {
+  const el = document.getElementById('menu-departments');
+  if (!el || !window.JDTaxonomy) return;
+  el.innerHTML = JDTaxonomy.DEPARTMENTS.map(d =>
+    `<button class="menu-row menu-cat" onclick="openMenuDepartment('${d.slug}')">${escapeHTML(d.name)}<i class="ph ph-caret-right menu-chev"></i></button>`).join('');
+}
+document.addEventListener('DOMContentLoaded', renderMenuDepartments);
+
+function openMenuDepartment(slug) {
+  const dept = JDTaxonomy.department(slug);
+  const panel = document.getElementById('menu-panel-dept');
+  if (!dept || !panel) return;
+  const stocked = new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category));
+  const cats = JDTaxonomy.categoriesIn(dept.slug).filter(c => c !== dept.slug && stocked.has(c)).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b));
+  const row = (cat, label) => `<a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('${escapeJSString(cat)}');">${escapeHTML(label)}<i class="ph ph-caret-right menu-chev"></i></a>`;
+  panel.innerHTML = `<button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>${escapeHTML(dept.name)}</button>` +
+    row(dept.slug, 'Shop All ' + dept.name) + cats.map(c => row(c, JDTaxonomy.label(c))).join('');
+  openMenuPanel('dept');
+}
+
 function closeMenuPanel(instant) {
   if (!DOM.menuDrawer) return;
   DOM.menuDrawer.classList.remove('sub-open');

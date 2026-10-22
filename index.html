@@ -387,10 +387,8 @@
         <i class="ph ph-caret-right menu-chev"></i>
       </button>
       <a class="menu-row menu-cat" onclick="closeMenu();navigateToNewIn();">New In<i class="ph ph-caret-right menu-chev"></i></a>
-      <button class="menu-row menu-cat" onclick="openMenuPanel('clothing')">Clothing<i class="ph ph-caret-right menu-chev"></i></button>
-      <button class="menu-row menu-cat" onclick="openMenuPanel('accessories')">Accessories<i class="ph ph-caret-right menu-chev"></i></button>
-      <a class="menu-row menu-cat" onclick="closeMenu();navigateToCategory('parfum');">Scent<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-cat" onclick="closeMenu();navigateToCategory('homeware');">Homeware<i class="ph ph-caret-right menu-chev"></i></a>
+      <!-- Departments from the category tree (taxonomy.js), app.js renderMenuDepartments(). -->
+      <div id="menu-departments"></div>
 
       <div class="menu-links">
         <a class="menu-plain" onclick="closeMenu();navigateTo('brands');">Brands</a>
@@ -409,23 +407,8 @@
       </div>
     </div>
 
-    <div class="menu-panel menu-subpanel" id="menu-panel-clothing">
-      <button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>Clothing</button>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('all-clothing');">Shop All Clothing<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('dresses');">Dresses<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('tops');">Tops<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('bottoms');">Bottoms<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('jackets');">Jackets<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('sets');">Sets<i class="ph ph-caret-right menu-chev"></i></a>
-    </div>
-
-    <div class="menu-panel menu-subpanel" id="menu-panel-accessories">
-      <button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>Accessories</button>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('all-accessories');">Shop All Accessories<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('bags');">Bags<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('jewelry');">Jewellery<i class="ph ph-caret-right menu-chev"></i></a>
-      <a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('sunglasses');">Sunglasses<i class="ph ph-caret-right menu-chev"></i></a>
-    </div>
+    <!-- One department's categories, filled in by openMenuDepartment(). -->
+    <div class="menu-panel menu-subpanel" id="menu-panel-dept"></div>
   </div>
 </div>
 
@@ -566,6 +549,7 @@
 <!-- Coming Soon gate: enforced by server.js before this page is sent
      (a signed jd_visitor / jd_admin pass is required while Coming Soon
      is on), so there is nothing left for the browser to check here. -->
+<script src="taxonomy.js" defer></script>
 <script src="vendors.js" defer></script>
 <script src="cart.js" defer></script>
 <script src="wishlist.js" defer></script>

@@ -80,17 +80,27 @@
     return values.sort(function (a, b) { return a.localeCompare(b); });
   }
 
+  // One category per product, from the category tree (taxonomy.js),
+  // grouped by department. A category saved before the tree (e.g.
+  // Bottoms) stays selected and marked "old" until it's re-picked.
   function renderProductCategoryOptions(product) {
-    var records = getProductCategoryRecords();
-    var options = records.map(function (category) {
-      var slug = String(category.slug || category.id || '');
-      return '<option value="' + esc(slug) + '"' + (product.category === slug ? ' selected' : '') + '>' + esc(category.name || slug) + '</option>';
-    });
-    if (product.category && !records.some(function (category) { return String(category.slug || category.id) === product.category; })) {
-      options.unshift('<option value="' + esc(product.category) + '" selected>' + esc(product.category.replace(/-/g, ' ')) + ' (existing tag)</option>');
-    }
-    if (!options.length) options.push('<option value="" selected>No categories configured</option>');
-    return options.join('');
+    var T = window.JDTaxonomy;
+    var current = product.category || '';
+    var known = T.DEPARTMENTS.some(function (d) { return d.categories.some(function (c) { return c.slug === current; }); });
+    var old = current && !known ? '<option value="' + esc(current) + '" selected>' + esc(T.label(current)) + ' (old, please re-pick)</option>' : '';
+    var none = !current ? '<option value="" selected disabled>Pick a category</option>' : '';
+    return none + old + T.DEPARTMENTS.map(function (d) {
+      return '<optgroup label="' + esc(d.name) + '">' + d.categories.map(function (c) {
+        return '<option value="' + esc(c.slug) + '"' + (c.slug === current ? ' selected' : '') + '>' + esc(c.name) + '</option>';
+      }).join('') + '</optgroup>';
+    }).join('');
+  }
+
+  function renderProductGenderOptions(product) {
+    var current = window.JDTaxonomy.genderOf(product);
+    return window.JDTaxonomy.GENDERS.map(function (g) {
+      return '<option value="' + g[0] + '"' + (g[0] === current ? ' selected' : '') + '>' + esc(g[1]) + '</option>';
+    }).join('');
   }
 
   var SIZE_UNITS = ['Custom','OS','XS–XXL','UK','EU','US','cm','inches'];
@@ -610,7 +620,9 @@
     var sizesEl = safeEl('pf-sizes-input');
     if (!catEl || !unitEl || !sizesEl) return;
     var cat = catEl.value;
-    var preset = SIZE_PRESETS[cat];
+    // The category tree's kind of sizes (taxonomy.js) first; the old
+    // per-category list covers slugs saved before it.
+    var preset = window.JDTaxonomy.category(cat) ? window.JDTaxonomy.sizePreset(cat) : SIZE_PRESETS[cat];
     if (preset) {
       unitEl.value  = preset.unit;
       sizesEl.value = preset.sizes;
@@ -827,7 +839,8 @@
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Organization</span></div>' +
         '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;">' + catOptions + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;" required>' + catOptions + '</select></div>' +
+          '<div class="form-group" style="padding:0;"><label>Gender</label><select name="gender" style="width:100%;">' + renderProductGenderOptions(p) + '</select></div>' +
           '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
           renderProductCollectionOptions(p) +
           '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">(comma separated)</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
@@ -1199,6 +1212,7 @@
       // link to the Janedore page instead of leaving it unset.
       vendorId:             window._currentVendorId || resolveVendorId(form.brand.value) || (existingProduct ? existingProduct.vendorId : null) || null,
       category:             form.category.value,
+      gender:               form.gender ? form.gender.value : window.JDTaxonomy.genderOf(existingProduct),
       price:                price,
       salePrice:            salePrice,
       badge:                badgeValue || null,
@@ -1275,7 +1289,6 @@
   // Categories manager: categories are stored in Firestore and assigned through
   // the existing product.category field so category browsing stays compatible.
   var categoriesRef = window._adminDB.collection('categories');
-  function categorySlug(name) { return (name || '').toString().toLowerCase().trim().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
   window._renderCategoriesTab = function() {
     var mc = safeEl('main-content'); if (!mc) return;
     if (window._currentUserRole !== 'SUPER_ADMIN') { mc.innerHTML = '<div class="empty-state"><p>Only Super Admins can manage categories.</p></div>'; return; }
@@ -1347,10 +1360,10 @@
     if(type==='categories') {
       if(window._currentUserRole!=='SUPER_ADMIN'){showToast('Only Super Admins can delete categories.','error');return;}
       var items=(window._adminCategoriesData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
-      if(!confirm('Delete '+items.length+' selected categor'+(items.length===1?'y':'ies')+'? Products assigned to them will be left uncategorized. This cannot be undone.'))return;
+      if(!confirm('Delete '+items.length+' selected tile'+(items.length===1?'':'s')+'? Their products keep their category. This cannot be undone.'))return;
       var batch=window._adminDB.batch();
-      items.forEach(function(item){batch.delete(categoriesRef.doc(item.id));(window._allProducts||[]).forEach(function(pr){if(pr.category===item.slug)batch.set(productsRef.doc(pr.id),{category:''},{merge:true});});});
-      batch.commit().then(function(){(window._allProducts||[]).forEach(function(pr){if(items.some(function(it){return pr.category===it.slug;}))pr.category='';});showToast('Selected categories deleted');window._catalogBulkCancel();window._loadProducts();window._loadAdminCategories();}).catch(function(e){showToast('Could not delete categories: '+e.message,'error');});
+      items.forEach(function(item){batch.delete(categoriesRef.doc(item.id));});
+      batch.commit().then(function(){showToast('Selected tiles deleted');window._catalogBulkCancel();window._loadAdminCategories();}).catch(function(e){showToast('Could not delete tiles: '+e.message,'error');});
     } else if(type==='collections') {
       var items=(window._adminCollectionsData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
       if(!confirm('Delete '+items.length+' selected collection'+(items.length===1?'':'s')+'? This cannot be undone.'))return;
@@ -1370,7 +1383,8 @@
     var products = window._allProducts || [];
     var collections = window._adminCollectionsData || [];
     var stats = function(category) {
-      var categoryProducts = products.filter(function(p) { return p.status !== 'archived' && p.category === category.slug; });
+      var dept = window.JDTaxonomy.department(category.slug);
+      var categoryProducts = products.filter(function(p) { return p.status !== 'archived' && (dept ? window.JDTaxonomy.departmentOf(p.category) === dept.slug : p.category === category.slug); });
       var brands = {};
       categoryProducts.forEach(function(p) { var brand = String(p.brand || p.vendorName || '').trim(); if (brand) brands[brand.toLowerCase()] = true; });
       var linkedCollections = collections.filter(function(collection) {
@@ -1401,7 +1415,7 @@
       var image = category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" loading="lazy" class="pi-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="ph ph-image"></i></div>';
       return '<div class="products-row admin-selectable-row" role="listitem" data-catalog-id="' + esc(category.id) + '" data-category-search="' + esc(search) + '" onclick="window._catalogBulkToggle(event,\'categories\',\'' + esc(category.id) + '\',function(){window._showCategoryForm(\'' + esc(category.id) + '\')})"><span class="admin-select-check"><i class="ph ph-check"></i></span>' + image +
         '<div style="flex:1;min-width:0;"><div class="pi-name">' + esc(title) + '</div><div class="pi-meta">' + count.collections + ' collections · ' + count.brands + ' brands</div>' +
-        '<div class="pi-meta">' + count.products + ' tagged products' + (category.featuredOnHomepage ? ' · Featured on homepage' : '') + '</div></div><i class="ph ph-caret-right" style="color:var(--muted);"></i></div>';
+        '<div class="pi-meta">' + count.products + ' products' + (category.featuredOnHomepage ? ' · Featured on homepage' : '') + '</div></div><i class="ph ph-caret-right" style="color:var(--muted);"></i></div>';
     }).join('') + '<div class="orders-empty-sub" id="categories-admin-no-results" style="display:none;padding:18px 0;">No categories match your search.</div></div>';
   }
   window._filterAdminCategories = function() {
@@ -1419,47 +1433,54 @@
     var empty = safeEl('categories-admin-no-results');
     if (empty) empty.style.display = visible ? 'none' : 'block';
   };
+  // A tile on the homepage's "Shop by categories" and the Categories page:
+  // a name, an image, and the department or category (taxonomy.js) it
+  // opens. Which category a product is in is set on the product itself.
+  function categoryTreeOptions(selected) {
+    return window.JDTaxonomy.DEPARTMENTS.map(function(d) {
+      return '<optgroup label="' + esc(d.name) + '">' +
+        '<option value="' + esc(d.slug) + '"' + (selected === d.slug ? ' selected' : '') + '>All ' + esc(d.name) + '</option>' +
+        d.categories.map(function(c) { return '<option value="' + esc(c.slug) + '"' + (selected === c.slug ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') +
+        '</optgroup>';
+    }).join('');
+  }
   window._showCategoryForm = function(categoryId) {
     var wrap = safeEl('categories-admin-form-wrap'); if (!wrap) return;
     var category = (window._adminCategoriesData || []).find(function(c) { return c.id === categoryId; }) || {name:'',imageUrl:'',slug:''};
-    var products = window._allProducts || [];
-    wrap.innerHTML = '<form id="admin-category-form" style="border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;background:var(--surface);" onsubmit="window._saveAdminCategory(event,\'' + esc(categoryId || '') + '\')"><div style="font-weight:600;margin-bottom:16px;">' + (categoryId ? 'Edit category' : 'New category') + '</div><div class="form-group"><label for="admin-category-name">Category name</label><input id="admin-category-name" name="name" required maxlength="80" value="' + esc(category.name || '') + '" placeholder="e.g. Home & Living"></div><div class="form-group"><label for="admin-category-image">Category image</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="admin-category-image" name="imageUrl" value="' + esc(category.imageUrl || '') + '" placeholder="Image URL" style="flex:1;min-width:180px;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._uploadCategoryImage()"><i class="ph-light ph-cloud-arrow-up"></i> Upload image</button></div><div id="admin-category-image-preview" style="margin-top:10px;">' + (category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" style="max-width:180px;max-height:130px;object-fit:cover;border-radius:8px;">' : '') + '</div></div><div class="form-group"><label style="display:flex;align-items:center;gap:9px;"><input type="checkbox" name="featuredOnHomepage"' + (category.featuredOnHomepage ? ' checked' : '') + '> Feature this category on the homepage</label><div style="font-size:11px;color:var(--muted);margin-top:5px;">Featured categories use this same name and image on the homepage. All categories remain listed on the Categories page.</div></div><div class="form-group"><label>Tag products</label><input id="admin-category-product-search" placeholder="Search products" oninput="window._filterCategoryProductChoices()" style="margin-bottom:8px;"><div id="admin-category-products" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' + (products.length ? products.map(function(pr) { return '<label data-category-product-row data-search="' + esc((pr.name || '').toLowerCase()) + '" style="display:flex;align-items:center;gap:9px;padding:8px 4px;font-size:13px;"><input type="checkbox" name="productIds" value="' + esc(pr.id) + '"' + (pr.category === category.slug ? ' checked' : '') + '><span>' + esc(pr.name || pr.id) + '</span><span style="margin-left:auto;color:var(--muted);font-size:11px;">' + esc(pr.brand || '') + '</span></label>'; }).join('') : '<div style="padding:10px;color:var(--muted);">No products loaded yet.</div>') + '</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">Each product has one primary category.</div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" class="btn btn-ghost" onclick="window._cancelCategoryForm()">Cancel</button><button type="submit" class="btn btn-primary">Save category</button></div></form>';
+    var dept = window.JDTaxonomy.department(category.slug);
+    var target = dept ? dept.slug : category.slug;
+    wrap.innerHTML = '<form id="admin-category-form" style="border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;background:var(--surface);" onsubmit="window._saveAdminCategory(event,\'' + esc(categoryId || '') + '\')"><div style="font-weight:600;margin-bottom:16px;">' + (categoryId ? 'Edit category tile' : 'New category tile') + '</div>' +
+      '<div class="form-group"><label for="admin-category-name">Name on the tile</label><input id="admin-category-name" name="name" required maxlength="80" value="' + esc(category.name || '') + '" placeholder="e.g. Clothing"></div>' +
+      '<div class="form-group"><label for="admin-category-slug">Opens</label><select id="admin-category-slug" name="slug" required style="width:100%;">' + (target && !window.JDTaxonomy.department(target) && !window.JDTaxonomy.category(target) ? '<option value="" selected>Pick a department or category</option>' : '') + categoryTreeOptions(target) + '</select><div style="font-size:11px;color:var(--muted);margin-top:5px;">The department or category page this tile opens. Products are put in a category on the product itself (Products &gt; Category).</div></div>' +
+      '<div class="form-group"><label for="admin-category-image">Image</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="admin-category-image" name="imageUrl" value="' + esc(category.imageUrl || '') + '" placeholder="Image URL" style="flex:1;min-width:180px;"><button class="btn btn-sm btn-ghost" type="button" onclick="window._uploadCategoryImage()"><i class="ph-light ph-cloud-arrow-up"></i> Upload image</button></div><div id="admin-category-image-preview" style="margin-top:10px;">' + (category.imageUrl ? '<img src="' + esc(category.imageUrl) + '" alt="" style="max-width:180px;max-height:130px;object-fit:cover;border-radius:8px;">' : '') + '</div></div>' +
+      '<div class="form-group"><label style="display:flex;align-items:center;gap:9px;"><input type="checkbox" name="featuredOnHomepage"' + (category.featuredOnHomepage ? ' checked' : '') + '> Feature this tile on the homepage</label><div style="font-size:11px;color:var(--muted);margin-top:5px;">Featured tiles show on the homepage. All tiles remain listed on the Categories page.</div></div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" class="btn btn-ghost" onclick="window._cancelCategoryForm()">Cancel</button><button type="submit" class="btn btn-primary">Save tile</button></div></form>';
   };
   window._uploadCategoryImage = function() {
     if (typeof window._uploadToCloudinary !== 'function') { showToast('Image upload is not ready yet. Please try again.', 'error'); return; }
     window._uploadToCloudinary(function(url) { var input = safeEl('admin-category-image'), preview = safeEl('admin-category-image-preview'); if (input) input.value = url; if (preview) preview.innerHTML = '<img src="' + esc(url) + '" alt="" style="max-width:180px;max-height:130px;object-fit:cover;border-radius:8px;">'; }, false);
-  };
-  window._filterCategoryProductChoices = function() {
-    var query = ((safeEl('admin-category-product-search') || {}).value || '').toLowerCase().trim(), list = safeEl('admin-category-products'); if (!list) return;
-    list.querySelectorAll('[data-category-product-row]').forEach(function(row) { row.style.display = (row.getAttribute('data-search') || '').indexOf(query) !== -1 ? 'flex' : 'none'; });
   };
   window._cancelCategoryForm = function() { var wrap = safeEl('categories-admin-form-wrap'); if (wrap) wrap.innerHTML = ''; };
   window._saveAdminCategory = function(event, categoryId) {
     event.preventDefault();
     if (!window._currentUser || !window._roleResolved || window._currentUserRole !== 'SUPER_ADMIN') { showToast('Only an authenticated Super Admin can save categories.', 'error'); return; }
     var form = safeEl('admin-category-form'); if (!form) return;
-    var name = (form.elements.name.value || '').trim(), imageUrl = (form.elements.imageUrl.value || '').trim(), slug = categorySlug(name);
-    if (!name || !slug) { showToast('Enter a valid category name.', 'error'); return; }
-    if ((window._adminCategoriesData || []).some(function(c) { return c.slug === slug && c.id !== categoryId; })) { showToast('A category with that name already exists.', 'error'); return; }
-    var selectedIds = Array.prototype.slice.call(form.querySelectorAll('input[name="productIds"]:checked')).map(function(input) { return input.value; }), old = (window._adminCategoriesData || []).find(function(c) { return c.id === categoryId; });
-    var batch = window._adminDB.batch(), ref = categoryId ? categoriesRef.doc(categoryId) : categoriesRef.doc(slug);
+    var name = (form.elements.name.value || '').trim(), imageUrl = (form.elements.imageUrl.value || '').trim(), slug = form.elements.slug.value;
+    if (!name) { showToast('Enter a name for the tile.', 'error'); return; }
+    if (!slug) { showToast('Pick the department or category this tile opens.', 'error'); return; }
+    if ((window._adminCategoriesData || []).some(function(c) { return c.slug === slug && c.id !== categoryId; })) { showToast('There is already a tile for that department or category.', 'error'); return; }
+    var ref = categoryId ? categoriesRef.doc(categoryId) : categoriesRef.doc(slug);
     var data = {name:name,slug:slug,imageUrl:imageUrl,featuredOnHomepage:!!form.elements.featuredOnHomepage.checked,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if (!categoryId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    batch.set(ref,data,{merge:true});
-    var chosen = {}; selectedIds.forEach(function(id) { chosen[id] = true; });
-    (window._allProducts || []).forEach(function(pr) { if (chosen[pr.id]) batch.set(productsRef.doc(pr.id),{category:slug},{merge:true}); else if (old && pr.category === old.slug) batch.set(productsRef.doc(pr.id),{category:''},{merge:true}); });
-    batch.commit().then(function() {
-      (window._allProducts || []).forEach(function(pr) { if (chosen[pr.id]) pr.category = slug; else if (old && pr.category === old.slug) pr.category = ''; });
-      showToast('Category saved'); window._loadProducts(); window._loadAdminCategories(); window._cancelCategoryForm();
-    }).catch(function(err) { showToast('Could not save category: ' + (err.message || 'Unknown error'), 'error'); });
+    ref.set(data,{merge:true}).then(function() {
+      showToast('Tile saved'); window._loadAdminCategories(); window._cancelCategoryForm();
+    }).catch(function(err) { showToast('Could not save tile: ' + (err.message || 'Unknown error'), 'error'); });
   };
   window._deleteCategory = function(categoryId) {
     if (window._currentUserRole !== 'SUPER_ADMIN') { showToast('Only Super Admins can delete categories.', 'error'); return; }
     var category = (window._adminCategoriesData || []).find(function(c) { return c.id === categoryId; });
-    if (!category || !confirm('Delete the category "' + category.name + '"? Products assigned to it will be left uncategorized.')) return;
-    var batch = window._adminDB.batch(); batch.delete(categoriesRef.doc(categoryId));
-    (window._allProducts || []).forEach(function(pr) { if (pr.category === category.slug) batch.set(productsRef.doc(pr.id),{category:''},{merge:true}); });
-    batch.commit().then(function() { (window._allProducts || []).forEach(function(pr) { if (pr.category === category.slug) pr.category = ''; }); showToast('Category deleted'); window._loadProducts(); window._loadAdminCategories(); }).catch(function(err) { showToast('Could not delete category: ' + (err.message || 'Unknown error'), 'error'); });
+    if (!category || !confirm('Delete the tile "' + category.name + '"? Its products keep their category.')) return;
+    categoriesRef.doc(categoryId).delete().then(function() { showToast('Tile deleted'); window._loadAdminCategories(); }).catch(function(err) { showToast('Could not delete tile: ' + (err.message || 'Unknown error'), 'error'); });
   };
 
 })();

@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const admin = require('firebase-admin');
 const { GoogleGenAI } = require('@google/genai');
 const orderEmails = require('./order-emails');
+const taxonomy = require('./taxonomy');
 
 const app = express();
 
@@ -281,7 +282,10 @@ app.get('/sitemap.xml', async (req, res) => {
         const updated = c.updatedAt && c.updatedAt.toDate ? c.updatedAt.toDate().toISOString().slice(0, 10) : '';
         urls.set(url, updated || new Date().toISOString().slice(0, 10));
       });
-      Object.keys(CATEGORY_META).forEach(cat => urls.set(SITE_URL + '/collections/' + encodeURIComponent(cat), new Date().toISOString().slice(0, 10)));
+      // Every department, and each category that has products to show.
+      const stocked = new Set(productSnap.docs.map(doc => doc.data() || {}).filter(p => String(p.status || '').toLowerCase() === 'active').map(p => p.category));
+      const cats = taxonomy.DEPARTMENTS.map(d => d.slug).concat(taxonomy.DEPARTMENTS.flatMap(d => d.categories.map(c => c.slug)).filter(c => stocked.has(c)));
+      cats.forEach(cat => urls.set(SITE_URL + '/collections/' + encodeURIComponent(cat), new Date().toISOString().slice(0, 10)));
     }
   } catch (e) {
     console.error('[SITEMAP] Could not build dynamic URLs:', e.message);
@@ -2647,11 +2651,12 @@ function injectProductMeta(html, product, slug) {
 }
 
 // ==================== COLLECTION SEO ====================
-// Static metadata — mirrors COLLECTION_DESCRIPTIONS in collection.js.
-// No Firestore lookup needed since categories are a fixed, known set.
+// Hand-written descriptions for some pages; every other department and
+// category in the category tree (taxonomy.js) gets its name and a
+// standard description. No Firestore lookup needed.
 
 const CATEGORY_META = {
-  'all-clothing': { label: 'All Clothing', description: 'Our complete clothing edit: refined silhouettes for the modern wardrobe.' },
+  'clothing':     { label: 'Clothing', description: 'Our complete clothing edit: refined silhouettes for the modern wardrobe.' },
   'dresses':      { label: 'Dresses', description: 'Effortless dresses that balance structure and fluidity.' },
   'tops':         { label: 'Tops', description: 'Elevated essentials, from sculptural blouses to relaxed knits.' },
   'bottoms':      { label: 'Bottoms', description: 'Tailored trousers and fluid skirts with quiet intention.' },
@@ -2660,11 +2665,17 @@ const CATEGORY_META = {
   'bags':         { label: 'Bags', description: 'Understated accessories that complete the look without saying too much.' },
   'jewelry':      { label: 'Jewelry', description: 'Sculptural adornments: timeless pieces with modern sensibility.' },
   'sunglasses':   { label: 'Sunglasses', description: 'Bold yet refined eyewear for the discerning gaze.' },
-  'parfum':       { label: 'Scent', description: 'A study in scent. THATO parfums are crafted for the considered wearer.' }
+  'parfum':       { label: 'Fragrance', description: 'A study in scent. THATO parfums are crafted for the considered wearer.' }
 };
 
 function injectCollectionMeta(html, cat) {
-  const meta = CATEGORY_META[cat];
+  const dept = taxonomy.department(cat);
+  if (dept) cat = dept.slug; // all-clothing, all-accessories
+  const known = dept || taxonomy.category(cat);
+  const meta = CATEGORY_META[cat] || (known && {
+    label: taxonomy.label(cat),
+    description: 'Shop ' + taxonomy.label(cat).toLowerCase() + ' from independent South African brands at JANEDORE.'
+  });
   if (!meta) return null; // unknown category — caller falls through to normal SPA
 
   const canonicalUrl = `${SITE_URL}/collections/${encodeURIComponent(cat)}`;
@@ -2951,7 +2962,7 @@ app.get('/collections/:cat', async (req, res, next) => {
       res.send(html);
       return;
     }
-    if (!CATEGORY_META[handle]) return next();
+    if (!CATEGORY_META[handle] && !taxonomy.department(handle) && !taxonomy.category(handle)) return next();
     const html = await renderIndexHtml(h => injectCollectionMeta(h, handle));
     res.send(html);
   } catch (e) {
