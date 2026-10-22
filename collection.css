@@ -730,7 +730,8 @@ body.brand-report-open #live-chat-bubble { display: none !important; }
 /* Brand bar: logo, name, "Cape Town · Clothing" and the report button.
    It sticks under the header, and while scrolling down it takes the
    header's place at the top, the same way the collection toolbar does
-   (body.collection-bar-stuck, updateCollectionBarStuck()). */
+   (body.collection-bar-stuck, updateCollectionBarStuck()). Its "···"
+   menu uses the Sort menu's style (.collection-sort-options). */
 .brand-bar {
   display: flex; align-items: center; gap: 12px;
   padding: 14px 20px; background: #fff; border-bottom: 1px solid #eee;
@@ -744,17 +745,18 @@ body.on-collection-page.collection-bar-stuck .brand-bar { top: 0; }
   background: #111; color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
 }
-.brand-bar-logo img { width: 100%; height: 100%; object-fit: cover; background: #fff; }
+.brand-bar-logo img { width: 70%; height: 70%; object-fit: contain; }
 .brand-bar-text { min-width: 0; }
 .brand-bar-name { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brand-bar-line { font-size: 12px; color: #888; margin-top: 2px; }
-.brand-bar-more { margin-left: auto; background: none; border: none; padding: 6px; color: #111; font-size: 22px; display: flex; cursor: pointer; }
+.brand-bar-menu { margin-left: auto; position: relative; }
+.brand-bar-menu .collection-sort-options { right: 0; }
+.brand-bar-more { background: none; border: none; padding: 6px; color: #111; font-size: 22px; display: flex; cursor: pointer; }
 @media (min-width: 768px) { .brand-bar { padding-left: 24px; padding-right: 24px; } }
 
-/* On brand pages the toolbar sticks under the brand bar instead of
-   under the header. */
-body:has(#page-vendor.active).on-collection-page .collection-filter-bar { top: calc(var(--main-nav-sticky-height, 0px) + var(--brand-bar-height, 0px)); }
-body:has(#page-vendor.active).on-collection-page.collection-bar-stuck .collection-filter-bar { top: var(--brand-bar-height, 0px); }
+/* Brand pages have no sort/filter bar. */
+body:has(#page-vendor.active) .collection-filter-bar,
+body:has(#page-vendor.active) #active-filter-chips { display: none !important; }
 
 /* Shop / Collections / Sale: the quick-link pills the header used to
    have (grey text, the picked one a black pill with white bold text). */
@@ -771,4 +773,3 @@ body:has(#page-vendor.active).on-collection-page.collection-bar-stuck .collectio
 /* Same spacing as the homepage's product rows (#home-shop-clothing). */
 .brand-section { padding: 24px 0; }
 #brand-shop { padding-bottom: 0; }
-#brand-shop .home-categories-header { padding-bottom: 0; }

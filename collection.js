@@ -573,15 +573,11 @@ function updateCollectionTitle() {
 
   if (descEl) descEl.style.display = 'none';
 
-  // Collection pages have no breadcrumb trail. Brand pages keep this bar
-  // for the product page's back arrow on the left and, on the right, the
-  // "more" button that opens the report-this-brand panel.
+  // No breadcrumb trail on collection or brand pages (the brand bar has
+  // the brand's own menu).
   if (bcEl) {
-    const onBrand = S.currentPage === 'vendor';
-    bcEl.classList.toggle('has-icons', onBrand);
-    bcEl.innerHTML = onBrand
-      ? `<button class="product-breadcrumb-back" type="button" onclick="goBackFromProduct()" aria-label="Go back"><i class="ph ph-arrow-left"></i></button><span class="page-breadcrumb-trail"></span><button class="product-breadcrumb-share brand-more-btn" type="button" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three-circle"></i></button>`
-      : '';
+    bcEl.classList.remove('has-icons');
+    bcEl.innerHTML = '';
   }
 }
 
@@ -1583,13 +1579,12 @@ function renderVendorPage(vendor) {
   const products = merchandiseProducts(getVendorFilteredProducts(vendor), 'vendor', S.sortBy);
   const expanded = expandProductVariants(products);
   // "Cape Town · Clothing": where they ship from and what they mostly sell.
+  const brandProducts = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName);
   const depts = {};
-  (getVendorFilteredProducts(vendor) || []).forEach(p => { const d = JDTaxonomy.departmentOf(p.category); if (d) depts[d] = (depts[d] || 0) + 1; });
+  brandProducts.forEach(p => { const d = JDTaxonomy.departmentOf(p.category); if (d) depts[d] = (depts[d] || 0) + 1; });
   const mainDept = Object.keys(depts).sort((x, y) => depts[y] - depts[x])[0];
   const barLine = [vendor?.location, mainDept ? JDTaxonomy.label(mainDept) : ''].filter(Boolean).join(' · ');
-  const brandProducts = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName);
   const newest = merchandiseProducts(brandProducts, undefined, 'newest').slice(0, 8);
-  const hasSale = brandProducts.some(hasSalePrice);
   const sectionHead = (id, title, btn) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div>${btn || ''}</div>`;
   const emptyTile = '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
 
@@ -1602,7 +1597,13 @@ function renderVendorPage(vendor) {
     <div class="brand-bar" id="brand-bar">
       <div class="brand-bar-logo">${logoUrl ? `<img src="${escapeHTML(logoUrl)}" alt="">` : escapeHTML(initials)}</div>
       <div class="brand-bar-text"><h1 class="brand-bar-name">${escapeHTML(brandName)}</h1>${barLine ? `<div class="brand-bar-line">${escapeHTML(barLine)}</div>` : ''}</div>
-      <button type="button" class="brand-bar-more" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three"></i></button>
+      <div class="brand-bar-menu">
+        <button type="button" class="brand-bar-more" aria-label="More" aria-expanded="false" onclick="toggleBrandMenu(event)"><i class="ph ph-dots-three"></i></button>
+        <div class="collection-sort-options" id="brand-menu" role="menu">
+          <button type="button" role="menuitem" onclick="closeBrandMenu();navigateToContentPage('customer-care')">Give feedback</button>
+          <button type="button" role="menuitem" onclick="closeBrandMenu();openBrandReport()">Report a problem</button>
+        </div>
+      </div>
     </div>
     <section class="brand-hero">
       <div class="hero-bg-placeholder${heroImg ? '' : ' content-empty'}" style="${heroImg ? `background-image:url('${escapeForCssUrl(heroImg)}');` : ''}"></div>
@@ -1615,7 +1616,7 @@ function renderVendorPage(vendor) {
     <div class="nav-quick-links brand-quick-links" role="tablist">
       <button class="nav-quick-link${S.vendorFilter.onSale ? '' : ' active'}" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
       <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
-      ${hasSale ? `<button class="nav-quick-link${S.vendorFilter.onSale ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>` : ''}
+      <button class="nav-quick-link${S.vendorFilter.onSale ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>
     </div>
     <section class="brand-section" id="brand-new">
       ${sectionHead('brand-new-heading', '', `<button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="showBrandSection('shop')">View all</button>`)}
@@ -1639,14 +1640,19 @@ function renderVendorPage(vendor) {
   }
   document.getElementById('brand-hero-heading').textContent = vendor?.heroHeading || brandName;
   initSliderLeadingTracking('vendor-new-grid');
-  updateBrandBarHeight();
 
-  moveFilterBarBelowVendorHero(el.querySelector('#brand-shop'));
+  // Brand pages have no sort/filter bar: a brand's range is small enough
+  // to browse as is.
 
   const gridEl = document.getElementById('vendor-products-grid');
   gridEl.style.gridTemplateColumns = gridTemplateFor(S.gridColsVendor);
   applyGridColsClass(gridEl, S.gridColsVendor);
-  renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
+  if (!expanded.length && S.vendorFilter.onSale) {
+    // Sale is always offered; say so plainly when nothing's on sale.
+    gridEl.innerHTML = `<div class="filter-empty-note" style="grid-column:1/-1;padding:24px 12px;">Nothing from ${escapeHTML(brandName)} is on sale right now.</div>`;
+  } else {
+    renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
+  }
   updateCollectionGridIcon();
   updateCollectionTitle();
   renderFilterPanel();
@@ -1679,12 +1685,25 @@ function showBrandSection(key) {
   window.scrollTo({ top: y, behavior: 'smooth' });
 }
 
-// The collection toolbar sticks under the brand bar on brand pages.
-function updateBrandBarHeight() {
-  const bar = document.getElementById('brand-bar');
-  if (bar) document.documentElement.style.setProperty('--brand-bar-height', bar.offsetHeight + 'px');
+// Brand bar "···" menu: feedback first, reporting second (same menu
+// style as the collection Sort menu).
+function toggleBrandMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('brand-menu');
+  if (!menu) return;
+  const open = !menu.classList.contains('open');
+  menu.classList.toggle('open', open);
+  const btn = document.querySelector('.brand-bar-more');
+  if (btn) btn.setAttribute('aria-expanded', String(open));
 }
-window.addEventListener('resize', updateBrandBarHeight);
+function closeBrandMenu() {
+  const menu = document.getElementById('brand-menu');
+  if (menu) menu.classList.remove('open');
+  const btn = document.querySelector('.brand-bar-more');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('.brand-bar-menu')) closeBrandMenu(); });
+
 
 
 // ---- Report this brand ----
