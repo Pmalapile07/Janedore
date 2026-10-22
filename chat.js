@@ -444,8 +444,7 @@ function toggleChat() {
     }
 
     _ScreenDebug.info('UI', 'Chat opened');
-    const dot = safeEl('chat-unread-dot');
-    if (dot) dot.style.display = 'none';
+    clearChatNotification();
 
     showScreen('chat-messages');
     setHeaderIcon('ph ph-x');
@@ -481,8 +480,10 @@ function toggleChat() {
     syncCustomerIdentityFromAccount();
     updateCustomerInfoBar();
     ensureAuth();
+    // Desktop only: on a phone, focusing pops the keyboard up over the
+    // chat before the customer has decided to type.
     const input = safeEl('chat-input');
-    if (input) setTimeout(() => input.focus(), 100);
+    if (input) focusIfDesktop(input);
   } else {
     win.classList.remove('open');
     document.body.classList.remove('chat-is-open'); // launcher reappears
@@ -532,7 +533,11 @@ function showOrderLookup() {
   const resultEl = safeEl('order-result');
   if (resultEl) resultEl.innerHTML = '';
   const input = safeEl('order-lookup-input');
-  if (input) setTimeout(() => input.focus(), 100);
+  if (input) focusIfDesktop(input);
+}
+
+function focusIfDesktop(input) {
+  if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) setTimeout(() => input.focus(), 100);
 }
 
 function setHeaderIcon(iconClass) {
@@ -1369,17 +1374,99 @@ function appendMessage(m) {
   if (m.products && m.products.length) renderProductCardsFromSnapshot(el, m.products);
 }
 
-// Shared badge-trigger, used both by the live listener below (a real
-// human admin's reply, which was never pre-registered in
-// loadedMessageKeys so it reaches this listener normally) and directly
-// by sendChatMessage() for AI/handoff replies — those pre-register
-// their own key to avoid double-rendering, which means they never
-// reach this listener's callback at all, so the badge has to be
-// triggered at the point those messages are actually written instead.
-function showUnreadBadgeIfClosed() {
+// A reply that arrives while the chat is closed: the launcher shows a
+// count, nudges, a preview of the message pops up beside it and a short
+// ping plays. Shared by the live listener below (a human admin's reply)
+// and sendChatMessage() for AI/handoff replies, which pre-register their
+// own keys and so never reach that listener. Only for messages from now
+// on: history loading when the page opens never pings.
+let _chatUnread = 0;
+let _chatNudgeTimer = null;
+let _chatPreviewTimer = null;
+const _chatPageOpenedAt = Date.now();
+function showUnreadBadgeIfClosed(m) {
   if (chatOpen) return;
-  const dot = safeEl('chat-unread-dot');
-  if (dot) dot.style.display = 'block';
+  if (m && m.createdAt && typeof m.createdAt === 'number' && m.createdAt < _chatPageOpenedAt - 5000) return;
+  _chatUnread++;
+  const badge = safeEl('chat-unread-dot');
+  if (badge) { badge.textContent = _chatUnread > 9 ? '9+' : String(_chatUnread); badge.style.display = 'flex'; }
+  showChatPreview(m);
+  nudgeChatBubble();
+  clearInterval(_chatNudgeTimer);
+  let nudges = 0;
+  _chatNudgeTimer = setInterval(() => { if (++nudges > 3) clearInterval(_chatNudgeTimer); else nudgeChatBubble(); }, 6000);
+  playChatPing();
+}
+
+function clearChatNotification() {
+  _chatUnread = 0;
+  clearInterval(_chatNudgeTimer);
+  const badge = safeEl('chat-unread-dot');
+  if (badge) badge.style.display = 'none';
+  hideChatPreview();
+}
+
+function nudgeChatBubble() {
+  const bubble = safeEl('live-chat-bubble');
+  if (!bubble) return;
+  bubble.classList.remove('chat-nudge');
+  void bubble.offsetWidth; // restart the animation
+  bubble.classList.add('chat-nudge');
+}
+
+function showChatPreview(m) {
+  const preview = safeEl('chat-preview');
+  if (!preview) return;
+  const text = String((m && m.text) || 'You have a new message.').replace(/\s+/g, ' ').trim();
+  const name = m && m.senderName && m.senderName !== 'JANEDORE' ? m.senderName : 'Janedore';
+  preview.querySelector('.chat-preview-name').textContent = name;
+  preview.querySelector('.chat-preview-text').textContent = text.length > 90 ? text.slice(0, 88) + '…' : text;
+  preview.classList.add('show');
+  clearTimeout(_chatPreviewTimer);
+  _chatPreviewTimer = setTimeout(hideChatPreview, 12000);
+}
+
+function hideChatPreview() {
+  clearTimeout(_chatPreviewTimer);
+  const preview = safeEl('chat-preview');
+  if (preview) preview.classList.remove('show');
+}
+
+// A soft two-note ping, made in the browser (no sound file). Browsers
+// only allow sound after the visitor has tapped the page, so the audio
+// is unlocked on their first tap; until then it's silent.
+let _chatAudio = null;
+function unlockChatAudio() {
+  try {
+    if (!_chatAudio) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      _chatAudio = new Ctx();
+    }
+    if (_chatAudio.state === 'suspended') _chatAudio.resume();
+  } catch (e) {}
+}
+document.addEventListener('pointerdown', unlockChatAudio, { passive: true });
+document.addEventListener('keydown', unlockChatAudio);
+
+function playChatPing() {
+  const ctx = _chatAudio;
+  if (!ctx || ctx.state !== 'running') return;
+  try {
+    const t = ctx.currentTime;
+    [[880, 0], [1318.5, 0.12]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t + delay);
+      gain.gain.exponentialRampToValueAtTime(0.18, t + delay + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + delay + 0.45);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t + delay);
+      osc.stop(t + delay + 0.5);
+    });
+  } catch (e) {}
 }
 
 function listenChat() {
@@ -1400,7 +1487,7 @@ function listenChat() {
     const el = safeEl('chat-messages');
     if (el) el.scrollTop = el.scrollHeight;
 
-    if (m.sender === 'admin') showUnreadBadgeIfClosed();
+    if (m.sender === 'admin') showUnreadBadgeIfClosed(m);
   };
   _chatListenerRef.on('child_added', _chatListenerCb);
   _ScreenDebug.info('RTDB', 'Listening for new messages');
@@ -1561,7 +1648,7 @@ async function sendChatMessage() {
       });
 
       appendMessage({ text: handoffText, sender: 'admin', senderName: 'JANEDORE', createdAt: Date.now() });
-      showUnreadBadgeIfClosed();
+      showUnreadBadgeIfClosed({ text: handoffText, senderName: 'JANEDORE' });
       const handoffEl = safeEl('chat-messages');
       if (handoffEl) handoffEl.scrollTop = handoffEl.scrollHeight;
     } else if (_aiLockedUntil && Date.now() < _aiLockedUntil) {
@@ -1631,7 +1718,7 @@ async function sendChatMessage() {
 
         if (matchedForCards.length) renderAIProductSuggestions(matchedForCards);
 
-        showUnreadBadgeIfClosed();
+        showUnreadBadgeIfClosed({ text: cleanedAiText, senderName: 'JAI' });
         const aiEl = safeEl('chat-messages');
         if (aiEl) aiEl.scrollTop = aiEl.scrollHeight;
         hideTypingIndicator();
@@ -1839,7 +1926,7 @@ async function sendChatImage(file) {
     if (tempEl) tempEl.remove();
     appendMessage({ type: 'image', imageUrl: imageUrl, sender: 'customer', createdAt: Date.now() });
     appendMessage({ text: handoffText, sender: 'system', senderName: 'JAI', createdAt: Date.now() });
-    showUnreadBadgeIfClosed();
+    showUnreadBadgeIfClosed({ text: handoffText, senderName: 'JAI' });
     _ScreenDebug.ok('SEND', 'Image saved; human handoff flagged; no AI image analysis used');
   } catch (e) {
     _ScreenDebug.err('SEND', 'Image send failed: ' + (e.code || '') + ' ' + e.message);

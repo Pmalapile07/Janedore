@@ -193,16 +193,76 @@
     100% { transform: rotateZ(0deg); }
   }
 
+  /* Unread count on the launcher (showUnreadBadgeIfClosed(), chat.js):
+     white with black text like the header's bag count, with a black
+     ring so it reads on white pages too; flips over the dark footer. */
   .chat-unread-dot {
     position: absolute !important;
-    top: 3px !important;
-    right: 3px !important;
-    width: 8px !important;
-    height: 8px !important;
-    border-radius: 50% !important;
-    background: #2ecc71 !important;
-    border: 2px solid #fff !important;
+    top: -7px !important;
+    right: -7px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #111 !important;
+    border: 1px solid #111 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
     display: none;
+  }
+  #live-chat-bubble.over-dark-footer .chat-unread-dot { background: #111 !important; color: #fff !important; border-color: #fff !important; }
+
+  /* A new message while the chat is closed: the launcher hops and
+     wiggles (a few times, ~6s apart, until it's opened). */
+  #live-chat-bubble.chat-nudge { animation: chat-nudge 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; }
+  @keyframes chat-nudge {
+    0%   { transform: translateY(0) rotate(0); }
+    20%  { transform: translateY(-10px) rotate(0); }
+    35%  { transform: translateY(0) rotate(0); }
+    50%  { transform: translateY(0) rotate(-10deg); }
+    65%  { transform: translateY(0) rotate(8deg); }
+    80%  { transform: translateY(0) rotate(-4deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+
+  /* Message preview beside the launcher; tap it to open the chat. */
+  #chat-preview {
+    position: fixed !important;
+    right: 24px !important;
+    bottom: 84px !important;
+    z-index: 9998 !important;
+    width: min(280px, calc(100vw - 48px)) !important;
+    box-sizing: border-box !important;
+    background: #fff !important;
+    color: #111 !important;
+    border: 1px solid #e5e5e5 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+    padding: 12px 36px 12px 14px !important;
+    font-family: 'Inter', sans-serif !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    opacity: 0 !important;
+    transform: translateY(8px) !important;
+    pointer-events: none !important;
+    transition: opacity 0.25s ease, transform 0.25s ease !important;
+  }
+  #chat-preview.show { opacity: 1 !important; transform: translateY(0) !important; pointer-events: auto !important; }
+  body.chat-is-open #chat-preview,
+  body:has(#page-product-detail.active) #chat-preview,
+  body:has(#page-cart.active) #chat-preview,
+  body:has(#page-checkout.active) #chat-preview,
+  body:has(#collection-filter-options.open) #chat-preview { display: none !important; }
+  #chat-preview .chat-preview-name { display: block !important; font-size: 11px !important; font-weight: 600 !important; margin-bottom: 4px !important; }
+  #chat-preview .chat-preview-text { display: block !important; font-size: 13px !important; line-height: 1.45 !important; color: #444 !important; }
+  #chat-preview .chat-preview-close {
+    position: absolute !important; top: 6px !important; right: 6px !important; background: none !important; border: none !important;
+    padding: 4px !important; color: #111 !important; font-size: 14px !important; cursor: pointer !important; display: flex !important;
   }
 
   /* ---------- WINDOW (full screen; forceFullScreen() in chat.js sets
@@ -878,10 +938,15 @@
      silently toggling an invisible element every time — the
      wishlist/cart hide behavior never actually worked. Keep this the
      one and only #live-chat-bubble. -->
-<button id="live-chat-bubble" onclick="toggleChat()">
+<button id="live-chat-bubble" onclick="toggleChat()" aria-label="Chat with us">
   <i class="ph ph-chat" aria-hidden="true"></i>
-  <span class="chat-unread-dot" id="chat-unread-dot"></span>
+  <span class="chat-unread-dot" id="chat-unread-dot" aria-label="New messages"></span>
 </button>
+<div id="chat-preview" role="status" aria-live="polite" onclick="if(!chatOpen)toggleChat()">
+  <span class="chat-preview-name"></span>
+  <span class="chat-preview-text"></span>
+  <button type="button" class="chat-preview-close" aria-label="Dismiss" onclick="event.stopPropagation();hideChatPreview()"><i class="ph ph-x"></i></button>
+</div>
 
 <div id="chat-window">
   <div class="chat-header">
