@@ -1493,6 +1493,37 @@ function listenChat() {
   _ScreenDebug.info('RTDB', 'Listening for new messages');
 }
 
+// ==================== CUSTOMER'S PAGE ====================
+// Where the customer was when they messaged, for the admin inbox's
+// customer panel ("Brand page: Noir Atelier", "Product: Wool coat").
+// Saved in its own write, so the chat can never be held up by it.
+function describeChatPage() {
+  try {
+    const page = (typeof S !== 'undefined' && S.currentPage) || 'home';
+    let label = '';
+    if (page === 'product-detail') {
+      const p = (typeof PRODUCTS !== 'undefined' ? PRODUCTS : []).find(x => x.id === S.currentReviewProductId);
+      label = p ? 'Product: ' + (p.name || '') + (p.brand ? ' (' + p.brand + ')' : '') : 'Product page';
+    } else if (page === 'vendor') {
+      const v = S.currentVendor || {};
+      label = 'Brand page: ' + (v.brand || v.name || '');
+    } else {
+      const heading = document.getElementById('collection-page-heading');
+      const named = { home: 'Homepage', cart: 'Bag', checkout: 'Checkout', wishlist: 'Wishlist', account: 'My account', login: 'Sign in', brands: 'All brands', categories: 'All categories', giftcards: 'Gift cards' };
+      if (page === 'products' || page === 'category') label = 'Collection: ' + ((heading && heading.textContent.trim()) || 'All products');
+      else if (page === 'content') label = 'Page: ' + String(S.currentContentSlug || '').replace(/-/g, ' ');
+      else label = named[page] || page;
+    }
+    return { label: label.slice(0, 200), url: (location.pathname + location.search).slice(0, 300) };
+  } catch (e) { return null; }
+}
+function saveChatPage(rtdb) {
+  const info = describeChatPage();
+  if (!info || !rtdb) return;
+  rtdb.ref('chat_inbox/' + chatSessionId + '/page').set({ label: info.label, url: info.url, at: firebase.database.ServerValue.TIMESTAMP })
+    .catch(e => _ScreenDebug.warn('RTDB', 'Page not saved: ' + e.message));
+}
+
 // ==================== SEND MESSAGE ====================
 async function sendChatMessage() {
   const rtdb = getRTDB();
@@ -1604,6 +1635,7 @@ async function sendChatMessage() {
     } catch (_) {} // FIX #19: cart parsing silent catch is fine — optional data
 
     await rtdb.ref('/').update(updates);
+    saveChatPage(rtdb);
     _ScreenDebug.ok('SEND', 'Customer message saved to RTDB');
     input.value = '';
 
@@ -1921,6 +1953,7 @@ async function sendChatImage(file) {
     updates['chat_inbox/' + chatSessionId + '/status'] = 'open';
 
     await rtdb.ref('/').update(updates);
+    saveChatPage(rtdb);
 
     const tempEl = document.getElementById(tempId);
     if (tempEl) tempEl.remove();

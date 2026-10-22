@@ -998,6 +998,10 @@
               + '<span style="font-size:12px;font-weight:400;word-break:break-all;">' + esc(sessionId) + '</span>'
             + '</div>'
             + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
+              + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Page when they messaged</div>'
+              + '<div id="cinfo-page"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
+            + '</div>'
+            + '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
               + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Cart when they messaged</div>'
               + '<div id="cinfo-cart"><span style="font-size:10.5px;color:var(--muted);">Loading...</span></div>'
             + '</div>'
@@ -1107,6 +1111,21 @@
 
       if (nameEl)  nameEl.textContent  = sessionData.customerName  || 'Guest';
       if (emailEl) emailEl.textContent = sessionData.customerEmail || '-';
+
+      // The page they were on when they last sent a message (chat.js
+      // saveChatPage()), linked so the team can open it.
+      var pageEl = safeEl('cinfo-page');
+      if (pageEl) {
+        var pg = sessionData.page;
+        if (pg && pg.label) {
+          var href = /^\//.test(pg.url || '') ? 'https://janedore.co.za' + pg.url : '';
+          pageEl.innerHTML = (href
+            ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" style="font-size:10.5px;color:var(--text);text-decoration:underline;text-underline-offset:2px;">' + esc(pg.label) + '</a>'
+            : '<span style="font-size:10.5px;color:var(--text);">' + esc(pg.label) + '</span>');
+        } else {
+          pageEl.innerHTML = '<span style="font-size:10.5px;color:var(--muted);">Not recorded</span>';
+        }
+      }
 
       if (cartEl) {
         var cart = sessionData.cart;
