@@ -76,18 +76,18 @@ function updateLoginModeUI() {
   if (errorEl) errorEl.style.display = 'none';
   showLoginNotice('');
 
-  // [title, button, line under the title: before, link, after]
+  // [title, button, line under the title: text, link]
   const labels = {
-    signin: ['Sign In', 'Sign In', 'New customer?', 'Create an account', ' to save your wishlist, track your orders and check out faster.'],
-    signup: ['Create Account', 'Create Account', 'Already have an account?', 'Sign in', ''],
-    reset: ['Reset Password', 'Send Reset Link', 'Remembered your password?', 'Back to sign in', '']
+    signin: ['Sign In', 'Sign In', 'New customer?', 'Create an account'],
+    signup: ['Create Account', 'Create Account', 'Already have an account?', 'Sign in'],
+    reset: ['Reset Password', 'Send Reset Link', 'Remembered your password?', 'Back to sign in']
   }[loginMode];
   const switchText = document.getElementById('login-switch-text');
-  const switchAfter = document.getElementById('login-switch-after');
+  const remember = document.getElementById('login-remember');
   const legal = document.getElementById('login-legal');
   const legalLead = document.getElementById('login-legal-lead');
   if (switchText) switchText.textContent = labels[2];
-  if (switchAfter) switchAfter.textContent = labels[4];
+  if (remember) remember.style.display = loginMode === 'reset' ? 'none' : 'flex';
   if (legal) legal.style.display = loginMode === 'reset' ? 'none' : 'block';
   if (legalLead) legalLead.textContent = loginMode === 'signup' ? 'By creating an account' : 'By signing in';
   if (title) title.textContent = labels[0];
@@ -142,6 +142,21 @@ function showLoginError(error) {
   errorEl.style.display = 'block';
 }
 
+// "Keep me signed in": ticked (the default) keeps the customer signed in
+// on this device until they sign out; unticked signs them out when the
+// tab or browser is closed. Also set when the box changes, so Google
+// sign-in picks it up without an await before its popup (iOS Safari
+// blocks popups that don't open straight from the tap).
+async function applyKeepSignedIn() {
+  const box = document.getElementById('login-remember-input');
+  const P = firebase.auth.Auth.Persistence;
+  await firebase.auth().setPersistence(box && !box.checked ? P.SESSION : P.LOCAL);
+}
+
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'login-remember-input') applyKeepSignedIn().catch(() => {});
+});
+
 async function handleLoginSubmit(e) {
   e.preventDefault();
 
@@ -179,6 +194,7 @@ async function handleLoginSubmit(e) {
       showLoginNotice('If there’s an account for ' + email + ', we’ve sent a link to reset your password. Check your inbox and spam folder.');
       return;
     }
+    await applyKeepSignedIn();
     if (loginMode === 'signup') {
       if (!name) throw new Error('Please enter your full name.');
       const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
