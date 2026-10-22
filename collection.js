@@ -480,7 +480,7 @@ function updateCollectionTitle() {
 
   // Pages show a heading, never a description or collection image.
   // Brand pages show no heading either.
-  let title = 'ALL PRODUCTS';
+  let title = 'All products';
 
   // The category tree's name (taxonomy.js) is only the fallback shown
   // before admin-pages.js's siteContent/collectionPages has loaded (or for
@@ -488,17 +488,19 @@ function updateCollectionTitle() {
   // overrides it once site-content.js's fetch resolves. Clothing and
   // Accessories copy may still be saved under their old all-clothing /
   // all-accessories keys.
-  const fixedTitles = { 'all': 'ALL PRODUCTS', 'sale': 'SALE', 'newin': 'NEW IN' };
+  // Titles typed in the admin show exactly as typed; these defaults and
+  // the category names are already in sentence case.
+  const fixedTitles = { 'all': 'All products', 'sale': 'Sale', 'newin': 'New in' };
   const oldKeys = { clothing: 'all-clothing', accessories: 'all-accessories' };
   const collectionPages = (window._siteContent && window._siteContent.collectionPages) || {};
   function collectionCopyFor(slug) {
     const custom = collectionPages[slug] || collectionPages[oldKeys[slug]] || {};
-    return { title: (custom.title || '').trim() || fixedTitles[slug] || JDTaxonomy.label(slug).toUpperCase() };
+    return { title: (custom.title || '').trim() || fixedTitles[slug] || JDTaxonomy.label(slug) };
   }
 
   if (S.currentCollectionHandle && S.currentCollectionData) {
     const collection = S.currentCollectionData;
-    title = String(collection.title || collection.name || collection.handle || S.currentCollectionHandle).toUpperCase();
+    title = String(collection.title || collection.name || collection.handle || S.currentCollectionHandle);
   } else if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = '';
   } else if (S.currentPage === 'products') {
@@ -519,9 +521,7 @@ function updateCollectionTitle() {
     titleEl.textContent = title;
   }
   if (headingEl) {
-    // Sentence case: only the first letter is a capital ("Free delivery").
-    const lower = title.toLowerCase();
-    headingEl.textContent = lower.charAt(0).toUpperCase() + lower.slice(1);
+    headingEl.textContent = title;
     headingEl.style.display = title ? 'block' : 'none';
   }
   if (countEl) {
