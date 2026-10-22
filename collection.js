@@ -452,10 +452,9 @@ function updateCollectionTitle() {
   const bcEl = document.getElementById('collection-page-breadcrumb');
   if (!titleEl && !headingEl) return;
 
+  // Pages show a heading, never a description or collection image.
+  // Brand pages show no heading either.
   let title = 'ALL PRODUCTS';
-  let description = '';
-  let collectionImage = '';
-  let showDesc = false;
 
   // The category tree's name (taxonomy.js) is only the fallback shown
   // before admin-pages.js's siteContent/collectionPages has loaded (or for
@@ -468,32 +467,18 @@ function updateCollectionTitle() {
   const collectionPages = (window._siteContent && window._siteContent.collectionPages) || {};
   function collectionCopyFor(slug) {
     const custom = collectionPages[slug] || collectionPages[oldKeys[slug]] || {};
-    return {
-      title: (custom.title || '').trim() || fixedTitles[slug] || JDTaxonomy.label(slug).toUpperCase(),
-      description: (custom.description || '').trim()
-    };
+    return { title: (custom.title || '').trim() || fixedTitles[slug] || JDTaxonomy.label(slug).toUpperCase() };
   }
 
   if (S.currentCollectionHandle && S.currentCollectionData) {
     const collection = S.currentCollectionData;
     title = String(collection.title || collection.name || collection.handle || S.currentCollectionHandle).toUpperCase();
-    description = String(collection.description || '');
-    collectionImage = String(collection.imageUrl || '');
-    showDesc = !!description || !!collectionImage;
   } else if (S.currentPage === 'vendor' && S.currentVendorId) {
-    title = 'BRAND';
-    showDesc = false;
+    title = '';
   } else if (S.currentPage === 'products') {
-    const slug = S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all');
-    const copy = collectionCopyFor(slug);
-    title = copy.title;
-    // All Products, Sale and New In show no description, only a heading.
-    description = '';
-    showDesc = false;
+    title = collectionCopyFor(S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all')).title;
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
-    // Department and category pages show no description, only a heading.
     title = collectionCopyFor(S.currentCategoryPage).title;
-    showDesc = false;
   } else {
     if (titleEl) titleEl.style.display = 'none';
     if (headingEl) headingEl.style.display = 'none';
@@ -509,7 +494,7 @@ function updateCollectionTitle() {
   }
   if (headingEl) {
     headingEl.textContent = title === 'ALL PRODUCTS' ? 'All Products' : title.toLowerCase().replace(/\b\w/g, function (char) { return char.toUpperCase(); });
-    headingEl.style.display = 'block';
+    headingEl.style.display = title ? 'block' : 'none';
   }
   if (countEl) {
     let countProducts = [];
@@ -525,16 +510,7 @@ function updateCollectionTitle() {
     countEl.textContent = count + (count === 1 ? ' product' : ' products');
   }
 
-  if (descEl) {
-    if (showDesc && (description || collectionImage)) {
-      const imageMarkup = collectionImage && safeImageURL(collectionImage) !== PLACEHOLDER_IMAGE ? `<img src="${escapeHTML(safeImageURL(collectionImage))}" alt="" loading="lazy" style="width:100%;max-height:320px;object-fit:cover;display:block;margin:0 0 14px;">` : '';
-      const descriptionMarkup = description ? `<p>${escapeHTML(description)}</p>` : '';
-      descEl.innerHTML = imageMarkup + descriptionMarkup;
-      descEl.style.display = imageMarkup || descriptionMarkup ? 'block' : 'none';
-    } else {
-      descEl.style.display = 'none';
-    }
-  }
+  if (descEl) descEl.style.display = 'none';
 
   // Collection pages have no breadcrumb trail. Brand pages keep this bar
   // for the product page's back arrow on the left and, on the right, the
