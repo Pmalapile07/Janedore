@@ -448,7 +448,7 @@ function toggleChat() {
     if (dot) dot.style.display = 'none';
 
     showScreen('chat-messages');
-    setHeaderIcon('ph-light ph-x');
+    setHeaderIcon('ph ph-x');
     const inputWrap = safeEl('chat-input-wrap');
     if (inputWrap) inputWrap.style.display = 'flex';
 
@@ -528,7 +528,7 @@ function showOrderLookup() {
   showScreen('order-lookup');
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'none';
-  setHeaderIcon('ph-light ph-arrow-up-left');
+  setHeaderIcon('ph ph-arrow-up-left');
   const resultEl = safeEl('order-result');
   if (resultEl) resultEl.innerHTML = '';
   const input = safeEl('order-lookup-input');
@@ -554,7 +554,7 @@ function backToChat() {
   showScreen('chat-messages');
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'flex';
-  setHeaderIcon('ph-light ph-x');
+  setHeaderIcon('ph ph-x');
 }
 
 function clearChatSession() {
@@ -740,7 +740,7 @@ function renderAIGreeting() {
     textWrap.appendChild(titleEl);
 
     const chevron = document.createElement('i');
-    chevron.className = 'ph-light ph-caret-right jai-card-chevron';
+    chevron.className = 'ph ph-caret-right jai-card-chevron';
 
     btn.appendChild(iconWrap);
     btn.appendChild(textWrap);
