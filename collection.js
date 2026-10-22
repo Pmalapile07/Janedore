@@ -444,32 +444,27 @@ function updateCollectionGridIcon() {
   else { icon.classList.add('cols-2'); }
 }
 
-// Collection pages: the Sort/Filter toolbar scrolls away with the page
-// until the first row of products (the first two) has gone up under the
-// header. From then on it sticks under the header; scrolling down slides
-// the header away and the toolbar takes its place at the top, and
-// scrolling up at any point brings the header straight back with the
-// toolbar under it (collection.css).
+// Collection pages: scrolling down once the Sort/Filter toolbar has
+// reached the header slides the header away and the toolbar becomes the
+// sticky top bar; scrolling up at any point brings the header straight
+// back, with the toolbar sticking under it again (collection.css). The
+// "reached" check uses a marker just above the toolbar, which never moves,
+// so hiding the header can't flip it back by itself.
 let _collectionLastY = 0;
 function updateCollectionBarStuck() {
+  const marker = document.getElementById('collection-bar-sentinel');
   const nav = document.getElementById('main-nav');
   const y = window.scrollY;
   const delta = y - _collectionLastY;
-  let active = false;
-  if (document.body.classList.contains('on-collection-page') && nav) {
-    const firstCard = document.querySelector('.page.active .product-grid .product-card');
-    const marker = document.getElementById('collection-bar-sentinel');
-    const edge = firstCard ? firstCard.getBoundingClientRect().bottom : (marker ? marker.getBoundingClientRect().top : Infinity);
-    active = edge <= nav.offsetHeight;
-  }
+  const onPage = document.body.classList.contains('on-collection-page') && marker && nav;
+  const reached = onPage && marker.getBoundingClientRect().top <= nav.offsetHeight;
   let stuck = document.body.classList.contains('collection-bar-stuck');
-  if (!active) stuck = false;
+  if (!reached) stuck = false;
   else if (delta > 4) stuck = true;      // scrolling down
   else if (delta < -4) stuck = false;    // scrolling up
-  // Small jitters (bounce, momentum) neither hide nor show the header.
-  if (Math.abs(delta) > 4 || !active) _collectionLastY = y;
-  document.body.classList.toggle('collection-bar-active', active);
-  document.body.classList.toggle('collection-bar-stuck', stuck);
+  // Small jitters (bounce, momentum) neither hide nor show it.
+  if (Math.abs(delta) > 4 || !reached) _collectionLastY = y;
+  document.body.classList.toggle('collection-bar-stuck', !!stuck);
 }
 let _collectionBarTick = false;
 window.addEventListener('scroll', () => {
