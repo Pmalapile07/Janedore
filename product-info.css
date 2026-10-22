@@ -449,6 +449,9 @@
    room for the whole list when open, and small regular stars. */
 #info-accordion-reviews.open .info-accordion-body { max-height: none; }
 .info-accordion-body .product-review-stars i { font-size: 12px; color: #111; vertical-align: -1px; }
-.product-review-photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+/* Same gap above the photos as between the stars and the text (the
+   accordion's ".info-accordion-body > div { margin: 0 }" would cancel it). */
+.product-review-photos,
+.info-accordion-body .product-review-photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 5px 0 12px; }
 .info-accordion-body .product-review-photo { display: block; width: 96px; height: 96px; object-fit: cover; cursor: pointer; }
 #page-account .product-review-photo { display: block; width: 72px; height: 72px; object-fit: cover; cursor: pointer; }
