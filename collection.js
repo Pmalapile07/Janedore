@@ -444,16 +444,27 @@ function updateCollectionGridIcon() {
   else { icon.classList.add('cols-2'); }
 }
 
-// Collection pages: once the Sort/Filter toolbar reaches the header, the
-// header slides away and the toolbar becomes the sticky top bar; it comes
-// back when the toolbar's own place in the page scrolls back below the
-// header (collection.css). Measured from a marker just above the toolbar,
-// which never moves, so hiding the header can't flip it back.
+// Collection pages: scrolling down once the Sort/Filter toolbar has
+// reached the header slides the header away and the toolbar becomes the
+// sticky top bar; scrolling up at any point brings the header straight
+// back, with the toolbar sticking under it again (collection.css). The
+// "reached" check uses a marker just above the toolbar, which never moves,
+// so hiding the header can't flip it back by itself.
+let _collectionLastY = 0;
 function updateCollectionBarStuck() {
   const marker = document.getElementById('collection-bar-sentinel');
   const nav = document.getElementById('main-nav');
-  const on = document.body.classList.contains('on-collection-page') && marker && nav;
-  document.body.classList.toggle('collection-bar-stuck', !!on && marker.getBoundingClientRect().top <= nav.offsetHeight);
+  const y = window.scrollY;
+  const delta = y - _collectionLastY;
+  const onPage = document.body.classList.contains('on-collection-page') && marker && nav;
+  const reached = onPage && marker.getBoundingClientRect().top <= nav.offsetHeight;
+  let stuck = document.body.classList.contains('collection-bar-stuck');
+  if (!reached) stuck = false;
+  else if (delta > 4) stuck = true;      // scrolling down
+  else if (delta < -4) stuck = false;    // scrolling up
+  // Small jitters (bounce, momentum) neither hide nor show it.
+  if (Math.abs(delta) > 4 || !reached) _collectionLastY = y;
+  document.body.classList.toggle('collection-bar-stuck', !!stuck);
 }
 let _collectionBarTick = false;
 window.addEventListener('scroll', () => {
