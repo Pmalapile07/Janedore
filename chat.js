@@ -30,7 +30,7 @@ const _ScreenDebug = {
   collapsed: false,
 
   ensurePanel() {
-    if (this.panel) return;
+    if (this.panel || !this.enabled) return;
     const win = document.getElementById('chat-window');
     if (!win) return;
 
@@ -45,7 +45,7 @@ const _ScreenDebug = {
       'line-height:1.5',
       'flex-shrink:0',
       'max-height:180px',
-      'display:none',
+      'display:flex',
       'flex-direction:column'
     ].join(';');
 
@@ -153,6 +153,20 @@ const _ScreenDebug = {
   ai(area, msg)   { this.row(area, msg, 'ai'); },
   info(area, msg) { this.row(area, msg, 'info'); }
 };
+
+// ?jaidebug=1 keeps it on for this browser until ?jaidebug=0.
+try {
+  const dbg = new URLSearchParams(window.location.search).get('jaidebug');
+  if (dbg === '1') localStorage.setItem('jaiDebug', '1');
+  if (dbg === '0') { localStorage.removeItem('jaiDebug'); _ScreenDebug.enabled = false; }
+} catch (_) {}
+
+// With debug on, page errors also show in the panel (they're otherwise
+// invisible on a phone).
+if (_ScreenDebug.enabled) {
+  window.addEventListener('error', e => _ScreenDebug.err('PAGE', (e.message || 'Error') + (e.filename ? ' @ ' + e.filename.split('/').pop() + ':' + e.lineno : '')));
+  window.addEventListener('unhandledrejection', e => _ScreenDebug.err('PAGE', 'Unhandled: ' + ((e.reason && e.reason.message) || e.reason)));
+}
 
 // ==================== STATE ====================
 let chatSessionId = sanitizeSessionId(localStorage.getItem('janedore_chat_session'));
