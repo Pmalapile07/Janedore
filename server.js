@@ -118,10 +118,18 @@ let gateCache = { at: 0, comingSoon: true, visitorPassword: null };
 async function getGateState() {
   if (!adminDb) return { comingSoon: true, visitorPassword: null };
   if (Date.now() - gateCache.at < 15000) return gateCache;
-  const [settings, secrets] = await Promise.all([
-    adminDb.collection('settings').doc('onlineStore').get(),
-    adminDb.collection('settings').doc('onlineStoreSecrets').get()
-  ]);
+  let settings, secrets;
+  try {
+    [settings, secrets] = await Promise.all([
+      adminDb.collection('settings').doc('onlineStore').get(),
+      adminDb.collection('settings').doc('onlineStoreSecrets').get()
+    ]);
+  } catch (e) {
+    // A slow or failed check (e.g. just after Render wakes the server)
+    // keeps the last answer rather than sending everyone to Coming soon.
+    if (gateCache.at) return gateCache;
+    throw e;
+  }
   gateCache = {
     at: Date.now(),
     // Unset counts as gated, same as /api/online-store-status.
