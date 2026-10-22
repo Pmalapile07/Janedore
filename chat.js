@@ -1700,7 +1700,11 @@ async function sendChatMessage() {
     }
   } finally {
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    if (input) { input.disabled = false; input.focus(); }
+    // No input.focus() here: focusing from code once the reply arrives
+    // (not from a tap) makes iOS scroll the page under the full-screen
+    // chat, and taps then land in the wrong place, so nothing in the
+    // chat responds. The keyboard stays as the customer left it.
+    if (input) input.disabled = false;
   }
 }
 
@@ -2303,12 +2307,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const win = document.getElementById('chat-window');
     if (win && win.classList.contains('open')) {
       forceFullScreen();
+      resetPageOffset();
     }
   }
 
-  // Widget HTML is injected asynchronously — watch for it to appear.
+  // The page behind the open chat is locked (lockPageScroll()), but iOS
+  // still scrolls it to show a focused input above the keyboard and
+  // doesn't always scroll it back. Then the chat is drawn in one place
+  // but takes taps in another, so it looks frozen: the X, the input,
+  // nothing responds. Once the keyboard is down, put it back.
+  function resetPageOffset() {
+    const vv = window.visualViewport;
+    const innerH = window.innerHeight || document.documentElement.clientHeight;
+    const keyboardOpen = !!(vv && (innerH - vv.height > 80));
+    if (!keyboardOpen && (window.scrollY || (vv && vv.offsetTop))) window.scrollTo(0, 0);
+  }
+  document.addEventListener('focusout', function (e) {
+    if (e.target && e.target.closest && e.target.closest('#chat-window')) setTimeout(onResize, 300);
+  });
+
+  // Widget HTML is injected asynchronously — watch for it to appear,
+  // once. (It used to keep re-running on every change anywhere on the
+  // page, every chat message included, re-pinning the window mid-tap.)
   const observer = new MutationObserver(function () {
     if (document.getElementById('chat-window')) {
+      observer.disconnect();
       forceFullScreen();
     }
   });
