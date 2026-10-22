@@ -97,26 +97,9 @@ function renderHero(hero) {
   loadBackgroundImage(document.getElementById('hero-bg'), hero.imageUrl, 1600);
 }
 
-// Homepage section headings wrap at 12 characters (spaces included):
-// words fill a line until the next one would pass 12, then start a new
-// line ("New arrivals" stays whole, "Shop by / brand", "Shop /
-// clothing"). A single longer word keeps its own line.
-const SECTION_HEADING_MAX_CHARS = 12;
-function sectionHeadingLines(text) {
-  const lines = [];
-  String(text || '').trim().split(/\s+/).filter(Boolean).forEach(function (word) {
-    const last = lines[lines.length - 1];
-    if (last !== undefined && (last + ' ' + word).length <= SECTION_HEADING_MAX_CHARS) lines[lines.length - 1] = last + ' ' + word;
-    else lines.push(word);
-  });
-  return lines;
-}
+// Homepage section headings sit on one line, exactly as typed in admin.
 function setSectionHeading(el, text) {
-  el.textContent = '';
-  sectionHeadingLines(text).forEach(function (line, i) {
-    if (i) el.appendChild(document.createElement('br'));
-    el.appendChild(document.createTextNode(line));
-  });
+  el.textContent = String(text || '').trim();
 }
 
 function renderNewArrivalsHeader(arrivals) {

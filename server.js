@@ -2762,22 +2762,6 @@ function fillTextElement(html, id, text) {
   });
 }
 
-// Homepage section headings wrap at 12 characters, spaces included
-// (sectionHeadingLines() in site-content.js does the same in the browser).
-function fillSectionHeading(html, id, text) {
-  const lines = [];
-  String(text || '').trim().split(/\s+/).filter(Boolean).forEach(function (word) {
-    const last = lines[lines.length - 1];
-    if (last !== undefined && (last + ' ' + word).length <= 12) lines[lines.length - 1] = last + ' ' + word;
-    else lines.push(word);
-  });
-  const re = new RegExp('(<[a-zA-Z0-9]+\\b[^>]*\\bid="' + id + '"[^>]*>)([^<]*)(</)');
-  return html.replace(re, function (_m, openTag, _oldText, closeStart) {
-    const cleanedOpen = openTag.replace(/\s*\b(skeleton-text|content-shimmer)\b/g, '');
-    return cleanedOpen + lines.map(escapeHtml).join('<br>') + closeStart;
-  });
-}
-
 function fillBackgroundElement(html, id, imageUrl, maxWidth) {
   const url = adminImageURL(imageUrl, maxWidth);
   const re = new RegExp('(<div\\b[^>]*\\bid="' + id + '"[^>]*)(>)');
@@ -2833,23 +2817,23 @@ function applyHomepageContent(html, homepage) {
   html = fillTextElement(html, 'hero-shop-btn', hero.buttonText);
   html = fillBackgroundElement(html, 'hero-bg', hero.imageUrl, 1600);
 
-  html = fillSectionHeading(html, 'arrivals-heading', arrivals.heading);
+  html = fillTextElement(html, 'arrivals-heading', arrivals.heading);
   html = fillTextElement(html, 'arrivals-view-all-btn', arrivals.buttonText);
 
-  html = fillSectionHeading(html, 'shop-by-category-heading', shopByCategory.heading);
+  html = fillTextElement(html, 'shop-by-category-heading', shopByCategory.heading);
   html = applyShopByCategoryTiles(html, Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : []);
 
-  html = fillSectionHeading(html, 'clothing-heading', clothing.heading);
+  html = fillTextElement(html, 'clothing-heading', clothing.heading);
   html = fillTextElement(html, 'clothing-view-all-btn', clothing.buttonText);
 
-  html = fillSectionHeading(html, 'accessories-heading', accessories.heading);
+  html = fillTextElement(html, 'accessories-heading', accessories.heading);
   html = fillTextElement(html, 'accessories-view-all-btn', accessories.buttonText);
 
   html = fillTextElement(html, 'banner-heading', banner.heading);
   html = fillTextElement(html, 'banner-btn', banner.buttonText);
   html = fillBackgroundElement(html, 'editorial-banner-img', banner.imageUrl, 1600);
 
-  html = fillSectionHeading(html, 'shop-by-brand-heading', shopByBrand.heading);
+  html = fillTextElement(html, 'shop-by-brand-heading', shopByBrand.heading);
 
   return html;
 }
