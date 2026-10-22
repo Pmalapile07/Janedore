@@ -83,7 +83,7 @@
   /* Floating header (kept from the launch-page look), off the screen edges. */
   .cs-header { position: sticky; top: 0; z-index: 20; padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 0; height: 0; overflow: visible; }
   .cs-header-pill { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 52px; padding: 0 6px 0 20px; border-radius: 999px; background: rgba(17,17,17,0.72); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-  .cs-logo { font-size: 15px; font-weight: 600; letter-spacing: 0.14em; color: #fff; }
+  .cs-logo { display: block; height: 16px; width: auto; }
 
   /* Buttons: the shop's (square, uppercase, letter-spaced). */
   .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; background: #111; color: #fff; font-family: inherit; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; }
@@ -155,7 +155,7 @@
 
   /* Footer: the shop's black footer. */
   .cs-footer { background: #111; color: #fff; padding: 40px var(--gutter) calc(28px + env(safe-area-inset-bottom, 0px)); }
-  .cs-footer-logo { font-size: 16px; font-weight: 600; letter-spacing: 0.14em; }
+  .cs-footer-logo { display: block; height: 20px; width: auto; }
   .cs-footer-tag { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 8px; }
   .cs-footer-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 28px; font-size: 12px; color: rgba(255,255,255,0.55); }
   .footer-copy { cursor: default; user-select: none; }
@@ -211,17 +211,7 @@
     position: relative;
   }
 
-  .admin-logo {
-    font-family: 'Telegraf', 'Inter', sans-serif;
-    font-size: 1.5rem;
-    letter-spacing: 0.08em;
-    color: var(--text);
-    opacity: 0.4;
-    display: block;
-    text-align: center;
-    margin: 0 auto 48px;
-    text-decoration: none;
-  }
+  .admin-logo { display: block; height: 22px; width: auto; margin: 0 auto 48px; opacity: 0.4; }
 
   .admin-label {
     display: block;
@@ -307,7 +297,7 @@
 
 <header class="cs-header">
   <div class="cs-header-pill">
-    <span class="cs-logo" aria-label="Janedore">JANEDORE</span>
+    <img class="cs-logo" src="/janedore-logo-white.png" alt="JANEDORE">
     <a href="#join" class="cs-btn cs-btn-sage">Join the list</a>
   </div>
 </header>
@@ -385,7 +375,7 @@
 </main>
 
 <footer class="cs-footer">
-  <div class="cs-footer-logo">JANEDORE</div>
+  <img class="cs-footer-logo" src="/janedore-logo-white.png" alt="JANEDORE">
   <p class="cs-footer-tag">Independent brands. Distinctive finds. One destination.</p>
   <div class="cs-footer-meta">
     <span class="footer-copy" id="copyright"></span>
@@ -433,7 +423,7 @@
     <button class="admin-close" id="admin-close-btn" aria-label="Close">
       <i class="ph ph-x"></i>
     </button>
-    <span class="admin-logo">JANEDORE</span>
+    <img class="admin-logo" src="/janedore-logo-black.png" alt="JANEDORE">
     <span class="admin-label">Admin Access</span>
     <input type="email" class="admin-field" id="admin-email"
            placeholder="Email"
