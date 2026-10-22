@@ -44,6 +44,14 @@
 
 <div id="admin-panel">
   <nav id="top-nav">
+    <!-- Home only (switchTab() in admin.js): who's signed in on the left
+         (opens the account panel with Sign out), the store in the middle,
+         notifications on the right (admin-dashboard.js). -->
+    <div class="nav-home" id="nav-home" style="display:none;">
+      <button type="button" class="nav-avatar nav-home-avatar" id="nav-account-btn" aria-label="Account" onclick="window._openAccountPanel()"><span id="nav-account-initials"></span></button>
+      <div class="nav-home-store"><span class="nav-home-store-mark">J</span><span>Janedore</span></div>
+      <button type="button" class="nav-home-bell" aria-label="Notifications" onclick="window._openNotifications()"><i class="ph ph-bell"></i><span class="nav-bell-dot" id="nav-bell-dot"></span></button>
+    </div>
     <span class="nav-brand-wrap" style="display:none;">
       <span class="nav-brand" id="top-nav-title"></span>
       <i class="ph ph-caret-down nav-brand-caret"></i>

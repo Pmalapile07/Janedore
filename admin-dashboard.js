@@ -36,17 +36,80 @@
   };
 
   /* ═══════════════════════════════════════════════════════════
-     SUPER_ADMIN / ADMIN DASHBOARD — overview only
-     Was a full page (stat cards, recent orders table, brand
-     performance / low stock) above/below the overview widget; cut
-     down to just the overview on request while the analytics piece
-     is still being built out. The old stat-grid/table rendering and
-     its extra Firestore queries (products/vendors/reviews) are gone
-     too, not just hidden, since nothing reads them anymore.
+     HOME — laid out like the Shopify app: a black top half with the
+     numbers (Live, Sessions, Total sales, Orders, Conversion rate) and
+     a chart of the one you tap, then a white sheet with what needs
+     doing ("activity"). The top bar on Home (admin.html #nav-home) has
+     the account circle on the left and notifications on the right.
+
+     Sales/Orders come from Firestore; Live and Sessions from the
+     store's own visit counting (/api/admin/analytics, analytics-api.js);
+     Conversion is orders ÷ sessions. Activity and notifications come
+     from /api/admin/home (admin-home-api.js), scoped to the role.
   ═══════════════════════════════════════════════════════════ */
+  var _dashRangeDays   = 30;
+  var _dashMetric      = 'sales';
+  var _dashOrdersCache = null;
+  var _dashDaily       = null; // sessions per day from /api/admin/analytics
+  var _homeData        = null; // /api/admin/home
+  var RANGES = [{ d: 1, label: 'Today' }, { d: 7, label: '7 days' }, { d: 30, label: '30 days' }, { d: 90, label: '90 days' }];
+
+  function authedGet(path) {
+    var user = window._currentUser;
+    if (!user || !user.getIdToken) return Promise.reject(new Error('Not signed in'));
+    return user.getIdToken().then(function (token) {
+      return fetch(path, { headers: { 'Authorization': 'Bearer ' + token } });
+    }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    });
+  }
+
+  function rangeLabel(days) {
+    var r = RANGES.filter(function (x) { return x.d === days; })[0];
+    return r ? r.label : days + ' days';
+  }
+
+  function heroStat(key, label, extra) {
+    return '<button type="button" class="dash-hero-stat' + (key === _dashMetric ? ' active' : '') + '" data-metric="' + key + '"' +
+      (key === 'live' ? ' disabled' : ' onclick="window._setDashMetric(\'' + key + '\')"') + '>' +
+      '<span class="dash-hero-stat-label">' + label + '</span>' +
+      '<span class="dash-hero-stat-value">' + (extra || '') + '<span id="ov-' + key + '">-</span></span>' +
+    '</button>';
+  }
+
+  function activitySheetHTML(inner) {
+    return '<div class="dash-sheet">' +
+      '<div class="dash-greeting"><span class="dash-greeting-hi" id="dash-greeting-hi">Hi.</span> Here’s your activity</div>' +
+      '<div id="dash-activity">' + (inner || '<div class="dash-activity-loading">Loading…</div>') + '</div>' +
+    '</div>';
+  }
+
   function renderOverviewDashboard(mc) {
-    mc.innerHTML = '<div class="dashboard-shell">' + dashOverviewHTML() + '</div>';
+    mc.innerHTML = '<div class="dash-home">' +
+      '<div class="dash-hero">' +
+        '<div class="dash-hero-stats">' +
+          heroStat('live', 'Live', '<span class="dash-hero-live-dot"></span>') +
+          heroStat('sessions', 'Sessions') +
+          heroStat('sales', 'Total sales') +
+          heroStat('orders', 'Orders') +
+          heroStat('conversion', 'Conversion rate') +
+        '</div>' +
+        '<div class="dash-hero-chart"><canvas id="dash-overview-chart"></canvas></div>' +
+        '<div class="dash-hero-controls">' +
+          '<div class="dash-range">' +
+            '<button type="button" class="dash-hero-btn" id="dash-range-btn" onclick="window._toggleDashRange(event)"><i class="ph ph-calendar-blank"></i><span id="dash-range-label">' + rangeLabel(_dashRangeDays) + '</span></button>' +
+            '<div class="dash-range-menu" id="dash-range-menu">' + RANGES.map(function (r) {
+              return '<button type="button" data-days="' + r.d + '" class="' + (r.d === _dashRangeDays ? 'active' : '') + '" onclick="window._setDashRange(' + r.d + ')">' + r.label + '</button>';
+            }).join('') + '</div>' +
+          '</div>' +
+          '<button type="button" class="dash-hero-btn" onclick="window.switchTab(\'analytics\')"><i class="ph ph-chart-line"></i>View report</button>' +
+        '</div>' +
+      '</div>' +
+      activitySheetHTML() +
+    '</div>';
     loadOverviewStats();
+    loadHome();
   }
 
   function loadOverviewStats() {
@@ -59,195 +122,42 @@
     });
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     VENDOR DASHBOARD
-     Uses vendor_sales for revenue/orders instead of orders collection
-     since Firestore rules block vendor order access.
-  ═══════════════════════════════════════════════════════════ */
-  function renderVendorDashboard(mc) {
-    var vendorId   = window._currentVendorId;
-    var vendorName = 'Your Brand';
-
-    mc.innerHTML =
-      '<div class="dashboard-shell">' +
-        '<div class="section-header" style="margin-bottom:16px;">' +
-          '<div class="section-title" id="vendor-dash-title">Dashboard</div>' +
-          '<div style="font-size:11px;color:var(--muted);">' + new Date().toLocaleDateString('en-ZA', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + '</div>' +
-        '</div>' +
-        '<div class="dash-stat-grid" id="dash-stat-grid">' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Revenue</div><div class="dash-stat-value" id="stat-revenue">-</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Orders</div><div class="dash-stat-value" id="stat-orders">-</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Products</div><div class="dash-stat-value" id="stat-products">-</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Unread Messages</div><div class="dash-stat-value" id="stat-unread">-</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Your Reviews</div><div class="dash-stat-value" id="stat-reviews">-</div></div>' +
-          '<div class="dash-stat-card"><div class="dash-stat-label">Commission</div><div class="dash-stat-value" id="stat-commission">-</div></div>' +
-        '</div>' +
-        '<div class="card" style="margin-bottom:16px;">' +
-          '<div class="card-header"><span class="card-title">Recent Orders</span></div>' +
-          '<div id="dash-recent-orders" style="padding:0 16px 12px;"><span style="font-size:12px;color:var(--muted);">Loading...</span></div>' +
-        '</div>' +
-        '<div class="card">' +
-          '<div class="card-header"><span class="card-title">Your Top Products</span></div>' +
-          '<div id="dash-top-products" style="padding:0 16px 12px;"><span style="font-size:12px;color:var(--muted);">Loading...</span></div>' +
-        '</div>' +
-      '</div>';
-
-    loadVendorStats(vendorId, vendorName);
-  }
-
-  function loadVendorStats(vendorId, vendorName) {
-    // Fetch vendor profile for the name
-    var vendorPromise = vendorsRef.doc(vendorId).get().then(function (doc) {
-      if (doc.exists) {
-        var data = doc.data();
-        vendorName = data.name || vendorName;
-        var title = safeEl('vendor-dash-title');
-        if (title) title.textContent = vendorName + ' Dashboard';
-      }
-      // Commission lives in vendorPrivate (see admin-vendors.js).
-      return db.collection('vendorPrivate').doc(vendorId).get().then(function (p) {
-        return Object.assign({}, doc.exists ? doc.data() : {}, p.exists ? p.data() : {});
-      }).catch(function () { return doc.exists ? doc.data() : {}; });
-    }).catch(function () { return {}; });
-
-    Promise.all([
-      vendorPromise,
-      productsRef.where('vendorId', '==', vendorId).get(),
-      reviewsRef.where('vendorId', '==', vendorId).get(),
-      // Try vendor_sales first, fall back to calculating from orders (won't work for vendor)
-      db.collection('vendor_sales').doc(vendorId).get()
-    ]).then(function (results) {
-      var vendorData   = results[0];
-      var productsSnap = results[1];
-      var reviewsSnap  = results[2];
-      var salesDoc     = results[3];
-
-      var products = productsSnap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
-      var reviews  = reviewsSnap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
-
-      var activeProducts = products.filter(function (p) { return p.status === 'active'; }).length;
-      var totalReviews   = reviews.length;
-      var commissionRate = vendorData.commissionRate || 0;
-      var unreadChats    = window._totalUnreadMessages || 0;
-
-      // Revenue from vendor_sales collection
-      var totalRevenue = 0;
-      var totalOrders  = 0;
-      var recentOrders = [];
-
-      if (salesDoc.exists) {
-        var salesData = salesDoc.data();
-        totalRevenue = salesData.totalRevenue || 0;
-        totalOrders  = salesData.totalOrders || 0;
-        recentOrders = salesData.recentOrders || [];
-      }
-
-      setStat('stat-revenue',    'R' + totalRevenue.toLocaleString('en-ZA'));
-      setStat('stat-orders',     totalOrders);
-      setStat('stat-products',   activeProducts);
-      setStat('stat-unread',     unreadChats);
-      setStat('stat-reviews',    totalReviews);
-      setStat('stat-commission', commissionRate + '%');
-
-      // Recent orders
-      var recentEl = safeEl('dash-recent-orders');
-      if (recentEl) {
-        if (recentOrders.length === 0) {
-          recentEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--muted);">No orders yet. Revenue data updates periodically.</div>';
-        } else {
-          recentEl.innerHTML = '<div class="table-wrap" style="margin-top:8px;"><table class="data-table">' +
-            '<thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>' +
-            '<tbody>' + recentOrders.slice(0, 8).map(function (o) {
-              return '<tr>' +
-                '<td style="font-weight:500;">#' + esc((o.orderNumber || o.id || '').toString().slice(-8).toUpperCase()) + '</td>' +
-                '<td>' + esc(o.customerName || 'Guest') + '</td>' +
-                '<td>' + fmt(o.total || 0) + '</td>' +
-                '<td>' + window._statusBadge(o.status || 'pending') + '</td>' +
-                '<td class="cell-muted">' + fmtDate(o.createdAt || o.date) + '</td>' +
-              '</tr>';
-            }).join('') +
-            '</tbody></table></div>';
-        }
-      }
-
-      // Top products — calculate from products collection only (no order data available)
-      var topEl = safeEl('dash-top-products');
-      if (topEl) {
-        if (activeProducts === 0) {
-          topEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--muted);">No active products yet. Add your first product to see performance.</div>';
-        } else {
-          topEl.innerHTML = '<div style="margin-top:8px;">' +
-            products.filter(function(p) { return p.status === 'active'; }).slice(0, 5).map(function (p, i) {
-              return '<div class="info-row" style="padding:8px 0;">' +
-                '<span class="label">' + (i + 1) + '. ' + esc(p.name) + '</span>' +
-                '<span style="font-size:12px;">' + fmt(p.price || 0) + ' · ' + p.stock + ' in stock</span>' +
-              '</div>';
-            }).join('') +
-          '</div>';
-        }
-      }
-
-    }).catch(function (e) {
-      console.error('[DASHBOARD VENDOR]', e);
-      // Still show basic stats even if vendor_sales fails
-      setStat('stat-revenue',  '-');
-      setStat('stat-orders',   '-');
-      showToast('Could not load full dashboard. Some data may be unavailable.', 'error');
-    });
-  }
-
-  /* ═══════════════════════════════════════════════════════════
-     OVERVIEW — Shopify-style Live/Sessions/Sales/Orders/Conversion
-     row + trend chart. The whole SUPER_ADMIN/ADMIN dashboard right
-     now, on request, while the analytics piece is still being built
-     out (not shown for Vendor — site-wide traffic isn't scoped per
-     brand; vendors keep their own separate dashboard below).
-
-     Sales/Orders and the chart are computed straight from Firestore.
-     Live and Sessions come from the store's own visit counting
-     (/api/admin/analytics, analytics-api.js); Conversion is orders ÷
-     sessions for the same range. Live refreshes every 30 seconds while
-     Home is open.
-  ═══════════════════════════════════════════════════════════ */
-  var _dashRangeDays  = 30;
-  var _dashOrdersCache = null;
-
-  function dashOverviewHTML() {
-    return '<div class="dash-overview">' +
-      '<div class="dash-overview-stats">' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label"><span class="dash-live-dot"></span>Live</span><span class="dash-overview-stat-value" id="ov-live">-</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Sessions</span><span class="dash-overview-stat-value" id="ov-sessions">-</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Total sales</span><span class="dash-overview-stat-value" id="ov-sales">-</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Orders</span><span class="dash-overview-stat-value" id="ov-orders">-</span></div>' +
-        '<div class="dash-overview-stat"><span class="dash-overview-stat-label">Conversion</span><span class="dash-overview-stat-value" id="ov-conversion">-</span></div>' +
-      '</div>' +
-      '<div class="dash-overview-chart-wrap"><canvas id="dash-overview-chart"></canvas></div>' +
-      '<div class="dash-overview-controls">' +
-        [1, 7, 30, 90].map(function (d) {
-          var label = d === 1 ? 'Today' : d + ' days';
-          return '<button class="dash-overview-range-btn' + (d === _dashRangeDays ? ' active' : '') + '" data-days="' + d + '" onclick="window._setDashRange(' + d + ')">' + label + '</button>';
-        }).join('') +
-        '<button class="dash-overview-report-btn" onclick="window.switchTab(\'analytics\')">View report</button>' +
-      '</div>' +
-    '</div>';
-  }
+  window._toggleDashRange = function (e) {
+    if (e) e.stopPropagation();
+    var menu = safeEl('dash-range-menu');
+    if (menu) menu.classList.toggle('open');
+  };
+  document.addEventListener('click', function () {
+    var menu = safeEl('dash-range-menu');
+    if (menu) menu.classList.remove('open');
+  });
 
   window._setDashRange = function (days) {
+    var menu = safeEl('dash-range-menu');
+    if (menu) {
+      menu.classList.remove('open');
+      menu.querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', Number(b.dataset.days) === days); });
+    }
+    var label = safeEl('dash-range-label');
+    if (label) label.textContent = rangeLabel(days);
     renderDashOverview(_dashOrdersCache || [], days);
   };
 
+  window._setDashMetric = function (metric) {
+    _dashMetric = metric;
+    document.querySelectorAll('.dash-hero-stat').forEach(function (b) { b.classList.toggle('active', b.dataset.metric === metric); });
+    drawDashChart();
+  };
+
+  var _dashBuckets = [];
   function renderDashOverview(orders, days) {
     _dashOrdersCache = orders;
     _dashRangeDays    = days;
 
-    document.querySelectorAll('.dash-overview-range-btn').forEach(function (b) {
-      b.classList.toggle('active', Number(b.dataset.days) === days);
-    });
-
     var today = new Date();
     var buckets = [];
     for (var i = days - 1; i >= 0; i--) {
-      buckets.push({ date: new Date(today.getFullYear(), today.getMonth(), today.getDate() - i), revenue: 0, orders: 0 });
+      buckets.push({ date: new Date(today.getFullYear(), today.getMonth(), today.getDate() - i), revenue: 0, orders: 0, sessions: 0 });
     }
     var startMs = buckets[0].date.getTime();
 
@@ -265,82 +175,309 @@
       totalSales += amt;
       totalOrders += 1;
     });
+    _dashBuckets = buckets;
 
     setStat('ov-sales',  'R' + totalSales.toLocaleString('en-ZA'));
     setStat('ov-orders', totalOrders);
+    drawDashChart();
     loadDashTraffic(days, totalOrders);
+  }
 
+  function chartSeries() {
+    return _dashBuckets.map(function (b) {
+      if (_dashMetric === 'orders') return b.orders;
+      if (_dashMetric === 'sessions') return b.sessions;
+      if (_dashMetric === 'conversion') return b.sessions ? Math.round(b.orders / b.sessions * 1000) / 10 : 0;
+      return b.revenue;
+    });
+  }
+  function formatMetric(v) {
+    if (_dashMetric === 'sales') return 'R' + Number(v).toLocaleString('en-ZA');
+    if (_dashMetric === 'conversion') return v + '%';
+    return Number(v).toLocaleString('en-ZA');
+  }
+
+  // Dark chart like Shopify's: faint horizontal lines with amounts on
+  // the left, dates along the bottom. An empty range still gets a 0–1
+  // scale so the lines show.
+  function drawDashChart() {
     var canvas = safeEl('dash-overview-chart');
     if (!canvas || typeof Chart === 'undefined') return;
-
     if (window._analyticsChart) { window._analyticsChart.destroy(); window._analyticsChart = null; }
-
+    var data = chartSeries();
+    var max = Math.max.apply(null, data.concat([0]));
     window._analyticsChart = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: {
-        labels: buckets.map(function (b) { return b.date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }); }),
-        datasets: [{
-          data: buckets.map(function (b) { return b.revenue; }),
-          borderColor: '#1a56db',
-          backgroundColor: 'rgba(26,86,219,0.08)',
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.3,
-          fill: true
-        }]
+        labels: _dashBuckets.map(function (b) { return b.date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }); }),
+        datasets: [{ data: data, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: function (ctx) { return 'R' + ctx.parsed.y.toLocaleString('en-ZA'); } } }
+          tooltip: { callbacks: { label: function (ctx) { return formatMetric(ctx.parsed.y); } } }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 }, color: '#8a8a8a' } },
-          y: { display: false, beginAtZero: true }
+          x: { grid: { display: false }, border: { display: false }, ticks: { maxTicksLimit: 4, maxRotation: 0, font: { size: 11 }, color: 'rgba(255,255,255,0.55)' } },
+          y: {
+            beginAtZero: true, suggestedMax: max ? undefined : 1,
+            grid: { color: 'rgba(255,255,255,0.12)', drawTicks: false }, border: { display: false },
+            ticks: { maxTicksLimit: 3, padding: 8, font: { size: 11 }, color: 'rgba(255,255,255,0.55)', callback: function (v) { return formatMetric(v); } }
+          }
         }
       }
     });
   }
 
   // Live, Sessions and Conversion for the chosen range. A newer call
-  // (another range button) wins over one still loading.
+  // (another range) wins over one still loading. Live refreshes every
+  // 30 seconds while Home is open.
   var _dashTrafficCall = 0;
   var _dashLiveTimer = null;
-  function analyticsGet(days) {
-    var user = window._currentUser;
-    if (!user || !user.getIdToken) return Promise.reject(new Error('Not signed in'));
-    return user.getIdToken().then(function (token) {
-      return fetch('/api/admin/analytics?days=' + days, { headers: { 'Authorization': 'Bearer ' + token } });
-    }).then(function (res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    });
-  }
   function loadDashTraffic(days, orders) {
     var call = ++_dashTrafficCall;
-    analyticsGet(days).then(function (data) {
+    authedGet('/api/admin/analytics?days=' + days).then(function (data) {
       if (call !== _dashTrafficCall) return;
       setStat('ov-live', data.live || 0);
       setStat('ov-sessions', (data.sessions || 0).toLocaleString('en-ZA'));
-      setStat('ov-conversion', data.sessions ? (orders / data.sessions * 100).toFixed(1) + '%' : '-');
+      setStat('ov-conversion', data.sessions ? (orders / data.sessions * 100).toFixed(1) + '%' : '0%');
+      (data.daily || []).forEach(function (d, i) {
+        var b = _dashBuckets[_dashBuckets.length - (data.daily.length - i)];
+        if (b) b.sessions = d.sessions || 0;
+      });
+      if (_dashMetric === 'sessions' || _dashMetric === 'conversion') drawDashChart();
     }).catch(function (e) { console.warn('[DASHBOARD] Analytics:', e.message); });
     if (!_dashLiveTimer) {
       _dashLiveTimer = setInterval(function () {
         if (!safeEl('ov-live')) { clearInterval(_dashLiveTimer); _dashLiveTimer = null; return; }
         if (document.visibilityState !== 'visible') return;
-        analyticsGet(1).then(function (data) { setStat('ov-live', data.live || 0); }).catch(function () {});
+        authedGet('/api/admin/analytics?days=1').then(function (data) { setStat('ov-live', data.live || 0); }).catch(function () {});
       }, 30000);
     }
   }
 
   /* ═══════════════════════════════════════════════════════════
+     VENDOR HOME — same black top half with the brand's own numbers
+     (vendor_sales; Firestore rules block vendor order reads), then the
+     activity sheet with their page setup, recent orders and products.
+  ═══════════════════════════════════════════════════════════ */
+  function renderVendorDashboard(mc) {
+    var vendorId   = window._currentVendorId;
+    var vendorName = 'Your brand';
+    var stat = function (id, label) {
+      return '<div class="dash-hero-stat"><span class="dash-hero-stat-label">' + label + '</span><span class="dash-hero-stat-value" id="' + id + '">-</span></div>';
+    };
+    mc.innerHTML = '<div class="dash-home">' +
+      '<div class="dash-hero">' +
+        '<div class="dash-hero-stats">' +
+          stat('stat-revenue', 'Total sales') + stat('stat-orders', 'Orders') + stat('stat-products', 'Products') +
+          stat('stat-reviews', 'Reviews') + stat('stat-commission', 'Commission') +
+        '</div>' +
+      '</div>' +
+      activitySheetHTML() +
+    '</div>';
+    loadVendorStats(vendorId, vendorName);
+    loadHome();
+  }
+
+  function loadVendorStats(vendorId, vendorName) {
+    var vendorPromise = vendorsRef.doc(vendorId).get().then(function (doc) {
+      // Commission lives in vendorPrivate (see admin-vendors.js).
+      return db.collection('vendorPrivate').doc(vendorId).get().then(function (p) {
+        return Object.assign({}, doc.exists ? doc.data() : {}, p.exists ? p.data() : {});
+      }).catch(function () { return doc.exists ? doc.data() : {}; });
+    }).catch(function () { return {}; });
+
+    Promise.all([
+      vendorPromise,
+      productsRef.where('vendorId', '==', vendorId).get(),
+      reviewsRef.where('vendorId', '==', vendorId).get(),
+      db.collection('vendor_sales').doc(vendorId).get()
+    ]).then(function (results) {
+      var vendorData = results[0];
+      var products = results[1].docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      var activeProducts = products.filter(function (p) { return p.status === 'active'; });
+      var sales = results[3].exists ? results[3].data() : {};
+
+      setStat('stat-revenue',    'R' + (sales.totalRevenue || 0).toLocaleString('en-ZA'));
+      setStat('stat-orders',     sales.totalOrders || 0);
+      setStat('stat-products',   activeProducts.length);
+      setStat('stat-reviews',    results[2].size);
+      setStat('stat-commission', (vendorData.commissionRate || 0) + '%');
+
+      var recentOrders = sales.recentOrders || [];
+      var extra = safeEl('dash-vendor-extra');
+      if (!extra) {
+        extra = document.createElement('div');
+        extra.id = 'dash-vendor-extra';
+        var sheet = document.querySelector('.dash-sheet');
+        if (sheet) sheet.appendChild(extra);
+      }
+      extra.innerHTML =
+        '<div class="dash-sheet-title">Recent orders</div>' +
+        (recentOrders.length ? recentOrders.slice(0, 8).map(function (o) {
+          return '<div class="dash-row"><span class="dash-row-text">#' + esc((o.orderNumber || o.id || '').toString().slice(-8).toUpperCase()) + ' · ' + esc(o.customerName || 'Guest') + '</span><span class="dash-row-meta">' + fmt(o.total || 0) + '</span></div>';
+        }).join('') : '<div class="dash-row-empty">No orders yet.</div>') +
+        '<div class="dash-sheet-title">Your products</div>' +
+        (activeProducts.length ? activeProducts.slice(0, 5).map(function (p) {
+          return '<div class="dash-row"><span class="dash-row-text">' + esc(p.name) + '</span><span class="dash-row-meta">' + fmt(p.price || 0) + ' · ' + (p.stock || 0) + ' in stock</span></div>';
+        }).join('') : '<div class="dash-row-empty">No active products yet.</div>');
+    }).catch(function (e) {
+      console.error('[DASHBOARD VENDOR]', e);
+      setStat('stat-revenue', '-');
+      setStat('stat-orders', '-');
+      showToast('Could not load full dashboard. Some data may be unavailable.', 'error');
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     ACTIVITY, ACCOUNT AND NOTIFICATIONS
+  ═══════════════════════════════════════════════════════════ */
+  var ACTIVITY = {
+    orders:       { icon: 'ph-package',            one: 'order to fulfil',              many: 'orders to fulfil',              module: 'orders' },
+    returns:      { icon: 'ph-arrow-u-up-left',    one: 'return request to review',     many: 'return requests to review',     module: 'orders' },
+    exchanges:    { icon: 'ph-arrows-left-right',  one: 'exchange request to review',   many: 'exchange requests to review',   module: 'orders' },
+    applications: { icon: 'ph-file-text',          one: 'new partner application',      many: 'new partner applications',      module: 'vendors' },
+    reports:      { icon: 'ph-flag',               one: 'brand concern to review',      many: 'brand concerns to review',      module: 'vendors' },
+    contacts:     { icon: 'ph-envelope-simple',    one: 'customer care message',        many: 'customer care messages',        module: 'inbox' },
+    chats:        { icon: 'ph-chat',               one: 'unread chat',                  many: 'unread chats',                  module: 'inbox' }
+  };
+  var SETUP = {
+    logo:    { label: 'Add your logo',       tab: 'vendors' },
+    hero:    { label: 'Add a hero image',    tab: 'vendors' },
+    product: { label: 'Add your first product', tab: 'products' }
+  };
+  var NOTE_ICONS = { order: 'ph-package', return: 'ph-arrow-u-up-left', exchange: 'ph-arrows-left-right', application: 'ph-file-text', report: 'ph-flag', message: 'ph-envelope-simple', review: 'ph-star' };
+  var NOTES_SEEN_KEY = 'jd_admin_notes_seen';
+
+  function canOpen(module) { return !window._can || window._can(module, 'read') || window._can(module, 'read_own'); }
+
+  function loadHome() {
+    paintAccount();
+    authedGet('/api/admin/home').then(function (data) {
+      _homeData = data;
+      paintAccount();
+      paintActivity();
+      paintBellDot();
+    }).catch(function (e) {
+      console.warn('[DASHBOARD] Home:', e.message);
+      _homeData = { activity: [], notifications: [] };
+      paintActivity();
+    });
+  }
+
+  function paintActivity() {
+    var el = safeEl('dash-activity');
+    if (!el || !_homeData) return;
+    var html = '';
+    var setup = (_homeData.setup || []).filter(function (s) { return SETUP[s.key]; });
+    if (setup.length && setup.some(function (s) { return !s.done; })) {
+      html += '<div class="dash-sheet-title">Set up your brand page</div>' + setup.map(function (s) {
+        return '<button type="button" class="dash-row dash-row-btn' + (s.done ? ' done' : '') + '" onclick="window.switchTab(\'' + SETUP[s.key].tab + '\')">' +
+          '<i class="ph ' + (s.done ? 'ph-check-circle' : 'ph-circle') + ' dash-row-icon"></i>' +
+          '<span class="dash-row-text">' + SETUP[s.key].label + '</span><i class="ph ph-caret-right dash-row-caret"></i></button>';
+      }).join('');
+    }
+    var items = (_homeData.activity || []).slice();
+    var unread = window._totalUnreadMessages || 0;
+    if (unread) items.push({ key: 'chats', count: unread, tab: 'messages' });
+    items = items.filter(function (a) { return a.count > 0 && ACTIVITY[a.key] && canOpen(ACTIVITY[a.key].module); });
+    if (items.length) {
+      html += (html ? '<div class="dash-sheet-title">To do</div>' : '') + items.map(function (a) {
+        var def = ACTIVITY[a.key];
+        return '<button type="button" class="dash-row dash-row-btn" onclick="window.switchTab(\'' + a.tab + '\')">' +
+          '<i class="ph ' + def.icon + ' dash-row-icon"></i>' +
+          '<span class="dash-row-text">' + a.count + ' ' + (a.count === 1 ? def.one : def.many) + '</span><i class="ph ph-caret-right dash-row-caret"></i></button>';
+      }).join('');
+    }
+    if (!html) {
+      html = '<div class="dash-all-done"><i class="ph ph-check-circle"></i>' +
+        '<div class="dash-all-done-title">That’s it for now</div>' +
+        '<div class="dash-all-done-sub">Check back later for more insights about your business.</div></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  // Who's signed in: the Super Admin shows as Jane Doe, an admin by the
+  // name on their admin profile, a brand by its brand name.
+  var _staffName = null;
+  function displayName() {
+    var role = window._currentUserRole;
+    if (role === 'SUPER_ADMIN') return 'Jane Doe';
+    if (role === 'VENDOR') return (_homeData && _homeData.brand && _homeData.brand.name) || 'Your brand';
+    return _staffName || ((window._currentUser && window._currentUser.email) || '').split('@')[0] || 'Admin';
+  }
+  function initials(name) {
+    return String(name).trim().split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() || 'J';
+  }
+  function paintAccount() {
+    if (window._currentUserRole === 'ADMIN' && _staffName === null && window._currentUser) {
+      _staffName = '';
+      db.collection('admins').doc(window._currentUser.uid).get().then(function (d) {
+        _staffName = (d.exists && String(d.data().name || '').trim()) || '';
+        paintAccount();
+      }).catch(function () {});
+    }
+    var name = displayName();
+    var el = safeEl('nav-account-initials');
+    var logo = window._currentUserRole === 'VENDOR' && _homeData && _homeData.brand && _homeData.brand.logoUrl;
+    if (el) el.innerHTML = logo ? '<img src="' + esc(logo) + '" alt="">' : esc(initials(name));
+    var hi = safeEl('dash-greeting-hi');
+    if (hi) hi.textContent = 'Hi ' + name + '.';
+  }
+
+  window._openAccountPanel = function () {
+    var roles = { SUPER_ADMIN: 'Super admin', ADMIN: 'Admin', VENDOR: 'Brand partner' };
+    var name = displayName();
+    window._mountPanel('<div class="slide-panel">' +
+      '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
+      '<div class="dash-account">' +
+        '<div class="dash-account-avatar">' + esc(initials(name)) + '</div>' +
+        '<div class="dash-account-name">' + esc(name) + '</div>' +
+        '<div class="dash-account-role">' + esc(roles[window._currentUserRole] || 'Viewer') + '</div>' +
+        '<div class="dash-account-email">' + esc((window._currentUser && window._currentUser.email) || '') + '</div>' +
+        '<button type="button" class="btn btn-danger dash-account-signout" onclick="window._closePanel();handleLogout()"><i class="ph ph-sign-out"></i> Sign out</button>' +
+      '</div>' +
+    '</div>');
+  };
+
+  function timeAgo(ms) {
+    var s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (s < 60) return 'Just now';
+    if (s < 3600) return Math.floor(s / 60) + ' min ago';
+    if (s < 86400) return Math.floor(s / 3600) + ' h ago';
+    var d = Math.floor(s / 86400);
+    return d === 1 ? 'Yesterday' : d + ' days ago';
+  }
+  function notesSeenAt() { try { return Number(localStorage.getItem(NOTES_SEEN_KEY)) || 0; } catch (e) { return 0; } }
+  function paintBellDot() {
+    var dot = safeEl('nav-bell-dot');
+    var notes = (_homeData && _homeData.notifications) || [];
+    if (dot) dot.style.display = notes.some(function (n) { return n.at > notesSeenAt(); }) ? 'block' : 'none';
+  }
+
+  window._openNotifications = function () {
+    var notes = (_homeData && _homeData.notifications) || [];
+    var seen = notesSeenAt();
+    try { localStorage.setItem(NOTES_SEEN_KEY, String(Date.now())); } catch (e) {}
+    paintBellDot();
+    window._mountPanel('<div class="slide-panel">' +
+      '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
+      '<div class="dash-notes-title">Notifications</div>' +
+      (notes.length ? notes.map(function (n) {
+        return '<button type="button" class="dash-row dash-row-btn' + (n.at > seen ? ' unseen' : '') + '" onclick="window._closePanel();window.switchTab(\'' + esc(n.tab) + '\')">' +
+          '<i class="ph ' + (NOTE_ICONS[n.type] || 'ph-bell') + ' dash-row-icon"></i>' +
+          '<span class="dash-row-text">' + esc(n.text) + '<span class="dash-row-sub">' + timeAgo(n.at) + '</span></span></button>';
+      }).join('') : '<div class="dash-all-done"><i class="ph ph-bell"></i><div class="dash-all-done-title">No notifications</div><div class="dash-all-done-sub">New orders, messages, reviews and requests from the last 14 days appear here.</div></div>') +
+    '</div>');
+  };
+
+  /* ═══════════════════════════════════════════════════════════
      ANALYTICS — placeholder destination for Home's "View report"
-     button. No real detailed-reporting system exists yet (same
-     Live/Sessions/Conversion gap as the Home overview widget — see
-     note above), so this intentionally shows nothing fabricated,
-     just an honest "not built yet" state.
+     button. No detailed reporting (top pages, traffic sources) exists
+     yet, so this shows an honest "not built yet" state.
   ═══════════════════════════════════════════════════════════ */
   window._renderAnalyticsTab = function () {
     var mc = safeEl('main-content');
