@@ -1,4 +1,5 @@
-#hero {
+#hero,
+.brand-hero {
   position: relative;
   width: 100%;
   height: 115.5vh; /* 10% taller (was 105vh / 630px) */
@@ -17,10 +18,12 @@
    (product-grid.css) so the hero frames the same width as the product
    grid below it. Vertical 12px is unrelated and untouched. */
 @media (min-width: 640px) {
-  #hero { padding: 12px 10px; }
+  #hero,
+  .brand-hero { padding: 12px 10px; }
 }
 @media (min-width: 1024px) {
-  #hero { padding: 12px 12px; }
+  #hero,
+  .brand-hero { padding: 12px 12px; }
 }
 
 /* Inset to #hero's own padding, not the full section, so the image
@@ -104,7 +107,8 @@
   margin: 0 0 -0.29em;
 }
 @media (min-width: 768px) { .hero-heading { font-size: 32px; max-width: 420px; } }
-#hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
+#hero .hero-shop-btn,
+.brand-hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
 
 /* Matches home-manifesto's weight (300) — the 400 it had before read
    too thick against the manifesto text further down the page. */
@@ -141,7 +145,8 @@
 .hero-shop-btn:hover { opacity: 0.85; }
 
 @media (max-width: 768px) {
-  #hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
+  #hero,
+  .brand-hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
 
   .hero-statement-sub { max-width: 320px; }
 }

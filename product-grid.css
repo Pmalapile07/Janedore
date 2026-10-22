@@ -436,7 +436,8 @@
 #accessories-grid .product-title,
 #all-products-grid .product-title,
 #category-products-grid .product-title,
-#vendor-products-grid .product-title {
+#vendor-products-grid .product-title,
+#vendor-new-grid .product-title {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 400;
@@ -485,7 +486,8 @@
 #accessories-grid .product-card.slide-leading .product-home-meta,
 #cart-slider-grid .product-card.slide-leading .product-home-meta,
 #wish-slider-grid .product-card.slide-leading .product-home-meta,
-.swipe-track .product-card:first-child .product-home-meta {
+.swipe-track .product-card:first-child .product-home-meta,
+#vendor-new-grid .product-card.slide-leading .product-home-meta {
   padding-left: 18px;
   padding-right: 18px;
 }
@@ -551,7 +553,9 @@ body .site-collection-layout {
 #arrivals-grid,
 #clothing-grid,
 #accessories-grid,
-#cart-slider-grid, #wish-slider-grid {
+#cart-slider-grid,
+#wish-slider-grid,
+#vendor-new-grid {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -578,15 +582,21 @@ body .site-collection-layout {
 #arrivals-grid::-webkit-scrollbar,
 #clothing-grid::-webkit-scrollbar,
 #accessories-grid::-webkit-scrollbar,
-#cart-slider-grid::-webkit-scrollbar, #wish-slider-grid::-webkit-scrollbar { display: none; }
+#cart-slider-grid::-webkit-scrollbar,
+#wish-slider-grid::-webkit-scrollbar,
+#vendor-new-grid::-webkit-scrollbar { display: none; }
 #arrivals-grid::after,
 #clothing-grid::after,
 #accessories-grid::after,
-#cart-slider-grid::after, #wish-slider-grid::after { content: ''; flex: 0 0 8px; }
+#cart-slider-grid::after,
+#wish-slider-grid::after,
+#vendor-new-grid::after { content: ''; flex: 0 0 8px; }
 #arrivals-grid .product-card,
 #clothing-grid .product-card,
 #accessories-grid .product-card,
-#cart-slider-grid .product-card, #wish-slider-grid .product-card {
+#cart-slider-grid .product-card,
+#wish-slider-grid .product-card,
+#vendor-new-grid .product-card {
   flex: 0 0 auto;
   width: 65vw;
   max-width: 300px;
@@ -596,23 +606,31 @@ body .site-collection-layout {
   #arrivals-grid,
   #clothing-grid,
   #accessories-grid,
-  #cart-slider-grid, #wish-slider-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
+  #cart-slider-grid,
+  #wish-slider-grid,
+  #vendor-new-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
   #arrivals-grid::after,
   #clothing-grid::after,
   #accessories-grid::after,
-  #cart-slider-grid::after, #wish-slider-grid::after { flex: 0 0 10px; }
+  #cart-slider-grid::after,
+  #wish-slider-grid::after,
+  #vendor-new-grid::after { flex: 0 0 10px; }
 }
 @media (min-width: 768px) {
   #arrivals-grid .product-card,
   #clothing-grid .product-card,
   #accessories-grid .product-card,
-  #cart-slider-grid .product-card, #wish-slider-grid .product-card { width: 28vw; max-width: 300px; }
+  #cart-slider-grid .product-card,
+  #wish-slider-grid .product-card,
+  #vendor-new-grid .product-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
   #arrivals-grid,
   #clothing-grid,
   #accessories-grid,
-  #cart-slider-grid, #wish-slider-grid {
+  #cart-slider-grid,
+  #wish-slider-grid,
+  #vendor-new-grid {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
@@ -622,7 +640,9 @@ body .site-collection-layout {
   #arrivals-grid::after,
   #clothing-grid::after,
   #accessories-grid::after,
-  #cart-slider-grid::after, #wish-slider-grid::after { flex: 0 0 12px; }
+  #cart-slider-grid::after,
+  #wish-slider-grid::after,
+  #vendor-new-grid::after { flex: 0 0 12px; }
 }
 
 /* --- Product page Shop by Brand slider — same slider mechanics as #arrivals-grid/
@@ -870,16 +890,22 @@ body .site-collection-layout {
 /* Homepage section buttons (New arrivals, Shop clothing, Shop
    accessories, Shop by brand): solid black with white text, the same
    weight and padding as the hero's Shop now button (hero.css). */
-#page-home .home-categories-header .initial-drop-view-all {
+#page-home .home-categories-header .initial-drop-view-all,
+#page-vendor .home-categories-header .initial-drop-view-all {
   background: #111; color: #fff; font-weight: 500; border: none; padding: 12px 32px;
   transition: background 0.2s;
 }
-#page-home .home-categories-header .initial-drop-view-all:hover { opacity: 1; background: #333; }
+#page-home .home-categories-header .initial-drop-view-all:hover,
+#page-vendor .home-categories-header .initial-drop-view-all:hover { opacity: 1; background: #333; }
 /* Narrow phones: the heading wraps onto a second line rather than
    running into the button, which keeps its size. */
-#page-home .home-categories-header { gap: 16px; }
-#page-home .home-categories-header .home-categories-title { min-width: 0; overflow-wrap: break-word; }
-#page-home .home-categories-header .initial-drop-view-all { flex-shrink: 0; white-space: nowrap; }
+#page-home .home-categories-header,
+#page-vendor .home-categories-header { gap: 16px; }
+#page-home .home-categories-header .home-categories-title,
+#page-vendor .home-categories-header .home-categories-title { min-width: 0; overflow-wrap: break-word; }
+#page-home .home-categories-header .initial-drop-view-all,
+#page-vendor .home-categories-header .initial-drop-view-all { flex-shrink: 0; white-space: nowrap; }
 @media (max-width: 400px) {
-  #page-home .home-categories-header .initial-drop-view-all { padding: 12px 20px; }
+  #page-home .home-categories-header .initial-drop-view-all,
+  #page-vendor .home-categories-header .initial-drop-view-all { padding: 12px 20px; }
 }

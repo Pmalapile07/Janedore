@@ -11,3 +11,8 @@
 - **Cash flow:** PayFast pays out a few days after an order, but Bob Go needs the money in the balance before a courier is booked. Decide how big a float to keep.
 - **Courier adjustments:** Bob Go's price is an estimate; if the courier measures a parcel bigger or heavier, the difference is charged afterwards. Decide who covers it (ask brands for accurate weights and sizes).
 - **Free delivery over R750:** Janedore pays the courier on those orders. Set the commission so it covers this.
+
+## Brand pages
+- **Admin fields:** let brands (or admin) set the hero headline (`vendor.heroHeading`; falls back to the brand name), the line under their name in the brand bar (now "location · main department"), and their short About text (`description`).
+- **Collections:** brands set up their own collections (name, image, products) for the Collections tiles, which are empty placeholders for now.
+- **Layout per category:** a brand page's sections (hero, New from, Collections, slider vs grid, order) should differ by the kind of brand (clothing, accessories, homeware, beauty, kids, men's). Header, brand bar and scroll behaviour stay the same everywhere. Decide each layout and make it choosable in admin.

@@ -1578,29 +1578,70 @@ function renderVendorPage(vendor) {
   const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
   const brandName = vendor?.brand || vendor?.name || '';
   const desc = vendor?.description || '';
-  // The brand's logo replaces its name in the hero; the name stays as alt text.
   const logoUrl = /^https:\/\//i.test(String(vendor?.logoUrl || '').trim()) ? vendor.logoUrl.trim() : '';
+  const initials = brandName.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
   const products = merchandiseProducts(getVendorFilteredProducts(vendor), 'vendor', S.sortBy);
   const expanded = expandProductVariants(products);
+  // "Cape Town · Clothing": where they ship from and what they mostly sell.
+  const depts = {};
+  (getVendorFilteredProducts(vendor) || []).forEach(p => { const d = JDTaxonomy.departmentOf(p.category); if (d) depts[d] = (depts[d] || 0) + 1; });
+  const mainDept = Object.keys(depts).sort((x, y) => depts[y] - depts[x])[0];
+  const barLine = [vendor?.location, mainDept ? JDTaxonomy.label(mainDept) : ''].filter(Boolean).join(' · ');
+  const newest = merchandiseProducts(PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName), undefined, 'newest').slice(0, 8);
+  const sectionHead = (id, title, btn) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div>${btn || ''}</div>`;
+  const emptyTile = '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
 
+  // A brand's page is its own small homepage inside Janedore: a brand bar
+  // (sticks, and takes the header's place while scrolling down, like the
+  // collection toolbar), their hero, Shop / Collections / About links,
+  // their newest pieces, their collections and all their products. Built
+  // from the homepage's own pieces (hero, section headers, slider, tiles).
   el.innerHTML = `
-    <section class="vendor-hero-section">
-      <div class="vendor-hero-img" style="background-image:url('${escapeForCssUrl(heroImg)}');">
-        <div class="vendor-hero-content">
-          ${logoUrl
-            ? `<h1 class="vendor-hero-name vendor-hero-logo-wrap"><img class="vendor-hero-logo" src="${escapeHTML(logoUrl)}" alt="${escapeHTML(brandName)}"></h1>`
-            : `<div class="vendor-hero-name">${escapeHTML(brandName)}</div>`}
-          <p class="vendor-hero-desc">${escapeHTML(desc)}</p>
-        </div>
+    <div class="brand-bar" id="brand-bar">
+      <div class="brand-bar-logo">${logoUrl ? `<img src="${escapeHTML(logoUrl)}" alt="">` : escapeHTML(initials)}</div>
+      <div class="brand-bar-text"><h1 class="brand-bar-name">${escapeHTML(brandName)}</h1>${barLine ? `<div class="brand-bar-line">${escapeHTML(barLine)}</div>` : ''}</div>
+      <button type="button" class="brand-bar-more" aria-label="Report this brand" onclick="openBrandReport()"><i class="ph ph-dots-three"></i></button>
+    </div>
+    <section class="brand-hero">
+      <div class="hero-bg-placeholder${heroImg ? '' : ' content-empty'}" style="${heroImg ? `background-image:url('${escapeForCssUrl(heroImg)}');` : ''}"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content-wrap">
+        <h2 class="hero-heading" id="brand-hero-heading"></h2>
+        <button class="hero-shop-btn" onclick="showBrandSection('shop')">Shop now</button>
       </div>
+    </section>
+    <div class="nav-quick-links brand-quick-links" role="tablist">
+      <button class="nav-quick-link active" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
+      <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
+      ${desc ? `<button class="nav-quick-link" data-brand-tab="about" onclick="showBrandSection('about')">About</button>` : ''}
+    </div>
+    ${desc ? `<p class="track-intro brand-about" id="brand-about" hidden>${escapeHTML(desc)}</p>` : ''}
+    <section class="brand-section" id="brand-new">
+      ${sectionHead('brand-new-heading', '', `<button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="showBrandSection('shop')">View all</button>`)}
+      <div class="product-grid" id="vendor-new-grid">${newest.length ? newest.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true)}</div>
+    </section>
+    <section class="brand-section" id="brand-collections">
+      ${sectionHead('brand-collections-heading')}
+      <div class="home-categories-grid">${emptyTile.repeat(4)}</div>
+    </section>
+    <section class="brand-section" id="brand-shop">
+      ${sectionHead('brand-all-heading')}
     </section>
     <section class="site-collection-layout">
       <div class="product-grid" id="vendor-products-grid"></div>
     </section>
   `;
+  if (typeof setSectionHeading === 'function') {
+    setSectionHeading(document.getElementById('brand-new-heading'), 'New from ' + brandName);
+    setSectionHeading(document.getElementById('brand-collections-heading'), 'Collections');
+    setSectionHeading(document.getElementById('brand-all-heading'), 'All products');
+  }
+  document.getElementById('brand-hero-heading').textContent = vendor?.heroHeading || brandName;
+  initSliderLeadingTracking('vendor-new-grid');
+  updateBrandBarHeight();
 
-  moveFilterBarBelowVendorHero(el.querySelector('.vendor-hero-section'));
+  moveFilterBarBelowVendorHero(el.querySelector('#brand-shop'));
 
   const gridEl = document.getElementById('vendor-products-grid');
   gridEl.style.gridTemplateColumns = gridTemplateFor(S.gridColsVendor);
@@ -1620,6 +1661,27 @@ function renderVendorPage(vendor) {
 }
 
 window.navigateToVendor = navigateToVendor;
+
+// Brand page links: Shop and Collections scroll to their section (under
+// the sticky brand bar); About shows the brand's short description.
+function showBrandSection(key) {
+  document.querySelectorAll('[data-brand-tab]').forEach(b => b.classList.toggle('active', b.dataset.brandTab === key));
+  const about = document.getElementById('brand-about');
+  if (about) about.hidden = key !== 'about';
+  if (key === 'about') return;
+  const target = document.getElementById(key === 'collections' ? 'brand-collections' : 'brand-shop');
+  const bar = document.getElementById('brand-bar');
+  if (!target) return;
+  const y = target.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0);
+  window.scrollTo({ top: y, behavior: 'smooth' });
+}
+
+// The collection toolbar sticks under the brand bar on brand pages.
+function updateBrandBarHeight() {
+  const bar = document.getElementById('brand-bar');
+  if (bar) document.documentElement.style.setProperty('--brand-bar-height', bar.offsetHeight + 'px');
+}
+window.addEventListener('resize', updateBrandBarHeight);
 
 
 // ---- Report this brand ----
