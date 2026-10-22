@@ -639,18 +639,19 @@ async function loadProductReviewsSection(productId) {
       return `<p class="info-sub-label">${escapeHTML(r.name || 'Anonymous')}${d ? ' · ' + d : ''}</p>
         <p class="product-review-stars" aria-label="${Number(r.rating) || 0} out of 5">${stars(Number(r.rating) || 0)}</p>
         ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}
-        ${reviewPhotosHtml(r, `Photo from ${escapeHTML(r.name || 'a customer')}`, ` onclick="window.open(this.src,'_blank','noopener')"`)}`;
+        ${reviewPhotosHtml(r, `Photo from ${escapeHTML(r.name || 'a customer')}`)}`;
     }).join('');
   showReviewButtonIfBought(productId);
 }
 
 // A review's photos in the customer's order (imageUrls; older reviews
-// have just imageUrl). Only our Cloudinary links are shown.
-function reviewPhotosHtml(r, alt, attrs) {
+// have just imageUrl). Only our Cloudinary links are shown; tapping one
+// opens the photo viewer (modals.js).
+function reviewPhotosHtml(r, alt) {
   const urls = (Array.isArray(r.imageUrls) && r.imageUrls.length ? r.imageUrls : [r.imageUrl])
     .filter(u => /^https:\/\/res\.cloudinary\.com\//.test(u || ''));
   if (!urls.length) return '';
-  return `<div class="product-review-photos">${urls.map(u => `<img class="product-review-photo" src="${escapeHTML(u)}" alt="${alt}" loading="lazy"${attrs || ''}>`).join('')}</div>`;
+  return `<div class="product-review-photos">${urls.map(u => `<img class="product-review-photo" src="${escapeHTML(u)}" alt="${alt}" loading="lazy" onclick="openPhotoViewer(this)">`).join('')}</div>`;
 }
 
 // Orders placed on this device (checkout.js), so a guest who bought the

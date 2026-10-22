@@ -75,6 +75,24 @@ function startReviewPhotoDrag(e) {
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
 }
+// Tapping a photo on a review opens that review's photos here, starting
+// with the one tapped.
+function openPhotoViewer(img) {
+  const photos = Array.from(img.parentNode.querySelectorAll('img'));
+  const track = document.getElementById('photo-viewer-track');
+  const viewer = document.getElementById('photo-viewer');
+  if (!track || !viewer) return;
+  track.innerHTML = '';
+  photos.forEach(p => { const i = document.createElement('img'); i.src = p.src; i.alt = p.alt; i.onclick = e => e.stopPropagation(); track.appendChild(i); });
+  viewer.classList.add('open');
+  track.scrollLeft = photos.indexOf(img) * track.clientWidth;
+}
+function closePhotoViewer() {
+  const viewer = document.getElementById('photo-viewer');
+  if (viewer) viewer.classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePhotoViewer(); });
+
 // Each photo goes to Cloudinary before the review is saved: with the
 // storefront's images-only preset when there is one (the chat's upload,
 // chat.js), otherwise with a signed upload the server gives buyers

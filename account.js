@@ -509,7 +509,7 @@ async function renderAccountReviews() {
       ${product ? `<div class="account-review-product" onclick="goToProduct('${escapeJSString(product.id)}')">${escapeHTML(product.name || '')}</div>` : ''}
       <div class="account-stars" aria-label="${rating} out of 5">${'★'.repeat(rating)}<span>${'★'.repeat(5 - rating)}</span></div>
       ${r.text ? `<p class="account-review-text">${escapeHTML(r.text)}</p>` : ''}
-      ${typeof reviewPhotosHtml === 'function' ? reviewPhotosHtml(r, '', '') : ''}
+      ${typeof reviewPhotosHtml === 'function' ? reviewPhotosHtml(r, '') : ''}
       ${date ? `<div class="account-order-meta">${escapeHTML(date)}</div>` : ''}
     </div>`;
   }).join('');

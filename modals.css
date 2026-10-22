@@ -18,6 +18,15 @@
 .review-image-label:hover { border-color: #111; color: #111; }
 .review-image-label i { font-size: 18px; }
 #review-image-input { display: none; }
+/* Review photo viewer: same open/close pattern as the review modal,
+   one photo per screen, swiped sideways. */
+#photo-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1100; display: none; }
+#photo-viewer.open { display: block; }
+#photo-viewer .review-modal-close { color: #fff; z-index: 1; }
+.photo-viewer-track { display: flex; width: 100%; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.photo-viewer-track::-webkit-scrollbar { display: none; }
+.photo-viewer-track img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: contain; scroll-snap-align: center; }
+
 /* Review photos: same frame as the old single preview, with the remove
    circle admin uses on product photos (admin-products.js). */
 .review-photos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
