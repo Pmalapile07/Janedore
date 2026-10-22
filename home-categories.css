@@ -214,3 +214,8 @@ button.home-category-card:focus-visible { outline: 2px solid #111; outline-offse
 .featured-brand-section + .featured-brand-section {
   padding-top: 0;
 }
+
+/* Category tiles straight under the hero: the hero's own 12px bottom
+   padding is the whole gap, the same 12px as above and below the free
+   delivery banner. */
+#hero + #home-categories { padding-top: 0; }
