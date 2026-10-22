@@ -729,7 +729,7 @@ async function buildOrderEmailContext(order) {
   const assets = await getBrandAssets();
   return {
     siteUrl: SITE_URL,
-    logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : SITE_URL + '/janedore-logo-white.png',
+    logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : SITE_URL + '/janedore-logo-white.png?v=2',
     logoFontUrl: assets.logoFont || '',
     products,
     vendorIdFor: item => (products[item.productId] && products[item.productId].vendorId) || item.vendorId || null,
@@ -2409,7 +2409,7 @@ app.post('/api/contact', async (req, res) => {
     });
     const msg = { name, email, orderNumber, topic, message, id: ref.id };
     const assets = await getBrandAssets().catch(() => ({}));
-    const ctx = { siteUrl: SITE_URL, logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : SITE_URL + '/janedore-logo-white.png', logoFontUrl: assets.logoFont || '' };
+    const ctx = { siteUrl: SITE_URL, logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : SITE_URL + '/janedore-logo-white.png?v=2', logoFontUrl: assets.logoFont || '' };
     const team = orderEmails.contactForStaff(msg, ctx);
     const copy = orderEmails.contactReceived(msg, ctx);
     // The team email must go out, or the message is only in Firestore.
@@ -2477,7 +2477,7 @@ app.post('/api/report-brand', async (req, res) => {
       const assets = await getBrandAssets().catch(() => ({}));
       const confirm = orderEmails.reportReceived({ brand, reason, details }, {
         siteUrl: SITE_URL,
-        logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : SITE_URL + '/janedore-logo-white.png',
+        logoUrl: assets.emailLogo ? logoImageUrl(assets.emailLogo, 360) : SITE_URL + '/janedore-logo-white.png?v=2',
         logoFontUrl: assets.logoFont || ''
       });
       sendResendEmail({
@@ -2888,10 +2888,10 @@ async function injectSiteLogo(html) {
   const { siteLogo } = await getBrandAssets();
   if (!siteLogo) return html;
   const src = escapeHtml(logoImageUrl(siteLogo, 480));
-  // The official logo (janedore-logo-white.png) is the header's default;
+  // The official logo (janedore-logo-white.png?v=2) is the header's default;
   // a Site logo uploaded in admin > Content replaces it.
   return html.replace(
-    '<img class="nav-logo-img" id="nav-logo-img" src="/janedore-logo-white.png"',
+    '<img class="nav-logo-img" id="nav-logo-img" src="/janedore-logo-white.png?v=2"',
     '<img class="nav-logo-img" id="nav-logo-img" src="' + src + '"'
   );
 }
