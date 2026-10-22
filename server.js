@@ -2762,15 +2762,19 @@ function fillTextElement(html, id, text) {
   });
 }
 
-// Homepage section headings: anything after the second word on the next
-// line (setSectionHeading() in site-content.js does the same in the browser).
+// Homepage section headings wrap at 12 characters, spaces included
+// (sectionHeadingLines() in site-content.js does the same in the browser).
 function fillSectionHeading(html, id, text) {
-  const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+  const lines = [];
+  String(text || '').trim().split(/\s+/).filter(Boolean).forEach(function (word) {
+    const last = lines[lines.length - 1];
+    if (last !== undefined && (last + ' ' + word).length <= 12) lines[lines.length - 1] = last + ' ' + word;
+    else lines.push(word);
+  });
   const re = new RegExp('(<[a-zA-Z0-9]+\\b[^>]*\\bid="' + id + '"[^>]*>)([^<]*)(</)');
   return html.replace(re, function (_m, openTag, _oldText, closeStart) {
     const cleanedOpen = openTag.replace(/\s*\b(skeleton-text|content-shimmer)\b/g, '');
-    const inner = escapeHtml(words.slice(0, 2).join(' ')) + (words.length > 2 ? '<br>' + escapeHtml(words.slice(2).join(' ')) : '');
-    return cleanedOpen + inner + closeStart;
+    return cleanedOpen + lines.map(escapeHtml).join('<br>') + closeStart;
   });
 }
 
