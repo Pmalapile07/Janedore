@@ -504,7 +504,7 @@ async function renderAccountReviews() {
   body.innerHTML = reviews.map(r => {
     const product = PRODUCTS.find(p => p.id === r.productId);
     const rating = Math.max(0, Math.min(5, Number(r.rating) || 0));
-    const date = r.createdAt ? trackDate(new Date(r.createdAt).toISOString(), true) : '';
+    const date = r.createdAt && r.createdAt.seconds ? trackDate(new Date(r.createdAt.seconds * 1000).toISOString(), true) : '';
     return `<div class="track-card account-review">
       ${product ? `<div class="account-review-product" onclick="goToProduct('${escapeJSString(product.id)}')">${escapeHTML(product.name || '')}</div>` : ''}
       <div class="account-stars" aria-label="${rating} out of 5">${Array.from({ length: 5 }, (_, i) => `<i class="${i < rating ? 'ph-fill' : 'ph'} ph-star" aria-hidden="true"></i>`).join('')}</div>
