@@ -1,10 +1,10 @@
 // ==================== WAITLIST ====================
 // Products with "Waitlist when sold out" on in admin: when a size or the
-// whole product is sold out, the product page's Add to Bag button reads
-// Add to Waitlist and joins it (product-detail.js). sweepWaitlist() checks
+// whole product is sold out, the product page's Add to bag button reads
+// Add to waitlist and joins it (product-detail.js). sweepWaitlist() checks
 // every 15 minutes and emails each customer once when their exact item is
 // back in stock, then marks the entry notified. Signed-in customers see
-// and remove their entries in My Account > Waitlist (account.js).
+// and remove their entries in My account > Waitlist (account.js).
 // waitlist/{id}, where id is a hash of email + product + colour + size,
 // so joining twice keeps one entry. Server only (firestore.rules default
 // deny); firebase-admin reads and writes it here.
@@ -65,7 +65,7 @@ module.exports = function registerWaitlist(app, deps) {
     }
   });
 
-  // ---- My Account: list and remove ----
+  // ---- My account: list and remove ----
   // Entries joined while signed in, plus those under the account's email
   // once it is verified (the same rule as orders).
   async function ownEntries(user) {

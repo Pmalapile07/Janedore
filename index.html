@@ -216,7 +216,7 @@
       }
     }
 
-    /* "Our Brands" — a continuously auto-scrolling logo+name strip,
+    /* "Our brands" — a continuously auto-scrolling logo+name strip,
        not a manual swipe slider. Same duplicate-the-content /
        translateX(-50%) loop technique as #announcement-bar's marquee
        in navigation.css. */
@@ -288,7 +288,7 @@
       </div>
     </div>
     <div class="nav-right">
-      <button class="nav-icon-btn nav-user-icon" onclick="navigateToLogin()" title="My Account"><i class="ph ph-user"></i></button>
+      <button class="nav-icon-btn nav-user-icon" onclick="navigateToLogin()" title="My account"><i class="ph ph-user"></i></button>
       <button class="nav-icon-btn nav-wishlist-icon" onclick="navigateTo('wishlist')" title="Wishlist"><i class="ph ph-heart"></i><span class="badge" id="wish-badge" style="display:none">0</span></button>
       <button class="nav-icon-btn nav-cart-icon" onclick="openCart()"><i class="ph ph-tote-simple"></i><span class="badge" id="cart-badge" style="display:none">0</span></button>
       <div class="desktop-utility-links"><button class="utility-text-link" onclick="navigateToLogin()">Account</button><button class="utility-text-link" onclick="navigateTo('wishlist')">Wishlist</button><button class="utility-text-link" onclick="openCart()">Cart</button></div>
@@ -312,7 +312,7 @@
 
 <nav class="page-breadcrumb" id="collection-page-breadcrumb" aria-label="Breadcrumb"></nav>
 
-<div class="collection-page-heading" id="collection-page-heading">All Products</div>
+<div class="collection-page-heading" id="collection-page-heading">All products</div>
 <div class="collection-top-description" id="collection-top-description"></div>
 
 <div id="collection-filter-bar" class="collection-filter-bar">
@@ -365,8 +365,8 @@
 <div id="menu-backdrop" onclick="closeMenu()"></div>
 <!-- Full-screen menu (app.js openMenu/closeMenu/openMenuPanel). Black
      header: close and "Menu" on the left, search, wishlist and bag on the
-     right. My Account, bold categories that open their own list (› ), then
-     plain links, a Track Your Order button and the help links. -->
+     right. My account, bold categories that open their own list (› ), then
+     plain links, a Track your order button and the help links. -->
 <div id="menu-drawer" role="dialog" aria-modal="true" aria-label="Menu">
   <div class="menu-head">
     <div class="menu-head-left">
@@ -383,27 +383,27 @@
   <div class="menu-panels">
     <div class="menu-panel" id="menu-panel-main">
       <button class="menu-row menu-account" onclick="closeMenu();navigateToLogin();">
-        <span class="menu-account-left"><span class="menu-avatar" id="menu-avatar"><i class="ph ph-user"></i></span><span id="menu-account-label">Sign In</span></span>
+        <span class="menu-account-left"><span class="menu-avatar" id="menu-avatar"><i class="ph ph-user"></i></span><span id="menu-account-label">Sign in</span></span>
         <i class="ph ph-caret-right menu-chev"></i>
       </button>
-      <a class="menu-row menu-cat" onclick="closeMenu();navigateToNewIn();">New In<i class="ph ph-caret-right menu-chev"></i></a>
+      <a class="menu-row menu-cat" onclick="closeMenu();navigateToNewIn();">New in<i class="ph ph-caret-right menu-chev"></i></a>
       <!-- Departments from the category tree (taxonomy.js), app.js renderMenuDepartments(). -->
       <div id="menu-departments"></div>
 
       <div class="menu-links">
         <a class="menu-plain" onclick="closeMenu();navigateTo('brands');">Brands</a>
         <a class="menu-plain menu-sale" onclick="closeMenu();navigateToSale();">Sale</a>
-        <a class="menu-plain" id="menu-giftcards-link" onclick="closeMenu();navigateTo('giftcards');">Gift Cards</a>
+        <a class="menu-plain" id="menu-giftcards-link" onclick="closeMenu();navigateTo('giftcards');">Gift cards</a>
       </div>
 
-      <button class="menu-cta" onclick="closeMenu();navigateToContentPage('track-your-order');">Track Your Order</button>
+      <button class="menu-cta" onclick="closeMenu();navigateToContentPage('track-your-order');">Track your order</button>
 
       <div class="menu-help">
-        <a onclick="closeMenu();navigateToContentPage('log-a-return');">Log a Return</a>
-        <a onclick="closeMenu();navigateToContentPage('exchange-an-item');">Exchange an Item</a>
-        <a onclick="closeMenu();navigateToContentPage('customer-care');">Customer Care</a>
-        <a onclick="closeMenu();navigateToContentPage('faq');">Frequently Asked Questions</a>
-        <a data-bp-link onclick="closeMenu();navigateToContentPage('brand-partnerships');">Brand Partnerships</a>
+        <a onclick="closeMenu();navigateToContentPage('log-a-return');">Log a return</a>
+        <a onclick="closeMenu();navigateToContentPage('exchange-an-item');">Exchange an item</a>
+        <a onclick="closeMenu();navigateToContentPage('customer-care');">Customer care</a>
+        <a onclick="closeMenu();navigateToContentPage('faq');">Frequently asked questions</a>
+        <a data-bp-link onclick="closeMenu();navigateToContentPage('brand-partnerships');">Brand partnerships</a>
       </div>
     </div>
 
@@ -413,7 +413,7 @@
 </div>
 
 
-<div id="review-modal-backdrop" onclick="closeReviewModal()"><div id="review-modal" onclick="event.stopPropagation()"><button class="review-modal-close" onclick="closeReviewModal()">✕</button><div class="review-modal-title">Write a Review</div><div class="review-stars" id="review-stars"><button class="review-star-btn" onclick="setReviewRating(1)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(2)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(3)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph ph-star"></i></button></div><input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height:auto;margin-bottom:12px;"><textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea><div class="review-image-upload"><label class="review-image-label" for="review-image-input"><i class="ph ph-image"></i> Add Image</label><input type="file" id="review-image-input" accept="image/*" onchange="handleReviewImage(event)"><img class="review-image-preview" id="review-image-preview" alt="Preview"></div><button class="review-submit-btn" onclick="submitReview()">Submit Review</button></div></div>
+<div id="review-modal-backdrop" onclick="closeReviewModal()"><div id="review-modal" onclick="event.stopPropagation()"><button class="review-modal-close" onclick="closeReviewModal()">✕</button><div class="review-modal-title">Write a review</div><div class="review-stars" id="review-stars"><button class="review-star-btn" onclick="setReviewRating(1)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(2)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(3)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(4)"><i class="ph ph-star"></i></button><button class="review-star-btn" onclick="setReviewRating(5)"><i class="ph ph-star"></i></button></div><input type="text" class="review-textarea" id="review-name" placeholder="Your name" style="min-height:auto;margin-bottom:12px;"><textarea class="review-textarea" id="review-text" placeholder="Share your thoughts about this piece..."></textarea><div class="review-image-upload"><label class="review-image-label" for="review-image-input"><i class="ph ph-image"></i> Add Image</label><input type="file" id="review-image-input" accept="image/*" onchange="handleReviewImage(event)"><img class="review-image-preview" id="review-image-preview" alt="Preview"></div><button class="review-submit-btn" onclick="submitReview()">Submit review</button></div></div>
 
 <!-- Shows once, the first time any page's footer scrolls into view
      (newsletter-popup.js) — never on load. Reuses the same
@@ -510,7 +510,7 @@
   <section id="home-shop-brand" style="padding:24px 0;">
     <div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;">
       <div class="home-categories-title skeleton-text" id="shop-by-brand-heading" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div>
-      <button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="navigateTo('brands')">View Brands</button>
+      <button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="navigateTo('brands')">View brands</button>
     </div>
     <div class="product-grid" id="brand-grid"></div>
   </section>
@@ -518,7 +518,7 @@
   <footer id="main-footer"></footer>
 </div>
 
-<div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic. It is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop Campaign</button></div></section><footer id="campaign-footer"></footer></div>
+<div class="page" id="page-campaign"><section class="campaign-section"><h1 class="campaign-heading">UNDERSTATED</h1><div class="campaign-cropped" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/7412AE31-45BC-4D96-9B5E-F8956E435983.png?v=1778185737');background-size:cover;background-position:center 30%;"></div><h2 class="campaign-subheading">The Bold Understated</h2><div class="campaign-fullwidth-image" style="background-image:url('https://cdn.shopify.com/s/files/1/0705/5615/6145/files/28830036-6222-44B2-9AB2-0840B112BDFF.png?v=1778196371');"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#c8bfb0,#a89888);"></div><p class="campaign-paragraph">Understated is more than an aesthetic. It is a philosophy of intentional restraint.</p><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#e0dbd4,#c8bfb0);"></div><div class="campaign-fullwidth-image" style="background:linear-gradient(160deg,#2a2a2a,#1c1c1c);"></div><p class="campaign-tagline">Where silence makes the strongest statement.</p><div class="campaign-product-slider" id="campaign-product-slider"><div class="campaign-slides" id="campaign-slides"></div><div class="campaign-slider-controls"><button class="campaign-slider-btn" onclick="moveCampaignSlider(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="campaign-slider-btn" onclick="moveCampaignSlider(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div><div class="shop-campaign-btn-wrap"><button class="shop-campaign-btn" onclick="navigateTo('products')">Shop campaign</button></div></section><footer id="campaign-footer"></footer></div>
 
 <div class="page" id="page-products">
   <div id="products-loaded"></div>
@@ -532,7 +532,7 @@
 
 <div class="page" id="page-editorial"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Editorial</div></div></section><footer id="editorial-footer"></footer></div>
 <div class="page" id="page-categories"><section id="categories-page-section" style="padding:24px 0 60px"><div class="home-categories-grid" id="categories-page-grid" aria-label="Categories"><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div><div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div></div></section><footer id="categories-footer"></footer></div>
-<div class="page" id="page-giftcards"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Gift Cards</div></div></section><footer id="giftcards-footer"></footer></div>
+<div class="page" id="page-giftcards"><section style="padding:60px 12px"><div style="text-align:center;margin-bottom:40px"><div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#888;margin-bottom:10px">Janedore</div><div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:300">Gift cards</div></div></section><footer id="giftcards-footer"></footer></div>
 <div class="page" id="page-brands"><section style="padding:22px 12px 60px"><div class="brands-page-heading" style="text-align:left;margin-bottom:16px"><div style="font-family:'Inter',sans-serif;font-size:var(--heading-size);font-weight:400">A&#8211;Z <span style="font-weight:600">Brands</span></div></div><div class="brands-page-grid" id="brands-page-grid"></div><div class="brands-az-index" id="brands-az-index"></div><div class="brands-az-list" id="brands-az-list"></div></section><footer id="brands-footer"></footer></div>
 <div class="page" id="page-cart"><div class="cart-page" id="cart-page-content"></div><footer id="cart-footer"></footer></div>
 <div class="page" id="page-wishlist"><div class="wish-page" id="wish-page-content"></div><footer id="wishlist-footer"></footer></div>
@@ -546,8 +546,8 @@
   <footer id="content-footer"></footer>
 </div>
 <script src="firebase.js"></script>
-<!-- Coming Soon gate: enforced by server.js before this page is sent
-     (a signed jd_visitor / jd_admin pass is required while Coming Soon
+<!-- Coming soon gate: enforced by server.js before this page is sent
+     (a signed jd_visitor / jd_admin pass is required while Coming soon
      is on), so there is nothing left for the browser to check here. -->
 <script src="taxonomy.js" defer></script>
 <script src="vendors.js" defer></script>

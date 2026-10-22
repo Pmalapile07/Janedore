@@ -68,7 +68,7 @@ function isInDepartment(product, deptSlug) {
 }
 
 // The `category` values actually relevant to whatever the customer is
-// currently browsing. Returns null on the All Products / Sale pages
+// currently browsing. Returns null on the All products / Sale pages
 // (every category is in scope there); on a category page, returns just
 // that page's own categories, so filter options/results never
 // reference a completely different department (e.g. clothing
@@ -146,10 +146,10 @@ function isLeatherPouchAllowed(context) {
 // Newest is the default; the Sort button shows whichever is picked.
 const SORT_OPTIONS = [
   { v: 'newest',     l: 'Newest' },
-  { v: 'price-desc', l: 'Price High to Low' },
-  { v: 'price-asc',  l: 'Price Low to High' },
+  { v: 'price-desc', l: 'Price high to low' },
+  { v: 'price-asc',  l: 'Price low to high' },
   { v: 'oldest',     l: 'Oldest' },
-  { v: 'discount',   l: 'Biggest Discount' }
+  { v: 'discount',   l: 'Biggest discount' }
 ];
 
 function applySort(products, sortBy) {
@@ -519,7 +519,7 @@ function updateCollectionTitle() {
     titleEl.textContent = title;
   }
   if (headingEl) {
-    headingEl.textContent = title === 'ALL PRODUCTS' ? 'All Products' : title.toLowerCase().replace(/\b\w/g, function (char) { return char.toUpperCase(); });
+    headingEl.textContent = title === 'ALL PRODUCTS' ? 'All products' : title.toLowerCase().replace(/\b\w/g, function (char) { return char.toUpperCase(); });
     headingEl.style.display = title ? 'block' : 'none';
   }
   if (countEl) {
@@ -721,8 +721,8 @@ function renderActiveFilterChips() {
   (f.genders || []).forEach(g => {
     chips.push({ label: JDTaxonomy.genderLabel(g), onclick: `applyCollectionFilter('genders','${escapeJSString(g)}')` });
   });
-  if (f.onSale) chips.push({ label: 'On Sale', onclick: `applyCollectionFilter('onSale', false)` });
-  if (f.inStock) chips.push({ label: 'In Stock', onclick: `applyCollectionFilter('inStock', false)` });
+  if (f.onSale) chips.push({ label: 'On sale', onclick: `applyCollectionFilter('onSale', false)` });
+  if (f.inStock) chips.push({ label: 'In stock', onclick: `applyCollectionFilter('inStock', false)` });
 
   if (!chips.length) { container.innerHTML = ''; return; }
 
@@ -766,12 +766,12 @@ function expandProductVariants(products) {
 }
 
 // ==================== PAGINATION (6 PER PAGE) ====================
-// Shared by the All Products, Category, and Sale grids. Page N shows
+// Shared by the All products, Category, and Sale grids. Page N shows
 // exactly products [(N-1)*6, N*6) — a real discrete page, not a
 // cumulative "load more" list — with a plain "Page N of M" footer
 // (arrow controls either side, no product count), hidden entirely
 // when there are 6 or fewer products (nothing to page through).
-// Keyed by the grid element's id so All Products and Sale (which
+// Keyed by the grid element's id so All products and Sale (which
 // share #all-products-grid) don't bleed into each other's state.
 // renderXProducts() always calls this with the full, already-
 // filtered/sorted list, so every call resets back to page 1 — a
@@ -1075,7 +1075,7 @@ function cardTouchEnd(e, productId) {
 // 2) site-wide featured picks, 3) whatever's left — so there's always
 // something to show as long as other active products exist.
 // excludeIds lets a caller keep this from repeating products another
-// section on the same page (e.g. You May Also Like) already shows.
+// section on the same page (e.g. You may also like) already shows.
 function getSuggestedProducts(currentProduct, excludeIds) {
   if (!currentProduct) return [];
   const exclude = new Set([currentProduct.id, ...(excludeIds || [])]);
@@ -1091,7 +1091,7 @@ function getSuggestedProducts(currentProduct, excludeIds) {
 }
 
 /* ============================================================
-   SWIPE SECTION — Recently Viewed / You May Also Like / Complete the Look
+   SWIPE SECTION — Recently viewed / You may also like / Complete the look
    ============================================================ */
 
 function buildSwipeSection(title, products, containerId) {
@@ -1148,9 +1148,9 @@ function renderCategoryProducts() {
 
 // Same shape as renderSaleProducts() above, but filters to genuinely
 // new products (isProductNew(), product-detail.js — createdAt within
-// PRODUCT_NEW_DAYS) instead of on-sale ones. Previously "New In" just
+// PRODUCT_NEW_DAYS) instead of on-sale ones. Previously "New in" just
 // sorted the entire catalog newest-first without actually filtering
-// it, so it looked identical to All Products once you scrolled past
+// it, so it looked identical to All products once you scrolled past
 // the first few items. renderPaginatedGrid() already falls back to
 // its placeholder cards when `filtered` is empty, so a quiet period
 // with nothing newly added still never looks broken.
@@ -1267,7 +1267,7 @@ function renderCollectionSortingTabs() {
     return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
       String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
   });
-  const tabs = [{ label: 'View All', cat: 'all' }].concat(collections.map(function (item) {
+  const tabs = [{ label: 'View all', cat: 'all' }].concat(collections.map(function (item) {
     return { label: item.title || item.name || item.handle || item.id, cat: String(item.handle || item.slug || item.id) };
   }));
   let active;
@@ -1313,7 +1313,7 @@ function selectSortTab(cat) {
 // written by admin-homepage.js), rendered by renderShopByCategory() in
 // site-content.js once that fetch resolves. Nothing to do here anymore.
 
-// "New Arrivals" means newest first — merchandiseProducts()'s own
+// "New arrivals" means newest first — merchandiseProducts()'s own
 // default order is by category then price, which has nothing to do
 // with when a product was added, so it's overridden here with the
 // 'newest' sort (createdAt, falling back to updatedAt) already built
@@ -1383,7 +1383,7 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
   // pageNavGeneration comment in app.js) — guards against this fetch
   // outliving the visit, whether that's a second navigateToVendor()
   // call (another brand) or navigating away to a completely different
-  // page (All Products, home, back button, anything).
+  // page (All products, home, back button, anything).
   const myNavGen = ++pageNavGeneration;
   closeSearch();
   S.saleMode = false;
@@ -1440,7 +1440,7 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
     } catch(e) {}
   }
   // Bails if the user has navigated anywhere else since this fetch
-  // started — another brand's page, All Products, back button, anything
+  // started — another brand's page, All products, back button, anything
   // — because every navigation function bumps pageNavGeneration (app.js).
   if (myNavGen !== pageNavGeneration) return;
   S.currentVendorId = docId;
@@ -1478,7 +1478,7 @@ function normalizeBrandName(name) {
 // The shared filter bar (#collection-filter-bar, holding the grid
 // toggle + FILTER button) and its active-chips row normally live right
 // after the nav, above every collection-style page's content — correct
-// for All Products/Category, which open straight into a grid with no
+// for All products/Category, which open straight into a grid with no
 // hero image above it. The vendor/brand page has a hero image first,
 // and the filter bar belongs below that image, directly above the
 // grid — not above the image, where it was sitting by default since
@@ -1537,7 +1537,7 @@ function renderVendorPage(vendor) {
   // when it gets wiped.
   restoreCollectionFilterBar();
   S.currentVendor = vendor;
-  // Same image source as the homepage's Shop by Brand cards
+  // Same image source as the homepage's Shop by brand cards
   // (vendors.js's shopByBrandCardsHtml) — heroImageUrl first, falling
   // back to logoUrl — so a brand's image matches wherever it shows up.
   const heroImg = safeImageURL(vendor?.heroImageUrl || vendor?.logoUrl || '');
@@ -1616,7 +1616,7 @@ function openBrandReport() {
       <label class="brand-report-label" for="brand-report-email">Your email <span>(optional, so we can follow up)</span></label>
       <input id="brand-report-email" name="email" type="email" maxlength="200" autocomplete="email" value="${escapeHTML(email)}">
       <div class="brand-report-msg" id="brand-report-msg" role="status"></div>
-      <button type="submit" class="brand-report-submit">Send Report</button>
+      <button type="submit" class="brand-report-submit">Send report</button>
     </form>
   </div>`;
   wrap.addEventListener('click', e => { if (e.target === wrap) closeBrandReport(); });
@@ -1676,6 +1676,6 @@ async function submitBrandReport(e) {
     form.innerHTML = `<div class="brand-report-done"><i class="ph ph-check-circle"></i><p><strong>Thank you. We've received your report.</strong></p><p>Our team will look into it. The brand won't be told who sent it.${sentTo ? ' We\'ve sent a copy to ' + escapeHTML(sentTo) + '.' : ''}</p><button type="button" class="brand-report-submit" onclick="closeBrandReport()">Done</button></div>`;
   } catch (err) {
     msg.textContent = err.message;
-    btn.disabled = false; btn.textContent = 'Send Report';
+    btn.disabled = false; btn.textContent = 'Send report';
   }
 }

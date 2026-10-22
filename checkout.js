@@ -93,7 +93,7 @@ function navigateToCheckout(replaceUrl) {
     showCheckoutStep(2);
 
     const placeOrderBtn = document.getElementById('checkout-place-order-btn');
-    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Pay Now'; }
+    if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Pay now'; }
 
     if (checkoutEmail) fillCheckoutFieldIfEmpty('checkout-email', checkoutEmail);
     prefillCheckoutForSignedInCustomer();
@@ -207,7 +207,7 @@ function toggleCheckoutCard(btn) {
 }
 
 // Step 2 (details + shipping) → step 3 (payment). The details form is
-// checked first; nothing is created or charged until Pay Now on step 3.
+// checked first; nothing is created or charged until Pay now on step 3.
 function goToPaymentStep(e) {
   if (e) e.preventDefault();
   const form = document.getElementById('checkout-form');
@@ -287,9 +287,9 @@ function renderCheckoutSummary() {
     : '';
   const totalsHtml = `<div class="checkout-totals-head${vatLine ? ' has-vat' : ''}"><span>Total to pay</span><span>${formatPrice(total)}</span></div>
     ${vatLine}
-    <div class="checkout-totals-row"><span>Cart Total</span><span>${formatPrice(subtotal)}</span></div>
+    <div class="checkout-totals-row"><span>Cart total</span><span>${formatPrice(subtotal)}</span></div>
     ${discountRow}
-    <div class="checkout-totals-row"><span>Delivery Fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
+    <div class="checkout-totals-row"><span>Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
   document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
 
   renderShippingMethod(shipping, packages);
@@ -373,7 +373,7 @@ async function placeOrder(e) {
   
   if (!email || !name || !address || !city || !province || !postal || !country) {
     alert('Please fill in all required fields.');
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay Now'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay now'; }
     return;
   }
   
@@ -500,7 +500,7 @@ async function placeOrder(e) {
   } catch (e) {
     console.warn('Order error:', e);
     alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay Now'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay now'; }
   }
   // No restore on success: redirectToPayFast() navigates the browser
   // away, so the button stays disabled/"Please wait…" until that
@@ -604,8 +604,8 @@ function formatConfirmationDate(iso) {
     ', ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
 }
 
-// Same as "View Order" in the confirmation email (order-emails.js): the
-// Track Your Order page sends a signed-in owner on to My Account and
+// Same as "View order" in the confirmation email (order-emails.js): the
+// Track your order page sends a signed-in owner on to My account and
 // shows guests the order with their checkout email filled in. The
 // account's cached order list predates this order, so it's cleared.
 function viewConfirmedOrder() {
@@ -686,11 +686,11 @@ function renderOrderConfirmation(order) {
     const discount = Number(order.discountAmount) || 0;
     summaryEl.innerHTML =
       '<div class="checkout-totals-head"><span>Total paid</span><span>' + formatPrice(order.total || 0) + '</span></div>' +
-      '<div class="checkout-totals-row"><span>Cart Total</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
+      '<div class="checkout-totals-row"><span>Cart total</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
       (discount > 0
         ? '<div class="checkout-totals-row discount"><span>Discount' + (order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : '') + '</span><span>-' + formatPrice(discount) + '</span></div>'
         : '') +
-      '<div class="checkout-totals-row"><span>Delivery Fee</span><span>' + (order.shipping === 0 ? 'Free' : formatPrice(order.shipping || 0)) + '</span></div>';
+      '<div class="checkout-totals-row"><span>Delivery fee</span><span>' + (order.shipping === 0 ? 'Free' : formatPrice(order.shipping || 0)) + '</span></div>';
   }
 
   const view = document.getElementById('checkout-confirmation-view');

@@ -5,27 +5,27 @@ function buildFooter(id) {
   const sections = [
     {
       id: "the-house",
-      title: "The Company",
+      title: "The company",
       links: [
         { label: "About JANEDORE Ltd.", slug: "about" },
         // Hidden while BRAND_PARTNERSHIPS_LIVE is false (brand-partnerships.js).
-        { label: "Brand Partnerships", slug: "brand-partnerships", hidden: typeof BRAND_PARTNERSHIPS_LIVE !== 'undefined' && !BRAND_PARTNERSHIPS_LIVE },
+        { label: "Brand partnerships", slug: "brand-partnerships", hidden: typeof BRAND_PARTNERSHIPS_LIVE !== 'undefined' && !BRAND_PARTNERSHIPS_LIVE },
         { label: "Sustainability", slug: "sustainability" }
       ]
     },
     {
       id: "delivery-returns",
-      title: "Delivery & Returns",
+      title: "Delivery & returns",
       links: [
-        { label: "Delivery & Collection", slug: "shipping-policy" },
-        { label: "Returns & Refunds", slug: "return-policy" }
+        { label: "Delivery & collection", slug: "shipping-policy" },
+        { label: "Returns & refunds", slug: "return-policy" }
       ]
     },
     {
       id: "legal-governance",
-      title: "Legal & Governance",
+      title: "Legal & governance",
       links: [
-        { label: "Terms of Use", slug: "terms-conditions" },
+        { label: "Terms of use", slug: "terms-conditions" },
         { label: "Privacy & POPIA", slug: "privacy-policy" }
       ]
     }
@@ -62,11 +62,11 @@ function buildFooter(id) {
 
   el.innerHTML = `
     <nav class="footer-quick-links" aria-label="Quick links">
-      <a onclick="navigateToContentPage('track-your-order')"><i class="ph ph-truck" aria-hidden="true"></i><span>Track Your Order</span></a>
-      <a onclick="navigateToContentPage('log-a-return')"><i class="ph ph-arrow-u-down-left" aria-hidden="true"></i><span>Log a Return</span></a>
-      <a onclick="navigateToContentPage('exchange-an-item')"><i class="ph ph-arrows-left-right" aria-hidden="true"></i><span>Exchange an Item</span></a>
-      <a onclick="navigateToContentPage('customer-care')"><i class="ph ph-headset" aria-hidden="true"></i><span>Customer Care</span></a>
-      <a onclick="navigateToContentPage('faq')"><i class="ph ph-question" aria-hidden="true"></i><span>Frequently Asked Questions</span></a>
+      <a onclick="navigateToContentPage('track-your-order')"><i class="ph ph-truck" aria-hidden="true"></i><span>Track your order</span></a>
+      <a onclick="navigateToContentPage('log-a-return')"><i class="ph ph-arrow-u-down-left" aria-hidden="true"></i><span>Log a return</span></a>
+      <a onclick="navigateToContentPage('exchange-an-item')"><i class="ph ph-arrows-left-right" aria-hidden="true"></i><span>Exchange an item</span></a>
+      <a onclick="navigateToContentPage('customer-care')"><i class="ph ph-headset" aria-hidden="true"></i><span>Customer care</span></a>
+      <a onclick="navigateToContentPage('faq')"><i class="ph ph-question" aria-hidden="true"></i><span>Frequently asked questions</span></a>
     </nav>
 
     <div class="footer-menu-divider" aria-hidden="true"></div>

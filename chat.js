@@ -611,7 +611,7 @@ function startFreshChatSession() {
 }
 
 // ==================== AI GREETING ====================
-// Track Order button is real markup in chat-widget.html (a <template>) —
+// Track order button is real markup in chat-widget.html (a <template>) —
 // this clones it rather than building a button from an HTML string, so
 // it can also be reused verbatim by renderTrackOrderPrompt() below.
 function cloneTrackOrderButton() {
@@ -622,7 +622,7 @@ function cloneTrackOrderButton() {
   // Defensive fallback, in case the template markup is ever missing.
   const btn = document.createElement('button');
   btn.className = 'chat-pill-btn filled jai-track-order-btn';
-  btn.textContent = 'Track Order';
+  btn.textContent = 'Track order';
   btn.addEventListener('click', showOrderLookup);
   return btn;
 }
@@ -1534,7 +1534,7 @@ async function sendChatMessage() {
     const AI_COOLDOWN_MS = 60 * 1000; // 1 minute
 
     if (customerWantsTrackOrder(text)) {
-      _ScreenDebug.info('SEND', 'Customer asked to track an order — showing the Track Order button locally, no AI/RTDB round-trip needed');
+      _ScreenDebug.info('SEND', 'Customer asked to track an order — showing the Track order button locally, no AI/RTDB round-trip needed');
       renderTrackOrderPrompt();
     } else if (customerWantsHuman(text)) {
       _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
@@ -2105,7 +2105,7 @@ async function lookupOrder() {
 
     const header = document.createElement('div');
     header.style.cssText = 'font-size:9px;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;font-weight:600;';
-    header.textContent = 'Order Details';
+    header.textContent = 'Order details';
     container.appendChild(header);
 
     const rows = [

@@ -65,7 +65,7 @@ function renderReturnsPage(tab) {
         <label class="track-label" for="rs-email">Email address</label>
         <input class="track-input" id="rs-email" type="email" placeholder="you@example.com" autocomplete="email" value="${escapeHTML(email)}">
         <div class="track-error" id="rs-error" role="alert"></div>
-        <button class="track-btn" id="rs-btn" type="submit">Check Status</button>
+        <button class="track-btn" id="rs-btn" type="submit">Check status</button>
         <p class="track-hint">Your return number begins with RT- and can be found in your return confirmation email.</p>
       </form>
       <div id="rs-result"></div>
@@ -81,7 +81,7 @@ function renderReturnsPage(tab) {
       <label class="track-label" for="rl-email">Email address</label>
       <input class="track-input" id="rl-email" type="email" placeholder="you@example.com" autocomplete="email" value="${escapeHTML(email)}">
       <div class="track-error" id="rl-error" role="alert"></div>
-      <button class="track-btn" id="rl-btn" type="submit">Find Order</button>
+      <button class="track-btn" id="rl-btn" type="submit">Find order</button>
     </form>
     <div id="rl-result"></div>
     ${RETURNS_POLICY_HTML}`;
@@ -120,7 +120,7 @@ async function submitReturnLookup(ev) {
   } catch (e) {
     returnsError('rl-error', e.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Find Order';
+    btn.disabled = false; btn.textContent = 'Find order';
   }
 }
 
@@ -167,9 +167,9 @@ function renderReturnForm() {
     <label class="track-label" for="return-note">Anything else we should know? (optional)</label>
     <textarea class="track-input return-textarea" id="return-note" maxlength="1000"></textarea>
     <div class="track-error" id="rsub-error" role="alert"></div>
-    <button type="button" class="track-btn" id="rsub-btn" onclick="submitReturnRequest()">Submit Return Request</button>
+    <button type="button" class="track-btn" id="rsub-btn" onclick="submitReturnRequest()">Submit return request</button>
     <p class="track-hint">Please don’t send anything back yet. We’ll email you instructions once your request has been reviewed.</p>`
-    : `<div class="track-notice">None of the items on this order can be returned at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span>.</div>`}
+    : `<div class="track-notice">None of the items on this order can be returned at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`}
     <button type="button" class="track-another" onclick="renderReturnsPage('start')">Use a different order</button>`;
   drawReturnPhotos();
 }
@@ -237,13 +237,13 @@ async function submitReturnRequest() {
       <div class="track-heading">Return request received</div>
       <div class="track-order-number">Return ${escapeHTML(res.returnNumber)} · Order ${escapeHTML(d.orderNumber)}</div>
       <p class="track-intro">We’ve emailed you a confirmation. Our team will review your request and email you with the next steps. Please keep the item, with its tags and packaging, until then.</p>
-      <button type="button" class="track-btn" onclick="openReturnStatus('${escapeJSString(res.returnNumber)}')">Check Return Status</button>
+      <button type="button" class="track-btn" onclick="openReturnStatus('${escapeJSString(res.returnNumber)}')">Check return status</button>
     </div>`;
     document.querySelector('.returns-policy')?.remove();
     resetScrollToTop();
   } catch (e) {
     returnsError('rsub-error', e.message);
-    btn.disabled = false; btn.textContent = 'Submit Return Request';
+    btn.disabled = false; btn.textContent = 'Submit return request';
   }
 }
 
@@ -271,7 +271,7 @@ async function submitReturnStatus(ev) {
   } catch (e) {
     returnsError('rs-error', e.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Check Status';
+    btn.disabled = false; btn.textContent = 'Check status';
   }
 }
 
@@ -300,7 +300,7 @@ function returnStatusHtml(r) {
     received: `We’ve received your item and will process your refund of ${amount}. We’ll email you once it has been completed.`,
     refund_pending: `We’re processing your refund of ${amount}. We’ll email you as soon as it has been completed.`,
     refunded: `Your refund of ${amount} has been completed and returned to your original payment method. It can take up to 10 business days to reflect.`,
-    closed: 'This return has been closed. If you have any questions, please contact Customer Care.'
+    closed: 'This return has been closed. If you have any questions, please contact customer care.'
   }[r.status] || '';
   const items = (r.items || []).map(it => {
     const product = PRODUCTS.find(p => p.id === it.productId);
@@ -321,6 +321,6 @@ function returnStatusHtml(r) {
     <div class="track-card"><div class="account-detail-title">Items</div>${items}
       ${['received', 'refund_pending', 'refunded'].includes(r.status) ? `<div class="account-row big return-refund-row"><span>Refund amount</span><span>${amount}</span></div>` : ''}
     </div>
-    <p class="account-help">Questions about your return? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact Customer Care</span> and quote ${escapeHTML(r.returnNumber)}.</p>
+    <p class="account-help">Questions about your return? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact customer care</span> and quote ${escapeHTML(r.returnNumber)}.</p>
   </div>`;
 }

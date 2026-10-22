@@ -102,13 +102,13 @@ if (serviceAccount) {
 }
 
 // ==================== COMING SOON GATE ====================
-// While Coming Soon is on, storefront pages are only sent to a browser
+// While Coming soon is on, storefront pages are only sent to a browser
 // holding a pass this server signed: jd_visitor after the visitor
 // password (/api/verify-visitor-password) or jd_admin after a Super
 // Admin signs in (/api/admin-gate-pass). Both are HttpOnly and HMAC-
 // signed, so a browser can't make one up, and a visitor pass stops
 // working when the visitor password changes. Everyone else is sent to
-// the Coming Soon page. Product data itself stays guarded by
+// the Coming soon page. Product data itself stays guarded by
 // firestore.rules either way; this only decides who sees the shop.
 const gateSecret = crypto.createHash('sha256')
   .update('jd-gate|' + (process.env.GATE_SECRET || (serviceAccount && serviceAccount.private_key) || crypto.randomBytes(32).toString('hex')))
@@ -156,7 +156,7 @@ function setGatePass(req, res, name, kind, visitorPassword) {
     httpOnly: true, secure: req.secure, sameSite: 'lax', path: '/', maxAge: GATE_PASS_MS
   });
 }
-// Full storefront pages only; files, the API, admin, Coming Soon itself
+// Full storefront pages only; files, the API, admin, Coming soon itself
 // and the bag reminder unsubscribe link are always served.
 const GATED_HTML = new Set(['/index.html', '/store.html', '/products.html', '/category.html']);
 app.use(async (req, res, next) => {
@@ -328,7 +328,7 @@ app.get('/api/store-settings', async (req, res) => {
 });
 
 // ==================== ONLINE STORE GATE ====================
-// The "Coming Soon" on/off flag and the visitor password that bypasses
+// The "Coming soon" on/off flag and the visitor password that bypasses
 // it both live in Firestore, but neither is read by the public client
 // directly: the flag's own doc could be made public-readable safely,
 // but it shares a security-rules shape with the password doc, and the
@@ -345,7 +345,7 @@ app.get('/api/online-store-status', async (req, res) => {
     // before this toggle existed, so a fresh/unconfigured doc never
     // accidentally exposes the site.
     const comingSoonEnabled = doc.exists && doc.data().comingSoonEnabled === false ? false : true;
-    // unlocked: this browser holds a valid pass (Coming Soon page skips
+    // unlocked: this browser holds a valid pass (Coming soon page skips
     // itself and goes to the shop).
     let unlocked = false;
     try { unlocked = hasGatePass(req, await getGateState()); } catch (e) {}
@@ -378,7 +378,7 @@ app.post('/api/verify-visitor-password', async (req, res) => {
 });
 
 // Super Admins get a jd_admin pass so they can see the shop while it's
-// behind Coming Soon (the Coming Soon admin sign-in and admin.html call
+// behind Coming soon (the Coming soon admin sign-in and admin.html call
 // this once signed in).
 app.post('/api/admin-gate-pass', async (req, res) => {
   if (!adminDb) return res.status(503).json({ ok: false });
@@ -2405,7 +2405,7 @@ app.post('/api/contact', async (req, res) => {
     const team = orderEmails.contactForStaff(msg, ctx);
     const copy = orderEmails.contactReceived(msg, ctx);
     // The team email must go out, or the message is only in Firestore.
-    await sendResendEmail({ from: 'Janedore Customer Care <noreply@janedore.co.za>', replyTo: email, to: ORDER_ALERT_EMAIL, subject: team.subject, html: team.html, text: team.text });
+    await sendResendEmail({ from: 'Janedore customer care <noreply@janedore.co.za>', replyTo: email, to: ORDER_ALERT_EMAIL, subject: team.subject, html: team.html, text: team.text });
     sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: email, subject: copy.subject, html: copy.html, text: copy.text })
       .catch((e) => console.error('[CONTACT] Copy to customer failed:', e.message));
     res.json({ ok: true });

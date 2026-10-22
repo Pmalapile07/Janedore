@@ -47,7 +47,7 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
   }
   body.chat-is-open #live-chat-bubble { display: none !important; }
-  /* Hidden on the product page (its sticky Add to Bag bar sits at the
+  /* Hidden on the product page (its sticky Add to bag bar sits at the
      bottom) and on the bag and checkout, where it would cover the totals
      and the pay button; shown on every other page. */
   body:has(#page-product-detail.active) #live-chat-bubble,
@@ -393,7 +393,7 @@
 
   /* ---------- PILL BUTTONS ---------- */
   /* Every button in the chat is a 33px pill (the send button's height)
-     with 12px regular Inter: these, the header's Track Order button and
+     with 12px regular Inter: these, the header's Track order button and
      the satisfaction Yes/No buttons. */
   #chat-window .chat-pill-btn {
     background: none !important;
@@ -861,12 +861,12 @@
      WIDGET MARKUP
      ========================================================= -->
 
-<!-- Track Order button lives here as real markup — JS clones this
+<!-- Track order button lives here as real markup — JS clones this
      template wherever the button needs to appear (the initial JAI
      greeting, and again any time a customer types something like
      "track order"), instead of building it from an HTML string. -->
 <template id="jai-track-order-template">
-  <button class="chat-pill-btn filled jai-track-order-btn" onclick="showOrderLookup()">Track Order</button>
+  <button class="chat-pill-btn filled jai-track-order-btn" onclick="showOrderLookup()">Track order</button>
 </template>
 
 <!-- The only copy of this markup — index.html used to also ship a

@@ -400,7 +400,7 @@ function showAddedToCartToast(text, icon, undo) {
   if (iconEl) iconEl.className = 'ph ' + (icon || 'ph-check-circle') + ' added-toast-icon';
   _toastUndo = typeof undo === 'function' ? undo : null;
   toast.querySelector('.added-toast-undo').style.display = _toastUndo ? '' : 'none';
-  // Sit just above the product page's sticky Add to Bag bar when it's there.
+  // Sit just above the product page's sticky Add to bag bar when it's there.
   const sticky = document.getElementById('sticky-add-bar');
   toast.style.bottom = (sticky ? sticky.getBoundingClientRect().height : 0) + 16 + 'px';
 
@@ -634,8 +634,8 @@ function renderCartPage() {
     DOM.cartPageContent.innerHTML = `<div class="cart-empty">
       <i class="ph ph-tote-simple cart-empty-icon" aria-hidden="true"></i>
       <div class="cart-empty-title">Your bag is empty</div>
-      <button class="cart-empty-btn" onclick="navigateTo('products')">Continue Shopping</button>
-    </div>${cartSliderHtml(useRecent ? 'Recently Viewed' : 'New Arrivals', picks)}`;
+      <button class="cart-empty-btn" onclick="navigateTo('products')">Continue shopping</button>
+    </div>${cartSliderHtml(useRecent ? 'Recently viewed' : 'New arrivals', picks)}`;
     if (picks.length) initSliderLeadingTracking('cart-slider-grid');
     return;
   }
@@ -714,10 +714,10 @@ function renderCartPage() {
   const hasSoldOut = cartHasSoldOutItem();
   html += `<div class="cart-card cart-totals">
     <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + shipping.fee)}</span></div>
-    <div class="cart-totals-row"><span>Cart Total</span><span>${formatPrice(getCartSubtotal())}</span></div>
+    <div class="cart-totals-row"><span>Cart total</span><span>${formatPrice(getCartSubtotal())}</span></div>
     ${appliedDiscount ? `<div class="cart-totals-row discount"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
-    <div class="cart-totals-row"><span>Delivery Fee${shipping.packages > 1 ? ` (${shipping.packages} packages)` : ''}</span><span>${shipping.freeShipping ? 'Free' : formatPrice(shipping.fee)}</span></div>
-    <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout Now</button>
+    <div class="cart-totals-row"><span>Delivery fee${shipping.packages > 1 ? ` (${shipping.packages} packages)` : ''}</span><span>${shipping.freeShipping ? 'Free' : formatPrice(shipping.fee)}</span></div>
+    <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout now</button>
   </div></div>`;
   const inspired = cartInspiredProducts();
   html += cartSliderHtml('Inspired by your bag', inspired);
@@ -748,7 +748,7 @@ function cartInspiredProducts() {
 
 // Horizontal product slider used on both cart states and the empty
 // wishlist (#wish-slider-grid there); #cart-slider-grid
-// shares the New Arrivals slider rules in product-grid.css.
+// shares the New arrivals slider rules in product-grid.css.
 function cartSliderHtml(title, products, gridId) {
   if (!products.length) return '';
   return `<section class="cart-suggestions">

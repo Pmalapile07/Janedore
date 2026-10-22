@@ -50,23 +50,33 @@ function buildSizeRowHtml(product, variantIndex) {
     const selectable = inStock || product.waitlist;
     return `<button class="${cls}" ${selectable ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')"${inStock ? '' : ' aria-label="' + escapeHTML(s) + ', sold out"'}>${escapeHTML(s)}</button>`;
   }).join('');
-  return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Select a Size</div><div class="sizes-row">${buttons}</div></div>`;
+  return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Select a size</div><div class="sizes-row">${buttons}</div></div>`;
 }
 
 // Waitlist (waitlist-api.js): products with "Waitlist when sold out"
-// on in admin keep their sold-out sizes selectable, and the Add to Bag
-// button reads Add to Waitlist for them (updateAddToCartState). Signed-in
+// on in admin keep their sold-out sizes selectable, and the Add to bag
+// button reads Add to waitlist for them (updateAddToCartState). Signed-in
 // customers join straight away; guests are asked to sign in first, since
-// the waitlist lives in My Account.
+// the waitlist lives in My account.
 function productWaitlistMode(product) {
   if (!product || !product.waitlist) return false;
   const vi = S.productVariantSelections[product.id] ?? 0;
   const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
-  if (hasSizes) return !!S.selectedSize && !isSizeInStock(product, vi, S.selectedSize);
+  // No size picked means this colour has none in stock (buildSizeRowHtml
+  // picks one that is), so it shows Add to waitlist straight away.
+  if (hasSizes) return !S.selectedSize || !isSizeInStock(product, vi, S.selectedSize);
   return isProductSoldOut(product) || !isSizeInStock(product, vi, 'OS');
 }
 
 async function joinProductWaitlist(product, btn) {
+  // Ask for the size they want before joining.
+  const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
+  if (hasSizes && !S.selectedSize) {
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Select a size to join the waitlist', 'ph-ruler');
+    const row = document.getElementById('product-size-row');
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   const user = firebase.auth().currentUser;
   if (!user || user.isAnonymous) {
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Sign in to join the waitlist', 'ph-user');
@@ -91,7 +101,7 @@ async function joinProductWaitlist(product, btn) {
   }
 }
 
-// Re-evaluates the sticky bar's Add to Bag button (the page's only add
+// Re-evaluates the sticky bar's Add to bag button (the page's only add
 // button) label/disabled state against
 // whatever's currently selected (size, color). Called after both size
 // and color selection rather than duplicating this logic at each call
@@ -113,20 +123,17 @@ function updateAddToCartState() {
   const needsSize = hasSizes && !S.selectedSize && !noSizeInStock;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
   const waitlist = productWaitlistMode(product);
-  // Waitlist on and every size of this colour sold out: pick one first.
-  const pickForWaitlist = !!product.waitlist && hasSizes && !S.selectedSize;
-  stickyBtn.disabled = waitlist ? false : (pickForWaitlist || needsSize || sizeOutOfStock || soldOut);
+  stickyBtn.disabled = waitlist ? false : (needsSize || sizeOutOfStock || soldOut);
 
   // Never overwrite the transient "Added" feedback; "Add" instead of
-  // "Add to Bag" once the bar is minimized.
+  // "Add to bag" once the bar is minimized.
   const bar = document.getElementById('sticky-add-bar');
   if (bar && bar.classList.contains('added-feedback')) return;
   const label = stickyBtn.querySelector('.sticky-btn-label');
-  const defaultLabel = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to Bag';
-  if (waitlist) { if (label) label.textContent = bar && bar.classList.contains('minimized') ? 'Waitlist' : 'Add to Waitlist'; return; }
-  if (pickForWaitlist) { if (label) label.textContent = 'Select a Size'; return; }
-  const unavailable = (sizeOutOfStock || soldOut) ? (isPreorder ? 'Pre-orders Full' : 'Sold Out') : '';
-  if (label) label.textContent = needsSize ? 'Select a Size' : (unavailable || (isPreorder ? 'Pre-order' : defaultLabel));
+  const defaultLabel = (bar && bar.classList.contains('minimized')) ? 'Add' : 'Add to bag';
+  if (waitlist) { if (label) label.textContent = bar && bar.classList.contains('minimized') ? 'Waitlist' : 'Add to waitlist'; return; }
+  const unavailable = (sizeOutOfStock || soldOut) ? (isPreorder ? 'Pre-orders full' : 'Sold out') : '';
+  if (label) label.textContent = needsSize ? 'Select a size' : (unavailable || (isPreorder ? 'Pre-order' : defaultLabel));
 }
 function wordCount(str) { return (str||'').split(/\s+/).filter(Boolean).length; }
 function truncateName(name) { if(!name) return ''; const w=name.split(' '); return w.length<=3?name:w.slice(0,3).join(' ')+'<br>'+w.slice(3).join(' '); }
@@ -135,8 +142,8 @@ function truncateNameEllipsis(name) { if(!name) return ''; const w=name.split(' 
 // Badges are computed from real product data rather than a manually-set
 // flag, so staff never have to remember to update them: New = added
 // within the last PRODUCT_NEW_DAYS days, Sale = has a valid sale price
-// below the list price, Sold Out = zero stock. Only Pre-order and a
-// free-text custom label stay admin-set. Sold Out always wins and hides
+// below the list price, Sold out = zero stock. Only Pre-order and a
+// free-text custom label stay admin-set. Sold out always wins and hides
 // every other badge — a product that can't be bought shouldn't also be
 // advertised as new or on sale.
 var PRODUCT_NEW_DAYS = 5;
@@ -168,7 +175,7 @@ function getProductBadges(product) {
     badges.push(manual.toUpperCase());
   }
   // Products marked Free delivery from brands that offer it (cart.js),
-  // the same products as the Free Delivery collection.
+  // the same products as the Free delivery collection.
   if (typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product)) badges.push('FREE DELIVERY');
 
   return badges;
@@ -336,7 +343,7 @@ function changeProductQuantity(delta) {
 }
 
 /* ============================================================
-   SWIPE SECTION — Recently Viewed / You May Also Like / Complete the Look
+   SWIPE SECTION — Recently viewed / You may also like / Complete the look
    ============================================================ */
 
 function buildSwipeSection(title, products, containerId) {
@@ -354,8 +361,8 @@ function buildSwipeSection(title, products, containerId) {
 
 // Static 2-column grid — same card markup/styling as the collection
 // page (productCard()), not the sliding swipe-track used elsewhere.
-// No scroll, no touch handlers, no bars. Used for Recently Viewed,
-// You May Also Like, and Complete the Look.
+// No scroll, no touch handlers, no bars. Used for Recently viewed,
+// You may also like, and Complete the look.
 function buildProductGridSection(title, products, gridId) {
   const cards = products.map(p => productCard(p)).join('');
   return `<div class="swipe-section">
@@ -425,21 +432,21 @@ async function renderProductPage(product) {
   // a selectable "size" (there's nothing to actually select).
   const sizes=(product.sizes||[]).filter(s=>s!=='OS');
   const productBadges=getProductBadges(product);
-  const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You May Also Like',related,`related-${product.id}`):'';
+  const related=merchandiseProducts(PRODUCTS.filter(p=>p.id!==product.id&&p.category===product.category&&p.status==='active')).slice(0,6); const relatedSection=related.length?buildProductGridSection('You may also like',related,`related-${product.id}`):'';
   // Same-brand picks first, then site-wide featured products, then
   // whatever's left — works for every category, unlike the old
-  // category-by-category rules. Excludes whatever You May Also Like
+  // category-by-category rules. Excludes whatever You may also like
   // (above) already shows, so the two sections don't repeat products.
-  const suggested=getSuggestedProducts(product,related.map(p=>p.id)); const suggestedSection=suggested.length?buildProductGridSection('Suggested Products',suggested,`suggested-${product.id}`):'';
+  const suggested=getSuggestedProducts(product,related.map(p=>p.id)); const suggestedSection=suggested.length?buildProductGridSection('Suggested products',suggested,`suggested-${product.id}`):'';
   const productVendor=findVendorForProduct(product);
   // Shows every brand, including the one this product is from — the
   // shopper is already looking at that brand's product, so there's no
   // real redundancy in also listing it here.
   const shopByBrandVendors=getFeaturedBrands(S.vendors||[]);
-  const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by Brand</div><div class="product-grid brand-grid-scroll">${shopByBrandCardsHtml(shopByBrandVendors)}</div></div>`:'';
+  const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by brand</div><div class="product-grid brand-grid-scroll">${shopByBrandCardsHtml(shopByBrandVendors)}</div></div>`:'';
 
   // Progress bars for the main image slider, mirroring the swipe-bar
-  // dots used in Recently Viewed / You May Also Like / Complete the Look.
+  // dots used in Recently viewed / You may also like / Complete the look.
   // Always rendered — a single image still shows one bar — replacing the
   // old thumbnail strip entirely.
   const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
@@ -502,7 +509,7 @@ async function renderProductPage(product) {
       </div>
       <div class="product-size-color-group">
         ${buildSizeRowHtml(product,vi)}
-        ${variants.length?`<div class="product-variants"><div class="sizes-label">Select a Color</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
+        ${variants.length?`<div class="product-variants"><div class="sizes-label">Select a colour</div><div class="variants-row">${variantSwatchesHtml(product,vi)}</div></div>`:''}
       </div>
       <div class="info-accordion-wrap">
         <div class="info-accordion-item open" id="info-accordion-description">
@@ -512,7 +519,7 @@ async function renderProductPage(product) {
           </div>
           <div class="info-accordion-body">
             <div>${product.description||'No description available.'}</div>
-            ${product.compositionCare?`<p class="info-sub-label">Composition &amp; Care</p><p>${product.compositionCare}</p>`:''}
+            ${product.compositionCare?`<p class="info-sub-label">Composition &amp; care</p><p>${product.compositionCare}</p>`:''}
             ${product.measurements?`<p class="info-sub-label">Measurements</p><p>${product.measurements}</p>`:''}
           </div>
         </div>

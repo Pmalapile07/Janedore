@@ -1,9 +1,9 @@
 /* ============================================================
    MY ACCOUNT: /account, /account/{section} and /account/orders/{JD-number}
    Rendered into #account-loaded (index.html) by navigateToAccount()
-   (login.js). /account is a list like the navigation menu (Account Info,
-   Orders, Returns & Exchanges, Wallet, Wishlist, Waitlist, Reviews) with
-   Sign Out; each opens its own page at /account/{section}. An order opens
+   (login.js). /account is a list like the navigation menu (Account info,
+   Orders, Returns & exchanges, Wallet, Wishlist, Waitlist, Reviews) with
+   Sign out; each opens its own page at /account/{section}. An order opens
    its own page with the same packages, steps and tracking as Track Your
    Order (track-order.js), plus delivery and payment details.
    ============================================================ */
@@ -29,7 +29,7 @@ function accountOrderFromPath() {
 }
 
 const ACCOUNT_SECTIONS = {
-  info: 'Account Info', orders: 'Orders', returns: 'Returns & Exchanges', wallet: 'Wallet', waitlist: 'Waitlist', reviews: 'Reviews'
+  info: 'Account info', orders: 'Orders', returns: 'Returns & exchanges', wallet: 'Wallet', waitlist: 'Waitlist', reviews: 'Reviews'
 };
 
 // From the URL: /account/orders, /account/info and so on.
@@ -53,25 +53,25 @@ async function renderAccountPage() {
     const first = (user.displayName || (_accountProfile && _accountProfile.name) || '').trim().split(/\s+/)[0];
     const row = (label, onclick) => `<button type="button" class="jd-list-row" onclick="${onclick}"><span>${label}</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
     el.innerHTML = `<section class="account-page">
-      <h1 class="account-heading">${first ? 'Hi, ' + escapeHTML(first) : 'My Account'}</h1>
+      <h1 class="account-heading">${first ? 'Hi, ' + escapeHTML(first) : 'My account'}</h1>
       <p class="account-hello">${escapeHTML(user.email || '')}</p>
-      <nav class="jd-list" aria-label="My Account">
-        ${row('Account Info', "openAccountSection('info')")}
+      <nav class="jd-list" aria-label="My account">
+        ${row('Account info', "openAccountSection('info')")}
         ${row('Orders', "openAccountSection('orders')")}
-        ${row('Returns &amp; Exchanges', "openAccountSection('returns')")}
+        ${row('Returns &amp; exchanges', "openAccountSection('returns')")}
         ${row('Wallet', "openAccountSection('wallet')")}
         ${row('Wishlist', "navigateTo('wishlist')")}
         ${row('Waitlist', "openAccountSection('waitlist')")}
         ${row('Reviews', "openAccountSection('reviews')")}
       </nav>
-      <button type="button" class="account-outline-btn account-signout-btn" onclick="handleLogout()">Sign Out</button>
-      <button type="button" class="account-help-link" onclick="navigateToContentPage('customer-care')"><i class="ph ph-question" aria-hidden="true"></i><span>Customer Care</span></button>
+      <button type="button" class="account-outline-btn account-signout-btn" onclick="handleLogout()">Sign out</button>
+      <button type="button" class="account-help-link" onclick="navigateToContentPage('customer-care')"><i class="ph ph-question" aria-hidden="true"></i><span>Customer care</span></button>
     </section>`;
     return;
   }
 
   el.innerHTML = `<section class="account-page">
-    <button type="button" class="account-back" onclick="openAccountSection('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button>
+    <button type="button" class="account-back" onclick="openAccountSection('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> My account</button>
     <h1 class="account-heading account-section-heading">${ACCOUNT_SECTIONS[section]}</h1>
     <div id="account-tab-body"><div class="loading-spinner"><div class="spinner"></div></div></div>
   </section>`;
@@ -190,7 +190,7 @@ async function renderAccountOrders() {
       <i class="ph ph-package cart-empty-icon" aria-hidden="true"></i>
       <div class="cart-empty-title">No orders yet</div>
       <div class="wish-empty-sub">When you place an order, it will appear here.</div>
-      <button class="cart-empty-btn" onclick="navigateTo('products')">Start Shopping</button>
+      <button class="cart-empty-btn" onclick="navigateTo('products')">Start shopping</button>
     </div>`;
     return;
   }
@@ -271,19 +271,19 @@ async function renderAccountOrder(orderNumber) {
       <div class="account-row"><span>Delivery fee${new Set(packages.map(p => p.brand)).size > 1 ? ' (' + new Set(packages.map(p => p.brand)).size + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
     </div>
-    ${order.paymentStatus === 'paid' && packages.some(p => p.shipped) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return Items</button>
-      <button type="button" class="account-outline-btn account-return-btn" onclick="startAccountExchange('${escapeJSString(order.orderNumber || order.id)}')">Exchange Items</button>` : ''}
-    <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact Customer Care</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
+    ${order.paymentStatus === 'paid' && packages.some(p => p.shipped) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return items</button>
+      <button type="button" class="account-outline-btn account-return-btn" onclick="startAccountExchange('${escapeJSString(order.orderNumber || order.id)}')">Exchange items</button>` : ''}
+    <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact customer care</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
   </section>`;
 }
 
-// Opens Log a Return with this order already filled in.
+// Opens Log a return with this order already filled in.
 function startAccountReturn(orderNumber) {
   history.pushState(null, null, '/pages/log-a-return?order=' + encodeURIComponent(orderNumber));
   navigateToContentPage('log-a-return', true);
 }
 
-// Opens Exchange an Item with this order already filled in.
+// Opens Exchange an item with this order already filled in.
 function startAccountExchange(orderNumber) {
   history.pushState(null, null, '/pages/exchange-an-item?order=' + encodeURIComponent(orderNumber));
   navigateToContentPage('exchange-an-item', true);
@@ -313,7 +313,7 @@ async function renderAccountProfile() {
     ${field('acc-phone', 'Phone number', p.phone, 'type="tel" autocomplete="tel" placeholder="+27 81 234 5678"')}
     <label class="track-label" for="acc-email">Email address</label>
     <input class="track-input" id="acc-email" value="${escapeHTML(user.email || '')}" disabled>
-    <p class="account-note">To change your email address, please contact Customer Care.</p>
+    <p class="account-note">To change your email address, please contact customer care.</p>
 
     <div class="account-section-title">Default delivery address</div>
     ${field('acc-address', 'Street address', p.address, 'autocomplete="street-address" placeholder="House number and street name"')}
@@ -324,12 +324,12 @@ async function renderAccountProfile() {
     ${field('acc-postal', 'Postal code', p.postalCode, 'inputmode="numeric" autocomplete="postal-code" placeholder="2000"')}
     <p class="account-note">Used to fill in checkout for you.</p>
     <div class="track-error" id="acc-error" role="alert"></div>
-    <button type="submit" class="track-btn" id="acc-save">Save Changes</button>
+    <button type="submit" class="track-btn" id="acc-save">Save changes</button>
   </form>
 
   <div class="account-section-title">Sign-in &amp; security</div>
   ${usesPassword ? `<p class="account-note">We’ll email you a secure link to set a new password.</p>
-    <button type="button" class="account-outline-btn" id="acc-password" onclick="sendAccountPasswordReset()">Change Password</button>` : ''}
+    <button type="button" class="account-outline-btn" id="acc-password" onclick="sendAccountPasswordReset()">Change password</button>` : ''}
   ${usesGoogle ? `<p class="account-note">You sign in with your Google account.</p>` : ''}`;
 }
 
@@ -355,7 +355,7 @@ async function saveAccountProfile(e) {
     err.textContent = 'We couldn’t save your details. Please try again.';
     err.style.display = 'block';
   } finally {
-    btn.disabled = false; btn.textContent = 'Save Changes';
+    btn.disabled = false; btn.textContent = 'Save changes';
   }
 }
 
@@ -366,7 +366,7 @@ async function sendAccountPasswordReset() {
   btn.disabled = true;
   try {
     await firebase.auth().sendPasswordResetEmail(user.email, { url: window.location.origin + '/login' });
-    btn.textContent = 'Link Sent';
+    btn.textContent = 'Link sent';
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Password link sent to ' + user.email, 'ph-envelope-simple');
   } catch (e) {
     btn.disabled = false;
@@ -374,7 +374,7 @@ async function sendAccountPasswordReset() {
   }
 }
 
-// ---------- Returns & Exchanges, Wallet, Waitlist ----------
+// ---------- Returns & exchanges, Wallet, Waitlist ----------
 
 // GET/POST to an /api/account/* endpoint as the signed-in customer.
 async function accountApi(path, method) {

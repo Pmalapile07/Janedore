@@ -7,7 +7,7 @@
 let loginMode = 'signin'; // 'signin', 'signup' or 'reset'
 
 // Signed-in customers never see the sign-in form: the account icon,
-// /login and a fresh sign-in all land on My Account (account.js).
+// /login and a fresh sign-in all land on My account (account.js).
 function realUser() {
   const user = firebase.auth().currentUser;
   return user && !user.isAnonymous ? user : null;
@@ -78,9 +78,9 @@ function updateLoginModeUI() {
 
   // [title, button, line under the title: text, link]
   const labels = {
-    signin: ['Sign In', 'Sign In', 'New customer?', 'Create an account'],
-    signup: ['Create Account', 'Create Account', 'Already have an account?', 'Sign in'],
-    reset: ['Reset Password', 'Send Reset Link', 'Remembered your password?', 'Back to sign in']
+    signin: ['Sign in', 'Sign in', 'New customer?', 'Create an account'],
+    signup: ['Create account', 'Create account', 'Already have an account?', 'Sign in'],
+    reset: ['Reset password', 'Send reset link', 'Remembered your password?', 'Back to sign in']
   }[loginMode];
   const switchText = document.getElementById('login-switch-text');
   const remember = document.getElementById('login-remember');
@@ -125,7 +125,7 @@ function friendlyAuthError(error) {
     'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': '',
     'auth/account-exists-with-different-credential': 'This email is already registered. Sign in with your email and password.',
-    'auth/operation-not-allowed': 'This sign-in option isn’t available right now. Please try another way to sign in, or contact Customer Care.',
+    'auth/operation-not-allowed': 'This sign-in option isn’t available right now. Please try another way to sign in, or contact customer care.',
     'auth/unauthorized-domain': 'This sign-in option isn’t available yet. Please use your email and password.',
     'auth/operation-not-supported-in-this-environment': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.',
     'auth/web-storage-unsupported': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.'

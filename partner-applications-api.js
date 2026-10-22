@@ -20,7 +20,7 @@ const LISTS = {
   rangeSize: ['1 to 10 products', '11 to 50 products', '51 to 200 products', 'More than 200 products'],
   fulfilment: ['We pack and ship orders ourselves', 'We use a fulfilment or courier partner', 'We are still setting this up']
 };
-// The form on Brand Partnerships no longer asks for location, price band,
+// The form on Brand partnerships no longer asks for location, price band,
 // channels, range size, fulfilment, goals or role; they are still accepted
 // (and shown in admin) so older applications keep their details.
 const DECIDED = ['accepted', 'declined'];

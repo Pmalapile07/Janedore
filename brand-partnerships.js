@@ -5,7 +5,7 @@
    look for, how it works, a few questions, then the application form
    itself (partner-application.js, which also submits it to
    /api/partner-applications). The hero image, hero video and the
-   selection image are set in admin > Pages > Brand Partnerships
+   selection image are set in admin > Pages > Brand partnerships
    (pages/brand-partnerships); without them the page is typographic.
 
    Copy rule: say only what JANEDORE actually offers today. Commission
@@ -93,7 +93,7 @@ function renderBrandPartnershipsPage() {
         <div class="bp-hero-media" id="bp-hero-media" hidden></div>
         <button type="button" class="bp-hero-pause" id="bp-hero-pause" hidden aria-label="Pause background video" onclick="bpToggleHeroVideo()"><span aria-hidden="true"></span></button>
         <div class="bp-hero-copy">
-          <div class="bp-eyebrow">Brand Partnerships</div>
+          <div class="bp-eyebrow">Brand partnerships</div>
           <h1 class="bp-hero-title" id="bp-hero-title">A considered home for distinctive brands.</h1>
           <p class="bp-hero-text">We work with a small selection of independent brands. If yours has a point of view, we would like to hear from you.</p>
           <div class="bp-hero-actions">
@@ -159,7 +159,7 @@ function renderBrandPartnershipsPage() {
       media.hidden = false;
       hero.classList.add('has-image');
     }
-    // Section images, each optional (admin > Pages > Brand Partnerships).
+    // Section images, each optional (admin > Pages > Brand partnerships).
     ['selectionImageUrl'].forEach(key => {
       const box = document.getElementById('bp-img-' + key);
       if (!data[key] || !box) return;

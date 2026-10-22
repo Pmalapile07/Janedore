@@ -24,32 +24,32 @@
   // [slug, name, kind of sizes (blank: one size)]
   var DEPARTMENTS = [
     { slug: 'clothing', name: 'Clothing', sizeSystem: 'clothing', categories: [
-      ['dresses', 'Dresses', 'clothing'], ['tops', 'Tops', 'clothing'], ['shirts', 'Shirts & Blouses', 'clothing'],
+      ['dresses', 'Dresses', 'clothing'], ['tops', 'Tops', 'clothing'], ['shirts', 'Shirts & blouses', 'clothing'],
       ['t-shirts', 'T-shirts', 'clothing'], ['knitwear', 'Knitwear', 'clothing'], ['pants', 'Pants', 'clothing'],
       ['jeans', 'Jeans', 'clothing'], ['shorts', 'Shorts', 'clothing'], ['skirts', 'Skirts', 'clothing'],
-      ['jackets', 'Jackets & Coats', 'clothing'], ['suits', 'Suits & Blazers', 'clothing'], ['sets', 'Sets & Co-ords', 'clothing'],
+      ['jackets', 'Jackets & coats', 'clothing'], ['suits', 'Suits & blazers', 'clothing'], ['sets', 'Sets & co-ords', 'clothing'],
       ['jumpsuits', 'Jumpsuits', 'clothing'], ['activewear', 'Activewear', 'clothing'], ['swimwear', 'Swimwear', 'clothing'],
-      ['lingerie', 'Lingerie & Sleepwear', 'clothing']
+      ['lingerie', 'Lingerie & sleepwear', 'clothing']
     ] },
     { slug: 'accessories', name: 'Accessories', categories: [
       ['shoes', 'Shoes', 'shoes'], ['bags', 'Bags', ''], ['jewelry', 'Jewellery', ''], ['sunglasses', 'Sunglasses', ''],
-      ['belts', 'Belts', ''], ['hats', 'Hats & Caps', ''], ['scarves', 'Scarves', ''], ['hair-accessories', 'Hair Accessories', ''],
-      ['wallets', 'Wallets & Purses', ''], ['watches', 'Watches', '']
+      ['belts', 'Belts', ''], ['hats', 'Hats & caps', ''], ['scarves', 'Scarves', ''], ['hair-accessories', 'Hair accessories', ''],
+      ['wallets', 'Wallets & purses', ''], ['watches', 'Watches', '']
     ] },
     { slug: 'homeware', name: 'Homeware', categories: [
       ['tableware', 'Tableware', ''], ['drinkware', 'Drinkware', ''], ['kitchen', 'Kitchen', ''], ['candles', 'Candles', ''],
-      ['home-fragrance', 'Home Fragrance', ''], ['decor', 'Décor', ''], ['vases', 'Vases', ''], ['bedding', 'Bedding', ''],
-      ['bath', 'Bath & Towels', ''], ['cushions', 'Cushions & Throws', ''], ['lighting', 'Lighting', ''],
-      ['wall-art', 'Wall Art', ''], ['storage', 'Storage', '']
+      ['home-fragrance', 'Home fragrance', ''], ['decor', 'Décor', ''], ['vases', 'Vases', ''], ['bedding', 'Bedding', ''],
+      ['bath', 'Bath & towels', ''], ['cushions', 'Cushions & throws', ''], ['lighting', 'Lighting', ''],
+      ['wall-art', 'Wall art', ''], ['storage', 'Storage', '']
     ] },
     { slug: 'beauty', name: 'Beauty', categories: [
       // 'parfum' is the slug Scent products were already saved with.
-      ['parfum', 'Fragrance', ''], ['skincare', 'Skincare', ''], ['makeup', 'Makeup', ''], ['hair-care', 'Hair Care', ''],
-      ['bath-body', 'Bath & Body', ''], ['nails', 'Nails', ''], ['beauty-tools', 'Beauty Tools', '']
+      ['parfum', 'Fragrance', ''], ['skincare', 'Skincare', ''], ['makeup', 'Makeup', ''], ['hair-care', 'Hair care', ''],
+      ['bath-body', 'Bath & body', ''], ['nails', 'Nails', ''], ['beauty-tools', 'Beauty tools', '']
     ] },
     { slug: 'kids', name: 'Kids', sizeSystem: 'kids', categories: [
-      ['girls', 'Girls’ Clothing', 'kids'], ['boys', 'Boys’ Clothing', 'kids'], ['baby', 'Baby (0–24 months)', 'kids'],
-      ['kids-shoes', 'Kids’ Shoes', 'kids-shoes'], ['kids-accessories', 'Kids’ Accessories', ''], ['toys', 'Toys', ''],
+      ['girls', 'Girls’ clothing', 'kids'], ['boys', 'Boys’ clothing', 'kids'], ['baby', 'Baby (0–24 months)', 'kids'],
+      ['kids-shoes', 'Kids’ shoes', 'kids-shoes'], ['kids-accessories', 'Kids’ accessories', ''], ['toys', 'Toys', ''],
       ['nursery', 'Nursery', '']
     ] }
   ];

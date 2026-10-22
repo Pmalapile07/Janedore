@@ -116,7 +116,7 @@ function clearWishlistOnLogout() {
 }
 
 // Cycles 1/2/3 columns, same pattern as toggleGrid()/toggleGridCat() on
-// the All Products / Category pages — kept separate (S.gridColsWish)
+// the All products / Category pages — kept separate (S.gridColsWish)
 // so switching the wishlist's layout doesn't affect theirs or vice versa.
 function toggleGridWish() {
   S.gridColsWish = S.gridColsWish === 1 ? 2 : S.gridColsWish === 2 ? 3 : 1;
@@ -127,10 +127,10 @@ function toggleGridWish() {
 // of hand-rolling a parallel card template here — that's what kept
 // silently drifting out of sync with the real card markup every time
 // productCard() changed. Same function, same structure, same page as
-// All Products, permanently.
+// All products, permanently.
 // Saved products under the heading, or the empty bag look
 // (renderCartPage(), cart.js) when there are none.
-// The "Wishlist" heading, styled like the My Account sections (account.js,
+// The "Wishlist" heading, styled like the My account sections (account.js,
 // .account-heading). Signed-in customers reach the wishlist from My
 // Account, so they get the same way back above it; everyone else gets a
 // prompt to sign in under it.
@@ -138,7 +138,7 @@ function wishHeadHtml() {
   const user = firebase.auth().currentUser;
   const signedIn = !!(user && !user.isAnonymous);
   if (signedIn) {
-    return `<div class="wish-head"><button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My Account</button><h1 class="account-heading account-section-heading">Wishlist</h1></div>`;
+    return `<div class="wish-head"><button type="button" class="account-back" onclick="navigateToAccount()"><i class="ph ph-arrow-left" aria-hidden="true"></i> My account</button><h1 class="account-heading account-section-heading">Wishlist</h1></div>`;
   }
   return `<div class="wish-head"><h1 class="account-heading">Wishlist</h1>
     <p class="wish-signin-note"><button type="button" class="wish-signin-link" onclick="navigateToLogin()">Sign in</button> to save your favourites and shop your wishlist from any device.</p></div>`;
@@ -149,7 +149,7 @@ function renderWishlistPage() {
   const head = wishHeadHtml();
   if (!S.wishlist.length) {
     DOM.wishPageContent.classList.add('is-empty');
-    DOM.wishPageContent.innerHTML = head + wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue Shopping', "navigateTo('products')");
+    DOM.wishPageContent.innerHTML = head + wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue shopping', "navigateTo('products')");
     if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
     return;
   }
@@ -160,7 +160,7 @@ function renderWishlistPage() {
 }
 
 // Same block as the empty bag: icon, message, black button, then Recently
-// Viewed or New Arrivals.
+// Viewed or New arrivals.
 function wishEmptyHtml(icon, title, btnLabel, btnAction, sub) {
   const recent = S.recentlyViewed.filter(p => p && p.status === 'active');
   const useRecent = recent.length >= 2;
@@ -170,5 +170,5 @@ function wishEmptyHtml(icon, title, btnLabel, btnAction, sub) {
       <div class="cart-empty-title">${title}</div>
       ${sub ? `<div class="wish-empty-sub">${sub}</div>` : ''}
       <button class="cart-empty-btn" onclick="${btnAction}">${btnLabel}</button>
-    </div>${cartSliderHtml(useRecent ? 'Recently Viewed' : 'New Arrivals', picks, 'wish-slider-grid')}`;
+    </div>${cartSliderHtml(useRecent ? 'Recently viewed' : 'New arrivals', picks, 'wish-slider-grid')}`;
 }

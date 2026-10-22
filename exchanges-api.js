@@ -167,7 +167,7 @@ module.exports = function registerExchanges(app, deps, shared) {
         if (!(qty > 0) || qty > item.qty) return res.status(400).json({ error: 'Please check the quantity for ' + item.name + '.' });
         if (!reason) return res.status(400).json({ error: 'Please choose a reason for ' + item.name + '.' });
         const pdoc = item.productId ? await adminDb.collection('products').doc(item.productId).get() : null;
-        if (!pdoc || !pdoc.exists) return res.status(400).json({ error: item.name + ' is no longer available to exchange. Please contact Customer Care.' });
+        if (!pdoc || !pdoc.exists) return res.status(400).json({ error: item.name + ' is no longer available to exchange. Please contact customer care.' });
         const p = pdoc.data();
         const sizes = p.sizes && p.sizes.length ? p.sizes : ['OS'];
         const wantVariantIndex = Math.floor(Number(sel.wantVariantIndex));
@@ -238,8 +238,8 @@ module.exports = function registerExchanges(app, deps, shared) {
     }
   });
 
-  // ---- signed-in customer: their returns and exchanges (My Account) ----
-  // Same rule as orders in My Account: those on orders placed while signed
+  // ---- signed-in customer: their returns and exchanges (My account) ----
+  // Same rule as orders in My account: those on orders placed while signed
   // in, plus those under the account's email once it is verified.
   app.get('/api/account/returns-exchanges', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });

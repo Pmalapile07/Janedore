@@ -142,9 +142,9 @@ function totalsBlock(order, headLabel) {
   return rows(
     row(headLabel || 'Total paid', money(order.total), { big: true, bold: true }) +
     divider() +
-    row('Cart Total', money(order.subtotal)) +
+    row('Cart total', money(order.subtotal)) +
     (discount > 0 ? row('Discount' + (order.discountCode ? ' (' + esc(order.discountCode) + ')' : ''), '-' + money(discount), { color: GREEN, semi: true }) : '') +
-    row('Delivery Fee', Number(order.shipping) ? money(order.shipping) : 'Free')
+    row('Delivery fee', Number(order.shipping) ? money(order.shipping) : 'Free')
   );
 }
 
@@ -163,7 +163,7 @@ const SUPPORT_FOOTER = 'Questions about your order? Reply to this email or write
 
 function textTotals(order) {
   const discount = Number(order.discountAmount) || 0;
-  return 'Cart Total: ' + money(order.subtotal) +
+  return 'Cart total: ' + money(order.subtotal) +
     (discount > 0 ? '\nDiscount' + (order.discountCode ? ' (' + order.discountCode + ')' : '') + ': -' + money(discount) : '') +
     '\nDelivery Fee: ' + (Number(order.shipping) ? money(order.shipping) : 'Free') +
     '\nTotal: ' + money(order.total);
@@ -186,7 +186,7 @@ function preorderLine(item) {
 }
 
 // "View order": signed-in customers land on their account's order page,
-// everyone else on Track Your Order with the number filled in
+// everyone else on Track your order with the number filled in
 // (track-order.js renderTrackOrderPage()).
 function viewOrderUrl(ctx, num) {
   return ctx.siteUrl + '/pages/track-your-order?order=' + encodeURIComponent(num) + '&view=1';
@@ -242,7 +242,7 @@ function customerConfirmation(order, ctx) {
       status,
       title('Your items', '(' + count + ')') + itemsBlock(items, ctx),
       title('Delivery details') + addressBlock(order),
-      totalsBlock(order, 'Total paid') + button('View Order', viewOrderUrl(ctx, num))
+      totalsBlock(order, 'Total paid') + button('View order', viewOrderUrl(ctx, num))
     ],
     footerHtml: SUPPORT_FOOTER
   });
@@ -688,7 +688,7 @@ function statusUpdate(order, ctx, status, trackings) {
     cards: [
       '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(copy[1]) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
-      trackingCard + button('View Order', viewOrderUrl(ctx, num)),
+      trackingCard + button('View order', viewOrderUrl(ctx, num)),
       title('Your items') + itemsBlock(order.items || [], ctx, { hidePrice: true }),
       status === 'delivered' ? '' : title('Delivering to') + addressBlock(order)
     ].filter(Boolean),
@@ -817,7 +817,7 @@ function reportReceived(report, ctx) {
       title('Need something else?') +
         '<div style="font-size:14px;line-height:1.8;color:#555555;">' +
         'Want to send something back? ' + link('Log a return', '/pages/log-a-return') + '.<br>' +
-        'Other questions? See our ' + link('Frequently Asked Questions', '/pages/faq') + '.</div>'
+        'Other questions? See our ' + link('Frequently asked questions', '/pages/faq') + '.</div>'
     ],
     footerHtml: 'Anything to add? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
@@ -828,15 +828,15 @@ function reportReceived(report, ctx) {
   return { subject: 'We received your report about ' + brand, html, text };
 }
 
-// Customer Care contact form (/api/contact): the team's copy and the
+// Customer care contact form (/api/contact): the team's copy and the
 // customer's copy.
 function contactForStaff(m, ctx) {
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
-    title: 'New Customer Care message',
+    title: 'New customer care message',
     preheader: m.topic + ' from ' + m.name,
-    bannerHtml: '<strong>New Customer Care message</strong>',
+    bannerHtml: '<strong>New customer care message</strong>',
     cards: [
       title('From') + rows(
         row('Name', esc(m.name), { semi: true }) +
@@ -847,9 +847,9 @@ function contactForStaff(m, ctx) {
     ],
     footerHtml: 'Reply to this email to answer ' + esc(m.name) + ' directly.<br>Message ' + esc(m.id)
   });
-  const text = 'New Customer Care message\n\nName: ' + m.name + '\nEmail: ' + m.email + (m.orderNumber ? '\nOrder: ' + m.orderNumber : '') +
+  const text = 'New customer care message\n\nName: ' + m.name + '\nEmail: ' + m.email + (m.orderNumber ? '\nOrder: ' + m.orderNumber : '') +
     '\nTopic: ' + m.topic + '\n\n' + m.message + '\n\nReply to this email to answer ' + m.name + ' directly.\nMessage ' + m.id;
-  return { subject: 'Customer Care: ' + m.topic + (m.orderNumber ? ' (' + m.orderNumber + ')' : '') + ' from ' + m.name, html, text };
+  return { subject: 'Customer care: ' + m.topic + (m.orderNumber ? ' (' + m.orderNumber + ')' : '') + ' from ' + m.name, html, text };
 }
 
 function contactReceived(m, ctx) {
@@ -859,10 +859,10 @@ function contactReceived(m, ctx) {
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
     title: 'We received your message',
-    preheader: 'Thank you for contacting Janedore Customer Care. We’ll reply to you at this email address.',
+    preheader: 'Thank you for contacting Janedore customer care. We’ll reply to you at this email address.',
     bannerHtml: '<strong>We received your message</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', thank you for contacting Janedore Customer Care. We’ll reply to you at this email address.</div>',
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', thank you for contacting Janedore customer care. We’ll reply to you at this email address.</div>',
       title('Your message') + rows(
         (m.orderNumber ? row('Order', esc(m.orderNumber), { semi: true }) : '') +
         row('Topic', esc(m.topic), { semi: true })) +
@@ -871,17 +871,17 @@ function contactReceived(m, ctx) {
         '<div style="font-size:14px;line-height:1.8;color:#555555;">' +
         link('Track your order', '/pages/track-your-order') + '<br>' +
         link('Log a return', '/pages/log-a-return') + '<br>' +
-        link('Frequently Asked Questions', '/pages/faq') + '</div>'
+        link('Frequently asked questions', '/pages/faq') + '</div>'
     ],
     footerHtml: 'Anything to add? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
-  const text = 'We received your message\n\nHi ' + first + ', thank you for contacting Janedore Customer Care. We’ll reply to you at this email address.\n\n' +
+  const text = 'We received your message\n\nHi ' + first + ', thank you for contacting Janedore customer care. We’ll reply to you at this email address.\n\n' +
     (m.orderNumber ? 'Order: ' + m.orderNumber + '\n' : '') + 'Topic: ' + m.topic + '\n\n' + m.message +
     '\n\nTrack your order: ' + ctx.siteUrl + '/pages/track-your-order\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently Asked Questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
   return { subject: 'We received your message', html, text };
 }
 
-// Partner Application (/api/partner-applications): the team's copy and
+// Partner application (/api/partner-applications): the team's copy and
 // the applicant's confirmation.
 function partnerApplicationForStaff(a, ctx) {
   const link = (url, label) => '<a href="' + esc(url) + '" style="color:#111111;">' + esc(label || url) + '</a>';

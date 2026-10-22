@@ -565,7 +565,7 @@ function navigateToCategory(cat, replaceUrl) {
 // Collections that exist without being created in admin. One with the
 // same handle made in admin > Collections takes over.
 const BUILTIN_COLLECTIONS = {
-  'free-delivery': { id: 'free-delivery', handle: 'free-delivery', title: 'Free Delivery', collectionType: 'automated', automatedRule: 'freedelivery' }
+  'free-delivery': { id: 'free-delivery', handle: 'free-delivery', title: 'Free delivery', collectionType: 'automated', automatedRule: 'freedelivery' }
 };
 
 async function navigateToCollection(handle, replaceUrl) {
@@ -637,7 +637,7 @@ function navigateToSale() {
 // of on-sale ones. Previously this just set S.sortBy='newest' and
 // called renderAllProducts(), which sorted the WHOLE catalog
 // newest-first without filtering anything out — indistinguishable
-// from All Products once you scrolled past the first few items.
+// from All products once you scrolled past the first few items.
 function navigateToNewInLegacy() { S.currentCollectionHandle = null; S.currentCollectionData = null; ++pageNavGeneration; closeFilterPanel(); closeSearch(); S.saleMode = false; S.newInMode = true; S.sortBy = 'newest'; S.filter = {cat:[], size:"all", vendor:[], onSale:false, inStock:false}; updateCleanUrl('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; S.activeSortTab = 'newin'; renderCollectionSortingTabs(); renderNewInProducts(); resetScrollToTop(); setNavForPage('products'); ensureNavScrolled(); updateChatVisibility(); }
 
 function navigateToNewIn() {
@@ -727,7 +727,7 @@ function openMenu() {
   const user = typeof firebase !== 'undefined' && firebase.auth ? firebase.auth().currentUser : null;
   const signedIn = user && !user.isAnonymous;
   const label = document.getElementById('menu-account-label');
-  if (label) label.textContent = signedIn ? 'My Account' : 'Sign In';
+  if (label) label.textContent = signedIn ? 'My account' : 'Sign in';
   const avatar = document.getElementById('menu-avatar');
   if (avatar) {
     const name = signedIn ? (user.displayName || user.email || '').trim() : '';
@@ -774,7 +774,7 @@ function openMenuDepartment(slug) {
   const cats = JDTaxonomy.categoriesIn(dept.slug).filter(c => c !== dept.slug && stocked.has(c)).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b));
   const row = (cat, label) => `<a class="menu-row menu-subcat" onclick="closeMenu();navigateToCategory('${escapeJSString(cat)}');">${escapeHTML(label)}<i class="ph ph-caret-right menu-chev"></i></a>`;
   panel.innerHTML = `<button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>${escapeHTML(dept.name)}</button>` +
-    row(dept.slug, 'Shop All ' + dept.name) + cats.map(c => row(c, JDTaxonomy.label(c))).join('');
+    row(dept.slug, 'Shop all ' + dept.name.toLowerCase()) + cats.map(c => row(c, JDTaxonomy.label(c))).join('');
   openMenuPanel('dept');
 }
 

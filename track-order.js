@@ -22,7 +22,7 @@ function renderTrackOrderPage() {
 
   el.innerHTML = `
     <section class="track-page">
-      <h1 class="track-title">Track Your Order</h1>
+      <h1 class="track-title">Track your order</h1>
       <p class="track-intro">Enter your order number and the email address used at checkout.</p>
       <form class="track-form" id="track-form" onsubmit="submitTrackOrder(event)" novalidate>
         <label class="track-label" for="track-number">Order number</label>
@@ -30,7 +30,7 @@ function renderTrackOrderPage() {
         <label class="track-label" for="track-email">Email</label>
         <input class="track-input" id="track-email" type="email" placeholder="you@example.com" autocomplete="email" value="${escapeHTML(email)}" required>
         <div class="track-error" id="track-error" role="alert"></div>
-        <button class="track-btn" id="track-btn" type="submit">Track Order</button>
+        <button class="track-btn" id="track-btn" type="submit">Track order</button>
         <p class="track-hint">Your order number begins with JD- and can be found in your order confirmation email.</p>
       </form>
       <div id="track-result"></div>
@@ -39,7 +39,7 @@ function renderTrackOrderPage() {
   else if (number && email) submitTrackOrder();
 }
 
-// "View Order" in order emails links to ?order=JD-123456&view=1. A
+// "View order" in order emails links to ?order=JD-123456&view=1. A
 // signed-in customer who owns that order goes straight to it in My
 // Account; anyone else stays here with the number (and their email, when
 // we know it) filled in, and the order shows as soon as both are there.
@@ -92,7 +92,7 @@ async function submitTrackOrder(e) {
   } catch (err) {
     showError('No connection. Check your internet and try again.');
   } finally {
-    btn.disabled = false; btn.textContent = 'Track Order';
+    btn.disabled = false; btn.textContent = 'Track order';
   }
 }
 
@@ -151,7 +151,7 @@ function courierTrackingUrl(courier, trackingNumber) {
   return tpl && trackingNumber ? tpl.replace('{n}', encodeURIComponent(trackingNumber)) : '';
 }
 
-// opts.hideAnother: the My Account order page (account.js) has its own way back.
+// opts.hideAnother: the My account order page (account.js) has its own way back.
 function trackResultHtml(o, opts) {
   opts = opts || {};
   const packages = o.packages || [];
@@ -167,13 +167,13 @@ function trackResultHtml(o, opts) {
 
   let notice = '';
   if (o.refundPending) {
-    notice = `<div class="track-notice">We’re processing a refund for this order. You’ll receive an email as soon as it has been completed. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span>.</div>`;
+    notice = `<div class="track-notice">We’re processing a refund for this order. You’ll receive an email as soon as it has been completed. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`;
   } else if (o.refunded) {
-    notice = `<div class="track-notice">Your refund has been completed and returned to your original payment method. Depending on your bank, it can take up to 10 business days to reflect. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span>.</div>`;
+    notice = `<div class="track-notice">Your refund has been completed and returned to your original payment method. Depending on your bank, it can take up to 10 business days to reflect. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`;
   } else if (o.cancelled) {
-    notice = `<div class="track-notice">This order has been cancelled. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span>.</div>`;
+    notice = `<div class="track-notice">This order has been cancelled. If you have any questions, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`;
   } else if (!o.paid) {
-    notice = `<div class="track-notice">Payment for this order has not been received, so it has not been processed. If you have been charged, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span> and quote your order number.</div>`;
+    notice = `<div class="track-notice">Payment for this order has not been received, so it has not been processed. If you have been charged, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span> and quote your order number.</div>`;
   }
   const allPreorder = packages.length > 0 && packages.every(p => p.preorder);
   const stages = packages.map(p => trackPackageStage(o, p));

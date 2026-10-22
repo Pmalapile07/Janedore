@@ -1,14 +1,14 @@
 /* ============================================================
    EXCHANGE AN ITEM: /pages/exchange-an-item
    content-pages.js hands this slug to renderExchangesPage(). Built like
-   Log a Return (returns.js): two pill tabs, Exchange an item (order
+   Log a return (returns.js): two pill tabs, Exchange an item (order
    number + email, pick items, what you'd like instead, reason, photos)
    and Check exchange status (exchange number + email).
    exchanges-api.js does the checks. Exchanges never become refunds, so
    nothing here mentions one. Who pays postage follows the reason (see
    EXCHANGE_POLICY_HTML).
    ?order=JD-123456 starts an exchange for that order; ?exchange=EX-123456
-   opens its status. Reuses the returns and Track Your Order styles and
+   opens its status. Reuses the returns and Track your order styles and
    the photo uploader helpers' pattern.
    ============================================================ */
 
@@ -61,7 +61,7 @@ function renderExchangesPage(tab) {
         <label class="track-label" for="xs-email">Email address</label>
         <input class="track-input" id="xs-email" type="email" placeholder="you@example.com" autocomplete="email" value="${escapeHTML(email)}">
         <div class="track-error" id="xs-error" role="alert"></div>
-        <button class="track-btn" id="xs-btn" type="submit">Check Status</button>
+        <button class="track-btn" id="xs-btn" type="submit">Check status</button>
         <p class="track-hint">Your exchange number begins with EX- and can be found in your exchange confirmation email.</p>
       </form>
       <div id="xs-result"></div>
@@ -77,7 +77,7 @@ function renderExchangesPage(tab) {
       <label class="track-label" for="xl-email">Email address</label>
       <input class="track-input" id="xl-email" type="email" placeholder="you@example.com" autocomplete="email" value="${escapeHTML(email)}">
       <div class="track-error" id="xl-error" role="alert"></div>
-      <button class="track-btn" id="xl-btn" type="submit">Find Order</button>
+      <button class="track-btn" id="xl-btn" type="submit">Find order</button>
     </form>
     <div id="xl-result"></div>
     ${EXCHANGE_POLICY_HTML}`;
@@ -116,7 +116,7 @@ async function submitExchangeLookup(ev) {
   } catch (e) {
     exchangesError('xl-error', e.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Find Order';
+    btn.disabled = false; btn.textContent = 'Find order';
   }
 }
 
@@ -124,7 +124,7 @@ async function submitExchangeLookup(ev) {
 // is in stock. Out of stock sizes stay visible but can't be chosen.
 function exchangeOptionsHtml(it) {
   const opts = it.options || [];
-  if (!opts.length) return `<p class="return-blocked">This item can’t be exchanged online. Please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span>.</p>`;
+  if (!opts.length) return `<p class="return-blocked">This item can’t be exchanged online. Please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</p>`;
   const current = opts[it.variantIndex] ? it.variantIndex : 0;
   const colour = opts.length > 1
     ? `<label class="track-label" for="xc-${it.index}">Colour</label>
@@ -204,9 +204,9 @@ function renderExchangeForm() {
     <label class="track-label" for="exchange-note">Anything else we should know? (optional)</label>
     <textarea class="track-input return-textarea" id="exchange-note" maxlength="1000"></textarea>
     <div class="track-error" id="xsub-error" role="alert"></div>
-    <button type="button" class="track-btn" id="xsub-btn" onclick="submitExchangeRequest()">Submit Exchange Request</button>
+    <button type="button" class="track-btn" id="xsub-btn" onclick="submitExchangeRequest()">Submit exchange request</button>
     <p class="track-hint">Please don’t send anything back yet. We’ll email you instructions once your request has been reviewed.</p>`
-    : `<div class="track-notice">None of the items on this order can be exchanged at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact Customer Care</span>.</div>`}
+    : `<div class="track-notice">None of the items on this order can be exchanged at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`}
     <button type="button" class="track-another" onclick="renderExchangesPage('start')">Use a different order</button>`;
   d.items.forEach(it => { if (it.eligible && (it.options || []).length) drawExchangeSizes(it.index); });
   drawExchangePhotos();
@@ -283,13 +283,13 @@ async function submitExchangeRequest() {
       <div class="track-heading">Exchange request received</div>
       <div class="track-order-number">Exchange ${escapeHTML(res.exchangeNumber)} · Order ${escapeHTML(d.orderNumber)}</div>
       <p class="track-intro">We’ve emailed you a confirmation. Our team will review your request with the brand and email you with the next steps. Please keep the item, with its tags and packaging, until then.</p>
-      <button type="button" class="track-btn" onclick="openExchangeStatus('${escapeJSString(res.exchangeNumber)}')">Check Exchange Status</button>
+      <button type="button" class="track-btn" onclick="openExchangeStatus('${escapeJSString(res.exchangeNumber)}')">Check exchange status</button>
     </div>`;
     document.querySelector('.exchanges-page .returns-policy')?.remove();
     resetScrollToTop();
   } catch (e) {
     exchangesError('xsub-error', e.message);
-    btn.disabled = false; btn.textContent = 'Submit Exchange Request';
+    btn.disabled = false; btn.textContent = 'Submit exchange request';
   }
 }
 
@@ -317,7 +317,7 @@ async function submitExchangeStatus(ev) {
   } catch (e) {
     exchangesError('xs-error', e.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Check Status';
+    btn.disabled = false; btn.textContent = 'Check status';
   }
 }
 
@@ -346,7 +346,7 @@ function exchangeStatusHtml(x) {
     declined: x.declineReason || '',
     received: 'The brand has received your item. We’ll email you as soon as your new one is on its way.',
     dispatched: 'Your new item has been dispatched. You can follow it with the tracking details below.',
-    closed: 'This exchange has been closed. If you have any questions, please contact Customer Care.'
+    closed: 'This exchange has been closed. If you have any questions, please contact customer care.'
   }[x.status] || '';
   const items = (x.items || []).map(it => {
     const product = PRODUCTS.find(p => p.id === it.productId);
@@ -367,7 +367,7 @@ function exchangeStatusHtml(x) {
       ${x.status === 'dispatched' && x.trackingNumber ? `<div class="return-instructions"><div class="account-detail-title">Tracking</div>${escapeHTML(x.courier || '')} · ${escapeHTML(x.trackingNumber)}</div>` : ''}
     </div>
     <div class="track-card"><div class="account-detail-title">Items</div>${items}</div>
-    <p class="account-help">Questions about your exchange? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact Customer Care</span> and quote ${escapeHTML(x.exchangeNumber)}.</p>
+    <p class="account-help">Questions about your exchange? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact customer care</span> and quote ${escapeHTML(x.exchangeNumber)}.</p>
   </div>`;
 }
 

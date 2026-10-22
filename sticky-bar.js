@@ -1,6 +1,6 @@
 // =========================================
 //  STICKY ADD TO CART — JANEDORE
-//  Just price + a single Add to Bag button.
+//  Just price + a single Add to bag button.
 //  Size/color are picked on the page itself (the
 //  size row above) — this bar only acts on whatever's
 //  already selected there, same as the main Add to
@@ -33,12 +33,12 @@ function createStickyBar(product) {
  bar.innerHTML = `
    <div class="sticky-top-row">
      <div class="sticky-price">${stickyPriceHtml(product)}</div>
-     <button class="sticky-wish-btn${isWished ? ' wished' : ''}" type="button" data-wish-id="${escapeHTML(product.id)}" data-wish-weight="ph" onclick="toggleWish('${product.id}',this)" aria-label="Add to Wishlist"><i class="${isWished ? 'ph-fill' : 'ph'} ph-heart"></i></button>
+     <button class="sticky-wish-btn${isWished ? ' wished' : ''}" type="button" data-wish-id="${escapeHTML(product.id)}" data-wish-weight="ph" onclick="toggleWish('${product.id}',this)" aria-label="Add to wishlist"><i class="${isWished ? 'ph-fill' : 'ph'} ph-heart"></i></button>
    </div>
    <button class="sticky-add-btn" id="sticky-add-btn"
      onclick="addToCartFromDetailSticky('${product.id}')"
      ${soldOut ? ' disabled' : ''}
-   ><span class="sticky-btn-label">${soldOut ? 'Sold Out' : 'Add to Bag'}</span><span class="sticky-btn-price">${formatPrice(price)}</span></button>`;
+   ><span class="sticky-btn-label">${soldOut ? 'Sold out' : 'Add to bag'}</span><span class="sticky-btn-price">${formatPrice(price)}</span></button>`;
  document.body.appendChild(bar);
  updateStickyBarOnScroll();
 }
@@ -70,7 +70,7 @@ function _stickyAddedFeedback(product) {
 
    setTimeout(() => {
      bar.classList.remove('added-feedback');
-     // Recompute rather than assume "Add to Bag" — the color/size may
+     // Recompute rather than assume "Add to bag" — the color/size may
      // have changed to something sold out while "Added" was showing.
      updateAddToCartState();
    }, 1600);
@@ -91,14 +91,14 @@ function updateStickyBarOnScroll() {
    const label = bar.querySelector('.sticky-btn-label');
    const btn = bar.querySelector('.sticky-add-btn');
    if (label && btn && !btn.disabled && label.textContent !== 'Added') {
-     label.textContent = label.textContent === 'Add to Waitlist' ? 'Waitlist' : 'Add';
+     label.textContent = label.textContent === 'Add to waitlist' ? 'Waitlist' : 'Add';
    }
  } else {
    bar.classList.remove('minimized');
    const label = bar.querySelector('.sticky-btn-label');
    const btn = bar.querySelector('.sticky-add-btn');
    if (label && btn && !btn.disabled && label.textContent !== 'Added') {
-     label.textContent = label.textContent === 'Waitlist' ? 'Add to Waitlist' : 'Add to Bag';
+     label.textContent = label.textContent === 'Waitlist' ? 'Add to waitlist' : 'Add to bag';
    }
  }
 }

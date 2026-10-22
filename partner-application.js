@@ -28,17 +28,17 @@ function renderPartnerApplicationPage(tab) {
   if (!el) return;
   const params = new URLSearchParams(window.location.search);
   const ref = (params.get('ref') || (window._paOpenStatus && _paRef) || '').trim();
-  // While Brand Partnerships is hidden, only the status check is offered.
+  // While Brand partnerships is hidden, only the status check is offered.
   const live = typeof BRAND_PARTNERSHIPS_LIVE === 'undefined' || BRAND_PARTNERSHIPS_LIVE;
   const wantsStatus = !live || tab === 'status' || (!tab && (ref || window._paOpenStatus));
   window._paOpenStatus = false;
   if (wantsStatus) { renderPartnerStatus(el, ref); return; }
-  // The application form is part of Brand Partnerships now.
+  // The application form is part of Brand partnerships now.
   window._bpScrollToApply = true;
   navigateToContentPage('brand-partnerships', true);
 }
 
-// From Brand Partnerships to the status check.
+// From Brand partnerships to the status check.
 function openPartnerStatusPage() {
   _paRef = '';
   window._paOpenStatus = true;
@@ -151,8 +151,8 @@ function renderPartnerStatus(el, ref) {
   const email = _paEmail || (user && !user.isAnonymous && user.email) || '';
   el.innerHTML = `
     <section class="track-page pa-page">
-      ${typeof BRAND_PARTNERSHIPS_LIVE === 'undefined' || BRAND_PARTNERSHIPS_LIVE ? `<span class="track-link pa-back" onclick="navigateToContentPage('brand-partnerships')">Brand Partnerships</span>` : ''}
-      <h1 class="track-title">Partner Application</h1>
+      ${typeof BRAND_PARTNERSHIPS_LIVE === 'undefined' || BRAND_PARTNERSHIPS_LIVE ? `<span class="track-link pa-back" onclick="navigateToContentPage('brand-partnerships')">Brand partnerships</span>` : ''}
+      <h1 class="track-title">Partner application</h1>
       ${partnerTabsHtml('status')}
       <p class="track-intro">Enter your application reference and the email address you applied with.</p>
       <form class="track-form" onsubmit="submitPartnerStatus(event)" novalidate>
@@ -161,7 +161,7 @@ function renderPartnerStatus(el, ref) {
         <label class="track-label" for="ps-email">Email address</label>
         <input class="track-input" id="ps-email" type="email" placeholder="you@yourbrand.com" autocomplete="email" value="${escapeHTML(email)}">
         <div class="track-error" id="ps-error" role="alert"></div>
-        <button class="track-btn" id="ps-btn" type="submit">Check Status</button>
+        <button class="track-btn" id="ps-btn" type="submit">Check status</button>
         <p class="track-hint">Your reference begins with PA- and can be found in your confirmation email.</p>
       </form>
       <div id="ps-result"></div>
@@ -189,7 +189,7 @@ async function submitPartnerStatus(ev) {
     showError(e.message);
     document.getElementById('ps-result').innerHTML = '';
   } finally {
-    btn.disabled = false; btn.textContent = 'Check Status';
+    btn.disabled = false; btn.textContent = 'Check status';
   }
 }
 

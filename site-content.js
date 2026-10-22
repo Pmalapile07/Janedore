@@ -1,7 +1,7 @@
 // ==================== SITE CONTENT (ADMIN-EDITABLE HOMEPAGE) ====================
-// Hero image/heading/button, New Arrivals' heading/button, Shop by
+// Hero image/heading/button, New arrivals' heading/button, Shop by
 // Category's heading + tiles, Shop by Clothing's heading/button, the
-// editorial banner, Shop by Brand's heading, and the newsletter copy
+// editorial banner, Shop by brand's heading, and the newsletter copy
 // all used to be hardcoded in index.html/collection.js. They now come
 // from siteContent/homepage (written by the admin "Homepage" tab,
 // admin-homepage.js) + siteContent/collectionPages (written by the
@@ -110,7 +110,7 @@ function renderNewArrivalsHeader(arrivals) {
 }
 
 // Collections ticked "Show in the menu" (Admin > Collections) are listed
-// in the menu's links, ahead of Gift Cards. Sale and New In already have
+// in the menu's links, ahead of Gift cards. Sale and New in already have
 // their own menu entries, so a collection with either handle is skipped.
 function renderMenuCollectionLinks() {
   const links = document.querySelector('#menu-panel-main .menu-links');

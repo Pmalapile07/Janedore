@@ -27,7 +27,7 @@ function renderCustomerCarePage() {
 
   el.innerHTML = `
     <section class="track-page care-page">
-      <h1 class="track-title">Customer Care</h1>
+      <h1 class="track-title">Customer care</h1>
       <p class="track-intro">We’re here to help with your orders, delivery, returns and anything else you need.</p>
 
       <div class="care-options">
@@ -57,7 +57,7 @@ function renderCustomerCarePage() {
         <textarea class="track-input return-textarea care-textarea" id="care-message" maxlength="3000" placeholder="Tell us how we can help."></textarea>
         <input type="text" id="care-website" class="care-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="track-error" id="care-error" role="alert"></div>
-        <button class="track-btn" id="care-btn" type="submit">Send Message</button>
+        <button class="track-btn" id="care-btn" type="submit">Send message</button>
         <p class="track-hint">We’ll reply to the email address above. You’ll also receive a copy of your message.</p>
       </form>
 
@@ -65,7 +65,7 @@ function renderCustomerCarePage() {
         <strong>You might find your answer here</strong><br>
         <span class="track-link" onclick="navigateToContentPage('track-your-order')">Track your order</span><br>
         <span class="track-link" onclick="navigateToContentPage('log-a-return')">Log a return</span><br>
-        <span class="track-link" onclick="navigateToContentPage('faq')">Frequently Asked Questions</span>
+        <span class="track-link" onclick="navigateToContentPage('faq')">Frequently asked questions</span>
       </div>
     </section>`;
 }
@@ -104,7 +104,7 @@ async function submitCustomerCare(ev) {
     if (heading) heading.style.display = 'none';
   } catch (e) {
     showError(e.message);
-    btn.disabled = false; btn.textContent = 'Send Message';
+    btn.disabled = false; btn.textContent = 'Send message';
   }
 }
 

@@ -4,7 +4,7 @@
 // Doc shape: { title: string, content: string (HTML) }
 
 async function navigateToContentPage(slug, replaceUrl) {
-  // Client Support was renamed Customer Care; old links still work.
+  // Client Support was renamed customer care; old links still work.
   if (slug === 'client-support') { slug = 'customer-care'; replaceUrl = true; }
   // Shared with every other page-navigation function (see the
   // pageNavGeneration comment in app.js) — without this, a slow fetch
@@ -29,7 +29,7 @@ async function navigateToContentPage(slug, replaceUrl) {
   const el = document.getElementById('content-page-body');
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
-  // Track Your Order, Log a Return, Exchange an Item, Customer Care, Brand Partnerships and the Partner Application are built in code, not Firestore pages
+  // Track your order, Log a return, Exchange an item, customer care, Brand partnerships and the Partner application are built in code, not Firestore pages
   // (track-order.js, returns.js).
   const formPage = slug === TRACK_ORDER_SLUG ? (typeof renderTrackOrderPage === 'function' && renderTrackOrderPage)
     : slug === 'log-a-return' ? (typeof renderReturnsPage === 'function' && renderReturnsPage)

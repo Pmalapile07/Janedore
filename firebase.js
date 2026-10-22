@@ -54,7 +54,7 @@ if (typeof firebase.appCheck === 'function') {
 // ==================== ANONYMOUS AUTH ====================
 // Required for RTDB reads on live_chat/ when rules require auth != null.
 // On the main site, an admin user is already signed in, so this is a no-op.
-// On the Coming Soon page, this establishes a session so chat RTDB reads succeed.
+// On the Coming soon page, this establishes a session so chat RTDB reads succeed.
 
 firebase.auth().onAuthStateChanged(function(user) {
   if (!user) {

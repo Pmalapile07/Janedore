@@ -10,16 +10,16 @@ function renderVendorsDesktop(vendors) {
   const wrap = document.createElement('div'); wrap.className = 'desktop-dropdown-wrap brands-dynamic';
   const span = document.createElement('span'); span.className = 'desktop-nav-link'; span.style.cssText = 'display:flex;align-items:center;gap:4px;'; span.innerHTML = 'Brands <i class="ph-light ph-caret-down" style="font-size:10px;"></i>';
   const menu = document.createElement('div'); menu.className = 'desktop-dropdown-menu';
-  vendors.forEach(vendor => { const name = vendor.name || vendor.brandName || 'Unknown Brand'; const a = document.createElement('a'); a.className = 'desktop-dropdown-item'; a.textContent = name; a.onclick = function(e) { e.preventDefault(); navigateToBrandProducts(name); }; menu.appendChild(a); });
+  vendors.forEach(vendor => { const name = vendor.name || vendor.brandName || 'Unknown brand'; const a = document.createElement('a'); a.className = 'desktop-dropdown-item'; a.textContent = name; a.onclick = function(e) { e.preventDefault(); navigateToBrandProducts(name); }; menu.appendChild(a); });
   wrap.appendChild(span); wrap.appendChild(menu); navLinksContainer.appendChild(wrap);
 }
 function renderVendorsMobile(vendors) {
   const brandsBody = document.querySelector('#brands-collapse .brands-collapse-body'); if (!brandsBody) return;
   if (!vendors.length) { brandsBody.innerHTML = '<div class="brand-logo-placeholder">No brands available</div>'; return; }
-  brandsBody.innerHTML = vendors.map(vendor => { const name = vendor.name || vendor.brandName || 'Unknown Brand'; const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;'); return `<div class="brand-logo-placeholder" onclick="navigateToBrandProducts('${escaped}');closeMenu();">${name}</div>`; }).join('');
+  brandsBody.innerHTML = vendors.map(vendor => { const name = vendor.name || vendor.brandName || 'Unknown brand'; const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;'); return `<div class="brand-logo-placeholder" onclick="navigateToBrandProducts('${escaped}');closeMenu();">${name}</div>`; }).join('');
 }
 function renderVendorsFooter(vendors) {
-  document.querySelectorAll('.footer-collapse').forEach(collapse => { const header = collapse.querySelector('.footer-collapse-header'); if (!header) return; if (header.textContent.trim().toLowerCase() !== 'brands') return; const body = collapse.querySelector('.footer-collapse-body'); if (!body) return; const ul = body.querySelector('.footer-links'); if (!ul) return; if (!vendors.length) { ul.innerHTML = '<li><a>No brands available</a></li>'; return; } ul.innerHTML = vendors.map(vendor => { const name = vendor.name || vendor.brandName || 'Unknown Brand'; const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;'); return `<li><a onclick="navigateToBrandProducts('${escaped}')">${name}</a></li>`; }).join(''); });
+  document.querySelectorAll('.footer-collapse').forEach(collapse => { const header = collapse.querySelector('.footer-collapse-header'); if (!header) return; if (header.textContent.trim().toLowerCase() !== 'brands') return; const body = collapse.querySelector('.footer-collapse-body'); if (!body) return; const ul = body.querySelector('.footer-links'); if (!ul) return; if (!vendors.length) { ul.innerHTML = '<li><a>No brands available</a></li>'; return; } ul.innerHTML = vendors.map(vendor => { const name = vendor.name || vendor.brandName || 'Unknown brand'; const escaped = name.replace(/'/g, "\\'").replace(/"/g, '&quot;'); return `<li><a onclick="navigateToBrandProducts('${escaped}')">${name}</a></li>`; }).join(''); });
 }
 function navigateToBrandProducts(brandName) { S.saleMode = false; updateHash('products'); document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById("page-products").classList.add("active"); S.currentPage = "products"; const toolbarCenter = document.getElementById("page-products").querySelector(".toolbar-center"); if(toolbarCenter) toolbarCenter.textContent = brandName.toUpperCase(); const filtered = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName); const prods = merchandiseProducts(filtered); if(DOM.allProductsGrid) { DOM.allProductsGrid.style.gridTemplateColumns = S.gridCols===1?"1fr":S.gridCols===2?"repeat(2,1fr)":"repeat(3,1fr)"; DOM.allProductsGrid.innerHTML = prods.length ? prods.map(p=>productCard(p, S.gridCols===3, true)).join("") : '<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:12px;color:#888;">No products from this brand yet.</div>'; applyEditorialGrid(DOM.allProductsGrid, S.gridCols); updateGridToggleSVG("grid-toggle-svg", S.gridCols); } resetScrollToTop(); ensureNavScrolled(); updateChatVisibility(); }
 
@@ -81,7 +81,7 @@ function renderHomeBrandSpotlight(vendors) {
   for (let i = 0; i < REPEATS; i++) repeated.push(...brands);
 
   const renderItem = (vendor) => {
-    const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown Brand';
+    const name = vendor.name || vendor.brandName || vendor.brand || 'Unknown brand';
     const logo = vendor.logoUrl
       ? `<img src="${escapeHTML(vendor.logoUrl)}" alt="" class="brand-strip-logo">`
       : `<span class="brand-strip-logo brand-strip-logo-fallback">${escapeHTML(name.charAt(0).toUpperCase())}</span>`;
@@ -92,11 +92,11 @@ function renderHomeBrandSpotlight(vendors) {
   sliderEl.innerHTML = `<div class="brand-strip-track">${setHTML}${setHTML}</div>`;
 }
 
-// Home page "Shop by Brand" — a manual swipe slider (#brand-grid),
+// Home page "Shop by brand" — a manual swipe slider (#brand-grid),
 // distinct from the auto-scrolling marquee above. One real card per
 // brand, same 5/6 image ratio as a product card.
 // Shared by the home page's #brand-grid and the product page's own
-// Shop by Brand section — same cards, same onclick, different
+// Shop by brand section — same cards, same onclick, different
 // container each place renders them into.
 function shopByBrandCardsHtml(brands) {
   return brands.map(vendor => {
@@ -109,7 +109,7 @@ function shopByBrandCardsHtml(brands) {
 
 // Flat #f4f4f4 box with a literal "Brand" label — same "never looks
 // broken or blank" idea as placeholderProductCard() (collection.js) for
-// an empty product grid. Used on the home page's Shop by Brand slider
+// an empty product grid. Used on the home page's Shop by brand slider
 // and the /brands page's featured grid when there are no brands yet.
 // Clickable through to previewPlaceholderVendor() (collection.js), same
 // pattern as placeholderProductCard() -> previewPlaceholderProduct(),
@@ -132,7 +132,7 @@ function buildShopByBrand(vendors) {
 // Same structure as a typical brand-directory page (Superbalist's
 // /brands was the reference): a grid of brand cards at the top (reuses
 // shopByBrandCardsHtml()/navigateToVendor() verbatim, same cards as the
-// homepage's Shop by Brand section, just laid out as a static 2-column
+// homepage's Shop by brand section, just laid out as a static 2-column
 // grid instead of a swipe slider — see .brands-page-grid in
 // product-grid.css), then a jump-to-letter index, then every brand
 // listed under its own letter heading. Scales to however many real
@@ -156,7 +156,7 @@ function renderBrandsPage(vendors) {
     .slice()
     .sort((a, b) => (a.name || a.brandName || '').localeCompare(b.name || b.brandName || ''))
     .forEach(v => {
-      const name = v.name || v.brandName || 'Unknown Brand';
+      const name = v.name || v.brandName || 'Unknown brand';
       const first = name.charAt(0).toUpperCase();
       const letter = /[A-Z]/.test(first) ? first : '#';
       (groups[letter] = groups[letter] || []).push(v);
@@ -182,7 +182,7 @@ function renderBrandsPage(vendors) {
 
   listEl.innerHTML = LETTERS.filter(letter => groups[letter]).map(letter => {
     const items = groups[letter].map(v => {
-      const name = v.name || v.brandName || 'Unknown Brand';
+      const name = v.name || v.brandName || 'Unknown brand';
       return `<li onclick="navigateToVendor('${escapeJSString(v.slug || v.id)}')">${escapeHTML(name)}</li>`;
     }).join('');
     return `<div class="brands-az-group" id="brands-letter-${letter}"><div class="brands-az-heading">${letter}</div><ul class="brands-az-items">${items}</ul></div>`;
