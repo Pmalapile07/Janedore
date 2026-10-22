@@ -1,9 +1,12 @@
 // Store analytics: tells the server this visitor is here, for Live and
 // Sessions in Admin > Home (analytics-api.js). A session is one visit
 // and ends after 30 minutes without the store open and in view. The id
-// is random and anonymous; nothing about the visitor is sent.
+// is random and anonymous; nothing about the visitor is sent. Staff
+// devices are not counted.
 (function () {
   if (window.__adminPreview) return;
+  // Not counted: a device someone has signed in to admin on (admin.js).
+  try { if (localStorage.getItem('jd_staff_device')) return; } catch (e) {}
   var KEY = 'jd_session';
   var IDLE_MS = 30 * 60 * 1000;
   var memory = null; // used when the browser blocks localStorage

@@ -283,6 +283,11 @@
 
       loadUserRole(user).then(function() {
         window._roleResolved = true;
+        // This device belongs to staff: the shop's visit counting
+        // (analytics.js) skips it, so Live and Sessions are customers only.
+        if (window._currentUserRole && window._currentUserRole !== 'VIEWER') {
+          try { localStorage.setItem('jd_staff_device', '1'); } catch (e) {}
+        }
         hideAuthLoading();
         safeSetDisplay('admin-panel', 'block');
         window._applyRoleUI();
@@ -446,11 +451,6 @@
     // with a lone dropdown caret floating next to it.
     var brandWrapEl = document.querySelector('.nav-brand-wrap');
     if (brandWrapEl) brandWrapEl.style.display = title ? '' : 'none';
-    // Home has its own top bar (account, store, notifications) and a
-    // black top half (admin-dashboard.js).
-    var navHomeEl = safeEl('nav-home');
-    if (navHomeEl) navHomeEl.style.display = tab === 'dashboard' ? '' : 'none';
-    document.body.classList.toggle('admin-home', tab === 'dashboard');
     // Cleared on every switch — whichever render*Tab() runs next fills
     // it back in if that section has its own top-bar actions (Orders
     // and Products do); otherwise it just stays empty.
@@ -471,6 +471,13 @@
   function renderCurrentTab() {
     var mc = safeEl('main-content');
     if (!mc) return;
+    // Home has its own top bar (account, store, notifications) and a
+    // full-width black top half (admin-dashboard.js). Set here, not in
+    // switchTab(), so the first load after sign-in gets it too.
+    var onHome = window._currentTab === 'dashboard';
+    var navHomeEl = safeEl('nav-home');
+    if (navHomeEl) navHomeEl.style.display = onHome ? '' : 'none';
+    document.body.classList.toggle('admin-home', onHome);
     destroyCharts();
     switch (window._currentTab) {
       case 'dashboard':   if (window._renderDashboardTab)   window._renderDashboardTab();   break;

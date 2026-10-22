@@ -210,7 +210,9 @@
       type: 'line',
       data: {
         labels: _dashBuckets.map(function (b) { return b.date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }); }),
-        datasets: [{ data: data, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true }]
+        // Nothing in the range (no sales, orders...): just the plain grid,
+        // no line.
+        datasets: [{ data: data, borderColor: max ? '#3b82f6' : 'transparent', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: !!max }]
       },
       options: {
         responsive: true,
@@ -351,6 +353,7 @@
   };
   var NOTE_ICONS = { order: 'ph-package', return: 'ph-arrow-u-up-left', exchange: 'ph-arrows-left-right', application: 'ph-file-text', report: 'ph-flag', message: 'ph-envelope-simple', review: 'ph-star' };
   var NOTES_SEEN_KEY = 'jd_admin_notes_seen';
+  var NOTES_CLEARED_KEY = 'jd_admin_notes_cleared';
 
   function canOpen(module) { return !window._can || window._can(module, 'read') || window._can(module, 'read_own'); }
 
@@ -400,24 +403,27 @@
     el.innerHTML = html;
   }
 
-  // Who's signed in: the Super Admin shows as Jane Doe, an admin by the
-  // name on their admin profile, a brand by its brand name.
+  // Who's signed in: the name on their admin profile (Admins tab) when
+  // there is one; otherwise a brand by its brand name, and staff by
+  // their role ("super admin", "admin").
+  var ROLE_NAMES = { SUPER_ADMIN: 'super admin', ADMIN: 'admin', VENDOR: 'vendor' };
   var _staffName = null;
   function displayName() {
+    if (_staffName) return _staffName;
     var role = window._currentUserRole;
-    if (role === 'SUPER_ADMIN') return 'Jane Doe';
-    if (role === 'VENDOR') return (_homeData && _homeData.brand && _homeData.brand.name) || 'Your brand';
-    return _staffName || ((window._currentUser && window._currentUser.email) || '').split('@')[0] || 'Admin';
+    if (role === 'VENDOR' && _homeData && _homeData.brand && _homeData.brand.name) return _homeData.brand.name;
+    return ROLE_NAMES[role] || 'there';
   }
   function initials(name) {
+    if (!_staffName && name === ROLE_NAMES.SUPER_ADMIN) return 'SA';
     return String(name).trim().split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() || 'J';
   }
   function paintAccount() {
-    if (window._currentUserRole === 'ADMIN' && _staffName === null && window._currentUser) {
+    if (_staffName === null && window._currentUser) {
       _staffName = '';
       db.collection('admins').doc(window._currentUser.uid).get().then(function (d) {
         _staffName = (d.exists && String(d.data().name || '').trim()) || '';
-        paintAccount();
+        if (_staffName) paintAccount();
       }).catch(function () {});
     }
     var name = displayName();
@@ -429,14 +435,15 @@
   }
 
   window._openAccountPanel = function () {
-    var roles = { SUPER_ADMIN: 'Super admin', ADMIN: 'Admin', VENDOR: 'Brand partner' };
+    var roles = { SUPER_ADMIN: 'Super admin', ADMIN: 'Admin', VENDOR: 'Vendor' };
     var name = displayName();
+    var showName = _staffName || (window._currentUserRole === 'VENDOR' ? name : roles[window._currentUserRole] || 'Viewer');
     window._mountPanel('<div class="slide-panel">' +
       '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
       '<div class="dash-account">' +
         '<div class="dash-account-avatar">' + esc(initials(name)) + '</div>' +
-        '<div class="dash-account-name">' + esc(name) + '</div>' +
-        '<div class="dash-account-role">' + esc(roles[window._currentUserRole] || 'Viewer') + '</div>' +
+        '<div class="dash-account-name">' + esc(showName) + '</div>' +
+        (showName !== roles[window._currentUserRole] ? '<div class="dash-account-role">' + esc(roles[window._currentUserRole] || 'Viewer') + '</div>' : '') +
         '<div class="dash-account-email">' + esc((window._currentUser && window._currentUser.email) || '') + '</div>' +
         '<button type="button" class="btn btn-danger dash-account-signout" onclick="window._closePanel();handleLogout()"><i class="ph ph-sign-out"></i> Sign out</button>' +
       '</div>' +
@@ -452,20 +459,32 @@
     return d === 1 ? 'Yesterday' : d + ' days ago';
   }
   function notesSeenAt() { try { return Number(localStorage.getItem(NOTES_SEEN_KEY)) || 0; } catch (e) { return 0; } }
+  // Clear all hides everything up to now on this device; newer ones
+  // still come in.
+  function visibleNotes() {
+    var cleared = 0;
+    try { cleared = Number(localStorage.getItem(NOTES_CLEARED_KEY)) || 0; } catch (e) {}
+    return ((_homeData && _homeData.notifications) || []).filter(function (n) { return n.at > cleared; });
+  }
+  window._clearNotifications = function () {
+    try { localStorage.setItem(NOTES_CLEARED_KEY, String(Date.now())); } catch (e) {}
+    window._openNotifications();
+  };
   function paintBellDot() {
     var dot = safeEl('nav-bell-dot');
-    var notes = (_homeData && _homeData.notifications) || [];
+    var notes = visibleNotes();
     if (dot) dot.style.display = notes.some(function (n) { return n.at > notesSeenAt(); }) ? 'block' : 'none';
   }
 
   window._openNotifications = function () {
-    var notes = (_homeData && _homeData.notifications) || [];
+    var notes = visibleNotes();
     var seen = notesSeenAt();
     try { localStorage.setItem(NOTES_SEEN_KEY, String(Date.now())); } catch (e) {}
     paintBellDot();
     window._mountPanel('<div class="slide-panel">' +
       '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
-      '<div class="dash-notes-title">Notifications</div>' +
+      '<div class="dash-notes-head"><span class="dash-notes-title">Notifications</span>' +
+        (notes.length ? '<button type="button" class="dash-notes-clear" onclick="window._clearNotifications()">Clear all</button>' : '') + '</div>' +
       (notes.length ? notes.map(function (n) {
         return '<button type="button" class="dash-row dash-row-btn' + (n.at > seen ? ' unseen' : '') + '" onclick="window._closePanel();window.switchTab(\'' + esc(n.tab) + '\')">' +
           '<i class="ph ' + (NOTE_ICONS[n.type] || 'ph-bell') + ' dash-row-icon"></i>' +
@@ -486,6 +505,7 @@
       '<div class="empty-state-icon"><i class="ph-light ph-chart-bar"></i></div>' +
       '<div class="empty-state-text">Detailed analytics are not set up yet</div>' +
       '<div style="font-size:var(--font-scale-sm);color:var(--muted2);max-width:380px;">Home shows live visitors, sessions, sales, orders and conversion for the range you choose. Detailed reports (top pages, traffic sources) will appear here once they are built.</div>' +
+      '<button type="button" class="btn" style="margin-top:var(--space-4);" onclick="window.switchTab(\'dashboard\')"><i class="ph ph-arrow-left"></i> Back to Home</button>' +
     '</div>';
   };
 
