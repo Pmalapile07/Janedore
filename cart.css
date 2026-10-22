@@ -8,7 +8,6 @@
 .cart-addon-price { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: #111; }
 .cart-addon-btn { background: #fff; color: #111; border: 0.8px solid #111; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 7px 12px; cursor: pointer; transition: all 0.2s; }
 .cart-addon-btn:hover { background: #111; color: #fff; }
-.cart-page-sold-out-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #b3261e; margin-bottom: 10px; }
 
 /* "Added to cart" bar (showAddedToCartToast(), cart.js). Pale tint of
    the brand green behind it; a stronger #B8CC87 strip along the top

@@ -267,10 +267,13 @@ function getCartShippingStatus() {
 
 // The product card's main badge (getCardBadges()), and the sale price in
 // red, on bag and checkout items. Thumbnails here are too small for two
-// badges; free delivery has its own line (cartFreeDeliveryHtml()).
+// badges; free delivery has its own line (cartFreeDeliveryHtml()). The
+// card's SOLD OUT badge also shows when just this item's size has sold
+// out.
 function cartBadgesHtml(item) {
   const product = getCartProduct(item.productId);
-  const badges = product && typeof getCardBadges === 'function' ? getCardBadges(product).slice(0, 1) : [];
+  const badges = getCartItemStock(item) <= 0 ? ['SOLD OUT']
+    : product && typeof getCardBadges === 'function' ? getCardBadges(product).slice(0, 1) : [];
   return badges.length ? `<div class="product-badge-stack cart-badge-stack">${badges.map(b => `<span class="product-badge ${badgeClass(b)}">${sanitizeHTML(b)}</span>`).join('')}</div>` : '';
 }
 // "Pre-order · Est. dispatch 15 Mar" under the brand on bag, checkout and
@@ -673,7 +676,6 @@ function renderCartPage() {
           <div class="cart-item-name" onclick="goToProduct('${productId}')">${itemName}</div>
           <div class="cart-item-brand">${itemBrand}${itemColor && itemColor !== 'Default' ? ' · ' + itemColor : ''}</div>
           ${cartPreorderHtml(item)}${cartFreeDeliveryHtml(item, mixed)}
-          ${soldOut ? '<div class="cart-page-sold-out-badge">Sold Out</div>' : ''}
         </div>
         <div class="cart-item-actions">
           <button class="cart-item-icon-btn${wished ? ' wished' : ''}" type="button" data-wish-id="${productId}" data-wish-weight="ph" onclick="toggleWish('${productId}',this)" aria-label="Save to wishlist"><i class="${wished ? 'ph-fill' : 'ph'} ph-heart"></i></button>
