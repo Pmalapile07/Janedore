@@ -49,7 +49,7 @@
   }
 </style>
 
-<script src="https://unpkg.com/phosphor-icons"></script>
+<script src="https://unpkg.com/@phosphor-icons/web" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -71,7 +71,8 @@
   body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* Header: the shop's black bar, wordmark left, preview password (•••) right. */
+  /* Header: the shop's black bar, wordmark left, preview password (···)
+     right. No shop icons: the store isn't open yet. */
   .site-header { position: sticky; top: 0; z-index: 10; background: var(--ink); height: 60px; padding: 0 12px 0 20px; padding-top: env(safe-area-inset-top, 0px); display: flex; align-items: center; justify-content: space-between; }
   .header-logo-text { font-family: 'Inter', Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: 0.12em; color: #fff; }
   .header-more { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; }
@@ -82,13 +83,16 @@
   .preview-inner { max-width: 440px; margin: 0 auto; padding: 20px; }
   .preview-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 10px; }
 
-  .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 72px 20px 96px; }
-  .headline { font-size: 34px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 14px; }
-  .subhead { font-size: 15px; font-weight: 400; line-height: 1.6; color: var(--muted); max-width: 380px; margin-bottom: 32px; }
+  /* Buttons and fields: the shop's (black, uppercase, letter-spaced). */
+  .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 50px; padding: 0 28px; border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; text-decoration: none; }
+  .cs-btn i { font-size: 16px; }
+  .cs-btn-outline { background: transparent; color: var(--ink); }
+  .cs-btn-white { background: #fff; color: var(--ink); border-color: #fff; }
+  .cs-btn:disabled { opacity: 0.6; cursor: default; }
 
-  .signup-wrapper { width: 100%; max-width: 440px; }
   .signup-row { display: flex; width: 100%; }
-  .signup-input { flex: 1; min-width: 0; height: 50px; padding: 0 16px; border: 1px solid #d4d4d4; border-right: none; border-radius: 0; font-family: inherit; font-size: 15px; color: var(--text); background: #fff; outline: none; -webkit-appearance: none; }
+  .signup-input { flex: 1; min-width: 0; height: 50px; padding: 0 16px; border: 1px solid #d4d4d4; border-radius: 0; font-family: inherit; font-size: 15px; color: var(--text); background: #fff; outline: none; -webkit-appearance: none; }
+  .signup-row .signup-input { border-right: none; }
   .signup-input:focus { border-color: var(--ink); }
   .signup-input::placeholder { color: #9a9a9a; }
   .signup-submit { flex: 0 0 auto; min-width: 116px; height: 50px; padding: 0 20px; border: 1px solid var(--ink); background: var(--ink); color: #fff; font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
@@ -100,13 +104,77 @@
   .signup-msg.error { color: #c0392b; }
   .signup-msg.success { color: var(--ink); }
 
-  .site-footer { padding: 20px 16px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; }
-  .footer-copy { font-size: 12px; color: var(--muted); cursor: default; user-select: none; }
+  /* Hero: the homepage hero photo (server.js fills it in), heading at
+     the bottom left with the button under it, like the shop. */
+  .cs-hero { position: relative; min-height: 78vh; min-height: 78svh; display: flex; align-items: flex-end; background: #2a2a2a center / cover no-repeat; color: #fff; }
+  .cs-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%); }
+  .cs-hero-content { position: relative; padding: 0 20px 40px; max-width: 560px; }
+  .cs-eyebrow { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; opacity: 0.85; }
+  .cs-hero h1 { font-size: 34px; font-weight: 600; line-height: 1.08; letter-spacing: -0.01em; margin-bottom: 14px; }
+  .cs-hero p { font-size: 15px; line-height: 1.55; max-width: 360px; margin-bottom: 24px; opacity: 0.92; }
+
+  /* More than a store: three short reasons. */
+  .cs-why { padding: 56px 20px 48px; text-align: center; }
+  .cs-section-title { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .cs-section-sub { font-size: 14px; color: var(--muted); margin-top: 8px; }
+  .cs-why-grid { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 960px; margin: 32px auto 0; }
+  .cs-why-item { display: flex; flex-direction: column; align-items: center; padding: 0 8px; }
+  .cs-why-item + .cs-why-item { border-left: 1px solid var(--border); }
+  .cs-why-icon { width: 48px; height: 48px; border-radius: 10px; background: #e6edd5; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--ink); margin-bottom: 12px; }
+  .cs-why-item h3 { font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+  .cs-why-item p { font-size: 12px; line-height: 1.5; color: var(--muted); max-width: 280px; }
+
+  /* The two sign-ups: customers (green) and brands (black). */
+  .cs-cards { display: grid; gap: 12px; padding: 0 12px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .cs-card { display: grid; grid-template-columns: 1fr; overflow: hidden; }
+  .cs-card-green { background: #e6edd5; }
+  .cs-card-dark { background: var(--ink); color: #fff; }
+  .cs-card-body { padding: 32px 20px; display: flex; flex-direction: column; justify-content: center; }
+  .cs-card h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .cs-card-body > p { font-size: 14px; line-height: 1.55; margin-bottom: 20px; max-width: 420px; }
+  .cs-card-green .cs-card-body > p { color: #3d3d3d; }
+  .cs-card-dark .cs-card-body > p { color: rgba(255,255,255,0.75); }
+  .cs-card-img { min-height: 260px; background: #cfd8bd center / cover no-repeat; }
+  .cs-card-img:empty:not([style]) { display: none; }
+  .cs-form { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; }
+  .cs-form .signup-input { flex: none; border-right: 1px solid #d4d4d4; }
+  .cs-card-dark .signup-input { background: #1c1c1c; border-color: #3a3a3a; color: #fff; }
+  .cs-card-dark .signup-input:focus { border-color: #fff; }
+  .cs-card-dark .signup-msg.success { color: #fff; }
+  .cs-brand-form[hidden] { display: none; }
+
+  /* What's coming: the homepage's four category photos. */
+  .cs-cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 12px; }
+  .cs-cat { position: relative; aspect-ratio: 1 / 1; background: #ececec center / cover no-repeat; display: flex; align-items: flex-end; }
+  .cs-cat::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0) 55%); }
+  .cs-cat span { position: relative; padding: 14px; color: #fff; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .site-footer { background: var(--ink); color: #fff; padding: 32px 20px; padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)); }
+  .footer-logo { font-size: 17px; font-weight: 600; letter-spacing: 0.12em; }
+  .footer-tagline { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 8px; }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 20px; cursor: default; user-select: none; }
 
   @media (min-width: 768px) {
     .site-header { padding: 0 20px 0 32px; }
-    .headline { font-size: 48px; }
-    .subhead { font-size: 16px; max-width: 420px; }
+    .cs-hero { min-height: 82vh; }
+    .cs-hero-content { padding: 0 40px 64px; }
+    .cs-hero h1 { font-size: 56px; }
+    .cs-hero p { font-size: 17px; max-width: 440px; }
+    .cs-why { padding: 80px 32px 64px; }
+    .cs-section-title { font-size: 32px; }
+    .cs-why-item { padding: 0 24px; }
+    .cs-why-icon { width: 56px; height: 56px; font-size: 26px; }
+    .cs-why-item h3 { font-size: 15px; }
+    .cs-why-item p { font-size: 14px; }
+    .cs-cards { grid-template-columns: 1fr 1fr; padding: 0 24px; }
+    .cs-card { grid-template-columns: 1fr 1fr; }
+    .cs-card-body { padding: 40px 32px; }
+    .cs-card-img { min-height: 100%; }
+    .cs-cats { grid-template-columns: repeat(4, 1fr); }
+    .site-footer { padding: 40px 32px; }
+  }
+  @media (min-width: 768px) and (max-width: 1099px) {
+    .cs-cards { grid-template-columns: 1fr; }
   }
 
   .admin-overlay {
@@ -252,29 +320,70 @@
   </div>
 </div>
 
-<main id="main" class="main-content">
-  <h1 class="headline">Coming soon</h1>
-  <p class="subhead">JANEDORE launches soon. Sign up to be the first to know when we open.</p>
-  <div class="signup-wrapper">
-    <div class="signup-row">
-      <label for="email-input" class="sr-only">Email address</label>
-      <input type="email"
-             class="signup-input"
-             id="email-input"
-             placeholder="Email address"
-             autocomplete="email"
-             aria-describedby="signup-msg"
-             required>
-      <button type="button" class="signup-submit" id="signup-btn" aria-label="Subscribe">
-        <span id="btn-text">Notify me</span>
-        <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
-      </button>
+<main id="main">
+  <section class="cs-hero" id="cs-hero">
+    <div class="cs-hero-content">
+      <span class="cs-eyebrow">Coming soon</span>
+      <h1>The independent collective</h1>
+      <p>A new destination for independent fashion, distinctive finds and the brands shaping what’s next.</p>
+      <a href="#early-access" class="cs-btn cs-btn-white">Get early access <i class="ph ph-caret-right"></i></a>
     </div>
-    <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="cs-why">
+    <h2 class="cs-section-title">More than a store</h2>
+    <p class="cs-section-sub">A curated space for people who see fashion differently.</p>
+    <div class="cs-why-grid">
+      <div class="cs-why-item"><span class="cs-why-icon"><i class="ph ph-magnifying-glass"></i></span><h3>Discover new brands</h3><p>Independent labels and fresh perspectives, all in one place.</p></div>
+      <div class="cs-why-item"><span class="cs-why-icon"><i class="ph ph-tote-simple"></i></span><h3>Shop the look</h3><p>Distinctive pieces across fashion, accessories, home and scent.</p></div>
+      <div class="cs-why-item"><span class="cs-why-icon"><i class="ph ph-users-three"></i></span><h3>Built for independents</h3><p>A platform for emerging brands and the people who value something different.</p></div>
+    </div>
+  </section>
+
+  <div class="cs-cards">
+    <section class="cs-card cs-card-green" id="early-access">
+      <div class="cs-card-body">
+        <h2>For the curious</h2>
+        <p>Be the first to discover new labels, exclusive drops and the pieces worth knowing about.</p>
+        <div class="cs-form">
+          <label for="email-input" class="sr-only">Email address</label>
+          <input type="email" class="signup-input" id="email-input" placeholder="Email address" autocomplete="email" aria-describedby="signup-msg" required>
+          <button type="button" class="cs-btn" id="signup-btn" aria-label="Join the list">
+            <span id="btn-text">Join the list</span>
+            <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
+          </button>
+          <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="cs-card-img" id="cs-curious-img"></div>
+    </section>
+
+    <section class="cs-card cs-card-dark" id="for-brands">
+      <div class="cs-card-body">
+        <h2>For independent brands</h2>
+        <p>Have a brand with a point of view? Register your interest in joining the collective, and our partnerships team will be in touch before launch.</p>
+        <button type="button" class="cs-btn cs-btn-white" id="brand-open-btn">Register your interest <i class="ph ph-caret-right"></i></button>
+        <div class="cs-form cs-brand-form" id="brand-form" hidden>
+          <label for="brand-name" class="sr-only">Brand name</label>
+          <input type="text" class="signup-input" id="brand-name" placeholder="Brand name" autocomplete="organization" maxlength="120">
+          <label for="brand-email" class="sr-only">Email address</label>
+          <input type="email" class="signup-input" id="brand-email" placeholder="Email address" autocomplete="email" maxlength="200">
+          <label for="brand-social" class="sr-only">Instagram or website (optional)</label>
+          <input type="text" class="signup-input" id="brand-social" placeholder="Instagram or website (optional)" maxlength="200">
+          <button type="button" class="cs-btn cs-btn-white" id="brand-submit-btn">Register your interest</button>
+          <div class="signup-msg" id="brand-msg" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
   </div>
+
+  <!-- cs-categories (server.js fills these from the homepage's Shop by category) -->
+  <div class="cs-cats" id="cs-cats"></div>
 </main>
 
 <footer class="site-footer">
+  <div class="footer-logo">JANEDORE</div>
+  <p class="footer-tagline">Independent brands. Distinctive finds. One destination.</p>
   <p class="footer-copy" id="copyright"></p>
 </footer>
 
@@ -527,6 +636,43 @@
   signupBtn.addEventListener('click', handleSignup);
   emailEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleSignup(); });
   emailEl.addEventListener('input',   function()  { if (msgEl.classList.contains('error')) clearMsg(); });
+
+  // ── Brands: register interest ───────────────────────────────
+  // Saved by the server (/api/brand-interest, server.js) and shown to
+  // staff in Admin > Home; the full partner application opens at launch.
+  (function() {
+    var openBtn = document.getElementById('brand-open-btn');
+    var form    = document.getElementById('brand-form');
+    var submit  = document.getElementById('brand-submit-btn');
+    var msg     = document.getElementById('brand-msg');
+    var nameEl  = document.getElementById('brand-name');
+    var mailEl  = document.getElementById('brand-email');
+    var socEl   = document.getElementById('brand-social');
+    function say(text, type) { msg.textContent = text; msg.className = 'signup-msg ' + type; }
+    openBtn.addEventListener('click', function() {
+      openBtn.hidden = true;
+      form.hidden = false;
+      nameEl.focus();
+    });
+    submit.addEventListener('click', function() {
+      var brandName = nameEl.value.trim();
+      var email = mailEl.value.trim().toLowerCase();
+      if (!brandName) { say('Please enter your brand name.', 'error'); return; }
+      if (!isValidEmail(email)) { say('Please enter a valid email address.', 'error'); return; }
+      submit.disabled = true; say('', '');
+      fetch('/api/brand-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandName: brandName, email: email, social: socEl.value.trim() })
+      }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); }).then(function(res) {
+        if (!res.ok) throw new Error(res.d.error || '');
+        form.innerHTML = '<div class="signup-msg success">Thank you. Your interest in partnering with JANEDORE has been registered, and our partnerships team will be in touch.</div>';
+      }).catch(function(e) {
+        say(e.message || 'We couldn’t complete your request. Please try again.', 'error');
+        submit.disabled = false;
+      });
+    });
+  })();
 
   var overlay    = document.getElementById('admin-overlay');
   var closeBtn   = document.getElementById('admin-close-btn');

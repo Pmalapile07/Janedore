@@ -3000,6 +3000,65 @@ app.get(['/admin', '/admin.html'], (req, res) => {
   }
 });
 
+// ==================== COMING SOON PAGE ====================
+// janedore-coming-soon.html with the homepage's own photos (admin >
+// Homepage): the hero photo behind the hero, the editorial banner photo
+// in the For the curious card, and the four Shop by category tiles.
+// Without them the page still works (plain backgrounds).
+app.get('/janedore-coming-soon.html', async (req, res) => {
+  let html = fs.readFileSync(path.join(__dirname, 'janedore-coming-soon.html'), 'utf8');
+  try {
+    const homepage = adminDb ? await getCachedHomepage() : {};
+    const bg = (url, w) => {
+      const u = adminImageURL(url, w).replace(/['"\\]/g, '');
+      return u ? " style=\"background-image:url('" + u + "');\"" : '';
+    };
+    html = html.replace('<section class="cs-hero" id="cs-hero">', '<section class="cs-hero" id="cs-hero"' + bg((homepage.hero || {}).imageUrl, 1600) + '>');
+    html = html.replace('<div class="cs-card-img" id="cs-curious-img"></div>', '<div class="cs-card-img" id="cs-curious-img"' + bg((homepage.banner || {}).imageUrl, 900) + '></div>');
+    const tiles = Array.isArray((homepage.shopByCategory || {}).tiles) ? homepage.shopByCategory.tiles.slice(0, 4) : [];
+    html = html.replace('<div class="cs-cats" id="cs-cats"></div>', '<div class="cs-cats" id="cs-cats">' +
+      tiles.map((t) => '<div class="cs-cat"' + bg(t.imageUrl, 600) + '><span>' + escapeHtml(t.label || '') + '</span></div>').join('') + '</div>');
+  } catch (e) {
+    console.error('[COMING_SOON] Photos failed:', e.message);
+  }
+  res.set('Cache-Control', 'no-cache');
+  res.type('html').send(html);
+});
+
+// Coming soon: brands registering interest before launch. Saved to
+// brandInterest (server only; shown in Admin > Home) and emailed to the
+// team.
+app.post('/api/brand-interest', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'We couldn’t complete your request. Please try again.' });
+  if (rateLimited(req, 'brand-interest', 5, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
+  const b = req.body || {};
+  const brandName = String(b.brandName || '').trim().slice(0, 120);
+  const email = String(b.email || '').trim().toLowerCase().slice(0, 200);
+  const social = String(b.social || '').trim().slice(0, 200);
+  if (!brandName) return res.status(400).json({ error: 'Please enter your brand name.' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+  try {
+    const id = email.replace(/[^a-z0-9]/g, '_');
+    await adminDb.collection('brandInterest').doc(id).set({
+      brandName, email, social, status: 'new', createdAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    sendResendEmail({
+      to: ORDER_ALERT_EMAIL,
+      subject: 'Brand interest: ' + brandName,
+      html: '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#111;">' +
+        '<h2 style="font-size:20px;margin:0 0 12px;">New brand interest from the coming soon page</h2>' +
+        '<p style="margin:0 0 6px;"><strong>Brand:</strong> ' + escapeHtml(brandName) + '</p>' +
+        '<p style="margin:0 0 6px;"><strong>Email:</strong> ' + escapeHtml(email) + '</p>' +
+        (social ? '<p style="margin:0 0 6px;"><strong>Instagram or website:</strong> ' + escapeHtml(social) + '</p>' : '') + '</div>',
+      replyTo: email
+    }).catch((e) => console.warn('[BRAND_INTEREST] Email failed:', e.message));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[BRAND_INTEREST]', e.message);
+    res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
+  }
+});
+
 // Serve static files (CSS, JS, images, etc.). index:false stops this from
 // auto-serving index.html for "/" itself (its default behavior) — every
 // HTML page must go through the routes below instead, so the cache-bust

@@ -351,7 +351,7 @@
     hero:    { label: 'Add a hero image',    tab: 'vendors' },
     product: { label: 'Add your first product', tab: 'products' }
   };
-  var NOTE_ICONS = { order: 'ph-package', return: 'ph-arrow-u-up-left', exchange: 'ph-arrows-left-right', application: 'ph-file-text', report: 'ph-flag', message: 'ph-envelope-simple', review: 'ph-star' };
+  var NOTE_ICONS = { order: 'ph-package', return: 'ph-arrow-u-up-left', exchange: 'ph-arrows-left-right', application: 'ph-file-text', report: 'ph-flag', message: 'ph-envelope-simple', review: 'ph-star', interest: 'ph-handshake' };
   var NOTES_SEEN_KEY = 'jd_admin_notes_seen';
   var NOTES_CLEARED_KEY = 'jd_admin_notes_cleared';
 

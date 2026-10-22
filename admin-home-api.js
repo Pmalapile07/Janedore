@@ -4,7 +4,8 @@
 //
 // - activity: what needs doing now. Super Admin / Admin: paid orders to
 //   fulfil, returns and exchanges to review, new partner applications,
-//   brand reports and customer care messages. A brand: its page setup
+//   brand reports and customer care messages. Brands that register
+//   interest on the coming soon page appear in notifications. A brand: its page setup
 //   (logo, hero image, slogan, first product) and its own orders and
 //   returns. Unread chats are added in the browser, which already
 //   tracks them.
@@ -49,10 +50,10 @@ module.exports = function registerAdminHome(app, deps) {
 
   async function platformHome() {
     const since = Date.now() - 14 * DAY;
-    const [orders, returns, exchanges, apps, reports, contacts, reviews] = await Promise.all([
+    const [orders, returns, exchanges, apps, reports, contacts, reviews, interest] = await Promise.all([
       safe(recent('orders', 300)), safe(recent('returns', 100)), safe(recent('exchanges', 100)),
       safe(recent('partnerApplications', 100)), safe(recent('brandReports', 100)),
-      safe(recent('contactMessages', 100)), safe(recent('reviews', 50))
+      safe(recent('contactMessages', 100)), safe(recent('reviews', 50)), safe(recent('brandInterest', 100))
     ]);
     const paid = orders.filter((o) => o.paymentStatus === 'paid');
     const activity = [
@@ -71,6 +72,7 @@ module.exports = function registerAdminHome(app, deps) {
     reports.forEach((r) => notes.push({ type: 'report', at: toMs(r.createdAt), text: 'Concern reported about ' + (r.brand || 'a brand') + ': ' + (r.reason || ''), tab: 'reports' }));
     contacts.forEach((c) => notes.push({ type: 'message', at: toMs(c.createdAt), text: 'Customer care message from ' + (c.name || 'a customer') + (c.topic ? ' about ' + String(c.topic).toLowerCase() : ''), tab: 'messages' }));
     reviews.forEach((r) => notes.push({ type: 'review', at: toMs(r.createdAt), text: (Number(r.rating) || 0) + '-star review from ' + (r.name || 'a customer'), tab: 'reviews' }));
+    interest.forEach((i) => notes.push({ type: 'interest', at: toMs(i.createdAt), text: 'Brand interest from ' + (i.brandName || 'a brand') + ' (' + (i.email || '') + ')', tab: 'applications' }));
     return { activity, notifications: notes.filter((n) => n.at >= since).sort((a, b) => b.at - a.at).slice(0, 30) };
   }
 
