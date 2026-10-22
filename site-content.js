@@ -155,15 +155,20 @@ function renderShopByCategory(shopByCategory) {
     const featuredCategories = allCategories.filter(function(category) { return category.featuredOnHomepage === true; });
     // Keep the homepage populated when categories exist but none have been
     // explicitly featured yet. Featured categories still take priority.
-    const categories = (featuredCategories.length ? featuredCategories : allCategories).slice(0, 4);
+    // Up to 8 tiles. When there are more categories than that, the last
+    // tile is an icon-only "all categories" tile (the /categories page).
+    const pool = featuredCategories.length ? featuredCategories : allCategories;
+    const showAll = allCategories.length > Math.min(pool.length, 8);
+    const categories = pool.slice(0, showAll ? 7 : 8);
 
     if (!categories.length) {
-      // Keep the four homepage category placeholders visible until categories
+      // Keep the eight homepage category placeholders visible until categories
       // are created in Admin. Do not collapse the section when the data is empty.
       grid.style.display = '';
-      grid.innerHTML = Array.from({ length: 4 }, function() {
+      grid.innerHTML = Array.from({ length: 8 }, function() {
         return '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
       }).join('');
+      updateHomeCategoriesNav();
       return;
     }
 
@@ -177,7 +182,10 @@ function renderShopByCategory(shopByCategory) {
         '" aria-label="Browse ' + name + '"><div class="home-category-img' +
         (category.imageUrl ? '' : ' content-empty') + '"><div class="home-category-label">' +
         name + '</div></div></button>';
-    }).join('');
+    }).join('') + (showAll
+      ? '<button type="button" class="home-category-card home-category-all" aria-label="All categories" onclick="navigateTo(\'categories\')"><div class="home-category-img"><i class="ph ph-squares-four" aria-hidden="true"></i></div></button>'
+      : '');
+    updateHomeCategoriesNav();
 
     grid.querySelectorAll('[data-category-slug]').forEach(function(card, index) {
       const category = categories[index];
@@ -191,6 +199,30 @@ function renderShopByCategory(shopByCategory) {
     console.warn('[SITE CONTENT] Could not load homepage categories:', error.message);
   });
 }
+// Homepage category tiles: chevrons scroll one column (two tiles) at a
+// time; each shows only when there's more that way.
+function scrollHomeCategories(dir) {
+  const grid = document.getElementById('home-categories-grid');
+  const card = grid && grid.querySelector('.home-category-card');
+  if (!card) return;
+  grid.scrollBy({ left: dir * (card.getBoundingClientRect().width + 6), behavior: 'smooth' });
+}
+function updateHomeCategoriesNav() {
+  const grid = document.getElementById('home-categories-grid');
+  if (!grid) return;
+  const scroller = grid.parentElement;
+  const max = grid.scrollWidth - grid.clientWidth;
+  scroller.classList.toggle('can-prev', grid.scrollLeft > 4);
+  scroller.classList.toggle('can-next', grid.scrollLeft < max - 4);
+}
+document.addEventListener('DOMContentLoaded', function () {
+  const grid = document.getElementById('home-categories-grid');
+  if (!grid) return;
+  grid.addEventListener('scroll', updateHomeCategoriesNav, { passive: true });
+  window.addEventListener('resize', updateHomeCategoriesNav);
+  updateHomeCategoriesNav();
+});
+
 function renderShopByClothingHeader(clothing) {
   clothing = clothing || {};
   const headingEl = document.getElementById('clothing-heading');

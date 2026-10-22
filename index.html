@@ -470,11 +470,20 @@
       <div class="home-categories-title skeleton-text" id="shop-by-category-heading" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div>
       <button id="categories-view-all-btn" class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="navigateTo('categories')">View all</button>
     </div>
+    <!-- Two rows of tiles that swipe sideways a column at a time (site-content.js). -->
+    <div class="home-categories-scroller">
     <div class="home-categories-grid" id="home-categories-grid">
       <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
       <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
       <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
       <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
+      <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
+      <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
+      <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
+      <div class="home-category-card"><div class="home-category-img"><div class="home-category-label"></div></div></div>
+    </div><!-- /home-categories-grid -->
+    <button type="button" class="home-categories-nav home-categories-prev" aria-label="Previous categories" onclick="scrollHomeCategories(-1)"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+    <button type="button" class="home-categories-nav home-categories-next" aria-label="More categories" onclick="scrollHomeCategories(1)"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
     </div>
   </section>
   <section id="home-all-products">

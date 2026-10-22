@@ -2783,11 +2783,11 @@ function fillBackgroundElement(html, id, imageUrl, maxWidth) {
 // innerHTML from scratch regardless of what's here, so this only needs
 // to get the initial paint right (image + label), not full
 // interactivity (onclick) — the client overwrites it moments later
-// either way. Unconfigured (no tiles) leaves the 4 static neutral
+// either way. Unconfigured (no tiles) leaves the 8 static neutral
 // placeholder tiles already in index.html untouched.
 function applyShopByCategoryTiles(html, tiles) {
   if (!tiles.length) return html;
-  const inner = tiles.map(function (tile) {
+  const inner = tiles.slice(0, 8).map(function (tile) {
     const label = escapeHtml(tile.label || '');
     const url = adminImageURL(tile.imageUrl, 600);
     const safeUrl = url.replace(/['"\\]/g, '');
@@ -2795,7 +2795,7 @@ function applyShopByCategoryTiles(html, tiles) {
     return '<div class="home-category-card"><div class="home-category-img"' + style + '><div class="home-category-label">' + label + '</div></div></div>';
   }).join('');
   return html.replace(
-    /(<div class="home-categories-grid" id="home-categories-grid">)[\s\S]*?(<\/div>\s*<\/section>)/,
+    /(<div class="home-categories-grid" id="home-categories-grid">)[\s\S]*?(<\/div><!-- \/home-categories-grid -->)/,
     '$1' + inner + '$2'
   );
 }

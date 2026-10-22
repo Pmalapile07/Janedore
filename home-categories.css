@@ -219,3 +219,31 @@ button.home-category-card:focus-visible { outline: 2px solid #111; outline-offse
    padding is the whole gap, the same 12px as above and below the free
    delivery banner. */
 #hero + #home-categories { padding-top: 0; }
+
+/* Homepage tiles: two rows that swipe sideways, a column (two tiles) at
+   a time, two columns on screen. The /categories page keeps the plain
+   grid. */
+.home-categories-scroller { position: relative; }
+#home-categories-grid {
+  grid-template-columns: none; grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column; grid-auto-columns: calc((100% - 6px) / 2);
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
+  scroll-padding: 0 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+#home-categories-grid::-webkit-scrollbar { display: none; }
+#home-categories-grid > .home-category-card { scroll-snap-align: start; }
+@media (min-width: 640px) { #home-categories-grid { scroll-padding: 0 10px; } }
+@media (min-width: 1024px) { #home-categories-grid { scroll-padding: 0 12px; } }
+/* Last tile when there are more categories than fit: all categories. */
+.home-category-all .home-category-img { display: flex; align-items: center; justify-content: center; }
+.home-category-all .home-category-img i { font-size: 32px; color: #111; }
+/* Chevrons: the free delivery banner's caret on a white circle. */
+.home-categories-nav {
+  position: absolute; top: 50%; z-index: 2; width: 36px; height: 36px; margin-top: -18px;
+  border: none; border-radius: 50%; background: #fff; color: #111; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  display: none; align-items: center; justify-content: center; padding: 0; cursor: pointer; font-size: 18px;
+}
+.home-categories-prev { left: 16px; }
+.home-categories-next { right: 16px; }
+.home-categories-scroller.can-prev .home-categories-prev,
+.home-categories-scroller.can-next .home-categories-next { display: flex; }
