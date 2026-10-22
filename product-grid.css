@@ -891,12 +891,14 @@ body .site-collection-layout {
    accessories, Shop by brand): solid black with white text, the same
    weight and padding as the hero's Shop now button (hero.css). */
 #page-home .home-categories-header .initial-drop-view-all,
-#page-vendor .home-categories-header .initial-drop-view-all {
+#page-vendor .home-categories-header .initial-drop-view-all,
+#page-home .home-section-btn-row .initial-drop-view-all {
   background: #111; color: #fff; font-weight: 500; border: none; padding: 12px 32px;
   transition: background 0.2s;
 }
 #page-home .home-categories-header .initial-drop-view-all:hover,
-#page-vendor .home-categories-header .initial-drop-view-all:hover { opacity: 1; background: #333; }
+#page-vendor .home-categories-header .initial-drop-view-all:hover,
+#page-home .home-section-btn-row .initial-drop-view-all:hover { opacity: 1; background: #333; }
 /* Narrow phones: the heading wraps onto a second line rather than
    running into the button, which keeps its size. */
 #page-home .home-categories-header,
@@ -904,8 +906,14 @@ body .site-collection-layout {
 #page-home .home-categories-header .home-categories-title,
 #page-vendor .home-categories-header .home-categories-title { min-width: 0; overflow-wrap: break-word; }
 #page-home .home-categories-header .initial-drop-view-all,
-#page-vendor .home-categories-header .initial-drop-view-all { flex-shrink: 0; white-space: nowrap; }
+#page-vendor .home-categories-header .initial-drop-view-all,
+#page-home .home-section-btn-row .initial-drop-view-all { flex-shrink: 0; white-space: nowrap; }
 @media (max-width: 400px) {
   #page-home .home-categories-header .initial-drop-view-all,
-  #page-vendor .home-categories-header .initial-drop-view-all { padding: 12px 20px; }
+  #page-vendor .home-categories-header .initial-drop-view-all,
+  #page-home .home-section-btn-row .initial-drop-view-all { padding: 12px 20px; }
 }
+
+/* Homepage rows: the button sits centred under the products, the same
+   size as when it sat beside the heading. */
+.home-section-btn-row { display: flex; justify-content: center; padding: 20px 20px 0; }
