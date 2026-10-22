@@ -94,7 +94,8 @@ body:not(.on-collection-page) .collection-top-description {
   display: none !important;
   background: #fff;
   border-bottom: 1px solid white;
-  padding: 12px 20px;
+  /* About 71px tall, also when it's the sticky top bar. */
+  padding: 22px 20px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
