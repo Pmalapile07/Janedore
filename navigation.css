@@ -10,7 +10,7 @@
   background: #111; display: flex; flex-direction: column;
   position: sticky; top: 0; z-index: 800;
   border-bottom: none; max-width: 100%; box-shadow: none;
-  transition: background 0.25s ease;
+  transition: background 0.25s ease, top 0.25s ease;
   /* Keeps this element on its own stable GPU compositing layer —
      without it, a sticky-positioned element on iOS Safari can
      occasionally lose its painted content (rendering blank/white)

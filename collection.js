@@ -444,7 +444,26 @@ function updateCollectionGridIcon() {
   else { icon.classList.add('cols-2'); }
 }
 
+// Collection pages: once the Sort/Filter toolbar reaches the header, the
+// header slides away and the toolbar becomes the sticky top bar; it comes
+// back when the toolbar's own place in the page scrolls back below the
+// header (collection.css). Measured from a marker just above the toolbar,
+// which never moves, so hiding the header can't flip it back.
+function updateCollectionBarStuck() {
+  const marker = document.getElementById('collection-bar-sentinel');
+  const nav = document.getElementById('main-nav');
+  const on = document.body.classList.contains('on-collection-page') && marker && nav;
+  document.body.classList.toggle('collection-bar-stuck', !!on && marker.getBoundingClientRect().top <= nav.offsetHeight);
+}
+let _collectionBarTick = false;
+window.addEventListener('scroll', () => {
+  if (_collectionBarTick) return;
+  _collectionBarTick = true;
+  requestAnimationFrame(() => { _collectionBarTick = false; updateCollectionBarStuck(); });
+}, { passive: true });
+
 function updateCollectionTitle() {
+  updateCollectionBarStuck();
   const titleEl = document.getElementById('collection-filter-title-display');
   const headingEl = document.getElementById('collection-page-heading');
   const countEl = document.getElementById('collection-product-count');

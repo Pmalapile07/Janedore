@@ -99,7 +99,6 @@ body:not(.on-collection-page) .collection-top-description {
   justify-content: space-between;
   gap: 12px;
   box-sizing: border-box;
-  /* Intentionally non-sticky: this toolbar scrolls away with collection content. */
   position: relative;
   top: auto;
   /* Above the product cards (badges, hearts and image overlays go up to
@@ -110,7 +109,17 @@ body:not(.on-collection-page) .collection-top-description {
 
 body.on-collection-page .collection-filter-bar {
   display: flex !important;
+  /* Sticks under the header; once it reaches the header, the header
+     slides up out of view and this takes its place at the top
+     (body.collection-bar-stuck, collection.js). The header moves by its
+     `top`, not a transform: a transform on a sticky element can leave
+     taps landing in the wrong place on iOS Safari (navigation.css). */
+  position: sticky;
+  top: var(--main-nav-sticky-height, 0px);
+  transition: top 0.25s ease;
 }
+body.on-collection-page.collection-bar-stuck .collection-filter-bar { top: 0; }
+body.on-collection-page.collection-bar-stuck #main-nav { top: calc(-1 * var(--main-nav-sticky-height, 0px)); }
 
 /* Collection title in center */
 .collection-filter-title-display {
