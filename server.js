@@ -2762,14 +2762,14 @@ function fillTextElement(html, id, text) {
   });
 }
 
-// Homepage section headings: first word, then the rest on the next line
-// (setSectionHeading() in site-content.js does the same in the browser).
+// Homepage section headings: anything after the second word on the next
+// line (setSectionHeading() in site-content.js does the same in the browser).
 function fillSectionHeading(html, id, text) {
   const words = String(text || '').trim().split(/\s+/).filter(Boolean);
   const re = new RegExp('(<[a-zA-Z0-9]+\\b[^>]*\\bid="' + id + '"[^>]*>)([^<]*)(</)');
   return html.replace(re, function (_m, openTag, _oldText, closeStart) {
     const cleanedOpen = openTag.replace(/\s*\b(skeleton-text|content-shimmer)\b/g, '');
-    const inner = escapeHtml(words[0] || '') + (words.length > 1 ? '<br>' + escapeHtml(words.slice(1).join(' ')) : '');
+    const inner = escapeHtml(words.slice(0, 2).join(' ')) + (words.length > 2 ? '<br>' + escapeHtml(words.slice(2).join(' ')) : '');
     return cleanedOpen + inner + closeStart;
   });
 }

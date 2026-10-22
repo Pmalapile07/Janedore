@@ -97,15 +97,15 @@ function renderHero(hero) {
   loadBackgroundImage(document.getElementById('hero-bg'), hero.imageUrl, 1600);
 }
 
-// Homepage section headings: the first word on its own line and the
-// rest under it ("Shop / accessories"), so a heading never runs into
-// its button. One-word headings stay as they are.
+// Homepage section headings: anything after the second word goes on the
+// next line ("Shop by / brand"); one- and two-word headings stay on one
+// line (they still wrap on a narrow phone rather than hit the button).
 function setSectionHeading(el, text) {
   const words = String(text || '').trim().split(/\s+/).filter(Boolean);
-  el.textContent = words[0] || '';
-  if (words.length > 1) {
+  el.textContent = words.slice(0, 2).join(' ');
+  if (words.length > 2) {
     el.appendChild(document.createElement('br'));
-    el.appendChild(document.createTextNode(words.slice(1).join(' ')));
+    el.appendChild(document.createTextNode(words.slice(2).join(' ')));
   }
 }
 
