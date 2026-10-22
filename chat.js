@@ -2166,106 +2166,92 @@ async function submitSatisfaction(satisfied) {
 }
 
 // ==================== ORDER LOOKUP ====================
+// Goes through /api/track-order (server.js), the same check as the Track
+// your order page: order number plus the email used at checkout. Orders
+// can't be read from the browser directly (firestore.rules).
 // FIX #6: build result with textContent, not innerHTML
 async function lookupOrder() {
-  const db = getFirestore();
   const input = safeEl('order-lookup-input');
+  const emailInput = safeEl('order-lookup-email');
   const resultEl = safeEl('order-result');
-  if (!db || !input || !resultEl) return;
+  if (!input || !emailInput || !resultEl) return;
 
-  const orderNum = input.value.trim().toUpperCase().replace(/^#/, '');
-  if (!orderNum) {
+  const showNote = (text, isError) => {
     resultEl.innerHTML = '';
     const msg = document.createElement('div');
-    msg.style.cssText = 'color:#888;margin-top:12px;';
-    msg.textContent = 'Please enter an order number';
+    msg.style.cssText = isError ? 'color:#c00;font-size:11px;font-weight:400;margin-top:16px;' : 'color:#888;margin-top:12px;';
+    msg.textContent = text;
     resultEl.appendChild(msg);
+  };
+
+  const orderNumber = input.value.trim().toUpperCase().replace(/^#/, '');
+  const email = emailInput.value.trim();
+  if (!orderNumber || !email) { showNote('Please enter your order number and email address'); return; }
+
+  showNote('Searching...');
+  _ScreenDebug.info('API', 'Order lookup requested');
+
+  let res, o;
+  try {
+    res = await fetch('/api/track-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderNumber, email }) });
+    o = await res.json().catch(() => ({}));
+  } catch (e) {
+    _ScreenDebug.err('API', 'Lookup failed: ' + e.message);
+    showNote('No connection. Check your internet and try again.', true);
+    return;
+  }
+  if (!res.ok) {
+    _ScreenDebug.warn('API', 'Lookup refused: ' + res.status);
+    showNote(o.error || 'Unable to look up order. Please try again.', true);
     return;
   }
 
+  _ScreenDebug.ok('API', 'Order found');
+  const date = o.createdAt
+    ? new Date(o.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '-';
+  const statusKey = o.refunded ? 'refunded' : o.refundPending ? 'refund pending' : o.cancelled ? 'cancelled' : (o.status || 'pending');
+  const status = statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
+  const packages = o.packages || [];
+  const itemCount = packages.reduce((n, p) => n + (p.items || []).reduce((m, i) => m + (Number(i.qty) || 1), 0), 0);
+
   resultEl.innerHTML = '';
-  const searching = document.createElement('div');
-  searching.style.cssText = 'color:#888;margin-top:12px;';
-  searching.textContent = 'Searching...';
-  resultEl.appendChild(searching);
+  const container = document.createElement('div');
+  container.style.cssText = "margin-top:20px;width:100%;text-align:left;font-family:'Inter',sans-serif;line-height:1.8;";
 
-  _ScreenDebug.info('FS', 'Order lookup requested');
+  const header = document.createElement('div');
+  header.style.cssText = 'font-size:9px;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;font-weight:600;';
+  header.textContent = 'Order details';
+  container.appendChild(header);
 
-  try {
-    const snap = await db.collection('orders')
-      .where('orderNumber', '==', orderNum).limit(1).get();
+  const rows = [
+    ['Order',  '#' + String(o.orderNumber || orderNumber)],
+    ['Status', String(status)],
+    ['Items',  String(itemCount)],
+    ['Date',   String(date)]
+  ];
+  packages.forEach(p => {
+    if (p.shipped && p.trackingNumber) rows.push([packages.length > 1 && p.brand ? p.brand + ' tracking' : 'Tracking', String((p.courier ? p.courier + ' ' : '') + p.trackingNumber)]);
+  });
 
-    resultEl.innerHTML = '';
+  rows.forEach(([label, value]) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;gap:12px;font-size:11px;font-weight:400;margin-bottom:6px;';
 
-    if (snap.empty) {
-      _ScreenDebug.warn('FS', 'No matching order');
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'margin-top:16px;color:#888;line-height:1.8;';
+    const labelEl = document.createElement('span');
+    labelEl.style.color = '#888';
+    labelEl.textContent = label;
 
-      const l1 = document.createElement('div');
-      l1.style.cssText = "font-family:'Inter',sans-serif;font-size:12px;font-weight:400;";
-      l1.textContent = 'No order found';
+    const valueEl = document.createElement('span');
+    valueEl.style.cssText = 'color:#111;text-align:right;';
+    valueEl.textContent = value;
 
-      const l2 = document.createElement('div');
-      l2.style.cssText = "font-family:'Inter',sans-serif;font-size:10px;font-weight:400;margin-top:4px;opacity:0.7;";
-      l2.textContent = 'Check your order number and try again';
+    row.appendChild(labelEl);
+    row.appendChild(valueEl);
+    container.appendChild(row);
+  });
 
-      wrap.appendChild(l1);
-      wrap.appendChild(l2);
-      resultEl.appendChild(wrap);
-      return;
-    }
-
-    _ScreenDebug.ok('FS', 'Order found');
-    const o = snap.docs[0].data();
-    const date = o.createdAt
-      ? new Date(o.createdAt.seconds * 1000).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
-      : '-';
-    const status = (o.status || 'pending').charAt(0).toUpperCase() + (o.status || 'pending').slice(1);
-
-    // FIX #6: build each row with textContent for Firestore-controlled values
-    const container = document.createElement('div');
-    container.style.cssText = "margin-top:20px;width:100%;text-align:left;font-family:'Inter',sans-serif;line-height:1.8;";
-
-    const header = document.createElement('div');
-    header.style.cssText = 'font-size:9px;color:#111;margin-bottom:12px;border-bottom:0.5px solid #e5e5e5;padding-bottom:8px;font-weight:600;';
-    header.textContent = 'Order details';
-    container.appendChild(header);
-
-    const rows = [
-      ['Order',  '#' + String(o.orderNumber || snap.docs[0].id || '')],
-      ['Status', String(status)],
-      ['Items',  String(o.items?.length || o.itemCount || 0)],
-      ['Total',  'R' + Number(o.subtotal || o.total || 0).toLocaleString()],
-      ['Date',   String(date)]
-    ];
-
-    rows.forEach(([label, value]) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;font-weight:400;margin-bottom:6px;';
-
-      const labelEl = document.createElement('span');
-      labelEl.style.color = '#888';
-      labelEl.textContent = label;
-
-      const valueEl = document.createElement('span');
-      valueEl.style.color = '#111';
-      valueEl.textContent = value;
-
-      row.appendChild(labelEl);
-      row.appendChild(valueEl);
-      container.appendChild(row);
-    });
-
-    resultEl.appendChild(container);
-  } catch (e) {
-    _ScreenDebug.err('FS', 'Lookup failed: ' + (e.code || '') + ' ' + e.message);
-    resultEl.innerHTML = '';
-    const errDiv = document.createElement('div');
-    errDiv.style.cssText = 'color:#c00;font-size:11px;font-weight:400;margin-top:16px;';
-    errDiv.textContent = 'Unable to look up order. Please try again.';
-    resultEl.appendChild(errDiv);
-  }
+  resultEl.appendChild(container);
 }
 
 // ==================== INIT ====================

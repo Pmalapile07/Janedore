@@ -974,10 +974,15 @@
 
   <div class="order-lookup" id="order-lookup" style="display:none;">
     <div class="order-lookup-title">Track your order</div>
-    <div class="order-lookup-subtitle">Enter your order number to check its status</div>
-    <div class="chat-input-pill">
+    <div class="order-lookup-subtitle">Enter your order number and the email you ordered with</div>
+    <div class="chat-input-pill" style="min-height:41px;box-sizing:border-box;margin-bottom:10px;">
       <input class="chat-input" id="order-lookup-input"
              placeholder="Order number (e.g. JD-123456)"
+             onkeypress="if(event.key==='Enter')lookupOrder()">
+    </div>
+    <div class="chat-input-pill">
+      <input class="chat-input" id="order-lookup-email" type="email" autocomplete="email"
+             placeholder="Email address"
              onkeypress="if(event.key==='Enter')lookupOrder()">
       <button class="chat-send-btn" id="order-track-btn" onclick="lookupOrder()" aria-label="Track order"><i class="ph ph-arrow-right"></i></button>
     </div>
