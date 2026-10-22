@@ -92,7 +92,7 @@
 .hero-heading {
   z-index: 2;
   font-family: 'Inter', sans-serif;
-  font-size: 24px;
+  font-size: 26px;
   font-style: normal;
   font-weight: 600;
   color: #fff;
@@ -106,7 +106,7 @@
      and the Shop now button sit on the same bottom line. */
   margin: 0 0 -0.29em;
 }
-@media (min-width: 768px) { .hero-heading { font-size: 32px; max-width: 420px; } }
+@media (min-width: 768px) { .hero-heading { font-size: 34px; max-width: 420px; } }
 #hero .hero-shop-btn,
 .brand-hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
 
