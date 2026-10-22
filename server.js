@@ -3002,8 +3002,9 @@ app.get(['/admin', '/admin.html'], (req, res) => {
 
 // ==================== COMING SOON PAGE ====================
 // janedore-coming-soon.html with the homepage's own photos (admin >
-// Homepage): the hero photo behind the hero, the editorial banner photo
-// in the For the curious card, and the four Shop by category tiles.
+// Homepage): the editorial banner photo in the For the curious card and
+// the four Shop by category tiles. The hero has its own photo
+// (coming-soon-hero.jpg).
 // Without them the page still works (plain backgrounds).
 app.get('/janedore-coming-soon.html', async (req, res) => {
   let html = fs.readFileSync(path.join(__dirname, 'janedore-coming-soon.html'), 'utf8');
@@ -3013,7 +3014,6 @@ app.get('/janedore-coming-soon.html', async (req, res) => {
       const u = adminImageURL(url, w).replace(/['"\\]/g, '');
       return u ? " style=\"background-image:url('" + u + "');\"" : '';
     };
-    html = html.replace('<section class="cs-hero" id="cs-hero">', '<section class="cs-hero" id="cs-hero"' + bg((homepage.hero || {}).imageUrl, 1600) + '>');
     html = html.replace('<div class="cs-card-img" id="cs-curious-img"></div>', '<div class="cs-card-img" id="cs-curious-img"' + bg((homepage.banner || {}).imageUrl, 900) + '></div>');
     const tiles = Array.isArray((homepage.shopByCategory || {}).tiles) ? homepage.shopByCategory.tiles.slice(0, 4) : [];
     html = html.replace('<div class="cs-cats" id="cs-cats"></div>', '<div class="cs-cats" id="cs-cats">' +

@@ -104,14 +104,15 @@
   .signup-msg.error { color: #c0392b; }
   .signup-msg.success { color: var(--ink); }
 
-  /* Hero: the homepage hero photo (server.js fills it in), heading at
-     the bottom left with the button under it, like the shop. */
-  .cs-hero { position: relative; min-height: 78vh; min-height: 78svh; display: flex; align-items: flex-end; background: #2a2a2a center / cover no-repeat; color: #fff; }
-  .cs-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%); }
-  .cs-hero-content { position: relative; padding: 0 20px 40px; max-width: 560px; }
+  /* Hero: coming-soon-hero.jpg, whole on phones. The heading and button
+     sit on the plain wall at the top, in black. */
+  .cs-hero { position: relative; overflow: hidden; min-height: calc(100vw * 1448 / 1086 + 150px); display: flex; align-items: flex-start; background: #dadbd3; color: var(--ink); }
+  .cs-hero-photo { position: absolute; left: 0; right: 0; bottom: 0; aspect-ratio: 1086 / 1448; background: url('/coming-soon-hero.jpg') center / cover no-repeat;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60px); mask-image: linear-gradient(to bottom, transparent 0, #000 60px); }
+  .cs-hero-content { position: relative; z-index: 1; padding: 32px 20px 0; max-width: 560px; }
   .cs-eyebrow { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; opacity: 0.85; }
   .cs-hero h1 { font-size: 34px; font-weight: 600; line-height: 1.08; letter-spacing: -0.01em; margin-bottom: 14px; }
-  .cs-hero p { font-size: 15px; line-height: 1.55; max-width: 360px; margin-bottom: 24px; opacity: 0.92; }
+  .cs-hero p { font-size: 15px; line-height: 1.55; max-width: 330px; margin-bottom: 24px; color: #2b2b2b; }
 
   /* More than a store: three short reasons. */
   .cs-why { padding: 56px 20px 48px; text-align: center; }
@@ -156,8 +157,10 @@
 
   @media (min-width: 768px) {
     .site-header { padding: 0 20px 0 32px; }
-    .cs-hero { min-height: 82vh; }
-    .cs-hero-content { padding: 0 40px 64px; }
+    .cs-hero { min-height: 88vh; align-items: center; }
+    .cs-hero-photo { left: auto; top: 0; height: 100%; aspect-ratio: 1086 / 1448;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22%); mask-image: linear-gradient(to right, transparent 0, #000 22%); }
+    .cs-hero-content { padding: 0 40px; }
     .cs-hero h1 { font-size: 56px; }
     .cs-hero p { font-size: 17px; max-width: 440px; }
     .cs-why { padding: 80px 32px 64px; }
@@ -322,11 +325,12 @@
 
 <main id="main">
   <section class="cs-hero" id="cs-hero">
+    <div class="cs-hero-photo" aria-hidden="true"></div>
     <div class="cs-hero-content">
       <span class="cs-eyebrow">Coming soon</span>
       <h1>The independent collective</h1>
       <p>A new destination for independent fashion, distinctive finds and the brands shaping what’s next.</p>
-      <a href="#early-access" class="cs-btn cs-btn-white">Get early access <i class="ph ph-caret-right"></i></a>
+      <a href="#early-access" class="cs-btn">Get early access <i class="ph ph-caret-right"></i></a>
     </div>
   </section>
 
