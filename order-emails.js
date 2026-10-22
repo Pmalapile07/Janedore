@@ -804,12 +804,12 @@ function reportReceived(report, ctx) {
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
-    title: 'We received your report',
-    preheader: 'Thanks for telling us about ' + brand + '. Our team will look into it.',
-    bannerHtml: '<strong>We received your report</strong>',
+    title: 'Report received',
+    preheader: 'Your report about ' + brand + ' has been received and will be reviewed by our team.',
+    bannerHtml: '<strong>Report received</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Thank you for letting us know. Our team will look into your report about <strong style="color:#111111;">' + esc(brand) +
-        '</strong> and get back to you at this email address if we need more details or have an update. ' + esc(brand) + ' won\'t be told who sent it.</div>',
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Thank you for your report about <strong style="color:#111111;">' + esc(brand) +
+        '</strong>. Our marketplace team will review it and take appropriate action, and will contact you at this email address if further details are required. All reports are handled in strict confidence.</div>',
       title('Your report') + rows(
         row('Brand', esc(brand), { semi: true }) +
         row('Reason', esc(report.reason), { semi: true })) +
@@ -821,11 +821,11 @@ function reportReceived(report, ctx) {
     ],
     footerHtml: 'Anything to add? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
-  const text = 'We received your report\n\nThank you for letting us know. Our team will look into your report about ' + brand +
-    ' and get back to you if we need more details or have an update. ' + brand + ' won\'t be told who sent it.\n\nBrand: ' + brand +
+  const text = 'Report received\n\nThank you for your report about ' + brand +
+    '. Our marketplace team will review it and take appropriate action, and will contact you if further details are required. All reports are handled in strict confidence.\n\nBrand: ' + brand +
     '\nReason: ' + report.reason + (report.details ? '\n\n' + report.details : '') +
     '\n\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently Asked Questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
-  return { subject: 'We received your report about ' + brand, html, text };
+  return { subject: 'Your report about ' + brand + ' has been received', html, text };
 }
 
 // Customer care contact form (/api/contact): the team's copy and the

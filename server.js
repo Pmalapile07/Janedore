@@ -2427,7 +2427,7 @@ app.post('/api/contact', async (req, res) => {
 // The "more" button on a brand page opens a short form; reports are
 // saved to brandReports and emailed to the Janedore team (never to the
 // brand). Limited to 5 reports an hour per IP address.
-const REPORT_REASONS = ['Counterfeit or fake product', 'Item not as described', 'Problem with an order', 'Offensive or misleading content', 'Something else'];
+const REPORT_REASONS = ['Counterfeit or replica item', 'Item not as described', 'Order or delivery issue', 'Misleading or inappropriate content', 'Something else'];
 const reportHits = new Map();
 app.post('/api/report-brand', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
@@ -2443,7 +2443,7 @@ app.post('/api/report-brand', async (req, res) => {
   const email = String(body.email || '').trim().substring(0, 200);
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
   if (!vendorId || !reason) return res.status(400).json({ error: 'Please choose a reason.' });
-  if (reason === 'Something else' && !details) return res.status(400).json({ error: 'Please tell us what happened.' });
+  if (reason === 'Something else' && !details) return res.status(400).json({ error: 'Please describe the issue.' });
 
   try {
     const vendorDoc = await adminDb.collection('vendors').doc(vendorId).get();
