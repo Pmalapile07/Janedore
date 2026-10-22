@@ -606,12 +606,11 @@ body .site-collection-layout {
   #cart-slider-grid::after, #wish-slider-grid::after { flex: 0 0 12px; }
 }
 
-/* --- Shop by Brand slider — same slider mechanics as #arrivals-grid/
+/* --- Product page Shop by Brand slider — same slider mechanics as #arrivals-grid/
    #clothing-grid above, but its own dedicated card markup (image +
    name only, no price/wishlist/badge/swatches) since a brand isn't a
    product. Cards are sized slightly bigger than the product sliders'
    (70vw/30vw/320px vs 65vw/28vw/300px), same 5/6 image ratio. */
-#brand-grid,
 .brand-grid-scroll {
   display: flex;
   overflow-x: auto;
@@ -628,25 +627,21 @@ body .site-collection-layout {
   scroll-padding-left: 18px;
   scrollbar-width: none;
 }
-#brand-grid::-webkit-scrollbar,
 .brand-grid-scroll::-webkit-scrollbar { display: none; }
-#brand-grid::after,
 .brand-grid-scroll::after { content: ''; flex: 0 0 18px; }
-/* Homepage's own Shop by Brand grid — matches the editorial banner
-   image's padding right above it (#home-editorial-banner in
-   home-categories.css) instead of the flat 18px shared with the
-   product page's own Shop by Brand slider (.brand-grid-scroll), which
-   keeps its original padding below. */
-#brand-grid { padding: 0 0 0 8px !important; scroll-padding-left: 8px; }
-#brand-grid::after { flex: 0 0 8px; }
 /* Product page Shop by Brand: lines up with the section heading and the
    product info above it (12px, .swipe-section-title / .product-info). */
 .brand-grid-scroll { padding: 0 0 0 12px !important; scroll-padding-left: 12px; }
 .brand-grid-scroll::after { flex: 0 0 12px; }
-@media (min-width: 640px) {
-  #brand-grid { padding: 0 0 0 10px !important; scroll-padding-left: 10px; }
-  #brand-grid::after { flex: 0 0 10px; }
-}
+/* Homepage Shop by Brand is a 2x2 grid laid out like Shop by category
+   (.home-categories-grid / .home-category-img in home-categories.css),
+   not a slider; the product page's .brand-grid-scroll stays a slider. */
+#brand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 8px; }
+#brand-grid .shop-brand-card { width: 100%; max-width: none; flex: none; scroll-snap-align: none; }
+#brand-grid .shop-brand-img { aspect-ratio: 0.87; }
+@media (min-width: 640px) { #brand-grid { padding: 0 10px; } }
+@media (min-width: 1024px) { #brand-grid { padding: 0 12px; } }
+
 /* Same size as the product card sliders (#arrivals-grid/#clothing-grid
    .product-card below), so Shop by Brand cards read as the same visual
    scale as every other card on the homepage. */
@@ -661,14 +656,11 @@ body .site-collection-layout {
   .shop-brand-card { width: 28vw; max-width: 300px; }
 }
 @media (min-width: 1024px) {
-  #brand-grid,
   .brand-grid-scroll {
     justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
   }
-  #brand-grid { padding: 0 0 0 12px !important; scroll-padding-left: 12px; }
-  #brand-grid::after { flex: 0 0 12px; }
 }
 .shop-brand-img {
   position: relative;

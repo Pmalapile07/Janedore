@@ -92,9 +92,8 @@ function renderHomeBrandSpotlight(vendors) {
   sliderEl.innerHTML = `<div class="brand-strip-track">${setHTML}${setHTML}</div>`;
 }
 
-// Home page "Shop by brand" — a manual swipe slider (#brand-grid),
-// distinct from the auto-scrolling marquee above. One real card per
-// brand, same 5/6 image ratio as a product card.
+// Home page "Shop by brand" — a 2x2 grid (#brand-grid) like Shop by
+// category, first four featured brands; View brands has the rest.
 // Shared by the home page's #brand-grid and the product page's own
 // Shop by brand section — same cards, same onclick, different
 // container each place renders them into.
@@ -125,7 +124,7 @@ function buildShopByBrand(vendors) {
   if (!grid) return;
 
   const brands = getFeaturedBrands(vendors);
-  grid.innerHTML = brands.length ? shopByBrandCardsHtml(brands) : placeholderBrandCardsHtml(4);
+  grid.innerHTML = brands.length ? shopByBrandCardsHtml(brands.slice(0, 4)) : placeholderBrandCardsHtml(4);
 }
 
 // ==================== BRANDS PAGE (/brands) — A-Z directory ====================
