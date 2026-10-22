@@ -444,20 +444,16 @@ function updateCollectionGridIcon() {
   else { icon.classList.add('cols-2'); }
 }
 
-// Collection pages: scrolling down once the Sort/Filter toolbar has
-// reached the header slides the header away and the toolbar becomes the
-// sticky top bar; scrolling up at any point brings the header straight
-// back, with the toolbar sticking under it again (collection.css). The
-// "reached" check uses a marker just above the toolbar, which never moves,
-// so hiding the header can't flip it back by itself.
+// Collection pages: as soon as the page scrolls down, the header (and its
+// search bar) slides away and the Sort/Filter toolbar becomes the sticky
+// top bar; scrolling up at any point brings the header straight back, with
+// the toolbar sticking under it again (collection.css). Back at the very
+// top the header always shows.
 let _collectionLastY = 0;
 function updateCollectionBarStuck() {
-  const marker = document.getElementById('collection-bar-sentinel');
-  const nav = document.getElementById('main-nav');
   const y = window.scrollY;
   const delta = y - _collectionLastY;
-  const onPage = document.body.classList.contains('on-collection-page') && marker && nav;
-  const reached = onPage && marker.getBoundingClientRect().top <= nav.offsetHeight;
+  const reached = document.body.classList.contains('on-collection-page') && y > 0;
   let stuck = document.body.classList.contains('collection-bar-stuck');
   if (!reached) stuck = false;
   else if (delta > 4) stuck = true;      // scrolling down

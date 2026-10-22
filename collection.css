@@ -110,7 +110,7 @@ body:not(.on-collection-page) .collection-top-description {
 
 body.on-collection-page .collection-filter-bar {
   display: flex !important;
-  /* Sticks under the header; once it reaches the header, the header
+  /* Sticks under the header; once the page scrolls down, the header
      slides up out of view and this takes its place at the top
      (body.collection-bar-stuck, collection.js). The header moves by its
      `top`, not a transform: a transform on a sticky element can leave
