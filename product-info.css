@@ -449,4 +449,6 @@
    room for the whole list when open, and small regular stars. */
 #info-accordion-reviews.open .info-accordion-body { max-height: none; }
 .info-accordion-body .product-review-stars i { font-size: 12px; color: #111; vertical-align: -1px; }
-.info-accordion-body .product-review-photo { display: block; width: 96px; height: 96px; object-fit: cover; margin: 4px 0 12px; cursor: pointer; }
+.product-review-photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.info-accordion-body .product-review-photo { display: block; width: 96px; height: 96px; object-fit: cover; cursor: pointer; }
+#page-account .product-review-photo { display: block; width: 72px; height: 72px; object-fit: cover; }

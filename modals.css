@@ -18,7 +18,15 @@
 .review-image-label:hover { border-color: #111; color: #111; }
 .review-image-label i { font-size: 18px; }
 #review-image-input { display: none; }
-.review-image-preview { width: 60px; height: 60px; object-fit: cover; display: none; border: 0.8px solid #ddd; }
+/* Review photos: same frame as the old single preview, with the remove
+   circle admin uses on product photos (admin-products.js). */
+.review-photos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.review-photos:empty { display: none; }
+.review-photo { position: relative; width: 60px; height: 60px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.review-photo img { width: 100%; height: 100%; object-fit: cover; border: 0.8px solid #ddd; display: block; pointer-events: none; }
+.review-photo.dragging { z-index: 2; opacity: 0.8; cursor: grabbing; }
+.review-photo.drop-target img { border-color: #111; }
+.review-photo-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); border: none; color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
 .review-submit-btn { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; cursor: pointer; transition: background 0.2s; font-family: inherit; }
 .review-submit-btn:hover { background: #333; }
 

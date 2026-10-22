@@ -23,7 +23,6 @@ const DOM = {
   get reviewText() { return document.getElementById("review-text"); },
   get reviewName() { return document.getElementById("review-name"); },
   get reviewImageInput() { return document.getElementById("review-image-input"); },
-  get reviewImagePreview() { return document.getElementById("review-image-preview"); },
   get reviewModalBackdrop() { return document.getElementById("review-modal-backdrop"); },
   get gridToggleSvg() { return document.getElementById("grid-toggle-svg"); },
   get catGridToggleSvg() { return document.getElementById("cat-grid-toggle-svg"); },
