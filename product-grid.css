@@ -914,6 +914,9 @@ body .site-collection-layout {
   #page-home .home-section-btn-row .initial-drop-view-all { padding: 12px 20px; }
 }
 
-/* Homepage rows: the button sits centred under the products, the same
-   size as when it sat beside the heading. */
-.home-section-btn-row { display: flex; justify-content: center; padding: 20px 20px 0; }
+/* Homepage rows: the button sits under the products on the right, the
+   same size and right edge as when it sat beside the heading (20px,
+   24px from 768px, 27px desktop: home-categories.css). */
+.home-section-btn-row { display: flex; justify-content: flex-end; padding: 20px 20px 0; }
+@media (min-width: 768px) { .home-section-btn-row { padding-left: 24px; padding-right: 24px; } }
+@media (min-width: 1024px) { .home-section-btn-row { padding-left: 27px; padding-right: 27px; } }
