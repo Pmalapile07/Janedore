@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 // serves the site from. They hold no secrets, but there is no reason for
 // anyone to download them, so they 404 like any missing file.
 const PRIVATE_FILES = new Set([
-  '/server.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/partner-applications-api.js', '/order-emails.js',
+  '/server.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/partner-applications-api.js', '/order-emails.js',
   '/firestore.rules', '/firestore.indexes.json', '/package.json', '/package-lock.json',
   '/debugger.html'
 ]);
@@ -3047,6 +3047,8 @@ require('./exchanges-api')(app, returnsDeps, returnsShared);
 // Waitlist: /api/waitlist and /api/account/waitlist* (waitlist-api.js),
 // plus the back-in-stock email sweep.
 require('./waitlist-api')(app, { adminDb, admin, sendResendEmail, buildOrderEmailContext, orderEmails, SITE_URL, rateLimited });
+// Product reviews from verified buyers: /api/reviews* (reviews-api.js).
+require('./reviews-api')(app, { adminDb, admin, rateLimited });
 require('./partner-applications-api')(app, { adminDb, admin, sendResendEmail, orderEmails, ORDER_ALERT_EMAIL, SITE_URL, getBrandAssets, logoImageUrl });
 
 // Catch-all for HTML routing — only sends index.html for clean URLs

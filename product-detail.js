@@ -623,10 +623,12 @@ async function loadProductReviewsSection(productId) {
   const time = r => (r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().getTime() : 0);
   reviews.sort((a, b) => time(b) - time(a));
   const stars = n => Array.from({ length: 5 }, (_, i) => `<i class="${i < Math.round(n) ? 'ph-fill' : 'ph'} ph-star" aria-hidden="true"></i>`).join('');
-  const write = `<p><span class="track-link" onclick="openReviewModal()">Write a review</span></p>`;
+  // Only shown to customers who bought it (filled in below).
+  const write = `<p id="product-review-write" hidden><span class="track-link" onclick="openReviewModal()">Write a review</span></p>`;
   if (countEl) countEl.textContent = reviews.length ? '(' + reviews.length + ')' : '';
   if (!reviews.length) {
-    body.innerHTML = `<p>No reviews yet. Be the first to review it.</p>${write}`;
+    body.innerHTML = `<p>No reviews yet.</p>${write}`;
+    showReviewButtonIfBought(productId);
     return;
   }
   const avg = reviews.reduce((n, r) => n + (Number(r.rating) || 0), 0) / reviews.length;
@@ -637,4 +639,32 @@ async function loadProductReviewsSection(productId) {
         <p class="product-review-stars" aria-label="${Number(r.rating) || 0} out of 5">${stars(Number(r.rating) || 0)}</p>
         ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}`;
     }).join('');
+  showReviewButtonIfBought(productId);
+}
+
+// Orders placed on this device (checkout.js), so a guest who bought the
+// item can review it without signing in.
+function deviceOrdersForReviews() {
+  try { return JSON.parse(localStorage.getItem('janedore_my_orders') || '[]'); } catch (e) { return []; }
+}
+async function reviewAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  try {
+    const user = firebase.auth().currentUser;
+    if (user && !user.isAnonymous) headers.Authorization = 'Bearer ' + await user.getIdToken();
+  } catch (e) {}
+  return headers;
+}
+// Write a review only for someone who bought this product (reviews-api.js
+// checks their paid orders); their order email is kept for the popup.
+async function showReviewButtonIfBought(productId) {
+  try {
+    const res = await fetch('/api/reviews/eligibility', { method: 'POST', headers: await reviewAuthHeaders(),
+      body: JSON.stringify({ productId, orders: deviceOrdersForReviews() }) });
+    const data = await res.json();
+    if (!data.eligible || S.currentReviewProductId !== productId) return;
+    S.reviewEmail = data.email || '';
+    const el = document.getElementById('product-review-write');
+    if (el) el.hidden = false;
+  } catch (e) {}
 }

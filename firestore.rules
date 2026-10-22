@@ -215,16 +215,9 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if true;
 
-      // Requires the real shape addProductReview() actually writes, a
-      // 1–5 numeric rating, and sane length caps — not unrestricted
-      // public writes.
-      allow create: if
-        request.resource.data.keys().hasOnly(['productId', 'rating', 'text', 'name', 'country', 'createdAt']) &&
-        request.resource.data.productId is string && request.resource.data.productId.size() > 0 &&
-        request.resource.data.rating is number &&
-        request.resource.data.rating >= 1 && request.resource.data.rating <= 5 &&
-        request.resource.data.text is string && request.resource.data.text.size() <= 2000 &&
-        request.resource.data.name is string && request.resource.data.name.size() <= 100;
+      // Written only by the server (reviews-api.js), after it checks the
+      // reviewer bought the product. No direct writes from the site.
+      allow create: if false;
 
       allow update: if isSuperAdmin() || isAdmin() ||
         (isVendor() &&
@@ -232,6 +225,13 @@ service cloud.firestore {
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vendorReply', 'vendorRepliedAt']));
 
       allow delete: if isSuperAdmin() || isAdmin();
+    }
+
+    // Who wrote each review (email, account): server only, readable by
+    // admins. Kept apart from reviews/{id}, which anyone can read.
+    match /reviewOwners/{reviewId} {
+      allow read: if isSuperAdmin() || isAdmin();
+      allow write: if false;
     }
 
     // =========================================================

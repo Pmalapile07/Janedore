@@ -485,9 +485,12 @@ async function renderAccountReviews() {
   const body = document.getElementById('account-tab-body');
   const user = accountUser();
   let reviews = [];
+  // Their own reviews, matched by account or verified email on the
+  // server (reviews-api.js); reviewers' emails are never public.
   try {
-    const snap = await db.collection('reviews').where('email', '==', (user.email || '').trim().toLowerCase()).limit(50).get();
-    reviews = snap.docs.map(d => d.data()).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 0) - ((a.createdAt && a.createdAt.seconds) || 0));
+    const res = await fetch('/api/account/reviews', { headers: { Authorization: 'Bearer ' + await user.getIdToken() } });
+    const data = await res.json();
+    reviews = (data.items || []).map(r => Object.assign({}, r, { createdAt: r.createdAt ? { seconds: Math.floor(r.createdAt / 1000) } : null }));
   } catch (e) { console.warn('[ACCOUNT_REVIEWS]', e.message); }
   if (!body || S.accountTab !== 'reviews') return;
   if (!reviews.length) {

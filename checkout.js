@@ -563,6 +563,13 @@ async function pollPaymentStatus(orderId, attempt) {
 
       lastConfirmedOrderNumber = data.orderNumber || orderId;
       sessionStorage.setItem('janedore_last_order_number', lastConfirmedOrderNumber);
+      // Remembered on this device so the buyer can review what they bought
+      // without signing in (product-detail.js deviceOrdersForReviews()).
+      try {
+        const mine = JSON.parse(localStorage.getItem('janedore_my_orders') || '[]').filter(o => o.orderNumber !== lastConfirmedOrderNumber);
+        mine.unshift({ orderNumber: lastConfirmedOrderNumber, email: localStorage.getItem('janedore_checkout_email') || '' });
+        localStorage.setItem('janedore_my_orders', JSON.stringify(mine.slice(0, 20)));
+      } catch (e) {}
 
       await loadConfirmedOrderDetails(orderId);
 
