@@ -432,22 +432,125 @@
     if (el) el.innerHTML = logo ? '<img src="' + esc(logo) + '" alt="">' : esc(initials(name));
     var hi = safeEl('dash-greeting-hi');
     if (hi) hi.textContent = 'Hi ' + name + '.';
+    rememberAccount();
+  }
+
+  // ── Account switcher (like the Shopify app) ──────────────────
+  // A card from the top listing the accounts used on this device, the
+  // signed-in one first with a ··· menu (Manage account, Log out), the
+  // others to switch to (signs out and opens Sign in with their email
+  // filled in), and Add account.
+  var ROLE_LABELS = { SUPER_ADMIN: 'Super admin', ADMIN: 'Admin', VENDOR: 'Vendor' };
+  var ACCOUNTS_KEY = 'jd_admin_accounts';
+  function accountTitle() {
+    return _staffName || (window._currentUserRole === 'VENDOR' ? displayName() : ROLE_LABELS[window._currentUserRole] || 'Viewer');
+  }
+  function savedAccounts() {
+    try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]').filter(function (a) { return a && a.email; }); } catch (e) { return []; }
+  }
+  function rememberAccount() {
+    var email = window._currentUser && window._currentUser.email;
+    if (!email) return;
+    var me = { email: email, name: accountTitle(), initials: initials(displayName()) };
+    var list = [me].concat(savedAccounts().filter(function (a) { return a.email !== email; })).slice(0, 5);
+    try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  function closeDashOverlay() {
+    var el = safeEl('dash-overlay');
+    if (el) el.remove();
+    document.removeEventListener('keydown', dashOverlayEsc);
+  }
+  function dashOverlayEsc(e) { if (e.key === 'Escape') closeDashOverlay(); }
+  window._closeDashOverlay = closeDashOverlay;
+  function openDashOverlay(kind, html) {
+    closeDashOverlay();
+    if (window._closePanel) window._closePanel();
+    var wrap = document.createElement('div');
+    wrap.id = 'dash-overlay';
+    wrap.className = 'dash-overlay dash-overlay-' + kind;
+    wrap.innerHTML = html;
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) closeDashOverlay(); });
+    document.body.appendChild(wrap);
+    document.addEventListener('keydown', dashOverlayEsc);
+    return wrap;
   }
 
   window._openAccountPanel = function () {
-    var roles = { SUPER_ADMIN: 'Super admin', ADMIN: 'Admin', VENDOR: 'Vendor' };
-    var name = displayName();
-    var showName = _staffName || (window._currentUserRole === 'VENDOR' ? name : roles[window._currentUserRole] || 'Viewer');
-    window._mountPanel('<div class="slide-panel">' +
-      '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
-      '<div class="dash-account">' +
-        '<div class="dash-account-avatar">' + esc(initials(name)) + '</div>' +
-        '<div class="dash-account-name">' + esc(showName) + '</div>' +
-        (showName !== roles[window._currentUserRole] ? '<div class="dash-account-role">' + esc(roles[window._currentUserRole] || 'Viewer') + '</div>' : '') +
-        '<div class="dash-account-email">' + esc((window._currentUser && window._currentUser.email) || '') + '</div>' +
-        '<button type="button" class="btn btn-danger dash-account-signout" onclick="window._closePanel();handleLogout()"><i class="ph ph-sign-out"></i> Sign out</button>' +
+    rememberAccount();
+    var email = (window._currentUser && window._currentUser.email) || '';
+    var others = savedAccounts().filter(function (a) { return a.email !== email; });
+    var row = function (a, current) {
+      return '<div class="acct-row' + (current ? ' current' : '') + '"' + (current ? '' : ' role="button" tabindex="0" onclick="window._switchAccount(\'' + esc(a.email) + '\')"') + '>' +
+        '<span class="acct-avatar">' + esc(a.initials) + '</span>' +
+        '<span class="acct-text"><span class="acct-name">' + esc(a.name) + '</span><span class="acct-email">' + esc(a.email) + '</span></span>' +
+        (current ? '<button type="button" class="acct-more" aria-label="Account options" onclick="window._toggleAccountMenu(event)"><i class="ph ph-dots-three"></i></button>' +
+          '<div class="acct-menu" id="acct-menu">' +
+            '<button type="button" onclick="window._openManageAccount()">Manage account</button>' +
+            '<button type="button" onclick="window._closeDashOverlay();handleLogout()">Log out</button>' +
+          '</div>' : '') +
+      '</div>';
+    };
+    openDashOverlay('account', '<div class="acct-card">' +
+      row({ email: email, name: accountTitle(), initials: initials(displayName()) }, true) +
+      others.map(function (a) { return row(a, false); }).join('') +
+      '<button type="button" class="acct-row acct-add" onclick="window._switchAccount(\'\')"><span class="acct-add-icon"><i class="ph ph-plus-circle"></i></span><span class="acct-name">Add account</span></button>' +
+    '</div>');
+  };
+
+  window._toggleAccountMenu = function (e) {
+    if (e) e.stopPropagation();
+    var menu = safeEl('acct-menu');
+    if (menu) menu.classList.toggle('open');
+  };
+
+  // Switching needs that account's password: sign out, then Sign in
+  // opens with the email filled in (empty for Add account).
+  window._switchAccount = function (email) {
+    closeDashOverlay();
+    window._pendingLoginEmail = email || '';
+    handleLogout();
+    var tries = 0;
+    var fill = setInterval(function () {
+      var input = safeEl('login-email');
+      var screen = safeEl('login-screen');
+      if (input && screen && getComputedStyle(screen).display !== 'none') {
+        clearInterval(fill);
+        input.value = window._pendingLoginEmail;
+        var next = window._pendingLoginEmail ? safeEl('login-password') : input;
+        if (next) next.focus();
+      } else if (++tries > 40) clearInterval(fill);
+    }, 100);
+  };
+
+  // Manage account: who is signed in, a password reset link, and (for
+  // the Super Admin) the team.
+  window._openManageAccount = function () {
+    var email = (window._currentUser && window._currentUser.email) || '';
+    var role = ROLE_LABELS[window._currentUserRole] || 'Viewer';
+    openDashOverlay('sheet', '<div class="dash-full-sheet">' +
+      '<div class="dash-full-head"><button type="button" class="dash-full-close" aria-label="Close" onclick="window._closeDashOverlay()"><i class="ph ph-x"></i></button><span class="dash-full-title">Account</span><span class="dash-full-action"></span></div>' +
+      '<div class="dash-full-body">' +
+        '<div class="dash-account">' +
+          '<div class="dash-account-avatar">' + esc(initials(displayName())) + '</div>' +
+          '<div class="dash-account-name">' + esc(accountTitle()) + '</div>' +
+          (accountTitle() !== role ? '<div class="dash-account-role">' + esc(role) + '</div>' : '') +
+          '<div class="dash-account-email">' + esc(email) + '</div>' +
+        '</div>' +
+        '<button type="button" class="dash-row dash-row-btn" onclick="window._sendOwnPasswordReset()"><i class="ph ph-key dash-row-icon"></i><span class="dash-row-text">Change password<span class="dash-row-sub">We’ll email you a link to set a new password</span></span><i class="ph ph-caret-right dash-row-caret"></i></button>' +
+        (window._currentUserRole === 'SUPER_ADMIN' ? '<button type="button" class="dash-row dash-row-btn" onclick="window._closeDashOverlay();window.switchTab(\'admins\')"><i class="ph ph-users-three dash-row-icon"></i><span class="dash-row-text">Manage team<span class="dash-row-sub">Admins and their names, roles and access</span></span><i class="ph ph-caret-right dash-row-caret"></i></button>' : '') +
+        (window._currentUserRole === 'VENDOR' ? '<button type="button" class="dash-row dash-row-btn" onclick="window._closeDashOverlay();window.switchTab(\'vendors\')"><i class="ph ph-storefront dash-row-icon"></i><span class="dash-row-text">Brand details<span class="dash-row-sub">Your logo, hero image and brand information</span></span><i class="ph ph-caret-right dash-row-caret"></i></button>' : '') +
       '</div>' +
     '</div>');
+  };
+  window._sendOwnPasswordReset = function () {
+    var email = window._currentUser && window._currentUser.email;
+    if (!email) return;
+    firebase.auth().sendPasswordResetEmail(email).then(function () {
+      showToast('A password reset link has been sent to ' + email + '.', 'success');
+    }).catch(function () {
+      showToast('We couldn’t send the email. Please try again.', 'error');
+    });
   };
 
   function timeAgo(ms) {
@@ -476,20 +579,26 @@
     if (dot) dot.style.display = notes.some(function (n) { return n.at > notesSeenAt(); }) ? 'block' : 'none';
   }
 
+  // Notifications: a full screen sheet with a curved top, like the
+  // Shopify app's alerts.
   window._openNotifications = function () {
     var notes = visibleNotes();
     var seen = notesSeenAt();
     try { localStorage.setItem(NOTES_SEEN_KEY, String(Date.now())); } catch (e) {}
     paintBellDot();
-    window._mountPanel('<div class="slide-panel">' +
-      '<button class="slide-panel-close" onclick="window._closePanel()">&#x2715;</button>' +
-      '<div class="dash-notes-head"><span class="dash-notes-title">Notifications</span>' +
-        (notes.length ? '<button type="button" class="dash-notes-clear" onclick="window._clearNotifications()">Clear all</button>' : '') + '</div>' +
+    openDashOverlay('sheet', '<div class="dash-full-sheet">' +
+      '<div class="dash-full-head"><button type="button" class="dash-full-close" aria-label="Close" onclick="window._closeDashOverlay()"><i class="ph ph-x"></i></button>' +
+        '<span class="dash-full-title">Notifications</span>' +
+        '<span class="dash-full-action">' + (notes.length ? '<button type="button" class="dash-notes-clear" onclick="window._clearNotifications()">Clear all</button>' : '') + '</span></div>' +
+      '<div class="dash-full-body">' +
       (notes.length ? notes.map(function (n) {
-        return '<button type="button" class="dash-row dash-row-btn' + (n.at > seen ? ' unseen' : '') + '" onclick="window._closePanel();window.switchTab(\'' + esc(n.tab) + '\')">' +
+        return '<button type="button" class="dash-row dash-row-btn' + (n.at > seen ? ' unseen' : '') + '" onclick="window._closeDashOverlay();window.switchTab(\'' + esc(n.tab) + '\')">' +
           '<i class="ph ' + (NOTE_ICONS[n.type] || 'ph-bell') + ' dash-row-icon"></i>' +
           '<span class="dash-row-text">' + esc(n.text) + '<span class="dash-row-sub">' + timeAgo(n.at) + '</span></span></button>';
-      }).join('') : '<div class="dash-all-done"><i class="ph ph-bell"></i><div class="dash-all-done-title">No notifications</div><div class="dash-all-done-sub">New orders, messages, reviews and requests from the last 14 days appear here.</div></div>') +
+      }).join('') : '<div class="dash-notes-empty"><span class="dash-notes-empty-icon"><i class="ph ph-bell"></i></span>' +
+          '<div class="dash-all-done-title">Your notifications will show here</div>' +
+          '<div class="dash-all-done-sub">New orders, messages, reviews and requests from the last 14 days appear here.</div></div>') +
+      '</div>' +
     '</div>');
   };
 
