@@ -70,7 +70,7 @@
     font-size: 13px;
     color: #666;
     line-height: 1.5;
-    margin: -12px 0 24px;
+    margin: -12px 0 16px;
   }
   .login-link {
     font: inherit;
@@ -91,7 +91,7 @@
     line-height: 1.6;
     color: #444;
     padding: 14px 16px;
-    margin-top: 24px;
+    margin-bottom: 24px;
   }
   .login-legal a { color: #111; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .login-form-group#password-group { position: relative; }
@@ -157,6 +157,9 @@
     <div class="login-box">
       <div class="login-title" id="login-mode-title">Sign In</div>
       <p class="login-switch"><span id="login-switch-text">New customer?</span> <button type="button" class="login-link" id="toggle-mode-btn" onclick="toggleLoginMode()">Create an account</button><span id="login-switch-after"> to save your wishlist, track your orders and check out faster.</span></p>
+      <div class="login-legal" id="login-legal">
+        <span id="login-legal-lead">By signing in</span>, you agree to our <a onclick="navigateToContentPage('terms-conditions')">Terms &amp; Conditions</a> and acknowledge that your personal information will be processed in line with our <a onclick="navigateToContentPage('privacy-policy')">Privacy Policy</a>.
+      </div>
       <div class="login-error" id="login-error"></div>
       
       <form id="login-form" onsubmit="handleLoginSubmit(event)">
@@ -182,9 +185,6 @@
         </button>
       </div>
 
-      <div class="login-legal" id="login-legal">
-        <span id="login-legal-lead">By signing in</span>, you agree to Janedore&rsquo;s <a onclick="navigateToContentPage('terms-conditions')">Terms &amp; Conditions</a> and acknowledge that your personal information will be processed in line with our <a onclick="navigateToContentPage('privacy-policy')">Privacy Policy</a>.
-      </div>
     </div>
   </div>
 </div>
