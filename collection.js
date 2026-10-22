@@ -1429,9 +1429,11 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl, view) {
   document.body.classList.add('on-collection-page');
   // A brand has its home (/brands/x) and its All products and Sale pages
   // (/brands/x/shop, /brands/x/sale), all under the same brand bar.
+  // One page per brand. Old /brands/x/shop and /brands/x/sale links open
+  // it scrolled to All products (Sale picked for /sale).
   const brandView = view === 'shop' || view === 'sale' ? view : 'home';
-  const viewSuffix = brandView === 'home' ? '' : '/' + brandView;
-  const newPath = '/brands/' + encodeURIComponent(vendorIdOrSlug) + viewSuffix;
+  const viewSuffix = '';
+  const newPath = '/brands/' + encodeURIComponent(vendorIdOrSlug);
   if (window.location.pathname !== newPath) {
     replaceUrl ? history.replaceState(null, null, newPath) : history.pushState(null, null, newPath);
   }
@@ -1457,7 +1459,6 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl, view) {
   // carry over to the next brand you look at.
   S.vendorFilter = {cat:[], size:'all', vendor:[], onSale: brandView === 'sale', inStock:false};
   S.gridColsVendor = 2;
-  S.vendorView = brandView;
 
   // Resolve a slug (the normal case — every brand link passes its
   // slug now) or a raw doc ID (old links already shared/indexed) down
@@ -1503,6 +1504,7 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl, view) {
   resetScrollToTop();
   ensureNavScrolled();
   updateChatVisibility();
+  if (brandView !== 'home') requestAnimationFrame(() => scrollToBrandSection('brand-shop'));
   updateCollectionTitle();
 }
 
@@ -1596,14 +1598,13 @@ function renderVendorPage(vendor) {
   // A brand's page is its own small homepage inside Janedore: a brand bar
   // (sticks, and takes the header's place while scrolling down, like the
   // collection toolbar), their hero with their slogan, Shop / Collections
-  // / Sale links, New in and their collections. Shop now, Shop and View
-  // all open the brand's All products page and Sale its sale page
-  // (S.vendorView), still under the brand bar. Built from the homepage's
-  // own pieces (hero, section headers, slider, tiles).
-  const view = S.vendorView || 'home';
+  // / Sale links, New in, their collections and All products, all on one
+  // page. Built from the homepage's own pieces (hero, section headers,
+  // slider, tiles).
+  const onSale = !!S.vendorFilter.onSale;
   const brandBar = `
     <div class="brand-bar" id="brand-bar">
-      <button type="button" class="brand-bar-logo" aria-label="${escapeHTML(brandName)} home" onclick="openBrandView('home')">${logoUrl ? `<img src="${escapeHTML(logoUrl)}" alt="">` : escapeHTML(initials)}</button>
+      <button type="button" class="brand-bar-logo" aria-label="${escapeHTML(brandName)} home" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">${logoUrl ? `<img src="${escapeHTML(logoUrl)}" alt="">` : escapeHTML(initials)}</button>
       <div class="brand-bar-text"><h1 class="brand-bar-name">${escapeHTML(brandName)}</h1>${barLine ? `<div class="brand-bar-line">${escapeHTML(barLine)}</div>` : ''}</div>
       <div class="brand-bar-menu">
         <button type="button" class="brand-bar-more" aria-label="More" aria-expanded="false" onclick="toggleBrandMenu(event)"><i class="ph ph-dots-three"></i></button>
@@ -1615,13 +1616,13 @@ function renderVendorPage(vendor) {
     </div>`;
   const pills = `
     <div class="nav-quick-links brand-quick-links" role="tablist">
-      <button class="nav-quick-link${view === 'shop' ? ' active' : ''}" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
+      <button class="nav-quick-link${onSale ? '' : ' active'}" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
       <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
-      <button class="nav-quick-link${view === 'sale' ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>
+      <button class="nav-quick-link${onSale ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>
     </div>`;
   const slogan = String(vendor?.slogan || vendor?.heroHeading || '').trim();
 
-  el.innerHTML = view === 'home' ? `
+  el.innerHTML = `
     ${brandBar}
     <section class="brand-hero">
       <div class="hero-bg-placeholder${heroImg ? '' : ' content-empty'}" style="${heroImg ? `background-image:url('${escapeForCssUrl(heroImg)}');` : ''}"></div>
@@ -1640,9 +1641,6 @@ function renderVendorPage(vendor) {
       ${sectionHead('brand-collections-heading')}
       <div class="home-categories-grid">${emptyTile.repeat(4)}</div>
     </section>
-  ` : `
-    ${brandBar}
-    ${pills}
     <section class="brand-section" id="brand-shop">
       ${sectionHead('brand-all-heading')}
     </section>
@@ -1654,17 +1652,9 @@ function renderVendorPage(vendor) {
     const set = (id, t) => { const h = document.getElementById(id); if (h) setSectionHeading(h, t); };
     set('brand-new-heading', 'New in');
     set('brand-collections-heading', 'Collections');
-    set('brand-all-heading', view === 'sale' ? 'Sale' : 'All products');
+    set('brand-all-heading', onSale ? 'Sale' : 'All products');
   }
-  if (view === 'home') {
-    initSliderLeadingTracking('vendor-new-grid');
-    const footerEl = document.getElementById('vendor-footer');
-    if (footerEl && typeof buildFooter === 'function') {
-      buildFooter('vendor-footer');
-      if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
-    }
-    return;
-  }
+  initSliderLeadingTracking('vendor-new-grid');
 
   // Brand pages have no sort/filter bar: a brand's range is small enough
   // to browse as is.
@@ -1693,27 +1683,26 @@ function renderVendorPage(vendor) {
 
 window.navigateToVendor = navigateToVendor;
 
-// Brand page links. Shop opens the brand's All products page and Sale
-// its sale page (/brands/x/shop, /brands/x/sale); Collections goes back
-// to the brand's home and scrolls to the collection tiles.
-function openBrandView(view) {
-  const vendor = S.currentVendor;
-  if (!vendor) return;
-  S.vendorView = view;
-  S.vendorFilter.onSale = view === 'sale';
-  const path = '/brands/' + encodeURIComponent(vendor.slug || vendor.id) + (view === 'home' ? '' : '/' + view);
-  if (window.location.pathname !== path) history.pushState(null, null, path);
-  renderVendorPage(vendor);
-  resetScrollToTop();
-}
-function showBrandSection(key) {
-  if (key === 'shop' || key === 'sale') { openBrandView(key); return; }
-  if ((S.vendorView || 'home') !== 'home') openBrandView('home');
-  const target = document.getElementById('brand-collections');
+// Brand page links, all on the one brand page: Shop shows all the
+// brand's products and Sale only their sale ones (scrolled to, under the
+// sticky brand bar); Collections scrolls to the collection tiles.
+function scrollToBrandSection(id) {
+  const target = document.getElementById(id);
   const bar = document.getElementById('brand-bar');
   if (!target) return;
   const y = target.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0);
   window.scrollTo({ top: y, behavior: 'smooth' });
+}
+function showBrandSection(key) {
+  if (key === 'collections') { scrollToBrandSection('brand-collections'); return; }
+  const onSale = key === 'sale';
+  if (S.currentVendor && !!S.vendorFilter.onSale !== onSale) {
+    const y = window.scrollY;
+    S.vendorFilter.onSale = onSale;
+    renderVendorPage(S.currentVendor);
+    window.scrollTo(0, y);
+  }
+  scrollToBrandSection('brand-shop');
 }
 
 // Brand bar "···" menu: feedback first, reporting second (same menu
