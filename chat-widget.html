@@ -54,7 +54,8 @@
   body:has(#page-cart.active) #live-chat-bubble,
   body:has(#page-checkout.active) #live-chat-bubble,
   body:has(#collection-filter-options.open) #live-chat-bubble,
-  body:has(#menu-drawer.open) #live-chat-bubble { display: none !important; }
+  body:has(#menu-drawer.open) #live-chat-bubble,
+  body:has(.added-toast.show) #live-chat-bubble { display: none !important; }
 
   /* Bubble is #111 on #111 — invisible once the black footer scrolls
      behind it. Toggled by the IntersectionObserver in chat.js while

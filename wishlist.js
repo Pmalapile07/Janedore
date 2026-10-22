@@ -44,6 +44,10 @@ function toggleWish(productId, btnEl) {
   renderWishlistPage();
   saveWishlistToStorage();
   syncWishlistToAccount();
+  // Same pop-up as Add to bag (cart.js), with Undo.
+  if (typeof showAddedToCartToast === 'function') {
+    showAddedToCartToast(nowWished ? 'Added to wishlist' : 'Removed from wishlist', 'ph-heart', () => toggleWish(productId));
+  }
 }
 
 // ==================== ACCOUNT SYNC ====================
