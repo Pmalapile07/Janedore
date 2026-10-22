@@ -203,12 +203,11 @@
      out (not shown for Vendor — site-wide traffic isn't scoped per
      brand; vendors keep their own separate dashboard below).
 
-     Sales/Orders and the chart are real, computed straight from
-     Firestore. Live/Sessions/Conversion stay "—" for now: there's no
-     visitor
-     tracking wired up yet (no Google Analytics reads, no presence
-     system). Once a GA4 property + service account are connected,
-     those three get the same real treatment instead of being hidden.
+     Sales/Orders and the chart are computed straight from Firestore.
+     Live and Sessions come from the store's own visit counting
+     (/api/admin/analytics, analytics-api.js); Conversion is orders ÷
+     sessions for the same range. Live refreshes every 30 seconds while
+     Home is open.
   ═══════════════════════════════════════════════════════════ */
   var _dashRangeDays  = 30;
   var _dashOrdersCache = null;
@@ -269,6 +268,7 @@
 
     setStat('ov-sales',  'R' + totalSales.toLocaleString('en-ZA'));
     setStat('ov-orders', totalOrders);
+    loadDashTraffic(days, totalOrders);
 
     var canvas = safeEl('dash-overview-chart');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -304,6 +304,37 @@
     });
   }
 
+  // Live, Sessions and Conversion for the chosen range. A newer call
+  // (another range button) wins over one still loading.
+  var _dashTrafficCall = 0;
+  var _dashLiveTimer = null;
+  function analyticsGet(days) {
+    var user = window._currentUser;
+    if (!user || !user.getIdToken) return Promise.reject(new Error('Not signed in'));
+    return user.getIdToken().then(function (token) {
+      return fetch('/api/admin/analytics?days=' + days, { headers: { 'Authorization': 'Bearer ' + token } });
+    }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    });
+  }
+  function loadDashTraffic(days, orders) {
+    var call = ++_dashTrafficCall;
+    analyticsGet(days).then(function (data) {
+      if (call !== _dashTrafficCall) return;
+      setStat('ov-live', data.live || 0);
+      setStat('ov-sessions', (data.sessions || 0).toLocaleString('en-ZA'));
+      setStat('ov-conversion', data.sessions ? (orders / data.sessions * 100).toFixed(1) + '%' : '-');
+    }).catch(function (e) { console.warn('[DASHBOARD] Analytics:', e.message); });
+    if (!_dashLiveTimer) {
+      _dashLiveTimer = setInterval(function () {
+        if (!safeEl('ov-live')) { clearInterval(_dashLiveTimer); _dashLiveTimer = null; return; }
+        if (document.visibilityState !== 'visible') return;
+        analyticsGet(1).then(function (data) { setStat('ov-live', data.live || 0); }).catch(function () {});
+      }, 30000);
+    }
+  }
+
   /* ═══════════════════════════════════════════════════════════
      ANALYTICS — placeholder destination for Home's "View report"
      button. No real detailed-reporting system exists yet (same
@@ -317,7 +348,7 @@
     mc.innerHTML = '<div class="empty-state">' +
       '<div class="empty-state-icon"><i class="ph-light ph-chart-bar"></i></div>' +
       '<div class="empty-state-text">Detailed analytics are not set up yet</div>' +
-      '<div style="font-size:var(--font-scale-sm);color:var(--muted2);max-width:380px;">The Home overview shows real sales and order totals. Live visitors, sessions, and conversion rate need a connected analytics source (e.g. Google Analytics) before deeper reporting can appear here.</div>' +
+      '<div style="font-size:var(--font-scale-sm);color:var(--muted2);max-width:380px;">Home shows live visitors, sessions, sales, orders and conversion for the range you choose. Detailed reports (top pages, traffic sources) will appear here once they are built.</div>' +
     '</div>';
   };
 

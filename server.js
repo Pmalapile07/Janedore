@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 // serves the site from. They hold no secrets, but there is no reason for
 // anyone to download them, so they 404 like any missing file.
 const PRIVATE_FILES = new Set([
-  '/server.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/partner-applications-api.js', '/order-emails.js',
+  '/server.js', '/analytics-api.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/partner-applications-api.js', '/order-emails.js',
   '/firestore.rules', '/firestore.indexes.json', '/package.json', '/package-lock.json',
   '/debugger.html'
 ]);
@@ -3033,6 +3033,9 @@ require('./exchanges-api')(app, returnsDeps, returnsShared);
 require('./waitlist-api')(app, { adminDb, admin, sendResendEmail, buildOrderEmailContext, orderEmails, SITE_URL, rateLimited });
 // Product reviews from verified buyers: /api/reviews* (reviews-api.js).
 require('./reviews-api')(app, { adminDb, admin, rateLimited });
+// Live visitors and sessions for Admin > Home: /api/analytics/ping and
+// /api/admin/analytics (analytics-api.js).
+require('./analytics-api')(app, { adminDb, admin, rateLimited, verifyPlatformStaff });
 require('./partner-applications-api')(app, { adminDb, admin, sendResendEmail, orderEmails, ORDER_ALERT_EMAIL, SITE_URL, getBrandAssets, logoImageUrl });
 
 // Catch-all for HTML routing — only sends index.html for clean URLs
