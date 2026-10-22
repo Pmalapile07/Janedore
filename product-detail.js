@@ -580,7 +580,7 @@ async function renderProductPage(product) {
         </div>
         <div class="info-accordion-item" id="info-accordion-shipping">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('shipping')">
-            Shipping &amp; Returns
+            Shipping &amp; returns
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="info-accordion-body"><p>${product.shippingReturns||'No shipping details available.'}</p></div>
