@@ -71,123 +71,121 @@
   body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* Laid out like a launch page (rounded cards, one huge statement per
-     section), in JANEDORE's black and sage. Display headings are written
-     in sentence case and set in capitals by .cs-display. */
-  :root { --sage: #dfe8c6; --sage-deep: #c7d6a1; --radius: 28px; }
+  /* The launch-page structure (floating header, one statement per
+     section) in the shop's own style: Inter 600 sentence-case headings
+     at the homepage's sizes, square black and white buttons, the hero
+     like the homepage's (heading bottom left, button under it), sage as
+     an accent only. */
+  :root { --sage: #dfe8c6; --head: 21px; --gutter: 20px; }
   body { background: #fff; }
-  .cs-display { font-weight: 900; text-transform: uppercase; letter-spacing: -0.035em; line-height: 0.95; }
-  .cs-wrap { padding: 0 12px; }
+  .cs-title { font-size: var(--head); font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; color: #111; }
 
-  /* Floating pill header. */
-  .cs-header { position: sticky; top: 0; z-index: 20; padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px; pointer-events: none; }
-  .cs-header-pill { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; padding: 0 8px 0 22px; border-radius: 999px; background: rgba(17,17,17,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-  .cs-logo { font-size: 16px; font-weight: 600; letter-spacing: 0.14em; color: #fff; }
-  .cs-pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 20px; border: none; border-radius: 999px; background: var(--sage); color: #111; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
-  .cs-pill:disabled { opacity: 0.6; cursor: default; }
-  .cs-pill-lg { height: 54px; width: 100%; font-size: 15px; }
+  /* Floating header (kept from the launch-page look), off the screen edges. */
+  .cs-header { position: sticky; top: 0; z-index: 20; padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 0; height: 0; overflow: visible; }
+  .cs-header-pill { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 52px; padding: 0 6px 0 20px; border-radius: 999px; background: rgba(17,17,17,0.72); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .cs-logo { font-size: 15px; font-weight: 600; letter-spacing: 0.14em; color: #fff; }
 
-  /* Hero card. */
-  .cs-hero { position: relative; margin-top: -80px; height: calc(100svh - 24px); min-height: 560px; border-radius: var(--radius); overflow: hidden; background: #cfd2c8 url('/coming-soon-hero.jpg') center 30% / cover no-repeat; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #fff; }
-  .cs-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.45) 100%); }
-  .cs-hero h1 { position: relative; font-size: 12.5vw; padding: 0 16px; text-shadow: 0 2px 24px rgba(0,0,0,0.25); }
-  .cs-hero-tag { position: absolute; left: 0; right: 0; bottom: 28px; font-size: 14px; font-weight: 500; }
+  /* Buttons: the shop's (square, uppercase, letter-spaced). */
+  .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; background: #111; color: #fff; font-family: inherit; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .cs-btn-white { background: #fff; color: #111; }
+  .cs-btn-sage { background: var(--sage); color: #111; border-radius: 999px; padding: 12px 18px; }
+  .cs-btn-block { width: 100%; padding: 16px; font-size: 11px; }
+  .cs-btn:disabled { opacity: 0.6; cursor: default; }
 
-  /* Black cards. */
-  .cs-dark { margin-top: 12px; border-radius: var(--radius); background: #111; color: var(--sage); padding: 56px 24px; text-align: center; }
-  .cs-quote { display: block; font-size: 44px; font-weight: 900; line-height: 0.6; height: 26px; }
-  .cs-dark h2 { font-size: 11vw; margin: 14px 0; }
-  .cs-dark-sub { font-size: 16px; line-height: 1.5; max-width: 340px; margin: 26px auto 0; color: rgba(223,232,198,0.85); }
-  .cs-dark-sub strong { color: var(--sage); }
+  /* Hero: like the shop's homepage hero. */
+  .cs-hero { position: relative; margin: 8px 8px 0; height: calc(100svh - 16px); min-height: 540px; background: #cfd2c8 url('/coming-soon-hero.jpg') center 30% / cover no-repeat; display: flex; align-items: flex-end; color: #fff; }
+  .cs-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0) 100%); }
+  .cs-hero-content { position: relative; padding: 0 12px 32px; }
+  .cs-hero-eyebrow { display: block; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+  .cs-hero h1 { font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: 0; max-width: 300px; margin-bottom: 18px; }
 
-  /* A fan of three photos, like the phones in the example. */
-  .cs-fan { position: relative; height: 330px; margin: 44px auto 8px; max-width: 360px; }
-  .cs-fan div { position: absolute; top: 20px; width: 46%; aspect-ratio: 3 / 4; border-radius: 22px; background: #333 center / cover no-repeat; border: 4px solid #222; box-shadow: 0 16px 40px rgba(0,0,0,0.5); }
-  .cs-fan .f1 { left: 2%; transform: rotate(-10deg); background-image: url('/coming-soon-accessories.jpg'); }
-  .cs-fan .f3 { right: 2%; transform: rotate(10deg); background-image: url('/coming-soon-scent.jpg'); }
-  .cs-fan .f2 { left: 50%; top: 0; width: 54%; transform: translateX(-50%); z-index: 1; background-image: url('/coming-soon-fashion.jpg'); background-position: center 25%; }
+  /* Black section. */
+  .cs-dark { margin: 8px 8px 0; background: #111; color: #fff; padding: 56px var(--gutter); }
+  .cs-dark .cs-title { color: #fff; }
+  .cs-dark-sub { font-size: 14px; line-height: 1.55; color: rgba(255,255,255,0.7); max-width: 360px; margin-top: 10px; }
+  .cs-fan { position: relative; height: 250px; margin: 32px auto 0; max-width: 300px; }
+  .cs-fan div { position: absolute; top: 18px; width: 46%; aspect-ratio: 3 / 4; background: #333 center / cover no-repeat; box-shadow: 0 16px 40px rgba(0,0,0,0.5); }
+  .cs-fan .f1 { left: 2%; transform: rotate(-8deg); background-image: url('/coming-soon-accessories.jpg'); }
+  .cs-fan .f3 { right: 2%; transform: rotate(8deg); background-image: url('/coming-soon-scent.jpg'); }
+  .cs-fan .f2 { left: 50%; top: 0; width: 52%; transform: translateX(-50%); z-index: 1; background-image: url('/coming-soon-fashion.jpg'); background-position: center 25%; }
+  .cs-features { list-style: none; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.15); }
+  .cs-features li { display: grid; grid-template-columns: 32px 1fr; gap: 14px; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.15); }
+  .cs-features i { font-size: 22px; color: var(--sage); }
+  .cs-features strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .cs-features span { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.65); }
 
-  .cs-features { list-style: none; text-align: left; max-width: 420px; margin: 40px auto 0; display: grid; gap: 28px; }
-  .cs-features li { display: grid; grid-template-columns: 40px 1fr; gap: 16px; }
-  .cs-features i { font-size: 30px; color: var(--sage); }
-  .cs-features strong { display: block; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-  .cs-features span { font-size: 15px; line-height: 1.5; color: rgba(223,232,198,0.8); }
+  /* White sections: headings left, like the homepage rows. */
+  .cs-light { padding: 48px 0 8px; }
+  .cs-light > .cs-title, .cs-light > .cs-lead { padding: 0 var(--gutter); }
+  .cs-lead { font-size: 14px; color: #666; margin-top: 6px; }
+  .cs-rows { display: grid; gap: 20px; padding: 24px var(--gutter) 0; }
+  .cs-row { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: center; }
+  .cs-row-img { aspect-ratio: 0.87; background: #f4f4f4 center / cover no-repeat; }
+  .cs-row h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: #111; }
+  .cs-row p { font-size: 13px; line-height: 1.5; color: #555; }
+  .cs-cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 20px 8px 0; }
+  .cs-cat { position: relative; aspect-ratio: 0.87; background: #f4f4f4 center / cover no-repeat; }
+  .cs-cat::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.35), rgba(0,0,0,0) 50%); }
+  .cs-cat span { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; color: #fff; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
 
-  /* Light sections. */
-  .cs-light { padding: 72px 12px 24px; }
-  .cs-light h2 { font-size: 11vw; color: #111; text-align: center; margin-bottom: 36px; }
-  .cs-lead { text-align: center; font-size: 16px; line-height: 1.5; color: #555; max-width: 360px; margin: -18px auto 36px; }
-  .cs-rows { display: grid; gap: 20px; }
-  .cs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-  .cs-row-img { aspect-ratio: 1 / 1; border-radius: 18px; background: #eee center / cover no-repeat; }
-  .cs-row h3 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 6px 0 10px; color: #111; }
-  .cs-row p { font-size: 15px; line-height: 1.5; color: #333; }
-
-  .cs-cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .cs-cat { position: relative; aspect-ratio: 3 / 4; border-radius: 18px; overflow: hidden; background: #eee center / cover no-repeat; }
-  .cs-cat::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0) 45%); }
-  .cs-cat span { position: absolute; left: 16px; bottom: 14px; color: #fff; font-size: 15px; font-weight: 600; }
-
-  /* Questions. */
-  .cs-faq { padding: 72px 12px 24px; }
-  .cs-faq h2 { font-size: 13vw; color: #111; }
-  .cs-faq > p { font-size: 16px; color: #333; margin: 12px 0 28px; }
-  .cs-faq details { border-bottom: 1px solid #e3e3e3; }
-  .cs-faq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; font-size: 17px; font-weight: 600; color: #111; cursor: pointer; }
+  /* Questions: like the product page's accordions. */
+  .cs-faq { padding: 56px var(--gutter) 8px; }
+  .cs-faq > p { font-size: 14px; color: #666; margin: 6px 0 16px; }
+  .cs-faq details { border-bottom: 1px solid #ececec; }
+  .cs-faq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; font-size: 15px; font-weight: 500; color: #111; cursor: pointer; }
   .cs-faq summary::-webkit-details-marker { display: none; }
-  .cs-faq summary i { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--sage); display: flex; align-items: center; justify-content: center; font-size: 16px; transition: transform 0.2s; }
+  .cs-faq summary i { flex-shrink: 0; font-size: 16px; transition: transform 0.2s; }
   .cs-faq details[open] summary i { transform: rotate(180deg); }
-  .cs-faq details p { font-size: 15px; line-height: 1.6; color: #444; padding: 0 0 22px; max-width: 560px; }
+  .cs-faq details p { font-size: 13px; line-height: 1.6; color: #444; padding: 0 0 18px; max-width: 560px; }
 
   /* Join. */
-  .cs-join { padding: 72px 12px 48px; text-align: center; }
-  .cs-join h2 { font-size: 10.5vw; color: #111; }
-  .cs-join > p { font-size: 16px; line-height: 1.5; color: #333; margin: 18px auto 28px; max-width: 340px; }
-  .cs-join .cs-form { max-width: 460px; margin: 0 auto; }
-  .signup-input { width: 100%; height: 54px; padding: 0 20px; border: 1px solid #d4d4d4; border-radius: 16px; font-family: inherit; font-size: 16px; color: #111; background: #fff; outline: none; -webkit-appearance: none; }
+  .cs-join { padding: 56px var(--gutter) 56px; }
+  .cs-join > p { font-size: 14px; line-height: 1.5; color: #555; margin: 8px 0 20px; max-width: 360px; }
+  .cs-join .cs-form { max-width: 460px; }
+  .signup-input { width: 100%; height: 50px; padding: 0 16px; border: 1px solid #d4d4d4; border-radius: 0; font-family: inherit; font-size: 15px; color: #111; background: #fff; outline: none; -webkit-appearance: none; }
   .signup-input:focus { border-color: #111; }
   .signup-input::placeholder { color: #9a9a9a; }
-  .cs-form { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-  .signup-spinner { width: 14px; height: 14px; border: 2px solid rgba(17,17,17,0.25); border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .cs-form { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .signup-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .signup-msg { font-size: 14px; line-height: 1.5; text-align: center; }
+  .signup-msg { font-size: 13px; line-height: 1.5; }
   .signup-msg:empty { display: none; }
   .signup-msg.error { color: #c0392b; }
   .signup-msg.success { color: #111; }
 
-  /* Footer card. */
-  .cs-footer { margin: 0 12px; border-radius: var(--radius) var(--radius) 0 0; background: #111; color: var(--sage); padding: 44px 24px calc(28px + env(safe-area-inset-bottom, 0px)); }
-  .cs-footer h2 { font-size: 11vw; }
-  .cs-footer-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 32px; font-size: 12px; color: rgba(223,232,198,0.7); }
-  .footer-copy { cursor: default; user-select: none; font-size: 13px; color: var(--sage); }
+  /* Footer: the shop's black footer. */
+  .cs-footer { background: #111; color: #fff; padding: 40px var(--gutter) calc(28px + env(safe-area-inset-bottom, 0px)); }
+  .cs-footer-logo { font-size: 16px; font-weight: 600; letter-spacing: 0.14em; }
+  .cs-footer-tag { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 8px; }
+  .cs-footer-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 28px; font-size: 12px; color: rgba(255,255,255,0.55); }
+  .footer-copy { cursor: default; user-select: none; }
   .cs-link { border: none; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
   /* Pop-ups: brand interest and preview password. */
   .cs-sheet-back { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; }
   .cs-sheet-back[hidden] { display: none; }
-  .cs-sheet { position: relative; width: 100%; max-width: 480px; background: #fff; border-radius: var(--radius) var(--radius) 0 0; padding: 32px 20px calc(24px + env(safe-area-inset-bottom, 0px)); }
-  .cs-sheet h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; padding-right: 40px; }
-  .cs-sheet > p { font-size: 15px; line-height: 1.5; color: #555; margin-bottom: 20px; }
-  .cs-sheet-close { position: absolute; top: 18px; right: 16px; width: 40px; height: 40px; border: none; border-radius: 50%; background: #f2f2f2; font-size: 18px; color: #111; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .cs-sheet { position: relative; width: 100%; max-width: 480px; background: #fff; padding: 28px 20px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .cs-sheet h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; padding-right: 40px; }
+  .cs-sheet > p { font-size: 14px; line-height: 1.5; color: #555; margin-bottom: 18px; }
+  .cs-sheet-close { position: absolute; top: 14px; right: 12px; width: 40px; height: 40px; border: none; background: none; font-size: 20px; color: #111; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
   @media (min-width: 768px) {
-    .cs-header { padding: 16px 24px; }
+    :root { --head: 27px; --gutter: 32px; }
+    .cs-header { padding: 18px 32px 0; }
     .cs-header-pill { max-width: 1100px; margin: 0 auto; }
-    .cs-wrap { padding: 0 24px; }
-    .cs-hero { margin-top: -92px; height: calc(100vh - 48px); }
-    .cs-hero h1 { font-size: 92px; max-width: 900px; }
-    .cs-dark { padding: 88px 48px; }
-    .cs-dark h2 { font-size: 72px; }
-    .cs-fan { height: 420px; max-width: 520px; }
-    .cs-features { grid-template-columns: 1fr 1fr; max-width: 860px; column-gap: 48px; }
-    .cs-light, .cs-faq, .cs-join { padding-left: 24px; padding-right: 24px; max-width: 1100px; margin: 0 auto; }
-    .cs-light h2, .cs-faq h2, .cs-join h2, .cs-footer h2 { font-size: 72px; }
+    .cs-hero { margin: 12px 12px 0; height: calc(100vh - 24px); }
+    .cs-hero-content { padding: 0 24px 48px; }
+    .cs-hero h1 { font-size: 34px; max-width: 420px; }
+    .cs-dark { margin: 12px 12px 0; padding: 72px 48px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; align-items: center; }
+    .cs-fan { grid-row: 1 / span 3; grid-column: 2; width: 100%; height: 380px; max-width: 440px; margin: 0 auto; }
+    .cs-row-img { aspect-ratio: 4 / 3; }
+    .cs-dark-brands { display: block; }
+    .cs-light, .cs-faq, .cs-join { max-width: 1200px; margin: 0 auto; }
     .cs-rows { grid-template-columns: repeat(3, 1fr); gap: 24px; }
     .cs-row { grid-template-columns: 1fr; }
-    .cs-cats { grid-template-columns: repeat(4, 1fr); }
-    .cs-footer { margin: 0 24px; padding: 64px 48px 32px; }
+    .cs-cats { grid-template-columns: repeat(4, 1fr); padding: 24px 12px 0; }
     .cs-sheet-back { align-items: center; }
-    .cs-sheet { border-radius: var(--radius); padding: 36px; }
+    .cs-sheet { padding: 32px; }
   }
 
   .admin-overlay {
@@ -310,22 +308,22 @@
 <header class="cs-header">
   <div class="cs-header-pill">
     <span class="cs-logo" aria-label="Janedore">JANEDORE</span>
-    <a href="#join" class="cs-pill">Join the list</a>
+    <a href="#join" class="cs-btn cs-btn-sage">Join the list</a>
   </div>
 </header>
 
 <main id="main">
-  <div class="cs-wrap">
     <section class="cs-hero">
-      <h1 class="cs-display">Not just a store. This is a collective.</h1>
-      <p class="cs-hero-tag">Independent brands. Distinctive finds. Coming soon.</p>
+      <div class="cs-hero-content">
+        <span class="cs-hero-eyebrow">Coming soon</span>
+        <h1>Not just a store. A collective.</h1>
+        <a href="#join" class="cs-btn cs-btn-white">Get early access</a>
+      </div>
     </section>
 
     <section class="cs-dark">
-      <span class="cs-quote">“</span>
-      <h2 class="cs-display">A new kind of fashion destination.</h2>
-      <span class="cs-quote">”</span>
-      <p class="cs-dark-sub">Independent labels and distinctive finds in one place. <strong>Built for people who see fashion differently.</strong></p>
+      <h2 class="cs-title">A new kind of fashion destination</h2>
+      <p class="cs-dark-sub">Independent labels and distinctive finds in one place, for people who see fashion differently.</p>
       <div class="cs-fan" aria-hidden="true"><div class="f1"></div><div class="f2"></div><div class="f3"></div></div>
       <ul class="cs-features">
         <li><i class="ph ph-sparkle"></i><div><strong>Discover new brands.</strong><span>Independent labels and fresh perspectives you won’t find everywhere else.</span></div></li>
@@ -334,10 +332,9 @@
         <li><i class="ph ph-handshake"></i><div><strong>Built with independents.</strong><span>A home for emerging brands, and a fairer way to reach the people who value them.</span></div></li>
       </ul>
     </section>
-  </div>
 
   <section class="cs-light">
-    <h2 class="cs-display">Made for people who see fashion differently.</h2>
+    <h2 class="cs-title">Made for people who see fashion differently</h2>
     <div class="cs-rows">
       <div class="cs-row"><div class="cs-row-img" style="background-image:url('/coming-soon-curious.jpg');background-position:center 30%;"></div><div><h3>For the curious</h3><p>Looking for pieces with a point of view. Not more of the same.</p></div></div>
       <div class="cs-row"><div class="cs-row-img" style="background-image:url('/coming-soon-brands.jpg');"></div><div><h3>For independent brands</h3><p>Building something of your own. Looking for the people who’ll get it.</p></div></div>
@@ -346,7 +343,7 @@
   </section>
 
   <section class="cs-light">
-    <h2 class="cs-display">Arriving soon.</h2>
+    <h2 class="cs-title">Arriving soon</h2>
     <p class="cs-lead">Four worlds, one destination.</p>
     <div class="cs-cats">
       <div class="cs-cat" style="background-image:url('/coming-soon-fashion.jpg');background-position:center 25%;"><span>Fashion</span></div>
@@ -356,18 +353,14 @@
     </div>
   </section>
 
-  <div class="cs-wrap">
-    <section class="cs-dark">
-      <span class="cs-quote">“</span>
-      <h2 class="cs-display">Have a brand with a point of view?</h2>
-      <span class="cs-quote">”</span>
-      <p class="cs-dark-sub">We’re choosing the first labels to join the collective. Register your interest and <strong>our partnerships team will be in touch before launch.</strong></p>
-      <button type="button" class="cs-pill" id="brand-open-btn" style="margin-top:28px;">Register your interest</button>
+    <section class="cs-dark cs-dark-brands">
+      <h2 class="cs-title">Have a brand with a point of view?</h2>
+      <p class="cs-dark-sub">We’re choosing the first labels to join the collective. Register your interest, and our partnerships team will be in touch before launch.</p>
+      <div><button type="button" class="cs-btn cs-btn-white" id="brand-open-btn" style="margin-top:24px;">Register your interest</button></div>
     </section>
-  </div>
 
   <section class="cs-faq">
-    <h2 class="cs-display">Good questions.</h2>
+    <h2 class="cs-title">Good questions</h2>
     <p>A few things you might be wondering.</p>
     <details><summary>What is JANEDORE?<i class="ph ph-caret-down"></i></summary><p>A multi-brand store for independent fashion, accessories, homeware and scent. Every brand is chosen by us, and you can shop several of them in one bag.</p></details>
     <details><summary>When do you launch?<i class="ph ph-caret-down"></i></summary><p>Soon. Everyone on the list hears first, with early access before we open to everyone.</p></details>
@@ -377,12 +370,12 @@
   </section>
 
   <section class="cs-join" id="join">
-    <h2 class="cs-display">Join the list. Get early access.</h2>
+    <h2 class="cs-title">Join the list for early access</h2>
     <p>Be the first to know when we open, and the first to see new labels and exclusive drops.</p>
     <div class="cs-form">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email" class="signup-input" id="email-input" placeholder="Email address" autocomplete="email" aria-describedby="signup-msg" required>
-      <button type="button" class="cs-pill cs-pill-lg" id="signup-btn" aria-label="Join the list">
+      <button type="button" class="cs-btn cs-btn-block" id="signup-btn" aria-label="Join the list">
         <span id="btn-text">Join the list</span>
         <span id="btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
       </button>
@@ -392,7 +385,8 @@
 </main>
 
 <footer class="cs-footer">
-  <h2 class="cs-display">Find yours. Shop independent.</h2>
+  <div class="cs-footer-logo">JANEDORE</div>
+  <p class="cs-footer-tag">Independent brands. Distinctive finds. One destination.</p>
   <div class="cs-footer-meta">
     <span class="footer-copy" id="copyright"></span>
     <button type="button" class="cs-link" id="visitor-access-link" aria-expanded="false" aria-controls="visitor-access-row">Preview access</button>
@@ -407,7 +401,7 @@
     <div class="cs-form">
       <label for="visitor-password-input" class="sr-only">Preview password</label>
       <input type="password" class="signup-input" id="visitor-password-input" placeholder="Password" autocomplete="off" aria-describedby="visitor-msg">
-      <button type="button" class="cs-pill cs-pill-lg" id="visitor-submit-btn" aria-label="Enter">
+      <button type="button" class="cs-btn cs-btn-block" id="visitor-submit-btn" aria-label="Enter">
         <span id="visitor-btn-text">Enter</span>
         <span id="visitor-btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
       </button>
@@ -428,7 +422,7 @@
       <input type="email" class="signup-input" id="brand-email" placeholder="Email address" autocomplete="email" maxlength="200">
       <label for="brand-social" class="sr-only">Instagram or website (optional)</label>
       <input type="text" class="signup-input" id="brand-social" placeholder="Instagram or website (optional)" maxlength="200">
-      <button type="button" class="cs-pill cs-pill-lg" id="brand-submit-btn">Register your interest</button>
+      <button type="button" class="cs-btn cs-btn-block" id="brand-submit-btn">Register your interest</button>
       <div class="signup-msg" id="brand-msg" role="status" aria-live="polite"></div>
     </div>
   </div>
