@@ -510,7 +510,7 @@ async function renderAccountReviews() {
       <div class="account-stars" aria-label="${rating} out of 5">${Array.from({ length: 5 }, (_, i) => `<i class="${i < rating ? 'ph-fill' : 'ph'} ph-star" aria-hidden="true"></i>`).join('')}</div>
       ${r.text ? `<p class="account-review-text">${escapeHTML(r.text)}</p>` : ''}
       ${typeof reviewPhotosHtml === 'function' ? reviewPhotosHtml(r, '') : ''}
-      ${date ? `<div class="account-order-meta">${escapeHTML(date)}</div>` : ''}
+      ${date || r.city ? `<div class="account-order-meta">${[r.city, date].filter(Boolean).map(escapeHTML).join(' · ')}</div>` : ''}
     </div>`;
   }).join('');
 }

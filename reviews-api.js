@@ -126,6 +126,8 @@ module.exports = function registerReviews(app, deps) {
       batch.set(adminDb.collection('reviews').doc(id), {
         productId, rating, text, name, imageUrl, imageUrls, verified: true,
         vendorId: (productDoc.exists && productDoc.data().vendorId) || null,
+        // The city on the order they bought it with, shown beside their name.
+        city: String(purchase.order.city || '').trim().slice(0, 60) || null,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
       batch.set(adminDb.collection('reviewOwners').doc(id), {
@@ -155,7 +157,7 @@ module.exports = function registerReviews(app, deps) {
       const docs = ids.size ? await adminDb.getAll(...[...ids].map(id => adminDb.collection('reviews').doc(id))) : [];
       const items = docs.filter(d => d.exists).map(d => {
         const r = d.data();
-        return { id: d.id, productId: r.productId, rating: r.rating, text: r.text, name: r.name, imageUrl: r.imageUrl || null, imageUrls: r.imageUrls || (r.imageUrl ? [r.imageUrl] : []), createdAt: r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0 };
+        return { id: d.id, productId: r.productId, rating: r.rating, text: r.text, name: r.name, city: r.city || null, imageUrl: r.imageUrl || null, imageUrls: r.imageUrls || (r.imageUrl ? [r.imageUrl] : []), createdAt: r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0 };
       }).sort((a, b) => b.createdAt - a.createdAt);
       res.json({ items });
     } catch (e) {
