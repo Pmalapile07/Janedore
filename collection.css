@@ -424,8 +424,10 @@ body:not(.on-collection-page) .collection-page-heading {
 .filter-tick { position: relative; width: 24px; height: 24px; flex-shrink: 0; box-sizing: border-box; border: 1.5px solid #111; border-radius: 50%; }
 .filter-choice.picked .filter-tick { background: #111; }
 .filter-choice.picked .filter-tick::after {
-  content: ''; position: absolute; left: 7px; top: 3.5px; width: 5px; height: 10px;
-  border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  /* A drawn tick whose box is centred in the circle (a rotated border
+     corner always sat off-centre). */
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpolyline points='5 12.5 9.5 17 19 7.5' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
 }
 .filter-swatch { width: 14px; height: 14px; flex-shrink: 0; border-radius: 50%; border: 1px solid #ddd; }
 .filter-choice-label { flex: 1; min-width: 0; }
