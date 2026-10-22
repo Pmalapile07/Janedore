@@ -758,6 +758,9 @@ body.on-collection-page.collection-bar-stuck .brand-bar { top: 0; }
 /* Brand pages have no sort/filter bar. */
 body:has(#page-vendor.active) .collection-filter-bar,
 body:has(#page-vendor.active) #active-filter-chips { display: none !important; }
+/* The chip row sits outside the pages, so it only shows on collection
+   pages (it once leaked onto the homepage after a brand's Sale link). */
+body:not(.on-collection-page) #active-filter-chips { display: none !important; }
 
 /* Shop / Collections / Sale: the quick-link pills the header used to
    have (grey text, the picked one a black pill with white bold text). */

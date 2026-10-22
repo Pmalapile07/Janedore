@@ -1670,8 +1670,10 @@ function renderVendorPage(vendor) {
   }
   updateCollectionGridIcon();
   updateCollectionTitle();
-  renderFilterPanel();
-  renderActiveFilterChips();
+  // No filter chips on brand pages (Sale is the brand's own link); the
+  // chip row is shared with the collection pages, so empty it here.
+  const chipsEl = document.getElementById('active-filter-chips');
+  if (chipsEl) chipsEl.innerHTML = '';
   injectToolbarExtras('page-vendor', 'col-grid-icon');
 
   const footerEl = document.getElementById('vendor-footer');
