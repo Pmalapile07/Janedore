@@ -54,7 +54,7 @@
    this for desktop's text-link nav, independent of this change. */
 .nav-logo { cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center; margin-left: 4px; }
 /* Uploaded website logo (admin > Content), swapped in by server.js. */
-.nav-logo-img { display: block; height: 20px; width: auto; max-width: 200px; object-fit: contain; }
+.nav-logo-img { display: block; height: 18px; width: auto; max-width: 200px; object-fit: contain; }
 .footer-brand-mark .nav-logo-img { height: 24px; max-width: 240px; }
 
 .nav-logo-text {
