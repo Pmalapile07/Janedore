@@ -110,16 +110,19 @@ body:not(.on-collection-page) .collection-top-description {
 
 body.on-collection-page .collection-filter-bar {
   display: flex !important;
-  /* Sticks under the header; once it reaches the header, the header
-     slides up out of view and this takes its place at the top
-     (body.collection-bar-stuck, collection.js). The header moves by its
-     `top`, not a transform: a transform on a sticky element can leave
-     taps landing in the wrong place on iOS Safari (navigation.css). */
+}
+/* Scrolls away with the page until the first row of products has gone
+   past; from then on it sticks under the header, and takes the header's
+   place at the top while scrolling down (body.collection-bar-active /
+   collection-bar-stuck, collection.js). The header moves by its `top`,
+   not a transform: a transform on a sticky element can leave taps
+   landing in the wrong place on iOS Safari (navigation.css). */
+body.on-collection-page.collection-bar-active .collection-filter-bar {
   position: sticky;
   top: var(--main-nav-sticky-height, 0px);
   transition: top 0.25s ease;
 }
-body.on-collection-page.collection-bar-stuck .collection-filter-bar { top: 0; }
+body.on-collection-page.collection-bar-active.collection-bar-stuck .collection-filter-bar { top: 0; }
 body.on-collection-page.collection-bar-stuck #main-nav { top: calc(-1 * var(--main-nav-sticky-height, 0px)); }
 
 /* Collection title in center */
