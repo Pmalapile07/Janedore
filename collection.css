@@ -363,7 +363,7 @@ body:not(.on-collection-page) .collection-page-heading {
 
 /* =========================================
    FILTER PANEL - FULL SCREEN, LIKE THE MENU
-   Black header with close and "Filters" (as #menu-drawer, navigation.css),
+   White header with close and "Filters",
    sections that open and close, Reset/Done pinned to the bottom.
    ========================================= */
 
@@ -385,8 +385,9 @@ body:not(.on-collection-page) .collection-page-heading {
 .collection-filter-header {
   flex-shrink: 0;
   height: 64px;
-  background: #111;
-  color: #fff;
+  background: #fff;
+  color: #111;
+  border-bottom: 1px solid #eee;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -394,7 +395,7 @@ body:not(.on-collection-page) .collection-page-heading {
 }
 .collection-filter-title { font-size: 16px; font-weight: 600; margin-left: 6px; }
 .collection-filter-close { background: none; border: none; padding: 6px; display: flex; align-items: center; cursor: pointer; }
-.collection-filter-close svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; }
+.collection-filter-close svg { width: 22px; height: 22px; stroke: #111; fill: none; stroke-width: 1.5; stroke-linecap: round; }
 
 .collection-filter-body {
   flex: 1;
@@ -409,7 +410,8 @@ body:not(.on-collection-page) .collection-page-heading {
   display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 20px 0;
   background: none; border: 0; font-family: inherit; font-size: 16px; font-weight: 500; color: #111; text-align: left; cursor: pointer;
 }
-.filter-section-picked { font-weight: 400; color: #888; }
+/* Same size as the product count on collection pages. */
+.filter-section-picked { font-size: 12px; font-weight: 400; color: #888; }
 .filter-section-head svg { width: 18px; height: 18px; stroke: #111; fill: none; stroke-width: 1.5; flex-shrink: 0; transition: transform 0.2s ease; }
 .filter-section.open .filter-section-head svg { transform: rotate(180deg); }
 .filter-section-options { padding: 0 0 12px 8px; }
