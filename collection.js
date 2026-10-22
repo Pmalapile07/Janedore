@@ -487,9 +487,9 @@ function updateCollectionTitle() {
     const slug = S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all');
     const copy = collectionCopyFor(slug);
     title = copy.title;
-    // All Products shows no description, only its heading.
-    description = slug === 'all' ? '' : copy.description;
-    showDesc = !!description;
+    // All Products, Sale and New In show no description, only a heading.
+    description = '';
+    showDesc = false;
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
     const copy = collectionCopyFor(S.currentCategoryPage);
     title = copy.title;
