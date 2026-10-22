@@ -848,3 +848,11 @@ body .site-collection-layout {
 .initial-drop-view-all:hover {
   opacity: 0.7;
 }
+/* Homepage section buttons (New arrivals, Shop clothing, Shop
+   accessories, Shop by brand): solid black with white text, the same
+   weight and padding as the hero's Shop now button (hero.css). */
+#page-home .home-categories-header .initial-drop-view-all {
+  background: #111; color: #fff; font-weight: 500; border: none; padding: 12px 32px;
+  transition: background 0.2s;
+}
+#page-home .home-categories-header .initial-drop-view-all:hover { opacity: 1; background: #333; }
