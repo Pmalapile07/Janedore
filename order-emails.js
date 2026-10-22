@@ -1055,6 +1055,8 @@ function backInStock(item, ctx, links) {
   const what = [item.color && item.color !== 'Default' ? item.color : '', item.size && item.size !== 'OS' ? 'size ' + item.size : ''].filter(Boolean).join(', ');
   const heading = item.preorder ? 'Pre-orders open again' : 'Back in stock';
   const status = item.preorder ? 'is available to pre-order again' : 'is back in stock';
+  const first = String((links && links.name) || '').trim().split(/\s+/)[0];
+  const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
   const intro = 'good news: ' + (item.name || 'the item you were waiting for') + (what ? ' in ' + what : '') + ' ' + status + '. Quantities are limited and aren’t reserved for you, so order soon if you’d still like it.';
   const html = shell({
     logoUrl: ctx.logoUrl,
@@ -1063,12 +1065,12 @@ function backInStock(item, ctx, links) {
     preheader: (item.name || 'Your item') + ' ' + status + '.',
     bannerHtml: '<strong>' + heading + '</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.7;color:#555555;">Hi, ' + esc(intro) + '</div>',
+      '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi + intro) + '</div>',
       title('Your waitlist item') + itemsBlock([item], ctx, { hidePrice: true }) + button('View item', links.productUrl)
     ],
     footerHtml: 'You’re receiving this because you joined the waitlist for this item. We only email once per waitlist.<br>Janedore · janedore.co.za'
   });
-  const text = heading + '\n\nHi, ' + intro + '\n\n' + (item.name || '') + (item.brand ? ' (' + item.brand + ')' : '') + (what ? ', ' + what : '') + '\n\nView item: ' + links.productUrl;
+  const text = heading + '\n\n' + hi + intro + '\n\n' + (item.name || '') + (item.brand ? ' (' + item.brand + ')' : '') + (what ? ', ' + what : '') + '\n\nView item: ' + links.productUrl;
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };
 }
 

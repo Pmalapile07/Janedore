@@ -56,8 +56,7 @@ function buildSizeRowHtml(product, variantIndex) {
 // Waitlist (waitlist-api.js): products with "Waitlist when sold out"
 // on in admin keep their sold-out sizes selectable, and the Add to bag
 // button reads Add to waitlist for them (updateAddToCartState). Signed-in
-// customers join straight away; guests are asked to sign in first, since
-// the waitlist lives in My account.
+// customers join straight away; guests give their name and email.
 function productWaitlistMode(product) {
   if (!product || !product.waitlist) return false;
   const vi = S.productVariantSelections[product.id] ?? 0;
@@ -78,18 +77,12 @@ async function joinProductWaitlist(product, btn) {
     return;
   }
   const user = firebase.auth().currentUser;
-  if (!user || user.isAnonymous) {
-    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Sign in to join the waitlist', 'ph-user');
-    navigateToLogin();
-    return;
-  }
+  // Guests give a name and email instead (openWaitlistModal()).
+  if (!user || user.isAnonymous) { openWaitlistModal(product); return; }
   const label = btn && btn.querySelector('.sticky-btn-label');
   if (btn) btn.disabled = true;
   try {
-    const res = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await user.getIdToken() },
-      body: JSON.stringify({ productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: S.selectedSize || 'OS' }) });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    await postWaitlist(product, { name: user.displayName || '' }, await user.getIdToken());
     if (label) label.textContent = 'Added';
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Added to your waitlist', 'ph-check-circle');
     setTimeout(updateAddToCartState, 1600);
@@ -98,6 +91,68 @@ async function joinProductWaitlist(product, btn) {
     updateAddToCartState();
   } finally {
     if (btn) btn.disabled = false;
+  }
+}
+
+async function postWaitlist(product, contact, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const res = await fetch('/api/waitlist', { method: 'POST', headers,
+    body: JSON.stringify({ productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: S.selectedSize || 'OS', name: contact.name || '', email: contact.email || '' }) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+}
+
+// Guest waitlist: name and email in a popup (index.html), remembered on
+// this device for next time.
+const WAITLIST_CONTACT_KEY = 'janedore_waitlist_contact';
+let _waitlistModalProduct = null;
+function openWaitlistModal(product) {
+  _waitlistModalProduct = product;
+  const vi = S.productVariantSelections[product.id] ?? 0;
+  const color = ((product.variants || [])[vi] || {}).color;
+  const size = S.selectedSize && S.selectedSize !== 'OS' ? S.selectedSize : '';
+  const what = [color && color !== 'Default' ? color : '', size ? 'size ' + size : ''].filter(Boolean).join(', ');
+  document.getElementById('waitlist-modal-text').textContent =
+    'We’ll email you as soon as ' + (product.name || 'this item') + (what ? ' in ' + what : '') + ' is back in stock.';
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(WAITLIST_CONTACT_KEY) || '{}') || {}; } catch (e) {}
+  const nameEl = document.getElementById('waitlist-name');
+  const emailEl = document.getElementById('waitlist-email');
+  if (!nameEl.value) nameEl.value = saved.name || '';
+  if (!emailEl.value) emailEl.value = saved.email || '';
+  const err = document.getElementById('waitlist-error');
+  err.style.display = 'none';
+  document.getElementById('waitlist-modal-backdrop').classList.add('open');
+}
+function closeWaitlistModal() {
+  document.getElementById('waitlist-modal-backdrop').classList.remove('open');
+}
+async function submitGuestWaitlist(e) {
+  e.preventDefault();
+  const product = _waitlistModalProduct;
+  if (!product) return;
+  const name = document.getElementById('waitlist-name').value.trim();
+  const email = document.getElementById('waitlist-email').value.trim().toLowerCase();
+  const err = document.getElementById('waitlist-error');
+  const btn = document.getElementById('waitlist-submit');
+  const fail = (msg) => { err.textContent = msg; err.style.display = 'block'; };
+  if (!name) return fail('Please enter your name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email address.');
+  err.style.display = 'none';
+  btn.disabled = true;
+  try {
+    await postWaitlist(product, { name, email });
+    try { localStorage.setItem(WAITLIST_CONTACT_KEY, JSON.stringify({ name, email })); } catch (e2) {}
+    closeWaitlistModal();
+    const label = document.querySelector('#sticky-add-btn .sticky-btn-label');
+    if (label) label.textContent = 'Added';
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Added to your waitlist', 'ph-check-circle');
+    setTimeout(updateAddToCartState, 1600);
+  } catch (e2) {
+    fail(e2.message);
+  } finally {
+    btn.disabled = false;
   }
 }
 

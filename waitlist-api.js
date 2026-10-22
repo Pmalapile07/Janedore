@@ -3,7 +3,8 @@
 // whole product is sold out, the product page's Add to bag button reads
 // Add to waitlist and joins it (product-detail.js). sweepWaitlist() checks
 // every 15 minutes and emails each customer once when their exact item is
-// back in stock, then marks the entry notified. Signed-in customers see
+// back in stock, then marks the entry notified. Guests join with a name
+// and email instead of signing in. Signed-in customers see
 // and remove their entries in My account > Waitlist (account.js).
 // waitlist/{id}, where id is a hash of email + product + colour + size,
 // so joining twice keeps one entry. Server only (firestore.rules default
@@ -43,6 +44,8 @@ module.exports = function registerWaitlist(app, deps) {
     const productId = String(b.productId || '').slice(0, 120);
     const variantIndex = Math.max(0, Math.floor(Number(b.variantIndex) || 0));
     const size = String(b.size || 'OS').slice(0, 40);
+    const customerName = String((user && user.name) || b.name || '').trim().slice(0, 60);
+    if (!user && !customerName) return res.status(400).json({ error: 'Please enter your name.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
     try {
       const doc = productId ? await adminDb.collection('products').doc(productId).get() : null;
@@ -54,7 +57,7 @@ module.exports = function registerWaitlist(app, deps) {
       if (stockOf(p, variantIndex, size) > 0) return res.status(400).json({ error: 'Good news: this is in stock. You can add it to your bag now.' });
       const v = (p.variants || [])[variantIndex] || {};
       await col().doc(entryId(email, productId, variantIndex, size)).set({
-        email, uid: user ? user.uid : null, productId, variantIndex, size,
+        email, customerName, uid: user ? user.uid : null, productId, variantIndex, size,
         name: p.name || '', brand: p.brand || '', color: v.color || '',
         status: 'waiting', createdAt: Date.now()
       });
@@ -125,7 +128,7 @@ module.exports = function registerWaitlist(app, deps) {
         const ctx = await buildOrderEmailContext({ items: [{ productId: w.productId, variantIndex: w.variantIndex }] });
         const v = (p.variants || [])[w.variantIndex] || {};
         const item = { productId: w.productId, variantIndex: w.variantIndex, name: p.name || w.name, brand: p.brand || w.brand, color: v.color || w.color, size: w.size, qty: 1, preorder: String(p.badge || '').trim().toLowerCase() === 'pre-order' };
-        const email = orderEmails.backInStock(item, ctx, { productUrl: SITE_URL + '/products/' + encodeURIComponent(p.slug || w.productId) });
+        const email = orderEmails.backInStock(item, ctx, { productUrl: SITE_URL + '/products/' + encodeURIComponent(p.slug || w.productId), name: w.customerName });
         await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: w.email, subject: email.subject, html: email.html, text: email.text });
         await doc.ref.update({ status: 'notified', notifiedAt: Date.now() });
         console.log('[WAITLIST] Back in stock email sent for', doc.id);

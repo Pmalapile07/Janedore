@@ -24,6 +24,22 @@
 .review-submit-btn { width: 100%; background: #111; color: #fff; border: none; font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing); font-weight: var(--ui-font-weight); text-transform: uppercase; padding: 15px; cursor: pointer; transition: background 0.2s; font-family: inherit; }
 .review-submit-btn:hover { background: #333; }
 
+/* ==================== WAITLIST (GUESTS) ====================
+   Same open/close pattern as #review-modal-backdrop; inputs and button
+   are Track your order's (track-order.css). */
+#waitlist-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#waitlist-modal-backdrop.open { opacity: 1; pointer-events: all; }
+#waitlist-modal { background: #fff; width: calc(100% - 32px); max-width: 440px; padding: 32px 20px 24px; position: relative; font-family: 'Inter', sans-serif; color: #111; box-sizing: border-box; }
+.waitlist-modal-close { position: absolute; top: 12px; right: 12px; background: none; border: none; padding: 6px; font-size: 20px; color: #111; cursor: pointer; display: flex; }
+.waitlist-modal-title { font-size: 18px; font-weight: 600; margin: 0 0 8px; padding-right: 32px; }
+.waitlist-modal-text { font-size: 13px; color: #666; line-height: 1.5; margin: 0 0 20px; }
+.waitlist-modal-signin { font-size: 13px; color: #666; text-align: center; margin: 18px 0 0; }
+.waitlist-modal-signin button { background: none; border: none; padding: 0; font: inherit; font-weight: 500; color: #111; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
 /* ==================== NEWSLETTER POPUP ====================
    Same open/close pattern as #review-modal-backdrop above. Shown by
    newsletter-popup.js once a page's footer scrolls into view — the
