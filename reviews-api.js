@@ -74,6 +74,10 @@ module.exports = function registerReviews(app, deps) {
     const text = String(b.text || '').trim().slice(0, 2000);
     const name = String(b.name || '').trim().slice(0, 100) || 'Anonymous';
     const email = String(b.email || '').trim().toLowerCase().slice(0, 200);
+    // A photo the customer added, already uploaded to our Cloudinary
+    // account by the browser; anything else is ignored.
+    const cloud = process.env.CLOUDINARY_CLOUD_NAME || '';
+    const imageUrl = cloud && String(b.imageUrl || '').startsWith('https://res.cloudinary.com/' + cloud + '/image/upload/') ? String(b.imageUrl).slice(0, 500) : null;
     if (!productId) return res.status(400).json({ error: 'Missing product.' });
     if (!(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'Please choose a star rating.' });
     if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please enter the email you ordered with.' });
@@ -85,7 +89,7 @@ module.exports = function registerReviews(app, deps) {
       const id = crypto.createHash('sha256').update(email + '|' + productId).digest('hex').slice(0, 32);
       const batch = adminDb.batch();
       batch.set(adminDb.collection('reviews').doc(id), {
-        productId, rating, text, name, verified: true,
+        productId, rating, text, name, imageUrl, verified: true,
         vendorId: (productDoc.exists && productDoc.data().vendorId) || null,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
@@ -116,7 +120,7 @@ module.exports = function registerReviews(app, deps) {
       const docs = ids.size ? await adminDb.getAll(...[...ids].map(id => adminDb.collection('reviews').doc(id))) : [];
       const items = docs.filter(d => d.exists).map(d => {
         const r = d.data();
-        return { id: d.id, productId: r.productId, rating: r.rating, text: r.text, name: r.name, createdAt: r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0 };
+        return { id: d.id, productId: r.productId, rating: r.rating, text: r.text, name: r.name, imageUrl: r.imageUrl || null, createdAt: r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0 };
       }).sort((a, b) => b.createdAt - a.createdAt);
       res.json({ items });
     } catch (e) {

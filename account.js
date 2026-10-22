@@ -509,6 +509,7 @@ async function renderAccountReviews() {
       ${product ? `<div class="account-review-product" onclick="goToProduct('${escapeJSString(product.id)}')">${escapeHTML(product.name || '')}</div>` : ''}
       <div class="account-stars" aria-label="${rating} out of 5">${'★'.repeat(rating)}<span>${'★'.repeat(5 - rating)}</span></div>
       ${r.text ? `<p class="account-review-text">${escapeHTML(r.text)}</p>` : ''}
+      ${/^https:\/\/res\.cloudinary\.com\//.test(r.imageUrl || '') ? `<img class="product-review-photo" src="${escapeHTML(r.imageUrl)}" alt="" loading="lazy" style="display:block;width:72px;height:72px;object-fit:cover;margin:8px 0;">` : ''}
       ${date ? `<div class="account-order-meta">${escapeHTML(date)}</div>` : ''}
     </div>`;
   }).join('');

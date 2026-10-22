@@ -6,10 +6,8 @@
 #review-modal-backdrop.open { opacity: 1; pointer-events: all; }
 #review-modal { background: #fff; width: 90%; max-width: 480px; padding: 40px 32px; position: relative; }
 .review-modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
-.review-modal-title {
-  font-size: var(--ui-font-size); letter-spacing: var(--ui-letter-spacing);
-  font-weight: var(--ui-font-weight); text-transform: uppercase; margin-bottom: 24px; text-align: center;
-}
+/* Same as the "Your wishlist is empty" heading (cart.css .cart-empty-title). */
+.review-modal-title { font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 600; color: #111; margin-bottom: 24px; text-align: center; }
 .review-stars { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
 .review-star-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #ccc; transition: color 0.2s; padding: 0; }
 .review-star-btn.filled { color: #111; }

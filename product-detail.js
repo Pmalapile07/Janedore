@@ -637,7 +637,8 @@ async function loadProductReviewsSection(productId) {
       const d = time(r) ? new Date(time(r)).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
       return `<p class="info-sub-label">${escapeHTML(r.name || 'Anonymous')}${d ? ' · ' + d : ''}</p>
         <p class="product-review-stars" aria-label="${Number(r.rating) || 0} out of 5">${stars(Number(r.rating) || 0)}</p>
-        ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}`;
+        ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}
+        ${/^https:\/\/res\.cloudinary\.com\//.test(r.imageUrl || '') ? `<img class="product-review-photo" src="${escapeHTML(r.imageUrl)}" alt="Photo from ${escapeHTML(r.name || 'a customer')}" loading="lazy" onclick="window.open(this.src,'_blank','noopener')">` : ''}`;
     }).join('');
   showReviewButtonIfBought(productId);
 }
