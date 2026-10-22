@@ -2,6 +2,9 @@
   /* Page heading size: the product name on the product page, which every
      page title and product page / bag section heading follows. */
   --heading-size: 22px;
+  /* Section headings (homepage rows, product page and bag suggestions):
+     1px under the page heading. */
+  --section-heading-size: calc(var(--heading-size) - 1px);
   --ui-font-size: 10px !important;
   --ui-letter-spacing: 0.1em;
   --ui-font-weight: 400;

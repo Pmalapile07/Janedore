@@ -125,7 +125,7 @@
 #page-product-detail .swipe-section-title,
 .cart-suggestions-title {
   font-family: 'Inter', sans-serif;
-  font-size: var(--heading-size);
+  font-size: var(--section-heading-size);
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
