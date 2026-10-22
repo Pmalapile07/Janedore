@@ -114,24 +114,24 @@ function friendlyAuthError(error) {
   const messages = {
     // Signing in with Google on an email that has an unverified password
     // makes Firebase drop that password, so point people to both ways back in.
-    'auth/invalid-credential': 'That email and password don’t match. If you signed up with Google, use Continue with Google, or reset your password to add one.',
-    'auth/wrong-password': 'That email and password don’t match. If you signed up with Google, use Continue with Google, or reset your password to add one.',
-    'auth/user-not-found': 'That email and password don’t match. If you signed up with Google, use Continue with Google, or reset your password to add one.',
+    'auth/invalid-credential': 'The email address or password is incorrect. If you registered with Google, please continue with Google or reset your password.',
+    'auth/wrong-password': 'The email address or password is incorrect. If you registered with Google, please continue with Google or reset your password.',
+    'auth/user-not-found': 'The email address or password is incorrect. If you registered with Google, please continue with Google or reset your password.',
     'auth/invalid-email': 'Please enter a valid email address.',
-    'auth/email-already-in-use': 'There’s already an account with this email. Sign in instead.',
+    'auth/email-already-in-use': 'An account with this email address already exists. Please sign in.',
     'auth/weak-password': 'Please choose a password of at least 6 characters.',
     'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
-    'auth/network-request-failed': 'No connection. Check your internet and try again.',
+    'auth/network-request-failed': 'Unable to connect. Please check your internet connection and try again.',
     'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': '',
     'auth/account-exists-with-different-credential': 'This email is already registered. Sign in with your email and password.',
     'auth/operation-not-allowed': 'This sign-in option isn’t available right now. Please try another way to sign in, or contact customer care.',
     'auth/unauthorized-domain': 'This sign-in option isn’t available yet. Please use your email and password.',
-    'auth/operation-not-supported-in-this-environment': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.',
-    'auth/web-storage-unsupported': 'Google sign-in doesn’t work inside this app’s browser. Open janedore.co.za in Safari or Chrome, or use your email and password.'
+    'auth/operation-not-supported-in-this-environment': 'Google sign-in isn’t supported in this browser. Please open janedore.co.za in Safari or Chrome, or sign in with your email and password.',
+    'auth/web-storage-unsupported': 'Google sign-in isn’t supported in this browser. Please open janedore.co.za in Safari or Chrome, or sign in with your email and password.'
   };
   if (code in messages) return messages[code];
-  return (error && error.message && !/firebase/i.test(error.message)) ? error.message : 'Something went wrong. Please try again.';
+  return (error && error.message && !/firebase/i.test(error.message)) ? error.message : 'We couldn’t complete your request. Please try again.';
 }
 
 function showLoginError(error) {
@@ -191,7 +191,7 @@ async function handleLoginSubmit(e) {
         if (!['auth/unauthorized-continue-uri', 'auth/invalid-continue-uri', 'auth/unauthorized-domain', 'auth/missing-continue-uri'].includes(err && err.code)) throw err;
         await firebase.auth().sendPasswordResetEmail(email);
       }
-      showLoginNotice('If there’s an account for ' + email + ', we’ve sent a link to reset your password. Check your inbox and spam folder.');
+      showLoginNotice('If an account exists for ' + email + ', a password reset link has been sent. Please check your inbox and spam folder.');
       return;
     }
     await applyKeepSignedIn();
@@ -212,7 +212,7 @@ async function handleLoginSubmit(e) {
 
   } catch (error) {
     if (loginMode === 'reset' && error && error.code === 'auth/user-not-found') {
-      showLoginNotice('If there’s an account for ' + email + ', we’ve sent a link to reset your password. Check your inbox and spam folder.');
+      showLoginNotice('If an account exists for ' + email + ', a password reset link has been sent. Please check your inbox and spam folder.');
     } else {
       showLoginError(error);
     }

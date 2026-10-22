@@ -33,7 +33,7 @@ function renderCustomerCarePage() {
       <div class="care-options">
         ${chatReady ? `<button type="button" class="care-option" onclick="openCustomerCareChat()">
           <span class="care-option-icon"><i class="ph ph-chat-circle" aria-hidden="true"></i></span>
-          <span class="care-option-text"><span class="care-option-title">Chat with JAI</span><span class="care-option-desc">Quick answers, and a member of our team when you need one</span></span>
+          <span class="care-option-text"><span class="care-option-title">Chat with JAI</span><span class="care-option-desc">Instant answers, with our team available when you need further help</span></span>
           <i class="ph ph-caret-right care-option-chevron" aria-hidden="true"></i>
         </button>` : ''}
         <a class="care-option" href="mailto:${CUSTOMER_CARE_EMAIL}">
@@ -62,7 +62,7 @@ function renderCustomerCarePage() {
       </form>
 
       <div class="track-notice care-shortcuts">
-        <strong>You might find your answer here</strong><br>
+        <strong>Helpful links</strong><br>
         <span class="track-link" onclick="navigateToContentPage('track-your-order')">Track your order</span><br>
         <span class="track-link" onclick="navigateToContentPage('log-a-return')">Log a return</span><br>
         <span class="track-link" onclick="navigateToContentPage('faq')">Frequently asked questions</span>
@@ -85,7 +85,7 @@ async function submitCustomerCare(ev) {
   if (!payload.name) return showError('Please enter your name.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) return showError('Please enter a valid email address.');
   if (!payload.topic) return showError('Please choose a topic.');
-  if (!payload.message) return showError('Please write your message.');
+  if (!payload.message) return showError('Please enter your message.');
 
   const btn = document.getElementById('care-btn');
   btn.disabled = true; btn.textContent = 'Sending…';
@@ -98,7 +98,7 @@ async function submitCustomerCare(ev) {
     form.outerHTML = `<div class="returns-done care-done">
       <div class="returns-done-icon"><i class="ph ph-check" aria-hidden="true"></i></div>
       <h2 class="track-heading">Message sent</h2>
-      <p class="track-intro">Thank you, ${escapeHTML(payload.name.split(' ')[0])}. We’ve sent a copy to ${escapeHTML(payload.email)}, and we’ll reply to you there.</p>
+      <p class="track-intro">Thank you, ${escapeHTML(payload.name.split(' ')[0])}. A copy has been sent to ${escapeHTML(payload.email)}, and our team will respond to you by email.</p>
     </div>`;
     const heading = document.querySelector('.care-page > .track-heading');
     if (heading) heading.style.display = 'none';

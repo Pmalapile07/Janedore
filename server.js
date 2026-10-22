@@ -365,7 +365,7 @@ app.get('/api/online-store-status', async (req, res) => {
 });
 
 app.post('/api/verify-visitor-password', async (req, res) => {
-  if (rateLimited(req, 'visitor-password', 10, 15 * 60 * 1000)) return res.status(429).json({ ok: false, error: 'Too many tries. Please wait a few minutes.' });
+  if (rateLimited(req, 'visitor-password', 10, 15 * 60 * 1000)) return res.status(429).json({ ok: false, error: 'Too many attempts. Please wait a few minutes and try again.' });
   const password = req.body && req.body.password;
   if (!password || typeof password !== 'string') {
     return res.status(400).json({ ok: false });
@@ -594,15 +594,15 @@ app.post('/api/send-welcome-email', (req, res) => {
   if (welcomeSentTo.size > 5000) welcomeSentTo.clear();
 
   const html = emailLayout({
-    heading: 'You’re on the list.',
-    bodyHtml: '<p class="body-text">We’re not quite ready yet, but when we are,<br>you’ll be the first to know.</p>'
+    heading: 'Thank you for subscribing',
+    bodyHtml: '<p class="body-text">JANEDORE launches soon,<br>and you’ll be among the first to know.</p>'
   });
-  const text = 'You’re on the list.\n\nWe’re not quite ready yet, but when we are, you’ll be the first to know.\n\nJanedore\n\nsupport@janedore.co.za';
+  const text = 'Thank you for subscribing\n\nJANEDORE launches soon, and you’ll be among the first to know.\n\nJanedore\n\nsupport@janedore.co.za';
 
   sendResendEmail({
     from: 'Janedore <support@janedore.co.za>',
     to: email,
-    subject: 'You’re on the list.',
+    subject: 'Thank you for subscribing',
     html,
     text
   }).then(() => {
@@ -1051,7 +1051,7 @@ app.post('/api/orders/create', async (req, res) => {
   const bearer = String(req.headers.authorization || '').match(/^Bearer (.+)$/);
   if (bearer) {
     try { customerId = (await admin.auth().verifyIdToken(bearer[1])).uid; }
-    catch (e) { return res.status(401).json({ error: 'Your sign-in session expired. Please sign in again.' }); }
+    catch (e) { return res.status(401).json({ error: 'Your session has expired. Please sign in again.' }); }
   }
 
   try {
@@ -1075,20 +1075,20 @@ app.post('/api/orders/create', async (req, res) => {
       const productDocs = await Promise.all(productRefs.map(ref => tx.get(ref)));
       const productsById = {};
       productDocs.forEach((doc, i) => {
-        if (!doc.exists) throw Object.assign(new Error('A product in your bag is no longer available.'), { status: 409 });
+        if (!doc.exists) throw Object.assign(new Error('An item in your bag is no longer available.'), { status: 409 });
         const product = doc.data();
         if (String(product.status || '').toLowerCase() !== 'active') {
-          throw Object.assign(new Error('A product in your bag is no longer available.'), { status: 409 });
+          throw Object.assign(new Error('An item in your bag is no longer available.'), { status: 409 });
         }
         productsById[productIds[i]] = product;
         const expected = itemsByProduct[productIds[i]][0].price;
         if (Math.abs(serverUnitPrice(product) - expected) > 0.001) {
-          throw Object.assign(new Error('A product price just changed. Please review your bag and try again.'), { status: 409 });
+          throw Object.assign(new Error('The price of an item in your bag has changed. Please review your bag before continuing.'), { status: 409 });
         }
       });
       const shortfalls = applyStockChange(tx, productDocs, productRefs, itemsByProduct, -1);
       if (shortfalls.length) {
-        throw Object.assign(new Error('Some items have just sold out or no longer have enough stock: ' + shortfalls.join(', ')), { status: 409 });
+        throw Object.assign(new Error('Some items in your bag are no longer available in the quantity selected: ' + shortfalls.join(', ')), { status: 409 });
       }
       const canonicalItems = priced.items.map(item => {
         const product = productsById[item.productId];
@@ -1133,7 +1133,7 @@ app.post('/api/payfast/initiate', async (req, res) => {
     const order = orderDoc.data();
     if (!hasOrderAccess(req, order)) return res.status(403).json({ error: 'Order access could not be verified' });
     if (order.paymentStatus === 'paid') return res.status(400).json({ error: 'Order already paid' });
-    if (['cancelled', 'failed', 'expired'].includes(order.paymentStatus)) return res.status(400).json({ error: 'This order is no longer open. Please check out again.' });
+    if (['cancelled', 'failed', 'expired'].includes(order.paymentStatus)) return res.status(400).json({ error: 'This order has expired. Please return to your bag to check out again.' });
 
     // Charge what the order really costs, never what the browser wrote.
     let priced;
@@ -1208,7 +1208,7 @@ app.post('/api/payfast/initiate', async (req, res) => {
     res.json({ action: PAYFAST_PROCESS_URL, fields });
   } catch (e) {
     console.error('[PAYFAST_INITIATE] Error:', e.message);
-    res.status(500).json({ error: 'Could not start payment' });
+    res.status(500).json({ error: 'We couldn’t connect to our payment provider. Please try again.' });
   }
 });
 
@@ -1597,7 +1597,7 @@ app.post('/api/discounts/lookup', async (req, res) => {
   const ip = String(req.ip || '');
   const now = Date.now();
   const hits = (discountHits.get(ip) || []).filter((t) => now - t < 15 * 60 * 1000);
-  if (hits.length >= 30) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+  if (hits.length >= 30) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
   hits.push(now);
   discountHits.set(ip, hits);
   const code = String((req.body && req.body.code) || '').replace(/[^A-Za-z0-9_-]/g, '').substring(0, 20);
@@ -1612,7 +1612,7 @@ app.post('/api/discounts/lookup', async (req, res) => {
     res.json({ found: true, discount: out });
   } catch (e) {
     console.error('[DISCOUNT_LOOKUP] Error:', e.message);
-    res.status(500).json({ error: 'Could not check that code. Please try again.' });
+    res.status(500).json({ error: 'We couldn’t verify this code. Please try again.' });
   }
 });
 
@@ -1763,7 +1763,7 @@ app.post('/api/track-order', async (req, res) => {
   const ip = String(req.ip || '');
   const now = Date.now();
   const hits = (trackHits.get(ip) || []).filter((t) => now - t < 15 * 60 * 1000);
-  if (hits.length >= 15) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+  if (hits.length >= 15) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
   hits.push(now);
   trackHits.set(ip, hits);
 
@@ -1811,7 +1811,7 @@ app.post('/api/track-order', async (req, res) => {
     });
   } catch (e) {
     console.error('[TRACK_ORDER]', e.message);
-    res.status(500).json({ error: 'Something went wrong. Please try again.' });
+    res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
   }
 });
 
@@ -2310,7 +2310,7 @@ const CHAT_SYSTEM_PROMPT = `You are the JANEDORE customer support assistant. JAN
 
 app.post('/api/chat-ai-reply', async (req, res) => {
   // Each reply costs a Gemini call: 20 per 10 minutes per IP.
-  if (rateLimited(req, 'chat-ai', 20, 10 * 60 * 1000)) return res.status(429).json({ error: 'Too many messages. Please wait a few minutes.' });
+  if (rateLimited(req, 'chat-ai', 20, 10 * 60 * 1000)) return res.status(429).json({ error: 'Message limit reached. Please try again in a few minutes.' });
   const message = req.body && typeof req.body.message === 'string' ? req.body.message.slice(0, 2000) : req.body && req.body.message;
 
   if (!message || typeof message !== 'string' || !message.trim()) {
@@ -2388,7 +2388,7 @@ app.post('/api/contact', async (req, res) => {
   const ip = String(req.ip || '');
   const now = Date.now();
   const hits = (contactHits.get(ip) || []).filter((t) => now - t < 60 * 60 * 1000);
-  if (hits.length >= 5) return res.status(429).json({ error: 'You’ve sent a few messages already. Please try again later, or email us at support@janedore.co.za.' });
+  if (hits.length >= 5) return res.status(429).json({ error: 'We’ve received several messages from you recently. Please try again later, or email us at support@janedore.co.za.' });
 
   const name = String(body.name || '').trim().substring(0, 100);
   const email = String(body.email || '').trim().toLowerCase().substring(0, 200);
@@ -2398,7 +2398,7 @@ app.post('/api/contact', async (req, res) => {
   if (!name) return res.status(400).json({ error: 'Please enter your name.' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
   if (!topic) return res.status(400).json({ error: 'Please choose a topic.' });
-  if (!message) return res.status(400).json({ error: 'Please write your message.' });
+  if (!message) return res.status(400).json({ error: 'Please enter your message.' });
   hits.push(now);
   contactHits.set(ip, hits);
 

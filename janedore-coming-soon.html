@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Janedore · Coming Soon</title>
+<title>JANEDORE · Coming soon</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -13,14 +13,14 @@
 <meta name="author" content="Janedore">
 <meta name="robots" content="index, follow">
 
-<meta property="og:title" content="Janedore · Coming Soon">
-<meta property="og:description" content="You found us early. A curated, multi-brand fashion house.">
+<meta property="og:title" content="JANEDORE · Coming soon">
+<meta property="og:description" content="Coming soon. A curated, multi-brand fashion house.">
 <meta property="og:image" content="https://janedore.co.za/share-card.png">
 <meta property="og:url" content="https://janedore.co.za">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Janedore · Coming Soon">
-<meta name="twitter:description" content="You found us early.">
+<meta name="twitter:title" content="JANEDORE · Coming soon">
+<meta name="twitter:description" content="Coming soon.">
 <meta name="twitter:image" content="https://janedore.co.za/share-card.png">
 
 <link rel="canonical" href="https://janedore.co.za">
@@ -253,8 +253,8 @@
 </div>
 
 <main id="main" class="main-content">
-  <h1 class="headline">You found us early.</h1>
-  <p class="subhead">We're getting ready to open. Leave your email and you'll be the first to know when we launch.</p>
+  <h1 class="headline">Coming soon</h1>
+  <p class="subhead">JANEDORE launches soon. Sign up to be the first to know when we open.</p>
   <div class="signup-wrapper">
     <div class="signup-row">
       <label for="email-input" class="sr-only">Email address</label>
@@ -399,7 +399,7 @@
           setVisitorLoading(false);
         }
       }).catch(function() {
-        showVisitorMsg('Something went wrong. Please try again.', 'error');
+        showVisitorMsg('We couldn’t complete your request. Please try again.', 'error');
         setVisitorLoading(false);
       });
     }
@@ -502,7 +502,7 @@
         userAgent:    navigator.userAgent,
         referrer:     document.referrer || 'direct'
       }).then(function() {
-        showMsg("You're on the list. We'll be in touch.", 'success');
+        showMsg("Thank you for subscribing. We'll be in touch.", 'success');
         emailEl.value = '';
         setLoading(false);
         fetch('/api/send-welcome-email', {
@@ -516,9 +516,9 @@
     }).catch(function(err) {
       console.error('Newsletter error:', err.code, err.message);
       if (err.code === 'unavailable') {
-        showMsg('No connection. Check your internet and try again.', 'error');
+        showMsg('Unable to connect. Please check your internet connection and try again.', 'error');
       } else {
-        showMsg('Something went wrong. Please try again.', 'error');
+        showMsg('We couldn’t complete your request. Please try again.', 'error');
       }
       setLoading(false);
     });

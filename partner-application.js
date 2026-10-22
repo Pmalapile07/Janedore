@@ -182,7 +182,7 @@ async function submitPartnerStatus(ev) {
   try {
     const res = await fetch('/api/partner-applications/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reference, email }) });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    if (!res.ok) throw new Error(data.error || 'We couldn’t complete your request. Please try again.');
     _paEmail = email;
     document.getElementById('ps-result').innerHTML = partnerStatusHtml(data);
   } catch (e) {
@@ -194,7 +194,7 @@ async function submitPartnerStatus(ev) {
 }
 
 const PA_STATUS_COPY = {
-  received: ['Application received', 'Thank you for applying. Your application is in the queue and will be reviewed by our partnerships team.'],
+  received: ['Application received', 'Thank you for applying. Your application will be reviewed by our partnerships team in due course.'],
   under_review: ['Your application is under review', 'Our partnerships team is reviewing your application against our partnership criteria. We will email you as soon as a decision has been made.'],
   accepted: ['Your application has been accepted', 'Welcome to JANEDORE. A member of our partnerships team will be in touch to agree commercial terms and begin onboarding.'],
   conditional: ['Accepted with conditions', 'We see real potential in your brand and would like to welcome you to JANEDORE. The changes below are required before we can begin onboarding. Once you have made them, reply to your decision email with an update and our team will review it.'],
@@ -258,7 +258,7 @@ function pickPartnerImages() {
       _paUploading++;
       drawPartnerImages();
       uploadChatImageToCloudinary(file).then(url => { _paImages.push(url); })
-        .catch(() => partnerError('An image didn’t upload. Please try again.'))
+        .catch(() => partnerError('One of your images could not be uploaded. Please try again.'))
         .finally(() => { _paUploading--; drawPartnerImages(); });
     });
   };
@@ -285,7 +285,7 @@ async function submitPartnerApplication(ev) {
   const problem =
     !p.contactName ? ['Please enter your full name.', 'pa-name'] :
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email) ? ['Please enter a valid business email address.', 'pa-email'] :
-    p.phone.replace(/\D/g, '').length < 7 ? ['Please enter a contact number we can reach you on.', 'pa-phone'] :
+    p.phone.replace(/\D/g, '').length < 7 ? ['Please enter a valid contact number.', 'pa-phone'] :
     !p.brandName ? ['Please enter your brand name.', 'pa-brand'] :
     !looksLikeUrl(p.website) ? ['Please check your website address.', 'pa-website'] :
     !p.primaryCategory ? ['Please choose your primary product category.', 'pa-category'] :

@@ -83,14 +83,14 @@ async function submitTrackOrder(e) {
   try {
     const res = await fetch('/api/track-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderNumber, email }) });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) { showError(data.error || 'Something went wrong. Please try again.'); return; }
+    if (!res.ok) { showError(data.error || 'We couldn’t complete your request. Please try again.'); return; }
     if (S.currentContentSlug !== TRACK_ORDER_SLUG) return;
     document.getElementById('track-form').style.display = 'none';
     document.querySelector('.track-intro').style.display = 'none';
     document.getElementById('track-result').innerHTML = trackResultHtml(data);
     resetScrollToTop();
   } catch (err) {
-    showError('No connection. Check your internet and try again.');
+    showError('Unable to connect. Please check your internet connection and try again.');
   } finally {
     btn.disabled = false; btn.textContent = 'Track order';
   }

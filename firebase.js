@@ -149,10 +149,10 @@ async function subscribeNewsletter(email) {
     const input = document.getElementById('newsletter-email');
     if (input) {
       input.value = '';
-      input.placeholder = 'Subscribed!';
+      input.placeholder = 'Thank you for subscribing';
       setTimeout(() => { input.placeholder = 'Enter your email'; }, 2000);
     }
-    // Let them see the "Subscribed!" confirmation before the popup closes.
+    // Let them see the "Thank you for subscribing" confirmation before the popup closes.
     if (window.dismissNewsletterPopup) setTimeout(window.dismissNewsletterPopup, 1200);
   } catch (e) {
     console.warn("Firebase newsletter save failed:", e);

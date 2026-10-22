@@ -25,7 +25,7 @@ function returnsSavedEmail() {
 // Shown under both the Start a return and Check return status tabs.
 const RETURNS_POLICY_HTML = `<div class="track-notice returns-policy">
       <strong>How returns work</strong><br>
-      1. Tell us what you’d like to return, why, and add photos.<br>
+      1. Select the items you wish to return, give a reason and add photos.<br>
       2. We review your request, together with the brand, and email you our decision.<br>
       3. If approved, we’ll explain how to send the item back. Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.<br>
       4. Once we’ve received and checked the item, we refund you to your original payment method.
@@ -91,7 +91,7 @@ function renderReturnsPage(tab) {
 async function returnsPost(path, payload) {
   const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  if (!res.ok) throw new Error(data.error || 'We couldn’t complete your request. Please try again.');
   return data;
 }
 
@@ -152,7 +152,7 @@ function renderReturnForm() {
         ${qty}
         <label class="track-label" for="rr-${it.index}">Reason for return</label>
         <select class="track-input" id="rr-${it.index}"><option value="">Choose a reason</option>${reasons}</select>
-        <label class="track-label" for="rd-${it.index}">Tell us more</label>
+        <label class="track-label" for="rd-${it.index}">Additional details</label>
         <textarea class="track-input return-textarea" id="rd-${it.index}" maxlength="1000" placeholder="Describe the issue, e.g. the fit, the fault, or what was different from the description."></textarea>
       </div>
     </div>`;
@@ -164,13 +164,13 @@ function renderReturnForm() {
     ${anyEligible ? `<div class="account-section-title return-photos-title">Photos</div>
     <p class="account-note return-note">Add up to ${RETURN_PHOTO_MAX} clear photos of the item, showing any damage or fault, and the label or tags.</p>
     <div class="return-photos" id="return-photos"></div>
-    <label class="track-label" for="return-note">Anything else we should know? (optional)</label>
+    <label class="track-label" for="return-note">Additional notes (optional)</label>
     <textarea class="track-input return-textarea" id="return-note" maxlength="1000"></textarea>
     <div class="track-error" id="rsub-error" role="alert"></div>
     <button type="button" class="track-btn" id="rsub-btn" onclick="submitReturnRequest()">Submit return request</button>
     <p class="track-hint">Please don’t send anything back yet. We’ll email you instructions once your request has been reviewed.</p>`
-    : `<div class="track-notice">None of the items on this order can be returned at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`}
-    <button type="button" class="track-another" onclick="renderReturnsPage('start')">Use a different order</button>`;
+    : `<div class="track-notice">None of the items on this order can be returned at the moment. If you believe this is incorrect, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`}
+    <button type="button" class="track-another" onclick="renderReturnsPage('start')">Find another order</button>`;
   drawReturnPhotos();
 }
 
@@ -203,7 +203,7 @@ function pickReturnPhotos() {
       _returnUploading++;
       drawReturnPhotos();
       uploadChatImageToCloudinary(file).then(url => { _returnPhotos.push(url); })
-        .catch(() => returnsError('rsub-error', 'A photo didn’t upload. Please try again.'))
+        .catch(() => returnsError('rsub-error', 'One of your photos could not be uploaded. Please try again.'))
         .finally(() => { _returnUploading--; drawReturnPhotos(); });
     });
   };
@@ -222,7 +222,7 @@ async function submitReturnRequest() {
     const details = document.getElementById('rd-' + i).value.trim();
     const qtyEl = document.getElementById('rq-' + i);
     if (!reason) { returnsError('rsub-error', 'Please choose a reason for ' + trackPlainText(it.name) + '.'); return; }
-    if (!details) { returnsError('rsub-error', 'Please tell us more about the issue with ' + trackPlainText(it.name) + '.'); return; }
+    if (!details) { returnsError('rsub-error', 'Please describe the issue with ' + trackPlainText(it.name) + '.'); return; }
     items.push({ index: i, qty: qtyEl ? Number(qtyEl.value) : 1, reason, details });
   }
   if (!items.length) { returnsError('rsub-error', 'Please choose at least one item to return.'); return; }

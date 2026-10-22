@@ -142,7 +142,7 @@ function totalsBlock(order, headLabel) {
   return rows(
     row(headLabel || 'Total paid', money(order.total), { big: true, bold: true }) +
     divider() +
-    row('Cart total', money(order.subtotal)) +
+    row('Subtotal', money(order.subtotal)) +
     (discount > 0 ? row('Discount' + (order.discountCode ? ' (' + esc(order.discountCode) + ')' : ''), '-' + money(discount), { color: GREEN, semi: true }) : '') +
     row('Delivery fee', Number(order.shipping) ? money(order.shipping) : 'Free')
   );
@@ -163,9 +163,9 @@ const SUPPORT_FOOTER = 'Questions about your order? Reply to this email or write
 
 function textTotals(order) {
   const discount = Number(order.discountAmount) || 0;
-  return 'Cart total: ' + money(order.subtotal) +
+  return 'Subtotal: ' + money(order.subtotal) +
     (discount > 0 ? '\nDiscount' + (order.discountCode ? ' (' + order.discountCode + ')' : '') + ': -' + money(discount) : '') +
-    '\nDelivery Fee: ' + (Number(order.shipping) ? money(order.shipping) : 'Free') +
+    '\nDelivery fee: ' + (Number(order.shipping) ? money(order.shipping) : 'Free') +
     '\nTotal: ' + money(order.total);
 }
 
@@ -214,13 +214,13 @@ function customerConfirmation(order, ctx) {
   const items = order.items || [];
   const count = items.reduce((a, i) => a + (Number(i.qty) || 1), 0);
   const brands = [...new Set(items.map(i => i.brand).filter(Boolean))];
-  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const num = order.orderNumber || '';
 
   const thanks =
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:8px 0 4px;">' +
       '<div style="width:56px;height:56px;line-height:56px;border-radius:28px;background:' + GREEN + ';color:#111111;font-size:28px;text-align:center;margin:0 auto 16px;">&#10003;</div>' +
-      '<div style="font-size:22px;font-weight:700;line-height:1.3;color:#111111;">Thank you, ' + esc(first) + '</div>' +
+      '<div style="font-size:22px;font-weight:700;line-height:1.3;color:#111111;">Thank you' + (first ? ', ' + esc(first) : '') + '</div>' +
       '<div style="font-size:14px;line-height:1.5;color:#555555;margin:8px auto 0;max-width:380px;">Your payment was successful and your order has been confirmed. We\'ll send a shipping confirmation once your order has been dispatched.</div>' +
       '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:20px;">Order #' + esc(num) + '</div>' +
       '<div style="font-size:13px;color:#777777;margin-top:4px;">' + esc(orderDate(order)) + '</div>' +
@@ -247,7 +247,7 @@ function customerConfirmation(order, ctx) {
     footerHtml: SUPPORT_FOOTER
   });
 
-  const text = 'Thank you, ' + first + '. Your order is confirmed.\n\nOrder #' + num + ' · ' + orderDate(order) +
+  const text = 'Thank you' + (first ? ', ' + first : '') + '. Your order is confirmed.\n\nOrder #' + num + ' · ' + orderDate(order) +
     '\n\n' + textItems(items) + '\n\n' + textTotals(order) +
     '\n\nDelivering to:\n' + [order.customerName].concat(addressLines(order)).join('\n') +
     '\n\nView your order: ' + viewOrderUrl(ctx, num) +
@@ -329,10 +329,10 @@ function vendorNewOrder(order, ctx, vendor, items) {
 function shipped(order, ctx, items, opts) {
   opts = opts || {};
   const num = order.orderNumber || '';
-  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const intro = opts.complete
-    ? 'good news: your order has been dispatched.'
-    : 'good news: part of your order has been dispatched. The remaining items will ship separately, as each brand dispatches from its own warehouse.';
+    ? 'your order has been dispatched.'
+    : 'part of your order has been dispatched. The remaining items will be shipped separately by their respective brands.';
   const tracking = opts.tracking || {};
   const courierUrl = courierTrackingUrl(tracking.courier, tracking.trackingNumber);
   const trackingCard = tracking.trackingNumber
@@ -352,16 +352,16 @@ function shipped(order, ctx, items, opts) {
     preheader: intro,
     bannerHtml: '<strong>' + esc(opts.heading || 'Your order has shipped') + '</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + intro + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + intro + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
       trackingCard + button('Track your order', trackUrl),
-      title('On its way') + itemsBlock(items, ctx, { hidePrice: true }),
+      title('Items in this shipment') + itemsBlock(items, ctx, { hidePrice: true }),
       title('Delivering to') + addressBlock(order)
     ].filter(Boolean),
     footerHtml: SUPPORT_FOOTER
   });
 
-  const text = (opts.heading || 'Your order has shipped') + '\n\nHi ' + first + ', ' + intro + '\n\n' + textItems(items, true) +
+  const text = (opts.heading || 'Your order has shipped') + '\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\n' + textItems(items, true) +
     (tracking.trackingNumber ? '\n\n' + (tracking.courier ? tracking.courier + ': ' : '') + tracking.trackingNumber : '') +
     '\n\nOrder #' + num + '\nTrack your order: ' + trackUrl + '\n\nQuestions? support@janedore.co.za';
 
@@ -431,7 +431,7 @@ function returnStatusUrl(ctx, ret) {
 
 // Customer: we have your request.
 function returnRequested(ret, ctx) {
-  const first = String(ret.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(ret.customerName || '').trim().split(/\s+/)[0] || '';
   const intro = 'we’ve received your return request for order #' + (ret.orderNumber || '') + '. Our team will review it and email you with the next steps. Please keep the item, with its tags and packaging, until then.';
   const html = shell({
     logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
@@ -439,7 +439,7 @@ function returnRequested(ret, ctx) {
     preheader: 'Return ' + ret.returnNumber + ' for order #' + ret.orderNumber + ' is under review.',
     bannerHtml: '<strong>Return request received</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(intro) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Return ' + esc(ret.returnNumber) + '</div>' +
         '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ret.orderNumber) + '</div>' +
         button('Check return status', returnStatusUrl(ctx, ret)),
@@ -448,7 +448,7 @@ function returnRequested(ret, ctx) {
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = 'Return request received\n\nHi ' + first + ', ' + intro + '\n\nReturn ' + ret.returnNumber + '\nOrder #' + ret.orderNumber + '\n\n' + returnTextItems(ret) +
+  const text = 'Return request received\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\nReturn ' + ret.returnNumber + '\nOrder #' + ret.orderNumber + '\n\n' + returnTextItems(ret) +
     '\n\nCheck return status: ' + returnStatusUrl(ctx, ret);
   return { subject: 'Return request received (' + ret.returnNumber + ')', html, text };
 }
@@ -484,7 +484,7 @@ function returnForStaff(ret, ctx, opts) {
 
 // Customer: each step after review.
 function returnUpdate(ret, ctx, stage) {
-  const first = String(ret.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(ret.customerName || '').trim().split(/\s+/)[0] || '';
   const amount = money(ret.refundAmount || 0);
   const shipping = ret.approval && ret.approval.shipping;
   const copy = {
@@ -509,7 +509,7 @@ function returnUpdate(ret, ctx, stage) {
     preheader: copy[0] + ' (' + ret.returnNumber + ')',
     bannerHtml: '<strong>' + esc(copy[0]) + '</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(copy[1]) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(copy[1]) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Return ' + esc(ret.returnNumber) + '</div>' +
         '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ret.orderNumber) + '</div>' +
         button('Check return status', returnStatusUrl(ctx, ret)),
@@ -519,7 +519,7 @@ function returnUpdate(ret, ctx, stage) {
     ].filter(Boolean),
     footerHtml: SUPPORT_FOOTER
   });
-  const text = copy[0] + '\n\nHi ' + first + ', ' + copy[1] +
+  const text = copy[0] + '\n\nHi' + (first ? ' ' + first : '') + ', ' + copy[1] +
     (stage === 'declined' ? '\n\nReason: ' + (ret.declineReason || '') : '') +
     (stage === 'approved' && ret.approval && ret.approval.message ? '\n\n' + ret.approval.message : '') +
     '\n\nReturn ' + ret.returnNumber + '\n' + returnTextItems(ret) + '\n\nCheck return status: ' + returnStatusUrl(ctx, ret);
@@ -555,16 +555,16 @@ function exchangeStatusUrl(ctx, ex) {
 }
 function exchangePostageLine(postage) {
   return postage === 'janedore'
-    ? 'Postage for this exchange is on us: we’ll arrange collection of the item and send your new one at no cost to you.'
+    ? 'We’ll cover the delivery costs for this exchange: a courier will collect the item and your replacement will be sent at no cost to you.'
     : 'Postage for this exchange is at your cost: sending the item back, and delivery of your new item.';
 }
 
 // Customer: we have your request.
 function exchangeRequested(ex, ctx) {
-  const first = String(ex.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(ex.customerName || '').trim().split(/\s+/)[0] || '';
   const intro = 'we’ve received your exchange request for order #' + (ex.orderNumber || '') + '. Our team will review it with the brand and email you with the next steps. Please keep the item, with its tags and packaging, until then.';
   const postage = ex.postage === 'janedore'
-    ? 'As the reason you gave is on our side, postage for this exchange should be on us. We’ll confirm this when we review your request.'
+    ? 'As the issue appears to be on our side, delivery costs for this exchange are expected to be covered by JANEDORE. We’ll confirm this once your request has been reviewed.'
     : 'As the item was sent as ordered, postage for this exchange is at your cost. We’ll confirm the details when we review your request.';
   const html = shell({
     logoUrl: ctx.logoUrl, logoFontUrl: ctx.logoFontUrl,
@@ -572,7 +572,7 @@ function exchangeRequested(ex, ctx) {
     preheader: 'Exchange ' + ex.exchangeNumber + ' for order #' + ex.orderNumber + ' is under review.',
     bannerHtml: '<strong>Exchange request received</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(intro) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Exchange ' + esc(ex.exchangeNumber) + '</div>' +
         '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ex.orderNumber) + '</div>' +
         button('Check exchange status', exchangeStatusUrl(ctx, ex)),
@@ -581,7 +581,7 @@ function exchangeRequested(ex, ctx) {
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = 'Exchange request received\n\nHi ' + first + ', ' + intro + '\n\nExchange ' + ex.exchangeNumber + '\nOrder #' + ex.orderNumber + '\n\n' + exchangeTextItems(ex) +
+  const text = 'Exchange request received\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\nExchange ' + ex.exchangeNumber + '\nOrder #' + ex.orderNumber + '\n\n' + exchangeTextItems(ex) +
     '\n\n' + postage + ' Please don’t send anything back yet.\n\nCheck exchange status: ' + exchangeStatusUrl(ctx, ex);
   return { subject: 'Exchange request received (' + ex.exchangeNumber + ')', html, text };
 }
@@ -618,7 +618,7 @@ function exchangeForStaff(ex, ctx, opts) {
 
 // Customer: each step after review.
 function exchangeUpdate(ex, ctx, stage) {
-  const first = String(ex.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(ex.customerName || '').trim().split(/\s+/)[0] || '';
   const postage = ex.approval && ex.approval.postage;
   const copy = {
     approved: ['Your exchange has been approved', 'your exchange ' + ex.exchangeNumber + ' has been approved and your new item has been set aside for you. ' +
@@ -641,7 +641,7 @@ function exchangeUpdate(ex, ctx, stage) {
     preheader: copy[0] + ' (' + ex.exchangeNumber + ')',
     bannerHtml: '<strong>' + esc(copy[0]) + '</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(copy[1]) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(copy[1]) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Exchange ' + esc(ex.exchangeNumber) + '</div>' +
         '<div style="font-size:13px;color:#777777;margin-top:4px;">Order #' + esc(ex.orderNumber) + '</div>' +
         button('Check exchange status', exchangeStatusUrl(ctx, ex)),
@@ -650,7 +650,7 @@ function exchangeUpdate(ex, ctx, stage) {
     ].filter(Boolean),
     footerHtml: SUPPORT_FOOTER
   });
-  const text = copy[0] + '\n\nHi ' + first + ', ' + copy[1] +
+  const text = copy[0] + '\n\nHi' + (first ? ' ' + first : '') + ', ' + copy[1] +
     (stage === 'declined' ? '\n\nReason: ' + (ex.declineReason || '') : '') +
     (stage === 'approved' && ex.approval && ex.approval.message ? '\n\n' + ex.approval.message : '') +
     (stage === 'dispatched' ? '\n\nCourier: ' + (d.courier || '') + '\nTracking number: ' + (d.trackingNumber || '') : '') +
@@ -662,7 +662,7 @@ function exchangeUpdate(ex, ctx, stage) {
 // /api/orders/:id/notify-status). trackings: packages that already have
 // a tracking number.
 const STATUS_EMAIL_COPY = {
-  processing: ['Your order is being processed', 'we’re getting your order ready. We’ll let you know when it has been packed.'],
+  processing: ['Your order is being processed', 'your order is being prepared. We’ll notify you once it has been packed.'],
   packed: ['Your order has been packed', 'your order has been packed and is waiting for the courier. We’ll send tracking details once it has been dispatched.'],
   shipped: ['Your order is on its way', 'your order has been handed to the courier and is on its way to you.'],
   delivered: ['Your order has been delivered', 'your order has been delivered. We hope you love it. Items can be returned or exchanged within 30 days of dispatch.']
@@ -670,7 +670,7 @@ const STATUS_EMAIL_COPY = {
 function statusUpdate(order, ctx, status, trackings) {
   const copy = STATUS_EMAIL_COPY[status];
   const num = order.orderNumber || '';
-  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const tracked = (trackings || []).filter(t => t.trackingNumber);
   const trackingCard = status === 'shipped' && tracked.length
     ? title('Tracking') + rows(tracked.map(t => {
@@ -686,7 +686,7 @@ function statusUpdate(order, ctx, status, trackings) {
     preheader: 'Order #' + num + ': ' + copy[0].toLowerCase() + '.',
     bannerHtml: '<strong>' + esc(copy[0]) + '</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(copy[1]) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(copy[1]) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
       trackingCard + button('View order', viewOrderUrl(ctx, num)),
       title('Your items') + itemsBlock(order.items || [], ctx, { hidePrice: true }),
@@ -694,7 +694,7 @@ function statusUpdate(order, ctx, status, trackings) {
     ].filter(Boolean),
     footerHtml: SUPPORT_FOOTER
   });
-  const text = copy[0] + '\n\nHi ' + first + ', ' + copy[1] + '\n\n' + textItems(order.items || [], true) +
+  const text = copy[0] + '\n\nHi' + (first ? ' ' + first : '') + ', ' + copy[1] + '\n\n' + textItems(order.items || [], true) +
     tracked.map(t => '\n' + (t.courier ? t.courier + ': ' : '') + t.trackingNumber).join('') +
     '\n\nOrder #' + num + '\nView your order: ' + viewOrderUrl(ctx, num) + '\n\nQuestions? support@janedore.co.za';
   return { subject: copy[0] + ' (order #' + num + ')', html, text };
@@ -704,7 +704,7 @@ function statusUpdate(order, ctx, status, trackings) {
 // it is being processed; nothing claims the money has moved yet.
 function refundStarted(order, ctx) {
   const num = order.orderNumber || '';
-  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const amount = Number(order.refundAmount || order.total) || 0;
   const intro = 'we’re processing a refund of ' + money(amount) + ' for your order #' + num + '. We’ll email you again as soon as the refund has been completed.';
   const html = shell({
@@ -714,7 +714,7 @@ function refundStarted(order, ctx) {
     preheader: 'Your refund of ' + money(amount) + ' for order #' + num + ' is being processed.',
     bannerHtml: '<strong>We’re processing your refund</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(intro) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
       title('Refund summary') + rows(
         row('Refund amount', money(amount), { big: true, bold: true }) +
@@ -726,7 +726,7 @@ function refundStarted(order, ctx) {
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = 'We’re processing your refund\n\nHi ' + first + ', ' + intro + '\n\nRefund amount: ' + money(amount) + '\nStatus: In progress' +
+  const text = 'We’re processing your refund\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\nRefund amount: ' + money(amount) + '\nStatus: In progress' +
     '\n\n' + textItems(order.items || [], false) + '\n\nQuestions? support@janedore.co.za';
   return { subject: 'We’re processing your refund (order #' + num + ')', html, text };
 }
@@ -735,7 +735,7 @@ function refundStarted(order, ctx) {
 // PayFast. server.js /api/orders/:id/notify-refunded sends both.
 function refunded(order, ctx) {
   const num = order.orderNumber || '';
-  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const amount = Number(order.refundAmount || order.total) || 0;
   const intro = 'your refund of ' + money(amount) + ' for order #' + num + ' has been completed and returned to your original payment method. Depending on your bank, it can take up to 10 business days to reflect in your account.';
   const html = shell({
@@ -745,7 +745,7 @@ function refunded(order, ctx) {
     preheader: 'A refund of ' + money(amount) + ' for order #' + num + ' has been processed.',
     bannerHtml: '<strong>Your refund has been processed</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(intro) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
       title('Refund summary') + rows(
         row('Refund amount', money(amount), { big: true, bold: true }) +
@@ -757,7 +757,7 @@ function refunded(order, ctx) {
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = 'Your refund has been processed\n\nHi ' + first + ', ' + intro + '\n\nRefund amount: ' + money(amount) +
+  const text = 'Your refund has been processed\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\nRefund amount: ' + money(amount) +
     '\n\n' + textItems(order.items || [], false) + '\n\nQuestions? support@janedore.co.za';
   return { subject: 'Your refund has been processed (order #' + num + ')', html, text };
 }
@@ -767,7 +767,7 @@ function refunded(order, ctx) {
 function preorderDateChanged(order, ctx, items, opts) {
   opts = opts || {};
   const num = order.orderNumber || '';
-  const first = String(order.customerName || '').trim().split(/\s+/)[0] || 'there';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const newDate = shipByDate(opts.newDate);
   const oldDate = shipByDate(opts.oldDate);
   const intro = 'the estimated dispatch date for your pre-order from ' + (opts.brand || 'the brand') + ' has been updated' +
@@ -780,7 +780,7 @@ function preorderDateChanged(order, ctx, items, opts) {
     preheader: intro,
     bannerHtml: '<strong>Update to your pre-order</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', ' + esc(intro) + '</div>' +
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(intro) + '</div>' +
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
       title('Estimated dispatch') + rows(
         (oldDate ? row('Previous', esc(oldDate), { semi: true }) : '') +
@@ -790,7 +790,7 @@ function preorderDateChanged(order, ctx, items, opts) {
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = 'Update to your pre-order\n\nHi ' + first + ', ' + intro + (oldDate ? '\nPrevious: ' + oldDate : '') +
+  const text = 'Update to your pre-order\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + (oldDate ? '\nPrevious: ' + oldDate : '') +
     '\n\n' + textItems(items, true) + '\n\nOrder #' + num + '\nTrack your order: ' + trackUrl +
     '\n\nNo action is required. If the revised date doesn’t suit you, reply to this email and our team will assist you.';
   return { subject: 'Update to your pre-order (order #' + num + ')', html, text };
@@ -824,7 +824,7 @@ function reportReceived(report, ctx) {
   const text = 'Report received\n\nThank you for your report about ' + brand +
     '. Our marketplace team will review it and take appropriate action, and will contact you if further details are required. All reports are handled in strict confidence.\n\nBrand: ' + brand +
     '\nReason: ' + report.reason + (report.details ? '\n\n' + report.details : '') +
-    '\n\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently Asked Questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
+    '\n\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently asked questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
   return { subject: 'Your report about ' + brand + ' has been received', html, text };
 }
 
@@ -858,11 +858,11 @@ function contactReceived(m, ctx) {
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
-    title: 'We received your message',
+    title: 'We’ve received your message',
     preheader: 'Thank you for contacting Janedore customer care. We’ll reply to you at this email address.',
-    bannerHtml: '<strong>We received your message</strong>',
+    bannerHtml: '<strong>We’ve received your message</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi ' + esc(first) + ', thank you for contacting Janedore customer care. We’ll reply to you at this email address.</div>',
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', thank you for contacting Janedore customer care. We’ll reply to you at this email address.</div>',
       title('Your message') + rows(
         (m.orderNumber ? row('Order', esc(m.orderNumber), { semi: true }) : '') +
         row('Topic', esc(m.topic), { semi: true })) +
@@ -875,10 +875,10 @@ function contactReceived(m, ctx) {
     ],
     footerHtml: 'Anything to add? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
-  const text = 'We received your message\n\nHi ' + first + ', thank you for contacting Janedore customer care. We’ll reply to you at this email address.\n\n' +
+  const text = 'We’ve received your message\n\nHi' + (first ? ' ' + first : '') + ', thank you for contacting Janedore customer care. We’ll reply to you at this email address.\n\n' +
     (m.orderNumber ? 'Order: ' + m.orderNumber + '\n' : '') + 'Topic: ' + m.topic + '\n\n' + m.message +
-    '\n\nTrack your order: ' + ctx.siteUrl + '/pages/track-your-order\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently Asked Questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
-  return { subject: 'We received your message', html, text };
+    '\n\nTrack your order: ' + ctx.siteUrl + '/pages/track-your-order\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently asked questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
+  return { subject: 'We’ve received your message', html, text };
 }
 
 // Partner application (/api/partner-applications): the team's copy and
@@ -1057,7 +1057,7 @@ function backInStock(item, ctx, links) {
   const status = item.preorder ? 'is available to pre-order again' : 'is back in stock';
   const first = String((links && links.name) || '').trim().split(/\s+/)[0];
   const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
-  const intro = 'good news: ' + (item.name || 'the item you were waiting for') + (what ? ' in ' + what : '') + ' ' + status + '. Quantities are limited and aren’t reserved for you, so order soon if you’d still like it.';
+  const intro = (item.name || 'the item you were waiting for') + (what ? ' in ' + what : '') + ' ' + status + '. Quantities are limited and cannot be reserved, so we recommend ordering soon.';
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
@@ -1068,7 +1068,7 @@ function backInStock(item, ctx, links) {
       '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi + intro) + '</div>',
       title('Your waitlist item') + itemsBlock([item], ctx, { hidePrice: true }) + button('View item', links.productUrl)
     ],
-    footerHtml: 'You’re receiving this because you joined the waitlist for this item. We only email once per waitlist.<br>Janedore · janedore.co.za'
+    footerHtml: 'You’re receiving this email because you joined the waitlist for this item. This is a one-time notification.<br>Janedore · janedore.co.za'
   });
   const text = heading + '\n\n' + hi + intro + '\n\n' + (item.name || '') + (item.brand ? ' (' + item.brand + ')' : '') + (what ? ', ' + what : '') + '\n\nView item: ' + links.productUrl;
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };

@@ -23,7 +23,7 @@ const EXCHANGE_POLICY_HTML = `<div class="track-notice returns-policy">
       <strong>How exchanges work</strong><br>
       1. Choose the item, the size or colour you’d like instead, and tell us why.<br>
       2. We review your request with the brand and email you our decision. Once approved, your new item is set aside for you.<br>
-      3. Send the item back as instructed. If we sent the wrong size or item, or it arrived damaged or faulty, postage is on us. If the item was sent as ordered, postage both ways is at your cost.<br>
+      3. Send the item back as instructed. If we sent the wrong size or item, or it arrived damaged or faulty, we will cover the delivery costs. If the item was sent as ordered, delivery costs in both directions are at your expense.<br>
       4. Once the brand has received the item, your new one is dispatched with tracking.
     </div>`;
 
@@ -92,7 +92,7 @@ function exchangesError(id, msg) {
 async function exchangesPost(path, payload) {
   const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  if (!res.ok) throw new Error(data.error || 'We couldn’t complete your request. Please try again.');
   return data;
 }
 
@@ -145,7 +145,7 @@ function drawExchangeSizes(index) {
       : `<input type="hidden" id="xs-${index}" value=""><p class="return-blocked">This colour is out of stock at the moment.</p>`;
     return;
   }
-  box.innerHTML = `<label class="track-label" for="xs-${index}">Size you’d like</label>
+  box.innerHTML = `<label class="track-label" for="xs-${index}">Preferred size</label>
     <select class="track-input" id="xs-${index}"><option value="">Choose a size</option>${sizes.map(s => `<option value="${escapeHTML(s.size)}"${s.inStock ? '' : ' disabled'}>${escapeHTML(s.size)}${s.inStock ? '' : ' (out of stock)'}</option>`).join('')}</select>`;
 }
 
@@ -155,7 +155,7 @@ function exchangePostageHint(index) {
   if (!hint) return;
   if (!reason) { hint.textContent = ''; return; }
   hint.textContent = (_exchangeLookup.ourFault || []).includes(reason)
-    ? 'Postage is on us for this exchange. Please add photos showing the issue.'
+    ? 'Delivery costs for this exchange will be covered by JANEDORE. Please add photos showing the issue.'
     : 'As the item was sent as ordered, postage both ways is at your cost.';
 }
 
@@ -189,7 +189,7 @@ function renderExchangeForm() {
         <label class="track-label" for="xr-${it.index}">Reason for exchange</label>
         <select class="track-input" id="xr-${it.index}" onchange="exchangePostageHint(${it.index})"><option value="">Choose a reason</option>${reasons}</select>
         <p class="track-hint exchange-postage" id="xp-${it.index}" aria-live="polite"></p>
-        <label class="track-label" for="xd-${it.index}">Tell us more (optional)</label>
+        <label class="track-label" for="xd-${it.index}">Additional details (optional)</label>
         <textarea class="track-input return-textarea" id="xd-${it.index}" maxlength="1000" placeholder="For example, how the fit felt, or what was wrong with the item."></textarea>
       </div>
     </div>`;
@@ -201,13 +201,13 @@ function renderExchangeForm() {
     ${anyEligible ? `<div class="account-section-title return-photos-title">Photos</div>
     <p class="account-note return-note">Required if we sent the wrong size or item, or it arrived damaged or faulty. Add up to ${EXCHANGE_PHOTO_MAX} clear photos of the item and its label or tags.</p>
     <div class="return-photos" id="exchange-photos"></div>
-    <label class="track-label" for="exchange-note">Anything else we should know? (optional)</label>
+    <label class="track-label" for="exchange-note">Additional notes (optional)</label>
     <textarea class="track-input return-textarea" id="exchange-note" maxlength="1000"></textarea>
     <div class="track-error" id="xsub-error" role="alert"></div>
     <button type="button" class="track-btn" id="xsub-btn" onclick="submitExchangeRequest()">Submit exchange request</button>
     <p class="track-hint">Please don’t send anything back yet. We’ll email you instructions once your request has been reviewed.</p>`
-    : `<div class="track-notice">None of the items on this order can be exchanged at the moment. If you think this is a mistake, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`}
-    <button type="button" class="track-another" onclick="renderExchangesPage('start')">Use a different order</button>`;
+    : `<div class="track-notice">None of the items on this order can be exchanged at the moment. If you believe this is incorrect, please <span class="track-link" onclick="navigateToContentPage('customer-care')">contact customer care</span>.</div>`}
+    <button type="button" class="track-another" onclick="renderExchangesPage('start')">Find another order</button>`;
   d.items.forEach(it => { if (it.eligible && (it.options || []).length) drawExchangeSizes(it.index); });
   drawExchangePhotos();
 }
@@ -241,7 +241,7 @@ function pickExchangePhotos() {
       _exchangeUploading++;
       drawExchangePhotos();
       uploadChatImageToCloudinary(file).then(url => { _exchangePhotos.push(url); })
-        .catch(() => exchangesError('xsub-error', 'A photo didn’t upload. Please try again.'))
+        .catch(() => exchangesError('xsub-error', 'One of your photos could not be uploaded. Please try again.'))
         .finally(() => { _exchangeUploading--; drawExchangePhotos(); });
     });
   };
@@ -328,7 +328,7 @@ function exchangeWantText(it) {
 function exchangeStatusHtml(x) {
   const declined = x.status === 'declined';
   const reached = { submitted: 0, approved: 1, received: 2, dispatched: 3, closed: 3 }[x.status] || 0;
-  const labels = declined ? ['Request received', 'Reviewed', 'Declined'] : ['Request received', 'Approved', 'Item received', 'New item sent'];
+  const labels = declined ? ['Request received', 'Reviewed', 'Declined'] : ['Request received', 'Approved', 'Item received', 'Replacement dispatched'];
   const steps = labels.map((label, i) => {
     const state = declined || i <= reached ? 'done' : i === reached + 1 ? 'current' : '';
     return `<div class="track-step ${state}"><span class="track-step-dot">${state === 'done' ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}</span><span class="track-step-label">${label}</span></div>`;
@@ -338,7 +338,7 @@ function exchangeStatusHtml(x) {
     received: 'We’ve received your item', dispatched: 'Your new item is on its way', closed: 'Exchange closed'
   }[x.status] || 'Your exchange';
   const postage = x.postage === 'janedore'
-    ? 'Postage is on us: we’ll arrange collection of the item and send your new one at no cost to you.'
+    ? 'We’ll arrange collection of the item and send your replacement at no cost to you.'
     : 'Postage both ways is at your cost.';
   const notice = {
     submitted: 'We’re reviewing your request with the brand and will email you our decision. Please don’t send anything back yet.',

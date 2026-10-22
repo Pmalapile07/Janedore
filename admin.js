@@ -820,7 +820,7 @@
       if (errorEl) {
         var msg = 'That email and password don\u2019t match. If you have also signed in to the shop with Google using this email, use Forgot password to set a new one.';
         if (err.code === 'auth/too-many-requests') msg = 'Too many failed attempts. Please wait a few minutes, or use Forgot password.';
-        if (err.code === 'auth/network-request-failed') msg = 'No connection. Check your internet and try again.';
+        if (err.code === 'auth/network-request-failed') msg = 'Unable to connect. Please check your internet connection and try again.';
         errorEl.textContent = msg; errorEl.style.display = 'block';
       }
       if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Sign In'; }
@@ -856,7 +856,7 @@
       var code = (err && err.code) || 'unknown';
       if (errorEl) {
         errorEl.textContent = code === 'auth/too-many-requests' ? 'Too many requests. Please wait a few minutes and try again.'
-          : code === 'auth/network-request-failed' ? 'No connection. Check your internet and try again.'
+          : code === 'auth/network-request-failed' ? 'Unable to connect. Please check your internet connection and try again.'
           : 'We couldn\u2019t send the email (' + code + '). Please try again, or send this message to your developer.';
         errorEl.style.display = 'block';
       }

@@ -109,7 +109,7 @@ module.exports = function registerExchanges(app, deps, shared) {
   // ---- customer: find order ----
   app.post('/api/exchanges/lookup', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (limited(req, 20)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (limited(req, 20)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const orderNumber = cleanNumber(req.body && req.body.orderNumber);
     const email = cleanEmail(req.body && req.body.email);
     if (!orderNumber || !email) return res.status(400).json({ error: 'Please enter your order number and email address.' });
@@ -138,14 +138,14 @@ module.exports = function registerExchanges(app, deps, shared) {
       });
     } catch (e) {
       console.error('[EXCHANGES_LOOKUP]', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 
   // ---- customer: submit ----
   app.post('/api/exchanges', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (limited(req, 20)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (limited(req, 20)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const b = req.body || {};
     const orderNumber = cleanNumber(b.orderNumber);
     const email = cleanEmail(b.email);
@@ -214,14 +214,14 @@ module.exports = function registerExchanges(app, deps, shared) {
       res.json({ ok: true, exchangeNumber });
     } catch (e) {
       console.error('[EXCHANGES_SUBMIT]', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 
   // ---- customer: status ----
   app.post('/api/exchanges/status', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (limited(req, 20)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (limited(req, 20)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const number = cleanNumber(req.body && req.body.exchangeNumber);
     const email = cleanEmail(req.body && req.body.email);
     const notFound = () => res.status(404).json({ error: 'We couldn’t find an exchange matching those details. Please check your exchange number and email address.' });
@@ -234,7 +234,7 @@ module.exports = function registerExchanges(app, deps, shared) {
       res.json(publicExchange(doc.data()));
     } catch (e) {
       console.error('[EXCHANGES_STATUS]', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 

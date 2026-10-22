@@ -287,7 +287,7 @@ function renderCheckoutSummary() {
     : '';
   const totalsHtml = `<div class="checkout-totals-head${vatLine ? ' has-vat' : ''}"><span>Total to pay</span><span>${formatPrice(total)}</span></div>
     ${vatLine}
-    <div class="checkout-totals-row"><span>Cart total</span><span>${formatPrice(subtotal)}</span></div>
+    <div class="checkout-totals-row"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
     ${discountRow}
     <div class="checkout-totals-row"><span>Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
   document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
@@ -349,7 +349,7 @@ async function placeOrder(e) {
   e.preventDefault();
 
   if (!S.cart.length) {
-    alert('Your cart is empty.');
+    alert('Your bag is empty.');
     return;
   }
 
@@ -450,7 +450,7 @@ async function placeOrder(e) {
     const authHeaders = { 'Content-Type': 'application/json' };
     if (user && !user.isAnonymous) {
       try { authHeaders.Authorization = 'Bearer ' + await user.getIdToken(); }
-      catch (authError) { throw new Error('Your sign-in session expired. Please sign in again.'); }
+      catch (authError) { throw new Error('Your session has expired. Please sign in again.'); }
     }
     const createResponse = await fetch('/api/orders/create', {
       method: 'POST',
@@ -464,7 +464,7 @@ async function placeOrder(e) {
       throw err;
     }
     const orderId = created.orderId;
-    if (!orderId || !created.orderAccessToken) throw new Error('The server did not return a secure order confirmation. Please contact support before retrying.');
+    if (!orderId || !created.orderAccessToken) throw new Error('We were unable to confirm your order. Please contact customer care before trying again.');
     sessionStorage.setItem('janedore_order_access_' + orderId, created.orderAccessToken);
 
     // Fire-and-forget — save this address to the signed-in customer's
@@ -499,7 +499,7 @@ async function placeOrder(e) {
 
   } catch (e) {
     console.warn('Order error:', e);
-    alert(e.outOfStock ? e.message : 'Error placing order: ' + e.message);
+    alert(e.outOfStock ? e.message : 'We couldn’t place your order. ' + e.message);
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay now'; }
   }
   // No restore on success: redirectToPayFast() navigates the browser
@@ -523,7 +523,7 @@ async function redirectToPayFast(orderId) {
   });
   if (!res.ok) {
     const body = await res.json().catch(function () { return {}; });
-    throw new Error(body.error || 'Could not start payment. Please try again.');
+    throw new Error(body.error || 'We couldn’t connect to our payment provider. Please try again.');
   }
   const { action, fields } = await res.json();
 
@@ -645,8 +645,8 @@ function renderOrderConfirmation(order) {
   const thanksText = document.getElementById('confirmation-thanks-text');
   if (thanksText) {
     thanksText.textContent = order.paymentStatus === 'paid'
-      ? 'Your payment went through and your order is in. A confirmation email is on its way.'
-      : "Your order is in. We'll email your confirmation as soon as your payment clears.";
+      ? 'Your payment was successful and your order is confirmed. A confirmation email will follow shortly.'
+      : "Your order has been placed. We'll email your confirmation as soon as your payment has been verified.";
   }
 
   const items = order.items || [];
@@ -693,7 +693,7 @@ function renderOrderConfirmation(order) {
     const discount = Number(order.discountAmount) || 0;
     summaryEl.innerHTML =
       '<div class="checkout-totals-head"><span>Total paid</span><span>' + formatPrice(order.total || 0) + '</span></div>' +
-      '<div class="checkout-totals-row"><span>Cart total</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
+      '<div class="checkout-totals-row"><span>Subtotal</span><span>' + formatPrice(order.subtotal || 0) + '</span></div>' +
       (discount > 0
         ? '<div class="checkout-totals-row discount"><span>Discount' + (order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : '') + '</span><span>-' + formatPrice(discount) + '</span></div>'
         : '') +
@@ -733,7 +733,7 @@ function showPayFastConfirmTimeout(orderId) {
   const text = document.getElementById('checkout-confirming-text');
   const retryBtn = document.getElementById('checkout-confirming-retry');
   if (spinner) spinner.style.display = 'none';
-  if (text) text.textContent = 'This is taking longer than usual. We\'ll email your confirmation as soon as it clears, or check again now.';
+  if (text) text.textContent = 'Confirming your payment is taking longer than expected. We\'ll email your confirmation once it is verified, or you can check again below.';
   if (retryBtn) {
     retryBtn.style.display = 'inline-block';
     retryBtn.onclick = function () {
@@ -786,7 +786,7 @@ function handlePayFastReturn() {
       headers: orderAccessHeaders(orderId)
     })
       .catch(function (e) { console.warn('[PAYFAST_CANCEL] Could not record cancellation:', e.message); });
-    alert('Payment was cancelled. Your bag is still here whenever you\'re ready.');
+    alert('Your payment was cancelled. The items remain in your bag.');
     return;
   }
 

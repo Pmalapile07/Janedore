@@ -37,7 +37,7 @@ module.exports = function registerWaitlist(app, deps) {
   // ---- join ----
   app.post('/api/waitlist', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (rateLimited(req, 'waitlist', 20, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (rateLimited(req, 'waitlist', 20, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const b = req.body || {};
     const user = await signedIn(req);
     const email = String((user && user.email) || b.email || '').trim().toLowerCase().slice(0, 200);
@@ -51,10 +51,10 @@ module.exports = function registerWaitlist(app, deps) {
       const doc = productId ? await adminDb.collection('products').doc(productId).get() : null;
       if (!doc || !doc.exists || doc.data().status !== 'active') return res.status(404).json({ error: 'This product is no longer available.' });
       const p = doc.data();
-      if (!p.waitlist) return res.status(400).json({ error: 'This product doesn’t have a waitlist.' });
+      if (!p.waitlist) return res.status(400).json({ error: 'A waitlist is not available for this product.' });
       const sizes = p.sizes && p.sizes.length ? p.sizes : ['OS'];
       if (!sizes.includes(size) || variantIndex >= Math.max(1, (p.variants || []).length)) return res.status(400).json({ error: 'Please choose a size.' });
-      if (stockOf(p, variantIndex, size) > 0) return res.status(400).json({ error: 'Good news: this is in stock. You can add it to your bag now.' });
+      if (stockOf(p, variantIndex, size) > 0) return res.status(400).json({ error: 'This item is in stock and available to add to your bag.' });
       const v = (p.variants || [])[variantIndex] || {};
       await col().doc(entryId(email, productId, variantIndex, size)).set({
         email, customerName, uid: user ? user.uid : null, productId, variantIndex, size,
@@ -64,7 +64,7 @@ module.exports = function registerWaitlist(app, deps) {
       res.json({ ok: true });
     } catch (e) {
       console.error('[WAITLIST] Join failed:', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 
@@ -104,7 +104,7 @@ module.exports = function registerWaitlist(app, deps) {
       res.json({ ok: true });
     } catch (e) {
       console.error('[WAITLIST] Remove failed:', e.message);
-      res.status(500).json({ error: 'Could not remove it. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t remove this item from your waitlist. Please try again.' });
     }
   });
 

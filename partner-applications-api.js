@@ -139,7 +139,7 @@ module.exports = function registerPartnerApplications(app, deps) {
   // ---- Status check (brand) ----
   app.post('/api/partner-applications/status', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (limited(req, 'status', 20, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (limited(req, 'status', 20, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const reference = String((req.body || {}).reference || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 20);
     const email = String((req.body || {}).email || '').trim().toLowerCase().slice(0, 200);
     const notFound = () => res.status(404).json({ error: 'We couldn’t find an application matching those details. Please check your reference and email address.' });
@@ -155,7 +155,7 @@ module.exports = function registerPartnerApplications(app, deps) {
       });
     } catch (e) {
       console.error('[PARTNER_APP] Status error:', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 

@@ -136,7 +136,7 @@ module.exports = function registerReturns(app, deps) {
   // ---- customer: find order ----
   app.post('/api/returns/lookup', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (limited(req, 20)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (limited(req, 20)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const orderNumber = cleanNumber(req.body && req.body.orderNumber);
     const email = cleanEmail(req.body && req.body.email);
     if (!orderNumber || !email) return res.status(400).json({ error: 'Please enter your order number and email address.' });
@@ -147,14 +147,14 @@ module.exports = function registerReturns(app, deps) {
       res.json({ orderNumber: found.order.orderNumber || orderNumber, items: items.map(({ vendorId, ...i }) => i), reasons: REASONS, returnDays: RETURN_DAYS });
     } catch (e) {
       console.error('[RETURNS_LOOKUP]', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 
   // ---- customer: submit ----
   app.post('/api/returns', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (limited(req, 20)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (limited(req, 20)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const b = req.body || {};
     const orderNumber = cleanNumber(b.orderNumber);
     const email = cleanEmail(b.email);
@@ -176,7 +176,7 @@ module.exports = function registerReturns(app, deps) {
         if (!item || !item.eligible) return res.status(400).json({ error: 'One of the items can no longer be returned. Please refresh and try again.' });
         if (!(qty > 0) || qty > item.qty) return res.status(400).json({ error: 'Please check the quantity for ' + item.name + '.' });
         if (!reason) return res.status(400).json({ error: 'Please choose a reason for ' + item.name + '.' });
-        if (!details) return res.status(400).json({ error: 'Please tell us more about the issue with ' + item.name + '.' });
+        if (!details) return res.status(400).json({ error: 'Please describe the issue with ' + item.name + '.' });
         picked.push(Object.assign({}, item, { qty, reason, details }));
       }
       if (!picked.length) return res.status(400).json({ error: 'Please choose at least one item to return.' });
@@ -210,14 +210,14 @@ module.exports = function registerReturns(app, deps) {
       res.json({ ok: true, returnNumber });
     } catch (e) {
       console.error('[RETURNS_SUBMIT]', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 
   // ---- customer: status ----
   app.post('/api/returns/status', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (limited(req, 20)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (limited(req, 20)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const number = cleanNumber(req.body && req.body.returnNumber);
     const email = cleanEmail(req.body && req.body.email);
     const notFound = () => res.status(404).json({ error: 'We couldn’t find a return matching those details. Please check your return number and email address.' });
@@ -230,7 +230,7 @@ module.exports = function registerReturns(app, deps) {
       res.json(publicReturn(doc.data()));
     } catch (e) {
       console.error('[RETURNS_STATUS]', e.message);
-      res.status(500).json({ error: 'Something went wrong. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
     }
   });
 

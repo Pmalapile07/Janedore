@@ -266,7 +266,7 @@ async function renderAccountOrder(orderNumber) {
       <div class="account-detail-title">Payment summary</div>
       <div class="account-row big"><span>Total paid</span><span>${formatPrice(order.total || 0)}</span></div>
       ${accountOrderRefunded(order) ? `<div class="account-row"><span>Refunded</span><span>-${formatPrice(order.refundAmount || order.total || 0)}</span></div>` : ''}
-      <div class="account-row"><span>Cart total</span><span>${formatPrice(order.subtotal || 0)}</span></div>
+      <div class="account-row"><span>Subtotal</span><span>${formatPrice(order.subtotal || 0)}</span></div>
       ${discount > 0 ? `<div class="account-row"><span>Discount${order.discountCode ? ' (' + escapeHTML(order.discountCode) + ')' : ''}</span><span>-${formatPrice(discount)}</span></div>` : ''}
       <div class="account-row"><span>Delivery fee${new Set(packages.map(p => p.brand)).size > 1 ? ' (' + new Set(packages.map(p => p.brand)).size + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
@@ -322,7 +322,7 @@ async function renderAccountProfile() {
       <div>${field('acc-province', 'Province', p.province, 'autocomplete="address-level1" placeholder="Gauteng"')}</div>
     </div>
     ${field('acc-postal', 'Postal code', p.postalCode, 'inputmode="numeric" autocomplete="postal-code" placeholder="2000"')}
-    <p class="account-note">Used to fill in checkout for you.</p>
+    <p class="account-note">Used to pre-fill your details at checkout.</p>
     <div class="track-error" id="acc-error" role="alert"></div>
     <button type="submit" class="track-btn" id="acc-save">Save changes</button>
   </form>
@@ -370,7 +370,7 @@ async function sendAccountPasswordReset() {
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Password link sent to ' + user.email, 'ph-envelope-simple');
   } catch (e) {
     btn.disabled = false;
-    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Something went wrong. Please try again.', 'ph-warning-circle');
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('We couldn’t complete your request. Please try again.', 'ph-warning-circle');
   }
 }
 
@@ -381,13 +381,13 @@ async function accountApi(path, method) {
   const token = await accountUser().getIdToken();
   const res = await fetch(path, { method: method || 'GET', headers: { 'Authorization': 'Bearer ' + token } });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  if (!res.ok) throw new Error(data.error || 'We couldn’t complete your request. Please try again.');
   return data;
 }
 
 const ACCOUNT_SERVICE_STATUS = {
   submitted: ['Under review', ''], approved: ['Approved', 'shipped'], received: ['Item received', 'shipped'], declined: ['Not approved', 'cancelled'],
-  refund_pending: ['Refund in progress', 'shipped'], refunded: ['Refunded', 'delivered'], dispatched: ['New item sent', 'delivered'], closed: ['Closed', 'cancelled']
+  refund_pending: ['Refund in progress', 'shipped'], refunded: ['Refunded', 'delivered'], dispatched: ['Replacement dispatched', 'delivered'], closed: ['Closed', 'cancelled']
 };
 
 async function renderAccountReturns() {
@@ -418,7 +418,7 @@ async function renderAccountReturns() {
       <button type="button" class="jd-list-row" onclick="navigateToContentPage('exchange-an-item')"><span>Exchange an item</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
     </nav>
     ${list.length ? `<div class="account-section-title">Your returns and exchanges</div>${list.join('')}`
-      : `<p class="account-note account-empty-note">You haven’t returned or exchanged anything yet. Items can be returned or exchanged within 30 days of dispatch.</p>`}`;
+      : `<p class="account-note account-empty-note">You have no returns or exchanges. Items may be returned or exchanged within 30 days of dispatch.</p>`}`;
 }
 
 function openAccountService(path) {
@@ -449,7 +449,7 @@ async function renderAccountWaitlist() {
     body.innerHTML = `<div class="cart-empty account-empty">
       <i class="ph ph-bell cart-empty-icon" aria-hidden="true"></i>
       <div class="cart-empty-title">Your waitlist is empty</div>
-      <div class="wish-empty-sub">When a size you love is sold out or its pre-orders are full, join its waitlist on the product page and we’ll email you when it’s available again.</div>
+      <div class="wish-empty-sub">Join the waitlist for a sold-out size on its product page, and we’ll notify you when it becomes available.</div>
     </div>`;
     return;
   }
@@ -461,7 +461,7 @@ async function renderAccountWaitlist() {
       <div class="track-item-img"${product ? ` onclick="goToProduct('${escapeJSString(product.id)}')"` : ''} style="background-image:url('${escapeForCssUrl(thumb)}')"></div>
       <div class="track-item-info"><div class="track-item-name">${escapeHTML(trackPlainText(w.name || (product && product.name) || ''))}</div>
         <div class="track-item-meta">${meta}</div>
-        <div class="track-item-meta">${w.status === 'notified' ? 'Available again: we emailed you' : 'Waiting for restock'}</div>
+        <div class="track-item-meta">${w.status === 'notified' ? 'Back in stock. We’ve notified you by email.' : 'Waiting for restock'}</div>
         <button type="button" class="track-link account-waitlist-remove" onclick="removeAccountWaitlist('${escapeJSString(w.id)}', this)">Remove</button>
       </div>
     </div>`;
@@ -524,7 +524,7 @@ function sendAccountVerification(el) {
     showAddedToCartToast('Verification email sent to ' + user.email);
   }).catch(e => {
     if (el) el.style.pointerEvents = '';
-    showAddedToCartToast(e && e.code === 'auth/too-many-requests' ? 'Please wait a few minutes before trying again' : 'Could not send the email. Please try again.');
+    showAddedToCartToast(e && e.code === 'auth/too-many-requests' ? 'Please wait a few minutes before trying again' : 'We couldn’t send the email. Please try again.');
   });
 }
 

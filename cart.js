@@ -140,7 +140,7 @@ function cartHasSoldOutItem() {
 }
 function handleCheckoutClick() {
   if (cartHasSoldOutItem()) {
-    alert('Please remove the sold out item(s) from your bag before checking out.');
+    alert('Please remove sold-out items from your bag to continue to checkout.');
     return;
   }
   navigateTo('checkout');
@@ -354,7 +354,7 @@ function addToCart(productId, size, qty) {
     return;
   }
   const addQty = Math.min(q, room);
-  if (addQty < q) alert('Only ' + available + ' of ' + (product.name || 'this item') + ' (' + resolvedSize + ') left, so we added what’s available.');
+  if (addQty < q) alert('Only ' + available + ' of ' + (product.name || 'this item') + ' (' + resolvedSize + ') remaining. We’ve added the available quantity to your bag.');
 
   if (existing) existing.qty += addQty;
   else S.cart.push({ productId, variantIndex: vi, size: resolvedSize, qty: addQty, name: sanitizeHTML(product.name), brand: sanitizeHTML(product.brand), price: product.price, salePrice: product.salePrice, color: sanitizeHTML(variant.color || 'Default'), thumbnail: getProductThumbnail(product, vi) });
@@ -366,7 +366,7 @@ function addToCart(productId, size, qty) {
   showAddedToCartToast();
 }
 
-// "Added to cart" bar: stays where the customer is (no cart panel), with a
+// "Added to bag" bar: stays where the customer is (no cart panel), with a
 // strip along its top that shrinks to nothing; the bar leaves when it
 // does. Adding again while it's showing restarts the countdown. Removing
 // an item from the bag uses the same bar, with an Undo.
@@ -384,7 +384,7 @@ function showAddedToCartToast(text, icon, undo) {
     toast.innerHTML =
       '<div class="added-toast-progress"></div>' +
       '<i class="ph ph-check-circle added-toast-icon" aria-hidden="true"></i>' +
-      '<span class="added-toast-text">Added to cart</span>' +
+      '<span class="added-toast-text">Added to bag</span>' +
       '<button type="button" class="added-toast-undo">Undo</button>' +
       '<button type="button" class="added-toast-close" aria-label="Dismiss"><i class="ph ph-x"></i></button>';
     toast.querySelector('.added-toast-close').addEventListener('click', hideAddedToCartToast);
@@ -395,7 +395,7 @@ function showAddedToCartToast(text, icon, undo) {
     });
     document.body.appendChild(toast);
   }
-  toast.querySelector('.added-toast-text').textContent = text || 'Added to cart';
+  toast.querySelector('.added-toast-text').textContent = text || 'Added to bag';
   const iconEl = toast.querySelector('.added-toast-icon');
   if (iconEl) iconEl.className = 'ph ' + (icon || 'ph-check-circle') + ' added-toast-icon';
   _toastUndo = typeof undo === 'function' ? undo : null;
@@ -468,7 +468,7 @@ function applyPromoCode(inputId) {
   const code = sanitizeDiscountCode(input.value);
   
   if (!code) {
-    showPromoMessage(inputId, 'Please enter a valid discount code (letters, numbers, underscores, hyphens only)', 'error');
+    showPromoMessage(inputId, 'Please enter a valid discount code.', 'error');
     return;
   }
 
@@ -479,12 +479,12 @@ function applyPromoCode(inputId) {
   fetch('/api/discounts/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
     .then(function(res) {
       return res.json().catch(function() { return {}; }).then(function(data) {
-        if (!res.ok) throw new Error(data.error || 'Could not check that code');
+        if (!res.ok) throw new Error(data.error || 'We couldn’t verify this code. Please try again.');
         return data;
       });
     }).then(function(data) {
     if (!data.found) {
-      showPromoMessage(inputId, 'Invalid discount code', 'error');
+      showPromoMessage(inputId, 'This discount code is not valid.', 'error');
       return;
     }
 
@@ -517,7 +517,7 @@ function applyPromoCode(inputId) {
 
     // Check minimum purchase
     if (discount.minimumPurchase && subtotal < discount.minimumPurchase) {
-      showPromoMessage(inputId, 'Minimum purchase of ' + formatPrice(discount.minimumPurchase) + ' required', 'error');
+      showPromoMessage(inputId, 'A minimum spend of ' + formatPrice(discount.minimumPurchase) + ' applies to this code.', 'error');
       return;
     }
 
@@ -537,7 +537,7 @@ function applyPromoCode(inputId) {
 
   }).catch(function(err) {
     console.error('[APPLY_DISCOUNT]', err);
-    showPromoMessage(inputId, 'Error applying discount: ' + sanitizeHTML(err.message), 'error');
+    showPromoMessage(inputId, 'This code could not be applied. Please try again.', 'error');
   });
 }
 
@@ -568,7 +568,7 @@ function getDiscountDescription(discount) {
     case 'fixed_amount':
       return formatPrice(discount.value) + ' off';
     case 'free_shipping':
-      return 'Free shipping';
+      return 'Free delivery';
     case 'buy_x_get_y':
       return 'Buy ' + discount.value + ' Get 1 Free';
     default:
@@ -714,10 +714,10 @@ function renderCartPage() {
   const hasSoldOut = cartHasSoldOutItem();
   html += `<div class="cart-card cart-totals">
     <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + shipping.fee)}</span></div>
-    <div class="cart-totals-row"><span>Cart total</span><span>${formatPrice(getCartSubtotal())}</span></div>
+    <div class="cart-totals-row"><span>Subtotal</span><span>${formatPrice(getCartSubtotal())}</span></div>
     ${appliedDiscount ? `<div class="cart-totals-row discount"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
     <div class="cart-totals-row"><span>Delivery fee${shipping.packages > 1 ? ` (${shipping.packages} packages)` : ''}</span><span>${shipping.freeShipping ? 'Free' : formatPrice(shipping.fee)}</span></div>
-    <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Checkout now</button>
+    <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Proceed to checkout</button>
   </div></div>`;
   const inspired = cartInspiredProducts();
   html += cartSliderHtml('Inspired by your bag', inspired);

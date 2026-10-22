@@ -174,7 +174,7 @@ function handleSearch(val) {
   _searchSuggestions = getSearchSuggestions(v);
   const suggestions = _searchSuggestions.length ? `<div class="search-section-title">Suggestions</div><ul class="search-rows">${_searchSuggestions.map((s, i) => `
     <li><button type="button" class="search-row" onclick="openSearchSuggestion(${i})">${searchEntryIcon(s)}<span class="search-row-label">${searchHighlight(s.label, v)}</span><span class="search-row-type">${SEARCH_TYPE_LABEL[s.type]}</span></button></li>`).join('')}</ul>` : '';
-  DOM.searchBody.innerHTML = suggestions + `<div class="search-results-title">${results.length} result${results.length!==1?"s":""}</div>${results.length?`<div class="search-results-grid">${results.map(p=>productCard(p)).join("")}</div>`:'<div class="search-no-results">No pieces found.</div>'}`;
+  DOM.searchBody.innerHTML = suggestions + `<div class="search-results-title">${results.length} result${results.length!==1?"s":""}</div>${results.length?`<div class="search-results-grid">${results.map(p=>productCard(p)).join("")}</div>`:'<div class="search-no-results">No results found. Please try a different search.</div>'}`;
 }
 
 // What was typed, as a recent search. A brand's exact name is kept as

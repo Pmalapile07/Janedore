@@ -100,7 +100,7 @@ async function postWaitlist(product, contact, token) {
   const res = await fetch('/api/waitlist', { method: 'POST', headers,
     body: JSON.stringify({ productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: S.selectedSize || 'OS', name: contact.name || '', email: contact.email || '' }) });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  if (!res.ok) throw new Error(data.error || 'We couldn’t complete your request. Please try again.');
 }
 
 // Guest waitlist: name and email in a popup (index.html), remembered on
@@ -452,7 +452,7 @@ async function shareCurrentProduct(productId) {
   }
   try {
     await navigator.clipboard.writeText(url);
-    alert('Product link copied. You can now share it in any app.');
+    alert('Link copied to clipboard.');
   } catch (error) {
     window.prompt('Copy this product link to share it:', url);
   }
@@ -583,7 +583,7 @@ async function renderProductPage(product) {
             Shipping &amp; returns
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="info-accordion-body"><p>${product.shippingReturns||'No shipping details available.'}</p></div>
+          <div class="info-accordion-body"><p>${product.shippingReturns||'Please see our delivery and returns policies for details.'}</p></div>
         </div>
         <div class="info-accordion-item" id="info-accordion-reviews">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('reviews')">
@@ -628,7 +628,7 @@ async function loadProductReviewsSection(productId) {
   const write = `<div id="product-review-write" hidden${reviews.length ? ' style="margin-bottom:24px;"' : ''}><button type="button" class="cart-empty-btn" onclick="openReviewModal()">Write a review</button></div>`;
   if (countEl) countEl.textContent = reviews.length ? '(' + reviews.length + ')' : '';
   if (!reviews.length) {
-    body.innerHTML = `<p>No reviews yet.</p>${write}`;
+    body.innerHTML = `<p>There are no reviews for this product yet.</p>${write}`;
     showReviewButtonIfBought(productId);
     return;
   }

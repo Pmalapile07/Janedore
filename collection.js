@@ -1665,7 +1665,7 @@ function renderVendorPage(vendor) {
   applyGridColsClass(gridEl, S.gridColsVendor);
   if (!expanded.length && S.vendorFilter.onSale) {
     // Sale is always offered; say so plainly when nothing's on sale.
-    gridEl.innerHTML = `<div class="filter-empty-note" style="grid-column:1/-1;padding:24px 12px;">Nothing from ${escapeHTML(brandName)} is on sale right now.</div>`;
+    gridEl.innerHTML = `<div class="filter-empty-note" style="grid-column:1/-1;padding:24px 12px;">There are currently no sale items from ${escapeHTML(brandName)}.</div>`;
   } else {
     renderPaginatedGrid(gridEl, expanded, S.gridColsVendor);
   }

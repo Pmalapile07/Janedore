@@ -790,7 +790,7 @@ function renderTrackOrderPrompt() {
   bubble.className = 'chat-msg admin jai-msg';
   const textNode = document.createElement('div');
   textNode.style.marginBottom = '10px';
-  textNode.textContent = 'Sure, you can track your order below.';
+  textNode.textContent = 'You can track your order below.';
   bubble.appendChild(textNode);
   bubble.appendChild(cloneTrackOrderButton());
 
@@ -1658,7 +1658,7 @@ async function sendChatMessage() {
     } else if (customerWantsHuman(text)) {
       _ScreenDebug.info('SEND', 'Customer requested human — AI skipped by design');
 
-      const handoffText = 'Got it. Connecting you with our team, they will be with you shortly.';
+      const handoffText = 'Connecting you with our customer care team. A member of the team will be with you shortly.';
       const handoffRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
       const handoffTs = firebase.database.ServerValue.TIMESTAMP;
       loadedMessageKeys.add(handoffRef.key);
@@ -1763,7 +1763,7 @@ async function sendChatMessage() {
         rtdb.ref('live_chat/' + chatSessionId + '/meta/aiLockedUntil').set(_aiLockedUntil).catch(() => {});
         _ScreenDebug.info('AI', 'AI locked for ' + Math.round(AI_COOLDOWN_MS / 1000) + 's cooldown after failure');
 
-        const fallbackText = 'Thanks for reaching out. Our customer care team will get back to you shortly.';
+        const fallbackText = 'Thank you for your message. Our customer care team will respond shortly.';
         const fallbackRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
         loadedMessageKeys.add(fallbackRef.key);
 
@@ -1793,7 +1793,7 @@ async function sendChatMessage() {
     if (e.code === 'PERMISSION_DENIED') {
       startFreshChatSession();
     }
-    alert('Failed to send message. Please try again.');
+    alert('Your message could not be sent. Please try again.');
 
     const reopenPill = document.getElementById('chat-reopening-pill');
     if (reopenPill) reopenPill.remove();
@@ -1825,7 +1825,7 @@ function uploadChatImageToCloudinary(file) {
   return new Promise((resolve, reject) => {
     const cloudName = window.CLOUDINARY_CLOUD_NAME;
     const uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !uploadPreset) { reject(new Error('Image upload is not available right now.')); return; }
+    if (!cloudName || !uploadPreset) { reject(new Error('Image uploads are currently unavailable.')); return; }
 
     const formData = new FormData();
     formData.append('file', file);
@@ -1858,7 +1858,7 @@ function pickAndSendChatImage() {
     if (input.parentNode) input.parentNode.removeChild(input);
     if (!file) return;
     if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) { alert('Please choose a PNG, JPEG, or WEBP image.'); return; }
-    if (file.size > MAX_CHAT_IMAGE_BYTES) { alert('That image is too large (max ' + Math.round(MAX_CHAT_IMAGE_BYTES / 1000000) + 'MB).'); return; }
+    if (file.size > MAX_CHAT_IMAGE_BYTES) { alert('Images must be smaller than ' + Math.round(MAX_CHAT_IMAGE_BYTES / 1000000) + ' MB.'); return; }
     sendChatImage(file);
   };
   input.click();
@@ -1912,7 +1912,7 @@ async function sendChatImage(file) {
     const msgRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
     const handoffRef = rtdb.ref('live_chat/' + chatSessionId + '/messages').push();
     const ts = firebase.database.ServerValue.TIMESTAMP;
-    const handoffText = 'Thanks for sharing the photo! I’ve flagged this conversation for our customer care team. Please tell us briefly what you need help with while they review it.';
+    const handoffText = 'Thank you for the photo. Our customer care team has been notified. Please briefly describe how we can help while they review it.';
     loadedMessageKeys.add(msgRef.key);
     loadedMessageKeys.add(handoffRef.key);
 
@@ -1965,7 +1965,7 @@ async function sendChatImage(file) {
     _ScreenDebug.err('SEND', 'Image send failed: ' + (e.code || '') + ' ' + e.message);
     const tempEl = document.getElementById(tempId);
     if (tempEl) tempEl.remove();
-    alert('Failed to send image. Please try again.');
+    alert('Your image could not be sent. Please try again.');
   } finally {
     URL.revokeObjectURL(localUrl);
     _imageUploadInFlight = false;
@@ -2083,7 +2083,7 @@ function showResolvedBanner() {
   banner.style.cssText = 'width:100%;text-align:center;padding:6px 0;';
   const span = document.createElement('span');
   span.style.cssText = 'font-size:10px;color:#888;background:#f5f5f5;padding:3px 12px;border-radius:20px;font-family:Inter,sans-serif;font-weight:400;';
-  span.textContent = 'Resolved.';
+  span.textContent = 'Conversation resolved';
   banner.appendChild(span);
   wrap.insertBefore(banner, wrap.firstChild);
 }
@@ -2098,7 +2098,7 @@ function showSatisfactionPrompt() {
   if (!el) return;
 
   const input = safeEl('chat-input');
-  if (input) input.placeholder = 'Conversation resolved, send a message to reopen';
+  if (input) input.placeholder = 'This conversation has been resolved. Send a message to reopen it.';
 
   const prompt = document.createElement('div');
   prompt.id = 'satisfaction-prompt';
@@ -2106,7 +2106,7 @@ function showSatisfactionPrompt() {
 
   const msgDiv = document.createElement('div');
   msgDiv.style.marginBottom = '10px';
-  msgDiv.textContent = 'We\'re glad we could help. Was your issue resolved?';
+  msgDiv.textContent = 'Was your query resolved?';
   prompt.appendChild(msgDiv);
 
   const btnRow = document.createElement('div');
@@ -2122,7 +2122,7 @@ function showSatisfactionPrompt() {
   const noBtn = document.createElement('button');
   noBtn.className = 'chat-pill-btn';
   noBtn.id = 'sat-no';
-  noBtn.textContent = 'Not really';
+  noBtn.textContent = 'No';
   noBtn.addEventListener('click', function () { submitSatisfaction(false); });
 
   btnRow.appendChild(yesBtn);
@@ -2158,7 +2158,7 @@ async function submitSatisfaction(satisfied) {
   const thanksText = document.createElement('div');
   thanksText.textContent = satisfied
     ? 'Thank you for letting us know. We hope to see you again soon.'
-    : 'We\'re sorry to hear that. A member of the Janedore team will follow up with you shortly.';
+    : 'Thank you for letting us know. A member of our customer care team will follow up with you shortly.';
   thanks.appendChild(thanksText);
   el.appendChild(thanks);
   el.scrollTop = el.scrollHeight;
@@ -2186,7 +2186,7 @@ async function lookupOrder() {
 
   const orderNumber = input.value.trim().toUpperCase().replace(/^#/, '');
   const email = emailInput.value.trim();
-  if (!orderNumber || !email) { showNote('Please enter your order number and email address'); return; }
+  if (!orderNumber || !email) { showNote('Please enter your order number and email address.'); return; }
 
   showNote('Searching...');
   _ScreenDebug.info('API', 'Order lookup requested');
@@ -2197,12 +2197,12 @@ async function lookupOrder() {
     o = await res.json().catch(() => ({}));
   } catch (e) {
     _ScreenDebug.err('API', 'Lookup failed: ' + e.message);
-    showNote('No connection. Check your internet and try again.', true);
+    showNote('Unable to connect. Please check your internet connection and try again.', true);
     return;
   }
   if (!res.ok) {
     _ScreenDebug.warn('API', 'Lookup refused: ' + res.status);
-    showNote(o.error || 'Unable to look up order. Please try again.', true);
+    showNote(o.error || 'We couldn’t retrieve your order. Please try again.', true);
     return;
   }
 

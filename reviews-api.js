@@ -76,8 +76,8 @@ module.exports = function registerReviews(app, deps) {
   // signed uploads (server.js).
   app.post('/api/reviews/photo-signature', async (req, res) => {
     const apiKey = process.env.CLOUDINARY_API_KEY, secret = process.env.CLOUDINARY_API_SECRET, cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    if (!apiKey || !secret || !cloudName || !adminDb) return res.status(503).json({ error: 'Photo uploads are not set up' });
-    if (rateLimited(req, 'review-photo-sign', 30, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (!apiKey || !secret || !cloudName || !adminDb) return res.status(503).json({ error: 'Photo uploads are currently unavailable.' });
+    if (rateLimited(req, 'review-photo-sign', 30, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     try {
       const productId = String((req.body || {}).productId || '').slice(0, 120);
       const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders) : null;
@@ -97,7 +97,7 @@ module.exports = function registerReviews(app, deps) {
 
   app.post('/api/reviews', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-    if (rateLimited(req, 'review-submit', 10, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many tries. Please wait a few minutes and try again.' });
+    if (rateLimited(req, 'review-submit', 10, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     const b = req.body || {};
     const productId = String(b.productId || '').slice(0, 120);
     const rating = Math.round(Number(b.rating));
@@ -119,7 +119,7 @@ module.exports = function registerReviews(app, deps) {
     try {
       const purchase = await findPurchase(req, productId, b.orders);
       if (!purchase) return res.status(403).json({ error: 'Only customers who bought this item can review it.' });
-      if (purchase.email !== email) return res.status(400).json({ error: 'Please use the email you ordered with: ' + purchase.email });
+      if (purchase.email !== email) return res.status(400).json({ error: 'Please use the email address associated with your order.' });
       const productDoc = await adminDb.collection('products').doc(productId).get();
       const id = crypto.createHash('sha256').update(email + '|' + productId).digest('hex').slice(0, 32);
       const batch = adminDb.batch();
@@ -138,7 +138,7 @@ module.exports = function registerReviews(app, deps) {
       res.json({ ok: true });
     } catch (e) {
       console.error('[REVIEWS] Save failed:', e.message);
-      res.status(500).json({ error: 'Could not save your review. Please try again.' });
+      res.status(500).json({ error: 'We couldn’t submit your review. Please try again.' });
     }
   });
 
