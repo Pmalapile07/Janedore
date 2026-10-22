@@ -469,6 +469,39 @@ window.addEventListener('scroll', () => {
   requestAnimationFrame(() => { _collectionBarTick = false; updateCollectionBarStuck(); });
 }, { passive: true });
 
+// Collection pages show each product name on one line: whole words only,
+// as many as fit the card, the rest left off (the product page has the
+// full name). Re-runs when a grid is redrawn or the screen size changes.
+const FIT_TITLE_GRIDS = '#all-products-grid, #category-products-grid, #vendor-products-grid';
+function fitCollectionCardTitles() {
+  document.querySelectorAll(FIT_TITLE_GRIDS).forEach(grid => {
+    grid.querySelectorAll('.product-title').forEach(el => {
+      if (!el.dataset.fullName) el.dataset.fullName = el.textContent.trim();
+      const full = el.dataset.fullName;
+      // Keyed on the row's width, which doesn't change when the name is cut.
+      const width = el.parentElement ? el.parentElement.clientWidth : el.clientWidth;
+      if (!width || el.dataset.fitWidth === String(width)) return;
+      el.dataset.fitWidth = String(width);
+      el.title = full;
+      const words = full.split(/\s+/);
+      el.textContent = full;
+      let n = words.length;
+      while (n > 1 && el.scrollWidth > el.clientWidth) el.textContent = words.slice(0, --n).join(' ');
+    });
+  });
+}
+let _fitTitlesQueued = false;
+function queueFitCollectionCardTitles() {
+  if (_fitTitlesQueued) return;
+  _fitTitlesQueued = true;
+  requestAnimationFrame(() => { _fitTitlesQueued = false; fitCollectionCardTitles(); });
+}
+new MutationObserver(mutations => {
+  if (mutations.some(m => m.target.closest && m.target.closest(FIT_TITLE_GRIDS))) queueFitCollectionCardTitles();
+}).observe(document.documentElement, { childList: true, subtree: true });
+window.addEventListener('resize', queueFitCollectionCardTitles);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(queueFitCollectionCardTitles);
+
 function updateCollectionTitle() {
   updateCollectionBarStuck();
   const titleEl = document.getElementById('collection-filter-title-display');

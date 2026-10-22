@@ -445,6 +445,25 @@
   line-height: normal;
 }
 
+/* Collection pages: one line per product name. fitCollectionCardTitles()
+   (collection.js) keeps only the whole words that fit; the rest is left
+   off, with no "...". */
+#all-products-grid .product-title,
+#category-products-grid .product-title,
+#vendor-products-grid .product-title {
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+/* Without these, a long one-line name widens its card and column
+   instead of being cut. */
+#all-products-grid > .product-card,
+#category-products-grid > .product-card,
+#vendor-products-grid > .product-card,
+#all-products-grid .product-card-name-row,
+#category-products-grid .product-card-name-row,
+#vendor-products-grid .product-card-name-row { min-width: 0; }
+
 /* --- SLIDER layout: New Arrivals (#arrivals-grid), Shop by Clothing
    (#clothing-grid), and the swipe sections that share this markup
    (.swipe-track — kept in case anything still uses that slider markup
