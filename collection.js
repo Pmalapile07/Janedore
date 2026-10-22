@@ -1409,7 +1409,7 @@ function initSliderLeadingTracking(gridId) {
 
 // ==================== VENDOR / BRAND PAGE ====================
 
-async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
+async function navigateToVendor(vendorIdOrSlug, replaceUrl, view) {
   // Shared with every other page-navigation function (see the
   // pageNavGeneration comment in app.js) — guards against this fetch
   // outliving the visit, whether that's a second navigateToVendor()
@@ -1427,7 +1427,11 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
   // Shows the shared filter bar (grid toggle, FILTER button, title)
   // above the grid, same as the products/category pages.
   document.body.classList.add('on-collection-page');
-  const newPath = '/brands/' + encodeURIComponent(vendorIdOrSlug);
+  // A brand has its home (/brands/x) and its All products and Sale pages
+  // (/brands/x/shop, /brands/x/sale), all under the same brand bar.
+  const brandView = view === 'shop' || view === 'sale' ? view : 'home';
+  const viewSuffix = brandView === 'home' ? '' : '/' + brandView;
+  const newPath = '/brands/' + encodeURIComponent(vendorIdOrSlug) + viewSuffix;
   if (window.location.pathname !== newPath) {
     replaceUrl ? history.replaceState(null, null, newPath) : history.pushState(null, null, newPath);
   }
@@ -1451,8 +1455,9 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
   if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
   // Reset per-visit so a filter/grid choice on one brand's page doesn't
   // carry over to the next brand you look at.
-  S.vendorFilter = {cat:[], size:'all', vendor:[], onSale:false, inStock:false};
+  S.vendorFilter = {cat:[], size:'all', vendor:[], onSale: brandView === 'sale', inStock:false};
   S.gridColsVendor = 2;
+  S.vendorView = brandView;
 
   // Resolve a slug (the normal case — every brand link passes its
   // slug now) or a raw doc ID (old links already shared/indexed) down
@@ -1484,7 +1489,7 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl) {
     renderVendorPage(vendor);
     // Silently upgrade the address bar to the canonical slug URL if we
     // arrived via a raw ID or anything else — no new history entry.
-    const canonicalPath = '/brands/' + encodeURIComponent(vendor?.slug || docId);
+    const canonicalPath = '/brands/' + encodeURIComponent(vendor?.slug || docId) + viewSuffix;
     if (window.location.pathname !== canonicalPath) {
       history.replaceState(null, null, canonicalPath);
     }
@@ -1590,10 +1595,13 @@ function renderVendorPage(vendor) {
 
   // A brand's page is its own small homepage inside Janedore: a brand bar
   // (sticks, and takes the header's place while scrolling down, like the
-  // collection toolbar), their hero, Shop / Collections / Sale links,
-  // their newest pieces, their collections and all their products. Built
-  // from the homepage's own pieces (hero, section headers, slider, tiles).
-  el.innerHTML = `
+  // collection toolbar), their hero with their slogan, Shop / Collections
+  // / Sale links, New in and their collections. Shop now, Shop and View
+  // all open the brand's All products page and Sale its sale page
+  // (S.vendorView), still under the brand bar. Built from the homepage's
+  // own pieces (hero, section headers, slider, tiles).
+  const view = S.vendorView || 'home';
+  const brandBar = `
     <div class="brand-bar" id="brand-bar">
       <div class="brand-bar-logo">${logoUrl ? `<img src="${escapeHTML(logoUrl)}" alt="">` : escapeHTML(initials)}</div>
       <div class="brand-bar-text"><h1 class="brand-bar-name">${escapeHTML(brandName)}</h1>${barLine ? `<div class="brand-bar-line">${escapeHTML(barLine)}</div>` : ''}</div>
@@ -1604,20 +1612,26 @@ function renderVendorPage(vendor) {
           <button type="button" role="menuitem" onclick="closeBrandMenu();openBrandReport()">Report a problem</button>
         </div>
       </div>
-    </div>
+    </div>`;
+  const pills = `
+    <div class="nav-quick-links brand-quick-links" role="tablist">
+      <button class="nav-quick-link${view === 'shop' ? ' active' : ''}" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
+      <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
+      <button class="nav-quick-link${view === 'sale' ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>
+    </div>`;
+  const slogan = String(vendor?.slogan || vendor?.heroHeading || '').trim();
+
+  el.innerHTML = view === 'home' ? `
+    ${brandBar}
     <section class="brand-hero">
       <div class="hero-bg-placeholder${heroImg ? '' : ' content-empty'}" style="${heroImg ? `background-image:url('${escapeForCssUrl(heroImg)}');` : ''}"></div>
       <div class="hero-overlay"></div>
+      ${slogan ? `<h2 class="hero-heading brand-hero-slogan">${escapeHTML(slogan)}</h2>` : ''}
       <div class="hero-content-wrap">
-        <h2 class="hero-heading" id="brand-hero-heading"></h2>
         <button class="hero-shop-btn" onclick="showBrandSection('shop')">Shop now</button>
       </div>
     </section>
-    <div class="nav-quick-links brand-quick-links" role="tablist">
-      <button class="nav-quick-link${S.vendorFilter.onSale ? '' : ' active'}" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
-      <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
-      <button class="nav-quick-link${S.vendorFilter.onSale ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>
-    </div>
+    ${pills}
     <section class="brand-section" id="brand-new">
       ${sectionHead('brand-new-heading', '', `<button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="showBrandSection('shop')">View all</button>`)}
       <div class="product-grid" id="vendor-new-grid">${newest.length ? newest.map(p => productCardHome(p)).join('') : placeholderProductCards(6, true)}</div>
@@ -1626,6 +1640,9 @@ function renderVendorPage(vendor) {
       ${sectionHead('brand-collections-heading')}
       <div class="home-categories-grid">${emptyTile.repeat(4)}</div>
     </section>
+  ` : `
+    ${brandBar}
+    ${pills}
     <section class="brand-section" id="brand-shop">
       ${sectionHead('brand-all-heading')}
     </section>
@@ -1634,12 +1651,20 @@ function renderVendorPage(vendor) {
     </section>
   `;
   if (typeof setSectionHeading === 'function') {
-    setSectionHeading(document.getElementById('brand-new-heading'), 'New from ' + brandName);
-    setSectionHeading(document.getElementById('brand-collections-heading'), 'Collections');
-    setSectionHeading(document.getElementById('brand-all-heading'), 'All products');
+    const set = (id, t) => { const h = document.getElementById(id); if (h) setSectionHeading(h, t); };
+    set('brand-new-heading', 'New in');
+    set('brand-collections-heading', 'Collections');
+    set('brand-all-heading', view === 'sale' ? 'Sale' : 'All products');
   }
-  document.getElementById('brand-hero-heading').textContent = vendor?.heroHeading || brandName;
-  initSliderLeadingTracking('vendor-new-grid');
+  if (view === 'home') {
+    initSliderLeadingTracking('vendor-new-grid');
+    const footerEl = document.getElementById('vendor-footer');
+    if (footerEl && typeof buildFooter === 'function') {
+      buildFooter('vendor-footer');
+      if (typeof renderVendorsFooter === 'function') renderVendorsFooter(S.vendors || []);
+    }
+    return;
+  }
 
   // Brand pages have no sort/filter bar: a brand's range is small enough
   // to browse as is.
@@ -1668,17 +1693,23 @@ function renderVendorPage(vendor) {
 
 window.navigateToVendor = navigateToVendor;
 
-// Brand page links: Shop shows all the brand's products and Sale only
-// their sale ones (the toolbar's own On sale filter), both scrolled to
-// All products under the sticky brand bar; Collections scrolls to the
-// collection tiles.
+// Brand page links. Shop opens the brand's All products page and Sale
+// its sale page (/brands/x/shop, /brands/x/sale); Collections goes back
+// to the brand's home and scrolls to the collection tiles.
+function openBrandView(view) {
+  const vendor = S.currentVendor;
+  if (!vendor) return;
+  S.vendorView = view;
+  S.vendorFilter.onSale = view === 'sale';
+  const path = '/brands/' + encodeURIComponent(vendor.slug || vendor.id) + (view === 'home' ? '' : '/' + view);
+  if (window.location.pathname !== path) history.pushState(null, null, path);
+  renderVendorPage(vendor);
+  resetScrollToTop();
+}
 function showBrandSection(key) {
-  if (key !== 'collections' && S.currentVendor) {
-    const onSale = key === 'sale';
-    if (S.vendorFilter.onSale !== onSale) { S.vendorFilter.onSale = onSale; renderVendorPage(S.currentVendor); }
-  }
-  document.querySelectorAll('[data-brand-tab]').forEach(b => b.classList.toggle('active', b.dataset.brandTab === key));
-  const target = document.getElementById(key === 'collections' ? 'brand-collections' : 'brand-shop');
+  if (key === 'shop' || key === 'sale') { openBrandView(key); return; }
+  if ((S.vendorView || 'home') !== 'home') openBrandView('home');
+  const target = document.getElementById('brand-collections');
   const bar = document.getElementById('brand-bar');
   if (!target) return;
   const y = target.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0);

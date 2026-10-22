@@ -734,7 +734,7 @@ body.brand-report-open #live-chat-bubble { display: none !important; }
    menu uses the Sort menu's style (.collection-sort-options). */
 .brand-bar {
   display: flex; align-items: center; gap: 12px;
-  padding: 14px 20px; background: #fff; border-bottom: 1px solid #eee;
+  padding: 14px 20px; background: #fff;
   font-family: 'Inter', sans-serif; color: #111;
   position: sticky; top: var(--main-nav-sticky-height, 0px); z-index: 11;
   transition: top 0.25s ease;
@@ -773,3 +773,12 @@ body:has(#page-vendor.active) #active-filter-chips { display: none !important; }
 /* Same spacing as the homepage's product rows (#home-shop-clothing). */
 .brand-section { padding: 24px 0; }
 #brand-shop { padding-bottom: 0; }
+/* The brand's slogan sits in the middle of their hero photo (hero.css
+   heading type), with Shop now kept bottom right. */
+.brand-hero .brand-hero-slogan {
+  position: absolute; inset: 12px 8px; z-index: 2; margin: 0; padding: 0 32px; max-width: none;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+@media (min-width: 640px) { .brand-hero .brand-hero-slogan { inset: 12px 10px; } }
+@media (min-width: 1024px) { .brand-hero .brand-hero-slogan { inset: 12px 12px; } }
+.brand-hero .hero-content-wrap { justify-content: flex-end; }

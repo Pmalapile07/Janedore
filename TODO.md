@@ -13,6 +13,6 @@
 - **Free delivery over R750:** Janedore pays the courier on those orders. Set the commission so it covers this.
 
 ## Brand pages
-- **Admin fields:** let brands (or admin) set the hero headline (`vendor.heroHeading`; falls back to the brand name), the line under their name in the brand bar (now "location · main department"), and their (About removed: brand pages show no story, like Superbalist).
+- **Admin fields:** let brands (or admin) set their slogan, shown in the middle of their hero photo (`vendor.slogan`; nothing shows until it is set), the line under their name in the brand bar (now "location · main department"), and their (About removed: brand pages show no story, like Superbalist).
 - **Collections:** brands set up their own collections (name, image, products) for the Collections tiles, which are empty placeholders for now.
 - **Layout per category:** a brand page's sections (hero, New from, Collections, slider vs grid, order) should differ by the kind of brand (clothing, accessories, homeware, beauty, kids, men's). Header, brand bar and scroll behaviour stay the same everywhere. Decide each layout and make it choosable in admin.

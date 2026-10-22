@@ -320,7 +320,7 @@ async function init() {
     } else if (pathRoute.page === 'content') {
       navigateToContentPage(pathRoute.slug, true);
     } else if (pathRoute.page === 'vendor') {
-      navigateToVendor(pathRoute.slug, true);
+      navigateToVendor(pathRoute.slug, true, pathRoute.view);
     } else if (pathRoute.page === 'login') {
       await window.authReady;
       navigateToLogin(true);
@@ -407,8 +407,8 @@ function getRouteFromPath() {
   if (m) return { page: 'category', cat: decodeURIComponent(m[1]) };
   m = path.match(/^\/pages\/([^\/]+)\/?$/);
   if (m) return { page: 'content', slug: decodeURIComponent(m[1]) };
-  m = path.match(/^\/brands\/([^\/]+)\/?$/);
-  if (m) return { page: 'vendor', slug: decodeURIComponent(m[1]) };
+  m = path.match(/^\/brands\/([^\/]+)(?:\/(shop|sale))?\/?$/);
+  if (m) return { page: 'vendor', slug: decodeURIComponent(m[1]), view: m[2] || 'home' };
   m = path.match(/^\/account\/(orders\/[^\/]+|[a-z]+)\/?$/);
   if (m) return { page: 'account' };
   m = path.match(/^\/(shop|login|account|checkout|cart|wishlist|campaign|editorial|brands|categories|gift-cards)\/?$/);
@@ -433,7 +433,7 @@ window.addEventListener('popstate', async () => {
       navigateToContentPage(pathRoute.slug, true);
       return;
     } else if (pathRoute.page === 'vendor') {
-      navigateToVendor(pathRoute.slug, true);
+      navigateToVendor(pathRoute.slug, true, pathRoute.view);
       return;
     } else if (pathRoute.page === 'login') {
       await window.authReady;
