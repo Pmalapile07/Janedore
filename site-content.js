@@ -97,11 +97,23 @@ function renderHero(hero) {
   loadBackgroundImage(document.getElementById('hero-bg'), hero.imageUrl, 1600);
 }
 
+// Homepage section headings: the first word on its own line and the
+// rest under it ("Shop / accessories"), so a heading never runs into
+// its button. One-word headings stay as they are.
+function setSectionHeading(el, text) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+  el.textContent = words[0] || '';
+  if (words.length > 1) {
+    el.appendChild(document.createElement('br'));
+    el.appendChild(document.createTextNode(words.slice(1).join(' ')));
+  }
+}
+
 function renderNewArrivalsHeader(arrivals) {
   arrivals = arrivals || {};
   const headingEl = document.getElementById('arrivals-heading');
   const btnEl = document.getElementById('arrivals-view-all-btn');
-  if (headingEl) { headingEl.textContent = arrivals.heading || ''; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { setSectionHeading(headingEl, arrivals.heading); headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
     btnEl.textContent = arrivals.buttonText || '';
     btnEl.classList.remove('skeleton-text');
@@ -227,7 +239,7 @@ function renderShopByClothingHeader(clothing) {
   clothing = clothing || {};
   const headingEl = document.getElementById('clothing-heading');
   const btnEl = document.getElementById('clothing-view-all-btn');
-  if (headingEl) { headingEl.textContent = clothing.heading || ''; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { setSectionHeading(headingEl, clothing.heading); headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
     btnEl.textContent = clothing.buttonText || '';
     btnEl.classList.remove('skeleton-text');
@@ -242,7 +254,7 @@ function renderShopByAccessoriesHeader(accessories) {
   accessories = Object.assign({}, SHOP_BY_ACCESSORIES_DEFAULTS, accessories || {});
   const headingEl = document.getElementById('accessories-heading');
   const btnEl = document.getElementById('accessories-view-all-btn');
-  if (headingEl) { headingEl.textContent = accessories.heading || ''; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { setSectionHeading(headingEl, accessories.heading); headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
     btnEl.textContent = accessories.buttonText || '';
     btnEl.classList.remove('skeleton-text');
@@ -279,7 +291,7 @@ function renderLogo() {
 function renderShopByBrandHeader(shopByBrand) {
   shopByBrand = shopByBrand || {};
   const headingEl = document.getElementById('shop-by-brand-heading');
-  if (headingEl) { headingEl.textContent = shopByBrand.heading || ''; headingEl.classList.remove('skeleton-text'); }
+  if (headingEl) { setSectionHeading(headingEl, shopByBrand.heading); headingEl.classList.remove('skeleton-text'); }
 }
 
 function renderNewsletter(newsletter) {

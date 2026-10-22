@@ -2762,6 +2762,18 @@ function fillTextElement(html, id, text) {
   });
 }
 
+// Homepage section headings: first word, then the rest on the next line
+// (setSectionHeading() in site-content.js does the same in the browser).
+function fillSectionHeading(html, id, text) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+  const re = new RegExp('(<[a-zA-Z0-9]+\\b[^>]*\\bid="' + id + '"[^>]*>)([^<]*)(</)');
+  return html.replace(re, function (_m, openTag, _oldText, closeStart) {
+    const cleanedOpen = openTag.replace(/\s*\b(skeleton-text|content-shimmer)\b/g, '');
+    const inner = escapeHtml(words[0] || '') + (words.length > 1 ? '<br>' + escapeHtml(words.slice(1).join(' ')) : '');
+    return cleanedOpen + inner + closeStart;
+  });
+}
+
 function fillBackgroundElement(html, id, imageUrl, maxWidth) {
   const url = adminImageURL(imageUrl, maxWidth);
   const re = new RegExp('(<div\\b[^>]*\\bid="' + id + '"[^>]*)(>)');
@@ -2817,23 +2829,23 @@ function applyHomepageContent(html, homepage) {
   html = fillTextElement(html, 'hero-shop-btn', hero.buttonText);
   html = fillBackgroundElement(html, 'hero-bg', hero.imageUrl, 1600);
 
-  html = fillTextElement(html, 'arrivals-heading', arrivals.heading);
+  html = fillSectionHeading(html, 'arrivals-heading', arrivals.heading);
   html = fillTextElement(html, 'arrivals-view-all-btn', arrivals.buttonText);
 
   html = fillTextElement(html, 'shop-by-category-heading', shopByCategory.heading);
   html = applyShopByCategoryTiles(html, Array.isArray(shopByCategory.tiles) ? shopByCategory.tiles : []);
 
-  html = fillTextElement(html, 'clothing-heading', clothing.heading);
+  html = fillSectionHeading(html, 'clothing-heading', clothing.heading);
   html = fillTextElement(html, 'clothing-view-all-btn', clothing.buttonText);
 
-  html = fillTextElement(html, 'accessories-heading', accessories.heading);
+  html = fillSectionHeading(html, 'accessories-heading', accessories.heading);
   html = fillTextElement(html, 'accessories-view-all-btn', accessories.buttonText);
 
   html = fillTextElement(html, 'banner-heading', banner.heading);
   html = fillTextElement(html, 'banner-btn', banner.buttonText);
   html = fillBackgroundElement(html, 'editorial-banner-img', banner.imageUrl, 1600);
 
-  html = fillTextElement(html, 'shop-by-brand-heading', shopByBrand.heading);
+  html = fillSectionHeading(html, 'shop-by-brand-heading', shopByBrand.heading);
 
   return html;
 }
