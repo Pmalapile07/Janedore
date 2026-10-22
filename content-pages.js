@@ -36,7 +36,8 @@ async function navigateToContentPage(slug, replaceUrl) {
     : slug === 'exchange-an-item' ? (typeof renderExchangesPage === 'function' && renderExchangesPage)
     : slug === 'customer-care' ? (typeof renderCustomerCarePage === 'function' && renderCustomerCarePage)
     : slug === 'brand-partnerships' ? (typeof renderBrandPartnershipsPage === 'function' && renderBrandPartnershipsPage)
-    : slug === 'partner-application' ? (typeof renderPartnerApplicationPage === 'function' && renderPartnerApplicationPage) : null;
+    : slug === 'partner-application' ? (typeof renderPartnerApplicationPage === 'function' && renderPartnerApplicationPage)
+    : slug === 'app' ? renderAppPage : null;
   if (formPage) {
     formPage();
     resetScrollToTop();
@@ -59,6 +60,18 @@ async function navigateToContentPage(slug, replaceUrl) {
   resetScrollToTop();
   ensureNavScrolled();
   updateChatVisibility();
+}
+
+// Menu > Download the app. There's no app yet.
+function renderAppPage() {
+  const el = document.getElementById('content-page-body');
+  if (!el) return;
+  el.innerHTML = `
+    <section class="track-page">
+      <h1 class="track-title">The Janedore app</h1>
+      <p class="track-intro">Our app is coming soon. Until then, you can shop every brand, track your orders and manage your account right here on the website.</p>
+      <button type="button" class="track-btn" onclick="navigateTo('products')">Continue shopping</button>
+    </section>`;
 }
 
 function renderContentPage(data, slug) {
