@@ -135,8 +135,9 @@
   .cs-card-body > p { font-size: 14px; line-height: 1.55; margin-bottom: 20px; max-width: 420px; }
   .cs-card-green .cs-card-body > p { color: #3d3d3d; }
   .cs-card-dark .cs-card-body > p { color: rgba(255,255,255,0.75); }
-  .cs-card-img { min-height: 260px; background: #cfd8bd center / cover no-repeat; }
-  .cs-card-img:empty:not([style]) { display: none; }
+  .cs-card-img { min-height: 340px; background: #cfd8bd center / cover no-repeat; }
+  .cs-curious-img { background-image: url('/coming-soon-curious.jpg'); background-position: center 30%; }
+  .cs-brands-img { background-image: url('/coming-soon-brands.jpg'); background-color: #c9cbc2; }
   .cs-form { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; }
   .cs-form .signup-input { flex: none; border-right: 1px solid #d4d4d4; }
   .cs-card-dark .signup-input { background: #1c1c1c; border-color: #3a3a3a; color: #fff; }
@@ -359,7 +360,7 @@
           <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
         </div>
       </div>
-      <div class="cs-card-img" id="cs-curious-img"></div>
+      <div class="cs-card-img cs-curious-img" aria-hidden="true"></div>
     </section>
 
     <section class="cs-card cs-card-dark" id="for-brands">
@@ -378,6 +379,7 @@
           <div class="signup-msg" id="brand-msg" role="status" aria-live="polite"></div>
         </div>
       </div>
+      <div class="cs-card-img cs-brands-img" aria-hidden="true"></div>
     </section>
   </div>
 
