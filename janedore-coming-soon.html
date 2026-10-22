@@ -81,19 +81,20 @@
   .cs-title { font-size: var(--head); font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; color: #111; }
 
   /* Floating header (kept from the launch-page look), off the screen edges. */
-  .cs-header { position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 0; right: 0; z-index: 20; padding: 0 20px; }
-  .cs-header-pill { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 52px; padding: 0 6px 0 20px; border-radius: 999px; background: rgba(17,17,17,0.72); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  /* Header: the shop's black bar. */
+  .cs-header { position: sticky; top: 0; z-index: 20; background: #111; padding-top: env(safe-area-inset-top, 0px); }
+  .cs-header-pill { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; padding: 0 var(--gutter); }
   .cs-logo { display: block; height: 16px; width: auto; }
 
   /* Buttons: the shop's (square, uppercase, letter-spaced). */
   .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; background: #111; color: #fff; font-family: inherit; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; }
   .cs-btn-white { background: #fff; color: #111; }
-  .cs-btn-sage { background: var(--sage); color: #111; border-radius: 999px; padding: 12px 18px; }
+  .cs-btn-sage { background: var(--sage); color: #111; padding: 11px 16px; }
   .cs-btn-block { width: 100%; padding: 16px; font-size: 11px; }
   .cs-btn:disabled { opacity: 0.6; cursor: default; }
 
   /* Hero: like the shop's homepage hero. */
-  .cs-hero { position: relative; margin: 8px 8px 0; height: calc(100svh - 16px); min-height: 540px; background: #cfd2c8 url('/coming-soon-hero.jpg') center 30% / cover no-repeat; display: flex; align-items: flex-end; color: #fff; }
+  .cs-hero { position: relative; margin: 8px 8px 0; height: calc(100svh - 76px); min-height: 540px; background: #cfd2c8 url('/coming-soon-hero.jpg') center 30% / cover no-repeat; display: flex; align-items: flex-end; color: #fff; }
   .cs-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0) 100%); }
   .cs-hero-content { position: relative; padding: 0 12px 32px; }
   .cs-hero-eyebrow { display: block; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
@@ -193,7 +194,6 @@
   .cs-sheet-back[hidden] { display: none; }
   .cs-sheet { position: relative; width: 100%; max-width: 440px; background: rgba(17,17,17,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: #fff; border-radius: 28px; padding: 28px 22px 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); animation: csSheetIn 0.25s ease; }
   @keyframes csSheetIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
-  .cs-sheet img.cs-sheet-logo { display: block; height: 14px; width: auto; margin-bottom: 18px; }
   .cs-sheet h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; padding-right: 44px; }
   .cs-sheet > p { font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
   .cs-sheet-close { position: absolute; top: 18px; right: 16px; width: 36px; height: 36px; border: none; border-radius: 50%; background: rgba(255,255,255,0.12); font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -207,9 +207,8 @@
 
   @media (min-width: 768px) {
     :root { --head: 27px; --gutter: 32px; }
-    .cs-header { top: 24px; padding: 0 36px; }
-    .cs-header-pill { max-width: 1100px; margin: 0 auto; }
-    .cs-hero { margin: 12px 12px 0; height: calc(100vh - 24px); }
+    .cs-header-pill { height: 64px; }
+    .cs-hero { margin: 12px 12px 0; height: calc(100vh - 88px); }
     .cs-hero-content { padding: 0 24px 48px; }
     .cs-hero h1 { font-size: 34px; max-width: 420px; }
     .cs-dark { margin: 12px 12px 0; padding: 72px 48px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; align-items: center; }
@@ -397,15 +396,15 @@
     <h2 class="cs-title">Good questions</h2>
     <p>A few things you might be wondering.</p>
     <details><summary>What is JANEDORE?<i class="ph ph-caret-down"></i></summary><p>JANEDORE is a curated destination for independent labels across clothing, accessories, home and living, and kids. Every brand is selected by our team, and pieces from several brands can be purchased in a single order.</p></details>
-    <details><summary>When does JANEDORE open?<i class="ph ph-caret-down"></i></summary><p>We are preparing for launch. Members of our list will be the first to know our opening date and will receive early access before we open to everyone.</p></details>
-    <details><summary>What does early access include?<i class="ph ph-caret-down"></i></summary><p>Access to the store before it opens to the public, and a first look at the labels joining the collective.</p></details>
+    <details><summary>When does JANEDORE open?<i class="ph ph-caret-down"></i></summary><p>We are preparing for launch. Members of our list will be the first to know our opening date, with early access and 10% off their first order.</p></details>
+    <details><summary>What does early access include?<i class="ph ph-caret-down"></i></summary><p>Access to the store before it opens to the public, 10% off your first order, and a first look at the labels joining the collective.</p></details>
     <details><summary>Which brands will be available?<i class="ph ph-caret-down"></i></summary><p>A considered edit of independent labels, from emerging designers to established names. Each brand will be introduced as we approach launch.</p></details>
     <details><summary>How can my brand be considered?<i class="ph ph-caret-down"></i></summary><p>We welcome enquiries from independent labels whose craft and values align with ours. Register your interest, and a member of our partnerships team will be in touch.</p></details>
   </section>
 
   <section class="cs-join" id="join">
-    <h2 class="cs-title">Join the list for early access</h2>
-    <p>Be the first to know when we open, with early access before the store opens to everyone.</p>
+    <h2 class="cs-title">Early access, and 10% off your first order</h2>
+    <p>Join the list to shop before we open to everyone, and receive 10% off your first order at launch.</p>
     <button type="button" class="cs-btn" data-open="join-sheet">Join the list</button>
   </section>
 </main>
@@ -422,9 +421,8 @@
 <div class="cs-sheet-back" id="join-sheet" hidden>
   <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="join-title">
     <button type="button" class="cs-sheet-close" data-close aria-label="Close"><i class="ph ph-x"></i></button>
-    <img class="cs-sheet-logo" src="/janedore-logo-white.png" alt="JANEDORE">
-    <h2 id="join-title">Join the list</h2>
-    <p>Be the first to know when we open, with early access before the store opens to everyone.</p>
+    <h2 id="join-title">Get 10% off your first order</h2>
+    <p>Join the list for early access before we open to everyone, and 10% off your first order at launch.</p>
     <div class="cs-form">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email" class="signup-input" id="email-input" placeholder="Email address" autocomplete="email" aria-describedby="signup-msg" required>
@@ -440,7 +438,6 @@
 <div class="cs-sheet-back" id="visitor-access-row" hidden>
   <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="preview-title">
     <button type="button" class="cs-sheet-close" id="visitor-close-btn" aria-label="Close"><i class="ph ph-x"></i></button>
-    <img class="cs-sheet-logo" src="/janedore-logo-white.png" alt="JANEDORE">
     <h2 id="preview-title">Preview access</h2>
     <p>Enter the preview password you were given.</p>
     <div class="cs-form">
@@ -458,7 +455,6 @@
 <div class="cs-sheet-back" id="brand-sheet" hidden>
   <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="brand-sheet-title">
     <button type="button" class="cs-sheet-close" id="brand-close-btn" aria-label="Close"><i class="ph ph-x"></i></button>
-    <img class="cs-sheet-logo" src="/janedore-logo-white.png" alt="JANEDORE">
     <h2 id="brand-sheet-title">For independent brands</h2>
     <p>Tell us about your brand, and our partnerships team will be in touch before launch.</p>
     <div class="cs-form" id="brand-form">
@@ -702,7 +698,7 @@
         userAgent:    navigator.userAgent,
         referrer:     document.referrer || 'direct'
       }).then(function() {
-        showMsg("Thank you for subscribing. We'll be in touch.", 'success');
+        showMsg("Thank you. You're on the list, and your 10% code will be emailed to you at launch.", 'success');
         emailEl.value = '';
         setLoading(false);
         fetch('/api/send-welcome-email', {
