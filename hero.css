@@ -51,17 +51,28 @@
   .hero-bg-placeholder, .hero-overlay { inset: 12px 12px; }
 }
 
+/* Heading on the left and Shop now on the right, on one line at the
+   bottom of the image, like the homepage section headers. The side
+   padding plus #hero's own puts the heading and button on the same
+   edges as those headers (20px phones, 24px from 768px, 27px desktop;
+   home-categories.css). */
 .hero-content-wrap {
   position: relative;
   z-index: 2;
-  text-align: center;
-  padding: 0 24px 40px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  padding: 0 12px 32px;
   margin-top: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 16px; /* This gap creates space between your heading and the button */
+  justify-content: space-between;
+  gap: 16px;
 }
+@media (min-width: 640px) { .hero-content-wrap { padding: 0 10px 40px; } }
+@media (min-width: 768px) { .hero-content-wrap { padding: 0 14px 40px; } }
+@media (min-width: 1024px) { .hero-content-wrap { padding: 0 15px 48px; } }
 
 .hero-sub {
   font-family: 'Inter', sans-serif;
@@ -78,17 +89,20 @@
 .hero-heading {
   z-index: 2;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 24px;
   font-style: normal;
-  font-weight: 500;
+  font-weight: 600;
   color: #fff;
-  text-transform: uppercase;
+  text-transform: none;
   line-height: 1.15;
-  letter-spacing: 0.1em;
-  max-width: 480px;
-  text-align: center;
+  letter-spacing: 0;
+  max-width: 220px;
+  min-width: 0;
+  text-align: left;
   margin: 0;
 }
+@media (min-width: 768px) { .hero-heading { font-size: 32px; max-width: 420px; } }
+#hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
 
 /* Matches home-manifesto's weight (300) — the 400 it had before read
    too thick against the manifesto text further down the page. */
@@ -126,7 +140,7 @@
 
 @media (max-width: 768px) {
   #hero { height: auto; min-height: unset; aspect-ratio: 4/5; }
-  .hero-content-wrap { padding: 0 20px 32px; gap: 12px; }
+
   .hero-statement-sub { max-width: 320px; }
 }
 
