@@ -77,10 +77,11 @@
 @media (min-width: 768px) { .hero-content-wrap { padding: 0 14px 40px; } }
 @media (min-width: 1024px) { .hero-content-wrap { padding: 0 15px 48px; } }
 
-/* Homepage hero: big heading at the bottom left with Shop now under it.
+/* Homepage hero: big heading at the bottom, centred, with Shop women and
+   Shop men under it.
    Brand pages keep the row above (slogan centred, button on the right). */
-#hero .hero-content-wrap { flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 18px; }
-#hero .hero-heading { font-size: 30px; line-height: 1.1; max-width: 280px; margin: 0; }
+#hero .hero-content-wrap { flex-direction: column; align-items: center; justify-content: flex-end; gap: 18px; }
+#hero .hero-heading { font-size: 30px; line-height: 1.1; max-width: 280px; margin: 0; text-align: center; }
 @media (min-width: 768px) { #hero .hero-heading { font-size: 34px; max-width: 420px; } }
 
 .hero-sub {
