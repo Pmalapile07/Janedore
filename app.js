@@ -756,8 +756,8 @@ function openMenuPanel(name) {
   panel.classList.add('active');
   DOM.menuDrawer.classList.add('sub-open');
 }
-// The menu's sections, like Superbalist: Women, Men, Kids, Home and
-// living and Beauty, each opening its own list. Women and Men list their
+// The menu's sections, like Superbalist: All (every product), then
+// Women, Men, Kids, Home and living and Beauty, each opening its own list. Women and Men list their
 // sections (SHOP_GROUPS, collection.js); the others their categories.
 // Only what has products right now, so the menu never leads to an empty
 // page.
@@ -765,7 +765,9 @@ const MENU_SECTIONS = [['women', 'Women'], ['men', 'Men'], ['kids', 'Kids'], ['h
 function renderMenuDepartments() {
   const el = document.getElementById('menu-departments');
   if (!el || !window.JDTaxonomy) return;
-  el.innerHTML = MENU_SECTIONS.map(([key, name]) =>
+  // All: every product, straight to the page; the sections open their lists.
+  el.innerHTML = `<a class="menu-row menu-cat" onclick="closeMenu();navigateTo('products');">All<i class="ph ph-caret-right menu-chev"></i></a>` +
+    MENU_SECTIONS.map(([key, name]) =>
     `<button class="menu-row menu-cat" onclick="openMenuSection('${key}')">${escapeHTML(name)}<i class="ph ph-caret-right menu-chev"></i></button>`).join('');
 }
 document.addEventListener('DOMContentLoaded', renderMenuDepartments);
