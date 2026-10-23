@@ -19,12 +19,17 @@ let _exchangePhotos = [];
 let _exchangeUploading = 0;
 let _exchangeEmail = '';
 
+// A summary of the exchange policy (the rules exchanges-api.js applies),
+// laid out like the returns one (returns.js).
 const EXCHANGE_POLICY_HTML = `<div class="track-notice returns-policy">
-      <strong>How exchanges work</strong><br>
-      1. Choose the item, the size or colour you’d like instead, and tell us why.<br>
-      2. We review your request with the brand and email you our decision. Once approved, your new item is set aside for you.<br>
-      3. Send the item back as instructed. If we sent the wrong size or item, or it arrived damaged or faulty, we will cover the delivery costs. If the item was sent as ordered, delivery costs in both directions are at your expense.<br>
-      4. Once the brand has received the item, your new one is dispatched with tracking.
+      <strong class="returns-policy-title">Exchanges at a glance</strong>
+      <ul class="returns-policy-list">
+        <li>Items can be exchanged for another size or colour within 30 days of delivery, subject to availability.</li>
+        <li>Every request is reviewed with the brand, and we’ll email you our decision. Once approved, your new item is set aside for you.</li>
+        <li>If we sent the wrong size or item, or it arrived damaged or faulty, we cover the delivery costs. Otherwise, delivery in both directions is at your cost.</li>
+        <li>Your new item is dispatched with tracking once the brand has received the original.</li>
+        <li>Would you rather have a refund? You can <span class="track-link" onclick="navigateToContentPage('log-a-return')">return an item</span> instead.</li>
+      </ul>
     </div>`;
 
 function renderExchangesPage(tab) {
