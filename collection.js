@@ -1023,7 +1023,7 @@ function productCard(p, isLarge, showDetails, variantIndex, eager) {
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">${wishBtn}</div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">${wishBtn}${quickAddButtonHtml(p)}</div>
       ${metaRow}
     </div>`;
 }
@@ -1094,7 +1094,7 @@ function productCardHome(p, eager) {
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')"><button class="product-wish-btn${isWished ? ' wished' : ''}" data-wish-id="${escapeHTML(p.id)}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph'} ph-heart"></i></button></div>
+      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')"><button class="product-wish-btn${isWished ? ' wished' : ''}" data-wish-id="${escapeHTML(p.id)}" onclick="event.stopPropagation();toggleWish('${pid}', this)"><i class="${isWished ? 'ph-fill' : 'ph'} ph-heart"></i></button>${quickAddButtonHtml(p)}</div>
       <div class="product-home-meta">
         ${brand}
         <div class="product-home-name-row">${name}</div>
