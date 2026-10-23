@@ -636,7 +636,7 @@ async function loadProductReviewsSection(productId) {
   body.innerHTML = `<p class="product-review-stars" aria-label="${avg.toFixed(1)} out of 5">${stars(avg)} ${avg.toFixed(1)} · ${reviews.length} review${reviews.length === 1 ? '' : 's'}</p>${write}` +
     reviews.map(r => {
       const d = time(r) ? new Date(time(r)).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-      return `<p class="info-sub-label">${[r.name || 'Anonymous', r.city, d].filter(Boolean).map(escapeHTML).join(' · ')}</p>
+      return `<p class="info-sub-label">${[r.name || 'Anonymous', r.city].filter(Boolean).map(escapeHTML).join(' · ')}${d ? ` · <span class="product-review-date">${escapeHTML(d)}</span>` : ''}</p>
         <p class="product-review-stars" aria-label="${Number(r.rating) || 0} out of 5">${stars(Number(r.rating) || 0)}</p>
         ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}
         ${reviewPhotosHtml(r, `Photo from ${escapeHTML(r.name || 'a customer')}`)}`;
