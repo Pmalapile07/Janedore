@@ -94,9 +94,8 @@ body:not(.on-collection-page) .collection-top-description {
   display: none !important;
   background: #fff;
   border-bottom: 1px solid white;
-  /* About 71px tall, also when it's the sticky top bar. The product count
-     on the left lines up with the heading and filter trail above (8px). */
-  padding: 22px 20px 22px 8px;
+  /* About 71px tall, also when it's the sticky top bar. */
+  padding: 22px 20px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -245,7 +244,7 @@ body:not(.on-collection-page) .collection-page-heading {
 .collection-sort-options button:hover { background: #f5f5f5; }
 
 @media (max-width: 380px) {
-  .collection-filter-bar { gap: 8px; padding-right: 16px; }
+  .collection-filter-bar { gap: 8px; padding-left: 16px; padding-right: 16px; }
   .collection-product-count { font-size: 11px; }
   .collection-toolbar-actions { gap: 14px; }
 }
