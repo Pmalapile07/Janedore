@@ -13,11 +13,28 @@
 - **Free delivery over R750:** Janedore pays the courier on those orders. Set the commission so it covers this.
 
 ## Brand pages
-- **Admin fields:** let brands (or admin) set their slogan, shown in the middle of their hero photo (`vendor.slogan`; nothing shows until it is set), the line under their name in the brand bar (now "location · main department"), and their (About removed: brand pages show no story, like Superbalist).
+- **Admin fields:** let brands (or admin) set their slogan, shown in the middle of their hero photo (`vendor.slogan`; nothing shows until it is set), and their (About removed: brand pages show no story, like Superbalist). The line under their name in the brand bar is now automatic: the brand's top two departments ("Clothing & Accessories"), no location.
 - **Collections:** brands set up their own collections (name, image, products) for the Collections tiles, which are empty placeholders for now.
 - **Layout per category:** a brand page's sections (hero, New from, Collections, slider vs grid, order) should differ by the kind of brand (clothing, accessories, homeware, beauty, kids, men's). Header, brand bar and scroll behaviour stay the same everywhere. Decide each layout and make it choosable in admin.
 
-- **Brand rating:** once brands have reviews, show their average in the brand bar ("Cape Town · Clothing · ★ 4.7 (32)"), only when they have some. A full Reviews tab was tried and left out: product pages already show reviews, and empty tabs make new brands look worse.
+- **Brand rating:** once brands have reviews, show their average in the brand bar ("Clothing & Accessories · ★ 4.7 (32)"), only when they have some. A full Reviews tab was tried and left out: product pages already show reviews, and empty tabs make new brands look worse.
+
+## Sorting, recommendations and search
+- **Sold out last:** push sold-out products to the end of every collection grid and home page row, instead of mixed in with what's available.
+- **Suggested products bug:** `getSuggestedProducts()` (`collection.js`) puts the same brand first, then featured products, but passing the list through `merchandiseProducts()` re-sorts it by category and price, so that order is lost.
+- **Better "You may also like":** same department and gender, a similar price range, the same brand first, in stock only (now: same category, cheapest first).
+- **Better search:** rank exact name matches first, also match colours and descriptions, and tolerate small typos like "dres" (now: plain matching on name, brand and category slug, unranked; `search.js` `getSearchResults()`).
+- **Best sellers:** count units sold per product at checkout (`soldCount`, nothing records it yet), then add a Best selling sort and Trending rows.
+
+## Wallet and store credit
+- **Store credit:** a balance per customer with a history of every credit and spend (server only), shown in Account > Wallet (now a "coming soon" placeholder, `account.js` `renderAccountWallet()`).
+- **Granting credit:** in admin, refund a return as store credit (only if the customer chooses it; refunds to the original payment method stay the default) and add goodwill credit to a customer.
+- **Spending it:** "Use wallet balance" at checkout, taken off the total on the server; skip PayFast when credit covers the whole order.
+- **Gift cards (later):** buy a card, a code is emailed, redeeming it adds credit. Prepaid vouchers must stay valid for at least 3 years (Consumer Protection Act).
+
+## Checks
+- **Waitlist emails:** the back-in-stock check runs every 15 minutes inside the server (`waitlist-api.js` `sweepWaitlist()`). Make sure the hosting never puts the server to sleep, or move the check to a scheduled job.
+- **Policies:** update the returns policy page and FAQ in admin to 14 days, and add any return conditions (unworn, tags on, hygiene exclusions) to the returns summary.
 
 ## Coming soon page
 - **Redesign:** the current page (janedore-coming-soon.html) isn't right yet. Liked so far: the hero photo, the app-preview phones, the dark pop-ups, the shop's black header. Start the next version from what the page needs to say (who it's for, why join), not from another brand's layout.
