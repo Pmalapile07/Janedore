@@ -110,6 +110,7 @@ function productBelongsToCollection(product, collection) {
   if (collection.collectionType === 'automated') {
     if (collection.automatedRule === 'sale') return hasSalePrice(product);
     if (collection.automatedRule === 'newin') return typeof isProductNew === 'function' && isProductNew(product);
+    if (collection.automatedRule === 'gender') return JDTaxonomy.forGender(product, collection.gender);
     if (collection.automatedRule === 'freedelivery') return typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product);
   }
   const values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
@@ -223,7 +224,7 @@ function passesCommonFilters(p, f) {
   if (f.size && f.size !== 'all' && !(p.sizes || []).includes(f.size)) return false;
   if (f.sizes && f.sizes.length && !(p.sizes || []).some(s => f.sizes.includes(s))) return false;
   if (f.colors && f.colors.length && !productColors(p).some(c => f.colors.includes(c))) return false;
-  if (f.genders && f.genders.length && !f.genders.includes(JDTaxonomy.genderOf(p))) return false;
+  if (f.genders && f.genders.length && !f.genders.some(g => JDTaxonomy.forGender(p, g))) return false;
   if (f.onSale && !hasSalePrice(p)) return false;
   if (f.inStock && (Number(p.stock) || 0) <= 0) return false;
   return true;
@@ -613,7 +614,7 @@ function passesFacets(p, f, skip) {
   if (skip !== 'vendor' && f.vendor.length && !f.vendor.includes(p.brand)) return false;
   if (skip !== 'sizes' && f.sizes && f.sizes.length && !(p.sizes || []).some(s => f.sizes.includes(s))) return false;
   if (skip !== 'colors' && f.colors && f.colors.length && !productColors(p).some(c => f.colors.includes(c))) return false;
-  if (skip !== 'genders' && f.genders && f.genders.length && !f.genders.includes(JDTaxonomy.genderOf(p))) return false;
+  if (skip !== 'genders' && f.genders && f.genders.length && !f.genders.some(g => JDTaxonomy.forGender(p, g))) return false;
   if (skip !== 'onSale' && f.onSale && !hasSalePrice(p)) return false;
   if (skip !== 'inStock' && f.inStock && (Number(p.stock) || 0) <= 0) return false;
   return true;
@@ -659,7 +660,7 @@ function renderFilterPanel() {
   // needs no filter).
   const genders = [...new Set(pool.map(p => JDTaxonomy.genderOf(p)))];
   if (genders.length > 1 || (f.genders || []).length) {
-    sections.push({ key: 'genders', title: 'Gender', options: JDTaxonomy.GENDERS.filter(g => genders.includes(g[0])).map(([g, label]) => ({ value: g, label, picked: (f.genders || []).includes(g), count: count('genders', p => JDTaxonomy.genderOf(p) === g) })) });
+    sections.push({ key: 'genders', title: 'Gender', options: JDTaxonomy.GENDERS.filter(g => genders.includes(g[0])).map(([g, label]) => ({ value: g, label, picked: (f.genders || []).includes(g), count: count('genders', p => JDTaxonomy.forGender(p, g)) })) });
   }
 
   // Brands: not on a brand's own page.

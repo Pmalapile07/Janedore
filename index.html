@@ -376,6 +376,7 @@
 
   <div class="menu-panels">
     <div class="menu-panel" id="menu-panel-main">
+      <div class="menu-gender-tabs" id="menu-gender-tabs" role="group" aria-label="Shop women or men"></div>
       <button class="menu-row menu-account" onclick="closeMenu();navigateToLogin();">
         <span class="menu-account-left"><span class="menu-avatar" id="menu-avatar"><i class="ph ph-user"></i></span><span id="menu-account-label">Sign in</span></span>
         <i class="ph ph-caret-right menu-chev"></i>
@@ -458,7 +459,10 @@
   <div class="hero-overlay"></div>
   <div class="hero-content-wrap">
     <h2 class="hero-heading skeleton-text" id="hero-heading"></h2>
-    <button class="hero-shop-btn skeleton-text" id="hero-shop-btn"></button>
+    <div class="hero-gender-btns">
+      <button class="hero-shop-btn" onclick="shopGenderPage('women')">Shop women</button>
+      <button class="hero-shop-btn" onclick="shopGenderPage('men')">Shop men</button>
+    </div>
   </div>
 </section>
 

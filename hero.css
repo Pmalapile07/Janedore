@@ -115,6 +115,9 @@
 @media (min-width: 768px) { .hero-heading { font-size: 34px; max-width: 420px; } }
 #hero .hero-shop-btn,
 .brand-hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
+/* Shop women and Shop men, side by side. */
+.hero-gender-btns { display: flex; gap: 8px; }
+#hero .hero-gender-btns .hero-shop-btn { padding: 12px 24px; }
 
 /* Matches home-manifesto's weight (300) — the 400 it had before read
    too thick against the manifesto text further down the page. */

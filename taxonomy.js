@@ -131,6 +131,8 @@
     sizePreset: function (slug) { var s = Taxonomy.sizeSystem(slug); return s ? SIZE_SYSTEMS[s].preset : ONE_SIZE; },
     // Products saved before Gender existed are womenswear.
     genderOf: function (product) { return (product && product.gender) || 'women'; },
+    // Shopping Women or Men: unisex pieces show in both.
+    forGender: function (product, g) { var pg = Taxonomy.genderOf(product); return pg === g || pg === 'unisex'; },
     genderLabel: function (g) { for (var i = 0; i < GENDERS.length; i++) if (GENDERS[i][0] === g) return GENDERS[i][1]; return g; }
   };
 
