@@ -737,14 +737,6 @@ function openMenu() {
   const signedIn = user && !user.isAnonymous;
   const label = document.getElementById('menu-account-label');
   if (label) label.textContent = signedIn ? 'My account' : 'Sign in';
-  const avatar = document.getElementById('menu-avatar');
-  if (avatar) {
-    const name = signedIn ? (user.displayName || user.email || '').trim() : '';
-    const parts = name.split(/[\s@.]+/).filter(Boolean);
-    const initials = (parts[0] ? parts[0][0] : '') + (user && user.displayName && parts[1] ? parts[1][0] : '');
-    avatar.innerHTML = initials ? '' : '<i class="ph ph-user"></i>';
-    if (initials) avatar.textContent = initials.toUpperCase();
-  }
   const badge = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n; el.style.display = n > 0 ? 'flex' : 'none'; } };
   badge('menu-wish-badge', (S.wishlist || []).length);
   badge('menu-bag-badge', (S.cart || []).reduce((a, i) => a + (Number(i.qty) || 1), 0));
