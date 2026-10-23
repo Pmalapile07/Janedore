@@ -68,6 +68,7 @@
 /* Returns (returns.js) share the tracking page's look. */
 .returns-page .account-tabs { margin-bottom: 20px; }
 .returns-policy { margin-top: 28px; line-height: 1.7; }
+.returns-policy-title { display: block; margin-bottom: 10px; }
 .return-item { border: 1px solid #e5e5e5; padding: 12px 14px; margin: 0 0 10px; }
 .return-item.is-selected { border-color: #111; }
 .return-item.is-blocked { opacity: 0.55; }

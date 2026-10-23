@@ -25,7 +25,7 @@ function returnsSavedEmail() {
 // Shown under both the Start a return and Check return status tabs.
 // A summary of the returns policy (the rules returns-api.js applies).
 const RETURNS_POLICY_HTML = `<div class="track-notice returns-policy">
-      <strong>Returns at a glance</strong><br>
+      <strong class="returns-policy-title">Returns at a glance</strong>
       · Items can be returned within 30 days of delivery.<br>
       · Every request is reviewed with the brand, and we’ll email you our decision.<br>
       · Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.<br>
