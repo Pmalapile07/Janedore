@@ -78,7 +78,7 @@ function openCardActions(productId) {
     ((p.stock ?? 0) > 0
       ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to bag</button>`
       : p.waitlist
-        ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to waitlist</button>`
+        ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Notify me when available</button>`
         : `<button type="button" class="quick-add-submit" disabled>${isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'}</button>`) +
     `<button type="button" class="quick-add-secondary" onclick="closeQuickAdd();toggleWish('${id}')">${wished ? 'Remove from wishlist' : 'Add to wishlist'}</button>` +
     `<button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${id}']=${vi};goToProduct('${id}')">View full details</button>`;
@@ -129,37 +129,77 @@ function renderQuickAdd() {
         return `<button type="button" class="product-size-btn${_quickAdd.size === s ? ' sel' : ''}${ok ? '' : ' out-of-stock'}" ${selectable ? '' : 'disabled'}${ok ? '' : ' aria-label="' + escapeHTML(s) + ', sold out"'} onclick="quickAddSize('${escapeJSString(s)}')">${escapeHTML(s)}</button>`;
       }).join('') + '</div>'
     : '';
-  // The button reads like the product page's: Add to waitlist for a
-  // sold-out pick when the product has a waitlist.
+  // A sold-out pick on a product with a waitlist: Notify me, with an
+  // email field for guests right here (no signing in needed).
   const pickedOut = sizes.length ? (_quickAdd.size && !isSizeInStock(p, vi, _quickAdd.size)) : !available;
+  const notify = pickedOut && p.waitlist;
   const label = sizes.length && !_quickAdd.size ? 'Select a size'
-    : pickedOut ? (p.waitlist ? 'Add to waitlist' : (isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'))
+    : notify ? 'Notify me'
+    : pickedOut ? (isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out')
     : 'Add to bag';
+  let notifyHtml = '';
+  if (notify) {
+    const user = firebase.auth().currentUser;
+    const signedIn = user && !user.isAnonymous;
+    const what = sizes.length ? 'This size is sold out.' : 'This item is sold out.';
+    if (_quickAdd.email === undefined) {
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem(WAITLIST_CONTACT_KEY) || '{}') || {}; } catch (e) {}
+      _quickAdd.email = saved.email || '';
+    }
+    notifyHtml = `<div class="quick-add-section">
+      <div class="quick-add-label">Notify me when it’s back</div>
+      <p class="quick-add-note">${what} ${signedIn ? `We’ll email you at ${escapeHTML(user.email || '')} as soon as it’s back in stock.` : 'Enter your email address and we’ll let you know as soon as it’s back in stock.'}</p>
+      ${signedIn ? '' : `<input class="track-input quick-add-email" id="qa-notify-email" type="email" autocomplete="email" inputmode="email" placeholder="Email address" maxlength="200" value="${escapeHTML(_quickAdd.email)}" oninput="_quickAdd.email=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();quickAddSubmit()}">`}
+      <p class="track-error" id="qa-notify-error"></p>
+    </div>`;
+  }
 
   panel.innerHTML = quickAddHeadHtml(p, vi) + `
     ${colours ? `<div class="quick-add-section">${colours}</div>` : ''}
     ${sizeRow ? `<div class="quick-add-section">${sizeRow}</div>` : ''}
-    <button type="button" class="quick-add-submit" onclick="quickAddSubmit()" ${label === 'Add to bag' || label === 'Add to waitlist' ? '' : 'disabled'}>${label}</button>
+    ${notifyHtml}
+    <button type="button" class="quick-add-submit" id="qa-submit" onclick="quickAddSubmit()" ${label === 'Add to bag' || label === 'Notify me' ? '' : 'disabled'}>${label}</button>
     <button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${escapeJSString(p.id)}']=${vi};goToProduct('${escapeJSString(p.id)}')">View full details</button>`;
 }
 
 function quickAddColour(i) { _quickAdd.vi = i; renderQuickAdd(); }
 function quickAddSize(s) { _quickAdd.size = s; renderQuickAdd(); }
 
-function quickAddSubmit() {
+async function quickAddSubmit() {
   const p = _quickAdd && PRODUCTS.find(x => x.id === _quickAdd.id);
   if (!p) return;
   if (quickAddSizes(p).length && !_quickAdd.size) return;
   // addToCart() and the waitlist use the colour picked for this product.
   S.productVariantSelections[p.id] = _quickAdd.vi;
   const size = _quickAdd.size || 'OS';
-  closeQuickAdd();
-  if (p.waitlist && !isSizeInStock(p, _quickAdd.vi, size)) {
-    // The product page's waitlist: signed in joins straight away, guests
-    // give a name and email (product-detail.js).
-    S.selectedSize = size === 'OS' ? null : size;
-    joinProductWaitlist(p, null);
+  if (!(p.waitlist && !isSizeInStock(p, _quickAdd.vi, size))) {
+    closeQuickAdd();
+    addToCart(p.id, size, 1);
     return;
   }
-  addToCart(p.id, size, 1);
+  // The waitlist, right here: signed-in customers by their account, guests
+  // by the email they typed (postWaitlist, product-detail.js).
+  S.selectedSize = size === 'OS' ? null : size;
+  const err = document.getElementById('qa-notify-error');
+  const btn = document.getElementById('qa-submit');
+  const fail = (msg) => { if (err) { err.textContent = msg; err.style.display = 'block'; } };
+  const user = firebase.auth().currentUser;
+  const signedIn = user && !user.isAnonymous;
+  const email = String(_quickAdd.email || '').trim().toLowerCase();
+  if (!signedIn && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email address.');
+  if (err) err.style.display = 'none';
+  if (btn) btn.disabled = true;
+  try {
+    if (signedIn) await postWaitlist(p, { name: user.displayName || '' }, await user.getIdToken());
+    else {
+      await postWaitlist(p, { email });
+      try { localStorage.setItem(WAITLIST_CONTACT_KEY, JSON.stringify({ email })); } catch (e) {}
+    }
+    closeQuickAdd();
+    showAddedToCartToast(signedIn ? 'Added to your waitlist' : 'We’ll email you when it’s back in stock', 'ph-check-circle');
+  } catch (e) {
+    fail(e.message);
+    if (btn) btn.disabled = false;
+  }
 }

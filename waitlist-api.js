@@ -3,9 +3,11 @@
 // whole product is sold out, the product page's Add to bag button reads
 // Add to waitlist and joins it (product-detail.js). sweepWaitlist() checks
 // every 15 minutes and emails each customer once when their exact item is
-// back in stock, then marks the entry notified. Guests join with a name
-// and email instead of signing in. Signed-in customers see
-// and remove their entries in My account > Waitlist (account.js).
+// back in stock, then marks the entry notified. Guests join with their
+// email (a name is optional) instead of signing in, and get a private
+// claim code kept on their device: signing in on that device adds the
+// entry to their account (My account > Waitlist, account.js), where
+// signed-in customers see and remove their entries.
 // waitlist/{id}, where id is a hash of email + product + colour + size,
 // so joining twice keeps one entry. Server only (firestore.rules default
 // deny); firebase-admin reads and writes it here.
@@ -45,7 +47,6 @@ module.exports = function registerWaitlist(app, deps) {
     const variantIndex = Math.max(0, Math.floor(Number(b.variantIndex) || 0));
     const size = String(b.size || 'OS').slice(0, 40);
     const customerName = String((user && user.name) || b.name || '').trim().slice(0, 60);
-    if (!user && !customerName) return res.status(400).json({ error: 'Please enter your name.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
     try {
       const doc = productId ? await adminDb.collection('products').doc(productId).get() : null;
@@ -56,12 +57,16 @@ module.exports = function registerWaitlist(app, deps) {
       if (!sizes.includes(size) || variantIndex >= Math.max(1, (p.variants || []).length)) return res.status(400).json({ error: 'Please choose a size.' });
       if (stockOf(p, variantIndex, size) > 0) return res.status(400).json({ error: 'This item is in stock and available to add to your bag.' });
       const v = (p.variants || [])[variantIndex] || {};
-      await col().doc(entryId(email, productId, variantIndex, size)).set({
-        email, customerName, uid: user ? user.uid : null, productId, variantIndex, size,
+      const claim = user ? null : crypto.randomBytes(24).toString('hex');
+      const ref = col().doc(entryId(email, productId, variantIndex, size));
+      // Joining again as a guest keeps an entry already in an account there.
+      const prev = user ? null : await ref.get();
+      await ref.set({
+        email, customerName, uid: user ? user.uid : ((prev && prev.exists && prev.data().uid) || null), claim, productId, variantIndex, size,
         name: p.name || '', brand: p.brand || '', color: v.color || '',
         status: 'waiting', createdAt: Date.now()
       });
-      res.json({ ok: true });
+      res.json({ ok: true, claim });
     } catch (e) {
       console.error('[WAITLIST] Join failed:', e.message);
       res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
@@ -69,11 +74,21 @@ module.exports = function registerWaitlist(app, deps) {
   });
 
   // ---- My account: list and remove ----
-  // Entries joined while signed in, plus those under the account's email
-  // once it is verified (the same rule as orders).
-  async function ownEntries(user) {
+  // Entries joined while signed in, those joined as a guest on this device
+  // (their claim codes, which also link them to the account), plus those
+  // under the account's email once it is verified (the same rule as
+  // orders).
+  async function ownEntries(user, claims) {
     const found = {};
     const add = (snap) => snap.docs.forEach((d) => { found[d.id] = d.data(); });
+    for (const c of (claims || []).slice(0, 30)) {
+      const snap = await col().where('claim', '==', c).limit(1).get();
+      for (const d of snap.docs) {
+        if (d.data().uid && d.data().uid !== user.uid) continue;
+        if (!d.data().uid) await d.ref.update({ uid: user.uid });
+        found[d.id] = Object.assign({}, d.data(), { uid: user.uid });
+      }
+    }
     add(await col().where('uid', '==', user.uid).limit(100).get());
     if (user.email_verified && user.email) add(await col().where('email', '==', String(user.email).toLowerCase()).limit(100).get());
     return found;
@@ -84,8 +99,9 @@ module.exports = function registerWaitlist(app, deps) {
     const user = await signedIn(req);
     if (!user) return res.status(401).json({ error: 'Please sign in.' });
     try {
-      const found = await ownEntries(user);
-      res.json({ items: Object.keys(found).map((id) => Object.assign({ id }, found[id], { uid: undefined }))
+      const claims = String(req.query.claims || '').split(',').filter((c) => /^[a-f0-9]{48}$/.test(c));
+      const found = await ownEntries(user, claims);
+      res.json({ items: Object.keys(found).map((id) => Object.assign({ id }, found[id], { uid: undefined, claim: undefined }))
         .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)) });
     } catch (e) {
       console.error('[WAITLIST] List failed:', e.message);

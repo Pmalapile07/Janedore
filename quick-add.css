@@ -45,6 +45,9 @@
 .quick-add-price-was { color: #888; font-weight: 400; text-decoration: line-through; }
 
 .quick-add-section { margin-top: 20px; }
+/* Notify me when it's back (sold-out pick with a waitlist). */
+.quick-add-note { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: #555; }
+.quick-add-email { width: 100%; box-sizing: border-box; }
 /* Same as the product page's "Select a size" label (.sizes-label). */
 .quick-add-label { font-size: 14px; font-weight: 500; margin-bottom: 12px; }
 .quick-add-label span { font-weight: 400; color: #666; }

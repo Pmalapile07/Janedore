@@ -101,9 +101,23 @@ async function postWaitlist(product, contact, token) {
     body: JSON.stringify({ productId: product.id, variantIndex: S.productVariantSelections[product.id] ?? 0, size: S.selectedSize || 'OS', name: contact.name || '', email: contact.email || '' }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'We couldn’t complete your request. Please try again.');
+  // A guest's claim code: signing in on this device adds the entry to the
+  // account's waitlist (account.js renderAccountWaitlist, waitlist-api.js).
+  if (data.claim) {
+    try {
+      const claims = waitlistClaims().filter(c => c !== data.claim);
+      claims.unshift(data.claim);
+      localStorage.setItem(WAITLIST_CLAIMS_KEY, JSON.stringify(claims.slice(0, 30)));
+    } catch (e) {}
+  }
+  return data;
+}
+const WAITLIST_CLAIMS_KEY = 'janedore_waitlist_claims';
+function waitlistClaims() {
+  try { const c = JSON.parse(localStorage.getItem(WAITLIST_CLAIMS_KEY) || '[]'); return Array.isArray(c) ? c : []; } catch (e) { return []; }
 }
 
-// Guest waitlist: name and email in a popup (index.html), remembered on
+// Guest waitlist: their email in a popup (index.html), remembered on
 // this device for next time.
 const WAITLIST_CONTACT_KEY = 'janedore_waitlist_contact';
 let _waitlistModalProduct = null;
@@ -117,9 +131,7 @@ function openWaitlistModal(product) {
     'We’ll email you as soon as ' + (product.name || 'this item') + (what ? ' in ' + what : '') + ' is back in stock.';
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(WAITLIST_CONTACT_KEY) || '{}') || {}; } catch (e) {}
-  const nameEl = document.getElementById('waitlist-name');
   const emailEl = document.getElementById('waitlist-email');
-  if (!nameEl.value) nameEl.value = saved.name || '';
   if (!emailEl.value) emailEl.value = saved.email || '';
   const err = document.getElementById('waitlist-error');
   err.style.display = 'none';
@@ -132,22 +144,20 @@ async function submitGuestWaitlist(e) {
   e.preventDefault();
   const product = _waitlistModalProduct;
   if (!product) return;
-  const name = document.getElementById('waitlist-name').value.trim();
   const email = document.getElementById('waitlist-email').value.trim().toLowerCase();
   const err = document.getElementById('waitlist-error');
   const btn = document.getElementById('waitlist-submit');
   const fail = (msg) => { err.textContent = msg; err.style.display = 'block'; };
-  if (!name) return fail('Please enter your name.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email address.');
   err.style.display = 'none';
   btn.disabled = true;
   try {
-    await postWaitlist(product, { name, email });
-    try { localStorage.setItem(WAITLIST_CONTACT_KEY, JSON.stringify({ name, email })); } catch (e2) {}
+    await postWaitlist(product, { email });
+    try { localStorage.setItem(WAITLIST_CONTACT_KEY, JSON.stringify({ email })); } catch (e2) {}
     closeWaitlistModal();
     const label = document.querySelector('#sticky-add-btn .sticky-btn-label');
     if (label) label.textContent = 'Added';
-    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Added to your waitlist', 'ph-check-circle');
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('We’ll email you when it’s back in stock', 'ph-check-circle');
     setTimeout(updateAddToCartState, 1600);
   } catch (e2) {
     fail(e2.message);

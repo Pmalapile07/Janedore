@@ -436,24 +436,38 @@ function renderAccountWallet() {
   </div>`;
 }
 
+// Entries joined signed in, as a guest on this device (its claim codes,
+// product-detail.js postWaitlist, which link them to this account), and
+// under this email once it's verified (waitlist-api.js).
 async function renderAccountWaitlist() {
   const body = document.getElementById('account-tab-body');
+  const user = accountUser();
+  if (user && !user.emailVerified) {
+    await user.reload().catch(() => {});
+    if (user.emailVerified) await user.getIdToken(true).catch(() => {});
+  }
+  const claims = typeof waitlistClaims === 'function' ? waitlistClaims() : [];
   let items;
-  try { items = (await accountApi('/api/account/waitlist')).items || []; }
+  try {
+    items = (await accountApi('/api/account/waitlist' + (claims.length ? '?claims=' + claims.join(',') : ''))).items || [];
+    // Linked to this account now, so this device no longer needs them.
+    if (claims.length) { try { localStorage.removeItem(WAITLIST_CLAIMS_KEY); } catch (e) {} }
+  }
   catch (e) {
     if (body && S.accountTab === 'waitlist') body.innerHTML = `<p class="account-note">${escapeHTML(e.message)}</p>`;
     return;
   }
   if (!body || S.accountTab !== 'waitlist') return;
+  const verify = user && !user.emailVerified ? `<div class="track-notice account-verify">Joined a waitlist with this email address on another device? <span class="track-link" onclick="sendAccountVerification(this)">Verify your email</span> to see it here.</div>` : '';
   if (!items.length) {
-    body.innerHTML = `<div class="cart-empty account-empty">
+    body.innerHTML = verify + `<div class="cart-empty account-empty">
       <i class="ph ph-bell cart-empty-icon" aria-hidden="true"></i>
       <div class="cart-empty-title">Your waitlist is empty</div>
       <div class="wish-empty-sub">Join the waitlist for a sold-out size on its product page, and we’ll notify you when it becomes available.</div>
     </div>`;
     return;
   }
-  body.innerHTML = items.map(w => {
+  body.innerHTML = verify + items.map(w => {
     const product = PRODUCTS.find(p => p.id === w.productId);
     const thumb = product ? getProductThumbnail(product, w.variantIndex) : PLACEHOLDER_IMAGE;
     const meta = [w.brand, w.color && w.color !== 'Default' ? w.color : '', w.size && w.size !== 'OS' ? 'Size ' + w.size : ''].filter(Boolean).map(escapeHTML).join(' · ');
