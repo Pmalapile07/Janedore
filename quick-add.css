@@ -22,16 +22,6 @@
 .card-action-icon { font-size: 24px; width: 24px; height: 24px; overflow: hidden; color: transparent; font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 .card-icon-ready .card-action-icon { color: inherit; }
 
-/* Its sheet: Add to bag, wishlist, View full details. */
-.card-action-list { margin-top: 18px; border-top: 1px solid #eee; }
-.card-action-row {
-  display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 0; background: none; border: none; border-bottom: 1px solid #eee;
-  font-family: inherit; font-size: 15px; color: #111; text-align: left; cursor: pointer;
-}
-.card-action-row > i:first-child { font-size: 20px; width: 22px; text-align: center; flex-shrink: 0; }
-.card-action-row span { flex: 1; }
-.card-action-chev { font-size: 16px; color: #888; }
-
 #quick-add-sheet { position: fixed; inset: 0; z-index: 1300; visibility: hidden; transition: visibility 0s linear 0.3s; }
 #quick-add-sheet.open { visibility: visible; transition: visibility 0s; }
 .quick-add-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); opacity: 0; transition: opacity 0.3s ease; }
@@ -73,6 +63,11 @@
   font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
 }
 .quick-add-submit:disabled { background: #e5e5e5; color: #888; cursor: default; }
+/* Add to wishlist, under Add to bag: white with a black border. */
+.quick-add-secondary {
+  display: block; width: 100%; height: 46px; margin-top: 10px; border: 1px solid #111; background: #fff; color: #111; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+}
 .quick-add-details {
   display: block; width: 100%; margin-top: 10px; padding: 10px 0; background: none; border: none; cursor: pointer;
   font-family: inherit; font-size: 13px; color: #111; text-decoration: underline; text-underline-offset: 3px;

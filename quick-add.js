@@ -69,12 +69,14 @@ function openCardActions(productId) {
   const vi = S.productVariantSelections[productId] ?? 0;
   const id = escapeJSString(p.id);
   const wished = (S.wishlist || []).some(w => w.id === p.id);
-  const row = (icon, label, onclick) => `<button type="button" class="card-action-row" onclick="${onclick}"><i class="ph ${icon}" aria-hidden="true"></i><span>${label}</span><i class="ph ph-caret-right card-action-chev" aria-hidden="true"></i></button>`;
-  panel.innerHTML = quickAddHeadHtml(p, vi) + `<div class="card-action-list">` +
-    ((p.stock ?? 0) > 0 ? row('ph-tote-simple', 'Add to bag', `openQuickAdd('${id}')`) : '') +
-    row('ph-heart', wished ? 'Remove from wishlist' : 'Add to wishlist', `closeQuickAdd();toggleWish('${id}')`) +
-    row('ph-arrow-right', 'View full details', `closeQuickAdd();S.productVariantSelections['${id}']=${vi};goToProduct('${id}')`) +
-    `</div>`;
+  // Add to bag (black) over Add to wishlist (outlined), then the link to
+  // the product page, like the quick add view below.
+  panel.innerHTML = quickAddHeadHtml(p, vi) +
+    ((p.stock ?? 0) > 0
+      ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to bag</button>`
+      : `<button type="button" class="quick-add-submit" disabled>Sold out</button>`) +
+    `<button type="button" class="quick-add-secondary" onclick="closeQuickAdd();toggleWish('${id}')">${wished ? 'Remove from wishlist' : 'Add to wishlist'}</button>` +
+    `<button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${id}']=${vi};goToProduct('${id}')">View full details</button>`;
   showQuickAddSheet(sheet);
 }
 
