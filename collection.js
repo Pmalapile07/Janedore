@@ -557,7 +557,10 @@ function updateCollectionTitle() {
     return { title: (custom.title || '').trim() || fixedTitles[slug] || JDTaxonomy.label(slug) };
   }
 
-  if (S.currentCollectionHandle && S.currentCollectionData) {
+  if (S.currentPage === 'vendor') {
+    // Brand pages have their brand bar instead of a heading.
+    title = '';
+  } else if (S.currentCollectionHandle && S.currentCollectionData) {
     const collection = S.currentCollectionData;
     title = String(collection.title || collection.name || collection.handle || S.currentCollectionHandle);
     // Women or Men opened on one section from the menu: "Men’s shoes",
@@ -567,8 +570,6 @@ function updateCollectionTitle() {
       const g = collection.gender;
       title = gr.key === 'new' ? 'New in for ' + g : (g === 'men' ? 'Men’s ' : 'Women’s ') + shopGroupName(gr, g).toLowerCase();
     }
-  } else if (S.currentPage === 'vendor' && S.currentVendorId) {
-    title = '';
   } else if (S.currentPage === 'products') {
     title = collectionCopyFor(S.saleMode ? 'sale' : (S.newInMode ? 'newin' : 'all')).title;
   } else if (S.currentPage === 'category' && S.currentCategoryPage) {
@@ -1474,6 +1475,10 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl, view) {
   closeSearch();
   S.saleMode = false;
   S.newInMode = false;
+  // A brand page is not a collection: forget the one just visited, or its
+  // name (e.g. Women) would show as this page's heading.
+  S.currentCollectionHandle = null;
+  S.currentCollectionData = null;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-vendor").classList.add("active");
   S.currentPage = "vendor";
