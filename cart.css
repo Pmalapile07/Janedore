@@ -109,16 +109,25 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   font-family: 'Inter', sans-serif;
   color: #111;
 }
+/* Same look as the home page's free delivery banner (hero.css
+   .home-delivery-banner): rounded, inset, truck at 30px. Lines up with
+   the cards below. */
 .cart-delivery-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 18px 16px;
+  gap: 18px;
+  margin: 12px 8px 0;
+  padding: 14px 20px;
   background: #e6edd5;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 400;
+  line-height: 1.4;
 }
-.cart-delivery-banner i { font-size: 22px; flex-shrink: 0; }
+@media (min-width: 640px) { .cart-delivery-banner { margin: 12px 10px 0; } }
+@media (min-width: 660px) { .cart-delivery-banner { max-width: 620px; margin: 12px auto 0; } }
+@media (min-width: 1024px) { .cart-delivery-banner { max-width: 616px; } }
+.cart-delivery-banner i { font-size: 30px; flex-shrink: 0; }
 .cart-delivery-banner strong { font-weight: 600; }
 .cart-cards {
   display: flex;
