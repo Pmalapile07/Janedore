@@ -19,7 +19,12 @@
 .product-card-action:active { opacity: 0.55; }
 .product-card-action::after { content: ''; position: absolute; inset: -4px; }
 .product-card-action > i { transform: translate(-2px, -1px); }
-.card-action-plus { position: absolute; left: 16px; top: 16px; font-size: 12px; line-height: 1; color: #111; }
+/* The filled plus-circle drawn white, with black behind its cut-out
+   plus: a white circle with a black plus that cuts into the heart. */
+.card-action-plus {
+  position: absolute; left: 16px; top: 16px; font-size: 13px; line-height: 1; color: #fff;
+  border-radius: 50%; background: radial-gradient(circle, #111 0 30%, transparent 31%);
+}
 
 /* Its sheet: Add to bag, wishlist, View full details. */
 .card-action-list { margin-top: 18px; border-top: 1px solid #eee; }
