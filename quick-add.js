@@ -61,7 +61,7 @@ function renderQuickAdd() {
     : `<span>${escapeHTML(formatPriceCardStyle(p.price))}</span>`;
   const colours = (p.variants || []).length > 1
     ? `<div class="quick-add-label">Colour: <span>${escapeHTML(variant.color || '')}</span></div><div class="quick-add-swatches">` +
-      p.variants.map((v, i) => `<button type="button" class="quick-add-swatch${i === vi ? ' selected' : ''}" style="background:${escapeHTML((v && v.swatch) || '#ccc')}" aria-label="${escapeHTML((v && v.color) || 'Colour ' + (i + 1))}" onclick="quickAddColour(${i})"></button>`).join('') + '</div>'
+      p.variants.map((v, i) => { const thumb = variantSwatchThumb(v); return `<button type="button" class="quick-add-swatch${i === vi ? ' selected' : ''}${thumb ? ' has-image' : ''}" style="${thumb ? `background-image:url('${thumb}')` : `background:${escapeHTML((v && v.swatch) || '#ccc')}`}" aria-label="${escapeHTML((v && v.color) || 'Colour ' + (i + 1))}" onclick="quickAddColour(${i})"></button>`; }).join('') + '</div>'
     : '';
   const sizeRow = sizes.length
     ? `<div class="quick-add-label">Select a size</div><div class="sizes-row">` +

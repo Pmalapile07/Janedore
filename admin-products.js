@@ -588,9 +588,20 @@
     var detailUrls = detailSel ? Array.from(detailSel.selectedOptions).map(function(o){ return o.value; }) : [];
     var combined = cat === 'jewelry' ? [].concat(modelUrls, ghostUrls, detailUrls) : [].concat(ghostUrls, modelUrls, detailUrls);
     if (combined.length === 0) { strip.innerHTML = '<div style="font-size:10.5px;color:var(--muted);">No images assigned</div>'; return; }
-    strip.innerHTML = '<div style="display:flex;gap:5px;flex-wrap:wrap;">' + combined.map(function(url) {
-      return '<img src="' + esc(url) + '" style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:0.5px solid var(--border-light);" onerror="this.style.display=\'none\'">';
-    }).join('') + '</div>';
+    // Tap a photo to make it this colour's swatch in the shop; until one
+    // is picked (or if the picked one is unassigned), the first is used.
+    var swatchEl = block.querySelector('[name="variant-swatchimg-' + variantIndex + '"]');
+    var picked = swatchEl && combined.indexOf(swatchEl.value) !== -1 ? swatchEl.value : combined[0];
+    strip.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + combined.map(function(url, i) {
+      var on = url === picked;
+      return '<img src="' + esc(url) + '" data-swatch-pick="' + i + '" title="' + (on ? 'Swatch photo' : 'Use as swatch photo') + '" style="width:44px;height:58px;object-fit:cover;border-radius:4px;cursor:pointer;border:' + (on ? '2px solid var(--text, #111)' : '0.5px solid var(--border-light)') + ';" onerror="this.style.display=\'none\'">';
+    }).join('') + '</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">Tap a photo to show it as this colour\'s swatch in the shop.</div>';
+    strip.querySelectorAll('[data-swatch-pick]').forEach(function(img) {
+      img.addEventListener('click', function() {
+        if (swatchEl) swatchEl.value = combined[parseInt(img.getAttribute('data-swatch-pick'), 10)];
+        _refreshVariantPreviewStrip(variantIndex);
+      });
+    });
   }
 
   function _renderAllVariantImageSelectors() {
@@ -609,6 +620,8 @@
           _buildVariantImageSelector('ghost',  vi, getSelected('ghost'))  +
           _buildVariantImageSelector('detail', vi, getSelected('detail'));
       }
+      // The swatch photo strip shows what's assigned, from the start.
+      _refreshVariantPreviewStrip(vi);
     });
   }
 
@@ -934,10 +947,10 @@
           '<div class="form-group" style="padding:0;"><label>URL handle</label><div id="pf-url-handle" style="font-size:12px;color:var(--muted);background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:8px 10px;">' + esc(displaySlug) + '</div></div>' +
           '<div class="form-group" style="padding:0;"><label>Preview</label><div id="pf-seo-preview" style="padding:10px 12px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-sm);"></div></div>' +
         '</div>' +
-      '</div>' +
+      '</div>';
 
-
-
+    // Runs once the form is on the page: fills the media library, each
+    // colour's photo lists and swatch photo strip.
     _renderMediaPool();
     window._pfUpdateMargin();
     window._updateSizePreview();
@@ -989,14 +1002,19 @@
       '</div>' +
       '<div style="display:flex;gap:10px;margin-bottom:12px;">' +
         '<div class="form-group" style="padding:0;flex:1;"><label>Color name</label><input name="variant-color-'+index+'" value="'+esc(v.color||'')+'" placeholder="e.g. Black"></div>' +
-        '<div class="form-group" style="padding:0;width:110px;"><label>Swatch</label><div style="display:flex;gap:7px;align-items:center;"><input name="variant-swatch-'+index+'" value="'+esc(v.swatch||'#111')+'" placeholder="#111" style="flex:1;min-width:0;" oninput="this.nextElementSibling.value=this.value"><input type="color" value="'+esc(v.swatch||'#111')+'" style="width:34px;height:34px;padding:2px;border:0.5px solid var(--border-med);cursor:pointer;border-radius:6px;flex-shrink:0;" oninput="document.querySelector(\'[name=variant-swatch-'+index+']\').value=this.value"></div></div>' +
       '</div>' +
+      // The shop shows a photo as each colour's swatch, picked below
+      // (the strip of this colour's photos). The old flat colour is kept
+      // for products whose colours have no photos.
+      '<input type="hidden" name="variant-swatch-'+index+'" value="'+esc(v.swatch||'#111')+'">' +
+      '<input type="hidden" name="variant-swatchimg-'+index+'" value="'+esc(v.swatchImage||'')+'">' +
       '<div class="variant-img-selectors">' +
         _buildVariantImageSelector('model',  index, modelUrls)  +
         _buildVariantImageSelector('ghost',  index, ghostUrls)  +
         _buildVariantImageSelector('detail', index, detailUrls) +
       '</div>' +
-      '<div id="variant-preview-strip-' + index + '" style="margin-top:8px;"><div style="font-size:10.5px;color:var(--muted);">No images assigned</div></div>' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-top:10px;">Swatch photo</div>' +
+      '<div id="variant-preview-strip-' + index + '" style="margin-top:4px;"><div style="font-size:10.5px;color:var(--muted);">No images assigned</div></div>' +
       buildVariantStockGrid(index, sizes, stockForVariant) +
     '</div>';
   }
@@ -1120,6 +1138,7 @@
       var vi = b.getAttribute('data-variant-index');
       var colorEl  = b.querySelector('[name="variant-color-'  + vi + '"]');
       var swatchEl = b.querySelector('[name="variant-swatch-' + vi + '"]');
+      var swatchImgEl = b.querySelector('[name="variant-swatchimg-' + vi + '"]');
       var getUrls = function(type) {
         var sel = b.querySelector('[data-img-type="' + type + '"]');
         return sel ? Array.from(sel.selectedOptions).map(function(o){ return o.value; }) : [];
@@ -1131,6 +1150,7 @@
       remaining.push({
         color:  colorEl  ? colorEl.value  : '',
         swatch: swatchEl ? swatchEl.value : '#111',
+        swatchImage: swatchImgEl ? swatchImgEl.value : '',
         images: { model: getUrls('model'), ghost: getUrls('ghost'), detail: getUrls('detail') },
         stock:  stock
       });
@@ -1252,10 +1272,15 @@
         var sel = block.querySelector('[data-img-type="' + type + '"]');
         return sel ? Array.from(sel.selectedOptions).map(function(o){ return o.value; }) : [];
       };
+      var vImages = { model: getSelected('model'), ghost: getSelected('ghost'), detail: getSelected('detail') };
+      // Saved only while that photo is still one of this colour's.
+      var swatchImage = form['variant-swatchimg-' + vi] ? form['variant-swatchimg-' + vi].value : '';
+      if ([].concat(vImages.model, vImages.ghost, vImages.detail).indexOf(swatchImage) === -1) swatchImage = '';
       data.variants.push({
         color:  form['variant-color-'  + vi].value.trim(),
         swatch: form['variant-swatch-' + vi].value.trim() || '#111',
-        images: { model: getSelected('model'), ghost: getSelected('ghost'), detail: getSelected('detail') }
+        swatchImage: swatchImage,
+        images: vImages
       });
       vi++;
     }

@@ -49,6 +49,8 @@
 .quick-add-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
 .quick-add-swatch { width: 28px; height: 28px; padding: 0; border: 1px solid #ddd; cursor: pointer; outline-offset: 2px; }
 .quick-add-swatch.selected { outline: 1px solid #111; }
+/* Swatch photos: the product page's shape (product-info.css), smaller. */
+.quick-add-swatch.has-image { width: 36px; height: 48px; background-color: #f4f4f4; background-size: cover; background-position: center; }
 
 /* Same black button as the product page's Add to bag (sticky-bar.css). */
 .quick-add-submit {

@@ -1040,10 +1040,13 @@ function cardVariantSwatchesHtml(p, selectedIndex) {
   if (variants.length <= 1) return '';
   const pid = escapeJSString(p.id);
   const swatches = variants.map((v, i) => {
-    const color = (v && v.swatch) || '#ccc';
+    // The colour's swatch photo (variantSwatchThumb, product-detail.js),
+    // or its flat colour when it has no photos.
+    const thumb = variantSwatchThumb(v);
+    const style = thumb ? `background-image:url('${thumb}')` : `background:${escapeHTML((v && v.swatch) || '#ccc')}`;
     const label = (v && v.color) || ('Variant ' + (i + 1));
     const selected = i === selectedIndex ? ' selected' : '';
-    return `<span class="variant-swatch${selected}" style="background:${escapeHTML(color)}" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}" onclick="event.stopPropagation();event.preventDefault();selectCardVariant('${pid}', ${i}, this);"></span>`;
+    return `<span class="variant-swatch${selected}${thumb ? ' has-image' : ''}" style="${style}" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}" onclick="event.stopPropagation();event.preventDefault();selectCardVariant('${pid}', ${i}, this);"></span>`;
   }).join('');
   return `<div class="product-swatches-row">${swatches}</div>`;
 }

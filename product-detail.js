@@ -285,7 +285,9 @@ function getAllProductImages(product, variantIndex) {
 // swatch color instead.
 function variantSwatchThumb(variant) {
   const imgs = variant?.images || {};
-  const url = [imgs.ghost, imgs.model, imgs.detail].map(a => (a || []).filter(Boolean)[0]).find(Boolean);
+  // The photo picked as the swatch in admin (variant.swatchImage), else
+  // the colour's first photo.
+  const url = variant?.swatchImage || [imgs.ghost, imgs.model, imgs.detail].map(a => (a || []).filter(Boolean)[0]).find(Boolean);
   if (!url) return '';
   return escapeForCssUrl(safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fit,w_144,h_192/'));
 }

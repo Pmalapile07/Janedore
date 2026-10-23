@@ -405,6 +405,14 @@
   border: none;
   outline: none;
 }
+/* A colour with photos shows its swatch photo, in the photos' 3:4 shape. */
+.product-swatches-row .variant-swatch.has-image {
+  width: 18px;
+  height: 24px;
+  background-color: #f4f4f4;
+  background-size: cover;
+  background-position: center;
+}
 .variant-swatch.selected::after {
   content: '';
   position: absolute;
