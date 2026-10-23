@@ -49,14 +49,14 @@
     ] },
     { slug: 'kids', name: 'Kids', sizeSystem: 'kids', categories: [
       ['girls', 'Girls’ clothing', 'kids'], ['boys', 'Boys’ clothing', 'kids'], ['baby', 'Baby (0–24 months)', 'kids'],
-      ['kids-shoes', 'Kids’ shoes', 'kids-shoes'], ['kids-accessories', 'Kids’ accessories', ''], ['toys', 'Toys', ''],
+      ['kids-shoes', 'Kids’ shoes', 'kids-shoes'], ['kids-accessories', 'Kids’ accessories', ''], ['kids-care', 'Bath & hair care', ''],
       ['nursery', 'Nursery', '']
     ] }
   ];
 
   // Saved before this tree. 'homeware' products sit in Homeware with no
-  // narrower category until they're re-picked.
-  var LEGACY = { bottoms: ['clothing', 'Bottoms', 'clothing'], homeware: ['homeware', 'Homeware', ''] };
+  // narrower category until they're re-picked. Toys is no longer offered.
+  var LEGACY = { bottoms: ['clothing', 'Bottoms', 'clothing'], homeware: ['homeware', 'Homeware', ''], toys: ['kids', 'Toys', ''] };
 
   // Old department page addresses.
   var DEPARTMENT_ALIASES = { 'all-clothing': 'clothing', 'all-accessories': 'accessories' };

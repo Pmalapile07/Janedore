@@ -796,7 +796,7 @@ function renderMenuDepartments() {
   const live = PRODUCTS.filter(p => p.status === 'active');
   if (g === 'kids') {
     const stocked = new Set(live.map(p => p.category));
-    const cats = JDTaxonomy.categoriesIn('kids').filter(c => c !== 'kids' && stocked.has(c)).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b));
+    const cats = JDTaxonomy.categoriesIn('kids').filter(c => c !== 'kids' && stocked.has(c) && !JDTaxonomy.category(c).legacy).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b));
     el.innerHTML = row('Shop all kids', "navigateToCategory('kids');") + cats.map(c => row(JDTaxonomy.label(c), `navigateToCategory('${escapeJSString(c)}');`)).join('');
     return;
   }
