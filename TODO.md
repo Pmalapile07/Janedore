@@ -17,5 +17,7 @@
 - **Collections:** brands set up their own collections (name, image, products) for the Collections tiles, which are empty placeholders for now.
 - **Layout per category:** a brand page's sections (hero, New from, Collections, slider vs grid, order) should differ by the kind of brand (clothing, accessories, homeware, beauty, kids, men's). Header, brand bar and scroll behaviour stay the same everywhere. Decide each layout and make it choosable in admin.
 
+- **Brand rating:** once brands have reviews, show their average in the brand bar ("Cape Town · Clothing · ★ 4.7 (32)"), only when they have some. A full Reviews tab was tried and left out: product pages already show reviews, and empty tabs make new brands look worse.
+
 ## Coming soon page
 - **Redesign:** the current page (janedore-coming-soon.html) isn't right yet. Liked so far: the hero photo, the app-preview phones, the dark pop-ups, the shop's black header. Start the next version from what the page needs to say (who it's for, why join), not from another brand's layout.
