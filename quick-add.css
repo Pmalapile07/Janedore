@@ -4,17 +4,17 @@
    the bottom on phones, a centred panel from 768px.
    ========================================= */
 
-/* Bottom right of the card photo, styled like the wishlist heart (no
-   background), above the long-press overlay (product-card.css
-   .product-img-wrap::after, z-index 5). */
+/* The wishlist heart's twin (product-grid.css .product-wish-btn): same
+   size, colour, tap area and fades, in the bottom right corner where the
+   heart sits top right. */
 .product-quick-add-btn {
-  position: absolute; right: 8px; bottom: 8px; z-index: 6;
-  width: 28px; height: 28px; padding: 0; border: none; background: none; color: #111;
-  display: inline-flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;
+  position: absolute; right: 0; bottom: 0; z-index: 6;
+  width: 28px; height: 28px; padding: 0; margin: 0; border: none; border-radius: 0; background: transparent; color: #111;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1; flex-shrink: 0; cursor: pointer;
   transition: opacity 0.2s ease;
 }
-.product-quick-add-btn:active { opacity: 0.6; }
-/* A 44px tap area without a bigger box. */
+.product-quick-add-btn:hover { opacity: 0.75; }
+.product-quick-add-btn:active { opacity: 0.55; }
 .product-quick-add-btn::after { content: ''; position: absolute; inset: -8px; }
 
 #quick-add-sheet { position: fixed; inset: 0; z-index: 1300; visibility: hidden; transition: visibility 0s linear 0.3s; }
