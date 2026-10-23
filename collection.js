@@ -1629,9 +1629,6 @@ function renderVendorPage(vendor) {
       <div class="hero-bg-placeholder${heroImg ? '' : ' content-empty'}" style="${heroImg ? `background-image:url('${escapeForCssUrl(heroImg)}');` : ''}"></div>
       <div class="hero-overlay"></div>
       ${heroText ? `<div class="brand-hero-slogan"><p class="hero-statement-sub brand-hero-text">${escapeHTML(heroText)}</p></div>` : ''}
-      <div class="hero-content-wrap">
-        <button class="hero-shop-btn" onclick="showBrandSection('shop')">Shop now</button>
-      </div>
     </section>
     ${pills}
     <section class="brand-section" id="brand-new">
