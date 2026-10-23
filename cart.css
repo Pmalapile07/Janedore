@@ -223,7 +223,7 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
 
 /* Promo code */
 .cart-code-label { display: block; font-size: 13px; color: #555; margin: 16px 0 6px; }
-.cart-code-row { display: flex; align-items: stretch; }
+.cart-code-row { display: flex; align-items: stretch; gap: 12px; }
 .cart-code-row input {
   flex: 1;
   min-width: 0;
