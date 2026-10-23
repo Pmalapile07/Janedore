@@ -23,12 +23,14 @@ function returnsSavedEmail() {
 }
 
 // Shown under both the Start a return and Check return status tabs.
+// A summary of the returns policy (the rules returns-api.js applies).
 const RETURNS_POLICY_HTML = `<div class="track-notice returns-policy">
-      <strong>How returns work</strong><br>
-      1. Select the items you wish to return, give a reason and add photos.<br>
-      2. We review your request, together with the brand, and email you our decision.<br>
-      3. If approved, we’ll explain how to send the item back. Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.<br>
-      4. Once we’ve received and checked the item, we refund you to your original payment method.
+      <strong>Returns at a glance</strong><br>
+      · Items can be returned within 30 days of delivery.<br>
+      · Every request is reviewed with the brand, and we’ll email you our decision.<br>
+      · Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.<br>
+      · Refunds are made to your original payment method once we’ve received and checked the item.<br>
+      · Prefer a different size or colour? You can <span class="track-link" onclick="navigateToContentPage('exchange-an-item')">exchange an item</span> instead.
     </div>`;
 
 function renderReturnsPage(tab) {
