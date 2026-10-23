@@ -972,7 +972,7 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
     if (total === 0) {
       gridEl.innerHTML = placeholderProductCards(PRODUCTS_PER_PAGE);
     } else {
-      gridEl.innerHTML = pageItems.map(({product, variantIndex}, i) => productCard(product, cols===3, true, variantIndex, pageNum === 1 && i < 4 && (i === 0 ? 'high' : true))).join("");
+      gridEl.innerHTML = pageItems.map(({product, variantIndex}, i) => productCard(product, cols===3, true, variantIndex, pageNum === 1 && i < 4 && (i === 0 ? 'high' : true), true)).join("");
       applyEditorialGrid(gridEl, cols);
     }
 
@@ -998,14 +998,33 @@ function renderPaginatedGrid(gridEl, expanded, cols) {
   renderPage(1);
 }
 
-function productCard(p, isLarge, showDetails, variantIndex, eager) {
+// The photo a card swipes to (collection pages only): the next of the
+// product's photos after the one the card shows, which may be another
+// colour's when this colour has just one. '' when there's no other.
+function cardSecondPhoto(p, vi, shown) {
+  const gal = getProductGallery(p);
+  if (gal.images.length < 2) return '';
+  const start = galleryStart(gal, vi);
+  for (let k = 0; k < gal.images.length; k++) {
+    const u = gal.images[(start + k) % gal.images.length];
+    if (u !== shown) return u;
+  }
+  return '';
+}
+
+// swipe: collection grids (renderPaginatedGrid) let shoppers swipe a card
+// to a second photo, or see it on hover with a mouse.
+function productCard(p, isLarge, showDetails, variantIndex, eager, swipe) {
   const vi = variantIndex !== undefined ? variantIndex : (S.productVariantSelections[p.id] ?? 0);
   const soldOut = (p.stock ?? 0) <= 0;
   const badges = getCardBadges(p);
   const badge = badges.length ? `<div class="product-badge-stack">${badges.map(b => `<span class="product-badge ${badgeClass(b)}">${escapeHTML(b)}</span>`).join('')}</div>` : '';
   const imgs = p.variants?.[vi]?.images;
-  const ghost = gridThumbURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+  const shown = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
+  const ghost = gridThumbURL(shown);
   const pid = escapeJSString(p.id);
+  const second = swipe ? cardSecondPhoto(p, vi, shown) : '';
+  const secondImg = second ? `<img class="card-photo-2" src="${escapeHTML(gridThumbURL(second))}" alt="" loading="lazy" onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">` : '';
 
   const brand = `<div class="product-brand">${escapeHTML(p.brand || '')}</div>`;
   const name = `<div class="product-title">${escapeHTML(p.name)}</div>`;
@@ -1023,7 +1042,7 @@ function productCard(p, isLarge, showDetails, variantIndex, eager) {
 
   return `
     <div class="product-card${soldOut ? ' sold-out' : ''}" onclick="S.productVariantSelections['${pid}']=${vi};goToProduct('${pid}')">
-      <div class="product-img-wrap">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">${wishBtn}${quickAddButtonHtml(p)}</div>
+      <div class="product-img-wrap${second ? ' card-has-2' : ''}">${badge}<img src="${escapeHTML(ghost)}" alt="${escapeHTML(p.name)}" ${eager === 'high' ? 'loading="eager" fetchpriority="high"' : eager ? 'loading="eager"' : 'loading="lazy"'} onload="this.classList.add('img-loaded')" onerror="this.classList.add('img-loaded')">${secondImg}${wishBtn}${quickAddButtonHtml(p)}</div>
       ${metaRow}
     </div>`;
 }
@@ -1061,9 +1080,14 @@ function selectCardVariant(productId, variantIndex, swatchEl) {
     const imgEl = card.querySelector('.product-img-wrap img');
     if (imgEl) {
       const imgs = p.variants?.[variantIndex]?.images;
-      const nextSrc = gridThumbURL(imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE);
+      const shown = imgs?.ghost?.[0] || imgs?.model?.[0] || PLACEHOLDER_IMAGE;
       imgEl.classList.remove('img-loaded');
-      imgEl.src = escapeHTML(nextSrc);
+      imgEl.src = escapeHTML(gridThumbURL(shown));
+      // A swipeable card's second photo follows the colour too.
+      const second = card.querySelector('.product-img-wrap img.card-photo-2');
+      const next = second && cardSecondPhoto(p, variantIndex, shown);
+      if (second && next) second.src = escapeHTML(gridThumbURL(next));
+      card.querySelector('.product-img-wrap').classList.remove('show-2');
     }
     const row = swatchEl.parentElement;
     if (row) {
@@ -1855,3 +1879,26 @@ async function submitBrandReport(e) {
     btn.disabled = false; btn.textContent = 'Submit report';
   }
 }
+
+// Collection cards with a second photo (productCard swipe): swipe left
+// for it, right to go back. The swipe doesn't open the product.
+(function () {
+  let wrap = null, sx = 0, sy = 0;
+  document.addEventListener('touchstart', e => {
+    wrap = e.target.closest ? e.target.closest('.product-img-wrap.card-has-2') : null;
+    if (wrap) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!wrap) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      wrap.classList.toggle('show-2', dx < 0);
+      wrap.dataset.swipedAt = Date.now();
+    }
+    wrap = null;
+  }, { passive: true });
+  document.addEventListener('click', e => {
+    const w = e.target.closest ? e.target.closest('.product-img-wrap.card-has-2') : null;
+    if (w && Date.now() - (Number(w.dataset.swipedAt) || 0) < 500) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+})();

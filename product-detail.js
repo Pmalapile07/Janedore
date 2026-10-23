@@ -279,6 +279,26 @@ function getAllProductImages(product, variantIndex) {
   return all.length ? all : [PLACEHOLDER_IMAGE];
 }
 
+// Every photo of the product, colour by colour (each colour's model,
+// ghost, then detail shots), with the colour each one belongs to. The
+// product page slider shows all of them; a collection card shows two.
+function getProductGallery(product) {
+  const images = [], owners = [];
+  (product?.variants || []).forEach((v, vi) => {
+    const imgs = v?.images || {};
+    [...(imgs.model || []), ...(imgs.ghost || []), ...(imgs.detail || [])].filter(Boolean).forEach(u => {
+      if (!images.includes(u)) { images.push(u); owners.push(vi); }
+    });
+  });
+  if (!images.length) { images.push(PLACEHOLDER_IMAGE); owners.push(0); }
+  return { images, owners };
+}
+// Where a colour's photos start in the gallery (0 if it has none).
+function galleryStart(gallery, variantIndex) {
+  const i = gallery.owners.indexOf(variantIndex);
+  return i === -1 ? 0 : i;
+}
+
 // Each color box shows that color's own product photo (product-on-white
 // shot first, then model, then detail), scaled by Cloudinary to fit the
 // box without cropping (c_fit). A color with no photos shows its flat
@@ -316,16 +336,12 @@ function selectVariant(productId, variantIndex, evt) {
 
   // Update product detail page images
   if(S.currentPage==="product-detail"){
-    const images = getAllProductImages(product, variantIndex);
-    const mainImg = document.getElementById("product-main-image");
-    const barsEl = document.getElementById("product-image-bars");
-    if(mainImg){ mainImg.style.backgroundImage=`url('${images[0]}')`; }
-    if(barsEl){
-      barsEl.innerHTML = images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('');
+    // The slider holds every colour's photos: jump to this colour's
+    // first one, unless a photo of this colour is already showing.
+    if (productImageOwners[currentImageIndex] !== variantIndex) {
+      const start = productImageOwners.indexOf(variantIndex);
+      if (start !== -1) showProductImage(start);
     }
-    // Update swipe init
-    productImages = images;
-    currentImageIndex = 0;
     // Update swatch selected state — scoped to the main product's own
     // swatch row, not every .variant-swatch on the page. Unscoped, this
     // also matched related-product cards elsewhere on the page (same
@@ -350,30 +366,37 @@ function selectVariant(productId, variantIndex, evt) {
   }
 }
 
-function switchMainImage(index, url) {
-  const mainImage = document.getElementById('product-main-image');
-  if (mainImage) { mainImage.style.backgroundImage = `url('${url}')`; }
-  document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === index));
-  currentImageIndex = index;
-}
+function switchMainImage(index) { showProductImage(index); }
 
 let productImages = [];
+let productImageOwners = [];
 let currentImageIndex = 0;
 
-function initProductSwipe(images) {
-  productImages = images;
-  currentImageIndex = 0;
+// Shows photo `index` of the product page slider. Landing on another
+// colour's photo selects that colour, so the bag gets what's on screen.
+function showProductImage(index) {
+  if (index < 0 || index >= productImages.length) return;
+  currentImageIndex = index;
   const mainImage = document.getElementById('product-main-image');
-  if (!mainImage || !images.length) return;
+  if (mainImage) mainImage.style.backgroundImage = `url('${productImages[index]}')`;
+  document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === index));
+  const pid = S.currentReviewProductId;
+  const owner = productImageOwners[index];
+  if (pid && owner !== undefined && owner !== (S.productVariantSelections[pid] ?? 0)) selectVariant(pid, owner);
+}
+
+function initProductSwipe(gallery, start) {
+  productImages = gallery.images;
+  productImageOwners = gallery.owners;
+  currentImageIndex = start || 0;
+  const mainImage = document.getElementById('product-main-image');
+  if (!mainImage || !productImages.length) return;
   let touchStartX = 0;
   mainImage.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
   mainImage.addEventListener('touchend', function(e) {
     const diff = touchStartX - e.changedTouches[0].screenX;
     if (Math.abs(diff) < 40) return;
-    if (diff > 0 && currentImageIndex < productImages.length - 1) { currentImageIndex++; }
-    else if (diff < 0 && currentImageIndex > 0) { currentImageIndex--; }
-    mainImage.style.backgroundImage = `url('${productImages[currentImageIndex]}')`;
-    document.querySelectorAll('#product-image-bars .swipe-bar').forEach((b, i) => b.classList.toggle('active', i === currentImageIndex));
+    showProductImage(currentImageIndex + (diff > 0 ? 1 : -1));
   }, {passive: true});
 }
 
@@ -483,7 +506,9 @@ async function renderProductPage(product) {
     S.productVariantSelections[product.id] = 0;
   }
 
-  const vi=S.productVariantSelections[product.id]; const images=getAllProductImages(product,vi);
+  // The slider shows every colour's photos, starting at the selected colour's.
+  const vi=S.productVariantSelections[product.id]; const gallery=getProductGallery(product); const images=gallery.images; const imageStart=galleryStart(gallery,vi);
+  productImages=images; productImageOwners=gallery.owners; currentImageIndex=imageStart;
   const variants=product.variants||[];
   // 'OS' is a placeholder sentinel, not a real size — never show it as
   // a selectable "size" (there's nothing to actually select).
@@ -506,7 +531,7 @@ async function renderProductPage(product) {
   // dots used in Recently viewed / You may also like / Complete the look.
   // Always rendered — a single image still shows one bar — replacing the
   // old thumbnail strip entirely.
-  const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===0?' active':''}" onclick="switchMainImage(${i},'${u.replace(/'/g,"&#39;")}')"></div>`).join('')}</div>`;
+  const imageBarsHtml = `<div class="swipe-bars" id="product-image-bars">${images.map((u,i)=>`<div class="swipe-bar${i===imageStart?' active':''}" onclick="switchMainImage(${i})"></div>`).join('')}</div>`;
 
   const titleCaseBreadcrumb = value => String(value || '').replace(/[-_]+/g, ' ').trim().toLowerCase().replace(/(^|\\s)\\S/g, letter => letter.toUpperCase());
   const productCollectionValues = (Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(','))
@@ -543,7 +568,7 @@ async function renderProductPage(product) {
   DOM.productDetail.innerHTML=`
     ${breadcrumbHtml}
     <div class="product-slider" id="product-slider">
-      <div class="product-main-image" id="product-main-image" style="background-image:url('${images[0]}');">
+      <div class="product-main-image" id="product-main-image" style="background-image:url('${images[imageStart]}');">
         ${productBadges.length?`<div class="product-badge-detail-stack">${productBadges.map(b=>`<span class="product-badge-detail ${badgeClass(b)}">${escapeHTML(b)}</span>`).join('')}</div>`:''}
       </div>
       ${imageBarsHtml}
@@ -605,7 +630,7 @@ async function renderProductPage(product) {
   ensureNavScrolled();
   if (typeof createStickyBar === 'function') createStickyBar(product);
   updateAddToCartState();
-  setTimeout(() => initProductSwipe(images), 100);
+  setTimeout(() => initProductSwipe(gallery, imageStart), 100);
   loadProductReviewsSection(product.id);
 }
 

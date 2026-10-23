@@ -112,6 +112,17 @@
 .product-img-wrap img.img-loaded {
   opacity: 1;
 }
+/* Collection cards with a second photo (collection.js productCard):
+   it waits off to the right and slides in on a swipe (.show-2) or, with
+   a mouse, on hover. */
+.product-img-wrap.card-has-2 img { transition: opacity 0.35s ease, transform 0.3s ease; }
+.product-img-wrap img.card-photo-2 { position: absolute; inset: 0; transform: translateX(100%); }
+.product-img-wrap.show-2 img:first-of-type { transform: translateX(-100%); }
+.product-img-wrap.show-2 img.card-photo-2 { transform: translateX(0); }
+@media (hover: hover) and (pointer: fine) {
+  .product-img-wrap.card-has-2:hover img:first-of-type { transform: translateX(-100%); }
+  .product-img-wrap.card-has-2:hover img.card-photo-2 { transform: translateX(0); }
+}
 
 /* Empty-catalog placeholder cards (placeholderProductCard(s) in
    collection.js) — shown instead of real cards when a grid has nothing
