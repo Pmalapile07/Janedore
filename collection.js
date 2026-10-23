@@ -1646,12 +1646,14 @@ function renderVendorPage(vendor) {
 
   const products = merchandiseProducts(getVendorFilteredProducts(vendor), 'vendor', S.sortBy);
   const expanded = expandProductVariants(products);
-  // "Cape Town · Clothing": where they ship from and what they mostly sell.
+  // "Clothing & Accessories": the two departments most of the brand's
+  // products are in (ties in menu order), or the one when that's all.
   const brandProducts = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName);
   const depts = {};
   brandProducts.forEach(p => { const d = JDTaxonomy.departmentOf(p.category); if (d) depts[d] = (depts[d] || 0) + 1; });
-  const mainDept = Object.keys(depts).sort((x, y) => depts[y] - depts[x])[0];
-  const barLine = [vendor?.location, mainDept ? JDTaxonomy.label(mainDept) : ''].filter(Boolean).join(' · ');
+  const deptOrder = JDTaxonomy.DEPARTMENTS.map(d => d.slug);
+  const barLine = Object.keys(depts).sort((x, y) => depts[y] - depts[x] || deptOrder.indexOf(x) - deptOrder.indexOf(y))
+    .slice(0, 2).map(d => JDTaxonomy.label(d)).join(' & ');
   const newest = merchandiseProducts(brandProducts, undefined, 'newest').slice(0, 8);
   const sectionHead = (id) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div></div>`;
   const emptyTile = '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
