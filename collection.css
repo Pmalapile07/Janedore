@@ -774,9 +774,6 @@ body:not(.on-collection-page) #active-filter-chips { display: none !important; }
 }
 .nav-quick-link:hover { color: #111; }
 .nav-quick-link.active { background: #111; color: #fff; font-weight: 700; }
-/* Women and Men pages: the same pills under the heading. */
-.collection-quick-links { padding: 0 12px 4px; }
-.collection-quick-links:empty, body:not(.on-collection-page) .collection-quick-links { display: none; }
 /* Same spacing as the homepage's product rows (#home-shop-clothing). */
 .brand-section { padding: 24px 0; }
 #brand-shop { padding-bottom: 0; }

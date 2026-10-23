@@ -105,9 +105,9 @@ window._loadPublishedCollections = function (forceRefresh) {
   return window._publishedCollectionsPromise;
 };
 
-// The sections of Women and Men: rows in the menu (app.js) and quick
-// links at the top of the Women and Men pages. Shoes and bags have their
-// own, as on ASOS and Zalando, rather than hiding inside Accessories.
+// The sections of Women and Men: rows in the menu (app.js). Shoes and
+// bags have their own, as on ASOS and Zalando, rather than hiding inside
+// Accessories.
 const SHOP_GROUPS = [
   { key: 'new', name: 'New in', test: p => typeof isProductNew === 'function' && isProductNew(p) },
   { key: 'clothing', name: 'Clothing', cats: () => JDTaxonomy.categoriesIn('clothing') },
@@ -128,11 +128,6 @@ function inShopGroup(p, key) {
   return gr.test ? gr.test(p) : gr.cats().includes(p.category);
 }
 function isGenderPage() { return !!(S.currentCollectionData && S.currentCollectionData.automatedRule === 'gender'); }
-function selectShopGroup(key) {
-  S.shopGroup = key || null;
-  renderCategoryProducts();
-  resetScrollToTop();
-}
 
 function productBelongsToCollection(product, collection) {
   if (!product || !collection) return false;
@@ -565,6 +560,13 @@ function updateCollectionTitle() {
   if (S.currentCollectionHandle && S.currentCollectionData) {
     const collection = S.currentCollectionData;
     title = String(collection.title || collection.name || collection.handle || S.currentCollectionHandle);
+    // Women or Men opened on one section from the menu: "Men’s shoes",
+    // "New in for men".
+    const gr = isGenderPage() && S.shopGroup && SHOP_GROUPS.find(x => x.key === S.shopGroup);
+    if (gr) {
+      const g = collection.gender;
+      title = gr.key === 'new' ? 'New in for ' + g : (g === 'men' ? 'Men’s ' : 'Women’s ') + shopGroupName(gr, g).toLowerCase();
+    }
   } else if (S.currentPage === 'vendor' && S.currentVendorId) {
     title = '';
   } else if (S.currentPage === 'products') {
@@ -1329,18 +1331,6 @@ function renderCollectionSortingTabs() {
     return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
       String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
   });
-  // Women and Men: quick links to their sections (SHOP_GROUPS).
-  const quick = document.getElementById('collection-quick-links');
-  if (quick) {
-    let html = '';
-    if (isGenderPage() && S.currentPage === 'category') {
-      const g = S.currentCollectionData.gender;
-      const mine = PRODUCTS.filter(p => p.status === 'active' && inGenderShop(p, g));
-      const groups = [{ key: '', name: 'View all' }].concat(SHOP_GROUPS.filter(gr => mine.some(p => inShopGroup(p, gr.key))));
-      html = groups.map(gr => `<button class="nav-quick-link${(S.shopGroup || '') === gr.key ? ' active' : ''}" onclick="selectShopGroup('${gr.key}')">${escapeHTML(gr.key ? shopGroupName(gr, g) : gr.name)}</button>`).join('');
-    }
-    quick.innerHTML = html;
-  }
   const tabs = [{ label: 'View all', cat: 'all' }].concat(collections.map(function (item) {
     return { label: item.title || item.name || item.handle || item.id, cat: String(item.handle || item.slug || item.id) };
   }));
