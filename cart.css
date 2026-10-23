@@ -238,19 +238,22 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   outline: none;
 }
 .cart-code-row input::placeholder { color: #999; }
+/* Same as the home page buttons (product-grid.css #page-home
+   .initial-drop-view-all): black, white 10px spaced capitals. */
 .cart-code-row button {
   border: none;
-  background: #e2e4e6;
-  color: #555;
-  transition: background 0.2s ease, color 0.2s ease;
-  padding: 0 20px;
-  font-family: inherit;
-  font-size: 14px;
+  background: #111;
+  color: #fff;
+  transition: background 0.2s ease;
+  padding: 0 32px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.15em;
   cursor: pointer;
 }
+.cart-code-row button:hover { background: #333; }
 
 /* Totals */
 .cart-totals-head {
@@ -334,9 +337,6 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   padding: 8px 8px 12px;
 }
 
-/* Apply stays grey until a code is typed, then turns black — it reads
-   as "ready" only when there's something to apply. */
-.cart-code-row input:not(:placeholder-shown) + button { background: #111; color: #fff; }
 
 /* ============================================
    CHECKOUT STEPS (header, index.html): 1 Bag · 2 Checkout · 3 Payment
