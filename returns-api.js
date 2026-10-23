@@ -12,7 +12,7 @@
 
 const crypto = require('crypto');
 
-const RETURN_DAYS = 30;
+const RETURN_DAYS = 14;
 const REASONS = ['Doesn’t fit', 'Not as described', 'Damaged or faulty', 'Wrong item received', 'Changed my mind', 'Other'];
 const OPEN = ['submitted', 'approved', 'received', 'refund_pending'];
 

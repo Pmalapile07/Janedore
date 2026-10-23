@@ -665,7 +665,7 @@ const STATUS_EMAIL_COPY = {
   processing: ['Your order is being processed', 'your order is being prepared. We’ll notify you once it has been packed.'],
   packed: ['Your order has been packed', 'your order has been packed and is waiting for the courier. We’ll send tracking details once it has been dispatched.'],
   shipped: ['Your order is on its way', 'your order has been handed to the courier and is on its way to you.'],
-  delivered: ['Your order has been delivered', 'your order has been delivered. We hope you love it. Items can be returned or exchanged within 30 days of delivery.']
+  delivered: ['Your order has been delivered', 'your order has been delivered. We hope you love it. Items can be returned or exchanged within 14 days of delivery.']
 };
 function statusUpdate(order, ctx, status, trackings) {
   const copy = STATUS_EMAIL_COPY[status];

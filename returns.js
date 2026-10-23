@@ -27,7 +27,7 @@ function returnsSavedEmail() {
 const RETURNS_POLICY_HTML = `<div class="track-notice returns-policy">
       <strong class="returns-policy-title">Returns at a glance</strong>
       <ul class="returns-policy-list">
-        <li>Items can be returned within 30 days of delivery.</li>
+        <li>Items can be returned within 14 days of delivery.</li>
         <li>Every request is reviewed with the brand, and we’ll email you our decision.</li>
         <li>Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.</li>
         <li>Refunds are made to your original payment method once we’ve received and checked the item.</li>
@@ -78,7 +78,7 @@ function renderReturnsPage(tab) {
     return;
   }
 
-  body.innerHTML = `<p class="track-intro">You can return items within 30 days of delivery. Find your order to choose what you’d like to return. Need a different size or colour instead? <span class="track-link" onclick="navigateToContentPage('exchange-an-item')">Exchange an item</span>.</p>
+  body.innerHTML = `<p class="track-intro">You can return items within 14 days of delivery. Find your order to choose what you’d like to return. Need a different size or colour instead? <span class="track-link" onclick="navigateToContentPage('exchange-an-item')">Exchange an item</span>.</p>
     <form class="track-form" id="rl-form" onsubmit="submitReturnLookup(event)" novalidate>
       <label class="track-label" for="rl-number">Order number</label>
       <input class="track-input" id="rl-number" placeholder="JD-123456" autocomplete="off" autocapitalize="characters" value="${escapeHTML(order)}">

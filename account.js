@@ -418,7 +418,7 @@ async function renderAccountReturns() {
       <button type="button" class="jd-list-row" onclick="navigateToContentPage('exchange-an-item')"><span>Exchange an item</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>
     </nav>
     ${list.length ? `<div class="account-section-title">Your returns and exchanges</div>${list.join('')}`
-      : `<p class="account-note account-empty-note">You have no returns or exchanges. Items may be returned or exchanged within 30 days of delivery.</p>`}`;
+      : `<p class="account-note account-empty-note">You have no returns or exchanges. Items may be returned or exchanged within 14 days of delivery.</p>`}`;
 }
 
 function openAccountService(path) {

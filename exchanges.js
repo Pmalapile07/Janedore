@@ -24,7 +24,7 @@ let _exchangeEmail = '';
 const EXCHANGE_POLICY_HTML = `<div class="track-notice returns-policy">
       <strong class="returns-policy-title">Exchanges at a glance</strong>
       <ul class="returns-policy-list">
-        <li>Items can be exchanged for another size or colour within 30 days of delivery, subject to availability.</li>
+        <li>Items can be exchanged for another size or colour within 14 days of delivery, subject to availability.</li>
         <li>Every request is reviewed with the brand, and we’ll email you our decision. Once approved, your new item is set aside for you.</li>
         <li>If we sent the wrong size or item, or it arrived damaged or faulty, we cover the delivery costs. Otherwise, delivery in both directions is at your cost.</li>
         <li>Your new item is dispatched with tracking once the brand has received the original.</li>
@@ -75,7 +75,7 @@ function renderExchangesPage(tab) {
     return;
   }
 
-  body.innerHTML = `<p class="track-intro">You can exchange an item for another size or colour within 30 days of delivery. Find your order to get started.</p>
+  body.innerHTML = `<p class="track-intro">You can exchange an item for another size or colour within 14 days of delivery. Find your order to get started.</p>
     <form class="track-form" id="xl-form" onsubmit="submitExchangeLookup(event)" novalidate>
       <label class="track-label" for="xl-number">Order number</label>
       <input class="track-input" id="xl-number" placeholder="JD-123456" autocomplete="off" autocapitalize="characters" value="${escapeHTML(order)}">
