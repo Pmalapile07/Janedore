@@ -26,11 +26,13 @@ function returnsSavedEmail() {
 // A summary of the returns policy (the rules returns-api.js applies).
 const RETURNS_POLICY_HTML = `<div class="track-notice returns-policy">
       <strong class="returns-policy-title">Returns at a glance</strong>
-      · Items can be returned within 30 days of delivery.<br>
-      · Every request is reviewed with the brand, and we’ll email you our decision.<br>
-      · Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.<br>
-      · Refunds are made to your original payment method once we’ve received and checked the item.<br>
-      · Prefer a different size or colour? You can <span class="track-link" onclick="navigateToContentPage('exchange-an-item')">exchange an item</span> instead.
+      <ul class="returns-policy-list">
+        <li>Items can be returned within 30 days of delivery.</li>
+        <li>Every request is reviewed with the brand, and we’ll email you our decision.</li>
+        <li>Return delivery is at your cost, unless the item is faulty or incorrect, in which case we’ll arrange collection.</li>
+        <li>Refunds are made to your original payment method once we’ve received and checked the item.</li>
+        <li>Prefer a different size or colour? You can <span class="track-link" onclick="navigateToContentPage('exchange-an-item')">exchange an item</span> instead.</li>
+      </ul>
     </div>`;
 
 function renderReturnsPage(tab) {

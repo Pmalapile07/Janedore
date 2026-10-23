@@ -69,6 +69,10 @@
 .returns-page .account-tabs { margin-bottom: 20px; }
 .returns-policy { margin-top: 28px; line-height: 1.7; }
 .returns-policy-title { display: block; margin-bottom: 10px; }
+/* Real bullets; a point that wraps lines up with its first line. */
+.returns-policy-list { margin: 0; padding-left: 18px; list-style: disc; }
+.returns-policy-list li { padding-left: 2px; }
+.returns-policy-list li + li { margin-top: 6px; }
 .return-item { border: 1px solid #e5e5e5; padding: 12px 14px; margin: 0 0 10px; }
 .return-item.is-selected { border-color: #111; }
 .return-item.is-blocked { opacity: 0.55; }
