@@ -223,3 +223,8 @@
   transition: color 0.2s;
 }
 .brand-logo-placeholder:hover { color: #111; }
+
+/* The wishlist heart (Material Symbols) half a pixel over the account and
+   bag icons beside it, in the header and the menu's header. */
+.nav-wishlist-icon .ms-icon,
+.menu-head-btn .ms-icon { font-size: 20.5px; }
