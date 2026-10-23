@@ -776,6 +776,14 @@ body:not(.on-collection-page) #active-filter-chips { display: none !important; }
 .nav-quick-link.active { background: #111; color: #fff; font-weight: 700; }
 /* Same spacing as the homepage's product rows (#home-shop-clothing). */
 .brand-section { padding: 24px 0; }
+/* Brand reviews: the product page's review accordion body, always open,
+   at the section headers' side padding. */
+.brand-reviews.info-accordion-body { max-height: none; overflow: visible; padding: 0 20px; }
+@media (min-width: 768px) { .brand-reviews.info-accordion-body { padding: 0 24px; } }
+@media (min-width: 1024px) { .brand-reviews.info-accordion-body { padding: 0 27px; } }
+.brand-review { padding-top: 4px; }
+.brand-review + .brand-review { border-top: 1px solid #eee; margin-top: 12px; padding-top: 8px; }
+.brand-review .brand-review-product { margin-top: 8px; font-weight: 500; }
 #brand-shop { padding-bottom: 0; }
 /* The brand's description sits in the middle of their hero photo
    (hero.css .hero-statement-sub type, at most four lines). No button:
