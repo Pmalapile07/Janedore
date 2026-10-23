@@ -70,7 +70,7 @@ function renderExchangesPage(tab) {
     return;
   }
 
-  body.innerHTML = `<p class="track-intro">You can exchange an item for another size or colour within 30 days of dispatch. Find your order to get started.</p>
+  body.innerHTML = `<p class="track-intro">You can exchange an item for another size or colour within 30 days of delivery. Find your order to get started.</p>
     <form class="track-form" id="xl-form" onsubmit="submitExchangeLookup(event)" novalidate>
       <label class="track-label" for="xl-number">Order number</label>
       <input class="track-input" id="xl-number" placeholder="JD-123456" autocomplete="off" autocapitalize="characters" value="${escapeHTML(order)}">

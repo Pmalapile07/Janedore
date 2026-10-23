@@ -1,6 +1,6 @@
 // ==================== RETURNS ====================
 // Customers log a return on /pages/log-a-return (returns.js): they find
-// their order with its number and checkout email, pick items shipped in
+// their order with its number and checkout email, pick items delivered in
 // the last RETURN_DAYS days, give a reason and photos, and get a return
 // number (RT-123456) to check its status with. Every brand on the
 // return is emailed and can accept or dispute it in admin; only Super
@@ -51,12 +51,23 @@ module.exports = function registerReturns(app, deps) {
     return { id: doc.id, ref: doc.ref, order };
   }
 
+  // When the order was delivered: the date saved when staff set it to
+  // Delivered (admin-orders.js), or for orders marked before that was
+  // saved, when the delivered email went out, else its last update.
+  // Null until the order is Delivered.
+  function deliveredAt(order) {
+    if (String(order.status || '').toLowerCase() !== 'delivered') return null;
+    const at = iso(order.deliveredAt) || iso(order.statusEmailsSent && order.statusEmailsSent.delivered) || iso(order.updatedAt);
+    return at ? new Date(at) : new Date();
+  }
+
   // Every order line, with how many can still be returned (or exchanged,
-  // exchanges-api.js) and why not. An item already returned or exchanged
-  // counts against both.
+  // exchanges-api.js) and why not. Returns and exchanges open once the
+  // order is delivered, for RETURN_DAYS days. An item already returned or
+  // exchanged counts against both.
   async function returnableItems(orderId, order, kind) {
     const noun = kind === 'exchange' ? 'Exchange' : 'Return';
-    const shipments = orderShipments(order);
+    const delivered = deliveredAt(order);
     const [returnsSnap, exchangesSnap] = await Promise.all([
       adminDb.collection('returns').where('orderId', '==', orderId).get(),
       adminDb.collection('exchanges').where('orderId', '==', orderId).get()
@@ -68,13 +79,11 @@ module.exports = function registerReturns(app, deps) {
       (r.items || []).forEach((i) => { used[i.index] = (used[i.index] || 0) + (Number(i.qty) || 0); });
     });
     return (order.items || []).map((item, index) => {
-      const shipment = shipments.find((s) => s.items.includes(item));
-      const shippedAt = shipment && shipment.tracking.trackingNumber ? (shipment.tracking.addedAt || iso(order.createdAt)) : null;
-      const deadline = shippedAt ? new Date(new Date(shippedAt).getTime() + RETURN_DAYS * 86400000) : null;
+      const deadline = delivered ? new Date(delivered.getTime() + RETURN_DAYS * 86400000) : null;
       const remaining = Math.max(0, (Number(item.qty) || 1) - (used[index] || 0));
       let blocked = '';
       if (order.paymentStatus !== 'paid') blocked = 'This order can’t be ' + (kind === 'exchange' ? 'exchanged.' : 'returned.');
-      else if (!shippedAt) blocked = 'Not shipped yet';
+      else if (!delivered) blocked = 'Not delivered yet';
       else if (deadline < new Date()) blocked = noun + ' window closed on ' + deadline.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' });
       else if (!remaining) blocked = 'Already returned or exchanged';
       return {

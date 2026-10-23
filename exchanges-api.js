@@ -1,7 +1,7 @@
 // ==================== EXCHANGES ====================
 // Customers exchange an item for another size or colour on
 // /pages/exchange-an-item (exchanges.js): they find their order with its
-// number and checkout email, pick items shipped in the last RETURN_DAYS
+// number and checkout email, pick items delivered in the last RETURN_DAYS
 // days, choose what they want instead (only sizes and colours in stock),
 // give a reason, and get an exchange number (EX-123456) to check its
 // status with. Exchanges never become refunds.

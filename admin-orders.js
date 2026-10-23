@@ -1560,7 +1560,9 @@
     if (!window._guard('orders', 'update')) return;
     if (ORDER_STATUSES.indexOf(status) === -1) { showToast('Invalid status value', 'error'); return; }
     ordersRef.doc(orderId)
-      .update({ status: status, updatedAt: new Date().toISOString() })
+      // Delivered also saves when, which starts the 30-day return and
+      // exchange window (returns-api.js).
+      .update(Object.assign({ status: status, updatedAt: new Date().toISOString() }, status === 'delivered' ? { deliveredAt: new Date().toISOString() } : {}))
       .then(function () {
         showToast('Status updated to ' + status);
         logOrderTimelineEvent(orderId, 'You changed the order status to ' + status.charAt(0).toUpperCase() + status.slice(1) + '.');
