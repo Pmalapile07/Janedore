@@ -116,7 +116,7 @@
 #hero .hero-shop-btn,
 .brand-hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
 /* Shop women and Shop men, side by side. */
-.hero-gender-btns { display: flex; gap: 8px; }
+.hero-gender-btns { display: flex; gap: 8px; align-self: center; justify-content: center; }
 #hero .hero-gender-btns .hero-shop-btn { padding: 12px 24px; }
 
 /* Matches home-manifesto's weight (300) — the 400 it had before read

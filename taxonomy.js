@@ -49,7 +49,7 @@
     ] },
     { slug: 'kids', name: 'Kids', sizeSystem: 'kids', categories: [
       ['girls', 'Girls’ clothing', 'kids'], ['boys', 'Boys’ clothing', 'kids'], ['baby', 'Baby (0–24 months)', 'kids'],
-      ['kids-shoes', 'Kids’ shoes', 'kids-shoes'], ['kids-accessories', 'Kids’ accessories', ''], ['kids-care', 'Bath & hair care', ''],
+      ['kids-shoes', 'Kids’ shoes', 'kids-shoes'], ['kids-accessories', 'Kids’ accessories', ''], ['kids-care', 'Head to toe', ''],
       ['nursery', 'Nursery', '']
     ] }
   ];
