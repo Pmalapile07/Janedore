@@ -308,6 +308,9 @@
 <nav class="page-breadcrumb" id="collection-page-breadcrumb" aria-label="Breadcrumb"></nav>
 
 <div class="collection-page-heading" id="collection-page-heading">All products</div>
+<!-- What the filters narrowed the page to, as a trail under the heading
+     (collection.js renderActiveFilterChips()). -->
+<div id="active-filter-chips" class="active-filter-trail"></div>
 <div class="collection-top-description" id="collection-top-description"></div>
 
 <div id="collection-filter-bar" class="collection-filter-bar">
@@ -336,7 +339,6 @@
     </div>
   </div>
 </div>
-<div id="active-filter-chips" class="active-filter-chips"></div>
 
 <!-- Full-screen filters (collection.js renderFilterPanel()), laid out like
      the menu: black header with close and "Filters", sections that open

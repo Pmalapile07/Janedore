@@ -463,54 +463,17 @@ body:not(.on-collection-page) .collection-page-heading {
 .collection-filter-done { background: #111; color: #fff; border: 1.5px solid #111; }
 
 /* =========================================
-   ACTIVE FILTER CHIPS - ABOVE THE GRID
+   FILTER TRAIL - UNDER THE HEADING
+   (collection.js renderActiveFilterChips(): "Women / Heels")
    ========================================= */
 
-.active-filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 0 20px 12px;
-}
-
-.active-filter-chips:empty {
-  padding: 0;
-}
-
-.filter-chip,
-.filter-chip-clear {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: #f5f5f5;
-  color: #333;
-  border: none;
-  border-radius: 20px;
-  padding: 7px 12px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.filter-chip:hover,
-.filter-chip-clear:hover {
-  background: #ebebeb;
-}
-
-.filter-chip-x {
-  font-size: 13px;
-  line-height: 1;
-}
-
-.filter-chip-clear {
-  background: none;
-  color: #555;
-  text-decoration: underline;
-  padding: 7px 4px;
-}
+.active-filter-trail { padding: 0 8px 12px; }
+.active-filter-trail:empty { padding: 0; }
+.filter-trail { display: flex; flex-wrap: wrap; align-items: center; row-gap: 4px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; line-height: 1.4; color: #888; }
+.filter-trail-link { background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.filter-trail-link:hover { color: #111; }
+.filter-trail-sep { margin: 0 8px; color: #bbb; }
+.filter-trail-current { color: #111; }
 
 /* =========================================
    3-COLUMN GRID - HIDE PRODUCT INFO

@@ -761,6 +761,10 @@ function renderFilterPanel() {
 // without opening it — same pattern as ASOS/Superbalist's applied-filter
 // row. Clicking a chip removes just that value; "Clear all" resets
 // everything at once.
+// The filters picked, as a trail under the page heading: the page, the
+// category's department, the category, then any other filters, e.g.
+// "Women / Accessories / Heels / Size 6". Changed from the Filter
+// panel; the page's name clears them.
 function renderActiveFilterChips() {
   const container = document.getElementById('active-filter-chips');
   if (!container) return;
@@ -768,34 +772,28 @@ function renderActiveFilterChips() {
   const isCategoryPage = S.currentPage === 'category';
   const f = S.currentPage === 'vendor' ? S.vendorFilter : (isCategoryPage ? S.catFilter : S.filter);
 
-  const chips = [];
-  f.cat.forEach(cat => {
-    const label = filterCategoryLabel(cat);
-    chips.push({ label, onclick: `applyCollectionFilter('cat','${escapeJSString(cat)}')` });
-  });
-  f.vendor.forEach(brand => {
-    chips.push({ label: brand, onclick: `applyCollectionFilter('vendor','${escapeJSString(brand)}')` });
-  });
-  (f.sizes || []).forEach(size => {
-    chips.push({ label: 'Size ' + size, onclick: `applyCollectionFilter('sizes','${escapeJSString(size)}')` });
-  });
-  (f.colors || []).forEach(color => {
-    chips.push({ label: color, onclick: `applyCollectionFilter('colors','${escapeJSString(color)}')` });
-  });
-  (f.genders || []).forEach(g => {
-    chips.push({ label: JDTaxonomy.genderLabel(g), onclick: `applyCollectionFilter('genders','${escapeJSString(g)}')` });
-  });
-  if (f.onSale) chips.push({ label: 'On sale', onclick: `applyCollectionFilter('onSale', false)` });
-  if (f.inStock) chips.push({ label: 'In stock', onclick: `applyCollectionFilter('inStock', false)` });
+  const parts = [];
+  if (f.cat.length) {
+    const depts = [...new Set(f.cat.map(c => JDTaxonomy.departmentOf(c)).filter(Boolean))];
+    const pageDept = JDTaxonomy.departmentOf(S.currentCategoryPage);
+    // The department, unless the page already is that department.
+    if (depts.length === 1 && depts[0] !== pageDept && !f.cat.includes(depts[0])) parts.push(JDTaxonomy.label(depts[0]));
+    parts.push(f.cat.map(filterCategoryLabel).join(', '));
+  }
+  (f.vendor || []).forEach(brand => parts.push(brand));
+  (f.sizes || []).forEach(size => parts.push('Size ' + size));
+  (f.colors || []).forEach(color => parts.push(color));
+  (f.genders || []).forEach(g => parts.push(JDTaxonomy.genderLabel(g)));
+  if (f.onSale) parts.push('On sale');
+  if (f.inStock) parts.push('In stock');
 
-  if (!chips.length) { container.innerHTML = ''; return; }
+  if (!parts.length) { container.innerHTML = ''; return; }
 
-  let html = chips.map(c =>
-    `<button class="filter-chip" onclick="${c.onclick}">${escapeHTML(c.label)} <span class="filter-chip-x">&times;</span></button>`
-  ).join('');
-  html += `<button class="filter-chip-clear" onclick="clearAllCollectionFilters()">Clear all</button>`;
-
-  container.innerHTML = html;
+  const heading = document.getElementById('collection-page-heading');
+  const page = (heading && heading.textContent.trim()) || 'All products';
+  const sep = '<span class="filter-trail-sep" aria-hidden="true">/</span>';
+  container.innerHTML = `<nav class="filter-trail" aria-label="Filters"><button type="button" class="filter-trail-link" onclick="clearAllCollectionFilters()">${escapeHTML(page)}</button>` +
+    parts.map((p, i) => sep + `<span class="${i === parts.length - 1 ? 'filter-trail-current' : 'filter-trail-item'}">${escapeHTML(p)}</span>`).join('') + '</nav>';
 }
 
 function applyEditorialGrid(gridEl, cols) {
@@ -1607,7 +1605,8 @@ function restoreCollectionFilterBar() {
   } else {
     _filterBarHomeParent.appendChild(bar);
   }
-  if (chips) bar.insertAdjacentElement('afterend', chips);
+  const heading = document.getElementById('collection-page-heading');
+  if (chips && heading) heading.insertAdjacentElement('afterend', chips);
 }
 
 function moveFilterBarBelowVendorHero(heroSection) {
