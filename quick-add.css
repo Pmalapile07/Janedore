@@ -17,10 +17,7 @@
 .product-card-action:hover { opacity: 0.75; }
 .product-card-action:active { opacity: 0.55; }
 .product-card-action::after { content: ''; position: absolute; inset: -4px; }
-/* Clipped to the icon's box and see-through until the icon font has
-   loaded (.card-icon-ready, quick-add.js), so its name never shows. */
-.card-action-icon { font-size: 24px; width: 24px; height: 24px; overflow: hidden; color: transparent; font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-.card-icon-ready .card-action-icon { color: inherit; }
+.material-symbols-outlined.card-action-icon { font-size: 24px; }
 
 #quick-add-sheet { position: fixed; inset: 0; z-index: 1300; visibility: hidden; transition: visibility 0s linear 0.3s; }
 #quick-add-sheet.open { visibility: visible; transition: visibility 0s; }

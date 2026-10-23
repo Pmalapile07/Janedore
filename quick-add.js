@@ -12,14 +12,15 @@ let _quickAdd = null; // { id, vi, size }
 // icon Superbalist uses. It stays an outline whether or not the product
 // is wished; the sheet says Add to or Remove from wishlist.
 function cardActionButtonHtml(p) {
-  return `<button type="button" class="product-card-action" aria-label="Options for ${escapeHTML(p.name || '')}" onclick="event.stopPropagation();openCardActions('${escapeJSString(p.id)}')"><span class="material-symbols-outlined card-action-icon" aria-hidden="true">heart_plus</span></button>`;
+  return `<button type="button" class="product-card-action" aria-label="Options for ${escapeHTML(p.name || '')}" onclick="event.stopPropagation();openCardActions('${escapeJSString(p.id)}')"><span class="material-symbols-outlined ms-icon card-action-icon" aria-hidden="true">heart_plus</span></button>`;
 }
 
-// The icon is hidden (quick-add.css) until its font has loaded, so its
-// name never shows in its place.
+// Material Symbols icons (the wishlist heart, heart_plus) stay hidden
+// (styles.css .ms-icon) until their font has loaded, so their names never
+// show in their place.
 if (document.fonts && document.fonts.load) {
-  document.fonts.load('24px "Material Symbols Outlined"', 'heart_plus')
-    .then(f => { if (f.length) document.documentElement.classList.add('card-icon-ready'); })
+  document.fonts.load('24px "Material Symbols Outlined"', 'favorite heart_plus')
+    .then(f => { if (f.length) document.documentElement.classList.add('ms-ready'); })
     .catch(() => {});
 }
 

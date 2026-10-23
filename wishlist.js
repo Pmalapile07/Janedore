@@ -17,6 +17,12 @@ function saveWishlistToStorage() {
   } catch(e) {}
 }
 
+// The wishlist heart everywhere: Material Symbols' favorite (loaded in
+// index.html), filled once the product is wished.
+function heartIconHtml(filled, cls) {
+  return `<span class="material-symbols-outlined ms-icon wish-icon${filled ? ' ms-filled' : ''}${cls ? ' ' + cls : ''}" aria-hidden="true">favorite</span>`;
+}
+
 function toggleWish(productId, btnEl) {
   const product = PRODUCTS.find(p => p.id === productId);
   if (!product) return;
@@ -36,8 +42,8 @@ function toggleWish(productId, btnEl) {
   const hearts = new Set(document.querySelectorAll(`[data-wish-id="${CSS.escape(productId)}"]`));
   if (btnEl) hearts.add(btnEl);
   hearts.forEach(b => {
-    const icon = b.querySelector('i');
-    if (icon) icon.className = nowWished ? 'ph-fill ph-heart' : (b.dataset.wishWeight || 'ph') + ' ph-heart';
+    const icon = b.querySelector('.wish-icon');
+    if (icon) icon.classList.toggle('ms-filled', nowWished);
     b.classList.toggle('wished', nowWished);
   });
   updateBadges();
@@ -46,7 +52,7 @@ function toggleWish(productId, btnEl) {
   syncWishlistToAccount();
   // Same pop-up as Add to bag (cart.js), with Undo.
   if (typeof showAddedToCartToast === 'function') {
-    showAddedToCartToast(nowWished ? 'Added to wishlist' : 'Removed from wishlist', 'ph-heart', () => toggleWish(productId));
+    showAddedToCartToast(nowWished ? 'Added to wishlist' : 'Removed from wishlist', 'favorite', () => toggleWish(productId));
   }
 }
 
@@ -153,7 +159,7 @@ function renderWishlistPage() {
   const head = wishHeadHtml();
   if (!S.wishlist.length) {
     DOM.wishPageContent.classList.add('is-empty');
-    DOM.wishPageContent.innerHTML = head + wishEmptyHtml('ph-heart', 'Your wishlist is empty', 'Continue shopping', "navigateTo('products')");
+    DOM.wishPageContent.innerHTML = head + wishEmptyHtml('favorite', 'Your wishlist is empty', 'Continue shopping', "navigateTo('products')");
     if (DOM.wishPageContent.querySelector('#wish-slider-grid')) initSliderLeadingTracking('wish-slider-grid');
     return;
   }
@@ -170,7 +176,7 @@ function wishEmptyHtml(icon, title, btnLabel, btnAction, sub) {
   const useRecent = recent.length >= 2;
   const picks = (useRecent ? recent : newestActiveProducts()).slice(0, 8);
   return `<div class="cart-empty">
-      <i class="ph ${icon} cart-empty-icon" aria-hidden="true"></i>
+      ${icon === 'favorite' ? heartIconHtml(false, 'cart-empty-icon') : `<i class="ph ${icon} cart-empty-icon" aria-hidden="true"></i>`}
       <div class="cart-empty-title">${title}</div>
       ${sub ? `<div class="wish-empty-sub">${sub}</div>` : ''}
       <button class="cart-empty-btn" onclick="${btnAction}">${btnLabel}</button>

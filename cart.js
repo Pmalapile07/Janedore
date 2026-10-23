@@ -396,8 +396,11 @@ function showAddedToCartToast(text, icon, undo) {
     document.body.appendChild(toast);
   }
   toast.querySelector('.added-toast-text').textContent = text || 'Added to bag';
+  // 'favorite' is the wishlist heart (heartIconHtml, wishlist.js); the
+  // rest are Phosphor icons.
   const iconEl = toast.querySelector('.added-toast-icon');
-  if (iconEl) iconEl.className = 'ph ' + (icon || 'ph-check-circle') + ' added-toast-icon';
+  if (iconEl) iconEl.outerHTML = icon === 'favorite' ? heartIconHtml(false, 'added-toast-icon')
+    : '<i class="ph ' + (icon || 'ph-check-circle') + ' added-toast-icon" aria-hidden="true"></i>';
   _toastUndo = typeof undo === 'function' ? undo : null;
   toast.querySelector('.added-toast-undo').style.display = _toastUndo ? '' : 'none';
   // Sit just above the product page's sticky Add to bag bar when it's there.
@@ -678,7 +681,7 @@ function renderCartPage() {
           ${cartPreorderHtml(item)}${cartFreeDeliveryHtml(item, mixed)}
         </div>
         <div class="cart-item-actions">
-          <button class="cart-item-icon-btn${wished ? ' wished' : ''}" type="button" data-wish-id="${productId}" data-wish-weight="ph" onclick="toggleWish('${productId}',this)" aria-label="Save to wishlist"><i class="${wished ? 'ph-fill' : 'ph'} ph-heart"></i></button>
+          <button class="cart-item-icon-btn${wished ? ' wished' : ''}" type="button" data-wish-id="${productId}" onclick="toggleWish('${productId}',this)" aria-label="Save to wishlist">${heartIconHtml(wished)}</button>
           <button class="cart-item-icon-btn" type="button" onclick="removeFromCart('${productId}','${itemSize}',${item.variantIndex})" aria-label="Remove from bag"><i class="ph ph-x"></i></button>
         </div>
       </div>

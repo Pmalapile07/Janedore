@@ -41,3 +41,16 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 60px 20px; }
 .spinner { width: 24px; height: 24px; border: 2px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Material Symbols icons (index.html loads favorite and heart_plus):
+   sized like the Phosphor icons around them (1em of the parent), thin
+   outline, and hidden until the font has loaded (html.ms-ready,
+   quick-add.js) so their names never show. .ms-filled fills the
+   wishlist heart. */
+.ms-icon {
+  display: inline-block; width: 1em; height: 1em; overflow: hidden; flex-shrink: 0;
+  font-size: inherit; line-height: 1; visibility: hidden;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+.ms-ready .ms-icon { visibility: visible; }
+.ms-icon.ms-filled { font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
