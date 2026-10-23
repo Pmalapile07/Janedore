@@ -569,27 +569,11 @@ const BUILTIN_COLLECTIONS = {
   men: { id: 'men', handle: 'men', title: 'Men', collectionType: 'automated', automatedRule: 'gender', gender: 'men' }
 };
 
-// The menu tab the shopper is on (Home, Women, Men or Kids). The hero
-// buttons set it too. Remembered on this device.
-function shopGender() {
-  try { const g = localStorage.getItem('jd_shop_gender'); return ['women', 'men', 'kids'].indexOf(g) !== -1 ? g : 'home'; } catch (e) { return 'home'; }
-}
-function setShopGender(g) {
-  try { localStorage.setItem('jd_shop_gender', g); } catch (e) {}
-}
 // The Women or Men page, optionally opened on one of its sections
 // (SHOP_GROUPS, collection.js), e.g. Men > Shoes.
 function shopGenderPage(g, group) {
-  setShopGender(g);
   S.nextShopGroup = group || null;
   navigateToCollection(g);
-}
-// A category within Women or Men: the category page with that gender
-// picked in the filters.
-function navigateToCategoryFor(cat, g) {
-  navigateToCategory(cat);
-  S.catFilter.genders = [g];
-  renderCategoryProducts();
 }
 
 async function navigateToCollection(handle, replaceUrl) {
@@ -764,7 +748,6 @@ function openMenu() {
   const badge = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n; el.style.display = n > 0 ? 'flex' : 'none'; } };
   badge('menu-wish-badge', (S.wishlist || []).length);
   badge('menu-bag-badge', (S.cart || []).reduce((a, i) => a + (Number(i.qty) || 1), 0));
-  renderMenuDepartments();
   if (typeof lockPageScroll === 'function' && !DOM.menuDrawer.classList.contains('open')) lockPageScroll();
   DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open");
 }
@@ -781,75 +764,37 @@ function openMenuPanel(name) {
   panel.classList.add('active');
   DOM.menuDrawer.classList.add('sub-open');
 }
-// The menu under the Home / Women / Men / Kids tabs. Home lists the whole
-// store, Kids included; Women and Men list their sections (SHOP_GROUPS,
-// collection.js) and Kids its categories. Only ones with products right
-// now, so the menu never leads to an empty page.
-// Home and living, brands, sale and gift cards sit below for everyone.
+// The menu's sections, like Superbalist: Women, Men, Kids, Home and
+// living and Beauty, each opening its own list. Women and Men list their
+// sections (SHOP_GROUPS, collection.js); the others their categories.
+// Only what has products right now, so the menu never leads to an empty
+// page.
+const MENU_SECTIONS = [['women', 'Women'], ['men', 'Men'], ['kids', 'Kids'], ['homeware', 'Home and living'], ['beauty', 'Beauty']];
 function renderMenuDepartments() {
   const el = document.getElementById('menu-departments');
   if (!el || !window.JDTaxonomy) return;
-  const g = shopGender();
-  const tabs = document.getElementById('menu-gender-tabs');
-  if (tabs) tabs.innerHTML = [['home', 'Home'], ['women', 'Women'], ['men', 'Men'], ['kids', 'Kids']].map(([v, label]) =>
-    `<button type="button" class="menu-gender-tab${v === g ? ' active' : ''}" aria-pressed="${v === g}" onclick="setShopGender('${v}');renderMenuDepartments();">${label}</button>`).join('');
-  const row = (label, onclick, sub) => `<${sub ? 'button' : 'a'} class="menu-row menu-cat" onclick="${sub ? '' : 'closeMenu();'}${onclick}">${escapeHTML(label)}<i class="ph ph-caret-right menu-chev"></i></${sub ? 'button' : 'a'}>`;
-  const live = PRODUCTS.filter(p => p.status === 'active');
-  if (g === 'kids') {
-    el.innerHTML = row('Shop all kids', "navigateToCategory('kids');") + kidsMenuCats().map(c => row(JDTaxonomy.label(c), `navigateToCategory('${escapeJSString(c)}');`)).join('');
-    return;
-  }
-  if (g === 'home') {
-    const adult = live.filter(p => ['kids', 'homeware'].indexOf(JDTaxonomy.departmentOf(p.category)) === -1);
-    el.innerHTML = row('Shop all', "navigateTo('products');") + row('New in', 'navigateToNewIn();') +
-      SHOP_GROUPS.filter(gr => !gr.test && adult.some(p => inShopGroup(p, gr.key))).map(gr => gr.cats().length === 1
-        ? row(gr.name, `navigateToCategory('${gr.key}');`)
-        : row(gr.name, `openMenuGroup('${gr.key}');`, true)).join('') +
-      (kidsMenuCats().length ? row('Kids', "openMenuGroup('kids');", true) : '');
-    return;
-  }
-  const mine = live.filter(p => inGenderShop(p, g));
-  el.innerHTML = row('Shop all ' + g, `shopGenderPage('${g}');`) + SHOP_GROUPS.filter(gr => mine.some(p => inShopGroup(p, gr.key))).map(gr => {
-    // Sections with one category (Shoes, Bags) and New in go straight to the page.
-    const direct = gr.test || gr.cats().length === 1;
-    return row(shopGroupName(gr, g), direct ? `shopGenderPage('${g}','${gr.key}');` : `openMenuGroup('${gr.key}');`, !direct);
-  }).join('');
+  el.innerHTML = MENU_SECTIONS.map(([key, name]) =>
+    `<button class="menu-row menu-cat" onclick="openMenuSection('${key}')">${escapeHTML(name)}<i class="ph ph-caret-right menu-chev"></i></button>`).join('');
 }
 document.addEventListener('DOMContentLoaded', renderMenuDepartments);
 
-// Kids categories with products right now (old ones like Toys left out).
-function kidsMenuCats() {
-  const stocked = new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category));
-  return JDTaxonomy.categoriesIn('kids').filter(c => c !== 'kids' && stocked.has(c) && !JDTaxonomy.category(c).legacy).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b));
-}
-
-// One section (Clothing, Accessories, Beauty, or Kids on the Home tab):
-// its categories with products right now. On Home it covers everyone;
-// on Women or Men, that gender.
-function openMenuGroup(key) {
+function openMenuSection(key) {
   const panel = document.getElementById('menu-panel-dept');
   if (!panel) return;
-  const g = shopGender();
+  const name = (MENU_SECTIONS.find(s => s[0] === key) || [key, key])[1];
+  const live = PRODUCTS.filter(p => p.status === 'active');
   const row = (label, onclick) => `<a class="menu-row menu-subcat" onclick="closeMenu();${onclick}">${escapeHTML(label)}<i class="ph ph-caret-right menu-chev"></i></a>`;
-  if (g === 'home') {
-    const gr = SHOP_GROUPS.find(x => x.key === key);
-    const name = gr ? gr.name : 'Kids';
-    const stocked = new Set(PRODUCTS.filter(p => p.status === 'active').map(p => p.category));
-    const cats = gr ? gr.cats().filter(c => stocked.has(c) && !JDTaxonomy.department(c)).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b)) : kidsMenuCats();
-    panel.innerHTML = `<button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>${escapeHTML(name)}</button>` +
-      row('Shop all ' + name.toLowerCase(), `navigateToCategory('${key}');`) +
-      cats.map(c => row(JDTaxonomy.label(c), `navigateToCategory('${escapeJSString(c)}');`)).join('');
-    openMenuPanel('dept');
-    return;
+  let rows;
+  if (key === 'women' || key === 'men') {
+    const mine = live.filter(p => inGenderShop(p, key));
+    rows = row('Shop all ' + key, `shopGenderPage('${key}');`) +
+      SHOP_GROUPS.filter(gr => mine.some(p => inShopGroup(p, gr.key))).map(gr => row(shopGroupName(gr, key), `shopGenderPage('${key}','${gr.key}');`)).join('');
+  } else {
+    const stocked = new Set(live.map(p => p.category));
+    const cats = JDTaxonomy.categoriesIn(key).filter(c => c !== key && stocked.has(c) && !JDTaxonomy.category(c).legacy).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b));
+    rows = row('Shop all ' + name.toLowerCase(), `navigateToCategory('${key}');`) + cats.map(c => row(JDTaxonomy.label(c), `navigateToCategory('${escapeJSString(c)}');`)).join('');
   }
-  const gr = SHOP_GROUPS.find(x => x.key === key);
-  if (!gr) return;
-  const stocked = new Set(PRODUCTS.filter(p => p.status === 'active' && JDTaxonomy.forGender(p, g)).map(p => p.category));
-  const cats = gr.cats().filter(c => stocked.has(c) && !JDTaxonomy.department(c)).sort((a, b) => JDTaxonomy.order(a) - JDTaxonomy.order(b));
-  const title = (g === 'men' ? 'Men’s ' : 'Women’s ') + shopGroupName(gr, g).toLowerCase();
-  panel.innerHTML = `<button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>${escapeHTML(title)}</button>` +
-    row('Shop all ' + title.charAt(0).toLowerCase() + title.slice(1), `shopGenderPage('${g}','${key}');`) +
-    cats.map(c => row(JDTaxonomy.label(c), `navigateToCategoryFor('${escapeJSString(c)}','${g}');`)).join('');
+  panel.innerHTML = `<button class="menu-back" onclick="closeMenuPanel()"><i class="ph ph-caret-left"></i>${escapeHTML(name)}</button>` + rows;
   openMenuPanel('dept');
 }
 

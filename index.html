@@ -376,16 +376,15 @@
 
   <div class="menu-panels">
     <div class="menu-panel" id="menu-panel-main">
-      <div class="menu-gender-tabs" id="menu-gender-tabs" role="group" aria-label="Shop everything, women, men or kids"></div>
       <button class="menu-row menu-account" onclick="closeMenu();navigateToLogin();">
         <span class="menu-account-left"><span class="menu-avatar" id="menu-avatar"><i class="ph ph-user"></i></span><span id="menu-account-label">Sign in</span></span>
         <i class="ph ph-caret-right menu-chev"></i>
       </button>
-      <!-- The chosen tab's sections, app.js renderMenuDepartments(). -->
+      <!-- Women, Men, Kids, Home and living, Beauty: app.js renderMenuDepartments(). -->
       <div id="menu-departments"></div>
 
       <div class="menu-links">
-        <a class="menu-plain" onclick="closeMenu();navigateToCategory('homeware');">Home and living</a>
+        <a class="menu-plain" onclick="closeMenu();navigateToNewIn();">New in</a>
         <a class="menu-plain" onclick="closeMenu();navigateTo('brands');">Brands</a>
         <a class="menu-plain menu-sale" onclick="closeMenu();navigateToSale();">Sale</a>
         <a class="menu-plain" id="menu-giftcards-link" onclick="closeMenu();navigateTo('giftcards');">Gift cards</a>
@@ -403,7 +402,7 @@
       </div>
     </div>
 
-    <!-- One section's categories, filled in by openMenuGroup(). -->
+    <!-- One section's list, filled in by openMenuSection(). -->
     <div class="menu-panel menu-subpanel" id="menu-panel-dept"></div>
   </div>
 </div>
