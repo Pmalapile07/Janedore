@@ -8,11 +8,10 @@
 
 let _quickAdd = null; // { id, vi, size }
 
-// The heart carries data-wish-id, so toggleWish() (wishlist.js) fills
-// it wherever the product is wished.
+// The heart stays an outline whether or not the product is wished; the
+// sheet says Add to or Remove from wishlist.
 function cardActionButtonHtml(p) {
-  const wished = (S.wishlist || []).some(w => w.id === p.id);
-  return `<button type="button" class="product-card-action${wished ? ' wished' : ''}" data-wish-id="${escapeHTML(p.id)}" aria-label="Options for ${escapeHTML(p.name || '')}" onclick="event.stopPropagation();openCardActions('${escapeJSString(p.id)}')"><i class="${wished ? 'ph-fill' : 'ph'} ph-heart"></i><span class="card-action-plus" aria-hidden="true"><b class="ph ph-plus"></b></span></button>`;
+  return `<button type="button" class="product-card-action" aria-label="Options for ${escapeHTML(p.name || '')}" onclick="event.stopPropagation();openCardActions('${escapeJSString(p.id)}')"><i class="ph ph-heart"></i><span class="card-action-plus" aria-hidden="true"><b class="ph ph-plus"></b></span></button>`;
 }
 
 function quickAddSizes(p) { return (p.sizes || []).filter(s => s !== 'OS'); }

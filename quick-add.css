@@ -5,7 +5,7 @@
    ========================================= */
 
 /* Card action (quick-add.js cardActionButtonHtml): a heart with a small
-   plus in a white circle on its right, bottom right of the card photo
+   white plus in a black circle on its right, bottom right of the card photo
    like Superbalist. Above the long-press overlay (product-card.css
    .product-img-wrap::after, z-index 5). */
 .product-card-action {
@@ -18,10 +18,10 @@
 .product-card-action:active { opacity: 0.55; }
 .product-card-action::after { content: ''; position: absolute; inset: -6px; }
 .card-action-plus {
-  position: absolute; left: 19px; top: 50%; transform: translateY(-50%);
-  width: 14px; height: 14px; border-radius: 50%; background: #fff; color: #111;
+  position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+  width: 10px; height: 10px; border-radius: 50%; background: #111; color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: normal; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  font-size: 7px; font-weight: normal;
 }
 .card-action-plus b { font-weight: normal; line-height: 1; }
 
