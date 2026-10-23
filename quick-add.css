@@ -1,21 +1,39 @@
 /* =========================================
-   QUICK ADD (quick-add.js)
-   The bag icon on product cards and the sheet it opens: slides up from
-   the bottom on phones, a centred panel from 768px.
+   CARD ACTIONS AND QUICK ADD (quick-add.js)
+   The heart-and-plus icon on product cards and the sheet it opens:
+   slides up from the bottom on phones, a centred panel from 768px.
    ========================================= */
 
-/* The wishlist heart's twin (product-grid.css .product-wish-btn): same
-   size, colour, tap area and fades, in the bottom right corner where the
-   heart sits top right. */
-.product-quick-add-btn {
-  position: absolute; right: 0; bottom: 0; z-index: 6;
-  width: 28px; height: 28px; padding: 0; margin: 0; border: none; border-radius: 0; background: transparent; color: #111;
-  display: inline-flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1; flex-shrink: 0; cursor: pointer;
+/* Card action (quick-add.js cardActionButtonHtml): a heart with a small
+   plus in a white circle on its right, bottom right of the card photo
+   like Superbalist. Above the long-press overlay (product-card.css
+   .product-img-wrap::after, z-index 5). */
+.product-card-action {
+  position: absolute; right: 2px; bottom: 2px; z-index: 6;
+  width: 36px; height: 32px; padding: 0 0 0 4px; margin: 0; border: none; background: transparent; color: #111;
+  display: inline-flex; align-items: center; justify-content: flex-start; font-size: 22px; line-height: 1; cursor: pointer;
   transition: opacity 0.2s ease;
 }
-.product-quick-add-btn:hover { opacity: 0.75; }
-.product-quick-add-btn:active { opacity: 0.55; }
-.product-quick-add-btn::after { content: ''; position: absolute; inset: -8px; }
+.product-card-action:hover { opacity: 0.75; }
+.product-card-action:active { opacity: 0.55; }
+.product-card-action::after { content: ''; position: absolute; inset: -6px; }
+.card-action-plus {
+  position: absolute; left: 19px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; border-radius: 50%; background: #fff; color: #111;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: normal; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+}
+.card-action-plus b { font-weight: normal; line-height: 1; }
+
+/* Its sheet: Add to bag, wishlist, View full details. */
+.card-action-list { margin-top: 18px; border-top: 1px solid #eee; }
+.card-action-row {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 0; background: none; border: none; border-bottom: 1px solid #eee;
+  font-family: inherit; font-size: 15px; color: #111; text-align: left; cursor: pointer;
+}
+.card-action-row > i:first-child { font-size: 20px; width: 22px; text-align: center; flex-shrink: 0; }
+.card-action-row span { flex: 1; }
+.card-action-chev { font-size: 16px; color: #888; }
 
 #quick-add-sheet { position: fixed; inset: 0; z-index: 1300; visibility: hidden; transition: visibility 0s linear 0.3s; }
 #quick-add-sheet.open { visibility: visible; transition: visibility 0s; }
