@@ -308,6 +308,8 @@
 
 <div class="collection-page-heading" id="collection-page-heading">All products</div>
 <div class="collection-top-description" id="collection-top-description"></div>
+<!-- Women and Men pages: their sections (collection.js SHOP_GROUPS). -->
+<div class="nav-quick-links brand-quick-links collection-quick-links" id="collection-quick-links" role="tablist"></div>
 
 <div id="collection-filter-bar" class="collection-filter-bar">
   <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn" aria-hidden="true" tabindex="-1" disabled>
@@ -376,16 +378,16 @@
 
   <div class="menu-panels">
     <div class="menu-panel" id="menu-panel-main">
-      <div class="menu-gender-tabs" id="menu-gender-tabs" role="group" aria-label="Shop women or men"></div>
+      <div class="menu-gender-tabs" id="menu-gender-tabs" role="group" aria-label="Shop women, men or kids"></div>
       <button class="menu-row menu-account" onclick="closeMenu();navigateToLogin();">
         <span class="menu-account-left"><span class="menu-avatar" id="menu-avatar"><i class="ph ph-user"></i></span><span id="menu-account-label">Sign in</span></span>
         <i class="ph ph-caret-right menu-chev"></i>
       </button>
-      <a class="menu-row menu-cat" onclick="closeMenu();navigateToNewIn();">New in<i class="ph ph-caret-right menu-chev"></i></a>
-      <!-- Departments from the category tree (taxonomy.js), app.js renderMenuDepartments(). -->
+      <!-- The chosen tab's sections, app.js renderMenuDepartments(). -->
       <div id="menu-departments"></div>
 
       <div class="menu-links">
+        <a class="menu-plain" onclick="closeMenu();navigateToCategory('homeware');">Home and living</a>
         <a class="menu-plain" onclick="closeMenu();navigateTo('brands');">Brands</a>
         <a class="menu-plain menu-sale" onclick="closeMenu();navigateToSale();">Sale</a>
         <a class="menu-plain" id="menu-giftcards-link" onclick="closeMenu();navigateTo('giftcards');">Gift cards</a>
@@ -403,7 +405,7 @@
       </div>
     </div>
 
-    <!-- One department's categories, filled in by openMenuDepartment(). -->
+    <!-- One section's categories, filled in by openMenuGroup(). -->
     <div class="menu-panel menu-subpanel" id="menu-panel-dept"></div>
   </div>
 </div>

@@ -105,12 +105,41 @@ window._loadPublishedCollections = function (forceRefresh) {
   return window._publishedCollectionsPromise;
 };
 
+// The sections of Women and Men: rows in the menu (app.js) and quick
+// links at the top of the Women and Men pages. Shoes and bags have their
+// own, as on ASOS and Zalando, rather than hiding inside Accessories.
+const SHOP_GROUPS = [
+  { key: 'new', name: 'New in', test: p => typeof isProductNew === 'function' && isProductNew(p) },
+  { key: 'clothing', name: 'Clothing', cats: () => JDTaxonomy.categoriesIn('clothing') },
+  { key: 'shoes', name: 'Shoes', cats: () => ['shoes'] },
+  { key: 'bags', name: 'Bags', cats: () => ['bags'] },
+  { key: 'accessories', name: 'Accessories', cats: () => JDTaxonomy.categoriesIn('accessories').filter(c => c !== 'shoes' && c !== 'bags') },
+  { key: 'beauty', name: 'Beauty', menName: 'Grooming', cats: () => JDTaxonomy.categoriesIn('beauty') }
+];
+// On the Women or Men page: that gender or unisex, leaving out Kids and
+// Home and living, which have their own sections.
+function inGenderShop(p, g) {
+  return JDTaxonomy.forGender(p, g) && ['kids', 'homeware'].indexOf(JDTaxonomy.departmentOf(p.category)) === -1;
+}
+function shopGroupName(gr, g) { return g === 'men' && gr.menName ? gr.menName : gr.name; }
+function inShopGroup(p, key) {
+  const gr = SHOP_GROUPS.find(x => x.key === key);
+  if (!gr) return true;
+  return gr.test ? gr.test(p) : gr.cats().includes(p.category);
+}
+function isGenderPage() { return !!(S.currentCollectionData && S.currentCollectionData.automatedRule === 'gender'); }
+function selectShopGroup(key) {
+  S.shopGroup = key || null;
+  renderCategoryProducts();
+  resetScrollToTop();
+}
+
 function productBelongsToCollection(product, collection) {
   if (!product || !collection) return false;
   if (collection.collectionType === 'automated') {
     if (collection.automatedRule === 'sale') return hasSalePrice(product);
     if (collection.automatedRule === 'newin') return typeof isProductNew === 'function' && isProductNew(product);
-    if (collection.automatedRule === 'gender') return JDTaxonomy.forGender(product, collection.gender);
+    if (collection.automatedRule === 'gender') return inGenderShop(product, collection.gender);
     if (collection.automatedRule === 'freedelivery') return typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product);
   }
   const values = Array.isArray(product.collections) ? product.collections : String(product.collections || '').split(',');
@@ -251,6 +280,7 @@ function getCatFilteredProducts() {
           return String(item.handle || item.slug || item.id) === S.currentCollectionHandle;
         });
       if (!productBelongsToCollection(p, collection)) return false;
+      if (S.shopGroup && isGenderPage() && !inShopGroup(p, S.shopGroup)) return false;
     }
     if (p.id === LEATHER_POUCH_ID && S.currentCategoryPage !== 'sunglasses' && !S.currentCollectionHandle) return false;
     if (S.catFilter.vendor.length && !S.catFilter.vendor.includes(p.brand)) return false;
@@ -1299,6 +1329,18 @@ function renderCollectionSortingTabs() {
     return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) ||
       String(a.title || a.name || '').localeCompare(String(b.title || b.name || ''));
   });
+  // Women and Men: quick links to their sections (SHOP_GROUPS).
+  const quick = document.getElementById('collection-quick-links');
+  if (quick) {
+    let html = '';
+    if (isGenderPage() && S.currentPage === 'category') {
+      const g = S.currentCollectionData.gender;
+      const mine = PRODUCTS.filter(p => p.status === 'active' && inGenderShop(p, g));
+      const groups = [{ key: '', name: 'View all' }].concat(SHOP_GROUPS.filter(gr => mine.some(p => inShopGroup(p, gr.key))));
+      html = groups.map(gr => `<button class="nav-quick-link${(S.shopGroup || '') === gr.key ? ' active' : ''}" onclick="selectShopGroup('${gr.key}')">${escapeHTML(gr.key ? shopGroupName(gr, g) : gr.name)}</button>`).join('');
+    }
+    quick.innerHTML = html;
+  }
   const tabs = [{ label: 'View all', cat: 'all' }].concat(collections.map(function (item) {
     return { label: item.title || item.name || item.handle || item.id, cat: String(item.handle || item.slug || item.id) };
   }));
