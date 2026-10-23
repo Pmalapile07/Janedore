@@ -11,7 +11,7 @@ let _quickAdd = null; // { id, vi, size }
 // The heart stays an outline whether or not the product is wished; the
 // sheet says Add to or Remove from wishlist.
 function cardActionButtonHtml(p) {
-  return `<button type="button" class="product-card-action" aria-label="Options for ${escapeHTML(p.name || '')}" onclick="event.stopPropagation();openCardActions('${escapeJSString(p.id)}')"><i class="ph ph-heart"></i><span class="card-action-plus" aria-hidden="true"><b class="ph ph-plus"></b></span></button>`;
+  return `<button type="button" class="product-card-action" aria-label="Options for ${escapeHTML(p.name || '')}" onclick="event.stopPropagation();openCardActions('${escapeJSString(p.id)}')"><i class="ph ph-heart"></i><i class="ph-fill ph-plus-circle card-action-plus" aria-hidden="true"></i></button>`;
 }
 
 function quickAddSizes(p) { return (p.sizes || []).filter(s => s !== 'OS'); }
