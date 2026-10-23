@@ -1619,7 +1619,6 @@ function renderVendorPage(vendor) {
       <button class="nav-quick-link${onSale ? '' : ' active'}" data-brand-tab="shop" onclick="showBrandSection('shop')">Shop</button>
       <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
       <button class="nav-quick-link${onSale ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>
-      <button class="nav-quick-link" data-brand-tab="reviews" onclick="showBrandSection('reviews')">Reviews</button>
     </div>`;
   // The brand's description (admin > Vendors) in the middle of its hero.
   const heroText = String(vendor?.description || vendor?.slogan || '').trim();
@@ -1647,19 +1646,13 @@ function renderVendorPage(vendor) {
     <section class="site-collection-layout">
       <div class="product-grid" id="vendor-products-grid"></div>
     </section>
-    <section class="brand-section" id="brand-reviews">
-      ${sectionHead('brand-reviews-heading')}
-      <div class="info-accordion-body brand-reviews" id="brand-reviews-body"><p>Loading reviews…</p></div>
-    </section>
   `;
   if (typeof setSectionHeading === 'function') {
     const set = (id, t) => { const h = document.getElementById(id); if (h) setSectionHeading(h, t); };
     set('brand-new-heading', 'New in');
     set('brand-collections-heading', 'Collections');
     set('brand-all-heading', onSale ? 'Sale' : 'All products');
-    set('brand-reviews-heading', 'Reviews');
   }
-  loadBrandReviews(vendor, brandProducts);
   initSliderLeadingTracking('vendor-new-grid');
 
   // Brand pages have no sort/filter bar: a brand's range is small enough
@@ -1703,7 +1696,6 @@ function scrollToBrandSection(id) {
 }
 function showBrandSection(key) {
   if (key === 'collections') { scrollToBrandSection('brand-collections'); return; }
-  if (key === 'reviews') { scrollToBrandSection('brand-reviews'); return; }
   const onSale = key === 'sale';
   if (S.currentVendor && !!S.vendorFilter.onSale !== onSale) {
     const y = window.scrollY;
@@ -1712,49 +1704,6 @@ function showBrandSection(key) {
     window.scrollTo(0, y);
   }
   scrollToBrandSection('brand-shop');
-}
-
-// Reviews of every product from this brand, newest first, with which
-// product each one is for. Reviews carry the brand's vendorId
-// (reviews-api.js); older ones are matched by product instead. Shown in
-// the product page's review style (product-detail.js).
-const BRAND_REVIEWS_SHOWN = 6;
-async function loadBrandReviews(vendor, brandProducts) {
-  const body = document.getElementById('brand-reviews-body');
-  if (!body || !vendor) return;
-  const vendorId = vendor.id;
-  const productIds = brandProducts.map(p => p.id);
-  const found = new Map();
-  try {
-    const db = firebase.firestore();
-    const queries = [db.collection('reviews').where('vendorId', '==', vendorId).limit(200).get()];
-    for (let i = 0; i < productIds.length && i < 90; i += 30) {
-      queries.push(db.collection('reviews').where('productId', 'in', productIds.slice(i, i + 30)).limit(200).get());
-    }
-    (await Promise.all(queries)).forEach(snap => snap.docs.forEach(d => found.set(d.id, d.data())));
-  } catch (e) { console.warn('[BRAND_REVIEWS]', e.message); }
-  if (!S.currentVendor || S.currentVendor.id !== vendorId) return;
-  const time = r => (r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().getTime() : 0);
-  const reviews = [...found.values()].sort((a, b) => time(b) - time(a));
-  const name = vendor.brand || vendor.name || 'this brand';
-  if (!reviews.length) { body.innerHTML = `<p>There are no reviews for ${escapeHTML(name)} yet.</p>`; return; }
-  const stars = n => Array.from({ length: 5 }, (_, i) => `<i class="${i < Math.round(n) ? 'ph-fill' : 'ph'} ph-star" aria-hidden="true"></i>`).join('');
-  const avg = reviews.reduce((n, r) => n + (Number(r.rating) || 0), 0) / reviews.length;
-  const item = r => {
-    const product = PRODUCTS.find(p => p.id === r.productId);
-    const d = time(r) ? new Date(time(r)).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-    return `<div class="brand-review">
-      ${product ? `<p class="brand-review-product"><span class="track-link" onclick="goToProduct('${escapeJSString(product.id)}')">${escapeHTML(product.name || '')}</span></p>` : ''}
-      <p class="info-sub-label">${[r.name || 'Anonymous', r.city, d].filter(Boolean).map(escapeHTML).join(' · ')}</p>
-      <p class="product-review-stars" aria-label="${Number(r.rating) || 0} out of 5">${stars(Number(r.rating) || 0)}</p>
-      ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}
-      ${typeof reviewPhotosHtml === 'function' ? reviewPhotosHtml(r, 'Photo from ' + escapeHTML(r.name || 'a customer')) : ''}
-    </div>`;
-  };
-  body.innerHTML = `<p class="product-review-stars" aria-label="${avg.toFixed(1)} out of 5">${stars(avg)} ${avg.toFixed(1)} · ${reviews.length} review${reviews.length === 1 ? '' : 's'}</p>` +
-    reviews.slice(0, BRAND_REVIEWS_SHOWN).map(item).join('') +
-    (reviews.length > BRAND_REVIEWS_SHOWN ? `<div class="home-section-btn-row" style="padding-left:0;padding-right:0;"><button class="initial-drop-view-all" style="display:inline-block;margin:0;" onclick="this.parentNode.outerHTML = window._brandReviewsRest">Show all reviews</button></div>` : '');
-  window._brandReviewsRest = reviews.slice(BRAND_REVIEWS_SHOWN).map(item).join('');
 }
 
 // Brand bar "···" menu: feedback first, reporting second (same menu
