@@ -1597,7 +1597,7 @@ function renderVendorPage(vendor) {
 
   // A brand's page is its own small homepage inside Janedore: a brand bar
   // (sticks, and takes the header's place while scrolling down, like the
-  // collection toolbar), their hero with their slogan, Shop / Collections
+  // collection toolbar), their hero with their description, Shop / Collections
   // / Sale links, New in, their collections and All products, all on one
   // page. Built from the homepage's own pieces (hero, section headers,
   // slider, tiles).
@@ -1620,14 +1620,15 @@ function renderVendorPage(vendor) {
       <button class="nav-quick-link" data-brand-tab="collections" onclick="showBrandSection('collections')">Collections</button>
       <button class="nav-quick-link${onSale ? ' active' : ''}" data-brand-tab="sale" onclick="showBrandSection('sale')">Sale</button>
     </div>`;
-  const slogan = String(vendor?.slogan || vendor?.heroHeading || '').trim();
+  // The brand's description (admin > Vendors) in the middle of its hero.
+  const heroText = String(vendor?.description || vendor?.slogan || '').trim();
 
   el.innerHTML = `
     ${brandBar}
     <section class="brand-hero">
       <div class="hero-bg-placeholder${heroImg ? '' : ' content-empty'}" style="${heroImg ? `background-image:url('${escapeForCssUrl(heroImg)}');` : ''}"></div>
       <div class="hero-overlay"></div>
-      ${slogan ? `<h2 class="hero-heading brand-hero-slogan">${escapeHTML(slogan)}</h2>` : ''}
+      ${heroText ? `<div class="brand-hero-slogan"><p class="hero-statement-sub brand-hero-text">${escapeHTML(heroText)}</p></div>` : ''}
       <div class="hero-content-wrap">
         <button class="hero-shop-btn" onclick="showBrandSection('shop')">Shop now</button>
       </div>
