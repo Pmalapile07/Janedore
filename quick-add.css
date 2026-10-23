@@ -4,18 +4,18 @@
    the bottom on phones, a centred panel from 768px.
    ========================================= */
 
-/* Bottom right of the card photo, above the long-press overlay
-   (product-card.css .product-img-wrap::after, z-index 5) like the
-   wishlist heart. */
+/* Bottom right of the card photo, styled like the wishlist heart (no
+   background), above the long-press overlay (product-card.css
+   .product-img-wrap::after, z-index 5). */
 .product-quick-add-btn {
   position: absolute; right: 8px; bottom: 8px; z-index: 6;
-  width: 32px; height: 32px; padding: 0; border: none; background: #fff; color: #111;
-  display: inline-flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
+  width: 28px; height: 28px; padding: 0; border: none; background: none; color: #111;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;
   transition: opacity 0.2s ease;
 }
 .product-quick-add-btn:active { opacity: 0.6; }
 /* A 44px tap area without a bigger box. */
-.product-quick-add-btn::after { content: ''; position: absolute; inset: -6px; }
+.product-quick-add-btn::after { content: ''; position: absolute; inset: -8px; }
 
 #quick-add-sheet { position: fixed; inset: 0; z-index: 1300; visibility: hidden; transition: visibility 0s linear 0.3s; }
 #quick-add-sheet.open { visibility: visible; transition: visibility 0s; }
