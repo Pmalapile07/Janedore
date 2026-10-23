@@ -302,7 +302,7 @@ function renderShippingMethod(shipping, packages) {
   const shippingPriceEl = document.getElementById('checkout-shipping-price');
   if (shippingPriceEl) shippingPriceEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
   const estimateEl = document.getElementById('checkout-delivery-estimate');
-  if (estimateEl) estimateEl.innerHTML = cartHasOnlyPreorder() ? '' : `Estimated delivery: <strong>${sanitizeHTML(deliveryEstimateText())}</strong>`;
+  if (estimateEl) estimateEl.innerHTML = cartHasOnlyPreorder() ? '' : `ETA: <strong>${sanitizeHTML(deliveryEstimateText())}</strong>`;
   const fromEl = document.getElementById('checkout-ships-from');
   if (!fromEl) return;
   const shipments = getCartShipments();
