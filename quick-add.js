@@ -73,9 +73,13 @@ function openCardActions(productId) {
   // Add to bag (black) over Add to wishlist (outlined), then the link to
   // the product page, like the quick add view below.
   panel.innerHTML = quickAddHeadHtml(p, vi) +
+    // Sold out: the waitlist when the product has one (admin > Waitlist
+    // when sold out), as on the product page.
     ((p.stock ?? 0) > 0
       ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to bag</button>`
-      : `<button type="button" class="quick-add-submit" disabled>Sold out</button>`) +
+      : p.waitlist
+        ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to waitlist</button>`
+        : `<button type="button" class="quick-add-submit" disabled>${isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'}</button>`) +
     `<button type="button" class="quick-add-secondary" onclick="closeQuickAdd();toggleWish('${id}')">${wished ? 'Remove from wishlist' : 'Add to wishlist'}</button>` +
     `<button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${id}']=${vi};goToProduct('${id}')">View full details</button>`;
   showQuickAddSheet(sheet);
@@ -105,9 +109,10 @@ function renderQuickAdd() {
   const vi = _quickAdd.vi;
   const variant = (p.variants || [])[vi] || {};
   const sizes = quickAddSizes(p);
-  // Keep the picked size only while it's in stock in this colour; a
+  // Keep the picked size only while it's in stock in this colour (or the
+  // product has a waitlist, whose sold-out sizes can be picked); a
   // product with one size in stock has it picked already.
-  if (_quickAdd.size && !isSizeInStock(p, vi, _quickAdd.size)) _quickAdd.size = null;
+  if (_quickAdd.size && !p.waitlist && !isSizeInStock(p, vi, _quickAdd.size)) _quickAdd.size = null;
   const inStock = sizes.filter(s => isSizeInStock(p, vi, s));
   if (!_quickAdd.size && inStock.length === 1) _quickAdd.size = inStock[0];
   const available = sizes.length ? inStock.length > 0 : isSizeInStock(p, vi, 'OS');
@@ -120,15 +125,21 @@ function renderQuickAdd() {
     ? `<div class="quick-add-label">Select a size</div><div class="sizes-row">` +
       sizes.map(s => {
         const ok = isSizeInStock(p, vi, s);
-        return `<button type="button" class="product-size-btn${_quickAdd.size === s ? ' sel' : ''}${ok ? '' : ' out-of-stock'}" ${ok ? '' : 'disabled aria-label="' + escapeHTML(s) + ', sold out"'} onclick="quickAddSize('${escapeJSString(s)}')">${escapeHTML(s)}</button>`;
+        const selectable = ok || p.waitlist;
+        return `<button type="button" class="product-size-btn${_quickAdd.size === s ? ' sel' : ''}${ok ? '' : ' out-of-stock'}" ${selectable ? '' : 'disabled'}${ok ? '' : ' aria-label="' + escapeHTML(s) + ', sold out"'} onclick="quickAddSize('${escapeJSString(s)}')">${escapeHTML(s)}</button>`;
       }).join('') + '</div>'
     : '';
-  const label = !available ? 'Sold out' : (sizes.length && !_quickAdd.size ? 'Select a size' : 'Add to bag');
+  // The button reads like the product page's: Add to waitlist for a
+  // sold-out pick when the product has a waitlist.
+  const pickedOut = sizes.length ? (_quickAdd.size && !isSizeInStock(p, vi, _quickAdd.size)) : !available;
+  const label = sizes.length && !_quickAdd.size ? 'Select a size'
+    : pickedOut ? (p.waitlist ? 'Add to waitlist' : (isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'))
+    : 'Add to bag';
 
   panel.innerHTML = quickAddHeadHtml(p, vi) + `
     ${colours ? `<div class="quick-add-section">${colours}</div>` : ''}
     ${sizeRow ? `<div class="quick-add-section">${sizeRow}</div>` : ''}
-    <button type="button" class="quick-add-submit" onclick="quickAddSubmit()" ${label === 'Add to bag' ? '' : 'disabled'}>${label}</button>
+    <button type="button" class="quick-add-submit" onclick="quickAddSubmit()" ${label === 'Add to bag' || label === 'Add to waitlist' ? '' : 'disabled'}>${label}</button>
     <button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${escapeJSString(p.id)}']=${vi};goToProduct('${escapeJSString(p.id)}')">View full details</button>`;
 }
 
@@ -139,8 +150,16 @@ function quickAddSubmit() {
   const p = _quickAdd && PRODUCTS.find(x => x.id === _quickAdd.id);
   if (!p) return;
   if (quickAddSizes(p).length && !_quickAdd.size) return;
-  // addToCart() adds the colour picked for this product.
+  // addToCart() and the waitlist use the colour picked for this product.
   S.productVariantSelections[p.id] = _quickAdd.vi;
+  const size = _quickAdd.size || 'OS';
   closeQuickAdd();
-  addToCart(p.id, _quickAdd.size || 'OS', 1);
+  if (p.waitlist && !isSizeInStock(p, _quickAdd.vi, size)) {
+    // The product page's waitlist: signed in joins straight away, guests
+    // give a name and email (product-detail.js).
+    S.selectedSize = size === 'OS' ? null : size;
+    joinProductWaitlist(p, null);
+    return;
+  }
+  addToCart(p.id, size, 1);
 }
