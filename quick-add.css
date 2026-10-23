@@ -22,7 +22,7 @@
 /* The filled plus-circle drawn white, with black behind its cut-out
    plus: a white circle with a black plus that cuts into the heart. */
 .card-action-plus {
-  position: absolute; left: 16px; top: 12px; font-size: 13px; line-height: 1; color: #fff;
+  position: absolute; left: 18px; top: 12px; font-size: 13px; line-height: 1; color: #fff;
   border-radius: 50%; background: radial-gradient(circle, #111 0 30%, transparent 31%);
 }
 
