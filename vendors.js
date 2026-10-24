@@ -143,7 +143,10 @@ function renderBrandsPage(vendors) {
   const listEl = document.getElementById('brands-az-list');
   if (!grid || !indexEl || !listEl) return;
 
-  const brands = getFeaturedBrands(vendors || []);
+  // Every active brand (fetchVendors() only loads active ones), JANEDORE
+  // included: this is the full directory, unlike the home page's guest
+  // brand spotlight (getFeaturedBrands()).
+  const brands = (vendors || []).slice();
 
   // Index built from LETTERS/groups up front, before the empty check,
   // so the A-Z row always renders (every letter in its disabled state
