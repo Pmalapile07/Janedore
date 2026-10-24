@@ -131,3 +131,18 @@
   text-transform: none;
   line-height: 1.3;
 }
+
+/* Product page Shop by brand (vendors.js brandLogoTilesHtml): one row of
+   small black squares with the brand's logo in the middle, swiped
+   sideways, like Superbalist's Our brands. */
+.brand-logo-row {
+  display: flex; gap: 8px; overflow-x: auto; padding: 0 12px 8px;
+  scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.brand-logo-row::-webkit-scrollbar { display: none; }
+.brand-logo-tile {
+  flex: 0 0 104px; width: 104px; height: 104px; padding: 0; border: none; background: #111; color: #fff;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; scroll-snap-align: start; overflow: hidden;
+}
+.brand-logo-tile img { width: 70%; height: 70%; object-fit: contain; }
+.brand-logo-tile span { padding: 0 8px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; line-height: 1.3; }

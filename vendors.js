@@ -106,6 +106,17 @@ function shopByBrandCardsHtml(brands) {
   }).join('');
 }
 
+// A row of small black squares with each brand's logo in the middle (its
+// name when it has none), like Superbalist's Our brands. The product
+// page's Shop by brand (product-detail.js).
+function brandLogoTilesHtml(brands) {
+  return `<div class="brand-logo-row">${brands.map(vendor => {
+    const name = vendor.brand || vendor.name || vendor.brandName || '';
+    const logo = /^https:\/\//i.test(String(vendor.logoUrl || '').trim()) ? vendor.logoUrl.trim() : '';
+    return `<button type="button" class="brand-logo-tile" aria-label="${escapeHTML(name)}" onclick="navigateToVendor('${escapeJSString(vendor.slug || vendor.id)}')">${logo ? `<img src="${escapeHTML(logo)}" alt="" loading="lazy">` : `<span>${escapeHTML(name)}</span>`}</button>`;
+  }).join('')}</div>`;
+}
+
 // Flat #f4f4f4 box with a literal "Brand" label — same "never looks
 // broken or blank" idea as placeholderProductCard() (collection.js) for
 // an empty product grid. Used on the home page's Shop by brand slider

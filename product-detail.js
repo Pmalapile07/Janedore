@@ -535,7 +535,7 @@ async function renderProductPage(product) {
   // shopper is already looking at that brand's product, so there's no
   // real redundancy in also listing it here.
   const shopByBrandVendors=getFeaturedBrands(S.vendors||[]);
-  const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by brand</div><div class="product-grid brand-grid-scroll">${shopByBrandCardsHtml(shopByBrandVendors)}</div></div>`:'';
+  const shopByBrandSection=shopByBrandVendors.length?`<div class="swipe-section"><div class="swipe-section-title">Shop by brand</div>${brandLogoTilesHtml(shopByBrandVendors)}</div>`:'';
 
   // Progress bars for the main image slider, mirroring the swipe-bar
   // dots used in Recently viewed / You may also like / Complete the look.
