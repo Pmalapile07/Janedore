@@ -26,6 +26,11 @@
 - **Better search:** rank exact name matches first, also match colours and descriptions, and tolerate small typos like "dres" (now: plain matching on name, brand and category slug, unranked; `search.js` `getSearchResults()`).
 - **Best sellers:** count units sold per product at checkout (`soldCount`, nothing records it yet), then add a Best selling sort and Trending rows.
 
+## Product codes
+- **SKU per colour and size:** a code for each exact item (e.g. `NOIR-COAT-BLK-M`), set in the admin product form beside each colour's stock per size, so brands pick the right item. Show it on packing slips, brand order emails and in admin orders. Products have one product-level SKU today.
+- **Barcode field (optional):** let brands that already have barcodes (GTIN/EAN) enter them per colour and size, for Google Shopping later (products without one are marked "no barcode"). No scanners: brands ship their own stock.
+- **JANEDORE's own products:** if they're ever sold on Takealot or in shops, get official barcodes from GS1 South Africa first.
+
 ## Wallet and store credit
 - **Store credit:** a balance per customer with a history of every credit and spend (server only), shown in Account > Wallet (now a "coming soon" placeholder, `account.js` `renderAccountWallet()`).
 - **Granting credit:** in admin, refund a return as store credit (only if the customer chooses it; refunds to the original payment method stay the default) and add goodwill credit to a customer.
