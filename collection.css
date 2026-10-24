@@ -753,4 +753,7 @@ body:not(.on-collection-page) #active-filter-chips { display: none !important; }
 /* Brand heroes are shorter than the homepage's: square on phones,
    about two thirds of the screen on wider ones. */
 .brand-hero { height: 70vh; min-height: 420px; }
+/* The brand's photo keeps its top (heads, faces) and is trimmed from the
+   bottom when it doesn't fit the frame. */
+.brand-hero .hero-bg-placeholder { background-position: center top; }
 @media (max-width: 768px) { .brand-hero { height: auto; min-height: 0; aspect-ratio: 1 / 1; } }
