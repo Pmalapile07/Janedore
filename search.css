@@ -16,6 +16,12 @@
 body.on-brands-page .search-bar-row {
   display: none;
 }
+/* Nor on sign in or customer care, where shoppers are there to do one
+   thing. */
+body:has(#page-login.active) .search-bar-row,
+body:has(#page-content.active .care-page) .search-bar-row {
+  display: none;
+}
 
 .search-bar-trigger {
   display: flex;
