@@ -38,7 +38,10 @@ function quickAddSheet() {
   }
   return sheet;
 }
+// Each view (the choices, then quick add) starts at the top of the sheet.
 function showQuickAddSheet(sheet) {
+  const panel = sheet.querySelector('.quick-add-panel');
+  if (panel) panel.scrollTop = 0;
   if (sheet.classList.contains('open')) return;
   if (typeof lockPageScroll === 'function') lockPageScroll();
   requestAnimationFrame(() => sheet.classList.add('open'));

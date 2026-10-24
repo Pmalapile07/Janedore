@@ -4,7 +4,7 @@
 // old setTimeout(...,100) broke that, so the overlay opened with its
 // input unfocused and no keyboard, making it look like an inert second
 // screen that needed its own separate tap to actually start typing.
-function openSearch() { DOM.searchOverlay.classList.add("open"); document.body.style.overflow="hidden"; DOM.searchInput.focus(); renderSearchDefault(); }
+function openSearch() { DOM.searchOverlay.classList.add("open"); document.body.style.overflow="hidden"; DOM.searchInput.focus(); renderSearchDefault(); if (DOM.searchBody) DOM.searchBody.scrollTop = 0; }
 
 // Closing after typing something that found results counts as a search,
 // so it's in Recent searches next time. Opening a product, brand or page

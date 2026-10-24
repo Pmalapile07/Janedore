@@ -740,6 +740,8 @@ function openMenu() {
   const badge = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n; el.style.display = n > 0 ? 'flex' : 'none'; } };
   badge('menu-wish-badge', (S.wishlist || []).length);
   badge('menu-bag-badge', (S.cart || []).reduce((a, i) => a + (Number(i.qty) || 1), 0));
+  // Opens at the top, however far it was scrolled last time.
+  if (!DOM.menuDrawer.classList.contains('open')) DOM.menuDrawer.querySelectorAll('.menu-panel').forEach(p => { p.scrollTop = 0; });
   if (typeof lockPageScroll === 'function' && !DOM.menuDrawer.classList.contains('open')) lockPageScroll();
   DOM.menuBackdrop.classList.add("open"); DOM.menuDrawer.classList.add("open");
 }

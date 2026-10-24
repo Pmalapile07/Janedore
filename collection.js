@@ -435,7 +435,12 @@ function toggleCollectionFilter() {
   const el = document.getElementById('collection-filter-options');
   if(!el) return;
   const opening = !el.classList.contains('open');
-  if (opening) { _filterOpenSections = null; renderFilterPanel(); }
+  if (opening) {
+    _filterOpenSections = null; renderFilterPanel();
+    // Opens at the top, however far it was scrolled last time.
+    const body = el.querySelector('.collection-filter-body');
+    if (body) body.scrollTop = 0;
+  }
   el.classList.toggle('open', opening);
   document.body.style.overflow = opening ? 'hidden' : '';
 }
