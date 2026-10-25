@@ -1582,38 +1582,59 @@
   // succeeded by the time this runs — if the email fails (no network,
   // Resend down, token issue) that's logged but never surfaces as an
   // error to the admin/vendor, since the real action already worked.
-  function notifyRefunded(orderId) {
+  // The customer emails sent when staff act on an order (server.js
+  // notify-status / notify-shipped / notify-refunded). Each result goes
+  // in the order's timeline, sent or not and why, so staff always know
+  // whether the customer was emailed; a not-sent one also shows a toast.
+  var EMAIL_SKIP_REASONS = {
+    'Order is not paid': 'the order isn’t paid',
+    'No customer email': 'the order has no customer email address',
+    'Tracking already emailed': 'the customer already received tracking for every package',
+    'Nothing shipped yet': 'nothing has shipped yet',
+    'That package has no tracking yet': 'that package has no tracking number yet'
+  };
+  function emailFailReason(reason) {
+    if (/RESEND_API_KEY/.test(reason || '')) return 'email isn’t set up on the server (RESEND_API_KEY is missing)';
+    return reason ? 'the email service refused it (' + reason + ')' : 'the email couldn’t be sent';
+  }
+  function notifyAndLog(orderId, path, body, label) {
     if (!window._currentUser || !window._currentUser.getIdToken) return;
+    var log = function (text, failed) {
+      logOrderTimelineEvent(orderId, text);
+      if (failed) showToast(text, 'error');
+    };
     window._currentUser.getIdToken().then(function (token) {
-      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-refunded', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: '{}'
+      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/' + path, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body || {})
       });
-    }).catch(function (e) { console.warn('[NOTIFY_REFUNDED]', e.message); });
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (d) {
+        if (res.ok && d.sentTo) return log(label + ' sent to ' + d.sentTo + '.');
+        if (res.ok && d.skipped === 'No email for this status') return log('No customer email is sent for this status.');
+        if (res.ok && d.skipped === 'Already emailed') return log(label + ' not sent again: the customer was already emailed' + (d.at ? ' on ' + fmtDate(d.at) : '') + '.');
+        if (res.ok && d.skipped) return log(label + ' not sent: ' + (EMAIL_SKIP_REASONS[d.skipped] || d.skipped) + '.', true);
+        log(label + ' not sent: ' + (res.ok ? 'no reply from the server' : emailFailReason(d.reason || d.error)) + '.', true);
+      });
+    }).catch(function (e) {
+      log(label + ' not sent: the server couldn’t be reached.', true);
+      console.warn('[ORDER_EMAIL]', e.message);
+    });
+  }
+
+  function notifyRefunded(orderId) {
+    var o = (window._ordersData || []).filter(function (x) { return x.id === orderId; })[0];
+    notifyAndLog(orderId, 'notify-refunded', {}, o && o.paymentStatus === 'refunded' ? 'Refund completed email' : 'Refund started email');
   }
 
   // Emails the customer that their order moved to Processing, Packed,
   // Shipped or Delivered. server.js sends each stage at most once per
   // order and skips stages that don't apply (unpaid, cancelled, etc).
   function notifyStatus(orderId, status) {
-    if (!window._currentUser || !window._currentUser.getIdToken) return;
-    window._currentUser.getIdToken().then(function (token) {
-      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ status: status })
-      });
-    }).catch(function (e) { console.warn('[NOTIFY_STATUS]', e.message); });
+    notifyAndLog(orderId, 'notify-status', { status: status }, status.charAt(0).toUpperCase() + status.slice(1) + ' email');
   }
 
   function notifyShipped(orderId, vendorId, preorder) {
-    if (!window._currentUser || !window._currentUser.getIdToken) return;
-    window._currentUser.getIdToken().then(function (token) {
-      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/notify-shipped', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ vendorId: vendorId || '', preorder: !!preorder })
-      });
-    }).catch(function (e) { console.warn('[NOTIFY_SHIPPED]', e.message); });
+    notifyAndLog(orderId, 'notify-shipped', { vendorId: vendorId || '', preorder: !!preorder }, 'Shipping email');
   }
 
   // vendorId === '' (the group with no vendor split, i.e. a manually-

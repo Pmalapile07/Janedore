@@ -2191,10 +2191,13 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
     const results = await Promise.allSettled(jobs);
     results.filter((r) => r.status === 'rejected').forEach((r) => console.error('[NOTIFY_SHIPPED] Send failed:', r.reason && r.reason.message));
 
-    res.json({ ok: true, status });
+    // The customer's email is the first job when there is one.
+    if (!order.customerEmail) return res.json({ ok: true, status, skipped: 'No customer email' });
+    if (results[0].status === 'rejected') return res.status(500).json({ error: 'Could not send shipping email', reason: results[0].reason && results[0].reason.message });
+    res.json({ ok: true, status, sentTo: order.customerEmail });
   } catch (e) {
     console.error('[NOTIFY_SHIPPED] Error:', e.message);
-    res.status(500).json({ error: 'Could not send shipping notification' });
+    res.status(500).json({ error: 'Could not send shipping notification', reason: e.message });
   }
 });
 
@@ -2225,15 +2228,19 @@ app.post('/api/orders/:id/notify-status', async (req, res) => {
     // A shipped status after every package already sent its own tracking
     // email would only repeat it.
     if (status === 'shipped' && computeOrderFulfillment(order) === 'fulfilled') return res.json({ ok: true, skipped: 'Tracking already emailed' });
-    if (order.statusEmailsSent && order.statusEmailsSent[status]) return res.json({ ok: true, skipped: 'Already emailed' });
+    if (order.statusEmailsSent && order.statusEmailsSent[status]) {
+      const at = order.statusEmailsSent[status];
+      return res.json({ ok: true, skipped: 'Already emailed', at: at && at.toDate ? at.toDate().toISOString() : null });
+    }
     const ctx = await buildOrderEmailContext(order);
     const email = orderEmails.statusUpdate(order, ctx, status, orderShipments(order).map((s) => s.tracking).filter((t) => t.trackingNumber));
     await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: email.subject, html: email.html, text: email.text });
     await orderRef.update({ ['statusEmailsSent.' + status]: admin.firestore.FieldValue.serverTimestamp() });
-    res.json({ ok: true });
+    res.json({ ok: true, sentTo: order.customerEmail });
   } catch (e) {
     console.error('[NOTIFY_STATUS]', e.message);
-    res.status(500).json({ error: 'Could not send status email' });
+    // Staff only: the reason goes in the order timeline (admin-orders.js).
+    res.status(500).json({ error: 'Could not send status email', reason: e.message });
   }
 });
 
@@ -2254,7 +2261,7 @@ app.post('/api/orders/:id/notify-refunded', async (req, res) => {
     const done = order.paymentStatus === 'refunded';
     if (!done && order.paymentStatus !== 'refund_pending') return res.status(400).json({ error: 'Order has no refund in progress' });
     const sentField = done ? 'refundEmailSentAt' : 'refundStartedEmailSentAt';
-    if (order[sentField]) return res.json({ ok: true, skipped: 'Already emailed' });
+    if (order[sentField]) return res.json({ ok: true, skipped: 'Already emailed', at: order[sentField].toDate ? order[sentField].toDate().toISOString() : null });
     if (!order.customerEmail) return res.json({ ok: true, skipped: 'No customer email' });
     const ctx = await buildOrderEmailContext(order);
     const email = done ? orderEmails.refunded(order, ctx) : orderEmails.refundStarted(order, ctx);
@@ -2262,10 +2269,10 @@ app.post('/api/orders/:id/notify-refunded', async (req, res) => {
     await orderRef.update({ [sentField]: admin.firestore.FieldValue.serverTimestamp() });
     sendResendEmail({ from: 'Janedore Orders <noreply@janedore.co.za>', to: ORDER_ALERT_EMAIL, subject: (done ? 'Refund completed' : 'Refund started') + ': order #' + (order.orderNumber || req.params.id), html: email.html, text: email.text })
       .catch((e) => console.warn('[NOTIFY_REFUNDED] Team copy failed:', e.message));
-    res.json({ ok: true });
+    res.json({ ok: true, sentTo: order.customerEmail });
   } catch (e) {
     console.error('[NOTIFY_REFUNDED]', e.message);
-    res.status(500).json({ error: 'Could not send refund email' });
+    res.status(500).json({ error: 'Could not send refund email', reason: e.message });
   }
 });
 
