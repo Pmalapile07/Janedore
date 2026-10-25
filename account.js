@@ -547,7 +547,7 @@ function openDeleteAccount() {
       <h2 class="account-delete-title" id="account-delete-title">Delete your account?</h2>
       <p>Your profile and personal data will be deleted where legally permitted. Past orders and transaction records may be retained for legal, accounting, refunds, disputes and fraud prevention.</p>
       <p>You will lose access to your account and order history.</p>
-      <p>Please read our <span class="track-link" onclick="closeDeleteAccount();navigateToContentPage('privacy-policy')">Privacy &amp; POPIA policy</span> before proceeding.</p>
+      <p>Please read our <span class="track-link" onclick="closeDeleteAccount();navigateToContentPage('privacy-policy')">Privacy &amp; POPIA</span> before proceeding.</p>
       <p class="account-delete-ask">Are you sure you want to continue?</p>
       <p class="track-error" id="account-delete-error" role="alert"></p>
       <button type="button" class="account-delete-confirm" id="account-delete-confirm" onclick="confirmDeleteAccount()">Delete account</button>
