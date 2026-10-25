@@ -228,13 +228,20 @@ function freeDeliveryOffer(p) {
   const minimum = Number(o && o.minimum);
   return minimum > 0 ? { minimum, maxCover: Math.max(0, Number(o.maxCover) || 0) } : null;
 }
-function isFreeDeliveryProduct(p) { return !!freeDeliveryOffer(p); }
-// "Free delivery on NIRIUS orders over R500 (up to R100 of delivery)".
+// "Free delivery" only when the brand pays all of it; covering part of
+// it is "R100 off delivery", never called free.
+function isPartialDeliveryOffer(o) { return !!(o && o.maxCover && o.maxCover < SHIPPING_FEE); }
+function deliveryDealName(o) { return isPartialDeliveryOffer(o) ? formatPrice(o.maxCover) + ' off delivery' : 'Free delivery'; }
+// Brands paying all of the delivery: the Free delivery badge and collection.
+function isFreeDeliveryProduct(p) { const o = freeDeliveryOffer(p); return !!o && !isPartialDeliveryOffer(o); }
+// The product's badge: FREE DELIVERY or R100 OFF DELIVERY.
+function deliveryBadge(p) { const o = freeDeliveryOffer(p); return o ? deliveryDealName(o).toUpperCase() : ''; }
+// "Free delivery on NIRIUS CO orders over R500" / "R100 off delivery on …".
 function freeDeliveryText(p) {
   const o = freeDeliveryOffer(p);
   if (!o) return '';
-  const brand = (productVendor(p) || {}).brand || (productVendor(p) || {}).name || p.brand || '';
-  return 'Free delivery on ' + brand + ' orders over ' + formatPrice(o.minimum) + (o.maxCover ? ' (' + brand + ' covers up to ' + formatPrice(o.maxCover) + ' of delivery)' : '') + '.';
+  const v = productVendor(p) || {};
+  return deliveryDealName(o) + ' on ' + (v.brand || v.name || p.brand || '') + ' orders over ' + formatPrice(o.minimum) + '.';
 }
 
 // Brands that share a warehouse (Admin > Brands, vendor.warehouse) ship
@@ -312,13 +319,13 @@ function cartHasMixedDelivery() {
 }
 function cartFreeDeliveryHtml(item, mixed) {
   const product = getCartProduct(item.productId);
-  if (!mixed || !isFreeDeliveryProduct(product)) return '';
+  if (!mixed || !freeDeliveryOffer(product)) return '';
   // What this item's package actually gets: free, part of the fee, or
   // the minimum still to reach.
   const pkg = getCartShipments().find(s => s.key === shippingPackageKey(product, item));
   const text = !pkg || pkg.free ? 'Free delivery'
     : pkg.covered ? formatPrice(pkg.covered) + ' off delivery'
-    : 'Free delivery over ' + formatPrice(pkg.minimum);
+    : deliveryDealName(freeDeliveryOffer(product)) + ' over ' + formatPrice(pkg.minimum);
   return '<div class="cart-item-free">' + text + '</div>';
 }
 function cartPreorderHtml(item) {
@@ -673,14 +680,15 @@ function renderCartPage() {
   const shipping = getCartShippingStatus();
   const eligible = shipping.shipments.filter(s => s.eligible);
   const pending = eligible.find(s => s.remaining > 0);
+  const deal = s => s.maxCover && s.maxCover < SHIPPING_FEE ? formatPrice(s.maxCover) + ' off delivery' : 'free delivery';
   // Only shown when a brand in the bag offers free delivery. Free delivery
   // is per brand, so a bag that mixes in other brands names the brand.
   const mixed = eligible.length > 0 && eligible.length < shipping.shipments.length;
   const names = list => list.map(s => sanitizeHTML(s.brand)).join(' and ');
   const bannerText = pending
-    ? `Add ${formatPrice(pending.remaining)} more from ${sanitizeHTML(pending.brand)} to qualify for <strong>free delivery</strong>.`
+    ? `Add ${formatPrice(pending.remaining)} more from ${sanitizeHTML(pending.brand)} to get <strong>${deal(pending)}</strong>.`
     : eligible.some(s => s.covered && !s.free)
-      ? names(eligible.filter(s => s.covered && !s.free)) + ' covers <strong>' + formatPrice(eligible.filter(s => s.covered && !s.free).reduce((a, s) => a + s.covered, 0)) + '</strong> of your delivery.'
+      ? 'You’ve unlocked <strong>' + formatPrice(eligible.filter(s => s.covered && !s.free).reduce((a, s) => a + s.covered, 0)) + ' off delivery</strong> from ' + names(eligible.filter(s => s.covered && !s.free)) + '.'
       : eligible.length
         ? (mixed ? `Your ${names(eligible)} items qualify for <strong>free delivery</strong>.` : 'Your order qualifies for <strong>free delivery</strong>.')
         : '';

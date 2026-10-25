@@ -305,7 +305,7 @@ function getProductBadges(product) {
   }
   // Products marked Free delivery from brands that offer it (cart.js),
   // the same products as the Free delivery collection.
-  if (typeof isFreeDeliveryProduct === 'function' && isFreeDeliveryProduct(product)) badges.push('FREE DELIVERY');
+  if (typeof deliveryBadge === 'function' && deliveryBadge(product)) badges.push(deliveryBadge(product));
 
   return badges;
 }
@@ -318,8 +318,9 @@ function getProductBadges(product) {
 var CARD_BADGE_PRIORITY = ['SOLD OUT', 'PRE-ORDER', 'SALE'];
 function getCardBadges(product) {
   var badges = getProductBadges(product);
-  var free = badges.indexOf('FREE DELIVERY') !== -1;
-  var rest = badges.filter(function (b) { return b !== 'FREE DELIVERY'; });
+  var isDelivery = function (b) { return /DELIVERY$/.test(b); };
+  var free = badges.filter(isDelivery)[0];
+  var rest = badges.filter(function (b) { return !isDelivery(b); });
   var main = null;
   for (var i = 0; i < CARD_BADGE_PRIORITY.length && !main; i++) {
     if (rest.indexOf(CARD_BADGE_PRIORITY[i]) !== -1) main = CARD_BADGE_PRIORITY[i];
@@ -327,7 +328,7 @@ function getCardBadges(product) {
   if (!main) main = rest.filter(function (b) { return b !== 'NEW'; })[0] || rest[0] || null;
   if (main === 'SOLD OUT') return [main];
   var isNew = main !== 'NEW' && rest.indexOf('NEW') !== -1;
-  return (main ? [main] : []).concat(isNew ? ['NEW'] : [], free ? ['FREE DELIVERY'] : []);
+  return (main ? [main] : []).concat(isNew ? ['NEW'] : [], free ? [free] : []);
 }
 
 function getProductImages(product, variantIndex) {

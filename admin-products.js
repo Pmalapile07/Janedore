@@ -13,7 +13,9 @@
     if (!product) return false;
     var house = isHouseProductAdmin(product);
     var v = (window._vendorsData || []).find(function(x) { return x.id === (house ? 'vendor-janedore' : product.vendorId); });
-    return !!(v && v.freeDeliveryOffer && Number(v.freeDeliveryOffer.minimum) > 0);
+    var o = v && v.freeDeliveryOffer;
+    // Only brands paying all of the delivery (a part is "R100 off", not free).
+    return !!(o && Number(o.minimum) > 0 && !(Number(o.maxCover) > 0 && Number(o.maxCover) < 150));
   };
 
   if (!window._adminDB) return;
