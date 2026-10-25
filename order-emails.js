@@ -409,6 +409,32 @@ function readyForCollection(order, ctx, items, opts) {
   return { subject: heading + ' (order #' + num + ')', html, text };
 }
 
+// Three incorrect collection codes were entered at the brand
+// (collection-api.js): the order is locked until customer care sends a
+// new code.
+function collectionLocked(order, ctx, opts) {
+  const num = order.orderNumber || '';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
+  const heading = 'Your collection code has been locked';
+  const intro = 'for your security, the collection code for your ' + opts.brand + ' order has been locked after three incorrect attempts. Your order is safe and will not be released until you have a new code.';
+  const next = 'Please contact customer care at support@janedore.co.za, quoting order #' + num + ', and we’ll issue you a new code. If you weren’t trying to collect your order, please let us know straight away.';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: heading,
+    preheader: 'Order #' + num + ': ' + heading.toLowerCase() + '.',
+    bannerHtml: '<strong>' + esc(heading) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(intro) + '<br><br>' + esc(next) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>' +
+        button('Contact customer care', 'mailto:support@janedore.co.za?subject=' + encodeURIComponent('New collection code, order #' + num))
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = heading + '\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\n' + next + '\n\nOrder #' + num;
+  return { subject: heading + ' (order #' + num + ')', html, text };
+}
+
 function shipped(order, ctx, items, opts) {
   opts = opts || {};
   const num = order.orderNumber || '';
@@ -1223,4 +1249,4 @@ function backInStock(item, ctx, links) {
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, readyForCollection, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, reviewRequest, reviewReward, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, readyForCollection, collectionLocked, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, reviewRequest, reviewReward, money };

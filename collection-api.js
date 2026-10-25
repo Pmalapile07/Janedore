@@ -9,8 +9,10 @@
 //   hours and a 6-digit collection code. The code lives only in
 //   collectionCodes/{orderId}__{key} (server only), so the brand can't
 //   see it and nobody can mark a parcel collected without the customer.
-// - Collected: the brand enters the code the customer gives them. Five
-//   wrong codes lock the package until the code is sent again. When every
+// - Collected: the brand enters the code the customer gives them. Three
+//   wrong codes lock the package: the customer and the team are emailed,
+//   and only Janedore customer care (staff) can send a new code; a brand
+//   can't. When every
 //   package is collected (or delivered, per Bob Go), the order becomes
 //   Delivered: delivered email, 14-day return window, review request.
 // - Not collected: a reminder 7 days after it was ready; after 14 days
@@ -23,7 +25,7 @@ const crypto = require('crypto');
 const DAY = 24 * 60 * 60 * 1000;
 const REMIND_AFTER = 7 * DAY;
 const HOLD_FOR = 14 * DAY;
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 3;
 const COURIER_DONE = ['delivered', 'finalised'];
 
 module.exports = function registerCollection(app, deps) {
@@ -79,6 +81,23 @@ module.exports = function registerCollection(app, deps) {
     return { sentTo: order.customerEmail };
   }
 
+  // Code locked: the customer is told to contact customer care (and to
+  // say so if it wasn't them), and the team is alerted.
+  async function notifyLocked(order, shipment) {
+    const num = order.orderNumber || '';
+    if (order.customerEmail) {
+      const ctx = await buildOrderEmailContext(order);
+      const email = orderEmails.collectionLocked(order, ctx, { brand: shipment.brand });
+      await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: email.subject, html: email.html, text: email.text });
+    }
+    if (alertEmail) await sendResendEmail({
+      from: 'Janedore Orders <noreply@janedore.co.za>', to: alertEmail,
+      subject: 'Collection code locked: order #' + num + ' (' + shipment.brand + ')',
+      text: 'Three incorrect collection codes were entered at ' + shipment.brand + ' for order #' + num + '. The order is locked.\n\nCustomer: ' + (order.customerName || '') + ' <' + (order.customerEmail || '') + '> ' + (order.customerPhone || '') + '\n\nConfirm with the customer that they are collecting, then send a new code from the order in admin.',
+      html: '<p>Three incorrect collection codes were entered at ' + shipment.brand + ' for order #' + num + '. The order is locked.</p><p>Customer: ' + (order.customerName || '') + ' &lt;' + (order.customerEmail || '') + '&gt; ' + (order.customerPhone || '') + '</p><p>Confirm with the customer that they are collecting, then send a new code from the order in admin.</p>'
+    });
+  }
+
   // Every package collected or delivered: the order is Delivered.
   async function finishIfDone(orderRef) {
     const order = (await orderRef.get()).data();
@@ -120,6 +139,8 @@ module.exports = function registerCollection(app, deps) {
       const label = shipment.brand + (shipment.preorder ? ' pre-order' : '');
 
       if (body.action === 'ready') {
+        // A new code (the customer asked customer care) is staff only.
+        if (state.readyAt && !auth.staff) return res.status(403).json({ error: 'Only Janedore customer care can send a new collection code.' });
         const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
         const readyAt = state.readyAt || Date.now();
         await codeRef(doc.id, key).set({ code, attempts: 0, createdAt: Date.now() });
@@ -154,9 +175,12 @@ module.exports = function registerCollection(app, deps) {
         });
         if (outcome === 'nocode') return res.status(400).json({ error: 'No collection code was sent. Mark it ready for collection again.' });
         if (outcome !== 'ok') {
-          if (outcome === 'locked') await orderRef.update({ ['collection.' + key + '.locked']: true, timeline: timeline(label + ': too many wrong collection codes. Send a new code to collect.') });
+          if (outcome === 'locked' && !state.locked) {
+            await orderRef.update({ ['collection.' + key + '.locked']: true, timeline: timeline(label + ': collection code locked after ' + MAX_ATTEMPTS + ' incorrect attempts. Customer care must send the customer a new code.') });
+            await notifyLocked(order, shipment).catch((e) => console.error('[COLLECTION] Lock emails:', e.message));
+          }
           return res.status(400).json({
-            error: outcome === 'locked' ? 'Too many wrong codes. Send the customer a new code (Resend code), then try again.' : 'That code isn’t right. Ask the customer to check their email.',
+            error: outcome === 'locked' ? 'The code has been locked after ' + MAX_ATTEMPTS + ' incorrect attempts. The customer must contact Janedore customer care for a new code.' : 'That code isn’t right. Ask the customer to check their email.',
             locked: outcome === 'locked'
           });
         }

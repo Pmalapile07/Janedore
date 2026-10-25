@@ -2198,7 +2198,7 @@ async function authorizeShipmentRequest(req, vendorId) {
   if (!adminDoc.exists) return { ok: false, reason: 'Not a staff/vendor account' };
   const role = adminDoc.data().role;
 
-  if (role === 'SUPER_ADMIN' || role === 'ADMIN') return { ok: true };
+  if (role === 'SUPER_ADMIN' || role === 'ADMIN') return { ok: true, staff: true };
   if (role === 'VENDOR' && adminDoc.data().vendorId === vendorId) return { ok: true };
   return { ok: false, reason: 'Not authorized for this vendor' };
 }

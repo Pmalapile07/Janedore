@@ -1671,13 +1671,17 @@
     return '<div style="margin-bottom:18px;">' +
       '<label class="card-title" style="display:block;margin-bottom:6px;">Collection code</label>' +
       note(c.locked
-        ? 'Too many wrong codes. Send the customer a new code, then enter it here.'
+        ? 'This code was locked after 3 incorrect attempts. The customer must contact Janedore customer care for a new code.'
         : 'Ready since ' + esc(fmtDate(new Date(c.readyAt).toISOString())) + '. Ask for the 6-digit code in person when the customer arrives, and only hand over the parcel once it\'s accepted here. Never ask for the code by phone, email or message.') +
+      (c.locked ? '' :
       '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-        '<input class="order-tracking-input order-collect-code" data-vendor="' + key + '" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit code" style="flex:1;"' + (c.locked ? ' disabled' : '') + '>' +
-        '<button class="btn btn-sm btn-primary"' + (c.locked ? ' disabled' : '') + ' onclick="window._collectionAction(' + args + ',\'collected\')">Mark collected</button>' +
-      '</div>' +
-      '<button class="btn btn-sm btn-ghost" onclick="window._collectionAction(' + args + ',\'ready\')">Resend code</button>' +
+        '<input class="order-tracking-input order-collect-code" data-vendor="' + key + '" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit code" style="flex:1;">' +
+        '<button class="btn btn-sm btn-primary" onclick="window._collectionAction(' + args + ',\'collected\')">Mark collected</button>' +
+      '</div>') +
+      // A new code: Janedore customer care only, never the brand.
+      (window._can('orders', 'update') && window._currentUserRole !== 'VENDOR'
+        ? '<button class="btn btn-sm btn-ghost" onclick="window._collectionAction(' + args + ',\'ready\')">Send customer a new code</button>'
+        : '') +
     '</div>';
   }
 
@@ -1687,7 +1691,9 @@
     var codeEl = document.querySelector('.order-collect-code[data-vendor="' + key + '"]');
     var code = codeEl ? codeEl.value.replace(/\D/g, '') : '';
     if (action === 'collected' && code.length !== 6) { showToast('Enter the 6-digit collection code', 'error'); return; }
-    if (action === 'ready' && codeEl && !confirm('Send the customer a new collection code? The old one will stop working.')) return;
+    var o = (window._ordersData || []).filter(function (x) { return x.id === orderId; })[0];
+    var resend = !!(o && o.collection && o.collection[key] && o.collection[key].readyAt);
+    if (action === 'ready' && resend && !confirm('Send the customer a new collection code? The old one will stop working.')) return;
     window._currentUser.getIdToken().then(function (token) {
       return fetch('/api/orders/' + encodeURIComponent(orderId) + '/collection', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
