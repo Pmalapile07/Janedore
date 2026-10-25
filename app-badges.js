@@ -14,6 +14,17 @@ const APP_STORE_BADGE = 'https://tools.applemarketingtools.com/api/badges/downlo
 const PLAY_STORE_BADGE = 'https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png';
 const APP_BAR_DISMISS_KEY = 'janedore_app_bar_closed';
 const APP_BAR_DISMISS_DAYS = 30;
+// Preview before the app is published: opening the site with
+// ?app-preview=1 shows the bar and badges on that phone only (links go
+// nowhere); ?app-preview=0 turns it off. Visitors never see it, since
+// Apple and Google only allow the badges for an app in their stores.
+const APP_PREVIEW_KEY = 'janedore_app_preview';
+(function () {
+  const m = location.search.match(/[?&]app-preview=([01])/);
+  if (!m) return;
+  try { m[1] === '1' ? localStorage.setItem(APP_PREVIEW_KEY, '1') : localStorage.removeItem(APP_PREVIEW_KEY); } catch (e) {}
+})();
+function appPreviewOn() { try { return localStorage.getItem(APP_PREVIEW_KEY) === '1'; } catch (e) { return false; } }
 
 function isInsideApp() {
   if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) return true;
@@ -23,15 +34,22 @@ function isInsideApp() {
 
 function appStoreLinks() {
   const apps = (window._siteContent && window._siteContent.homepage && window._siteContent.homepage.apps) || {};
-  return {
+  const links = {
     apple: /^https:\/\/apps\.apple\.com\//i.test(apps.appStoreUrl || '') ? apps.appStoreUrl : '',
     google: /^https:\/\/play\.google\.com\//i.test(apps.playStoreUrl || '') ? apps.playStoreUrl : ''
   };
+  if (appPreviewOn()) { links.apple = links.apple || '#'; links.google = links.google || '#'; }
+  return links;
+}
+
+// A store link opens in a new tab; a preview one (#) does nothing.
+function appLinkAttrs(link) {
+  return link === '#' ? 'href="#" onclick="return false"' : `href="${escapeHTML(link)}" target="_blank" rel="noopener"`;
 }
 
 function appBadgesHtml(links) {
-  return (links.apple ? `<a class="app-badge app-badge-apple" href="${escapeHTML(links.apple)}" target="_blank" rel="noopener"><img src="${APP_STORE_BADGE}" alt="Download on the App Store"></a>` : '') +
-    (links.google ? `<a class="app-badge app-badge-google" href="${escapeHTML(links.google)}" target="_blank" rel="noopener"><img src="${PLAY_STORE_BADGE}" alt="Get it on Google Play"></a>` : '');
+  return (links.apple ? `<a class="app-badge app-badge-apple" ${appLinkAttrs(links.apple)}><img src="${APP_STORE_BADGE}" alt="Download on the App Store"></a>` : '') +
+    (links.google ? `<a class="app-badge app-badge-google" ${appLinkAttrs(links.google)}><img src="${PLAY_STORE_BADGE}" alt="Get it on Google Play"></a>` : '');
 }
 
 function phoneSystem() {
@@ -64,7 +82,7 @@ function renderAppBadges() {
   const system = phoneSystem();
   const link = system ? links[system] : '';
   const existing = document.getElementById('app-bar');
-  if (inApp || !link || appBarDismissed()) { if (existing) existing.remove(); return; }
+  if (inApp || !link || (appBarDismissed() && !appPreviewOn())) { if (existing) existing.remove(); return; }
   if (existing) return;
   const nav = document.getElementById('main-nav');
   if (!nav) return;
@@ -74,6 +92,6 @@ function renderAppBadges() {
   bar.innerHTML = `<button type="button" class="app-bar-close" onclick="closeAppBar()" aria-label="Close"><i class="ph ph-x"></i></button>` +
     `<span class="app-bar-icon" aria-hidden="true">J</span>` +
     `<span class="app-bar-text"><strong>JANEDORE</strong><span>Shop faster in the app</span></span>` +
-    `<a class="app-bar-get" href="${escapeHTML(link)}" target="_blank" rel="noopener">Get</a>`;
+    `<a class="app-bar-get" ${appLinkAttrs(link)}>Get</a>`;
   nav.parentNode.insertBefore(bar, nav);
 }
