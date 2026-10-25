@@ -51,7 +51,7 @@ function safeImageURL(url) {
 // without an /upload/ segment (the inline SVG PLACEHOLDER_IMAGE, or a
 // non-Cloudinary source) just passes through unchanged.
 function gridThumbURL(url) {
-  return safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fill,w_700,h_840/');
+  return safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fill,w_700,h_924/');
 }
 
 function escapeForCssUrl(url) {

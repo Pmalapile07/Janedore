@@ -79,7 +79,7 @@
 .product-img-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 5 / 6;
+  aspect-ratio: 25 / 33; /* 5:6 with 10% more height */
   overflow: hidden;
   background: #f4f4f4;
 }
@@ -884,7 +884,7 @@ body .site-collection-layout {
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 5 / 6;
+  aspect-ratio: 25 / 33;
 }
 
 .initial-drop-view-all {
