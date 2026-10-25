@@ -56,12 +56,12 @@ body:has(#page-content.active .care-page) .search-bar-row {
 #search-overlay.open { opacity: 1; pointer-events: all; }
 .search-overlay-header { display: flex; align-items: center; padding: 0 12px; height: 64px; gap: 8px; }
 @media (min-width: 768px) { .search-overlay-header { padding: 0 16px; } }
-.search-input-wrap { flex: 1; display: flex; align-items: center; gap: 10px; background: #f4f4f4; padding: 10px 16px; border-radius: 24px; }
+.search-input-wrap { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: #f4f4f4; padding: 10px 16px; border-radius: 24px; }
 .search-input-wrap i { font-size: 19.5px; color: #111; flex-shrink: 0; } /* same size as the header search bar's (.search-bar-trigger i) */
-#search-input { flex: 1; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #111; background: transparent; }
+#search-input { flex: 1; min-width: 0; width: 100%; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #111; background: transparent; }
 #search-input::placeholder { color: #888; }
 /* Back arrow on the left of the search field: closes search. */
-.search-back-btn { background: none; border: none; color: #111; padding: 0; margin-left: -6px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+.search-back-btn { background: none; border: none; color: #111; padding: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-start; width: 28px; height: 36px; }
 .search-back-btn i { font-size: 22px; }
 .search-body { flex: 1; overflow-y: auto; padding: 32px 12px; }
 @media (min-width: 768px) { .search-body { padding: 32px 16px; } }
