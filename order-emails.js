@@ -1056,7 +1056,7 @@ function reviewRequest(order, ctx, items, links) {
   const first = String(order.customerName || '').trim().split(/\s+/)[0];
   const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
   const intro = 'we hope you’re enjoying your order. Tell us what you think: your review helps other shoppers choose, and helps our brands make better pieces.' +
-    (links.reward ? ' As a thank-you, we’ll email you ' + links.reward + ' once you’ve reviewed an item, whatever your rating.' : '');
+    (links.reward ? ' As a thank-you for reviewing, we’ll email you ' + links.reward + '. One code per order, whatever your rating.' : '');
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
