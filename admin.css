@@ -1230,8 +1230,9 @@ body.product-editor-open #main-content{padding:0;max-width:640px;}
 .pe-media-tag{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.92);color:#111;font-size:10.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pe-media-tag.unused{background:rgba(0,0,0,.55);color:#fff;}
 /* Sheets: full screen, over the bottom nav. */
-.pe-sheet{position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;background:var(--bg);transform:translateX(100%);visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s;}
-.pe-sheet.open{transform:none;visibility:visible;transition:transform .25s ease;}
+.pe-sheet{position:fixed;inset:0;z-index:700;display:none;flex-direction:column;background:var(--bg);}
+.pe-sheet.open{display:flex;animation:pe-sheet-in .22s ease;}
+@keyframes pe-sheet-in{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:none;}}
 .pe-sheet-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0)) 16px 10px;background:var(--surface);}
 .pe-sheet-title{text-align:center;font-size:15px;font-weight:600;}
 .pe-done{height:36px;padding:0 16px;border:0;border-radius:18px;background:var(--text);color:var(--surface);font:600 13px var(--font);cursor:pointer;}
@@ -1250,7 +1251,12 @@ body.product-editor-open #main-content{padding:0;max-width:640px;}
 .pe-option-check{font-size:18px;visibility:hidden;}
 .pe-option input:checked ~ .pe-option-check{visibility:visible;}
 #product-form.pe .form-group label{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:none;letter-spacing:0;}
-#product-form.pe .form-group input,#product-form.pe .form-group select,#product-form.pe .form-group textarea{border-radius:10px;min-height:44px;font-size:15px;}
+#product-form.pe .form-group input,#product-form.pe .form-group select,#product-form.pe .form-group textarea{border-radius:10px;min-height:44px;}
+/* iPhones zoom into a field whose text is under 16px, which made the
+   editor jump in and out; and nothing in it may scroll sideways. */
+body.product-editor-open #product-form input,body.product-editor-open #product-form select,body.product-editor-open #product-form textarea{font-size:16px!important;}
+body.product-editor-open #app-body,.pe-sheet-body{overflow-x:hidden;}
+.pe-sheet-body > *{min-width:0;max-width:100%;}
 /* A colour's photos: tap to pick, numbered in order. */
 .pe-pick{margin-bottom:12px;}
 .pe-pick-head{display:flex;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:8px;}

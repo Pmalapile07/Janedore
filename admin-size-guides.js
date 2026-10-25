@@ -89,7 +89,7 @@
           '<div id="pf-sg-editor"></div>' +
         '</div>' +
         '<div class="form-group" style="padding:0;">' +
-          '<label>Size guide photo <span style="font-size:10px;color:var(--muted);">(optional; a Super Admin approves it before the product can be published)</span></label>' +
+          '<label>Size guide photo <span style="font-size:10px;color:var(--muted);">' + (isSuperAdmin() ? '(optional)' : '(optional; a Super Admin approves it before the product can be published)') + '</span></label>' +
           '<input type="hidden" name="sizeGuideImage" id="pf-sg-image" value="' + esc(img) + '">' +
           '<input type="hidden" name="sizeGuideApproved" id="pf-sg-approved" value="' + (img && p.sizeGuideApproved === true ? 'true' : 'false') + '">' +
           '<div id="pf-sg-photo"></div>' +
@@ -150,8 +150,9 @@
   window._sgUploadPhoto = function () {
     window._uploadToCloudinary(function (url) {
       document.getElementById('pf-sg-image').value = url;
-      // A new photo always needs approving, even a Super Admin's own.
-      document.getElementById('pf-sg-approved').value = 'false';
+      // A brand's new photo needs a Super Admin's approval; a Super
+      // Admin's own is approved as it's added.
+      document.getElementById('pf-sg-approved').value = isSuperAdmin() ? 'true' : 'false';
       renderPhoto();
       showToast('Size guide photo added. Save the product to keep it.');
     }, false);

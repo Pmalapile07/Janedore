@@ -504,8 +504,15 @@
 
   var _mediaPool = [];
 
+  // Media is saved as product.media (in its dragged order), so photos
+  // not picked for a colour yet are kept too; then any colour photo
+  // missing from it (products saved before media was).
   function _poolFromProduct(p) {
     var seen = {}; var pool = [];
+    (Array.isArray(p.media) ? p.media : []).forEach(function(u) {
+      var s = safeUrl(u);
+      if (s && !seen[s]) { seen[s] = true; pool.push(s); }
+    });
     (p.variants || []).forEach(function(v) {
       var imgs = v.images || {};
       [].concat(imgs.model||[], imgs.ghost||[], imgs.detail||[]).forEach(function(u) {
@@ -1490,7 +1497,8 @@
       tags:                 form.tags.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean),
       createdAt:            existingProduct ? (existingProduct.createdAt || new Date().toISOString()) : new Date().toISOString(),
       updatedAt:            new Date().toISOString(),
-      variants:             []
+      variants:             [],
+      media:                _mediaPool.slice()
     };
 
     var vi = 0;
