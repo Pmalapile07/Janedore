@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 // serves the site from. They hold no secrets, but there is no reason for
 // anyone to download them, so they 404 like any missing file.
 const PRIVATE_FILES = new Set([
-  '/server.js', '/analytics-api.js', '/admin-home-api.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/account-api.js', '/bobgo-api.js', '/partner-applications-api.js', '/order-emails.js',
+  '/server.js', '/analytics-api.js', '/admin-home-api.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/account-api.js', '/bobgo-api.js', '/collection-api.js', '/partner-applications-api.js', '/order-emails.js',
   '/firestore.rules', '/firestore.indexes.json', '/package.json', '/package-lock.json',
   '/debugger.html'
 ]);
@@ -629,7 +629,7 @@ let brandAssetsCache = { value: { siteLogo: '', emailLogo: '', logoFont: '', log
 // in vendorPrivate/{id} instead (admin-vendors.js, firestore.rules).
 // getVendors() returns both merged. migrateVendorPrivate() moves any of
 // these fields still on a vendors doc, once, on start-up.
-const VENDOR_PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes', 'pickup'];
+const VENDOR_PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes', 'pickup', 'collection'];
 
 async function getVendors(ids) {
   if (!ids.length) return [];
@@ -798,7 +798,7 @@ async function sendPaidOrderEmails(orderId, order) {
     .then(() => { sent.janedore = true; })
     .catch(err => console.warn('[ORDER_EMAIL] Janedore alert failed for', orderId, ':', err.message)));
   brandSends.forEach(b => {
-    jobs.push(send(b.to, orderEmails.vendorNewOrder(order, ctx, b.vendor, b.items))
+    jobs.push(send(b.to, orderEmails.vendorNewOrder(order, ctx, b.vendor, b.items, { collect: (order.collectFrom || []).includes(b.id) }))
       .then(() => { sent.brands.push(b.id); })
       .catch(err => console.warn('[ORDER_EMAIL] Brand email failed for', orderId, b.id, ':', err.message)));
   });
@@ -916,6 +916,16 @@ function freeDeliveryOfferOf(vendor) {
   return minimum > 0 ? { minimum } : null;
 }
 
+// A brand's collection offer (vendors/{id}.collectionOffer, set and
+// approved by Super Admin in Admin > Brands, only for a shop, studio or
+// business address): { area, hours } or null. The full address is
+// private (vendorPrivate/{id}.collection) and only goes to the customer
+// once their order is ready to collect. Same as cart.js collectionOffer().
+function collectionOfferOf(vendor) {
+  const o = vendor && vendor.collectionOffer;
+  return o && o.area ? { area: String(o.area), hours: String(o.hours || '') } : null;
+}
+
 function serverUnitPrice(product) {
   const price = Number(product.price) || 0;
   const sale = Number(product.salePrice);
@@ -983,10 +993,12 @@ async function priceOrder(order) {
   const vendorIds = [...new Set([HOUSE_VENDOR_ID].concat(Object.values(products).map((p) => p.vendorId).filter(Boolean)))];
   const vendorDocs = await adminDb.getAll(...vendorIds.map((id) => adminDb.collection('vendors').doc(id)));
   const offers = {};
+  const collectable = {};
   const warehouses = {};
   vendorDocs.forEach((d, i) => {
     if (!d.exists) return;
     offers[vendorIds[i]] = freeDeliveryOfferOf(d.data());
+    if (collectionOfferOf(d.data())) collectable[vendorIds[i]] = true;
     const wh = String(d.data().warehouse || '').trim().toLowerCase();
     if (wh) warehouses[vendorIds[i]] = wh;
   });
@@ -1001,12 +1013,13 @@ async function priceOrder(order) {
   pricedItems.forEach((i) => {
     const product = products[String(i.productId || '')];
     const key = shippingPackageKey(product);
-    if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true, minimum: 0, vendorId: null });
+    if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true, minimum: 0, vendorId: null, vendorIds: new Set() });
     const pkg = packageMap.get(key);
     pkg.subtotal += i.price * i.qty;
     // Several brands in one warehouse: all must offer it, the highest
     // minimum applies, and the first brand pays.
     const vid = isHouseProduct(product) ? HOUSE_VENDOR_ID : product.vendorId;
+    pkg.vendorIds.add(vid);
     const offer = offers[vid];
     if (!offer) pkg.eligible = false;
     else {
@@ -1014,13 +1027,23 @@ async function priceOrder(order) {
       pkg.vendorId = pkg.vendorId || vid;
     }
   });
+  // Brands the customer collects from (checkout): only a brand that
+  // offers collection, in a package of its own (not a shared warehouse).
+  // Those packages have no delivery fee and no courier.
+  const wanted = Array.isArray(order.collectFrom) ? order.collectFrom.map(String) : [];
+  const collectFrom = [];
+  packageMap.forEach((pkg, key) => {
+    const vid = [...pkg.vendorIds][0];
+    pkg.collect = pkg.vendorIds.size === 1 && !key.startsWith('warehouse:') && collectable[vid] && wanted.includes(vid);
+    if (pkg.collect) collectFrom.push(vid);
+  });
   const packages = packageMap.size;
   let shipping = 0;
   // What each brand pays towards delivery on this order (its free
   // delivery offer), taken off its payout (PayFast split).
   const deliveryCovered = {};
   packageMap.forEach((pkg) => {
-    if (codeFree) return;
+    if (codeFree || pkg.collect) return;
     const covered = pkg.eligible && pkg.subtotal >= pkg.minimum ? SHIPPING_FEE : 0;
     if (covered) deliveryCovered[pkg.vendorId] = (deliveryCovered[pkg.vendorId] || 0) + covered;
     shipping += SHIPPING_FEE - covered;
@@ -1037,6 +1060,7 @@ async function priceOrder(order) {
     // paid their share of the full price (PayFast split below).
     discountFundedBy: discount ? discount.fundedBy : null,
     deliveryCovered,
+    collectFrom,
     shipping,
     shippingPackages: packages,
     total,
@@ -1069,7 +1093,10 @@ app.post('/api/orders/create', async (req, res) => {
   const province = String(input.province || '').trim().slice(0, 100);
   const postalCode = String(input.postalCode || '').trim().slice(0, 30);
   const country = String(input.country || '').trim().slice(0, 100);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || !customerName || !shippingAddress || !city || !province || !postalCode || !country) {
+  const collectFrom = Array.isArray(input.collectFrom) ? input.collectFrom.slice(0, 30).map((v) => String(v).slice(0, 150)) : [];
+  // An order collected in full needs no delivery address.
+  const needsAddress = !input.collectOnly;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || !customerName || (needsAddress && (!shippingAddress || !city || !province || !postalCode || !country))) {
     return res.status(400).json({ error: 'Please provide valid customer and delivery details.' });
   }
 
@@ -1091,7 +1118,10 @@ app.post('/api/orders/create', async (req, res) => {
       color: String(i.color || '').slice(0, 80),
       variantIndex: Math.max(0, Math.min(50, Math.floor(Number(i.variantIndex) || 0)))
     }));
-    const priced = await priceOrder({ items: inputItems, discountCode: String(input.discountCode || '').slice(0, 40), customerEmail });
+    const priced = await priceOrder({ items: inputItems, discountCode: String(input.discountCode || '').slice(0, 40), customerEmail, collectFrom });
+    if (!needsAddress && priced.collectFrom.length < priced.shippingPackages) {
+      throw Object.assign(new Error('Please add a delivery address for the items that aren\'t being collected.'), { status: 400 });
+    }
     const itemsByProduct = {};
     priced.items.forEach(i => { (itemsByProduct[i.productId] = itemsByProduct[i.productId] || []).push(i); });
     const productIds = Object.keys(itemsByProduct);
@@ -1131,7 +1161,7 @@ app.post('/api/orders/create', async (req, res) => {
         shippingAddress, city, province, postalCode, country,
         items: canonicalItems, packageCount: priced.shippingPackages, brands, vendorIds,
         subtotal: priced.subtotal, discountCode: priced.discountCode,
-        discountAmount: priced.discountAmount, shipping: priced.shipping,
+        discountAmount: priced.discountAmount, shipping: priced.shipping, collectFrom: priced.collectFrom,
         total: priced.total, currency: 'ZAR', itemCount: priced.itemCount,
         status: 'pending', paymentStatus: 'unpaid',
         orderAccessTokenHash: orderAccessTokenHash(accessToken),
@@ -1613,6 +1643,7 @@ app.get('/api/orders/:id', async (req, res) => {
       province: order.province || '',
       postalCode: order.postalCode || '',
       country: order.country || '',
+      collectFrom: order.collectFrom || [],
       createdAt: order.createdAt ? order.createdAt.toDate().toISOString() : null
     });
   } catch (e) {
@@ -1945,8 +1976,20 @@ app.post('/api/track-order', async (req, res) => {
     const order = doc.data();
     if (String(order.customerEmail || '').trim().toLowerCase() !== email) return notFound();
 
-    const packages = orderShipments(order).map((g) => ({
+    const shipments = orderShipments(order);
+    // Ready to collect: where, and when (the code is only in the email).
+    const places = {};
+    await Promise.all(shipments.filter((g) => g.collect).map(async (g) => {
+      const vid = g.vendorId || HOUSE_VENDOR_ID;
+      if (!places[vid]) places[vid] = collectionApi.collectionPlace(vid).catch(() => null);
+    }));
+    for (const vid of Object.keys(places)) places[vid] = await places[vid];
+    const packages = shipments.map((g) => ({
       brand: g.brand,
+      collect: g.collect,
+      readyAt: g.collect ? g.collection.readyAt || null : null,
+      collectedAt: g.collect ? g.collection.collectedAt || null : null,
+      collectFrom: g.collect && g.collection.readyAt && !g.collection.collectedAt ? places[g.vendorId || HOUSE_VENDOR_ID] : null,
       preorder: g.preorder,
       shipBy: g.shipBy,
       items: g.items.map((item) => ({
@@ -2106,14 +2149,29 @@ function orderShipments(order) {
       const t = g.vendorId
         ? (g.preorder ? (entry.preorder || {}) : entry)
         : { trackingNumber: order.trackingNumber, courier: order.courier };
-      return Object.assign(g, { tracking: { trackingNumber: t.trackingNumber || '', courier: t.courier || '', addedAt: t.addedAt || null } });
+      // Collected by the customer (order.collectFrom): no courier. Its
+      // progress is order.collection[key] { readyAt, collectedAt }.
+      const collect = (order.collectFrom || []).includes(g.vendorId || HOUSE_VENDOR_ID);
+      return Object.assign(g, {
+        tracking: { trackingNumber: t.trackingNumber || '', courier: t.courier || '', addedAt: t.addedAt || null },
+        collect, collection: collect ? ((order.collection || {})[collectionKey(g)] || {}) : null
+      });
     });
+}
+function collectionKey(shipment) { return (shipment.vendorId || HOUSE_VENDOR_ID) + (shipment.preorder ? '__preorder' : ''); }
+// Sent: a tracking number added, or ready to collect.
+function shipmentSent(s) { return s.collect ? !!s.collection.readyAt : !!s.tracking.trackingNumber; }
+// Every package delivered (Bob Go: status per tracking number) or
+// collected: the order is Delivered.
+function allPackagesDone(order, courierDone) {
+  const shipments = orderShipments(order);
+  return shipments.length > 0 && shipments.every((s) => s.collect ? !!s.collection.collectedAt : courierDone(s));
 }
 
 function computeOrderFulfillment(order) {
   const shipments = orderShipments(order);
   if (!shipments.length) return (order.trackingNumber ? 'fulfilled' : 'unfulfilled');
-  const shipped = shipments.filter((s) => s.tracking.trackingNumber).length;
+  const shipped = shipments.filter(shipmentSent).length;
   if (shipped === 0) return 'unfulfilled';
   if (shipped === shipments.length) return 'fulfilled';
   return 'partial';
@@ -3251,7 +3309,12 @@ require('./waitlist-api')(app, { adminDb, admin, sendResendEmail, buildOrderEmai
 // Product reviews from verified buyers: /api/reviews* (reviews-api.js).
 require('./reviews-api')(app, { adminDb, admin, rateLimited, issueReviewReward });
 // Bob Go tracking updates: Shipped and Delivered without clicking (bobgo-api.js).
-require('./bobgo-api')(app, { adminDb, admin, orderShipments, sendOrderStatusEmail, sendResendEmail, alertEmail: ORDER_ALERT_EMAIL });
+require('./bobgo-api')(app, { adminDb, admin, orderShipments, allPackagesDone, sendOrderStatusEmail, sendResendEmail, alertEmail: ORDER_ALERT_EMAIL });
+// Customers collecting from a brand: ready, code, collected (collection-api.js).
+const collectionApi = require('./collection-api')(app, {
+  adminDb, admin, orderShipments, collectionKey, allPackagesDone, authorizeShipmentRequest, sendOrderStatusEmail,
+  sendResendEmail, buildOrderEmailContext, orderEmails, alertEmail: ORDER_ALERT_EMAIL, houseVendorId: HOUSE_VENDOR_ID
+});
 // Customers deleting their own account: /api/account/delete (account-api.js).
 require('./account-api')(app, { adminDb, admin, rateLimited });
 // Live visitors and sessions for Admin > Home: /api/analytics/ping and

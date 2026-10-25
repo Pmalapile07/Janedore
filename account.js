@@ -158,7 +158,11 @@ function accountOrderPackages(order) {
     .map(g => {
       const entry = g.vendorId ? (vt[g.vendorId] || {}) : null;
       const t = g.vendorId ? (g.preorder ? (entry.preorder || {}) : entry) : { trackingNumber: order.trackingNumber, courier: order.courier };
-      return Object.assign(g, { shipped: !!t.trackingNumber, trackingNumber: t.trackingNumber || '', courier: t.courier || '', shippedAt: t.addedAt || null });
+      // Collected from the brand (order.collectFrom): no tracking number.
+      const collect = (order.collectFrom || []).includes(g.vendorId || 'vendor-janedore');
+      const c = collect ? ((order.collection || {})[(g.vendorId || 'vendor-janedore') + (g.preorder ? '__preorder' : '')] || {}) : {};
+      return Object.assign(g, { shipped: !!t.trackingNumber, trackingNumber: t.trackingNumber || '', courier: t.courier || '', shippedAt: t.addedAt || null,
+        collect, readyAt: c.readyAt || null, collectedAt: c.collectedAt || null });
     });
 }
 
@@ -169,7 +173,9 @@ function accountOrderStatus(o) {
   const pk = accountOrderPackages(o);
   const shipped = pk.filter(p => p.shipped).length;
   const status = String(o.status || '').toLowerCase();
-  if (status === 'delivered') return { label: 'Delivered', cls: 'delivered' };
+  const allCollect = pk.length > 0 && pk.every(p => p.collect);
+  if (status === 'delivered') return { label: allCollect ? 'Collected' : 'Delivered', cls: 'delivered' };
+  if (allCollect && pk.every(p => p.readyAt)) return { label: 'Ready to collect', cls: 'shipped' };
   if (pk.length && shipped === pk.length) return { label: 'Shipped', cls: 'shipped' };
   if (shipped) return { label: 'Partially shipped', cls: 'shipped' };
   if (status === 'shipped') return { label: 'Shipped', cls: 'shipped' };
@@ -255,6 +261,7 @@ async function renderAccountOrder(orderNumber) {
     packages
   }, { hideAnother: true });
 
+  const collecting = [...new Set(packages.filter(p => p.collect).map(p => p.brand))];
   const address = [order.shippingAddress, [order.city, order.province].filter(Boolean).join(', '), [order.postalCode, order.country].filter(Boolean).join(', ')]
     .filter(Boolean).map(escapeHTML).join('<br>');
   const discount = Number(order.discountAmount) || 0;
@@ -262,10 +269,14 @@ async function renderAccountOrder(orderNumber) {
   el.innerHTML = `<section class="account-page">
     ${back}
     ${tracking}
-    <div class="track-card account-detail">
+    ${packages.some(p => !p.collect) ? `<div class="track-card account-detail">
       <div class="account-detail-title">Delivery details</div>
       <div class="account-detail-text"><strong>${escapeHTML(order.customerName || '')}</strong><br>${address}${order.customerPhone ? '<br>' + escapeHTML(order.customerPhone) : ''}</div>
-    </div>
+    </div>` : ''}
+    ${collecting.length ? `<div class="track-card account-detail">
+      <div class="account-detail-title">Collection</div>
+      <div class="account-detail-text">You’re collecting from ${collecting.map(escapeHTML).join(' and ')}. The collection address, opening hours and your collection code are emailed to you when it’s ready.</div>
+    </div>` : ''}
     <div class="track-card account-detail">
       <div class="account-detail-title">Payment summary</div>
       <div class="account-row big"><span>Total paid</span><span>${formatPrice(order.total || 0)}</span></div>
@@ -275,7 +286,7 @@ async function renderAccountOrder(orderNumber) {
       <div class="account-row"><span>Delivery fee${new Set(packages.map(p => p.brand)).size > 1 ? ' (' + new Set(packages.map(p => p.brand)).size + ' packages)' : ''}</span><span>${shipping ? formatPrice(shipping) : 'Free'}</span></div>
       <div class="account-row"><span>Payment method</span><span>PayFast</span></div>
     </div>
-    ${order.paymentStatus === 'paid' && packages.some(p => p.shipped) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return items</button>
+    ${order.paymentStatus === 'paid' && packages.some(p => p.shipped || p.collectedAt) ? `<button type="button" class="account-outline-btn account-return-btn" onclick="startAccountReturn('${escapeJSString(order.orderNumber || order.id)}')">Return items</button>
       <button type="button" class="account-outline-btn account-return-btn" onclick="startAccountExchange('${escapeJSString(order.orderNumber || order.id)}')">Exchange items</button>` : ''}
     <p class="account-help">Need help with this order? <span class="track-link" onclick="navigateToContentPage('customer-care')">Contact customer care</span> and quote order ${escapeHTML(order.orderNumber || order.id)}.</p>
   </section>`;

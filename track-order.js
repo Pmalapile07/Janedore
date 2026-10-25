@@ -123,12 +123,16 @@ function trackDate(iso, withYear) {
 const TRACK_STAGES = ['pending', 'processing', 'packed', 'shipped', 'delivered'];
 const TRACK_STAGE_LABELS = ['Order confirmed', 'Processing', 'Packed', 'Shipped', 'Delivered'];
 const TRACK_PREORDER_STAGE_LABELS = ['Pre-order confirmed', 'In production', 'Packed', 'Shipped', 'Delivered'];
+// Collected by the customer from the brand (p.collect): no courier.
+const TRACK_COLLECT_STAGE_LABELS = ['Order confirmed', 'Processing', 'Packed', 'Ready to collect', 'Collected'];
+function trackStageLabels(p) { return p.collect ? TRACK_COLLECT_STAGE_LABELS : p.preorder ? TRACK_PREORDER_STAGE_LABELS : TRACK_STAGE_LABELS; }
 
 // How far one package has got: the order's status, or Shipped once the
 // package has tracking. On an order where some packages have tracking and
 // others don't, a "shipped" status doesn't move the rest past Packed.
 function trackPackageStage(o, p) {
   let stage = Math.max(0, TRACK_STAGES.indexOf(String(o.status || '').toLowerCase()));
+  if (p.collect) return p.collectedAt ? 4 : p.readyAt ? 3 : Math.min(stage, 2);
   if (p.shipped) stage = Math.max(stage, 3);
   else if (stage === 3 && (o.packages || []).some(x => x.shipped)) stage = 2;
   return stage;
@@ -178,7 +182,10 @@ function trackResultHtml(o, opts) {
   const allPreorder = packages.length > 0 && packages.every(p => p.preorder);
   const stages = packages.map(p => trackPackageStage(o, p));
   const allAt = (n) => stages.length > 0 && stages.every(s => s >= n);
+  const allCollect = packages.length > 0 && packages.every(p => p.collect);
   const heading = o.refundPending ? 'Refund in progress' : o.refunded ? 'Refunded' : o.cancelled ? 'Order cancelled' : !o.paid ? 'Payment pending'
+    : allCollect && allAt(4) ? 'Your order has been collected'
+    : allCollect && allAt(3) ? 'Your order is ready to collect'
     : allAt(4) ? (packages.length > 1 ? `All ${unit} have been delivered` : 'Your order has been delivered')
     : allShipped ? (packages.length > 1 ? `All ${unit} have shipped` : 'Your order has shipped')
     : shippedCount ? `Partially shipped: ${shippedCount} of ${packages.length} ${unit}`
@@ -188,7 +195,7 @@ function trackResultHtml(o, opts) {
   // Each package has its own steps; a pre-order is produced after purchase.
   // Steps up to the package's stage are done; the next one is in progress.
   const stepsHtml = (p, stage) => {
-    const labels = p.preorder ? TRACK_PREORDER_STAGE_LABELS : TRACK_STAGE_LABELS;
+    const labels = trackStageLabels(p);
     return `<div class="track-steps">${labels.map((label, i) => {
       const state = i <= stage ? 'done' : i === stage + 1 ? 'current' : '';
       return `<div class="track-step ${state}"><span class="track-step-dot">${state === 'done' ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}</span><span class="track-step-label">${label}</span></div>`;
@@ -211,11 +218,21 @@ function trackResultHtml(o, opts) {
     }).join('');
     const live = !o.cancelled && !o.refunded && !o.refundPending && o.paid;
     const stage = stages[i];
-    const pill = stage >= 2 ? (p.preorder ? TRACK_PREORDER_STAGE_LABELS : TRACK_STAGE_LABELS)[stage] : p.preorder ? 'In production' : 'Processing';
+    const pill = stage >= 2 ? trackStageLabels(p)[stage] : p.preorder ? 'In production' : 'Processing';
     const status = live ? `<span class="track-pill${stage === 4 ? ' delivered' : stage === 3 ? ' shipped' : ''}">${pill}</span>` : '';
     const courierUrl = courierTrackingUrl(p.courier, p.trackingNumber);
     const shipBy = p.preorder && p.shipBy ? preorderShipText(p.shipBy) : '';
-    const body = !live ? '' : stage === 4 && !p.shipped
+    const place = p.collectFrom;
+    const body = !live ? '' : p.collect
+      ? (p.collectedAt
+        ? `<p class="track-wait">Collected on ${escapeHTML(trackDate(new Date(p.collectedAt).toISOString()))}.</p>`
+        : p.readyAt
+        ? `<div class="track-ship">
+            ${place && place.addressLines && place.addressLines.length ? `<div class="track-ship-row"><span>Collect from</span><strong>${[place.brand].concat(place.addressLines).map(x => escapeHTML(trackPlainText(x))).join('<br>')}</strong></div>` : ''}
+            ${place && place.hours ? `<div class="track-ship-row"><span>Opening hours</span><strong>${escapeHTML(place.hours)}</strong></div>` : ''}
+          </div><p class="track-wait">Ready to collect. Please bring the collection code from your email; the parcel is only handed over to someone who gives it.</p>`
+        : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is preparing this package. We’ll email you the collection address, opening hours and your collection code as soon as it’s ready.</p>`)
+      : stage === 4 && !p.shipped
       ? `<p class="track-wait">This package has been delivered.</p>`
       : p.shipped
       ? `<div class="track-ship">

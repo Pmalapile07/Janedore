@@ -30,7 +30,7 @@ const MILESTONES = ['collected', 'out-for-delivery', 'ready-for-pickup', 'delive
 const BEFORE_SHIPPED = ['', 'pending', 'processing', 'packed'];
 
 module.exports = function registerBobGo(app, deps) {
-  const { adminDb, admin, orderShipments, sendOrderStatusEmail, sendResendEmail, alertEmail } = deps;
+  const { adminDb, admin, orderShipments, allPackagesDone, sendOrderStatusEmail, sendResendEmail, alertEmail } = deps;
 
   function signatureOk(req) {
     const secret = process.env.BOBGO_WEBHOOK_SECRET;
@@ -70,11 +70,13 @@ module.exports = function registerBobGo(app, deps) {
 
     // The order's status, from every package's latest Bob Go status.
     const statuses = Object.assign({}, ...Object.entries(order.bobgo || {}).map(([k, v]) => ({ [k]: v.status })), { [key]: status });
-    const refs = orderShipments(order).map((s) => refKey(s.tracking.trackingNumber)).filter((k) => k && k !== '_');
+    // Every courier package delivered and every collected one (if any,
+    // collection-api.js) collected.
+    const delivered = (s) => DONE.includes(statuses[refKey(s.tracking.trackingNumber)]);
     const current = String(order.status || '').toLowerCase();
     let next = null;
     if (order.paymentStatus === 'paid') {
-      if (refs.length && refs.every((k) => DONE.includes(statuses[k])) && (BEFORE_SHIPPED.includes(current) || current === 'shipped')) next = 'delivered';
+      if (allPackagesDone(order, delivered) && (BEFORE_SHIPPED.includes(current) || current === 'shipped')) next = 'delivered';
       else if ((MOVING.includes(status) || DONE.includes(status)) && BEFORE_SHIPPED.includes(current)) next = 'shipped';
     }
     if (next) {

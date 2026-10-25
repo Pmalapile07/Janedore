@@ -43,7 +43,8 @@ service cloud.firestore {
     function noRestrictedFieldsChanged() {
       return !(request.resource.data.diff(resource.data).affectedKeys()
         .hasAny(['platformRevenue', 'vendorPayouts', 'payoutStatus',
-                 'commissionRate', 'status', 'paymentStatus']));
+                 'commissionRate', 'status', 'paymentStatus',
+                 'collection', 'collectFrom', 'collectionReminderDue']));
     }
 
     // Vendors can only update their own profile — not commission or status.

@@ -238,6 +238,31 @@ function freeDeliveryText(p) {
   return 'Free delivery on ' + (v.brand || v.name || p.brand || '') + ' orders over ' + formatPrice(o.minimum) + '.';
 }
 
+// A brand Super Admin approved for collection (vendor.collectionOffer):
+// { area, hours }, or null. The customer can collect that brand's items
+// for free instead of delivery (checkout); the address is emailed once
+// the order is ready. Mirrors server.js collectionOfferOf().
+function collectionOffer(p) {
+  const o = (productVendor(p) || {}).collectionOffer;
+  return o && o.area ? { area: String(o.area), hours: String(o.hours || '') } : null;
+}
+function collectionText(p) {
+  const o = collectionOffer(p);
+  if (!o) return '';
+  const v = productVendor(p) || {};
+  return 'Free collection from ' + (v.brand || v.name || p.brand || '') + ' in ' + o.area + '.';
+}
+// Brands the customer chose to collect from at checkout (vendor ids).
+const COLLECT_KEY = 'janedore_collect';
+function collectChoices() {
+  try { return JSON.parse(sessionStorage.getItem(COLLECT_KEY) || '[]'); } catch (e) { return []; }
+}
+function setCollectChoice(vendorId, collect) {
+  const list = collectChoices().filter(v => v !== vendorId);
+  if (collect) list.push(vendorId);
+  try { sessionStorage.setItem(COLLECT_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
 // Brands that share a warehouse (Admin > Brands, vendor.warehouse) ship
 // together, so they're one package with one fee. Mirrors server.js
 // shippingPackageKey().
@@ -257,9 +282,12 @@ function getCartShipments() {
     const product = getCartProduct(item.productId);
     const key = shippingPackageKey(product, item);
     const brand = (product && product.brand) || item.brand || 'JANEDORE';
-    if (!groups.has(key)) groups.set(key, { key, brand, brands: [], warehouse: key.startsWith('warehouse:'), subtotal: 0, eligible: true, minimum: 0 });
+    if (!groups.has(key)) groups.set(key, { key, brand, brands: [], vendorIds: [], warehouse: key.startsWith('warehouse:'), subtotal: 0, eligible: true, minimum: 0, collectOffer: null });
     const g = groups.get(key);
     if (!g.brands.includes(brand)) g.brands.push(brand);
+    const vid = isHouseProduct(product || item) ? HOUSE_VENDOR_ID : ((product && product.vendorId) || 'unknown');
+    if (!g.vendorIds.includes(vid)) g.vendorIds.push(vid);
+    g.collectOffer = collectionOffer(product);
     g.subtotal += getCartItemLineTotal(item);
     // A package shared by several brands (one warehouse) qualifies only if
     // all of them offer it, at the highest minimum.
@@ -268,11 +296,16 @@ function getCartShipments() {
     else g.minimum = Math.max(g.minimum, offer.minimum);
   });
   const codeFree = !!(appliedDiscount && appliedDiscount.type === 'free_shipping');
+  const chosen = collectChoices();
   return [...groups.values()].map(g => {
+    // Collection: one brand's own package (not a shared warehouse) that
+    // offers it. Same rule as server.js priceOrder().
+    const canCollect = !g.warehouse && g.vendorIds.length === 1 && !!g.collectOffer;
+    const collect = canCollect && chosen.includes(g.vendorIds[0]);
     const reached = g.eligible && g.subtotal >= g.minimum;
     const free = codeFree || reached;
-    const fee = free ? 0 : SHIPPING_FEE;
-    return Object.assign(g, { brand: g.brands.join(' & '), free, fee, remaining: g.eligible && !reached && !codeFree ? g.minimum - g.subtotal : 0 });
+    const fee = free || collect ? 0 : SHIPPING_FEE;
+    return Object.assign(g, { brand: g.brands.join(' & '), free, fee, canCollect, collect, deliveryFee: free ? 0 : SHIPPING_FEE, remaining: g.eligible && !reached && !codeFree && !collect ? g.minimum - g.subtotal : 0 });
   });
 }
 

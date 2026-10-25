@@ -13,6 +13,7 @@
 - **Cash flow:** PayFast pays out a few days after an order, but Bob Go needs the money in the balance before a courier is booked. Decide how big a float to keep.
 - **Courier adjustments:** Bob Go's price is an estimate; if the courier measures a parcel bigger or heavier, the difference is charged afterwards. Decide who covers it (ask brands for accurate weights and sizes).
 - **Free delivery:** each brand's own offer (Admin > Brands: a minimum order). Over it, delivery is free and the brand pays it. It uses the R150 fee for now; once Bob Go rates are live, take the actual courier price off the brand's payout instead. Manual payouts must deduct `deliveryCovered` too.
+- **Collection (built):** Super Admin turns it on per brand (Admin > Brands > Collection, business addresses only). Not collected after 14 days: the team is emailed; cancelling and refunding is still done by hand. Once Bob Go booking is built, skip collected packages (`order.collectFrom`).
 
 ## Brand pages
 - **Admin fields:** let brands (or admin) set their slogan, shown in the middle of their hero photo (`vendor.slogan`; nothing shows until it is set), and their (About removed: brand pages show no story, like Superbalist). The line under their name in the brand bar is now automatic: the brand's top two departments ("Clothing & Accessories"), no location.

@@ -295,8 +295,56 @@ function renderCheckoutSummary() {
   renderShippingMethod(shipping, packages);
 }
 
+// Brands offering collection (cart.js canCollect): a Delivery or Collect
+// choice per brand. Collected items need no delivery address.
+function renderCollectOptions() {
+  const box = document.getElementById('checkout-collect-options');
+  const standard = document.getElementById('checkout-standard-option');
+  if (!box || !standard) return false;
+  const shipments = getCartShipments();
+  const any = shipments.some(s => s.canCollect);
+  box.style.display = any ? '' : 'none';
+  standard.style.display = any ? 'none' : '';
+  syncAddressForCollection(shipments);
+  if (!any) { box.innerHTML = ''; return false; }
+  const eta = cartHasOnlyPreorder() ? '' : `ETA: <strong>${sanitizeHTML(deliveryEstimateText())}</strong>`;
+  const option = (s, collect, head, price, note) => `<label class="checkout-option${s.collect === collect ? ' is-selected' : ''}">
+      <input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" ${s.collect === collect ? 'checked' : ''} onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', ${collect})">
+      <span class="checkout-option-radio" aria-hidden="true"></span>
+      <span class="checkout-option-body">
+        <span class="checkout-option-head"><span>${head}</span><strong>${price}</strong></span>
+        ${note ? `<span class="checkout-option-note">${note}</span>` : ''}
+      </span>
+    </label>`;
+  box.innerHTML = shipments.map(s => {
+    const delivery = option(s, false, 'Delivery', s.deliveryFee ? formatPrice(s.deliveryFee) : 'FREE', s.canCollect ? eta : `Ships from <strong>${sanitizeHTML(s.brand)}</strong>. ${eta}`);
+    const body = s.canCollect
+      ? delivery + option(s, true, 'Collect from ' + sanitizeHTML(s.brand), 'FREE',
+          `${sanitizeHTML(s.collectOffer.area)}${s.collectOffer.hours ? ' · ' + sanitizeHTML(s.collectOffer.hours) : ''}<br>We’ll email you the address and a collection code when it’s ready.`)
+      : delivery;
+    return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options">${body}</div></div>`;
+  }).join('');
+  return true;
+}
+function chooseCollection(vendorId, collect) {
+  setCollectChoice(vendorId, collect);
+  renderCheckoutSummary();
+}
+// Every brand collected: no delivery address, just the name.
+function syncAddressForCollection(shipments) {
+  const all = shipments.length > 0 && shipments.every(s => s.collect);
+  const fields = document.getElementById('checkout-address-fields');
+  const titleEl = document.getElementById('checkout-address-title');
+  if (fields) {
+    fields.style.display = all ? 'none' : '';
+    fields.querySelectorAll('input, select').forEach(el => { el.required = !all; });
+  }
+  if (titleEl) titleEl.textContent = all ? 'Your details' : 'Delivery address';
+}
+
 // Shipping method card: one parcel per brand, each from its own brand.
 function renderShippingMethod(shipping, packages) {
+  if (renderCollectOptions()) return;
   const nameEl = document.getElementById('checkout-shipping-name');
   if (nameEl) nameEl.textContent = packages > 1 ? 'Standard, ' + packages + ' packages' : 'Standard';
   const shippingPriceEl = document.getElementById('checkout-shipping-price');
@@ -370,8 +418,11 @@ async function placeOrder(e) {
   const postal = document.getElementById('checkout-postal').value.trim();
   const country = document.getElementById('checkout-country').value.trim();
   const phone = document.getElementById('checkout-phone').value.trim();
-  
-  if (!email || !name || !address || !city || !province || !postal || !country) {
+  const shipmentsNow = getCartShipments();
+  const collectFrom = shipmentsNow.filter(s => s.collect).map(s => s.vendorIds[0]);
+  const collectOnly = shipmentsNow.length > 0 && shipmentsNow.every(s => s.collect);
+
+  if (!email || !name || (!collectOnly && (!address || !city || !province || !postal || !country))) {
     alert('Please fill in all required fields.');
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay now'; }
     return;
@@ -403,11 +454,14 @@ async function placeOrder(e) {
     customerName: name,
     customerPhone: phone,
     customerId: user ? user.uid : null,
-    shippingAddress: address,
-    city,
-    province,
-    postalCode: postal,
+    shippingAddress: collectOnly ? '' : address,
+    city: collectOnly ? '' : city,
+    province: collectOnly ? '' : province,
+    postalCode: collectOnly ? '' : postal,
     country,
+    // Brands the customer collects from (server.js checks them).
+    collectFrom,
+    collectOnly,
     // vendorId per line + the order-level vendorIds list below are what
     // admin-vendors.js's revenue/order-count tally already reads
     // (vendorRevenue/vendorOrders in renderVendorsTab) — this was never
@@ -471,7 +525,7 @@ async function placeOrder(e) {
     // profile so it's there to prefill next visit. The order is already
     // placed, so a failure here should never block or undo any of
     // that, just get logged.
-    if (user && !user.isAnonymous) {
+    if (user && !user.isAnonymous && !collectOnly) {
       db.collection('customers').doc(user.uid).set({
         name,
         email: user.email || email,
@@ -685,7 +739,12 @@ function renderOrderConfirmation(order) {
       [order.city, order.province].filter(Boolean).join(', '),
       [order.postalCode, order.country].filter(Boolean).join(', ')
     ].filter(Boolean).map(escapeHTML);
-    addressEl.innerHTML = '<strong>' + escapeHTML(order.customerName) + '</strong>' + lines.join('<br>');
+    // Brands collected from (order.collectFrom): no address for those.
+    const collectIds = order.collectFrom || [];
+    const collecting = [...new Set((order.items || []).filter(i => collectIds.includes(i.vendorId || HOUSE_VENDOR_ID)).map(i => i.brand))];
+    const delivering = (order.items || []).some(i => !collectIds.includes(i.vendorId || HOUSE_VENDOR_ID));
+    addressEl.innerHTML = '<strong>' + escapeHTML(order.customerName) + '</strong>' + (delivering ? lines.join('<br>') : '') +
+      (collecting.length ? '<p class="checkout-card-note">You’re collecting from ' + collecting.map(escapeHTML).join(' and ') + '. We’ll email you the address, opening hours and your collection code when it’s ready.</p>' : '');
   }
 
   const summaryEl = document.getElementById('confirmation-summary');

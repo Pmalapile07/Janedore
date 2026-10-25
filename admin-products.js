@@ -14,7 +14,8 @@
     var house = isHouseProductAdmin(product);
     var v = (window._vendorsData || []).find(function(x) { return x.id === (house ? 'vendor-janedore' : product.vendorId); });
     var o = v && v.freeDeliveryOffer;
-    return !!(o && Number(o.minimum) > 0);
+    // Brands offering free collection count too.
+    return !!(o && Number(o.minimum) > 0) || !!(v && v.collectionOffer && v.collectionOffer.area);
   };
 
   if (!window._adminDB) return;

@@ -46,6 +46,17 @@ function addressLines(order) {
   ].filter(Boolean);
 }
 
+// Brands the customer collects from (order.collectFrom, vendor ids):
+// their names, from the order's items.
+function collectedBrands(order) {
+  const ids = order.collectFrom || [];
+  return [...new Set((order.items || []).filter(i => ids.includes(i.vendorId || 'vendor-janedore')).map(i => i.brand || 'JANEDORE'))];
+}
+function deliveredItems(order) {
+  const ids = order.collectFrom || [];
+  return (order.items || []).filter(i => !ids.includes(i.vendorId || 'vendor-janedore'));
+}
+
 // ---------- building blocks ----------
 
 function shell(opts) {
@@ -212,6 +223,11 @@ function courierTrackingUrl(courier, trackingNumber) {
 
 function customerConfirmation(order, ctx) {
   const items = order.items || [];
+  const collecting = collectedBrands(order);
+  const delivering = deliveredItems(order).length > 0;
+  const collectNote = collecting.length
+    ? 'You’re collecting your ' + collecting.join(' and ') + ' items. We’ll email you the collection address, opening hours and your collection code as soon as ' + (collecting.length > 1 ? 'each brand has' : 'it’s') + ' ready.'
+    : '';
   const count = items.reduce((a, i) => a + (Number(i.qty) || 1), 0);
   const brands = [...new Set(items.map(i => i.brand).filter(Boolean))];
   const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
@@ -221,7 +237,7 @@ function customerConfirmation(order, ctx) {
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:8px 0 4px;">' +
       '<div style="width:56px;height:56px;line-height:56px;border-radius:28px;background:' + GREEN + ';color:#111111;font-size:28px;text-align:center;margin:0 auto 16px;">&#10003;</div>' +
       '<div style="font-size:22px;font-weight:700;line-height:1.3;color:#111111;">Thank you' + (first ? ', ' + esc(first) : '') + '</div>' +
-      '<div style="font-size:14px;line-height:1.5;color:#555555;margin:8px auto 0;max-width:380px;">Your payment was successful and your order has been confirmed. We\'ll send a shipping confirmation once your order has been dispatched.</div>' +
+      '<div style="font-size:14px;line-height:1.5;color:#555555;margin:8px auto 0;max-width:380px;">Your payment was successful and your order has been confirmed. ' + (delivering ? 'We\'ll send a shipping confirmation once your order has been dispatched.' : 'We\'ll email you as soon as your order is ready to collect.') + '</div>' +
       '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:20px;">Order #' + esc(num) + '</div>' +
       '<div style="font-size:13px;color:#777777;margin-top:4px;">' + esc(orderDate(order)) + '</div>' +
     '</td></tr></table>';
@@ -241,7 +257,8 @@ function customerConfirmation(order, ctx) {
       thanks,
       status,
       title('Your items', '(' + count + ')') + itemsBlock(items, ctx),
-      title('Delivery details') + addressBlock(order),
+      delivering ? title('Delivery details') + addressBlock(order) : '',
+      collectNote ? title('Collection') + '<div style="font-size:14px;line-height:1.6;color:#555555;">' + esc(collectNote) + '</div>' : '',
       totalsBlock(order, 'Total paid') + button('View order', viewOrderUrl(ctx, num))
     ],
     footerHtml: SUPPORT_FOOTER
@@ -249,7 +266,8 @@ function customerConfirmation(order, ctx) {
 
   const text = 'Thank you' + (first ? ', ' + first : '') + '. Your order is confirmed.\n\nOrder #' + num + ' · ' + orderDate(order) +
     '\n\n' + textItems(items) + '\n\n' + textTotals(order) +
-    '\n\nDelivering to:\n' + [order.customerName].concat(addressLines(order)).join('\n') +
+    (delivering ? '\n\nDelivering to:\n' + [order.customerName].concat(addressLines(order)).join('\n') : '') +
+    (collectNote ? '\n\n' + collectNote : '') +
     '\n\nView your order: ' + viewOrderUrl(ctx, num) +
     '\n\nQuestions? support@janedore.co.za';
 
@@ -264,7 +282,8 @@ function adminNewOrder(order, ctx) {
   items.forEach(i => { const b = i.brand || 'Janedore'; byBrand[b] = (byBrand[b] || 0) + (Number(i.qty) || 1); });
 
   const banner = '<strong>New order #' + esc(num) + '</strong> · ' + money(order.total) + ' · ' + count + (count === 1 ? ' item' : ' items') +
-    (order.needsAttention ? '<br><span style="color:#b3261e;font-weight:700;">Needs attention: ' + esc(order.needsAttention) + '</span>' : '');
+    (order.needsAttention ? '<br><span style="color:#b3261e;font-weight:700;">Needs attention: ' + esc(order.needsAttention) + '</span>' : '') +
+    (collectedBrands(order).length ? '<br>Collecting from ' + esc(collectedBrands(order).join(' and ')) : '');
 
   const brandsCard = title('Brands on this order') + rows(Object.keys(byBrand).map(b =>
     row(esc(b), byBrand[b] + (byBrand[b] === 1 ? ' item' : ' items'))).join('')) +
@@ -296,11 +315,12 @@ function adminNewOrder(order, ctx) {
   return { subject: 'New order #' + num + ', ' + money(order.total), html, text };
 }
 
-function vendorNewOrder(order, ctx, vendor, items) {
+function vendorNewOrder(order, ctx, vendor, items, opts) {
   const count = items.reduce((a, i) => a + (Number(i.qty) || 1), 0);
   const value = items.reduce((a, i) => a + itemLine(i), 0);
   const num = order.orderNumber || '';
   const brandName = vendor.brand || vendor.name || 'your brand';
+  if (opts && opts.collect) return vendorCollectOrder(order, ctx, items, { count, value, num, brandName });
 
   const html = shell({
     logoUrl: ctx.logoUrl,
@@ -324,6 +344,69 @@ function vendorNewOrder(order, ctx, vendor, items) {
     '\n\nAdd tracking: ' + ctx.siteUrl + '/admin';
 
   return { subject: 'New order #' + num + ' to ship, ' + count + (count === 1 ? ' item' : ' items'), html, text };
+}
+
+// The customer collects this brand's items: no courier. The brand packs
+// them and marks the order Ready for collection in admin, which emails
+// the customer the address and a collection code.
+function vendorCollectOrder(order, ctx, items, o) {
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'New order for collection',
+    preheader: 'New Janedore order #' + o.num + ': the customer will collect it from you.',
+    bannerHtml: '<strong>You have a new order for collection.</strong> The customer has paid and will collect it from you.',
+    cards: [
+      title('Order #' + esc(o.num), esc(orderDate(order))) +
+        '<div style="font-size:14px;line-height:1.5;color:#555555;">Please pack the items below, then mark the order <strong>Ready for collection</strong> in admin. The customer is then emailed your collection address, hours and a collection code. Only hand the parcel over to someone who gives you that code, and enter it in admin to confirm the collection.</div>',
+      title('Items to pack', '(' + o.count + ')') + itemsBlock(items, ctx, { showBrand: false }) +
+        rows(divider() + row('Items total', money(o.value), { semi: true })),
+      title('Customer') + '<div style="font-size:14px;line-height:1.6;color:#555555;"><strong style="color:#111111;">' + esc(order.customerName || '') + '</strong>' + (order.customerPhone ? '<br>' + esc(order.customerPhone) : '') + '</div>' +
+        button('Open order in admin', ctx.siteUrl + '/admin')
+    ],
+    footerHtml: 'Questions about this order? Write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
+  });
+  const text = 'New Janedore order #' + o.num + ' for collection (' + o.count + ' items).\n\n' + textItems(items) +
+    '\nItems total: ' + money(o.value) + '\n\nThe customer will collect it from you. Pack the items, then mark the order Ready for collection in admin. Only hand it over to someone who gives you the collection code, and enter it in admin.\n\nCustomer: ' + (order.customerName || '') + (order.customerPhone ? ', ' + order.customerPhone : '') +
+    '\n\nAdmin: ' + ctx.siteUrl + '/admin';
+  return { subject: 'New order #' + o.num + ' for collection, ' + o.count + (o.count === 1 ? ' item' : ' items'), html, text };
+}
+
+// A brand marked its items Ready for collection (collection-api.js), or
+// a reminder that they are still waiting. opts: { brand, addressLines,
+// hours, instructions, code, holdUntil (date text), reminder }.
+function readyForCollection(order, ctx, items, opts) {
+  const num = order.orderNumber || '';
+  const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
+  const heading = opts.reminder ? 'Your order is waiting for you' : 'Your order is ready to collect';
+  const intro = (opts.reminder ? 'a reminder that your ' : 'your ') + opts.brand + ' items ' + (opts.reminder ? 'are still' : 'are') + ' ready to collect. Please bring the collection code below; the parcel is only handed over to someone who gives it.' +
+    (opts.holdUntil ? ' They will be held until ' + opts.holdUntil + '.' : '');
+  const where = title('Collect from') +
+    '<div style="font-size:14px;line-height:1.6;color:#555555;"><strong style="color:#111111;">' + esc(opts.brand) + '</strong><br>' + opts.addressLines.map(esc).join('<br>') +
+    (opts.hours ? '<br><br><strong style="color:#111111;">Opening hours</strong><br>' + esc(opts.hours) : '') +
+    (opts.instructions ? '<br><br>' + esc(opts.instructions) : '') + '</div>';
+  const code = '<div style="text-align:center;padding:6px 0;"><div style="font-size:13px;color:#777777;">Your collection code</div>' +
+    '<div style="font-size:32px;font-weight:700;letter-spacing:0.18em;color:#111111;margin-top:6px;">' + esc(opts.code) + '</div>' +
+    '<div style="font-size:12px;color:#777777;margin-top:8px;line-height:1.5;">Keep it private. Anyone you send to collect for you will need it.</div></div>';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: heading,
+    preheader: 'Order #' + num + ': ' + heading.toLowerCase() + ' from ' + opts.brand + '.',
+    bannerHtml: '<strong>' + esc(heading) + '</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.6;color:#555555;">Hi' + (first ? ' ' + esc(first) : '') + ', ' + esc(intro) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
+      code,
+      where + button('View order', viewOrderUrl(ctx, num)),
+      title('Items to collect') + itemsBlock(items, ctx, { hidePrice: true })
+    ],
+    footerHtml: SUPPORT_FOOTER
+  });
+  const text = heading + '\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\nYour collection code: ' + opts.code +
+    '\n\nCollect from:\n' + [opts.brand].concat(opts.addressLines).join('\n') + (opts.hours ? '\nOpening hours: ' + opts.hours : '') + (opts.instructions ? '\n' + opts.instructions : '') +
+    '\n\n' + textItems(items, true) + '\n\nOrder #' + num + '\nView your order: ' + viewOrderUrl(ctx, num) + '\n\nQuestions? support@janedore.co.za';
+  return { subject: heading + ' (order #' + num + ')', html, text };
 }
 
 function shipped(order, ctx, items, opts) {
@@ -667,8 +750,14 @@ const STATUS_EMAIL_COPY = {
   shipped: ['Your order is on its way', 'your order has been handed to the courier and is on its way to you.'],
   delivered: ['Your order has been delivered', 'your order has been delivered. We hope you love it. Items can be returned or exchanged within 14 days of delivery.']
 };
+// Every item collected by the customer: no courier in the copy.
+const COLLECT_STATUS_EMAIL_COPY = {
+  packed: ['Your order has been packed', 'your order has been packed. We’ll email you the collection details as soon as it’s ready to collect.'],
+  delivered: ['Your order has been collected', 'your order has been collected. We hope you love it. Items can be returned or exchanged within 14 days of collection.']
+};
 function statusUpdate(order, ctx, status, trackings) {
-  const copy = STATUS_EMAIL_COPY[status];
+  const delivering = deliveredItems(order).length > 0;
+  const copy = (!delivering && COLLECT_STATUS_EMAIL_COPY[status]) || STATUS_EMAIL_COPY[status];
   const num = order.orderNumber || '';
   const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const tracked = (trackings || []).filter(t => t.trackingNumber);
@@ -690,7 +779,7 @@ function statusUpdate(order, ctx, status, trackings) {
         '<div style="font-size:15px;font-weight:700;color:#111111;margin-top:14px;">Order #' + esc(num) + '</div>',
       trackingCard + button('View order', viewOrderUrl(ctx, num)),
       title('Your items') + itemsBlock(order.items || [], ctx, { hidePrice: true }),
-      status === 'delivered' ? '' : title('Delivering to') + addressBlock(order)
+      status === 'delivered' || !delivering ? '' : title('Delivering to') + addressBlock(order)
     ].filter(Boolean),
     footerHtml: SUPPORT_FOOTER
   });
@@ -1134,4 +1223,4 @@ function backInStock(item, ctx, links) {
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, reviewRequest, reviewReward, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, readyForCollection, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, reviewRequest, reviewReward, money };

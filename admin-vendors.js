@@ -21,7 +21,7 @@
   var privateRef = window._adminDB.collection('vendorPrivate');
   // pickup: where couriers collect the brand's parcels (Bob Go, later),
   // which may be someone's home, so never public.
-  var PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes', 'pickup'];
+  var PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes', 'pickup', 'collection'];
   var PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'];
 
   function saveVendor(id, data) {
@@ -54,6 +54,54 @@
         '<div class="form-group" style="font-size:10px;color:var(--muted);margin-top:-6px;">On orders of this brand\'s items over the minimum, delivery is free for the customer and the brand pays it, whatever it costs. It\'s taken off the brand\'s payout, and its products show a Free delivery badge.</div>' +
       '</div>';
   }
+  // Collection: customers collect their order from the brand instead of
+  // having it delivered. Super Admin only, and only for a shop, studio or
+  // business address, never a home. The full address is private
+  // (collection, emailed to the customer once their order is ready); the
+  // public collectionOffer only says the area and hours, which checkout
+  // and product pages show (cart.js, server.js priceOrder).
+  function collectionFieldsHtml(v) {
+    var c = v.collection || {};
+    var on = !!(v.collectionOffer && v.collectionOffer.area);
+    var f = function(name, label, value, extra) { return '<div class="form-group"><label>' + label + '</label><input name="' + name + '" value="' + esc(value || '') + '"' + (extra || '') + '></div>'; };
+    return '<div class="form-group" style="margin-bottom:6px;"><label>Collection</label>' +
+        '<select name="collectOn" onchange="this.closest(\'form\').querySelector(\'.collect-fields\').style.display = this.value === \'yes\' ? \'\' : \'none\'">' +
+          '<option value="no"' + (on ? '' : ' selected') + '>No</option><option value="yes"' + (on ? ' selected' : '') + '>Yes, customers can collect</option>' +
+        '</select></div>' +
+      '<div class="collect-fields" style="display:' + (on ? '' : 'none') + ';">' +
+        '<div class="form-group" style="font-size:10px;color:var(--muted);margin-top:-2px;">Customers can choose to collect this brand\'s items for free instead of delivery. The address is only emailed to them once the order is ready, with a collection code the brand checks before handing it over.</div>' +
+        '<label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;padding:0 20px;margin-bottom:12px;"><input type="checkbox" name="collectBusiness" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;accent-color:var(--text);"' + (on ? ' checked' : '') + '><span>This is a shop, studio or business address, not a private home.</span></label>' +
+        '<div class="form-group"><button type="button" class="btn btn-sm btn-ghost" onclick="window._copyPickupToCollection(this.form)">Same as pickup address</button></div>' +
+        f('collectCompany', 'Business or building name', c.company, ' placeholder="e.g. NIRIUS CO Studio"') +
+        f('collectStreet', 'Street address', c.street, ' placeholder="e.g. 22 Ealing Crescent"') +
+        f('collectSuburb', 'Suburb', c.suburb, ' placeholder="e.g. Bryanston"') +
+        '<div class="form-row">' + f('collectCity', 'City', c.city, ' placeholder="e.g. Johannesburg"') + f('collectPostalCode', 'Postal code', c.postalCode, ' inputmode="numeric" placeholder="e.g. 2191"') + '</div>' +
+        '<div class="form-group"><label>Province</label><select name="collectProvince"><option value="">Choose a province</option>' + PROVINCES.map(function(pr) { return '<option' + (c.province === pr ? ' selected' : '') + '>' + pr + '</option>'; }).join('') + '</select></div>' +
+        f('collectHours', 'Collection hours', (v.collectionOffer || {}).hours, ' placeholder="e.g. Mon–Fri 9:00–17:00, Sat 9:00–13:00"') +
+        f('collectInstructions', 'Collection instructions', c.instructions, ' placeholder="Optional, e.g. Shop 14, ground floor"') +
+      '</div>';
+  }
+  window._copyPickupToCollection = function(form) {
+    ['Company', 'Street', 'Suburb', 'City', 'PostalCode', 'Province'].forEach(function(k) {
+      if (form['pickup' + k] && form['collect' + k]) form['collect' + k].value = form['pickup' + k].value;
+    });
+  };
+  // { collection, offer } for saving, or { error }.
+  function readCollection(form) {
+    if (!form.collectOn || form.collectOn.value !== 'yes') return { collection: null, offer: null };
+    var c = {
+      company: form.collectCompany.value.trim(), street: form.collectStreet.value.trim(), suburb: form.collectSuburb.value.trim(),
+      city: form.collectCity.value.trim(), province: form.collectProvince.value, postalCode: form.collectPostalCode.value.trim(),
+      instructions: form.collectInstructions.value.trim()
+    };
+    var hours = form.collectHours.value.trim();
+    if (!form.collectBusiness.checked) return { error: 'Collection is only for a shop, studio or business address. Tick the box to confirm it isn\'t a private home.' };
+    if (!(c.street && c.suburb && c.city && c.province && /^\d{4}$/.test(c.postalCode))) return { error: 'Complete the collection address: street, suburb, city, province and a 4-digit postal code.' };
+    if (!hours) return { error: 'Add the collection hours.' };
+    c.confirmedBusinessAt = new Date().toISOString();
+    return { collection: c, offer: { area: c.suburb + ', ' + c.city, hours: hours } };
+  }
+
   function readFreeDeliveryOffer(form) {
     if (!form.freeDeliveryOn || form.freeDeliveryOn.value !== 'yes') return { offer: null };
     var minimum = Math.round(Number(form.freeDeliveryMinimum.value));
@@ -599,6 +647,11 @@
 
               freeDeliveryFieldsHtml(v) +
 
+              // Collection is set up by Janedore (Super Admin) only.
+              (v.collectionOffer && v.collectionOffer.area
+                ? '<div class="form-group" style="padding:0;margin-bottom:12px;"><label>Collection</label><div style="font-size:12px;line-height:1.5;">Customers can collect from ' + esc(v.collectionOffer.area) + (v.collectionOffer.hours ? ', ' + esc(v.collectionOffer.hours) : '') + '.</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">To change it, contact Janedore.</div></div>'
+                : '') +
+
             '</form>' +
           '</div>' +
         '</div>' +
@@ -721,6 +774,8 @@
             f('pickupInstructions', 'Collection instructions', a.instructions, ' placeholder="Optional, e.g. ring the bell at gate 2"');
         })() +
 
+        collectionFieldsHtml(v) +
+
         '<div class="form-group"><label>PayFast Merchant ID</label><input name="payfastMerchantId" value="' + esc(v.payfastMerchantId || '') + '" placeholder="e.g. 10000105" inputmode="numeric"><div style="font-size:10px;color:var(--muted);margin-top:4px;">From the vendor\'s own PayFast account settings page. Only the ID, never their key or passphrase. Lets checkout automatically split their share of a sale straight to them.</div></div>' +
 
         '<div class="form-group"><label>Internal Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
@@ -785,6 +840,10 @@
     var fdOffer = readFreeDeliveryOffer(form);
     if (fdOffer.error) { showToast(fdOffer.error, 'error'); return; }
     data.freeDeliveryOffer = fdOffer.offer;
+    var collect = readCollection(form);
+    if (collect.error) { showToast(collect.error, 'error'); return; }
+    data.collection = collect.collection;
+    data.collectionOffer = collect.offer;
     // A partial pickup address can't be used to book a courier.
     var pk = data.pickup;
     var started = pk.street || pk.suburb || pk.city || pk.province || pk.postalCode || pk.contactName || pk.contactPhone;

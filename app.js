@@ -564,7 +564,7 @@ function navigateToCategory(cat, replaceUrl) {
 // Collections that exist without being created in admin. One with the
 // same handle made in admin > Collections takes over.
 const BUILTIN_COLLECTIONS = {
-  'free-delivery': { id: 'free-delivery', handle: 'free-delivery', title: 'Free delivery', collectionType: 'automated', automatedRule: 'freedelivery' },
+  'free-delivery': { id: 'free-delivery', handle: 'free-delivery', title: 'Free delivery and collection', collectionType: 'automated', automatedRule: 'freedelivery' },
   women: { id: 'women', handle: 'women', title: 'Women', collectionType: 'automated', automatedRule: 'gender', gender: 'women' },
   men: { id: 'men', handle: 'men', title: 'Men', collectionType: 'automated', automatedRule: 'gender', gender: 'men' }
 };

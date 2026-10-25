@@ -110,6 +110,11 @@
   .checkout-options .checkout-option-head { align-items: center; }
   .checkout-pay-icons { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .checkout-pay-icons img { display: block; width: auto; height: 16px; }
+  .checkout-collect { display: flex; flex-direction: column; gap: 18px; }
+  .checkout-collect-brand { font-size: 13px; font-weight: 600; margin: 0 0 8px; }
+  .checkout-collect .checkout-options { gap: 8px; }
+  .checkout-collect .checkout-option { align-items: flex-start; }
+  .checkout-collect .checkout-option-radio { margin-top: -2px; }
   .checkout-ships-list { display: block; margin-top: 10px; border-top: 1px solid #eee; }
   .checkout-ships-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #eee; color: #111; }
   .checkout-ships-row:last-child { border-bottom: none; padding-bottom: 0; }
@@ -218,11 +223,13 @@
       </section>
 
       <section class="checkout-card">
-        <h2 class="checkout-card-title">Delivery address</h2>
+        <h2 class="checkout-card-title" id="checkout-address-title">Delivery address</h2>
         <div class="checkout-form-group">
           <label for="checkout-name">Full name</label>
           <input type="text" id="checkout-name" required autocomplete="name" placeholder="First and last name">
         </div>
+        <!-- Hidden when every brand is collected (checkout.js syncAddressForCollection). -->
+        <div id="checkout-address-fields">
         <div class="checkout-form-group">
           <label for="checkout-address">Street address</label>
           <input type="text" id="checkout-address" required autocomplete="street-address" placeholder="House number and street name">
@@ -253,11 +260,14 @@
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       <section class="checkout-card">
         <h2 class="checkout-card-title">Shipping method</h2>
-        <label class="checkout-option is-selected">
+        <!-- Brands offering collection: Delivery or Collect, per brand (checkout.js renderCollectOptions). -->
+        <div class="checkout-collect" id="checkout-collect-options" style="display:none;"></div>
+        <label class="checkout-option is-selected" id="checkout-standard-option">
           <input type="radio" name="checkout-shipping-method" value="standard" checked>
           <span class="checkout-option-radio" aria-hidden="true"></span>
           <span class="checkout-option-body">

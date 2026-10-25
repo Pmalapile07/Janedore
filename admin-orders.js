@@ -73,6 +73,15 @@
     return entry;
   }
 
+  // Collected by the customer from the brand (o.collectFrom, server.js
+  // priceOrder): no courier. o.collection[key] { readyAt, collectedAt }
+  // (collection-api.js). Ready for collection counts as sent.
+  function groupCollection(o, group) {
+    var vid = group.vendorId || 'vendor-janedore';
+    if ((o.collectFrom || []).indexOf(vid) === -1) return null;
+    return (o.collection || {})[vid + (group.preorder ? '__preorder' : '')] || {};
+  }
+
   function computeFulfillmentStatus(o) {
     var vendorIds = Array.isArray(o.vendorIds) ? o.vendorIds : [];
     if (!vendorIds.length) {
@@ -80,7 +89,7 @@
     }
     var groups = groupOrderItemsByVendor(o.items || []).filter(function (g) { return g.vendorId && vendorIds.indexOf(g.vendorId) !== -1; });
     if (!groups.length) return 'unfulfilled';
-    var shipped = groups.filter(function (g) { var t = groupTracking(o, g); return t && t.trackingNumber; });
+    var shipped = groups.filter(function (g) { var c = groupCollection(o, g); if (c) return !!c.readyAt; var t = groupTracking(o, g); return t && t.trackingNumber; });
     if (shipped.length === 0) return 'unfulfilled';
     if (shipped.length === groups.length) return 'fulfilled';
     return 'partial';
@@ -1143,16 +1152,20 @@
       html += '<div class="card-title" style="margin-bottom:7px;">Items</div>';
       html += groupOrderItemsByVendor(o.items).map(function (group) {
         var tracking = groupTracking(o, group);
-        var shipped = !!(tracking && tracking.trackingNumber);
+        var collection = groupCollection(o, group);
+        var shipped = collection ? !!collection.readyAt : !!(tracking && tracking.trackingNumber);
         var pkgKey = (group.vendorId || '') + (group.preorder ? '__preorder' : '');
         var canEditGroup = canUpdate ||
           (group.vendorId && window._can('orders', 'update_own_tracking', { vendorId: group.vendorId }));
+        var badge = collection
+          ? '<span style="text-transform:none;" class="badge badge-' + (collection.collectedAt ? 'delivered' : collection.readyAt ? 'fulfilled' : 'unfulfilled') + '">' + (collection.collectedAt ? 'Collected' : collection.readyAt ? 'Ready for collection' : 'To collect') + '</span>'
+          : statusBadge(shipped ? 'fulfilled' : 'unfulfilled');
 
         return (
           '<div class="order-vendor-group">' +
             '<div class="order-vendor-group-header">' +
               '<span class="order-vendor-group-brand">' + esc(group.brand) + (group.preorder ? ' · Pre-order' + (group.shipBy ? ', est. dispatch ' + esc(group.shipBy) : '') : '') + '</span>' +
-              statusBadge(shipped ? 'fulfilled' : 'unfulfilled') +
+              badge +
             '</div>' +
             '<div class="info-panel order-items-panel" style="margin-bottom:' + (canEditGroup ? '8px' : '14px') + ';">' +
               group.items.map(function (entry) {
@@ -1175,7 +1188,9 @@
                 );
               }).join('') +
             '</div>' +
-            (canEditGroup
+            (collection
+              ? collectionPanelHtml(o, orderId, group, collection, canEditGroup)
+              : canEditGroup
               ? '<div style="margin-bottom:18px;">' +
                   '<label class="card-title" style="display:block;margin-bottom:6px;">' + (shipped ? 'Tracking' : 'Add tracking') + '</label>' +
                   '<select class="filter-select order-group-courier" data-vendor="' + esc(pkgKey) + '" style="width:100%;margin-bottom:6px;">' +
@@ -1635,6 +1650,68 @@
 
   function notifyShipped(orderId, vendorId, preorder) {
     notifyAndLog(orderId, 'notify-shipped', { vendorId: vendorId || '', preorder: !!preorder }, 'Shipping email');
+  }
+
+  // A package the customer collects: Ready for collection (emails them
+  // the address and a code), then the code they give to mark it
+  // collected. Only the brand on it and staff can act.
+  function collectionPanelHtml(o, orderId, group, c, canAct) {
+    var args = '\'' + esc(orderId) + '\',\'' + esc(group.vendorId || 'vendor-janedore') + '\',' + (group.preorder ? 'true' : 'false');
+    var key = esc((group.vendorId || 'vendor-janedore') + (group.preorder ? '__preorder' : ''));
+    var note = function (t) { return '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;">' + t + '</div>'; };
+    if (c.collectedAt) return '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">Collected by the customer on ' + esc(fmtDate(new Date(c.collectedAt).toISOString())) + '.</div>';
+    if (!canAct) return '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' + (c.readyAt ? 'Ready for collection since ' + esc(fmtDate(new Date(c.readyAt).toISOString())) + '.' : 'The customer will collect this. Not ready yet.') + '</div>';
+    var paid = o.paymentStatus === 'paid';
+    if (!c.readyAt) {
+      return '<div style="margin-bottom:18px;">' +
+        note('The customer collects these items from the brand. Once they\'re packed, mark them ready: the customer is emailed the collection address, hours and a collection code.') +
+        '<button class="btn btn-sm btn-primary"' + (paid ? '' : ' disabled') + ' onclick="window._collectionAction(' + args + ',\'ready\')">Ready for collection</button>' +
+      '</div>';
+    }
+    return '<div style="margin-bottom:18px;">' +
+      '<label class="card-title" style="display:block;margin-bottom:6px;">Collection code</label>' +
+      note(c.locked
+        ? 'Too many wrong codes. Send the customer a new code, then enter it here.'
+        : 'Ready since ' + esc(fmtDate(new Date(c.readyAt).toISOString())) + '. Only hand the parcel over to someone who gives you the 6-digit code from the customer\'s email.') +
+      '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
+        '<input class="order-tracking-input order-collect-code" data-vendor="' + key + '" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit code" style="flex:1;"' + (c.locked ? ' disabled' : '') + '>' +
+        '<button class="btn btn-sm btn-primary"' + (c.locked ? ' disabled' : '') + ' onclick="window._collectionAction(' + args + ',\'collected\')">Mark collected</button>' +
+      '</div>' +
+      '<button class="btn btn-sm btn-ghost" onclick="window._collectionAction(' + args + ',\'ready\')">Resend code</button>' +
+    '</div>';
+  }
+
+  window._collectionAction = function (orderId, vendorId, preorder, action) {
+    if (!window._currentUser || !window._currentUser.getIdToken) return;
+    var key = vendorId + (preorder ? '__preorder' : '');
+    var codeEl = document.querySelector('.order-collect-code[data-vendor="' + key + '"]');
+    var code = codeEl ? codeEl.value.replace(/\D/g, '') : '';
+    if (action === 'collected' && code.length !== 6) { showToast('Enter the 6-digit collection code', 'error'); return; }
+    if (action === 'ready' && codeEl && !confirm('Send the customer a new collection code? The old one will stop working.')) return;
+    window._currentUser.getIdToken().then(function (token) {
+      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/collection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ vendorId: vendorId, preorder: !!preorder, action: action, code: code })
+      });
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (d) {
+        if (!res.ok) { showToast(d.error || 'Could not update the collection', 'error'); if (d.locked) refreshOrderDetail(orderId); return; }
+        if (action === 'collected') showToast(d.status === 'delivered' ? 'Collected. The order is now Delivered.' : 'Marked as collected');
+        else showToast(d.sentTo ? 'Collection email sent to ' + d.sentTo : 'Ready for collection. Email not sent: ' + (d.skipped || 'unknown reason'), d.sentTo ? undefined : 'error');
+        refreshOrderDetail(orderId);
+      });
+    }).catch(function () { showToast('The server couldn’t be reached', 'error'); });
+  };
+
+  // Reloads one order (the server changed it) and redraws its page.
+  function refreshOrderDetail(orderId) {
+    ordersRef.doc(orderId).get().then(function (doc) {
+      if (!doc.exists) return;
+      var data = Object.assign({ id: doc.id }, doc.data());
+      window._ordersData = (window._ordersData || []).map(function (x) { return x.id === orderId ? data : x; });
+      var bodyEl = safeEl('order-detail-body');
+      if (bodyEl) { bodyEl.innerHTML = renderOrderDetailContent(data, orderId); loadOrderItemImages(data); }
+    }).catch(function (e) { console.error('[ORDER_REFRESH]', e); });
   }
 
   // vendorId === '' (the group with no vendor split, i.e. a manually-
