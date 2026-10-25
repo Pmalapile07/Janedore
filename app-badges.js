@@ -6,7 +6,8 @@
 // home screen (standalone display).
 // - Footer: "Get the app" with both badges (buildFooter, footer.js).
 // - Phones: a slim bar above the header with Get, to the store for the
-//   phone's own system; closing it hides it for 30 days.
+//   phone's own system. It has no close button: it stays until the
+//   shopper uses the app.
 // The badge artwork is Apple's and Google's own, loaded from their
 // badge links unchanged, as both require.
 
@@ -15,8 +16,6 @@
 const APP_STORE_BADGE = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
 const APP_STORE_BADGE_FALLBACK = 'https://tools.applemarketingtools.com/api/badges/download-on-the-app-store/black/en-us?size=250x83';
 const PLAY_STORE_BADGE = 'https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png';
-const APP_BAR_DISMISS_KEY = 'janedore_app_bar_closed';
-const APP_BAR_DISMISS_DAYS = 30;
 // Preview before the app is published: opening the site with
 // ?app-preview=1 shows the bar and badges on that phone only (links go
 // nowhere), even opened from a home screen icon; ?app-preview=0 turns
@@ -59,16 +58,6 @@ function phoneSystem() {
   return '';
 }
 
-function appBarDismissed() {
-  try { return Date.now() - Number(localStorage.getItem(APP_BAR_DISMISS_KEY) || 0) < APP_BAR_DISMISS_DAYS * 864e5; } catch (e) { return false; }
-}
-
-function closeAppBar() {
-  try { localStorage.setItem(APP_BAR_DISMISS_KEY, String(Date.now())); } catch (e) {}
-  const bar = document.getElementById('app-bar');
-  if (bar) bar.remove();
-}
-
 function renderAppBadges() {
   const links = appStoreLinks();
   const inApp = isInsideApp() && !appPreviewOn();
@@ -82,15 +71,14 @@ function renderAppBadges() {
   const system = phoneSystem();
   const link = system ? links[system] : '';
   const existing = document.getElementById('app-bar');
-  if (inApp || !link || (appBarDismissed() && !appPreviewOn())) { if (existing) existing.remove(); return; }
+  if (inApp || !link) { if (existing) existing.remove(); return; }
   if (existing) return;
   const nav = document.getElementById('main-nav');
   if (!nav) return;
   const bar = document.createElement('div');
   bar.id = 'app-bar';
   bar.className = 'app-bar';
-  bar.innerHTML = `<button type="button" class="app-bar-close" onclick="closeAppBar()" aria-label="Close"><i class="ph ph-x"></i></button>` +
-    `<span class="app-bar-icon" aria-hidden="true">J</span>` +
+  bar.innerHTML = `<span class="app-bar-icon" aria-hidden="true">J</span>` +
     `<span class="app-bar-text"><strong>JANEDORE</strong><span>Shop faster in the app</span></span>` +
     `<a class="app-bar-get" ${appLinkAttrs(link)}>Get</a>`;
   nav.parentNode.insertBefore(bar, nav);
