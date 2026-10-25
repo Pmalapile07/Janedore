@@ -16,6 +16,10 @@ const app = express();
 // notification really came from PayFast's own servers.
 app.set('trust proxy', true);
 
+// Bob Go's webhook (bobgo-api.js) is verified against its exact bytes,
+// so that one path keeps the raw body; its payloads carry the shipment's
+// whole tracking history, hence the larger limit.
+app.use('/api/bobgo/webhook', express.json({ limit: '2mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 app.use(express.json());
 
 // ==================== SECURITY ====================
@@ -38,7 +42,7 @@ app.use((req, res, next) => {
 // serves the site from. They hold no secrets, but there is no reason for
 // anyone to download them, so they 404 like any missing file.
 const PRIVATE_FILES = new Set([
-  '/server.js', '/analytics-api.js', '/admin-home-api.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/account-api.js', '/partner-applications-api.js', '/order-emails.js',
+  '/server.js', '/analytics-api.js', '/admin-home-api.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/account-api.js', '/bobgo-api.js', '/partner-applications-api.js', '/order-emails.js',
   '/firestore.rules', '/firestore.indexes.json', '/package.json', '/package-lock.json',
   '/debugger.html'
 ]);
@@ -2156,6 +2160,10 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
     if (status === 'unfulfilled') return res.json({ ok: true, skipped: 'Nothing shipped yet' });
     const shipment = findShipment(order, vendorId, preorder);
     if (shipment && !shipment.tracking.trackingNumber) return res.json({ ok: true, skipped: 'That package has no tracking yet' });
+    // Every package's tracking number in one list, so Bob Go's tracking
+    // updates find the order (bobgo-api.js).
+    const refs = orderShipments(order).map((s) => String(s.tracking.trackingNumber || '').trim().toUpperCase()).filter(Boolean);
+    if (refs.length) orderRef.update({ trackingRefs: admin.firestore.FieldValue.arrayUnion(...refs) }).catch((e) => console.warn('[NOTIFY_SHIPPED] trackingRefs:', e.message));
 
     // Customer gets "on its way"; the Janedore team gets a copy saying
     // which brand shipped. The brand itself is not emailed.
@@ -2208,6 +2216,32 @@ app.post('/api/orders/:id/notify-shipped', async (req, res) => {
 // Shipped here is the status alone; tracking emails come from
 // notify-shipped when a brand adds a tracking number.
 const STATUS_EMAIL_STAGES = ['processing', 'packed', 'shipped', 'delivered'];
+// The status email itself, for the order as it now stands: used here
+// and by Bob Go's tracking updates (bobgo-api.js). Returns
+// { sentTo } or { skipped, at }; throws if the send fails.
+async function sendOrderStatusEmail(orderRef, order) {
+  const status = String(order.status || '').toLowerCase();
+  if (!STATUS_EMAIL_STAGES.includes(status)) return { skipped: 'No email for this status' };
+  if (order.paymentStatus !== 'paid') return { skipped: 'Order is not paid' };
+  // Delivered: ask for reviews a few days later (sweepReviewRequests).
+  if (status === 'delivered' && !order.reviewRequestDue && !order.reviewRequestSentAt) {
+    await orderRef.update({ reviewRequestDue: Date.now() + REVIEW_REQUEST_DELAY });
+  }
+  if (!order.customerEmail) return { skipped: 'No customer email' };
+  // A shipped status after every package already sent its own tracking
+  // email would only repeat it.
+  if (status === 'shipped' && computeOrderFulfillment(order) === 'fulfilled') return { skipped: 'Tracking already emailed' };
+  if (order.statusEmailsSent && order.statusEmailsSent[status]) {
+    const at = order.statusEmailsSent[status];
+    return { skipped: 'Already emailed', at: at && at.toDate ? at.toDate().toISOString() : null };
+  }
+  const ctx = await buildOrderEmailContext(order);
+  const email = orderEmails.statusUpdate(order, ctx, status, orderShipments(order).map((s) => s.tracking).filter((t) => t.trackingNumber));
+  await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: email.subject, html: email.html, text: email.text });
+  await orderRef.update({ ['statusEmailsSent.' + status]: admin.firestore.FieldValue.serverTimestamp() });
+  return { sentTo: order.customerEmail };
+}
+
 app.post('/api/orders/:id/notify-status', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   try {
@@ -2216,27 +2250,7 @@ app.post('/api/orders/:id/notify-status', async (req, res) => {
     const orderRef = adminDb.collection('orders').doc(req.params.id);
     const doc = await orderRef.get();
     if (!doc.exists) return res.status(404).json({ error: 'Order not found' });
-    const order = doc.data();
-    const status = String(order.status || '').toLowerCase();
-    if (!STATUS_EMAIL_STAGES.includes(status)) return res.json({ ok: true, skipped: 'No email for this status' });
-    if (order.paymentStatus !== 'paid') return res.json({ ok: true, skipped: 'Order is not paid' });
-    // Delivered: ask for reviews a few days later (sweepReviewRequests).
-    if (status === 'delivered' && !order.reviewRequestDue && !order.reviewRequestSentAt) {
-      await orderRef.update({ reviewRequestDue: Date.now() + REVIEW_REQUEST_DELAY });
-    }
-    if (!order.customerEmail) return res.json({ ok: true, skipped: 'No customer email' });
-    // A shipped status after every package already sent its own tracking
-    // email would only repeat it.
-    if (status === 'shipped' && computeOrderFulfillment(order) === 'fulfilled') return res.json({ ok: true, skipped: 'Tracking already emailed' });
-    if (order.statusEmailsSent && order.statusEmailsSent[status]) {
-      const at = order.statusEmailsSent[status];
-      return res.json({ ok: true, skipped: 'Already emailed', at: at && at.toDate ? at.toDate().toISOString() : null });
-    }
-    const ctx = await buildOrderEmailContext(order);
-    const email = orderEmails.statusUpdate(order, ctx, status, orderShipments(order).map((s) => s.tracking).filter((t) => t.trackingNumber));
-    await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: email.subject, html: email.html, text: email.text });
-    await orderRef.update({ ['statusEmailsSent.' + status]: admin.firestore.FieldValue.serverTimestamp() });
-    res.json({ ok: true, sentTo: order.customerEmail });
+    res.json(Object.assign({ ok: true }, await sendOrderStatusEmail(orderRef, doc.data())));
   } catch (e) {
     console.error('[NOTIFY_STATUS]', e.message);
     // Staff only: the reason goes in the order timeline (admin-orders.js).
@@ -3218,6 +3232,8 @@ require('./exchanges-api')(app, returnsDeps, returnsShared);
 require('./waitlist-api')(app, { adminDb, admin, sendResendEmail, buildOrderEmailContext, orderEmails, SITE_URL, rateLimited });
 // Product reviews from verified buyers: /api/reviews* (reviews-api.js).
 require('./reviews-api')(app, { adminDb, admin, rateLimited, issueReviewReward });
+// Bob Go tracking updates: Shipped and Delivered without clicking (bobgo-api.js).
+require('./bobgo-api')(app, { adminDb, admin, orderShipments, sendOrderStatusEmail, sendResendEmail, alertEmail: ORDER_ALERT_EMAIL });
 // Customers deleting their own account: /api/account/delete (account-api.js).
 require('./account-api')(app, { adminDb, admin, rateLimited });
 // Live visitors and sessions for Admin > Home: /api/analytics/ping and
