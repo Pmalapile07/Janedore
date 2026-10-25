@@ -1835,7 +1835,7 @@ async function sweepReviewRequests() {
       }
       if (!items.length) { await done({ reviewRequestSkipped: 'nothing to review' }); continue; }
       const message = orderEmails.reviewRequest(order, ctx, items, {
-        reward: orderEmails.money(REVIEW_REWARD.value) + ' off your next order of ' + orderEmails.money(REVIEW_REWARD.minimumPurchase) + ' or more',
+        reward: REVIEW_REWARD,
         stopUrl: SITE_URL + '/review-requests/stop?o=' + encodeURIComponent(doc.id) + '&t=' + token
       });
       // The token first, so a link in a sent email always works.

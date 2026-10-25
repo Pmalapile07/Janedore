@@ -1054,54 +1054,59 @@ function bagReminder(items, ctx, links) {
 // (item.reviewUrl) that proves the purchase, so no sign-in is needed.
 function reviewRequest(order, ctx, items, links) {
   const first = String(order.customerName || '').trim().split(/\s+/)[0];
-  const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
-  const intro = 'we hope you’re enjoying your order. Tell us what you think: your review helps other shoppers choose, and helps our brands make better pieces.' +
-    (links.reward ? ' As a thank-you for reviewing, we’ll email you ' + links.reward + '. One code per order, whatever your rating.' : '');
+  const hi = 'Hi' + (first ? ' ' + first : '') + ',';
+  const intro = 'We hope you’re loving your pieces. Share your thoughts in a quick review. It helps other shoppers choose with confidence and helps our brands keep improving.';
+  // links.reward: { value, minimumPurchase, days } (server.js REVIEW_REWARD).
+  const r = links.reward;
+  const offer = r ? 'Leave a review and receive ' + money(r.value) + ' off your next order.' : '';
+  const terms = r ? 'Valid on orders of ' + money(r.minimumPurchase) + ' or more, within ' + r.days + ' days of issue. One code per order, for any honest review.' : '';
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
-    title: 'How was your order?',
-    preheader: 'Tell us what you think of your order #' + (order.orderNumber || '') + '.',
-    bannerHtml: '<strong>How was your order?</strong>',
+    title: 'How are you finding your order?',
+    preheader: offer || 'Share your thoughts in a quick review.',
+    bannerHtml: '<strong>How are you finding your order?</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi + intro) + '</div>',
-      title('Your order #' + (order.orderNumber || '')) + items.map((item, i) =>
+      '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi) + '<br><br>' + esc(intro) + '</div>' +
+        (offer ? '<div style="font-size:15px;font-weight:700;line-height:1.5;color:#111111;margin-top:16px;">' + esc(offer) + '</div>' : ''),
+      title('Your order') + items.map((item, i) =>
         '<div style="' + (i ? 'border-top:1px solid #eeeeee;padding-top:14px;margin-top:20px;' : '') + '">' +
           itemsBlock([item], ctx, { hidePrice: true }) + button('Write a review', item.reviewUrl) +
-        '</div>').join('')
+        '</div>').join('') +
+        (terms ? '<div style="font-size:12px;line-height:1.6;color:#888888;margin-top:18px;">' + esc(terms) + '</div>' : '')
     ],
     footerHtml: 'You’re receiving this email because you ordered from Janedore. Questions? Write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>' +
       '<a href="' + esc(links.stopUrl) + '" style="color:#888888;">Don’t ask me for reviews</a> · Janedore · janedore.co.za'
   });
-  const text = 'How was your order?\n\n' + hi + intro + '\n\n' +
+  const text = 'How are you finding your order?\n\n' + hi + '\n\n' + intro + (offer ? '\n\n' + offer : '') + '\n\n' +
     items.map((i) => '- ' + (i.name || 'Item') + (i.brand ? ' (' + i.brand + ')' : '') + ': ' + i.reviewUrl).join('\n') +
-    '\n\nDon’t ask me for reviews: ' + links.stopUrl;
-  return { subject: 'How was your order #' + (order.orderNumber || '') + '?', html, text };
+    (terms ? '\n\n' + terms : '') + '\n\nDon’t ask me for reviews: ' + links.stopUrl;
+  return { subject: 'How are you finding your order?', html, text };
 }
 
 // After a review, once per order (server.js issueReviewReward): their
-// personal R50 code for the next order.
+// personal code for the next order.
 function reviewReward(order, ctx, reward) {
   const first = String(order.customerName || '').trim().split(/\s+/)[0];
-  const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
-  const terms = money(reward.value) + ' off your next order of ' + money(reward.minimumPurchase) + ' or more. Valid until ' + reward.until + ', for one order, with this email address.';
+  const hi = 'Hi' + (first ? ' ' + first : '') + ',';
+  const intro = 'Thank you for your review. Here’s ' + money(reward.value) + ' off your next order.';
+  const terms = 'Valid on orders of ' + money(reward.minimumPurchase) + ' or more until ' + reward.until + '. Single use, with this email address. Enter the code in your bag or at checkout.';
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
-    title: 'Thank you for your review',
-    preheader: 'Here’s ' + money(reward.value) + ' off your next order.',
-    bannerHtml: '<strong>Thank you for your review</strong>',
+    title: 'Your ' + money(reward.value) + ' thank-you',
+    preheader: intro,
+    bannerHtml: '<strong>Your ' + money(reward.value) + ' thank-you</strong>',
     cards: [
-      '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi + 'thank you for taking the time to review your order. Here’s a little thank-you for your next one.') + '</div>',
-      title('Your code') +
-        '<div style="border:1px dashed #111111;padding:18px;text-align:center;font-size:22px;font-weight:700;letter-spacing:0.12em;color:#111111;">' + esc(reward.code) + '</div>' +
-        '<div style="font-size:13px;line-height:1.6;color:#555555;margin-top:12px;">' + esc(terms) + ' Enter it in your bag or at checkout.</div>' +
-        button('Start shopping', reward.shopUrl)
+      '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi) + '<br><br>' + esc(intro) + '</div>' +
+        '<div style="border:1px dashed #111111;padding:18px;text-align:center;font-size:22px;font-weight:700;letter-spacing:0.12em;color:#111111;margin-top:20px;">' + esc(reward.code) + '</div>' +
+        button('Start shopping', reward.shopUrl) +
+        '<div style="font-size:12px;line-height:1.6;color:#888888;margin-top:18px;">' + esc(terms) + '</div>'
     ],
     footerHtml: 'Questions? Write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
-  const text = 'Thank you for your review\n\n' + hi + 'here’s a thank-you for your next order.\n\nYour code: ' + reward.code + '\n' + terms + '\n\nShop: ' + reward.shopUrl;
-  return { subject: 'Thank you for your review: ' + money(reward.value) + ' off your next order', html, text };
+  const text = 'Your ' + money(reward.value) + ' thank-you\n\n' + hi + '\n\n' + intro + '\n\nYour code: ' + reward.code + '\n\n' + terms + '\n\nShop: ' + reward.shopUrl;
+  return { subject: 'Your ' + money(reward.value) + ' thank-you', html, text };
 }
 
 // A waitlisted item is back in stock (waitlist-api.js). Sent once.
