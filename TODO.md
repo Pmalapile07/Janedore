@@ -40,6 +40,7 @@
 ## Checks
 - **Waitlist emails:** the back-in-stock check runs every 15 minutes inside the server (`waitlist-api.js` `sweepWaitlist()`). Make sure the hosting never puts the server to sleep, or move the check to a scheduled job.
 - **Deleted accounts:** orders, returns and exchanges from deleted accounts are kept, hidden (`accountDeletedAt`, `account-api.js`). Once the legal period is over (about 5 years for tax), anonymise or delete them automatically, and say how long records are kept in the Privacy & POPIA page.
+- **Review thank-you codes:** Janedore pays for them (order.discountFundedBy = 'janedore'). PayFast's split already pays a single brand its share of the full price; for orders paid out by hand (several brands, or a brand without PayFast), pay brands on the price before the discount too.
 - **Policies:** update the returns policy page and FAQ in admin to 14 days, and add any return conditions (unworn, tags on, hygiene exclusions) to the returns summary.
 
 ## Coming soon page

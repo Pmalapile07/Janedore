@@ -958,13 +958,18 @@ async function priceOrder(order) {
       !(d.endDate && new Date(d.endDate) < now) &&
       !(d.usageLimit !== null && d.usageLimit !== undefined && (d.usageCount || 0) >= d.usageLimit) &&
       !(d.minimumPurchase && subtotal < Number(d.minimumPurchase));
+    // A code made for one customer (a review thank-you, issueReviewReward)
+    // works only with the email it was sent to.
+    if (usable && d.customerEmail && d.customerEmail !== String(order.customerEmail || '').trim().toLowerCase()) {
+      throw Object.assign(new Error('This code can only be used with the email address it was sent to.'), { status: 400 });
+    }
     if (usable) {
       const value = Number(d.value) || 0;
       if (d.type === 'percentage') discountAmount = subtotal * value / 100;
       else if (d.type === 'fixed_amount') discountAmount = Math.min(value, subtotal);
       else if (d.type === 'buy_x_get_y') discountAmount = itemCount >= value && Number.isFinite(cheapestUnit) ? cheapestUnit : 0;
       discountAmount = Math.round(Math.max(0, Math.min(discountAmount, subtotal)) * 100) / 100;
-      discount = { id: d.id, code: d.code, type: d.type };
+      discount = { id: d.id, code: d.code, type: d.type, fundedBy: d.fundedBy === 'janedore' ? 'janedore' : null };
     }
   }
 
@@ -1011,6 +1016,9 @@ async function priceOrder(order) {
     discountCode: discount ? discount.code : null,
     discountId: discount ? discount.id : null,
     discountAmount,
+    // Janedore pays for this discount (a review thank-you): brands are
+    // paid their share of the full price (PayFast split below).
+    discountFundedBy: discount ? discount.fundedBy : null,
     shipping,
     shippingPackages: packages,
     total,
@@ -1065,7 +1073,7 @@ app.post('/api/orders/create', async (req, res) => {
       color: String(i.color || '').slice(0, 80),
       variantIndex: Math.max(0, Math.min(50, Math.floor(Number(i.variantIndex) || 0)))
     }));
-    const priced = await priceOrder({ items: inputItems, discountCode: String(input.discountCode || '').slice(0, 40) });
+    const priced = await priceOrder({ items: inputItems, discountCode: String(input.discountCode || '').slice(0, 40), customerEmail });
     const itemsByProduct = {};
     priced.items.forEach(i => { (itemsByProduct[i.productId] = itemsByProduct[i.productId] || []).push(i); });
     const productIds = Object.keys(itemsByProduct);
@@ -1191,9 +1199,14 @@ app.post('/api/payfast/initiate', async (req, res) => {
         const vendorPercentage = Number.isFinite(commission)
           ? Math.max(0, Math.min(100, Math.round(100 - commission)))
           : 85; // falls back to admin-vendors.js's own 15%-commission default
-        setupField = JSON.stringify({
-          split_payment: { merchant_id: Number(vendor.payfastMerchantId), percentage: vendorPercentage }
-        });
+        // A discount Janedore pays for (a review thank-you) comes out of
+        // Janedore's share: the brand gets its percentage of the full
+        // price, as a fixed amount in cents.
+        const funded = order.discountFundedBy === 'janedore' && Number(order.discountAmount) > 0;
+        const split = { merchant_id: Number(vendor.payfastMerchantId) };
+        if (funded) split.amount = Math.min(Math.round(Number(order.total) * 100), Math.round((Number(order.total) + Number(order.discountAmount)) * vendorPercentage));
+        else split.percentage = vendorPercentage;
+        setupField = JSON.stringify({ split_payment: split });
       }
     }
 
@@ -1822,6 +1835,7 @@ async function sweepReviewRequests() {
       }
       if (!items.length) { await done({ reviewRequestSkipped: 'nothing to review' }); continue; }
       const message = orderEmails.reviewRequest(order, ctx, items, {
+        reward: orderEmails.money(REVIEW_REWARD.value) + ' off your next order of ' + orderEmails.money(REVIEW_REWARD.minimumPurchase) + ' or more',
         stopUrl: SITE_URL + '/review-requests/stop?o=' + encodeURIComponent(doc.id) + '&t=' + token
       });
       // The token first, so a link in a sent email always works.
@@ -1836,6 +1850,44 @@ async function sweepReviewRequests() {
   }
 }
 setInterval(sweepReviewRequests, 15 * 60 * 1000).unref();
+
+// The thank-you for a review (reviews-api.js calls this after saving
+// one): R50 off the next order of R500+, for 30 days, one use, only with
+// the reviewer's email. Once per order, whatever the rating, and only
+// for an order that's been delivered. Janedore pays for it
+// (fundedBy: 'janedore'), not the brands: see the PayFast split.
+const REVIEW_REWARD = { value: 50, minimumPurchase: 500, days: 30 };
+async function issueReviewReward(orderRef) {
+  if (!adminDb || !orderRef) return;
+  const code = 'THANKS-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+  const endDate = new Date(Date.now() + REVIEW_REWARD.days * 864e5);
+  let order = null;
+  await adminDb.runTransaction(async (tx) => {
+    const doc = await tx.get(orderRef);
+    const o = doc.exists ? doc.data() : null;
+    if (!o || o.reviewRewardCode || o.paymentStatus !== 'paid' || o.accountDeletedAt || !o.customerEmail ||
+        String(o.status || '').toLowerCase() !== 'delivered') return;
+    tx.set(adminDb.collection('discounts').doc(), {
+      code, title: 'Review thank-you', description: 'Thank-you for reviewing order #' + (o.orderNumber || doc.id),
+      type: 'fixed_amount', value: REVIEW_REWARD.value, minimumPurchase: REVIEW_REWARD.minimumPurchase,
+      active: true, startDate: new Date().toISOString(), endDate: endDate.toISOString(),
+      usageLimit: 1, usageCount: 0, customerEmail: String(o.customerEmail).trim().toLowerCase(),
+      fundedBy: 'janedore', reason: 'review', orderId: doc.id, createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    tx.update(orderRef, { reviewRewardCode: code, reviewRewardAt: Date.now() });
+    order = o;
+  });
+  if (!order) return null;
+  try {
+    const ctx = await buildOrderEmailContext({ items: [] });
+    const message = orderEmails.reviewReward(order, ctx, Object.assign({}, REVIEW_REWARD, {
+      code, shopUrl: SITE_URL + '/', until: endDate.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
+    }));
+    await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: order.customerEmail, subject: message.subject, html: message.html, text: message.text });
+    console.log('[REVIEW_REWARD] Sent', code, 'for order', order.orderNumber || orderRef.id);
+  } catch (e) { console.error('[REVIEW_REWARD] Email failed for', orderRef.id, ':', e.message); }
+  return code;
+}
 
 // ==================== TRACK YOUR ORDER ====================
 // The /pages/track-your-order form (track-order.js). The customer gives
@@ -3158,7 +3210,7 @@ require('./exchanges-api')(app, returnsDeps, returnsShared);
 // plus the back-in-stock email sweep.
 require('./waitlist-api')(app, { adminDb, admin, sendResendEmail, buildOrderEmailContext, orderEmails, SITE_URL, rateLimited });
 // Product reviews from verified buyers: /api/reviews* (reviews-api.js).
-require('./reviews-api')(app, { adminDb, admin, rateLimited });
+require('./reviews-api')(app, { adminDb, admin, rateLimited, issueReviewReward });
 // Customers deleting their own account: /api/account/delete (account-api.js).
 require('./account-api')(app, { adminDb, admin, rateLimited });
 // Live visitors and sessions for Admin > Home: /api/analytics/ping and

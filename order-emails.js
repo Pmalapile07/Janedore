@@ -1055,7 +1055,8 @@ function bagReminder(items, ctx, links) {
 function reviewRequest(order, ctx, items, links) {
   const first = String(order.customerName || '').trim().split(/\s+/)[0];
   const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
-  const intro = 'we hope you’re enjoying your order. Tell us what you think: your review helps other shoppers choose, and helps our brands make better pieces.';
+  const intro = 'we hope you’re enjoying your order. Tell us what you think: your review helps other shoppers choose, and helps our brands make better pieces.' +
+    (links.reward ? ' As a thank-you, we’ll email you ' + links.reward + ' once you’ve reviewed an item, whatever your rating.' : '');
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
@@ -1076,6 +1077,31 @@ function reviewRequest(order, ctx, items, links) {
     items.map((i) => '- ' + (i.name || 'Item') + (i.brand ? ' (' + i.brand + ')' : '') + ': ' + i.reviewUrl).join('\n') +
     '\n\nDon’t ask me for reviews: ' + links.stopUrl;
   return { subject: 'How was your order #' + (order.orderNumber || '') + '?', html, text };
+}
+
+// After a review, once per order (server.js issueReviewReward): their
+// personal R50 code for the next order.
+function reviewReward(order, ctx, reward) {
+  const first = String(order.customerName || '').trim().split(/\s+/)[0];
+  const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
+  const terms = money(reward.value) + ' off your next order of ' + money(reward.minimumPurchase) + ' or more. Valid until ' + reward.until + ', for one order, with this email address.';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'Thank you for your review',
+    preheader: 'Here’s ' + money(reward.value) + ' off your next order.',
+    bannerHtml: '<strong>Thank you for your review</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi + 'thank you for taking the time to review your order. Here’s a little thank-you for your next one.') + '</div>',
+      title('Your code') +
+        '<div style="border:1px dashed #111111;padding:18px;text-align:center;font-size:22px;font-weight:700;letter-spacing:0.12em;color:#111111;">' + esc(reward.code) + '</div>' +
+        '<div style="font-size:13px;line-height:1.6;color:#555555;margin-top:12px;">' + esc(terms) + ' Enter it in your bag or at checkout.</div>' +
+        button('Start shopping', reward.shopUrl)
+    ],
+    footerHtml: 'Questions? Write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
+  });
+  const text = 'Thank you for your review\n\n' + hi + 'here’s a thank-you for your next order.\n\nYour code: ' + reward.code + '\n' + terms + '\n\nShop: ' + reward.shopUrl;
+  return { subject: 'Thank you for your review: ' + money(reward.value) + ' off your next order', html, text };
 }
 
 // A waitlisted item is back in stock (waitlist-api.js). Sent once.
@@ -1103,4 +1129,4 @@ function backInStock(item, ctx, links) {
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, reviewRequest, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, reviewRequest, reviewReward, money };

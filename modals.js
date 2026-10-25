@@ -142,12 +142,13 @@ async function submitReview() {
       name: DOM.reviewName.value.trim(), email, imageUrls, orders: deviceOrdersForReviews(), reviewLink: reviewLinkForReviews() }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return fail(data.error || 'We couldn’t submit your review. Please try again.');
+    S.reviewRewarded = !!data.reward;
   } catch (e) {
     return fail('We couldn’t submit your review. Please try again.');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Submit review'; }
   }
   closeReviewModal();
-  if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Thank you for your review', 'ph-star');
+  if (typeof showAddedToCartToast === 'function') showAddedToCartToast(S.reviewRewarded ? 'Thank you! Check your email for your thank-you code' : 'Thank you for your review', 'ph-star');
   if (S.currentPage === 'product-detail' && typeof loadProductReviewsSection === 'function') loadProductReviewsSection(S.currentReviewProductId);
 }

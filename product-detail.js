@@ -741,6 +741,7 @@ async function loadProductReviewsSection(productId) {
       return `<p class="info-sub-label">${[r.name || 'Anonymous', r.city].filter(Boolean).map(escapeHTML).join(' · ')}${d ? ` · <span class="product-review-date">${escapeHTML(d)}</span>` : ''}</p>
         <p class="product-review-stars" aria-label="${Number(r.rating) || 0} out of 5">${stars(Number(r.rating) || 0)}</p>
         ${r.text ? `<p>${escapeHTML(r.text)}</p>` : ''}
+        ${r.rewarded ? '<p class="product-review-reward">Received a thank-you voucher for this review</p>' : ''}
         ${reviewPhotosHtml(r, `Photo from ${escapeHTML(r.name || 'a customer')}`)}`;
     }).join('');
   showReviewButtonIfBought(productId);

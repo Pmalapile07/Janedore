@@ -22,7 +22,7 @@
 const crypto = require('crypto');
 
 module.exports = function registerReviews(app, deps) {
-  const { adminDb, admin, rateLimited } = deps;
+  const { adminDb, admin, rateLimited, issueReviewReward } = deps;
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const MAX_REVIEW_PHOTOS = 4;
 
@@ -45,7 +45,7 @@ module.exports = function registerReviews(app, deps) {
     const order = doc.exists ? doc.data() : null;
     if (!order || !order.reviewToken || order.accountDeletedAt || !hasProduct(order, productId)) return null;
     if (!crypto.timingSafeEqual(Buffer.from(order.reviewToken), Buffer.from(m[2]))) return null;
-    return { order, email: String(order.customerEmail || '').toLowerCase(), uid: order.customerId || null };
+    return { order, ref: doc.ref, email: String(order.customerEmail || '').toLowerCase(), uid: order.customerId || null };
   }
 
   // The paid order that proves this customer bought the product, or null.
@@ -57,10 +57,10 @@ module.exports = function registerReviews(app, deps) {
     const user = await signedIn(req);
     if (user) {
       const byUid = await adminDb.collection('orders').where('customerId', '==', user.uid).limit(100).get();
-      for (const d of byUid.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), email: String(user.email || d.data().customerEmail || '').toLowerCase(), uid: user.uid };
+      for (const d of byUid.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), ref: d.ref, email: String(user.email || d.data().customerEmail || '').toLowerCase(), uid: user.uid };
       if (user.email && user.email_verified) {
         const byEmail = await adminDb.collection('orders').where('customerEmail', '==', String(user.email).toLowerCase()).limit(100).get();
-        for (const d of byEmail.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), email: String(user.email).toLowerCase(), uid: user.uid };
+        for (const d of byEmail.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), ref: d.ref, email: String(user.email).toLowerCase(), uid: user.uid };
       }
     }
     for (const o of (Array.isArray(deviceOrders) ? deviceOrders : []).slice(0, 20)) {
@@ -69,7 +69,7 @@ module.exports = function registerReviews(app, deps) {
       if (!number || !EMAIL_RE.test(email)) continue;
       const snap = await adminDb.collection('orders').where('orderNumber', '==', number).limit(1).get();
       const order = snap.empty ? null : snap.docs[0].data();
-      if (order && String(order.customerEmail || '').toLowerCase() === email && hasProduct(order, productId)) return { order, email, uid: user ? user.uid : null };
+      if (order && String(order.customerEmail || '').toLowerCase() === email && hasProduct(order, productId)) return { order, ref: snap.docs[0].ref, email, uid: user ? user.uid : null };
     }
     return null;
   }
@@ -153,7 +153,15 @@ module.exports = function registerReviews(app, deps) {
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
       await batch.commit();
-      res.json({ ok: true });
+      // The thank-you code (server.js issueReviewReward), once per
+      // delivered order, whatever the rating. Reviews from an order that
+      // earned one are marked, so the shop can say so (product-detail.js).
+      let reward = null;
+      try {
+        if (issueReviewReward && purchase.ref) reward = await issueReviewReward(purchase.ref);
+        if (reward || purchase.order.reviewRewardCode) await adminDb.collection('reviews').doc(id).update({ rewarded: true });
+      } catch (e) { console.error('[REVIEWS] Thank-you code failed:', e.message); }
+      res.json({ ok: true, reward: !!reward });
     } catch (e) {
       console.error('[REVIEWS] Save failed:', e.message);
       res.status(500).json({ error: 'We couldn’t submit your review. Please try again.' });
