@@ -310,10 +310,10 @@ function getProductBadges(product) {
   return badges;
 }
 
-// Product cards are too small for every badge, so they show the one that
-// matters most to buying it (sold out, pre-order, sale, a custom admin
-// badge, then new), plus FREE DELIVERY under it when it applies. Sold out
-// always shows alone. The product page's larger image keeps every badge
+// Product cards show the badge that matters most to buying it (sold
+// out, pre-order, sale, a custom admin badge, then new), then NEW under
+// it when the product is also new, then FREE DELIVERY when it applies.
+// Sold out always shows alone. The product page shows every badge
 // (getProductBadges()).
 var CARD_BADGE_PRIORITY = ['SOLD OUT', 'PRE-ORDER', 'SALE'];
 function getCardBadges(product) {
@@ -326,7 +326,8 @@ function getCardBadges(product) {
   }
   if (!main) main = rest.filter(function (b) { return b !== 'NEW'; })[0] || rest[0] || null;
   if (main === 'SOLD OUT') return [main];
-  return (main ? [main] : []).concat(free ? ['FREE DELIVERY'] : []);
+  var isNew = main !== 'NEW' && rest.indexOf('NEW') !== -1;
+  return (main ? [main] : []).concat(isNew ? ['NEW'] : [], free ? ['FREE DELIVERY'] : []);
 }
 
 function getProductImages(product, variantIndex) {
