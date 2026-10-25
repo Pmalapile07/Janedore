@@ -102,9 +102,7 @@
 .product-img-wrap img {
   width: 100%;
   height: 100%;
-  /* Thumbnails come padded to the card's shape (gridThumbURL); contain
-     also keeps any photo from elsewhere whole instead of cropping it. */
-  object-fit: contain;
+  object-fit: cover;
   display: block;
   position: relative;
   z-index: 1;
@@ -113,7 +111,6 @@
 }
 .product-img-wrap img.img-loaded {
   opacity: 1;
-  background: #f4f4f4; /* covers the shimmer around a contained photo */
 }
 /* Collection cards with a second photo (collection.js productCard):
    it waits off to the right and slides in on a swipe (.show-2) or, with

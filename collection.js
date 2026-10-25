@@ -50,12 +50,8 @@ function safeImageURL(url) {
 // the full-resolution product-detail/zoom image are untouched. Any URL
 // without an /upload/ segment (the inline SVG PLACEHOLDER_IMAGE, or a
 // non-Cloudinary source) just passes through unchanged.
-// c_pad (not c_fill): the whole photo fits inside the card's 5:6 shape,
-// never cropped, whatever shape it was shot in (a 2:3 model shot keeps
-// its head and feet, landscape sunglasses keep both arms). b_auto fills
-// the space left over with the photo's own edge colour, so it blends in.
 function gridThumbURL(url) {
-  return safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_pad,b_auto,w_700,h_840/');
+  return safeImageURL(url).replace('/upload/', '/upload/f_auto,q_auto,c_fill,w_700,h_840/');
 }
 
 function escapeForCssUrl(url) {
