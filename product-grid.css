@@ -79,9 +79,7 @@
 .product-img-wrap {
   position: relative;
   width: 100%;
-  /* 2:3, the shape fashion photos are shot in (e.g. 1280×1920), so the
-     whole photo shows; any other shape keeps the top (the model's face). */
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 5 / 6;
   overflow: hidden;
   background: #f4f4f4;
 }
@@ -104,8 +102,9 @@
 .product-img-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center top;
+  /* Thumbnails come padded to the card's shape (gridThumbURL); contain
+     also keeps any photo from elsewhere whole instead of cropping it. */
+  object-fit: contain;
   display: block;
   position: relative;
   z-index: 1;
@@ -114,6 +113,7 @@
 }
 .product-img-wrap img.img-loaded {
   opacity: 1;
+  background: #f4f4f4; /* covers the shimmer around a contained photo */
 }
 /* Collection cards with a second photo (collection.js productCard):
    it waits off to the right and slides in on a swipe (.show-2) or, with
@@ -887,7 +887,7 @@ body .site-collection-layout {
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 5 / 6;
 }
 
 .initial-drop-view-all {
