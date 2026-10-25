@@ -6,6 +6,29 @@
 .account-tabs { justify-content: flex-start; margin-bottom: 24px; }
 .account-section-heading { margin-bottom: 24px; }
 .account-signout-btn { margin: 0; }
+/* Delete account (account.js openDeleteAccount): a quiet link under Sign
+   out, and its confirmation pop-up. */
+.account-delete-link {
+  display: block; margin: 16px auto 0; padding: 4px; background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; color: #666; text-decoration: underline; text-underline-offset: 3px;
+}
+#account-delete-backdrop {
+  position: fixed; inset: 0; z-index: 1300; background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.account-delete-modal {
+  background: #fff; width: calc(100% - 32px); max-width: 440px; max-height: calc(100% - 48px); overflow-y: auto;
+  padding: 28px 20px 20px; box-sizing: border-box; font-family: 'Inter', sans-serif; color: #111;
+}
+.account-delete-title { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.account-delete-modal p { font-size: 13px; line-height: 1.6; color: #555; margin: 0 0 10px; }
+.account-delete-modal p.account-delete-ask { color: #111; font-weight: 500; margin-top: 16px; }
+.account-delete-confirm {
+  display: block; width: 100%; height: 46px; margin: 18px 0 10px; border: none; background: #c0392b; color: #fff; cursor: pointer;
+  font-family: inherit; font-size: calc(var(--ui-font-size) + 1px); font-weight: 500; letter-spacing: var(--ui-letter-spacing); text-transform: uppercase;
+}
+.account-delete-confirm:disabled { opacity: 0.6; cursor: default; }
+.account-delete-cancel { margin-bottom: 0; }
 .account-help-link {
   display: flex; align-items: center; gap: 10px; margin: 28px 0 0; padding: 4px 0; background: none; border: none;
   font-family: inherit; font-size: 15px; color: #111; cursor: pointer;

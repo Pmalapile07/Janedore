@@ -259,7 +259,8 @@ module.exports = function registerExchanges(app, deps, shared) {
         for (let i = 0; i < orderIds.length; i += 10) {
           add(await adminDb.collection(kind).where('orderId', 'in', orderIds.slice(i, i + 10)).get());
         }
-        lists[kind] = Object.values(found).map((x) => ({
+        // Records from a deleted account stay hidden (account-api.js).
+        lists[kind] = Object.values(found).filter((x) => !x.accountDeletedAt).map((x) => ({
           number: x.returnNumber || x.exchangeNumber, orderNumber: x.orderNumber, status: x.status, createdAt: iso(x.createdAt),
           items: (x.items || []).map((i) => ({ productId: i.productId, variantIndex: i.variantIndex, name: i.name, brand: i.brand, qty: i.qty,
             wantSize: i.wantSize, wantColor: i.wantColor }))

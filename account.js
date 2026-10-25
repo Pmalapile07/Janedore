@@ -65,6 +65,7 @@ async function renderAccountPage() {
         ${row('Reviews', "openAccountSection('reviews')")}
       </nav>
       <button type="button" class="account-outline-btn account-signout-btn" onclick="handleLogout()">Sign out</button>
+      <button type="button" class="account-delete-link" onclick="openDeleteAccount()">Delete account</button>
       <button type="button" class="account-help-link" onclick="navigateToContentPage('customer-care')"><i class="ph ph-question" aria-hidden="true"></i><span>Customer care</span></button>
     </section>`;
     return;
@@ -115,7 +116,10 @@ async function loadAccountOrders() {
   const byId = {};
   snaps.forEach(snap => snap.docs.forEach(d => { byId[d.id] = Object.assign({ id: d.id }, d.data()); }));
   const seconds = (o) => (o.createdAt && o.createdAt.seconds) || (o.createdAt ? new Date(o.createdAt).getTime() / 1000 : 0);
+  // Orders from a deleted account (account-api.js) stay hidden, even in an
+  // account made later with the same email.
   _accountOrders = Object.values(byId)
+    .filter(o => !o.accountDeletedAt)
     .filter(o => o.paymentStatus === 'paid' || o.paymentStatus === 'refund_pending' || accountOrderCancelled(o))
     .sort((a, b) => seconds(b) - seconds(a));
   return _accountOrders;
@@ -527,6 +531,73 @@ async function renderAccountReviews() {
       ${date || r.city ? `<div class="account-order-meta">${[r.city, date].filter(Boolean).map(escapeHTML).join(' · ')}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// ---------- Delete account ----------
+// A confirmation pop-up, then /api/account/delete (account-api.js), which
+// deletes the profile and personal data and keeps (hidden) the records
+// the law requires. This device's saved details go too.
+
+function openDeleteAccount() {
+  closeDeleteAccount();
+  const wrap = document.createElement('div');
+  wrap.id = 'account-delete-backdrop';
+  wrap.onclick = closeDeleteAccount;
+  wrap.innerHTML = `<div class="account-delete-modal" role="dialog" aria-modal="true" aria-labelledby="account-delete-title" onclick="event.stopPropagation()">
+      <h2 class="account-delete-title" id="account-delete-title">Delete your account?</h2>
+      <p>Your profile and personal data will be deleted where legally permitted. Past orders and transaction records may be retained for legal, accounting, refunds, disputes and fraud prevention.</p>
+      <p>You will lose access to your account and order history.</p>
+      <p>Please read our <span class="track-link" onclick="closeDeleteAccount();navigateToContentPage('privacy-policy')">Privacy &amp; POPIA policy</span> before proceeding.</p>
+      <p class="account-delete-ask">Are you sure you want to continue?</p>
+      <p class="track-error" id="account-delete-error" role="alert"></p>
+      <button type="button" class="account-delete-confirm" id="account-delete-confirm" onclick="confirmDeleteAccount()">Delete account</button>
+      <button type="button" class="account-outline-btn account-delete-cancel" onclick="closeDeleteAccount()">Cancel</button>
+    </div>`;
+  document.body.appendChild(wrap);
+  if (typeof lockPageScroll === 'function') lockPageScroll();
+}
+
+function closeDeleteAccount() {
+  const wrap = document.getElementById('account-delete-backdrop');
+  if (!wrap) return;
+  wrap.remove();
+  if (typeof unlockPageScroll === 'function') unlockPageScroll();
+}
+
+async function confirmDeleteAccount() {
+  const btn = document.getElementById('account-delete-confirm');
+  const err = document.getElementById('account-delete-error');
+  const user = accountUser();
+  if (!user || !btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    const res = await fetch('/api/account/delete', { method: 'POST', headers: { 'Authorization': 'Bearer ' + await user.getIdToken(true) } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (err) {
+        err.textContent = data.error || 'We couldn’t delete your account. Please try again.';
+        err.style.display = 'block';
+      }
+      // An old sign-in: sign in again, then come back to delete.
+      if (data.reauth) { btn.disabled = false; btn.textContent = 'Sign in again'; btn.onclick = () => { closeDeleteAccount(); handleLogout(); }; }
+      else { btn.disabled = false; btn.textContent = 'Delete account'; }
+      return;
+    }
+    ['janedore_checkout_email', 'janedore_wishlist', 'janedore_recent_searches', 'janedore_waitlist_contact', 'janedore_waitlist_claims',
+      'janedore_my_orders', 'janedore_bag_id', 'janedore_chat_email', 'janedore_chat_name'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    S.wishlist = [];
+    if (typeof updateBadges === 'function') updateBadges();
+    closeDeleteAccount();
+    await firebase.auth().signOut().catch(() => {});
+    clearAccountCache();
+    navigateTo('home');
+    showAddedToCartToast('Your account has been deleted', 'ph-check-circle');
+  } catch (e) {
+    if (err) { err.textContent = 'We couldn’t delete your account. Please try again.'; err.style.display = 'block'; }
+    btn.disabled = false;
+    btn.textContent = 'Delete account';
+  }
 }
 
 // A different customer signing in on this device starts clean.
