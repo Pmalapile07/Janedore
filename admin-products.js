@@ -337,6 +337,7 @@
   window._renderProductsTab = function() {
     var mc = safeEl('main-content');
     if (!mc) return;
+    document.body.classList.remove('product-editor-open');
     _backfillVendorIds();
     var canAdd = isSuperAdmin() || window._currentUserRole === 'VENDOR';
 
@@ -515,20 +516,100 @@
     return pool;
   }
 
+  // Which colour and kind of photo each picture is used as, from the
+  // colours' photo pickers; shown on its tile.
+  var IMG_TYPE_LABEL = { model: 'Model', ghost: 'Flat lay', detail: 'Detail' };
+  function _mediaUses() {
+    var uses = {};
+    document.querySelectorAll('#variants-container .variant-block').forEach(function(block) {
+      var vi = block.getAttribute('data-variant-index');
+      var colorEl = block.querySelector('[name="variant-color-' + vi + '"]');
+      var colour = (colorEl && colorEl.value.trim()) || 'Colour ' + (Number(vi) + 1);
+      ['model', 'ghost', 'detail'].forEach(function(type) {
+        var sel = block.querySelector('select[data-img-type="' + type + '"]');
+        if (!sel) return;
+        Array.from(sel.selectedOptions).forEach(function(o) { (uses[o.value] = uses[o.value] || []).push(colour + ' · ' + IMG_TYPE_LABEL[type]); });
+      });
+    });
+    return uses;
+  }
+
   function _renderMediaPool() {
     var grid = safeEl('media-pool-grid');
     if (!grid) return;
-    if (_mediaPool.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:28px;background:var(--surface2);border:0.5px dashed var(--border-med);border-radius:var(--r-sm);color:var(--muted);font-size:11px;"><i class="ph-light ph-image" style="font-size:28px;display:block;margin-bottom:6px;"></i>No images yet. Click upload to add images.</div>';
-      return;
-    }
-    grid.innerHTML = _mediaPool.map(function(url, i) {
-      return '<div style="position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;border:0.5px solid var(--border-light);">' +
-        '<img src="' + esc(url) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.opacity=\'0.3\'">' +
-        '<button type="button" onclick="window._removeFromPool(' + i + ')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;" title="Remove"><i class="ph-light ph-x" style="font-size:10px;"></i></button>' +
-      '</div>';
-    }).join('');
+    // Selections first, so the tiles can say what each photo is used as.
     _renderAllVariantImageSelectors();
+    var uses = _mediaUses();
+    grid.innerHTML = _mediaPool.map(function(url, i) {
+      var used = uses[url] || [];
+      return '<div class="pe-media-tile" data-index="' + i + '">' +
+        '<img src="' + esc(url) + '" alt="" draggable="false" onerror="this.parentElement.style.opacity=\'0.3\'">' +
+        '<button type="button" class="pe-media-remove" onclick="window._removeFromPool(' + i + ')" aria-label="Remove photo"><i class="ph ph-x"></i></button>' +
+        '<span class="pe-media-tag' + (used.length ? '' : ' unused') + '">' + esc(used.length ? used[0] + (used.length > 1 ? ' +' + (used.length - 1) : '') : 'Not used') + '</span>' +
+      '</div>';
+    }).join('') +
+      '<button type="button" class="pe-media-tile pe-media-add" onclick="window._uploadToPool()" aria-label="Add photos"><i class="ph ph-plus"></i></button>';
+    grid.querySelectorAll('.pe-media-tile[data-index]').forEach(function(tile) { _bindMediaDrag(tile, grid); });
+    var count = safeEl('pe-media-count');
+    if (count) count.textContent = 'Media' + (_mediaPool.length ? ' (' + _mediaPool.length + ')' : '');
+  }
+
+  // Drag a photo onto another to move it there. A mouse drags straight
+  // away; a finger holds for a moment first, so swiping still scrolls.
+  // The order here is the order of each colour's photos in the shop.
+  function _bindMediaDrag(tile, grid) {
+    var from = Number(tile.getAttribute('data-index'));
+    var startX = 0, startY = 0, active = false, timer = null;
+    var targetAt = function(x, y) {
+      return Array.prototype.find.call(grid.querySelectorAll('.pe-media-tile[data-index]'), function(t) {
+        if (t === tile) return false;
+        var r = t.getBoundingClientRect();
+        return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+      });
+    };
+    var begin = function() { active = true; tile.classList.add('dragging'); if (navigator.vibrate) navigator.vibrate(10); };
+    var move = function(x, y) {
+      tile.style.transform = 'translate(' + (x - startX) + 'px,' + (y - startY) + 'px)';
+      var over = targetAt(x, y);
+      grid.querySelectorAll('.pe-media-tile').forEach(function(t) { t.classList.toggle('drop-target', t === over); });
+    };
+    var finish = function(x, y) {
+      clearTimeout(timer);
+      if (!active) return;
+      active = false;
+      var target = targetAt(x, y);
+      if (target) {
+        var moved = _mediaPool.splice(from, 1)[0];
+        _mediaPool.splice(Number(target.getAttribute('data-index')), 0, moved);
+        _peMarkDirty();
+      }
+      _renderMediaPool();
+    };
+    tile.addEventListener('mousedown', function(e) {
+      if (e.button !== 0 || e.target.closest('.pe-media-remove')) return;
+      startX = e.clientX; startY = e.clientY;
+      var onMove = function(ev) {
+        if (!active && Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 6) begin();
+        if (active) move(ev.clientX, ev.clientY);
+      };
+      var onUp = function(ev) { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); finish(ev.clientX, ev.clientY); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+    tile.addEventListener('touchstart', function(e) {
+      if (e.target.closest('.pe-media-remove') || e.touches.length !== 1) return;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      timer = setTimeout(begin, 280);
+    }, { passive: true });
+    tile.addEventListener('touchmove', function(e) {
+      var t = e.touches[0];
+      if (!active) { if (Math.abs(t.clientX - startX) + Math.abs(t.clientY - startY) > 8) clearTimeout(timer); return; }
+      e.preventDefault();
+      move(t.clientX, t.clientY);
+    }, { passive: false });
+    tile.addEventListener('touchend', function(e) { var t = e.changedTouches[0]; finish(t.clientX, t.clientY); });
+    tile.addEventListener('touchcancel', function() { clearTimeout(timer); if (active) { active = false; _renderMediaPool(); } });
+    tile.addEventListener('contextmenu', function(e) { e.preventDefault(); });
   }
 
   window._removeFromPool = function(index) {
@@ -549,6 +630,7 @@
   window._uploadToPool = function() {
     window._uploadToCloudinary(function(url) {
       if (_mediaPool.indexOf(url) === -1) _mediaPool.push(url);
+      _peMarkDirty();
       _renderMediaPool();
       showToast('Image added to media');
     });
@@ -556,22 +638,39 @@
 
   // ── VARIANT IMAGE SELECTORS ──────────────────────────────────
 
+  // Each colour picks its photos from Media by tapping them: model
+  // shots, flat lays and details. The hidden <select> holds the choice
+  // for saving; its order is Media's order.
   function _buildVariantImageSelector(type, variantIndex, selectedUrls) {
     selectedUrls = selectedUrls || [];
-    var label = type === 'model' ? 'Model shots' : type === 'ghost' ? 'Ghost / flat lay' : 'Detail shots';
-    var options = _mediaPool.map(function(url) {
-      var isSelected = selectedUrls.indexOf(url) !== -1;
-      var filename = url.split('/').pop().split('?')[0].substring(0, 28);
-      return '<option value="' + esc(url) + '"' + (isSelected ? ' selected' : '') + '>' + esc(filename) + '</option>';
-    }).join('');
-    return '<div style="margin-bottom:8px;">' +
-      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">' + label + '</div>' +
-      (options
-        ? '<select multiple data-img-type="' + type + '" data-variant="' + variantIndex + '" style="width:100%;min-height:60px;max-height:100px;font-size:11px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:4px;" onchange="window._onVariantImgChange(' + variantIndex + ')">' + options + '</select><div style="font-size:10px;color:var(--muted);margin-top:3px;">Hold Ctrl / Cmd to select multiple</div>'
-        : '<div style="font-size:11px;color:var(--muted);padding:6px;background:var(--surface2);border-radius:var(--r-sm);">Upload images above first</div>'
-      ) +
+    var label = type === 'model' ? 'Model photos' : type === 'ghost' ? 'Flat lay photos' : 'Detail photos';
+    var picked = _mediaPool.filter(function(url) { return selectedUrls.indexOf(url) !== -1; });
+    var select = '<select multiple hidden data-img-type="' + type + '" data-variant="' + variantIndex + '">' + _mediaPool.map(function(url) {
+      return '<option value="' + esc(url) + '"' + (selectedUrls.indexOf(url) !== -1 ? ' selected' : '') + '></option>';
+    }).join('') + '</select>';
+    return '<div class="pe-pick">' +
+      '<div class="pe-pick-head"><span>' + label + '</span><span class="pe-pick-count">' + (picked.length ? picked.length + ' selected' : 'None') + '</span></div>' +
+      select +
+      (_mediaPool.length
+        ? '<div class="pe-pick-grid">' + _mediaPool.map(function(url, i) {
+            var n = picked.indexOf(url);
+            return '<button type="button" class="pe-pick-tile' + (n !== -1 ? ' on' : '') + '" onclick="window._pfToggleVariantImg(' + variantIndex + ',\'' + type + '\',' + i + ')" aria-pressed="' + (n !== -1) + '">' +
+              '<img src="' + esc(url) + '" alt="" draggable="false">' + (n !== -1 ? '<span class="pe-pick-num">' + (n + 1) + '</span>' : '') + '</button>';
+          }).join('') + '</div>'
+        : '<div class="pe-note">Add photos to Media first.</div>') +
     '</div>';
   }
+
+  window._pfToggleVariantImg = function(variantIndex, type, poolIndex) {
+    var block = document.querySelector('[data-variant-index="' + variantIndex + '"]');
+    var sel = block && block.querySelector('select[data-img-type="' + type + '"]');
+    var url = _mediaPool[poolIndex];
+    if (!sel || !url) return;
+    var opt = Array.prototype.find.call(sel.options, function(o) { return o.value === url; });
+    if (opt) opt.selected = !opt.selected;
+    _peMarkDirty();
+    _renderMediaPool();
+  };
 
   window._onVariantImgChange = function(variantIndex) { _refreshVariantPreviewStrip(variantIndex); };
 
@@ -596,7 +695,7 @@
     strip.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + combined.map(function(url, i) {
       var on = url === picked;
       return '<img src="' + esc(url) + '" data-swatch-pick="' + i + '" title="' + (on ? 'Swatch photo' : 'Use as swatch photo') + '" style="width:44px;height:58px;object-fit:cover;border-radius:4px;cursor:pointer;border:' + (on ? '2px solid var(--text, #111)' : '0.5px solid var(--border-light)') + ';" onerror="this.style.display=\'none\'">';
-    }).join('') + '</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">Tap a photo to show it as this colour\'s swatch in the shop.</div>';
+    }).join('') + '</div><div class="pe-note">Tap a photo to show it as this colour\'s swatch in the shop.</div>';
     strip.querySelectorAll('[data-swatch-pick]').forEach(function(img) {
       img.addEventListener('click', function() {
         if (swatchEl) swatchEl.value = combined[parseInt(img.getAttribute('data-swatch-pick'), 10)];
@@ -749,7 +848,7 @@
 
     p = p || {
       id:'', sku:'', name:'', brand:'JANEDORE', vendorId:'vendor-janedore',
-      category:'dresses', price:0, salePrice:null, badge:'', sizes:[], sizeUnit:'XS–XXL', stock:0,
+      category:'', price:0, salePrice:null, badge:'', sizes:[], sizeUnit:'XS–XXL', stock:0,
       status:'draft', featured:false, description:'', productFeatures:'',
       compositionCare:'', shippingReturns:'', measurements:'', tags:[], collections:[],
       shippingWeight:'', internationalShipping:false, onlineStore:true, seoTitle:'', metaDescription:'',
@@ -790,168 +889,184 @@
     var badgeSelectValue = isPresetBadge ? p.badge : ((p.badge && !isReservedBadge) ? '__custom__' : '');
     var badgeCustomValue = (isPresetBadge || isReservedBadge) ? '' : (p.badge || '');
 
+    // Laid out like Shopify's product page: a header of round buttons,
+    // white sections on grey, and rows that open a sheet (window._peOpen)
+    // for their fields. Every field stays inside #product-form, so
+    // _handleProductSubmit reads them all as before.
+    var peRow = function(key, icon, label, opts) {
+      opts = opts || {};
+      return '<button type="button" class="pe-row' + (opts.plain ? ' pe-row-plain' : '') + '" onclick="window._peOpen(\'' + key + '\')">' +
+        (icon ? '<i class="ph ph-' + icon + ' pe-row-icon" id="pe-icon-' + key + '"></i>' : '') +
+        '<span class="pe-row-text"><span class="pe-row-label" id="pe-label-' + key + '">' + label + '</span><span class="pe-row-sub" id="pe-sub-' + key + '"></span></span>' +
+        '<i class="ph ph-caret-right pe-row-chev" aria-hidden="true"></i></button>';
+    };
+    var peSheet = function(key, title, body) {
+      return '<div class="pe-sheet" id="pe-sheet-' + key + '" role="dialog" aria-modal="true" aria-label="' + title + '">' +
+        '<div class="pe-sheet-head"><button type="button" class="pe-circle" onclick="window._peClose()" aria-label="Back"><i class="ph ph-caret-left"></i></button>' +
+        '<div class="pe-sheet-title">' + title + '</div><button type="button" class="pe-done" onclick="window._peClose()">Done</button></div>' +
+        '<div class="pe-sheet-body">' + body + '</div></div>';
+    };
+    var field = function(label, control, note) {
+      return '<div class="form-group" style="padding:0;"><label>' + label + '</label>' + control + (note ? '<div class="pe-note">' + note + '</div>' : '') + '</div>';
+    };
+
+    document.body.classList.add('product-editor-open');
     mc.innerHTML =
-      '<div class="product-editor-header">' +
-        '<button type="button" class="product-editor-back" onclick="window._renderProductsTab()" aria-label="Back to products"><i class="ph ph-arrow-left"></i></button>' +
-        '<div class="product-editor-heading">' + (isNew ? 'Add product' : esc(p.name || 'Edit product')) + '</div>' +
-        '<div class="product-editor-actions">' +
-          '<button type="button" class="product-editor-icon" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')" aria-label="Share product" title="Share product"><i class="ph ph-share-network"></i></button>' +
-          '<button type="button" class="product-editor-icon" onclick="window._toggleProductEditorMenu(event)" aria-label="More product actions" title="More actions"><i class="ph ph-dots-three"></i></button>' +
+      '<form id="product-form" class="pe" novalidate onsubmit="window._handleProductSubmit(event,\'' + esc(p.id) + '\')">' +
+      '<div class="pe-header" id="pe-header">' +
+        '<button type="button" class="pe-circle" onclick="window._peBack()" aria-label="Back to products"><i class="ph ph-caret-left"></i></button>' +
+        '<div class="pe-header-title" id="pe-header-title">' + esc(p.name || '') + '</div>' +
+        '<div class="pe-header-actions product-editor-actions">' +
+          '<button type="button" class="pe-circle" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')" aria-label="Share product" title="Share product"><i class="ph ph-export"></i></button>' +
+          '<button type="button" class="pe-circle" onclick="window._toggleProductEditorMenu(event)" aria-label="More product actions" title="More actions"><i class="ph ph-dots-three"></i></button>' +
           '<div class="product-editor-menu" id="product-editor-menu" hidden>' +
             '<button type="button" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')">Copy product link</button>' +
             '<button type="button" onclick="window._renderProductsTab()">Cancel editing</button>' +
           '</div>' +
-          '<button type="button" class="product-editor-save" onclick="document.getElementById(\'product-form\').requestSubmit()">Save</button>' +
+          '<button type="submit" class="pe-save" id="pe-save">Save</button>' +
         '</div>' +
       '</div>' +
 
-      '<form id="product-form" onsubmit="window._handleProductSubmit(event,\'' + esc(p.id) + '\')">' +
+      // Product status
+      '<section class="pe-section"><button type="button" class="pe-row pe-row-plain pe-status-row" onclick="window._peOpen(\'status\')">' +
+        '<span class="pe-row-text"><span class="pe-row-label pe-strong">Product status</span></span>' +
+        '<span class="badge pe-status-pill" id="pe-status-pill"></span><i class="ph ph-caret-right pe-row-chev" aria-hidden="true"></i></button></section>' +
 
-      // 1. PRODUCT STATUS
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Status &amp; visibility</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Product status</label><select name="status" style="width:100%;">' + STATUSES.map(function(s){ return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select></div>' +
-          '<div class="form-group" style="padding:0;">' +
-            '<label>Badge <span style="font-size:10px;color:var(--muted);">New, Sale &amp; Sold Out show automatically based on date added, sale price &amp; stock. Use this only for Pre-order or a custom label.</span></label>' +
-            '<select name="badge" id="pf-badge-select" style="width:100%;" onchange="window._pfToggleCustomBadge()">' +
-              '<option value=""' + (badgeSelectValue === '' ? ' selected' : '') + '>None</option>' +
-              BADGE_PRESETS.map(function(b){ var label = b.replace(/\b\w/g,function(l){return l.toUpperCase();}); return '<option value="'+esc(b)+'"'+(badgeSelectValue===b?' selected':'')+'>'+label+'</option>'; }).join('') +
-              '<option value="__custom__"' + (badgeSelectValue === '__custom__' ? ' selected' : '') + '>Custom...</option>' +
-            '</select>' +
-            '<input name="badgeCustom" id="pf-badge-custom" value="' + esc(badgeCustomValue) + '" placeholder="Type your own badge text" style="width:100%;margin-top:6px;display:' + (badgeSelectValue === '__custom__' ? 'block' : 'none') + ';">' +
-          '</div>' +
-          // Pre-order: when it's expected to ship. Stock below is how many
-          // pre-orders the brand will take.
-          '<div class="form-group" id="pf-preorder-group" style="padding:0;display:' + (badgeSelectValue === 'pre-order' ? 'block' : 'none') + ';">' +
-            '<label>Estimated dispatch date <span style="font-size:10px;color:var(--muted);">Shown on the product, bag, checkout, emails and tracking page. Changing it emails every customer awaiting this pre-order. Stock = the number of pre-orders you will accept.</span></label>' +
-            '<input type="date" name="preorderShipDate" value="' + esc(p.preorderShipDate || '') + '" style="width:100%;">' +
-          '</div>' +
-          '<div class="form-group" style="padding:0;"><label>Featured on homepage</label><select name="featured" style="width:100%;"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select></div>' +
+      // Media, title, description, category, price
+      '<section class="pe-section">' +
+        '<div class="pe-section-head"><span class="pe-strong" id="pe-media-count">Media</span></div>' +
+        '<div class="pe-note pe-pad">Hold and drag a photo to change the order.</div>' +
+        '<div id="media-pool-grid" class="pe-media-grid"></div>' +
+        '<input class="pe-title" name="name" id="pe-title" value="' + esc(p.name) + '" placeholder="Title" autocomplete="off" oninput="window._updateSeoPreview();window._peTitle()">' +
+        peRow('description', 'plus-circle', 'Add description') +
+        peRow('category', 'plus-circle', 'Select category') +
+        peRow('price', '', 'R 0,00', { plain: true }) +
+      '</section>' +
+
+      // Sales channels
+      '<section class="pe-section">' +
+        '<div class="pe-section-head"><span class="pe-strong">Sales channels</span><button type="button" class="pe-link" onclick="window._peOpen(\'channels\')">Edit</button></div>' +
+        '<div class="pe-line"><i class="ph ph-storefront pe-row-icon"></i><span id="pe-sub-channels"></span></div>' +
+      '</section>' +
+
+      // Variants
+      '<section class="pe-section">' +
+        '<div class="pe-section-head"><span class="pe-strong">Variants</span></div>' +
+        peRow('variants', 'plus-circle', 'Add options (colour, size, etc.)') +
+      '</section>' +
+
+      // Inventory
+      '<section class="pe-section">' +
+        '<div class="pe-section-head"><span class="pe-strong">Inventory</span><button type="button" class="pe-link" onclick="window._peOpen(\'inventory\')">Edit</button></div>' +
+        '<div class="pe-line pe-line-between"><span>Available</span><span class="pe-count" id="pf-stock-total">' + esc(String(p.stock||0)) + '</span></div>' +
+      '</section>' +
+
+      // Everything else, one row each
+      '<section class="pe-section pe-list">' +
+        peRow('sizeguide', 'ruler', 'Size guide') +
+        peRow('shipping', 'truck', 'Shipping') +
+        peRow('gender', 'users', 'Gender') +
+        peRow('brand', 'storefront', 'Brand') +
+        peRow('collections', 'tag', 'Collections') +
+        peRow('tags', 'hash', 'Tags') +
+        peRow('seo', 'magnifying-glass', 'SEO') +
+      '</section>' +
+
+      // ---- Sheets ----
+      peSheet('status', 'Product status',
+        '<div class="pe-options">' + STATUSES.map(function(s){
+          return '<label class="pe-option"><input type="radio" name="status" value="' + s + '"' + ((p.status || 'draft') === s ? ' checked' : '') + ' onchange="window._peRefresh()"><span>' + s.charAt(0).toUpperCase() + s.slice(1) + '</span><i class="ph ph-check pe-option-check"></i></label>';
+        }).join('') + '</div>' +
+        '<div class="pe-note">Active products show in the shop. Brands save as Draft; a Super Admin publishes.</div>' +
+        field('Badge', '<select name="badge" id="pf-badge-select" style="width:100%;" onchange="window._pfToggleCustomBadge()">' +
+            '<option value=""' + (badgeSelectValue === '' ? ' selected' : '') + '>None</option>' +
+            BADGE_PRESETS.map(function(b){ var label = b.replace(/\b\w/g,function(l){return l.toUpperCase();}); return '<option value="'+esc(b)+'"'+(badgeSelectValue===b?' selected':'')+'>'+label+'</option>'; }).join('') +
+            '<option value="__custom__"' + (badgeSelectValue === '__custom__' ? ' selected' : '') + '>Custom...</option>' +
+          '</select>' +
+          '<input name="badgeCustom" id="pf-badge-custom" value="' + esc(badgeCustomValue) + '" placeholder="Type your own badge text" style="width:100%;margin-top:6px;display:' + (badgeSelectValue === '__custom__' ? 'block' : 'none') + ';">',
+          'New, Sale and Sold out show automatically from the date added, sale price and stock. Use this only for Pre-order or a custom label.') +
+        // Pre-order: when it's expected to ship. Stock is how many
+        // pre-orders the brand will take.
+        '<div class="form-group" id="pf-preorder-group" style="padding:0;display:' + (badgeSelectValue === 'pre-order' ? 'block' : 'none') + ';">' +
+          '<label>Estimated dispatch date</label><input type="date" name="preorderShipDate" value="' + esc(p.preorderShipDate || '') + '" style="width:100%;">' +
+          '<div class="pe-note">Shown on the product, bag, checkout, emails and tracking page. Changing it emails every customer awaiting this pre-order. Stock is the number of pre-orders you will accept.</div>' +
         '</div>' +
-      '</div>' +
+        field('Featured on homepage', '<select name="featured" style="width:100%;"><option value="false"'+(p.featured?'':' selected')+'>No</option><option value="true"'+(p.featured?' selected':'')+'>Yes</option></select>')) +
 
-      // 2. MEDIA
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header" style="justify-content:space-between;"><span class="card-title">Media</span><button type="button" class="btn btn-sm btn-ghost" onclick="window._uploadToPool()"><i class="ph-light ph-cloud-arrow-up" style="margin-right:4px;"></i> Upload images</button></div>' +
-        '<div style="padding:12px 16px;"><div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Upload all product images here first, then assign them to each variant below.</div><div id="media-pool-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;"></div></div>' +
-      '</div>' +
+      peSheet('description', 'Description',
+        field('Description', '<textarea name="description" style="min-height:140px;">' + esc(p.description||'') + '</textarea>', 'Supports * bullets and **bold**.') +
+        field('Product features', '<textarea name="productFeatures" style="min-height:80px;">' + esc(p.productFeatures||'') + '</textarea>') +
+        field('Composition &amp; care', '<textarea name="compositionCare" style="min-height:80px;">' + esc(p.compositionCare||'') + '</textarea>') +
+        field('Measurements', '<input name="measurements" value="' + esc(p.measurements||'') + '" placeholder="e.g. Model wears size S. Length: 98cm.">')) +
 
-      // 3. PRODUCT
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Product</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Title</label><input name="name" value="' + esc(p.name) + '" placeholder="e.g. Raffle Brandy Dress" required oninput="window._updateSeoPreview()"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Description <span style="font-size:10px;color:var(--muted);">(supports * bullets and **bold**)</span></label><textarea name="description" style="min-height:80px;">' + esc(p.description||'') + '</textarea></div>' +
-          '<div class="form-group" style="padding:0;"><label>Product features</label><textarea name="productFeatures" style="min-height:60px;">' + esc(p.productFeatures||'') + '</textarea></div>' +
-          '<div class="form-group" style="padding:0;"><label>Composition &amp; care</label><textarea name="compositionCare" style="min-height:60px;">' + esc(p.compositionCare||'') + '</textarea></div>' +
-          '<div class="form-group" style="padding:0;"><label>Measurements</label><input name="measurements" value="' + esc(p.measurements||'') + '" placeholder="e.g. Model wears size S. Length: 98cm."></div>' +
+      peSheet('category', 'Category',
+        field('Category', '<select name="category" style="width:100%;">' + catOptions + '</select>')) +
+
+      peSheet('price', 'Price',
+        field('Price (R)', '<input name="price" type="number" min="0" step="0.01" inputmode="decimal" value="' + esc(String(p.price||0)) + '" oninput="window._pfUpdateMargin()">') +
+        field('Sale price (R)', '<input name="salePrice" type="number" min="0" step="0.01" inputmode="decimal" value="' + esc(String(p.salePrice||'')) + '" oninput="window._pfUpdateMargin()">', 'Leave blank if it isn’t on sale.') +
+        '<div id="pf-margin-display" class="pe-summary" style="display:none;"></div>') +
+
+      peSheet('channels', 'Sales channels',
+        field('Online Store', '<select name="onlineStore" style="width:100%;"><option value="true"'+(p.onlineStore===false?'':' selected')+'>Enabled</option><option value="false"'+(p.onlineStore===false?' selected':'')+'>Disabled</option></select>')) +
+
+      peSheet('variants', 'Variants',
+        '<div class="pe-sheet-section">' +
+          '<div class="pe-section-head pe-flush"><span class="pe-strong">Sizes</span><button type="button" class="pe-link" onclick="window._applySizePreset()">Auto-fill from category</button></div>' +
+          field('Size unit', '<select id="pf-size-unit" name="sizeUnit" style="width:100%;" onchange="window._updateSizePreview()">' +
+            SIZE_UNITS.map(function(u){ return '<option value="'+u+'"'+(currentUnit===u?' selected':'')+'>'+u+'</option>'; }).join('') + '</select>') +
+          field('Sizes', '<input id="pf-sizes-input" name="sizes" value="' + esc(currentSizes) + '" placeholder="e.g. UK 3, UK 4, UK 5 or XS, S, M, L" oninput="window._updateSizePreview()">', 'Comma separated.') +
+          '<div id="pf-size-preview" style="padding:4px 0;min-height:36px;"></div>' +
         '</div>' +
-      '</div>' +
-
-      // 8. ORGANIZATION
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Organization</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Category</label><select name="category" style="width:100%;" required>' + catOptions + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Gender</label><select name="gender" style="width:100%;">' + renderProductGenderOptions(p) + '</select></div>' +
-          '<div class="form-group" style="padding:0;"><label>Brand</label><select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select></div>' +
-          renderProductCollectionOptions(p) +
-          '<div class="form-group" style="padding:0;"><label>Tags <span style="font-size:10px;color:var(--muted);">(comma separated)</span></label><input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale"></div>' +
-        '</div>' +
-      '</div>' +
-
-      // 4. PRICING
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Pricing</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Price (R)</label><input name="price" type="number" min="0" step="0.01" value="' + esc(String(p.price||0)) + '" required oninput="window._pfUpdateMargin()"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Sale price (R) <span style="font-size:10px;color:var(--muted);">(leave blank if not on sale)</span></label><input name="salePrice" type="number" min="0" step="0.01" value="' + esc(String(p.salePrice||'')) + '" oninput="window._pfUpdateMargin()"></div>' +
-          '<div id="pf-margin-display" style="background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none;"></div>' +
-        '</div>' +
-      '</div>' +
-
-      // 9. SALES CHANNELS
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Sales channels</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Online Store</label><select name="onlineStore" style="width:100%;"><option value="true"'+(p.onlineStore===false?'':' selected')+'>Enabled</option><option value="false"'+(p.onlineStore===false?' selected':'')+'>Disabled</option></select></div>' +
-        '</div>' +
-      '</div>' +
-
-      // 5. VARIANTS (sizes shown first as the other product option, then color/media variants)
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header" style="justify-content:space-between;"><span class="card-title">Sizes</span><button type="button" class="btn btn-xs btn-ghost" onclick="window._applySizePreset()">Auto-fill from category</button></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;">' +
-            '<label>Size unit</label>' +
-            '<select id="pf-size-unit" name="sizeUnit" style="width:100%;" onchange="window._updateSizePreview()">' +
-              SIZE_UNITS.map(function(u){ return '<option value="'+u+'"'+(currentUnit===u?' selected':'')+'>'+u+'</option>'; }).join('') +
-            '</select>' +
-          '</div>' +
-          '<div class="form-group" style="padding:0;">' +
-            '<label>Sizes <span style="font-size:10px;color:var(--muted);">(comma separated)</span></label>' +
-            '<input id="pf-sizes-input" name="sizes" value="' + esc(currentSizes) + '" placeholder="e.g. UK 3, UK 4, UK 5 or XS, S, M, L" oninput="window._updateSizePreview()">' +
-          '</div>' +
-          '<div class="form-group" style="padding:0;">' +
-            '<label>Preview</label>' +
-            '<div id="pf-size-preview" style="padding:8px 0;min-height:36px;"></div>' +
-          '</div>' +
-        '</div>' +
-        '<div style="padding:0 16px 12px;border-top:0.5px solid var(--border);">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;"><span class="card-title" style="font-size:12px;">Variants</span><button type="button" class="btn btn-xs btn-ghost" onclick="window._addVariant()"><i class="ph-light ph-plus"></i> Add variant</button></div>' +
+        '<div class="pe-sheet-section">' +
+          '<div class="pe-section-head pe-flush"><span class="pe-strong">Colours</span><button type="button" class="pe-link" onclick="window._addVariant()">Add colour</button></div>' +
+          '<div class="pe-note">For each colour, tap its photos. Stock is set per colour and size.</div>' +
           '<div id="variants-container">' +
             (p.variants||[]).map(function(v, i){ return buildVariantBlock(v, i, p.category, p.sizes||[], (p.stockByVariant && p.stockByVariant[i]) || {}); }).join('') +
           '</div>' +
-        '</div>' +
-      '</div>' +
+        '</div>') +
 
-      // Size guide (admin-size-guides.js)
-      (window._sizeGuideCardHtml ? window._sizeGuideCardHtml(p) : '') +
+      peSheet('inventory', 'Inventory',
+        field('SKU', '<input name="sku" value="' + esc(p.sku||'') + '" placeholder="e.g. DRS-RBB-001">') +
+        '<div class="form-group" style="padding:0;"><label>Total stock</label><div class="pe-summary"><span id="pf-stock-label"></span></div>' +
+          '<div class="pe-note">Set per colour and size in Variants. <button type="button" class="pe-link" onclick="window._peOpen(\'variants\')">Open variants</button></div></div>' +
+        // Restocking (stored as product.waitlist): when a size or the
+        // whole product sells out, Add to bag becomes Add to waitlist.
+        field('When it sells out', '<select name="waitlist" style="width:100%;"><option value="false"' + (p.waitlist ? '' : ' selected') + '>Not restocking</option><option value="true"' + (p.waitlist ? ' selected' : '') + '>Restocking (waitlist)</option></select>',
+          'Restocking: sold-out sizes and colours show Add to waitlist, and customers are emailed once when you add stock. For a pre-order, selling out means the pre-order limit is reached: choose Restocking to take a waitlist for the next batch.')) +
 
-      // 6. INVENTORY
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Inventory</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>SKU</label><input name="sku" value="' + esc(p.sku||'') + '" placeholder="e.g. DRS-RBB-001"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Total stock <span style="font-size:10px;color:var(--muted);">(set per size, per color above)</span></label><div style="display:flex;align-items:center;gap:10px;"><span id="pf-stock-total" style="font-size:20px;font-weight:500;">' + esc(String(p.stock||0)) + '</span><span id="pf-stock-label" style="font-size:11px;color:var(--muted);"></span></div></div>' +
-          // Restocking (stored as product.waitlist): when a size or the
-          // whole product sells out, Add to Bag becomes Add to Waitlist.
-          '<div class="form-group" style="padding:0;"><label>When it sells out</label><select name="waitlist" style="width:100%;"><option value="false"' + (p.waitlist ? '' : ' selected') + '>Not restocking</option><option value="true"' + (p.waitlist ? ' selected' : '') + '>Restocking (waitlist)</option></select>' +
-            '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Restocking: sold-out sizes and colours show Add to Waitlist, and customers are emailed once when you add stock. For a pre-order, selling out means the pre-order limit is reached: choose Restocking to take a waitlist for the next batch.</div></div>' +
-        '</div>' +
-      '</div>' +
+      peSheet('sizeguide', 'Size guide', window._sizeGuideCardHtml ? window._sizeGuideCardHtml(p) : '') +
 
-      // 7. SHIPPING
-      '<div class="card" style="margin-bottom:12px;">' +
-        '<div class="card-header"><span class="card-title">Shipping</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>Weight (kg)</label><input name="shippingWeight" type="number" min="0" step="0.01" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Shipping &amp; returns note</label><input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000"></div>' +
-          '<div class="form-group" style="padding:0;"><label>International shipping</label><select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select></div>' +
-          // Free delivery is Janedore's call (it pays the courier), so
-          // brands don't see it. Off unless set.
-          (window._currentUserRole === 'VENDOR' ? '' : (function () {
-            var fd = p.freeDelivery === true;
-            var offered = brandOffersFreeDelivery(p);
-            return '<div class="form-group" style="padding:0;"><label>Free delivery</label><select name="freeDelivery" style="width:100%;"><option value="false"' + (fd ? '' : ' selected') + '>No</option><option value="true"' + (fd ? ' selected' : '') + '>Yes</option></select>' +
-              '<div style="font-size:11px;color:var(--muted);margin-top:5px;">' + (offered
-                ? 'Yes: shows the Free Delivery badge and ships free once the customer\'s ' + esc(p.brand || 'brand') + ' items come to R750 or more.'
-                : esc(p.brand || 'This brand') + ' doesn\'t offer free delivery (Admin &gt; Brands), so this has no effect until it does.') + '</div></div>';
-          })()) +
-        '</div>' +
-      '</div>' +
+      peSheet('shipping', 'Shipping',
+        field('Weight (kg)', '<input name="shippingWeight" type="number" min="0" step="0.01" inputmode="decimal" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5">') +
+        field('Shipping &amp; returns note', '<input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000">') +
+        field('International shipping', '<select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select>') +
+        // Free delivery is Janedore's call (it pays the courier), so
+        // brands don't see it. Off unless set.
+        (window._currentUserRole === 'VENDOR' ? '' : (function () {
+          var fd = p.freeDelivery === true;
+          var offered = brandOffersFreeDelivery(p);
+          return field('Free delivery', '<select name="freeDelivery" style="width:100%;"><option value="false"' + (fd ? '' : ' selected') + '>No</option><option value="true"' + (fd ? ' selected' : '') + '>Yes</option></select>',
+            offered
+              ? 'Yes: shows the Free Delivery badge and ships free once the customer\'s ' + esc(p.brand || 'brand') + ' items come to R750 or more.'
+              : esc(p.brand || 'This brand') + ' doesn\'t offer free delivery (Admin &gt; Brands), so this has no effect until it does.');
+        })())) +
 
-      // 10. SEO
-      '<div class="card" style="margin-bottom:24px;">' +
-        '<div class="card-header"><span class="card-title">Search engine listing</span></div>' +
-        '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
-          '<div class="form-group" style="padding:0;"><label>SEO title</label><input name="seoTitle" value="' + esc(p.seoTitle||'') + '" placeholder="Defaults to product title" oninput="window._updateSeoPreview()"></div>' +
-          '<div class="form-group" style="padding:0;"><label>Meta description</label><textarea name="metaDescription" style="min-height:60px;" oninput="window._updateSeoPreview()">' + esc(p.metaDescription||'') + '</textarea></div>' +
-          '<div class="form-group" style="padding:0;"><label>URL handle</label><div id="pf-url-handle" style="font-size:12px;color:var(--muted);background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-sm);padding:8px 10px;">' + esc(displaySlug) + '</div></div>' +
-          '<div class="form-group" style="padding:0;"><label>Preview</label><div id="pf-seo-preview" style="padding:10px 12px;background:var(--surface2);border:0.5px solid var(--border-med);border-radius:var(--r-sm);"></div></div>' +
-        '</div>' +
-      '</div>';
+      peSheet('gender', 'Gender', field('Gender', '<select name="gender" style="width:100%;">' + renderProductGenderOptions(p) + '</select>')) +
+
+      peSheet('brand', 'Brand', field('Brand', '<select name="brand" style="width:100%;">' + BRANDS.map(function(b){ return '<option value="'+b+'"'+(p.brand===b?' selected':'')+'>'+b+'</option>'; }).join('') + '</select>')) +
+
+      peSheet('collections', 'Collections', renderProductCollectionOptions(p)) +
+
+      peSheet('tags', 'Tags', field('Tags', '<input name="tags" value="' + esc((p.tags||[]).join(', ')) + '" placeholder="e.g. summer, linen, sale">', 'Comma separated.')) +
+
+      peSheet('seo', 'SEO',
+        field('SEO title', '<input name="seoTitle" value="' + esc(p.seoTitle||'') + '" placeholder="Defaults to product title" oninput="window._updateSeoPreview()">') +
+        field('Meta description', '<textarea name="metaDescription" style="min-height:80px;" oninput="window._updateSeoPreview()">' + esc(p.metaDescription||'') + '</textarea>') +
+        field('URL handle', '<div id="pf-url-handle" class="pe-summary">' + esc(displaySlug) + '</div>') +
+        field('Preview', '<div id="pf-seo-preview" class="pe-summary"></div>')) +
+
+      '</form>';
 
     // Runs once the form is on the page: fills the media library, each
     // colour's photo lists and swatch photo strip.
@@ -960,7 +1075,116 @@
     window._updateSizePreview();
     window._updateSeoPreview();
     if (window._initSizeGuideCard) window._initSizeGuideCard(p);
+    _peInit();
   };
+
+  // ── PRODUCT EDITOR: SHEETS, SUMMARIES, HEADER ─────────────────
+  // Each row opens its sheet; Done or the back arrow closes it and
+  // refreshes the row summaries. Save lights up once something changes.
+
+  var _peDirty = false;
+  function _peMarkDirty() {
+    _peDirty = true;
+    var btn = safeEl('pe-save');
+    if (btn) btn.classList.add('ready');
+  }
+
+  window._peOpen = function(key) {
+    window._peClose(true);
+    var sheet = safeEl('pe-sheet-' + key);
+    if (!sheet) return;
+    sheet.classList.add('open');
+    var body = sheet.querySelector('.pe-sheet-body');
+    if (body) body.scrollTop = 0;
+  };
+
+  window._peClose = function(silent) {
+    document.querySelectorAll('#product-form .pe-sheet.open').forEach(function(el) { el.classList.remove('open'); });
+    if (!silent) window._peRefresh();
+  };
+
+  window._peBack = function() {
+    if (_peDirty && !confirm('Discard unsaved changes?')) return;
+    window._renderProductsTab();
+  };
+
+  // The product's name shows in the header once its title field has
+  // scrolled out of view.
+  window._peTitle = function() {
+    var title = safeEl('pe-header-title');
+    var input = safeEl('pe-title');
+    var header = safeEl('pe-header');
+    if (!title || !input || !header) return;
+    title.textContent = input.value;
+    title.classList.toggle('shown', input.getBoundingClientRect().bottom < header.getBoundingClientRect().bottom);
+  };
+
+  function _peSet(key, label, sub, filled) {
+    var labelEl = safeEl('pe-label-' + key), subEl = safeEl('pe-sub-' + key), iconEl = safeEl('pe-icon-' + key);
+    if (labelEl) labelEl.textContent = label;
+    if (subEl) { subEl.textContent = sub || ''; subEl.style.display = sub ? '' : 'none'; }
+    if (iconEl && iconEl.classList.contains('ph-plus-circle')) iconEl.style.display = filled ? 'none' : '';
+  }
+
+  window._peRefresh = function() {
+    var form = safeEl('product-form');
+    if (!form) return;
+    var val = function(name) { var el = form.elements[name]; return el ? String(el.value || '').trim() : ''; };
+    var selText = function(name) { var el = form.elements[name]; return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].text : ''; };
+
+    var status = val('status') || 'draft';
+    var pill = safeEl('pe-status-pill');
+    if (pill) { pill.textContent = status.charAt(0).toUpperCase() + status.slice(1); pill.setAttribute('style', PRODUCT_STATUS_BADGE_STYLE[status] || PRODUCT_STATUS_BADGE_STYLE.draft); }
+
+    var desc = val('description').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    _peSet('description', desc ? desc.slice(0, 90) + (desc.length > 90 ? '…' : '') : 'Add description', '', !!desc);
+    var cat = val('category');
+    _peSet('category', cat ? window.JDTaxonomy.label(cat) : 'Select category', cat ? 'Category' : '', !!cat);
+
+    var price = parseFloat(val('price')) || 0, sale = val('salePrice') ? parseFloat(val('salePrice')) : null;
+    var money = function(n) { return 'R ' + n.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    _peSet('price', sale !== null ? money(sale) : money(price), sale !== null ? 'Was ' + money(price) : '', true);
+
+    var ch = safeEl('pe-sub-channels');
+    if (ch) ch.textContent = val('onlineStore') === 'false' ? 'Not on the Online Store' : 'Online Store';
+
+    var sizes = val('sizes');
+    var colours = Array.prototype.slice.call(form.querySelectorAll('[name^="variant-color-"]')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+    var hasOptions = !!sizes || colours.length > 1 || (colours.length === 1 && colours[0].toLowerCase() !== 'default');
+    _peSet('variants', hasOptions ? [colours.length ? colours.length + (colours.length === 1 ? ' colour' : ' colours') : '', sizes ? 'Sizes ' + sizes : ''].filter(Boolean).join(' · ') : 'Add options (colour, size, etc.)',
+      hasOptions && colours.length ? colours.join(', ') : '', hasOptions);
+
+    var guide = [];
+    if (val('sizeGuideId')) guide.push('Size chart');
+    if (val('sizeGuideImage')) guide.push(val('sizeGuideApproved') === 'true' ? 'Photo approved' : 'Photo waiting for approval');
+    _peSet('sizeguide', 'Size guide', guide.join(' · '));
+    var weight = val('shippingWeight');
+    _peSet('shipping', 'Shipping', weight ? weight + ' kg' : '');
+    _peSet('gender', 'Gender', selText('gender'));
+    _peSet('brand', 'Brand', val('brand'));
+    var colCount = form.querySelectorAll('input[name="collectionHandles"]:checked').length;
+    _peSet('collections', 'Collections', colCount ? colCount + (colCount === 1 ? ' collection' : ' collections') : '');
+    _peSet('tags', 'Tags', val('tags'));
+    _peSet('seo', 'SEO', val('seoTitle') || val('name'));
+
+    var count = safeEl('pe-media-count');
+    if (count) count.textContent = 'Media' + (_mediaPool.length ? ' (' + _mediaPool.length + ')' : '');
+    _renderMediaPool();
+    window._peTitle();
+  };
+
+  function _peInit() {
+    var form = safeEl('product-form');
+    _peDirty = false;
+    if (form) {
+      form.addEventListener('input', _peMarkDirty);
+      form.addEventListener('change', _peMarkDirty);
+    }
+    var body = safeEl('app-body');
+    if (body && !body._peScroll) { body._peScroll = true; body.addEventListener('scroll', function() { if (window._peTitle) window._peTitle(); }, { passive: true }); }
+    if (body) body.scrollTop = 0;
+    window._peRefresh();
+  }
 
   window._shareAdminProduct = function(productId) {
     var product = (window._allProducts || []).find(function(item) { return item.id === productId; });
@@ -1000,14 +1224,12 @@
     var ghostUrls  = Array.isArray(images.ghost)  ? images.ghost  : [];
     var detailUrls = Array.isArray(images.detail) ? images.detail : [];
 
-    return '<div class="variant-block" data-variant-index="' + index + '" style="padding-top:14px;margin-top:' + (index > 0 ? '14px' : '4px') + ';border-top:' + (index > 0 ? '0.5px solid var(--border)' : 'none') + ';">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
-        '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);">Variant ' + (index+1) + '</div>' +
-        '<button type="button" class="btn btn-xs btn-ghost" style="color:var(--danger);" onclick="window._removeVariant('+index+')">Remove</button>' +
+    return '<div class="variant-block pe-variant" data-variant-index="' + index + '">' +
+      '<div class="pe-variant-head">' +
+        '<span class="pe-strong">Colour ' + (index+1) + '</span>' +
+        '<button type="button" class="pe-link pe-danger" onclick="window._removeVariant('+index+')">Remove</button>' +
       '</div>' +
-      '<div style="display:flex;gap:10px;margin-bottom:12px;">' +
-        '<div class="form-group" style="padding:0;flex:1;"><label>Color name</label><input name="variant-color-'+index+'" value="'+esc(v.color||'')+'" placeholder="e.g. Black"></div>' +
-      '</div>' +
+      '<div class="form-group" style="padding:0;margin-bottom:14px;"><label>Colour name</label><input name="variant-color-'+index+'" value="'+esc(v.color||'')+'" placeholder="e.g. Black"></div>' +
       // The shop shows a photo as each colour's swatch, picked below
       // (the strip of this colour's photos). The old flat colour is kept
       // for products whose colours have no photos.
@@ -1018,7 +1240,7 @@
         _buildVariantImageSelector('ghost',  index, ghostUrls)  +
         _buildVariantImageSelector('detail', index, detailUrls) +
       '</div>' +
-      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-top:10px;">Swatch photo</div>' +
+      '<div class="pe-pick-head" style="margin-top:4px;"><span>Swatch photo</span></div>' +
       '<div id="variant-preview-strip-' + index + '" style="margin-top:4px;"><div style="font-size:10.5px;color:var(--muted);">No images assigned</div></div>' +
       buildVariantStockGrid(index, sizes, stockForVariant) +
     '</div>';
@@ -1034,15 +1256,15 @@
     var cells = keys.map(function(s, i) {
       var val = typeof stock[s] === 'number' ? stock[s] : 0;
       return '<div style="display:flex;flex-direction:column;gap:3px;">' +
-        '<label style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">' + esc(s) + '</label>' +
+        '<label style="font-size:12px;color:var(--muted);">' + esc(s) + '</label>' +
         '<input type="number" min="0" name="variant-stock-' + index + '-' + i + '" data-stock-size="' + esc(s) + '" value="' + val + '" style="width:100%;text-align:center;padding:6px 4px;" oninput="window._refreshVariantStockTotal(' + index + ')">' +
       '</div>';
     }).join('');
     var total = keys.reduce(function(sum, s){ return sum + (typeof stock[s] === 'number' ? stock[s] : 0); }, 0);
-    return '<div class="variant-stock-grid" data-variant-stock-index="' + index + '" style="margin-top:12px;padding-top:12px;border-top:0.5px dashed var(--border);">' +
-      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px;">Stock by size</div>' +
+    return '<div class="variant-stock-grid" data-variant-stock-index="' + index + '" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">' +
+      '<div class="pe-pick-head"><span>Stock by size</span></div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;">' + cells + '</div>' +
-      '<div class="variant-stock-total" id="variant-stock-total-' + index + '" style="font-size:10.5px;color:var(--muted);margin-top:8px;">' + total + ' total for this color</div>' +
+      '<div class="variant-stock-total" id="variant-stock-total-' + index + '" style="font-size:10.5px;color:var(--muted);margin-top:8px;">' + total + ' total for this colour</div>' +
     '</div>';
   }
 
@@ -1052,7 +1274,7 @@
     if (!block || !totalEl) return;
     var total = 0;
     block.querySelectorAll('input[data-stock-size]').forEach(function(inp) { total += parseInt(inp.value, 10) || 0; });
-    totalEl.textContent = total + ' total for this color';
+    totalEl.textContent = total + ' total for this colour';
     window._refreshGrandStockTotal();
   };
 
@@ -1177,6 +1399,8 @@
     var price     = parseFloat(form.price.value);
     var salePrice = form.salePrice.value ? parseFloat(form.salePrice.value) : null;
 
+    if (!String(form.name.value || '').trim()) { showToast('Add a title', 'error'); return; }
+    if (!form.category.value) { showToast('Choose a category', 'error'); window._peOpen('category'); return; }
     if (isNaN(price) || price < 0) { showToast('Invalid price', 'error'); return; }
 
     var unitEl  = safeEl('pf-size-unit');

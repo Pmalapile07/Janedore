@@ -478,6 +478,7 @@
     var navHomeEl = safeEl('nav-home');
     if (navHomeEl) navHomeEl.style.display = onHome ? '' : 'none';
     document.body.classList.toggle('admin-home', onHome);
+    document.body.classList.remove('product-editor-open');
     destroyCharts();
     switch (window._currentTab) {
       case 'dashboard':   if (window._renderDashboardTab)   window._renderDashboardTab();   break;
