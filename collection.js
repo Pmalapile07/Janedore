@@ -1653,7 +1653,10 @@ function renderVendorPage(vendor) {
   const expanded = expandProductVariants(products);
   // "Clothing & Accessories": the two departments most of the brand's
   // products are in (ties in menu order), or the one when that's all.
-  const brandProducts = PRODUCTS.filter(p => p.status === 'active' && (p.brand || '') === brandName);
+  // The brand's products, matched the same way as its All products grid
+  // (vendorId, or the brand name in any capitals: products are saved as
+  // "JANEDORE" while the brand may be named "Janedore").
+  const brandProducts = getVendorBaseProducts(vendor);
   const depts = {};
   brandProducts.forEach(p => { const d = JDTaxonomy.departmentOf(p.category); if (d) depts[d] = (depts[d] || 0) + 1; });
   const deptOrder = JDTaxonomy.DEPARTMENTS.map(d => d.slug);
@@ -1662,6 +1665,9 @@ function renderVendorPage(vendor) {
   const newest = merchandiseProducts(brandProducts, undefined, 'newest').slice(0, 8);
   const sectionHead = (id) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div></div>`;
   const emptyTile = '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
+  const collectionTiles = brandCollectionTiles(brandProducts);
+  const pickedCats = S.vendorFilter.cat || [];
+  const pickedTile = pickedCats.length ? collectionTiles.find(t => t.cats.length === pickedCats.length && t.cats.every(c => pickedCats.includes(c))) : null;
 
   // A brand's page is its own small homepage inside Janedore: a brand bar
   // (sticks, and takes the header's place while scrolling down, like the
@@ -1706,7 +1712,9 @@ function renderVendorPage(vendor) {
     </section>
     <section class="brand-section" id="brand-collections">
       ${sectionHead('brand-collections-heading')}
-      <div class="home-categories-grid">${emptyTile.repeat(4)}</div>
+      <div class="home-categories-grid" id="brand-collections-grid">${collectionTiles.length
+        ? collectionTiles.map((t, i) => `<button type="button" class="home-category-card" onclick="openBrandCollection(${i})" aria-label="Shop ${escapeHTML(t.name)}"><div class="home-category-img${t.image ? '' : ' content-empty'}" data-tile-image="${escapeHTML(t.image)}"><div class="home-category-label">${escapeHTML(t.name)}</div></div></button>`).join('')
+        : emptyTile.repeat(4)}</div>
     </section>
     <section class="brand-section" id="brand-shop">
       ${sectionHead('brand-all-heading')}
@@ -1719,8 +1727,13 @@ function renderVendorPage(vendor) {
     const set = (id, t) => { const h = document.getElementById(id); if (h) setSectionHeading(h, t); };
     set('brand-new-heading', 'New in');
     set('brand-collections-heading', 'Collections');
-    set('brand-all-heading', onSale ? 'Sale' : 'All products');
+    set('brand-all-heading', onSale ? 'Sale' : pickedTile ? pickedTile.name : 'All products');
   }
+  S.brandCollectionTiles = collectionTiles;
+  document.querySelectorAll('#brand-collections-grid [data-tile-image]').forEach(el => {
+    const url = el.getAttribute('data-tile-image');
+    if (url && typeof loadBackgroundImage === 'function') loadBackgroundImage(el, url, 600);
+  });
   initSliderLeadingTracking('vendor-new-grid');
 
   // Brand pages have no sort/filter bar: a brand's range is small enough
@@ -1762,12 +1775,47 @@ function scrollToBrandSection(id) {
   const y = target.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0);
   window.scrollTo({ top: y, behavior: 'smooth' });
 }
+// The brand's Collections: made automatically from what it sells, one
+// tile per department (Clothing, Accessories, Beauty...) with the photo
+// of its newest product there, in the Shop by category tiles' style. A
+// brand in one department gets a tile per category instead (Dresses,
+// Tops...). Tapping one shows just those products under All products.
+function brandCollectionTiles(products) {
+  const newest = merchandiseProducts(products, undefined, 'newest');
+  const group = (keyOf, nameOf, catsOf) => {
+    const map = new Map();
+    newest.forEach(p => {
+      const key = keyOf(p);
+      if (!key) return;
+      if (!map.has(key)) map.set(key, { key, name: nameOf(key), cats: catsOf(key), count: 0, image: '' });
+      const t = map.get(key);
+      t.count++;
+      if (!t.image) { const img = getProductImages(p, 0)[0]; if (img && img !== PLACEHOLDER_IMAGE) t.image = img; }
+    });
+    return [...map.values()].sort((a, b) => b.count - a.count || JDTaxonomy.order(a.key) - JDTaxonomy.order(b.key));
+  };
+  const depts = group(p => JDTaxonomy.departmentOf(p.category), d => JDTaxonomy.label(d), d => JDTaxonomy.categoriesIn(d));
+  if (depts.length !== 1) return depts;
+  const cats = group(p => p.category, c => JDTaxonomy.label(c), c => [c]);
+  return cats.length > 1 ? cats : depts;
+}
+
+function openBrandCollection(i) {
+  const tile = (S.brandCollectionTiles || [])[i];
+  if (!tile || !S.currentVendor) return;
+  S.vendorFilter.cat = tile.cats.slice();
+  S.vendorFilter.onSale = false;
+  renderVendorPage(S.currentVendor);
+  scrollToBrandSection('brand-shop');
+}
+
 function showBrandSection(key) {
   if (key === 'collections') { scrollToBrandSection('brand-collections'); return; }
   const onSale = key === 'sale';
-  if (S.currentVendor && !!S.vendorFilter.onSale !== onSale) {
+  if (S.currentVendor && (!!S.vendorFilter.onSale !== onSale || (S.vendorFilter.cat || []).length)) {
     const y = window.scrollY;
     S.vendorFilter.onSale = onSale;
+    S.vendorFilter.cat = [];
     renderVendorPage(S.currentVendor);
     window.scrollTo(0, y);
   }
