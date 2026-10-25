@@ -6,7 +6,9 @@
 // Who counts as having bought it: a paid order containing the product
 // that is either the signed-in customer's (their uid, or their verified
 // account email) or, for a guest, one this device placed (order number
-// plus the email used at checkout, the same pair Track your order uses).
+// plus the email used at checkout, the same pair Track your order uses),
+// or one whose review request email they opened: its Write a review
+// link carries orderId.reviewToken (server.js sweepReviewRequests).
 //
 // Up to 4 photos; /api/reviews/photo-signature lets a buyer upload them
 // when the storefront has no public Cloudinary preset.
@@ -34,8 +36,24 @@ module.exports = function registerReviews(app, deps) {
     return order.paymentStatus === 'paid' && (order.items || []).some(i => i && i.productId === productId);
   }
 
+  // The order a review request link (orderId.token) belongs to, if the
+  // token matches and the order has the product.
+  async function purchaseFromLink(link, productId) {
+    const m = String(link || '').match(/^([A-Za-z0-9_-]{1,200})\.([a-f0-9]{32})$/);
+    if (!m) return null;
+    const doc = await adminDb.collection('orders').doc(m[1]).get();
+    const order = doc.exists ? doc.data() : null;
+    if (!order || !order.reviewToken || order.accountDeletedAt || !hasProduct(order, productId)) return null;
+    if (!crypto.timingSafeEqual(Buffer.from(order.reviewToken), Buffer.from(m[2]))) return null;
+    return { order, email: String(order.customerEmail || '').toLowerCase(), uid: order.customerId || null };
+  }
+
   // The paid order that proves this customer bought the product, or null.
-  async function findPurchase(req, productId, deviceOrders) {
+  async function findPurchase(req, productId, deviceOrders, reviewLink) {
+    if (reviewLink) {
+      const fromLink = await purchaseFromLink(reviewLink, productId);
+      if (fromLink) return fromLink;
+    }
     const user = await signedIn(req);
     if (user) {
       const byUid = await adminDb.collection('orders').where('customerId', '==', user.uid).limit(100).get();
@@ -61,7 +79,7 @@ module.exports = function registerReviews(app, deps) {
     if (rateLimited(req, 'review-eligibility', 120, 15 * 60 * 1000)) return res.json({ eligible: false });
     try {
       const productId = String((req.body || {}).productId || '').slice(0, 120);
-      const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders) : null;
+      const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders, (req.body || {}).reviewLink) : null;
       res.json(purchase ? { eligible: true, email: purchase.email } : { eligible: false });
     } catch (e) {
       console.error('[REVIEWS] Eligibility failed:', e.message);
@@ -80,7 +98,7 @@ module.exports = function registerReviews(app, deps) {
     if (rateLimited(req, 'review-photo-sign', 30, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     try {
       const productId = String((req.body || {}).productId || '').slice(0, 120);
-      const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders) : null;
+      const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders, (req.body || {}).reviewLink) : null;
       if (!purchase) return res.status(403).json({ error: 'Only customers who bought this item can add photos.' });
       // Cloudinary signs every parameter except file, cloud_name,
       // resource_type and api_key: sorted key=value pairs joined with &,
@@ -117,7 +135,7 @@ module.exports = function registerReviews(app, deps) {
     if (!(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'Please choose a star rating.' });
     if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please enter the email you ordered with.' });
     try {
-      const purchase = await findPurchase(req, productId, b.orders);
+      const purchase = await findPurchase(req, productId, b.orders, b.reviewLink);
       if (!purchase) return res.status(403).json({ error: 'Only customers who bought this item can review it.' });
       if (purchase.email !== email) return res.status(400).json({ error: 'Please use the email address associated with your order.' });
       const productDoc = await adminDb.collection('products').doc(productId).get();

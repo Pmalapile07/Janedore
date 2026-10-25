@@ -109,6 +109,15 @@
        flash first. Hide it until init() has routed (route-pending is
        cleared in app.js), with an 8s safety net in case init() fails. -->
   <script>
+  // Review request emails link to a product with ?review=orderId.token
+  // (server.js sweepReviewRequests): kept for this visit so the review
+  // form can prove the purchase (product-detail.js reviewLinkForReviews).
+  (function () {
+    var m = location.search.match(/[?&]review=([A-Za-z0-9_.-]{1,240})/);
+    if (!m) return;
+    try { sessionStorage.setItem('janedore_review_link', decodeURIComponent(m[1])); } catch (e) {}
+    window._reviewLinkOpen = true;
+  })();
   // App badges preview (app-badges.js): read ?app-preview=1 / =0 first
   // thing, before the page's routing can rewrite the address.
   (function () {

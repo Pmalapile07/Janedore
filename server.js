@@ -165,12 +165,12 @@ function setGatePass(req, res, name, kind, visitorPassword) {
   });
 }
 // Full storefront pages only; files, the API, admin, Coming soon itself
-// and the bag reminder unsubscribe link are always served.
+// and the bag reminder and review request unsubscribe links are always served.
 const GATED_HTML = new Set(['/index.html', '/store.html', '/products.html', '/category.html']);
 app.use(async (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   const p = req.path;
-  const page = GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && p !== '/admin' && !p.startsWith('/bag-reminders/'));
+  const page = GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && p !== '/admin' && !p.startsWith('/bag-reminders/') && !p.startsWith('/review-requests/'));
   if (!page) return next();
   try {
     const state = await getGateState();
@@ -1751,6 +1751,92 @@ async function sweepBagReminders() {
 }
 setInterval(sweepBagReminders, 15 * 60 * 1000).unref();
 
+// ==================== REVIEW REQUESTS ====================
+// 5 days after staff mark an order Delivered (notify-status sets
+// reviewRequestDue), the customer gets one email asking them to review
+// what they bought: each item they haven't reviewed yet, with a Write a
+// review link carrying the order's reviewToken, which proves the
+// purchase to reviews-api.js (no sign-in needed). Not sent for unpaid,
+// refunded or returned/exchanged orders, deleted accounts, or anyone who
+// opted out (reviewOptOut, server only, keyed like bagOptOut).
+const REVIEW_REQUEST_DELAY = 5 * 24 * 60 * 60 * 1000;
+
+app.get('/review-requests/stop', async (req, res) => {
+  const orderId = String(req.query.o || '').slice(0, 200);
+  const token = String(req.query.t || '');
+  let done = false;
+  if (adminDb && orderId && /^[a-f0-9]{32}$/.test(token)) {
+    try {
+      const doc = await adminDb.collection('orders').doc(orderId).get();
+      const order = doc.exists ? doc.data() : null;
+      if (order && order.reviewToken && order.customerEmail &&
+          crypto.timingSafeEqual(Buffer.from(order.reviewToken), Buffer.from(token))) {
+        await adminDb.collection('reviewOptOut').doc(emailKey(order.customerEmail)).set({ at: Date.now() });
+        done = true;
+      }
+    } catch (e) { console.error('[REVIEW_REQUEST] Opt-out error:', e.message); }
+  }
+  res.set('Content-Type', 'text/html; charset=utf-8').send('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>JANEDORE</title></head>' +
+    '<body style="margin:0;font-family:Inter,Helvetica,Arial,sans-serif;color:#111;background:#fff;"><div style="max-width:480px;margin:0 auto;padding:80px 24px;text-align:center;">' +
+    '<div style="letter-spacing:0.12em;font-size:15px;margin:0 0 40px;">JANEDORE</div>' +
+    '<h1 style="font-size:22px;font-weight:600;margin:0 0 12px;">' + (done ? 'We won’t ask again' : 'Link not recognised') + '</h1>' +
+    '<p style="font-size:14px;line-height:1.6;color:#555;margin:0 0 28px;">' + (done ? 'You will no longer receive emails asking you to review your orders. You will still receive emails about your orders.' : 'This link is no longer valid. If you keep receiving these emails, please contact support@janedore.co.za.') + '</p>' +
+    '<a href="/" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:14px 28px;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;">Continue shopping</a>' +
+    '</div></body></html>');
+});
+
+async function sweepReviewRequests() {
+  if (!adminDb) return;
+  const now = Date.now();
+  let snap;
+  try {
+    snap = await adminDb.collection('orders').where('reviewRequestDue', '<=', now).limit(50).get();
+  } catch (e) { console.error('[REVIEW_REQUEST] Sweep query failed:', e.message); return; }
+  for (const doc of snap.docs) {
+    const order = doc.data();
+    const done = (fields) => doc.ref.update(Object.assign({ reviewRequestDue: null }, fields || {})).catch(() => {});
+    try {
+      const email = String(order.customerEmail || '').trim().toLowerCase();
+      if (String(order.status || '').toLowerCase() !== 'delivered' || order.paymentStatus !== 'paid' || order.accountDeletedAt || !email || order.reviewRequestSentAt) { await done(); continue; }
+      if ((await adminDb.collection('reviewOptOut').doc(emailKey(email)).get()).exists) { await done(); continue; }
+      const [returns, exchanges] = await Promise.all(['returns', 'exchanges'].map((c) => adminDb.collection(c).where('orderId', '==', doc.id).limit(1).get()));
+      if (!returns.empty || !exchanges.empty) { await done({ reviewRequestSkipped: 'return or exchange' }); continue; }
+
+      // One line per product, leaving out ones they've already reviewed
+      // (same review id as reviews-api.js) and ones no longer in the shop.
+      const seen = new Set();
+      const lines = (order.items || []).filter((i) => i && i.productId && !seen.has(i.productId) && seen.add(i.productId));
+      const ctx = await buildOrderEmailContext({ items: lines });
+      const token = crypto.randomBytes(16).toString('hex');
+      const items = [];
+      for (const i of lines) {
+        const p = ctx.products[i.productId];
+        if (!p || p.status !== 'active') continue;
+        const reviewId = crypto.createHash('sha256').update(email + '|' + i.productId).digest('hex').slice(0, 32);
+        if ((await adminDb.collection('reviewOwners').doc(reviewId).get()).exists) continue;
+        const v = (p.variants || [])[i.variantIndex] || (p.variants || [])[0] || {};
+        items.push(Object.assign({}, i, {
+          name: p.name || i.name || 'Item', brand: p.brand || i.brand || '', color: v.color || i.color || '',
+          reviewUrl: SITE_URL + '/products/' + encodeURIComponent(p.slug || i.productId) + '?review=' + encodeURIComponent(doc.id + '.' + token)
+        }));
+      }
+      if (!items.length) { await done({ reviewRequestSkipped: 'nothing to review' }); continue; }
+      const message = orderEmails.reviewRequest(order, ctx, items, {
+        stopUrl: SITE_URL + '/review-requests/stop?o=' + encodeURIComponent(doc.id) + '&t=' + token
+      });
+      // The token first, so a link in a sent email always works.
+      await doc.ref.update({ reviewToken: token });
+      await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: email, subject: message.subject, html: message.html, text: message.text });
+      await done({ reviewRequestSentAt: now });
+      console.log('[REVIEW_REQUEST] Sent for order', order.orderNumber || doc.id);
+    } catch (e) {
+      console.error('[REVIEW_REQUEST] Failed for', doc.id, ':', e.message);
+      await done({ reviewRequestError: String(e.message).slice(0, 200) });
+    }
+  }
+}
+setInterval(sweepReviewRequests, 15 * 60 * 1000).unref();
+
 // ==================== TRACK YOUR ORDER ====================
 // The /pages/track-your-order form (track-order.js). The customer gives
 // their order number and the email they checked out with; both have to
@@ -2079,6 +2165,10 @@ app.post('/api/orders/:id/notify-status', async (req, res) => {
     const status = String(order.status || '').toLowerCase();
     if (!STATUS_EMAIL_STAGES.includes(status)) return res.json({ ok: true, skipped: 'No email for this status' });
     if (order.paymentStatus !== 'paid') return res.json({ ok: true, skipped: 'Order is not paid' });
+    // Delivered: ask for reviews a few days later (sweepReviewRequests).
+    if (status === 'delivered' && !order.reviewRequestDue && !order.reviewRequestSentAt) {
+      await orderRef.update({ reviewRequestDue: Date.now() + REVIEW_REQUEST_DELAY });
+    }
     if (!order.customerEmail) return res.json({ ok: true, skipped: 'No customer email' });
     // A shipped status after every package already sent its own tracking
     // email would only repeat it.

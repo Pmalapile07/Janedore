@@ -1049,6 +1049,35 @@ function bagReminder(items, ctx, links) {
   return { subject: 'You left something in your bag', html, text };
 }
 
+// A few days after an order is delivered (server.js sweepReviewRequests):
+// each item they haven't reviewed yet, with its own Write a review link
+// (item.reviewUrl) that proves the purchase, so no sign-in is needed.
+function reviewRequest(order, ctx, items, links) {
+  const first = String(order.customerName || '').trim().split(/\s+/)[0];
+  const hi = 'Hi' + (first ? ' ' + first : '') + ', ';
+  const intro = 'we hope you’re enjoying your order. Tell us what you think: your review helps other shoppers choose, and helps our brands make better pieces.';
+  const html = shell({
+    logoUrl: ctx.logoUrl,
+    logoFontUrl: ctx.logoFontUrl,
+    title: 'How was your order?',
+    preheader: 'Tell us what you think of your order #' + (order.orderNumber || '') + '.',
+    bannerHtml: '<strong>How was your order?</strong>',
+    cards: [
+      '<div style="font-size:14px;line-height:1.7;color:#555555;">' + esc(hi + intro) + '</div>',
+      title('Your order #' + (order.orderNumber || '')) + items.map((item, i) =>
+        '<div style="' + (i ? 'border-top:1px solid #eeeeee;padding-top:14px;margin-top:20px;' : '') + '">' +
+          itemsBlock([item], ctx, { hidePrice: true }) + button('Write a review', item.reviewUrl) +
+        '</div>').join('')
+    ],
+    footerHtml: 'You’re receiving this email because you ordered from Janedore. Questions? Write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>' +
+      '<a href="' + esc(links.stopUrl) + '" style="color:#888888;">Don’t ask me for reviews</a> · Janedore · janedore.co.za'
+  });
+  const text = 'How was your order?\n\n' + hi + intro + '\n\n' +
+    items.map((i) => '- ' + (i.name || 'Item') + (i.brand ? ' (' + i.brand + ')' : '') + ': ' + i.reviewUrl).join('\n') +
+    '\n\nDon’t ask me for reviews: ' + links.stopUrl;
+  return { subject: 'How was your order #' + (order.orderNumber || '') + '?', html, text };
+}
+
 // A waitlisted item is back in stock (waitlist-api.js). Sent once.
 // item.preorder: a pre-order whose limit was reached has opened again.
 function backInStock(item, ctx, links) {
@@ -1074,4 +1103,4 @@ function backInStock(item, ctx, links) {
   return { subject: (item.name || 'Your item') + ' ' + status, html, text };
 }
 
-module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, money };
+module.exports = { customerConfirmation, adminNewOrder, vendorNewOrder, shipped, adminShipped, statusUpdate, reportReceived, preorderDateChanged, refundStarted, refunded, returnRequested, returnForStaff, returnUpdate, exchangeRequested, exchangeForStaff, exchangeUpdate, contactForStaff, contactReceived, partnerApplicationForStaff, partnerApplicationReceived, partnerApplicationUpdate, bagReminder, backInStock, reviewRequest, money };

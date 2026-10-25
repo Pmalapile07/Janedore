@@ -761,6 +761,11 @@ function reviewPhotosHtml(r, alt) {
 function deviceOrdersForReviews() {
   try { return JSON.parse(localStorage.getItem('janedore_my_orders') || '[]'); } catch (e) { return []; }
 }
+// The Write a review link from a review request email (kept by a script
+// at the top of index.html): proves the purchase without signing in.
+function reviewLinkForReviews() {
+  try { return sessionStorage.getItem('janedore_review_link') || ''; } catch (e) { return ''; }
+}
 async function reviewAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };
   try {
@@ -774,11 +779,13 @@ async function reviewAuthHeaders() {
 async function showReviewButtonIfBought(productId) {
   try {
     const res = await fetch('/api/reviews/eligibility', { method: 'POST', headers: await reviewAuthHeaders(),
-      body: JSON.stringify({ productId, orders: deviceOrdersForReviews() }) });
+      body: JSON.stringify({ productId, orders: deviceOrdersForReviews(), reviewLink: reviewLinkForReviews() }) });
     const data = await res.json();
     if (!data.eligible || S.currentReviewProductId !== productId) return;
     S.reviewEmail = data.email || '';
     const el = document.getElementById('product-review-write');
     if (el) el.hidden = false;
+    // Arrived from the email's Write a review: open the form straight away.
+    if (window._reviewLinkOpen) { window._reviewLinkOpen = false; openReviewModal(); }
   } catch (e) {}
 }

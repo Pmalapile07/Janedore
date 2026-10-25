@@ -103,7 +103,7 @@ async function uploadReviewPhotos(files) {
     try { const urls = []; for (const f of files) urls.push(await uploadChatImageToCloudinary(f)); return urls; } catch (e) {}
   }
   const res = await fetch('/api/reviews/photo-signature', { method: 'POST', headers: await reviewAuthHeaders(),
-    body: JSON.stringify({ productId: S.currentReviewProductId, orders: deviceOrdersForReviews() }) });
+    body: JSON.stringify({ productId: S.currentReviewProductId, orders: deviceOrdersForReviews(), reviewLink: reviewLinkForReviews() }) });
   const sig = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error('upload: ' + (sig.error || res.status));
   const urls = [];
@@ -139,7 +139,7 @@ async function submitReview() {
     catch (e) { console.warn('[REVIEWS] Photo upload failed:', e.message); return fail('Your photos could not be uploaded. Remove them to post your review without photos, or try again later.'); }
     const res = await fetch('/api/reviews', { method: 'POST', headers: await reviewAuthHeaders(), body: JSON.stringify({
       productId: S.currentReviewProductId, rating: S.reviewRating, text: DOM.reviewText.value.trim(),
-      name: DOM.reviewName.value.trim(), email, imageUrls, orders: deviceOrdersForReviews() }) });
+      name: DOM.reviewName.value.trim(), email, imageUrls, orders: deviceOrdersForReviews(), reviewLink: reviewLinkForReviews() }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return fail(data.error || 'We couldn’t submit your review. Please try again.');
   } catch (e) {
