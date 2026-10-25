@@ -265,6 +265,8 @@
 .size-guide-body table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; }
 .size-guide-body th, .size-guide-body td { padding: 8px 6px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
 .size-guide-body th { font-weight: 600; color: #111; }
+.size-guide-photo { display: block; width: 100%; height: auto; margin: 8px 0 0; background: #f4f4f4; }
+.size-guide-disclaimer-note { margin: 16px 0 0; font-size: 12px; line-height: 1.6; color: #888; }
 .sizes-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .product-size-btn {
   min-width: 48px;

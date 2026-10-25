@@ -50,26 +50,63 @@ function buildSizeRowHtml(product, variantIndex) {
     const selectable = inStock || product.waitlist;
     return `<button class="${cls}" ${selectable ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')"${inStock ? '' : ' aria-label="' + escapeHTML(s) + ', sold out"'}>${escapeHTML(s)}</button>`;
   }).join('');
-  const guide = productNeedsSizeGuide(product) ? '<button type="button" class="size-guide-link" onclick="openSizeGuide()">Size guide</button>' : '';
+  const guide = productNeedsSizeGuide(product) ? `<button type="button" class="size-guide-link" onclick="openSizeGuide('${escapeJSString(product.id)}')">Size guide</button>` : '';
   return `<div class="product-sizes" id="product-size-row"><div class="sizes-head"><div class="sizes-label">Select a size</div>${guide}</div><div class="sizes-row">${buttons}</div></div>`;
 }
 
-// Size guide: only for products whose fit depends on a size chart, i.e.
+// Size guide: for products whose fit depends on a size chart, i.e.
 // categories with clothing or shoe sizes (taxonomy.js sizeSystem):
 // clothing, shoes, kids' clothing and kids' shoes. Not bags, jewellery,
-// beauty or homeware. Opens the Size Guide page (admin > Pages) in the
-// quick add sheet, so the customer stays on the product.
+// beauty or homeware, unless the brand added a guide to the product.
+// Opens in the quick add sheet, so the customer stays on the product.
+function productHasOwnSizeGuide(product) {
+  return !!(product.sizeGuideId || (product.sizeGuideImage && product.sizeGuideApproved === true));
+}
 function productNeedsSizeGuide(product) {
-  return !!(typeof JDTaxonomy !== 'undefined' && JDTaxonomy.sizeSystem(product.category));
+  return productHasOwnSizeGuide(product) || !!(typeof JDTaxonomy !== 'undefined' && JDTaxonomy.sizeSystem(product.category));
 }
 
+// What the pop-up shows, first that exists:
+// 1. the product's own guide (admin-size-guides.js): its brand's size
+//    chart and/or a size guide photo a Super Admin approved;
+// 2. the Size Guide page (admin > Pages);
+// 3. a note pointing to customer care.
+const SIZE_GUIDE_DISCLAIMER = 'This size guide is provided by the brand. Measurements are approximate and fit can vary by style. If you’re between sizes, check the product details or contact customer care.';
 let _sizeGuidePage;
-async function openSizeGuide() {
+const _sizeCharts = {};
+
+function sizeChartHtml(chart) {
+  if (!chart || !(chart.columns || []).length) return '';
+  const rows = (chart.rows || []).map(r => Array.isArray(r) ? r : (r && r.cells) || []);
+  return `<table><thead><tr>${chart.columns.map(c => `<th>${escapeHTML(c)}</th>`).join('')}</tr></thead>` +
+    `<tbody>${rows.map(r => `<tr>${chart.columns.map((_, i) => `<td>${escapeHTML(r[i] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+
+async function openSizeGuide(productId) {
+  const product = PRODUCTS.find(p => p.id === productId) || {};
   const sheet = quickAddSheet();
   const panel = sheet.querySelector('.quick-add-panel');
   const head = '<button type="button" class="quick-add-close" onclick="closeQuickAdd()" aria-label="Close"><i class="ph ph-x"></i></button><h2 class="size-guide-title">Size guide</h2>';
   panel.innerHTML = head + '<div class="loading-spinner"><div class="spinner"></div></div>';
   showQuickAddSheet(sheet);
+
+  if (productHasOwnSizeGuide(product)) {
+    let chart = '';
+    if (product.sizeGuideId) {
+      if (!(product.sizeGuideId in _sizeCharts)) {
+        try { const doc = await db.collection('sizeGuides').doc(product.sizeGuideId).get(); _sizeCharts[product.sizeGuideId] = doc.exists ? doc.data() : null; }
+        catch (e) { _sizeCharts[product.sizeGuideId] = null; }
+      }
+      chart = sizeChartHtml(_sizeCharts[product.sizeGuideId]);
+    }
+    const photoUrl = product.sizeGuideApproved === true ? safeImageURL(product.sizeGuideImage || '') : '';
+    const photo = photoUrl ? `<img class="size-guide-photo" src="${escapeHTML(photoUrl)}" alt="${escapeHTML((product.brand || 'Brand') + ' size guide')}">` : '';
+    if (chart || photo) {
+      panel.innerHTML = head + `<div class="size-guide-body">${chart}${photo}</div><p class="size-guide-disclaimer-note">${SIZE_GUIDE_DISCLAIMER}</p>`;
+      return;
+    }
+  }
+
   if (_sizeGuidePage === undefined) {
     try { const doc = await db.collection('pages').doc('size-guide').get(); _sizeGuidePage = doc.exists ? (doc.data().content || '') : ''; }
     catch (e) { _sizeGuidePage = undefined; }

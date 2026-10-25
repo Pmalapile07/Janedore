@@ -476,6 +476,7 @@
             (p.brand ? ' · <span style="font-weight:600;font-size:11px;">' + esc(p.brand) + '</span>' : '') +
           '</div>' +
         '</div>' +
+        (isSuperAdmin() && window._sizeGuideNeedsApproval && window._sizeGuideNeedsApproval(p) ? '<span class="badge" style="margin-right:6px;background:#fff4e5;color:#8a5300;">Size guide to approve</span>' : '') +
         '<span class="badge" style="' + badgeStyle + '">' + esc(status) + '</span>' +
     '</div>';
   }
@@ -905,6 +906,9 @@
         '</div>' +
       '</div>' +
 
+      // Size guide (admin-size-guides.js)
+      (window._sizeGuideCardHtml ? window._sizeGuideCardHtml(p) : '') +
+
       // 6. INVENTORY
       '<div class="card" style="margin-bottom:12px;">' +
         '<div class="card-header"><span class="card-title">Inventory</span></div>' +
@@ -955,6 +959,7 @@
     window._pfUpdateMargin();
     window._updateSizePreview();
     window._updateSeoPreview();
+    if (window._initSizeGuideCard) window._initSizeGuideCard(p);
   };
 
   window._shareAdminProduct = function(productId) {
@@ -1294,6 +1299,14 @@
     if (form.freeDelivery) data.freeDelivery = form.freeDelivery.value === 'true';
     else if (existingProduct && typeof existingProduct.freeDelivery === 'boolean') data.freeDelivery = existingProduct.freeDelivery;
     if (form.waitlist) data.waitlist = form.waitlist.value === 'true';
+
+    // Size guide: a photo must be approved by a Super Admin before the
+    // product is published (firestore.rules checks this too).
+    if (window._sizeGuideFormData) Object.assign(data, window._sizeGuideFormData(form));
+    if (data.status === 'active' && data.sizeGuideImage && !data.sizeGuideApproved) {
+      showToast('The size guide photo needs Super Admin approval before this product can be published.', 'error');
+      return;
+    }
 
     var isPreorder = badgeValue === 'pre-order';
     data.preorderShipDate = isPreorder && form.preorderShipDate ? (form.preorderShipDate.value || null) : null;

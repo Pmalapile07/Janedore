@@ -89,6 +89,12 @@ service cloud.firestore {
     // PRODUCTS
     // =========================================================
 
+    function sizeGuidePhotoOk() {
+      return !(request.resource.data.get('status', '') == 'active' &&
+               request.resource.data.get('sizeGuideImage', '') != '' &&
+               request.resource.data.get('sizeGuideApproved', false) != true);
+    }
+
     match /products/{productId} {
       allow read: if true;
 
@@ -97,22 +103,39 @@ service cloud.firestore {
       // storefront treats as live. Checking against the status value
       // the app actually uses, so a vendor can't self-publish straight
       // to live.
-      allow create: if isSuperAdmin() ||
+      // Size guide photo (admin-size-guides.js): only a Super Admin
+      // approves it, a brand can't keep an approval on a new photo, and
+      // no product goes live with a photo that isn't approved.
+      allow create: if sizeGuidePhotoOk() && (isSuperAdmin() ||
         (isVendor() &&
          request.resource.data.vendorId == adminDoc().vendorId &&
-         request.resource.data.status != 'active');
+         request.resource.data.status != 'active' &&
+         request.resource.data.get('sizeGuideApproved', false) != true));
 
-      allow update: if isSuperAdmin() ||
+      allow update: if sizeGuidePhotoOk() && (isSuperAdmin() ||
         (isVendor() &&
          resource.data.vendorId == adminDoc().vendorId &&
          request.resource.data.vendorId == adminDoc().vendorId &&
-         request.resource.data.status != 'active');
+         request.resource.data.status != 'active' &&
+         (request.resource.data.get('sizeGuideApproved', false) != true ||
+          (resource.data.get('sizeGuideApproved', false) == true &&
+           request.resource.data.get('sizeGuideImage', '') == resource.data.get('sizeGuideImage', '')))));
 
       allow delete: if isSuperAdmin() ||
         (isVendor() &&
          resource.data.vendorId == adminDoc().vendorId &&
          resource.data.status != 'active' &&
          resource.data.published != true);
+    }
+
+    // Size charts (admin-size-guides.js): one per brand fit, picked on
+    // products by sizeGuideId and shown in the shop's Size guide pop-up.
+    match /sizeGuides/{guideId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() || isOwnVendor(request.resource.data.vendorId);
+      allow update: if isSuperAdmin() ||
+        (isOwnVendor(resource.data.vendorId) && isOwnVendor(request.resource.data.vendorId));
+      allow delete: if isSuperAdmin() || isOwnVendor(resource.data.vendorId);
     }
 
     // =========================================================
