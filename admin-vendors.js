@@ -19,7 +19,10 @@
   // public, because the storefront reads it, so it only keeps what shoppers
   // see. server.js moves any of these still on a vendors doc on start-up.
   var privateRef = window._adminDB.collection('vendorPrivate');
-  var PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes'];
+  // pickup: where couriers collect the brand's parcels (Bob Go, later),
+  // which may be someone's home, so never public.
+  var PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes', 'pickup'];
+  var PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'];
 
   function saveVendor(id, data) {
     var pub = {}, priv = {};
@@ -676,6 +679,21 @@
 
         '<div class="form-group"><label>Warehouse</label><input name="warehouse" value="' + esc(v.warehouse || '') + '" placeholder="e.g. Cape Town DC"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Leave empty if this brand ships from its own premises. Brands with the same warehouse name ship together: a customer ordering from both gets one package and pays one delivery fee.</div></div>' +
 
+        // Pickup address: where the courier collects this brand's parcels.
+        (function() {
+          var a = v.pickup || {};
+          var f = function(name, label, value, extra) { return '<div class="form-group"><label>' + label + '</label><input name="' + name + '" value="' + esc(value || '') + '"' + (extra || '') + '></div>'; };
+          return '<div class="form-group" style="margin-bottom:0;"><label>Pickup address</label><div style="font-size:10px;color:var(--muted);margin-top:-2px;">Where the courier collects this brand\'s parcels. Used for delivery prices at checkout and booking collections. Private: only Janedore staff and the brand can see it.</div></div>' +
+            '<div class="form-group"><label>Type</label><select name="pickupType"><option value="business"' + (a.type !== 'residential' ? ' selected' : '') + '>Business</option><option value="residential"' + (a.type === 'residential' ? ' selected' : '') + '>Residential (a home)</option></select></div>' +
+            f('pickupCompany', 'Business or building name', a.company, ' placeholder="Optional"') +
+            f('pickupStreet', 'Street address', a.street, ' placeholder="e.g. 22 Ealing Crescent"') +
+            f('pickupSuburb', 'Suburb', a.suburb, ' placeholder="e.g. Bryanston"') +
+            '<div class="form-row">' + f('pickupCity', 'City', a.city, ' placeholder="e.g. Johannesburg"') + f('pickupPostalCode', 'Postal code', a.postalCode, ' inputmode="numeric" placeholder="e.g. 2191"') + '</div>' +
+            '<div class="form-group"><label>Province</label><select name="pickupProvince"><option value="">Choose a province</option>' + PROVINCES.map(function(pr) { return '<option' + (a.province === pr ? ' selected' : '') + '>' + pr + '</option>'; }).join('') + '</select></div>' +
+            '<div class="form-row">' + f('pickupContactName', 'Contact person', a.contactName, ' placeholder="Who hands over parcels"') + f('pickupContactPhone', 'Contact phone', a.contactPhone, ' type="tel" placeholder="e.g. 082 123 4567"') + '</div>' +
+            f('pickupInstructions', 'Collection instructions', a.instructions, ' placeholder="Optional, e.g. ring the bell at gate 2"');
+        })() +
+
         '<div class="form-group"><label>PayFast Merchant ID</label><input name="payfastMerchantId" value="' + esc(v.payfastMerchantId || '') + '" placeholder="e.g. 10000105" inputmode="numeric"><div style="font-size:10px;color:var(--muted);margin-top:4px;">From the vendor\'s own PayFast account settings page. Only the ID, never their key or passphrase. Lets checkout automatically split their share of a sale straight to them.</div></div>' +
 
         '<div class="form-group"><label>Internal Notes</label><textarea name="notes">' + esc(v.notes || '') + '</textarea></div>' +
@@ -716,12 +734,31 @@
       payfastMerchantId: form.payfastMerchantId.value.trim(),
       freeDelivery:   form.freeDelivery.value === 'true',
       warehouse:      form.warehouse.value.trim(),
+      pickup: {
+        type:         form.pickupType.value === 'residential' ? 'residential' : 'business',
+        company:      form.pickupCompany.value.trim(),
+        street:       form.pickupStreet.value.trim(),
+        suburb:       form.pickupSuburb.value.trim(),
+        city:         form.pickupCity.value.trim(),
+        province:     form.pickupProvince.value,
+        postalCode:   form.pickupPostalCode.value.trim(),
+        contactName:  form.pickupContactName.value.trim(),
+        contactPhone: form.pickupContactPhone.value.trim(),
+        instructions: form.pickupInstructions.value.trim()
+      },
       status:         form.status.value,
       notes:          form.notes.value.trim(),
       updatedAt:      new Date().toISOString()
     };
     if (!existingId) {
       data.createdAt = new Date().toISOString();
+    }
+    // A partial pickup address can't be used to book a courier.
+    var pk = data.pickup;
+    var started = pk.street || pk.suburb || pk.city || pk.province || pk.postalCode || pk.contactName || pk.contactPhone;
+    if (started && !(pk.street && pk.suburb && pk.city && pk.province && /^\d{4}$/.test(pk.postalCode) && pk.contactName && pk.contactPhone)) {
+      showToast('Complete the pickup address: street, suburb, city, province, a 4-digit postal code, contact person and phone.', 'error');
+      return;
     }
 
     saveVendor(brandId, data).then(function() {

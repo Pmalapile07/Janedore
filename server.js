@@ -621,11 +621,11 @@ app.post('/api/send-welcome-email', (req, res) => {
 let brandAssetsCache = { value: { siteLogo: '', emailLogo: '', logoFont: '', logoFontFormat: '' }, at: 0 };
 // ==================== BRAND PRIVATE DETAILS ====================
 // vendors/{id} is public (the storefront reads it), so a brand's contact
-// and login email, commission, PayFast merchant ID and internal notes live
+// and login email, commission, PayFast merchant ID, pickup address and internal notes live
 // in vendorPrivate/{id} instead (admin-vendors.js, firestore.rules).
 // getVendors() returns both merged. migrateVendorPrivate() moves any of
 // these fields still on a vendors doc, once, on start-up.
-const VENDOR_PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes'];
+const VENDOR_PRIVATE_FIELDS = ['email', 'accountEmail', 'accountUid', 'commissionRate', 'payfastMerchantId', 'notes', 'pickup'];
 
 async function getVendors(ids) {
   if (!ids.length) return [];

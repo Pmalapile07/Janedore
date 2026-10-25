@@ -1045,7 +1045,15 @@
       peSheet('sizeguide', 'Size guide', window._sizeGuideCardHtml ? window._sizeGuideCardHtml(p) : '') +
 
       peSheet('shipping', 'Shipping',
-        field('Weight (kg)', '<input name="shippingWeight" type="number" min="0" step="0.01" inputmode="decimal" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5">') +
+        // Weight and parcel size, packed and ready to ship: what delivery
+        // prices and courier bookings (Bob Go) are worked out from.
+        field('Weight (kg)', '<input name="shippingWeight" type="number" min="0" step="0.01" inputmode="decimal" value="' + esc(String(p.shippingWeight||'')) + '" placeholder="e.g. 0.5">', 'Packed, in its Janedore box.') +
+        '<div class="form-group" style="padding:0;"><label>Parcel size (cm): length × width × height</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">' +
+          ['Length', 'Width', 'Height'].map(function(d) {
+            var v = p.parcel && p.parcel[d.toLowerCase() + 'Cm'];
+            return '<input name="parcel' + d + '" type="number" min="0" step="0.1" inputmode="decimal" value="' + esc(v ? String(v) : '') + '" placeholder="' + d + '" aria-label="' + d + ' in cm">';
+          }).join('') +
+        '</div><div class="pe-note">The box it ships in. Couriers charge on the bigger of the weight and the size, so measure the box, not the item.</div></div>' +
         field('Shipping &amp; returns note', '<input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000">') +
         field('International shipping', '<select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select>') +
         // Free delivery is Janedore's call (it pays the courier), so
@@ -1166,7 +1174,8 @@
     if (val('sizeGuideImage')) guide.push(val('sizeGuideApproved') === 'true' ? 'Photo approved' : 'Photo waiting for approval');
     _peSet('sizeguide', 'Size guide', guide.join(' · '));
     var weight = val('shippingWeight');
-    _peSet('shipping', 'Shipping', weight ? weight + ' kg' : '');
+    var dims = ['parcelLength', 'parcelWidth', 'parcelHeight'].map(val);
+    _peSet('shipping', 'Shipping', [weight ? weight + ' kg' : '', dims.every(Boolean) ? dims.join(' × ') + ' cm' : ''].filter(Boolean).join(' · '));
     _peSet('gender', 'Gender', selText('gender'));
     _peSet('brand', 'Brand', val('brand'));
     var colCount = form.querySelectorAll('input[name="collectionHandles"]:checked').length;
@@ -1484,6 +1493,10 @@
       measurements:         form.measurements ? form.measurements.value : '',
       shippingReturns:      form.shippingReturns.value,
       shippingWeight:       parseFloat(form.shippingWeight.value) || 0,
+      parcel:               (function() {
+        var dims = { lengthCm: parseFloat(form.parcelLength.value) || 0, widthCm: parseFloat(form.parcelWidth.value) || 0, heightCm: parseFloat(form.parcelHeight.value) || 0 };
+        return dims.lengthCm && dims.widthCm && dims.heightCm ? dims : null;
+      })(),
       internationalShipping: form.internationalShipping.value === 'true',
       onlineStore:          form.onlineStore ? form.onlineStore.value === 'true' : true,
       seoTitle:             form.seoTitle ? form.seoTitle.value : '',
@@ -1532,6 +1545,9 @@
     else if (existingProduct && typeof existingProduct.freeDelivery === 'boolean') data.freeDelivery = existingProduct.freeDelivery;
     if (form.waitlist) data.waitlist = form.waitlist.value === 'true';
 
+    if (!data.parcel && (form.parcelLength.value || form.parcelWidth.value || form.parcelHeight.value)) {
+      showToast('Add all three parcel measurements: length, width and height.', 'error'); window._peOpen('shipping'); return;
+    }
     // Size guide: a photo must be approved by a Super Admin before the
     // product is published (firestore.rules checks this too).
     if (window._sizeGuideFormData) Object.assign(data, window._sizeGuideFormData(form));
