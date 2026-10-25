@@ -274,6 +274,7 @@ async function renderSiteContent() {
     const homepage = homepageSnap.exists ? (homepageSnap.data() || {}) : {};
     const collectionPages = collectionPagesSnap.exists ? (collectionPagesSnap.data() || {}) : {};
     window._siteContent = { homepage, collectionPages };
+    if (typeof renderAppBadges === 'function') renderAppBadges();
 
     renderLogo(homepage.logoUrl);
     renderMenuCollectionLinks();

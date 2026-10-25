@@ -87,6 +87,8 @@ function buildFooter(id) {
       <i class="ph-bold ph-tiktok-logo" aria-label="TikTok" role="img"></i>
     </div>
 
+    <div class="footer-apps" data-app-badges hidden></div>
+
     <div class="footer-bottom">
       <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span> <span class="footer-disclaimer">Independent brands featured on this platform remain the property of their respective owners.</span></p>
     </div>
@@ -112,6 +114,8 @@ function buildFooter(id) {
     logoText.style.lineHeight = computed.lineHeight;
     footerLogoMark.replaceChildren(logoText);
   }
+  // App Store / Google Play badges, once their links are set (app-badges.js).
+  if (typeof renderAppBadges === 'function') renderAppBadges();
 }
 
 

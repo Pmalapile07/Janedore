@@ -264,6 +264,7 @@
     var banner = h.editorialBanner || {};
     var brand = h.shopByBrand || {};
     var news = h.newsletter || {};
+    var apps = h.apps || {};
 
     var sectionsHtml =
       accordionSectionHtml('ph-stamp', 'Site Logo',
@@ -336,6 +337,16 @@
         '<div class="form-group" style="padding:0;"><label>Subtext</label><input name="newsletterSubtext" value="' + esc(news.subtext || '') + '" placeholder=""></div>' +
         '<div class="form-group" style="padding:0;"><label>Disclaimer</label><input name="newsletterDisclaimer" value="' + esc(news.disclaimer || '') + '" placeholder=""></div>',
         'newsletter'
+      ) +
+
+      // App store badges on the site (app-badges.js): each shows once its
+      // link is here, never inside the app itself.
+      accordionSectionHtml('ph-device-mobile', 'App download',
+        '<span>' + (apps.appStoreUrl || apps.playStoreUrl ? 'Links added' : 'No links yet') + '</span>',
+        '<p class="account-muted" style="font-size:11px;margin:0;">Paste your app\'s store pages once it\'s published. The official App Store and Google Play badges show on the site for each link added, and never inside the app.</p>' +
+        '<div class="form-group" style="padding:0;"><label>App Store link</label><input name="appStoreUrl" value="' + esc(apps.appStoreUrl || '') + '" placeholder="https://apps.apple.com/..."></div>' +
+        '<div class="form-group" style="padding:0;"><label>Google Play link</label><input name="playStoreUrl" value="' + esc(apps.playStoreUrl || '') + '" placeholder="https://play.google.com/store/apps/details?id=..."></div>',
+        'apps'
       );
 
     mc.innerHTML =
@@ -525,6 +536,10 @@
         heading: form.newsletterHeading.value.trim(),
         subtext: form.newsletterSubtext.value.trim(),
         disclaimer: form.newsletterDisclaimer.value.trim()
+      },
+      apps: {
+        appStoreUrl: /^https:\/\/apps\.apple\.com\//i.test(form.appStoreUrl.value.trim()) ? form.appStoreUrl.value.trim() : '',
+        playStoreUrl: /^https:\/\/play\.google\.com\//i.test(form.playStoreUrl.value.trim()) ? form.playStoreUrl.value.trim() : ''
       },
       updatedAt: new Date().toISOString()
     };
