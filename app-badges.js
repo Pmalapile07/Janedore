@@ -16,14 +16,11 @@ const APP_BAR_DISMISS_KEY = 'janedore_app_bar_closed';
 const APP_BAR_DISMISS_DAYS = 30;
 // Preview before the app is published: opening the site with
 // ?app-preview=1 shows the bar and badges on that phone only (links go
-// nowhere); ?app-preview=0 turns it off. Visitors never see it, since
+// nowhere), even opened from a home screen icon; ?app-preview=0 turns
+// it off. Visitors never see it, since
 // Apple and Google only allow the badges for an app in their stores.
+// The address is read by a script at the top of index.html.
 const APP_PREVIEW_KEY = 'janedore_app_preview';
-(function () {
-  const m = location.search.match(/[?&]app-preview=([01])/);
-  if (!m) return;
-  try { m[1] === '1' ? localStorage.setItem(APP_PREVIEW_KEY, '1') : localStorage.removeItem(APP_PREVIEW_KEY); } catch (e) {}
-})();
 function appPreviewOn() { try { return localStorage.getItem(APP_PREVIEW_KEY) === '1'; } catch (e) { return false; } }
 
 function isInsideApp() {
@@ -71,7 +68,7 @@ function closeAppBar() {
 
 function renderAppBadges() {
   const links = appStoreLinks();
-  const inApp = isInsideApp();
+  const inApp = isInsideApp() && !appPreviewOn();
 
   document.querySelectorAll('[data-app-badges]').forEach(el => {
     const badges = inApp ? '' : appBadgesHtml(links);

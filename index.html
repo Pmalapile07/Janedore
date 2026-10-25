@@ -109,6 +109,15 @@
        flash first. Hide it until init() has routed (route-pending is
        cleared in app.js), with an 8s safety net in case init() fails. -->
   <script>
+  // App badges preview (app-badges.js): read ?app-preview=1 / =0 first
+  // thing, before the page's routing can rewrite the address.
+  (function () {
+    var m = location.search.match(/[?&]app-preview=([01])/);
+    if (!m) return;
+    try { m[1] === '1' ? localStorage.setItem('janedore_app_preview', '1') : localStorage.removeItem('janedore_app_preview'); } catch (e) {}
+  })();
+  </script>
+  <script>
   (function () {
     var p = location.pathname, h = location.hash.replace('#', '');
     var home = (p === '/' || p === '/index.html') && (!h || h === 'home') && !/payfast_return/.test(location.search);
