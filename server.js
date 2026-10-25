@@ -908,12 +908,12 @@ function isHouseProduct(p) {
 }
 // A brand's free delivery offer (vendors/{id}.freeDeliveryOffer, set in
 // Admin > Brands or the brand's own profile): on its orders over
-// minimum, the brand pays the delivery, all of it or up to maxCover.
-// { minimum, maxCover } or null. Same as cart.js freeDeliveryOffer().
+// minimum, delivery is free and the brand pays it, whatever it costs.
+// { minimum } or null. Same as cart.js freeDeliveryOffer().
 function freeDeliveryOfferOf(vendor) {
   const o = vendor && vendor.freeDeliveryOffer;
   const minimum = Number(o && o.minimum);
-  return minimum > 0 ? { minimum, maxCover: Math.max(0, Number(o.maxCover) || 0) } : null;
+  return minimum > 0 ? { minimum } : null;
 }
 
 function serverUnitPrice(product) {
@@ -1001,17 +1001,16 @@ async function priceOrder(order) {
   pricedItems.forEach((i) => {
     const product = products[String(i.productId || '')];
     const key = shippingPackageKey(product);
-    if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true, minimum: 0, maxCover: 0, vendorId: null });
+    if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true, minimum: 0, vendorId: null });
     const pkg = packageMap.get(key);
     pkg.subtotal += i.price * i.qty;
     // Several brands in one warehouse: all must offer it, the highest
-    // minimum and smallest cover apply, and the first brand pays.
+    // minimum applies, and the first brand pays.
     const vid = isHouseProduct(product) ? HOUSE_VENDOR_ID : product.vendorId;
     const offer = offers[vid];
     if (!offer) pkg.eligible = false;
     else {
       pkg.minimum = Math.max(pkg.minimum, offer.minimum);
-      if (offer.maxCover) pkg.maxCover = pkg.maxCover ? Math.min(pkg.maxCover, offer.maxCover) : offer.maxCover;
       pkg.vendorId = pkg.vendorId || vid;
     }
   });
@@ -1022,7 +1021,7 @@ async function priceOrder(order) {
   const deliveryCovered = {};
   packageMap.forEach((pkg) => {
     if (codeFree) return;
-    const covered = pkg.eligible && pkg.subtotal >= pkg.minimum ? (pkg.maxCover ? Math.min(pkg.maxCover, SHIPPING_FEE) : SHIPPING_FEE) : 0;
+    const covered = pkg.eligible && pkg.subtotal >= pkg.minimum ? SHIPPING_FEE : 0;
     if (covered) deliveryCovered[pkg.vendorId] = (deliveryCovered[pkg.vendorId] || 0) + covered;
     shipping += SHIPPING_FEE - covered;
   });

@@ -37,8 +37,8 @@
   }
 
   // Free delivery is the brand's own offer, paid by the brand: on its
-  // orders over a minimum, it covers the delivery, all of it or up to a
-  // maximum (vendor.freeDeliveryOffer, read by cart.js and server.js).
+  // orders over a minimum, delivery is free and the brand pays it
+  // (vendor.freeDeliveryOffer, read by cart.js and server.js).
   // Set here by Super Admin or by the brand in its own profile.
   function freeDeliveryFieldsHtml(v) {
     var o = v.freeDeliveryOffer || {};
@@ -50,18 +50,15 @@
       '<div class="fd-fields" style="display:' + (on ? '' : 'none') + ';">' +
         '<div class="form-row">' +
           '<div class="form-group"><label>Minimum order (R)</label><input name="freeDeliveryMinimum" type="number" min="1" step="1" inputmode="numeric" value="' + esc(on ? String(o.minimum) : '') + '" placeholder="e.g. 500"></div>' +
-          '<div class="form-group"><label>Covers up to (R)</label><input name="freeDeliveryMaxCover" type="number" min="1" step="1" inputmode="numeric" value="' + esc(on && o.maxCover ? String(o.maxCover) : '') + '" placeholder="All of it"></div>' +
         '</div>' +
-        '<div class="form-group" style="font-size:10px;color:var(--muted);margin-top:-6px;">On orders of this brand\'s items over the minimum, the brand pays the delivery: all of it, or up to the amount set (the customer pays the rest). It\'s taken off the brand\'s payout, and its products show a Free delivery badge.</div>' +
+        '<div class="form-group" style="font-size:10px;color:var(--muted);margin-top:-6px;">On orders of this brand\'s items over the minimum, delivery is free for the customer and the brand pays it, whatever it costs. It\'s taken off the brand\'s payout, and its products show a Free delivery badge.</div>' +
       '</div>';
   }
   function readFreeDeliveryOffer(form) {
     if (!form.freeDeliveryOn || form.freeDeliveryOn.value !== 'yes') return { offer: null };
     var minimum = Math.round(Number(form.freeDeliveryMinimum.value));
-    var maxCover = form.freeDeliveryMaxCover.value ? Math.round(Number(form.freeDeliveryMaxCover.value)) : 0;
     if (!(minimum > 0)) return { error: 'Add the minimum order for free delivery.' };
-    if (maxCover < 0) return { error: 'The amount covered can\'t be negative.' };
-    return { offer: { minimum: minimum, maxCover: maxCover } };
+    return { offer: { minimum: minimum } };
   }
 
   function withPrivate(vendor) {

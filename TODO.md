@@ -12,7 +12,7 @@
 - **Who pays what:** the customer's delivery fee comes in through PayFast with the order; Janedore pays Bob Go from a prepaid Bob Go balance. Talk to Bob Go (billing +27 12 940 1060) and PayFast about the details.
 - **Cash flow:** PayFast pays out a few days after an order, but Bob Go needs the money in the balance before a courier is booked. Decide how big a float to keep.
 - **Courier adjustments:** Bob Go's price is an estimate; if the courier measures a parcel bigger or heavier, the difference is charged afterwards. Decide who covers it (ask brands for accurate weights and sizes).
-- **Free delivery over R750:** Janedore pays the courier on those orders. Set the commission so it covers this.
+- **Free delivery:** each brand's own offer (Admin > Brands: a minimum order). Over it, delivery is free and the brand pays it. It uses the R150 fee for now; once Bob Go rates are live, take the actual courier price off the brand's payout instead. Manual payouts must deduct `deliveryCovered` too.
 
 ## Brand pages
 - **Admin fields:** let brands (or admin) set their slogan, shown in the middle of their hero photo (`vendor.slogan`; nothing shows until it is set), and their (About removed: brand pages show no story, like Superbalist). The line under their name in the brand bar is now automatic: the brand's top two departments ("Clothing & Accessories"), no location.

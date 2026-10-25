@@ -227,7 +227,7 @@
 }
 .product-badge.badge-sale { background: #c0392b; color: #fff; }
 /* Same green as the home page's free delivery banner (hero.css). */
-.product-badge.badge-free-delivery, .product-badge[class*="-off-delivery"] { background: #e6edd5; color: #111; }
+.product-badge.badge-free-delivery { background: #e6edd5; color: #111; }
 
 /* ============================================
    PRODUCT CARD — info block

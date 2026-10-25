@@ -209,9 +209,8 @@ function getCartTotalAfterDiscount() {
 const SHIPPING_FEE = 150;
 // Free delivery is each brand's own offer (Admin > Brands, or the brand's
 // own profile: vendor.freeDeliveryOffer): on its orders over a minimum,
-// the brand pays the delivery, all of it or up to a maximum it sets
-// (maxCover; the customer pays the rest). Every product of that brand
-// qualifies. The brand pays for it, not Janedore. Mirrors server.js
+// delivery is free and the brand pays it, whatever it costs. Every
+// product of that brand qualifies. The brand pays for it, not Janedore. Mirrors server.js
 // priceOrder(), which is what actually gets charged.
 const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
@@ -222,26 +221,21 @@ function productVendor(p) {
   const vid = isHouseProduct(p) ? HOUSE_VENDOR_ID : p.vendorId;
   return (S.vendors || []).find(v => v.id === vid) || null;
 }
-// { minimum, maxCover } (maxCover 0: the whole delivery), or null.
+// { minimum }, or null.
 function freeDeliveryOffer(p) {
   const o = (productVendor(p) || {}).freeDeliveryOffer;
   const minimum = Number(o && o.minimum);
-  return minimum > 0 ? { minimum, maxCover: Math.max(0, Number(o.maxCover) || 0) } : null;
+  return minimum > 0 ? { minimum } : null;
 }
-// "Free delivery" only when the brand pays all of it; covering part of
-// it is "R100 off delivery", never called free.
-function isPartialDeliveryOffer(o) { return !!(o && o.maxCover && o.maxCover < SHIPPING_FEE); }
-function deliveryDealName(o) { return isPartialDeliveryOffer(o) ? formatPrice(o.maxCover) + ' off delivery' : 'Free delivery'; }
-// Brands paying all of the delivery: the Free delivery badge and collection.
-function isFreeDeliveryProduct(p) { const o = freeDeliveryOffer(p); return !!o && !isPartialDeliveryOffer(o); }
-// The product's badge: FREE DELIVERY or R100 OFF DELIVERY.
-function deliveryBadge(p) { const o = freeDeliveryOffer(p); return o ? deliveryDealName(o).toUpperCase() : ''; }
-// "Free delivery on NIRIUS CO orders over R500" / "R100 off delivery on …".
+// The Free delivery badge and collection.
+function isFreeDeliveryProduct(p) { return !!freeDeliveryOffer(p); }
+function deliveryBadge(p) { return isFreeDeliveryProduct(p) ? 'FREE DELIVERY' : ''; }
+// "Free delivery on NIRIUS CO orders over R500."
 function freeDeliveryText(p) {
   const o = freeDeliveryOffer(p);
   if (!o) return '';
   const v = productVendor(p) || {};
-  return deliveryDealName(o) + ' on ' + (v.brand || v.name || p.brand || '') + ' orders over ' + formatPrice(o.minimum) + '.';
+  return 'Free delivery on ' + (v.brand || v.name || p.brand || '') + ' orders over ' + formatPrice(o.minimum) + '.';
 }
 
 // Brands that share a warehouse (Admin > Brands, vendor.warehouse) ship
@@ -263,25 +257,22 @@ function getCartShipments() {
     const product = getCartProduct(item.productId);
     const key = shippingPackageKey(product, item);
     const brand = (product && product.brand) || item.brand || 'JANEDORE';
-    if (!groups.has(key)) groups.set(key, { key, brand, brands: [], warehouse: key.startsWith('warehouse:'), subtotal: 0, eligible: true, minimum: 0, maxCover: 0 });
+    if (!groups.has(key)) groups.set(key, { key, brand, brands: [], warehouse: key.startsWith('warehouse:'), subtotal: 0, eligible: true, minimum: 0 });
     const g = groups.get(key);
     if (!g.brands.includes(brand)) g.brands.push(brand);
     g.subtotal += getCartItemLineTotal(item);
     // A package shared by several brands (one warehouse) qualifies only if
-    // all of them offer it: the highest minimum, the smallest cover.
+    // all of them offer it, at the highest minimum.
     const offer = freeDeliveryOffer(product);
     if (!offer) g.eligible = false;
-    else {
-      g.minimum = Math.max(g.minimum, offer.minimum);
-      if (offer.maxCover) g.maxCover = g.maxCover ? Math.min(g.maxCover, offer.maxCover) : offer.maxCover;
-    }
+    else g.minimum = Math.max(g.minimum, offer.minimum);
   });
   const codeFree = !!(appliedDiscount && appliedDiscount.type === 'free_shipping');
   return [...groups.values()].map(g => {
     const reached = g.eligible && g.subtotal >= g.minimum;
-    const covered = codeFree ? SHIPPING_FEE : reached ? (g.maxCover ? Math.min(g.maxCover, SHIPPING_FEE) : SHIPPING_FEE) : 0;
-    const fee = SHIPPING_FEE - covered;
-    return Object.assign(g, { brand: g.brands.join(' & '), free: fee === 0, fee, covered, remaining: g.eligible && !reached && !codeFree ? g.minimum - g.subtotal : 0 });
+    const free = codeFree || reached;
+    const fee = free ? 0 : SHIPPING_FEE;
+    return Object.assign(g, { brand: g.brands.join(' & '), free, fee, remaining: g.eligible && !reached && !codeFree ? g.minimum - g.subtotal : 0 });
   });
 }
 
@@ -320,12 +311,9 @@ function cartHasMixedDelivery() {
 function cartFreeDeliveryHtml(item, mixed) {
   const product = getCartProduct(item.productId);
   if (!mixed || !freeDeliveryOffer(product)) return '';
-  // What this item's package actually gets: free, part of the fee, or
-  // the minimum still to reach.
+  // Free, or the minimum still to reach.
   const pkg = getCartShipments().find(s => s.key === shippingPackageKey(product, item));
-  const text = !pkg || pkg.free ? 'Free delivery'
-    : pkg.covered ? formatPrice(pkg.covered) + ' off delivery'
-    : deliveryDealName(freeDeliveryOffer(product)) + ' over ' + formatPrice(pkg.minimum);
+  const text = !pkg || pkg.free ? 'Free delivery' : 'Free delivery over ' + formatPrice(pkg.minimum);
   return '<div class="cart-item-free">' + text + '</div>';
 }
 function cartPreorderHtml(item) {
@@ -680,18 +668,15 @@ function renderCartPage() {
   const shipping = getCartShippingStatus();
   const eligible = shipping.shipments.filter(s => s.eligible);
   const pending = eligible.find(s => s.remaining > 0);
-  const deal = s => s.maxCover && s.maxCover < SHIPPING_FEE ? formatPrice(s.maxCover) + ' off delivery' : 'free delivery';
   // Only shown when a brand in the bag offers free delivery. Free delivery
   // is per brand, so a bag that mixes in other brands names the brand.
   const mixed = eligible.length > 0 && eligible.length < shipping.shipments.length;
   const names = list => list.map(s => sanitizeHTML(s.brand)).join(' and ');
   const bannerText = pending
-    ? `Add ${formatPrice(pending.remaining)} more from ${sanitizeHTML(pending.brand)} to get <strong>${deal(pending)}</strong>.`
-    : eligible.some(s => s.covered && !s.free)
-      ? 'You’ve unlocked <strong>' + formatPrice(eligible.filter(s => s.covered && !s.free).reduce((a, s) => a + s.covered, 0)) + ' off delivery</strong> from ' + names(eligible.filter(s => s.covered && !s.free)) + '.'
-      : eligible.length
-        ? (mixed ? `Your ${names(eligible)} items qualify for <strong>free delivery</strong>.` : 'Your order qualifies for <strong>free delivery</strong>.')
-        : '';
+    ? `Add ${formatPrice(pending.remaining)} more from ${sanitizeHTML(pending.brand)} to get <strong>free delivery</strong>.`
+    : eligible.length
+      ? (mixed ? `Your ${names(eligible)} items qualify for <strong>free delivery</strong>.` : 'Your order qualifies for <strong>free delivery</strong>.')
+      : '';
   let html = `${bannerText ? `<div class="cart-delivery-banner"><i class="ph ph-truck" aria-hidden="true"></i><span>${bannerText}</span></div>` : ''}<div class="cart-cards">`;
 
   S.cart.forEach(item => {

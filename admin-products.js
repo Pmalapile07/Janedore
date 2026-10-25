@@ -14,8 +14,7 @@
     var house = isHouseProductAdmin(product);
     var v = (window._vendorsData || []).find(function(x) { return x.id === (house ? 'vendor-janedore' : product.vendorId); });
     var o = v && v.freeDeliveryOffer;
-    // Only brands paying all of the delivery (a part is "R100 off", not free).
-    return !!(o && Number(o.minimum) > 0 && !(Number(o.maxCover) > 0 && Number(o.maxCover) < 150));
+    return !!(o && Number(o.minimum) > 0);
   };
 
   if (!window._adminDB) return;
