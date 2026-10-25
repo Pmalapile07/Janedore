@@ -5,18 +5,15 @@
   function isHouseProductAdmin(p) {
     return !!p && (!p.vendorId || p.vendorId === 'vendor-janedore' || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
   }
-  // Whether the product's brand offers free delivery (vendor.freeDelivery,
-  // Admin > Brands; JANEDORE defaults to on).
-  function brandOffersFreeDelivery(product) {
+  // Free delivery is the brand's own offer (vendor.freeDeliveryOffer,
+  // Admin > Brands): every product of a brand with one qualifies. Same
+  // rule as cart.js/server.js; used by the Free Delivery automated
+  // collection here and in admin-collections.js.
+  window._isFreeDeliveryBrandProduct = function(product) {
+    if (!product) return false;
     var house = isHouseProductAdmin(product);
     var v = (window._vendorsData || []).find(function(x) { return x.id === (house ? 'vendor-janedore' : product.vendorId); });
-    return v && typeof v.freeDelivery === 'boolean' ? v.freeDelivery : house;
-  }
-  // A product has free delivery when it's marked Free delivery here and
-  // its brand offers it. Same rule as cart.js/server.js; used by the Free
-  // Delivery automated collection here and in admin-collections.js.
-  window._isFreeDeliveryBrandProduct = function(product) {
-    return !!product && product.freeDelivery === true && brandOffersFreeDelivery(product);
+    return !!(v && v.freeDeliveryOffer && Number(v.freeDeliveryOffer.minimum) > 0);
   };
 
   if (!window._adminDB) return;
@@ -1055,17 +1052,8 @@
           }).join('') +
         '</div><div class="pe-note">The box it ships in. Couriers charge on the bigger of the weight and the size, so measure the box, not the item.</div></div>' +
         field('Shipping &amp; returns note', '<input name="shippingReturns" value="' + esc(p.shippingReturns||'') + '" placeholder="e.g. Free shipping over R1000">') +
-        field('International shipping', '<select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select>') +
-        // Free delivery is Janedore's call (it pays the courier), so
-        // brands don't see it. Off unless set.
-        (window._currentUserRole === 'VENDOR' ? '' : (function () {
-          var fd = p.freeDelivery === true;
-          var offered = brandOffersFreeDelivery(p);
-          return field('Free delivery', '<select name="freeDelivery" style="width:100%;"><option value="false"' + (fd ? '' : ' selected') + '>No</option><option value="true"' + (fd ? ' selected' : '') + '>Yes</option></select>',
-            offered
-              ? 'Yes: shows the Free Delivery badge and ships free once the customer\'s ' + esc(p.brand || 'brand') + ' items come to R750 or more.'
-              : esc(p.brand || 'This brand') + ' doesn\'t offer free delivery (Admin &gt; Brands), so this has no effect until it does.');
-        })())) +
+        field('International shipping', '<select name="internationalShipping" style="width:100%;"><option value="false"'+(p.internationalShipping?'':' selected')+'>No</option><option value="true"'+(p.internationalShipping?' selected':'')+'>Yes</option></select>',
+          'Free delivery is set per brand, in its brand details.')) +
 
       peSheet('gender', 'Gender', field('Gender', '<select name="gender" style="width:100%;">' + renderProductGenderOptions(p) + '</select>')) +
 
@@ -1539,10 +1527,6 @@
       data.variants.push({ color:'Default', swatch:'#111', images:{ model:[], ghost:[], detail:[] } });
     }
 
-    // Brands never see the Free delivery field; their saves keep whatever
-    // Janedore set.
-    if (form.freeDelivery) data.freeDelivery = form.freeDelivery.value === 'true';
-    else if (existingProduct && typeof existingProduct.freeDelivery === 'boolean') data.freeDelivery = existingProduct.freeDelivery;
     if (form.waitlist) data.waitlist = form.waitlist.value === 'true';
 
     if (!data.parcel && (form.parcelLength.value || form.parcelWidth.value || form.parcelHeight.value)) {

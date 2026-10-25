@@ -898,23 +898,22 @@ function generatePayFastSignature(data, passphrase, includeBlanks) {
 // result — not the browser's — is what gets charged and what the ITN
 // later checks the payment against. Mirrors cart.js's rules exactly:
 // sale price only when 0 < salePrice < price, discount validated the same
-// way applyPromoCode() does, and delivery per brand package: R150, or
-// free when every item in it is marked Free delivery and the package
-// comes to R750 or more (cart.js getCartShipments()).
+// way applyPromoCode() does, and delivery per brand package: R150, less
+// what the brand covers when it offers free delivery and the package
+// reaches its minimum (freeDeliveryOfferOf(), cart.js getCartShipments()).
 const SHIPPING_FEE = 150;
-const FREE_DELIVERY_MIN = 750;
 const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
   return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
 }
-// The product is marked Free delivery (Admin > Products) and its brand
-// offers it (vendors/{id}.freeDelivery, Admin > Brands; JANEDORE defaults
-// to on). freeVendors: vendorId -> that brand flag. Same as cart.js.
-function isFreeDeliveryProduct(p, freeVendors) {
-  if (!p || p.freeDelivery !== true) return false;
-  const house = isHouseProduct(p);
-  const flag = freeVendors && freeVendors[house ? HOUSE_VENDOR_ID : p.vendorId];
-  return typeof flag === 'boolean' ? flag : house;
+// A brand's free delivery offer (vendors/{id}.freeDeliveryOffer, set in
+// Admin > Brands or the brand's own profile): on its orders over
+// minimum, the brand pays the delivery, all of it or up to maxCover.
+// { minimum, maxCover } or null. Same as cart.js freeDeliveryOffer().
+function freeDeliveryOfferOf(vendor) {
+  const o = vendor && vendor.freeDeliveryOffer;
+  const minimum = Number(o && o.minimum);
+  return minimum > 0 ? { minimum, maxCover: Math.max(0, Number(o.maxCover) || 0) } : null;
 }
 
 function serverUnitPrice(product) {
@@ -983,11 +982,11 @@ async function priceOrder(order) {
   const codeFree = !!(discount && discount.type === 'free_shipping');
   const vendorIds = [...new Set([HOUSE_VENDOR_ID].concat(Object.values(products).map((p) => p.vendorId).filter(Boolean)))];
   const vendorDocs = await adminDb.getAll(...vendorIds.map((id) => adminDb.collection('vendors').doc(id)));
-  const freeVendors = {};
+  const offers = {};
   const warehouses = {};
   vendorDocs.forEach((d, i) => {
     if (!d.exists) return;
-    if (typeof d.data().freeDelivery === 'boolean') freeVendors[vendorIds[i]] = d.data().freeDelivery;
+    offers[vendorIds[i]] = freeDeliveryOfferOf(d.data());
     const wh = String(d.data().warehouse || '').trim().toLowerCase();
     if (wh) warehouses[vendorIds[i]] = wh;
   });
@@ -1002,15 +1001,30 @@ async function priceOrder(order) {
   pricedItems.forEach((i) => {
     const product = products[String(i.productId || '')];
     const key = shippingPackageKey(product);
-    if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true });
+    if (!packageMap.has(key)) packageMap.set(key, { subtotal: 0, eligible: true, minimum: 0, maxCover: 0, vendorId: null });
     const pkg = packageMap.get(key);
     pkg.subtotal += i.price * i.qty;
-    if (!isFreeDeliveryProduct(product, freeVendors)) pkg.eligible = false;
+    // Several brands in one warehouse: all must offer it, the highest
+    // minimum and smallest cover apply, and the first brand pays.
+    const vid = isHouseProduct(product) ? HOUSE_VENDOR_ID : product.vendorId;
+    const offer = offers[vid];
+    if (!offer) pkg.eligible = false;
+    else {
+      pkg.minimum = Math.max(pkg.minimum, offer.minimum);
+      if (offer.maxCover) pkg.maxCover = pkg.maxCover ? Math.min(pkg.maxCover, offer.maxCover) : offer.maxCover;
+      pkg.vendorId = pkg.vendorId || vid;
+    }
   });
   const packages = packageMap.size;
   let shipping = 0;
+  // What each brand pays towards delivery on this order (its free
+  // delivery offer), taken off its payout (PayFast split).
+  const deliveryCovered = {};
   packageMap.forEach((pkg) => {
-    if (!(codeFree || (pkg.eligible && pkg.subtotal >= FREE_DELIVERY_MIN))) shipping += SHIPPING_FEE;
+    if (codeFree) return;
+    const covered = pkg.eligible && pkg.subtotal >= pkg.minimum ? (pkg.maxCover ? Math.min(pkg.maxCover, SHIPPING_FEE) : SHIPPING_FEE) : 0;
+    if (covered) deliveryCovered[pkg.vendorId] = (deliveryCovered[pkg.vendorId] || 0) + covered;
+    shipping += SHIPPING_FEE - covered;
   });
   const total = Math.round((afterDiscount + shipping) * 100) / 100;
 
@@ -1023,6 +1037,7 @@ async function priceOrder(order) {
     // Janedore pays for this discount (a review thank-you): brands are
     // paid their share of the full price (PayFast split below).
     discountFundedBy: discount ? discount.fundedBy : null,
+    deliveryCovered,
     shipping,
     shippingPackages: packages,
     total,
@@ -1206,10 +1221,14 @@ app.post('/api/payfast/initiate', async (req, res) => {
         // A discount Janedore pays for (a review thank-you) comes out of
         // Janedore's share: the brand gets its percentage of the full
         // price, as a fixed amount in cents.
+        // Free delivery the brand offers comes out of the brand's share.
         const funded = order.discountFundedBy === 'janedore' && Number(order.discountAmount) > 0;
+        const covered = Number((order.deliveryCovered || {})[order.vendorIds[0]]) || 0;
         const split = { merchant_id: Number(vendor.payfastMerchantId) };
-        if (funded) split.amount = Math.min(Math.round(Number(order.total) * 100), Math.round((Number(order.total) + Number(order.discountAmount)) * vendorPercentage));
-        else split.percentage = vendorPercentage;
+        if (funded || covered) {
+          const cents = Math.round((Number(order.total) + (funded ? Number(order.discountAmount) : 0)) * vendorPercentage) - Math.round(covered * 100);
+          split.amount = Math.max(0, Math.min(Math.round(Number(order.total) * 100), cents));
+        } else split.percentage = vendorPercentage;
         setupField = JSON.stringify({ split_payment: split });
       }
     }

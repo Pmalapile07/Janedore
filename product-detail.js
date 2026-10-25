@@ -685,7 +685,7 @@ async function renderProductPage(product) {
             Shipping &amp; returns
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="info-accordion-body"><p>${product.shippingReturns||'Please see our delivery and returns policies for details.'}</p></div>
+          <div class="info-accordion-body">${typeof freeDeliveryText === 'function' && freeDeliveryText(product) ? `<p><strong>${escapeHTML(freeDeliveryText(product))}</strong></p>` : ''}<p>${product.shippingReturns||'Please see our delivery and returns policies for details.'}</p></div>
         </div>
         <div class="info-accordion-item" id="info-accordion-reviews">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('reviews')">

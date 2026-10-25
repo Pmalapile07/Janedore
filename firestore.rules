@@ -49,7 +49,7 @@ service cloud.firestore {
     // Vendors can only update their own profile — not commission or status.
     function vendorProfileFieldsOnly() {
       return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['name', 'brand', 'email', 'description', 'logoUrl', 'heroImageUrl', 'updatedAt']);
+        .hasOnly(['name', 'brand', 'email', 'description', 'logoUrl', 'heroImageUrl', 'freeDeliveryOffer', 'updatedAt']);
     }
 
     // A vendor may add/edit tracking only for their own line items on an

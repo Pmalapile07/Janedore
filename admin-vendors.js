@@ -36,6 +36,34 @@
     return first.then(function() { return vendorsRef.doc(id).set(pub, { merge: true }); });
   }
 
+  // Free delivery is the brand's own offer, paid by the brand: on its
+  // orders over a minimum, it covers the delivery, all of it or up to a
+  // maximum (vendor.freeDeliveryOffer, read by cart.js and server.js).
+  // Set here by Super Admin or by the brand in its own profile.
+  function freeDeliveryFieldsHtml(v) {
+    var o = v.freeDeliveryOffer || {};
+    var on = Number(o.minimum) > 0;
+    return '<div class="form-group" style="margin-bottom:6px;"><label>Free delivery</label>' +
+        '<select name="freeDeliveryOn" onchange="this.closest(\'form\').querySelector(\'.fd-fields\').style.display = this.value === \'yes\' ? \'\' : \'none\'">' +
+          '<option value="no"' + (on ? '' : ' selected') + '>No</option><option value="yes"' + (on ? ' selected' : '') + '>Yes</option>' +
+        '</select></div>' +
+      '<div class="fd-fields" style="display:' + (on ? '' : 'none') + ';">' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Minimum order (R)</label><input name="freeDeliveryMinimum" type="number" min="1" step="1" inputmode="numeric" value="' + esc(on ? String(o.minimum) : '') + '" placeholder="e.g. 500"></div>' +
+          '<div class="form-group"><label>Covers up to (R)</label><input name="freeDeliveryMaxCover" type="number" min="1" step="1" inputmode="numeric" value="' + esc(on && o.maxCover ? String(o.maxCover) : '') + '" placeholder="All of it"></div>' +
+        '</div>' +
+        '<div class="form-group" style="font-size:10px;color:var(--muted);margin-top:-6px;">On orders of this brand\'s items over the minimum, the brand pays the delivery: all of it, or up to the amount set (the customer pays the rest). It\'s taken off the brand\'s payout, and its products show a Free delivery badge.</div>' +
+      '</div>';
+  }
+  function readFreeDeliveryOffer(form) {
+    if (!form.freeDeliveryOn || form.freeDeliveryOn.value !== 'yes') return { offer: null };
+    var minimum = Math.round(Number(form.freeDeliveryMinimum.value));
+    var maxCover = form.freeDeliveryMaxCover.value ? Math.round(Number(form.freeDeliveryMaxCover.value)) : 0;
+    if (!(minimum > 0)) return { error: 'Add the minimum order for free delivery.' };
+    if (maxCover < 0) return { error: 'The amount covered can\'t be negative.' };
+    return { offer: { minimum: minimum, maxCover: maxCover } };
+  }
+
   function withPrivate(vendor) {
     return privateRef.doc(vendor.id).get().then(function(doc) {
       return doc.exists ? Object.assign(vendor, doc.data(), { id: vendor.id }) : vendor;
@@ -572,6 +600,8 @@
                 '<div style="display:flex;gap:8px;"><input name="heroImageUrl" value="' + esc(v.heroImageUrl || '') + '" placeholder="https://..." style="flex:1;"><button type="button" class="btn btn-sm btn-ghost" onclick="window._uploadSingleImageTo(this)"><i class="ph-light ph-cloud-arrow-up"></i> Upload</button></div>' +
               '</div>' +
 
+              freeDeliveryFieldsHtml(v) +
+
             '</form>' +
           '</div>' +
         '</div>' +
@@ -633,6 +663,9 @@
       heroImageUrl:  form.heroImageUrl.value.trim(),
       updatedAt:     new Date().toISOString()
     };
+    var fd = readFreeDeliveryOffer(form);
+    if (fd.error) { showToast(fd.error, 'error'); return; }
+    data.freeDeliveryOffer = fd.offer;
 
     saveVendor(vendorId, data).then(function() {
       showToast('Brand profile updated');
@@ -672,10 +705,7 @@
           '<div class="form-group"><label>Status</label><select name="status"><option value="active"' + (v.status === 'active' ? ' selected' : '') + '>Active</option><option value="suspended"' + (v.status === 'suspended' ? ' selected' : '') + '>Suspended</option><option value="inactive"' + (v.status === 'inactive' ? ' selected' : '') + '>Inactive</option></select></div>' +
         '</div>' +
 
-        (function() {
-          var fd = typeof v.freeDelivery === 'boolean' ? v.freeDelivery : v.id === 'vendor-janedore';
-          return '<div class="form-group"><label>Free delivery</label><select name="freeDelivery"><option value="true"' + (fd ? ' selected' : '') + '>Yes, on orders over R750</option><option value="false"' + (fd ? '' : ' selected') + '>No</option></select><div style="font-size:10px;color:var(--muted);margin-top:4px;">Yes: this brand\'s products marked Free delivery (Admin &gt; Products) ship free once a customer\'s order of them reaches R750, and the bag shows how far they are from it. Janedore pays the courier.</div></div>';
-        })() +
+        freeDeliveryFieldsHtml(v) +
 
         '<div class="form-group"><label>Warehouse</label><input name="warehouse" value="' + esc(v.warehouse || '') + '" placeholder="e.g. Cape Town DC"><div style="font-size:10px;color:var(--muted);margin-top:4px;">Leave empty if this brand ships from its own premises. Brands with the same warehouse name ship together: a customer ordering from both gets one package and pays one delivery fee.</div></div>' +
 
@@ -732,7 +762,9 @@
       heroImageUrl:   form.heroImageUrl.value.trim(),
       commissionRate: commission,
       payfastMerchantId: form.payfastMerchantId.value.trim(),
-      freeDelivery:   form.freeDelivery.value === 'true',
+      freeDeliveryOffer: null,
+      // The old on/off switch (free delivery over a fixed R750) is gone.
+      freeDelivery:   firebase.firestore.FieldValue.delete(),
       warehouse:      form.warehouse.value.trim(),
       pickup: {
         type:         form.pickupType.value === 'residential' ? 'residential' : 'business',
@@ -753,6 +785,9 @@
     if (!existingId) {
       data.createdAt = new Date().toISOString();
     }
+    var fdOffer = readFreeDeliveryOffer(form);
+    if (fdOffer.error) { showToast(fdOffer.error, 'error'); return; }
+    data.freeDeliveryOffer = fdOffer.offer;
     // A partial pickup address can't be used to book a courier.
     var pk = data.pickup;
     var started = pk.street || pk.suburb || pk.city || pk.province || pk.postalCode || pk.contactName || pk.contactPhone;
