@@ -358,7 +358,7 @@ function vendorCollectOrder(order, ctx, items, o) {
     bannerHtml: '<strong>You have a new order for collection.</strong> The customer has paid and will collect it from you.',
     cards: [
       title('Order #' + esc(o.num), esc(orderDate(order))) +
-        '<div style="font-size:14px;line-height:1.5;color:#555555;">Please pack the items below, then mark the order <strong>Ready for collection</strong> in admin. The customer is then emailed your collection address, hours and a collection code. Only hand the parcel over to someone who gives you that code, and enter it in admin to confirm the collection.</div>',
+        '<div style="font-size:14px;line-height:1.5;color:#555555;">Please pack the items below, then mark the order <strong>Ready for collection</strong> in admin. The customer is then emailed your collection address, hours and a collection code. When the customer arrives, ask for the code in person, enter it in admin, and only hand over the parcel once it is accepted. Never ask for the code by phone, email or message.</div>',
       title('Items to pack', '(' + o.count + ')') + itemsBlock(items, ctx, { showBrand: false }) +
         rows(divider() + row('Items total', money(o.value), { semi: true })),
       title('Customer') + '<div style="font-size:14px;line-height:1.6;color:#555555;"><strong style="color:#111111;">' + esc(order.customerName || '') + '</strong>' + (order.customerPhone ? '<br>' + esc(order.customerPhone) : '') + '</div>' +
@@ -367,7 +367,7 @@ function vendorCollectOrder(order, ctx, items, o) {
     footerHtml: 'Questions about this order? Write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
   const text = 'New Janedore order #' + o.num + ' for collection (' + o.count + ' items).\n\n' + textItems(items) +
-    '\nItems total: ' + money(o.value) + '\n\nThe customer will collect it from you. Pack the items, then mark the order Ready for collection in admin. Only hand it over to someone who gives you the collection code, and enter it in admin.\n\nCustomer: ' + (order.customerName || '') + (order.customerPhone ? ', ' + order.customerPhone : '') +
+    '\nItems total: ' + money(o.value) + '\n\nThe customer will collect it from you. Pack the items, then mark the order Ready for collection in admin. When the customer arrives, ask for the collection code in person, enter it in admin, and only hand over the parcel once it is accepted. Never ask for the code by phone, email or message.\n\nCustomer: ' + (order.customerName || '') + (order.customerPhone ? ', ' + order.customerPhone : '') +
     '\n\nAdmin: ' + ctx.siteUrl + '/admin';
   return { subject: 'New order #' + o.num + ' for collection, ' + o.count + (o.count === 1 ? ' item' : ' items'), html, text };
 }
@@ -379,15 +379,15 @@ function readyForCollection(order, ctx, items, opts) {
   const num = order.orderNumber || '';
   const first = String(order.customerName || '').trim().split(/\s+/)[0] || '';
   const heading = opts.reminder ? 'Your order is waiting for you' : 'Your order is ready to collect';
-  const intro = (opts.reminder ? 'a reminder that your ' : 'your ') + opts.brand + ' items ' + (opts.reminder ? 'are still' : 'are') + ' ready to collect. Please bring the collection code below; the parcel is only handed over to someone who gives it.' +
-    (opts.holdUntil ? ' They will be held until ' + opts.holdUntil + '.' : '');
+  const intro = (opts.reminder ? 'a reminder that your ' : 'your ') + opts.brand + ' items ' + (opts.reminder ? 'are still' : 'are') + ' ready to collect. Your order will only be released on presentation of the collection code below.' +
+    (opts.holdUntil ? ' It will be held for you until ' + opts.holdUntil + '.' : '');
   const where = title('Collect from') +
     '<div style="font-size:14px;line-height:1.6;color:#555555;"><strong style="color:#111111;">' + esc(opts.brand) + '</strong><br>' + opts.addressLines.map(esc).join('<br>') +
     (opts.hours ? '<br><br><strong style="color:#111111;">Opening hours</strong><br>' + esc(opts.hours) : '') +
     (opts.instructions ? '<br><br>' + esc(opts.instructions) : '') + '</div>';
   const code = '<div style="text-align:center;padding:6px 0;"><div style="font-size:13px;color:#777777;">Your collection code</div>' +
     '<div style="font-size:32px;font-weight:700;letter-spacing:0.18em;color:#111111;margin-top:6px;">' + esc(opts.code) + '</div>' +
-    '<div style="font-size:12px;color:#777777;margin-top:8px;line-height:1.5;">Keep it private. Anyone you send to collect for you will need it.</div></div>';
+    '<div style="font-size:12px;color:#555555;margin-top:10px;line-height:1.6;">Only share this code in person, when you collect your order. Janedore and ' + esc(opts.brand) + ' will never ask for it by phone, email or message. If someone is collecting on your behalf, they will need this code.</div></div>';
   const html = shell({
     logoUrl: ctx.logoUrl,
     logoFontUrl: ctx.logoFontUrl,
@@ -403,7 +403,7 @@ function readyForCollection(order, ctx, items, opts) {
     ],
     footerHtml: SUPPORT_FOOTER
   });
-  const text = heading + '\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\nYour collection code: ' + opts.code +
+  const text = heading + '\n\nHi' + (first ? ' ' + first : '') + ', ' + intro + '\n\nYour collection code: ' + opts.code + '\nOnly share this code in person, when you collect your order. Janedore and ' + opts.brand + ' will never ask for it by phone, email or message.' +
     '\n\nCollect from:\n' + [opts.brand].concat(opts.addressLines).join('\n') + (opts.hours ? '\nOpening hours: ' + opts.hours : '') + (opts.instructions ? '\n' + opts.instructions : '') +
     '\n\n' + textItems(items, true) + '\n\nOrder #' + num + '\nView your order: ' + viewOrderUrl(ctx, num) + '\n\nQuestions? support@janedore.co.za';
   return { subject: heading + ' (order #' + num + ')', html, text };

@@ -230,7 +230,7 @@ function trackResultHtml(o, opts) {
         ? `<div class="track-ship">
             ${place && place.addressLines && place.addressLines.length ? `<div class="track-ship-row"><span>Collect from</span><strong>${[place.brand].concat(place.addressLines).map(x => escapeHTML(trackPlainText(x))).join('<br>')}</strong></div>` : ''}
             ${place && place.hours ? `<div class="track-ship-row"><span>Opening hours</span><strong>${escapeHTML(place.hours)}</strong></div>` : ''}
-          </div><p class="track-wait">Ready to collect. Please bring the collection code from your email; the parcel is only handed over to someone who gives it.</p>`
+          </div><p class="track-wait">Ready to collect. Your order will only be released on presentation of the collection code in your email. Only share it in person, when you collect; we and the brand will never ask for it by phone, email or message.</p>`
         : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is preparing this package. We’ll email you the collection address, opening hours and your collection code as soon as it’s ready.</p>`)
       : stage === 4 && !p.shipped
       ? `<p class="track-wait">This package has been delivered.</p>`

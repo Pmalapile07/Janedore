@@ -1672,7 +1672,7 @@
       '<label class="card-title" style="display:block;margin-bottom:6px;">Collection code</label>' +
       note(c.locked
         ? 'Too many wrong codes. Send the customer a new code, then enter it here.'
-        : 'Ready since ' + esc(fmtDate(new Date(c.readyAt).toISOString())) + '. Only hand the parcel over to someone who gives you the 6-digit code from the customer\'s email.') +
+        : 'Ready since ' + esc(fmtDate(new Date(c.readyAt).toISOString())) + '. Ask for the 6-digit code in person when the customer arrives, and only hand over the parcel once it\'s accepted here. Never ask for the code by phone, email or message.') +
       '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
         '<input class="order-tracking-input order-collect-code" data-vendor="' + key + '" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit code" style="flex:1;"' + (c.locked ? ' disabled' : '') + '>' +
         '<button class="btn btn-sm btn-primary"' + (c.locked ? ' disabled' : '') + ' onclick="window._collectionAction(' + args + ',\'collected\')">Mark collected</button>' +
