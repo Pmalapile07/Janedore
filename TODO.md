@@ -44,3 +44,6 @@
 
 ## Coming soon page
 - **Redesign:** the current page (janedore-coming-soon.html) isn't right yet. Liked so far: the hero photo, the app-preview phones, the dark pop-ups, the shop's black header. Start the next version from what the page needs to say (who it's for, why join), not from another brand's layout.
+
+## App
+- **Open instead of Get:** once the app is built, make janedore.co.za links open the app when it's installed (Universal Links on iPhone, App Links on Android). On Android, Chrome can then tell the site the app is installed (related_applications in a web manifest, plus assetlinks.json), so the bar above the header says Open. iPhones never tell a website which apps are installed, so there the bar keeps Get, and the App Store shows Open for people who already have it.
