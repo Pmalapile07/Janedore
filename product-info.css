@@ -254,6 +254,17 @@
   margin-bottom: 13px;
   text-transform: none;
 }
+/* "Select a size" with "Size guide" opposite (product-detail.js). */
+.sizes-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.sizes-head .size-guide-link {
+  padding: 0; margin: 0 0 13px; background: none; border: none; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 13px; color: #111; text-decoration: underline; text-underline-offset: 3px;
+}
+.size-guide-title { margin: 4px 0 16px; font-size: 16px; font-weight: 600; }
+.size-guide-body { font-size: 13px; line-height: 1.6; color: #333; overflow-x: auto; }
+.size-guide-body table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; }
+.size-guide-body th, .size-guide-body td { padding: 8px 6px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
+.size-guide-body th { font-weight: 600; color: #111; }
 .sizes-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .product-size-btn {
   min-width: 48px;

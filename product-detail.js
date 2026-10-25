@@ -50,7 +50,34 @@ function buildSizeRowHtml(product, variantIndex) {
     const selectable = inStock || product.waitlist;
     return `<button class="${cls}" ${selectable ? '' : 'disabled aria-disabled="true"'} onclick="selectProductSize(this,'${s}')"${inStock ? '' : ' aria-label="' + escapeHTML(s) + ', sold out"'}>${escapeHTML(s)}</button>`;
   }).join('');
-  return `<div class="product-sizes" id="product-size-row"><div class="sizes-label">Select a size</div><div class="sizes-row">${buttons}</div></div>`;
+  const guide = productNeedsSizeGuide(product) ? '<button type="button" class="size-guide-link" onclick="openSizeGuide()">Size guide</button>' : '';
+  return `<div class="product-sizes" id="product-size-row"><div class="sizes-head"><div class="sizes-label">Select a size</div>${guide}</div><div class="sizes-row">${buttons}</div></div>`;
+}
+
+// Size guide: only for products whose fit depends on a size chart, i.e.
+// categories with clothing or shoe sizes (taxonomy.js sizeSystem):
+// clothing, shoes, kids' clothing and kids' shoes. Not bags, jewellery,
+// beauty or homeware. Opens the Size Guide page (admin > Pages) in the
+// quick add sheet, so the customer stays on the product.
+function productNeedsSizeGuide(product) {
+  return !!(typeof JDTaxonomy !== 'undefined' && JDTaxonomy.sizeSystem(product.category));
+}
+
+let _sizeGuidePage;
+async function openSizeGuide() {
+  const sheet = quickAddSheet();
+  const panel = sheet.querySelector('.quick-add-panel');
+  const head = '<button type="button" class="quick-add-close" onclick="closeQuickAdd()" aria-label="Close"><i class="ph ph-x"></i></button><h2 class="size-guide-title">Size guide</h2>';
+  panel.innerHTML = head + '<div class="loading-spinner"><div class="spinner"></div></div>';
+  showQuickAddSheet(sheet);
+  if (_sizeGuidePage === undefined) {
+    try { const doc = await db.collection('pages').doc('size-guide').get(); _sizeGuidePage = doc.exists ? (doc.data().content || '') : ''; }
+    catch (e) { _sizeGuidePage = undefined; }
+  }
+  panel.innerHTML = head + (_sizeGuidePage
+    ? `<div class="size-guide-body">${_sizeGuidePage}</div>`
+    : '<p class="quick-add-note">Size charts are on their way. For help choosing a size, our customer care team is happy to help.</p>' +
+      '<button type="button" class="quick-add-secondary" onclick="closeQuickAdd();navigateToContentPage(\'customer-care\')">Contact customer care</button>');
 }
 
 // Waitlist (waitlist-api.js): products with "Waitlist when sold out"

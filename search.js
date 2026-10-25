@@ -157,7 +157,13 @@ function searchEntryIcon(e) {
     const product = PRODUCTS.find(p => p.id === e.value);
     if (product) return `<span class="search-row-thumb" style="background-image:url('${escapeForCssUrl(getProductThumbnail(product, 0))}')"></span>`;
   }
-  const icon = e.type === 'brand' ? 'ph-storefront' : e.type === 'category' ? 'ph-squares-four' : e.type === 'query' ? 'ph-clock-counter-clockwise' : 'ph-magnifying-glass';
+  if (e.type === 'brand') {
+    const vendor = (S.vendors || []).find(x => (x.slug || x.id) === e.value);
+    const logo = vendor && /^https:\/\//i.test(String(vendor.logoUrl || '').trim()) ? vendor.logoUrl.trim() : '';
+    const initials = String(e.label || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    return `<span class="search-row-icon search-row-brand">${logo ? `<img src="${escapeHTML(logo)}" alt="">` : escapeHTML(initials)}</span>`;
+  }
+  const icon = e.type === 'category' ? 'ph-squares-four' : e.type === 'query' ? 'ph-clock-counter-clockwise' : 'ph-magnifying-glass';
   return `<span class="search-row-icon"><i class="ph ${icon}" aria-hidden="true"></i></span>`;
 }
 
