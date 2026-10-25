@@ -10,7 +10,10 @@
 // The badge artwork is Apple's and Google's own, loaded from their
 // badge links unchanged, as both require.
 
-const APP_STORE_BADGE = 'https://tools.applemarketingtools.com/api/badges/download-on-the-app-store/black/en-us?size=250x83';
+// Apple's standard badge file; its badge maker (the fallback) only
+// returns an image for a published app.
+const APP_STORE_BADGE = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
+const APP_STORE_BADGE_FALLBACK = 'https://tools.applemarketingtools.com/api/badges/download-on-the-app-store/black/en-us?size=250x83';
 const PLAY_STORE_BADGE = 'https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png';
 const APP_BAR_DISMISS_KEY = 'janedore_app_bar_closed';
 const APP_BAR_DISMISS_DAYS = 30;
@@ -45,7 +48,7 @@ function appLinkAttrs(link) {
 }
 
 function appBadgesHtml(links) {
-  return (links.apple ? `<a class="app-badge app-badge-apple" ${appLinkAttrs(links.apple)}><img src="${APP_STORE_BADGE}" alt="Download on the App Store"></a>` : '') +
+  return (links.apple ? `<a class="app-badge app-badge-apple" ${appLinkAttrs(links.apple)}><img src="${APP_STORE_BADGE}" alt="Download on the App Store" onerror="if(this.src!=='${APP_STORE_BADGE_FALLBACK}')this.src='${APP_STORE_BADGE_FALLBACK}'"></a>` : '') +
     (links.google ? `<a class="app-badge app-badge-google" ${appLinkAttrs(links.google)}><img src="${PLAY_STORE_BADGE}" alt="Get it on Google Play"></a>` : '');
 }
 
