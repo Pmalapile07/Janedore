@@ -155,11 +155,11 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
 .cart-item-img {
   position: relative;
   width: 96px;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 2 / 3;
   flex-shrink: 0;
   background-color: #f4f4f4;
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   cursor: pointer;
 }
 .cart-item-info { flex: 1; min-width: 0; }

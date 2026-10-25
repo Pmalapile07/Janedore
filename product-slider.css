@@ -16,17 +16,17 @@
 
 .product-main-image {
   width: 100%;
-  aspect-ratio: 3/4;
+  /* 2:3 like the photos themselves, so nothing is cropped. */
+  aspect-ratio: 2/3;
   background: #f4f4f4;
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
   position: relative;
 }
 
 @media (min-width: 769px) {
   .product-slider { padding: 16px; }
-  .product-main-image { aspect-ratio: 2/3; }
 }
 
 .slider-bars { display: none; }

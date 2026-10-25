@@ -79,7 +79,9 @@
 .product-img-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 5 / 6;
+  /* 2:3, the shape fashion photos are shot in (e.g. 1280×1920), so the
+     whole photo shows; any other shape keeps the top (the model's face). */
+  aspect-ratio: 2 / 3;
   overflow: hidden;
   background: #f4f4f4;
 }
@@ -103,6 +105,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   display: block;
   position: relative;
   z-index: 1;
@@ -884,7 +887,7 @@ body .site-collection-layout {
 .product-grid.editorial-1col .product-card:nth-child(3n+2) .product-img-wrap,
 .product-grid.editorial-1col .product-card:nth-child(3n+3) .product-img-wrap,
 .product-grid.editorial-3col .product-card .product-img-wrap {
-  aspect-ratio: 5 / 6;
+  aspect-ratio: 2 / 3;
 }
 
 .initial-drop-view-all {
