@@ -348,16 +348,14 @@
               '<i class="ph ph-plus-circle"></i>' +
             '</button>'
           : '') +
-        '<div class="orders-actions-menu-wrap">' +
-          '<button class="orders-actions-btn" onclick="window._toggleOrdersActionsMenu(event)" aria-label="Product actions">' +
-            '<i class="ph ph-dots-three"></i>' +
-          '</button>' +
-          '<div class="orders-actions-popover" id="orders-actions-popover" onclick="event.stopPropagation()">' +
-            '<button class="orders-actions-item" onclick="window._toggleOrdersActionsMenu();window._refreshProducts()">' +
-              '<i class="ph-light ph-arrows-clockwise"></i> Refresh' +
-            '</button>' +
-          '</div>' +
-        '</div>';
+        // Actions: select products, then delete them (Super Admin only,
+        // like deleting one product).
+        (isSuperAdmin()
+          ? '<div class="admin-bulk-actions-wrap"><button class="orders-actions-btn" type="button" onclick="window._toggleCatalogActions(event,\'products\')" aria-label="Product actions" title="Actions"><i class="ph ph-dots-three"></i></button>' +
+              '<div class="admin-catalog-actions" id="products-actions-menu" hidden><div class="admin-catalog-actions-title">Actions</div>' +
+                '<button type="button" onclick="window._catalogBulkStart(\'products\')"><i class="ph ph-check-circle"></i> Select products</button>' +
+              '</div></div>'
+          : '');
     }
 
     mc.innerHTML =
@@ -467,7 +465,8 @@
     var inactive = brandInactiveForProduct(p);
     var status = inactive ? 'inactive' : (p.status || 'draft');
     var badgeStyle = PRODUCT_STATUS_BADGE_STYLE[status] || PRODUCT_STATUS_BADGE_STYLE.draft;
-    return '<div class="products-row" onclick="window._openProductForm(\'' + esc(p.id) + '\')">' +
+    return '<div class="products-row admin-selectable-row" data-catalog-id="' + esc(p.id) + '" onclick="window._catalogBulkToggle(event,\'products\',\'' + esc(p.id) + '\',function(){window._openProductForm(\'' + esc(p.id) + '\')})">' +
+        '<span class="admin-select-check"><i class="ph ph-check"></i></span>' +
         (thumb ? '<img src="'+esc(thumb)+'" class="pi-thumb" onerror="this.style.display=\'none\'" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:12px;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:4px;background:var(--surface2);margin-right:12px;flex-shrink:0;"></div>') +
         '<div style="flex:1;min-width:0;">' +
           '<div class="pi-name">' + esc(p.name) + '</div>' +
@@ -923,12 +922,15 @@
         '<button type="button" class="pe-circle" onclick="window._peBack()" aria-label="Back to products"><i class="ph ph-caret-left"></i></button>' +
         '<div class="pe-header-title" id="pe-header-title">' + esc(p.name || '') + '</div>' +
         '<div class="pe-header-actions product-editor-actions">' +
-          '<button type="button" class="pe-circle" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')" aria-label="Share product" title="Share product"><i class="ph ph-export"></i></button>' +
-          '<button type="button" class="pe-circle" onclick="window._toggleProductEditorMenu(event)" aria-label="More product actions" title="More actions"><i class="ph ph-dots-three"></i></button>' +
-          '<div class="product-editor-menu" id="product-editor-menu" hidden>' +
-            '<button type="button" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')">Copy product link</button>' +
-            '<button type="button" onclick="window._renderProductsTab()">Cancel editing</button>' +
-          '</div>' +
+          // A new product has nothing to share yet: just Back and Save.
+          (p.id
+            ? '<button type="button" class="pe-circle" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')" aria-label="Share product" title="Share product"><i class="ph ph-export"></i></button>' +
+              '<button type="button" class="pe-circle" onclick="window._toggleProductEditorMenu(event)" aria-label="More product actions" title="More actions"><i class="ph ph-dots-three"></i></button>' +
+              '<div class="product-editor-menu" id="product-editor-menu" hidden>' +
+                '<button type="button" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')">Copy product link</button>' +
+                '<button type="button" onclick="window._renderProductsTab()">Cancel editing</button>' +
+              '</div>'
+            : '') +
           '<button type="submit" class="pe-save" id="pe-save">Save</button>' +
         '</div>' +
       '</div>' +
@@ -1640,6 +1642,12 @@
       var items=(window._adminCollectionsData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
       if(!confirm('Delete '+items.length+' selected collection'+(items.length===1?'':'s')+'? This cannot be undone.'))return;
       Promise.all(items.map(function(item){return window._deleteAdminCollection(item.id,true);})).then(function(){showToast('Selected collections deleted');window._catalogBulkCancel();window._loadProducts();window._loadAdminCollections();}).catch(function(e){showToast('Could not delete collections: '+(e.message||'Please try again.'),'error');});
+    } else if(type==='products') {
+      if(!isSuperAdmin()){showToast('Only Super Admin can delete products.','error');return;}
+      if(!confirm('Delete '+ids.length+' selected product'+(ids.length===1?'':'s')+'? This cannot be undone.'))return;
+      var pbatch=window._adminDB.batch();
+      ids.forEach(function(id){pbatch.delete(productsRef.doc(id));});
+      pbatch.commit().then(function(){showToast(ids.length===1?'Product deleted':ids.length+' products deleted');window._catalogBulkCancel();window._loadProducts();window._renderProductsTab();}).catch(function(e){showToast('Could not delete products: '+e.message,'error');});
     } else if(type==='brands') {
       if(window._currentUserRole!=='SUPER_ADMIN'){showToast('Only Super Admin can delete brands.','error');return;}
       var items=(window._vendorsData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
