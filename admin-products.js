@@ -926,9 +926,10 @@
           (p.id
             ? '<button type="button" class="pe-circle" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')" aria-label="Share product" title="Share product"><i class="ph ph-export"></i></button>' +
               '<button type="button" class="pe-circle" onclick="window._toggleProductEditorMenu(event)" aria-label="More product actions" title="More actions"><i class="ph ph-dots-three"></i></button>' +
-              '<div class="product-editor-menu" id="product-editor-menu" hidden>' +
-                '<button type="button" onclick="window._shareAdminProduct(\'' + esc(p.id) + '\')">Copy product link</button>' +
-                '<button type="button" onclick="window._renderProductsTab()">Cancel editing</button>' +
+              '<div class="product-editor-menu admin-catalog-actions" id="product-editor-menu" hidden><div class="admin-catalog-actions-title">Actions</div>' +
+                '<button type="button" onclick="window._duplicateProduct(\'' + esc(p.id) + '\')"><i class="ph ph-copy"></i> Duplicate</button>' +
+                (p.status !== 'archived' ? '<button type="button" onclick="window._archiveProduct(\'' + esc(p.id) + '\')"><i class="ph ph-archive"></i> Archive</button>' : '') +
+                (isSuperAdmin() ? '<button type="button" class="pe-menu-danger" onclick="window.deleteProduct(\'' + esc(p.id) + '\')"><i class="ph ph-trash"></i> Delete</button>' : '') +
               '</div>'
             : '') +
           '<button type="submit" class="pe-save" id="pe-save">Save</button>' +
@@ -1201,6 +1202,30 @@
     if (navigator.share) navigator.share({ title: product.name || 'JANEDORE product', url: url }).catch(function() {});
     else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function() { showToast('Product link copied'); }).catch(function() { showToast(url, 'info'); });
     else showToast(url, 'info');
+  };
+  // Duplicate: a new, unsaved draft with everything copied but its own
+  // link and SKU (made on save). Nothing is created until Save.
+  window._duplicateProduct = function(productId) {
+    var product = (window._allProducts || []).find(function(item) { return item.id === productId; });
+    if (!product) return;
+    var copy = JSON.parse(JSON.stringify(product));
+    ['id', 'slug', 'sku', 'createdAt', 'updatedAt', 'rating', 'reviewCount', 'sold'].forEach(function(k) { delete copy[k]; });
+    copy.id = '';
+    copy.name = 'Copy of ' + (product.name || 'product');
+    copy.status = 'draft';
+    window._openProductForm(copy);
+    showToast('Duplicated as a draft. Save to create it.');
+  };
+  // Archive: hidden from the shop, kept in admin (Archived tab).
+  window._archiveProduct = function(productId) {
+    var menu = document.getElementById('product-editor-menu');
+    if (menu) menu.hidden = true;
+    if (!confirm('Archive this product? It will be hidden from your store. You can make it active again at any time.')) return;
+    productsRef.doc(productId).update({ status: 'archived', updatedAt: new Date().toISOString() }).then(function() {
+      showToast('Product archived');
+      window._loadProducts();
+      window._renderProductsTab();
+    }).catch(function(e) { showToast('Could not archive: ' + e.message, 'error'); });
   };
   window._toggleProductEditorMenu = function(event) {
     if (event) event.stopPropagation();
