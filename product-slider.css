@@ -16,7 +16,7 @@
 
 .product-main-image {
   width: 100%;
-  aspect-ratio: 2/3;
+  aspect-ratio: 15 / 22; /* the original 3:4 with 10% more height */
   background: #f4f4f4;
   background-size: cover;
   background-position: center;
@@ -26,6 +26,7 @@
 
 @media (min-width: 769px) {
   .product-slider { padding: 16px; }
+  .product-main-image { aspect-ratio: 20 / 33; } /* the original 2:3 with 10% more height */
 }
 
 .slider-bars { display: none; }
