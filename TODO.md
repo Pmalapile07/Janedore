@@ -54,3 +54,10 @@
 
 ## Admin
 - **Product ⋯ > Show preview:** open the product's page inside the website editor (admin > Online Store), the way Shopify's Show preview does.
+
+## Customer account and address validation
+- **South African postal codes:** require exactly 4 digits, preserve leading zeros (e.g. `0157`), and reject fewer or more digits. Validate when creating and editing addresses.
+- **Phone numbers:** validate customer phone numbers with support for South African local and international formats (e.g. `082 123 4567` and `+27 82 123 4567`); normalize safely without rejecting valid formatting.
+- **Required address fields:** require the delivery details needed to fulfil an order (recipient name, street address, city/town, and postal code as applicable). Apply rules consistently to account addresses and checkout.
+- **Email validation:** trim accidental surrounding whitespace and validate email syntax wherever customers enter an email address; distinguish syntax checks from email verification.
+- **Validation coverage:** enforce checks in the frontend for clear, immediate feedback and on the backend before saving. Cover new and existing addresses, account profile edits, and checkout without breaking Google sign-in or existing customer records.
