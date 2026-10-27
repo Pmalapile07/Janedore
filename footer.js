@@ -10,6 +10,7 @@ function buildFooter(id) {
         { label: "About JANEDORE Ltd.", slug: "about" },
         // Hidden while BRAND_PARTNERSHIPS_LIVE is false (brand-partnerships.js).
         { label: "Brand partnerships", slug: "brand-partnerships", hidden: typeof BRAND_PARTNERSHIPS_LIVE !== 'undefined' && !BRAND_PARTNERSHIPS_LIVE },
+        { label: "Brand Concierge", slug: "brand-concierge" },
         { label: "Sustainability", slug: "sustainability" }
       ]
     },
