@@ -19,7 +19,7 @@ function buildFooter(id) {
       title: "Delivery & returns",
       links: [
         { label: "Delivery & collection", slug: "shipping-policy" },
-        { label: "Returns & refunds", slug: "return-policy" }
+        { label: "Returns & exchanges", slug: "return-policy" }
       ]
     },
     {
