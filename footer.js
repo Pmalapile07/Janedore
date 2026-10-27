@@ -91,7 +91,7 @@ function buildFooter(id) {
     <div class="footer-apps" data-app-badges hidden></div>
 
     <div class="footer-bottom">
-      <p class="footer-legal-line"><span class="footer-copy">© 2026 Janedore. All rights reserved.</span><br><span class="footer-disclaimer">Independent brands featured on this platform remain the property of their respective owners.</span></p>
+      <p class="footer-legal-line"><span class="footer-copy">© 2026 JANEDORE. All rights reserved.</span><br><span class="footer-disclaimer">JANEDORE is a curated retail platform featuring independent brands. All third-party trademarks and brand assets remain the property of their respective owners.</span></p>
     </div>
   `;
 
