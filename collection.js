@@ -117,7 +117,7 @@ const SHOP_GROUPS = [
   { key: 'beauty', name: 'Beauty', menName: 'Grooming', cats: () => JDTaxonomy.categoriesIn('beauty') }
 ];
 // On the Women or Men page: that gender or unisex, leaving out Kids and
-// Home and living, which have their own sections.
+// Homeware, which have their own sections.
 function inGenderShop(p, g) {
   return JDTaxonomy.forGender(p, g) && ['kids', 'homeware'].indexOf(JDTaxonomy.departmentOf(p.category)) === -1;
 }
