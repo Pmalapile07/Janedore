@@ -91,7 +91,7 @@ function buildFooter(id) {
     <div class="footer-apps" data-app-badges hidden></div>
 
     <div class="footer-bottom">
-      <p class="footer-legal-line"><span class="footer-copy">© 2026 JANEDORE. All rights reserved.</span><br><span class="footer-disclaimer">JANEDORE is a curated retail platform featuring independent brands. All third-party trademarks and brand assets remain the property of their respective owners.</span></p>
+      <p class="footer-legal-line"><span class="footer-copy">Copyright © 2026 Janedore. All rights reserved.</span><br><span class="footer-disclaimer">The use of this website is subject to the applicable <a href="#" onclick="event.preventDefault(); navigateToContentPage('terms-conditions')">Terms and Conditions</a>, <a href="#" onclick="event.preventDefault(); navigateToContentPage('privacy-policy')">Privacy Policy</a> and <a href="#" onclick="event.preventDefault(); navigateToContentPage('return-policy')">Returns Policy</a>, in accordance with applicable South African legislation.</span></p>
     </div>
   `;
 
