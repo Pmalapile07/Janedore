@@ -107,7 +107,7 @@ function clearRecentSearchesOnLogout() {
   try { localStorage.removeItem(RECENT_SEARCH_KEY); } catch (e) {}
 }
 
-// ==================== SUGGESTIONS ====================
+// ==================== SUGGESTIONS ==================
 // Brands, products and categories whose name matches what's typed. Names
 // that start with it come first, then a word inside that starts with it
 // ("a" finds "Apples"); from three letters, a match anywhere in the name
@@ -259,7 +259,7 @@ function renderTrendingSearches() {
     // Still open, nothing typed and no recent searches since.
     if (!list.length || !DOM.searchOverlay.classList.contains('open') || DOM.searchInput.value.trim() || loadRecentSearches().length) return;
     DOM.searchBody.innerHTML = `<div class="search-section-head"><div class="search-section-title">Trending searches</div></div>
-      <ul class="search-rows">${list.map((e, i) => `<li><button type="button" class="search-row" onclick="openTrendingSearch(${i})"><span class="search-row-icon"><i class="ph ph-trend-up" aria-hidden="true"></i></span><span class="search-row-label">${escapeHTML(e.label)}</span>${e.type !== 'query' ? `<span class="search-row-type">${SEARCH_TYPE_LABEL[e.type]}</span>` : ''}</button></li>`).join('')}</ul>`;
+      <ul class="search-rows">${list.map((e, i) => `<li><button type="button" class="search-row" onclick="openTrendingSearch(${i})"><span class="search-row-label">${escapeHTML(e.label)}</span>${e.type !== 'query' ? `<span class="search-row-type">${SEARCH_TYPE_LABEL[e.type]}</span>` : ''}</button></li>`).join('')}</ul>`;
   });
 }
 
