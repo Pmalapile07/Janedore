@@ -79,7 +79,7 @@ function shell(opts) {
         // Logo image from admin > Content when set; email apps can't load
         // the site's logo font, so text is only the fallback.
         (opts.logoUrl
-          ? '<img src="' + esc(opts.logoUrl) + '" alt="JANEDORE" height="22" style="display:block;height:22px;width:auto;border:0;">'
+          ? '<img src="' + esc(opts.logoUrl) + '" alt="JANEDORE" height="15" style="display:block;height:15px;width:auto;border:0;">'
           : '<span style="font-family:' + (opts.logoFontUrl ? '\'Janedore Logo\', ' : '') + FONT + ';font-size:16px;' +
               // A bold logo font falls back to bold Helvetica where web fonts don't load.
               (/bold/i.test(opts.logoFontUrl || '') ? 'font-weight:700;' : '') +
