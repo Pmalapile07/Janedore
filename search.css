@@ -67,7 +67,8 @@ body:has(#page-content.active .care-page) .search-bar-row {
 @media (min-width: 768px) { .search-body { padding: 32px 16px; } }
 .search-results-title { font-size: 12px; letter-spacing: 0; font-weight: var(--ui-font-weight); text-transform: none; color: #888; margin-bottom: 16px; }
 .search-results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-.search-no-results { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300; color: #bbb; padding: 40px 0; text-align: center; }
+/* Match the no-results message to the 14px category/brand search rows. */
+.search-no-results { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: #bbb; padding: 40px 0; text-align: center; }
 
 /* Suggestions while typing and Recent searches before (search.js). */
 .search-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
