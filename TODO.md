@@ -34,6 +34,13 @@
 - **Barcode field (optional):** let brands that already have barcodes (GTIN/EAN) enter them per colour and size, for Google Shopping later (products without one are marked "no barcode"). No scanners: brands ship their own stock.
 - **JANEDORE's own products:** if they're ever sold on Takealot or in shops, get official barcodes from GS1 South Africa first.
 
+## Pre-shipment exchanges
+- **Exchange before dispatch:** allow a customer to request an exchange while the relevant brand shipment has no tracking number yet. Check tracking per brand/package, so a different brand’s shipment does not block an eligible item. Once tracking is added to that shipment, close this pre-shipment option. Keep the existing post-delivery exchange flow and its policy separate.
+- **Same brand, any available product:** let the customer choose any active, available product from the original item’s brand (not only another size/colour of the same product). Validate brand ownership, product status, variant/size, stock and eligibility on the server; calculate prices from trusted product/order data, never from browser-submitted amounts.
+- **Price difference:** if the replacement costs more, show the exact difference and require successful, verified payment before confirming/fulfilling the exchange. If it costs less, credit the difference to the customer’s JANEDORE store-credit wallet. Define how quantities and multiple items are priced, and make sure failed/cancelled payments cannot complete an exchange.
+- **Store-credit foundation:** implement the wallet ledger, balance and transaction history server-side, then expose it in Account > Wallet and support spending it at checkout. Use atomic transactions/idempotency to prevent duplicate credits or spends. Do not treat a cheaper replacement as credit until the exchange is successfully approved/processed under the agreed workflow.
+- **Admin and customer experience:** show the original and replacement products, price difference/payment or credit status, and shipment eligibility in customer exchange status and Admin > Exchanges. Notify the customer of next steps. Test tracking added mid-request, out-of-stock replacements, cross-brand tampering, duplicate requests, payment failures and existing delivered-item exchanges.
+
 ## Wallet and store credit
 - **Store credit:** a balance per customer with a history of every credit and spend (server only), shown in Account > Wallet (now a "coming soon" placeholder, `account.js` `renderAccountWallet()`).
 - **Granting credit:** in admin, refund a return as store credit (only if the customer chooses it; refunds to the original payment method stay the default) and add goodwill credit to a customer.
