@@ -80,6 +80,10 @@ body:has(#page-content.active .care-page) .search-bar-row {
   flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0;
   border: 0; background: none; font-family: 'Inter', sans-serif; font-size: 14px; color: #111; text-align: left; cursor: pointer;
 }
+/* Extra breathing room between trending search items only. */
+.search-rows:has(.search-row-label) li:has(button[onclick^="openTrendingSearch"]) + li button.search-row {
+  padding-top: 16px;
+}
 .search-row-icon { width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f4f4f4; border-radius: 50%; }
 .search-row-icon i { font-size: 16px; color: #555; }
 /* A brand: its logo circle, as on the brand page's bar (.brand-bar-logo). */
