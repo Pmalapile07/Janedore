@@ -74,7 +74,7 @@ async function renderAccountPage() {
   el.innerHTML = `<section class="account-page">
     <button type="button" class="account-back" onclick="openAccountSection('')"><i class="ph ph-arrow-left" aria-hidden="true"></i> My account</button>
     <h1 class="account-heading account-section-heading">${ACCOUNT_SECTIONS[section]}</h1>
-    <div id="account-tab-body"><div class="loading-spinner"><div class="spinner"></div></div></div>
+    <div id="account-tab-body"><div class="account-loading-skeleton" aria-label="Loading account section" aria-busy="true"><i></i><i></i><i></i><i></i></div></div>
   </section>`;
   if (section === 'orders') renderAccountOrders();
   else if (section === 'info') renderAccountProfile();
@@ -236,7 +236,7 @@ function backToAccountOrders() {
 async function renderAccountOrder(orderNumber) {
   const el = accountRoot();
   if (!el) return;
-  el.innerHTML = '<section class="account-page"><div class="loading-spinner"><div class="spinner"></div></div></section>';
+  el.innerHTML = '<section class="account-page"><div class="account-page-skeleton" aria-label="Loading account" aria-busy="true"><i></i><i></i><i></i><i></i><i></i></div></section>';
   let order = null;
   try { order = (await loadAccountOrders()).find(o => (o.orderNumber || o.id) === orderNumber) || null; }
   catch (e) { console.error('[ACCOUNT_ORDER]', e); }
