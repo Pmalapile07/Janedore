@@ -87,7 +87,7 @@ async function openSizeGuide(productId) {
   const sheet = quickAddSheet();
   const panel = sheet.querySelector('.quick-add-panel');
   const head = '<button type="button" class="quick-add-close" onclick="closeQuickAdd()" aria-label="Close"><i class="ph ph-x"></i></button><h2 class="size-guide-title">Size guide</h2>';
-  panel.innerHTML = head + '<div class="loading-spinner"><div class="spinner"></div></div>';
+  panel.innerHTML = head + '<div class="size-guide-loading-skeleton" aria-label="Loading size guide" aria-busy="true"><i></i><i></i><i></i><i></i></div>';
   showQuickAddSheet(sheet);
 
   if (productHasOwnSizeGuide(product)) {
