@@ -238,7 +238,7 @@
   window._renderHomepageTab = function () {
     var mc = safeEl('main-content');
     if (!mc) return;
-    mc.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    mc.innerHTML = '<div class="admin-loading-skeleton admin-home-loading-skeleton" aria-label="Loading homepage settings" aria-busy="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>';
     Promise.all([homepageRef.get(), ensureVendorsLoaded(), ensureProductsLoaded()]).then(function (results) {
       var homepageSnap = results[0];
       _homepageData = homepageSnap.exists ? (homepageSnap.data() || {}) : {};
