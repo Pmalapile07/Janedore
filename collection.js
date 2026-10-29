@@ -239,7 +239,25 @@ function merchandiseProducts(products, context, sortBy) {
   return applySort(sorted, sortBy);
 }
 
-function showLoading(container) { if(container) container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; }
+function productGridLoadingSkeleton(count) {
+  const total = Math.max(2, Math.min(12, Number(count) || 6));
+  return '<div class="product-grid product-grid-loading" aria-label="Loading products" aria-busy="true">' +
+    Array.from({ length: total }, function () {
+      return '<div class="product-card product-card-loading" aria-hidden="true"><div class="product-img-wrap"></div><div class="product-home-meta"><div class="loading-bar loading-bar-brand content-shimmer"></div><div class="loading-bar loading-bar-title content-shimmer"></div><div class="loading-bar loading-bar-price content-shimmer"></div></div></div>';
+    }).join('') + '</div>';
+}
+function brandPageLoadingSkeleton() {
+  return '<div class="brand-page-skeleton" aria-label="Loading brand page" aria-busy="true">' +
+    '<div class="brand-skeleton-bar"><span class="brand-skeleton-logo content-shimmer"></span><span class="brand-skeleton-name"><i class="content-shimmer"></i><i class="content-shimmer"></i></span></div>' +
+    '<div class="brand-skeleton-hero content-shimmer"></div>' +
+    '<div class="brand-skeleton-tabs"><i class="content-shimmer"></i><i class="content-shimmer"></i><i class="content-shimmer"></i></div>' +
+    '<div class="brand-skeleton-section"><i class="content-shimmer"></i></div>' +
+    productGridLoadingSkeleton(6) +
+    '<div class="brand-skeleton-section"><i class="content-shimmer"></i></div>' +
+    '<div class="brand-skeleton-tiles"><i class="content-shimmer"></i><i class="content-shimmer"></i><i class="content-shimmer"></i></div>' +
+    '</div>';
+}
+function showLoading(container) { if (container) container.innerHTML = productGridLoadingSkeleton(6); }
 
 // ── FILTERS ──────────────────────────────────────────────────
 // Filters available: category, brand, size, on-sale, in-stock.
@@ -1520,7 +1538,7 @@ async function navigateToVendor(vendorIdOrSlug, replaceUrl, view) {
   // destroyed them for the current one.
   restoreCollectionFilterBar();
   const el = document.getElementById('vendor-page-content');
-  if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  if (el) el.innerHTML = brandPageLoadingSkeleton();
   // Reset per-visit so a filter/grid choice on one brand's page doesn't
   // carry over to the next brand you look at.
   S.vendorFilter = {cat:[], size:'all', vendor:[], onSale: brandView === 'sale', inStock:false};
