@@ -939,3 +939,29 @@ body .site-collection-layout {
 .home-section-btn-row { display: flex; justify-content: flex-end; padding: 20px 20px 0; }
 @media (min-width: 768px) { .home-section-btn-row { padding-left: 24px; padding-right: 24px; } }
 @media (min-width: 1024px) { .home-section-btn-row { padding-left: 27px; padding-right: 27px; } }
+
+/* Brand-page skeleton: mirrors the real page silhouette instead of showing
+   a centred spinner while the vendor record and product data resolve. */
+.brand-page-skeleton { padding-bottom: 32px; overflow: hidden; }
+.brand-skeleton-bar { min-height: 76px; display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #eee; }
+.brand-skeleton-logo { width: 44px; height: 44px; border-radius: 50%; flex: 0 0 auto; }
+.brand-skeleton-name { display: flex; flex-direction: column; gap: 8px; width: min(48%, 220px); }
+.brand-skeleton-name i { display: block; height: 12px; border-radius: 2px; }
+.brand-skeleton-name i:first-child { width: 82%; height: 16px; }
+.brand-skeleton-name i:last-child { width: 56%; }
+.brand-skeleton-hero { width: 100%; aspect-ratio: 16 / 7; min-height: 190px; max-height: 520px; }
+.brand-skeleton-tabs { display: flex; gap: 24px; padding: 20px 18px; border-bottom: 1px solid #eee; }
+.brand-skeleton-tabs i { display: block; width: 56px; height: 12px; border-radius: 2px; }
+.brand-skeleton-tabs i:first-child { width: 42px; }
+.brand-skeleton-section { padding: 28px 18px 12px; }
+.brand-skeleton-section i { display: block; width: 132px; height: 18px; border-radius: 2px; }
+.brand-page-skeleton .product-grid-loading { pointer-events: none; }
+.brand-page-skeleton .product-grid-loading .product-img-wrap { background: #f4f4f4; }
+.brand-page-skeleton .product-grid-loading .product-img-wrap::before { display: block; }
+.brand-skeleton-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0 8px; }
+.brand-skeleton-tiles i { display: block; aspect-ratio: 4 / 5; border-radius: 1px; }
+@media (max-width: 639px) {
+  .brand-skeleton-hero { aspect-ratio: 4 / 3; min-height: 180px; }
+  .brand-skeleton-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .brand-skeleton-tiles i:last-child { display: none; }
+}
