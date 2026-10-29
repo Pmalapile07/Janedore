@@ -865,8 +865,15 @@
   window._deleteVendor = function(vendorId) {
     if (!isSuperAdmin()) return;
     if (!confirm('Delete this brand? This cannot be undone.')) return;
-    vendorsRef.doc(vendorId).delete().then(function() {
-      privateRef.doc(vendorId).delete().catch(function() {});
+    // Record a tombstone before deleting so default seeding cannot resurrect this brand.
+    window._adminDB.collection('vendorDeletionTombstones').doc(vendorId).set({
+      vendorId: vendorId,
+      deletedAt: new Date().toISOString()
+    }).then(function() {
+      return vendorsRef.doc(vendorId).delete();
+    }).then(function() {
+      return privateRef.doc(vendorId).delete().catch(function() {});
+    }).then(function() {
       showToast('Brand deleted');
       closeModal();
       window._renderVendorsTab();
@@ -890,12 +897,24 @@
       { id: 'vendor-thato', name: 'THATO', brand: 'THATO', email: '', commissionRate: 15, status: 'active', description: 'Curated parfum collection.', logoUrl: '', heroImageUrl: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), notes: '' }
     ];
 
+    var tombstonesRef = window._adminDB.collection('vendorDeletionTombstones');
     var promises = defaults.map(function(v) {
-      return saveVendor(v.id, v);
+      // Never overwrite an existing vendor: that would blank its logo/hero image
+      // and reset any custom details. Never recreate a deliberately deleted one.
+      return Promise.all([
+        vendorsRef.doc(v.id).get(),
+        tombstonesRef.doc(v.id).get()
+      ]).then(function(results) {
+        var existing = results[0];
+        var deleted = results[1];
+        if (deleted.exists || existing.exists) return false;
+        return saveVendor(v.id, v).then(function() { return true; });
+      });
     });
 
-    Promise.all(promises).then(function() {
-      showToast('Default brands seeded!');
+    Promise.all(promises).then(function(results) {
+      var created = results.filter(Boolean).length;
+      showToast(created ? ('Seeded ' + created + ' missing default brand' + (created === 1 ? '' : 's') + '.') : 'No changes needed — existing and deleted brands were preserved.');
       if (btn) { btn.disabled = false; btn.textContent = 'Seed Default Brands'; }
       window._renderVendorsTab();
     }).catch(function(e) {
