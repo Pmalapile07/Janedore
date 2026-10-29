@@ -655,18 +655,33 @@
     font-weight: 400 !important;
     letter-spacing: 0.02em !important;
   }
-  /* History-load placeholder — a plain spinner, no "Loading..." text */
-  #chat-window .chat-loading-spinner {
-    width: 28px !important;
-    height: 28px !important;
-    margin: 0 auto !important;
-    border: 2px solid #e0e0e0 !important;
-    border-top-color: #111 !important;
-    border-radius: 50% !important;
-    animation: chat-spin 0.7s linear infinite !important;
+  /* Conversation-history skeleton bubbles, not a spinner. */
+  #chat-window .chat-history-skeleton {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 14px 0 !important;
   }
-  @keyframes chat-spin {
-    to { transform: rotate(360deg); }
+  #chat-window .chat-history-skeleton i {
+    display: block !important;
+    height: 38px !important;
+    width: 72% !important;
+    max-width: 240px !important;
+    border-radius: 14px 14px 14px 3px !important;
+    background: linear-gradient(90deg, #f1f1f1 25%, #e7e7e7 37%, #f1f1f1 50%) !important;
+    background-size: 400% 100% !important;
+    animation: chat-skeleton-shimmer 1.5s ease-in-out infinite !important;
+  }
+  #chat-window .chat-history-skeleton i:nth-child(2) {
+    width: 58% !important;
+    align-self: flex-end !important;
+    border-radius: 14px 14px 3px 14px !important;
+  }
+  #chat-window .chat-history-skeleton i:nth-child(3) { width: 66% !important; }
+  @keyframes chat-skeleton-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
   }
 
   /* ---------- INPUT PILL (border above removed) ---------- */
