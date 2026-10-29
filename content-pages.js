@@ -27,7 +27,7 @@ async function navigateToContentPage(slug, replaceUrl) {
   }
 
   const el = document.getElementById('content-page-body');
-  if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  if (el) el.innerHTML = '<div class="content-page-skeleton" aria-label="Loading page" aria-busy="true"><i></i><i></i><i></i><i></i><i></i></div>';
 
   // Track your order, Log a return, Exchange an item, customer care, Brand partnerships and the Partner application are built in code, not Firestore pages
   // (track-order.js, returns.js).
