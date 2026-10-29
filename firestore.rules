@@ -169,6 +169,13 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // Permanent deletion markers prevent the default-vendor seeder from
+    // recreating brands that a Super Admin intentionally deleted.
+    match /vendorDeletionTombstones/{vendorId} {
+      allow read, create, update: if isSuperAdmin();
+      allow delete: if false;
+    }
+
     // =========================================================
     // ORDERS
     // =========================================================
