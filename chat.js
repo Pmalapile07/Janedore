@@ -1159,7 +1159,7 @@ async function loadMessages() {
   const el = safeEl('chat-messages');
   if (!rtdb || !el) { _ScreenDebug.err('RTDB', 'Cannot load — rtdb or el missing'); return false; }
 
-  el.innerHTML = '<div class="chat-welcome"><div class="chat-loading-spinner"></div></div>';
+  el.innerHTML = '<div class="chat-welcome chat-history-skeleton" aria-label="Loading conversation" aria-busy="true"><i></i><i></i><i></i></div>';
   _ScreenDebug.info('RTDB', 'Loading history for session ' + chatSessionId.slice(0, 20));
 
   const LOAD_TIMEOUT_MS = 10000;
