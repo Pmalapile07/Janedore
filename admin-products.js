@@ -1677,7 +1677,11 @@
       if(window._currentUserRole!=='SUPER_ADMIN'){showToast('Only Super Admin can delete brands.','error');return;}
       var items=(window._vendorsData||[]).filter(function(x){return ids.indexOf(x.id)>=0;});
       if(!confirm('Delete '+items.length+' selected brand'+(items.length===1?'':'s')+'? This cannot be undone.'))return;
-      Promise.all(items.map(function(item){return window._adminDB.collection('vendors').doc(item.id).delete();})).then(function(){showToast('Selected brands deleted');window._catalogBulkCancel();window._renderVendorsTab();}).catch(function(e){showToast('Could not delete brands: '+e.message,'error');});
+      Promise.all(items.map(function(item){
+        var tombstone = window._adminDB.collection('vendorDeletionTombstones').doc(item.id);
+        return tombstone.set({vendorId:item.id,deletedAt:new Date().toISOString()})
+          .then(function(){return window._adminDB.collection('vendors').doc(item.id).delete();});
+      })).then(function(){showToast('Selected brands deleted');window._catalogBulkCancel();window._renderVendorsTab();}).catch(function(e){showToast('Could not delete brands: '+e.message,'error');});
     }
   };
   window._toggleCatalogActions = function(event,type){event.stopPropagation();var menu=document.getElementById(type+'-actions-menu');if(menu)menu.hidden=!menu.hidden;};
