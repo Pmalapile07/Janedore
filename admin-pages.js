@@ -77,7 +77,7 @@
   window._renderPagesTab = function() {
     var mc = safeEl('main-content');
     if (!mc) return;
-    mc.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    mc.innerHTML = '<div class="admin-loading-skeleton" aria-label="Loading pages" aria-busy="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>';
     loadPagesData().then(renderPagesList);
   };
 
