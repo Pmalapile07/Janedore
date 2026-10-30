@@ -3309,7 +3309,7 @@ require('./waitlist-api')(app, { adminDb, admin, sendResendEmail, buildOrderEmai
 // Product reviews from verified buyers: /api/reviews* (reviews-api.js).
 require('./reviews-api')(app, { adminDb, admin, rateLimited, issueReviewReward });
 // Bob Go tracking updates: Shipped and Delivered without clicking (bobgo-api.js).
-require('./bobgo-api')(app, { adminDb, admin, orderShipments, allPackagesDone, sendOrderStatusEmail, sendResendEmail, alertEmail: ORDER_ALERT_EMAIL });
+require('./bobgo-api')(app, { adminDb, admin, orderShipments, allPackagesDone, sendOrderStatusEmail, sendResendEmail, alertEmail: ORDER_ALERT_EMAIL, rateLimited });
 // Customers collecting from a brand: ready, code, collected (collection-api.js).
 const collectionApi = require('./collection-api')(app, {
   adminDb, admin, orderShipments, collectionKey, allPackagesDone, authorizeShipmentRequest, sendOrderStatusEmail,
