@@ -64,8 +64,8 @@
   .checkout-totals-head.has-vat { padding-bottom: 4px; margin-bottom: 0; border-bottom: none; }
   .checkout-vat-note { text-align: right; font-size: 12px; color: #777; padding-bottom: 16px; margin-bottom: 8px; border-bottom: 1px solid #ddd; }
   .checkout-totals-row { display: flex; justify-content: space-between; font-size: 14px; margin: 10px 0; }
-  /* Discounts always show in the site green (same as the toast strip and step circles). */
-  .checkout-totals-row.discount { color: #b8cc87; font-weight: 600; }
+  /* Discounts always show in the site blue (same as the toast strip and step circles). */
+  .checkout-totals-row.discount { color: #809ADD; font-weight: 600; }
   .checkout-order { padding: 0; }
   .checkout-order-toggle {
     width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -82,19 +82,19 @@
   .checkout-collapsible { padding: 0; }
   .checkout-code-body { padding: 0 16px 16px; }
   .checkout-code-body .cart-code-label { margin-top: 0; }
-  /* Radio cards (shipping and payment method), site green when chosen. */
+  /* Radio cards (shipping and payment method), site blue when chosen. */
   .checkout-options { display: flex; flex-direction: column; gap: 12px; }
   .checkout-option {
     display: flex; gap: 14px; align-items: flex-start; padding: 16px;
     border: 1px solid #d0d0d0; cursor: pointer;
   }
-  .checkout-option.is-selected { border: 2px solid #b8cc87; padding: 15px; }
+  .checkout-option.is-selected { border: 2px solid #809ADD; padding: 15px; }
   .checkout-option input { position: absolute; opacity: 0; pointer-events: none; }
   .checkout-option-radio {
     width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #999; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; margin-top: -2px;
   }
-  .checkout-option.is-selected .checkout-option-radio { border: none; background: #b8cc87; }
+  .checkout-option.is-selected .checkout-option-radio { border: none; background: #809ADD; }
   .checkout-option.is-selected .checkout-option-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
   .checkout-option input:focus-visible + .checkout-option-radio { outline: 2px solid #111; outline-offset: 2px; }
   .checkout-option-body { flex: 1; min-width: 0; }
@@ -155,7 +155,7 @@
   .checkout-thanks { text-align: center; padding: 28px 16px; }
   .checkout-thanks-icon {
     width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 50%;
-    background: #b8cc87; color: #111; display: flex; align-items: center; justify-content: center;
+    background: #809ADD; color: #111; display: flex; align-items: center; justify-content: center;
     font-size: 28px;
   }
   .checkout-thanks-title { font-size: 22px; font-weight: 600; margin: 0 0 8px; line-height: 1.3; }
