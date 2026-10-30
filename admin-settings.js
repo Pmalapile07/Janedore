@@ -197,12 +197,64 @@
           '</div>' +
         '</div>' +
 
+        // ═══ BOB GO CONNECTION TEST ═══
+        '<div class="card" style="margin-bottom:12px;">' +
+          '<div class="card-header"><span class="card-title">Bob Go API</span></div>' +
+          '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">' +
+            '<div style="font-size:12px;color:var(--muted);line-height:1.5;">Check whether Render can authenticate with Bob Go and retrieve checkout rates. This uses a sample Pretoria-to-Cape Town parcel. It does not create a shipment or charge you.</div>' +
+            '<button type="button" class="btn btn-primary" id="bobgo-test-btn" onclick="window._testBobGoRates()">Test Bob Go connection</button>' +
+            '<div id="bobgo-test-result" role="status" aria-live="polite" style="font-size:13px;line-height:1.5;"></div>' +
+          '</div>' +
+        '</div>' +
+
         // Save button at bottom
         '<button type="submit" class="btn btn-primary" style="width:100%;margin-bottom:80px;">' +
           '<i class="ph-light ph-check" style="margin-right:4px;"></i> Save All Settings' +
         '</button>' +
 
       '</form>';
+  };
+
+  window._testBobGoRates = async function() {
+    var button = document.getElementById('bobgo-test-btn');
+    var output = document.getElementById('bobgo-test-result');
+    if (!button || !output) return;
+    var user = window._adminAuth && window._adminAuth.currentUser;
+    if (!user) { output.textContent = 'Please sign in to Admin again.'; return; }
+    button.disabled = true;
+    button.textContent = 'Testing…';
+    output.textContent = 'Contacting Bob Go Sandbox…';
+    try {
+      var token = await user.getIdToken();
+      var response = await fetch('/api/admin/bobgo/test-rates', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      var data = await response.json().catch(function() { return {}; });
+      if (!response.ok || !data.ok) {
+        output.textContent = 'Not working yet: ' + (data.error || 'The test could not be completed.') + (data.hint ? ' ' + data.hint : '');
+        output.style.color = 'var(--danger, #b42318)';
+        return;
+      }
+      output.style.color = 'var(--success, #287a45)';
+      if (!data.rateCount) {
+        output.textContent = 'Connected to ' + data.environment + ', but Bob Go returned no rates for the sample route. ' + data.message;
+        output.style.color = 'var(--muted)';
+        return;
+      }
+      var lines = data.rates.map(function(rate) {
+        return rate.serviceName + ' — ' + rate.currency + ' ' + Number(rate.price).toFixed(2) +
+          (rate.description ? ' · ' + rate.description : '');
+      });
+      output.textContent = 'Success — ' + data.environment + ' returned ' + data.rateCount + ' rate(s): ' + lines.join(' | ');
+    } catch (e) {
+      output.style.color = 'var(--danger, #b42318)';
+      output.textContent = 'Could not run the test: ' + (e.message || 'Please try again.');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Test Bob Go connection';
+    }
   };
 
   /* ─────────────────────────────────────────────────────────
