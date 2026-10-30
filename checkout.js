@@ -853,3 +853,42 @@ function handlePayFastReturn() {
   pollPaymentStatus(orderId, 0);
 }
 handlePayFastReturn();
+
+
+// Temporary Bob Go Sandbox preview for checkout testing only.
+// Does not change shipping totals, create an order, or book a shipment.
+async function previewBobGoCheckoutRates() {
+  const button = document.getElementById('bobgo-preview-btn');
+  const output = document.getElementById('bobgo-preview-results');
+  if (!button || !output) return;
+  const value = id => (document.getElementById(id)?.value || '').trim();
+  const payload = { street: value('checkout-address'), city: value('checkout-city'), province: value('checkout-province'), postalCode: value('checkout-postal') };
+  if (!payload.street || !payload.city || !payload.province || !payload.postalCode) {
+    output.textContent = 'Enter your street address, city, province and postal code above first.';
+    return;
+  }
+  button.disabled = true;
+  button.textContent = 'Checking Sandbox…';
+  output.textContent = 'Requesting test rates from Bob Go…';
+  try {
+    const response = await fetch('/api/bobgo/checkout-preview', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Could not retrieve test rates.');
+    if (!data.rates || !data.rates.length) {
+      output.textContent = 'Bob Go responded, but no Sandbox rates matched this destination.';
+    } else {
+      output.innerHTML = '<div style="font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:8px;">SANDBOX TEST RATES — NOT CHARGED</div>' +
+        data.rates.map(rate => '<div style="padding:10px 0;border-top:1px solid #eee;"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px;"><strong>' +
+          sanitizeHTML(rate.serviceName) + '</strong><strong>' + formatPrice(rate.price) + '</strong></div>' +
+          (rate.description ? '<div style="font-size:12px;color:#666;margin-top:4px;">' + sanitizeHTML(rate.description) + '</div>' : '') +
+          '</div>').join('');
+    }
+  } catch (error) {
+    output.textContent = error.message || 'Could not retrieve Bob Go test rates.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Test delivery rates';
+  }
+}
