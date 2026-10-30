@@ -1,6 +1,6 @@
 /* Brand Partnerships (brand-partnerships.js) and the partner
    application form inside it (partner-application.js). Editorial and
-   restrained: #F4F4F4 tint bands, the brand's green (#b8cc87) only on
+   restrained: #F4F4F4 tint bands, the brand's blue (#809ADD) only on
    the process step rules. Thin rules, no cards or shadows.
    Mobile first; the desktop layout starts at 900px. */
 .bp { font-family: 'Inter', sans-serif; color: #111; overflow-x: clip; }
@@ -59,7 +59,7 @@
 .bp-hero.has-video .bp-eyebrow { color: rgba(255, 255, 255, 0.8); }
 .bp-hero.has-video .bp-hero-text { color: rgba(255, 255, 255, 0.88); }
 .bp-hero.has-video .bp-btn { background: #fff; color: #111; }
-.bp-hero.has-video .bp-btn:hover { background: #e6edd5; }
+.bp-hero.has-video .bp-btn:hover { background: #809ADD; }
 .bp-hero.has-video .bp-link { color: #fff; }
 .bp-hero.has-video .bp-btn:focus-visible, .bp-hero.has-video .bp-link:focus-visible { outline-color: #fff; }
 .bp-hero-pause {
@@ -171,7 +171,7 @@ select.pa-input {
 
   .bp-apply-head { margin-top: 88px; }
   .bp-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: none; }
-  .bp-step { border-bottom: none; border-top: 2px solid #b8cc87; padding: 20px 0 0; }
+  .bp-step { border-bottom: none; border-top: 2px solid #809ADD; padding: 20px 0 0; }
 
   .bp-apply { padding-bottom: 120px; }
 }
@@ -184,4 +184,4 @@ select.pa-input {
 .pa-page #ps-result:not(:empty) { margin-top: 36px; }
 .pa-conditions { margin: 0; padding: 0 0 0 20px; font-size: 13px; line-height: 1.7; }
 .pa-conditions li { margin: 0 0 8px; }
-.pa-help { background: #e6edd5; font-size: 13px; line-height: 1.6; padding: 14px 16px; margin-top: 14px; }
+.pa-help { background: #809ADD; font-size: 13px; line-height: 1.6; padding: 14px 16px; margin-top: 14px; }
