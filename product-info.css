@@ -81,7 +81,7 @@
   color: #fff;
 }
 .product-badge-detail.badge-sale { background: #c0392b; color: #fff; }
-.product-badge-detail.badge-free-delivery { background: #e6edd5; color: #111; }
+.product-badge-detail.badge-free-delivery { background: #809ADD; color: #111; }
 
 .product-name-group {
   display: flex;
