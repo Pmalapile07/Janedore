@@ -278,6 +278,13 @@
         </label>
       </section>
 
+      <section class="checkout-card" id="bobgo-sandbox-preview-card">
+        <h2 class="checkout-card-title">Try Bob Go delivery rates</h2>
+        <p class="checkout-card-note">Sandbox test only. Uses a sample parcel and Pretoria pickup address; it will not affect your order total or book a courier.</p>
+        <button type="button" class="checkout-place-order-btn" id="bobgo-preview-btn" onclick="previewBobGoCheckoutRates()">Test delivery rates</button>
+        <div id="bobgo-preview-results" aria-live="polite" style="margin-top:12px;"></div>
+      </section>
+
       <section class="checkout-card checkout-collapsible">
         <button type="button" class="checkout-order-toggle" aria-expanded="false" aria-controls="checkout-code-body-2" onclick="toggleCheckoutCard(this)">
           <span class="checkout-card-title">Apply a code</span>
