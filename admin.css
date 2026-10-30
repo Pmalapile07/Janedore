@@ -64,7 +64,7 @@ input, select, textarea { font-size:16px !important; }
 .login-btn{width:100%;background:#fff;color:#0d0d0d;border:none;border-radius:var(--r-sm);padding:var(--space-4);font-family:var(--font);font-size:var(--font-scale-md);font-weight:600;letter-spacing:.03em;cursor:pointer;margin-top:var(--space-2);transition:opacity var(--duration-base),transform 0.1s;}
 .login-btn:active{opacity:.82;transform:scale(0.99);}
 .login-btn:disabled{opacity:.6;cursor:default;}
-.login-notice{background:rgba(230,237,213,0.12);border:0.5px solid rgba(230,237,213,0.3);border-radius:var(--r-xs);padding:var(--space-2) var(--space-4);font-size:var(--font-scale-sm);line-height:1.5;color:#e6edd5;margin-bottom:var(--space-3);display:none;}
+.login-notice{background:rgba(128,154,221,0.12);border:0.5px solid rgba(128,154,221,0.3);border-radius:var(--r-xs);padding:var(--space-2) var(--space-4);font-size:var(--font-scale-sm);line-height:1.5;color:#809ADD;margin-bottom:var(--space-3);display:none;}
 .login-forgot{display:block;margin:var(--space-4) auto 0;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.55);font-family:var(--font);font-size:var(--font-scale-sm);text-decoration:underline;text-underline-offset:3px;padding:var(--space-1);}
 .login-forgot:hover{color:#fff;}
 
@@ -1121,7 +1121,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .content-item-body{padding:10px 12px 12px;}
 .content-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .content-item-meta{font-size:11px;color:var(--muted);margin-top:2px;text-transform:capitalize;}
-.content-item-used{display:inline-block;margin-top:6px;font-size:10px;font-weight:600;background:#e6edd5;color:#111;padding:2px 8px;border-radius:10px;}
+.content-item-used{display:inline-block;margin-top:6px;font-size:10px;font-weight:600;background:#809ADD;color:#111;padding:2px 8px;border-radius:10px;}
 .content-item-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 /* Dark checkerboard behind images: white logos stay visible and transparent areas show. */
 .content-kind-image{background-color:#2b2b2b;background-image:linear-gradient(45deg,#353535 25%,transparent 25%),linear-gradient(-45deg,#353535 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#353535 75%),linear-gradient(-45deg,transparent 75%,#353535 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;}
@@ -1138,7 +1138,7 @@ hr.divider{border:none;border-top:0.5px solid var(--border);margin:var(--space-4
 .report-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .report-brand { font-size: 15px; font-weight: 600; color: var(--text, #111); }
 .report-reason { font-size: 13px; color: var(--text, #111); margin-top: 2px; }
-.report-status { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #e6edd5; color: #111; white-space: nowrap; }
+.report-status { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #809ADD; color: #111; white-space: nowrap; }
 .report-card.is-reviewed .report-status { background: #f1f1f1; color: #777; }
 .report-details { font-size: 13px; line-height: 1.5; color: #444; margin-top: 10px; white-space: pre-wrap; word-break: break-word; }
 .report-meta { font-size: 12px; color: var(--muted, #888); margin-top: 10px; }
