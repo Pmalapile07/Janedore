@@ -10,7 +10,7 @@
 .cart-addon-btn:hover { background: #111; color: #fff; }
 
 /* "Added to cart" bar (showAddedToCartToast(), cart.js). Pale tint of
-   the brand green behind it; a stronger #B8CC87 strip along the top
+   the brand blue behind it; a stronger #809ADD strip along the top
    shrinks to nothing over the bar's lifetime, then the bar leaves. */
 .added-toast {
   position: fixed;
@@ -24,7 +24,7 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #e6edd5;
+  background: #809ADD;
   color: #111;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
@@ -44,7 +44,7 @@
   left: 0;
   width: 100%;
   height: 4px;
-  background: #b8cc87;
+  background: #809ADD;
   transform-origin: left center;
 }
 .added-toast-icon {
@@ -118,7 +118,7 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   gap: 18px;
   margin: 12px 8px 0;
   padding: 14px 20px;
-  background: #e6edd5;
+  background: #809ADD;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 400;
@@ -272,8 +272,8 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   font-size: 14px;
   margin: 10px 0;
 }
-/* Discounts always show in the site green. */
-.cart-totals-row.discount { color: #b8cc87; font-weight: 600; }
+/* Discounts always show in the site blue. */
+.cart-totals-row.discount { color: #809ADD; font-weight: 600; }
 .cart-page-remove-discount { background: none; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 0 4px; }
 .cart-checkout-btn {
   width: 100%;
@@ -360,8 +360,8 @@ body:has(#page-checkout.active) .checkout-steps { display: flex; }
   justify-content: center;
 }
 .checkout-step i { display: none; font-size: 16px; }
-.checkout-step.is-current { border: 2px solid #b8cc87; }
-.checkout-step.is-done { background: #b8cc87; border: 2px solid #b8cc87; color: #111; }
+.checkout-step.is-current { border: 2px solid #809ADD; }
+.checkout-step.is-done { background: #809ADD; border: 2px solid #809ADD; color: #111; }
 .checkout-step.is-done .checkout-step-num { display: none; }
 .checkout-step.is-done i { display: block; }
 .checkout-step.is-clickable { cursor: pointer; transition: opacity 0.2s ease; }
@@ -376,5 +376,5 @@ body:has(#page-checkout.active) .checkout-steps { display: flex; }
 /* Pre-order line on bag, checkout and confirmation items (cartPreorderHtml(), cart.js). */
 .cart-item-preorder { display: inline-block; white-space: nowrap; margin-top: 6px; padding: 3px 8px; background: #f4f4f4; color: #111; font-size: 11px; font-weight: 600; }
 /* Same green as the delivery bar; sits beside a Pre-order tag if both. */
-.cart-item-free { display: inline-block; white-space: nowrap; margin-top: 6px; padding: 3px 8px; background: #e6edd5; color: #111; font-size: 11px; font-weight: 600; }
+.cart-item-free { display: inline-block; white-space: nowrap; margin-top: 6px; padding: 3px 8px; background: #809ADD; color: #111; font-size: 11px; font-weight: 600; }
 .cart-item-preorder + .cart-item-free { margin-left: 6px; }
