@@ -231,12 +231,12 @@ module.exports = function registerBobGo(app, deps) {
       return res.status(429).json({ ok: false, error: 'Please wait before requesting test rates again.' });
     }
     const apiKey = String(process.env.BOBGO_API_KEY || '').trim();
-    const configuredBase = String(process.env.BOBGO_BASE_URL || 'https://api.sandbox.bobgo.co.za/v2').trim().replace(/\\/+$/, '');
+    const configuredBase = String(process.env.BOBGO_BASE_URL || 'https://api.sandbox.bobgo.co.za/v2').trim().replace(/\/+$/, '');
     let endpoint;
     try {
       const base = new URL(configuredBase);
       if (base.protocol !== 'https:' || base.hostname !== 'api.sandbox.bobgo.co.za') throw new Error('Sandbox only');
-      endpoint = new URL(base.pathname.replace(/\\/$/, '') + '/rates-at-checkout', base.origin);
+      endpoint = new URL(base.pathname.replace(/\/$/, '') + '/rates-at-checkout', base.origin);
     } catch (e) {
       return res.status(503).json({ ok: false, error: 'Checkout preview is available only while Bob Go is configured for Sandbox.' });
     }
