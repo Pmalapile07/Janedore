@@ -3,6 +3,11 @@
 let checkoutEmail = localStorage.getItem('janedore_checkout_email') || '';
 let lastConfirmedOrderNumber = sessionStorage.getItem('janedore_last_order_number') || null;
 
+// Bob Go checkout quotes are per brand/warehouse shipment. Sandbox quotes are
+// for checkout testing only and must never be used to charge a customer.
+let bobGoCheckoutQuote = null;
+let bobGoSelectedRates = {};
+
 // Full order details (items, address, totals) for the confirmation page
 // — separate from lastConfirmedOrderNumber above, which alone isn't
 // enough to render a real confirmation page. Persisted the same way, so
@@ -193,7 +198,8 @@ function getCheckoutTotals() {
   const discountAmount = getDiscountAmount();
   const afterDiscount = getCartTotalAfterDiscount();
   const status = getCartShippingStatus(afterDiscount);
-  const shipping = status.fee;
+  const quoted = getSelectedBobGoShippingTotal();
+  const shipping = quoted === null ? status.fee : quoted;
   return { subtotal, discountAmount, shipping, packages: status.packages, total: afterDiscount + shipping };
 }
 
@@ -297,33 +303,64 @@ function renderCheckoutSummary() {
 
 // Brands offering collection (cart.js canCollect): a Delivery or Collect
 // choice per brand. Collected items need no delivery address.
+function getSelectedBobGoShippingTotal() {
+  if (!bobGoCheckoutQuote || !Array.isArray(bobGoCheckoutQuote.shipments)) return null;
+  const shipments = getCartShipments().filter(s => !s.collect);
+  if (!shipments.length) return 0;
+  if (shipments.some(s => !bobGoSelectedRates[s.key])) return null;
+  return shipments.reduce((sum, s) => {
+    const q = bobGoCheckoutQuote.shipments.find(x => x.key === s.key);
+    const rate = q && q.rates && q.rates[bobGoSelectedRates[s.key]];
+    return sum + (rate ? (s.free ? 0 : Number(rate.price) || 0) : 0);
+  }, 0);
+}
+function chooseBobGoRate(key, kind) {
+  bobGoSelectedRates[key] = kind;
+  renderCheckoutSummary();
+}
 function renderCollectOptions() {
   const box = document.getElementById('checkout-collect-options');
   const standard = document.getElementById('checkout-standard-option');
   if (!box || !standard) return false;
   const shipments = getCartShipments();
   const any = shipments.some(s => s.canCollect);
-  box.style.display = any ? '' : 'none';
-  standard.style.display = any ? 'none' : '';
+  box.style.display = '';
+  standard.style.display = 'none';
   syncAddressForCollection(shipments);
-  if (!any) { box.innerHTML = ''; return false; }
-  const eta = cartHasOnlyPreorder() ? '' : `ETA: <strong>${sanitizeHTML(deliveryEstimateText())}</strong>`;
-  const option = (s, collect, head, price, note) => `<label class="checkout-option${s.collect === collect ? ' is-selected' : ''}">
-      <input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" ${s.collect === collect ? 'checked' : ''} onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', ${collect})">
+  const quoteByKey = new Map((bobGoCheckoutQuote && bobGoCheckoutQuote.shipments || []).map(s => [s.key, s]));
+  const formatEta = rate => {
+    if (!rate || (!rate.minDeliveryDate && !rate.maxDeliveryDate)) return 'Delivery estimate unavailable';
+    const fmt = value => {
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' });
+    };
+    const min = fmt(rate.minDeliveryDate), max = fmt(rate.maxDeliveryDate);
+    return min && max && min !== max ? 'Estimated delivery: ' + min + ' – ' + max : 'Estimated delivery: ' + (min || max);
+  };
+  const rateOption = (s, kind, label) => {
+    const q = quoteByKey.get(s.key);
+    const rate = q && q.rates && q.rates[kind];
+    if (!rate) return '';
+    const selected = (bobGoSelectedRates[s.key] || 'standard') === kind;
+    const shownPrice = s.free ? 'FREE' : formatPrice(rate.price);
+    return `<label class="checkout-option${selected ? ' is-selected' : ''}">
+      <input type="radio" name="bobgo-rate-${sanitizeHTML(s.key)}" ${selected ? 'checked' : ''} onchange="chooseBobGoRate('${escapeJSString(s.key)}','${kind}')">
       <span class="checkout-option-radio" aria-hidden="true"></span>
       <span class="checkout-option-body">
-        <span class="checkout-option-head"><span>${head}</span><strong>${price}</strong></span>
-        ${note ? `<span class="checkout-option-note">${note}</span>` : ''}
+        <span class="checkout-option-head"><span>${label}</span><strong>${shownPrice}</strong></span>
+        <span class="checkout-option-note">Ships from <strong>${sanitizeHTML(s.brand)}</strong></span>
+        <span class="checkout-option-note checkout-delivery-estimate">${sanitizeHTML(formatEta(rate))}</span>
       </span>
     </label>`;
+  };
   box.innerHTML = shipments.map(s => {
-    const delivery = option(s, false, 'Delivery', s.deliveryFee ? formatPrice(s.deliveryFee) : 'FREE', s.canCollect ? eta : `Ships from <strong>${sanitizeHTML(s.brand)}</strong>. ${eta}`);
-    const body = s.canCollect
-      ? delivery + option(s, true, 'Collect from ' + sanitizeHTML(s.brand), 'FREE',
-          `${sanitizeHTML(s.collectOffer.area)}${s.collectOffer.hours ? ' · ' + sanitizeHTML(s.collectOffer.hours) : ''}<br>We’ll email you the address and a collection code when it’s ready.`)
-      : delivery;
-    return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options">${body}</div></div>`;
+    if (s.collect) return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options"><div class="checkout-option is-selected"><span class="checkout-option-body"><span class="checkout-option-head"><span>Collect from ${sanitizeHTML(s.brand)}</span><strong>FREE</strong></span><span class="checkout-option-note">${sanitizeHTML(s.collectOffer && s.collectOffer.area || '')}</span></span></div></div></div>`;
+    const q = quoteByKey.get(s.key);
+    const choices = q ? rateOption(s, 'standard', 'Standard Delivery') + rateOption(s, 'locker', 'Locker Collection') : '';
+    const collect = s.canCollect ? `<label class="checkout-option"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', true)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Collect from ${sanitizeHTML(s.brand)}</span><strong>FREE</strong></span><span class="checkout-option-note">${sanitizeHTML(s.collectOffer.area)}${s.collectOffer.hours ? ' · ' + sanitizeHTML(s.collectOffer.hours) : ''}</span></span></label>` : '';
+    return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options">${choices || '<span class="checkout-option-note">Enter your delivery address, then calculate rates.</span>'}${collect}</div></div>`;
   }).join('');
+  if (!shipments.length) { box.innerHTML = ''; return any; }
   return true;
 }
 function chooseCollection(vendorId, collect) {
@@ -348,9 +385,9 @@ function renderShippingMethod(shipping, packages) {
   const nameEl = document.getElementById('checkout-shipping-name');
   if (nameEl) nameEl.textContent = packages > 1 ? 'Standard, ' + packages + ' packages' : 'Standard';
   const shippingPriceEl = document.getElementById('checkout-shipping-price');
-  if (shippingPriceEl) shippingPriceEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
+  if (shippingPriceEl) shippingPriceEl.textContent = bobGoCheckoutQuote ? (shipping === 0 ? 'FREE' : formatPrice(shipping)) : 'Calculate at checkout';
   const estimateEl = document.getElementById('checkout-delivery-estimate');
-  if (estimateEl) estimateEl.innerHTML = cartHasOnlyPreorder() ? '' : `ETA: <strong>${sanitizeHTML(deliveryEstimateText())}</strong>`;
+  if (estimateEl) estimateEl.innerHTML = bobGoCheckoutQuote ? 'Bob Go estimate shown per delivery option below.' : 'Enter your delivery address to calculate a Bob Go rate.';
   const fromEl = document.getElementById('checkout-ships-from');
   if (!fromEl) return;
   const shipments = getCartShipments();
@@ -855,40 +892,41 @@ function handlePayFastReturn() {
 handlePayFastReturn();
 
 
-// Temporary Bob Go Sandbox preview for checkout testing only.
-// Does not change shipping totals, create an order, or book a shipment.
-async function previewBobGoCheckoutRates() {
-  const button = document.getElementById('bobgo-preview-btn');
-  const output = document.getElementById('bobgo-preview-results');
-  if (!button || !output) return;
+// Request live per-brand parcel quotes from the Bob Go Sandbox API.
+async function loadBobGoCheckoutRates() {
+  const button = document.getElementById('bobgo-checkout-rates-btn');
+  const output = document.getElementById('bobgo-checkout-status');
   const value = id => (document.getElementById(id)?.value || '').trim();
-  const payload = { street: value('checkout-address'), city: value('checkout-city'), province: value('checkout-province'), postalCode: value('checkout-postal') };
-  if (!payload.street || !payload.city || !payload.province || !payload.postalCode) {
-    output.textContent = 'Enter your street address, city, province and postal code above first.';
+  const payload = {
+    street: value('checkout-address'), city: value('checkout-city'),
+    province: value('checkout-province'), postalCode: value('checkout-postal'),
+    items: S.cart.map(item => ({ productId: String(item.productId), qty: Number(item.qty) }))
+  };
+  if (!payload.street || !payload.city || !payload.province || !/^\\d{4}$/.test(payload.postalCode)) {
+    if (output) output.textContent = 'Complete your street address, city, province and 4-digit postal code first.';
     return;
   }
-  button.disabled = true;
-  button.textContent = 'Checking Sandbox…';
-  output.textContent = 'Requesting test rates from Bob Go…';
+  if (button) { button.disabled = true; button.textContent = 'Calculating…'; }
+  if (output) output.textContent = 'Getting delivery prices and estimates for each brand…';
+  bobGoCheckoutQuote = null; bobGoSelectedRates = {};
   try {
-    const response = await fetch('/api/bobgo/checkout-preview', {
+    const response = await fetch('/api/bobgo/checkout-rates', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Could not retrieve test rates.');
-    if (!data.rates || !data.rates.length) {
-      output.textContent = 'Bob Go responded, but no Sandbox rates matched this destination.';
-    } else {
-      output.innerHTML = '<div style="font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:8px;">SANDBOX TEST RATES — NOT CHARGED</div>' +
-        data.rates.map(rate => '<div style="padding:10px 0;border-top:1px solid #eee;"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px;"><strong>' +
-          sanitizeHTML(rate.serviceName) + '</strong><strong>' + formatPrice(rate.price) + '</strong></div>' +
-          (rate.description ? '<div style="font-size:12px;color:#666;margin-top:4px;">' + sanitizeHTML(rate.description) + '</div>' : '') +
-          '</div>').join('');
-    }
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Could not retrieve Bob Go rates.');
+    bobGoCheckoutQuote = data;
+    (data.shipments || []).forEach(s => { if (s.rates && s.rates.standard) bobGoSelectedRates[s.key] = 'standard'; });
+    const missing = (data.shipments || []).filter(s => !(s.rates && (s.rates.standard || s.rates.locker)));
+    if (missing.length) throw new Error('Bob Go returned no delivery service for ' + missing.map(s => s.brand).join(', ') + '. Please check the pickup address and service area.');
+    if (output) output.textContent = 'SANDBOX TEST: These rates and estimates are for testing only. They are not charged.';
+    renderCheckoutSummary();
   } catch (error) {
-    output.textContent = error.message || 'Could not retrieve Bob Go test rates.';
+    bobGoCheckoutQuote = null; bobGoSelectedRates = {};
+    if (output) output.textContent = error.message || 'Could not retrieve Bob Go rates.';
+    renderCheckoutSummary();
   } finally {
-    button.disabled = false;
-    button.textContent = 'Test delivery rates';
+    if (button) { button.disabled = false; button.textContent = 'Recalculate delivery'; }
   }
 }
+
