@@ -15,6 +15,8 @@
   @media (min-width: 640px) { .checkout-cards { padding-left: 10px; padding-right: 10px; } }
   @media (min-width: 1024px) { .checkout-cards { padding-left: 12px; padding-right: 12px; } }
   .checkout-card { background: #fff; padding: 16px; }
+  /* Keep the shipping method panel boundary visible while its options update. */
+  #checkout-shipping-method-card { border: 1px solid #d0d0d0; }
   .checkout-card-title { font-size: 17px; font-weight: 600; margin: 0 0 16px; line-height: 1.3; }
   .checkout-form-group { margin-bottom: 14px; min-width: 0; }
   .checkout-card .checkout-form-group:last-child,
@@ -263,7 +265,7 @@
         </div>
       </section>
 
-      <section class="checkout-card">
+      <section class="checkout-card" id="checkout-shipping-method-card">
         <h2 class="checkout-card-title">Shipping method</h2>
         <!-- Bob Go delivery choices and any available brand collection option, rendered per shipment. -->
         <div class="checkout-collect" id="checkout-collect-options" style="display:none;"></div>
