@@ -199,7 +199,7 @@ function getCheckoutTotals() {
   const afterDiscount = getCartTotalAfterDiscount();
   const status = getCartShippingStatus(afterDiscount);
   const quoted = getSelectedBobGoShippingTotal();
-  const shipping = quoted === null ? status.fee : quoted;
+  const shipping = quoted === null ? 0 : quoted;
   return { subtotal, discountAmount, shipping, packages: status.packages, total: afterDiscount + shipping };
 }
 
@@ -341,7 +341,7 @@ function renderCollectOptions() {
     const q = quoteByKey.get(s.key);
     const rate = q && q.rates && q.rates[kind];
     if (!rate) return '';
-    const selected = (bobGoSelectedRates[s.key] || 'standard') === kind;
+    const selected = (bobGoSelectedRates[s.key] || (q && q.rates && q.rates.standard ? 'standard' : 'locker')) === kind;
     const shownPrice = s.free ? 'FREE' : formatPrice(rate.price);
     return `<label class="checkout-option${selected ? ' is-selected' : ''}">
       <input type="radio" name="bobgo-rate-${sanitizeHTML(s.key)}" ${selected ? 'checked' : ''} onchange="chooseBobGoRate('${escapeJSString(s.key)}','${kind}')">
@@ -354,11 +354,12 @@ function renderCollectOptions() {
     </label>`;
   };
   box.innerHTML = shipments.map(s => {
-    if (s.collect) return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options"><div class="checkout-option is-selected"><span class="checkout-option-body"><span class="checkout-option-head"><span>Collect from ${sanitizeHTML(s.brand)}</span><strong>FREE</strong></span><span class="checkout-option-note">${sanitizeHTML(s.collectOffer && s.collectOffer.area || '')}</span></span></div></div></div>`;
+    if (s.collect) return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options"><label class="checkout-option is-selected"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" checked onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', true)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Collect from ${sanitizeHTML(s.brand)}</span><strong>FREE</strong></span><span class="checkout-option-note">${sanitizeHTML(s.collectOffer && s.collectOffer.area || '')}</span></span></label><label class="checkout-option"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', false)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Delivery</span></span></span></label></div></div>`;
     const q = quoteByKey.get(s.key);
     const choices = q ? rateOption(s, 'standard', 'Standard Delivery') + rateOption(s, 'locker', 'Locker Collection') : '';
     const collect = s.canCollect ? `<label class="checkout-option"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', true)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Collect from ${sanitizeHTML(s.brand)}</span><strong>FREE</strong></span><span class="checkout-option-note">${sanitizeHTML(s.collectOffer.area)}${s.collectOffer.hours ? ' · ' + sanitizeHTML(s.collectOffer.hours) : ''}</span></span></label>` : '';
-    return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options">${choices || '<span class="checkout-option-note">Enter your delivery address, then calculate rates.</span>'}${collect}</div></div>`;
+    const shipChoice = s.canCollect ? `<label class="checkout-option"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" checked onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', false)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Delivery</span></span><span class="checkout-option-note">Choose a Bob Go delivery option below.</span></span></label>` : '';
+    return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options">${shipChoice}${choices || '<span class="checkout-option-note">Enter your delivery address, then calculate rates.</span>'}${collect}</div></div>`;
   }).join('');
   if (!shipments.length) { box.innerHTML = ''; return any; }
   return true;
@@ -435,6 +436,11 @@ async function placeOrder(e) {
 
   if (!S.cart.length) {
     alert('Your bag is empty.');
+    return;
+  }
+
+  if (!bobGoCheckoutQuote || bobGoCheckoutQuote.sandbox) {
+    alert('Bob Go is currently in Sandbox. You can test delivery rates here, but orders cannot be placed until the live Bob Go connection is enabled.');
     return;
   }
 
@@ -916,7 +922,7 @@ async function loadBobGoCheckoutRates() {
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) throw new Error(data.error || 'Could not retrieve Bob Go rates.');
     bobGoCheckoutQuote = data;
-    (data.shipments || []).forEach(s => { if (s.rates && s.rates.standard) bobGoSelectedRates[s.key] = 'standard'; });
+    (data.shipments || []).forEach(s => { if (s.rates && s.rates.standard) bobGoSelectedRates[s.key] = 'standard'; else if (s.rates && s.rates.locker) bobGoSelectedRates[s.key] = 'locker'; });
     const missing = (data.shipments || []).filter(s => !(s.rates && (s.rates.standard || s.rates.locker)));
     if (missing.length) throw new Error('Bob Go returned no delivery service for ' + missing.map(s => s.brand).join(', ') + '. Please check the pickup address and service area.');
     if (output) output.textContent = 'SANDBOX TEST: These rates and estimates are for testing only. They are not charged.';
