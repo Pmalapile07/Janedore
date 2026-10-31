@@ -9,7 +9,7 @@ let bobGoCheckoutQuote = null;
 let bobGoSelectedRates = {};
 
 document.addEventListener('input', function(e) {
-  if (!e.target || !['checkout-address','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
+  if (!e.target || !['checkout-address','checkout-suburb','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
   bobGoCheckoutQuote = null;
   bobGoSelectedRates = {};
   const status = document.getElementById('bobgo-checkout-status');
@@ -17,7 +17,7 @@ document.addEventListener('input', function(e) {
   renderCheckoutSummary();
 });
 document.addEventListener('change', function(e) {
-  if (!e.target || !['checkout-address','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
+  if (!e.target || !['checkout-address','checkout-suburb','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
   bobGoCheckoutQuote = null;
   bobGoSelectedRates = {};
   const status = document.getElementById('bobgo-checkout-status');
@@ -166,7 +166,7 @@ async function prefillCheckoutForSignedInCustomer() {
       if (!snap.empty) {
         const o = snap.docs[0].data();
         saved = Object.assign({
-          name: o.customerName, phone: o.customerPhone, address: o.shippingAddress,
+          name: o.customerName, phone: o.customerPhone, address: o.shippingAddress, suburb: o.suburb,
           city: o.city, province: o.province, postalCode: o.postalCode
         }, saved);
       }
@@ -178,6 +178,7 @@ async function prefillCheckoutForSignedInCustomer() {
   fillCheckoutFieldIfEmpty('checkout-name', saved.name);
   fillCheckoutFieldIfEmpty('checkout-phone', saved.phone);
   fillCheckoutFieldIfEmpty('checkout-address', saved.address);
+  fillCheckoutFieldIfEmpty('checkout-suburb', saved.suburb);
   fillCheckoutFieldIfEmpty('checkout-city', saved.city);
   fillCheckoutFieldIfEmpty('checkout-province', saved.province);
   fillCheckoutFieldIfEmpty('checkout-postal', saved.postalCode);
@@ -500,6 +501,7 @@ async function placeOrder(e) {
   const email = document.getElementById('checkout-email').value.trim();
   const name = document.getElementById('checkout-name').value.trim();
   const address = document.getElementById('checkout-address').value.trim();
+  const suburb = document.getElementById('checkout-suburb').value.trim();
   const city = document.getElementById('checkout-city').value.trim();
   const province = document.getElementById('checkout-province').value.trim();
   const postal = document.getElementById('checkout-postal').value.trim();
@@ -529,7 +531,7 @@ async function placeOrder(e) {
     };
   }).filter(Boolean);
 
-  if (!email || !name || (!collectOnly && (!address || !city || !province || !postal || !country))) {
+  if (!email || !name || (!collectOnly && (!address || !suburb || !city || !province || !postal || !country))) {
     alert('Please fill in all required fields.');
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay now'; }
     return;
@@ -562,6 +564,7 @@ async function placeOrder(e) {
     customerPhone: phone,
     customerId: user ? user.uid : null,
     shippingAddress: collectOnly ? '' : address,
+    suburb: collectOnly ? '' : suburb,
     city: collectOnly ? '' : city,
     province: collectOnly ? '' : province,
     postalCode: collectOnly ? '' : postal,
@@ -641,6 +644,7 @@ async function placeOrder(e) {
         email: user.email || email,
         phone,
         address,
+        suburb,
         city,
         province,
         postalCode: postal,
@@ -972,6 +976,7 @@ async function loadBobGoCheckoutRates() {
   const value = id => (document.getElementById(id)?.value || '').trim();
   const payload = {
     street: value('checkout-address'),
+    suburb: value('checkout-suburb'),
     city: value('checkout-city'),
     province: value('checkout-province'),
     postalCode: value('checkout-postal'),
@@ -985,10 +990,10 @@ async function loadBobGoCheckoutRates() {
     postalCodeValid: /^\d{4}$/.test(payload.postalCode)
   });
 
-  if (!payload.street || !payload.city || !payload.province || !/^\d{4}$/.test(payload.postalCode)) {
-    const message = 'Complete your street address, city, province and 4-digit postal code first.';
+  if (!payload.street || !payload.suburb || !payload.city || !payload.province || !/^\d{4}$/.test(payload.postalCode)) {
+    const message = 'Complete your street address, suburb / local area, city, province and 4-digit postal code first.';
     console.warn('[BOBGO CHECKOUT] Address validation failed.', {
-      hasStreet: !!payload.street, hasCity: !!payload.city,
+      hasStreet: !!payload.street, hasSuburb: !!payload.suburb, hasCity: !!payload.city,
       hasProvince: !!payload.province, postalCodeValid: /^\d{4}$/.test(payload.postalCode)
     });
     if (output) output.textContent = message;
