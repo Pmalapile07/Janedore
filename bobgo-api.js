@@ -335,55 +335,67 @@ module.exports = function registerBobGo(app, deps) {
           rateNames: rawRates.slice(0, 12).map(rate => String(rate.service_name || rate.name || 'Unnamed')),
           responseKeys: Object.keys(result.data || {})
         });
+        // Preserve Bob Go's returned service-level order. The account's
+        // Checkout > Service levels priority is configured in Bob Go; JANEDORE
+        // must not replace it with its own delivery-speed or price sorting.
         const mapped = rawRates.map((rate, index) => {
           const name = String(rate.service_name || rate.serviceName || rate.courier_name || rate.name || 'Delivery');
           const price = Number(rate.total_price ?? rate.price);
           if (!Number.isFinite(price) || price < 0) return null;
           const rawType = String(rate.type || '').toLowerCase();
-          const isLocker = rawType === 'pickup-point' || !!rate.pickup_point_location_id;
+          const locationId = rate.pickup_point_location_id;
+          const isLocker = locationId != null || rawType.includes('pickup-point') || rawType.includes('locker');
+          const levelText = String(rate.service_level_name || rate.service_level || rate.service_level_code || name);
+          const levelLower = levelText.toLowerCase();
+          const checkoutLabel = isLocker || levelLower.includes('pickup') || levelLower.includes('locker')
+            ? 'Pickup Point'
+            : levelLower.includes('express') ? 'Express Shipping'
+            : levelLower.includes('standard') ? 'Standard Shipping'
+            : levelText;
+          const explicitPriority = Number(rate.service_level_priority);
           const baseRate = {
-            key: String(rate.service_code || rate.id || ((isLocker ? 'locker-' : 'door-') + index)),
+            key: String(rate.service_code || rate.id || ((isLocker ? 'locker-' : 'delivery-') + index)),
             serviceName: name,
+            checkoutLabel,
             price,
             description: String(rate.description || '').slice(0, 160),
             minDeliveryDate: rate.min_delivery_date || rate.minDeliveryDate || null,
             maxDeliveryDate: rate.max_delivery_date || rate.maxDeliveryDate || null,
             bobgoRateId: rate.id == null ? null : rate.id,
             serviceCode: rate.service_code || null,
-            type: rate.type || (isLocker ? 'pickup-point' : 'door'),
+            type: isLocker ? 'pickup-point' : (rate.type || 'door'),
             serviceLevelCode: rate.service_level_code || null,
-            serviceLevelPriority: Number(rate.service_level_priority)
+            serviceLevelPriority: Number.isFinite(explicitPriority) ? explicitPriority : null,
+            sourceOrder: index
           };
           if (isLocker) {
             const distanceKm = Number(rate.pickup_point_location_distance);
-            // Do not show a location if Bob Go cannot confirm its distance
-            // from the buyer's delivery address or if it is beyond 10 km.
-            if (!Number.isFinite(distanceKm) || distanceKm < 0 || distanceKm > 10) return null;
+            // Keep the 10 km safety limit, but never discard door/express
+            // alternatives merely because a pickup point cannot be used.
+            if (!Number.isFinite(distanceKm) || distanceKm < 0 || distanceKm > 10 || !locationId || !rate.provider_slug) return null;
             return Object.assign(baseRate, {
-              pickupPointLocationId: Number(rate.pickup_point_location_id),
-              providerSlug: String(rate.provider_slug || ''),
+              pickupPointLocationId: Number(locationId),
+              providerSlug: String(rate.provider_slug),
               distanceKm
             });
           }
-          if (rawType && rawType !== 'door') return null;
+          // Unknown non-locker service types are retained. Bob Go owns the
+          // service-level configuration; rejecting unfamiliar types here
+          // can make a valid checkout response appear completely empty.
           return baseRate;
         }).filter(Boolean);
+        const byBobGoPriority = (x, y) => {
+          if (x.serviceLevelPriority != null && y.serviceLevelPriority != null) {
+            return x.serviceLevelPriority - y.serviceLevelPriority || x.sourceOrder - y.sourceOrder;
+          }
+          if (x.serviceLevelPriority != null) return -1;
+          if (y.serviceLevelPriority != null) return 1;
+          return x.sourceOrder - y.sourceOrder;
+        };
+        const deliveryOptions = mapped.filter(rate => !rate.pickupPointLocationId).sort(byBobGoPriority);
+        const standard = deliveryOptions.find(rate => rate.checkoutLabel === 'Standard Shipping') || deliveryOptions[0] || null;
 
-        const doorRates = mapped.filter(rate => rate.type === 'door');
-        // "Standard Delivery" is one simple customer-facing option. Prefer
-        // the earliest delivery estimate; use Bob Go's configured priority
-        // and then price as deterministic fallbacks.
-        doorRates.sort((x, y) => {
-          const xd = Date.parse(x.maxDeliveryDate || x.minDeliveryDate || '') || Infinity;
-          const yd = Date.parse(y.maxDeliveryDate || y.minDeliveryDate || '') || Infinity;
-          return xd - yd ||
-            (Number.isFinite(x.serviceLevelPriority) ? x.serviceLevelPriority : Infinity) -
-            (Number.isFinite(y.serviceLevelPriority) ? y.serviceLevelPriority : Infinity) ||
-            x.price - y.price;
-        });
-        const standard = doorRates[0] || null;
-
-        const lockerRates = mapped.filter(rate => rate.pickupPointLocationId && rate.providerSlug);
+        const lockerRates = mapped.filter(rate => rate.pickupPointLocationId && rate.providerSlug).sort(byBobGoPriority);
         const locationsEndpoint = new URL(endpoint.pathname.replace(/\/rates-at-checkout$/, '/locations'), endpoint.origin);
         const lockers = (await Promise.all(lockerRates.slice(0, 20).map(async rate => {
           try {
@@ -423,7 +435,7 @@ module.exports = function registerBobGo(app, deps) {
           key: g.key,
           vendorIds: vids,
           brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || id)).join(' & '),
-          rates: { standard, lockers }
+          rates: { standard, deliveryOptions, lockers }
         });
       }
       console.info('[BOBGO CHECKOUT] Separate Bob Go quotes returned:', shipments.map(s => ({ key: s.key, brand: s.brand, hasStandard: !!s.rates.standard, lockerCount: (s.rates.lockers || []).length })));
