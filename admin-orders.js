@@ -1221,7 +1221,7 @@
       html += '<div class="card-title" style="margin-bottom:7px;">Customer delivery choice</div>' +
         '<div class="info-panel" style="margin-bottom:18px;">' +
         o.shippingSelections.map(function (selection) {
-          var label = selection.method === 'locker' ? 'Locker Collection' : 'Standard Delivery';
+          var label = selection.method === 'locker' ? 'Legacy Locker Collection' : (selection.checkoutLabel || selection.serviceName || 'Door Delivery');
           var destination = selection.method === 'locker'
             ? '<div class="info-row"><span class="label">Locker</span><span>' + esc(selection.pickupPointName || 'Selected locker') + '</span></div>' +
               '<div class="info-row"><span class="label">Address</span><span>' + esc(selection.pickupPointAddress || '-') + '</span></div>' +
