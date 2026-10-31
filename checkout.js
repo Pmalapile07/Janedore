@@ -339,8 +339,7 @@ function getSelectedBobGoShippingTotal() {
     const q = bobGoCheckoutQuote.shipments.find(x => x.key === s.key);
     const selectedKey = bobGoSelectedRates[s.key];
     const available = q && q.rates
-      ? (Array.isArray(q.rates.deliveryOptions) ? q.rates.deliveryOptions : [q.rates.standard])
-          .concat(Array.isArray(q.rates.lockers) ? q.rates.lockers : []).filter(Boolean)
+      ? (Array.isArray(q.rates.deliveryOptions) ? q.rates.deliveryOptions : [q.rates.standard]).filter(Boolean)
       : [];
     const rate = available.find(item => item.key === selectedKey);
     return sum + (rate ? (s.free ? 0 : Number(rate.price) || 0) : 0);
@@ -381,33 +380,9 @@ function renderCollectOptions() {
     const deliveryOptions = q && q.rates
       ? (Array.isArray(q.rates.deliveryOptions) ? q.rates.deliveryOptions : [q.rates.standard].filter(Boolean))
       : [];
-    const lockers = q && q.rates && Array.isArray(q.rates.lockers) ? q.rates.lockers : [];
-    const allOptions = lockers.concat(deliveryOptions);
-    const selectedKey = bobGoSelectedRates[s.key] || (allOptions[0] && allOptions[0].key) || '';
-    const selected = allOptions.find(rate => rate.key === selectedKey) || null;
+    const selectedKey = bobGoSelectedRates[s.key] || (deliveryOptions[0] && deliveryOptions[0].key) || '';
+    const selected = deliveryOptions.find(rate => rate.key === selectedKey) || null;
     const options = [];
-    if (lockers.length) {
-      const selectedLocker = lockers.find(rate => rate.key === selectedKey) || lockers[0];
-      const lockerSelected = selected && !!selected.pickupPointLocationId;
-      const lockerPrice = s.free ? 'FREE' : formatPrice(selectedLocker.price);
-      const lockerOptions = lockers.map(rate => {
-        const label = (rate.locationName || 'Pickup point') + (rate.distanceKm != null ? ' · ' + Number(rate.distanceKm).toFixed(1) + ' km' : '');
-        return '<option value="' + sanitizeHTML(rate.key) + '"' + (rate.key === selectedLocker.key ? ' selected' : '') + '>' + sanitizeHTML(label) + '</option>';
-      }).join('');
-      options.push(`<label class="checkout-option${lockerSelected ? ' is-selected' : ''}">
-        <input type="radio" name="${methodName(s.key)}" value="${sanitizeHTML(selectedLocker.key)}" ${lockerSelected ? 'checked' : ''} onchange="chooseBobGoRate('${escapeJSString(s.key)}','${escapeJSString(selectedLocker.key)}')">
-        <span class="checkout-option-radio" aria-hidden="true"></span>
-        <span class="checkout-option-body">
-          <span class="checkout-option-head"><span>Pickup Point</span><strong>${lockerPrice}</strong></span>
-          <span class="checkout-option-note">Collect your parcel from a nearby Bob Go pickup point</span>
-          <select aria-label="Choose a nearby pickup point" class="checkout-locker-select" style="width:100%;margin-top:9px;" onchange="chooseBobGoRate('${escapeJSString(s.key)}',this.value)">
-            ${lockerOptions}
-          </select>
-          <span class="checkout-option-note">${sanitizeHTML(selectedLocker.locationAddress || '')}${selectedLocker.tradingHours ? ' · ' + sanitizeHTML(selectedLocker.tradingHours) : ''}</span>
-          <span class="checkout-option-note checkout-delivery-estimate">${sanitizeHTML(formatEta(selectedLocker))}</span>
-        </span>
-      </label>`);
-    }
     deliveryOptions.forEach(rate => {
       const isSelected = selectedKey === rate.key;
       const label = rate.checkoutLabel || rate.serviceName || 'Delivery';
@@ -538,23 +513,19 @@ async function placeOrder(e) {
     const rates = quote && quote.rates || {};
     const selectedKey = bobGoSelectedRates[s.key];
     const selected = (Array.isArray(rates.deliveryOptions) ? rates.deliveryOptions : [rates.standard])
-      .concat(Array.isArray(rates.lockers) ? rates.lockers : []).filter(Boolean)
+      .filter(Boolean)
       .find(rate => rate.key === selectedKey);
     if (!selected) return null;
     return {
       shipmentKey: s.key,
       brand: quote.brand || s.brand,
       vendorIds: quote.vendorIds || s.vendorIds || [],
-      method: selected.pickupPointLocationId ? 'locker' : 'standard',
+      method: 'door',
+      checkoutLabel: selected.checkoutLabel || 'Door Delivery',
       price: Number(selected.price) || 0,
       serviceName: selected.serviceName || '',
       serviceCode: selected.serviceCode || null,
-      bobgoRateId: selected.bobgoRateId == null ? null : selected.bobgoRateId,
-      pickupPointLocationId: selected.pickupPointLocationId || null,
-      providerSlug: selected.providerSlug || null,
-      pickupPointName: selected.locationName || null,
-      pickupPointAddress: selected.locationAddress || null,
-      pickupPointDistanceKm: selected.distanceKm == null ? null : selected.distanceKm
+      bobgoRateId: selected.bobgoRateId == null ? null : selected.bobgoRateId
     };
   }).filter(Boolean);
 
@@ -598,8 +569,8 @@ async function placeOrder(e) {
     // Brands the customer collects from (server.js checks them).
     collectFrom,
     collectOnly,
-    // Customer-selected destination/method per brand shipment. A locker is
-    // the recipient's collection point; it is not the brand's courier handover.
+    // Customer's street-address delivery service per brand shipment.
+    // Brand-side courier collection/drop-off is a separate fulfilment choice.
     shippingSelections,
     // vendorId per line + the order-level vendorIds list below are what
     // admin-vendors.js's revenue/order-count tally already reads
@@ -1073,10 +1044,8 @@ async function loadBobGoCheckoutRates() {
     bobGoCheckoutQuote = data;
     data.shipments.forEach(shipment => {
       const rates = shipment.rates || {};
-      // Bob Go's configured service-level order is preserved by the API.
-      // Pickup Point is the highest-priority service in this account.
-      const defaultRate = (Array.isArray(rates.lockers) && rates.lockers[0]) ||
-        (Array.isArray(rates.deliveryOptions) && rates.deliveryOptions[0]) || rates.standard;
+      // Bob Go's configured door-delivery service-level order is preserved.
+      const defaultRate = (Array.isArray(rates.deliveryOptions) && rates.deliveryOptions[0]) || rates.standard;
       if (defaultRate) bobGoSelectedRates[shipment.key] = defaultRate.key;
     });
 
@@ -1085,10 +1054,10 @@ async function loadBobGoCheckoutRates() {
       shipments: data.shipments.map(shipment => ({
         key: shipment.key,
         brand: shipment.brand,
-        availableOptions: (shipment.rates && (shipment.rates.lockers || []).length || 0) + (shipment.rates && (shipment.rates.deliveryOptions || []).length || 0)
+        availableOptions: (shipment.rates && (shipment.rates.deliveryOptions || []).length || 0)
       }))
     });
-    const availableCount = data.shipments.reduce((n, shipment) => n + ((shipment.rates && shipment.rates.lockers || []).length) + ((shipment.rates && shipment.rates.deliveryOptions || []).length), 0);
+    const availableCount = data.shipments.reduce((n, shipment) => n + ((shipment.rates && shipment.rates.deliveryOptions || []).length), 0);
     if (output) output.textContent = availableCount
       ? 'SANDBOX TEST: Bob Go delivery options are shown below. These rates are for testing only and are not charged.'
       : 'Bob Go responded, but has no eligible service levels for this address. Check your Bob Go service areas and checkout rules.';
