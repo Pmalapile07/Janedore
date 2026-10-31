@@ -331,9 +331,10 @@ module.exports = function registerBobGo(app, deps) {
           if (!Number.isFinite(price) || price < 0) return null;
           // Bob Go explicitly identifies locker/counter delivery with type=pickup-point.
           // Keep the name fallback for older or incomplete Sandbox responses.
-          const kind = String(rate.type || '').toLowerCase() === 'pickup-point' ||
-            /locker|bob.?box|pickup.?point|collection.?point|pudo/i.test(name + ' ' + String(rate.description || ''))
-            ? 'pickup-point' : 'standard';
+          const rawType = String(rate.type || '').toLowerCase();
+          const kind = rawType
+            ? (rawType === 'pickup-point' ? 'pickup-point' : 'standard')
+            : (/locker|bob.?box|pickup.?point|collection.?point|pudo/i.test(name + ' ' + String(rate.description || '')) ? 'pickup-point' : 'standard');
           return {
             key: String(rate.service_code || rate.id || (kind + '-' + index)),
             kind,
