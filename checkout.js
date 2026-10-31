@@ -16,6 +16,14 @@ document.addEventListener('input', function(e) {
   if (status) status.textContent = 'Your delivery address changed. Recalculate Bob Go delivery rates.';
   renderCheckoutSummary();
 });
+document.addEventListener('change', function(e) {
+  if (!e.target || !['checkout-address','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
+  bobGoCheckoutQuote = null;
+  bobGoSelectedRates = {};
+  const status = document.getElementById('bobgo-checkout-status');
+  if (status) status.textContent = 'Your delivery address changed. Recalculate Bob Go delivery rates.';
+  renderCheckoutSummary();
+});
 
 // Full order details (items, address, totals) for the confirmation page
 // — separate from lastConfirmedOrderNumber above, which alone isn't
