@@ -262,7 +262,7 @@ async function renderAccountOrder(orderNumber) {
   }, { hideAnother: true });
 
   const collecting = [...new Set(packages.filter(p => p.collect).map(p => p.brand))];
-  const address = [order.shippingAddress, [order.city, order.province].filter(Boolean).join(', '), [order.postalCode, order.country].filter(Boolean).join(', ')]
+  const address = [order.shippingAddress, [order.suburb, order.city, order.province].filter(Boolean).join(', '), [order.postalCode, order.country].filter(Boolean).join(', ')]
     .filter(Boolean).map(escapeHTML).join('<br>');
   const discount = Number(order.discountAmount) || 0;
   const shipping = Number(order.shipping) || 0;
