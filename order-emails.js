@@ -41,7 +41,7 @@ function orderDate(order) {
 function addressLines(order) {
   return [
     order.shippingAddress,
-    [order.city, order.province].filter(Boolean).join(', '),
+    [order.suburb, order.city, order.province].filter(Boolean).join(', '),
     [order.postalCode, order.country].filter(Boolean).join(', ')
   ].filter(Boolean);
 }
