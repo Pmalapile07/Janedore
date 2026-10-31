@@ -206,7 +206,7 @@ function getCartTotalAfterDiscount() {
   return Math.max(0, subtotal - discountAmount);
 }
 
-const SHIPPING_FEE = 150;
+const SHIPPING_FEE = 0; // Bob Go rates are calculated at checkout; no fixed R150 fee.
 // Free delivery is each brand's own offer (Admin > Brands, or the brand's
 // own profile: vendor.freeDeliveryOffer): on its orders over a minimum,
 // delivery is free and the brand pays it, whatever it costs. Every
@@ -773,7 +773,7 @@ function renderCartPage() {
     <div class="cart-totals-head"><span>Total to pay</span><span>${formatPrice(finalTotal + shipping.fee)}</span></div>
     <div class="cart-totals-row"><span>Subtotal</span><span>${formatPrice(getCartSubtotal())}</span></div>
     ${appliedDiscount ? `<div class="cart-totals-row discount"><span>Discount (${sanitizeHTML(appliedDiscount.code)}) <button class="cart-page-remove-discount" onclick="removePromoCode()" aria-label="Remove discount">×</button></span><span>-${formatPrice(discountAmount)}</span></div>` : ''}
-    <div class="cart-totals-row"><span>Delivery fee${shipping.packages > 1 ? ` (${shipping.packages} packages)` : ''}</span><span>${shipping.freeShipping ? 'Free' : formatPrice(shipping.fee)}</span></div>
+    <div class="cart-totals-row"><span>Delivery fee${shipping.packages > 1 ? ` (${shipping.packages} packages)` : ''}</span><span>${'Calculated at checkout'}</span></div>
     <button class="cart-checkout-btn"${hasSoldOut ? ' disabled' : ''} onclick="handleCheckoutClick()">Proceed to checkout</button>
   </div></div>`;
   const inspired = cartInspiredProducts();
