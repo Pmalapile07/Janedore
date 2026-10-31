@@ -325,15 +325,44 @@ module.exports = function registerBobGo(app, deps) {
         });
         if (result.status < 200 || result.status >= 300) throw Object.assign(new Error(String(result.data.message || result.data.error || ('Bob Go returned HTTP ' + result.status)).slice(0, 250)), { status: 502 });
         const rawRates = Array.isArray(result.data.rates) ? result.data.rates : [];
-        const mapped = rawRates.map(rate => {
+        const mapped = rawRates.map((rate, index) => {
           const name = String(rate.service_name || rate.serviceName || rate.courier_name || rate.name || 'Delivery');
           const price = Number(rate.total_price ?? rate.price);
           if (!Number.isFinite(price) || price < 0) return null;
-          const kind = /locker|bob.?box|pickup.?point|collection.?point|pudo/i.test(name + ' ' + String(rate.description || '')) ? 'locker' : 'standard';
-          return { kind, serviceName: name, price, description: String(rate.description || '').slice(0, 160), minDeliveryDate: rate.min_delivery_date || rate.minDeliveryDate || null, maxDeliveryDate: rate.max_delivery_date || rate.maxDeliveryDate || null };
+          // Bob Go explicitly identifies locker/counter delivery with type=pickup-point.
+          // Keep the name fallback for older or incomplete Sandbox responses.
+          const kind = String(rate.type || '').toLowerCase() === 'pickup-point' ||
+            /locker|bob.?box|pickup.?point|collection.?point|pudo/i.test(name + ' ' + String(rate.description || ''))
+            ? 'pickup-point' : 'standard';
+          return {
+            key: String(rate.service_code || rate.id || (kind + '-' + index)),
+            kind,
+            serviceName: name,
+            price,
+            description: String(rate.description || '').slice(0, 160),
+            minDeliveryDate: rate.min_delivery_date || rate.minDeliveryDate || null,
+            maxDeliveryDate: rate.max_delivery_date || rate.maxDeliveryDate || null,
+            // Preserve the identifiers Bob Go requires if this option is booked later.
+            bobgoRateId: rate.id == null ? null : rate.id,
+            serviceCode: rate.service_code || null,
+            type: rate.type || null,
+            pickupPointLocationId: rate.pickup_point_location_id == null ? null : rate.pickup_point_location_id,
+            pickupPointProviderSlug: rate.provider_slug || null,
+            serviceLevelCode: rate.service_level_code || null,
+            pickupPointDistanceKm: rate.pickup_point_location_distance == null ? null : Number(rate.pickup_point_location_distance),
+            serviceLevelPriority: rate.service_level_priority == null ? null : Number(rate.service_level_priority)
+          };
         }).filter(Boolean);
-        const cheapest = kind => mapped.filter(r => r.kind === kind).sort((x,y) => x.price-y.price)[0] || null;
-        shipments.push({ key: g.key, brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || id)).join(' & '), rates: { standard: cheapest('standard'), locker: cheapest('locker') } });
+        const standard = mapped.filter(r => r.kind === 'standard').sort((x,y) => x.price-y.price)[0] || null;
+        const pickupPoints = mapped.filter(r => r.kind === 'pickup-point').sort((x,y) =>
+          (Number.isFinite(x.serviceLevelPriority) ? x.serviceLevelPriority : 999) -
+          (Number.isFinite(y.serviceLevelPriority) ? y.serviceLevelPriority : 999) || x.price-y.price
+        );
+        shipments.push({
+          key: g.key,
+          brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || id)).join(' & '),
+          rates: { standard, pickupPoints }
+        });
       }
       console.info('[BOBGO CHECKOUT] Separate Bob Go quotes returned:', shipments.map(s => ({ key: s.key, brand: s.brand, hasStandard: !!s.rates.standard, hasLocker: !!s.rates.locker })));
       return res.json({ ok: true, sandbox: true, shipments });
