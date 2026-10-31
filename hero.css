@@ -10,20 +10,16 @@
   justify-content: center;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 12px 8px;
+  padding: 12px 12px;
   background: #fff;
   box-sizing: border-box;
 }
 /* Left/right matches .product-grid's own responsive padding
    (product-grid.css) so the hero frames the same width as the product
    grid below it. Vertical 12px is unrelated and untouched. */
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   #hero,
-  .brand-hero { padding: 12px 10px; }
-}
-@media (min-width: 1024px) {
-  #hero,
-  .brand-hero { padding: 12px 12px; }
+  .brand-hero { padding: 12px 16px; }
 }
 
 /* Inset to #hero's own padding, not the full section, so the image
@@ -65,7 +61,7 @@
   width: 100%;
   box-sizing: border-box;
   text-align: left;
-  padding: 0 12px 32px;
+  padding: 0 0 32px;
   margin-top: 0;
   display: flex;
   flex-direction: row;
@@ -73,15 +69,14 @@
   justify-content: space-between;
   gap: 16px;
 }
-@media (min-width: 640px) { .hero-content-wrap { padding: 0 10px 40px; } }
-@media (min-width: 768px) { .hero-content-wrap { padding: 0 14px 40px; } }
-@media (min-width: 1024px) { .hero-content-wrap { padding: 0 15px 48px; } }
+@media (min-width: 768px) { .hero-content-wrap { padding: 0 0 40px; } }
+@media (min-width: 1024px) { .hero-content-wrap { padding-bottom: 48px; } }
 
 /* Homepage hero: big heading at the bottom, centred, with Shop women and
    Shop men under it.
    Brand pages keep the row above (slogan centred, button on the right). */
-#hero .hero-content-wrap { flex-direction: column; align-items: center; justify-content: flex-end; gap: 18px; }
-#hero .hero-heading { font-size: 30px; line-height: 1.1; max-width: 280px; margin: 0; text-align: center; }
+#hero .hero-content-wrap { flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 18px; }
+#hero .hero-heading { font-size: 30px; line-height: 1.1; max-width: 280px; margin: 0; text-align: left; }
 @media (min-width: 768px) { #hero .hero-heading { font-size: 34px; max-width: 420px; } }
 
 .hero-sub {
@@ -116,11 +111,6 @@
 @media (min-width: 768px) { .hero-heading { font-size: 34px; max-width: 420px; } }
 #hero .hero-shop-btn,
 .brand-hero .hero-shop-btn { flex-shrink: 0; white-space: nowrap; }
-/* Shop women and Shop men, side by side. */
-/* Two equal columns, so both are as wide as Shop women. */
-.hero-gender-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-self: center; }
-#hero .hero-gender-btns .hero-shop-btn { padding: 12px 24px; }
-
 /* Matches home-manifesto's weight (300) — the 400 it had before read
    too thick against the manifesto text further down the page. */
 .hero-statement-sub {
@@ -133,7 +123,7 @@
   text-transform: none;
   line-height: 1.5;
   max-width: 420px;
-  text-align: center;
+  text-align: left;
   margin: 0;
 }
 
