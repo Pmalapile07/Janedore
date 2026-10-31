@@ -44,7 +44,7 @@
   left: 0;
   width: 100%;
   height: 4px;
-  background: #E0EBFF;
+  background: #111;
   transform-origin: left center;
 }
 .added-toast-icon {
@@ -272,8 +272,8 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   font-size: 14px;
   margin: 10px 0;
 }
-/* Discounts always show in the site blue. */
-.cart-totals-row.discount { color: #E0EBFF; font-weight: 600; }
+/* Discount amount and label use the same red as sale prices. */
+.cart-totals-row.discount { color: #c0392b; font-weight: 600; }
 .cart-page-remove-discount { background: none; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 0 4px; }
 .cart-checkout-btn {
   width: 100%;
