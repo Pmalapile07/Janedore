@@ -935,6 +935,8 @@ async function loadBobGoCheckoutRates() {
     items: S.cart.map(item => ({ productId: String(item.productId), qty: Number(item.qty) }))
   };
 
+  const cartShipmentsForQuote = getCartShipments();
+  console.info('[BOBGO CHECKOUT] Frontend cart shipment groups:', cartShipmentsForQuote.map(s => ({ key: s.key, brand: s.brand, vendorIds: s.vendorIds })));
   console.info('[BOBGO CHECKOUT] Rate calculation started.', {
     itemCount: payload.items.length,
     postalCodeValid: /^\d{4}$/.test(payload.postalCode)
@@ -1011,6 +1013,7 @@ async function loadBobGoCheckoutRates() {
         '. Check the brand pickup address and service area.');
     }
 
+    console.info('[BOBGO CHECKOUT] Package count comparison:', { frontendCount: cartShipmentsForQuote.length, bobGoCount: data.shipments.length, frontendKeys: cartShipmentsForQuote.map(s => s.key), bobGoKeys: data.shipments.map(s => s.key) });
     console.info('[BOBGO CHECKOUT] Rates loaded successfully.', {
       shipments: data.shipments.map(shipment => ({
         key: shipment.key,
