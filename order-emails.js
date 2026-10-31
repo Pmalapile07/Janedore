@@ -12,8 +12,8 @@
 // Each returns { subject, html, text }. ctx carries siteUrl and an image
 // lookup (imageFor(item) → URL or ''), filled in by server.js.
 
-const GREEN = '#809ADD';
-const GREEN_TINT = '#809ADD';
+const GREEN = '#E0EBFF';
+const GREEN_TINT = '#E0EBFF';
 const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 function esc(str) {
