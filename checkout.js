@@ -937,14 +937,14 @@ async function loadBobGoCheckoutRates() {
 
   console.info('[BOBGO CHECKOUT] Rate calculation started.', {
     itemCount: payload.items.length,
-    postalCodeValid: /^\\d{4}$/.test(payload.postalCode)
+    postalCodeValid: /^\d{4}$/.test(payload.postalCode)
   });
 
-  if (!payload.street || !payload.city || !payload.province || !/^\\d{4}$/.test(payload.postalCode)) {
+  if (!payload.street || !payload.city || !payload.province || !/^\d{4}$/.test(payload.postalCode)) {
     const message = 'Complete your street address, city, province and 4-digit postal code first.';
     console.warn('[BOBGO CHECKOUT] Address validation failed.', {
       hasStreet: !!payload.street, hasCity: !!payload.city,
-      hasProvince: !!payload.province, postalCodeValid: /^\\d{4}$/.test(payload.postalCode)
+      hasProvince: !!payload.province, postalCodeValid: /^\d{4}$/.test(payload.postalCode)
     });
     if (output) output.textContent = message;
     return;
