@@ -1243,6 +1243,7 @@
         '<div class="card-title" style="margin-bottom:7px;">Shipping address</div>' +
         '<div class="info-panel" style="margin-bottom:18px;">' +
           '<div class="info-row"><span class="label">Address</span><span>'  + esc(o.shippingAddress || '-') + '</span></div>' +
+          '<div class="info-row"><span class="label">Suburb / local area</span><span>' + esc(o.suburb || '-') + '</span></div>' +
           '<div class="info-row"><span class="label">City</span><span>'     + esc(o.city || '-') + '</span></div>' +
           '<div class="info-row"><span class="label">Province</span><span>' + esc(o.province || '-') + '</span></div>' +
         '</div>';
