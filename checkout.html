@@ -271,15 +271,14 @@
           <input type="radio" name="checkout-shipping-method" value="standard" checked>
           <span class="checkout-option-radio" aria-hidden="true"></span>
           <span class="checkout-option-body">
-            <span class="checkout-option-head"><span id="checkout-shipping-name">Standard</span><strong id="checkout-shipping-price">R150</strong></span>
+            <span class="checkout-option-head"><span id="checkout-shipping-name">Standard</span><strong id="checkout-shipping-price">Calculate at checkout</strong></span>
             <span class="checkout-option-note" id="checkout-ships-from"></span>
             <span class="checkout-option-note checkout-delivery-estimate" id="checkout-delivery-estimate"></span>
           </span>
         </label>
-      </section>
-
-      <div id="bobgo-checkout-status" class="checkout-option-note" aria-live="polite" style="margin-top:14px;">Enter your delivery address to calculate Bob Go prices and estimated delivery dates for each brand.</div>
+        <div id="bobgo-checkout-status" class="checkout-option-note" aria-live="polite" style="margin-top:14px;">Enter your delivery address to calculate Bob Go prices and estimated delivery dates for each brand.</div>
         <button type="button" class="checkout-place-order-btn" id="bobgo-checkout-rates-btn" onclick="loadBobGoCheckoutRates()" style="margin-top:12px;">Calculate delivery</button>
+      </section>
 
       <section class="checkout-card checkout-collapsible">
         <button type="button" class="checkout-order-toggle" aria-expanded="false" aria-controls="checkout-code-body-2" onclick="toggleCheckoutCard(this)">
