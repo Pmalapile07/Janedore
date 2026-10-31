@@ -928,35 +928,112 @@ async function loadBobGoCheckoutRates() {
   const output = document.getElementById('bobgo-checkout-status');
   const value = id => (document.getElementById(id)?.value || '').trim();
   const payload = {
-    street: value('checkout-address'), city: value('checkout-city'),
-    province: value('checkout-province'), postalCode: value('checkout-postal'),
+    street: value('checkout-address'),
+    city: value('checkout-city'),
+    province: value('checkout-province'),
+    postalCode: value('checkout-postal'),
     items: S.cart.map(item => ({ productId: String(item.productId), qty: Number(item.qty) }))
   };
+
+  console.info('[BOBGO CHECKOUT] Rate calculation started.', {
+    itemCount: payload.items.length,
+    postalCodeValid: /^\\d{4}$/.test(payload.postalCode)
+  });
+
   if (!payload.street || !payload.city || !payload.province || !/^\\d{4}$/.test(payload.postalCode)) {
-    if (output) output.textContent = 'Complete your street address, city, province and 4-digit postal code first.';
+    const message = 'Complete your street address, city, province and 4-digit postal code first.';
+    console.warn('[BOBGO CHECKOUT] Address validation failed.', {
+      hasStreet: !!payload.street, hasCity: !!payload.city,
+      hasProvince: !!payload.province, postalCodeValid: /^\\d{4}$/.test(payload.postalCode)
+    });
+    if (output) output.textContent = message;
     return;
   }
+  if (!payload.items.length) {
+    if (output) output.textContent = 'Your bag is empty. Add an item before calculating delivery.';
+    console.warn('[BOBGO CHECKOUT] Cannot calculate rates for an empty bag.');
+    return;
+  }
+
   if (button) { button.disabled = true; button.textContent = 'Calculating…'; }
   if (output) output.textContent = 'Getting delivery prices and estimates for each brand…';
-  bobGoCheckoutQuote = null; bobGoSelectedRates = {};
+  bobGoCheckoutQuote = null;
+  bobGoSelectedRates = {};
+
   try {
     const response = await fetch('/api/bobgo/checkout-rates', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Could not retrieve Bob Go rates.');
+    const responseText = await response.text();
+    let data = {};
+    try { data = responseText ? JSON.parse(responseText) : {}; }
+    catch (parseError) {
+      console.error('[BOBGO CHECKOUT] Server returned non-JSON response.', {
+        httpStatus: response.status,
+        responsePreview: responseText.slice(0, 500),
+        parseError
+      });
+      throw new Error('The shipping server returned an unexpected response. Check the console and server logs.');
+    }
+
+    console.info('[BOBGO CHECKOUT] Rate endpoint responded.', {
+      httpStatus: response.status,
+      ok: response.ok,
+      apiOk: !!data.ok,
+      shipmentCount: Array.isArray(data.shipments) ? data.shipments.length : 0
+    });
+
+    if (!response.ok || !data.ok) {
+      const error = new Error(data.error || data.message || 'Could not retrieve Bob Go rates.');
+      error.httpStatus = response.status;
+      error.serverHint = data.hint || null;
+      throw error;
+    }
+
+    if (!Array.isArray(data.shipments) || !data.shipments.length) {
+      throw new Error('Bob Go responded, but no shipment rates were returned. Check the cart items and brand shipping setup.');
+    }
+
     bobGoCheckoutQuote = data;
-    (data.shipments || []).forEach(s => { if (s.rates && s.rates.standard) bobGoSelectedRates[s.key] = 'standard'; else if (s.rates && s.rates.locker) bobGoSelectedRates[s.key] = 'locker'; });
-    const missing = (data.shipments || []).filter(s => !(s.rates && (s.rates.standard || s.rates.locker)));
-    if (missing.length) throw new Error('Bob Go returned no delivery service for ' + missing.map(s => s.brand).join(', ') + '. Please check the pickup address and service area.');
+    data.shipments.forEach(shipment => {
+      if (shipment.rates && shipment.rates.standard) bobGoSelectedRates[shipment.key] = 'standard';
+      else if (shipment.rates && shipment.rates.locker) bobGoSelectedRates[shipment.key] = 'locker';
+    });
+
+    const missing = data.shipments.filter(shipment =>
+      !(shipment.rates && (shipment.rates.standard || shipment.rates.locker))
+    );
+    if (missing.length) {
+      throw new Error('Bob Go returned no delivery service for ' +
+        missing.map(shipment => shipment.brand || shipment.key).join(', ') +
+        '. Check the brand pickup address and service area.');
+    }
+
+    console.info('[BOBGO CHECKOUT] Rates loaded successfully.', {
+      shipments: data.shipments.map(shipment => ({
+        key: shipment.key,
+        brand: shipment.brand,
+        standardAvailable: !!(shipment.rates && shipment.rates.standard),
+        lockerAvailable: !!(shipment.rates && shipment.rates.locker)
+      }))
+    });
     if (output) output.textContent = 'SANDBOX TEST: These rates and estimates are for testing only. They are not charged.';
     renderCheckoutSummary();
   } catch (error) {
-    bobGoCheckoutQuote = null; bobGoSelectedRates = {};
-    if (output) output.textContent = error.message || 'Could not retrieve Bob Go rates.';
+    bobGoCheckoutQuote = null;
+    bobGoSelectedRates = {};
+    console.error('[BOBGO CHECKOUT] Rate calculation failed.', {
+      message: error && error.message,
+      httpStatus: error && error.httpStatus,
+      serverHint: error && error.serverHint,
+      error
+    });
+    const detail = error && error.serverHint ? ' ' + error.serverHint : '';
+    if (output) output.textContent = (error.message || 'Could not retrieve Bob Go rates.') + detail;
     renderCheckoutSummary();
   } finally {
-    if (button) { button.disabled = false; button.textContent = 'Recalculate delivery'; }
+    if (button) { button.disabled = false; button.textContent = 'Calculate delivery'; }
   }
 }
-
