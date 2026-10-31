@@ -329,12 +329,16 @@ function getSelectedBobGoShippingTotal() {
   if (shipments.some(s => !bobGoSelectedRates[s.key])) return null;
   return shipments.reduce((sum, s) => {
     const q = bobGoCheckoutQuote.shipments.find(x => x.key === s.key);
-    const rate = q && q.rates && q.rates[bobGoSelectedRates[s.key]];
+    const selectedKey = bobGoSelectedRates[s.key];
+    const rate = q && q.rates && (
+      (q.rates.pickupPoints || []).find(r => r.key === selectedKey) ||
+      (q.rates.standard && q.rates.standard.key === selectedKey ? q.rates.standard : null)
+    );
     return sum + (rate ? (s.free ? 0 : Number(rate.price) || 0) : 0);
   }, 0);
 }
-function chooseBobGoRate(key, kind) {
-  bobGoSelectedRates[key] = kind;
+function chooseBobGoRate(key, rateKey) {
+  bobGoSelectedRates[key] = rateKey;
   renderCheckoutSummary();
 }
 function renderCollectOptions() {
@@ -361,18 +365,21 @@ function renderCollectOptions() {
     const min = fmt(rate.minDeliveryDate), max = fmt(rate.maxDeliveryDate);
     return min && max && min !== max ? 'Estimated delivery: ' + min + ' – ' + max : 'Estimated delivery: ' + (min || max);
   };
-  const rateOption = (s, kind, label) => {
-    const q = quoteByKey.get(s.key);
-    const rate = q && q.rates && q.rates[kind];
+  const rateOption = (s, rate, label, isDefault) => {
     if (!rate) return '';
-    const selected = (bobGoSelectedRates[s.key] || (q && q.rates && q.rates.standard ? 'standard' : 'locker')) === kind;
+    const selected = (bobGoSelectedRates[s.key] || '') === rate.key || (!bobGoSelectedRates[s.key] && isDefault);
     const shownPrice = s.free ? 'FREE' : formatPrice(rate.price);
+    const distance = Number.isFinite(Number(rate.pickupPointDistanceKm))
+      ? ' · ' + Number(rate.pickupPointDistanceKm).toFixed(1) + ' km away' : '';
+    const optionLabel = rate.kind === 'pickup-point'
+      ? (rate.serviceName || 'Bob Box / Pickup point')
+      : label;
     return `<label class="checkout-option${selected ? ' is-selected' : ''}">
-      <input type="radio" name="bobgo-rate-${sanitizeHTML(s.key)}" ${selected ? 'checked' : ''} onchange="chooseBobGoRate('${escapeJSString(s.key)}','${kind}')">
+      <input type="radio" name="bobgo-rate-${sanitizeHTML(s.key)}" value="${sanitizeHTML(rate.key)}" ${selected ? 'checked' : ''} onchange="chooseBobGoRate('${escapeJSString(s.key)}','${escapeJSString(rate.key)}')">
       <span class="checkout-option-radio" aria-hidden="true"></span>
       <span class="checkout-option-body">
-        <span class="checkout-option-head"><span>${label}</span><strong>${shownPrice}</strong></span>
-        <span class="checkout-option-note">Ships from <strong>${sanitizeHTML(s.brand)}</strong></span>
+        <span class="checkout-option-head"><span>${sanitizeHTML(optionLabel)}</span><strong>${shownPrice}</strong></span>
+        <span class="checkout-option-note">${rate.kind === 'pickup-point' ? 'Collect your parcel from this nearby pickup point' : 'Ships to your delivery address'} · Ships from <strong>${sanitizeHTML(s.brand)}</strong>${distance}</span>
         <span class="checkout-option-note checkout-delivery-estimate">${sanitizeHTML(formatEta(rate))}</span>
       </span>
     </label>`;
@@ -380,7 +387,14 @@ function renderCollectOptions() {
   box.innerHTML = shipments.map(s => {
     if (s.collect) return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options"><label class="checkout-option is-selected"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" checked onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', true)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Collect from ${sanitizeHTML(s.brand)}</span><strong>FREE</strong></span><span class="checkout-option-note">${sanitizeHTML(s.collectOffer && s.collectOffer.area || '')}</span></span></label><label class="checkout-option"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', false)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Delivery</span></span></span></label></div></div>`;
     const q = quoteByKey.get(s.key);
-    const choices = q ? rateOption(s, 'standard', 'Standard Delivery') + rateOption(s, 'locker', 'Locker Collection') : '';
+    const pickupPoints = q && q.rates && Array.isArray(q.rates.pickupPoints) ? q.rates.pickupPoints : [];
+    const standard = q && q.rates && q.rates.standard;
+    // Put pickup-point options first and make the first one the default.
+    // Standard delivery remains available immediately after them.
+    const choices = q
+      ? pickupPoints.map((rate, index) => rateOption(s, rate, 'Pickup point', index === 0)).join('') +
+        rateOption(s, standard, 'Standard Delivery', pickupPoints.length === 0)
+      : '';
     const collect = s.canCollect ? `<label class="checkout-option"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', true)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Collect from ${sanitizeHTML(s.brand)}</span><strong>FREE</strong></span><span class="checkout-option-note">${sanitizeHTML(s.collectOffer.area)}${s.collectOffer.hours ? ' · ' + sanitizeHTML(s.collectOffer.hours) : ''}</span></span></label>` : '';
     const shipChoice = s.canCollect ? `<label class="checkout-option"><input type="radio" name="checkout-collect-${sanitizeHTML(s.key)}" checked onchange="chooseCollection('${escapeJSString(s.vendorIds[0])}', false)"><span class="checkout-option-radio" aria-hidden="true"></span><span class="checkout-option-body"><span class="checkout-option-head"><span>Delivery</span></span><span class="checkout-option-note">Choose a Bob Go delivery option below.</span></span></label>` : '';
     return `<div><p class="checkout-collect-brand">${sanitizeHTML(s.brand)}</p><div class="checkout-options">${shipChoice}${choices || '<span class="checkout-option-note">Enter your delivery address, then calculate rates.</span>'}${collect}</div></div>`;
@@ -1000,12 +1014,13 @@ async function loadBobGoCheckoutRates() {
 
     bobGoCheckoutQuote = data;
     data.shipments.forEach(shipment => {
-      if (shipment.rates && shipment.rates.standard) bobGoSelectedRates[shipment.key] = 'standard';
-      else if (shipment.rates && shipment.rates.locker) bobGoSelectedRates[shipment.key] = 'locker';
+      const pickupPoints = shipment.rates && Array.isArray(shipment.rates.pickupPoints) ? shipment.rates.pickupPoints : [];
+      if (pickupPoints.length) bobGoSelectedRates[shipment.key] = pickupPoints[0].key;
+      else if (shipment.rates && shipment.rates.standard) bobGoSelectedRates[shipment.key] = shipment.rates.standard.key;
     });
 
     const missing = data.shipments.filter(shipment =>
-      !(shipment.rates && (shipment.rates.standard || shipment.rates.locker))
+      !(shipment.rates && (shipment.rates.standard || (Array.isArray(shipment.rates.pickupPoints) && shipment.rates.pickupPoints.length)))
     );
     if (missing.length) {
       throw new Error('Bob Go returned no delivery service for ' +
@@ -1019,7 +1034,7 @@ async function loadBobGoCheckoutRates() {
         key: shipment.key,
         brand: shipment.brand,
         standardAvailable: !!(shipment.rates && shipment.rates.standard),
-        lockerAvailable: !!(shipment.rates && shipment.rates.locker)
+        pickupPointCount: shipment.rates && Array.isArray(shipment.rates.pickupPoints) ? shipment.rates.pickupPoints.length : 0
       }))
     });
     if (output) output.textContent = 'SANDBOX TEST: These rates and estimates are for testing only. They are not charged.';
