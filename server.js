@@ -897,11 +897,8 @@ function generatePayFastSignature(data, passphrase, includeBlanks) {
 // the live product records and the discount code's own record, and that
 // result — not the browser's — is what gets charged and what the ITN
 // later checks the payment against. Mirrors cart.js's rules exactly:
-// sale price only when 0 < salePrice < price, discount validated the same
-// way applyPromoCode() does, and delivery per brand package: R150, less
-// what the brand covers when it offers free delivery and the package
-// reaches its minimum (freeDeliveryOfferOf(), cart.js getCartShipments()).
-const SHIPPING_FEE = 150;
+// Bob Go is the delivery price source. The old fixed R150 placeholder is removed.
+const SHIPPING_FEE = 0;
 const HOUSE_VENDOR_ID = 'vendor-janedore';
 function isHouseProduct(p) {
   return !!p && (!p.vendorId || p.vendorId === HOUSE_VENDOR_ID || String(p.brand || '').trim().toUpperCase() === 'JANEDORE');
@@ -1074,6 +1071,7 @@ async function priceOrder(order) {
 // Firestore Admin SDK writes bypass client rules; stock is never decremented
 // directly by an anonymous browser.
 app.post('/api/orders/create', async (req, res) => {
+  return res.status(503).json({ error: 'JANEDORE checkout is being configured with Bob Go Sandbox. Orders cannot be placed until live delivery quotes are connected.' });
   if (!adminDb) return res.status(503).json({ error: 'Checkout is not configured' });
   if (rateLimited(req, 'order-create', 12, 15 * 60 * 1000)) {
     return res.status(429).json({ error: 'Too many checkout attempts. Please try again shortly.' });
