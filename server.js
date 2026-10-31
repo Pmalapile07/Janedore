@@ -1092,6 +1092,29 @@ app.post('/api/orders/create', async (req, res) => {
   const postalCode = String(input.postalCode || '').trim().slice(0, 30);
   const country = String(input.country || '').trim().slice(0, 100);
   const collectFrom = Array.isArray(input.collectFrom) ? input.collectFrom.slice(0, 30).map((v) => String(v).slice(0, 150)) : [];
+  const shippingSelections = Array.isArray(input.shippingSelections) ? input.shippingSelections.slice(0, 30).map((selection) => {
+    const method = selection && selection.method === 'locker' ? 'locker' : 'standard';
+    const locationId = Number(selection && selection.pickupPointLocationId);
+    const providerSlug = String(selection && selection.providerSlug || '').trim().slice(0, 100);
+    if (method === 'locker' && (!Number.isSafeInteger(locationId) || locationId <= 0 || !/^[a-z0-9_-]+$/i.test(providerSlug))) {
+      throw Object.assign(new Error('The selected locker details are invalid. Please recalculate delivery options.'), { status: 400 });
+    }
+    return {
+      shipmentKey: String(selection && selection.shipmentKey || '').slice(0, 180),
+      brand: String(selection && selection.brand || '').slice(0, 180),
+      vendorIds: Array.isArray(selection && selection.vendorIds) ? selection.vendorIds.slice(0, 10).map(v => String(v).slice(0, 150)) : [],
+      method,
+      price: Math.max(0, Number(selection && selection.price) || 0),
+      serviceName: String(selection && selection.serviceName || '').slice(0, 160),
+      serviceCode: String(selection && selection.serviceCode || '').slice(0, 160) || null,
+      bobgoRateId: selection && selection.bobgoRateId != null ? String(selection.bobgoRateId).slice(0, 80) : null,
+      pickupPointLocationId: method === 'locker' ? locationId : null,
+      providerSlug: method === 'locker' ? providerSlug : null,
+      pickupPointName: method === 'locker' ? String(selection.pickupPointName || '').slice(0, 160) : null,
+      pickupPointAddress: method === 'locker' ? String(selection.pickupPointAddress || '').slice(0, 300) : null,
+      pickupPointDistanceKm: method === 'locker' && Number.isFinite(Number(selection.pickupPointDistanceKm)) ? Number(selection.pickupPointDistanceKm) : null
+    };
+  }) : [];
   // An order collected in full needs no delivery address.
   const needsAddress = !input.collectOnly;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || !customerName || (needsAddress && (!shippingAddress || !city || !province || !postalCode || !country))) {
@@ -1160,6 +1183,7 @@ app.post('/api/orders/create', async (req, res) => {
         items: canonicalItems, packageCount: priced.shippingPackages, brands, vendorIds,
         subtotal: priced.subtotal, discountCode: priced.discountCode,
         discountAmount: priced.discountAmount, shipping: priced.shipping, collectFrom: priced.collectFrom,
+        shippingSelections,
         total: priced.total, currency: 'ZAR', itemCount: priced.itemCount,
         status: 'pending', paymentStatus: 'unpaid',
         orderAccessTokenHash: orderAccessTokenHash(accessToken),
