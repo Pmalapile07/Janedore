@@ -156,7 +156,7 @@ async function prefillCheckoutForSignedInCustomer() {
     console.warn('[CHECKOUT] Could not load saved profile:', e.message);
   }
 
-  if (!saved.address) {
+  if (!saved.address || !saved.suburb) {
     try {
       const snap = await db.collection('orders')
         .where('customerEmail', '==', user.email)
