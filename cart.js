@@ -271,7 +271,7 @@ function shippingPackageKey(product, item) {
   const vid = house ? HOUSE_VENDOR_ID : ((product && product.vendorId) || 'unknown');
   const vendor = (S.vendors || []).find(v => v.id === vid);
   const warehouse = vendor && String(vendor.warehouse || '').trim().toLowerCase();
-  return warehouse ? 'warehouse:' + warehouse : (house ? 'janedore' : vid);
+  return warehouse ? 'warehouse:' + warehouse : vid;
 }
 
 // One package per brand (or per shared warehouse); JANEDORE's own stock
