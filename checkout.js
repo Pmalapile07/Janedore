@@ -8,6 +8,15 @@ let lastConfirmedOrderNumber = sessionStorage.getItem('janedore_last_order_numbe
 let bobGoCheckoutQuote = null;
 let bobGoSelectedRates = {};
 
+document.addEventListener('input', function(e) {
+  if (!e.target || !['checkout-address','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
+  bobGoCheckoutQuote = null;
+  bobGoSelectedRates = {};
+  const status = document.getElementById('bobgo-checkout-status');
+  if (status) status.textContent = 'Your delivery address changed. Recalculate Bob Go delivery rates.';
+  renderCheckoutSummary();
+});
+
 // Full order details (items, address, totals) for the confirmation page
 // — separate from lastConfirmedOrderNumber above, which alone isn't
 // enough to render a real confirmation page. Persisted the same way, so
@@ -326,6 +335,11 @@ function renderCollectOptions() {
   const any = shipments.some(s => s.canCollect);
   box.style.display = '';
   standard.style.display = 'none';
+  const rateButton = document.getElementById('bobgo-checkout-rates-btn');
+  const rateStatus = document.getElementById('bobgo-checkout-status');
+  const needsDelivery = shipments.some(s => !s.collect);
+  if (rateButton) rateButton.style.display = needsDelivery ? '' : 'none';
+  if (rateStatus) rateStatus.style.display = needsDelivery ? '' : 'none';
   syncAddressForCollection(shipments);
   const quoteByKey = new Map((bobGoCheckoutQuote && bobGoCheckoutQuote.shipments || []).map(s => [s.key, s]));
   const formatEta = rate => {
