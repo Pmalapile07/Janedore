@@ -223,53 +223,6 @@ module.exports = function registerBobGo(app, deps) {
   });
 
 
-  // Checkout-only visual test. Sandbox only: uses Bob Go's harmless sample
-  // collection address and sample parcel, and never creates an order or booking.
-  app.post('/api/bobgo/checkout-preview', async (req, res) => {
-    res.set('Cache-Control', 'no-store');
-    if (typeof deps.rateLimited === 'function' && deps.rateLimited(req, 'bobgo-checkout-preview', 8, 60 * 60 * 1000)) {
-      return res.status(429).json({ ok: false, error: 'Please wait before requesting test rates again.' });
-    }
-    const apiKey = String(process.env.BOBGO_API_KEY || '').trim();
-    const configuredBase = String(process.env.BOBGO_BASE_URL || 'https://api.sandbox.bobgo.co.za/v2').trim().replace(/\/+$/, '');
-    let endpoint;
-    try {
-      const base = new URL(configuredBase);
-      if (base.protocol !== 'https:' || base.hostname !== 'api.sandbox.bobgo.co.za') throw new Error('Sandbox only');
-      endpoint = new URL(base.pathname.replace(/\/$/, '') + '/rates-at-checkout', base.origin);
-    } catch (e) {
-      return res.status(503).json({ ok: false, error: 'Checkout preview is available only while Bob Go is configured for Sandbox.' });
-    }
-    if (!apiKey) return res.status(503).json({ ok: false, error: 'Bob Go Sandbox API key is not configured.' });
-    const a = req.body || {};
-    const city = String(a.city || '').trim().slice(0, 80);
-    const province = String(a.province || '').trim().slice(0, 80);
-    const postal = String(a.postalCode || '').trim().slice(0, 12);
-    const street = String(a.street || '').trim().slice(0, 120);
-    if (!city || !province || !postal || !street) return res.status(400).json({ ok: false, error: 'Enter your street, city, province and postal code first.' });
-    const payload = JSON.stringify({
-      collection_address: { type: 'business', company: 'JANEDORE Sandbox test', street_address: '125 Dallas Avenue', local_area: 'Newlands', city: 'Pretoria', zone: 'Gauteng', country: 'ZA', code: '0181' },
-      delivery_address: { type: 'residential', street_address: street, local_area: city, city, zone: province, country: 'ZA', code: postal },
-      items: [{ description: 'JANEDORE sandbox checkout test parcel', sku: 'JANEDORE-SANDBOX-TEST', price: 200, quantity: 1, length_cm: 17, width_cm: 8, height_cm: 5, weight_kg: 0.4 }],
-      order_total_price: 200, handling_time: 2
-    });
-    try {
-      const result = await new Promise((resolve, reject) => {
-        const request = https.request({ hostname: endpoint.hostname, path: endpoint.pathname, method: 'POST', timeout: 20000, headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json', Accept: 'application/json', 'Content-Length': Buffer.byteLength(payload) } }, response => {
-          let body = '';
-          response.on('data', chunk => { body += chunk; if (body.length > 1024 * 1024) request.destroy(new Error('Bob Go response was too large.')); });
-          response.on('end', () => { let data = {}; try { data = body ? JSON.parse(body) : {}; } catch (_) {} resolve({ status: response.statusCode || 0, data }); });
-        });
-        request.on('timeout', () => request.destroy(new Error('Bob Go did not respond within 20 seconds.')));
-        request.on('error', reject); request.write(payload); request.end();
-      });
-      if (result.status < 200 || result.status >= 300) return res.status(502).json({ ok: false, error: String(result.data.message || result.data.error || ('Bob Go returned HTTP ' + result.status)).slice(0, 250) });
-      const rates = Array.isArray(result.data.rates) ? result.data.rates : [];
-      return res.json({ ok: true, sandbox: true, rates: rates.slice(0, 8).map(rate => ({ serviceName: String(rate.service_name || 'Delivery').slice(0, 100), price: Number(rate.total_price) || 0, currency: String(rate.currency || 'ZAR'), description: String(rate.description || '').slice(0, 160), minDeliveryDate: rate.min_delivery_date || null, maxDeliveryDate: rate.max_delivery_date || null })) });
-    } catch (e) { return res.status(502).json({ ok: false, error: e.message || 'Could not reach Bob Go Sandbox.' }); }
-  });
-
-
   // Per-brand checkout rate quotes. Always Sandbox until the live key is enabled.
   // Product parcel data and brand pickup addresses are read from Firestore,
   // never accepted from the browser.
