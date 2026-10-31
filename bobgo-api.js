@@ -246,12 +246,12 @@ module.exports = function registerBobGo(app, deps) {
 
     const a = req.body || {};
     const street = String(a.street || '').trim().slice(0, 120);
-    const suburb = String(a.suburb || a.city || '').trim().slice(0, 80);
+    const suburb = String(a.suburb || '').trim().slice(0, 80);
     const city = String(a.city || '').trim().slice(0, 80);
     const province = String(a.province || '').trim().slice(0, 80);
     const postal = String(a.postalCode || '').trim().slice(0, 12);
     const lines = Array.isArray(a.items) ? a.items.slice(0, 30) : [];
-    if (!street || !city || !province || !/^\d{4}$/.test(postal) || !lines.length) {
+    if (!street || !suburb || !city || !province || !/^\d{4}$/.test(postal) || !lines.length) {
       return res.status(400).json({ ok: false, error: 'Complete your delivery address before checking rates.' });
     }
     if (lines.some(i => !i || typeof i.productId !== 'string' || !/^[A-Za-z0-9_-]{1,150}$/.test(i.productId) || !Number.isInteger(Number(i.qty)) || Number(i.qty) < 1 || Number(i.qty) > 20)) {
@@ -303,14 +303,14 @@ module.exports = function registerBobGo(app, deps) {
       const shipments = [];
       for (const g of groups.values()) {
         const vids = [...g.vendorIds], pickups = vids.map(id => vendors[id] && vendors[id].pickup);
-        const valid = p => p && p.street && p.city && p.province && /^\d{4}$/.test(String(p.postalCode || ''));
+        const valid = p => p && p.street && p.suburb && p.city && p.province && /^\d{4}$/.test(String(p.postalCode || ''));
         if (pickups.some(p => !valid(p))) throw Object.assign(new Error('Please add a complete pickup address for every brand under Admin → Brands.'), { status: 422 });
         const pickup = pickups[0];
         const same = p => ['street','suburb','city','province','postalCode'].every(k => String(p[k] || '').trim().toLowerCase() === String(pickup[k] || '').trim().toLowerCase());
         if (pickups.some(p => !same(p))) throw Object.assign(new Error('Brands sharing a warehouse must have the same pickup address.'), { status: 422 });
 
         const payload = JSON.stringify({
-          collection_address: { type: pickup.type === 'residential' ? 'residential' : 'business', company: String(pickup.company || 'JANEDORE brand'), street_address: pickup.street, local_area: pickup.suburb || pickup.city, city: pickup.city, zone: pickup.province, country: 'ZA', code: String(pickup.postalCode) },
+          collection_address: { type: pickup.type === 'residential' ? 'residential' : 'business', company: String(pickup.company || 'JANEDORE brand'), street_address: pickup.street, local_area: pickup.suburb, city: pickup.city, zone: pickup.province, country: 'ZA', code: String(pickup.postalCode) },
           delivery_address: { type: 'residential', street_address: street, local_area: suburb, city, zone: province, country: 'ZA', code: postal },
           // Customer checkout is door-to-door only. Bob Go's "door" filter
           // can also include in-store pickup, so the response is strictly
