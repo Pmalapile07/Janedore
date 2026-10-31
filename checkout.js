@@ -104,6 +104,8 @@ function navigateToCheckout(replaceUrl) {
       return;
     }
 
+    bobGoCheckoutQuote = null;
+    bobGoSelectedRates = {};
     showCheckoutStep(2);
 
     const placeOrderBtn = document.getElementById('checkout-place-order-btn');
