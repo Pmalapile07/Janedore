@@ -278,12 +278,8 @@
         </label>
       </section>
 
-      <section class="checkout-card" id="bobgo-sandbox-preview-card">
-        <h2 class="checkout-card-title">Try Bob Go delivery rates</h2>
-        <p class="checkout-card-note">Sandbox test only. Uses a sample parcel and Pretoria pickup address; it will not affect your order total or book a courier.</p>
-        <button type="button" class="checkout-place-order-btn" id="bobgo-preview-btn" onclick="previewBobGoCheckoutRates()">Test delivery rates</button>
-        <div id="bobgo-preview-results" aria-live="polite" style="margin-top:12px;"></div>
-      </section>
+      <div id="bobgo-checkout-status" class="checkout-option-note" aria-live="polite" style="margin-top:14px;">Enter your delivery address to calculate Bob Go prices and estimated delivery dates for each brand.</div>
+        <button type="button" class="checkout-place-order-btn" id="bobgo-checkout-rates-btn" onclick="loadBobGoCheckoutRates()" style="margin-top:12px;">Calculate delivery</button>
 
       <section class="checkout-card checkout-collapsible">
         <button type="button" class="checkout-order-toggle" aria-expanded="false" aria-controls="checkout-code-body-2" onclick="toggleCheckoutCard(this)">
