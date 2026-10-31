@@ -1215,6 +1215,26 @@
       }).join('');
     }
 
+    // ── Customer's delivery choice, saved separately from the brand's
+    // eventual courier collection/drop-off method. ──────────────────
+    if (Array.isArray(o.shippingSelections) && o.shippingSelections.length) {
+      html += '<div class="card-title" style="margin-bottom:7px;">Customer delivery choice</div>' +
+        '<div class="info-panel" style="margin-bottom:18px;">' +
+        o.shippingSelections.map(function (selection) {
+          var label = selection.method === 'locker' ? 'Locker Collection' : 'Standard Delivery';
+          var destination = selection.method === 'locker'
+            ? '<div class="info-row"><span class="label">Locker</span><span>' + esc(selection.pickupPointName || 'Selected locker') + '</span></div>' +
+              '<div class="info-row"><span class="label">Address</span><span>' + esc(selection.pickupPointAddress || '-') + '</span></div>' +
+              (selection.pickupPointDistanceKm != null ? '<div class="info-row"><span class="label">Distance</span><span>' + esc(String(selection.pickupPointDistanceKm)) + ' km from customer address</span></div>' : '')
+            : '<div class="info-row"><span class="label">Destination</span><span>' + esc([o.shippingAddress, o.city, o.province, o.postalCode].filter(Boolean).join(', ') || '-') + '</span></div>';
+          return '<div style="padding:10px 0;border-bottom:1px solid var(--border);">' +
+            '<div style="font-weight:600;margin-bottom:5px;">' + esc(selection.brand || 'Brand shipment') + ' · ' + label + '</div>' +
+            destination +
+          '</div>';
+        }).join('') +
+        '</div>';
+    }
+
     // ── Shipping address (tracking itself lives per-vendor above,
     // since each brand ships its own items from its own warehouse —
     // this is just where it's all going) ───────────────────────────
