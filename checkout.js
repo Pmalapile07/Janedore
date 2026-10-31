@@ -295,7 +295,7 @@ function renderCheckoutSummary() {
     ${vatLine}
     <div class="checkout-totals-row"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
     ${discountRow}
-    <div class="checkout-totals-row"><span>Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${shipping === 0 ? 'Free' : formatPrice(shipping)}</span></div>`;
+    <div class="checkout-totals-row"><span>Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${bobGoCheckoutQuote ? (shipping === 0 ? 'Free' : formatPrice(shipping)) : 'Calculated at checkout'}</span></div>`;
   document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
 
   renderShippingMethod(shipping, packages);
