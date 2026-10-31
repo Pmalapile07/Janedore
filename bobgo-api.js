@@ -312,6 +312,9 @@ module.exports = function registerBobGo(app, deps) {
         const payload = JSON.stringify({
           collection_address: { type: pickup.type === 'residential' ? 'residential' : 'business', company: String(pickup.company || 'JANEDORE brand'), street_address: pickup.street, local_area: pickup.suburb || pickup.city, city: pickup.city, zone: pickup.province, country: 'ZA', code: String(pickup.postalCode) },
           delivery_address: { type: 'residential', street_address: street, local_area: suburb, city, zone: province, country: 'ZA', code: postal },
+          // Ask Bob Go for both door delivery and locker collection. The buyer
+          // chooses the destination; the brand's collection method is separate.
+          delivery_type: ['door', 'locker'],
           items: g.items, order_total_price: Math.round(g.total * 100) / 100, handling_time: 2
         });
         const result = await new Promise((resolve, reject) => {
@@ -330,14 +333,9 @@ module.exports = function registerBobGo(app, deps) {
           const price = Number(rate.total_price ?? rate.price);
           if (!Number.isFinite(price) || price < 0) return null;
           const rawType = String(rate.type || '').toLowerCase();
-          // This checkout promises delivery to the customer's entered address.
-          // A pickup-point rate means the recipient must collect from a locker/counter,
-          // so it is intentionally not offered as a substitute for door delivery.
-          const isRecipientPickup = rawType === 'pickup-point' ||
-            (!rawType && /locker|bob.?box|pickup.?point|collection.?point|pudo/i.test(name + ' ' + String(rate.description || '')));
-          if (isRecipientPickup || (rawType && rawType !== 'door')) return null;
-          return {
-            key: String(rate.service_code || rate.id || ('door-' + index)),
+          const isLocker = rawType === 'pickup-point' || !!rate.pickup_point_location_id;
+          const baseRate = {
+            key: String(rate.service_code || rate.id || ((isLocker ? 'locker-' : 'door-') + index)),
             serviceName: name,
             price,
             description: String(rate.description || '').slice(0, 160),
@@ -345,18 +343,83 @@ module.exports = function registerBobGo(app, deps) {
             maxDeliveryDate: rate.max_delivery_date || rate.maxDeliveryDate || null,
             bobgoRateId: rate.id == null ? null : rate.id,
             serviceCode: rate.service_code || null,
-            type: rate.type || 'door',
-            serviceLevelCode: rate.service_level_code || null
+            type: rate.type || (isLocker ? 'pickup-point' : 'door'),
+            serviceLevelCode: rate.service_level_code || null,
+            serviceLevelPriority: Number(rate.service_level_priority)
           };
+          if (isLocker) {
+            const distanceKm = Number(rate.pickup_point_location_distance);
+            // Do not show a location if Bob Go cannot confirm its distance
+            // from the buyer's delivery address or if it is beyond 10 km.
+            if (!Number.isFinite(distanceKm) || distanceKm < 0 || distanceKm > 10) return null;
+            return Object.assign(baseRate, {
+              pickupPointLocationId: Number(rate.pickup_point_location_id),
+              providerSlug: String(rate.provider_slug || ''),
+              distanceKm
+            });
+          }
+          if (rawType && rawType !== 'door') return null;
+          return baseRate;
         }).filter(Boolean);
-        const standard = mapped.sort((x,y) => x.price-y.price)[0] || null;
+
+        const doorRates = mapped.filter(rate => rate.type === 'door');
+        // "Standard Delivery" is one simple customer-facing option. Prefer
+        // the earliest delivery estimate; use Bob Go's configured priority
+        // and then price as deterministic fallbacks.
+        doorRates.sort((x, y) => {
+          const xd = Date.parse(x.maxDeliveryDate || x.minDeliveryDate || '') || Infinity;
+          const yd = Date.parse(y.maxDeliveryDate || y.minDeliveryDate || '') || Infinity;
+          return xd - yd ||
+            (Number.isFinite(x.serviceLevelPriority) ? x.serviceLevelPriority : Infinity) -
+            (Number.isFinite(y.serviceLevelPriority) ? y.serviceLevelPriority : Infinity) ||
+            x.price - y.price;
+        });
+        const standard = doorRates[0] || null;
+
+        const lockerRates = mapped.filter(rate => rate.pickupPointLocationId && rate.providerSlug);
+        const locationsEndpoint = new URL(endpoint.pathname.replace(/\/rates-at-checkout$/, '/locations'), endpoint.origin);
+        const lockers = (await Promise.all(lockerRates.slice(0, 20).map(async rate => {
+          try {
+            const url = new URL(locationsEndpoint.toString());
+            url.searchParams.set('location_id', String(rate.pickupPointLocationId));
+            url.searchParams.set('provider_slug', rate.providerSlug);
+            const locationResult = await new Promise((resolve, reject) => {
+              const request = https.request({ hostname: url.hostname, path: url.pathname + url.search, method: 'GET', timeout: 12000, headers: { Authorization: 'Bearer ' + apiKey, Accept: 'application/json' } }, response => {
+                let body = '';
+                response.on('data', chunk => { body += chunk; if (body.length > 256 * 1024) request.destroy(new Error('Bob Go location response was too large.')); });
+                response.on('end', () => {
+                  let data = {};
+                  try { data = body ? JSON.parse(body) : {}; } catch (_) {}
+                  resolve({ status: response.statusCode || 0, data });
+                });
+              });
+              request.on('timeout', () => request.destroy(new Error('Bob Go location lookup timed out.')));
+              request.on('error', reject);
+              request.end();
+            });
+            if (locationResult.status < 200 || locationResult.status >= 300) return null;
+            const location = Array.isArray(locationResult.data.locations) ? locationResult.data.locations[0] : null;
+            if (!location || location.active === false || (Array.isArray(location.compartment_errors) && location.compartment_errors.length)) return null;
+            return Object.assign({}, rate, {
+              locationName: String(location.human_name || location.name || rate.serviceName).slice(0, 120),
+              locationAddress: String(location.full_address || location.address || '').slice(0, 240),
+              tradingHours: String(location.trading_hours || '').slice(0, 100),
+              providerName: String(location.pickup_point_provider_name || '').slice(0, 80)
+            });
+          } catch (e) {
+            console.warn('[BOBGO CHECKOUT] Could not resolve locker location:', rate.pickupPointLocationId, e.message);
+            return null;
+          }
+        }))).filter(Boolean);
+
         shipments.push({
           key: g.key,
+          vendorIds: vids,
           brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || id)).join(' & '),
-          rates: { standard }
+          rates: { standard, lockers }
         });
       }
-      console.info('[BOBGO CHECKOUT] Separate Bob Go quotes returned:', shipments.map(s => ({ key: s.key, brand: s.brand, hasStandard: !!s.rates.standard, hasLocker: !!s.rates.locker })));
+      console.info('[BOBGO CHECKOUT] Separate Bob Go quotes returned:', shipments.map(s => ({ key: s.key, brand: s.brand, hasStandard: !!s.rates.standard, lockerCount: (s.rates.lockers || []).length })));
       return res.json({ ok: true, sandbox: true, shipments });
     } catch (e) {
       console.error('[BOBGO CHECKOUT RATES]', e.message);
