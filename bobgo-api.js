@@ -275,10 +275,19 @@ module.exports = function registerBobGo(app, deps) {
       vendorIds.forEach((id, i) => { vendors[id] = Object.assign({}, pubDocs[i].exists ? pubDocs[i].data() : {}, privateDocs[i].exists ? privateDocs[i].data() : {}); });
 
       const groups = new Map();
+      const groupingDiagnostics = [];
       lines.forEach(line => {
         const p = products[line.productId], vid = vendorIdFor(p), vendor = vendors[vid] || {};
         const wh = String(vendor.warehouse || '').trim().toLowerCase();
         const key = wh ? 'warehouse:' + wh : vid;
+        groupingDiagnostics.push({
+          productId: line.productId,
+          productName: String(p.name || '').slice(0, 80),
+          brand: String(p.brand || ''),
+          resolvedVendorId: vid,
+          warehouseGroup: wh || null,
+          shipmentKey: key
+        });
         if (!groups.has(key)) groups.set(key, { key, vendorIds: new Set(), items: [], total: 0 });
         const g = groups.get(key), qty = Number(line.qty), parcel = p.parcel || {};
         const weight = Number(p.shippingWeight), length = Number(parcel.lengthCm), width = Number(parcel.widthCm), height = Number(parcel.heightCm);
@@ -290,6 +299,7 @@ module.exports = function registerBobGo(app, deps) {
         g.items.push({ description: String(p.name || 'JANEDORE item').slice(0, 100), sku: String(p.sku || line.productId).slice(0, 80), price, quantity: qty, length_cm: length, width_cm: width, height_cm: height, weight_kg: weight });
       });
 
+      console.info('[BOBGO CHECKOUT] Cart products grouped for rate requests:', groupingDiagnostics);
       const shipments = [];
       for (const g of groups.values()) {
         const vids = [...g.vendorIds], pickups = vids.map(id => vendors[id] && vendors[id].pickup);
@@ -325,6 +335,7 @@ module.exports = function registerBobGo(app, deps) {
         const cheapest = kind => mapped.filter(r => r.kind === kind).sort((x,y) => x.price-y.price)[0] || null;
         shipments.push({ key: g.key, brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || id)).join(' & '), rates: { standard: cheapest('standard'), locker: cheapest('locker') } });
       }
+      console.info('[BOBGO CHECKOUT] Separate Bob Go quotes returned:', shipments.map(s => ({ key: s.key, brand: s.brand, hasStandard: !!s.rates.standard, hasLocker: !!s.rates.locker })));
       return res.json({ ok: true, sandbox: true, shipments });
     } catch (e) {
       console.error('[BOBGO CHECKOUT RATES]', e.message);
