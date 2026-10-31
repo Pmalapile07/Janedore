@@ -369,7 +369,7 @@ function renderCollectOptions() {
     if (!rate) return '';
     const selected = (bobGoSelectedRates[s.key] || '') === rate.key || (!bobGoSelectedRates[s.key] && isDefault);
     const shownPrice = s.free ? 'FREE' : formatPrice(rate.price);
-    const distance = Number.isFinite(Number(rate.pickupPointDistanceKm))
+    const distance = rate.pickupPointDistanceKm != null && Number.isFinite(Number(rate.pickupPointDistanceKm))
       ? ' · ' + Number(rate.pickupPointDistanceKm).toFixed(1) + ' km away' : '';
     const optionLabel = rate.kind === 'pickup-point'
       ? (rate.serviceName || 'Bob Box / Pickup point')
