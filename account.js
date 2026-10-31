@@ -332,6 +332,7 @@ async function renderAccountProfile() {
 
     <div class="account-section-title">Default delivery address</div>
     ${field('acc-address', 'Street address', p.address, 'autocomplete="street-address" placeholder="House number and street name"')}
+    ${field('acc-suburb', 'Suburb / local area', p.suburb, 'autocomplete="address-level3" placeholder="e.g. Hatfield"')}
     <div class="account-form-row">
       <div>${field('acc-city', 'City', p.city, 'autocomplete="address-level2" placeholder="Johannesburg"')}</div>
       <div>${field('acc-province', 'Province', p.province, 'autocomplete="address-level1" placeholder="Gauteng"')}</div>
@@ -357,7 +358,7 @@ async function saveAccountProfile(e) {
   const name = val('acc-name');
   err.style.display = 'none';
   if (!name) { err.textContent = 'Please enter your full name.'; err.style.display = 'block'; return; }
-  const data = { name, phone: val('acc-phone'), address: val('acc-address'), city: val('acc-city'), province: val('acc-province'), postalCode: val('acc-postal'),
+  const data = { name, phone: val('acc-phone'), address: val('acc-address'), suburb: val('acc-suburb'), city: val('acc-city'), province: val('acc-province'), postalCode: val('acc-postal'),
     email: (user.email || '').toLowerCase(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
