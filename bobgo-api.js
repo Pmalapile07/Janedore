@@ -269,6 +269,116 @@ module.exports = function registerBobGo(app, deps) {
     } catch (e) { return res.status(502).json({ ok: false, error: e.message || 'Could not reach Bob Go Sandbox.' }); }
   });
 
+
+  // Per-brand checkout rate quotes. Always Sandbox until the live key is enabled.
+  // Product parcel data and brand pickup addresses are read from Firestore,
+  // never accepted from the browser.
+  app.post('/api/bobgo/checkout-rates', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    if (!adminDb) return res.status(503).json({ ok: false, error: 'Checkout shipping is not configured.' });
+    if (typeof deps.rateLimited === 'function' && deps.rateLimited(req, 'bobgo-checkout-rates', 12, 10 * 60 * 1000)) {
+      return res.status(429).json({ ok: false, error: 'Please wait before checking delivery rates again.' });
+    }
+    const apiKey = String(process.env.BOBGO_API_KEY || '').trim();
+    const baseUrl = String(process.env.BOBGO_BASE_URL || 'https://api.sandbox.bobgo.co.za/v2').trim().replace(/\/+$/, '');
+    let endpoint;
+    try {
+      const base = new URL(baseUrl);
+      if (base.protocol !== 'https:' || base.hostname !== 'api.sandbox.bobgo.co.za') throw new Error('Sandbox only');
+      endpoint = new URL(base.pathname.replace(/\/$/, '') + '/rates-at-checkout', base.origin);
+    } catch (_) {
+      return res.status(503).json({ ok: false, error: 'Checkout rates are currently available in Bob Go Sandbox only.' });
+    }
+    if (!apiKey) return res.status(503).json({ ok: false, error: 'Bob Go Sandbox API key is not configured.' });
+
+    const a = req.body || {};
+    const street = String(a.street || '').trim().slice(0, 120);
+    const suburb = String(a.suburb || a.city || '').trim().slice(0, 80);
+    const city = String(a.city || '').trim().slice(0, 80);
+    const province = String(a.province || '').trim().slice(0, 80);
+    const postal = String(a.postalCode || '').trim().slice(0, 12);
+    const lines = Array.isArray(a.items) ? a.items.slice(0, 30) : [];
+    if (!street || !city || !province || !/^\d{4}$/.test(postal) || !lines.length) {
+      return res.status(400).json({ ok: false, error: 'Complete your delivery address before checking rates.' });
+    }
+    if (lines.some(i => !i || typeof i.productId !== 'string' || !/^[A-Za-z0-9_-]{1,150}$/.test(i.productId) || !Number.isInteger(Number(i.qty)) || Number(i.qty) < 1 || Number(i.qty) > 20)) {
+      return res.status(400).json({ ok: false, error: 'Your bag contains an invalid item or quantity. Please refresh your bag.' });
+    }
+
+    try {
+      const ids = [...new Set(lines.map(i => String(i.productId)))];
+      const productDocs = await adminDb.getAll(...ids.map(id => adminDb.collection('products').doc(id)));
+      const products = {};
+      productDocs.forEach((d, i) => { if (d.exists) products[ids[i]] = d.data(); });
+      if (ids.some(id => !products[id])) return res.status(409).json({ ok: false, error: 'A product in your bag is no longer available.' });
+
+      const vendorIdFor = p => (!p.vendorId || p.vendorId === 'vendor-janedore' || String(p.brand || '').trim().toUpperCase() === 'JANEDORE') ? 'vendor-janedore' : String(p.vendorId);
+      const vendorIds = [...new Set(ids.map(id => vendorIdFor(products[id])))];
+      const [pubDocs, privateDocs] = await Promise.all([
+        adminDb.getAll(...vendorIds.map(id => adminDb.collection('vendors').doc(id))),
+        adminDb.getAll(...vendorIds.map(id => adminDb.collection('vendorPrivate').doc(id)))
+      ]);
+      const vendors = {};
+      vendorIds.forEach((id, i) => { vendors[id] = Object.assign({}, pubDocs[i].exists ? pubDocs[i].data() : {}, privateDocs[i].exists ? privateDocs[i].data() : {}); });
+
+      const groups = new Map();
+      lines.forEach(line => {
+        const p = products[line.productId], vid = vendorIdFor(p), vendor = vendors[vid] || {};
+        const wh = String(vendor.warehouse || '').trim().toLowerCase();
+        const key = wh ? 'warehouse:' + wh : vid;
+        if (!groups.has(key)) groups.set(key, { key, vendorIds: new Set(), items: [], total: 0 });
+        const g = groups.get(key), qty = Number(line.qty), parcel = p.parcel || {};
+        const weight = Number(p.shippingWeight), length = Number(parcel.lengthCm), width = Number(parcel.widthCm), height = Number(parcel.heightCm);
+        if (!(weight > 0) || !(length > 0) || !(width > 0) || !(height > 0)) {
+          throw Object.assign(new Error('Shipping weight and packed parcel dimensions are missing for ' + String(p.name || 'a product') + '. Add them under Admin → Products → Shipping.'), { status: 422 });
+        }
+        const price = Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.price) ? Number(p.salePrice) : Number(p.price) || 0;
+        g.vendorIds.add(vid); g.total += price * qty;
+        g.items.push({ description: String(p.name || 'JANEDORE item').slice(0, 100), sku: String(p.sku || line.productId).slice(0, 80), price, quantity: qty, length_cm: length, width_cm: width, height_cm: height, weight_kg: weight });
+      });
+
+      const shipments = [];
+      for (const g of groups.values()) {
+        const vids = [...g.vendorIds], pickups = vids.map(id => vendors[id] && vendors[id].pickup);
+        const valid = p => p && p.street && p.city && p.province && /^\d{4}$/.test(String(p.postalCode || ''));
+        if (pickups.some(p => !valid(p))) throw Object.assign(new Error('Please add a complete pickup address for every brand under Admin → Brands.'), { status: 422 });
+        const pickup = pickups[0];
+        const same = p => ['street','suburb','city','province','postalCode'].every(k => String(p[k] || '').trim().toLowerCase() === String(pickup[k] || '').trim().toLowerCase());
+        if (pickups.some(p => !same(p))) throw Object.assign(new Error('Brands sharing a warehouse must have the same pickup address.'), { status: 422 });
+
+        const payload = JSON.stringify({
+          collection_address: { type: pickup.type === 'residential' ? 'residential' : 'business', company: String(pickup.company || 'JANEDORE brand'), street_address: pickup.street, local_area: pickup.suburb || pickup.city, city: pickup.city, zone: pickup.province, country: 'ZA', code: String(pickup.postalCode) },
+          delivery_address: { type: 'residential', street_address: street, local_area: suburb, city, zone: province, country: 'ZA', code: postal },
+          items: g.items, order_total_price: Math.round(g.total * 100) / 100, handling_time: 2
+        });
+        const result = await new Promise((resolve, reject) => {
+          const request = https.request({ hostname: endpoint.hostname, path: endpoint.pathname, method: 'POST', timeout: 20000, headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json', Accept: 'application/json', 'Content-Length': Buffer.byteLength(payload) } }, response => {
+            let body = '';
+            response.on('data', chunk => { body += chunk; if (body.length > 1024 * 1024) request.destroy(new Error('Bob Go response was too large.')); });
+            response.on('end', () => { let data = {}; try { data = body ? JSON.parse(body) : {}; } catch (_) {} resolve({ status: response.statusCode || 0, data }); });
+          });
+          request.on('timeout', () => request.destroy(new Error('Bob Go did not respond within 20 seconds.')));
+          request.on('error', reject); request.write(payload); request.end();
+        });
+        if (result.status < 200 || result.status >= 300) throw Object.assign(new Error(String(result.data.message || result.data.error || ('Bob Go returned HTTP ' + result.status)).slice(0, 250)), { status: 502 });
+        const rawRates = Array.isArray(result.data.rates) ? result.data.rates : [];
+        const mapped = rawRates.map(rate => {
+          const name = String(rate.service_name || rate.serviceName || rate.courier_name || rate.name || 'Delivery');
+          const price = Number(rate.total_price ?? rate.price);
+          if (!Number.isFinite(price) || price < 0) return null;
+          const kind = /locker|bob.?box|pickup.?point|collection.?point|pudo/i.test(name + ' ' + String(rate.description || '')) ? 'locker' : 'standard';
+          return { kind, serviceName: name, price, description: String(rate.description || '').slice(0, 160), minDeliveryDate: rate.min_delivery_date || rate.minDeliveryDate || null, maxDeliveryDate: rate.max_delivery_date || rate.maxDeliveryDate || null };
+        }).filter(Boolean);
+        const cheapest = kind => mapped.filter(r => r.kind === kind).sort((x,y) => x.price-y.price)[0] || null;
+        shipments.push({ key: g.key, brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || id)).join(' & '), rates: { standard: cheapest('standard'), locker: cheapest('locker') } });
+      }
+      return res.json({ ok: true, sandbox: true, shipments });
+    } catch (e) {
+      console.error('[BOBGO CHECKOUT RATES]', e.message);
+      return res.status(e.status || 502).json({ ok: false, error: e.message || 'Could not retrieve Bob Go delivery rates.' });
+    }
+  });
+
   app.post('/api/bobgo/webhook', (req, res) => {
     if (!adminDb || !process.env.BOBGO_WEBHOOK_SECRET) return res.status(503).json({ error: 'Not configured' });
     if (!signatureOk(req)) return res.status(401).json({ error: 'Bad signature' });
