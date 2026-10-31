@@ -312,9 +312,8 @@ module.exports = function registerBobGo(app, deps) {
         const payload = JSON.stringify({
           collection_address: { type: pickup.type === 'residential' ? 'residential' : 'business', company: String(pickup.company || 'JANEDORE brand'), street_address: pickup.street, local_area: pickup.suburb || pickup.city, city: pickup.city, zone: pickup.province, country: 'ZA', code: String(pickup.postalCode) },
           delivery_address: { type: 'residential', street_address: street, local_area: suburb, city, zone: province, country: 'ZA', code: postal },
-          // Ask Bob Go for both door delivery and locker collection. The buyer
-          // chooses the destination; the brand's collection method is separate.
-          delivery_type: ['door', 'locker'],
+          // Leave delivery_type unrestricted: Bob Go returns all eligible
+          // door and pickup-point options configured for this destination.
           items: g.items, order_total_price: Math.round(g.total * 100) / 100, handling_time: 2
         });
         const result = await new Promise((resolve, reject) => {
@@ -328,6 +327,14 @@ module.exports = function registerBobGo(app, deps) {
         });
         if (result.status < 200 || result.status >= 300) throw Object.assign(new Error(String(result.data.message || result.data.error || ('Bob Go returned HTTP ' + result.status)).slice(0, 250)), { status: 502 });
         const rawRates = Array.isArray(result.data.rates) ? result.data.rates : [];
+        console.info('[BOBGO CHECKOUT] Raw Bob Go rates:', {
+          shipmentKey: g.key,
+          httpStatus: result.status,
+          rateCount: rawRates.length,
+          rateTypes: rawRates.map(rate => String(rate.type || 'unspecified')),
+          rateNames: rawRates.slice(0, 12).map(rate => String(rate.service_name || rate.name || 'Unnamed')),
+          responseKeys: Object.keys(result.data || {})
+        });
         const mapped = rawRates.map((rate, index) => {
           const name = String(rate.service_name || rate.serviceName || rate.courier_name || rate.name || 'Delivery');
           const price = Number(rate.total_price ?? rate.price);
