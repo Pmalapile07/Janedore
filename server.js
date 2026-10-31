@@ -1087,6 +1087,7 @@ app.post('/api/orders/create', async (req, res) => {
   const customerName = String(input.customerName || '').trim().slice(0, 120);
   const customerPhone = String(input.customerPhone || '').trim().slice(0, 40);
   const shippingAddress = String(input.shippingAddress || '').trim().slice(0, 300);
+  const suburb = String(input.suburb || '').trim().slice(0, 100);
   const city = String(input.city || '').trim().slice(0, 100);
   const province = String(input.province || '').trim().slice(0, 100);
   const postalCode = String(input.postalCode || '').trim().slice(0, 30);
@@ -1105,7 +1106,7 @@ app.post('/api/orders/create', async (req, res) => {
   })) : [];
   // An order collected in full needs no delivery address.
   const needsAddress = !input.collectOnly;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || !customerName || (needsAddress && (!shippingAddress || !city || !province || !postalCode || !country))) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || !customerName || (needsAddress && (!shippingAddress || !suburb || !city || !province || !postalCode || !country))) {
     return res.status(400).json({ error: 'Please provide valid customer and delivery details.' });
   }
 
@@ -1167,7 +1168,7 @@ app.post('/api/orders/create', async (req, res) => {
       const brands = [...new Set(canonicalItems.map(i => i.brand).filter(Boolean))];
       tx.set(orderRef, {
         orderNumber, customerEmail, customerName, customerPhone, customerId,
-        shippingAddress, city, province, postalCode, country,
+        shippingAddress, suburb, city, province, postalCode, country,
         items: canonicalItems, packageCount: priced.shippingPackages, brands, vendorIds,
         subtotal: priced.subtotal, discountCode: priced.discountCode,
         discountAmount: priced.discountAmount, shipping: priced.shipping, collectFrom: priced.collectFrom,
@@ -1649,6 +1650,7 @@ app.get('/api/orders/:id', async (req, res) => {
       currency: order.currency || 'ZAR',
       customerName: order.customerName || '',
       shippingAddress: order.shippingAddress || '',
+      suburb: order.suburb || '',
       city: order.city || '',
       province: order.province || '',
       postalCode: order.postalCode || '',
