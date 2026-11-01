@@ -223,6 +223,27 @@ function getCheckoutTotals() {
   return { subtotal, discountAmount, shipping, packages: status.packages, total: afterDiscount + shipping };
 }
 
+// Explains why multi-brand orders can arrive in separate parcels in V1.
+function openCheckoutPackagesInfo() {
+  const panel = document.getElementById('checkout-packages-info');
+  if (!panel) return;
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  if (typeof lockPageScroll === 'function') lockPageScroll();
+  const close = panel.querySelector('.checkout-packages-info-close');
+  if (close) close.focus();
+}
+function closeCheckoutPackagesInfo() {
+  const panel = document.getElementById('checkout-packages-info');
+  if (!panel || !panel.classList.contains('open')) return;
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+  if (typeof unlockPageScroll === 'function') unlockPageScroll();
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCheckoutPackagesInfo();
+});
+
 // Opens/closes a collapsible checkout card (Order summary, Apply a code).
 function toggleCheckoutCard(btn) {
   const body = btn && document.getElementById(btn.getAttribute('aria-controls'));
@@ -323,7 +344,7 @@ function renderCheckoutSummary() {
     ${vatLine}
     <div class="checkout-totals-row"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
     ${discountRow}
-    <div class="checkout-totals-row"><span>Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${bobGoCheckoutQuote ? (shipping === 0 ? 'Free' : formatPrice(shipping)) : 'Calculated at checkout'}</span></div>`;
+    <div class="checkout-totals-row"><span class="checkout-delivery-label">${packages > 1 ? '<button type="button" class="checkout-packages-info-trigger" onclick="openCheckoutPackagesInfo()" aria-label="Why does my order ship in multiple packages?" title="Why multiple packages?"><i class="ph ph-info" aria-hidden="true"></i></button>' : ''}Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${bobGoCheckoutQuote ? (shipping === 0 ? 'Free' : formatPrice(shipping)) : 'Calculated at checkout'}</span></div>`;
   document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
 
   renderShippingMethod(shipping, packages);
