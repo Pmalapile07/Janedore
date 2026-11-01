@@ -243,6 +243,32 @@
   }
   .checkout-packages-info-content p { margin: 0 0 14px; }
   .checkout-packages-info-content p:last-child { margin-bottom: 0; }
+
+  .bobgo-checkout-status[hidden] { display: none !important; }
+  .bobgo-checkout-status:not([hidden]) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    margin: 12px 0 2px;
+    min-height: 22px;
+    color: #666;
+    font-size: 13px;
+  }
+  .bobgo-rate-spinner {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    border: 2px solid #dedede;
+    border-top-color: #111;
+    border-radius: 50%;
+    animation: bobgo-rate-spin .7s linear infinite;
+  }
+  @keyframes bobgo-rate-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .bobgo-rate-spinner { animation-duration: 1.8s; }
+  }
 </style>
 
 <div id="checkout-page-content">
@@ -320,7 +346,7 @@
             <span class="checkout-option-note checkout-delivery-estimate" id="checkout-delivery-estimate"></span>
           </span>
         </label>
-        <div id="bobgo-checkout-status" class="checkout-option-note" aria-live="polite" style="margin-top:14px;">Delivery prices and options will appear automatically once your address is complete.</div>
+        <div id="bobgo-checkout-status" class="checkout-option-note bobgo-checkout-status" aria-live="polite" role="status" hidden></div>
       </section>
 
       <section class="checkout-card checkout-collapsible">
