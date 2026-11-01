@@ -23,8 +23,8 @@
     width: 48px !important;
     height: 48px !important;
     border-radius: 3px !important;
-    background: #E0EBFF !important;
-    color: #111 !important;
+    background: #111 !important;
+    color: #fff !important;
     border: none !important;
     cursor: pointer !important;
     display: flex !important;
@@ -34,10 +34,9 @@
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
     perspective: 300px !important;
-    /* Keep the launcher icon black against the same pale blue used by
-       the homepage free-delivery banner. */
+    /* Black launcher with a white chat icon/mascot details. */
     --jai-bg: #111;
-    --jai-fg: #E0EBFF;
+    --jai-fg: #fff;
   }
   #live-chat-bubble:hover {
     transform: translateY(-2px) !important;
@@ -55,14 +54,13 @@
   body:has(#quick-add-sheet.open) #live-chat-bubble,
   body:has(.added-toast.show) #live-chat-bubble { display: none !important; }
 
-  /* Keep the same pale-blue launcher over the dark footer too; the
-     pale blue stays visible against black and the chat icon remains black. */
+  /* Keep the launcher black with a white icon over the dark footer too. */
   #live-chat-bubble.over-dark-footer {
-    background: #E0EBFF !important;
-    color: #111 !important;
+    background: #111 !important;
+    color: #fff !important;
     box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important;
     --jai-bg: #111;
-    --jai-fg: #E0EBFF;
+    --jai-fg: #fff;
   }
   #live-chat-bubble.over-dark-footer:hover {
     box-shadow: 0 8px 24px rgba(0,0,0,0.45) !important;
