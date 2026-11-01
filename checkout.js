@@ -25,12 +25,12 @@ function scheduleBobGoCheckoutRates() {
   const status = document.getElementById('bobgo-checkout-status');
 
   renderCheckoutSummary();
-  if (!addressReady) {
-    if (status) status.textContent = 'Delivery prices and options will appear automatically once your address is complete.';
-    return;
+  if (status) {
+    status.hidden = true;
+    status.innerHTML = '';
   }
+  if (!addressReady) return;
 
-  if (status) status.textContent = 'Getting delivery prices and estimates…';
   bobGoRateTimer = setTimeout(function() {
     loadBobGoCheckoutRates();
   }, 700);
@@ -1049,8 +1049,10 @@ async function loadBobGoCheckoutRates() {
     return;
   }
 
-  if (button) { button.disabled = true; button.textContent = 'Calculating…'; }
-  if (output) output.textContent = 'Getting delivery prices and estimates for each brand…';
+  if (output) {
+    output.hidden = false;
+    output.innerHTML = '<span class="bobgo-rate-spinner" aria-hidden="true"></span><span class="bobgo-rate-loading-text">Loading delivery options</span>';
+  }
   bobGoCheckoutQuote = null;
   bobGoSelectedRates = {};
 
@@ -1108,9 +1110,10 @@ async function loadBobGoCheckoutRates() {
       }))
     });
     const availableCount = data.shipments.reduce((n, shipment) => n + ((shipment.rates && shipment.rates.deliveryOptions || []).length), 0);
-    if (output) output.textContent = availableCount
-      ? 'SANDBOX TEST: Bob Go delivery options are shown below. These rates are for testing only and are not charged.'
-      : 'Bob Go responded, but has no eligible service levels for this address. Check your Bob Go service areas and checkout rules.';
+    if (output) {
+      output.hidden = availableCount > 0;
+      output.textContent = availableCount ? '' : 'No delivery options are available for this address. Please check your address or try another one.';
+    }
     renderCheckoutSummary();
   } catch (error) {
     if (requestId !== bobGoRateRequestId) return;
@@ -1123,9 +1126,12 @@ async function loadBobGoCheckoutRates() {
       error
     });
     const detail = error && error.serverHint ? ' ' + error.serverHint : '';
-    if (output) output.textContent = (error.message || 'Could not retrieve Bob Go rates.') + detail;
+    if (output) {
+      output.hidden = false;
+      output.textContent = (error.message || 'Could not retrieve delivery options. Please try again.') + detail;
+    }
     renderCheckoutSummary();
   } finally {
-    if (requestId === bobGoRateRequestId && button) { button.disabled = false; button.textContent = 'Calculate delivery'; }
+    // The loading indicator is removed by the success/error state above.
   }
 }
