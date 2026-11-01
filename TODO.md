@@ -174,3 +174,12 @@ Do this before picking up any other TODO. Read the existing implementation and r
 - **Vendor experience and notifications:** show vendors a simple Requests page with their submissions, current status, latest response and a way to reply or attach requested information. Notify the relevant vendor/staff when a request is submitted, assigned, updated or awaiting their response, using the existing email/notification system where appropriate.
 - **Admin overview:** show request counts by status and make it easy to filter/search by type, vendor, status, assignee and date. Keep the first version practical and consistent with the existing Admin UI; avoid turning it into an overcomplicated ticketing system.
 
+## Reduce visible technology fingerprints — planned
+- **Goal:** make JANEDORE present as its own platform and reduce unnecessary clues in the public website that reveal its underlying technology stack.
+- Audit public HTML, JavaScript bundles, browser console output, diagnostics and network requests for avoidable Firebase/project-specific fingerprints or internal implementation details. Remove debug disclosures and unnecessary metadata without breaking existing functionality.
+- Reduce casual source-code exposure through an appropriate production build/bundling/minification setup, while recognising this does not hide technologies exposed by browser network traffic.
+- Gradually move sensitive customer-facing operations behind JANEDORE's own server/API where practical, rather than attempting a risky full rewrite. Keep Firebase services that are still needed working during the transition.
+- Assess a custom JANEDORE authentication domain and other provider branding/configuration options where supported.
+- **Important limitation:** do not treat Firebase client configuration/API keys as private secrets. If the browser communicates directly with Firebase services, requests and provider endpoints can still reveal Firebase and the project. Meaningful reduction of those fingerprints requires changing the relevant architecture, not merely renaming files or hiding strings.
+- Preserve checkout, customer accounts, admin/vendor tools, chat, uploads, notifications and all existing data flows. Make changes incrementally and regression-test each affected feature; do not compromise security or functionality just to conceal the stack.
+- Report which fingerprints were actually removed, which remain inherently visible, what requires Firebase/Render/DNS console configuration, and what was tested. Do not claim the underlying stack is fully hidden.
