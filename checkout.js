@@ -8,21 +8,39 @@ let lastConfirmedOrderNumber = sessionStorage.getItem('janedore_last_order_numbe
 let bobGoCheckoutQuote = null;
 let bobGoSelectedRates = {};
 
-document.addEventListener('input', function(e) {
-  if (!e.target || !['checkout-address','checkout-suburb','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
+let bobGoRateTimer = null;
+let bobGoRateRequestId = 0;
+const BOBGO_ADDRESS_FIELDS = ['checkout-address','checkout-suburb','checkout-city','checkout-province','checkout-postal'];
+
+function scheduleBobGoCheckoutRates() {
+  clearTimeout(bobGoRateTimer);
+  bobGoRateRequestId++;
   bobGoCheckoutQuote = null;
   bobGoSelectedRates = {};
+
+  const value = id => (document.getElementById(id)?.value || '').trim();
+  const addressReady = !!value('checkout-address') && !!value('checkout-suburb')
+    && !!value('checkout-city') && !!value('checkout-province')
+    && /^\d{4}$/.test(value('checkout-postal'));
   const status = document.getElementById('bobgo-checkout-status');
-  if (status) status.textContent = 'Your delivery address changed. Recalculate Bob Go delivery rates.';
+
   renderCheckoutSummary();
+  if (!addressReady) {
+    if (status) status.textContent = 'Delivery prices and options will appear automatically once your address is complete.';
+    return;
+  }
+
+  if (status) status.textContent = 'Getting delivery prices and estimates…';
+  bobGoRateTimer = setTimeout(function() {
+    loadBobGoCheckoutRates();
+  }, 700);
+}
+
+document.addEventListener('input', function(e) {
+  if (e.target && BOBGO_ADDRESS_FIELDS.includes(e.target.id)) scheduleBobGoCheckoutRates();
 });
 document.addEventListener('change', function(e) {
-  if (!e.target || !['checkout-address','checkout-suburb','checkout-city','checkout-province','checkout-postal'].includes(e.target.id) || !bobGoCheckoutQuote) return;
-  bobGoCheckoutQuote = null;
-  bobGoSelectedRates = {};
-  const status = document.getElementById('bobgo-checkout-status');
-  if (status) status.textContent = 'Your delivery address changed. Recalculate Bob Go delivery rates.';
-  renderCheckoutSummary();
+  if (e.target && BOBGO_ADDRESS_FIELDS.includes(e.target.id)) scheduleBobGoCheckoutRates();
 });
 
 // Full order details (items, address, totals) for the confirmation page
@@ -182,6 +200,7 @@ async function prefillCheckoutForSignedInCustomer() {
   fillCheckoutFieldIfEmpty('checkout-city', saved.city);
   fillCheckoutFieldIfEmpty('checkout-province', saved.province);
   fillCheckoutFieldIfEmpty('checkout-postal', saved.postalCode);
+  if (S.currentPage === 'checkout') scheduleBobGoCheckoutRates();
 }
 
 // Logging in while already on checkout (e.g. in another tab) fills the
@@ -427,7 +446,7 @@ function renderCollectOptions() {
     });
     const empty = q && !options.length
       ? '<span class="checkout-option-note">Bob Go has no available delivery services for this address right now. Please check the address or try another one.</span>'
-      : (!q ? '<span class="checkout-option-note">Enter your delivery address, then calculate rates.</span>' : '');
+      : (!q ? '<span class="checkout-option-note">Delivery options will appear automatically when your address is complete.</span>' : '');
     return '<div><p class="checkout-collect-brand">' + sanitizeHTML(s.brand) + '</p><div class="checkout-options">' + options.join('') + empty + '</div></div>';
   }).join('');
   if (!shipments.length) { box.innerHTML = ''; return any; }
@@ -995,6 +1014,7 @@ handlePayFastReturn();
 
 // Request live per-brand parcel quotes from the Bob Go Sandbox API.
 async function loadBobGoCheckoutRates() {
+  const requestId = ++bobGoRateRequestId;
   const button = document.getElementById('bobgo-checkout-rates-btn');
   const output = document.getElementById('bobgo-checkout-status');
   const value = id => (document.getElementById(id)?.value || '').trim();
@@ -1070,6 +1090,7 @@ async function loadBobGoCheckoutRates() {
       throw new Error('Bob Go responded, but no shipment rates were returned. Check the cart items and brand shipping setup.');
     }
 
+    if (requestId !== bobGoRateRequestId) return;
     bobGoCheckoutQuote = data;
     data.shipments.forEach(shipment => {
       const rates = shipment.rates || {};
@@ -1092,6 +1113,7 @@ async function loadBobGoCheckoutRates() {
       : 'Bob Go responded, but has no eligible service levels for this address. Check your Bob Go service areas and checkout rules.';
     renderCheckoutSummary();
   } catch (error) {
+    if (requestId !== bobGoRateRequestId) return;
     bobGoCheckoutQuote = null;
     bobGoSelectedRates = {};
     console.error('[BOBGO CHECKOUT] Rate calculation failed.', {
@@ -1104,6 +1126,6 @@ async function loadBobGoCheckoutRates() {
     if (output) output.textContent = (error.message || 'Could not retrieve Bob Go rates.') + detail;
     renderCheckoutSummary();
   } finally {
-    if (button) { button.disabled = false; button.textContent = 'Calculate delivery'; }
+    if (requestId === bobGoRateRequestId && button) { button.disabled = false; button.textContent = 'Calculate delivery'; }
   }
 }
