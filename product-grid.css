@@ -732,6 +732,10 @@ body .site-collection-layout {
   align-items: center;
   justify-content: center;
 }
+/* Product-page Shop by Brand tiles are landscape rectangles. Keep this
+   scoped to the product-page slider; homepage and /brands cards retain
+   their own proportions. */
+.brand-grid-scroll .shop-brand-img { aspect-ratio: 4 / 3; }
 /* The vendor's logo (admin's separate Logo field), centered on top of
    the hero photo — same layout as a typical brand-directory card
    (hero image + logo mark over it). Sized in % of the card, so it
