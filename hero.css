@@ -61,7 +61,7 @@
   width: 100%;
   box-sizing: border-box;
   text-align: left;
-  padding: 0 0 32px;
+  padding: 0 0 32px 8px;
   margin-top: 0;
   display: flex;
   flex-direction: row;
@@ -69,8 +69,8 @@
   justify-content: space-between;
   gap: 16px;
 }
-@media (min-width: 768px) { .hero-content-wrap { padding: 0 0 40px; } }
-@media (min-width: 1024px) { .hero-content-wrap { padding-bottom: 48px; } }
+@media (min-width: 768px) { .hero-content-wrap { padding: 0 0 40px 8px; } }
+@media (min-width: 1024px) { .hero-content-wrap { padding-bottom: 48px; padding-left: 11px; } }
 
 /* Homepage hero: big heading at the bottom, centred, with Shop women and
    Shop men under it.
