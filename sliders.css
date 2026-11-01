@@ -141,7 +141,7 @@
 }
 .brand-logo-row::-webkit-scrollbar { display: none; }
 .brand-logo-tile {
-  flex: 0 0 104px; width: 104px; height: 104px; padding: 0; border: none; background: #111; color: #fff;
+  flex: 0 0 104px; width: 104px; height: 78px; padding: 0; border: none; background: #111; color: #fff;
   display: flex; align-items: center; justify-content: center; cursor: pointer; scroll-snap-align: start; overflow: hidden;
 }
 .brand-logo-tile img { width: 70%; height: 70%; object-fit: contain; }
