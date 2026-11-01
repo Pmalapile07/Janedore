@@ -303,10 +303,6 @@ function getProductBadges(product) {
   if (manual && RESERVED_BADGE_VALUES.indexOf(manual.toLowerCase()) === -1) {
     badges.push(manual.toUpperCase());
   }
-  // Products marked Free delivery from brands that offer it (cart.js),
-  // the same products as the Free delivery collection.
-  if (typeof deliveryBadge === 'function' && deliveryBadge(product)) badges.push(deliveryBadge(product));
-
   return badges;
 }
 
