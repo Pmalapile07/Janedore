@@ -344,8 +344,11 @@ function renderCheckoutSummary() {
     ${vatLine}
     <div class="checkout-totals-row"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
     ${discountRow}
-    <div class="checkout-totals-row"><span class="checkout-delivery-label">${packages > 1 ? '<button type="button" class="checkout-packages-info-trigger" onclick="openCheckoutPackagesInfo()" aria-label="Why does my order ship in multiple packages?" title="Why multiple packages?"><i class="ph ph-info" aria-hidden="true"></i></button>' : ''}Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${bobGoCheckoutQuote ? (shipping === 0 ? 'Free' : formatPrice(shipping)) : 'Calculated at checkout'}</span></div>`;
+    <div class="checkout-totals-row"><span>Delivery fee${packages > 1 ? ' (' + packages + ' packages)' : ''}</span><span>${bobGoCheckoutQuote ? (shipping === 0 ? 'Free' : formatPrice(shipping)) : 'Calculated at checkout'}</span></div>`;
   document.querySelectorAll('[data-checkout-totals]').forEach(el => { el.innerHTML = totalsHtml; });
+
+  const shippingInfoTrigger = document.getElementById('checkout-shipping-info-trigger');
+  if (shippingInfoTrigger) shippingInfoTrigger.style.display = packages > 1 ? 'inline-flex' : 'none';
 
   renderShippingMethod(shipping, packages);
 }
