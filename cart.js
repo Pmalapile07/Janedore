@@ -759,7 +759,7 @@ function renderCartPage() {
   }
 
   html += `<div class="cart-card cart-code">
-    <div class="cart-card-title">Apply a code <i class="ph ph-info" title="Promo and discount codes are applied to your bag total."></i></div>
+    <div class="cart-card-title">Apply a code <i class="ph-bold ph-info" title="Promo and discount codes are applied to your bag total."></i></div>
     <label class="cart-code-label" for="cart-promo-input">Enter a promo code</label>
     <div class="cart-code-row">
       <input id="cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')applyPromoCode()">
