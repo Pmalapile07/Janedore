@@ -1698,14 +1698,55 @@ app.post('/api/discounts/lookup', async (req, res) => {
 // The abandoned bag email. cart.js sends the bag here (product ids, sizes
 // and quantities only) whenever it changes, but only once we know the
 // shopper's email: signed in, or typed at checkout. If the bag sits
-// unpaid for 3 hours, sweepBagReminders() sends one reminder with a
-// "Return to your bag" link (/cart?bag=ID refills it). Never sent if the
-// order was paid, the bag is empty or older than 3 days, or the shopper
-// unsubscribed (link in every email). bags/{id} and bagOptOut are
-// server-only (no Firestore rule allows them).
+// unpaid for 3 hours, sweepBagReminders() may send one reminder.
+// A customer-wide 24-hour cooldown applies across all bag IDs/devices.
+// Never sent if the order was paid, the bag is empty or older than 3 days,
+// or the shopper unsubscribed. These collections are server-only.
 const BAG_REMINDER_DELAY = 3 * 60 * 60 * 1000;
+const BAG_REMINDER_COOLDOWN = 24 * 60 * 60 * 1000;
+const BAG_REMINDER_LOCK_MS = 10 * 60 * 1000;
 const BAG_MAX_AGE = 3 * 24 * 60 * 60 * 1000;
 const emailKey = (email) => crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex');
+
+// A customer-wide throttle prevents separate devices/bag IDs from generating
+// multiple reminders. Reserve the cooldown before sending so concurrent sweep
+// workers cannot email the same customer at the same time.
+async function claimBagReminder(email, bagId, now) {
+  const ref = adminDb.collection('bagReminderLimits').doc(emailKey(email));
+  const claimId = bagId + ':' + now;
+  const claimed = await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const data = snap.exists ? snap.data() : {};
+    const lastReminderAt = Number(data.lastReminderAt || 0);
+    const sendingAt = Number(data.sendingAt || 0);
+    if (lastReminderAt && now - lastReminderAt < BAG_REMINDER_COOLDOWN) return false;
+    if (sendingAt && now - sendingAt < BAG_REMINDER_LOCK_MS) return false;
+    tx.set(ref, {
+      lastReminderAt: now,
+      sendingAt: now,
+      sendingBagId: bagId,
+      sendingClaimId: claimId
+    }, { merge: true });
+    return true;
+  });
+  return claimed ? claimId : null;
+}
+
+async function finishBagReminderClaim(email, claimId) {
+  const ref = adminDb.collection('bagReminderLimits').doc(emailKey(email));
+  await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists || snap.data().sendingClaimId !== claimId) return;
+    tx.set(ref, { sendingAt: null, sendingBagId: null, sendingClaimId: null }, { merge: true });
+  });
+}
+
+async function releaseBagReminderClaim(email, claimId) {
+  if (!claimId) return;
+  // Keep lastReminderAt even on an uncertain send failure: Resend may have
+  // accepted the message before a network error. This favours no duplicates.
+  await finishBagReminderClaim(email, claimId).catch(() => {});
+}
 
 function cleanBagItems(items) {
   return (Array.isArray(items) ? items : []).slice(0, 30).map((i) => ({
@@ -1792,6 +1833,7 @@ async function sweepBagReminders() {
   } catch (e) { console.error('[BAG] Sweep query failed:', e.message); return; }
   for (const doc of snap.docs) {
     const bag = doc.data();
+    let reminderClaimId = null;
     const done = (fields) => doc.ref.update(Object.assign({ reminderDue: null }, fields || {})).catch(() => {});
     try {
       if (!bag.items || !bag.items.length || !bag.email || now - (bag.updatedAt || 0) > BAG_MAX_AGE) { await done(); continue; }
@@ -1818,10 +1860,22 @@ async function sweepBagReminders() {
         bagUrl: SITE_URL + '/cart?bag=' + doc.id,
         stopUrl: SITE_URL + '/bag-reminders/stop?bag=' + doc.id
       });
+
+      // Enforce one reminder per customer email address every 24 hours,
+      // regardless of how many bag IDs or devices they use.
+      reminderClaimId = await claimBagReminder(bag.email, doc.id, now);
+      if (!reminderClaimId) {
+        await done({ reminderSuppressedAt: now });
+        continue;
+      }
+
       await sendResendEmail({ from: 'Janedore <noreply@janedore.co.za>', replyTo: 'support@janedore.co.za', to: bag.email, subject: email.subject, html: email.html, text: email.text });
+      await finishBagReminderClaim(bag.email, reminderClaimId);
+      reminderClaimId = null;
       await done({ reminderSentAt: now });
       console.log('[BAG] Reminder sent for bag', doc.id);
     } catch (e) {
+      await releaseBagReminderClaim(bag.email, reminderClaimId);
       console.error('[BAG] Reminder failed for', doc.id, ':', e.message);
       await done({ reminderError: String(e.message).slice(0, 200) });
     }
