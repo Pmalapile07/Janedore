@@ -90,7 +90,7 @@ function renderHero(hero) {
   const btnEl = document.getElementById('hero-shop-btn');
   if (headingEl) { headingEl.textContent = hero.heading || ''; headingEl.classList.remove('skeleton-text'); }
   if (btnEl) {
-    btnEl.textContent = 'Shop now';
+    btnEl.textContent = hero.buttonText || '';
     btnEl.classList.remove('skeleton-text');
     btnEl.onclick = function () { goToSiteLink(hero.buttonLink || { type: 'products' }); };
   }
