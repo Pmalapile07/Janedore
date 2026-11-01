@@ -696,7 +696,7 @@ body .site-collection-layout {
    not a slider; the product page's .brand-grid-scroll stays a slider. */
 #brand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 8px; }
 #brand-grid .shop-brand-card { width: 100%; max-width: none; flex: none; scroll-snap-align: none; }
-#brand-grid .shop-brand-img { aspect-ratio: 0.87; }
+#brand-grid .shop-brand-img { aspect-ratio: 4 / 3; }
 @media (min-width: 640px) { #brand-grid { padding: 0 10px; } }
 @media (min-width: 1024px) { #brand-grid { padding: 0 12px; } }
 
