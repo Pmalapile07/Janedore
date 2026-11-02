@@ -13,7 +13,10 @@ let _quickAddWaitlistReady = false;
 // Load the signed-in customer's existing waitlist before rendering either
 // quick-add view. This file is used from product cards, not just product pages.
 async function ensureQuickAddWaitlistLoaded() {
-  if (typeof WAITLISTED_VARIANTS === 'undefined') return;
+  if (typeof WAITLISTED_VARIANTS === 'undefined') {
+    _quickAddWaitlistReady = true;
+    return;
+  }
   if (_quickAddWaitlistLoad) return _quickAddWaitlistLoad;
   _quickAddWaitlistLoad = (async () => {
   try {
