@@ -111,7 +111,7 @@ async function openCardActions(productId) {
     ((p.stock ?? 0) > 0
       ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to bag</button>`
       : p.waitlist && quickAddProductAlreadyWaitlisted(p.id)
-        ? `<div class="quick-add-waitlisted" role="status">Already on your waitlist</div>`
+        ? `<button type="button" class="quick-add-submit" disabled aria-disabled="true">Already on your waitlist</button>`
         : p.waitlist
           ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Notify me when available</button>`
           : `<button type="button" class="quick-add-submit" disabled>${isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'}</button>`) +
