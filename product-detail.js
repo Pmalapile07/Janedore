@@ -131,6 +131,21 @@ function productWaitlistMode(product) {
   return isProductSoldOut(product) || !isSizeInStock(product, vi, 'OS');
 }
 
+const WAITLISTED_VARIANTS = new Set();
+
+async function loadCustomerWaitlist() {
+  const user = firebase.auth().currentUser;
+  if (!user || user.isAnonymous) return;
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch('/api/account/waitlist', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    (data.items || []).forEach(item => WAITLISTED_VARIANTS.add([item.productId, item.variantIndex || 0, item.size || 'OS'].join('|')));
+    updateAddToCartState();
+  } catch (e) { console.warn('[WAITLIST] Could not check existing entries:', e.message); }
+}
+
 async function joinProductWaitlist(product, btn) {
   // Ask for the size they want before joining.
   const hasSizes = (product.sizes || []).filter(s => s !== 'OS').length > 0;
@@ -146,10 +161,11 @@ async function joinProductWaitlist(product, btn) {
   const label = btn && btn.querySelector('.sticky-btn-label');
   if (btn) btn.disabled = true;
   try {
-    await postWaitlist(product, { name: user.displayName || '' }, await user.getIdToken());
-    if (label) label.textContent = 'Added';
-    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Added to your waitlist', 'ph-check-circle');
-    setTimeout(updateAddToCartState, 1600);
+    const result = await postWaitlist(product, { name: user.displayName || '' }, await user.getIdToken());
+    const key = [product.id, S.productVariantSelections[product.id] ?? 0, S.selectedSize || 'OS'].join('|');
+    WAITLISTED_VARIANTS.add(key);
+    updateAddToCartState();
+    if (typeof showAddedToCartToast === 'function') showAddedToCartToast(result.already ? 'This item is already on your waitlist' : 'Added to your waitlist', result.already ? 'ph-info' : 'ph-check-circle');
   } catch (e) {
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast(e.message, 'ph-warning-circle');
     updateAddToCartState();
@@ -252,7 +268,24 @@ function updateAddToCartState() {
   const needsSize = hasSizes && !S.selectedSize && !noSizeInStock;
   const sizeOutOfStock = !needsSize && hasSizes && !isSizeInStock(product, vi, S.selectedSize);
   const waitlist = productWaitlistMode(product);
+  const waitlistKey = [product.id, vi, S.selectedSize || 'OS'].join('|');
+  const alreadyWaitlisted = waitlist && WAITLISTED_VARIANTS.has(waitlistKey);
   stickyBtn.disabled = waitlist ? false : (needsSize || sizeOutOfStock || soldOut);
+  let waitlistStatus = document.getElementById('sticky-waitlist-status');
+  if (alreadyWaitlisted) {
+    stickyBtn.style.display = 'none';
+    if (!waitlistStatus) {
+      waitlistStatus = document.createElement('div');
+      waitlistStatus.id = 'sticky-waitlist-status';
+      waitlistStatus.style.cssText = 'width:100%;padding:14px 12px;text-align:center;background:#f4f4f4;color:#333;font-size:13px;font-weight:500;';
+      waitlistStatus.textContent = 'Already on your waitlist';
+      stickyBtn.insertAdjacentElement('afterend', waitlistStatus);
+    }
+    waitlistStatus.style.display = '';
+  } else {
+    stickyBtn.style.display = '';
+    if (waitlistStatus) waitlistStatus.style.display = 'none';
+  }
 
   // Never overwrite the transient "Added" feedback; "Add" instead of
   // "Add to bag" once the bar is minimized.
@@ -702,6 +735,7 @@ async function renderProductPage(product) {
   ensureNavScrolled();
   if (typeof createStickyBar === 'function') createStickyBar(product);
   updateAddToCartState();
+  loadCustomerWaitlist();
   setTimeout(() => initProductSwipe(gallery, imageStart), 100);
   loadProductReviewsSection(product.id);
 }
