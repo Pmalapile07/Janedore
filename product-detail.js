@@ -134,12 +134,17 @@ function productWaitlistMode(product) {
 const WAITLISTED_VARIANTS = new Set();
 
 async function loadCustomerWaitlist() {
-  const user = firebase.auth().currentUser;
-  if (!user || user.isAnonymous) return;
   try {
+    // Wait for Firebase to finish restoring the saved login session.
+    // currentUser can be temporarily null during the first page load.
+    const user = window.authReady ? await window.authReady : firebase.auth().currentUser;
+    if (!user || user.isAnonymous) return;
     const token = await user.getIdToken();
     const res = await fetch('/api/account/waitlist', { headers: { Authorization: 'Bearer ' + token } });
-    if (!res.ok) return;
+    if (!res.ok) {
+      console.warn('[WAITLIST] Existing entries could not be checked:', res.status);
+      return;
+    }
     const data = await res.json();
     (data.items || []).forEach(item => WAITLISTED_VARIANTS.add([item.productId, item.variantIndex || 0, item.size || 'OS'].join('|')));
     updateAddToCartState();
