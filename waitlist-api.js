@@ -60,15 +60,16 @@ module.exports = function registerWaitlist(app, deps) {
       const claim = user ? null : crypto.randomBytes(24).toString('hex');
       const ref = col().doc(entryId(email, productId, variantIndex, size));
 
-      // Check by the entry fields as well as the deterministic document ID.
-      // This also recognises older waitlist records that were created before
-      // IDs were based on email + product + variant + size.
-      const emailEntries = await col().where('email', '==', email).limit(500).get();
-      const matchingEntry = emailEntries.docs.some((entry) => {
+      // Search by product, then compare normalised fields. This catches legacy
+      // records with mixed-case emails, extra whitespace, or older document IDs.
+      const productEntries = await col().where('productId', '==', productId).limit(500).get();
+      const matchingEntry = productEntries.docs.some((entry) => {
         const data = entry.data();
-        return String(data.productId || '') === productId &&
+        const savedEmail = String(data.email || '').trim().toLowerCase();
+        const savedSize = String(data.size || 'OS').trim().toUpperCase();
+        return savedEmail === email &&
           Number(data.variantIndex || 0) === variantIndex &&
-          String(data.size || 'OS') === size;
+          savedSize === size.trim().toUpperCase();
       });
       if (matchingEntry) return res.json({ ok: true, already: true });
 
