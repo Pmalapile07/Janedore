@@ -60,33 +60,37 @@
   padding: 28px 24px;
   text-align: left;
 }
+/* Match the homepage hero typography: same Inter weight, size,
+   line-height and sentence case, with the same responsive scale. */
 .editorial-banner-heading {
   font-family: 'Inter', sans-serif;
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 1.2;
-  text-transform: uppercase;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-transform: none;
   color: #fff;
-  margin: 0 0 14px;
+  max-width: 280px;
+  margin: 0 0 18px;
 }
-/* Ghost/underline style, matching .initial-drop-view-all (product-grid.css)
-   — just a bottom border line, no fill — but white since it sits over
-   a dark photo overlay instead of a white page background. */
+@media (min-width: 768px) {
+  .editorial-banner-heading { font-size: 34px; max-width: 420px; }
+}
+
+/* Same solid white / black-text Shop now button as the homepage hero. */
 .editorial-banner-btn {
   font-family: 'Inter', sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  background: transparent;
-  color: #fff;
+  background: #fff;
+  color: #111;
   border: none;
-  border-bottom: 1px solid #fff;
-  padding: 4px 0;
+  padding: 12px 32px;
   cursor: pointer;
   transition: opacity 0.2s;
 }
-.editorial-banner-btn:hover { opacity: 0.7; }
+.editorial-banner-btn:hover { opacity: 0.85; }
 /* Bottom padding dropped to 0 — the previous 16px, combined with
    #home-categories's own 24px top padding, still made this gap (40px)
    visibly bigger than every other section-to-section gap on the page
