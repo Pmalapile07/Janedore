@@ -237,13 +237,18 @@ async function submitGuestWaitlist(e) {
   err.style.display = 'none';
   btn.disabled = true;
   try {
-    await postWaitlist(product, { email });
+    const result = await postWaitlist(product, { email });
     try { localStorage.setItem(WAITLIST_CONTACT_KEY, JSON.stringify({ email })); } catch (e2) {}
+    const key = [product.id, S.productVariantSelections[product.id] ?? 0, S.selectedSize || 'OS'].join('|');
+    WAITLISTED_VARIANTS.add(key);
     closeWaitlistModal();
-    const label = document.querySelector('#sticky-add-btn .sticky-btn-label');
-    if (label) label.textContent = 'Added';
-    if (typeof showAddedToCartToast === 'function') showAddedToCartToast('We’ll email you when it’s back in stock', 'ph-check-circle');
-    setTimeout(updateAddToCartState, 1600);
+    updateAddToCartState();
+    if (typeof showAddedToCartToast === 'function') {
+      showAddedToCartToast(
+        result.already ? 'This item is already on your waitlist' : 'We’ll email you when it’s back in stock',
+        result.already ? 'ph-info' : 'ph-check-circle'
+      );
+    }
   } catch (e2) {
     fail(e2.message);
   } finally {
