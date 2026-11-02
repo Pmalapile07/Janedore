@@ -7,11 +7,14 @@
 // stock limits and the "Added to bag" bar work the same way.
 
 let _quickAdd = null; // { id, vi, size }
+let _quickAddWaitlistLoad = null;
 
 // Load the signed-in customer's existing waitlist before rendering either
 // quick-add view. This file is used from product cards, not just product pages.
 async function ensureQuickAddWaitlistLoaded() {
   if (typeof WAITLISTED_VARIANTS === 'undefined') return;
+  if (_quickAddWaitlistLoad) return _quickAddWaitlistLoad;
+  _quickAddWaitlistLoad = (async () => {
   try {
     const user = window.authReady ? await window.authReady : firebase.auth().currentUser;
     if (!user || user.isAnonymous) return;
@@ -25,6 +28,8 @@ async function ensureQuickAddWaitlistLoaded() {
   } catch (e) {
     console.warn('[WAITLIST] Quick-add could not check existing entries:', e.message);
   }
+  })();
+  return _quickAddWaitlistLoad;
 }
 
 function quickAddProductAlreadyWaitlisted(productId) {
@@ -106,7 +111,7 @@ async function openCardActions(productId) {
     ((p.stock ?? 0) > 0
       ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to bag</button>`
       : p.waitlist && quickAddProductAlreadyWaitlisted(p.id)
-        ? `<div class="quick-add-submit" aria-live="polite" style="text-align:center;cursor:default;">Already on your waitlist</div>`
+        ? `<div class="quick-add-waitlisted" role="status">Already on your waitlist</div>`
         : p.waitlist
           ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Notify me when available</button>`
           : `<button type="button" class="quick-add-submit" disabled>${isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'}</button>`) +
