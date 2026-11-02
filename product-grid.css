@@ -527,14 +527,13 @@
 #all-products-grid .product-card .product-card-name-row,
 #category-products-grid .product-card .product-card-name-row,
 #vendor-products-grid .product-card .product-card-name-row,
-.static-product-grid .product-card .product-card-name-row {
-  padding-left: 8px;
-}
+.static-product-grid .product-card .product-card-name-row,
 #all-products-grid .product-card .product-price-row,
 #category-products-grid .product-card .product-price-row,
 #vendor-products-grid .product-card .product-price-row,
 .static-product-grid .product-card .product-price-row {
   padding-left: 8px;
+  padding-right: 8px;
 }
 
 /* --- Collection-page grid padding: removes the grid's own left/right
