@@ -3193,11 +3193,11 @@ async function injectSiteLogo(html) {
   const { siteLogo } = await getBrandAssets();
   if (!siteLogo) return html;
   const src = escapeHtml(logoImageUrl(siteLogo, 480));
-  // The official logo (janedore-logo-white.png?v=3) is the header's default;
-  // a Site logo uploaded in admin > Content replaces it.
+  // A Site logo uploaded in admin > Content takes priority over the text wordmark.
+  // When no Site logo is set, the admin-selected Logo font styles the text wordmark.
   return html.replace(
-    '<img class="nav-logo-img" id="nav-logo-img" src="/janedore-logo-white.png?v=3"',
-    '<img class="nav-logo-img" id="nav-logo-img" src="' + src + '"'
+    '<span class="nav-logo-text">JANEDORE</span>',
+    '<img class="nav-logo-img" id="nav-logo-img" src="' + src + '" alt="JANEDORE" width="1200" height="158">'
   );
 }
 
