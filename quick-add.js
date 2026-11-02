@@ -8,6 +8,30 @@
 
 let _quickAdd = null; // { id, vi, size }
 
+// Load the signed-in customer's existing waitlist before rendering either
+// quick-add view. This file is used from product cards, not just product pages.
+async function ensureQuickAddWaitlistLoaded() {
+  if (typeof WAITLISTED_VARIANTS === 'undefined') return;
+  try {
+    const user = window.authReady ? await window.authReady : firebase.auth().currentUser;
+    if (!user || user.isAnonymous) return;
+    const token = await user.getIdToken();
+    const res = await fetch('/api/account/waitlist', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    (data.items || []).forEach(item => WAITLISTED_VARIANTS.add([
+      item.productId, item.variantIndex ?? 0, item.size || 'OS'
+    ].join('|')));
+  } catch (e) {
+    console.warn('[WAITLIST] Quick-add could not check existing entries:', e.message);
+  }
+}
+
+function quickAddProductAlreadyWaitlisted(productId) {
+  if (typeof WAITLISTED_VARIANTS === 'undefined') return false;
+  return [...WAITLISTED_VARIANTS].some(key => key.startsWith(productId + '|'));
+}
+
 // Google's Material Symbols heart_plus (loaded in index.html), the same
 // icon Superbalist uses. It stays an outline whether or not the product
 // is wished; the sheet says Add to or Remove from wishlist.
@@ -65,7 +89,8 @@ function quickAddHeadHtml(p, vi) {
     </div>`;
 }
 
-function openCardActions(productId) {
+async function openCardActions(productId) {
+  await ensureQuickAddWaitlistLoaded();
   const p = PRODUCTS.find(x => x.id === productId);
   if (!p) return;
   const sheet = quickAddSheet();
@@ -80,15 +105,18 @@ function openCardActions(productId) {
     // when sold out), as on the product page.
     ((p.stock ?? 0) > 0
       ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Add to bag</button>`
-      : p.waitlist
-        ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Notify me when available</button>`
-        : `<button type="button" class="quick-add-submit" disabled>${isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'}</button>`) +
+      : p.waitlist && quickAddProductAlreadyWaitlisted(p.id)
+        ? `<div class="quick-add-submit" aria-live="polite" style="text-align:center;cursor:default;">Already on your waitlist</div>`
+        : p.waitlist
+          ? `<button type="button" class="quick-add-submit" onclick="openQuickAdd('${id}')">Notify me when available</button>`
+          : `<button type="button" class="quick-add-submit" disabled>${isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out'}</button>`) +
     `<button type="button" class="quick-add-secondary" onclick="closeQuickAdd();toggleWish('${id}')">${wished ? 'Remove from wishlist' : 'Add to wishlist'}</button>` +
     `<button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${id}']=${vi};goToProduct('${id}')">View full details</button>`;
   showQuickAddSheet(sheet);
 }
 
-function openQuickAdd(productId) {
+async function openQuickAdd(productId) {
+  await ensureQuickAddWaitlistLoaded();
   const p = PRODUCTS.find(x => x.id === productId);
   if (!p) return;
   const vi = S.productVariantSelections[productId] ?? 0;
@@ -136,12 +164,15 @@ function renderQuickAdd() {
   // email field for guests right here (no signing in needed).
   const pickedOut = sizes.length ? (_quickAdd.size && !isSizeInStock(p, vi, _quickAdd.size)) : !available;
   const notify = pickedOut && p.waitlist;
+  const waitlistKey = [p.id, vi, _quickAdd.size || 'OS'].join('|');
+  const alreadyWaitlisted = notify && typeof WAITLISTED_VARIANTS !== 'undefined' && WAITLISTED_VARIANTS.has(waitlistKey);
   const label = sizes.length && !_quickAdd.size ? 'Select a size'
+    : alreadyWaitlisted ? 'Already on your waitlist'
     : notify ? 'Notify me'
     : pickedOut ? (isPreorderProduct(p) ? 'Pre-orders full' : 'Sold out')
     : 'Add to bag';
   let notifyHtml = '';
-  if (notify) {
+  if (notify && !alreadyWaitlisted) {
     const user = firebase.auth().currentUser;
     const signedIn = user && !user.isAnonymous;
     const what = sizes.length ? 'This size is sold out.' : 'This item is sold out.';
@@ -162,6 +193,7 @@ function renderQuickAdd() {
     ${colours ? `<div class="quick-add-section">${colours}</div>` : ''}
     ${sizeRow ? `<div class="quick-add-section">${sizeRow}</div>` : ''}
     ${notifyHtml}
+    ${alreadyWaitlisted ? '<p class="quick-add-note" role="status">You’re already on the waitlist for this item. We’ll email you when it’s back in stock.</p>' : ''}
     <button type="button" class="quick-add-submit" id="qa-submit" onclick="quickAddSubmit()" ${label === 'Add to bag' || label === 'Notify me' ? '' : 'disabled'}>${label}</button>
     <button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${escapeJSString(p.id)}']=${vi};goToProduct('${escapeJSString(p.id)}')">View full details</button>`;
 }
