@@ -59,6 +59,19 @@ module.exports = function registerWaitlist(app, deps) {
       const v = (p.variants || [])[variantIndex] || {};
       const claim = user ? null : crypto.randomBytes(24).toString('hex');
       const ref = col().doc(entryId(email, productId, variantIndex, size));
+
+      // Check by the entry fields as well as the deterministic document ID.
+      // This also recognises older waitlist records that were created before
+      // IDs were based on email + product + variant + size.
+      const emailEntries = await col().where('email', '==', email).limit(500).get();
+      const matchingEntry = emailEntries.docs.some((entry) => {
+        const data = entry.data();
+        return String(data.productId || '') === productId &&
+          Number(data.variantIndex || 0) === variantIndex &&
+          String(data.size || 'OS') === size;
+      });
+      if (matchingEntry) return res.json({ ok: true, already: true });
+
       // Never create or overwrite a waitlist entry that already exists.
       const prev = await ref.get();
       if (prev.exists) return res.json({ ok: true, already: true });
