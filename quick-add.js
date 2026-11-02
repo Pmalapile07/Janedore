@@ -8,6 +8,7 @@
 
 let _quickAdd = null; // { id, vi, size }
 let _quickAddWaitlistLoad = null;
+let _quickAddWaitlistReady = false;
 
 // Load the signed-in customer's existing waitlist before rendering either
 // quick-add view. This file is used from product cards, not just product pages.
@@ -28,7 +29,7 @@ async function ensureQuickAddWaitlistLoaded() {
   } catch (e) {
     console.warn('[WAITLIST] Quick-add could not check existing entries:', e.message);
   }
-  })();
+  })().finally(() => { _quickAddWaitlistReady = true; });
   return _quickAddWaitlistLoad;
 }
 
@@ -120,13 +121,15 @@ async function openCardActions(productId) {
     `<button type="button" class="quick-add-secondary" onclick="closeQuickAdd();toggleWish('${id}')">${wished ? 'Remove from wishlist' : 'Add to wishlist'}</button>` +
     `<button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${id}']=${vi};goToProduct('${id}')">View full details</button>`;
   showQuickAddSheet(sheet);
-  waitlistLoad.then(() => {
-    if (sheet.classList.contains('open') &&
-        panel.dataset.quickAddView === 'actions' &&
-        panel.dataset.quickAddProductId === productId) {
-      openCardActions(productId);
-    }
-  });
+  if (!_quickAddWaitlistReady) {
+    waitlistLoad.then(() => {
+      if (sheet.classList.contains('open') &&
+          panel.dataset.quickAddView === 'actions' &&
+          panel.dataset.quickAddProductId === productId) {
+        openCardActions(productId);
+      }
+    });
+  }
 }
 
 async function openQuickAdd(productId) {
@@ -141,14 +144,16 @@ async function openQuickAdd(productId) {
   panel.dataset.quickAddProductId = productId;
   renderQuickAdd();
   showQuickAddSheet(sheet);
-  waitlistLoad.then(() => {
-    if (sheet.classList.contains('open') &&
-        panel.dataset.quickAddView === 'quick-add' &&
-        panel.dataset.quickAddProductId === productId &&
-        _quickAdd && _quickAdd.id === productId) {
-      renderQuickAdd();
-    }
-  });
+  if (!_quickAddWaitlistReady) {
+    waitlistLoad.then(() => {
+      if (sheet.classList.contains('open') &&
+          panel.dataset.quickAddView === 'quick-add' &&
+          panel.dataset.quickAddProductId === productId &&
+          _quickAdd && _quickAdd.id === productId) {
+        renderQuickAdd();
+      }
+    });
+  }
 }
 
 function closeQuickAdd() {
