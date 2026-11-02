@@ -59,14 +59,15 @@ module.exports = function registerWaitlist(app, deps) {
       const v = (p.variants || [])[variantIndex] || {};
       const claim = user ? null : crypto.randomBytes(24).toString('hex');
       const ref = col().doc(entryId(email, productId, variantIndex, size));
-      // Joining again as a guest keeps an entry already in an account there.
-      const prev = user ? null : await ref.get();
+      // Never create or overwrite a waitlist entry that already exists.
+      const prev = await ref.get();
+      if (prev.exists) return res.json({ ok: true, already: true });
       await ref.set({
-        email, customerName, uid: user ? user.uid : ((prev && prev.exists && prev.data().uid) || null), claim, productId, variantIndex, size,
+        email, customerName, uid: user ? user.uid : null, claim, productId, variantIndex, size,
         name: p.name || '', brand: p.brand || '', color: v.color || '',
         status: 'waiting', createdAt: Date.now()
       });
-      res.json({ ok: true, claim });
+      res.json({ ok: true, claim, already: false });
     } catch (e) {
       console.error('[WAITLIST] Join failed:', e.message);
       res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
