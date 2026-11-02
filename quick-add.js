@@ -95,11 +95,13 @@ function quickAddHeadHtml(p, vi) {
 }
 
 async function openCardActions(productId) {
-  await ensureQuickAddWaitlistLoaded();
+  const waitlistLoad = ensureQuickAddWaitlistLoaded();
   const p = PRODUCTS.find(x => x.id === productId);
   if (!p) return;
   const sheet = quickAddSheet();
   const panel = sheet.querySelector('.quick-add-panel');
+  panel.dataset.quickAddView = 'actions';
+  panel.dataset.quickAddProductId = productId;
   const vi = S.productVariantSelections[productId] ?? 0;
   const id = escapeJSString(p.id);
   const wished = (S.wishlist || []).some(w => w.id === p.id);
@@ -118,17 +120,35 @@ async function openCardActions(productId) {
     `<button type="button" class="quick-add-secondary" onclick="closeQuickAdd();toggleWish('${id}')">${wished ? 'Remove from wishlist' : 'Add to wishlist'}</button>` +
     `<button type="button" class="quick-add-details" onclick="closeQuickAdd();S.productVariantSelections['${id}']=${vi};goToProduct('${id}')">View full details</button>`;
   showQuickAddSheet(sheet);
+  waitlistLoad.then(() => {
+    if (sheet.classList.contains('open') &&
+        panel.dataset.quickAddView === 'actions' &&
+        panel.dataset.quickAddProductId === productId) {
+      openCardActions(productId);
+    }
+  });
 }
 
 async function openQuickAdd(productId) {
-  await ensureQuickAddWaitlistLoaded();
+  const waitlistLoad = ensureQuickAddWaitlistLoaded();
   const p = PRODUCTS.find(x => x.id === productId);
   if (!p) return;
   const vi = S.productVariantSelections[productId] ?? 0;
   _quickAdd = { id: productId, vi, size: null };
   const sheet = quickAddSheet();
+  const panel = sheet.querySelector('.quick-add-panel');
+  panel.dataset.quickAddView = 'quick-add';
+  panel.dataset.quickAddProductId = productId;
   renderQuickAdd();
   showQuickAddSheet(sheet);
+  waitlistLoad.then(() => {
+    if (sheet.classList.contains('open') &&
+        panel.dataset.quickAddView === 'quick-add' &&
+        panel.dataset.quickAddProductId === productId &&
+        _quickAdd && _quickAdd.id === productId) {
+      renderQuickAdd();
+    }
+  });
 }
 
 function closeQuickAdd() {
