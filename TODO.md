@@ -183,3 +183,11 @@ Do this before picking up any other TODO. Read the existing implementation and r
 - **Important limitation:** do not treat Firebase client configuration/API keys as private secrets. If the browser communicates directly with Firebase services, requests and provider endpoints can still reveal Firebase and the project. Meaningful reduction of those fingerprints requires changing the relevant architecture, not merely renaming files or hiding strings.
 - Preserve checkout, customer accounts, admin/vendor tools, chat, uploads, notifications and all existing data flows. Make changes incrementally and regression-test each affected feature; do not compromise security or functionality just to conceal the stack.
 - Report which fingerprints were actually removed, which remain inherently visible, what requires Firebase/Render/DNS console configuration, and what was tested. Do not claim the underlying stack is fully hidden.
+
+## Waitlist duplicate detection — investigate and fix
+- When a customer joins a product/colour/size waitlist while signed in, then logs out and tries to join the same item using the same email as a guest, the guest flow still reports that the item was newly added instead of recognising the existing entry.
+- The customer confirmed the product and size are identical. Check whether the selected colour/variant is also identical, but do not assume that explains the issue.
+- Trace the actual signed-in request identity (the backend uses the verified Firebase token email in preference to the submitted email), guest email, product ID, variant index and size all the way into the saved Firestore waitlist record and the guest duplicate lookup.
+- Inspect existing records and legacy formats/document IDs safely. Identify the exact mismatch before changing the matching logic again; do not keep adding speculative queries or broad/unbounded Firestore reads.
+- Add privacy-safe diagnostics if needed (masked email or comparison outcome only; never log full email or other personal data). Test the same exact product, colour and size first while signed in and then while logged out with the same email, and verify the response is `already: true` with no second entry created.
+- Preserve existing waitlist UI and back-in-stock notifications. Report the root cause, files changed and tests actually run.
