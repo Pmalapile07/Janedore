@@ -143,6 +143,11 @@ function handleCheckoutClick() {
     alert('Please remove sold-out items from your bag to continue to checkout.');
     return;
   }
+  // Start immediately on the customer's tap; checkout keeps it moving while
+  // saved-address delivery options are fetched in the background.
+  if (typeof window.startNavigationLoadProgress === 'function') {
+    window.startNavigationLoadProgress();
+  }
   navigateTo('checkout');
 }
 
