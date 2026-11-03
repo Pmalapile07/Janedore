@@ -239,6 +239,7 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   cursor: pointer;
 }
 .cart-code-fields[hidden] { display: none !important; }
+.cart-code-toggle[hidden] { display: none !important; }
 
 /* Promo code */
 .cart-code-label { display: block; font-size: 13px; color: #555; margin: 16px 0 6px; }
