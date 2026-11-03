@@ -137,6 +137,23 @@
   })();
   </script>
   <style>
+    #navigation-load-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #E0EBFF;
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 180ms linear, opacity 180ms ease;
+      z-index: 2001;
+      pointer-events: none;
+      opacity: 1;
+    }
+    #navigation-load-progress.is-hidden { opacity: 0; }
+  </style>
+  <style>
     html.route-pending #page-home { display: none !important; }
     html.route-pending body::after { content: ''; position: fixed; top: 50%; left: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: route-spin 0.8s linear infinite; z-index: 5; }
     @keyframes route-spin { to { transform: rotate(360deg); } }
@@ -294,6 +311,33 @@
   </style>
 </head>
 <body>
+<div id="navigation-load-progress" aria-hidden="true"></div>
+<script>
+  // Slim, top-edge navigation progress indicator for full document loads.
+  // It advances while the browser loads, then completes before fading away.
+  (function () {
+    var bar = document.getElementById('navigation-load-progress');
+    if (!bar) return;
+    var progress = 0;
+    var finished = false;
+    var timer = setInterval(function () {
+      if (finished || progress >= 90) return;
+      progress = Math.min(90, progress + Math.max(0.6, (90 - progress) * 0.035));
+      bar.style.transform = 'scaleX(' + (progress / 100) + ')';
+    }, 100);
+    function complete() {
+      if (finished) return;
+      finished = true;
+      clearInterval(timer);
+      bar.style.transform = 'scaleX(1)';
+      setTimeout(function () { bar.classList.add('is-hidden'); }, 260);
+    }
+    window.addEventListener('load', complete, { once: true });
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) complete();
+    });
+  })();
+</script>
 
 <nav id="main-nav">
   <div class="nav-top-row">
