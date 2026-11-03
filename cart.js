@@ -681,6 +681,18 @@ function recordDiscountUsage() {
    now shared via the helpers above.
    ============================================================ */
 
+function toggleCartPromoCode() {
+  const fields = document.getElementById('cart-code-fields');
+  const button = document.querySelector('.cart-code-toggle');
+  if (!fields || !button) return;
+  const isOpening = fields.hidden;
+  fields.hidden = !isOpening;
+  button.setAttribute('aria-expanded', String(isOpening));
+  button.setAttribute('aria-label', isOpening ? 'Close promo code field' : 'Add a promo code');
+  const icon = button.querySelector('i');
+  if (icon) icon.className = isOpening ? 'ph ph-minus' : 'ph ph-plus';
+}
+
 function renderCartPage() {
   if (!DOM.cartPageContent) return;
   // The logo-only header (cart.css) applies only while the bag has items;
@@ -764,11 +776,16 @@ function renderCartPage() {
   }
 
   html += `<div class="cart-card cart-code">
-    <div class="cart-card-title">Apply a code <span class="material-symbols-outlined" title="Promo and discount codes are applied to your bag total." aria-hidden="true">info</span></div>
-    <label class="cart-code-label" for="cart-promo-input">Enter a promo code</label>
-    <div class="cart-code-row">
-      <input id="cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')applyPromoCode()">
-      <button type="button" onclick="applyPromoCode()">Apply</button>
+    <div class="cart-code-heading">
+      <span class="cart-card-title">Apply a code</span>
+      <button class="cart-code-toggle" type="button" onclick="toggleCartPromoCode()" aria-label="Add a promo code" aria-expanded="false" aria-controls="cart-code-fields"><i class="ph ph-plus" aria-hidden="true"></i></button>
+    </div>
+    <div class="cart-code-fields" id="cart-code-fields" hidden>
+      <label class="cart-code-label" for="cart-promo-input">Enter a promo code</label>
+      <div class="cart-code-row">
+        <input id="cart-promo-input" type="text" placeholder="Enter code" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')applyPromoCode()">
+        <button type="button" onclick="applyPromoCode()">Apply</button>
+      </div>
     </div>
   </div>`;
 
