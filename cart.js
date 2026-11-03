@@ -685,12 +685,8 @@ function toggleCartPromoCode() {
   const fields = document.getElementById('cart-code-fields');
   const button = document.querySelector('.cart-code-toggle');
   if (!fields || !button) return;
-  const isOpening = fields.hidden;
-  fields.hidden = !isOpening;
-  button.setAttribute('aria-expanded', String(isOpening));
-  button.setAttribute('aria-label', isOpening ? 'Close promo code field' : 'Add a promo code');
-  const icon = button.querySelector('i');
-  if (icon) icon.className = isOpening ? 'ph ph-minus' : 'ph ph-plus';
+  fields.hidden = false;
+  button.hidden = true;
 }
 
 function renderCartPage() {
