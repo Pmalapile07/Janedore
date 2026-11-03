@@ -1682,7 +1682,7 @@ function renderVendorPage(vendor) {
   const barLine = Object.keys(depts).sort((x, y) => depts[y] - depts[x] || deptOrder.indexOf(x) - deptOrder.indexOf(y))
     .slice(0, 2).map(d => JDTaxonomy.label(d)).join(' & ');
   const newest = merchandiseProducts(brandProducts, undefined, 'newest').slice(0, 8);
-  const sectionHead = (id) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:calc(var(--section-heading-size) - 5px) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div></div>`;
+  const sectionHead = (id) => `<div class="home-categories-header" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><div class="home-categories-title" id="${id}" style="font-family:'Inter',sans-serif !important;font-weight:600 !important;font-size:var(--section-heading-size) !important;letter-spacing:0 !important;text-transform:none !important;line-height:1.3;color:#111;padding:8px 0;"></div></div>`;
   const emptyTile = '<div class="home-category-card" aria-hidden="true"><div class="home-category-img content-empty"><div class="home-category-label"></div></div></div>';
   const collectionTiles = brandCollectionTiles(brandProducts);
   const pickedCats = S.vendorFilter.cat || [];
