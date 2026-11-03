@@ -23,6 +23,8 @@ function scheduleBobGoCheckoutRates() {
     && !!value('checkout-city') && !!value('checkout-province')
     && /^\d{4}$/.test(value('checkout-postal'));
   const status = document.getElementById('bobgo-checkout-status');
+  const instruction = document.getElementById('checkout-delivery-instruction');
+  if (instruction) instruction.hidden = addressReady;
 
   renderCheckoutSummary();
   if (status) {
