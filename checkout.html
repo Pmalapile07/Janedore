@@ -244,14 +244,6 @@
   .checkout-packages-info-content p { margin: 0 0 14px; }
   .checkout-packages-info-content p:last-child { margin-bottom: 0; }
 
-  .checkout-delivery-instruction {
-    margin: 10px 0 0;
-    color: #777;
-    font-size: 13px;
-    line-height: 1.5;
-    font-style: italic;
-  }
-  .checkout-delivery-instruction[hidden] { display: none !important; }
   .bobgo-checkout-status[hidden] { display: none !important; }
   .bobgo-checkout-status:not([hidden]) {
     display: flex;
@@ -345,7 +337,6 @@
         <h2 class="checkout-card-title"><button type="button" id="checkout-shipping-info-trigger" class="checkout-packages-info-trigger" onclick="openCheckoutPackagesInfo()" aria-label="Why does my order ship in multiple packages?" title="Why multiple packages?" style="display:none;"><i class="ph-bold ph-info" aria-hidden="true"></i></button>Shipping method</h2>
         <!-- Bob Go delivery choices and any available brand collection option, rendered per shipment. -->
         <div class="checkout-collect" id="checkout-collect-options" style="display:none;"></div>
-        <p class="checkout-delivery-instruction" id="checkout-delivery-instruction">Delivery options will appear automatically once your address is complete.</p>
         <label class="checkout-option is-selected" id="checkout-standard-option">
           <input type="radio" name="checkout-shipping-method" value="standard" checked>
           <span class="checkout-option-radio" aria-hidden="true"></span>
