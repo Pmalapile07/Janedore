@@ -11,6 +11,7 @@ let bobGoSelectedRates = {};
 let bobGoRateTimer = null;
 let bobGoRateRequestId = 0;
 const BOBGO_ADDRESS_FIELDS = ['checkout-address','checkout-suburb','checkout-city','checkout-province','checkout-postal'];
+let checkoutDeliveryPreparationPending = false;
 
 function scheduleBobGoCheckoutRates() {
   clearTimeout(bobGoRateTimer);
@@ -216,32 +217,37 @@ async function prefillCheckoutForSignedInCustomer(options) {
 // saved address restored first; Bob Go rates are then fetched before the
 // top navigation progress bar is allowed to finish.
 async function prepareCheckoutDeliveryOptions() {
-  await prefillCheckoutForSignedInCustomer({ deferRates: true });
-  if (S.currentPage !== 'checkout') return;
+  checkoutDeliveryPreparationPending = true;
+  try {
+    await prefillCheckoutForSignedInCustomer({ deferRates: true });
+    if (S.currentPage !== 'checkout') return;
 
-  const value = id => (document.getElementById(id)?.value || '').trim();
-  const addressReady = !!value('checkout-address') && !!value('checkout-suburb')
-    && !!value('checkout-city') && !!value('checkout-province')
-    && /^\d{4}$/.test(value('checkout-postal'));
-  const needsDelivery = getCartShipments().some(shipment => !shipment.collect);
+    const value = id => (document.getElementById(id)?.value || '').trim();
+    const addressReady = !!value('checkout-address') && !!value('checkout-suburb')
+      && !!value('checkout-city') && !!value('checkout-province')
+      && /^\d{4}$/.test(value('checkout-postal'));
+    const needsDelivery = getCartShipments().some(shipment => !shipment.collect);
 
-  if (addressReady && needsDelivery) {
-    await loadBobGoCheckoutRates();
-  } else if (!addressReady) {
-    // Guests and customers without a saved address see the instruction;
-    // rates will load as soon as they complete the address fields.
-    scheduleBobGoCheckoutRates();
-  } else {
-    const instruction = document.getElementById('checkout-delivery-instruction');
-    if (instruction) instruction.hidden = true;
-    renderCheckoutSummary();
+    if (addressReady && needsDelivery) {
+      await loadBobGoCheckoutRates();
+    } else if (!addressReady) {
+      // Guests and customers without a saved address see the instruction;
+      // rates will load as soon as they complete the address fields.
+      scheduleBobGoCheckoutRates();
+    } else {
+      const instruction = document.getElementById('checkout-delivery-instruction');
+      if (instruction) instruction.hidden = true;
+      renderCheckoutSummary();
+    }
+  } finally {
+    checkoutDeliveryPreparationPending = false;
   }
 }
 
 // Logging in while already on checkout (e.g. in another tab) fills the
 // form in too.
 firebase.auth().onAuthStateChanged(function () {
-  if (S.currentPage === 'checkout' && document.getElementById('checkout-form-view')) {
+  if (!checkoutDeliveryPreparationPending && S.currentPage === 'checkout' && document.getElementById('checkout-form-view')) {
     prefillCheckoutForSignedInCustomer();
   }
 });
