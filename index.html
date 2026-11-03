@@ -313,28 +313,40 @@
 <body>
 <div id="navigation-load-progress" aria-hidden="true"></div>
 <script>
-  // Slim, top-edge navigation progress indicator for full document loads.
-  // It advances while the browser loads, then completes before fading away.
+  // Shared top-edge progress indicator. Full document loads use the
+  // same controller; checkout can also hold it open while delivery rates load.
   (function () {
     var bar = document.getElementById('navigation-load-progress');
     if (!bar) return;
     var progress = 0;
+    var timer = null;
     var finished = false;
-    var timer = setInterval(function () {
-      if (finished || progress >= 90) return;
-      progress = Math.min(90, progress + Math.max(0.6, (90 - progress) * 0.035));
-      bar.style.transform = 'scaleX(' + (progress / 100) + ')';
-    }, 100);
-    function complete() {
+
+    window.startNavigationLoadProgress = function () {
+      clearInterval(timer);
+      finished = false;
+      progress = 0;
+      bar.classList.remove('is-hidden');
+      bar.style.transform = 'scaleX(0)';
+      timer = setInterval(function () {
+        if (finished || progress >= 90) return;
+        progress = Math.min(90, progress + Math.max(0.6, (90 - progress) * 0.035));
+        bar.style.transform = 'scaleX(' + (progress / 100) + ')';
+      }, 100);
+    };
+
+    window.completeNavigationLoadProgress = function () {
       if (finished) return;
       finished = true;
       clearInterval(timer);
       bar.style.transform = 'scaleX(1)';
       setTimeout(function () { bar.classList.add('is-hidden'); }, 260);
-    }
-    window.addEventListener('load', complete, { once: true });
+    };
+
+    window.startNavigationLoadProgress();
+    window.addEventListener('load', window.completeNavigationLoadProgress, { once: true });
     window.addEventListener('pageshow', function (event) {
-      if (event.persisted) complete();
+      if (event.persisted) window.completeNavigationLoadProgress();
     });
   })();
 </script>
