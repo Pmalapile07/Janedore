@@ -140,9 +140,15 @@ function navigateToCheckout(replaceUrl) {
     if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.textContent = 'Pay now'; }
 
     if (checkoutEmail) fillCheckoutFieldIfEmpty('checkout-email', checkoutEmail);
-    prefillCheckoutForSignedInCustomer();
-
     renderCheckoutSummary();
+
+    // Keep the checkout progress bar moving until saved-address delivery
+    // options have loaded and are visible on the destination page.
+    prepareCheckoutDeliveryOptions().finally(function () {
+      if (typeof window.completeNavigationLoadProgress === 'function') {
+        window.completeNavigationLoadProgress();
+      }
+    });
   }
 }
 
@@ -160,7 +166,8 @@ function fillCheckoutFieldIfEmpty(id, value) {
 // profile has no address yet, their most recent order's details are used
 // instead. Waits for Firebase to restore the login first, so this also
 // works when the page is reloaded straight onto /checkout.
-async function prefillCheckoutForSignedInCustomer() {
+async function prefillCheckoutForSignedInCustomer(options) {
+  options = options || {};
   await (window.authReady || Promise.resolve());
   const user = firebase.auth().currentUser;
   if (!user || user.isAnonymous || !user.email) return;
@@ -202,7 +209,33 @@ async function prefillCheckoutForSignedInCustomer() {
   fillCheckoutFieldIfEmpty('checkout-city', saved.city);
   fillCheckoutFieldIfEmpty('checkout-province', saved.province);
   fillCheckoutFieldIfEmpty('checkout-postal', saved.postalCode);
-  if (S.currentPage === 'checkout') scheduleBobGoCheckoutRates();
+  if (S.currentPage === 'checkout' && !options.deferRates) scheduleBobGoCheckoutRates();
+}
+
+// Called when the customer enters checkout. Logged-in customers have their
+// saved address restored first; Bob Go rates are then fetched before the
+// top navigation progress bar is allowed to finish.
+async function prepareCheckoutDeliveryOptions() {
+  await prefillCheckoutForSignedInCustomer({ deferRates: true });
+  if (S.currentPage !== 'checkout') return;
+
+  const value = id => (document.getElementById(id)?.value || '').trim();
+  const addressReady = !!value('checkout-address') && !!value('checkout-suburb')
+    && !!value('checkout-city') && !!value('checkout-province')
+    && /^\\d{4}$/.test(value('checkout-postal'));
+  const needsDelivery = getCartShipments().some(shipment => !shipment.collect);
+
+  if (addressReady && needsDelivery) {
+    await loadBobGoCheckoutRates();
+  } else if (!addressReady) {
+    // Guests and customers without a saved address see the instruction;
+    // rates will load as soon as they complete the address fields.
+    scheduleBobGoCheckoutRates();
+  } else {
+    const instruction = document.getElementById('checkout-delivery-instruction');
+    if (instruction) instruction.hidden = true;
+    renderCheckoutSummary();
+  }
 }
 
 // Logging in while already on checkout (e.g. in another tab) fills the
