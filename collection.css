@@ -140,10 +140,11 @@ body.on-collection-page.collection-bar-stuck #main-nav { top: calc(-1 * var(--ma
    used by New Arrivals and Shop by Category on the homepage. */
 .collection-page-heading {
   display: none;
-  /* Sides line up with the product cards' text (8px, product-grid.css).
+  /* Align the heading's left and right edges with the product count
+     in .collection-filter-bar (20px; 16px on very narrow screens).
      The top padding stands in for the breadcrumb that used to sit above;
      brand pages still have their icon bar there instead. */
-  padding: 22px 8px 10px;
+  padding: 22px 20px 10px;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
   font-size: calc(var(--heading-size) - 5px);
@@ -244,6 +245,7 @@ body:not(.on-collection-page) .collection-page-heading {
 .collection-sort-options button:hover { background: #f5f5f5; }
 
 @media (max-width: 380px) {
+  .collection-page-heading { padding-left: 16px; padding-right: 16px; }
   .collection-filter-bar { gap: 8px; padding-left: 16px; padding-right: 16px; }
   .collection-product-count { font-size: 11px; }
   .collection-toolbar-actions { gap: 14px; }
