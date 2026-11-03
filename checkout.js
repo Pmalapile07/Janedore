@@ -222,7 +222,7 @@ async function prepareCheckoutDeliveryOptions() {
   const value = id => (document.getElementById(id)?.value || '').trim();
   const addressReady = !!value('checkout-address') && !!value('checkout-suburb')
     && !!value('checkout-city') && !!value('checkout-province')
-    && /^\\d{4}$/.test(value('checkout-postal'));
+    && /^\d{4}$/.test(value('checkout-postal'));
   const needsDelivery = getCartShipments().some(shipment => !shipment.collect);
 
   if (addressReady && needsDelivery) {
