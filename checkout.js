@@ -24,9 +24,6 @@ function scheduleBobGoCheckoutRates() {
     && !!value('checkout-city') && !!value('checkout-province')
     && /^\d{4}$/.test(value('checkout-postal'));
   const status = document.getElementById('bobgo-checkout-status');
-  const instruction = document.getElementById('checkout-delivery-instruction');
-  if (instruction) instruction.hidden = addressReady;
-
   renderCheckoutSummary();
   if (status) {
     status.hidden = true;
@@ -146,9 +143,15 @@ function navigateToCheckout(replaceUrl) {
     // Keep the checkout progress bar moving until saved-address delivery
     // options have loaded and are visible on the destination page.
     prepareCheckoutDeliveryOptions().finally(function () {
-      if (typeof window.completeNavigationLoadProgress === 'function') {
-        window.completeNavigationLoadProgress();
-      }
+      // Let the browser paint the completed shipping-method state before
+      // finishing the progress bar, so it never disappears ahead of the UI.
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          if (typeof window.completeNavigationLoadProgress === 'function') {
+            window.completeNavigationLoadProgress();
+          }
+        });
+      });
     });
   }
 }
@@ -231,12 +234,10 @@ async function prepareCheckoutDeliveryOptions() {
     if (addressReady && needsDelivery) {
       await loadBobGoCheckoutRates();
     } else if (!addressReady) {
-      // Guests and customers without a saved address see the instruction;
-      // rates will load as soon as they complete the address fields.
+      // Guests and customers without a saved address can complete the form;
+      // delivery rates are fetched as soon as the required address is entered.
       scheduleBobGoCheckoutRates();
     } else {
-      const instruction = document.getElementById('checkout-delivery-instruction');
-      if (instruction) instruction.hidden = true;
       renderCheckoutSummary();
     }
   } finally {
@@ -1090,9 +1091,11 @@ async function loadBobGoCheckoutRates() {
     return;
   }
 
+  // Keep the status area quiet while rates are being fetched. The top
+  // navigation progress bar is the only loading feedback during checkout.
   if (output) {
-    output.hidden = false;
-    output.innerHTML = '<span class="bobgo-rate-spinner" aria-hidden="true"></span><span class="bobgo-rate-loading-text">Loading delivery options</span>';
+    output.hidden = true;
+    output.textContent = '';
   }
   bobGoCheckoutQuote = null;
   bobGoSelectedRates = {};
