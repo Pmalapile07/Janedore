@@ -390,9 +390,10 @@
      (collection.js renderActiveFilterChips()). -->
 <div id="active-filter-chips" class="active-filter-trail"></div>
 <div class="collection-top-description" id="collection-top-description"></div>
+<div class="collection-product-count" id="collection-product-count">0 products</div>
 
 <div id="collection-filter-bar" class="collection-filter-bar">
-  <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn" aria-hidden="true" tabindex="-1" disabled>
+  <button class="col-grid-toggle-btn" onclick="toggleCollectionGrid()" id="col-grid-toggle-btn" type="button" aria-label="Change product grid layout">
     <div class="col-grid-icon cols-2" id="col-grid-icon">
       <div class="col-grid-bar"></div>
       <div class="col-grid-bar"></div>
@@ -400,7 +401,6 @@
     </div>
   </button>
   <div class="collection-filter-title-display" id="collection-filter-title-display" aria-hidden="true">ALL PRODUCTS</div>
-  <div class="collection-product-count" id="collection-product-count">0 products</div>
   <div class="collection-toolbar-actions">
     <div class="collection-sort-dropdown">
       <button class="collection-sort-trigger" id="collection-sort-trigger" type="button" onclick="toggleCollectionSort()" aria-expanded="false" aria-label="Sort products">
