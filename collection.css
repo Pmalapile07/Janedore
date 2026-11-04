@@ -163,21 +163,29 @@ body:not(.on-collection-page) .collection-page-heading {
   display: none !important;
 }
 
-/* The old grid toggle and centered toolbar title remain in the markup/code
-   for compatibility, but are intentionally disabled in the storefront UI. */
-.col-grid-toggle-btn,
+/* The centered legacy title stays hidden; the grid toggle is active again. */
 .collection-filter-title-display {
   display: none !important;
 }
 
 .collection-product-count {
+  display: none;
   color: #888;
   font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
   white-space: nowrap;
-  margin-right: auto;
+  box-sizing: border-box;
+  padding: 0 20px 14px;
+}
+
+body.on-collection-page #collection-product-count {
+  display: block;
+}
+
+body:has(#page-vendor.active) #collection-product-count {
+  display: none !important;
 }
 
 .collection-toolbar-actions {
