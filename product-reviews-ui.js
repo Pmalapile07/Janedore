@@ -38,7 +38,6 @@
       const authorName = String(review.name || 'Anonymous');
       const author = [authorName, review.city]
         .filter(Boolean).map(escapeHTML).join(' · ');
-      const initials = authorName.trim().split(/\\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'A';
       const rating = Math.max(0, Math.min(5, Number(review.rating) || 0));
       const verified = review.verified === true
         ? '<span class="product-review-verified"><i class="ph ph-check-circle" aria-hidden="true"></i> Verified purchase</span>' : '';
@@ -48,7 +47,7 @@
         ? '<div class="product-review-brand-reply"><span>Brand reply</span><p>' + escapeHTML(review.vendorReply) + '</p></div>' : '';
 
       return '<article class="product-review-card">' +
-        '<div class="product-review-card-head"><span class="product-review-avatar" aria-hidden="true">' + escapeHTML(initials) + '</span>' +
+        '<div class="product-review-card-head"><span class="product-review-avatar" aria-hidden="true"><i class="ph ph-user" aria-hidden="true"></i></span>' +
         '<div class="product-review-author-wrap">' +
         '<div class="product-review-author-line"><p class="product-review-author">' + author + '</p>' + verified + featured + '</div>' +
         (date ? '<p class="product-review-date">' + escapeHTML(date) + (clock ? ' · ' + escapeHTML(clock) : '') + '</p>' : '') +
