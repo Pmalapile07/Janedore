@@ -28,8 +28,12 @@
     });
 
     list.innerHTML = sorted.map(review => {
-      const date = time(review)
-        ? new Date(time(review)).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
+      const createdAt = time(review);
+      const date = createdAt
+        ? new Date(createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '';
+      const clock = createdAt
+        ? new Date(createdAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false })
         : '';
       const author = [review.name || 'Anonymous', review.city]
         .filter(Boolean).map(escapeHTML).join(' · ');
@@ -43,9 +47,9 @@
 
       return '<article class="product-review-card">' +
         '<div class="product-review-card-head"><div class="product-review-author-wrap">' +
-        '<p class="product-review-author">' + author + '</p>' +
-        (date ? '<p class="product-review-date">' + escapeHTML(date) + '</p>' : '') +
-        '</div><div class="product-review-labels">' + verified + featured + '</div></div>' +
+        '<div class="product-review-author-line"><p class="product-review-author">' + author + '</p>' + verified + featured + '</div>' +
+        (date ? '<p class="product-review-date">' + escapeHTML(date) + (clock ? ' · ' + escapeHTML(clock) : '') + '</p>' : '') +
+        '</div></div>' +
         '<p class="product-review-stars" aria-label="' + rating + ' out of 5">' + stars(rating) + '</p>' +
         (review.text ? '<p class="product-review-text">' + escapeHTML(review.text) + '</p>' : '') +
         (review.rewarded ? '<p class="product-review-reward">Received a thank-you voucher for this review</p>' : '') +
