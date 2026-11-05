@@ -823,12 +823,21 @@ async function showReviewButtonIfBought(productId) {
     const res = await fetch('/api/reviews/eligibility', { method: 'POST', headers: await reviewAuthHeaders(),
       body: JSON.stringify({ productId, orders: deviceOrdersForReviews(), reviewLink: reviewLinkForReviews() }) });
     const data = await res.json();
-    if (!data.eligible || S.currentReviewProductId !== productId) return;
-    S.reviewEmail = data.email || '';
-    window._jdOwnReviewForEdit = data.ownReview || null;
+    if (S.currentReviewProductId !== productId) return;
     const writeEl = document.getElementById('product-review-write');
     const editEl = document.getElementById('product-review-edit');
     const editNote = document.getElementById('product-review-edit-note');
+    if (!data.eligible) {
+      // No verified purchase means no review actions of either kind.
+      S.reviewEmail = '';
+      window._jdOwnReviewForEdit = null;
+      if (writeEl) writeEl.hidden = true;
+      if (editEl) editEl.hidden = true;
+      if (editNote) editNote.hidden = true;
+      return;
+    }
+    S.reviewEmail = data.email || '';
+    window._jdOwnReviewForEdit = data.ownReview || null;
     if (data.ownReview) {
       if (writeEl) writeEl.hidden = true;
       if (editEl) editEl.hidden = !(Number(data.ownReview.editCount || 0) < 1 && !data.ownReview.hasPendingEdit);
