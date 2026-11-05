@@ -79,27 +79,54 @@ module.exports = function registerReviews(app, deps) {
     if (rateLimited(req, 'review-eligibility', 120, 15 * 60 * 1000)) return res.json({ eligible: false });
     try {
       const productId = String((req.body || {}).productId || '').slice(0, 120);
-      const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders, (req.body || {}).reviewLink) : null;
+      if (!productId) return res.json({ eligible: false });
+
+      // Existing review ownership survives deletion of the original order.
+      // Signed-in customers are matched by their original uid or verified email.
+      const user = await signedIn(req);
+      let ownerDoc = null;
+      if (user) {
+        const owners = await adminDb.collection('reviewOwners').where('uid', '==', user.uid).limit(100).get();
+        ownerDoc = owners.docs.find(d => d.data().productId === productId) || null;
+        if (!ownerDoc && user.email && user.email_verified) {
+          const email = String(user.email).toLowerCase();
+          const id = crypto.createHash('sha256').update(email + '|' + productId).digest('hex').slice(0, 32);
+          const candidate = await adminDb.collection('reviewOwners').doc(id).get();
+          if (candidate.exists && String(candidate.data().email || '').toLowerCase() === email) ownerDoc = candidate;
+        }
+      }
+
+      if (ownerDoc) {
+        const id = ownerDoc.id;
+        const [reviewSnap, editSnap] = await Promise.all([
+          adminDb.collection('reviews').doc(id).get(),
+          adminDb.collection('reviewEdits').doc(id).get()
+        ]);
+        if (reviewSnap.exists) {
+          const review = reviewSnap.data();
+          return res.json({ eligible: true, email: String(ownerDoc.data().email || user.email || '').toLowerCase(),
+            ownReview: { rating: review.rating || 0, text: review.text || '', name: review.name || '',
+              editCount: Number(review.editCount) || 0, hasPendingEdit: editSnap.exists } });
+        }
+      }
+
+      // No existing review: a paid order is still required to show Write a review.
+      const purchase = await findPurchase(req, productId, (req.body || {}).orders, (req.body || {}).reviewLink);
       if (!purchase) return res.json({ eligible: false });
       const id = crypto.createHash('sha256').update(purchase.email + '|' + productId).digest('hex').slice(0, 32);
-      const [ownerSnap, reviewSnap, editSnap] = await Promise.all([
+      const [ownerSnap, reviewSnap] = await Promise.all([
         adminDb.collection('reviewOwners').doc(id).get(),
-        adminDb.collection('reviews').doc(id).get(),
-        adminDb.collection('reviewEdits').doc(id).get()
+        adminDb.collection('reviews').doc(id).get()
       ]);
-      let ownReview = null;
-      if (ownerSnap.exists && reviewSnap.exists &&
-          (String(ownerSnap.data().email || '').toLowerCase() === purchase.email || (purchase.uid && ownerSnap.data().uid === purchase.uid))) {
+      if (ownerSnap.exists && reviewSnap.exists && String(ownerSnap.data().email || '').toLowerCase() === purchase.email) {
+        const editSnap = await adminDb.collection('reviewEdits').doc(id).get();
         const review = reviewSnap.data();
-        ownReview = {
-          rating: review.rating || 0,
-          text: review.text || '',
-          name: review.name || '',
-          editCount: Number(review.editCount) || 0,
-          hasPendingEdit: editSnap.exists
-        };
+        return res.json({ eligible: true, email: purchase.email, ownReview: {
+          rating: review.rating || 0, text: review.text || '', name: review.name || '',
+          editCount: Number(review.editCount) || 0, hasPendingEdit: editSnap.exists
+        }});
       }
-      res.json({ eligible: true, email: purchase.email, ownReview });
+      res.json({ eligible: true, email: purchase.email, ownReview: null });
     } catch (e) {
       console.error('[REVIEWS] Eligibility failed:', e.message);
       res.json({ eligible: false });
@@ -208,8 +235,8 @@ module.exports = function registerReviews(app, deps) {
     if (!(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'Please choose a star rating.' });
     if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please use the email address associated with your order.' });
     try {
+      const user = await signedIn(req);
       const purchase = await findPurchase(req, productId, b.orders, b.reviewLink);
-      if (!purchase || purchase.email !== email) return res.status(403).json({ error: 'We could not verify this purchase. Please use the email and order details from your original order.' });
       const id = crypto.createHash('sha256').update(email + '|' + productId).digest('hex').slice(0, 32);
       const reviewRef = adminDb.collection('reviews').doc(id);
       const ownerRef = adminDb.collection('reviewOwners').doc(id);
@@ -218,10 +245,18 @@ module.exports = function registerReviews(app, deps) {
         const [reviewSnap, ownerSnap, editSnap] = await Promise.all([
           transaction.get(reviewRef), transaction.get(ownerRef), transaction.get(editRef)
         ]);
-        if (!reviewSnap.exists || !ownerSnap.exists ||
-            (String(ownerSnap.data().email || '').toLowerCase() !== email && !(purchase.uid && ownerSnap.data().uid === purchase.uid))) {
-          const error = new Error('We could not find a review belonging to this order.');
-          error.status = 404;
+        const owner = ownerSnap.exists ? ownerSnap.data() : {};
+        const ownerEmail = String(owner.email || '').toLowerCase();
+        const matchesSignedInOwner = !!user && (
+          owner.uid === user.uid ||
+          (user.email_verified && String(user.email || '').toLowerCase() === ownerEmail)
+        );
+        const matchesVerifiedPurchase = !!purchase && purchase.email === email &&
+          (ownerEmail === email || (purchase.uid && owner.uid === purchase.uid));
+        if (!reviewSnap.exists || !ownerSnap.exists || owner.productId !== productId ||
+            ownerEmail !== email || (!matchesSignedInOwner && !matchesVerifiedPurchase)) {
+          const error = new Error('We could not verify that this review belongs to your account.');
+          error.status = 403;
           throw error;
         }
         const review = reviewSnap.data();
