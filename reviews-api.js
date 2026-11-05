@@ -57,10 +57,10 @@ module.exports = function registerReviews(app, deps) {
     const user = await signedIn(req);
     if (user) {
       const byUid = await adminDb.collection('orders').where('customerId', '==', user.uid).limit(100).get();
-      for (const d of byUid.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), ref: d.ref, email: String(user.email || d.data().customerEmail || '').toLowerCase(), uid: user.uid };
+      for (const d of byUid.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), ref: d.ref, email: String(d.data().customerEmail || user.email || '').toLowerCase(), uid: user.uid };
       if (user.email && user.email_verified) {
         const byEmail = await adminDb.collection('orders').where('customerEmail', '==', String(user.email).toLowerCase()).limit(100).get();
-        for (const d of byEmail.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), ref: d.ref, email: String(user.email).toLowerCase(), uid: user.uid };
+        for (const d of byEmail.docs) if (hasProduct(d.data(), productId)) return { order: d.data(), ref: d.ref, email: String(d.data().customerEmail || user.email).toLowerCase(), uid: user.uid };
       }
     }
     for (const o of (Array.isArray(deviceOrders) ? deviceOrders : []).slice(0, 20)) {
@@ -89,7 +89,7 @@ module.exports = function registerReviews(app, deps) {
       ]);
       let ownReview = null;
       if (ownerSnap.exists && reviewSnap.exists &&
-          String(ownerSnap.data().email || '').toLowerCase() === purchase.email) {
+          (String(ownerSnap.data().email || '').toLowerCase() === purchase.email || (purchase.uid && ownerSnap.data().uid === purchase.uid))) {
         const review = reviewSnap.data();
         ownReview = {
           rating: review.rating || 0,
@@ -159,6 +159,12 @@ module.exports = function registerReviews(app, deps) {
       if (purchase.email !== email) return res.status(400).json({ error: 'Please use the email address associated with your order.' });
       const productDoc = await adminDb.collection('products').doc(productId).get();
       const id = crypto.createHash('sha256').update(email + '|' + productId).digest('hex').slice(0, 32);
+      // A purchase grants one review, not repeated overwrites. Existing
+      // reviews can only be changed through the owner-verified edit queue.
+      const existingReview = await adminDb.collection('reviews').doc(id).get();
+      if (existingReview.exists) {
+        return res.status(409).json({ error: 'You have already reviewed this product. Use Edit your review if you want to make your one-time change.' });
+      }
       const batch = adminDb.batch();
       batch.set(adminDb.collection('reviews').doc(id), {
         productId, rating, text, name, imageUrl, imageUrls, verified: true,
@@ -213,7 +219,7 @@ module.exports = function registerReviews(app, deps) {
           transaction.get(reviewRef), transaction.get(ownerRef), transaction.get(editRef)
         ]);
         if (!reviewSnap.exists || !ownerSnap.exists ||
-            String(ownerSnap.data().email || '').toLowerCase() !== email) {
+            (String(ownerSnap.data().email || '').toLowerCase() !== email && !(purchase.uid && ownerSnap.data().uid === purchase.uid))) {
           const error = new Error('We could not find a review belonging to this order.');
           error.status = 404;
           throw error;
