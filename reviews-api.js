@@ -80,7 +80,25 @@ module.exports = function registerReviews(app, deps) {
     try {
       const productId = String((req.body || {}).productId || '').slice(0, 120);
       const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders, (req.body || {}).reviewLink) : null;
-      res.json(purchase ? { eligible: true, email: purchase.email } : { eligible: false });
+      if (!purchase) return res.json({ eligible: false });
+      const id = crypto.createHash('sha256').update(purchase.email + '|' + productId).digest('hex').slice(0, 32);
+      const [ownerSnap, reviewSnap] = await Promise.all([
+        adminDb.collection('reviewOwners').doc(id).get(),
+        adminDb.collection('reviews').doc(id).get()
+      ]);
+      let ownReview = null;
+      if (ownerSnap.exists && reviewSnap.exists &&
+          String(ownerSnap.data().email || '').toLowerCase() === purchase.email) {
+        const review = reviewSnap.data();
+        ownReview = {
+          rating: review.rating || 0,
+          text: review.text || '',
+          name: review.name || '',
+          editCount: Number(review.editCount) || 0,
+          hasPendingEdit: !!review.pendingEdit
+        };
+      }
+      res.json({ eligible: true, email: purchase.email, ownReview });
     } catch (e) {
       console.error('[REVIEWS] Eligibility failed:', e.message);
       res.json({ eligible: false });
@@ -165,6 +183,64 @@ module.exports = function registerReviews(app, deps) {
     } catch (e) {
       console.error('[REVIEWS] Save failed:', e.message);
       res.status(500).json({ error: 'We couldn’t submit your review. Please try again.' });
+    }
+  });
+
+  // One-time customer review edit. The approved public fields are never
+  // changed here: the proposed version stays in pendingEdit for admin review.
+  app.post('/api/reviews/edit', async (req, res) => {
+    if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+    if (rateLimited(req, 'review-edit', 8, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
+    const b = req.body || {};
+    const productId = String(b.productId || '').slice(0, 120);
+    const rating = Math.round(Number(b.rating));
+    const text = String(b.text || '').trim().slice(0, 2000);
+    const name = String(b.name || '').trim().slice(0, 100) || 'Anonymous';
+    const email = String(b.email || '').trim().toLowerCase().slice(0, 200);
+    if (!productId) return res.status(400).json({ error: 'Missing product.' });
+    if (!(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'Please choose a star rating.' });
+    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please use the email address associated with your order.' });
+    try {
+      const purchase = await findPurchase(req, productId, b.orders, b.reviewLink);
+      if (!purchase || purchase.email !== email) return res.status(403).json({ error: 'We could not verify this purchase. Please use the email and order details from your original order.' });
+      const id = crypto.createHash('sha256').update(email + '|' + productId).digest('hex').slice(0, 32);
+      const reviewRef = adminDb.collection('reviews').doc(id);
+      const ownerRef = adminDb.collection('reviewOwners').doc(id);
+      await adminDb.runTransaction(async transaction => {
+        const [reviewSnap, ownerSnap] = await Promise.all([
+          transaction.get(reviewRef), transaction.get(ownerRef)
+        ]);
+        if (!reviewSnap.exists || !ownerSnap.exists ||
+            String(ownerSnap.data().email || '').toLowerCase() !== email) {
+          const error = new Error('We could not find a review belonging to this order.');
+          error.status = 404;
+          throw error;
+        }
+        const review = reviewSnap.data();
+        if ((Number(review.editCount) || 0) >= 1) {
+          const error = new Error('You have already used your one-time review edit.');
+          error.status = 409;
+          throw error;
+        }
+        if (review.pendingEdit) {
+          const error = new Error('Your review edit is already waiting for admin approval.');
+          error.status = 409;
+          throw error;
+        }
+        transaction.update(reviewRef, {
+          pendingEdit: {
+            rating, text, name,
+            submittedAt: admin.firestore.FieldValue.serverTimestamp()
+          },
+          editCount: 1,
+          editSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      res.json({ ok: true, pendingApproval: true });
+    } catch (e) {
+      if (e.status) return res.status(e.status).json({ error: e.message });
+      console.error('[REVIEWS] Edit submission failed:', e.message);
+      res.status(500).json({ error: 'We couldn’t submit your edit. Please try again.' });
     }
   });
 
