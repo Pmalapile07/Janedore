@@ -1,5 +1,65 @@
-function openReviewModal() { DOM.reviewModalBackdrop.classList.add("open"); S.reviewRating=0; setReviewPhotos([]); updateReviewStars(); DOM.reviewText.value=""; DOM.reviewName.value=""; DOM.reviewImageInput.value=""; const em=document.getElementById('review-email'); if(em) em.value=S.reviewEmail||''; const er=document.getElementById('review-error'); if(er) er.style.display='none'; }
-function closeReviewModal() { DOM.reviewModalBackdrop.classList.remove("open"); }
+let _jdReviewEditMode = false;
+
+function openReviewModal() {
+  _jdReviewEditMode = false;
+  DOM.reviewModalBackdrop.classList.add("open");
+  S.reviewRating = 0;
+  setReviewPhotos([]);
+  updateReviewStars();
+  DOM.reviewText.value = "";
+  DOM.reviewName.value = "";
+  DOM.reviewImageInput.value = "";
+  const email = document.getElementById('review-email');
+  if (email) { email.value = S.reviewEmail || ''; email.style.display = ''; }
+  const photos = document.getElementById('review-photos');
+  const upload = document.querySelector('#review-modal .review-image-upload');
+  if (photos) photos.style.display = '';
+  if (upload) upload.style.display = '';
+  const title = document.querySelector('#review-modal .review-modal-title');
+  if (title) title.textContent = 'Write a review';
+  const submit = document.querySelector('#review-modal .review-submit-btn');
+  if (submit) { submit.onclick = submitReview; submit.textContent = 'Submit review'; }
+  const error = document.getElementById('review-error');
+  if (error) error.style.display = 'none';
+}
+
+function openReviewEditModal() {
+  const review = window._jdOwnReviewForEdit;
+  if (!review || Number(review.editCount || 0) >= 1 || review.hasPendingEdit) return;
+  _jdReviewEditMode = true;
+  S.reviewRating = Number(review.rating) || 0;
+  DOM.reviewText.value = review.text || '';
+  DOM.reviewName.value = review.name || '';
+  updateReviewStars();
+  const email = document.getElementById('review-email');
+  const photos = document.getElementById('review-photos');
+  const upload = document.querySelector('#review-modal .review-image-upload');
+  if (email) email.style.display = 'none';
+  if (photos) photos.style.display = 'none';
+  if (upload) upload.style.display = 'none';
+  const title = document.querySelector('#review-modal .review-modal-title');
+  if (title) title.textContent = 'Edit your review';
+  const submit = document.querySelector('#review-modal .review-submit-btn');
+  if (submit) { submit.onclick = submitReviewEdit; submit.textContent = 'Send for approval'; }
+  const error = document.getElementById('review-error');
+  if (error) error.style.display = 'none';
+  DOM.reviewModalBackdrop.classList.add('open');
+}
+
+function closeReviewModal() {
+  DOM.reviewModalBackdrop.classList.remove("open");
+  _jdReviewEditMode = false;
+  const email = document.getElementById('review-email');
+  const photos = document.getElementById('review-photos');
+  const upload = document.querySelector('#review-modal .review-image-upload');
+  if (email) email.style.display = '';
+  if (photos) photos.style.display = '';
+  if (upload) upload.style.display = '';
+  const title = document.querySelector('#review-modal .review-modal-title');
+  if (title) title.textContent = 'Write a review';
+  const submit = document.querySelector('#review-modal .review-submit-btn');
+  if (submit) { submit.onclick = submitReview; submit.textContent = 'Submit review'; }
+}
 function setReviewRating(r) { S.reviewRating=r; updateReviewStars(); }
 function updateReviewStars() { document.querySelectorAll("#review-stars .review-star-btn").forEach((b,i)=>{ b.innerHTML = i < S.reviewRating ? '<i class="ph-fill ph-star"></i>' : '<i class="ph ph-star"></i>'; b.classList.toggle("filled", i < S.reviewRating); }); }
 
@@ -122,6 +182,49 @@ async function uploadReviewPhotos(files) {
   }
   return urls;
 }
+// A one-time edit is stored privately as pendingEdit by the server. The
+// currently approved review stays public until an admin approves the change.
+async function submitReviewEdit() {
+  const error = document.getElementById('review-error');
+  const fail = message => { if (error) { error.textContent = message; error.style.display = 'block'; } };
+  if (!S.reviewRating) return fail('Please choose a star rating.');
+  if (!S.currentReviewProductId || !S.reviewEmail) return fail('We could not verify your order. Please try again.');
+  const button = document.querySelector('#review-modal .review-submit-btn');
+  if (button) { button.disabled = true; button.textContent = 'Sending…'; }
+  try {
+    const response = await fetch('/api/reviews/edit', {
+      method: 'POST',
+      headers: await reviewAuthHeaders(),
+      body: JSON.stringify({
+        productId: S.currentReviewProductId,
+        rating: S.reviewRating,
+        text: DOM.reviewText.value.trim(),
+        name: DOM.reviewName.value.trim(),
+        email: S.reviewEmail,
+        orders: deviceOrdersForReviews(),
+        reviewLink: reviewLinkForReviews()
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return fail(data.error || 'We couldn’t submit your edit. Please try again.');
+  } catch (e) {
+    return fail('We couldn’t submit your edit. Please try again.');
+  } finally {
+    if (button) { button.disabled = false; button.textContent = 'Send for approval'; }
+  }
+  window._jdOwnReviewForEdit = Object.assign({}, window._jdOwnReviewForEdit || {}, {
+    editCount: 1,
+    hasPendingEdit: true
+  });
+  closeReviewModal();
+  if (typeof showAddedToCartToast === 'function') {
+    showAddedToCartToast('Your edit has been sent to JANEDORE for approval. Your current review remains visible.', 'ph-check-circle');
+  }
+  if (S.currentPage === 'product-detail' && typeof loadProductReviewsSection === 'function') {
+    loadProductReviewsSection(S.currentReviewProductId);
+  }
+}
+
 // Saved by the server (reviews-api.js), which checks the reviewer bought
 // the product; the email they ordered with is required but never shown.
 async function submitReview() {
