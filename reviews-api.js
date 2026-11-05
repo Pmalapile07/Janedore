@@ -82,9 +82,10 @@ module.exports = function registerReviews(app, deps) {
       const purchase = productId ? await findPurchase(req, productId, (req.body || {}).orders, (req.body || {}).reviewLink) : null;
       if (!purchase) return res.json({ eligible: false });
       const id = crypto.createHash('sha256').update(purchase.email + '|' + productId).digest('hex').slice(0, 32);
-      const [ownerSnap, reviewSnap] = await Promise.all([
+      const [ownerSnap, reviewSnap, editSnap] = await Promise.all([
         adminDb.collection('reviewOwners').doc(id).get(),
-        adminDb.collection('reviews').doc(id).get()
+        adminDb.collection('reviews').doc(id).get(),
+        adminDb.collection('reviewEdits').doc(id).get()
       ]);
       let ownReview = null;
       if (ownerSnap.exists && reviewSnap.exists &&
@@ -95,7 +96,7 @@ module.exports = function registerReviews(app, deps) {
           text: review.text || '',
           name: review.name || '',
           editCount: Number(review.editCount) || 0,
-          hasPendingEdit: !!review.pendingEdit
+          hasPendingEdit: editSnap.exists
         };
       }
       res.json({ eligible: true, email: purchase.email, ownReview });
@@ -206,9 +207,10 @@ module.exports = function registerReviews(app, deps) {
       const id = crypto.createHash('sha256').update(email + '|' + productId).digest('hex').slice(0, 32);
       const reviewRef = adminDb.collection('reviews').doc(id);
       const ownerRef = adminDb.collection('reviewOwners').doc(id);
+      const editRef = adminDb.collection('reviewEdits').doc(id);
       await adminDb.runTransaction(async transaction => {
-        const [reviewSnap, ownerSnap] = await Promise.all([
-          transaction.get(reviewRef), transaction.get(ownerRef)
+        const [reviewSnap, ownerSnap, editSnap] = await Promise.all([
+          transaction.get(reviewRef), transaction.get(ownerRef), transaction.get(editRef)
         ]);
         if (!reviewSnap.exists || !ownerSnap.exists ||
             String(ownerSnap.data().email || '').toLowerCase() !== email) {
@@ -222,18 +224,18 @@ module.exports = function registerReviews(app, deps) {
           error.status = 409;
           throw error;
         }
-        if (review.pendingEdit) {
+        if (editSnap.exists) {
           const error = new Error('Your review edit is already waiting for admin approval.');
           error.status = 409;
           throw error;
         }
         transaction.update(reviewRef, {
-          pendingEdit: {
-            rating, text, name,
-            submittedAt: admin.firestore.FieldValue.serverTimestamp()
-          },
           editCount: 1,
           editSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        transaction.create(editRef, {
+          reviewId: id, productId, rating, text, name,
+          submittedAt: admin.firestore.FieldValue.serverTimestamp()
         });
       });
       res.json({ ok: true, pendingApproval: true });
