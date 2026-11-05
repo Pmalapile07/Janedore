@@ -825,9 +825,29 @@ async function showReviewButtonIfBought(productId) {
     const data = await res.json();
     if (!data.eligible || S.currentReviewProductId !== productId) return;
     S.reviewEmail = data.email || '';
-    const el = document.getElementById('product-review-write');
-    if (el) el.hidden = false;
-    // Arrived from the email's Write a review: open the form straight away.
-    if (window._reviewLinkOpen) { window._reviewLinkOpen = false; openReviewModal(); }
+    window._jdOwnReviewForEdit = data.ownReview || null;
+    const writeEl = document.getElementById('product-review-write');
+    const editEl = document.getElementById('product-review-edit');
+    const editNote = document.getElementById('product-review-edit-note');
+    if (data.ownReview) {
+      if (writeEl) writeEl.hidden = true;
+      if (editEl) editEl.hidden = !(Number(data.ownReview.editCount || 0) < 1 && !data.ownReview.hasPendingEdit);
+      if (editNote) {
+        editNote.textContent = data.ownReview.hasPendingEdit
+          ? 'Your edited review is waiting for approval.'
+          : (Number(data.ownReview.editCount || 0) >= 1 ? 'You have used your one-time review edit.' : '');
+        editNote.hidden = !editNote.textContent;
+      }
+    } else {
+      if (writeEl) writeEl.hidden = false;
+      if (editEl) editEl.hidden = true;
+      if (editNote) editNote.hidden = true;
+    }
+    // Arrived from the email's Write a review: open the correct form.
+    if (window._reviewLinkOpen) {
+      window._reviewLinkOpen = false;
+      if (data.ownReview && Number(data.ownReview.editCount || 0) < 1 && !data.ownReview.hasPendingEdit) openReviewEditModal();
+      else if (!data.ownReview) openReviewModal();
+    }
   } catch (e) {}
 }
