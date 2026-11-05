@@ -49,12 +49,13 @@
       return '<article class="product-review-card">' +
         '<div class="product-review-card-head"><span class="product-review-avatar" aria-hidden="true"><i class="ph ph-user" aria-hidden="true"></i></span>' +
         '<div class="product-review-author-wrap">' +
-        '<div class="product-review-author-line"><p class="product-review-author">' + author + '</p>' + verified + featured + '</div>' +
+        '<div class="product-review-author-line"><p class="product-review-author">' + author + '</p>' + featured + '</div>' +
         (date ? '<p class="product-review-date">' + escapeHTML(date) + (clock ? ' · ' + escapeHTML(clock) : '') + '</p>' : '') +
         '</div><p class="product-review-stars" aria-label="' + rating + ' out of 5">' + stars(rating) + '</p></div>' +
         (review.text ? '<p class="product-review-text">' + escapeHTML(review.text) + '</p>' : '') +
         (review.rewarded ? '<p class="product-review-reward">Received a thank-you voucher for this review</p>' : '') +
         reply + reviewPhotosHtml(review, 'Photo from ' + escapeHTML(review.name || 'a customer')) +
+        (verified ? '<div class="product-review-verification-row">' + verified + '</div>' : '') +
         '</article>';
     }).join('');
   }
