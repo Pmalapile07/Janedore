@@ -19,8 +19,8 @@
 .product-review-card { padding:16px 0 18px; border-top:1px solid #eee; }
 .product-review-card:first-child { border-top:0; padding-top:0; }
 .product-review-card-head { display:flex; align-items:flex-start; gap:9px; }
-.product-review-avatar { flex:0 0 30px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#f1f1f1; color:#777; font-size:16px; }
-.product-review-author-wrap { min-width:0; flex:1 1 auto; padding-top:5px; }
+.product-review-avatar { flex:0 0 30px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; align-self:center; border-radius:50%; background:#f1f1f1; color:#777; font-size:16px; }
+.product-review-author-wrap { min-width:0; flex:1 1 auto; padding-top:0; }
 .product-review-card-head > .product-review-stars { flex:0 0 auto; margin:10px 0 0 auto; line-height:1; letter-spacing:0; white-space:nowrap; }
 .product-review-card-head > .product-review-stars i { font-size:13px; }
 .product-review-author-line { display:flex; align-items:center; flex-wrap:wrap; column-gap:8px; row-gap:3px; }
