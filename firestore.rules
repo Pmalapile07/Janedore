@@ -265,6 +265,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Proposed customer review edits are private until a moderator approves
+    // them. The storefront cannot read or write this collection.
+    match /reviewEdits/{reviewId} {
+      allow read, write: if isPlatformStaff();
+    }
+
     // =========================================================
     // NEWSLETTER
     // =========================================================
