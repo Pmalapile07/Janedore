@@ -112,7 +112,7 @@
       '<p>' + reviews.length + ' customer review' + (reviews.length === 1 ? '' : 's') + '</p></div>' +
       '<div class="product-review-breakdown">' + breakdown + '</div></section>' +
       writeButton +
-      '<div class="product-reviews-toolbar"><span>Customer reviews</span>' +
+      '<div class="product-reviews-toolbar">' +
       '<label for="product-review-sort">Sort by</label>' +
       '<select id="product-review-sort" onchange="sortProductReviews(this.value)">' +
       '<option value="newest">Most recent</option><option value="highest">Highest rating</option>' +
