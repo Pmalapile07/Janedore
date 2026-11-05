@@ -61,7 +61,17 @@
         r.productName = productMap[r.productId] || 'Unknown product';
         return r;
       });
-      renderReviewsList(window._reviewsData);
+      if (!canModerate) {
+        renderReviewsList(window._reviewsData);
+        return;
+      }
+      return window._adminDB.collection('reviewEdits').get().then(function(edits) {
+        edits.docs.forEach(function(doc) {
+          var review = window._reviewsData.find(function(r) { return r.id === doc.id; });
+          if (review) review.pendingEdit = doc.data();
+        });
+        renderReviewsList(window._reviewsData);
+      });
     }).catch(function(e) {
       console.error('[REVIEWS_TAB]', e);
       var el = safeEl('reviews-list');
@@ -202,14 +212,16 @@
     var review = (window._reviewsData || []).find(function(r) { return r.id === reviewId; });
     var edit = review && review.pendingEdit;
     if (!edit) { showToast('No pending edit found.', 'error'); return; }
-    reviewsRef.doc(reviewId).update({
+    var batch = window._adminDB.batch();
+    batch.update(reviewsRef.doc(reviewId), {
       rating: Number(edit.rating) || review.rating,
       text: String(edit.text || ''),
       name: String(edit.name || 'Anonymous'),
-      pendingEdit: firebase.firestore.FieldValue.delete(),
       editApprovedAt: firebase.firestore.FieldValue.serverTimestamp(),
       moderationStatus: 'approved'
-    }).then(function() {
+    });
+    batch.delete(window._adminDB.collection('reviewEdits').doc(reviewId));
+    batch.commit().then(function() {
       showToast('Customer review edit approved');
       updateLocalReview(reviewId, {
         rating: Number(edit.rating) || review.rating,
@@ -224,10 +236,7 @@
   window._rejectReviewEdit = function(reviewId) {
     if (!window._guard('reviews', 'moderate')) return;
     if (!confirm('Reject this customer review edit? The currently published review will stay unchanged.')) return;
-    reviewsRef.doc(reviewId).update({
-      pendingEdit: firebase.firestore.FieldValue.delete(),
-      editRejectedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function() {
+    window._adminDB.collection('reviewEdits').doc(reviewId).delete().then(function() {
       showToast('Review edit rejected. The original review remains published.');
       updateLocalReview(reviewId, { pendingEdit: null });
     }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
