@@ -267,7 +267,6 @@
     var batch = window._adminDB.batch();
     batch.delete(reviewsRef.doc(reviewId));
     batch.delete(window._adminDB.collection('reviewEdits').doc(reviewId));
-    batch.delete(window._adminDB.collection('reviewOwners').doc(reviewId));
     batch.commit().then(function() {
       showToast('Review deleted');
       window._reviewsData = (window._reviewsData || []).filter(function(x) { return x.id !== reviewId; });
