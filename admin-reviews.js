@@ -33,6 +33,7 @@
           '<option value="">All</option>' +
           '<option value="approved">Approved</option>' +
           '<option value="pending">Pending</option>' +
+          '<option value="pending_edits">Edits awaiting approval</option>' +
           '<option value="hidden">Hidden</option>' +
         '</select>' +
       '</div>' +
@@ -73,17 +74,17 @@
   ───────────────────────────────────────────────────────── */
   function renderReviewsList(reviews) {
     var filter = (safeEl('review-status-filter') || {}).value || '';
-    var filtered = filter
-      ? reviews.filter(function(r) { return (r.moderationStatus || 'pending') === filter; })
-      : reviews;
+    var filtered = filter === 'pending_edits'
+      ? reviews.filter(function(r) { return !!r.pendingEdit; })
+      : (filter ? reviews.filter(function(r) { return (r.moderationStatus || 'pending') === filter; }) : reviews);
 
     var el = safeEl('reviews-list');
     if (!el) return;
 
     if (filtered.length === 0) {
-      var message = filter
-        ? 'No ' + filter + ' reviews.'
-        : (role === 'VENDOR' ? 'No reviews for your products yet.' : 'No reviews yet.');
+      var message = filter === 'pending_edits'
+        ? 'No review edits are waiting for approval.'
+        : (filter ? 'No ' + filter + ' reviews.' : (role === 'VENDOR' ? 'No reviews for your products yet.' : 'No reviews yet.'));
       el.innerHTML = '<div class="orders-empty-state">' +
         '<div class="orders-empty-icon"><i class="ph-light ph-star"></i></div>' +
         '<div class="orders-empty-title">' + (filter ? 'No matches' : 'All clear') + '</div>' +
@@ -112,6 +113,7 @@
           '</div>' +
           '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' +
             statusBadge(r.moderationStatus || 'pending') +
+            (r.pendingEdit ? '<span class="badge badge-warning">Edit awaiting approval</span>' : '') +
             (r.featured ? '<span class="badge badge-paid">Featured</span>' : '') +
           '</div>' +
         '</div>' +
@@ -144,11 +146,25 @@
               '</div>'
             : '') +
 
+          // Proposed customer edit, kept separate from the public review.
+          (r.pendingEdit
+            ? '<div style="background:var(--accent-soft);border:1px solid var(--border);border-radius:var(--r-xs);padding:10px 12px;margin:0 0 10px;">' +
+                '<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;margin-bottom:7px;">CUSTOMER REQUESTED EDIT</div>' +
+                '<div style="font-size:11px;color:var(--muted);margin-bottom:5px;">Proposed rating: ' + esc(r.pendingEdit.rating || '') + ' / 5</div>' +
+                '<div style="font-size:12px;font-weight:600;margin-bottom:5px;">' + esc(r.pendingEdit.name || 'Anonymous') + '</div>' +
+                (r.pendingEdit.text ? '<p style="font-size:12px;line-height:1.55;color:var(--text);white-space:pre-wrap;">' + esc(r.pendingEdit.text) + '</p>' : '<p style="font-size:11px;color:var(--muted);">No written comment.</p>') +
+              '</div>'
+            : '') +
+
           // Action buttons
           (canModerate || canDelete
             ? '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
                 (canModerate
-                  ? '<button class="btn btn-xs btn-success" onclick="window._approveReview(\'' + esc(r.id) + '\')">Approve</button>' +
+                  ? (r.pendingEdit
+                      ? '<button class="btn btn-xs btn-success" onclick="window._approveReviewEdit(\'' + esc(r.id) + '\')">Approve edit</button>' +
+                        '<button class="btn btn-xs btn-ghost" onclick="window._rejectReviewEdit(\'' + esc(r.id) + '\')">Reject edit</button>'
+                      : '') +
+                    '<button class="btn btn-xs btn-success" onclick="window._approveReview(\'' + esc(r.id) + '\')">Approve</button>' +
                     '<button class="btn btn-xs btn-ghost" onclick="window._hideReview(\'' + esc(r.id) + '\')">Hide</button>' +
                     '<button class="btn btn-xs btn-ghost" onclick="window._featureReview(\'' + esc(r.id) + '\',' + (!r.featured) + ')">' +
                       (r.featured ? 'Unfeature' : 'Feature') +
@@ -178,6 +194,42 @@
     reviewsRef.doc(reviewId).update({ moderationStatus: 'approved' }).then(function() {
       showToast('Review approved');
       updateLocalReview(reviewId, { moderationStatus: 'approved' });
+    }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+  };
+
+  window._approveReviewEdit = function(reviewId) {
+    if (!window._guard('reviews', 'moderate')) return;
+    var review = (window._reviewsData || []).find(function(r) { return r.id === reviewId; });
+    var edit = review && review.pendingEdit;
+    if (!edit) { showToast('No pending edit found.', 'error'); return; }
+    reviewsRef.doc(reviewId).update({
+      rating: Number(edit.rating) || review.rating,
+      text: String(edit.text || ''),
+      name: String(edit.name || 'Anonymous'),
+      pendingEdit: firebase.firestore.FieldValue.delete(),
+      editApprovedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      moderationStatus: 'approved'
+    }).then(function() {
+      showToast('Customer review edit approved');
+      updateLocalReview(reviewId, {
+        rating: Number(edit.rating) || review.rating,
+        text: String(edit.text || ''),
+        name: String(edit.name || 'Anonymous'),
+        pendingEdit: null,
+        moderationStatus: 'approved'
+      });
+    }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+  };
+
+  window._rejectReviewEdit = function(reviewId) {
+    if (!window._guard('reviews', 'moderate')) return;
+    if (!confirm('Reject this customer review edit? The currently published review will stay unchanged.')) return;
+    reviewsRef.doc(reviewId).update({
+      pendingEdit: firebase.firestore.FieldValue.delete(),
+      editRejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      showToast('Review edit rejected. The original review remains published.');
+      updateLocalReview(reviewId, { pendingEdit: null });
     }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
   };
 
