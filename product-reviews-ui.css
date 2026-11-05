@@ -41,3 +41,5 @@
   .product-reviews-toolbar { gap:6px; }
   .product-reviews-toolbar select { max-width:132px; }
 }
+
+.product-review-edit-note { margin:0 0 14px; font-size:11px; line-height:1.5; color:#777; letter-spacing:0; }
