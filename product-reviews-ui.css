@@ -19,7 +19,6 @@
 .product-review-card { padding:16px 0 18px; border-top:1px solid #eee; }
 .product-review-card:first-child { border-top:0; padding-top:0; }
 .product-review-card-head { display:flex; align-items:center; gap:10px; }
-.product-review-avatar { flex:0 0 42px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#f1f1f1; color:#777; font-size:18px; }
 .product-review-author-wrap { min-width:0; flex:1 1 auto; }
 .product-review-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:3px; }
 .product-review-meta .product-review-date { margin:0; }
