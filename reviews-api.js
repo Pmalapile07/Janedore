@@ -287,6 +287,66 @@ module.exports = function registerReviews(app, deps) {
     }
   });
 
+
+  // Public review interactions are deliberately narrow: visitors can
+  // submit one helpfulness vote and one flag per review. They cannot
+  // create, edit, or modify review documents.
+  function validInteractionInput(body) {
+    return body && /^[a-f0-9-]{32,36}$/i.test(String(body.visitorId || '')) &&
+      /^[A-Za-z0-9_-]{1,128}$/.test(String(body.reviewId || ''));
+  }
+
+  app.post('/api/reviews/feedback', async (req, res) => {
+    if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+    if (rateLimited(req, 'review-feedback', 20, 15 * 60 * 1000)) return res.status(429).json({ error: 'Please wait before voting again.' });
+    const b = req.body || {};
+    if (!validInteractionInput(b) || typeof b.helpful !== 'boolean') return res.status(400).json({ error: 'Invalid vote.' });
+    try {
+      const reviewRef = adminDb.collection('reviews').doc(b.reviewId);
+      const reviewSnap = await reviewRef.get();
+      if (!reviewSnap.exists || reviewSnap.data().moderationStatus === 'hidden') return res.status(404).json({ error: 'Review not found.' });
+      const visitorHash = crypto.createHash('sha256').update(String(b.visitorId)).digest('hex');
+      const voteRef = adminDb.collection('reviewFeedback').doc(b.reviewId + '_' + visitorHash);
+      await adminDb.runTransaction(async tx => {
+        const existing = await tx.get(voteRef);
+        if (existing.exists) { const error = new Error('You have already voted on this review.'); error.status = 409; throw error; }
+        tx.create(voteRef, { reviewId: b.reviewId, helpful: b.helpful, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+        tx.update(reviewRef, b.helpful
+          ? { helpfulCount: admin.firestore.FieldValue.increment(1) }
+          : { notHelpfulCount: admin.firestore.FieldValue.increment(1) });
+      });
+      res.json({ ok: true });
+    } catch (e) {
+      if (e.status) return res.status(e.status).json({ error: e.message });
+      console.error('[REVIEWS] Feedback failed:', e.message);
+      res.status(500).json({ error: 'Could not save your vote.' });
+    }
+  });
+
+  app.post('/api/reviews/flag', async (req, res) => {
+    if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+    if (rateLimited(req, 'review-flag', 10, 15 * 60 * 1000)) return res.status(429).json({ error: 'Please wait before reporting again.' });
+    const b = req.body || {};
+    if (!validInteractionInput(b)) return res.status(400).json({ error: 'Invalid report.' });
+    try {
+      const reviewRef = adminDb.collection('reviews').doc(b.reviewId);
+      const reviewSnap = await reviewRef.get();
+      if (!reviewSnap.exists) return res.status(404).json({ error: 'Review not found.' });
+      const visitorHash = crypto.createHash('sha256').update(String(b.visitorId)).digest('hex');
+      const flagRef = adminDb.collection('reviewFlags').doc(b.reviewId + '_' + visitorHash);
+      await adminDb.runTransaction(async tx => {
+        const existing = await tx.get(flagRef);
+        if (existing.exists) { const error = new Error('You have already reported this review.'); error.status = 409; throw error; }
+        tx.create(flagRef, { reviewId: b.reviewId, productId: reviewSnap.data().productId || '', createdAt: admin.firestore.FieldValue.serverTimestamp(), status: 'new' });
+      });
+      res.json({ ok: true });
+    } catch (e) {
+      if (e.status) return res.status(e.status).json({ error: e.message });
+      console.error('[REVIEWS] Flag failed:', e.message);
+      res.status(500).json({ error: 'Could not report this review.' });
+    }
+  });
+
   // My account > Reviews: the signed-in customer's own reviews, matched
   // by their uid or their verified email.
   app.get('/api/account/reviews', async (req, res) => {
