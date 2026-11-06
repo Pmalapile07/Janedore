@@ -65,11 +65,20 @@
         renderReviewsList(window._reviewsData);
         return;
       }
-      return window._adminDB.collection('reviewEdits').get().then(function(edits) {
-        edits.docs.forEach(function(doc) {
+      return Promise.all([
+        window._adminDB.collection('reviewEdits').get(),
+        window._adminDB.collection('reviewFlags').where('status', '==', 'new').get()
+      ]).then(function(results) {
+        results[0].docs.forEach(function(doc) {
           var review = window._reviewsData.find(function(r) { return r.id === doc.id; });
           if (review) review.pendingEdit = doc.data();
         });
+        var flagCounts = {};
+        results[1].docs.forEach(function(doc) {
+          var flag = doc.data();
+          flagCounts[flag.reviewId] = (flagCounts[flag.reviewId] || 0) + 1;
+        });
+        window._reviewsData.forEach(function(review) { review.flagCount = flagCounts[review.id] || 0; });
         renderReviewsList(window._reviewsData);
       });
     }).catch(function(e) {
@@ -125,6 +134,7 @@
             statusBadge(r.moderationStatus || 'pending') +
             (r.pendingEdit ? '<span class="badge badge-warning">Edit awaiting approval</span>' : '') +
             (r.featured ? '<span class="badge badge-paid">Featured</span>' : '') +
+            (r.flagCount ? '<span class="badge badge-warning">' + r.flagCount + ' report' + (r.flagCount === 1 ? '' : 's') + '</span>' : '') +
           '</div>' +
         '</div>' +
 
@@ -147,6 +157,8 @@
           '<div style="font-size:10px;color:var(--muted);margin-bottom:10px;">' +
             fmtDate(r.createdAt) +
           '</div>' +
+
+          (r.flagCount ? '<div style="font-size:11px;color:var(--muted);margin:0 0 10px;"><i class="ph-fill ph-flag"></i> Reported by ' + r.flagCount + ' visitor' + (r.flagCount === 1 ? '' : 's') + '</div>' : '') +
 
           // Vendor reply
           (r.vendorReply
