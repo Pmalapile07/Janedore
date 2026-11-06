@@ -686,20 +686,24 @@
     background: #fff !important;
     border-top: none !important;
   }
-  #chat-window .chat-privacy-note {
-    margin: 0;
-    padding: 0 3px;
-    color: #777;
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 400;
-    line-height: 1.5;
-    text-align: left;
+  #chat-window .chat-privacy-notice {
+    align-self: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 0 2px !important;
+    padding: 10px 12px !important;
+    background: #f4f4f4 !important;
+    color: #444 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    line-height: 1.6 !important;
+    text-align: center !important;
   }
-  #chat-window .chat-privacy-note a {
-    color: #333;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+  #chat-window .chat-privacy-notice a {
+    color: #111 !important;
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
   }
   #chat-window .chat-input-pill {
     display: flex !important;
@@ -1025,13 +1029,6 @@
         <i class="ph ph-arrow-up"></i>
       </button>
     </div>
-    <p class="chat-privacy-note">
-      Messages, your name or email (if provided), and relevant cart details may be stored for customer support.
-      AI replies may process your message with relevant product and delivery information.
-      Photos you attach are uploaded for our customer-care team to review.
-      Please do not share passwords or payment details.
-      <a href="#" onclick="event.preventDefault();navigateToContentPage('privacy-policy')">Privacy policy</a>
-    </p>
   </div>
 
   <div class="chat-footer-brand">
