@@ -51,3 +51,13 @@
 }
 
 .product-review-edit-note { margin:0 0 14px; font-size:11px; line-height:1.5; color:#777; letter-spacing:0; }
+
+.product-review-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px 14px; margin-top:14px; padding-top:10px; border-top:1px solid #eee; }
+.product-review-helpful-label { font-size:10px; color:#777; letter-spacing:0; }
+.product-review-votes { display:flex; align-items:center; gap:10px; }
+.product-review-action, .product-review-flag { display:inline-flex; align-items:center; justify-content:center; gap:5px; border:0; padding:4px 2px; background:transparent; color:#666; font:11px 'Inter',sans-serif; cursor:pointer; }
+.product-review-action i, .product-review-flag i { font-size:15px; }
+.product-review-action.is-selected, .product-review-flag.is-selected { color:#111; }
+.product-review-action:disabled { opacity:.55; cursor:default; }
+.product-review-flag { margin-left:auto; font-size:10px; }
+.product-review-flag i { font-size:12px; }
