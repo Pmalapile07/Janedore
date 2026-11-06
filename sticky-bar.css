@@ -5,10 +5,13 @@
 
 #sticky-add-bar,
 .sticky-add-bar {
- position: fixed;
- left: 0;
- right: 0;
- bottom: 0;
+ /* Keep the bar anchored to the viewport bottom, even if another
+    product-page rule tries to override its positioning. */
+ position: fixed !important;
+ left: 0 !important;
+ right: 0 !important;
+ bottom: 0 !important;
+ width: 100%;
 
  z-index: 850;
 
