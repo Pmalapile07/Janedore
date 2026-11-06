@@ -828,38 +828,109 @@ async function getActiveProductsForAI() {
   return _productsContextCache.data;
 }
 
-// Common words long enough to pass the length filter but meaningless as
-// a match signal — without excluding these, "do you have a dress for
-// evening" could match a completely unrelated product whose description
-// just happens to also contain "for" or "have".
+// Ignore conversational words and common support terms when matching
+// catalogue items. These should not cause an unrelated product to rank.
 const AI_PRODUCT_SEARCH_STOPWORDS = new Set([
   'the', 'and', 'for', 'are', 'you', 'your', 'have', 'has', 'with', 'this',
   'that', 'any', 'some', 'can', 'could', 'would', 'what', 'where', 'when',
-  'looking', 'want', 'need', 'please', 'hello', 'hi', 'hey', 'thanks', 'thank'
+  'looking', 'want', 'need', 'please', 'hello', 'hi', 'hey', 'thanks', 'thank',
+  'does', 'not', 'just', 'about', 'from', 'into', 'there', 'here', 'show',
+  'find', 'get', 'how', 'much', 'price', 'cost', 'order', 'delivery',
+  'shipping', 'return', 'refund', 'policy', 'track', 'status', 'available'
 ]);
 
-// Plain keyword match, not a real search engine — scores each product by
-// how many words from the customer's message appear in its name/brand/
-// category/description, and keeps only genuine matches. A message with
-// no product-shaped words ("hi", "thanks") correctly matches nothing.
-function findRelevantProductsForAI(products, messageText, limit) {
-  const words = String(messageText || '')
+// Expand common shopping language so a customer does not need to use the
+// exact words stored in a product title or category. These are retrieval
+// hints only; Gemini still receives the actual product details as evidence.
+const AI_PRODUCT_SEARCH_SYNONYMS = {
+  dress: ['dresses', 'gown', 'gowns', 'eveningwear', 'occasionwear'],
+  dresses: ['dress', 'gown', 'gowns', 'eveningwear', 'occasionwear'],
+  gown: ['dress', 'dresses', 'formal', 'evening'],
+  wedding: ['formal', 'evening', 'occasion', 'dress', 'gown'],
+  formal: ['occasion', 'evening', 'wedding', 'dress', 'gown'],
+  party: ['occasion', 'evening', 'dress'],
+  sneakers: ['sneaker', 'trainers', 'shoes', 'footwear'],
+  sneaker: ['sneakers', 'trainers', 'shoes', 'footwear'],
+  shoes: ['shoe', 'footwear', 'sneakers', 'sandals', 'heels'],
+  heels: ['heel', 'shoes', 'footwear'],
+  handbag: ['handbags', 'bag', 'bags'],
+  bags: ['bag', 'handbag', 'handbags'],
+  jewellery: ['jewelry', 'accessories'],
+  jewelry: ['jewellery', 'accessories'],
+  accessories: ['accessory', 'jewellery', 'jewelry']
+};
+
+function getProductSearchWords(value) {
+  return String(value || '')
     .toLowerCase()
+    .replace(/&/g, ' and ')
     .split(/[^a-z0-9]+/)
     .filter(w => w.length > 2 && !AI_PRODUCT_SEARCH_STOPWORDS.has(w));
-  if (!words.length) return [];
+}
 
-  const scored = products
-    .map(p => {
-      const haystack = [p.name, p.brand, p.category, p.description, p.productFeatures]
-        .filter(Boolean).join(' ').toLowerCase();
-      const score = words.reduce((n, w) => n + (haystack.includes(w) ? 1 : 0), 0);
-      return { product: p, score };
-    })
-    .filter(s => s.score > 0);
+function flattenAIProductField(value) {
+  if (Array.isArray(value)) return value.map(flattenAIProductField).join(' ');
+  if (value && typeof value === 'object') return Object.values(value).map(flattenAIProductField).join(' ');
+  return value == null ? '' : String(value);
+}
+
+// A follow-up such as "what about black ones?" needs the preceding
+// conversation to resolve "ones". Ordinary new questions do not inherit
+// old product keywords, so an earlier dress search cannot pollute a
+// later shipping or returns question.
+function buildAIProductSearchText(customerText, conversationHistory) {
+  const current = String(customerText || '').trim();
+  const isFollowUp = /\b(what about|how about|and (?:in|with|for)|those|these|that one|this one|it|them|ones|same|similar|instead)\b/i.test(current);
+  if (!isFollowUp || !conversationHistory) return current;
+  return current + ' ' + String(conversationHistory).slice(-2400);
+}
+
+// Rank products using weighted catalogue fields rather than counting
+// accidental substring matches. Names/brands and category/tags matter
+// more than incidental words in a long description.
+function findRelevantProductsForAI(products, messageText, limit) {
+  const queryWords = getProductSearchWords(messageText);
+  if (!queryWords.length || !Array.isArray(products) || !products.length) return [];
+
+  const expandedWords = new Set(queryWords);
+  queryWords.forEach(word => {
+    (AI_PRODUCT_SEARCH_SYNONYMS[word] || []).forEach(alias => expandedWords.add(alias));
+  });
+
+  const scored = products.map(product => {
+    const identity = flattenAIProductField([product.name, product.brand]).toLowerCase();
+    const categories = flattenAIProductField([
+      product.category, product.type, product.subcategory, product.subCategory,
+      product.productType, product.collection, product.occasion, product.tags,
+      product.keywords
+    ]).toLowerCase();
+    const details = flattenAIProductField([
+      product.description, product.productFeatures, product.color, product.colors,
+      product.material, product.gender, product.sizes
+    ]).toLowerCase();
+
+    const identityWords = new Set(getProductSearchWords(identity));
+    const categoryWords = new Set(getProductSearchWords(categories));
+    const detailWords = new Set(getProductSearchWords(details));
+
+    let score = 0;
+    expandedWords.forEach(word => {
+      if (identityWords.has(word)) score += 3;
+      else if (categoryWords.has(word)) score += 2;
+      else if (detailWords.has(word)) score += 1;
+    });
+
+    // Exact phrase hits are useful, but never enough to bypass the
+    // requirement for a real catalogue match.
+    const normalizedQuery = String(messageText || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const normalizedName = identity.replace(/[^a-z0-9]+/g, ' ').trim();
+    if (normalizedQuery && normalizedName && normalizedName.includes(normalizedQuery)) score += 4;
+
+    return { product, score };
+  }).filter(item => item.score > 0);
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, limit).map(s => s.product);
+  return scored.slice(0, Math.max(1, Number(limit) || 6)).map(item => item.product);
 }
 
 function describeProductForAI(p) {
@@ -951,16 +1022,69 @@ function renderProductCardsFromSnapshot(el, products) {
   el.appendChild(wrap);
 }
 
-// Always resolves to a usable string — including the "nothing matched"
-// case — so the template can do a plain {{products}} substitution with
-// no conditional logic required.
-async function buildProductsContextForAI(messageText) {
-  const products = await getActiveProductsForAI();
-  const matches = findRelevantProductsForAI(products, messageText, 6);
-  if (!matches.length) {
-    return "No specific products matched this message yet. If the customer is looking for something, ask a short clarifying question (what they're after, size, occasion) before recommending anything, and don't invent products.";
+// Fetch a small, recent slice of the actual customer-facing conversation.
+// This lets the model resolve follow-ups such as "what about the black one?"
+// without sending account details, internal metadata or the entire chat log.
+async function getRecentConversationContextForAI() {
+  const rtdb = getRTDB();
+  if (!rtdb || !chatSessionId) return 'No previous conversation is available.';
+
+  try {
+    const snap = await rtdb.ref('live_chat/' + chatSessionId + '/messages')
+      .orderByChild('createdAt')
+      .limitToLast(12)
+      .once('value');
+
+    const messages = [];
+    snap.forEach(child => {
+      const message = child.val() || {};
+      if (message.type === 'auth' || message.sender === 'system') return;
+
+      const rawText = String(message.text || '').replace(/\s+/g, ' ').trim();
+      const text = rawText || (message.type === 'image' ? '[Image shared]' : '');
+      if (!text) return;
+
+      let speaker = 'JANEDORE support';
+      if (message.sender === 'customer') speaker = 'Customer';
+      else if (message.senderName === 'JAI') speaker = 'JANEDORE AI';
+
+      messages.push(speaker + ': ' + text.slice(0, 650));
+    });
+
+    if (!messages.length) return 'No previous conversation is available.';
+
+    // Keep the newest messages within a predictable prompt budget.
+    let selected = [];
+    let total = 0;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const line = messages[i];
+      if (total + line.length > 4200) continue;
+      selected.unshift(line);
+      total += line.length;
+    }
+    return selected.join('\n');
+  } catch (e) {
+    _ScreenDebug.warn('AI', 'Could not load recent conversation context: ' + e.message);
+    return 'Previous conversation could not be loaded. Answer the current message on its own.';
   }
-  return matches.map(describeProductForAI).join('\n');
+}
+
+// Product context is based on the current request. Only contextual
+// follow-ups inherit earlier conversation words, preventing stale topics
+// from influencing unrelated questions. The exact matches are also kept
+// for the product cards shown below the AI reply.
+let _lastAIMatchedProducts = [];
+
+async function buildProductsContextForAI(messageText, conversationHistory) {
+  const products = await getActiveProductsForAI();
+  const searchText = buildAIProductSearchText(messageText, conversationHistory);
+  const matches = findRelevantProductsForAI(products, searchText, 6);
+  _lastAIMatchedProducts = matches;
+
+  if (!matches.length) {
+    return 'PRODUCT SEARCH RESULT: No matching active products were found for this request. This is not evidence that JANEDORE has no products in that category. Do not invent product names, prices, sizes or stock. If the customer is clearly shopping, ask one useful clarifying question or explain that no matching items were found.';
+  }
+  return 'MATCHING ACTIVE PRODUCTS:\n' + matches.map(describeProductForAI).join('\n');
 }
 
 // Same slugs admin-pages.js seeds for the "Policies"/"Help" footer
@@ -1047,12 +1171,14 @@ async function getAIReply(customerText) {
       try {
         _ScreenDebug.ai('AI', 'Calling getReply attempt ' + attempt + '/' + MAX_ATTEMPTS + ' — textLength=' + safeText.length);
         const t0 = Date.now();
-        const [productsContext, shippingInfo] = await Promise.all([
-          buildProductsContextForAI(safeText),
+        const [conversationHistory, shippingInfo] = await Promise.all([
+          getRecentConversationContextForAI(),
           getShippingReturnsContextForAI()
         ]);
+        const productsContext = await buildProductsContextForAI(safeText, conversationHistory);
         const reply = await window._aiBridge.getReply('customer-support-chat', {
           customerText: safeText,
+          conversationHistory: conversationHistory,
           products: productsContext,
           shippingInfo: shippingInfo
         });
@@ -1734,13 +1860,9 @@ async function sendChatMessage() {
         // (see buildProductsContextForAI()/getAIReply()) rather than
         // trying to parse product names out of its reply text, so
         // there's no risk of a card mismatching or a hallucinated item.
-        let matchedForCards = [];
-        try {
-          const productsForCards = await getActiveProductsForAI();
-          matchedForCards = findRelevantProductsForAI(productsForCards, text, 4);
-        } catch (e) {
-          _ScreenDebug.err('AI', 'Failed to match products for cards: ' + e.message);
-        }
+        // Use the same retrieval result that was supplied to Gemini. This
+        // keeps visible product cards consistent with the evidence in its prompt.
+        const matchedForCards = _lastAIMatchedProducts.slice(0, 4);
         const productSnapshots = matchedForCards.map(buildProductCardSnapshot);
 
         const aiMessage = {
