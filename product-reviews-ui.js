@@ -64,7 +64,6 @@
   window.flagProductReview = async function(reviewId, button) {
     const visitorId = reviewVisitorId();
     if (!visitorId) return alert('Please enable site storage to report a review.');
-    if (!confirm('Report this review to JANEDORE for review?')) return;
     button.disabled = true;
     try {
       const response = await fetch('/api/reviews/flag', {
@@ -74,7 +73,8 @@
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not report this review.');
       button.classList.add('is-selected');
-      button.textContent = 'Review reported';
+      const label = button.querySelector('span');
+      if (label) label.textContent = 'Review flagged';
     } catch (error) {
       button.disabled = false;
       alert(error.message);
@@ -138,7 +138,7 @@
             '<button type="button" class="product-review-action" aria-label="Yes, helpful" onclick="submitReviewFeedback(\'' + escapeHTML(review.id || '') + '\',true,this)"><i class="ph ph-thumbs-up" aria-hidden="true"></i><span>' + (Number(review.helpfulCount) || 0) + '</span></button>' +
             '<button type="button" class="product-review-action" aria-label="No, not helpful" onclick="submitReviewFeedback(\'' + escapeHTML(review.id || '') + '\',false,this)"><i class="ph ph-thumbs-down" aria-hidden="true"></i><span>' + (Number(review.notHelpfulCount) || 0) + '</span></button>' +
           '</div>' +
-          '<button type="button" class="product-review-flag" onclick="flagProductReview(\'' + escapeHTML(review.id || '') + '\',this)"><i class="ph-fill ph-flag" aria-hidden="true"></i> Flag review</button>' +
+          '<button type="button" class="product-review-flag" onclick="flagProductReview(\'' + escapeHTML(review.id || '') + '\',this)"><i class="ph-fill ph-flag" aria-hidden="true"></i><span>Flag review</span></button>' +
         '</div>' +
         '</article>';
     }).join('');
