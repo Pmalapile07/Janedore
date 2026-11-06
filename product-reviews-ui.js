@@ -40,6 +40,26 @@
     } catch (_) { return ''; }
   }
 
+  function getReviewInteraction(reviewId) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('janedore_review_interactions') || '{}');
+      return saved[reviewId] || {};
+    } catch (_) { return {}; }
+  }
+
+  function saveReviewInteraction(reviewId, interaction) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('janedore_review_interactions') || '{}');
+      saved[reviewId] = Object.assign({}, saved[reviewId], interaction);
+      localStorage.setItem('janedore_review_interactions', JSON.stringify(saved));
+      return true;
+    } catch (_) { return false; }
+  }
+
+  function findReview(reviewId) {
+    return items.find(review => review.id === reviewId);
+  }
+
   window.submitReviewFeedback = async function(reviewId, helpful, button) {
     const visitorId = reviewVisitorId();
     if (!visitorId) return alert('Please enable site storage to vote.');
@@ -51,10 +71,13 @@
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not save your vote.');
-      button.classList.add('is-selected');
-      button.closest('.product-review-votes').querySelectorAll('button').forEach(b => { b.disabled = true; });
-      const count = button.querySelector('span');
-      if (count) count.textContent = Number(count.textContent || 0) + 1;
+      saveReviewInteraction(reviewId, { vote: helpful ? 'helpful' : 'notHelpful' });
+      const review = findReview(reviewId);
+      if (review) {
+        const countKey = helpful ? 'helpfulCount' : 'notHelpfulCount';
+        review[countKey] = (Number(review[countKey]) || 0) + 1;
+      }
+      renderList();
     } catch (error) {
       button.disabled = false;
       alert(error.message);
@@ -72,9 +95,8 @@
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not report this review.');
-      button.classList.add('is-selected');
-      const label = button.querySelector('span');
-      if (label) label.textContent = 'Review flagged';
+      saveReviewInteraction(reviewId, { flagged: true });
+      renderList();
     } catch (error) {
       button.disabled = false;
       alert(error.message);
@@ -132,14 +154,20 @@
         (review.rewarded ? '<p class="product-review-reward">Received a thank-you voucher for this review</p>' : '') +
         reviewPhotosHtml(review, 'Photo from ' + escapeHTML(authorName === 'Anonymous' ? 'a customer' : authorName)) +
         reply +
-        '<div class="product-review-actions">' +
-          '<span class="product-review-helpful-label">Was this helpful to you?</span>' +
-          '<div class="product-review-votes">' +
-            '<button type="button" class="product-review-action" aria-label="Yes, helpful" onclick="submitReviewFeedback(\'' + escapeHTML(review.id || '') + '\',true,this)"><i class="ph ph-thumbs-up" aria-hidden="true"></i><span>' + (Number(review.helpfulCount) || 0) + '</span></button>' +
-            '<button type="button" class="product-review-action" aria-label="No, not helpful" onclick="submitReviewFeedback(\'' + escapeHTML(review.id || '') + '\',false,this)"><i class="ph ph-thumbs-down" aria-hidden="true"></i><span>' + (Number(review.notHelpfulCount) || 0) + '</span></button>' +
-          '</div>' +
-          '<button type="button" class="product-review-flag" onclick="flagProductReview(\'' + escapeHTML(review.id || '') + '\',this)"><i class="ph-fill ph-flag" aria-hidden="true"></i><span>Flag review</span></button>' +
-        '</div>' +
+        (() => {
+          const interaction = getReviewInteraction(review.id || '');
+          const vote = interaction.vote || '';
+          const flagged = interaction.flagged === true;
+          const reviewId = escapeHTML(review.id || '');
+          return '<div class="product-review-actions">' +
+            '<span class="product-review-helpful-label">Was this helpful to you?</span>' +
+            '<div class="product-review-votes">' +
+              '<button type="button" class="product-review-action' + (vote === 'helpful' ? ' is-selected' : '') + '"' + (vote ? ' disabled' : '') + ' aria-pressed="' + (vote === 'helpful') + '" aria-label="Yes, helpful" onclick="submitReviewFeedback(\'' + reviewId + '\',true,this)"><i class="ph ph-thumbs-up" aria-hidden="true"></i><span>' + (Number(review.helpfulCount) || 0) + '</span></button>' +
+              '<button type="button" class="product-review-action' + (vote === 'notHelpful' ? ' is-selected' : '') + '"' + (vote ? ' disabled' : '') + ' aria-pressed="' + (vote === 'notHelpful') + '" aria-label="No, not helpful" onclick="submitReviewFeedback(\'' + reviewId + '\',false,this)"><i class="ph ph-thumbs-down" aria-hidden="true"></i><span>' + (Number(review.notHelpfulCount) || 0) + '</span></button>' +
+            '</div>' +
+            '<button type="button" class="product-review-flag' + (flagged ? ' is-selected' : '') + '"' + (flagged ? ' disabled' : '') + ' aria-pressed="' + flagged + '" onclick="flagProductReview(\'' + reviewId + '\',this)"><i class="ph-fill ph-flag" aria-hidden="true"></i><span>' + (flagged ? 'Review flagged' : 'Flag review') + '</span></button>' +
+          '</div>';
+        })() +
         '</article>';
     }).join('');
   }
