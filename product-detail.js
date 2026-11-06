@@ -729,7 +729,7 @@ async function renderProductPage(product) {
         </div>
         <div class="info-accordion-item" id="info-accordion-reviews">
           <div class="info-accordion-header" onclick="toggleInfoAccordion('reviews')">
-            <span>Reviews <span id="product-review-count"></span></span>
+            <span>Customer reviews <span id="product-review-count"></span></span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="info-accordion-body" id="product-reviews-body"><p>Loading reviews…</p></div>
