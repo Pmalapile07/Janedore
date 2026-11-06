@@ -258,6 +258,19 @@ service cloud.firestore {
       allow delete: if isSuperAdmin() || isAdmin();
     }
 
+    // Public review interactions are written only by the server API.
+    // Direct client writes are denied, so visitors cannot create or edit
+    // reviews or forge vote counters. Staff can inspect interaction records.
+    match /reviewFeedback/{voteId} {
+      allow read: if isPlatformStaff();
+      allow write: if false;
+    }
+
+    match /reviewFlags/{flagId} {
+      allow read: if isPlatformStaff();
+      allow write: if false;
+    }
+
     // Who wrote each review (email, account): server only, readable by
     // admins. Kept apart from reviews/{id}, which anyone can read.
     match /reviewOwners/{reviewId} {
