@@ -677,12 +677,29 @@
 
   /* ---------- INPUT PILL (border above removed) ---------- */
   #chat-window .chat-input-wrap {
-    align-items: center !important;
-    padding: 14px 16px !important;
-    gap: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 10px 16px 14px !important;
+    gap: 8px !important;
     flex-shrink: 0 !important;
     background: #fff !important;
     border-top: none !important;
+  }
+  #chat-window .chat-privacy-note {
+    margin: 0;
+    padding: 0 3px;
+    color: #777;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+  }
+  #chat-window .chat-privacy-note a {
+    color: #333;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   #chat-window .chat-input-pill {
     display: flex !important;
@@ -997,6 +1014,13 @@
   </div>
 
   <div class="chat-input-wrap" id="chat-input-wrap" style="display:flex;">
+    <p class="chat-privacy-note">
+      Messages, your name or email (if provided), and relevant cart details may be stored for customer support.
+      AI replies may process your message with relevant product and delivery information.
+      Photos you attach are uploaded for our customer-care team to review.
+      Please do not share passwords or payment details.
+      <a href="#" onclick="event.preventDefault();navigateToContentPage('privacy-policy')">Privacy policy</a>
+    </p>
     <div class="chat-input-pill">
       <button class="chat-attach-btn" id="chat-attach-btn" onclick="pickAndSendChatImage()" aria-label="Attach a photo">
         <i class="ph ph-paperclip-horizontal chat-attach-icon"></i>
