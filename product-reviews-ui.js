@@ -123,17 +123,21 @@
     if (activeProductId !== productId) sort = 'newest';
     activeProductId = productId;
 
+    const sortToolbar = reviews.length > 1
+      ? '<div class="product-reviews-toolbar">' +
+        '<label for="product-review-sort">Sort by</label>' +
+        '<select id="product-review-sort" onchange="sortProductReviews(this.value)">' +
+        '<option value="newest">Most recent</option><option value="highest">Highest rating</option>' +
+        '<option value="lowest">Lowest rating</option></select></div>'
+      : '';
+
     body.innerHTML = '<section class="product-reviews-summary" aria-label="Customer rating summary">' +
       '<div class="product-reviews-average"><strong>' + average.toFixed(1) + '</strong>' +
       '<span class="product-review-stars" aria-label="' + average.toFixed(1) + ' out of 5">' + stars(average) + '</span>' +
       '<p>' + reviews.length + ' customer review' + (reviews.length === 1 ? '' : 's') + '</p></div>' +
       '<div class="product-review-breakdown">' + breakdown + '</div></section>' +
       writeButton +
-      '<div class="product-reviews-toolbar">' +
-      '<label for="product-review-sort">Sort by</label>' +
-      '<select id="product-review-sort" onchange="sortProductReviews(this.value)">' +
-      '<option value="newest">Most recent</option><option value="highest">Highest rating</option>' +
-      '<option value="lowest">Lowest rating</option></select></div>' +
+      sortToolbar +
       '<div id="product-review-list" class="product-review-list"></div>';
 
     const select = document.getElementById('product-review-sort');
