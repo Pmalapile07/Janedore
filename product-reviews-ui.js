@@ -11,6 +11,15 @@
       ? review.createdAt.toDate().getTime() : 0;
   }
 
+  function formatPersonName(value) {
+    return String(value || 'Anonymous')
+      .trim()
+      .toLocaleLowerCase('en-ZA')
+      .replace(/(^|[\\s'-])([\\p{L}])/gu, (_, separator, letter) =>
+        separator + letter.toLocaleUpperCase('en-ZA')
+      );
+  }
+
   function stars(rating) {
     return Array.from({ length: 5 }, (_, i) =>
       '<i class="' + (i < Math.round(rating) ? 'ph-fill' : 'ph') +
@@ -35,7 +44,7 @@
       const clock = createdAt
         ? new Date(createdAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false })
         : '';
-      const authorName = String(review.name || 'Anonymous');
+      const authorName = formatPersonName(review.name);
       const author = [authorName, review.city]
         .filter(Boolean).map(escapeHTML).join(' · ');
       const rating = Math.max(0, Math.min(5, Number(review.rating) || 0));
@@ -56,7 +65,7 @@
         '<p class="product-review-stars" aria-label="' + rating + ' out of 5">' + stars(rating) + '</p>' +
         (review.text ? '<p class="product-review-text">' + escapeHTML(review.text) + '</p>' : '') +
         (review.rewarded ? '<p class="product-review-reward">Received a thank-you voucher for this review</p>' : '') +
-        reviewPhotosHtml(review, 'Photo from ' + escapeHTML(review.name || 'a customer')) +
+        reviewPhotosHtml(review, 'Photo from ' + escapeHTML(authorName === 'Anonymous' ? 'a customer' : authorName)) +
         reply +
         '</article>';
     }).join('');
