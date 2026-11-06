@@ -880,7 +880,7 @@ function flattenAIProductField(value) {
 // later shipping or returns question.
 function buildAIProductSearchText(customerText, conversationHistory) {
   const current = String(customerText || '').trim();
-  const isFollowUp = /\b(what about|how about|and (?:in|with|for)|those|these|that one|this one|it|them|ones|same|similar|instead)\b/i.test(current);
+  const isFollowUp = /\b(what about|how about|and (?:in|with|for)|those|these|that one|this one|which one|same|similar|instead|(?:is|are|does|do) (?:it|that|those|these) (?:available|come|have|in|with|look|fit)|(?:it|they|them) (?:in|come|available|have|look|fit))\b/i.test(current);
   if (!isFollowUp || !conversationHistory) return current;
   return current + ' ' + String(conversationHistory).slice(-2400);
 }
