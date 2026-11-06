@@ -121,7 +121,7 @@
         ? '<div class="product-review-brand-reply"><span>Brand reply</span><p>' + escapeHTML(review.vendorReply) + '</p></div>' : '';
 
       return '<article class="product-review-card">' +
-        '<div class="product-review-card-head"><span class="product-review-avatar" aria-hidden="true"><i class="ph ph-user" aria-hidden="true"></i></span>' +
+        '<div class="product-review-card-head">' +
         '<div class="product-review-author-wrap">' +
         '<div class="product-review-author-line"><p class="product-review-author">' + author + '</p>' + featured + '</div>' +
         '<div class="product-review-meta">' +
