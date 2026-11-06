@@ -15,7 +15,7 @@
     return String(value || 'Anonymous')
       .trim()
       .toLocaleLowerCase('en-ZA')
-      .replace(/(^|[\\s'-])([\\p{L}])/gu, (_, separator, letter) =>
+      .replace(/(^|[\s'-])([\p{L}])/gu, (_, separator, letter) =>
         separator + letter.toLocaleUpperCase('en-ZA')
       );
   }
