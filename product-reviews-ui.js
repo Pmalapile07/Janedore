@@ -11,6 +11,76 @@
       ? review.createdAt.toDate().getTime() : 0;
   }
 
+  function relativeReviewDate(timestamp) {
+    const days = Math.max(0, Math.floor((Date.now() - timestamp) / 86400000));
+    if (days === 0) return 'Today';
+    if (days === 1) return '1 day ago';
+    if (days < 7) return days + ' days ago';
+    if (days < 14) return '1 week ago';
+    if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+    if (days < 60) return '1 month ago';
+    if (days < 365) return Math.floor(days / 30) + ' months ago';
+    if (days < 730) return '1 year ago';
+    return Math.floor(days / 365) + ' years ago';
+  }
+
+  function reviewVisitorId() {
+    const key = 'janedore_review_visitor';
+    try {
+      let id = localStorage.getItem(key);
+      if (!id) {
+        id = window.crypto && crypto.randomUUID ? crypto.randomUUID() :
+          'xxxxxxxxyxxx4xxxyxxxyxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+          });
+        localStorage.setItem(key, id);
+      }
+      return id;
+    } catch (_) { return ''; }
+  }
+
+  window.submitReviewFeedback = async function(reviewId, helpful, button) {
+    const visitorId = reviewVisitorId();
+    if (!visitorId) return alert('Please enable site storage to vote.');
+    button.disabled = true;
+    try {
+      const response = await fetch('/api/reviews/feedback', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, helpful, visitorId })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not save your vote.');
+      button.classList.add('is-selected');
+      button.closest('.product-review-votes').querySelectorAll('button').forEach(b => { b.disabled = true; });
+      const count = button.querySelector('span');
+      if (count) count.textContent = Number(count.textContent || 0) + 1;
+    } catch (error) {
+      button.disabled = false;
+      alert(error.message);
+    }
+  };
+
+  window.flagProductReview = async function(reviewId, button) {
+    const visitorId = reviewVisitorId();
+    if (!visitorId) return alert('Please enable site storage to report a review.');
+    if (!confirm('Report this review to JANEDORE for review?')) return;
+    button.disabled = true;
+    try {
+      const response = await fetch('/api/reviews/flag', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, visitorId })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not report this review.');
+      button.classList.add('is-selected');
+      button.textContent = 'Review reported';
+    } catch (error) {
+      button.disabled = false;
+      alert(error.message);
+    }
+  };
+
   function formatPersonName(value) {
     return String(value || 'Anonymous')
       .trim()
@@ -38,12 +108,7 @@
 
     list.innerHTML = sorted.map(review => {
       const createdAt = time(review);
-      const date = createdAt
-        ? new Date(createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
-        : '';
-      const clock = createdAt
-        ? new Date(createdAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false })
-        : '';
+      const date = createdAt ? relativeReviewDate(createdAt) : '';
       const authorName = formatPersonName(review.name);
       const author = [authorName, review.city]
         .filter(Boolean).map(escapeHTML).join(' · ');
@@ -60,13 +125,21 @@
         '<div class="product-review-author-wrap">' +
         '<div class="product-review-author-line"><p class="product-review-author">' + author + '</p>' + featured + '</div>' +
         '<div class="product-review-meta">' +
-        (date ? '<span class="product-review-date">' + escapeHTML(date) + (clock ? ' · ' + escapeHTML(clock) : '') + '</span>' : '') +
+        (date ? '<span class="product-review-date">' + escapeHTML(date) + '</span>' : '') +
         verified + '</div></div></div>' +
         '<p class="product-review-stars" aria-label="' + rating + ' out of 5">' + stars(rating) + '</p>' +
         (review.text ? '<p class="product-review-text">' + escapeHTML(review.text) + '</p>' : '') +
         (review.rewarded ? '<p class="product-review-reward">Received a thank-you voucher for this review</p>' : '') +
         reviewPhotosHtml(review, 'Photo from ' + escapeHTML(authorName === 'Anonymous' ? 'a customer' : authorName)) +
         reply +
+        '<div class="product-review-actions">' +
+          '<span class="product-review-helpful-label">Was this helpful to you?</span>' +
+          '<div class="product-review-votes">' +
+            '<button type="button" class="product-review-action" aria-label="Yes, helpful" onclick="submitReviewFeedback(\'' + escapeHTML(review.id || '') + '\',true,this)"><i class="ph ph-thumbs-up" aria-hidden="true"></i><span>' + (Number(review.helpfulCount) || 0) + '</span></button>' +
+            '<button type="button" class="product-review-action" aria-label="No, not helpful" onclick="submitReviewFeedback(\'' + escapeHTML(review.id || '') + '\',false,this)"><i class="ph ph-thumbs-down" aria-hidden="true"></i><span>' + (Number(review.notHelpfulCount) || 0) + '</span></button>' +
+          '</div>' +
+          '<button type="button" class="product-review-flag" onclick="flagProductReview(\'' + escapeHTML(review.id || '') + '\',this)"><i class="ph-fill ph-flag" aria-hidden="true"></i> Flag review</button>' +
+        '</div>' +
         '</article>';
     }).join('');
   }
@@ -81,7 +154,7 @@
     let reviews = [];
     try {
       const snap = await db.collection('reviews').where('productId', '==', productId).limit(100).get();
-      reviews = snap.docs.map(doc => doc.data());
+      reviews = snap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
     } catch (error) {
       console.warn('[REVIEWS]', error.message);
     }
