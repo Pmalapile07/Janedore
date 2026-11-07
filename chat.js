@@ -183,6 +183,7 @@ function clearChatIdentityOnLogout() {
 }
 
 let chatOpen = false;
+let hasConversation = false;
 let typingTimeout = null;
 let loadedMessageKeys = new Set();
 let hasLoadedOnce = false;
@@ -446,7 +447,7 @@ function toggleChat() {
     _ScreenDebug.info('UI', 'Chat opened');
     clearChatNotification();
 
-    showScreen('chat-messages');
+    showScreen('chat-welcome-screen');
     setHeaderIcon('ph ph-x');
     setChatHeaderState(false);
     const inputWrap = safeEl('chat-input-wrap');
@@ -502,7 +503,7 @@ function toggleChat() {
 }
 
 function showScreen(id) {
-  ['chat-messages', 'order-lookup'].forEach(s => {
+  ['chat-welcome-screen', 'chat-messages', 'order-lookup'].forEach(s => {
     const el = safeEl(s);
     if (el) el.style.display = 'none';
   });
@@ -528,6 +529,7 @@ function updateCustomerInfoBar() {
 function showOrderLookup() {
   _ScreenDebug.info('UI', 'Order lookup screen');
   showScreen('order-lookup');
+  setChatHeaderState(true);
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'none';
   setHeaderIcon('ph ph-arrow-up-left');
@@ -561,16 +563,14 @@ function setChatHeaderState(activeConversation) {
 // not close the widget, navigate the storefront, or delete stored messages.
 function backToWelcomeScreen() {
   _ScreenDebug.info('UI', 'Back to chat welcome screen');
-  const messages = safeEl('chat-messages');
-  if (messages) messages.innerHTML = '';
   const orderLookup = safeEl('order-lookup');
   if (orderLookup) orderLookup.style.display = 'none';
-  showScreen('chat-messages');
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'flex';
   const input = safeEl('chat-input');
   if (input) { input.value = ''; input.placeholder = 'Type your message...'; }
   renderAIGreeting();
+  showScreen('chat-welcome-screen');
   setChatHeaderState(false);
 }
 
@@ -584,12 +584,9 @@ function handleHeaderButtonClick() {
 }
 
 function backToChat() {
-  _ScreenDebug.info('UI', 'Back to chat');
-  showScreen('chat-messages');
-  const inputWrap = safeEl('chat-input-wrap');
-  if (inputWrap) inputWrap.style.display = 'flex';
-  setHeaderIcon('ph ph-x');
-  setChatHeaderState(false);
+  _ScreenDebug.info('UI', 'Back to conversation');
+  showConversationScreen();
+  setHeaderIcon('ph ph-arrow-left');
 }
 
 function clearChatSession() {
@@ -703,23 +700,42 @@ function quickActionShippingReturns() {
 }
 
 function quickActionAskAnything() {
+  showConversationScreen();
   const input = safeEl('chat-input');
-  if (input) input.focus();
+  if (input) focusIfDesktop(input);
+}
+
+function showConversationScreen() {
+  showScreen('chat-messages');
+  const inputWrap = safeEl('chat-input-wrap');
+  if (inputWrap) inputWrap.style.display = 'flex';
+  const input = safeEl('chat-input');
+  if (input) input.placeholder = 'Type your message...';
+  setChatHeaderState(true);
 }
 
 function renderAIGreeting() {
-  const el = safeEl('chat-messages');
+  const el = safeEl('chat-welcome-screen');
   if (!el) return;
   el.innerHTML = '';
 
   const screen = document.createElement('div');
-  screen.id = 'jai-welcome-screen';
+  screen.id = 'jai-welcome-content';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'jai-welcome-bubble';
+
+  const kicker = document.createElement('div');
+  kicker.className = 'jai-welcome-kicker';
+  kicker.textContent = 'Welcome to JAI';
 
   const question = document.createElement('div');
-  question.className = 'jai-welcome-bubble';
+  question.className = 'jai-welcome-question';
   question.textContent = 'How can I help you today?';
 
-  screen.appendChild(question);
+  bubble.appendChild(kicker);
+  bubble.appendChild(question);
+  screen.appendChild(bubble);
 
   const timeLine = document.createElement('div');
   timeLine.className = 'jai-welcome-time';
@@ -738,7 +754,7 @@ function renderAIGreeting() {
     { icon: 'ph ph-tote-simple', title: 'Find something new', onClick: quickActionDiscoverProduct },
     { icon: 'ph ph-package', title: 'Track an order', onClick: quickActionTrackOrder },
     { icon: 'ph ph-truck', title: 'Shipping & returns', onClick: quickActionShippingReturns },
-    { icon: 'ph ph-chat', title: 'Ask a question', onClick: quickActionAskAnything }
+    { icon: 'ph ph-chat', title: hasConversation ? 'Go back to conversation' : 'Ask a question', onClick: quickActionAskAnything }
   ];
 
   QUICK_ACTION_CARDS.forEach(c => {
@@ -775,14 +791,12 @@ function renderAIGreeting() {
   setChatHeaderState(false);
 }
 
-// Once the customer actually sends something — text or an image — the
-// starter welcome screen (greeting + quick-action cards) has done its
-// job and just takes up space above the real conversation, so it's
-// removed outright rather than left to scroll past.
+// A message starts or resumes the separate conversation screen. The
+// welcome screen stays mounted separately and can be returned to.
 function removeWelcomeScreen() {
-  const screen = document.getElementById('jai-welcome-screen');
-  if (screen) screen.remove();
-  setChatHeaderState(true);
+  hasConversation = true;
+  showConversationScreen();
+  renderAIGreeting();
 }
 
 // Detects a customer asking to track an order in plain text (e.g. "track
@@ -1338,6 +1352,7 @@ async function loadMessages() {
     }
 
     if (!snap.exists()) {
+      hasConversation = false;
       renderAIGreeting();
       return true;
     }
@@ -1361,13 +1376,15 @@ async function loadMessages() {
     const isStale = lastMsg && lastMsg.createdAt && (Date.now() - lastMsg.createdAt) > HISTORY_STALE_MS;
 
     if (!messages.length || isStale) {
+      hasConversation = false;
       _ScreenDebug.info('RTDB', messages.length
         ? 'History stale (last message ' + Math.round((Date.now() - lastMsg.createdAt) / 60000) + 'm ago) — showing fresh greeting, history kept in Firebase'
         : 'No renderable messages — showing greeting');
       renderAIGreeting();
     } else {
+      hasConversation = true;
       messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
-      setChatHeaderState(true);
+      renderAIGreeting();
       _ScreenDebug.info('RTDB', 'Rendered ' + messages.length + ' stored messages');
     }
 
@@ -1434,6 +1451,7 @@ function parseMoodTag(rawText) {
 function appendMessage(m) {
   const el = safeEl('chat-messages');
   if (!el) return;
+  hasConversation = true;
 
   // System messages — still use a pill, but textContent for text
   if (m.sender === 'system') {
@@ -1627,8 +1645,8 @@ function listenChat() {
     if (!m || m.type === 'auth') return;
 
     _ScreenDebug.info('RTDB', 'New message from ' + (m.sender || 'unknown'));
-    if (document.getElementById('jai-welcome-screen')) return;
     appendMessage(m);
+    if (document.getElementById('chat-welcome-screen')) renderAIGreeting();
 
     const el = safeEl('chat-messages');
     if (el) el.scrollTop = el.scrollHeight;
