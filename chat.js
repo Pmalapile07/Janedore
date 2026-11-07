@@ -545,12 +545,10 @@ function setHeaderIcon(iconClass) {
   if (icon) icon.className = iconClass;
 }
 
-// Leave the full-screen chat and return to the storefront homepage.
-// Closing first restores the page scroll lock; navigateTo then switches
-// the underlying storefront to Home using the site's normal router.
-function goHomeFromChat() {
+// Close the chat overlay and reveal whichever storefront screen was open
+// before the customer launched the widget.
+function goBackFromChat() {
   if (chatOpen) toggleChat();
-  if (typeof navigateTo === 'function') navigateTo('home');
 }
 
 function handleHeaderButtonClick() {
@@ -688,6 +686,8 @@ function quickActionAskAnything() {
 function renderAIGreeting() {
   const el = safeEl('chat-messages');
   if (!el) return;
+  const privacyNotice = safeEl('chat-privacy-notice');
+  if (privacyNotice) privacyNotice.style.display = 'none';
 
   const screen = document.createElement('div');
   screen.id = 'jai-welcome-screen';
@@ -774,6 +774,8 @@ function renderAIGreeting() {
 function removeWelcomeScreen() {
   const screen = document.getElementById('jai-welcome-screen');
   if (screen) screen.remove();
+  const privacyNotice = safeEl('chat-privacy-notice');
+  if (privacyNotice) privacyNotice.style.display = 'block';
 }
 
 // Detects a customer asking to track an order in plain text (e.g. "track
@@ -1358,6 +1360,8 @@ async function loadMessages() {
       renderAIGreeting();
     } else {
       messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
+      const privacyNotice = safeEl('chat-privacy-notice');
+      if (privacyNotice) privacyNotice.style.display = 'block';
       _ScreenDebug.info('RTDB', 'Rendered ' + messages.length + ' stored messages');
     }
 
