@@ -206,12 +206,24 @@
 .product-badge-stack {
   position: absolute;
   top: 8px;
-  left: 8px;
+  left: 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+}
+/* Keep the image badges on the exact same left edge as the text below
+   each card. The leading card in homepage sliders has an 18px text inset;
+   all other cards keep their text flush with the image. */
+#arrivals-grid .product-card.slide-leading .product-badge-stack,
+#clothing-grid .product-card.slide-leading .product-badge-stack,
+#accessories-grid .product-card.slide-leading .product-badge-stack,
+#cart-slider-grid .product-card.slide-leading .product-badge-stack,
+#wish-slider-grid .product-card.slide-leading .product-badge-stack,
+#vendor-new-grid .product-card.slide-leading .product-badge-stack,
+.swipe-track .product-card:first-child .product-badge-stack {
+  left: 18px;
 }
 /* Same badge on cards and the product page (product-info.css): black
    with white text. SALE is red with white text, matching the red sale
