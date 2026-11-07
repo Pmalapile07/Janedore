@@ -280,16 +280,18 @@
         <h2 class="checkout-card-title">Contact details</h2>
         <div class="checkout-form-group">
           <label for="checkout-email">Email</label>
-          <input type="email" id="checkout-email" required autocomplete="email" placeholder="your@email.com">
+          <input type="email" id="checkout-email" required maxlength="254" autocomplete="email" placeholder="your@email.com">
         </div>
         <div class="checkout-form-group">
           <label for="checkout-phone">Phone number</label>
-          <input type="tel" id="checkout-phone" required autocomplete="tel" placeholder="+27 81 234 5678">
+          <input type="tel" id="checkout-phone" required maxlength="18" inputmode="tel" autocomplete="tel" placeholder="082 123 4567">
         </div>
       </section>
 
       <section class="checkout-card">
         <h2 class="checkout-card-title" id="checkout-address-title">Delivery address</h2>
+        <button type="button" class="account-outline-btn" id="checkout-use-location" data-jd-use-location="checkout">Use my current location</button>
+        <p class="checkout-card-note" id="checkout-location-status" aria-live="polite">Allow location access to suggest your address, or enter it manually.</p>
         <div class="checkout-form-group">
           <label for="checkout-name">Full name</label>
           <input type="text" id="checkout-name" required autocomplete="name" placeholder="First and last name">
@@ -311,13 +313,14 @@
           </div>
           <div class="checkout-form-group">
             <label for="checkout-province">Province</label>
-            <input type="text" id="checkout-province" required autocomplete="address-level1" placeholder="Gauteng">
+            <input type="text" id="checkout-province" required autocomplete="address-level1" list="jd-checkout-sa-provinces" placeholder="Choose a province">
           </div>
         </div>
+        <datalist id="jd-checkout-sa-provinces"><option>Eastern Cape</option><option>Free State</option><option>Gauteng</option><option>KwaZulu-Natal</option><option>Limpopo</option><option>Mpumalanga</option><option>Northern Cape</option><option>North West</option><option>Western Cape</option></datalist>
         <div class="checkout-form-row">
           <div class="checkout-form-group">
             <label for="checkout-postal">Postal code</label>
-            <input type="text" id="checkout-postal" required autocomplete="postal-code" inputmode="numeric" placeholder="2000">
+            <input type="text" id="checkout-postal" required maxlength="4" pattern="[0-9]{4}" autocomplete="postal-code" inputmode="numeric" placeholder="2000">
           </div>
           <div class="checkout-form-group">
             <label for="checkout-country">Country</label>
