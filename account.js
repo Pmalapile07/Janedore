@@ -332,7 +332,7 @@ async function renderAccountProfile() {
 
     <div class="account-section-title">Default delivery address</div>
     <button type="button" class="account-outline-btn" id="acc-use-location" data-jd-use-location="acc">Use my current location</button>
-    <p class="account-note" id="acc-location-status" aria-live="polite">Or enter your delivery address below.</p>
+    <p class="account-note" id="acc-location-status" aria-live="polite">Or enter your delivery address below. Address data © OpenStreetMap contributors.</p>
     ${field('acc-address', 'Street address', p.address, 'autocomplete="street-address" placeholder="House number and street name"')}
     ${field('acc-suburb', 'Suburb / local area', p.suburb, 'autocomplete="address-level3" placeholder="e.g. Hatfield"')}
     <div class="account-form-row">
