@@ -502,6 +502,13 @@ function toggleChat() {
   }
 }
 
+// Open the privacy policy from the active chat, then minimise the widget.
+// toggleChat() hides the panel and unlocks the page without clearing the conversation.
+function openPrivacyPolicyFromChat() {
+  navigateToContentPage('privacy-policy');
+  if (chatOpen) toggleChat();
+}
+
 function showScreen(id) {
   ['chat-welcome-screen', 'chat-messages', 'order-lookup'].forEach(s => {
     const el = safeEl(s);
