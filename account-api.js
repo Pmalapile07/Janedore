@@ -53,7 +53,7 @@ module.exports = function registerAccount(app, deps) {
     const hasAddress = [address, suburb, city, b.province, postalCode].some(x => String(x || '').trim());
     if (!name || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name)) return res.status(400).json({ error: 'Enter a valid full name.' });
     if (!validEmail) return res.status(400).json({ error: 'Your account email address is not valid. Please contact customer care.' });
-    if (rawPhone && !/^0(6[0-9]|7[1-9]|8[1-4])[0-9]{7}$/.test(phone)) return res.status(400).json({ error: 'Enter a valid South African phone number using 10 digits or +27 format.' });
+    if (rawPhone && !/^0(6[0-9]|7[1-9]|8[1-4])[0-9]{7}$/.test(phone)) return res.status(400).json({ error: 'Enter a 10-digit South African cellphone number starting with 0.' });
     if (hasAddress && (!address || address.length < 5 || address.length > 120 || /[\u0000-\u001f\u007f]/.test(address) ||
       !suburb || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(suburb) ||
       !city || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(city) ||
