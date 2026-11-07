@@ -593,7 +593,7 @@ async function placeOrder(e) {
   const postal = document.getElementById('checkout-postal').value.trim();
   const country = document.getElementById('checkout-country').value.trim();
   const rawPhone = document.getElementById('checkout-phone').value.trim();
-  const phoneResult = window.JDValidation ? window.JDValidation.validatePhone(rawPhone, true) : { ok: /^0[1-8]\\d{8}$/.test(rawPhone), phone: rawPhone };
+  const phoneResult = window.JDValidation ? window.JDValidation.validatePhone(rawPhone, true) : { ok: /^0[1-8][0-9]{8}$/.test(rawPhone), phone: rawPhone };
   const phone = phoneResult.phone;
   const shipmentsNow = getCartShipments();
   const collectFrom = shipmentsNow.filter(s => s.collect).map(s => s.vendorIds[0]);
