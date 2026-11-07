@@ -41,9 +41,7 @@ module.exports = function registerAccount(app, deps) {
     const b = req.body || {};
     const name = String(b.name || '').trim();
     const rawPhone = String(b.phone || '').trim();
-    let phone = rawPhone.replace(/[\s().-]/g, '');
-    if (phone.startsWith('+27')) phone = '0' + phone.slice(3);
-    else if (phone.startsWith('27') && phone.length === 11) phone = '0' + phone.slice(2);
+    const phone = rawPhone.replace(/\D/g, '');
     const email = String(user.email || '').trim().toLowerCase();
     const validEmail = email.length <= 254 && /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(email);
     const provinceNames = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
@@ -55,7 +53,7 @@ module.exports = function registerAccount(app, deps) {
     const hasAddress = [address, suburb, city, b.province, postalCode].some(x => String(x || '').trim());
     if (!name || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name)) return res.status(400).json({ error: 'Enter a valid full name.' });
     if (!validEmail) return res.status(400).json({ error: 'Your account email address is not valid. Please contact customer care.' });
-    if (rawPhone && !/^0[1-8]\d{8}$/.test(phone)) return res.status(400).json({ error: 'Enter a valid South African phone number using 10 digits or +27 format.' });
+    if (rawPhone && !/^0(6[0-9]|7[1-9]|8[1-4])[0-9]{7}$/.test(phone)) return res.status(400).json({ error: 'Enter a valid South African phone number using 10 digits or +27 format.' });
     if (hasAddress && (!address || address.length < 5 || address.length > 120 || /[\u0000-\u001f\u007f]/.test(address) ||
       !suburb || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(suburb) ||
       !city || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(city) ||
