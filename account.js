@@ -325,14 +325,14 @@ async function renderAccountProfile() {
   body.innerHTML = `<form class="account-form" onsubmit="saveAccountProfile(event)" novalidate>
     <div class="account-section-title">Personal details</div>
     ${field('acc-name', 'Full name', p.name || user.displayName, 'autocomplete="name" required')}
-    ${field('acc-phone', 'Phone number', p.phone, 'type="tel" inputmode="tel" maxlength="18" autocomplete="tel" placeholder="082 123 4567"')}
+    ${field('acc-phone', 'Phone number', p.phone, 'type="tel" inputmode="numeric" minlength="10" maxlength="10" pattern="0(6[0-9]|7[1-9]|8[1-4])[0-9]{7}" autocomplete="tel" placeholder="0821234567"')}
     <label class="track-label" for="acc-email">Email address</label>
     <input class="track-input" id="acc-email" value="${escapeHTML(user.email || '')}" disabled>
     <p class="account-note">To change your email address, please contact customer care.</p>
 
     <div class="account-section-title">Default delivery address</div>
     <button type="button" class="account-outline-btn" id="acc-use-location" data-jd-use-location="acc">Use my current location</button>
-    <p class="account-note" id="acc-location-status" aria-live="polite">Or enter your delivery address below. Address data © OpenStreetMap contributors.</p>
+    <p class="account-note" id="acc-location-status" class="account-note account-location-note" aria-live="polite">Or enter your delivery address below. Address data © OpenStreetMap contributors.</p>
     ${field('acc-address', 'Street address', p.address, 'autocomplete="street-address" placeholder="House number and street name"')}
     ${field('acc-suburb', 'Suburb / local area', p.suburb, 'autocomplete="address-level3" placeholder="e.g. Hatfield"')}
     <div class="account-form-row">
