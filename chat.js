@@ -720,7 +720,7 @@ function renderAIGreeting() {
   el.innerHTML = '';
 
   const screen = document.createElement('div');
-  screen.id = 'jai-welcome-content';
+  screen.id = 'jai-welcome-screen';
 
   const bubble = document.createElement('div');
   bubble.className = 'jai-welcome-bubble';
@@ -787,8 +787,6 @@ function renderAIGreeting() {
 
   screen.appendChild(actions);
   el.appendChild(screen);
-
-  setChatHeaderState(false);
 }
 
 // A message starts or resumes the separate conversation screen. The
