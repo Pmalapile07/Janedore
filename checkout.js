@@ -318,6 +318,9 @@ function toggleCheckoutCard(btn) {
 // checked first; nothing is created or charged until Pay now on step 3.
 function goToPaymentStep(e) {
   if (e) e.preventDefault();
+  const form = document.getElementById('checkout-form');
+  if (form && !form.reportValidity()) return;
+  if (window.JDValidation && !window.JDValidation.validateCheckout().ok) return;
   const needsDelivery = getCartShipments().some(s => !s.collect);
   if (needsDelivery && getSelectedBobGoShippingTotal() === null) {
     const status = document.getElementById('bobgo-checkout-status');
@@ -326,9 +329,6 @@ function goToPaymentStep(e) {
     if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
-  const form = document.getElementById('checkout-form');
-  if (form && !form.reportValidity()) return;
-  if (window.JDValidation && !window.JDValidation.validateCheckout().ok) return;
   showCheckoutStep(3);
 }
 
