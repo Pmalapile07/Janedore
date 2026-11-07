@@ -27,6 +27,56 @@ module.exports = function registerAccount(app, deps) {
     return (await adminDb.collection(col).where(field, '==', value).limit(500).get()).docs;
   }
 
+
+  // Customer profile writes go through Admin SDK so the same validation
+  // is enforced even if a browser bypasses the storefront form.
+  app.post('/api/account/profile', async (req, res) => {
+    if (!adminDb) return res.status(503).json({ error: 'Account updates are not configured.' });
+    if (rateLimited(req, 'account-profile', 12, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many updates. Please wait and try again.' });
+    const match = String(req.headers.authorization || '').match(/^Bearer (.+)$/);
+    if (!match) return res.status(401).json({ error: 'Please sign in.' });
+    let user;
+    try { user = await admin.auth().verifyIdToken(match[1]); }
+    catch (_) { return res.status(401).json({ error: 'Your session has expired. Please sign in again.' }); }
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    const rawPhone = String(b.phone || '').trim();
+    let phone = rawPhone.replace(/[\s().-]/g, '');
+    if (phone.startsWith('+27')) phone = '0' + phone.slice(3);
+    else if (phone.startsWith('27') && phone.length === 11) phone = '0' + phone.slice(2);
+    const email = String(user.email || '').trim().toLowerCase();
+    const validEmail = email.length <= 254 && /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(email);
+    const provinceNames = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
+    const province = provinceNames.find(x => x.toLowerCase() === String(b.province || '').trim().toLowerCase()) || '';
+    const address = String(b.address || '').trim();
+    const suburb = String(b.suburb || '').trim();
+    const city = String(b.city || '').trim();
+    const postalCode = String(b.postalCode || '').trim();
+    const hasAddress = [address, suburb, city, b.province, postalCode].some(x => String(x || '').trim());
+    if (!name || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name)) return res.status(400).json({ error: 'Enter a valid full name.' });
+    if (!validEmail) return res.status(400).json({ error: 'Your account email address is not valid. Please contact customer care.' });
+    if (rawPhone && !/^0[1-8]\d{8}$/.test(phone)) return res.status(400).json({ error: 'Enter a valid South African phone number using 10 digits or +27 format.' });
+    if (hasAddress && (!address || address.length < 5 || address.length > 120 || /[\u0000-\u001f\u007f]/.test(address) ||
+      !suburb || suburb.length < 2 || suburb.length > 80 || /[\u0000-\u001f\u007f]/.test(suburb) ||
+      !city || city.length < 2 || city.length > 80 || /[\u0000-\u001f\u007f]/.test(city) ||
+      !province || !/^\d{4}$/.test(postalCode))) {
+      return res.status(400).json({ error: 'Complete your street address, suburb, city, province and 4-digit postal code.' });
+    }
+    const data = {
+      name, phone, address: hasAddress ? address : '', suburb: hasAddress ? suburb : '',
+      city: hasAddress ? city : '', province: hasAddress ? province : '',
+      postalCode: hasAddress ? postalCode : '', email,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      await adminDb.collection('customers').doc(user.uid).set(data, { merge: true });
+      return res.json({ ok: true });
+    } catch (error) {
+      console.error('[ACCOUNT_PROFILE_SAVE]', error.message);
+      return res.status(500).json({ error: 'We couldn’t save your details. Please try again.' });
+    }
+  });
+
   app.post('/api/account/delete', async (req, res) => {
     if (!adminDb) return res.status(503).json({ error: 'Not configured' });
     if (rateLimited(req, 'account-delete', 5, 15 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
