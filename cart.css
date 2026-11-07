@@ -251,8 +251,10 @@ body:has(#page-checkout.active) #main-nav .search-bar-row {
   border-bottom: 1px solid #999;
   border-radius: 0;
   padding: 12px 0;
-  font-family: inherit;
-  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
   color: #111;
   background: transparent;
   outline: none;
