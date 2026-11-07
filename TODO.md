@@ -4,14 +4,14 @@
 Do this before picking up any other TODO. Read the existing implementation and recent Git history first; do not blindly rewrite working checkout behaviour. The goal is to make customer address capture reliable (including hard-to-find South African addresses) and get a valid door-delivery quote for every brand shipment, with clear diagnostics.
 
 ### What is already implemented — preserve and verify it
-- Checkout now has a required **Suburb / local area** field (`checkout.html`, id `checkout-suburb`).
-- Customer account profile has a suburb field (`account.js`, id `acc-suburb`) and saves it as `suburb`.
-- Checkout prefills suburb from the saved profile and, when missing there, tries the latest order address (`checkout.js`).
-- Checkout includes suburb in the Bob Go quote request, validates it, includes it in the order payload, and saves it to the customer profile (`checkout.js`).
-- Server validates and persists the suburb on delivery orders and returns it in order details (`server.js`).
-- Bob Go checkout sends customer suburb as `delivery_address.local_area` and brand pickup suburb as `collection_address.local_area`; it no longer silently substitutes city for suburb (`bobgo-api.js`).
-- Suburb is displayed in saved order details, order emails and Admin order details (`account.js`, `order-emails.js`, `admin-orders.js`).
-- Customer checkout is intended to remain door-to-door only. Do not reintroduce recipient pickup-point or in-store collection choices. Sender-side Bob Go drop-off is a separate fulfilment workflow.
+- [x] Checkout now has a required **Suburb / local area** field (`checkout.html`, id `checkout-suburb`).
+- [x] Customer account profile has a suburb field (`account.js`, id `acc-suburb`) and saves it as `suburb`.
+- [x] Checkout prefills suburb from the saved profile and, when missing there, tries the latest order address (`checkout.js`).
+- [x] Checkout includes suburb in the Bob Go quote request, validates it, includes it in the order payload, and saves it to the customer profile (`checkout.js`).
+- [x] Server validates and persists the suburb on delivery orders and returns it in order details (`server.js`).
+- [x] Bob Go checkout sends customer suburb as `delivery_address.local_area` and brand pickup suburb as `collection_address.local_area`; it no longer silently substitutes city for suburb (`bobgo-api.js`).
+- [x] Suburb is displayed in saved order details, order emails and Admin order details (`account.js`, `order-emails.js`, `admin-orders.js`).
+- [x] Customer checkout is intended to remain door-to-door only. Do not reintroduce recipient pickup-point or in-store collection choices. Sender-side Bob Go drop-off is a separate fulfilment workflow.
 - Existing changes were committed to the repository in the recent Bob Go/suburb work (including commits `8863af9409b5207fe2b88cd56599aac63afb1e63`, `eac2eae2ddf6329992d84a72941193954d4c954c`, `60095d79d76737cbe46819f5867d1178b6ad3a86`, `4abe071b50bd1e96b8f22daeeaf0858975392d9e`, `9139adedc3f0e42d1be552ecac6f71c5025cc306`, and `6336aa40f87709d9be8be37b1ba267fcae21e16a`). Inspect current main rather than assuming these commits are deployed.
 
 ### Current reproducible checkout result
@@ -29,7 +29,7 @@ Do this before picking up any other TODO. Read the existing implementation and r
 2. Inspect THATO's saved private pickup/warehouse address and warehouse grouping logic. Confirm the Naboomspruit address is complete and is the intended sender address. Verify product parcel dimensions/weight and any Bob Go account service-area/rate configuration relevant to that route.
 3. Inspect the raw Bob Go response for THATO and compare it with JANEDORE's response. Explain whether no rates were returned by Bob Go or rates were excluded by our strict door-only filter. Keep the customer destination separate from each brand's sender pickup address.
 4. Fix checkout presentation and safeguards: show a clear per-brand state when a shipment has no eligible door rate; never label the whole quote successful as if every shipment is covered; never silently omit a shipment's shipping fee or allow payment/order submission if a required shipment has no selected eligible rate. Preserve the valid JANEDORE option while clearly identifying THATO's issue.
-5. Implement a robust address location fallback for South African addresses that text autocomplete cannot find. Support manual address entry and an exact map pin so the customer can locate their actual property; store validated latitude/longitude alongside the address and pass coordinates to Bob Go where its API supports them. Also assess whether brand pickup addresses need coordinates for Bob Go's sender-side location search. No Google Maps/Places integration was found in the previously inspected source files. First inspect Render's existing configuration and the current Maps provider/key setup; never ask the user to paste API secrets into chat. If a Google Maps key is not configured, explain the minimum setup required or choose a properly supported alternative. Do not rely on unrestricted public geocoding/tile services.
+5. [ ] **Remaining map-pin work:** the first pass now has an optional device-location button and a rate-limited, attributed OpenStreetMap reverse-geocoding endpoint that suggests address fields. Still add a draggable/exact map pin and persist confirmed coordinates if needed for hard-to-find addresses and sender-side Bob Go location search. Do not treat the reverse-geocoded street as guaranteed; the customer must confirm it. Review provider terms, caching and production suitability before launch.
 6. Ensure suburb and coordinates are consistently saved/loaded for customer profile, checkout order, order details, admin views and email address formatting. Keep backwards compatibility for older records that have no suburb/coordinates.
 7. Add privacy-safe, useful diagnostics: per shipment key/brand, HTTP status, raw rate count/types and eligible door-option count. Do not log full customer addresses, names, phone numbers, email addresses, auth tokens or API keys.
 8. Test with at least two brands and different sender addresses, including THATO/Naboomspruit and JANEDORE; test an address that text search cannot find but can be pinned manually; test a missing suburb; test iOS autofill; test zero raw rates, non-door-only rates, one brand with no rates and all brands with rates. Verify that checkout cannot proceed unless every shipment has a valid selected service and the combined amount is correct.
@@ -107,11 +107,15 @@ Do this before picking up any other TODO. Read the existing implementation and r
 - **Product ⋯ > Show preview:** open the product's page inside the website editor (admin > Online Store), the way Shopify's Show preview does.
 
 ## Customer account and address validation
-- **South African postal codes:** require exactly 4 digits, preserve leading zeros (e.g. `0157`), and reject fewer or more digits. Validate when creating and editing addresses.
-- **Phone numbers:** validate customer phone numbers with support for South African local and international formats (e.g. `082 123 4567` and `+27 82 123 4567`); normalize safely without rejecting valid formatting.
-- **Required address fields:** require the delivery details needed to fulfil an order (recipient name, street address, city/town, and postal code as applicable). Apply rules consistently to account addresses and checkout.
-- **Email validation:** trim accidental surrounding whitespace and validate email syntax wherever customers enter an email address; distinguish syntax checks from email verification.
-- **Validation coverage:** enforce checks in the frontend for clear, immediate feedback and on the backend before saving. Cover new and existing addresses, account profile edits, and checkout without breaking Google sign-in or existing customer records.
+- [x] **South African postal codes:** checkout and saved-profile addresses require exactly 4 digits; values are kept as strings so leading zeros (e.g. `0157`) are preserved.
+- [x] **Phone numbers:** checkout requires a South African number and account phone is optional; local and `+27` formats are normalised to a 10-digit national number.
+- [x] **Required address fields:** delivery checkout requires street address, suburb, city, one of the nine provinces and a 4-digit postal code. Account addresses may be left blank, but a partially entered address cannot be saved.
+- [x] **Email syntax:** checkout trims surrounding whitespace and validates the address format without requiring `.com`; valid suffixes such as `.co.za` are accepted.
+- [x] **Frontend and backend checks:** checkout validates before continuing; account profile saves use a server endpoint with validation; Bob Go rate requests and the order-creation code validate destination details too. The order endpoint remains deliberately blocked while Bob Go is in Sandbox, so its live order path has not yet been exercised.
+- [x] **Current-location suggestion:** checkout and account profile can request device location and reverse-geocode it into street/suburb/city/province/postal-code suggestions. Location is optional, permission-based, and the customer must review the result. Address lookup uses OpenStreetMap data with attribution and request throttling.
+- [ ] **Email ownership verification:** syntax validation does not prove that the mailbox exists or belongs to the customer; add a verification email/code if we decide it is required at checkout.
+- [ ] **Exact property pin and coordinate storage:** current location lookup suggests an address but does not let customers move a map pin or store confirmed latitude/longitude with the address.
+- [ ] **Authoritative address/postcode matching:** manual suburb, city and postal-code entries are format-checked, not independently confirmed against an official South African address/postcode register.
 
 ## Live data freshness, deleted products and renamed brands
 - **Deleted products remain visible to customers (critical):** A product deleted in Admin still appeared on the public website and could be added to the cart, with the customer able to proceed toward checkout. Trace the full product lifecycle across Firebase/database reads, frontend state, browser storage, service workers/CDN/browser caches (if applicable), product detail pages, collection/homepage cards, cart and checkout. Identify the actual cause rather than applying a cosmetic workaround.
