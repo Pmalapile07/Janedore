@@ -1000,9 +1000,6 @@
 
 <div id="chat-window">
   <div class="chat-header">
-    <button type="button" class="chat-header-home" onclick="goHomeFromChat()" aria-label="Back to homepage" title="Back to homepage">
-      <i class="ph ph-arrow-left" aria-hidden="true"></i><span>Home</span>
-    </button>
     <div class="chat-header-identity">
       <div class="chat-header-avatar" aria-hidden="true">JAI</div>
       <div>
@@ -1011,13 +1008,16 @@
       </div>
     </div>
     <div class="chat-header-right">
+      <button type="button" class="chat-header-home" onclick="goBackFromChat()" aria-label="Back to previous screen" title="Back">
+        <i class="ph ph-arrow-left" aria-hidden="true"></i><span>Back</span>
+      </button>
       <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()">
         <i class="ph ph-x" id="chat-header-icon"></i>
       </button>
     </div>
   </div>
 
-  <div class="chat-privacy-notice" id="chat-privacy-notice">
+  <div class="chat-privacy-notice" id="chat-privacy-notice" style="display:none;">
     By sending a message, you acknowledge that your personal information will be processed in accordance with our
     <a href="#" onclick="event.preventDefault(); navigateToContentPage('privacy-policy');">Privacy Policy</a>
     and the Protection of Personal Information Act (POPIA).
