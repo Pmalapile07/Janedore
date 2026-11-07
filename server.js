@@ -56,6 +56,7 @@ app.use((req, res, next) => {
 // Simple per-IP limiter for public endpoints: true once an IP has made
 // `max` requests to this bucket within `windowMs`.
 const rateBuckets = new Map();
+let lastNominatimRequestAt = 0;
 function rateLimited(req, bucket, max, windowMs) {
   const key = bucket + ':' + String(req.ip || '');
   const now = Date.now();
@@ -77,6 +78,8 @@ app.get('/api/geocode/reverse', async (req, res) => {
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
     return res.status(400).json({ ok: false, error: 'The location coordinates were not valid.' });
   }
+  if (Date.now() - lastNominatimRequestAt < 1100) return res.status(429).json({ ok: false, error: 'Please wait a moment before trying location lookup again.' });
+  lastNominatimRequestAt = Date.now();
   const endpoint = new URL('https://nominatim.openstreetmap.org/reverse');
   endpoint.search = new URLSearchParams({ format: 'jsonv2', addressdetails: '1', zoom: '18', lat: String(lat), lon: String(lon) }).toString();
   try {
