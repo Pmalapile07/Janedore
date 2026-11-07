@@ -706,7 +706,7 @@
     border-top: none !important;
   }
   #chat-window .chat-privacy-notice {
-    display: block !important;
+    display: none !important;
     flex: 0 0 auto !important;
     width: 100% !important;
     box-sizing: border-box !important;
@@ -1008,10 +1008,10 @@
       </div>
     </div>
     <div class="chat-header-right">
-      <button type="button" class="chat-header-home" onclick="goBackFromChat()" aria-label="Back to previous screen" title="Back">
-        <i class="ph ph-arrow-left" aria-hidden="true"></i><span>Back</span>
+      <button type="button" class="chat-header-home" id="chat-back-btn" onclick="backToWelcomeScreen()" aria-label="Back to chat welcome screen" title="Back" style="display:none;">
+        <i class="ph ph-arrow-left" aria-hidden="true"></i>
       </button>
-      <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()">
+      <button class="chat-header-close" id="chat-header-btn" onclick="handleHeaderButtonClick()" aria-label="Close chat">
         <i class="ph ph-x" id="chat-header-icon"></i>
       </button>
     </div>
