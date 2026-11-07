@@ -32,7 +32,7 @@ app.use((req, res, next) => {
     'X-Frame-Options': 'SAMEORIGIN',
     'Content-Security-Policy': "frame-ancestors 'self'",
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self), payment=()'
   });
   if (req.secure) res.set('Strict-Transport-Security', 'max-age=15552000');
   next();
@@ -65,6 +65,65 @@ function rateLimited(req, bucket, max, windowMs) {
   rateBuckets.set(key, hits);
   return false;
 }
+
+// Explicitly requested device-location lookup for customer address forms.
+// Coordinates are used for this reverse-geocode request only and are not stored.
+app.get('/api/geocode/reverse', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (rateLimited(req, 'address-geocode', 8, 60 * 60 * 1000)) {
+    return res.status(429).json({ ok: false, error: 'Please wait before trying location lookup again.' });
+  }
+  const lat = Number(req.query.lat), lon = Number(req.query.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    return res.status(400).json({ ok: false, error: 'The location coordinates were not valid.' });
+  }
+  const endpoint = new URL('https://nominatim.openstreetmap.org/reverse');
+  endpoint.search = new URLSearchParams({ format: 'jsonv2', addressdetails: '1', zoom: '18', lat: String(lat), lon: String(lon) }).toString();
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const request = https.get(endpoint, {
+        headers: { 'User-Agent': 'JANEDORE/1.0 (customer address lookup; support@janedore.co.za)', 'Accept-Language': 'en' },
+        timeout: 10000
+      }, response => {
+        let body = '';
+        response.on('data', chunk => { body += chunk; if (body.length > 250000) request.destroy(new Error('Location response was too large.')); });
+        response.on('end', () => {
+          let data = {};
+          try { data = body ? JSON.parse(body) : {}; } catch (_) {}
+          resolve({ status: response.statusCode || 0, data });
+        });
+      });
+      request.on('timeout', () => request.destroy(new Error('Location lookup timed out.')));
+      request.on('error', reject);
+    });
+    if (result.status < 200 || result.status >= 300 || !result.data.address) {
+      return res.status(502).json({ ok: false, error: 'We could not find an address for this location. Please enter it manually.' });
+    }
+    const a = result.data.address;
+    if (String(a.country_code || '').toLowerCase() !== 'za') {
+      return res.status(400).json({ ok: false, error: 'Location lookup is currently available for South African addresses only.' });
+    }
+    const street = [a.house_number, a.road].filter(Boolean).join(' ').slice(0, 120);
+    const suburb = String(a.suburb || a.neighbourhood || a.quarter || a.residential || a.city_district || '').slice(0, 80);
+    const city = String(a.city || a.town || a.municipality || a.village || a.county || '').slice(0, 80);
+    const state = String(a.state || '').trim().toLowerCase();
+    const provinces = {
+      'eastern cape': 'Eastern Cape', 'free state': 'Free State', 'gauteng': 'Gauteng',
+      'kwazulu-natal': 'KwaZulu-Natal', 'kwazulu natal': 'KwaZulu-Natal',
+      'limpopo': 'Limpopo', 'mpumalanga': 'Mpumalanga', 'northern cape': 'Northern Cape',
+      'north west': 'North West', 'western cape': 'Western Cape'
+    };
+    res.json({
+      ok: true, street, suburb, city, province: provinces[state] || '',
+      postalCode: /^\d{4}$/.test(String(a.postcode || '').trim()) ? String(a.postcode).trim() : '',
+      displayName: String(result.data.display_name || '').slice(0, 300)
+    });
+  } catch (error) {
+    console.warn('[ADDRESS_GEOCODE] Lookup failed:', error.message);
+    res.status(502).json({ ok: false, error: 'Location lookup is temporarily unavailable. Please enter your address manually.' });
+  }
+});
+
 // Drop old entries every 30 minutes so the map can't grow without limit.
 setInterval(() => {
   const now = Date.now();
