@@ -175,6 +175,7 @@
   .checkout-confirmation-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #2e8b57; flex-shrink: 0; }
   .checkout-confirmation-status-dot.danger { background: #c00; }
   .checkout-card-note { margin: 12px 0 0; font-size: 12px; color: #777; line-height: 1.5; }
+  .checkout-location-note { margin: -8px 0 14px; display: block; }
   .checkout-item { display: flex; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid #eee; }
   .checkout-item:first-child { border-top: none; padding-top: 0; }
   .checkout-item:last-child { padding-bottom: 0; }
@@ -284,7 +285,7 @@
         </div>
         <div class="checkout-form-group">
           <label for="checkout-phone">Phone number</label>
-          <input type="tel" id="checkout-phone" required maxlength="18" inputmode="tel" autocomplete="tel" placeholder="082 123 4567">
+          <input type="tel" id="checkout-phone" required minlength="10" maxlength="10" pattern="0(6[0-9]|7[1-9]|8[1-4])[0-9]{7}" inputmode="numeric" autocomplete="tel" placeholder="0821234567">
         </div>
       </section>
 
@@ -297,7 +298,7 @@
         <!-- Hidden when every brand is collected (checkout.js syncAddressForCollection). -->
         <div id="checkout-address-fields">
         <button type="button" class="account-outline-btn" id="checkout-use-location" data-jd-use-location="checkout">Use my current location</button>
-        <p class="checkout-card-note" id="checkout-location-status" aria-live="polite">Allow location access to suggest your address, or enter it manually. Address data © OpenStreetMap contributors.</p>
+        <p class="checkout-card-note" id="checkout-location-status" class="checkout-card-note checkout-location-note" aria-live="polite">Allow location access to suggest your address, or enter it manually. Address data © OpenStreetMap contributors.</p>
         <div class="checkout-form-group">
           <label for="checkout-address">Street address</label>
           <input type="text" id="checkout-address" required autocomplete="street-address" placeholder="House number and street name">
