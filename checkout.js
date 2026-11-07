@@ -328,6 +328,7 @@ function goToPaymentStep(e) {
   }
   const form = document.getElementById('checkout-form');
   if (form && !form.reportValidity()) return;
+  if (window.JDValidation && !window.JDValidation.validateCheckout().ok) return;
   showCheckoutStep(3);
 }
 
@@ -591,7 +592,9 @@ async function placeOrder(e) {
   const province = document.getElementById('checkout-province').value.trim();
   const postal = document.getElementById('checkout-postal').value.trim();
   const country = document.getElementById('checkout-country').value.trim();
-  const phone = document.getElementById('checkout-phone').value.trim();
+  const rawPhone = document.getElementById('checkout-phone').value.trim();
+  const phoneResult = window.JDValidation ? window.JDValidation.validatePhone(rawPhone, true) : { ok: /^0[1-8]\\d{8}$/.test(rawPhone), phone: rawPhone };
+  const phone = phoneResult.phone;
   const shipmentsNow = getCartShipments();
   const collectFrom = shipmentsNow.filter(s => s.collect).map(s => s.vendorIds[0]);
   const collectOnly = shipmentsNow.length > 0 && shipmentsNow.every(s => s.collect);
@@ -616,7 +619,7 @@ async function placeOrder(e) {
     };
   }).filter(Boolean);
 
-  if (!email || !name || (!collectOnly && (!address || !suburb || !city || !province || !postal || !country))) {
+  if (!email || !name || !phoneResult.ok || (window.JDValidation && !window.JDValidation.validEmail(email)) || (!collectOnly && (!address || !suburb || !city || !province || !postal || !country))) {
     alert('Please fill in all required fields.');
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Pay now'; }
     return;
