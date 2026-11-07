@@ -12,6 +12,7 @@ let bobGoRateTimer = null;
 let bobGoRateRequestId = 0;
 const BOBGO_ADDRESS_FIELDS = ['checkout-suburb','checkout-city','checkout-province','checkout-postal'];
 let checkoutDeliveryPreparationPending = false;
+let checkoutDeliveryPreparationId = 0;
 
 function scheduleBobGoCheckoutRates() {
   clearTimeout(bobGoRateTimer);
@@ -219,6 +220,7 @@ async function prefillCheckoutForSignedInCustomer(options) {
 // saved address restored first; Bob Go rates are then fetched before the
 // top navigation progress bar is allowed to finish.
 async function prepareCheckoutDeliveryOptions() {
+  const preparationId = ++checkoutDeliveryPreparationId;
   checkoutDeliveryPreparationPending = true;
   try {
     await prefillCheckoutForSignedInCustomer({ deferRates: true });
@@ -246,9 +248,19 @@ async function prepareCheckoutDeliveryOptions() {
 // Logging in while already on checkout (e.g. in another tab) fills the
 // form in too.
 firebase.auth().onAuthStateChanged(function () {
-  if (!checkoutDeliveryPreparationPending && S.currentPage === 'checkout' && document.getElementById('checkout-form-view')) {
-    prefillCheckoutForSignedInCustomer();
-  }
+  if (checkoutDeliveryPreparationPending || S.currentPage !== 'checkout' || !document.getElementById('checkout-form-view')) return;
+
+  // Checkout navigation owns the initial address + rate-loading sequence.
+  // If auth restoration began just before navigation, its preparation ID
+  // changes and this observer must not launch a second quote request.
+  const preparationIdAtStart = checkoutDeliveryPreparationId;
+  prefillCheckoutForSignedInCustomer({ deferRates: true }).then(function () {
+    if (preparationIdAtStart !== checkoutDeliveryPreparationId) return;
+    if (checkoutDeliveryPreparationPending || S.currentPage !== 'checkout') return;
+    scheduleBobGoCheckoutRates();
+  }).catch(function (error) {
+    console.warn('[CHECKOUT] Could not finish auth-based checkout prefill:', error && error.message);
+  });
 });
 
 // VAT rate from admin Settings (0 = not VAT-registered, no VAT line).
@@ -1101,11 +1113,27 @@ async function loadBobGoCheckoutRates() {
   bobGoSelectedRates = {};
 
   try {
-    const response = await fetch('/api/bobgo/checkout-rates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    // Mobile connections can briefly drop while the checkout fragment and
+    // Firebase session are restoring. Retry only a fetch-level network
+    // failure (which has no HTTP response); never retry an HTTP/API error.
+    let response;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        response = await fetch('/api/bobgo/checkout-rates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        break;
+      } catch (fetchError) {
+        if (requestId !== bobGoRateRequestId) return;
+        const isNetworkFailure = fetchError instanceof TypeError;
+        if (!isNetworkFailure || attempt === 1) throw fetchError;
+        console.warn('[BOBGO CHECKOUT] Temporary network failure; retrying rate request once.');
+        await new Promise(resolve => setTimeout(resolve, 400));
+        if (requestId !== bobGoRateRequestId) return;
+      }
+    }
     const responseText = await response.text();
     let data = {};
     try { data = responseText ? JSON.parse(responseText) : {}; }
