@@ -10,7 +10,7 @@ let bobGoSelectedRates = {};
 
 let bobGoRateTimer = null;
 let bobGoRateRequestId = 0;
-const BOBGO_ADDRESS_FIELDS = ['checkout-address','checkout-suburb','checkout-city','checkout-province','checkout-postal'];
+const BOBGO_ADDRESS_FIELDS = ['checkout-suburb','checkout-city','checkout-province','checkout-postal'];
 let checkoutDeliveryPreparationPending = false;
 
 function scheduleBobGoCheckoutRates() {
@@ -20,9 +20,8 @@ function scheduleBobGoCheckoutRates() {
   bobGoSelectedRates = {};
 
   const value = id => (document.getElementById(id)?.value || '').trim();
-  const addressReady = !!value('checkout-address') && !!value('checkout-suburb')
-    && !!value('checkout-city') && !!value('checkout-province')
-    && /^\d{4}$/.test(value('checkout-postal'));
+  const addressReady = !!value('checkout-suburb') && !!value('checkout-city')
+    && !!value('checkout-province') && /^\d{4}$/.test(value('checkout-postal'));
   const status = document.getElementById('bobgo-checkout-status');
   renderCheckoutSummary();
   if (status) {
@@ -226,9 +225,8 @@ async function prepareCheckoutDeliveryOptions() {
     if (S.currentPage !== 'checkout') return;
 
     const value = id => (document.getElementById(id)?.value || '').trim();
-    const addressReady = !!value('checkout-address') && !!value('checkout-suburb')
-      && !!value('checkout-city') && !!value('checkout-province')
-      && /^\d{4}$/.test(value('checkout-postal'));
+    const addressReady = !!value('checkout-suburb') && !!value('checkout-city')
+      && !!value('checkout-province') && /^\d{4}$/.test(value('checkout-postal'));
     const needsDelivery = getCartShipments().some(shipment => !shipment.collect);
 
     if (addressReady && needsDelivery) {
@@ -1064,7 +1062,6 @@ async function loadBobGoCheckoutRates() {
   const output = document.getElementById('bobgo-checkout-status');
   const value = id => (document.getElementById(id)?.value || '').trim();
   const payload = {
-    street: value('checkout-address'),
     suburb: value('checkout-suburb'),
     city: value('checkout-city'),
     province: value('checkout-province'),
@@ -1079,10 +1076,10 @@ async function loadBobGoCheckoutRates() {
     postalCodeValid: /^\d{4}$/.test(payload.postalCode)
   });
 
-  if (!payload.street || !payload.suburb || !payload.city || !payload.province || !/^\d{4}$/.test(payload.postalCode)) {
-    const message = 'Complete your street address, suburb / local area, city, province and 4-digit postal code first.';
-    console.warn('[BOBGO CHECKOUT] Address validation failed.', {
-      hasStreet: !!payload.street, hasSuburb: !!payload.suburb, hasCity: !!payload.city,
+  if (!payload.suburb || !payload.city || !payload.province || !/^\d{4}$/.test(payload.postalCode)) {
+    const message = 'Enter your suburb / local area, city, province and 4-digit postal code to see delivery options.';
+    console.warn('[BOBGO CHECKOUT] Delivery-area validation failed.', {
+      hasSuburb: !!payload.suburb, hasCity: !!payload.city,
       hasProvince: !!payload.province, postalCodeValid: /^\d{4}$/.test(payload.postalCode)
     });
     if (output) output.textContent = message;
