@@ -253,8 +253,11 @@ module.exports = function registerBobGo(app, deps) {
     const lines = Array.isArray(a.items) ? a.items.slice(0, 30) : [];
     const validProvinces = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
     const canonicalProvince = validProvinces.find(p => p.toLowerCase() === province.toLowerCase());
-    if (!street || street.length < 5 || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(suburb) || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/g.test(city) || !canonicalProvince || !/^\d{4}$/.test(postal) || !lines.length) {
-      return res.status(400).json({ ok: false, error: 'Complete your delivery address before checking rates.' });
+    // Bob Go's checkout-rates endpoint requires a delivery_address object,
+    // but street_address itself is optional. Let buyers see delivery options
+    // from their delivery area before asking for their full street address.
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(suburb) || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(city) || !canonicalProvince || !/^\d{4}$/.test(postal) || !lines.length) {
+      return res.status(400).json({ ok: false, error: 'Enter your suburb, city, province and postal code before checking rates.' });
     }
     if (lines.some(i => !i || typeof i.productId !== 'string' || !/^[A-Za-z0-9_-]{1,150}$/.test(i.productId) || !Number.isInteger(Number(i.qty)) || Number(i.qty) < 1 || Number(i.qty) > 20)) {
       return res.status(400).json({ ok: false, error: 'Your bag contains an invalid item or quantity. Please refresh your bag.' });
@@ -313,7 +316,7 @@ module.exports = function registerBobGo(app, deps) {
 
         const payload = JSON.stringify({
           collection_address: { type: pickup.type === 'residential' ? 'residential' : 'business', company: String(pickup.company || 'JANEDORE brand'), street_address: pickup.street, local_area: pickup.suburb, city: pickup.city, zone: pickup.province, country: 'ZA', code: String(pickup.postalCode) },
-          delivery_address: { type: 'residential', street_address: street, local_area: suburb, city, zone: canonicalProvince, country: 'ZA', code: postal },
+          delivery_address: { type: 'residential', local_area: suburb, city, zone: canonicalProvince, country: 'ZA', code: postal },
           // Customer checkout is door-to-door only. Bob Go's "door" filter
           // can also include in-store pickup, so the response is strictly
           // filtered to type === "door" below.
