@@ -17,6 +17,7 @@
   function normalizeProvince(raw) {
     return provinceMap.get(String(raw || '').trim().toLowerCase()) || '';
   }
+  function validPlaceName(value) { return /^[\\p{L}][\\p{L}0-9 .,'’()/-]{1,79}$/u.test(String(value || '').trim()); }
   function cleanText(raw, max) {
     const value = String(raw || '').trim();
     return value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
@@ -30,8 +31,8 @@
       postalCode: String(a.postalCode || '').trim()
     };
     if (!cleanText(address.street, 120) || address.street.length < 5) return { ok: false, field: 'street', message: 'Enter a complete street address, including the building or house number.' };
-    if (!cleanText(address.suburb, 80) || address.suburb.length < 2) return { ok: false, field: 'suburb', message: 'Enter a valid suburb or local area.' };
-    if (!cleanText(address.city, 80) || address.city.length < 2) return { ok: false, field: 'city', message: 'Enter a valid city or town.' };
+    if (!cleanText(address.suburb, 80) || !validPlaceName(address.suburb)) return { ok: false, field: 'suburb', message: 'Enter a valid suburb or local area.' };
+    if (!cleanText(address.city, 80) || !validPlaceName(address.city)) return { ok: false, field: 'city', message: 'Enter a valid city or town.' };
     if (!address.province) return { ok: false, field: 'province', message: 'Choose one of South Africa’s nine provinces.' };
     if (!/^\d{4}$/.test(address.postalCode)) return { ok: false, field: 'postalCode', message: 'Enter a 4-digit South African postal code.' };
     return { ok: true, address };
