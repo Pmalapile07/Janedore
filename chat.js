@@ -1420,22 +1420,6 @@ function parseMoodTag(rawText) {
   return { mood: 'neutral', text: text.trim() };
 }
 
-function ensureChatPrivacyNotice(messagesEl) {
-  if (!messagesEl || messagesEl.querySelector('.chat-privacy-notice')) return;
-  const notice = document.createElement('div');
-  notice.className = 'chat-privacy-notice';
-  notice.appendChild(document.createTextNode('By sending a message, you acknowledge that your personal information will be processed in accordance with our '));
-  const link = document.createElement('a');
-  link.href = '#';
-  link.textContent = 'Privacy Policy';
-  link.onclick = (event) => {
-    event.preventDefault();
-    navigateToContentPage('privacy-policy');
-  };
-  notice.appendChild(link);
-  notice.appendChild(document.createTextNode(' and the Protection of Personal Information Act (POPIA).'));
-  messagesEl.appendChild(notice);
-}
 
 function appendMessage(m) {
   const el = safeEl('chat-messages');
@@ -1471,8 +1455,6 @@ function appendMessage(m) {
   const isJAI = !isCustomer && rawName === 'JAI';
 
   const isImage = m.type === 'image' && m.imageUrl;
-
-  if (isCustomer) ensureChatPrivacyNotice(el);
 
   const div = document.createElement('div');
   div.className = 'chat-msg ' + (isCustomer ? 'customer' : 'admin') + (isJAI ? ' jai-msg' : '') + (isImage ? ' chat-msg-image' : '');
@@ -2039,7 +2021,6 @@ async function sendChatImage(file) {
   const tempId = 'chat-image-temp-' + Date.now();
   const messagesEl = safeEl('chat-messages');
   if (messagesEl) {
-    ensureChatPrivacyNotice(messagesEl);
     const div = document.createElement('div');
     div.className = 'chat-msg customer chat-msg-image';
     div.id = tempId;
