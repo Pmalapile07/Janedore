@@ -85,7 +85,7 @@
     };
     if (!navigator.geolocation) { setStatus('Location is not available in this browser. You can enter your address manually.', true); return; }
     if (button) { button.disabled = true; button.textContent = 'Finding location…'; }
-    setStatus('Allow location access when asked. Your coordinates are sent to OpenStreetMap to suggest an address and are not saved by JANEDORE. Please review the suggestion.');
+    setStatus('Allow location access when asked. Your coordinates are sent to OpenStreetMap to suggest an address; they are not added to your saved profile or order. Please review the suggestion.');
     navigator.geolocation.getCurrentPosition(async position => {
       try {
         const url = '/api/geocode/reverse?lat=' + encodeURIComponent(position.coords.latitude) + '&lon=' + encodeURIComponent(position.coords.longitude);
