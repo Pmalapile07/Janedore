@@ -706,11 +706,12 @@
     border-top: none !important;
   }
   #chat-window .chat-privacy-notice {
-    align-self: center !important;
+    display: block !important;
+    flex: 0 0 auto !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    margin: 0 0 2px !important;
-    padding: 10px 12px !important;
+    margin: 0 !important;
+    padding: 10px 20px !important;
     background: #f4f4f4 !important;
     color: #444 !important;
     font-family: 'Inter', sans-serif !important;
@@ -1016,10 +1017,13 @@
     </div>
   </div>
 
-  <!-- Typing indicator is no longer static markup here — showTypingIndicator()
-       in chat.js builds it dynamically inside #chat-messages, at the bottom
-       of the conversation, right where the reply will actually appear. -->
+  <div class="chat-privacy-notice" id="chat-privacy-notice">
+    By sending a message, you acknowledge that your personal information will be processed in accordance with our
+    <a href="#" onclick="event.preventDefault(); navigateToContentPage('privacy-policy');">Privacy Policy</a>
+    and the Protection of Personal Information Act (POPIA).
+  </div>
 
+  <!-- Typing indicator is built dynamically inside #chat-messages. -->
   <div class="chat-messages" id="chat-messages"></div>
 
   <div class="order-lookup" id="order-lookup" style="display:none;">
