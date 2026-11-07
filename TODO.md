@@ -1,7 +1,7 @@
 # Janedore — to do next
 
-## FIRST TASK FOR CLAUDE — finish and debug Bob Go checkout address/rates (start here)
-Do this before picking up any other TODO. Read the existing implementation and recent Git history first; do not blindly rewrite working checkout behaviour. The goal is to make customer address capture reliable (including hard-to-find South African addresses) and get a valid door-delivery quote for every brand shipment, with clear diagnostics.
+## CURRENT PRIORITY — finish Bob Go per-shipment rate handling and verify address capture
+Do this before picking up any other TODO. The suburb field/prefill/quote flow is already in place, and customer contact/address validation plus optional GPS address suggestions have now been added. Re-test the previously observed false `hasSuburb: false` warning, then focus on the remaining THATO/Naboomspruit zero-rate case and clear per-brand partial-rate handling. Read the existing implementation and recent Git history first; do not rewrite working checkout behaviour.
 
 ### What is already implemented — preserve and verify it
 - [x] Checkout now has a required **Suburb / local area** field (`checkout.html`, id `checkout-suburb`).
@@ -25,7 +25,7 @@ Do this before picking up any other TODO. Read the existing implementation and r
 - The customer has already expanded the frontend summary and confirmed the two shipment counts above; do not ask them to repeat that same inspection.
 
 ### Work to complete
-1. Trace suburb value end-to-end: checkout input -> quote payload -> server request validation -> Bob Go `delivery_address.local_area`; test typing, iOS/Safari autofill, saved-profile prefill and latest-order fallback. Fix the real cause of the false `hasSuburb: false` warning. Avoid logging the customer's full address or other personal data.
+1. [ ] **Retest address capture:** trace checkout input -> quote payload -> server request validation -> Bob Go `delivery_address.local_area`. Retest typing, iOS/Safari autofill, saved-profile prefill and latest-order fallback after the new validation/location changes. If `hasSuburb: false` still occurs, identify the actual cause before changing the field flow. Avoid logging the customer's full address or other personal data.
 2. Inspect THATO's saved private pickup/warehouse address and warehouse grouping logic. Confirm the Naboomspruit address is complete and is the intended sender address. Verify product parcel dimensions/weight and any Bob Go account service-area/rate configuration relevant to that route.
 3. Inspect the raw Bob Go response for THATO and compare it with JANEDORE's response. Explain whether no rates were returned by Bob Go or rates were excluded by our strict door-only filter. Keep the customer destination separate from each brand's sender pickup address.
 4. Fix checkout presentation and safeguards: show a clear per-brand state when a shipment has no eligible door rate; never label the whole quote successful as if every shipment is covered; never silently omit a shipment's shipping fee or allow payment/order submission if a required shipment has no selected eligible rate. Preserve the valid JANEDORE option while clearly identifying THATO's issue.
@@ -116,6 +116,7 @@ Do this before picking up any other TODO. Read the existing implementation and r
 - [ ] **Email ownership verification:** syntax validation does not prove that the mailbox exists or belongs to the customer; add a verification email/code if we decide it is required at checkout.
 - [ ] **Exact property pin and coordinate storage:** current location lookup suggests an address but does not let customers move a map pin or store confirmed latitude/longitude with the address.
 - [ ] **Authoritative address/postcode matching:** manual suburb, city and postal-code entries are format-checked, not independently confirmed against an official South African address/postcode register.
+- [ ] **Runtime regression test:** test the account profile and checkout on the deployed site, especially iPhone Safari, with valid/invalid phone formats, `.co.za` email, leading-zero postal codes, all nine provinces, location permission granted/denied and an incomplete reverse-geocoded address. Record actual results before marking the validation work fully verified.
 
 ## Live data freshness, deleted products and renamed brands
 - **Deleted products remain visible to customers (critical):** A product deleted in Admin still appeared on the public website and could be added to the cart, with the customer able to proceed toward checkout. Trace the full product lifecycle across Firebase/database reads, frontend state, browser storage, service workers/CDN/browser caches (if applicable), product detail pages, collection/homepage cards, cart and checkout. Identify the actual cause rather than applying a cosmetic workaround.
