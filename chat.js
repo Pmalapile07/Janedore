@@ -448,6 +448,7 @@ function toggleChat() {
 
     showScreen('chat-messages');
     setHeaderIcon('ph ph-x');
+    setChatHeaderState(false);
     const inputWrap = safeEl('chat-input-wrap');
     if (inputWrap) inputWrap.style.display = 'flex';
 
@@ -545,10 +546,32 @@ function setHeaderIcon(iconClass) {
   if (icon) icon.className = iconClass;
 }
 
-// Close the chat overlay and reveal whichever storefront screen was open
-// before the customer launched the widget.
-function goBackFromChat() {
-  if (chatOpen) toggleChat();
+// The welcome screen and an active conversation have different header
+// controls. Never show the close and back buttons at the same time.
+function setChatHeaderState(activeConversation) {
+  const backBtn = safeEl('chat-back-btn');
+  const closeBtn = safeEl('chat-header-btn');
+  if (backBtn) backBtn.style.display = activeConversation ? 'inline-flex' : 'none';
+  if (closeBtn) closeBtn.style.display = activeConversation ? 'none' : 'inline-flex';
+  const privacyNotice = safeEl('chat-privacy-notice');
+  if (privacyNotice) privacyNotice.style.display = activeConversation ? 'block' : 'none';
+}
+
+// Back returns to the original welcome screen inside the widget. It does
+// not close the widget, navigate the storefront, or delete stored messages.
+function backToWelcomeScreen() {
+  _ScreenDebug.info('UI', 'Back to chat welcome screen');
+  const messages = safeEl('chat-messages');
+  if (messages) messages.innerHTML = '';
+  const orderLookup = safeEl('order-lookup');
+  if (orderLookup) orderLookup.style.display = 'none';
+  showScreen('chat-messages');
+  const inputWrap = safeEl('chat-input-wrap');
+  if (inputWrap) inputWrap.style.display = 'flex';
+  const input = safeEl('chat-input');
+  if (input) { input.value = ''; input.placeholder = 'Type your message...'; }
+  renderAIGreeting();
+  setChatHeaderState(false);
 }
 
 function handleHeaderButtonClick() {
@@ -566,6 +589,7 @@ function backToChat() {
   const inputWrap = safeEl('chat-input-wrap');
   if (inputWrap) inputWrap.style.display = 'flex';
   setHeaderIcon('ph ph-x');
+  setChatHeaderState(false);
 }
 
 function clearChatSession() {
@@ -686,85 +710,19 @@ function quickActionAskAnything() {
 function renderAIGreeting() {
   const el = safeEl('chat-messages');
   if (!el) return;
-  const privacyNotice = safeEl('chat-privacy-notice');
-  if (privacyNotice) privacyNotice.style.display = 'none';
+  el.innerHTML = '';
 
   const screen = document.createElement('div');
   screen.id = 'jai-welcome-screen';
 
-  // A single grey bubble: small "Welcome to JAI" over the question,
-  // then the time underneath, outside the bubble.
-  const bubble = document.createElement('div');
-  bubble.className = 'jai-welcome-bubble';
+  const question = document.createElement('div');
+  question.className = 'jai-welcome-bubble';
+  question.textContent = 'How can I help you today?';
 
-  const kicker = document.createElement('div');
-  kicker.className = 'jai-welcome-kicker';
-  kicker.textContent = 'Welcome to JAI';
-
-  const questionLine = document.createElement('div');
-  questionLine.className = 'jai-welcome-question';
-  questionLine.textContent = 'How can I help you today?';
-
-  bubble.appendChild(kicker);
-  bubble.appendChild(questionLine);
-
-  const timeLine = document.createElement('div');
-  timeLine.className = 'jai-welcome-time';
-  timeLine.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
-  screen.appendChild(bubble);
-  screen.appendChild(timeLine);
-
-  const label = document.createElement('div');
-  label.className = 'jai-quick-label';
-  label.textContent = 'Quick help';
-  screen.appendChild(label);
-
-  const actions = document.createElement('div');
-  actions.className = 'jai-quick-actions';
-
-  // Regular weight (ph), not ph-light — matches the header cart icon
-  // (nav-cart-icon, index.html) and the closed chat bubble's own icon
-  // (chat-widget.html), reused verbatim below rather than visually
-  // similar substitutes, by request.
-  const QUICK_ACTION_CARDS = [
-    { icon: 'ph ph-tote-simple', title: 'Find something new',  onClick: quickActionDiscoverProduct },
-    { icon: 'ph ph-package',     title: 'Track an order',      onClick: quickActionTrackOrder },
-    { icon: 'ph ph-truck',       title: 'Shipping & returns',  onClick: quickActionShippingReturns },
-    { icon: 'ph ph-chat',        title: 'Ask a question',      onClick: quickActionAskAnything }
-  ];
-
-  QUICK_ACTION_CARDS.forEach(c => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'jai-quick-card';
-
-    const iconWrap = document.createElement('div');
-    iconWrap.className = 'jai-card-icon';
-    const iconEl = document.createElement('i');
-    iconEl.className = c.icon;
-    iconWrap.appendChild(iconEl);
-
-    const textWrap = document.createElement('div');
-    textWrap.className = 'jai-card-text';
-    const titleEl = document.createElement('div');
-    titleEl.className = 'jai-card-title';
-    titleEl.textContent = c.title;
-    textWrap.appendChild(titleEl);
-
-    const chevron = document.createElement('i');
-    chevron.className = 'ph ph-caret-right jai-card-chevron';
-
-    btn.appendChild(iconWrap);
-    btn.appendChild(textWrap);
-    btn.appendChild(chevron);
-    btn.addEventListener('click', c.onClick);
-
-    actions.appendChild(btn);
-  });
-
-  screen.appendChild(actions);
+  screen.appendChild(question);
   el.appendChild(screen);
+
+  setChatHeaderState(false);
 }
 
 // Once the customer actually sends something — text or an image — the
@@ -774,8 +732,7 @@ function renderAIGreeting() {
 function removeWelcomeScreen() {
   const screen = document.getElementById('jai-welcome-screen');
   if (screen) screen.remove();
-  const privacyNotice = safeEl('chat-privacy-notice');
-  if (privacyNotice) privacyNotice.style.display = 'block';
+  setChatHeaderState(true);
 }
 
 // Detects a customer asking to track an order in plain text (e.g. "track
@@ -1360,8 +1317,7 @@ async function loadMessages() {
       renderAIGreeting();
     } else {
       messages.forEach(m => { if (m.type !== 'auth') appendMessage(m); });
-      const privacyNotice = safeEl('chat-privacy-notice');
-      if (privacyNotice) privacyNotice.style.display = 'block';
+      setChatHeaderState(true);
       _ScreenDebug.info('RTDB', 'Rendered ' + messages.length + ' stored messages');
     }
 
@@ -1621,6 +1577,7 @@ function listenChat() {
     if (!m || m.type === 'auth') return;
 
     _ScreenDebug.info('RTDB', 'New message from ' + (m.sender || 'unknown'));
+    if (document.getElementById('jai-welcome-screen')) return;
     appendMessage(m);
 
     const el = safeEl('chat-messages');
