@@ -545,6 +545,14 @@ function setHeaderIcon(iconClass) {
   if (icon) icon.className = iconClass;
 }
 
+// Leave the full-screen chat and return to the storefront homepage.
+// Closing first restores the page scroll lock; navigateTo then switches
+// the underlying storefront to Home using the site's normal router.
+function goHomeFromChat() {
+  if (chatOpen) toggleChat();
+  if (typeof navigateTo === 'function') navigateTo('home');
+}
+
 function handleHeaderButtonClick() {
   const orderLookup = safeEl('order-lookup');
   if (orderLookup && orderLookup.style.display !== 'none') {
