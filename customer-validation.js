@@ -37,7 +37,7 @@
   function validatePhone(raw, required) {
     if (!String(raw || '').trim() && !required) return { ok: true, phone: '' };
     const phone = normalizePhone(raw);
-    return phone ? { ok: true, phone } : { ok: false, message: 'Enter a valid South African number, e.g. 082 123 4567 or +27 82 123 4567.' };
+    return phone ? { ok: true, phone } : { ok: false, message: 'Enter exactly 10 digits, starting with 0, e.g. 0821234567.' };
   }
   function validateCheckout() {
     const get = id => document.getElementById(id);
