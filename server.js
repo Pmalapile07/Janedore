@@ -1161,12 +1161,16 @@ app.post('/api/orders/create', async (req, res) => {
     shipmentKey: String(selection && selection.shipmentKey || '').slice(0, 180),
     brand: String(selection && selection.brand || '').slice(0, 180),
     vendorIds: Array.isArray(selection && selection.vendorIds) ? selection.vendorIds.slice(0, 10).map(v => String(v).slice(0, 150)) : [],
-    method: 'door',
-    checkoutLabel: String(selection && selection.checkoutLabel || 'Door Delivery').slice(0, 100),
+    method: selection && selection.method === 'pickup-point' ? 'pickup-point' : 'door',
+    checkoutLabel: String(selection && selection.checkoutLabel || 'Standard delivery').slice(0, 100),
     price: Math.max(0, Number(selection && selection.price) || 0),
     serviceName: String(selection && selection.serviceName || '').slice(0, 160),
     serviceCode: String(selection && selection.serviceCode || '').slice(0, 160) || null,
-    bobgoRateId: selection && selection.bobgoRateId != null ? String(selection.bobgoRateId).slice(0, 80) : null
+    bobgoRateId: selection && selection.bobgoRateId != null ? String(selection.bobgoRateId).slice(0, 80) : null,
+    pickupPointLocationId: selection && selection.method === 'pickup-point' && selection.pickupPointLocationId != null ? String(selection.pickupPointLocationId).slice(0, 100) : null,
+    pickupPointProviderSlug: selection && selection.method === 'pickup-point' ? String(selection.pickupPointProviderSlug || '').slice(0, 80) || null : null,
+    pickupPointName: selection && selection.method === 'pickup-point' ? String(selection.pickupPointName || '').slice(0, 120) || null : null,
+    pickupPointAddress: selection && selection.method === 'pickup-point' ? String(selection.pickupPointAddress || '').slice(0, 240) || null : null
   })) : [];
   // An order collected in full needs no delivery address.
   const needsAddress = !input.collectOnly;
