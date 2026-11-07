@@ -1147,9 +1147,7 @@ app.post('/api/orders/create', async (req, res) => {
   }
   const customerEmail = String(input.customerEmail || '').trim().toLowerCase().slice(0, 254);
   const customerName = String(input.customerName || '').trim().slice(0, 120);
-  let customerPhone = String(input.customerPhone || '').trim().slice(0, 40).replace(/[\s().-]/g, '');
-  if (customerPhone.startsWith('+27')) customerPhone = '0' + customerPhone.slice(3);
-  else if (customerPhone.startsWith('27') && customerPhone.length === 11) customerPhone = '0' + customerPhone.slice(2);
+  const customerPhone = String(input.customerPhone || '').replace(/\D/g, '').slice(0, 40);
   const shippingAddress = String(input.shippingAddress || '').trim().slice(0, 300);
   const suburb = String(input.suburb || '').trim().slice(0, 100);
   const city = String(input.city || '').trim().slice(0, 100);
@@ -1173,7 +1171,7 @@ app.post('/api/orders/create', async (req, res) => {
   // An order collected in full needs no delivery address.
   const needsAddress = !input.collectOnly;
   const validEmail = customerEmail.length <= 254 && /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(customerEmail);
-  const validPhone = /^0[1-8]\d{8}$/.test(customerPhone);
+  const validPhone = /^0(6[0-9]|7[1-9]|8[1-4])[0-9]{7}$/.test(customerPhone);
   const validPlace = /^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/;
   if (!validEmail || !customerName || customerName.length < 2 || !validPhone ||
       (needsAddress && (shippingAddress.length < 5 || !validPlace.test(suburb) || !validPlace.test(city) ||
