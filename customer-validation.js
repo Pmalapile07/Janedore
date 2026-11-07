@@ -4,11 +4,8 @@
   const PROVINCES = ["Eastern Cape","Free State","Gauteng","KwaZulu-Natal","Limpopo","Mpumalanga","Northern Cape","North West","Western Cape"];
   const provinceMap = new Map(PROVINCES.map(x => [x.toLowerCase(), x]));
   function normalizePhone(raw) {
-    let value = String(raw || '').trim().replace(/[\s().-]/g, '');
-    if (value.startsWith('00')) value = '+' + value.slice(2);
-    if (value.startsWith('+27')) value = '0' + value.slice(3);
-    else if (value.startsWith('27') && value.length === 11) value = '0' + value.slice(2);
-    return /^0[1-8]\d{8}$/.test(value) ? value : '';
+    const value = String(raw || '').replace(/\D/g, '');
+    return /^0(6[0-9]|7[1-9]|8[1-4])[0-9]{7}$/.test(value) ? value : '';
   }
   function validEmail(raw) {
     const value = String(raw || '').trim();
@@ -115,6 +112,12 @@
   document.addEventListener('click', e => {
     const button = e.target.closest('[data-jd-use-location]');
     if (button) { e.preventDefault(); useCurrentLocation(button.getAttribute('data-jd-use-location')); }
+  });
+  document.addEventListener('input', e => {
+    if (e.target && (e.target.id === 'checkout-phone' || e.target.id === 'acc-phone')) {
+      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+      if (e.target.value !== digits) e.target.value = digits;
+    }
   });
   document.addEventListener('blur', e => {
     if (e.target && e.target.id === 'checkout-phone') {
