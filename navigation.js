@@ -103,7 +103,21 @@ function navigateToCheckout() {
   ensureNavScrolled();
 }
 
-function initNavScroll() { DOM.hero = document.getElementById("hero"); window.addEventListener("scroll", () => { if (!DOM.hero) { DOM.mainNav.classList.add("scrolled"); return; } DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0); updateStickyBarOnScroll(); }, { passive: true }); }
+function initNavScroll() {
+  DOM.hero = document.getElementById("hero");
+  window.addEventListener("scroll", () => {
+    // Product pages have no home hero. Keep sticky-bar updates independent
+    // from the navigation-header branch so they always run while scrolling.
+    if (DOM.mainNav) {
+      if (!DOM.hero) {
+        DOM.mainNav.classList.add("scrolled");
+      } else {
+        DOM.mainNav.classList.toggle("scrolled", DOM.hero.getBoundingClientRect().bottom <= 0);
+      }
+    }
+    if (typeof updateStickyBarOnScroll === 'function') updateStickyBarOnScroll();
+  }, { passive: true });
+}
 
 function ensureNavScrolled() { 
   if (S.currentPage !== 'home') {
