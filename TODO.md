@@ -1,7 +1,7 @@
 # Janedore — to do next
 
 ## CURRENT PRIORITY — finish Bob Go per-shipment rate handling and verify address capture
-Do this before picking up any other TODO. The suburb field/prefill/quote flow is already in place, and customer contact/address validation plus optional GPS address suggestions have now been added. Re-test the previously observed false `hasSuburb: false` warning, then focus on the remaining THATO/Naboomspruit zero-rate case and clear per-brand partial-rate handling. Read the existing implementation and recent Git history first; do not rewrite working checkout behaviour.
+Do this before picking up any other TODO. The suburb field/prefill/quote flow is already in place, and customer contact/address validation plus optional GPS address suggestions have now been added. Re-test the previously observed false `hasSuburb: false` warning, then focus on clear per-brand partial-rate handling. The THATO/Naboomspruit zero-rate result is understood as an external Google Maps/location-coverage limitation for that area, not a checkout field bug; do not keep trying to fix it in code unless new evidence points to our request payload. Read the existing implementation and recent Git history first; do not rewrite working checkout behaviour.
 
 ### What is already implemented — preserve and verify it
 - [x] Checkout now has a required **Suburb / local area** field (`checkout.html`, id `checkout-suburb`).
