@@ -253,7 +253,7 @@ module.exports = function registerBobGo(app, deps) {
     const lines = Array.isArray(a.items) ? a.items.slice(0, 30) : [];
     const validProvinces = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
     const canonicalProvince = validProvinces.find(p => p.toLowerCase() === province.toLowerCase());
-    if (!street || street.length < 5 || !/^[\\p{L}][\\p{L}0-9 .,'’()/-]{1,79}$/u.test(suburb) || !/^[\\p{L}][\\p{L}0-9 .,'’()/-]{1,79}$/u.test(city) || !canonicalProvince || !/^\d{4}$/.test(postal) || !lines.length) {
+    if (!street || street.length < 5 || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/g.test(suburb) || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/g.test(city) || !canonicalProvince || !/^\d{4}$/.test(postal) || !lines.length) {
       return res.status(400).json({ ok: false, error: 'Complete your delivery address before checking rates.' });
     }
     if (lines.some(i => !i || typeof i.productId !== 'string' || !/^[A-Za-z0-9_-]{1,150}$/.test(i.productId) || !Number.isInteger(Number(i.qty)) || Number(i.qty) < 1 || Number(i.qty) > 20)) {
