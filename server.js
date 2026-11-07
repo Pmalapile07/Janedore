@@ -1142,13 +1142,17 @@ app.post('/api/orders/create', async (req, res) => {
   if (items.some(i => !i || typeof i.productId !== 'string' || !/^[A-Za-z0-9_-]{1,150}$/.test(i.productId) || !Number.isInteger(Number(i.qty)) || Number(i.qty) < 1 || Number(i.qty) > 20)) {
     return res.status(400).json({ error: 'One or more items or quantities are invalid.' });
   }
-  const customerEmail = String(input.customerEmail || '').trim().toLowerCase().slice(0, 200);
+  const customerEmail = String(input.customerEmail || '').trim().toLowerCase().slice(0, 254);
   const customerName = String(input.customerName || '').trim().slice(0, 120);
-  const customerPhone = String(input.customerPhone || '').trim().slice(0, 40);
+  let customerPhone = String(input.customerPhone || '').trim().slice(0, 40).replace(/[\s().-]/g, '');
+  if (customerPhone.startsWith('+27')) customerPhone = '0' + customerPhone.slice(3);
+  else if (customerPhone.startsWith('27') && customerPhone.length === 11) customerPhone = '0' + customerPhone.slice(2);
   const shippingAddress = String(input.shippingAddress || '').trim().slice(0, 300);
   const suburb = String(input.suburb || '').trim().slice(0, 100);
   const city = String(input.city || '').trim().slice(0, 100);
-  const province = String(input.province || '').trim().slice(0, 100);
+  const provinceInput = String(input.province || '').trim().slice(0, 100);
+  const provinceNames = ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','Northern Cape','North West','Western Cape'];
+  const province = provinceNames.find(p => p.toLowerCase() === provinceInput.toLowerCase()) || '';
   const postalCode = String(input.postalCode || '').trim().slice(0, 30);
   const country = String(input.country || '').trim().slice(0, 100);
   const collectFrom = Array.isArray(input.collectFrom) ? input.collectFrom.slice(0, 30).map((v) => String(v).slice(0, 150)) : [];
@@ -1165,8 +1169,13 @@ app.post('/api/orders/create', async (req, res) => {
   })) : [];
   // An order collected in full needs no delivery address.
   const needsAddress = !input.collectOnly;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || !customerName || (needsAddress && (!shippingAddress || !suburb || !city || !province || !postalCode || !country))) {
-    return res.status(400).json({ error: 'Please provide valid customer and delivery details.' });
+  const validEmail = customerEmail.length <= 254 && /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(customerEmail);
+  const validPhone = /^0[1-8]\d{8}$/.test(customerPhone);
+  const validPlace = /^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/;
+  if (!validEmail || !customerName || customerName.length < 2 || !validPhone ||
+      (needsAddress && (shippingAddress.length < 5 || !validPlace.test(suburb) || !validPlace.test(city) ||
+        !province || !/^\d{4}$/.test(postalCode) || country.toLowerCase() !== 'south africa'))) {
+    return res.status(400).json({ error: 'Please provide a valid email, 10-digit South African phone number and complete South African delivery address.' });
   }
 
   let customerId = null;
