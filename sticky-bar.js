@@ -102,3 +102,30 @@ function updateStickyBarOnScroll() {
    }
  }
 }
+
+// Track the bar independently of the navigation header. Safari can change
+// the visual viewport as its browser controls move, so refresh after those
+// changes as well as ordinary document scrolling and device rotation.
+let _stickyBarFrame = 0;
+function scheduleStickyBarUpdate() {
+ if (_stickyBarFrame) return;
+ _stickyBarFrame = requestAnimationFrame(() => {
+   _stickyBarFrame = 0;
+   updateStickyBarOnScroll();
+ });
+}
+
+(function initStickyBarTracking() {
+ if (window.__janedoreStickyBarTracking) return;
+ window.__janedoreStickyBarTracking = true;
+
+ window.addEventListener('scroll', scheduleStickyBarUpdate, { passive: true });
+ window.addEventListener('resize', scheduleStickyBarUpdate, { passive: true });
+ window.addEventListener('orientationchange', scheduleStickyBarUpdate, { passive: true });
+ window.addEventListener('pageshow', scheduleStickyBarUpdate, { passive: true });
+
+ if (window.visualViewport) {
+   window.visualViewport.addEventListener('resize', scheduleStickyBarUpdate, { passive: true });
+   window.visualViewport.addEventListener('scroll', scheduleStickyBarUpdate, { passive: true });
+ }
+})();
