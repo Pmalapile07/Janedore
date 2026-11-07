@@ -16,7 +16,7 @@
   @media (min-width: 1024px) { .checkout-cards { padding-left: 12px; padding-right: 12px; } }
   .checkout-card { background: #fff; padding: 16px; }
   /* Keep the shipping method panel boundary visible while its options update. */
-  #checkout-shipping-method-card { border: 1px solid #d0d0d0; }
+  #checkout-shipping-method-card { border: 1px solid #809ADD; }
   .checkout-card-title { font-size: 17px; font-weight: 600; margin: 0 0 16px; line-height: 1.3; }
   .checkout-form-group { margin-bottom: 14px; min-width: 0; }
   .checkout-card .checkout-form-group:last-child,
@@ -105,6 +105,19 @@
   .checkout-option-head strong { font-weight: 600; }
   .checkout-option-note { display: block; margin-top: 6px; font-size: 13px; color: #555; line-height: 1.5; }
   .checkout-option-note strong { color: #111; font-weight: 600; }
+  /* Same shimmer used by product cards, sized to the shipping details. */
+  #checkout-shipping-method-card.is-loading-rates .checkout-option-head > span,
+  #checkout-shipping-method-card.is-loading-rates .checkout-option-head > strong,
+  #checkout-shipping-method-card.is-loading-rates .checkout-option-note {
+    color: transparent !important;
+    background-image: linear-gradient(90deg, #f4f4f4 25%, #eaeaea 37%, #f4f4f4 50%);
+    background-size: 400% 100%;
+    animation: product-img-shimmer 1.6s ease-in-out infinite;
+    border-radius: 2px;
+  }
+  #checkout-shipping-method-card.is-loading-rates .checkout-option-head > span { width: 92px; }
+  #checkout-shipping-method-card.is-loading-rates .checkout-option-head > strong { width: 58px; }
+  #checkout-shipping-method-card.is-loading-rates .checkout-option-note { width: min(72%, 220px); min-height: 10px; }
   .checkout-delivery-estimate:empty { display: none; }
   /* Payment methods: name on the left, brand logos on the right edge, all
      one height; each logo keeps its own width. */
