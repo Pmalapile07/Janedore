@@ -17,7 +17,7 @@
   function normalizeProvince(raw) {
     return provinceMap.get(String(raw || '').trim().toLowerCase()) || '';
   }
-  function validPlaceName(value) { return /^[\\p{L}][\\p{L}0-9 .,'’()/-]{1,79}$/u.test(String(value || '').trim()); }
+  function validPlaceName(value) { return /^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(String(value || '').trim()); }
   function cleanText(raw, max) {
     const value = String(raw || '').trim();
     return value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
