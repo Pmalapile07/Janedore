@@ -57,8 +57,8 @@ module.exports = function registerAccount(app, deps) {
     if (!validEmail) return res.status(400).json({ error: 'Your account email address is not valid. Please contact customer care.' });
     if (rawPhone && !/^0[1-8]\d{8}$/.test(phone)) return res.status(400).json({ error: 'Enter a valid South African phone number using 10 digits or +27 format.' });
     if (hasAddress && (!address || address.length < 5 || address.length > 120 || /[\u0000-\u001f\u007f]/.test(address) ||
-      !suburb || suburb.length < 2 || suburb.length > 80 || /[\u0000-\u001f\u007f]/.test(suburb) ||
-      !city || city.length < 2 || city.length > 80 || /[\u0000-\u001f\u007f]/.test(city) ||
+      !suburb || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(suburb) ||
+      !city || !/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ0-9 .,'’()/-]{1,79}$/.test(city) ||
       !province || !/^\d{4}$/.test(postalCode))) {
       return res.status(400).json({ error: 'Complete your street address, suburb, city, province and 4-digit postal code.' });
     }
