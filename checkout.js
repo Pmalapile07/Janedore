@@ -517,7 +517,7 @@ function renderShippingMethod(shipping, packages) {
   const shippingPriceEl = document.getElementById('checkout-shipping-price');
   if (shippingPriceEl) shippingPriceEl.textContent = bobGoCheckoutQuote ? (shipping === 0 ? 'FREE' : formatPrice(shipping)) : 'Calculate at checkout';
   const estimateEl = document.getElementById('checkout-delivery-estimate');
-  if (estimateEl) estimateEl.innerHTML = bobGoCheckoutQuote ? 'Bob Go estimate shown per delivery option below.' : 'Enter your delivery address to calculate a Bob Go rate.';
+  if (estimateEl) estimateEl.innerHTML = bobGoCheckoutQuote ? 'Bob Go estimate shown per delivery option below.' : 'Enter your suburb, city, province and postal code to see delivery options.';
   const fromEl = document.getElementById('checkout-ships-from');
   if (!fromEl) return;
   const shipments = getCartShipments();
