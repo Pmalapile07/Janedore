@@ -477,23 +477,26 @@ function renderCollectOptions() {
     const deliveryOptions = q && q.rates
       ? (Array.isArray(q.rates.deliveryOptions) ? q.rates.deliveryOptions : [q.rates.standard].filter(Boolean))
       : [];
-    const selectedKey = bobGoSelectedRates[s.key] || (deliveryOptions[0] && deliveryOptions[0].key) || '';
+    const defaultDoor = deliveryOptions.find(rate => rate.type === 'door') || null;
+    const selectedKey = bobGoSelectedRates[s.key] || (defaultDoor && defaultDoor.key) || '';
     const selected = deliveryOptions.find(rate => rate.key === selectedKey) || null;
     const options = [];
     deliveryOptions.forEach(rate => {
       const isSelected = selectedKey === rate.key;
+      const isPickup = rate.type === 'pickup-point';
       const label = rate.checkoutLabel || rate.serviceName || 'Delivery';
       const price = s.free ? 'FREE' : formatPrice(rate.price);
-      const note = label === 'Express Shipping' ? 'Express delivery to your street address'
-        : label === 'Standard Shipping' ? 'Delivered to your street address'
-        : (rate.description || 'Delivered to your street address');
+      const pointDetails = [rate.pickupPointName, rate.pickupPointAddress].filter(Boolean).join(' · ');
+      const note = isPickup
+        ? (pointDetails || 'Choose this nearby collection point')
+        : 'Delivered to your street address';
       options.push(`<label class="checkout-option${isSelected ? ' is-selected' : ''}">
         <input type="radio" name="${methodName(s.key)}" value="${sanitizeHTML(rate.key)}" ${isSelected ? 'checked' : ''} onchange="chooseBobGoRate('${escapeJSString(s.key)}','${escapeJSString(rate.key)}')">
         <span class="checkout-option-radio" aria-hidden="true"></span>
         <span class="checkout-option-body">
           <span class="checkout-option-head"><span>${sanitizeHTML(label)}</span><strong>${price}</strong></span>
           <span class="checkout-option-note">${sanitizeHTML(note)}</span>
-          <span class="checkout-option-note checkout-delivery-estimate">${sanitizeHTML(formatEta(rate))}</span>
+          ${isPickup ? '' : '<span class="checkout-option-note checkout-delivery-estimate">' + sanitizeHTML(formatEta(rate)) + '</span>'}
         </span>
       </label>`);
     });
@@ -626,12 +629,16 @@ async function placeOrder(e) {
       shipmentKey: s.key,
       brand: quote.brand || s.brand,
       vendorIds: quote.vendorIds || s.vendorIds || [],
-      method: 'door',
-      checkoutLabel: selected.checkoutLabel || 'Door Delivery',
+      method: selected.type === 'pickup-point' ? 'pickup-point' : 'door',
+      checkoutLabel: selected.checkoutLabel || 'Standard delivery',
       price: Number(selected.price) || 0,
       serviceName: selected.serviceName || '',
       serviceCode: selected.serviceCode || null,
-      bobgoRateId: selected.bobgoRateId == null ? null : selected.bobgoRateId
+      bobgoRateId: selected.bobgoRateId == null ? null : selected.bobgoRateId,
+      pickupPointLocationId: selected.pickupPointLocationId || null,
+      pickupPointProviderSlug: selected.pickupPointProviderSlug || null,
+      pickupPointName: selected.pickupPointName || null,
+      pickupPointAddress: selected.pickupPointAddress || null
     };
   }).filter(Boolean);
 
@@ -1176,8 +1183,10 @@ async function loadBobGoCheckoutRates() {
     bobGoCheckoutQuote = data;
     data.shipments.forEach(shipment => {
       const rates = shipment.rates || {};
-      // Bob Go's configured door-delivery service-level order is preserved.
-      const defaultRate = (Array.isArray(rates.deliveryOptions) && rates.deliveryOptions[0]) || rates.standard;
+      // Always default to street delivery; collection points require an
+      // explicit customer selection.
+      const options = Array.isArray(rates.deliveryOptions) ? rates.deliveryOptions : [];
+      const defaultRate = options.find(rate => rate.type === 'door') || rates.standard;
       if (defaultRate) bobGoSelectedRates[shipment.key] = defaultRate.key;
     });
 
