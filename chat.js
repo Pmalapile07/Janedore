@@ -720,6 +720,56 @@ function renderAIGreeting() {
   question.textContent = 'How can I help you today?';
 
   screen.appendChild(question);
+
+  const timeLine = document.createElement('div');
+  timeLine.className = 'jai-welcome-time';
+  timeLine.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  screen.appendChild(timeLine);
+
+  const label = document.createElement('div');
+  label.className = 'jai-quick-label';
+  label.textContent = 'Quick help';
+  screen.appendChild(label);
+
+  const actions = document.createElement('div');
+  actions.className = 'jai-quick-actions';
+
+  const QUICK_ACTION_CARDS = [
+    { icon: 'ph ph-tote-simple', title: 'Find something new', onClick: quickActionDiscoverProduct },
+    { icon: 'ph ph-package', title: 'Track an order', onClick: quickActionTrackOrder },
+    { icon: 'ph ph-truck', title: 'Shipping & returns', onClick: quickActionShippingReturns },
+    { icon: 'ph ph-chat', title: 'Ask a question', onClick: quickActionAskAnything }
+  ];
+
+  QUICK_ACTION_CARDS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'jai-quick-card';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'jai-card-icon';
+    const iconEl = document.createElement('i');
+    iconEl.className = c.icon;
+    iconWrap.appendChild(iconEl);
+
+    const textWrap = document.createElement('div');
+    textWrap.className = 'jai-card-text';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'jai-card-title';
+    titleEl.textContent = c.title;
+    textWrap.appendChild(titleEl);
+
+    const chevron = document.createElement('i');
+    chevron.className = 'ph ph-caret-right jai-card-chevron';
+
+    btn.appendChild(iconWrap);
+    btn.appendChild(textWrap);
+    btn.appendChild(chevron);
+    btn.addEventListener('click', c.onClick);
+    actions.appendChild(btn);
+  });
+
+  screen.appendChild(actions);
   el.appendChild(screen);
 
   setChatHeaderState(false);
