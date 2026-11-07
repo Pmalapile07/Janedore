@@ -294,6 +294,25 @@
     border-bottom: none !important;
     flex-shrink: 0 !important;
   }
+  #chat-window .chat-header-home {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    flex: 0 0 auto !important;
+    padding: 8px 4px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #111 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+  }
+  #chat-window .chat-header-home i { font-size: 18px !important; }
+  #chat-window .chat-header-home:active { opacity: 0.55 !important; }
+
   #chat-window .chat-header-identity {
     display: flex !important;
     align-items: center !important;
@@ -980,6 +999,9 @@
 
 <div id="chat-window">
   <div class="chat-header">
+    <button type="button" class="chat-header-home" onclick="goHomeFromChat()" aria-label="Back to homepage" title="Back to homepage">
+      <i class="ph ph-arrow-left" aria-hidden="true"></i><span>Home</span>
+    </button>
     <div class="chat-header-identity">
       <div class="chat-header-avatar" aria-hidden="true">JAI</div>
       <div>
