@@ -245,7 +245,6 @@ module.exports = function registerBobGo(app, deps) {
     if (!apiKey) return res.status(503).json({ ok: false, error: 'Bob Go Sandbox API key is not configured.' });
 
     const a = req.body || {};
-    const street = String(a.street || '').trim().slice(0, 120);
     const suburb = String(a.suburb || '').trim().slice(0, 80);
     const city = String(a.city || '').trim().slice(0, 80);
     const province = String(a.province || '').trim().slice(0, 80);
