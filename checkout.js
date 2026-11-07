@@ -521,15 +521,21 @@ function syncAddressForCollection(shipments) {
   if (titleEl) titleEl.textContent = all ? 'Your details' : 'Delivery address';
 }
 
+// Product-card-style shimmer while Bob Go calculates delivery options.
+function setCheckoutShippingLoading(loading) {
+  const card = document.getElementById('checkout-shipping-method-card');
+  if (card) card.classList.toggle('is-loading-rates', !!loading);
+}
+
 // Shipping method card: one parcel per brand, each from its own brand.
 function renderShippingMethod(shipping, packages) {
   if (renderCollectOptions()) return;
   const nameEl = document.getElementById('checkout-shipping-name');
   if (nameEl) nameEl.textContent = packages > 1 ? 'Standard, ' + packages + ' packages' : 'Standard';
   const shippingPriceEl = document.getElementById('checkout-shipping-price');
-  if (shippingPriceEl) shippingPriceEl.textContent = bobGoCheckoutQuote ? (shipping === 0 ? 'FREE' : formatPrice(shipping)) : 'Calculate at checkout';
+  if (shippingPriceEl) shippingPriceEl.textContent = bobGoCheckoutQuote ? (shipping === 0 ? 'FREE' : formatPrice(shipping)) : '';
   const estimateEl = document.getElementById('checkout-delivery-estimate');
-  if (estimateEl) estimateEl.innerHTML = bobGoCheckoutQuote ? 'Bob Go estimate shown per delivery option below.' : 'Enter your suburb, city, province and postal code to see delivery options.';
+  if (estimateEl) estimateEl.innerHTML = '';
   const fromEl = document.getElementById('checkout-ships-from');
   if (!fromEl) return;
   const shipments = getCartShipments();
@@ -1089,17 +1095,18 @@ async function loadBobGoCheckoutRates() {
   });
 
   if (!payload.suburb || !payload.city || !payload.province || !/^\d{4}$/.test(payload.postalCode)) {
-    const message = 'Enter your suburb / local area, city, province and 4-digit postal code to see delivery options.';
     console.warn('[BOBGO CHECKOUT] Delivery-area validation failed.', {
       hasSuburb: !!payload.suburb, hasCity: !!payload.city,
       hasProvince: !!payload.province, postalCodeValid: /^\d{4}$/.test(payload.postalCode)
     });
-    if (output) output.textContent = message;
+    if (output) { output.hidden = true; output.textContent = ''; }
+    setCheckoutShippingLoading(false);
     return;
   }
   if (!payload.items.length) {
-    if (output) output.textContent = 'Your bag is empty. Add an item before calculating delivery.';
+    if (output) { output.hidden = true; output.textContent = ''; }
     console.warn('[BOBGO CHECKOUT] Cannot calculate rates for an empty bag.');
+    setCheckoutShippingLoading(false);
     return;
   }
 
@@ -1109,6 +1116,7 @@ async function loadBobGoCheckoutRates() {
     output.hidden = true;
     output.textContent = '';
   }
+  setCheckoutShippingLoading(true);
   bobGoCheckoutQuote = null;
   bobGoSelectedRates = {};
 
@@ -1204,6 +1212,6 @@ async function loadBobGoCheckoutRates() {
     }
     renderCheckoutSummary();
   } finally {
-    // The loading indicator is removed by the success/error state above.
+    if (requestId === bobGoRateRequestId) setCheckoutShippingLoading(false);
   }
 }
