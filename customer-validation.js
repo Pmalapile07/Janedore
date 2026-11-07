@@ -121,7 +121,6 @@
       const normalized = normalizePhone(e.target.value);
       if (normalized) e.target.value = normalized;
     }
-    if (e.target && e.target.id === 'checkout-postal') e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
   }, true);
   window.JDValidation = { PROVINCES, normalizePhone, validEmail, normalizeProvince, validateAddress, validatePhone, validateCheckout };
 })();
