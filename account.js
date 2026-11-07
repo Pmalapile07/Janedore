@@ -325,19 +325,22 @@ async function renderAccountProfile() {
   body.innerHTML = `<form class="account-form" onsubmit="saveAccountProfile(event)" novalidate>
     <div class="account-section-title">Personal details</div>
     ${field('acc-name', 'Full name', p.name || user.displayName, 'autocomplete="name" required')}
-    ${field('acc-phone', 'Phone number', p.phone, 'type="tel" autocomplete="tel" placeholder="+27 81 234 5678"')}
+    ${field('acc-phone', 'Phone number', p.phone, 'type="tel" inputmode="tel" maxlength="18" autocomplete="tel" placeholder="082 123 4567"')}
     <label class="track-label" for="acc-email">Email address</label>
     <input class="track-input" id="acc-email" value="${escapeHTML(user.email || '')}" disabled>
     <p class="account-note">To change your email address, please contact customer care.</p>
 
     <div class="account-section-title">Default delivery address</div>
+    <button type="button" class="account-outline-btn" id="acc-use-location" data-jd-use-location="acc">Use my current location</button>
+    <p class="account-note" id="acc-location-status" aria-live="polite">Or enter your delivery address below.</p>
     ${field('acc-address', 'Street address', p.address, 'autocomplete="street-address" placeholder="House number and street name"')}
     ${field('acc-suburb', 'Suburb / local area', p.suburb, 'autocomplete="address-level3" placeholder="e.g. Hatfield"')}
     <div class="account-form-row">
       <div>${field('acc-city', 'City', p.city, 'autocomplete="address-level2" placeholder="Johannesburg"')}</div>
-      <div>${field('acc-province', 'Province', p.province, 'autocomplete="address-level1" placeholder="Gauteng"')}</div>
+      <div>${field('acc-province', 'Province', p.province, 'autocomplete="address-level1" list="jd-sa-provinces" placeholder="Choose a province"')}</div>
     </div>
-    ${field('acc-postal', 'Postal code', p.postalCode, 'inputmode="numeric" autocomplete="postal-code" placeholder="2000"')}
+    ${field('acc-postal', 'Postal code', p.postalCode, 'inputmode="numeric" maxlength="4" autocomplete="postal-code" placeholder="2000"')}
+    <datalist id="jd-sa-provinces"><option>Eastern Cape</option><option>Free State</option><option>Gauteng</option><option>KwaZulu-Natal</option><option>Limpopo</option><option>Mpumalanga</option><option>Northern Cape</option><option>North West</option><option>Western Cape</option></datalist>
     <p class="account-note">Used to pre-fill your details at checkout.</p>
     <div class="track-error" id="acc-error" role="alert"></div>
     <button type="submit" class="track-btn" id="acc-save">Save changes</button>
@@ -358,17 +361,37 @@ async function saveAccountProfile(e) {
   const name = val('acc-name');
   err.style.display = 'none';
   if (!name) { err.textContent = 'Please enter your full name.'; err.style.display = 'block'; return; }
-  const data = { name, phone: val('acc-phone'), address: val('acc-address'), suburb: val('acc-suburb'), city: val('acc-city'), province: val('acc-province'), postalCode: val('acc-postal'),
-    email: (user.email || '').toLowerCase(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+  const phoneResult = window.JDValidation.validatePhone(val('acc-phone'), false);
+  if (!phoneResult.ok) { err.textContent = phoneResult.message; err.style.display = 'block'; return; }
+  const addressResult = window.JDValidation.validateAddress({
+    street: val('acc-address'), suburb: val('acc-suburb'), city: val('acc-city'),
+    province: val('acc-province'), postalCode: val('acc-postal')
+  }, false);
+  if (!addressResult.ok) { err.textContent = addressResult.message; err.style.display = 'block'; return; }
+  const data = {
+    name, phone: phoneResult.phone,
+    address: addressResult.address ? addressResult.address.street : '',
+    suburb: addressResult.address ? addressResult.address.suburb : '',
+    city: addressResult.address ? addressResult.address.city : '',
+    province: addressResult.address ? addressResult.address.province : '',
+    postalCode: addressResult.address ? addressResult.address.postalCode : ''
+  };
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    await db.collection('customers').doc(user.uid).set(data, { merge: true });
+    const token = await user.getIdToken();
+    const response = await fetch('/api/account/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'We couldn’t save your details. Please try again.');
     if (name !== user.displayName) await user.updateProfile({ displayName: name });
     _accountProfile = Object.assign({}, _accountProfile, data);
     if (typeof showAddedToCartToast === 'function') showAddedToCartToast('Your details have been saved', 'ph-check-circle');
   } catch (ex) {
     console.error('[ACCOUNT_SAVE]', ex);
-    err.textContent = 'We couldn’t save your details. Please try again.';
+    err.textContent = ex.message || 'We couldn’t save your details. Please try again.';
     err.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Save changes';
