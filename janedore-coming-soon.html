@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Janedore · Coming soon</title>
+<title>JANEDORE · Coming soon</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="The next brand you love might not be a household name. Discover independent South African brands on Janedore.">
+<meta name="description" content="JANEDORE brings South African independent brands together in one place. Discover something different.">
 <meta name="keywords" content="fashion, clothing, accessories, curated fashion, coming soon">
 <meta name="author" content="Janedore">
 <meta name="robots" content="noindex, follow">
-<meta property="og:title" content="Janedore · Coming soon">
-<meta property="og:description" content="Discover independent South African brands, distinctive products and something beyond the usual.">
+<meta property="og:title" content="JANEDORE · Coming soon">
+<meta property="og:description" content="A place for South African independent brands and the people who want to discover them.">
 <meta property="og:image" content="https://janedore.co.za/share-card.png">
 <meta property="og:url" content="https://janedore.co.za">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Janedore · Coming soon">
-<meta name="twitter:description" content="Discover something different with Janedore.">
+<meta name="twitter:title" content="JANEDORE · Coming soon">
+<meta name="twitter:description" content="Coming soon.">
 <meta name="twitter:image" content="https://janedore.co.za/share-card.png">
 <link rel="canonical" href="https://janedore.co.za">
 <meta name="theme-color" content="#111111">
@@ -51,10 +51,10 @@
   /* Header (unchanged) */
   .cs-header { position:sticky; top:0; z-index:20; background:#111; padding-top:env(safe-area-inset-top,0px); }
   .cs-header-pill { display:flex; align-items:center; justify-content:space-between; gap:12px; height:60px; padding:0 var(--gutter); }
-  .cs-logo { display:block; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; color:#fff; white-space:nowrap; }
+  .cs-logo { display:block; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:#fff; white-space:nowrap; }
 
   /* Buttons (unchanged) */
-  .cs-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:12px 32px; border:0; border-radius:0; background:#111; color:#fff; font-family:'Inter',sans-serif; font-size:10px; font-weight:500; letter-spacing:.02em; line-height:1.2; text-transform:uppercase; cursor:pointer; text-decoration:none; white-space:nowrap; -webkit-appearance:none; }
+  .cs-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:12px 32px; border:0; border-radius:0; background:#111; color:#fff; font-family:'Inter',sans-serif; font-size:10px; font-weight:500; letter-spacing:.15em; line-height:1.2; text-transform:uppercase; cursor:pointer; text-decoration:none; white-space:nowrap; -webkit-appearance:none; }
   .cs-btn-white { background:#fff; color:#111; }
   .cs-btn-accent { background:var(--accent); color:#111; }
   .cs-btn-block { width:100%; }
@@ -154,7 +154,7 @@
 
   /* Footer (unchanged) */
   .cs-footer { background:#111; color:#fff; padding:40px var(--gutter) calc(28px + env(safe-area-inset-bottom,0px)); margin-top:8px; }
-  .cs-footer-logo { display:block; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; color:#fff; }
+  .cs-footer-logo { display:block; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:#fff; }
   .cs-footer-tag { font-size:13px; color:rgba(255,255,255,.65); margin-top:8px; }
   .cs-footer-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:28px; font-size:12px; color:rgba(255,255,255,.55); }
   .cs-link { border:none; background:none; padding:0; font:inherit; color:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
@@ -190,6 +190,29 @@
     .cs-sheet-back { align-items:center; }
   }
 
+
+  /* Reference look: floating pale blue header, rounded image hero, pill buttons */
+  .cs-header { background:#fff; padding:calc(12px + env(safe-area-inset-top,0px)) 12px 0; }
+  .cs-header-pill { background:var(--accent); border-radius:20px; height:64px; padding:0 12px 0 24px; }
+  .cs-logo { color:#111; font-weight:800; letter-spacing:0; }
+  .cs-btn { border-radius:999px; font-size:14px; font-weight:400; letter-spacing:0; text-transform:none; }
+  .cs-header .cs-btn-accent { background:#111; color:#fff; min-height:40px; padding:0 22px; }
+
+  .cs-hero { margin:12px 12px 0; min-height:460px; padding:28px 24px; border-radius:20px; align-items:flex-end; justify-content:flex-end; }
+  .hero-fallback { inset:0; animation:none; background:linear-gradient(160deg,#9a8f87 0%,#6b5d54 45%,#2b211c 100%); }
+  .hero-shade { background:linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,0) 45%); }
+  .cs-hero-content { max-width:none; display:flex; justify-content:flex-end; }
+  .cs-hero h1 { font-size:34px; font-weight:700; line-height:1.1; letter-spacing:-.01em; max-width:300px; margin:0; text-align:right; }
+
+  .disc, .brandcta { margin:12px 12px 0; border-radius:20px; overflow:hidden; }
+  .cs-cat { border-radius:16px; }
+  .join .signup-input { border-radius:999px; padding:0 22px; }
+  .cs-footer { margin:12px; border-radius:20px; }
+  @media (min-width:768px) {
+    .cs-hero { min-height:640px; padding:40px; }
+    .cs-hero h1 { font-size:56px; max-width:640px; }
+  }
+
   .disc-item i { display:block; font-size:26px; margin-bottom:14px; color:#111; }
   .footer-copy { cursor:default; user-select:none; }
   .cs-sheet-close { display:flex; align-items:center; justify-content:center; }
@@ -200,7 +223,7 @@
   .admin-overlay { position:fixed; inset:0; background:rgba(255,255,255,.98); z-index:100; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .25s ease; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
   .admin-overlay.open { opacity:1; pointer-events:all; }
   .admin-box { width:100%; max-width:340px; padding:0 32px; position:relative; }
-  .admin-logo { display:block; margin:0 auto 48px; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; color:#111; white-space:nowrap; opacity:.4; text-align:center; }
+  .admin-logo { display:block; margin:0 auto 48px; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:#111; white-space:nowrap; opacity:.4; text-align:center; }
   .admin-label { display:block; font-size:10px; font-weight:500; letter-spacing:.3em; text-transform:uppercase; color:var(--text); text-align:center; margin-bottom:40px; }
   .admin-field { width:100%; background:transparent; border:none; border-bottom:1px solid var(--border); padding:14px 0; margin-bottom:24px; font-family:'Inter',sans-serif; font-size:15px; font-weight:300; color:var(--text); outline:none; -webkit-appearance:none; transition:border-color .3s; }
   .admin-field:focus { border-color:var(--text); }
@@ -218,8 +241,8 @@
 
 <header class="cs-header">
   <div class="cs-header-pill">
-    <span class="cs-logo">Janedore</span>
-    <button type="button" class="cs-btn cs-btn-accent" data-open="join-sheet">Join the list</button>
+    <span class="cs-logo">JANEDORE</span>
+    <button type="button" class="cs-btn cs-btn-accent" data-open="join-sheet">Join the waitlist</button>
   </div>
 </header>
 
@@ -230,78 +253,66 @@
       <div class="hero-shade"></div>
     </div>
     <div class="cs-hero-content">
-      <h1>Not everything worth discovering is mainstream.</h1>
-      <p class="cs-hero-copy">The next brand you love might not be a household name. Find independent South African labels, unexpected finds and good things from businesses doing things their own way.</p>
-      <div class="join-form">
-        <label for="hero-email" class="sr-only">Email address</label>
-        <input type="email" class="signup-input" id="hero-email" placeholder="Email address" autocomplete="email">
-        <button type="button" class="cs-btn" id="hero-btn">Get early access</button>
-      </div>
-      <div class="signup-msg" id="hero-msg" role="status" aria-live="polite" style="margin-top:12px;">Be first to know when Janedore opens. Get early access and meet the independent brands joining the platform.</div>
+      <h1>The home of independent brands</h1>
     </div>
   </section>
 
   <section class="disc">
     <div class="disc-inner">
       <div class="sec-head">
-        <h2 class="cs-title">Good finds don’t have to come from big names.</h2>
-        <p class="sec-sub">From labels you’re about to know to products you didn’t know you needed, this is where independent South African brands get discovered.</p>
+        <h2 class="cs-title">Discover something different.</h2>
+        <p class="sec-sub">Explore South African independent labels across clothing, accessories, homeware and more, all in one place.</p>
       </div>
       <div class="disc-grid">
-        <div class="disc-item"><i class="ph ph-sparkle"></i><strong>Your new favourite might be here.</strong><span>Come across labels that are doing their own thing — and give them a place on your radar.</span></div>
-        <div class="disc-item"><i class="ph ph-squares-four"></i><strong>There’s more to browse.</strong><span>Clothing, accessories, homeware, beauty, scent and more. A little something beyond the expected.</span></div>
-        <div class="disc-item"><i class="ph ph-compass"></i><strong>Not the usual suspects.</strong><span>Look past the familiar names and find independent businesses worth getting to know.</span></div>
-        <div class="disc-item"><i class="ph ph-handshake"></i><strong>Independent, by design.</strong><span>Different brands. Different stories. Each with its own identity, all in one place.</span></div>
+        <div class="disc-item"><i class="ph ph-sparkle"></i><strong>Discover new brands.</strong><span>Independent labels and fresh perspectives you won’t find everywhere else.</span></div>
+        <div class="disc-item"><i class="ph ph-seal-check"></i><strong>Every brand, chosen.</strong><span>Each label is selected for how it’s made and the point of view behind it.</span></div>
+        <div class="disc-item"><i class="ph ph-tote-simple"></i><strong>One bag, many brands.</strong><span>Shop clothing, accessories, homeware, and kids together, with one checkout.</span></div>
+        <div class="disc-item"><i class="ph ph-handshake"></i><strong>Built with independents.</strong><span>A home for emerging brands, and a fairer way to reach the people who value them.</span></div>
       </div>
     </div>
   </section>
 
   <section class="sec">
     <div class="sec-head">
-      <h2 class="cs-title">Your next find starts here.</h2>
-      <p class="sec-sub">Take a look around. There’s more than one kind of good find.</p>
+      <h2 class="cs-title">What you’ll find here.</h2>
+      <p class="sec-sub">A growing mix of independent labels and categories.</p>
     </div>
     <div class="cs-cats">
       <span class="cs-cat">Clothing</span>
       <span class="cs-cat">Accessories</span>
       <span class="cs-cat">Homeware</span>
-      <span class="cs-cat">Beauty</span>
-      <span class="cs-cat">Scent</span>
-      <span class="cs-cat">Kids</span>
+      <span class="cs-cat">Beauty kits</span>
     </div>
     <div class="trio">
       <div><h3>Find something new</h3><p>Discover pieces from independent labels you may not come across in the usual places.</p></div>
-      <div><h3>Support independent businesses</h3><p>Shop from brands building their own ideas, collections and points of view.</p></div>
-      <div><h3>Explore beyond fashion</h3><p>Browse clothing, accessories, homeware, beauty, scent and kids’ products as the platform grows.</p></div>
+      <div><h3>Support independent</h3><p>Shop from businesses building their own ideas, collections and points of view.</p></div>
+      <div><h3>Different categories, one place</h3><p>Explore clothing, accessories, homeware, beauty and kids’ products as JANEDORE grows.</p></div>
     </div>
   </section>
 
   <section class="brandcta">
     <div class="brandcta-inner">
       <div>
-        <h2 class="cs-title">Your brand belongs in the conversation.</h2>
-        <p>Building an independent brand in South Africa? We’re bringing together businesses with something of their own to say. Tell us about yours.</p>
+        <h2 class="cs-title">Have a brand with a point of view?</h2>
+        <p>If you’re building an independent brand in South Africa, tell us about it. We’d love to hear what you’re working on.</p>
       </div>
       <button type="button" class="cs-btn cs-btn-white" data-open="brand-sheet">Register your interest</button>
     </div>
   </section>
 
   <section class="cs-faq">
-    <h2 class="cs-title">Before you get browsing…</h2>
-    <p>A few useful things to know about shopping on Janedore.</p>
-    <details><summary>Is Janedore a store or a marketplace?</summary><p>It’s a marketplace: a place where independent South African brands bring their products together for you to discover and shop. Each brand keeps its own identity, products and business.</p></details>
-    <details><summary>What kind of things will I find here?</summary><p>Expect more than one kind of find. Browse clothing, accessories, homeware, beauty, scent, kids’ products and more as new brands join.</p></details>
-    <details><summary>Who am I buying from?</summary><p>You’re shopping products listed by the individual brands on Janedore. The platform brings them together, while each brand remains its own business and manages its stock.</p></details>
-    <details><summary>Where will my order be sent from?</summary><p>Brands fulfil orders from their own locations. The delivery methods available for your order will be shown at checkout.</p></details>
-    <details><summary>Can I put products from different brands in one order?</summary><p>Shopping across brands may depend on the items and delivery arrangements available at checkout. We’ll make the available options clear before you place your order.</p></details>
-    <details><summary>How do I know which brands are on Janedore?</summary><p>You’ll be able to browse the brands and their collections on the platform. We’ll also introduce new arrivals and labels through our updates.</p></details>
-    <details><summary>Why should I join the early-access list?</summary><p>You’ll hear when Janedore is ready to open and get the chance to explore the platform before it opens to everyone.</p></details>
-    <details><summary>I have an independent brand. Can I apply?</summary><p>Yes. We’re interested in hearing from independent South African brands. Use the brand interest form to introduce your business and tell us what you make.</p></details>
+    <h2 class="cs-title">Good questions</h2>
+    <p>A few things you might be wondering.</p>
+    <details><summary>What is JANEDORE?</summary><p>JANEDORE is a platform bringing independent South African brands together across clothing, accessories, homeware and more. It gives customers one place to discover and shop from different labels.</p></details>
+    <details><summary>When does JANEDORE open?</summary><p>We are preparing for launch. Members of our list will be the first to hear when JANEDORE is ready to open.</p></details>
+    <details><summary>What does early access include?</summary><p>Early access before the platform opens to everyone, plus updates on the brands and products joining JANEDORE.</p></details>
+    <details><summary>Which brands will be available?</summary><p>A considered edit of independent labels, from emerging designers to established names. Each brand will be introduced as we approach launch.</p></details>
+    <details><summary>How can my brand be considered?</summary><p>We welcome enquiries from independent South African brands. Register your interest and tell us a little about your brand.</p></details>
   </section>
 
   <section class="join" id="join">
-    <h2 class="cs-title">Get in before the crowd.</h2>
-    <p class="sec-sub">Join the list for early access, launch news and updates about the independent brands coming to Janedore.</p>
+    <h2 class="cs-title">Join the list for early access</h2>
+    <p class="sec-sub">Shop before we open to everyone, with early access to our discounts.</p>
     <div class="join-form">
       <label for="inline-email" class="sr-only">Email address</label>
       <input type="email" class="signup-input" id="inline-email" placeholder="Email address" autocomplete="email">
@@ -312,8 +323,8 @@
 </main>
 
 <footer class="cs-footer">
-  <span class="cs-footer-logo">Janedore</span>
-  <p class="cs-footer-tag">Find your next favourite. Support independent.</p>
+  <span class="cs-footer-logo">JANEDORE</span>
+  <p class="cs-footer-tag">Independent brands. Distinctive finds. One destination.</p>
   <div class="cs-footer-meta">
     <span class="footer-copy" id="copyright"></span>
     <button type="button" class="cs-link" id="visitor-access-link" data-open="visitor-access-row">Preview access</button>
@@ -325,7 +336,7 @@
   <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="join-title">
     <button type="button" class="cs-sheet-close" data-close aria-label="Close"><i class="ph ph-x"></i></button>
     <h2 id="join-title">Get early access</h2>
-    <p>Join the list for early access, launch news and updates about the independent brands coming to Janedore.</p>
+    <p>Join the list to shop before we open to everyone, with early access to our discounts.</p>
     <div class="cs-form">
       <label for="email-input" class="sr-only">Email address</label>
       <input type="email" class="signup-input" id="email-input" placeholder="Email address" autocomplete="email" required>
@@ -359,7 +370,7 @@
   <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="brand-sheet-title">
     <button type="button" class="cs-sheet-close" data-close aria-label="Close"><i class="ph ph-x"></i></button>
     <h2 id="brand-sheet-title">For independent brands</h2>
-    <p>Introduce your brand and tell us a little about what you’re building. We’ll be in touch with more information about joining the platform.</p>
+    <p>Tell us about your brand, and our partnerships team will be in touch before launch.</p>
     <div class="cs-form" id="brand-form">
       <label for="brand-name" class="sr-only">Brand name</label>
       <input type="text" class="signup-input" id="brand-name" placeholder="Brand name" autocomplete="organization" maxlength="120">
@@ -376,7 +387,7 @@
 <div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
   <div class="admin-box">
     <button class="admin-close" id="admin-close-btn" aria-label="Close"><i class="ph ph-x"></i></button>
-    <span class="admin-logo">Janedore</span>
+    <span class="admin-logo">JANEDORE</span>
     <span class="admin-label">Admin Access</span>
     <input type="email" class="admin-field" id="admin-email" placeholder="Email" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false">
     <input type="text" class="admin-field" id="admin-password" placeholder="Password" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly');this.type='password';" style="-webkit-text-security:disc;">
@@ -515,7 +526,6 @@
     emailEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') go(); });
     emailEl.addEventListener('input', function() { if (msgEl.classList.contains('error')) { msgEl.className = 'signup-msg'; msgEl.textContent = ''; } });
   }
-  makeSignup(document.getElementById('hero-email'), document.getElementById('hero-btn'), document.getElementById('hero-msg'));
   makeSignup(document.getElementById('email-input'), document.getElementById('signup-btn'), document.getElementById('signup-msg'));
   makeSignup(document.getElementById('inline-email'), document.getElementById('inline-btn'), document.getElementById('inline-msg'));
 
@@ -553,7 +563,7 @@
       fetch('/api/brand-interest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandName: brandName, email: email, social: socEl.value.trim() }) })
       .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); }).then(function(res) {
         if (!res.ok) throw new Error(res.d.error || '');
-        form.innerHTML = '<div class="signup-msg success">Thank you. Your interest in joining Janedore has been registered. We’ll be in touch.</div>';
+        form.innerHTML = '<div class="signup-msg success">Thank you. Your interest in partnering with JANEDORE has been registered, and our partnerships team will be in touch.</div>';
       }).catch(function(e) { say(e.message || 'We couldn\u2019t complete your request. Please try again.', 'error'); submit.disabled = false; });
     });
   })();
@@ -610,6 +620,9 @@
 
   // Hero video: paste your hosted .mp4 URL here (H.264, 720p, under ~8MB, 10 to 20 second loop).
   // Leave empty to keep the animated background.
+  // Hero photo: paste your hosted image URL here (the warm gradient shows until you do).
+  var HERO_IMAGE_URL = '';
+  if (HERO_IMAGE_URL) document.querySelector('.hero-fallback').style.cssText = 'background:url("' + HERO_IMAGE_URL + '") center/cover no-repeat;animation:none;inset:0';
   var HERO_VIDEO_URL = '';
   var HERO_POSTER_URL = '';
   if (HERO_VIDEO_URL) {
