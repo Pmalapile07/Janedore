@@ -226,13 +226,13 @@
   .wl-copy { margin-top:12px; }
   .wl-count-number { display:inline-block; color:#809ADD; font-weight:700; text-shadow:0 0 5px rgba(128,154,221,.55),0 0 12px rgba(128,154,221,.42),0 0 22px rgba(224,235,255,.95); }
 
-  /* Founding community section */
-  .community { margin:12px 12px 0; padding:64px 24px; border-radius:20px; background:#fff; color:#111; }
-  .community-inner { max-width:1200px; margin:0 auto; }
+  /* Founding community section — uses the same section gutter and spacing as the main content */
+  .community { width:100%; max-width:1200px; margin:0 auto; padding:64px var(--gutter); background:#fff; color:#111; }
+  .community-inner { width:100%; margin:0 auto; }
   .community-heading { max-width:760px; }
-  .community-heading .cs-title { margin:0; }
+  .community-heading .cs-title { margin:0; font-size:26px; line-height:1.15; }
   .community-heading p { max-width:620px; margin:14px 0 0; color:#555; font-size:13px; line-height:1.6; }
-  .community-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:32px 0 36px; align-items:start; }
+  .community-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:32px 0 36px; align-items:start; }
   .community-card { display:block; width:100%; overflow:hidden; border-radius:12px; background:linear-gradient(145deg,#e8e5df,#c9c4ba); }
   .community-card:nth-child(2) { background:linear-gradient(145deg,#d9e0e9,#aeb9c8); }
   .community-card:nth-child(3) { background:linear-gradient(145deg,#e9ddd5,#c9b4a7); }
@@ -252,8 +252,7 @@
   .community-bottom p { margin:12px 0 0; color:#555; font-size:13px; line-height:1.6; }
   .community-bottom .cs-btn { flex-shrink:0; background:#111; color:#fff; min-height:48px; padding:0 24px; }
   @media (min-width:768px) {
-    .community { padding:88px 48px; }
-    .community-gallery { grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:44px 0 48px; }
+    .community-gallery { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:44px 0 48px; }
     .community-card { border-radius:16px; }
     .community-bottom h3 { font-size:28px; }
   }
