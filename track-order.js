@@ -220,7 +220,7 @@ function trackResultHtml(o, opts) {
     const stage = stages[i];
     const pill = stage >= 2 ? trackStageLabels(p)[stage] : p.preorder ? 'In production' : 'Processing';
     const status = live ? `<span class="track-pill${stage === 4 ? ' delivered' : stage === 3 ? ' shipped' : ''}">${pill}</span>` : '';
-    const courierUrl = courierTrackingUrl(p.courier, p.trackingNumber);
+    const courierUrl = p.trackingUrl || courierTrackingUrl(p.courier, p.trackingNumber);
     const shipBy = p.preorder && p.shipBy ? preorderShipText(p.shipBy) : '';
     const place = p.collectFrom;
     const body = !live ? '' : p.collect
