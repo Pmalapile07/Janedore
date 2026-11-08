@@ -80,7 +80,7 @@
      an accent only. */
   :root { --head: 21px; --gutter: 20px; }
   body { background: #fff; }
-  .cs-title { font-size: var(--head); font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; color: #111; }
+  .cs-title { font-size: var(--head); font-weight: 600; letter-spacing: 0; line-height: 1.25; color: #111; }
 
   /* Floating header (kept from the launch-page look), off the screen edges. */
   /* Header: the shop's black bar. */
@@ -93,6 +93,7 @@
   .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 12px 32px; border: 0; border-radius: 0; background: #111; color: #fff; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; line-height: 1.2; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; -webkit-appearance: none; }
   .cs-btn-white { background: #fff; color: #111; }
   .cs-btn-accent { background: #111; color: #fff; padding: 12px 32px; }
+  .cs-header .cs-btn-accent { background: #fff; color: #111; }
   .cs-btn-block { width: 100%; padding: 12px 32px; font-size: 10px; }
   .cs-btn:disabled { opacity: 0.6; cursor: default; }
 
@@ -160,8 +161,7 @@
   .footer-copy { cursor: default; user-select: none; }
   .cs-link { border: none; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
-  /* Pop-ups (join the list, brand interest, preview access): the floating
-     header's dark glass, rounded, with the homepage's pale-blue accent button. */
+  /* Pop-ups (join the list, brand interest, preview access). */
   .cs-sheet-back { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.35); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
   .cs-sheet-back[hidden] { display: none; }
   .cs-sheet { position: relative; width: 100%; max-width: 440px; background: rgba(17,17,17,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: #fff; border-radius: 28px; padding: 28px 22px 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); animation: csSheetIn 0.25s ease; }
@@ -183,7 +183,7 @@
     .cs-hero { margin: 12px 12px 0; min-height: 500px; padding: 72px 48px; }
     .cs-hero-content { padding: 0; }
     .cs-hero h1 { font-size: 34px; max-width: 520px; }
-    .cs-dark { margin: 12px 12px 0; padding: 72px 48px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; align-items: center; }
+    .cs-dark { margin: 12px 12px 0; padding: 72px 48px; display: block; }
     .cs-row { padding: 24px 0; }
     .cs-dark-brands { display: block; }
     .cs-light, .cs-faq, .cs-join { max-width: 1200px; margin: 0 auto; }
