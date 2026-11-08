@@ -13,8 +13,8 @@
 // Each step goes in the order's timeline, emailed or not, as when staff
 // change it in admin. Off until BOBGO_WEBHOOK_SECRET is set: every
 // delivery must carry Bob Go's signature (an HMAC-SHA256 of the raw body
-// with that secret, base64), or it's refused. Subscribe the URL to
-// tracking/updated in Bob Go (Settings → Webhook subscriptions).
+// with that secret, base64), or it's refused. Subscribe the URL to both tracking/updated and
+// shipment_submission_status/updated in Bob Go (Settings → Webhook subscriptions).
 // Every delivery is logged in bobgoEvents (server only).
 
 const crypto = require('crypto');
