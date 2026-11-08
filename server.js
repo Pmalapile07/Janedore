@@ -2309,7 +2309,8 @@ function orderShipments(order) {
           bobgoStatusFriendly: t.bobgoStatusFriendly || null,
           bobgoProviderTrackingReference: t.bobgoProviderTrackingReference || null,
           bobgoTrackingUrl: t.bobgoTrackingUrl || null,
-          bobgoCheckpoints: Array.isArray(t.bobgoCheckpoints) ? t.bobgoCheckpoints : []
+          bobgoCheckpoints: Array.isArray(t.bobgoCheckpoints) ? t.bobgoCheckpoints : [],
+          bobgoBooking: t.bobgoBooking || null
         },
         collect, collection: collect ? ((order.collection || {})[collectionKey(g)] || {}) : null
       });
