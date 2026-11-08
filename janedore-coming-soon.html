@@ -75,8 +75,6 @@
   .cs-faq details[open] summary::after { transform:rotate(-135deg); }
   .cs-faq details p { font-size:13px; line-height:1.6; color:#444; padding:0 0 18px; max-width:560px; }
 
-  /* NEW: Join — inline field, no popup needed */
-  .join { padding:72px var(--gutter); max-width:1200px; margin:0 auto; width:100%; }
   .join-form { display:flex; flex-direction:column; gap:10px; margin-top:24px; max-width:460px; }
   .signup-input { width:100%; height:50px; padding:0 16px; border:1px solid #d4d4d4; border-radius:0; font-family:inherit; font-size:15px; color:#111; background:#fff; outline:none; -webkit-appearance:none; }
   .signup-input:focus { border-color:#111; }
@@ -226,39 +224,32 @@
   .wl-copy { margin-top:12px; }
   .wl-count-number { display:inline-block; color:#809ADD; font-weight:700; text-shadow:0 0 5px rgba(128,154,221,.55),0 0 12px rgba(128,154,221,.42),0 0 22px rgba(224,235,255,.95); }
 
-  /* Founding community section — uses the same section gutter and spacing as the main content */
+  /* Founding community section — shared site gutter and a fixed, even image rhythm */
   .community { width:100%; max-width:1200px; margin:0 auto; padding:64px var(--gutter); background:#fff; color:#111; }
   .community-inner { width:100%; margin:0 auto; }
   .community-heading { max-width:760px; }
   .community-heading .cs-title { margin:0; font-size:26px; line-height:1.15; }
   .community-heading p { max-width:620px; margin:14px 0 0; color:#555; font-size:13px; line-height:1.6; }
-  .community-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:32px 0 36px; align-items:start; }
-  .community-card { display:block; width:100%; overflow:hidden; border-radius:12px; background:linear-gradient(145deg,#e8e5df,#c9c4ba); }
-  .community-card:nth-child(2) { background:linear-gradient(145deg,#d9e0e9,#aeb9c8); }
-  .community-card:nth-child(3) { background:linear-gradient(145deg,#e9ddd5,#c9b4a7); }
-  .community-card:nth-child(4) { background:linear-gradient(145deg,#d9ded5,#aeb8a7); }
-  .community-card:nth-child(5) { background:linear-gradient(145deg,#e7e0eb,#bdb0c8); }
-  .community-card:nth-child(6) { background:linear-gradient(145deg,#e9e2d4,#c9bda5); }
-  .community-card:nth-child(7) { background:linear-gradient(145deg,#dce5e4,#a9bfbd); }
-  .community-card:nth-child(8) { background:linear-gradient(145deg,#e7d9d7,#c8aaa6); }
-  .community-card:nth-child(1), .community-card:nth-child(5) { aspect-ratio:4 / 5; }
-  .community-card:nth-child(2), .community-card:nth-child(7) { aspect-ratio:3 / 4; }
-  .community-card:nth-child(3), .community-card:nth-child(6) { aspect-ratio:1 / 1; }
-  .community-card:nth-child(4), .community-card:nth-child(8) { aspect-ratio:4 / 3; }
+  .community-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-areas:"a a" "b c" "b d" "e f" "e g" "h h"; grid-auto-rows:112px; gap:12px; margin:32px 0 36px; }
+  .community-card { display:block; width:100%; height:100%; min-width:0; min-height:0; overflow:hidden; border-radius:12px; background:linear-gradient(145deg,#e8e5df,#c9c4ba); }
+  .community-card:nth-child(1) { grid-area:a; }
+  .community-card:nth-child(2) { grid-area:b; background:linear-gradient(145deg,#d9e0e9,#aeb9c8); }
+  .community-card:nth-child(3) { grid-area:c; background:linear-gradient(145deg,#e9ddd5,#c9b4a7); }
+  .community-card:nth-child(4) { grid-area:d; background:linear-gradient(145deg,#d9ded5,#aeb8a7); }
+  .community-card:nth-child(5) { grid-area:e; background:linear-gradient(145deg,#e7e0eb,#bdb0c8); }
+  .community-card:nth-child(6) { grid-area:f; background:linear-gradient(145deg,#e9e2d4,#c9bda5); }
+  .community-card:nth-child(7) { grid-area:g; background:linear-gradient(145deg,#dce5e4,#a9bfbd); }
+  .community-card:nth-child(8) { grid-area:h; background:linear-gradient(145deg,#e7d9d7,#c8aaa6); }
   .community-divider { width:100%; height:1px; background:#d8d8d8; margin:0 0 30px; }
-  .community-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:28px; }
-  .community-bottom > div { max-width:620px; }
+  .community-bottom { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; text-align:center; }
+  .community-bottom > div { width:100%; max-width:620px; }
   .community-bottom h3 { margin:0; font-size:22px; line-height:1.2; font-weight:600; letter-spacing:-.02em; }
-  .community-bottom p { margin:12px 0 0; color:#555; font-size:13px; line-height:1.6; }
-  .community-bottom .cs-btn { flex-shrink:0; background:#111; color:#fff; min-height:48px; padding:0 24px; }
+  .community-bottom p { margin:12px auto 0; color:#555; font-size:13px; line-height:1.6; max-width:520px; }
+  .community-bottom .cs-btn { flex-shrink:0; align-self:center; background:#111; color:#fff; min-height:48px; padding:0 24px; }
   @media (min-width:768px) {
-    .community-gallery { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:44px 0 48px; }
+    .community-gallery { grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-areas:"a a b b" "c d e f" "c g e h"; grid-auto-rows:180px; gap:12px; margin:44px 0 48px; }
     .community-card { border-radius:16px; }
     .community-bottom h3 { font-size:28px; }
-  }
-  @media (max-width:600px) {
-    .community-bottom { align-items:stretch; flex-direction:column; }
-    .community-bottom .cs-btn { width:100%; }
   }
 
   /* Footer in the same blue */
@@ -367,16 +358,6 @@
     </div>
   </section>
 
-  <section class="brandcta">
-    <div class="brandcta-inner">
-      <div>
-        <h2 class="cs-title">Have a brand with a point of view?</h2>
-        <p>If you’re building an independent brand in South Africa, tell us about it. We’d love to hear what you’re working on.</p>
-      </div>
-      <button type="button" class="cs-btn cs-btn-white" data-open="brand-sheet">Register your interest</button>
-    </div>
-  </section>
-
   <section class="cs-faq">
     <h2 class="cs-title">Good questions</h2>
     <p>A few things you might be wondering.</p>
@@ -387,15 +368,14 @@
     <details><summary>How can my brand join?</summary><p>We welcome enquiries from independent South African brands. Register your interest and tell us a little about your brand.</p></details>
   </section>
 
-  <section class="join" id="join">
-    <h2 class="cs-title">Join the list for early access</h2>
-    <p class="sec-sub">Get early access before Janedore opens to everyone.</p>
-    <div class="join-form">
-      <label for="inline-email" class="sr-only">Email address</label>
-      <input type="email" class="signup-input" id="inline-email" placeholder="Email address" autocomplete="email">
-      <button type="button" class="cs-btn" id="inline-btn">Join the list</button>
+  <section class="brandcta">
+    <div class="brandcta-inner">
+      <div>
+        <h2 class="cs-title">Have a brand with a point of view?</h2>
+        <p>If you’re building an independent brand in South Africa, tell us about it. We’d love to hear what you’re working on.</p>
+      </div>
+      <button type="button" class="cs-btn cs-btn-white" data-open="brand-sheet">Register your interest</button>
     </div>
-    <div class="signup-msg" id="inline-msg" role="status" aria-live="polite" style="margin-top:12px;"></div>
   </section>
 </main>
 
@@ -490,7 +470,6 @@
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
     if (nameInput) nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
   }
-  bindSignup('inline-email', 'inline-btn', 'inline-msg');
   bindSignup('wl-email', 'wl-btn', 'wl-msg', 'wl-name');
   loadWaitlistCount();
 
