@@ -210,6 +210,7 @@
   .cs-header-pill { background:rgba(224,235,255,.72); -webkit-backdrop-filter:blur(18px) saturate(170%); backdrop-filter:blur(18px) saturate(170%); border:0; box-shadow:0 6px 24px rgba(17,17,17,.06); border-radius:28px; transition:background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease; }
   .cs-header-pill.is-scrolled { background:rgba(224,235,255,.58); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); box-shadow:0 8px 28px rgba(17,17,17,.08); }
   .cs-logo { color:#111 !important; }
+  .cs-sheet .signup-input { font-size:13px; }
   .cs-logo.cs-site-logo-image { display:block; width:auto; height:25px; max-width:190px; object-fit:contain; filter:brightness(0) saturate(100%); }
 
   /* Waitlist card */
@@ -406,8 +407,8 @@
     <h2>Get early access</h2>
     <p>Join the list to get early access before Janedore opens to everyone.</p>
     <div class="cs-form">
-      <input type="email" class="signup-input" placeholder="Email address" autocomplete="email" maxlength="254" required>
-      <button type="button" class="cs-btn cs-btn-block" data-fake>Join the list</button>
+      <input type="email" class="signup-input" id="join-email" placeholder="Email address" autocomplete="email" maxlength="254" required>
+      <button type="button" class="cs-btn cs-btn-block" id="join-submit">Join the list</button>
       <div class="signup-msg"></div>
     </div>
   </div>
@@ -419,10 +420,10 @@
     <h2>For independent brands</h2>
     <p>Tell us about your brand and we’ll be in touch before launch.</p>
     <div class="cs-form">
-      <input type="text" class="signup-input" placeholder="Brand name" autocomplete="organization" maxlength="120" required>
-      <input type="email" class="signup-input" placeholder="Email address" autocomplete="email" maxlength="254" required>
-      <input type="text" class="signup-input" placeholder="Instagram or website (optional)" maxlength="200" autocomplete="url">
-      <button type="button" class="cs-btn cs-btn-block" data-fake>Register your interest</button>
+      <input type="text" class="signup-input" id="brand-name" placeholder="Brand name" autocomplete="organization" maxlength="120" required>
+      <input type="email" class="signup-input" id="brand-email" placeholder="Email address" autocomplete="email" maxlength="254" required>
+      <input type="text" class="signup-input" id="brand-social" placeholder="Instagram or website (optional)" maxlength="200" autocomplete="url">
+      <button type="button" class="cs-btn cs-btn-block" id="brand-submit">Register your interest</button>
       <div class="signup-msg"></div>
     </div>
   </div>
@@ -449,8 +450,9 @@
   document.querySelectorAll('.cs-sheet-back').forEach(function (s) {
     s.addEventListener('click', function (e) { if (e.target === s || e.target.hasAttribute('data-close')) s.hidden = true; });
   });
-  document.querySelectorAll('[data-fake]').forEach(function (b) {
-    b.addEventListener('click', function () { b.parentNode.querySelector('.signup-msg').textContent = 'Preview only. Wire this to your real handler.'; });
+  // Preview access is a separate password flow; newsletter pop-ups use real submit handlers below.
+  document.querySelectorAll('#preview-sheet [data-fake]').forEach(function (b) {
+    b.addEventListener('click', function () { b.parentNode.querySelector('.signup-msg').textContent = 'Enter your preview password to continue.'; });
   });
 
   // Public total only: read the same newsletter collection shown in Admin > Newsletter.
@@ -479,26 +481,90 @@
     });
   });
 
+  async function submitComingSoonSignup(payload, msg, button) {
+    if (button.disabled) return false;
+    button.disabled = true;
+    msg.className = 'signup-msg';
+    msg.textContent = 'Submitting...';
+    try {
+      var response = await fetch('/api/coming-soon-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var result = await response.json().catch(function () { return {}; });
+      if (!response.ok || !result.ok) throw new Error(result.error || 'We couldn’t submit your details. Please try again.');
+      msg.className = 'signup-msg';
+      msg.textContent = 'Thank you. You’re on the list, and we’ll be in touch before we open.';
+      return true;
+    } catch (error) {
+      msg.className = 'signup-msg error';
+      msg.textContent = error.message || 'Something went wrong. Please try again.';
+      return false;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   function bindSignup(inputId, btnId, msgId, nameId) {
     var input = document.getElementById(inputId), btn = document.getElementById(btnId), msg = document.getElementById(msgId);
     var nameInput = nameId ? document.getElementById(nameId) : null;
-    function go() {
-      var v = cleanPlainText(input.value, 254).toLowerCase();
-      if (nameInput && !cleanPlainText(nameInput.value, 100)) { msg.textContent = 'Please enter your full name.'; msg.className = 'signup-msg error'; return; }
-      if (nameInput) nameInput.value = cleanPlainText(nameInput.value, 100);
-      input.value = v;
-      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
-      msg.className = 'signup-msg';
-      msg.textContent = 'Thank you. You\\u2019re on the list, and we\\u2019ll be in touch before we open.';
-      input.value = '';
-      if (nameInput) nameInput.value = '';
+    async function go() {
+      var email = cleanPlainText(input.value, 254).toLowerCase();
+      var name = nameInput ? cleanPlainText(nameInput.value, 100) : '';
+      if (nameInput && !name) { msg.textContent = 'Please enter your full name.'; msg.className = 'signup-msg error'; return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
+      input.value = email;
+      if (nameInput) nameInput.value = name;
+      if (await submitComingSoonSignup({ email: email, name: name, signupType: 'customer' }, msg, btn)) {
+        input.value = ''; if (nameInput) nameInput.value = ''; loadWaitlistCount();
+      }
     }
     btn.addEventListener('click', go);
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
     if (nameInput) nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
   }
   bindSignup('wl-email', 'wl-btn', 'wl-msg', 'wl-name');
+
+  function bindPopupSignup() {
+    var joinEmail = document.getElementById('join-email');
+    var joinButton = document.getElementById('join-submit');
+    var joinMessage = document.querySelector('#join-sheet .signup-msg');
+    joinButton.addEventListener('click', async function () {
+      var email = cleanPlainText(joinEmail.value, 254).toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        joinMessage.className = 'signup-msg error'; joinMessage.textContent = 'Please enter a valid email address.'; return;
+      }
+      joinEmail.value = email;
+      if (await submitComingSoonSignup({ email: email, signupType: 'customer' }, joinMessage, joinButton)) {
+        joinEmail.value = ''; loadWaitlistCount();
+      }
+    });
+    joinEmail.addEventListener('keydown', function (e) { if (e.key === 'Enter') joinButton.click(); });
+
+    var brandName = document.getElementById('brand-name');
+    var brandEmail = document.getElementById('brand-email');
+    var brandSocial = document.getElementById('brand-social');
+    var brandButton = document.getElementById('brand-submit');
+    var brandMessage = document.querySelector('#brand-sheet .signup-msg');
+    brandButton.addEventListener('click', async function () {
+      var name = cleanPlainText(brandName.value, 120);
+      var email = cleanPlainText(brandEmail.value, 254).toLowerCase();
+      var social = cleanPlainText(brandSocial.value, 200);
+      if (!name) { brandMessage.className = 'signup-msg error'; brandMessage.textContent = 'Please enter your brand name.'; return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        brandMessage.className = 'signup-msg error'; brandMessage.textContent = 'Please enter a valid email address.'; return;
+      }
+      brandName.value = name; brandEmail.value = email; brandSocial.value = social;
+      if (await submitComingSoonSignup({ email: email, brandName: name, social: social, signupType: 'brand' }, brandMessage, brandButton)) {
+        brandName.value = ''; brandEmail.value = ''; brandSocial.value = '';
+      }
+    });
+    [brandName, brandEmail, brandSocial].forEach(function (field) {
+      field.addEventListener('keydown', function (e) { if (e.key === 'Enter') brandButton.click(); });
+    });
+  }
+  bindPopupSignup();
   loadWaitlistCount();
 
   // Keep the header solid blue at the top; switch to glass only after scrolling.
