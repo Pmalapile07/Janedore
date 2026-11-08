@@ -705,6 +705,10 @@
           '<label>Street Address</label>' +
           '<input id="no-address" placeholder="123 Example Street" value="' + esc(d.shippingAddress || '') + '">' +
         '</div>' +
+        '<div class="form-group">' +
+          '<label>Suburb / local area</label>' +
+          '<input id="no-suburb" placeholder="e.g. Hatfield" value="' + esc(d.suburb || '') + '">' +
+        '</div>' +
         '<div class="form-row">' +
           '<div class="form-group" style="padding:0;">' +
             '<label>City</label>' +
@@ -908,6 +912,7 @@
       customerEmail:     (safeEl('no-customer-email') || {}).value || '',
       customerPhone:     (safeEl('no-customer-phone') || {}).value || '',
       shippingAddress:   (safeEl('no-address')        || {}).value || '',
+      suburb:            (safeEl('no-suburb')          || {}).value || '',
       city:              (safeEl('no-city')            || {}).value || '',
       province:          (safeEl('no-province')        || {}).value || '',
       postalCode:        (safeEl('no-postal')          || {}).value || '',
@@ -1226,7 +1231,7 @@
             ? '<div class="info-row"><span class="label">Locker</span><span>' + esc(selection.pickupPointName || 'Selected locker') + '</span></div>' +
               '<div class="info-row"><span class="label">Address</span><span>' + esc(selection.pickupPointAddress || '-') + '</span></div>' +
               (selection.pickupPointDistanceKm != null ? '<div class="info-row"><span class="label">Distance</span><span>' + esc(String(selection.pickupPointDistanceKm)) + ' km from customer address</span></div>' : '')
-            : '<div class="info-row"><span class="label">Destination</span><span>' + esc([o.shippingAddress, o.city, o.province, o.postalCode].filter(Boolean).join(', ') || '-') + '</span></div>';
+            : '<div class="info-row"><span class="label">Destination</span><span>' + esc([o.shippingAddress, o.suburb, o.city, o.province, o.postalCode].filter(Boolean).join(', ') || '-') + '</span></div>';
           return '<div style="padding:10px 0;border-bottom:1px solid var(--border);">' +
             '<div style="font-weight:600;margin-bottom:5px;">' + esc(selection.brand || 'Brand shipment') + ' · ' + label + '</div>' +
             destination +
@@ -1420,7 +1425,7 @@
 
   function addressHtml(o, isVendor) {
     return '<strong>' + esc(o.customerName || 'Customer') + '</strong><br>' +
-      [o.shippingAddress, [o.city, o.province].filter(Boolean).join(', '), [o.postalCode, o.country || 'South Africa'].filter(Boolean).join(', ')]
+      [o.shippingAddress, [o.suburb, o.city, o.province].filter(Boolean).join(', '), [o.postalCode, o.country || 'South Africa'].filter(Boolean).join(', ')]
         .filter(Boolean).map(esc).join('<br>') +
       (o.customerPhone ? '<br>' + esc(o.customerPhone) : '') +
       (!isVendor && o.customerEmail ? '<br>' + esc(o.customerEmail) : '');
