@@ -198,8 +198,7 @@
     const writeButton = '<div id="product-review-write" hidden style="margin:0 0 20px;">' +
       '<button type="button" class="cart-empty-btn" onclick="openReviewModal()">Write a review</button></div>' +
       '<div id="product-review-edit" hidden style="margin:0 0 12px;">' +
-      '<button type="button" class="cart-empty-btn" onclick="openReviewEditModal()">Edit your review</button></div>' +
-      '<p id="product-review-edit-note" hidden class="product-review-edit-note"></p>';
+      '<button type="button" class="cart-empty-btn" onclick="openReviewEditModal()">Edit review</button></div>';
 
     if (!reviews.length) {
       items = [];
