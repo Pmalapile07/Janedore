@@ -3278,7 +3278,7 @@ async function injectCustomLogoFont(html) {
     /<link id="logo-font-css"[^>]*>/,
     () => '<link rel="preload" as="font" type="' + mime + '" href="' + url + '" crossorigin>\n' +
       '  <style id="logo-font-css">@font-face{font-family:"Janedore Logo";src:url("' + url + '") format("' + cssFormat + '");font-weight:400;font-style:normal;font-display:block;}' +
-      '.nav-logo-text,.footer-logo-fallback{font-family:"Janedore Logo","Inter",Helvetica,Arial,sans-serif !important;font-weight:400 !important;}</style>'
+      '.nav-logo-text,.footer-logo-fallback,.cs-logo,.cs-footer-logo,.admin-logo,.ph-logo-text{font-family:"Janedore Logo","Inter",Helvetica,Arial,sans-serif !important;font-weight:400 !important;}</style>'
   );
 }
 
@@ -3290,7 +3290,12 @@ async function injectSiteLogo(html) {
   const src = escapeHtml(logoImageUrl(siteLogo, 480));
   // A Site logo uploaded in admin > Content takes priority over the text wordmark.
   // When no Site logo is set, the admin-selected Logo font styles the text wordmark.
+  // Apply the same Admin > Content site-logo asset to the Coming soon
+  // page's header, footer, admin overlay and miniature app previews too.
   return html.replace(
+    /<span class="(cs-logo|ph-logo-text|cs-footer-logo|admin-logo)">JANEDORE<\/span>/g,
+    (_, logoClass) => '<img class="' + logoClass + ' cs-site-logo-image" src="' + src + '" alt="JANEDORE">'
+  ).replace(
     '<span class="nav-logo-text">JANEDORE</span>',
     '<img class="nav-logo-img" id="nav-logo-img" src="' + src + '" alt="JANEDORE" width="1200" height="158">'
   );
@@ -3433,6 +3438,21 @@ app.post('/api/brand-interest', async (req, res) => {
   } catch (e) {
     console.error('[BRAND_INTEREST]', e.message);
     res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
+  }
+});
+
+// Serve the Coming soon page through the same live brand-asset injectors
+// as the homepage, so Admin > Content controls its real logo and logo font.
+app.get('/janedore-coming-soon.html', async (req, res, next) => {
+  try {
+    let html = fs.readFileSync(path.join(__dirname, 'janedore-coming-soon.html'), 'utf8');
+    html = await injectCustomLogoFont(html);
+    html = await injectSiteLogo(html);
+    res.set('Cache-Control', 'no-store');
+    res.type('html').send(injectCacheBust(html));
+  } catch (e) {
+    console.error('[COMING_SOON] Could not render branded page:', e.message);
+    next(e);
   }
 });
 
