@@ -3472,7 +3472,10 @@ app.post('/api/coming-soon-signup', async (req, res) => {
     };
     if (name) subscriber.name = name;
     if (signupType === 'brand') subscriber.brandName = brandName;
-    await adminDb.collection('newsletter').doc(subscriberId).set(subscriber, { merge: true });
+    const newsletterRef = adminDb.collection('newsletter');
+    const existingSubscriber = await newsletterRef.where('email', '==', email).limit(1).get();
+    const subscriberRef = existingSubscriber.empty ? newsletterRef.doc(subscriberId) : existingSubscriber.docs[0].ref;
+    await subscriberRef.set(subscriber, { merge: true });
 
     if (signupType === 'brand') {
       const brandId = email.replace(/[^a-z0-9]/g, '_');
