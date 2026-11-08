@@ -61,12 +61,27 @@ module.exports = function registerBobGo(app, deps) {
     const pkg = orderShipments(order).find((s) => String(s.tracking.trackingNumber || '').trim().toUpperCase() === ref);
     const label = (pkg ? pkg.brand + (pkg.preorder ? ' pre-order' : '') : 'Package') + ' (' + ref + ')';
     const friendly = String(t.status_friendly || status.replace(/-/g, ' '));
+    const checkpoints = (Array.isArray(t.checkpoints) ? t.checkpoints : []).slice(0, 60).map(cp => ({
+      time: cp.time || cp.time_string || null,
+      status: String(cp.status || '').slice(0, 80),
+      statusFriendly: String(cp.status_friendly || cp.message || '').slice(0, 180),
+      location: String(cp.location || '').slice(0, 120),
+      message: String(cp.message || '').slice(0, 240)
+    }));
+    const trackingUrl = (t.shipment && t.shipment.tracking_url) || prev.trackingUrl || null;
     const update = {
       ['bobgo.' + key]: {
-        status, statusFriendly: friendly, trackingUrl: (t.shipment && t.shipment.tracking_url) || prev.trackingUrl || null,
-        lastCheckpointTime: t.last_checkpoint_time || null, at: new Date().toISOString()
+        status, statusFriendly: friendly, trackingUrl,
+        lastCheckpointTime: t.last_checkpoint_time || null, checkpoints, at: new Date().toISOString()
       }
     };
+    if (pkg && pkg.vendorId) {
+      const path = 'vendorTracking.' + pkg.vendorId + (pkg.preorder ? '.preorder' : '');
+      update[path + '.bobgoStatus'] = status;
+      update[path + '.bobgoStatusFriendly'] = friendly;
+      update[path + '.bobgoTrackingUrl'] = trackingUrl;
+      update[path + '.bobgoCheckpoints'] = checkpoints;
+    }
     if (MILESTONES.includes(status)) update.timeline = timeline(label + ': ' + friendly + ' (Bob Go).');
 
     // The order's status, from every package's latest Bob Go status.
@@ -110,6 +125,39 @@ module.exports = function registerBobGo(app, deps) {
       }).catch((e) => console.warn('[BOBGO] Alert email failed:', e.message));
     }
     return next ? 'order ' + next : 'saved';
+  }
+
+  async function handleSubmissionStatus(s) {
+    const ref = String(s.tracking_reference || '').trim().toUpperCase();
+    if (!ref) return 'no tracking reference';
+    const snap = await adminDb.collection('orders').where('trackingRefs', 'array-contains', ref).limit(1).get();
+    if (snap.empty) return 'no order with this tracking reference';
+    const orderRef = snap.docs[0].ref;
+    const order = snap.docs[0].data();
+    const pkg = orderShipments(order).find(x => String(x.tracking.trackingNumber || '').toUpperCase() === ref);
+    if (!pkg || !pkg.vendorId) return 'shipment package not found';
+    const status = String(s.submission_status || '').toLowerCase();
+    const patch = {};
+    const path = 'vendorTracking.' + pkg.vendorId + (pkg.preorder ? '.preorder' : '');
+    patch[path + '.bobgoSubmissionStatus'] = status;
+    if (s.provider_tracking_reference) patch[path + '.bobgoProviderTrackingReference'] = String(s.provider_tracking_reference).slice(0, 100);
+    if (s.tracking_url) patch[path + '.bobgoTrackingUrl'] = String(s.tracking_url).slice(0, 500);
+    patch[path + '.bobgoFailedReason'] = s.failed_reason ? String(s.failed_reason).slice(0, 300) : null;
+    patch.updatedAt = new Date().toISOString();
+    const key = refKey(ref);
+    patch['bobgo.' + key + '.submissionStatus'] = status;
+    patch['bobgo.' + key + '.providerTrackingReference'] = s.provider_tracking_reference || null;
+    patch['bobgo.' + key + '.failedReason'] = s.failed_reason || null;
+    patch['bobgo.' + key + '.at'] = new Date().toISOString();
+    await orderRef.update(patch);
+    if (['failed-indefinitely', 'no-rates'].includes(status) && alertEmail) {
+      await sendResendEmail({
+        from: 'Janedore Orders <noreply@janedore.co.za>', to: alertEmail,
+        subject: 'Bob Go booking needs attention: order #' + (order.orderNumber || snap.docs[0].id),
+        text: 'Bob Go could not submit shipment ' + ref + '. Status: ' + status + '. Reason: ' + String(s.failed_reason || 'No reason supplied') + '. Please check this booking in Bob Go before trying again.'
+      }).catch(e => console.warn('[BOBGO] Booking alert failed:', e.message));
+    }
+    return 'submission ' + status + ' saved';
   }
 
   // Super Admin-only connection test. Uses Bob Go's documented sample lane
@@ -420,7 +468,7 @@ module.exports = function registerBobGo(app, deps) {
     const body = req.body || {};
     const log = adminDb.collection('bobgoEvents').doc();
     const ref = String(body.shipment_tracking_reference || body.tracking_reference || '').toUpperCase();
-    (topic === 'tracking/updated' ? handleTracking(body) : Promise.resolve('topic not used yet'))
+    (topic === 'tracking/updated' ? handleTracking(body) : topic === 'shipment_submission_status/updated' ? handleSubmissionStatus(body) : Promise.resolve('topic not used yet'))
       .then((result) => log.set({ topic, ref, status: body.status || null, result, receivedAt: Date.now() }))
       .catch((e) => {
         console.error('[BOBGO] Webhook failed:', topic, ref, e.message);
