@@ -391,21 +391,25 @@
       }
     }).catch(function () {});
   }
-  function bindSignup(inputId, btnId, msgId) {
+  function bindSignup(inputId, btnId, msgId, nameId) {
     var input = document.getElementById(inputId), btn = document.getElementById(btnId), msg = document.getElementById(msgId);
+    var nameInput = nameId ? document.getElementById(nameId) : null;
     function go() {
       var v = input.value.trim().toLowerCase();
+      if (nameInput && !nameInput.value.trim()) { msg.textContent = 'Please enter your full name.'; msg.className = 'signup-msg error'; return; }
       if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
+      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
       msg.className = 'signup-msg';
-      msg.textContent = 'Thank you. You\u2019re on the list, and we\u2019ll be in touch before we open.';
+      msg.textContent = 'Thank you. You\\u2019re on the list, and we\\u2019ll be in touch before we open.';
       input.value = '';
+      if (nameInput) nameInput.value = '';
     }
     btn.addEventListener('click', go);
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+    if (nameInput) nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
   }
   bindSignup('inline-email', 'inline-btn', 'inline-msg');
-  bindSignup('wl-email', 'wl-btn', 'wl-msg');
+  bindSignup('wl-email', 'wl-btn', 'wl-msg', 'wl-name');
   loadWaitlistCount();
 
   // Keep the header solid blue at the top; switch to glass only after scrolling.
