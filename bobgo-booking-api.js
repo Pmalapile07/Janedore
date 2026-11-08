@@ -165,7 +165,7 @@ module.exports = function registerBobGoBooking(app, deps) {
         throw new Error('This order combines brands that share a warehouse. Combined shared-warehouse booking is not enabled yet, so no courier booking was created.');
       }
       const pickupPoint = selection.method === 'pickup-point';
-      const pickupLocationId = pickupLocationId;
+      const pickupLocationId = Number(selection.pickupPointLocationId);
       if (pickupPoint && (!Number.isInteger(pickupLocationId) || pickupLocationId <= 0 || !selection.pickupPointProviderSlug)) {
         throw new Error('The selected collection point is missing its Bob Go location details. Please contact JANEDORE support.');
       }
@@ -195,7 +195,7 @@ module.exports = function registerBobGoBooking(app, deps) {
         delivery_contact_email: safeText(order.customerEmail, 180)
       };
       if (pickupPoint) {
-        ratePayload.delivery_pickup_point_location_id = Number(selection.pickupPointLocationId);
+        ratePayload.delivery_pickup_point_location_id = pickupLocationId;
         ratePayload.pickup_point_provider_slug = safeText(selection.pickupPointProviderSlug, 80);
       } else {
         if (!deliveryAddress.street_address || !deliveryAddress.local_area || !deliveryAddress.city || !deliveryAddress.zone || !/^\d{4}$/.test(deliveryAddress.code)) throw new Error('The customer delivery address is incomplete.');
@@ -238,7 +238,7 @@ module.exports = function registerBobGoBooking(app, deps) {
       };
       ['collection_contact_mobile_number','collection_contact_email','delivery_contact_mobile_number','delivery_contact_email'].forEach(k => { if (!bookingPayload[k]) delete bookingPayload[k]; });
       if (pickupPoint) {
-        bookingPayload.delivery_pickup_point_location_id = Number(selection.pickupPointLocationId);
+        bookingPayload.delivery_pickup_point_location_id = pickupLocationId;
         bookingPayload.pickup_point_provider_slug = safeText(selection.pickupPointProviderSlug, 80);
       } else bookingPayload.delivery_address = deliveryAddress;
 
