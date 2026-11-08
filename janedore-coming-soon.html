@@ -8,14 +8,14 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-<meta name="description" content="Janedore - A curated fashion house. Something extraordinary is coming. Sign up to be the first to know when we launch.">
+<meta name="description" content="JANEDORE brings South African independent brands together in one place. Discover something different.">
 <meta name="keywords" content="fashion, clothing, accessories, curated fashion, coming soon">
 <meta name="author" content="Janedore">
 <!-- Never in search results: Google should index the real shop, not this page. -->
 <meta name="robots" content="noindex, follow">
 
 <meta property="og:title" content="JANEDORE · Coming soon">
-<meta property="og:description" content="Coming soon. A curated, multi-brand fashion house.">
+<meta property="og:description" content="A place for South African independent brands and the people who want to discover them.">
 <meta property="og:image" content="https://janedore.co.za/share-card.png">
 <meta property="og:url" content="https://janedore.co.za">
 <meta property="og:type" content="website">
@@ -89,53 +89,26 @@
   .cs-site-logo-image { display: block; height: 1em; width: auto; max-width: 200px; object-fit: contain; } .ph-bar .cs-site-logo-image { height: 8px; } .cs-logo { display: block; font-family: 'Inter', Helvetica, Arial, sans-serif; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; white-space: nowrap; }
 
   /* Buttons: the shop's (square, uppercase, letter-spaced). */
-  .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; background: #111; color: #fff; font-family: inherit; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  /* Shared CTA styling follows the homepage's Inter button treatment. */
+  .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 12px 32px; border: 0; border-radius: 0; background: #111; color: #fff; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; line-height: 1.2; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; -webkit-appearance: none; }
   .cs-btn-white { background: #fff; color: #111; }
-  .cs-btn-accent { background: var(--accent); color: #111; padding: 11px 16px; }
-  .cs-btn-block { width: 100%; padding: 16px; font-size: 11px; }
+  .cs-btn-accent { background: #111; color: #fff; padding: 12px 32px; }
+  .cs-btn-block { width: 100%; padding: 12px 32px; font-size: 10px; }
   .cs-btn:disabled { opacity: 0.6; cursor: default; }
 
-  /* Hero: like the shop's homepage hero. */
-  .cs-hero { position: relative; margin: 8px 8px 0; height: calc(100svh - 76px); min-height: 540px; background: #cfd2c8 url('/coming-soon-hero.jpg') center 30% / cover no-repeat; display: flex; align-items: flex-end; color: #fff; }
-  .cs-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0) 100%); }
-  .cs-hero-content { position: relative; padding: 0 12px 32px; }
-  .cs-hero-eyebrow { display: block; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
-  .cs-hero h1 { font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: 0; max-width: 300px; margin-bottom: 18px; }
+  /* Text-led hero: uses the same heading and paragraph treatment as the homepage. */
+  .cs-hero { position: relative; margin: 8px 8px 0; min-height: 430px; padding: 56px var(--gutter); background: #fff; display: flex; align-items: center; color: #111; }
+  .cs-hero-content { position: relative; width: 100%; max-width: 720px; }
+  .cs-hero-eyebrow { display: block; font-size: 10px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: #666; margin-bottom: 16px; }
+  .cs-hero h1 { font-family: 'Inter', sans-serif; font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: 0; max-width: 420px; margin-bottom: 14px; color: #111; }
+  .cs-hero-copy { max-width: 480px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 300; line-height: 1.5; letter-spacing: normal; color: #555; margin-bottom: 24px; }
 
   /* Black section. */
   .cs-dark { margin: 8px 8px 0; background: #111; color: #fff; padding: 56px var(--gutter); }
   .cs-dark .cs-title { color: #fff; }
   .cs-dark-sub { font-size: 14px; line-height: 1.55; color: rgba(255,255,255,0.7); max-width: 360px; margin-top: 10px; }
-  /* A first look at the app: three phone screens built from the shop's
-     own pieces (no screenshots). */
-  .cs-phones { position: relative; height: 408px; margin: 36px auto 0; max-width: 360px; }
-  .cs-phone { position: absolute; top: 24px; width: 168px; aspect-ratio: 9 / 19; background: #fff; border: 6px solid #2b2b2b; border-radius: 30px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,0.55); color: #111; font-size: 7px; }
-  .cs-phone.p1 { left: 0; transform: rotate(-9deg); }
-  .cs-phone.p3 { right: 0; transform: rotate(9deg); }
-  .cs-phone.p2 { left: 50%; top: 0; width: 186px; transform: translateX(-50%); z-index: 1; }
-  .ph-status { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px 4px; font-size: 7px; font-weight: 600; }
-  .ph-status i { width: 44px; height: 10px; border-radius: 10px; background: #111; }
-  .ph-bar { background: #111; padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; }
-  .ph-bar .ph-logo-text { color: #fff; font-family: 'Inter', Helvetica, Arial, sans-serif; font-size: 8px; line-height: 1; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap; }
-  .ph-bar span { width: 26px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.35); }
-  .ph-search { margin: 7px 8px; height: 16px; border-radius: 10px; background: #f1f1f1; display: flex; align-items: center; padding: 0 8px; color: #999; font-size: 6.5px; }
-  .ph-chips { display: flex; gap: 4px; padding: 0 8px; overflow: hidden; white-space: nowrap; }
-  .ph-chips b { font-weight: 500; font-size: 6px; padding: 3px 6px; border-radius: 8px; background: #f1f1f1; }
-  .ph-chips b:first-child { background: #111; color: #fff; }
-  .ph-h { font-size: 8px; font-weight: 600; padding: 8px 8px 5px; }
-  .ph-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 0 8px; }
-  .ph-card i { display: block; aspect-ratio: 0.85; background: #eee center / cover no-repeat; }
-  .ph-card u, .ph-card s { display: block; height: 4px; border-radius: 2px; background: #e4e4e4; margin-top: 4px; text-decoration: none; }
-  .ph-card s { width: 45%; background: #cfcfcf; }
-  .ph-hero { aspect-ratio: 0.8; background: #eee center / cover no-repeat; }
-  .ph-lines { padding: 8px; }
-  .ph-lines u { display: block; height: 5px; border-radius: 3px; background: #e4e4e4; margin-bottom: 5px; text-decoration: none; }
-  .ph-lines u:nth-child(2) { width: 40%; background: #cfcfcf; }
-  .ph-sizes { display: flex; gap: 4px; padding: 0 8px; }
-  .ph-sizes b { flex: 1; height: 14px; border: 1px solid #ddd; }
-  .ph-add { margin: 8px; height: 18px; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 6px; letter-spacing: 0.12em; font-weight: 500; }
-  .cs-app-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; font-size: 13px; color: var(--accent); }
-  .cs-app-note i { font-size: 16px; }
+  .cs-platform-note { margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.18); font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.7); }
+
 
   .cs-features { list-style: none; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.15); }
   .cs-features li { display: grid; grid-template-columns: 32px 1fr; gap: 14px; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.15); }
@@ -147,15 +120,12 @@
   .cs-light { padding: 48px 0 8px; }
   .cs-light > .cs-title, .cs-light > .cs-lead { padding: 0 var(--gutter); }
   .cs-lead { font-size: 14px; color: #666; margin-top: 6px; }
-  .cs-rows { display: grid; gap: 20px; padding: 24px var(--gutter) 0; }
-  .cs-row { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: center; }
-  .cs-row-img { aspect-ratio: 0.87; background: #f4f4f4 center / cover no-repeat; }
-  .cs-row h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: #111; }
-  .cs-row p { font-size: 13px; line-height: 1.5; color: #555; }
-  .cs-cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 20px 8px 0; }
-  .cs-cat { position: relative; aspect-ratio: 0.87; background: #f4f4f4 center / cover no-repeat; }
-  .cs-cat::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.35), rgba(0,0,0,0) 50%); }
-  .cs-cat span { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; color: #fff; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+  .cs-rows { display: grid; grid-template-columns: 1fr; gap: 0; padding: 24px var(--gutter) 0; }
+  .cs-row { display: block; padding: 20px 0; border-top: 1px solid #e5e5e5; }
+  .cs-row h3 { font-size: 15px; font-weight: 600; letter-spacing: 0; margin-bottom: 6px; color: #111; }
+  .cs-row p { font-size: 13px; font-weight: 300; letter-spacing: normal; line-height: 1.5; color: #555; max-width: 520px; }
+  .cs-cats { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px var(--gutter) 0; }
+  .cs-cat { display: inline-flex; align-items: center; min-height: 40px; padding: 10px 16px; border: 1px solid #e5e5e5; background: #fff; color: #111; font-size: 12px; font-weight: 400; letter-spacing: normal; }
 
   /* Questions: like the product page's accordions. */
   .cs-faq { padding: 56px var(--gutter) 8px; }
@@ -202,7 +172,7 @@
   .cs-sheet .signup-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; color: #fff; }
   .cs-sheet .signup-input::placeholder { color: rgba(255,255,255,0.5); }
   .cs-sheet .signup-input:focus { border-color: var(--accent); }
-  .cs-sheet .cs-btn-block { background: var(--accent); color: #111; border-radius: 999px; }
+  .cs-sheet .cs-btn-block { background: #fff; color: #111; border-radius: 0; }
   .cs-sheet .signup-spinner { border-color: rgba(17,17,17,0.25); border-top-color: #111; }
   .cs-sheet .signup-msg.success { color: var(--accent); }
   .cs-sheet .signup-msg.error { color: #ff8a80; }
@@ -210,18 +180,16 @@
   @media (min-width: 768px) {
     :root { --head: 27px; --gutter: 32px; }
     .cs-header-pill { height: 64px; }
-    .cs-hero { margin: 12px 12px 0; height: calc(100vh - 88px); }
-    .cs-hero-content { padding: 0 24px 48px; }
-    .cs-hero h1 { font-size: 34px; max-width: 420px; }
+    .cs-hero { margin: 12px 12px 0; min-height: 500px; padding: 72px 48px; }
+    .cs-hero-content { padding: 0; }
+    .cs-hero h1 { font-size: 34px; max-width: 520px; }
     .cs-dark { margin: 12px 12px 0; padding: 72px 48px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; align-items: center; }
-    .cs-phone-wrap { grid-row: 1 / span 3; grid-column: 2; width: 100%; }
-    .cs-phones { height: 430px; max-width: 400px; margin-top: 0; }
-    .cs-row-img { aspect-ratio: 4 / 3; }
+    .cs-row { padding: 24px 0; }
     .cs-dark-brands { display: block; }
     .cs-light, .cs-faq, .cs-join { max-width: 1200px; margin: 0 auto; }
     .cs-rows { grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .cs-row { grid-template-columns: 1fr; }
-    .cs-cats { grid-template-columns: repeat(4, 1fr); padding: 24px 12px 0; }
+    .cs-row { border-top: 1px solid #e5e5e5; }
+    .cs-cats { padding: 24px 12px 0; }
     .cs-sheet-back { align-items: center; }
     .cs-sheet { padding: 32px 28px 28px; }
   }
@@ -343,23 +311,17 @@
 <main id="main">
     <section class="cs-hero">
       <div class="cs-hero-content">
-        <span class="cs-hero-eyebrow">Coming soon</span>
-        <h1>Not just a store.<br>A collective.</h1>
-        <button type="button" class="cs-btn cs-btn-white" data-open="join-sheet">Get early access</button>
+        <span class="cs-hero-eyebrow">JANEDORE · Coming soon</span>
+        <h1>For independent brands.</h1>
+        <p class="cs-hero-copy">A place for South African independent brands to be discovered, reach new customers and grow alongside one another.</p>
+        <button type="button" class="cs-btn" data-open="brand-sheet">Register your brand</button>
       </div>
     </section>
 
     <section class="cs-dark">
-      <h2 class="cs-title">A new kind of fashion destination</h2>
-      <p class="cs-dark-sub">Independent labels and distinctive finds in one place, for people who see fashion differently.</p>
-      <div class="cs-phone-wrap">
-      <div class="cs-phones" aria-hidden="true">
-        <div class="cs-phone p1"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><span class="ph-logo-text">JANEDORE</span><span></span></div><div class="ph-h">Accessories</div><div class="ph-grid"><div class="ph-card"><i style="background-image:url('/coming-soon-accessories.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-brands.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-curious.jpg');background-position:center 30%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-scent.jpg');background-position:center;"></i><u></u><s></s></div></div></div>
-        <div class="cs-phone p2"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><span class="ph-logo-text">JANEDORE</span><span></span></div><div class="ph-search">Search products or brands</div><div class="ph-chips"><b>Clothing</b><b>Accessories</b><b>Homeware</b><b>Kids</b></div><div class="ph-h">New in</div><div class="ph-grid"><div class="ph-card"><i style="background-image:url('/coming-soon-fashion.jpg');background-position:center 25%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-kids.jpg');background-position:center 20%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-homeware.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-accessories.jpg');background-position:center;"></i><u></u><s></s></div></div></div>
-        <div class="cs-phone p3"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><span class="ph-logo-text">JANEDORE</span><span></span></div><div class="ph-hero" style="background-image:url('/coming-soon-kids.jpg');background-position:center 20%;"></div><div class="ph-lines"><u></u><u></u></div><div class="ph-sizes"><b></b><b></b><b></b><b></b></div><div class="ph-add">ADD TO BAG</div></div>
-      </div>
-      <p class="cs-app-note"><i class="ph ph-device-mobile"></i>The JANEDORE app is on its way.</p>
-      </div>
+      <h2 class="cs-title">Discover something different.</h2>
+      <p class="cs-dark-sub">Explore South African independent labels across clothing, accessories, homeware and more — all in one place.</p>
+      <p class="cs-platform-note">JANEDORE brings independent businesses and people who love finding something new a little closer together.</p>
       <ul class="cs-features">
         <li><i class="ph ph-sparkle"></i><div><strong>Discover new brands.</strong><span>Independent labels and fresh perspectives you won’t find everywhere else.</span></div></li>
         <li><i class="ph ph-seal-check"></i><div><strong>Every brand, chosen.</strong><span>Each label is selected for how it’s made and the point of view behind it.</span></div></li>
@@ -369,39 +331,42 @@
     </section>
 
   <section class="cs-light">
-    <h2 class="cs-title">Made for people who see fashion differently</h2>
+    <h2 class="cs-title">More than the usual names.</h2>
+    <p class="cs-lead">A platform for discovering independent South African brands and the people behind them.</p>
     <div class="cs-rows">
-      <div class="cs-row"><div class="cs-row-img" style="background-image:url('/coming-soon-curious.jpg');background-position:center 30%;"></div><div><h3>For the curious</h3><p>Looking for pieces with a point of view. Not more of the same.</p></div></div>
-      <div class="cs-row"><div class="cs-row-img" style="background-image:url('/coming-soon-brands.jpg');"></div><div><h3>For independent brands</h3><p>Building something of your own. Looking for the people who’ll get it.</p></div></div>
-      <div class="cs-row"><div class="cs-row-img" style="background-image:url('/coming-soon-homeware.jpg');"></div><div><h3>For gifting</h3><p>Finding something they won’t already have, from a brand worth knowing.</p></div></div>
+      <div class="cs-row"><h3>Find something new</h3><p>Discover pieces from independent labels you may not come across in the usual places.</p></div>
+      <div class="cs-row"><h3>Support independent</h3><p>Shop from businesses building their own ideas, collections and points of view.</p></div>
+      <div class="cs-row"><h3>Different categories, one place</h3><p>Explore clothing, accessories, homeware, beauty and kids’ products as JANEDORE grows.</p></div>
     </div>
   </section>
 
   <section class="cs-light">
-    <h2 class="cs-title">Arriving soon</h2>
-    <p class="cs-lead">A first look at what’s coming.</p>
+    <h2 class="cs-title">What you’ll find here.</h2>
+    <p class="cs-lead">A growing mix of independent labels and categories.</p>
     <div class="cs-cats">
-      <div class="cs-cat" style="background-image:url('/coming-soon-fashion.jpg');background-position:center 25%;"><span>Clothing</span></div>
-      <div class="cs-cat" style="background-image:url('/coming-soon-accessories.jpg');"><span>Accessories</span></div>
-      <div class="cs-cat" style="background-image:url('/coming-soon-homeware.jpg');"><span>Homeware</span></div>
-      <div class="cs-cat" style="background-image:url('/coming-soon-kids.jpg');background-position:center 20%;"><span>Kids</span></div>
+      <span class="cs-cat">Clothing</span>
+      <span class="cs-cat">Accessories</span>
+      <span class="cs-cat">Homeware</span>
+      <span class="cs-cat">Beauty</span>
+      <span class="cs-cat">Kids</span>
+      <span class="cs-cat">Scent</span>
     </div>
   </section>
 
     <section class="cs-dark cs-dark-brands">
       <h2 class="cs-title">Have a brand with a point of view?</h2>
-      <p class="cs-dark-sub">We’re choosing the first labels to join the collective. Register your interest, and our partnerships team will be in touch before launch.</p>
+      <p class="cs-dark-sub">If you’re building an independent brand in South Africa, tell us about it. We’d love to hear what you’re working on.</p>
       <div><button type="button" class="cs-btn cs-btn-white" id="brand-open-btn" data-open="brand-sheet" style="margin-top:24px;">Register your interest</button></div>
     </section>
 
   <section class="cs-faq">
     <h2 class="cs-title">Good questions</h2>
     <p>A few things you might be wondering.</p>
-    <details><summary>What is JANEDORE?<i class="ph ph-caret-down"></i></summary><p>JANEDORE is a curated destination for independent labels across clothing, accessories, homeware, and kids. Every brand is selected by our team, and pieces from several brands can be purchased in a single order.</p></details>
-    <details><summary>When does JANEDORE open?<i class="ph ph-caret-down"></i></summary><p>We are preparing for launch. Members of our list will be the first to know our opening date, with early access to the store and to our discounts.</p></details>
-    <details><summary>What does early access include?<i class="ph ph-caret-down"></i></summary><p>Access to the store before it opens to the public, early access to our discounts, and a first look at the labels joining the collective.</p></details>
+    <details><summary>What is JANEDORE?<i class="ph ph-caret-down"></i></summary><p>JANEDORE is a platform bringing independent South African brands together across clothing, accessories, homeware and more. It gives customers one place to discover and shop from different labels.</p></details>
+    <details><summary>When does JANEDORE open?<i class="ph ph-caret-down"></i></summary><p>We are preparing for launch. Members of our list will be the first to hear when JANEDORE is ready to open.</p></details>
+    <details><summary>What does early access include?<i class="ph ph-caret-down"></i></summary><p>Early access before the platform opens to everyone, plus updates on the brands and products joining JANEDORE.</p></details>
     <details><summary>Which brands will be available?<i class="ph ph-caret-down"></i></summary><p>A considered edit of independent labels, from emerging designers to established names. Each brand will be introduced as we approach launch.</p></details>
-    <details><summary>How can my brand be considered?<i class="ph ph-caret-down"></i></summary><p>We welcome enquiries from independent labels whose craft and values align with ours. Register your interest, and a member of our partnerships team will be in touch.</p></details>
+    <details><summary>How can my brand be considered?<i class="ph ph-caret-down"></i></summary><p>We welcome enquiries from independent South African brands. Register your interest and tell us a little about your brand.</p></details>
   </section>
 
   <section class="cs-join" id="join">
