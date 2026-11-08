@@ -1,8 +1,8 @@
 // ==================== BOB GO: TRACKING UPDATES ====================
 // Bob Go (the courier platform) posts every tracking event for a parcel
 // to /api/bobgo/webhook (topic tracking/updated). Each one is matched to
-// its order by the package's tracking number (order.trackingRefs, kept by
-// server.js notify-shipped), saved on the order (order.bobgo), and moves
+// its order by the package's tracking number (order.trackingRefs, registered
+// immediately when the Bob Go booking is saved), saved on the order (order.bobgo), and moves
 // the order along with no one clicking:
 // - a parcel collected or on its way: the order becomes Shipped;
 // - every parcel delivered: the order becomes Delivered, which sends the
