@@ -64,7 +64,7 @@ module.exports = function registerBobGoBooking(app, deps) {
       if (!pkg || !pkg.tracking.trackingNumber || !pkg.tracking.bobgoShipmentId) return res.status(404).json({ error: 'No Bob Go booking was found for this parcel.' });
       if (pkg.tracking.bobgoSubmissionStatus !== 'success') return res.status(409).json({ error: 'The courier has not accepted this booking yet. The label will be available once Bob Go confirms it.' });
       const apiKey = safeText(process.env.BOBGO_API_KEY, 500);
-      const base = safeText(process.env.BOBGO_BASE_URL || 'https://api.sandbox.bobgo.co.za/v2', 300).replace(/\\/+$/, '');
+    const base = safeText(process.env.BOBGO_BASE_URL || 'https://api.sandbox.bobgo.co.za/v2', 300).replace(/\/+$/, '');
       const result = await bobgoRequest(base, apiKey, '/shipments/waybill?tracking_references=' + encodeURIComponent(JSON.stringify([pkg.tracking.trackingNumber])) + '&paper_size=A4');
       if (result.status < 200 || result.status >= 300) return res.status(502).json({ error: safeText(result.data.message || 'Bob Go could not generate the waybill.', 240) });
       if (!result.data.waybills_ready || !result.data.download_url) return res.status(409).json({ error: 'The courier booking is accepted, but the waybill is not ready yet. Please try again shortly.' });
