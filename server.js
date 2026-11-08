@@ -3446,6 +3446,58 @@ app.post('/api/brand-interest', async (req, res) => {
   }
 });
 
+// Coming-soon signups are saved in the same collection used by Admin > Newsletter.
+// Deterministic IDs prevent repeat submissions from creating duplicate subscribers.
+app.post('/api/coming-soon-signup', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'We couldn’t complete your request. Please try again.' });
+  if (rateLimited(req, 'coming-soon-signup', 8, 60 * 60 * 1000)) {
+    return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
+  }
+  const b = req.body || {};
+  const email = String(b.email || '').trim().toLowerCase().slice(0, 254);
+  const name = String(b.name || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, 100);
+  const signupType = b.signupType === 'brand' ? 'brand' : 'customer';
+  const brandName = String(b.brandName || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, 120);
+  const social = String(b.social || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, 200);
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+  if (signupType === 'brand' && !brandName) return res.status(400).json({ error: 'Please enter your brand name.' });
+  try {
+    const subscriberId = crypto.createHash('sha256').update(email).digest('hex');
+    const tags = signupType === 'brand' ? ['coming soon', 'brand interest'] : ['coming soon'];
+    const subscriber = {
+      email,
+      subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
+      source: 'coming soon',
+      tags: admin.firestore.FieldValue.arrayUnion(...tags)
+    };
+    if (name) subscriber.name = name;
+    if (signupType === 'brand') subscriber.brandName = brandName;
+    await adminDb.collection('newsletter').doc(subscriberId).set(subscriber, { merge: true });
+
+    if (signupType === 'brand') {
+      const brandId = email.replace(/[^a-z0-9]/g, '_');
+      await adminDb.collection('brandInterest').doc(brandId).set({
+        brandName, email, social, status: 'new', source: 'coming soon',
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      sendResendEmail({
+        to: ORDER_ALERT_EMAIL,
+        subject: 'Brand interest: ' + brandName,
+        html: '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#111;">' +
+          '<h2>New brand interest from the coming soon page</h2>' +
+          '<p><strong>Brand:</strong> ' + escapeHtml(brandName) + '</p>' +
+          '<p><strong>Email:</strong> ' + escapeHtml(email) + '</p>' +
+          (social ? '<p><strong>Instagram or website:</strong> ' + escapeHtml(social) + '</p>' : '') + '</div>',
+        replyTo: email
+      }).catch((e) => console.warn('[COMING_SOON_SIGNUP] Brand alert email failed:', e.message));
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[COMING_SOON_SIGNUP]', e.message);
+    return res.status(500).json({ error: 'We couldn’t complete your request. Please try again.' });
+  }
+});
+
 // Public aggregate only — never expose newsletter email addresses.
 app.get('/api/newsletter-count', async (req, res) => {
   res.set('Cache-Control', 'no-store');
