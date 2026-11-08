@@ -838,11 +838,19 @@ async function showReviewButtonIfBought(productId) {
     window._jdOwnReviewForEdit = data.ownReview || null;
     if (data.ownReview) {
       if (writeEl) writeEl.hidden = true;
-      if (editEl) editEl.hidden = !(Number(data.ownReview.editCount || 0) < 1 && !data.ownReview.hasPendingEdit);
+      if (editEl) {
+        editEl.hidden = false;
+        const editButton = editEl.querySelector('button');
+        const alreadyEdited = Number(data.ownReview.editCount || 0) >= 1 || data.ownReview.hasPendingEdit === true;
+        if (editButton) {
+          editButton.disabled = alreadyEdited;
+          editButton.textContent = alreadyEdited ? 'Already edited' : 'Edit review';
+          editButton.setAttribute('aria-disabled', alreadyEdited ? 'true' : 'false');
+        }
+      }
     } else {
       if (writeEl) writeEl.hidden = false;
       if (editEl) editEl.hidden = true;
-      if (editNote) editNote.hidden = true;
     }
     // Arrived from the email's Write a review: open the correct form.
     if (window._reviewLinkOpen) {
