@@ -101,7 +101,6 @@ module.exports = function registerBobGoBooking(app, deps) {
     if (!apiKey) return res.status(503).json({ error: 'BOBGO_API_KEY is missing from Render.' });
 
     const orderRef = adminDb.collection('orders').doc(req.params.id);
-    const lockKey = vendorId + (preorder ? '__preorder' : '');
     const entryPath = 'vendorTracking.' + vendorId + (preorder ? '.preorder' : '');
     const lockToken = require('crypto').randomUUID();
     let order, shipment;
@@ -147,11 +146,6 @@ module.exports = function registerBobGoBooking(app, deps) {
         throw new Error('This brand needs a complete pickup address in Admin → Brands before booking.');
       }
       const lines = shipment.items || [];
-      const productIds = [...new Set(lines.map(i => String(i.productId || '')).filter(Boolean))];
-      if (!productIds.length) throw new Error('No products were found in this brand shipment.');
-      const productDocs = await adminDb.getAll(...productIds.map(id => adminDb.collection('products').doc(id)));
-      const products = {};
-      productDocs.forEach((doc, i) => { if (doc.exists) products[productIds[i]] = doc.data(); });
       const parcelInput = req.body && req.body.parcel || {};
       const length = Number(parcelInput.lengthCm), width = Number(parcelInput.widthCm);
       const height = Number(parcelInput.heightCm), weight = Number(parcelInput.weightKg);
