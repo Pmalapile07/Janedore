@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 // serves the site from. They hold no secrets, but there is no reason for
 // anyone to download them, so they 404 like any missing file.
 const PRIVATE_FILES = new Set([
-  '/server.js', '/analytics-api.js', '/admin-home-api.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/account-api.js', '/bobgo-api.js', '/collection-api.js', '/partner-applications-api.js', '/order-emails.js',
+  '/server.js', '/analytics-api.js', '/admin-home-api.js', '/returns-api.js', '/exchanges-api.js', '/waitlist-api.js', '/reviews-api.js', '/account-api.js', '/bobgo-api.js', '/bobgo-booking-api.js', '/collection-api.js', '/partner-applications-api.js', '/order-emails.js',
   '/firestore.rules', '/firestore.indexes.json', '/package.json', '/package-lock.json',
   '/debugger.html'
 ]);
