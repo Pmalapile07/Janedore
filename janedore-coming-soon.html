@@ -500,7 +500,7 @@
   }
 
   // Scroll reveal
-  var targets = document.querySelectorAll('.sec-head, .disc-item, .cs-cat, .trio > div, .brandcta-inner, .cs-faq, .join, .community-heading, .community-gallery, .community-bottom');
+  var targets = document.querySelectorAll('.sec-head, .disc-item, .cs-cat, .trio > div, .brandcta-inner, .cs-faq, .community-heading, .community-gallery, .community-bottom');
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
