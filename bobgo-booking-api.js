@@ -165,6 +165,11 @@ module.exports = function registerBobGoBooking(app, deps) {
         throw new Error('This order combines brands that share a warehouse. Combined shared-warehouse booking is not enabled yet, so no courier booking was created.');
       }
       const pickupPoint = selection.method === 'pickup-point';
+      const selectedProvider = safeText(pickupPoint ? selection.pickupPointProviderSlug : selection.providerSlug, 100).toLowerCase();
+      const selectedService = safeText(selection.serviceLevelCode, 100);
+      if (!selectedProvider || !selectedService) {
+        throw new Error('The courier service selected at checkout is missing its Bob Go provider or service code. No alternative courier will be booked automatically.');
+      }
       const pickupLocationId = Number(selection.pickupPointLocationId);
       if (pickupPoint && (!Number.isInteger(pickupLocationId) || pickupLocationId <= 0 || !selection.pickupPointProviderSlug)) {
         throw new Error('The selected collection point is missing its Bob Go location details. Please contact JANEDORE support.');
@@ -208,15 +213,13 @@ module.exports = function registerBobGoBooking(app, deps) {
       if (rated.data.id == null) throw new Error('Bob Go did not return a rate request ID, so the booking was not submitted.');
       const requests = Array.isArray(rated.data.provider_rate_requests) ? rated.data.provider_rate_requests : [];
       const options = [];
-      requests.filter(r => r.status === 'success').forEach(r => {
-        (Array.isArray(r.responses) ? r.responses : []).filter(x => x.status === 'success' && x.service_level_code && r.provider_slug).forEach(x => {
+      requests.filter(r => r.status === 'success' && String(r.provider_slug || '').toLowerCase() === selectedProvider).forEach(r => {
+        (Array.isArray(r.responses) ? r.responses : []).filter(x => x.status === 'success' && x.service_level_code === selectedService).forEach(x => {
           const amount = Number(x.rate_amount);
-          const serviceLabel = String(x.service_level && (x.service_level.name || x.service_level.service_level_name) || x.service_level_code).toLowerCase();
-          if (!serviceLabel.includes('express') && Number.isFinite(amount) && amount >= 0) options.push({ provider: r.provider_slug, providerName: r.provider_name || r.provider_slug, service: x.service_level_code, amount });
+          if (Number.isFinite(amount) && amount >= 0) options.push({ provider: r.provider_slug, providerName: r.provider_name || r.provider_slug, service: x.service_level_code, amount });
         });
       });
-      options.sort((a, b) => a.amount - b.amount);
-      if (!options.length) throw new Error('Bob Go returned no bookable courier rates for this parcel and destination. Check the pickup address, parcel dimensions and Bob Go courier services.');
+      if (!options.length) throw new Error('The courier service selected at checkout is no longer available for this packed parcel. No different courier or service was booked. Please contact JANEDORE support.');
       const chosen = options[0];
       const bookingPayload = {
         provider_slug: chosen.provider,
