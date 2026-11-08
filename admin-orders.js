@@ -1197,7 +1197,9 @@
               ? collectionPanelHtml(o, orderId, group, collection, canEditGroup)
               : canEditGroup
               ? (group.vendorId
-                ? (tracking && tracking.bobgoShipmentId
+                ? (tracking && tracking.bobgoBooking && ['booking','unknown'].indexOf(tracking.bobgoBooking.status) !== -1
+                  ? '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">Bob Go booking ' + esc(tracking.bobgoBooking.status) + '. ' + esc(tracking.bobgoBooking.message || 'Do not submit another booking until this one has been checked.') + '</div>'
+                  : tracking && tracking.bobgoShipmentId
                   ? '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
                       '<div style="font-weight:600;">Bob Go · ' + esc(tracking.trackingNumber || 'Booking created') + '</div>' +
                       '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(tracking.bobgoStatusFriendly || tracking.bobgoSubmissionStatus || 'Booking pending') +
