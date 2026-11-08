@@ -425,7 +425,7 @@ module.exports = function registerBobGo(app, deps) {
               ? null : Number.isFinite(Number(rate.service_level_priority)) ? Number(rate.service_level_priority) : null,
             sourceOrder: index
           };
-        }).filter(rate => rate && (rate.type !== 'pickup-point' || (rate.pickupPointLocationId && rate.pickupPointProviderSlug)));
+        }).filter(rate => rate && rate.providerSlug && rate.serviceLevelCode && (rate.type !== 'pickup-point' || (rate.pickupPointLocationId && rate.pickupPointProviderSlug)));
         const byBobGoPriority = (x, y) => {
           if (x.serviceLevelPriority != null && y.serviceLevelPriority != null) {
             return x.serviceLevelPriority - y.serviceLevelPriority || x.sourceOrder - y.sourceOrder;
