@@ -203,7 +203,8 @@
   .cs-header { position:fixed; top:0; left:0; right:0; z-index:30; }
   .cs-header-pill { background:#E0EBFF; -webkit-backdrop-filter:none; backdrop-filter:none; border:0; box-shadow:none; border-radius:28px; transition:background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease; }
   .cs-header-pill.is-scrolled { background:rgba(224,235,255,.58); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); box-shadow:0 8px 28px rgba(17,17,17,.08); }
-  .cs-logo.cs-site-logo-image { display:block; width:auto; height:25px; max-width:190px; object-fit:contain; }
+  .cs-logo { color:#111 !important; }
+  .cs-logo.cs-site-logo-image { display:block; width:auto; height:25px; max-width:190px; object-fit:contain; filter:brightness(0) saturate(100%); }
 
   /* Waitlist card */
   .waitlist { scroll-margin-top:90px; background:#fff; color:#111; }
@@ -213,13 +214,14 @@
   .waitlist .brandcta-inner p { color:#555; margin:12px auto 0; max-width:520px; }
   .wl-form { width:100%; max-width:520px; }
   .waitlist .join-form { margin:0 auto; max-width:none; flex-direction:column; }
-  .waitlist .signup-input { background:#fff; border:1px solid #d4d4d4; color:#111; border-radius:999px; padding:0 22px; }
+  .waitlist .signup-input { width:100%; min-width:0; height:54px; box-sizing:border-box; background:#fff; border:1px solid #d4d4d4; color:#111; border-radius:999px; padding:0 22px; font-size:18px; }
   .waitlist .signup-input::placeholder { color:#777; }
   .waitlist .signup-input:focus { border-color:#111; }
-  .waitlist .cs-btn { background:var(--accent); color:#111; align-self:stretch; }
-  .waitlist .signup-msg, .wl-count { color:#555; font-size:13px; font-weight:300; line-height:1.5; }
+  .waitlist .cs-btn { width:100%; min-height:54px; box-sizing:border-box; background:var(--accent); color:#111; align-self:stretch; padding:0 22px; }
+  .waitlist .signup-msg { color:#555; font-size:13px; font-weight:400; line-height:1.5; }
   .waitlist .signup-msg.error { color:#c0392b; }
-  .wl-count { margin-top:12px; }
+  .wl-copy { margin-top:12px; }
+  .wl-count-number { display:inline-block; color:#809ADD; font-weight:700; text-shadow:0 0 5px rgba(128,154,221,.55),0 0 12px rgba(128,154,221,.42),0 0 22px rgba(224,235,255,.95); }
 
   /* Footer in the same blue */
   .cs-footer { background:var(--accent); color:#111; }
@@ -255,8 +257,7 @@
     <div class="brandcta-inner">
       <div>
         <h2 class="cs-title">Join the waitlist</h2>
-        <p>Join 300+ people already on the JANEDORE waitlist and get early access before everyone else.</p>
-        <p class="wl-count" id="wl-count" hidden></p>
+        <p class="wl-copy" id="wl-copy" hidden>Join <span class="wl-count-number" id="wl-count-number"></span> people already on the JANEDORE waitlist and get early access before everyone else.</p>
       </div>
       <div class="wl-form">
         <div class="join-form">
@@ -395,14 +396,15 @@
     b.addEventListener('click', function () { b.parentNode.querySelector('.signup-msg').textContent = 'Preview only. Wire this to your real handler.'; });
   });
 
-  // Waitlist number: only shown when the server returns a real count (/api/waitlist-count).
+  // Public total only: read the same newsletter collection shown in Admin > Newsletter.
   function loadWaitlistCount() {
-    var el = document.getElementById('wl-count');
-    if (!el) return;
-    fetch('/api/waitlist-count', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-      if (d && typeof d.count === 'number' && d.count > 0) {
-        el.textContent = d.count.toLocaleString('en-ZA') + (d.count === 1 ? ' person is on the waitlist' : ' people are on the waitlist');
-        el.hidden = false;
+    var copy = document.getElementById('wl-copy');
+    var number = document.getElementById('wl-count-number');
+    if (!copy || !number) return;
+    fetch('/api/newsletter-count', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (d && Number.isInteger(d.count) && d.count >= 0) {
+        number.textContent = d.count.toLocaleString('en-ZA') + '+';
+        copy.hidden = false;
       }
     }).catch(function () {});
   }
