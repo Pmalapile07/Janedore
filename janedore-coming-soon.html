@@ -92,8 +92,8 @@
   /* Shared CTA styling follows the homepage's Inter button treatment. */
   .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 12px 32px; border: 0; border-radius: 0; background: #111; color: #fff; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; line-height: 1.2; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; -webkit-appearance: none; }
   .cs-btn-white { background: #fff; color: #111; }
-  .cs-btn-accent { background: #111; color: #fff; padding: 12px 32px; }
-  .cs-header .cs-btn-accent { background: #fff; color: #111; }
+  .cs-btn-accent { background: var(--accent); color: #111; padding: 12px 32px; }
+  .cs-header .cs-btn-accent { background: var(--accent); color: #111; }
   .cs-btn-block { width: 100%; padding: 12px 32px; font-size: 10px; }
   .cs-btn:disabled { opacity: 0.6; cursor: default; }
 
@@ -125,8 +125,9 @@
   .cs-row { display: block; padding: 20px 0; border-top: 1px solid #e5e5e5; }
   .cs-row h3 { font-size: 15px; font-weight: 600; letter-spacing: 0; margin-bottom: 6px; color: #111; }
   .cs-row p { font-size: 13px; font-weight: 300; letter-spacing: normal; line-height: 1.5; color: #555; max-width: 520px; }
-  .cs-cats { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px var(--gutter) 0; }
-  .cs-cat { display: inline-flex; align-items: center; min-height: 40px; padding: 10px 16px; border: 1px solid #e5e5e5; background: #fff; color: #111; font-size: 12px; font-weight: 400; letter-spacing: normal; }
+  .cs-cats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 20px var(--gutter) 0; }
+  .cs-cat { display: flex; align-items: flex-end; min-height: 132px; padding: 18px; border: 1px solid #e5e5e5; background: #f7f8fa; color: #111; font-size: 13px; font-weight: 600; letter-spacing: 0; }
+  .cs-features li:nth-child(3) i { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-top: -5px; border-radius: 8px; background: var(--accent); color: #244a86; font-size: 20px; }
 
   /* Questions: like the product page's accordions. */
   .cs-faq { padding: 56px var(--gutter) 8px; }
@@ -189,7 +190,8 @@
     .cs-light, .cs-faq, .cs-join { max-width: 1200px; margin: 0 auto; }
     .cs-rows { grid-template-columns: repeat(3, 1fr); gap: 24px; }
     .cs-row { border-top: 1px solid #e5e5e5; }
-    .cs-cats { padding: 24px 12px 0; }
+    .cs-cats { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 24px 12px 0; }
+    .cs-cat { min-height: 150px; }
     .cs-sheet-back { align-items: center; }
     .cs-sheet { padding: 32px 28px 28px; }
   }
@@ -311,10 +313,9 @@
 <main id="main">
     <section class="cs-hero">
       <div class="cs-hero-content">
-        <span class="cs-hero-eyebrow">JANEDORE · Coming soon</span>
         <h1>For independent brands.</h1>
         <p class="cs-hero-copy">A place for South African independent brands to be discovered, reach new customers and grow alongside one another.</p>
-        <button type="button" class="cs-btn" data-open="brand-sheet">Register your brand</button>
+        <a class="cs-btn cs-btn-accent" href="janedore-for-customers.html">For customers</a>
       </div>
     </section>
 
@@ -347,9 +348,7 @@
       <span class="cs-cat">Clothing</span>
       <span class="cs-cat">Accessories</span>
       <span class="cs-cat">Homeware</span>
-      <span class="cs-cat">Beauty</span>
-      <span class="cs-cat">Kids</span>
-      <span class="cs-cat">Scent</span>
+      <span class="cs-cat">Beauty kits</span>
     </div>
   </section>
 
