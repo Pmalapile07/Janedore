@@ -634,6 +634,8 @@ async function placeOrder(e) {
       price: Number(selected.price) || 0,
       serviceName: selected.serviceName || '',
       serviceCode: selected.serviceCode || null,
+      providerSlug: selected.providerSlug || null,
+      serviceLevelCode: selected.serviceLevelCode || null,
       bobgoRateId: selected.bobgoRateId == null ? null : selected.bobgoRateId,
       pickupPointLocationId: selected.pickupPointLocationId || null,
       pickupPointProviderSlug: selected.pickupPointProviderSlug || null,
