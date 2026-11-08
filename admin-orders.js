@@ -1814,7 +1814,7 @@
       return res.json().catch(function () { return {}; }).then(function (data) {
         if (!res.ok) throw new Error(data.error || 'Bob Go could not book this parcel.');
         showToast('Bob Go booking created: ' + (data.trackingReference || 'tracking pending'));
-        window._openOrderDetail(orderId);
+        refreshOrderDetail(orderId);
       });
     }).catch(function (e) {
       showToast(e.message || 'Could not book with Bob Go.', 'error');
