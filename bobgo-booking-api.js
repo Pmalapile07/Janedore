@@ -92,7 +92,7 @@ module.exports = function registerBobGoBooking(app, deps) {
         if (shipment.collect) throw Object.assign(new Error('This order is marked for customer collection, not courier delivery.'), { status: 409 });
         const current = preorder ? ((order.vendorTracking || {})[vendorId] || {}).preorder || {} : (order.vendorTracking || {})[vendorId] || {};
         if (current.bobgoShipmentId || current.trackingNumber) throw Object.assign(new Error('This parcel already has a tracking reference. Refresh the order.'), { status: 409 });
-        if (current.bobgoBooking && current.bobgoBooking.status === 'booking') throw Object.assign(new Error('A booking is already in progress for this parcel. Do not click again.'), { status: 409 });
+        if (current.bobgoBooking && ['booking', 'unknown'].includes(current.bobgoBooking.status)) throw Object.assign(new Error(current.bobgoBooking.status === 'unknown' ? 'The previous booking result is uncertain. Check Bob Go before attempting another booking.' : 'A booking is already in progress for this parcel. Do not click again.'), { status: 409 });
         const patch = {};
         patch[entryPath + '.bobgoBooking'] = { status: 'booking', token: lockToken, startedAt: new Date().toISOString() };
         patch.updatedAt = new Date().toISOString();
@@ -102,9 +102,10 @@ module.exports = function registerBobGoBooking(app, deps) {
       return res.status(e.status || 500).json({ error: e.message || 'Could not prepare the shipment.' });
     }
 
-    const releaseLock = async (message) => {
+    let createAttempted = false;
+  const releaseLock = async (message, status) => {
       const patch = {};
-      patch[entryPath + '.bobgoBooking'] = { status: 'failed', message: safeText(message, 240), failedAt: new Date().toISOString() };
+      patch[entryPath + '.bobgoBooking'] = { status: status || 'failed', message: safeText(message, 240), failedAt: new Date().toISOString() };
       await orderRef.update(patch).catch(() => {});
     };
 
@@ -212,6 +213,7 @@ module.exports = function registerBobGoBooking(app, deps) {
         bookingPayload.pickup_point_provider_slug = safeText(selection.pickupPointProviderSlug, 80);
       } else bookingPayload.delivery_address = deliveryAddress;
 
+      createAttempted = true;
       const booked = await bobgoRequest(base, apiKey, '/shipments', bookingPayload);
       if (booked.status < 200 || booked.status >= 300) throw new Error(safeText(booked.data.message || booked.data.error || ('Bob Go booking failed (' + booked.status + ').'), 240));
       const result = booked.data || {};
@@ -245,7 +247,7 @@ module.exports = function registerBobGoBooking(app, deps) {
       });
     } catch (e) {
       console.error('[BOBGO BOOKING]', req.params.id, vendorId, preorder ? 'preorder' : 'stock', e.message);
-      await releaseLock(e.message);
+      await releaseLock(e.message, createAttempted ? 'unknown' : 'failed');
       return res.status(502).json({ error: e.message || 'Could not book this shipment with Bob Go.' });
     }
   });
