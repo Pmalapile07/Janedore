@@ -2135,10 +2135,19 @@ app.post('/api/track-order', async (req, res) => {
         productId: item.productId || '', variantIndex: item.variantIndex || 0, name: item.name || '',
         size: item.size || '', color: item.color || '', qty: item.qty || 1
       })),
-      shipped: !!g.tracking.trackingNumber,
+      booked: !!g.tracking.trackingNumber,
+      shipped: g.tracking.bobgoShipmentId
+        ? ['collected','in-transit','out-for-delivery','ready-for-pickup','delivered','finalised'].includes(String(g.tracking.bobgoStatus || '').toLowerCase())
+        : !!g.tracking.trackingNumber,
       courier: g.tracking.courier,
       trackingNumber: g.tracking.trackingNumber,
-      shippedAt: g.tracking.addedAt
+      shippedAt: g.tracking.addedAt,
+      bobgoSubmissionStatus: g.tracking.bobgoSubmissionStatus,
+      bobgoStatus: g.tracking.bobgoStatus,
+      bobgoStatusFriendly: g.tracking.bobgoStatusFriendly,
+      providerTrackingReference: g.tracking.bobgoProviderTrackingReference,
+      trackingUrl: g.tracking.bobgoTrackingUrl,
+      checkpoints: g.tracking.bobgoCheckpoints
     }));
 
     res.json({
@@ -2292,14 +2301,23 @@ function orderShipments(order) {
       // progress is order.collection[key] { readyAt, collectedAt }.
       const collect = (order.collectFrom || []).includes(g.vendorId || HOUSE_VENDOR_ID);
       return Object.assign(g, {
-        tracking: { trackingNumber: t.trackingNumber || '', courier: t.courier || '', addedAt: t.addedAt || null },
+        tracking: {
+          trackingNumber: t.trackingNumber || '', courier: t.courier || '', addedAt: t.addedAt || null,
+          bobgoShipmentId: t.bobgoShipmentId || null,
+          bobgoSubmissionStatus: t.bobgoSubmissionStatus || null,
+          bobgoStatus: t.bobgoStatus || null,
+          bobgoStatusFriendly: t.bobgoStatusFriendly || null,
+          bobgoProviderTrackingReference: t.bobgoProviderTrackingReference || null,
+          bobgoTrackingUrl: t.bobgoTrackingUrl || null,
+          bobgoCheckpoints: Array.isArray(t.bobgoCheckpoints) ? t.bobgoCheckpoints : []
+        },
         collect, collection: collect ? ((order.collection || {})[collectionKey(g)] || {}) : null
       });
     });
 }
 function collectionKey(shipment) { return (shipment.vendorId || HOUSE_VENDOR_ID) + (shipment.preorder ? '__preorder' : ''); }
 // Sent: a tracking number added, or ready to collect.
-function shipmentSent(s) { return s.collect ? !!s.collection.readyAt : !!s.tracking.trackingNumber; }
+function shipmentSent(s) { if (s.collect) return !!s.collection.readyAt; if (s.tracking.bobgoShipmentId) return ['collected','in-transit','out-for-delivery','ready-for-pickup','delivered','finalised'].includes(String(s.tracking.bobgoStatus || '').toLowerCase()); return !!s.tracking.trackingNumber; }
 // Every package delivered (Bob Go: status per tracking number) or
 // collected: the order is Delivered.
 function allPackagesDone(order, courierDone) {
