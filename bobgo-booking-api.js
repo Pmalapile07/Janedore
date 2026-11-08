@@ -161,6 +161,9 @@ module.exports = function registerBobGoBooking(app, deps) {
       const selection = (Array.isArray(order.shippingSelections) ? order.shippingSelections : [])
         .find(s => Array.isArray(s.vendorIds) && s.vendorIds.includes(vendorId));
       if (!selection) throw new Error('The customer delivery option could not be matched to this brand shipment.');
+      if (Array.isArray(selection.vendorIds) && selection.vendorIds.length > 1) {
+        throw new Error('This order combines brands that share a warehouse. Combined shared-warehouse booking is not enabled yet, so no courier booking was created.');
+      }
       const pickupPoint = selection.method === 'pickup-point';
       if (pickupPoint && (!selection.pickupPointLocationId || !selection.pickupPointProviderSlug)) {
         throw new Error('The selected collection point is missing its Bob Go location details. Please contact JANEDORE support.');
