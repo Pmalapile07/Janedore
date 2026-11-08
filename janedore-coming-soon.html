@@ -65,7 +65,7 @@
     --text:   #111111;
     --muted:  #6B6B6B;
     --border: #E5E5E5;
-    --green:  #809ADD;
+    --accent: #E0EBFF;
   }
 
   html { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; font-size: 16px; }
@@ -75,9 +75,9 @@
   /* The launch-page structure (floating header, one statement per
      section) in the shop's own style: Inter 600 sentence-case headings
      at the homepage's sizes, square black and white buttons, the hero
-     like the homepage's (heading bottom left, button under it), sage as
+     like the homepage's (heading bottom left, button under it), the homepage's pale-blue accent as
      an accent only. */
-  :root { --sage: #dfe8c6; --head: 21px; --gutter: 20px; }
+  :root { --head: 21px; --gutter: 20px; }
   body { background: #fff; }
   .cs-title { font-size: var(--head); font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; color: #111; }
 
@@ -85,12 +85,12 @@
   /* Header: the shop's black bar. */
   .cs-header { position: sticky; top: 0; z-index: 20; background: #111; padding-top: env(safe-area-inset-top, 0px); }
   .cs-header-pill { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; padding: 0 var(--gutter); }
-  .cs-logo { display: block; height: 16px; width: auto; }
+  .cs-logo { display: block; font-family: 'Inter', Helvetica, Arial, sans-serif; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; white-space: nowrap; }
 
   /* Buttons: the shop's (square, uppercase, letter-spaced). */
   .cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; background: #111; color: #fff; font-family: inherit; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; }
   .cs-btn-white { background: #fff; color: #111; }
-  .cs-btn-sage { background: var(--sage); color: #111; padding: 11px 16px; }
+  .cs-btn-accent { background: var(--accent); color: #111; padding: 11px 16px; }
   .cs-btn-block { width: 100%; padding: 16px; font-size: 11px; }
   .cs-btn:disabled { opacity: 0.6; cursor: default; }
 
@@ -115,7 +115,7 @@
   .ph-status { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px 4px; font-size: 7px; font-weight: 600; }
   .ph-status i { width: 44px; height: 10px; border-radius: 10px; background: #111; }
   .ph-bar { background: #111; padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; }
-  .ph-bar img { height: 8px; width: auto; }
+  .ph-bar .ph-logo-text { color: #fff; font-family: 'Inter', Helvetica, Arial, sans-serif; font-size: 8px; line-height: 1; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap; }
   .ph-bar span { width: 26px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.35); }
   .ph-search { margin: 7px 8px; height: 16px; border-radius: 10px; background: #f1f1f1; display: flex; align-items: center; padding: 0 8px; color: #999; font-size: 6.5px; }
   .ph-chips { display: flex; gap: 4px; padding: 0 8px; overflow: hidden; white-space: nowrap; }
@@ -133,12 +133,12 @@
   .ph-sizes { display: flex; gap: 4px; padding: 0 8px; }
   .ph-sizes b { flex: 1; height: 14px; border: 1px solid #ddd; }
   .ph-add { margin: 8px; height: 18px; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 6px; letter-spacing: 0.12em; font-weight: 500; }
-  .cs-app-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; font-size: 13px; color: var(--sage); }
+  .cs-app-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; font-size: 13px; color: var(--accent); }
   .cs-app-note i { font-size: 16px; }
 
   .cs-features { list-style: none; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.15); }
   .cs-features li { display: grid; grid-template-columns: 32px 1fr; gap: 14px; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.15); }
-  .cs-features i { font-size: 22px; color: var(--sage); }
+  .cs-features i { font-size: 22px; color: var(--accent); }
   .cs-features strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 3px; }
   .cs-features span { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.65); }
 
@@ -183,14 +183,14 @@
 
   /* Footer: the shop's black footer. */
   .cs-footer { background: #111; color: #fff; padding: 40px var(--gutter) calc(28px + env(safe-area-inset-bottom, 0px)); }
-  .cs-footer-logo { display: block; height: 20px; width: auto; }
+  .cs-footer-logo { display: block; font-family: 'Inter', Helvetica, Arial, sans-serif; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; white-space: nowrap; }
   .cs-footer-tag { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 8px; }
   .cs-footer-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 28px; font-size: 12px; color: rgba(255,255,255,0.55); }
   .footer-copy { cursor: default; user-select: none; }
   .cs-link { border: none; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
   /* Pop-ups (join the list, brand interest, preview access): the floating
-     header's dark glass, rounded, with a sage button. */
+     header's dark glass, rounded, with the homepage's pale-blue accent button. */
   .cs-sheet-back { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.35); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
   .cs-sheet-back[hidden] { display: none; }
   .cs-sheet { position: relative; width: 100%; max-width: 440px; background: rgba(17,17,17,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: #fff; border-radius: 28px; padding: 28px 22px 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); animation: csSheetIn 0.25s ease; }
@@ -200,10 +200,10 @@
   .cs-sheet-close { position: absolute; top: 18px; right: 16px; width: 36px; height: 36px; border: none; border-radius: 50%; background: rgba(255,255,255,0.12); font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .cs-sheet .signup-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; color: #fff; }
   .cs-sheet .signup-input::placeholder { color: rgba(255,255,255,0.5); }
-  .cs-sheet .signup-input:focus { border-color: var(--sage); }
-  .cs-sheet .cs-btn-block { background: var(--sage); color: #111; border-radius: 999px; }
+  .cs-sheet .signup-input:focus { border-color: var(--accent); }
+  .cs-sheet .cs-btn-block { background: var(--accent); color: #111; border-radius: 999px; }
   .cs-sheet .signup-spinner { border-color: rgba(17,17,17,0.25); border-top-color: #111; }
-  .cs-sheet .signup-msg.success { color: var(--sage); }
+  .cs-sheet .signup-msg.success { color: var(--accent); }
   .cs-sheet .signup-msg.error { color: #ff8a80; }
 
   @media (min-width: 768px) {
@@ -248,7 +248,7 @@
     position: relative;
   }
 
-  .admin-logo { display: block; height: 22px; width: auto; margin: 0 auto 48px; opacity: 0.4; }
+  .admin-logo { display: block; margin: 0 auto 48px; font-family: 'Inter', Helvetica, Arial, sans-serif; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: #111; white-space: nowrap; opacity: 0.4; }
 
   .admin-label {
     display: block;
@@ -334,8 +334,8 @@
 
 <header class="cs-header">
   <div class="cs-header-pill">
-    <img class="cs-logo" src="/janedore-logo-white.png?v=3" alt="JANEDORE">
-    <button type="button" class="cs-btn cs-btn-sage" data-open="join-sheet">Join the list</button>
+    <span class="cs-logo">JANEDORE</span>
+    <button type="button" class="cs-btn cs-btn-accent" data-open="join-sheet">Join the list</button>
   </div>
 </header>
 
@@ -353,9 +353,9 @@
       <p class="cs-dark-sub">Independent labels and distinctive finds in one place, for people who see fashion differently.</p>
       <div class="cs-phone-wrap">
       <div class="cs-phones" aria-hidden="true">
-        <div class="cs-phone p1"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><img src="/janedore-logo-white.png?v=3" alt=""><span></span></div><div class="ph-h">Accessories</div><div class="ph-grid"><div class="ph-card"><i style="background-image:url('/coming-soon-accessories.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-brands.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-curious.jpg');background-position:center 30%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-scent.jpg');background-position:center;"></i><u></u><s></s></div></div></div>
-        <div class="cs-phone p2"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><img src="/janedore-logo-white.png?v=3" alt=""><span></span></div><div class="ph-search">Search products or brands</div><div class="ph-chips"><b>Clothing</b><b>Accessories</b><b>Homeware</b><b>Kids</b></div><div class="ph-h">New in</div><div class="ph-grid"><div class="ph-card"><i style="background-image:url('/coming-soon-fashion.jpg');background-position:center 25%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-kids.jpg');background-position:center 20%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-homeware.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-accessories.jpg');background-position:center;"></i><u></u><s></s></div></div></div>
-        <div class="cs-phone p3"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><img src="/janedore-logo-white.png?v=3" alt=""><span></span></div><div class="ph-hero" style="background-image:url('/coming-soon-kids.jpg');background-position:center 20%;"></div><div class="ph-lines"><u></u><u></u></div><div class="ph-sizes"><b></b><b></b><b></b><b></b></div><div class="ph-add">ADD TO BAG</div></div>
+        <div class="cs-phone p1"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><span class="ph-logo-text">JANEDORE</span><span></span></div><div class="ph-h">Accessories</div><div class="ph-grid"><div class="ph-card"><i style="background-image:url('/coming-soon-accessories.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-brands.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-curious.jpg');background-position:center 30%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-scent.jpg');background-position:center;"></i><u></u><s></s></div></div></div>
+        <div class="cs-phone p2"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><span class="ph-logo-text">JANEDORE</span><span></span></div><div class="ph-search">Search products or brands</div><div class="ph-chips"><b>Clothing</b><b>Accessories</b><b>Homeware</b><b>Kids</b></div><div class="ph-h">New in</div><div class="ph-grid"><div class="ph-card"><i style="background-image:url('/coming-soon-fashion.jpg');background-position:center 25%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-kids.jpg');background-position:center 20%;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-homeware.jpg');background-position:center;"></i><u></u><s></s></div><div class="ph-card"><i style="background-image:url('/coming-soon-accessories.jpg');background-position:center;"></i><u></u><s></s></div></div></div>
+        <div class="cs-phone p3"><div class="ph-status">9:41<i></i></div><div class="ph-bar"><span class="ph-logo-text">JANEDORE</span><span></span></div><div class="ph-hero" style="background-image:url('/coming-soon-kids.jpg');background-position:center 20%;"></div><div class="ph-lines"><u></u><u></u></div><div class="ph-sizes"><b></b><b></b><b></b><b></b></div><div class="ph-add">ADD TO BAG</div></div>
       </div>
       <p class="cs-app-note"><i class="ph ph-device-mobile"></i>The JANEDORE app is on its way.</p>
       </div>
@@ -411,7 +411,7 @@
 </main>
 
 <footer class="cs-footer">
-  <img class="cs-footer-logo" src="/janedore-logo-white.png?v=3" alt="JANEDORE">
+  <span class="cs-footer-logo">JANEDORE</span>
   <p class="cs-footer-tag">Independent brands. Distinctive finds. One destination.</p>
   <div class="cs-footer-meta">
     <span class="footer-copy" id="copyright"></span>
@@ -476,7 +476,7 @@
     <button class="admin-close" id="admin-close-btn" aria-label="Close">
       <i class="ph ph-x"></i>
     </button>
-    <img class="admin-logo" src="/janedore-logo-black.png?v=3" alt="JANEDORE">
+    <span class="admin-logo">JANEDORE</span>
     <span class="admin-label">Admin Access</span>
     <input type="email" class="admin-field" id="admin-email"
            placeholder="Email"
