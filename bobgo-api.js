@@ -279,19 +279,10 @@ module.exports = function registerBobGo(app, deps) {
       vendorIds.forEach((id, i) => { vendors[id] = Object.assign({}, pubDocs[i].exists ? pubDocs[i].data() : {}, privateDocs[i].exists ? privateDocs[i].data() : {}); });
 
       const groups = new Map();
-      const groupingDiagnostics = [];
       lines.forEach(line => {
         const p = products[line.productId], vid = vendorIdFor(p), vendor = vendors[vid] || {};
         const wh = String(vendor.warehouse || '').trim().toLowerCase();
         const key = wh ? 'warehouse:' + wh : vid;
-        groupingDiagnostics.push({
-          productId: line.productId,
-          productName: String(p.name || '').slice(0, 80),
-          brand: String(p.brand || ''),
-          resolvedVendorId: vid,
-          warehouseGroup: wh || null,
-          shipmentKey: key
-        });
         if (!groups.has(key)) groups.set(key, { key, vendorIds: new Set(), items: [], total: 0 });
         const g = groups.get(key), qty = Number(line.qty), parcel = p.parcel || {};
         const weight = Number(p.shippingWeight), length = Number(parcel.lengthCm), width = Number(parcel.widthCm), height = Number(parcel.heightCm);
@@ -303,7 +294,6 @@ module.exports = function registerBobGo(app, deps) {
         g.items.push({ description: String(p.name || 'JANEDORE item').slice(0, 100), sku: String(p.sku || line.productId).slice(0, 80), price, quantity: qty, length_cm: length, width_cm: width, height_cm: height, weight_kg: weight });
       });
 
-      console.info('[BOBGO CHECKOUT] Cart products grouped for rate requests:', groupingDiagnostics);
       const shipments = [];
       for (const g of groups.values()) {
         const vids = [...g.vendorIds], pickups = vids.map(id => vendors[id] && vendors[id].pickup);
@@ -331,16 +321,23 @@ module.exports = function registerBobGo(app, deps) {
           request.on('timeout', () => request.destroy(new Error('Bob Go did not respond within 20 seconds.')));
           request.on('error', reject); request.write(payload); request.end();
         });
-        if (result.status < 200 || result.status >= 300) throw Object.assign(new Error(String(result.data.message || result.data.error || ('Bob Go returned HTTP ' + result.status)).slice(0, 250)), { status: 502 });
         const rawRates = Array.isArray(result.data.rates) ? result.data.rates : [];
-        console.info('[BOBGO CHECKOUT] Raw Bob Go rates:', {
-          shipmentKey: g.key,
-          httpStatus: result.status,
-          rateCount: rawRates.length,
-          rateTypes: rawRates.map(rate => String(rate.type || 'unspecified')),
-          rateNames: rawRates.slice(0, 12).map(rate => String(rate.service_name || rate.name || 'Unnamed')),
-          responseKeys: Object.keys(result.data || {})
-        });
+        const rawRateTypes = rawRates.reduce((counts, rate) => {
+          const type = String(rate && rate.type || 'unspecified').trim().toLowerCase() || 'unspecified';
+          counts[type] = (counts[type] || 0) + 1;
+          return counts;
+        }, {});
+        if (result.status < 200 || result.status >= 300) {
+          console.warn('[BOBGO CHECKOUT] Shipment rate diagnostics:', {
+            shipmentKey: g.key,
+            brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || 'Brand')).join(' & '),
+            httpStatus: result.status,
+            rawRateCount: rawRates.length,
+            rawRateTypes,
+            eligibleDoorOptionCount: 0
+          });
+          throw Object.assign(new Error(String(result.data.message || result.data.error || ('Bob Go returned HTTP ' + result.status)).slice(0, 250)), { status: 502 });
+        }
         // Keep standard door delivery and supported pickup points together
         // in the same checkout. Express is intentionally not offered.
         const mapped = rawRates.map((rate, index) => {
@@ -389,6 +386,14 @@ module.exports = function registerBobGo(app, deps) {
         };
         const deliveryOptions = mapped.filter(rate => rate.type === 'door').sort(byBobGoPriority);
         const pickupOptions = mapped.filter(rate => rate.type === 'pickup-point');
+        console.info('[BOBGO CHECKOUT] Shipment rate diagnostics:', {
+          shipmentKey: g.key,
+          brand: vids.map(id => String((vendors[id] && (vendors[id].brand || vendors[id].name)) || 'Brand')).join(' & '),
+          httpStatus: result.status,
+          rawRateCount: rawRates.length,
+          rawRateTypes,
+          eligibleDoorOptionCount: deliveryOptions.length
+        });
         const standard = deliveryOptions[0] || null;
         const allOptions = deliveryOptions.concat(pickupOptions);
 
@@ -399,7 +404,6 @@ module.exports = function registerBobGo(app, deps) {
           rates: { standard, deliveryOptions: allOptions }
         });
       }
-      console.info('[BOBGO CHECKOUT] Separate Bob Go quotes returned:', shipments.map(s => ({ key: s.key, brand: s.brand, hasStandard: !!s.rates.standard, deliveryOptionCount: s.rates.deliveryOptions.length })));
       return res.json({ ok: true, sandbox: true, shipments });
     } catch (e) {
       console.error('[BOBGO CHECKOUT RATES]', e.message);
