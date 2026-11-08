@@ -234,6 +234,15 @@ function trackResultHtml(o, opts) {
         : `<p class="track-wait">${escapeHTML(trackPlainText(p.brand))} is preparing this package. We’ll email you the collection address, opening hours and your collection code as soon as it’s ready.</p>`)
       : stage === 4 && !p.shipped
       ? `<p class="track-wait">This package has been delivered.</p>`
+      : p.booked && !p.shipped
+      ? `<div class="track-ship">
+          ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
+          <div class="track-ship-row"><span>Bob Go tracking reference</span><strong>${escapeHTML(p.trackingNumber)}</strong></div>
+          ${p.providerTrackingReference ? `<div class="track-ship-row"><span>Courier waybill</span><strong>${escapeHTML(p.providerTrackingReference)}</strong></div>` : ''}
+          <p class="track-wait">${escapeHTML(p.bobgoStatusFriendly || (p.bobgoSubmissionStatus === 'success' ? 'Courier booking confirmed' : 'Courier booking is being confirmed'))}. This parcel has been booked with the courier and is waiting to be collected or scanned.</p>
+          ${p.checkpoints && p.checkpoints.length ? `<div class="track-ship-row"><span>Latest updates</span><strong>${p.checkpoints.slice(0,5).map(cp => [cp.statusFriendly || cp.message, cp.location, cp.time].filter(Boolean).map(x => escapeHTML(x)).join(' · ')).join('<br>')}</strong></div>` : ''}
+          ${p.trackingUrl ? `<div class="track-ship-row"><a class="track-copy" href="${escapeHTML(p.trackingUrl)}" target="_blank" rel="noopener">View courier tracking <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a></div>` : ''}
+        </div>`
       : p.shipped
       ? `<div class="track-ship">
           ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
