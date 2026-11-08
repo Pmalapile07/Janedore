@@ -201,15 +201,17 @@ module.exports = function registerBobGoBooking(app, deps) {
         ratePayload.delivery_address = deliveryAddress;
       }
 
+      ['collection_contact_mobile_number','collection_contact_email','delivery_contact_mobile_number','delivery_contact_email'].forEach(k => { if (!ratePayload[k]) delete ratePayload[k]; });
       const rated = await bobgoRequest(base, apiKey, '/rates', ratePayload);
       if (rated.status < 200 || rated.status >= 300) throw new Error(safeText(rated.data.message || rated.data.error || ('Bob Go rate request failed (' + rated.status + ').'), 240));
       if (rated.data.id == null) throw new Error('Bob Go did not return a rate request ID, so the booking was not submitted.');
       const requests = Array.isArray(rated.data.provider_rate_requests) ? rated.data.provider_rate_requests : [];
       const options = [];
       requests.filter(r => r.status === 'success').forEach(r => {
-        (Array.isArray(r.responses) ? r.responses : []).filter(x => x.status === 'success' && x.service_level_code).forEach(x => {
+        (Array.isArray(r.responses) ? r.responses : []).filter(x => x.status === 'success' && x.service_level_code && r.provider_slug).forEach(x => {
           const amount = Number(x.rate_amount);
-          if (Number.isFinite(amount) && amount >= 0) options.push({ provider: r.provider_slug, providerName: r.provider_name || r.provider_slug, service: x.service_level_code, amount });
+          const serviceLabel = String(x.service_level && (x.service_level.name || x.service_level.service_level_name) || x.service_level_code).toLowerCase();
+          if (!serviceLabel.includes('express') && Number.isFinite(amount) && amount >= 0) options.push({ provider: r.provider_slug, providerName: r.provider_name || r.provider_slug, service: x.service_level_code, amount });
         });
       });
       options.sort((a, b) => a.amount - b.amount);
@@ -233,6 +235,7 @@ module.exports = function registerBobGoBooking(app, deps) {
         delivery_contact_email: safeText(order.customerEmail, 180),
         timeout: 5000
       };
+      ['collection_contact_mobile_number','collection_contact_email','delivery_contact_mobile_number','delivery_contact_email'].forEach(k => { if (!bookingPayload[k]) delete bookingPayload[k]; });
       if (pickupPoint) {
         bookingPayload.delivery_pickup_point_location_id = Number(selection.pickupPointLocationId);
         bookingPayload.pickup_point_provider_slug = safeText(selection.pickupPointProviderSlug, 80);
