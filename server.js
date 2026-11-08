@@ -3455,11 +3455,11 @@ app.post('/api/coming-soon-signup', async (req, res) => {
   }
   const b = req.body || {};
   const email = String(b.email || '').trim().toLowerCase().slice(0, 254);
-  const name = String(b.name || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, 100);
+  const name = String(b.name || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 100);
   const signupType = b.signupType === 'brand' ? 'brand' : 'customer';
-  const brandName = String(b.brandName || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, 120);
-  const social = String(b.social || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, 200);
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+  const brandName = String(b.brandName || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 120);
+  const social = String(b.social || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 200);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
   if (signupType === 'brand' && !brandName) return res.status(400).json({ error: 'Please enter your brand name.' });
   try {
     const subscriberId = crypto.createHash('sha256').update(email).digest('hex');
