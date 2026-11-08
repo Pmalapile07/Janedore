@@ -203,6 +203,7 @@ module.exports = function registerBobGoBooking(app, deps) {
 
       const rated = await bobgoRequest(base, apiKey, '/rates', ratePayload);
       if (rated.status < 200 || rated.status >= 300) throw new Error(safeText(rated.data.message || rated.data.error || ('Bob Go rate request failed (' + rated.status + ').'), 240));
+      if (rated.data.id == null) throw new Error('Bob Go did not return a rate request ID, so the booking was not submitted.');
       const requests = Array.isArray(rated.data.provider_rate_requests) ? rated.data.provider_rate_requests : [];
       const options = [];
       requests.filter(r => r.status === 'success').forEach(r => {
