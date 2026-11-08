@@ -226,6 +226,42 @@
   .wl-copy { margin-top:12px; }
   .wl-count-number { display:inline-block; color:#809ADD; font-weight:700; text-shadow:0 0 5px rgba(128,154,221,.55),0 0 12px rgba(128,154,221,.42),0 0 22px rgba(224,235,255,.95); }
 
+  /* Founding community section */
+  .community { margin:12px 12px 0; padding:64px 24px; border-radius:20px; background:#fff; color:#111; }
+  .community-inner { max-width:1200px; margin:0 auto; }
+  .community-heading { max-width:760px; }
+  .community-heading .cs-title { margin:0; }
+  .community-heading p { max-width:620px; margin:14px 0 0; color:#555; font-size:13px; line-height:1.6; }
+  .community-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:32px 0 36px; align-items:start; }
+  .community-card { display:block; width:100%; overflow:hidden; border-radius:12px; background:linear-gradient(145deg,#e8e5df,#c9c4ba); }
+  .community-card:nth-child(2) { background:linear-gradient(145deg,#d9e0e9,#aeb9c8); }
+  .community-card:nth-child(3) { background:linear-gradient(145deg,#e9ddd5,#c9b4a7); }
+  .community-card:nth-child(4) { background:linear-gradient(145deg,#d9ded5,#aeb8a7); }
+  .community-card:nth-child(5) { background:linear-gradient(145deg,#e7e0eb,#bdb0c8); }
+  .community-card:nth-child(6) { background:linear-gradient(145deg,#e9e2d4,#c9bda5); }
+  .community-card:nth-child(7) { background:linear-gradient(145deg,#dce5e4,#a9bfbd); }
+  .community-card:nth-child(8) { background:linear-gradient(145deg,#e7d9d7,#c8aaa6); }
+  .community-card:nth-child(1), .community-card:nth-child(5) { aspect-ratio:4 / 5; }
+  .community-card:nth-child(2), .community-card:nth-child(7) { aspect-ratio:3 / 4; }
+  .community-card:nth-child(3), .community-card:nth-child(6) { aspect-ratio:1 / 1; }
+  .community-card:nth-child(4), .community-card:nth-child(8) { aspect-ratio:4 / 3; }
+  .community-divider { width:100%; height:1px; background:#d8d8d8; margin:0 0 30px; }
+  .community-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:28px; }
+  .community-bottom > div { max-width:620px; }
+  .community-bottom h3 { margin:0; font-size:22px; line-height:1.2; font-weight:600; letter-spacing:-.02em; }
+  .community-bottom p { margin:12px 0 0; color:#555; font-size:13px; line-height:1.6; }
+  .community-bottom .cs-btn { flex-shrink:0; background:#111; color:#fff; min-height:48px; padding:0 24px; }
+  @media (min-width:768px) {
+    .community { padding:88px 48px; }
+    .community-gallery { grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:44px 0 48px; }
+    .community-card { border-radius:16px; }
+    .community-bottom h3 { font-size:28px; }
+  }
+  @media (max-width:600px) {
+    .community-bottom { align-items:stretch; flex-direction:column; }
+    .community-bottom .cs-btn { width:100%; }
+  }
+
   /* Footer in the same blue */
   .cs-footer { background:var(--accent); color:#111; }
   .cs-footer-logo { color:#111; }
@@ -302,6 +338,33 @@
       <span class="cs-cat">Beauty</span>
       <span class="cs-cat">Scent</span>
       <span class="cs-cat">Kids’ products</span>
+    </div>
+  </section>
+
+  <section class="community" id="founding-community">
+    <div class="community-inner">
+      <div class="community-heading">
+        <h2 class="cs-title">Built with independent brands, not just for them.</h2>
+        <p>From first looks and honest feedback to new discoveries and launch conversations, the people who join early will help shape what Janedore becomes.</p>
+      </div>
+      <div class="community-gallery" aria-label="A glimpse of the Janedore community">
+        <div class="community-card" aria-hidden="true"></div>
+        <div class="community-card" aria-hidden="true"></div>
+        <div class="community-card" aria-hidden="true"></div>
+        <div class="community-card" aria-hidden="true"></div>
+        <div class="community-card" aria-hidden="true"></div>
+        <div class="community-card" aria-hidden="true"></div>
+        <div class="community-card" aria-hidden="true"></div>
+        <div class="community-card" aria-hidden="true"></div>
+      </div>
+      <div class="community-divider" role="presentation"></div>
+      <div class="community-bottom">
+        <div>
+          <h3>Be part of what we're building.</h3>
+          <p>Hear what’s happening first, get invited to community events and get early access as Janedore takes shape.</p>
+        </div>
+        <a class="cs-btn" href="#waitlist">Join the founding community</a>
+      </div>
     </div>
   </section>
 
@@ -459,7 +522,7 @@
   }
 
   // Scroll reveal
-  var targets = document.querySelectorAll('.sec-head, .disc-item, .cs-cat, .trio > div, .brandcta-inner, .cs-faq, .join');
+  var targets = document.querySelectorAll('.sec-head, .disc-item, .cs-cat, .trio > div, .brandcta-inner, .cs-faq, .join, .community-heading, .community-gallery, .community-bottom');
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
