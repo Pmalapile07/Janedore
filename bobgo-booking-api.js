@@ -12,7 +12,7 @@ module.exports = function registerBobGoBooking(app, deps) {
   function bobgoRequest(base, apiKey, path, payload) {
     const body = payload == null ? null : JSON.stringify(payload);
     return new Promise((resolve, reject) => {
-      const url = new URL(base.replace(/\\/+$/, '') + path);
+      const url = new URL(base.replace(/\/+$/, '') + path);
       const request = https.request({
         hostname: url.hostname, path: url.pathname + url.search,
         method: body ? 'POST' : 'GET', timeout: 25000,
