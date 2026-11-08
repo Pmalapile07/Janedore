@@ -12,7 +12,7 @@ module.exports = function registerBobGoBooking(app, deps) {
   function bobgoRequest(base, apiKey, path, payload) {
     const body = payload == null ? null : JSON.stringify(payload);
     return new Promise((resolve, reject) => {
-      const url = new URL(path, base + '/');
+      const url = new URL(base.replace(/\\/+$/, '') + path);
       const request = https.request({
         hostname: url.hostname, path: url.pathname + url.search,
         method: body ? 'POST' : 'GET', timeout: 25000,
@@ -124,22 +124,17 @@ module.exports = function registerBobGoBooking(app, deps) {
       const productDocs = await adminDb.getAll(...productIds.map(id => adminDb.collection('products').doc(id)));
       const products = {};
       productDocs.forEach((doc, i) => { if (doc.exists) products[productIds[i]] = doc.data(); });
-      const parcels = [];
-      let declaredValue = 0;
-      for (const item of lines) {
-        const p = products[String(item.productId || '')];
-        if (!p) throw new Error('A product in this shipment no longer exists.');
-        const dims = p.parcel || {};
-        const weight = Number(p.shippingWeight), length = Number(dims.lengthCm), width = Number(dims.widthCm), height = Number(dims.heightCm);
-        if (!(weight > 0 && length > 0 && width > 0 && height > 0)) throw new Error('Shipping weight and parcel dimensions are missing for ' + safeText(p.name || item.name, 100) + '. Update the product under Admin → Products → Shipping.');
-        const qty = Math.max(1, Math.min(20, Math.floor(Number(item.qty) || 1)));
-        for (let n = 0; n < qty; n++) parcels.push({
-          submitted_length_cm: length, submitted_width_cm: width, submitted_height_cm: height,
-          submitted_weight_kg: weight, description: safeText(p.name || item.name || 'JANEDORE item', 100)
-        });
-        declaredValue += (Number(item.price) || 0) * qty;
+      const parcelInput = req.body && req.body.parcel || {};
+      const length = Number(parcelInput.lengthCm), width = Number(parcelInput.widthCm);
+      const height = Number(parcelInput.heightCm), weight = Number(parcelInput.weightKg);
+      if (![length, width, height, weight].every(Number.isFinite) || !(length > 0 && width > 0 && height > 0 && weight > 0) || length > 200 || width > 200 || height > 200 || weight > 70) {
+        throw new Error('Enter the packed parcel length, width, height (cm) and total weight (kg) before booking.');
       }
-      if (parcels.length > 30) throw new Error('This parcel has too many line items to book automatically. Please contact JANEDORE support.');
+      const declaredValue = lines.reduce((sum, item) => sum + (Number(item.price) || 0) * Math.max(1, Number(item.qty) || 1), 0);
+      const parcels = [{
+        submitted_length_cm: length, submitted_width_cm: width, submitted_height_cm: height,
+        submitted_weight_kg: weight, description: safeText(shipment.brand + (preorder ? ' pre-order' : '') + ' order', 100)
+      }];
 
       const selection = (Array.isArray(order.shippingSelections) ? order.shippingSelections : [])
         .find(s => Array.isArray(s.vendorIds) && s.vendorIds.includes(vendorId));
@@ -188,7 +183,7 @@ module.exports = function registerBobGoBooking(app, deps) {
       requests.filter(r => r.status === 'success').forEach(r => {
         (Array.isArray(r.responses) ? r.responses : []).filter(x => x.status === 'success' && x.service_level_code).forEach(x => {
           const amount = Number(x.rate_amount);
-          if (Number.isFinite(amount) && amount >= 0) options.push({ provider: r.provider_slug, service: x.service_level_code, amount });
+          if (Number.isFinite(amount) && amount >= 0) options.push({ provider: r.provider_slug, providerName: r.provider_name || r.provider_slug, service: x.service_level_code, amount });
         });
       });
       options.sort((a, b) => a.amount - b.amount);
@@ -225,8 +220,8 @@ module.exports = function registerBobGoBooking(app, deps) {
       const entry = {
         bobgoShipmentId: String(result.id),
         trackingNumber: trackingRef,
-        courier: safeText(chosen.provider, 80),
-        courierName: safeText(chosen.provider, 80),
+        courier: safeText(chosen.providerName, 80),
+        courierName: safeText(chosen.providerName, 80),
         bobgoSubmissionStatus: safeText(result.submission_status || 'pending-rates', 60),
         bobgoStatus: safeText(result.status, 60),
         bobgoProviderTrackingReference: result.provider_tracking_reference || null,
