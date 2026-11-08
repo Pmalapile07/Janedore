@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Janedore · Coming soon</title>
+<link id="logo-font-css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -108,11 +109,22 @@
   @media (prefers-reduced-motion:reduce) { .hero-fallback { animation:none; } .rv { opacity:1; transform:none; transition:none; } }
 
   /* One paragraph style everywhere: the hero copy's (13px / 300 / 1.5) */
-  .sec-sub, .disc-item span, .trio p, .brandcta p, .cs-faq > p, .cs-faq details p, .cs-footer-tag, .cs-sheet > p { font-size:13px; font-weight:300; line-height:1.5; }
+  .sec-sub, .disc-item span, .trio p, .brandcta p, .cs-faq > p, .cs-faq details p, .cs-footer-tag, .cs-sheet > p { font-size:13px; font-weight:400; line-height:1.5; }
   .sec-sub, .trio p, .cs-faq > p, .cs-faq details p { color:#555; }
 
   /* Header button radius */
   .cs-header .cs-btn-accent { border-radius:25px; }
+
+  /* Empty app-preview image card — image will be added later. */
+  .cs-app-preview-placeholder {
+    width:100%;
+    aspect-ratio:16 / 7;
+    min-height:150px;
+    margin:32px 0 0;
+    border:1px solid #e5e5e5;
+    border-radius:16px;
+    background:#f7f8fa;
+  }
 
   /* Category cards */
   .cs-cats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:32px; }
@@ -161,7 +173,8 @@
   /* Reference look: floating pale blue header, rounded image hero, pill buttons */
   .cs-header { background:transparent; padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0; }
   .cs-header-pill { background:#E0EBFF; border:0; box-shadow:none; border-radius:28px; height:64px; padding:0 12px 0 24px; }
-  .cs-logo { color:#111; font-weight:800; letter-spacing:0; }
+  .cs-logo { color:#fff; font-family:'Inter',Helvetica,Arial,sans-serif; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; text-transform:uppercase; white-space:nowrap; }
+  .cs-logo.cs-site-logo-image { display:block; height:15px; width:auto; max-width:200px; object-fit:contain; }
   .cs-btn { border-radius:999px; font-size:14px; font-weight:400; letter-spacing:0; text-transform:none; }
   .cs-header .cs-btn-accent { background:#111; color:#fff; min-height:40px; padding:0 22px; }
 
@@ -182,6 +195,7 @@
     .cs-hero-copy { max-width:380px; }
     .cs-cats { grid-template-columns:repeat(3,minmax(0,1fr)); }
     .disc-grid { grid-template-columns:repeat(3,1fr); }
+    .cs-app-preview-placeholder { aspect-ratio:16 / 5; min-height:220px; }
   }
 
   /* Fixed clear-glass header */
@@ -263,6 +277,7 @@
         <h2 class="cs-title">Look beyond the usual names.</h2>
         <p class="sec-sub">Janedore brings independent South African brands together in one place, so finding them takes less digging.</p>
       </div>
+      <div class="cs-app-preview-placeholder" aria-label="App preview image placeholder"></div>
       <div class="disc-grid">
         <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.8 6.2L19 11l-6.2 1.8L11 19l-1.8-6.2L3 11l6.2-1.8z"/><path d="M19 16v4M17 18h4"/></svg><strong>Find something new.</strong><span>Independent South African brands you may not come across anywhere else.</span></div>
         <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 12H4z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></svg><strong>More than clothes.</strong><span>Clothing, accessories, homeware, beauty, scent, kids’ products and other interesting finds.</span></div>
