@@ -56,7 +56,7 @@ module.exports = function registerBobGo(app, deps) {
     const key = refKey(ref);
     const prev = (order.bobgo || {})[key] || {};
     // Repeats are expected: the same status again changes nothing.
-    if (prev.status === status) return 'repeat';
+    if (prev.status === status && prev.lastCheckpointTime === (t.last_checkpoint_time || null)) return 'repeat';
 
     const pkg = orderShipments(order).find((s) => String(s.tracking.trackingNumber || '').trim().toUpperCase() === ref);
     const label = (pkg ? pkg.brand + (pkg.preorder ? ' pre-order' : '') : 'Package') + ' (' + ref + ')';
@@ -82,7 +82,7 @@ module.exports = function registerBobGo(app, deps) {
       update[path + '.bobgoTrackingUrl'] = trackingUrl;
       update[path + '.bobgoCheckpoints'] = checkpoints;
     }
-    if (MILESTONES.includes(status)) update.timeline = timeline(label + ': ' + friendly + ' (Bob Go).');
+    if (MILESTONES.includes(status) && prev.status !== status) update.timeline = timeline(label + ': ' + friendly + ' (Bob Go).');
 
     // The order's status, from every package's latest Bob Go status.
     const statuses = Object.assign({}, ...Object.entries(order.bobgo || {}).map(([k, v]) => ({ [k]: v.status })), { [key]: status });
