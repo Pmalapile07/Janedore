@@ -826,14 +826,12 @@ async function showReviewButtonIfBought(productId) {
     if (S.currentReviewProductId !== productId) return;
     const writeEl = document.getElementById('product-review-write');
     const editEl = document.getElementById('product-review-edit');
-    const editNote = document.getElementById('product-review-edit-note');
     if (!data.eligible) {
       // No verified purchase means no review actions of either kind.
       S.reviewEmail = '';
       window._jdOwnReviewForEdit = null;
       if (writeEl) writeEl.hidden = true;
       if (editEl) editEl.hidden = true;
-      if (editNote) editNote.hidden = true;
       return;
     }
     S.reviewEmail = data.email || '';
@@ -841,12 +839,6 @@ async function showReviewButtonIfBought(productId) {
     if (data.ownReview) {
       if (writeEl) writeEl.hidden = true;
       if (editEl) editEl.hidden = !(Number(data.ownReview.editCount || 0) < 1 && !data.ownReview.hasPendingEdit);
-      if (editNote) {
-        editNote.textContent = data.ownReview.hasPendingEdit
-          ? 'Your edited review is waiting for approval.'
-          : (Number(data.ownReview.editCount || 0) >= 1 ? 'You have used your one-time review edit.' : '');
-        editNote.hidden = !editNote.textContent;
-      }
     } else {
       if (writeEl) writeEl.hidden = false;
       if (editEl) editEl.hidden = true;
