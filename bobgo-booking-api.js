@@ -7,7 +7,7 @@
 const https = require('https');
 
 module.exports = function registerBobGoBooking(app, deps) {
-  const { adminDb, admin, orderShipments, authorizeShipmentRequest, rateLimited } = deps;
+  const { adminDb, admin, orderShipments, authorizeShipmentRequest, rateLimited, sendResendEmail } = deps;
 
   function bobgoRequest(base, apiKey, path, payload) {
     const body = payload == null ? null : JSON.stringify(payload);
@@ -240,6 +240,15 @@ module.exports = function registerBobGoBooking(app, deps) {
       const patch = { updatedAt: new Date().toISOString(), trackingRefs: admin.firestore.FieldValue.arrayUnion(trackingRef) };
       Object.keys(entry).forEach(k => { patch[entryPath + '.' + k] = entry[k]; });
       await orderRef.update(patch);
+      if (order.customerEmail && typeof sendResendEmail === 'function') {
+        await sendResendEmail({
+          from: 'Janedore <noreply@janedore.co.za>',
+          replyTo: 'support@janedore.co.za',
+          to: order.customerEmail,
+          subject: 'Your JANEDORE parcel has been booked',
+          text: 'Your ' + shipment.brand + (preorder ? ' pre-order parcel' : ' parcel') + ' for order #' + (order.orderNumber || req.params.id) + ' has been booked with the courier.\n\nBob Go tracking reference: ' + trackingRef + '\n\nThe courier is still confirming the booking. We will update your Track Your Order page as soon as the courier accepts and scans the parcel.\n\nJANEDORE'
+        }).catch(e => console.warn('[BOBGO BOOKING] Customer email failed:', e.message));
+      }
       return res.json({
         ok: true, trackingReference: trackingRef,
         submissionStatus: entry.bobgoSubmissionStatus,
