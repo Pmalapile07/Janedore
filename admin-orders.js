@@ -1208,11 +1208,11 @@
                     '</div>'
                   : '<div style="margin-bottom:18px;">' +
                       '<label class="card-title" style="display:block;margin-bottom:6px;">Packed parcel measurements</label>' +
-                      '<div style="font-size:12px;color:var(--muted);margin-bottom:7px;">Enter the final packed box size and total weight before booking the courier.</div>' +
+                      '<div style="font-size:12px;color:var(--muted);margin-bottom:7px;">Enter the final packed box size and total weight. JANEDORE will book the courier and provide the waybill.</div>' +
                       '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:7px;">' +
                         ['Length cm','Width cm','Height cm','Weight kg'].map(function(label,i){return '<label style="font-size:10px;color:var(--muted);">'+label+'<input class="bobgo-parcel-input" data-vendor="'+esc(pkgKey)+'" data-dim="'+['lengthCm','widthCm','heightCm','weightKg'][i]+'" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="'+['30','20','10','1'][i]+'" style="width:100%;margin-top:3px;"></label>';}).join('') +
                       '</div>' +
-                      '<button class="btn btn-sm btn-primary" style="width:100%;" onclick="window._bookBobGoShipment(\'' + esc(orderId) + '\',\'' + esc(group.vendorId) + '\',' + (group.preorder ? 'true' : 'false') + ')">Book with Bob Go</button>' +
+                      '<button class="btn btn-sm btn-primary" style="width:100%;" onclick="window._bookBobGoShipment(\'' + esc(orderId) + '\',\'' + esc(group.vendorId) + '\',' + (group.preorder ? 'true' : 'false') + ')" >Ready for courier collection</button>' +
                     '</div>')
                 : '<div style="margin-bottom:18px;">' +
                     '<label class="card-title" style="display:block;margin-bottom:6px;">' + (shipped ? 'Tracking' : 'Add tracking') + '</label>' +
