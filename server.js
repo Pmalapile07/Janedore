@@ -1166,6 +1166,8 @@ app.post('/api/orders/create', async (req, res) => {
     price: Math.max(0, Number(selection && selection.price) || 0),
     serviceName: String(selection && selection.serviceName || '').slice(0, 160),
     serviceCode: String(selection && selection.serviceCode || '').slice(0, 160) || null,
+    providerSlug: String(selection && selection.providerSlug || '').slice(0, 100) || null,
+    serviceLevelCode: String(selection && selection.serviceLevelCode || '').slice(0, 100) || null,
     bobgoRateId: selection && selection.bobgoRateId != null ? String(selection.bobgoRateId).slice(0, 80) : null,
     pickupPointLocationId: selection && selection.method === 'pickup-point' && selection.pickupPointLocationId != null ? String(selection.pickupPointLocationId).slice(0, 100) : null,
     pickupPointProviderSlug: selection && selection.method === 'pickup-point' ? String(selection.pickupPointProviderSlug || '').slice(0, 80) || null : null,
