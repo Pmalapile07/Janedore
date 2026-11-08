@@ -469,12 +469,12 @@
   // field limits; do not strip ordinary punctuation or HTML-like characters here.
   // Server-side validation and output escaping remain the security boundary.
   function cleanPlainText(value, maxLength) {
-    return String(value || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').slice(0, maxLength).trim();
+    return String(value || '').replace(/[\u0000-\u001F\u007F]/g, '').slice(0, maxLength).trim();
   }
   document.querySelectorAll('.cs-sheet input[type="text"], .cs-sheet input[type="email"], #wl-name, #wl-email').forEach(function (field) {
     field.addEventListener('input', function () {
       var max = Number(field.getAttribute('maxlength')) || 254;
-      var cleaned = String(field.value || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').slice(0, max);
+      var cleaned = String(field.value || '').replace(/[\u0000-\u001F\u007F]/g, '').slice(0, max);
       if (field.value !== cleaned) field.value = cleaned;
     });
   });
@@ -485,8 +485,9 @@
     function go() {
       var v = cleanPlainText(input.value, 254).toLowerCase();
       if (nameInput && !cleanPlainText(nameInput.value, 100)) { msg.textContent = 'Please enter your full name.'; msg.className = 'signup-msg error'; return; }
-      if (nameInput) nameInput.value = cleanPlainText(nameInput.value, 100);\n      input.value = v;\n      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
-      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
+      if (nameInput) nameInput.value = cleanPlainText(nameInput.value, 100);
+      input.value = v;\n      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
       msg.className = 'signup-msg';
       msg.textContent = 'Thank you. You\\u2019re on the list, and we\\u2019ll be in touch before we open.';
       input.value = '';
