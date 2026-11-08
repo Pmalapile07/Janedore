@@ -33,6 +33,14 @@
   .cs-hero h1 { font-size:30px; font-weight:600; line-height:1.1; max-width:420px; margin-bottom:14px; color:#111; }
   .cs-hero-copy { max-width:480px; font-size:13px; font-weight:300; line-height:1.5; color:#555; margin-bottom:24px; }
 
+  /* Image banner above the FAQ — add the image to this frame later */
+  .cs-image-banner { position:relative; margin:8px 8px 0; min-height:320px; padding:48px var(--gutter); display:flex; align-items:center; justify-content:center; background:#eee; text-align:center; }
+  .cs-image-banner h2 { max-width:760px; font-size:30px; font-weight:600; line-height:1.1; letter-spacing:-.025em; color:#111; }
+  @media (min-width:768px) {
+    .cs-image-banner { min-height:460px; }
+    .cs-image-banner h2 { font-size:42px; }
+  }
+
   /* NEW: shared section frame */
   .sec { padding:64px var(--gutter); max-width:1200px; width:100%; margin:0 auto; }
   .sec-head { max-width:560px; }
@@ -356,6 +364,10 @@
         <a class="cs-btn" href="#waitlist">Join the founding community</a>
       </div>
     </div>
+  </section>
+
+  <section class="cs-image-banner" aria-label="Janedore brand image">
+    <h2>The home of independent South African brands.</h2>
   </section>
 
   <section class="cs-faq">
