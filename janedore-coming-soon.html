@@ -299,9 +299,9 @@
       <div class="wl-form">
         <div class="join-form">
           <label for="wl-name" class="sr-only">Full name</label>
-          <input type="text" class="signup-input" id="wl-name" placeholder="Full name" autocomplete="name">
+          <input type="text" class="signup-input" id="wl-name" placeholder="Full name" autocomplete="name" maxlength="100" required>
           <label for="wl-email" class="sr-only">Email address</label>
-          <input type="email" class="signup-input" id="wl-email" placeholder="Email address" autocomplete="email">
+          <input type="email" class="signup-input" id="wl-email" placeholder="Email address" autocomplete="email" maxlength="254" required>
           <button type="button" class="cs-btn" id="wl-btn">Get early access</button>
         </div>
         <div class="signup-msg" id="wl-msg" role="status" aria-live="polite" style="margin-top:12px;"></div>
@@ -406,7 +406,7 @@
     <h2>Get early access</h2>
     <p>Join the list to get early access before Janedore opens to everyone.</p>
     <div class="cs-form">
-      <input type="email" class="signup-input" placeholder="Email address">
+      <input type="email" class="signup-input" placeholder="Email address" autocomplete="email" maxlength="254" required>
       <button type="button" class="cs-btn cs-btn-block" data-fake>Join the list</button>
       <div class="signup-msg"></div>
     </div>
@@ -419,9 +419,9 @@
     <h2>For independent brands</h2>
     <p>Tell us about your brand and we’ll be in touch before launch.</p>
     <div class="cs-form">
-      <input type="text" class="signup-input" placeholder="Brand name">
-      <input type="email" class="signup-input" placeholder="Email address">
-      <input type="text" class="signup-input" placeholder="Instagram or website (optional)">
+      <input type="text" class="signup-input" placeholder="Brand name" autocomplete="organization" maxlength="120" required>
+      <input type="email" class="signup-input" placeholder="Email address" autocomplete="email" maxlength="254" required>
+      <input type="text" class="signup-input" placeholder="Instagram or website (optional)" maxlength="200" autocomplete="url">
       <button type="button" class="cs-btn cs-btn-block" data-fake>Register your interest</button>
       <div class="signup-msg"></div>
     </div>
@@ -434,7 +434,7 @@
     <h2>Preview access</h2>
     <p>Enter the preview password you were given.</p>
     <div class="cs-form">
-      <input type="password" class="signup-input" placeholder="Password">
+      <input type="password" class="signup-input" placeholder="Password" maxlength="128" autocomplete="current-password">
       <button type="button" class="cs-btn cs-btn-block" data-fake>Enter</button>
       <div class="signup-msg"></div>
     </div>
@@ -465,13 +465,27 @@
       }
     }).catch(function () {});
   }
+  // Keep user-entered text as plain text. Remove control characters and enforce
+  // field limits; do not strip ordinary punctuation or HTML-like characters here.
+  // Server-side validation and output escaping remain the security boundary.
+  function cleanPlainText(value, maxLength) {
+    return String(value || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').slice(0, maxLength).trim();
+  }
+  document.querySelectorAll('.cs-sheet input[type="text"], .cs-sheet input[type="email"], #wl-name, #wl-email').forEach(function (field) {
+    field.addEventListener('input', function () {
+      var max = Number(field.getAttribute('maxlength')) || 254;
+      var cleaned = String(field.value || '').replace(/[\\u0000-\\u001F\\u007F]/g, '').slice(0, max);
+      if (field.value !== cleaned) field.value = cleaned;
+    });
+  });
+
   function bindSignup(inputId, btnId, msgId, nameId) {
     var input = document.getElementById(inputId), btn = document.getElementById(btnId), msg = document.getElementById(msgId);
     var nameInput = nameId ? document.getElementById(nameId) : null;
     function go() {
-      var v = input.value.trim().toLowerCase();
-      if (nameInput && !nameInput.value.trim()) { msg.textContent = 'Please enter your full name.'; msg.className = 'signup-msg error'; return; }
-      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
+      var v = cleanPlainText(input.value, 254).toLowerCase();
+      if (nameInput && !cleanPlainText(nameInput.value, 100)) { msg.textContent = 'Please enter your full name.'; msg.className = 'signup-msg error'; return; }
+      if (nameInput) nameInput.value = cleanPlainText(nameInput.value, 100);\n      input.value = v;\n      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
       if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
       msg.className = 'signup-msg';
       msg.textContent = 'Thank you. You\\u2019re on the list, and we\\u2019ll be in touch before we open.';
