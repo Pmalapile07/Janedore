@@ -1196,20 +1196,33 @@
             (collection
               ? collectionPanelHtml(o, orderId, group, collection, canEditGroup)
               : canEditGroup
-              ? '<div style="margin-bottom:18px;">' +
-                  '<label class="card-title" style="display:block;margin-bottom:6px;">' + (shipped ? 'Tracking' : 'Add tracking') + '</label>' +
-                  '<select class="filter-select order-group-courier" data-vendor="' + esc(pkgKey) + '" style="width:100%;margin-bottom:6px;">' +
-                    '<option value="">Select courier...</option>' +
-                    COURIERS.map(function (c) {
-                      return '<option value="' + c + '"' + ((tracking && tracking.courier === c) ? ' selected' : '') + '>' + c + '</option>';
-                    }).join('') +
-                  '</select>' +
-                  '<div style="display:flex;gap:6px;">' +
-                    '<input class="order-tracking-input order-group-tracking" data-vendor="' + esc(pkgKey) + '"' +
-                      ' value="' + esc((tracking && tracking.trackingNumber) || '') + '"' +
-                      ' placeholder="Tracking number" style="flex:1;">' +
-                    '<button class="btn btn-sm" onclick="window._saveVendorTracking(\'' + esc(orderId) + '\',\'' + esc(group.vendorId || '') + '\',' + (group.preorder ? 'true' : 'false') + ')">Save</button>' +
-                  '</div>' +
+              ? (group.vendorId
+                ? (tracking && tracking.bobgoShipmentId
+                  ? '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
+                      '<div style="font-weight:600;">Bob Go · ' + esc(tracking.trackingNumber || 'Booking created') + '</div>' +
+                      '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(tracking.bobgoSubmissionStatus || 'Booking pending') +
+                      (tracking.bobgoProviderTrackingReference ? ' · Courier waybill ' + esc(tracking.bobgoProviderTrackingReference) : '') + '</div>' +
+                    '</div>'
+                  : '<div style="margin-bottom:18px;">' +
+                      '<label class="card-title" style="display:block;margin-bottom:6px;">Packed parcel measurements</label>' +
+                      '<div style="font-size:12px;color:var(--muted);margin-bottom:7px;">Enter the final packed box size and total weight before booking the courier.</div>' +
+                      '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:7px;">' +
+                        ['Length cm','Width cm','Height cm','Weight kg'].map(function(label,i){return '<label style="font-size:10px;color:var(--muted);">'+label+'<input class="bobgo-parcel-input" data-vendor="'+esc(pkgKey)+'" data-dim="'+['lengthCm','widthCm','heightCm','weightKg'][i]+'" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="'+['30','20','10','1'][i]+'" style="width:100%;margin-top:3px;"></label>';}).join('') +
+                      '</div>' +
+                      '<button class="btn btn-sm btn-primary" style="width:100%;" onclick="window._bookBobGoShipment(\'' + esc(orderId) + '\',\'' + esc(group.vendorId) + '\',' + (group.preorder ? 'true' : 'false') + ')">Book with Bob Go</button>' +
+                    '</div>')
+                : '<div style="margin-bottom:18px;">' +
+                    '<label class="card-title" style="display:block;margin-bottom:6px;">' + (shipped ? 'Tracking' : 'Add tracking') + '</label>' +
+                    '<select class="filter-select order-group-courier" data-vendor="' + esc(pkgKey) + '" style="width:100%;margin-bottom:6px;">' +
+                      '<option value="">Select courier...</option>' +
+                      COURIERS.map(function (c) { return '<option value="' + c + '"' + ((tracking && tracking.courier === c) ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
+                    '</select>' +
+                    '<div style="display:flex;gap:6px;">' +
+                      '<input class="order-tracking-input order-group-tracking" data-vendor="' + esc(pkgKey) + '" value="' + esc((tracking && tracking.trackingNumber) || '') + '" placeholder="Tracking number" style="flex:1;">' +
+                      '<button class="btn btn-sm" onclick="window._saveVendorTracking(\'' + esc(orderId) + '\',\'' + esc(group.vendorId || '') + '\',' + (group.preorder ? 'true' : 'false') + ')">Save</button>' +
+                    '</div></div>')
+              : '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
+                  (shipped ? esc(tracking.trackingNumber) + (tracking.courier ? ' via ' + esc(tracking.courier) : '') : 'Not shipped yet') +
                 '</div>'
               : '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
                   (shipped
@@ -1756,6 +1769,40 @@
   // preorder: the brand's pre-order package, saved at
   // vendorTracking[vid].preorder. Both are written as dot paths so saving
   // one package never wipes the other.
+  // Books a packed vendor parcel through the server; no brand-entered tracking number.
+  window._bookBobGoShipment = function (orderId, vendorId, preorder) {
+    if (!vendorId || !window._currentUser || !window._currentUser.getIdToken) {
+      showToast('Please sign in again before booking.', 'error'); return;
+    }
+    var pkgKey = vendorId + (preorder ? '__preorder' : '');
+    var parcel = {};
+    document.querySelectorAll('.bobgo-parcel-input[data-vendor="' + pkgKey + '"]').forEach(function (el) {
+      parcel[el.getAttribute('data-dim')] = Number(el.value);
+    });
+    if (![parcel.lengthCm, parcel.widthCm, parcel.heightCm, parcel.weightKg].every(function (n) { return Number.isFinite(n) && n > 0; })) {
+      showToast('Enter all four packed parcel measurements first.', 'error'); return;
+    }
+    var buttons = document.querySelectorAll('button[onclick*="_bookBobGoShipment"]');
+    buttons.forEach(function (b) { b.disabled = true; });
+    window._currentUser.getIdToken().then(function (token) {
+      return fetch('/api/orders/' + encodeURIComponent(orderId) + '/book-bobgo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ vendorId: vendorId, preorder: !!preorder, parcel: parcel })
+      });
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (!res.ok) throw new Error(data.error || 'Bob Go could not book this parcel.');
+        showToast('Bob Go booking created: ' + (data.trackingReference || 'tracking pending'));
+        notifyShipped(orderId, vendorId, preorder);
+        window._openOrderDetail(orderId);
+      });
+    }).catch(function (e) {
+      showToast(e.message || 'Could not book with Bob Go.', 'error');
+      buttons.forEach(function (b) { b.disabled = false; });
+    });
+  };
+
   window._saveVendorTracking = function (orderId, vendorId, preorder) {
     var pkgKey = vendorId + (preorder ? '__preorder' : '');
     var trackingEl = document.querySelector('.order-group-tracking[data-vendor="' + pkgKey + '"]');
