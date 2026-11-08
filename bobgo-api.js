@@ -414,6 +414,7 @@ module.exports = function registerBobGo(app, deps) {
             maxDeliveryDate: rate.max_delivery_date || rate.maxDeliveryDate || null,
             bobgoRateId: rate.id == null ? null : rate.id,
             serviceCode: rate.service_code || null,
+            providerSlug: provider || null,
             type,
             pickupPointLocationId: rate.pickup_point_location_id == null ? null : String(rate.pickup_point_location_id),
             pickupPointProviderSlug: provider || null,
