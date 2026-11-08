@@ -1566,8 +1566,13 @@ app.post('/api/payfast/notify', async (req, res) => {
     // body before this was changed from the old blanks-stripped
     // version, which failed on every single payment).
     const expectedSignature = generatePayFastSignature(dataForSignature, PAYFAST_PASSPHRASE, true);
+    const expectedSignatureBytes = Buffer.from(String(expectedSignature || ''), 'utf8');
+    const receivedSignatureBytes = Buffer.from(String(receivedSignature || ''), 'utf8');
 
-    if (expectedSignature !== receivedSignature) {
+    // Compare equal-length signature buffers in constant time. This does
+    // not replace PayFast's IP, amount, or server-side VALID checks below.
+    if (expectedSignatureBytes.length !== receivedSignatureBytes.length ||
+        !crypto.timingSafeEqual(expectedSignatureBytes, receivedSignatureBytes)) {
       console.error('[PAYFAST_ITN] Signature mismatch for', pfData.m_payment_id);
       return;
     }

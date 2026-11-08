@@ -55,7 +55,13 @@ module.exports = function registerBobGo(app, deps) {
     const order = snap.docs[0].data();
     const key = refKey(ref);
     const prev = (order.bobgo || {})[key] || {};
-    // Repeats are expected: the same status again changes nothing.
+    // Bob Go may retry deliveries. Ignore an older tracking snapshot so a
+    // delayed/replayed event cannot roll the saved shipment status backwards.
+    const incomingCheckpointTime = Date.parse(t.last_checkpoint_time || '');
+    const previousCheckpointTime = Date.parse(prev.lastCheckpointTime || '');
+    if (Number.isFinite(incomingCheckpointTime) && Number.isFinite(previousCheckpointTime) &&
+        incomingCheckpointTime < previousCheckpointTime) return 'stale tracking event ignored';
+    // Repeats are expected: the same status and checkpoint changes nothing.
     if (prev.status === status && prev.lastCheckpointTime === (t.last_checkpoint_time || null)) return 'repeat';
 
     const pkg = orderShipments(order).find((s) => String(s.tracking.trackingNumber || '').trim().toUpperCase() === ref);
