@@ -89,7 +89,7 @@
     }
     var groups = groupOrderItemsByVendor(o.items || []).filter(function (g) { return g.vendorId && vendorIds.indexOf(g.vendorId) !== -1; });
     if (!groups.length) return 'unfulfilled';
-    var shipped = groups.filter(function (g) { var c = groupCollection(o, g); if (c) return !!c.readyAt; var t = groupTracking(o, g); return t && t.trackingNumber; });
+    var shipped = groups.filter(function (g) { var c = groupCollection(o, g); if (c) return !!c.readyAt; var t = groupTracking(o, g); if (t && t.bobgoShipmentId) return ['collected','in-transit','out-for-delivery','ready-for-pickup','delivered','finalised'].indexOf(String(t.bobgoStatus || '').toLowerCase()) !== -1; return t && t.trackingNumber; });
     if (shipped.length === 0) return 'unfulfilled';
     if (shipped.length === groups.length) return 'fulfilled';
     return 'partial';
@@ -1158,13 +1158,13 @@
       html += groupOrderItemsByVendor(o.items).map(function (group) {
         var tracking = groupTracking(o, group);
         var collection = groupCollection(o, group);
-        var shipped = collection ? !!collection.readyAt : !!(tracking && tracking.trackingNumber);
+        var shipped = collection ? !!collection.readyAt : !!(tracking && (tracking.bobgoShipmentId ? ['collected','in-transit','out-for-delivery','ready-for-pickup','delivered','finalised'].indexOf(String(tracking.bobgoStatus || '').toLowerCase()) !== -1 : tracking.trackingNumber));
         var pkgKey = (group.vendorId || '') + (group.preorder ? '__preorder' : '');
         var canEditGroup = canUpdate ||
           (group.vendorId && window._can('orders', 'update_own_tracking', { vendorId: group.vendorId }));
         var badge = collection
           ? '<span style="text-transform:none;" class="badge badge-' + (collection.collectedAt ? 'delivered' : collection.readyAt ? 'fulfilled' : 'unfulfilled') + '">' + (collection.collectedAt ? 'Collected' : collection.readyAt ? 'Ready for collection' : 'To collect') + '</span>'
-          : statusBadge(shipped ? 'fulfilled' : 'unfulfilled');
+          : (tracking && tracking.bobgoShipmentId && !shipped ? statusBadge('packed') : statusBadge(shipped ? 'fulfilled' : 'unfulfilled'));
 
         return (
           '<div class="order-vendor-group">' +
@@ -1200,7 +1200,7 @@
                 ? (tracking && tracking.bobgoShipmentId
                   ? '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
                       '<div style="font-weight:600;">Bob Go · ' + esc(tracking.trackingNumber || 'Booking created') + '</div>' +
-                      '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(tracking.bobgoSubmissionStatus || 'Booking pending') +
+                      '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(tracking.bobgoStatusFriendly || tracking.bobgoSubmissionStatus || 'Booking pending') +
                       (tracking.bobgoProviderTrackingReference ? ' · Courier waybill ' + esc(tracking.bobgoProviderTrackingReference) : '') + '</div>' +
                     '</div>'
                   : '<div style="margin-bottom:18px;">' +
@@ -1794,7 +1794,6 @@
       return res.json().catch(function () { return {}; }).then(function (data) {
         if (!res.ok) throw new Error(data.error || 'Bob Go could not book this parcel.');
         showToast('Bob Go booking created: ' + (data.trackingReference || 'tracking pending'));
-        notifyShipped(orderId, vendorId, preorder);
         window._openOrderDetail(orderId);
       });
     }).catch(function (e) {
