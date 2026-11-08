@@ -1204,7 +1204,7 @@
                       '<div style="font-weight:600;">Bob Go · ' + esc(tracking.trackingNumber || 'Booking created') + '</div>' +
                       '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(tracking.bobgoStatusFriendly || tracking.bobgoSubmissionStatus || 'Booking pending') +
                       (tracking.bobgoProviderTrackingReference ? ' · Courier waybill ' + esc(tracking.bobgoProviderTrackingReference) : '') + '</div>' +
-                      (tracking.bobgoSubmissionStatus === 'success' ? '<button class="btn btn-sm btn-ghost" style="margin-top:8px;" onclick="window._getBobGoWaybill(\\'' + esc(orderId) + '\\',\\'' + esc(group.vendorId) + '\\',' + (group.preorder ? 'true' : 'false') + ')">Print waybill</button>' : '') +
+                      (tracking.bobgoSubmissionStatus === 'success' ? '<button class="btn btn-sm btn-ghost" style="margin-top:8px;" onclick="window._getBobGoWaybill(\'' + esc(orderId) + '\',\'' + esc(group.vendorId) + '\',' + (group.preorder ? 'true' : 'false') + ')">Print waybill</button>' : '') +
                     '</div>'
                   : '<div style="margin-bottom:18px;">' +
                       '<label class="card-title" style="display:block;margin-bottom:6px;">Packed parcel measurements</label>' +
