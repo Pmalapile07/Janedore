@@ -2312,7 +2312,8 @@ function orderShipments(order) {
           bobgoProviderTrackingReference: t.bobgoProviderTrackingReference || null,
           bobgoTrackingUrl: t.bobgoTrackingUrl || null,
           bobgoCheckpoints: Array.isArray(t.bobgoCheckpoints) ? t.bobgoCheckpoints : [],
-          bobgoBooking: t.bobgoBooking || null
+          bobgoBooking: t.bobgoBooking || null,
+          bobgoFailedReason: t.bobgoFailedReason || null
         },
         collect, collection: collect ? ((order.collection || {})[collectionKey(g)] || {}) : null
       });
