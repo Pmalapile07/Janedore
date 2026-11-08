@@ -2,44 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>JANEDORE · Coming soon</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="JANEDORE brings South African independent brands together in one place. Discover something different.">
-<meta name="keywords" content="fashion, clothing, accessories, curated fashion, coming soon">
-<meta name="author" content="Janedore">
-<meta name="robots" content="noindex, follow">
-<meta property="og:title" content="JANEDORE · Coming soon">
-<meta property="og:description" content="A place for South African independent brands and the people who want to discover them.">
-<meta property="og:image" content="https://janedore.co.za/share-card.png">
-<meta property="og:url" content="https://janedore.co.za">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="JANEDORE · Coming soon">
-<meta name="twitter:description" content="Coming soon.">
-<meta name="twitter:image" content="https://janedore.co.za/share-card.png">
-<link rel="canonical" href="https://janedore.co.za">
-<meta name="theme-color" content="#111111">
-<style>html.cs-checking body { visibility: hidden; }</style>
-<script>
-  document.documentElement.classList.add('cs-checking');
-  setTimeout(function () { document.documentElement.classList.remove('cs-checking'); }, 2500);
-</script>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Janedore · Coming soon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800;900&display=swap" rel="stylesheet">
-<style>
-  @font-face { font-family:'Telegraf'; src:url('https://raw.githubusercontent.com/Pmalapile07/Janedore/main/TelegrafRegular_272984568a25d8528fe2de8b20b29011.otf') format('opentype'); font-weight:400; font-style:normal; font-display:swap; }
-</style>
-<script src="https://unpkg.com/@phosphor-icons/web" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root { --bg:#FFFFFF; --ink:#111111; --text:#111111; --muted:#6B6B6B; --border:#E5E5E5; --accent:#E0EBFF; --head:21px; --gutter:20px; }
@@ -176,7 +143,7 @@
     :root { --head:27px; --gutter:32px; }
     .cs-header-pill { height:64px; }
     .cs-hero { margin:12px 12px 0; min-height:640px; padding:72px 48px; }
-    .cs-hero h1 { font-size:34px; max-width:520px; }
+    .cs-hero h1 { font-size:30px; max-width:520px; }
     .disc, .brandcta { margin:12px 12px 0; }
     .disc-inner, .brandcta-inner { padding:88px 48px; }
     .disc-grid { grid-template-columns:repeat(4,1fr); gap:28px; }
@@ -189,11 +156,11 @@
     .join-form .cs-btn { flex-shrink:0; }
     .cs-sheet-back { align-items:center; }
   }
-
-
+</style>
+<style>
   /* Reference look: floating pale blue header, rounded image hero, pill buttons */
-  .cs-header { background:#fff; padding:calc(12px + env(safe-area-inset-top,0px)) 12px 0; }
-  .cs-header-pill { background:var(--accent); border-radius:20px; height:64px; padding:0 12px 0 24px; }
+  .cs-header { background:transparent; padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0; }
+  .cs-header-pill { background:rgba(224,235,255,.55); -webkit-backdrop-filter:blur(18px) saturate(170%); backdrop-filter:blur(18px) saturate(170%); border:1px solid rgba(255,255,255,.65); box-shadow:0 8px 32px rgba(17,17,17,.08), inset 0 1px 0 rgba(255,255,255,.7); border-radius:20px; height:64px; padding:0 12px 0 24px; }
   .cs-logo { color:#111; font-weight:800; letter-spacing:0; }
   .cs-btn { border-radius:999px; font-size:14px; font-weight:400; letter-spacing:0; text-transform:none; }
   .cs-header .cs-btn-accent { background:#111; color:#fff; min-height:40px; padding:0 22px; }
@@ -201,7 +168,8 @@
   .cs-hero { margin:12px 12px 0; min-height:460px; padding:28px 24px; border-radius:20px; align-items:flex-end; justify-content:flex-end; }
   .hero-fallback { inset:0; animation:none; background:linear-gradient(160deg,#9a8f87 0%,#6b5d54 45%,#2b211c 100%); }
   .hero-shade { background:linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,0) 45%); }
-  .cs-hero-content { max-width:none; display:flex; justify-content:flex-end; }
+  .cs-hero-content { max-width:none; display:flex; flex-direction:column; align-items:flex-end; }
+  .cs-hero-copy { text-align:right; max-width:300px; margin:12px 0 0; }
   .cs-hero h1 { font-size:34px; font-weight:700; line-height:1.1; letter-spacing:-.01em; max-width:300px; margin:0; text-align:right; }
 
   .disc, .brandcta { margin:12px 12px 0; border-radius:20px; overflow:hidden; }
@@ -210,31 +178,38 @@
   .cs-footer { margin:12px; border-radius:20px; }
   @media (min-width:768px) {
     .cs-hero { min-height:640px; padding:40px; }
-    .cs-hero h1 { font-size:56px; max-width:640px; }
+    .cs-hero h1 { font-size:52px; max-width:640px; }
+    .cs-hero-copy { max-width:380px; }
+    .cs-cats { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .disc-grid { grid-template-columns:repeat(3,1fr); }
   }
 
-  .disc-item i { display:block; font-size:26px; margin-bottom:14px; color:#111; }
-  .footer-copy { cursor:default; user-select:none; }
-  .cs-sheet-close { display:flex; align-items:center; justify-content:center; }
-  .cs-sheet .signup-msg.error { color:#ff8a80; }
-  .signup-spinner { width:14px; height:14px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; }
-  .cs-sheet .signup-spinner { border-color:rgba(17,17,17,.25); border-top-color:#111; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .admin-overlay { position:fixed; inset:0; background:rgba(255,255,255,.98); z-index:100; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .25s ease; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
-  .admin-overlay.open { opacity:1; pointer-events:all; }
-  .admin-box { width:100%; max-width:340px; padding:0 32px; position:relative; }
-  .admin-logo { display:block; margin:0 auto 48px; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:#111; white-space:nowrap; opacity:.4; text-align:center; }
-  .admin-label { display:block; font-size:10px; font-weight:500; letter-spacing:.3em; text-transform:uppercase; color:var(--text); text-align:center; margin-bottom:40px; }
-  .admin-field { width:100%; background:transparent; border:none; border-bottom:1px solid var(--border); padding:14px 0; margin-bottom:24px; font-family:'Inter',sans-serif; font-size:15px; font-weight:300; color:var(--text); outline:none; -webkit-appearance:none; transition:border-color .3s; }
-  .admin-field:focus { border-color:var(--text); }
-  .admin-field::placeholder { color:var(--text); opacity:.5; }
-  .admin-field:-webkit-autofill, .admin-field:-webkit-autofill:focus { -webkit-box-shadow:0 0 0 30px rgba(255,255,255,.98) inset !important; -webkit-text-fill-color:var(--text) !important; }
-  .admin-submit { width:100%; background:var(--text); border:none; padding:16px; margin-top:16px; font-family:'Inter',sans-serif; font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase; color:#fff; cursor:pointer; transition:opacity .2s; -webkit-appearance:none; }
-  .admin-submit:hover { opacity:.8; }
-  .admin-submit:disabled { opacity:.3; cursor:not-allowed; }
-  .admin-error { font-size:11px; font-weight:300; color:#c0392b; margin-top:16px; min-height:18px; text-align:center; display:none; }
-  .admin-error.show { display:block; }
-  .admin-close { position:absolute; top:-40px; right:-8px; background:transparent; border:none; color:var(--text); cursor:pointer; font-size:20px; padding:8px; line-height:1; }
+  /* Fixed clear-glass header */
+  body { padding-top:calc(76px + env(safe-area-inset-top,0px)); }
+  .cs-header { position:fixed; top:0; left:0; right:0; z-index:30; }
+  .cs-header-pill { background:rgba(224,235,255,.35); -webkit-backdrop-filter:blur(28px) saturate(200%); backdrop-filter:blur(28px) saturate(200%); border:1px solid rgba(255,255,255,.6); box-shadow:0 8px 32px rgba(17,17,17,.10), inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px rgba(224,235,255,.4); }
+
+  /* Waitlist card */
+  .waitlist { scroll-margin-top:90px; }
+  .waitlist .brandcta-inner { gap:24px; }
+  .wl-form { width:100%; max-width:520px; }
+  .waitlist .join-form { margin-top:0; max-width:none; }
+  .waitlist .signup-input { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:0 22px; }
+  .waitlist .signup-input::placeholder { color:rgba(255,255,255,.6); }
+  .waitlist .signup-input:focus { border-color:#fff; }
+  .waitlist .cs-btn { background:#fff; color:#111; }
+  .waitlist .signup-msg, .wl-count { color:rgba(255,255,255,.75); font-size:13px; font-weight:300; line-height:1.5; }
+  .waitlist .signup-msg.error { color:#ff8a80; }
+  .wl-count { margin-top:12px; }
+
+  /* Footer in the same blue */
+  .cs-footer { background:var(--accent); color:#111; }
+  .cs-footer-logo { color:#111; }
+  .cs-footer-tag, .cs-footer-meta { color:#555; }
+
+  /* FAQ chevrons in a blue circle */
+  .cs-faq summary::after { width:28px; height:28px; border:0; border-radius:50%; margin:0; transform:none; background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' fill='none' stroke='%23111' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
+  .cs-faq details[open] summary::after { transform:rotate(180deg); }
 </style>
 </head>
 <body>
@@ -253,21 +228,38 @@
       <div class="hero-shade"></div>
     </div>
     <div class="cs-hero-content">
-      <h1>The home of independent brands</h1>
+      <h1>Not everything worth discovering is mainstream.</h1>
+    </div>
+  </section>
+
+  <section class="brandcta waitlist" id="waitlist">
+    <div class="brandcta-inner">
+      <div>
+        <h2 class="cs-title">Join the waitlist</h2>
+        <p>Get early access before Janedore opens to everyone.</p>
+        <p class="wl-count" id="wl-count" hidden></p>
+      </div>
+      <div class="wl-form">
+        <div class="join-form">
+          <label for="wl-email" class="sr-only">Email address</label>
+          <input type="email" class="signup-input" id="wl-email" placeholder="Email address" autocomplete="email">
+          <button type="button" class="cs-btn" id="wl-btn">Get early access</button>
+        </div>
+        <div class="signup-msg" id="wl-msg" role="status" aria-live="polite" style="margin-top:12px;"></div>
+      </div>
     </div>
   </section>
 
   <section class="disc">
     <div class="disc-inner">
       <div class="sec-head">
-        <h2 class="cs-title">Discover something different.</h2>
-        <p class="sec-sub">Explore South African independent labels across clothing, accessories, homeware and more, all in one place.</p>
+        <h2 class="cs-title">Look beyond the usual names.</h2>
+        <p class="sec-sub">Janedore brings independent South African brands together in one place, so finding them takes less digging.</p>
       </div>
       <div class="disc-grid">
-        <div class="disc-item"><i class="ph ph-sparkle"></i><strong>Discover new brands.</strong><span>Independent labels and fresh perspectives you won’t find everywhere else.</span></div>
-        <div class="disc-item"><i class="ph ph-seal-check"></i><strong>Every brand, chosen.</strong><span>Each label is selected for how it’s made and the point of view behind it.</span></div>
-        <div class="disc-item"><i class="ph ph-tote-simple"></i><strong>One bag, many brands.</strong><span>Shop clothing, accessories, homeware, and kids together, with one checkout.</span></div>
-        <div class="disc-item"><i class="ph ph-handshake"></i><strong>Built with independents.</strong><span>A home for emerging brands, and a fairer way to reach the people who value them.</span></div>
+        <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.8 6.2L19 11l-6.2 1.8L11 19l-1.8-6.2L3 11l6.2-1.8z"/><path d="M19 16v4M17 18h4"/></svg><strong>Find something new.</strong><span>Independent South African brands you may not come across anywhere else.</span></div>
+        <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 12H4z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></svg><strong>More than clothes.</strong><span>Clothing, accessories, homeware, beauty, scent, kids’ products and other interesting finds.</span></div>
+        <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9h3v7H2zM19 9h3v7h-3z"/><path d="M5 10l4-2 4 1.5 3-1.5 3 2"/><path d="M5 15l5 4 2-1.5M16 14l-3 3"/></svg><strong>Each brand has its own story.</strong><span>Every brand on Janedore keeps its own identity and products.</span></div>
       </div>
     </div>
   </section>
@@ -275,18 +267,15 @@
   <section class="sec">
     <div class="sec-head">
       <h2 class="cs-title">What you’ll find here.</h2>
-      <p class="sec-sub">A growing mix of independent labels and categories.</p>
+      <p class="sec-sub">For now, it’s South African brands only.</p>
     </div>
     <div class="cs-cats">
       <span class="cs-cat">Clothing</span>
       <span class="cs-cat">Accessories</span>
       <span class="cs-cat">Homeware</span>
-      <span class="cs-cat">Beauty kits</span>
-    </div>
-    <div class="trio">
-      <div><h3>Find something new</h3><p>Discover pieces from independent labels you may not come across in the usual places.</p></div>
-      <div><h3>Support independent</h3><p>Shop from businesses building their own ideas, collections and points of view.</p></div>
-      <div><h3>Different categories, one place</h3><p>Explore clothing, accessories, homeware, beauty and kids’ products as JANEDORE grows.</p></div>
+      <span class="cs-cat">Beauty</span>
+      <span class="cs-cat">Scent</span>
+      <span class="cs-cat">Kids’ products</span>
     </div>
   </section>
 
@@ -303,16 +292,16 @@
   <section class="cs-faq">
     <h2 class="cs-title">Good questions</h2>
     <p>A few things you might be wondering.</p>
-    <details><summary>What is JANEDORE?</summary><p>JANEDORE is a platform bringing independent South African brands together across clothing, accessories, homeware and more. It gives customers one place to discover and shop from different labels.</p></details>
-    <details><summary>When does JANEDORE open?</summary><p>We are preparing for launch. Members of our list will be the first to hear when JANEDORE is ready to open.</p></details>
-    <details><summary>What does early access include?</summary><p>Early access before the platform opens to everyone, plus updates on the brands and products joining JANEDORE.</p></details>
-    <details><summary>Which brands will be available?</summary><p>A considered edit of independent labels, from emerging designers to established names. Each brand will be introduced as we approach launch.</p></details>
-    <details><summary>How can my brand be considered?</summary><p>We welcome enquiries from independent South African brands. Register your interest and tell us a little about your brand.</p></details>
+    <details><summary>What is Janedore?</summary><p>A South African marketplace where independent brands sit side by side. You can browse clothing, accessories, homeware, beauty, scent, kids’ products and more, from businesses you may not have heard of yet.</p></details>
+    <details><summary>Is Janedore open yet?</summary><p>Not yet. We’re still getting the marketplace ready. Members of our list will be the first to hear when it opens.</p></details>
+    <details><summary>What does early access mean?</summary><p>Early access before the marketplace opens to everyone, plus updates on the brands and products joining Janedore.</p></details>
+    <details><summary>How will ordering and delivery work?</summary><p>We’ll share the details closer to launch.</p></details>
+    <details><summary>How can my brand join?</summary><p>We welcome enquiries from independent South African brands. Register your interest and tell us a little about your brand.</p></details>
   </section>
 
   <section class="join" id="join">
     <h2 class="cs-title">Join the list for early access</h2>
-    <p class="sec-sub">Shop before we open to everyone, with early access to our discounts.</p>
+    <p class="sec-sub">Get early access before Janedore opens to everyone.</p>
     <div class="join-form">
       <label for="inline-email" class="sr-only">Email address</label>
       <input type="email" class="signup-input" id="inline-email" placeholder="Email address" autocomplete="email">
@@ -324,299 +313,93 @@
 
 <footer class="cs-footer">
   <span class="cs-footer-logo">JANEDORE</span>
-  <p class="cs-footer-tag">Independent brands. Distinctive finds. One destination.</p>
+  <p class="cs-footer-tag">A South African marketplace for independent brands.</p>
   <div class="cs-footer-meta">
-    <span class="footer-copy" id="copyright"></span>
-    <button type="button" class="cs-link" id="visitor-access-link" data-open="visitor-access-row">Preview access</button>
+    <span id="copyright"></span>
+    <button type="button" class="cs-link" data-open="preview-sheet">Preview access</button>
   </div>
 </footer>
 
-
 <div class="cs-sheet-back" id="join-sheet" hidden>
-  <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="join-title">
-    <button type="button" class="cs-sheet-close" data-close aria-label="Close"><i class="ph ph-x"></i></button>
-    <h2 id="join-title">Get early access</h2>
-    <p>Join the list to shop before we open to everyone, with early access to our discounts.</p>
+  <div class="cs-sheet" role="dialog" aria-modal="true">
+    <button type="button" class="cs-sheet-close" data-close aria-label="Close">&times;</button>
+    <h2>Get early access</h2>
+    <p>Join the list to get early access before Janedore opens to everyone.</p>
     <div class="cs-form">
-      <label for="email-input" class="sr-only">Email address</label>
-      <input type="email" class="signup-input" id="email-input" placeholder="Email address" autocomplete="email" required>
-      <button type="button" class="cs-btn cs-btn-block" id="signup-btn" aria-label="Join the list">
-        <span class="btn-text">Join the list</span>
-        <span class="signup-spinner" style="display:none;" aria-hidden="true"></span>
-      </button>
-      <div class="signup-msg" id="signup-msg" role="status" aria-live="polite"></div>
-    </div>
-  </div>
-</div>
-
-<div class="cs-sheet-back" id="visitor-access-row" hidden>
-  <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="preview-title">
-    <button type="button" class="cs-sheet-close" data-close aria-label="Close"><i class="ph ph-x"></i></button>
-    <h2 id="preview-title">Preview access</h2>
-    <p>Enter the preview password you were given.</p>
-    <div class="cs-form">
-      <label for="visitor-password-input" class="sr-only">Preview password</label>
-      <input type="password" class="signup-input" id="visitor-password-input" placeholder="Password" autocomplete="off">
-      <button type="button" class="cs-btn cs-btn-block" id="visitor-submit-btn" aria-label="Enter">
-        <span id="visitor-btn-text">Enter</span>
-        <span id="visitor-btn-spinner" class="signup-spinner" style="display:none;" aria-hidden="true"></span>
-      </button>
-      <div class="signup-msg" id="visitor-msg" role="status" aria-live="polite"></div>
+      <input type="email" class="signup-input" placeholder="Email address">
+      <button type="button" class="cs-btn cs-btn-block" data-fake>Join the list</button>
+      <div class="signup-msg"></div>
     </div>
   </div>
 </div>
 
 <div class="cs-sheet-back" id="brand-sheet" hidden>
-  <div class="cs-sheet" role="dialog" aria-modal="true" aria-labelledby="brand-sheet-title">
-    <button type="button" class="cs-sheet-close" data-close aria-label="Close"><i class="ph ph-x"></i></button>
-    <h2 id="brand-sheet-title">For independent brands</h2>
-    <p>Tell us about your brand, and our partnerships team will be in touch before launch.</p>
-    <div class="cs-form" id="brand-form">
-      <label for="brand-name" class="sr-only">Brand name</label>
-      <input type="text" class="signup-input" id="brand-name" placeholder="Brand name" autocomplete="organization" maxlength="120">
-      <label for="brand-email" class="sr-only">Email address</label>
-      <input type="email" class="signup-input" id="brand-email" placeholder="Email address" autocomplete="email" maxlength="200">
-      <label for="brand-social" class="sr-only">Instagram or website (optional)</label>
-      <input type="text" class="signup-input" id="brand-social" placeholder="Instagram or website (optional)" maxlength="200">
-      <button type="button" class="cs-btn cs-btn-block" id="brand-submit-btn">Register your interest</button>
-      <div class="signup-msg" id="brand-msg" role="status" aria-live="polite"></div>
+  <div class="cs-sheet" role="dialog" aria-modal="true">
+    <button type="button" class="cs-sheet-close" data-close aria-label="Close">&times;</button>
+    <h2>For independent brands</h2>
+    <p>Tell us about your brand and we’ll be in touch before launch.</p>
+    <div class="cs-form">
+      <input type="text" class="signup-input" placeholder="Brand name">
+      <input type="email" class="signup-input" placeholder="Email address">
+      <input type="text" class="signup-input" placeholder="Instagram or website (optional)">
+      <button type="button" class="cs-btn cs-btn-block" data-fake>Register your interest</button>
+      <div class="signup-msg"></div>
     </div>
   </div>
 </div>
 
-<div class="admin-overlay" id="admin-overlay" role="dialog" aria-modal="true" aria-label="Admin login">
-  <div class="admin-box">
-    <button class="admin-close" id="admin-close-btn" aria-label="Close"><i class="ph ph-x"></i></button>
-    <span class="admin-logo">JANEDORE</span>
-    <span class="admin-label">Admin Access</span>
-    <input type="email" class="admin-field" id="admin-email" placeholder="Email" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <input type="text" class="admin-field" id="admin-password" placeholder="Password" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly');this.type='password';" style="-webkit-text-security:disc;">
-    <button class="admin-submit" id="admin-login-btn">Sign In</button>
-    <div class="admin-error" id="admin-error"></div>
+<div class="cs-sheet-back" id="preview-sheet" hidden>
+  <div class="cs-sheet" role="dialog" aria-modal="true">
+    <button type="button" class="cs-sheet-close" data-close aria-label="Close">&times;</button>
+    <h2>Preview access</h2>
+    <p>Enter the preview password you were given.</p>
+    <div class="cs-form">
+      <input type="password" class="signup-input" placeholder="Password">
+      <button type="button" class="cs-btn cs-btn-block" data-fake>Enter</button>
+      <div class="signup-msg"></div>
+    </div>
   </div>
 </div>
 
 <script>
-  // Early exit: already unlocked, or the gate is off entirely.
-  (function() {
-    fetch('/api/online-store-status', { cache: 'no-store' }).then(function(r) { return r.json(); }).then(function(data) {
-      if (data && (data.comingSoonEnabled === false || data.unlocked)) { window.location.replace('index.html'); return; }
-      document.documentElement.classList.remove('cs-checking');
-    }).catch(function() { document.documentElement.classList.remove('cs-checking'); });
-  })();
-
-  var RateLimiter = {
-    attempts: {},
-    check: function(key, limit, windowMs) {
-      limit = limit || 5; windowMs = windowMs || 300000;
-      var now = Date.now();
-      this.attempts[key] = (this.attempts[key] || []).filter(function(t) { return now - t < windowMs; });
-      if (this.attempts[key].length >= limit) return false;
-      this.attempts[key].push(now);
-      return true;
-    }
-  };
-
-  // Visitor password access (independent of Firebase).
-  (function() {
-    var visitorInput = document.getElementById('visitor-password-input');
-    var visitorBtn = document.getElementById('visitor-submit-btn');
-    var visitorBtnText = document.getElementById('visitor-btn-text');
-    var visitorSpinner = document.getElementById('visitor-btn-spinner');
-    var visitorMsg = document.getElementById('visitor-msg');
-    function setVisitorLoading(v) {
-      visitorBtn.disabled = v;
-      visitorBtnText.style.display = v ? 'none' : 'inline';
-      visitorSpinner.style.display = v ? 'inline-block' : 'none';
-    }
-    function showVisitorMsg(text, type) { visitorMsg.textContent = text; visitorMsg.className = 'signup-msg ' + type; }
-    function doVisitorLogin() {
-      var password = visitorInput.value;
-      if (!password) { showVisitorMsg('Please enter a password.', 'error'); return; }
-      var cid = localStorage.getItem('jd_cid') || ('c_' + Math.random().toString(36).substr(2, 9));
-      localStorage.setItem('jd_cid', cid);
-      if (!RateLimiter.check(cid + '_v')) { showVisitorMsg('Too many attempts. Please wait a few minutes.', 'error'); return; }
-      showVisitorMsg('', ''); setVisitorLoading(true);
-      fetch('/api/verify-visitor-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: password }) })
-      .then(function(r) { return r.json(); }).then(function(data) {
-        if (data && data.ok) { window.location.href = 'index.html'; }
-        else { showVisitorMsg('Incorrect password.', 'error'); setVisitorLoading(false); }
-      }).catch(function() { showVisitorMsg('We couldn\u2019t complete your request. Please try again.', 'error'); setVisitorLoading(false); });
-    }
-    visitorBtn.addEventListener('click', doVisitorLogin);
-    visitorInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doVisitorLogin(); });
-  })();
-</script>
-
-<script>
-  var firebaseConfig = {
-    apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
-    authDomain: "janedore-9f035.firebaseapp.com",
-    projectId: "janedore-9f035",
-    storageBucket: "janedore-9f035.firebasestorage.app",
-    messagingSenderId: "571299748651",
-    appId: "1:571299748651:web:01463a772d47b39cc4036e",
-    measurementId: "G-Y9NMT0ZGKZ",
-    databaseURL: "https://janedore-9f035-default-rtdb.firebaseio.com"
-  };
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  var auth = firebase.auth();
-  var db = firebase.firestore();
-
-  function requestAdminPass(user) {
-    return user.getIdToken().then(function(token) {
-      return fetch('/api/admin-gate-pass', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
-    }).then(function(r) { if (!r.ok) throw { friendly: 'Access denied.' }; });
-  }
-
   document.getElementById('copyright').textContent = '\u00a9 ' + new Date().getFullYear() + ' Janedore';
-
-  // Secret admin trigger: 5 rapid clicks on the copyright text
-  var clickCount = 0, clickTimer = null;
-  document.getElementById('copyright').addEventListener('click', function() {
-    clickCount++;
-    clearTimeout(clickTimer);
-    if (clickCount >= 5) { clickCount = 0; openAdminPanel(); }
-    else { clickTimer = setTimeout(function() { clickCount = 0; }, 2000); }
+  document.querySelectorAll('[data-open]').forEach(function (b) {
+    b.addEventListener('click', function () { document.getElementById(b.dataset.open).hidden = false; });
+  });
+  document.querySelectorAll('.cs-sheet-back').forEach(function (s) {
+    s.addEventListener('click', function (e) { if (e.target === s || e.target.hasAttribute('data-close')) s.hidden = true; });
+  });
+  document.querySelectorAll('[data-fake]').forEach(function (b) {
+    b.addEventListener('click', function () { b.parentNode.querySelector('.signup-msg').textContent = 'Preview only. Wire this to your real handler.'; });
   });
 
-  function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-
-  // One signup handler for the hero form, the pop-up and the bottom form.
-  function makeSignup(emailEl, btn, msgEl) {
-    var btnText = btn.querySelector('.btn-text');
-    var spinner = btn.querySelector('.signup-spinner');
-    function say(text, type) { msgEl.textContent = text; msgEl.className = 'signup-msg ' + type; }
-    function loading(v) {
-      btn.disabled = v;
-      if (btnText) btnText.style.display = v ? 'none' : 'inline';
-      if (spinner) spinner.style.display = v ? 'inline-block' : 'none';
-    }
+  // Waitlist number: only shown when the server returns a real count (/api/waitlist-count).
+  function loadWaitlistCount() {
+    var el = document.getElementById('wl-count');
+    if (!el) return;
+    fetch('/api/waitlist-count', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (d && typeof d.count === 'number' && d.count > 0) {
+        el.textContent = d.count.toLocaleString('en-ZA') + (d.count === 1 ? ' person is on the waitlist' : ' people are on the waitlist');
+        el.hidden = false;
+      }
+    }).catch(function () {});
+  }
+  function bindSignup(inputId, btnId, msgId) {
+    var input = document.getElementById(inputId), btn = document.getElementById(btnId), msg = document.getElementById(msgId);
     function go() {
-      var email = emailEl.value.trim().toLowerCase();
-      if (!email) { say('Please enter your email address.', 'error'); return; }
-      if (!isValidEmail(email)) { say('Please enter a valid email address.', 'error'); return; }
-      var cid = localStorage.getItem('jd_cid') || ('c_' + Math.random().toString(36).substr(2, 9));
-      localStorage.setItem('jd_cid', cid);
-      if (!RateLimiter.check(cid + '_s')) { say('Too many attempts. Please wait a few minutes.', 'error'); return; }
-      say('', ''); loading(true);
-      var docRef = db.collection('newsletter').doc(email.replace(/[@.]/g, '_'));
-      docRef.get().then(function(snap) {
-        if (snap.exists) { say("You've already subscribed.", 'success'); loading(false); return; }
-        return docRef.set({
-          email: email,
-          source: 'coming_soon_page',
-          subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          userAgent: navigator.userAgent,
-          referrer: document.referrer || 'direct'
-        }).then(function() {
-          say("Thank you. You're on the list, and we'll be in touch before we open.", 'success');
-          emailEl.value = '';
-          loading(false);
-          fetch('/api/send-welcome-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) })
-          .catch(function(e) { console.warn('[EMAIL] Welcome email failed:', e.message); });
-        });
-      }).catch(function(err) {
-        console.error('Newsletter error:', err.code, err.message);
-        say(err.code === 'unavailable' ? 'Unable to connect. Please check your internet connection and try again.' : 'We couldn\u2019t complete your request. Please try again.', 'error');
-        loading(false);
-      });
+      var v = input.value.trim().toLowerCase();
+      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
+      msg.className = 'signup-msg';
+      msg.textContent = 'Thank you. You\u2019re on the list, and we\u2019ll be in touch before we open.';
+      input.value = '';
     }
     btn.addEventListener('click', go);
-    emailEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') go(); });
-    emailEl.addEventListener('input', function() { if (msgEl.classList.contains('error')) { msgEl.className = 'signup-msg'; msgEl.textContent = ''; } });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
   }
-  makeSignup(document.getElementById('email-input'), document.getElementById('signup-btn'), document.getElementById('signup-msg'));
-  makeSignup(document.getElementById('inline-email'), document.getElementById('inline-btn'), document.getElementById('inline-msg'));
-
-  // Pop-ups: open, close, backdrop, Escape
-  document.querySelectorAll('[data-open]').forEach(function(b) {
-    b.addEventListener('click', function() {
-      var s = document.getElementById(b.getAttribute('data-open'));
-      s.hidden = false;
-      var f = s.querySelector('input');
-      if (f) setTimeout(function() { f.focus(); }, 50);
-    });
-  });
-  document.querySelectorAll('.cs-sheet-back').forEach(function(s) {
-    s.addEventListener('click', function(e) { if (e.target === s || e.target.closest('[data-close]')) s.hidden = true; });
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') document.querySelectorAll('.cs-sheet-back').forEach(function(s) { s.hidden = true; });
-  });
-
-  // Brands: register interest (saved by /api/brand-interest)
-  (function() {
-    var form = document.getElementById('brand-form');
-    var submit = document.getElementById('brand-submit-btn');
-    var msg = document.getElementById('brand-msg');
-    var nameEl = document.getElementById('brand-name');
-    var mailEl = document.getElementById('brand-email');
-    var socEl = document.getElementById('brand-social');
-    function say(text, type) { msg.textContent = text; msg.className = 'signup-msg ' + type; }
-    submit.addEventListener('click', function() {
-      var brandName = nameEl.value.trim();
-      var email = mailEl.value.trim().toLowerCase();
-      if (!brandName) { say('Please enter your brand name.', 'error'); return; }
-      if (!isValidEmail(email)) { say('Please enter a valid email address.', 'error'); return; }
-      submit.disabled = true; say('', '');
-      fetch('/api/brand-interest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandName: brandName, email: email, social: socEl.value.trim() }) })
-      .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); }).then(function(res) {
-        if (!res.ok) throw new Error(res.d.error || '');
-        form.innerHTML = '<div class="signup-msg success">Thank you. Your interest in partnering with JANEDORE has been registered, and our partnerships team will be in touch.</div>';
-      }).catch(function(e) { say(e.message || 'We couldn\u2019t complete your request. Please try again.', 'error'); submit.disabled = false; });
-    });
-  })();
-
-  // Admin login
-  var overlay = document.getElementById('admin-overlay');
-  var loginBtn = document.getElementById('admin-login-btn');
-  var adminEmail = document.getElementById('admin-email');
-  var adminPw = document.getElementById('admin-password');
-  var adminErr = document.getElementById('admin-error');
-  adminEmail.setAttribute('disabled', 'true');
-  adminPw.setAttribute('disabled', 'true');
-  function openAdminPanel() {
-    adminEmail.removeAttribute('disabled'); adminPw.removeAttribute('disabled');
-    overlay.classList.add('open');
-    setTimeout(function() { adminEmail.focus(); }, 300);
-  }
-  function closeAdminPanel() {
-    overlay.classList.remove('open');
-    adminEmail.value = ''; adminPw.value = '';
-    adminErr.className = 'admin-error'; adminErr.textContent = '';
-    loginBtn.disabled = false; loginBtn.textContent = 'Sign In';
-  }
-  document.getElementById('admin-close-btn').addEventListener('click', closeAdminPanel);
-  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeAdminPanel(); });
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && overlay.classList.contains('open')) closeAdminPanel(); });
-  adminEmail.addEventListener('keydown', function(e) { if (e.key === 'Enter') adminPw.focus(); });
-  adminPw.addEventListener('keydown', function(e) { if (e.key === 'Enter') doAdminLogin(); });
-  loginBtn.addEventListener('click', doAdminLogin);
-
-  function doAdminLogin() {
-    var email = adminEmail.value.trim();
-    var password = adminPw.value;
-    adminErr.className = 'admin-error'; adminErr.textContent = '';
-    if (!email || !password) { adminErr.textContent = 'Please enter your email and password.'; adminErr.className = 'admin-error show'; return; }
-    loginBtn.disabled = true; loginBtn.textContent = 'Signing in...';
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function() {
-      return auth.signInWithEmailAndPassword(email, password);
-    }).then(function(cred) {
-      return db.collection('admins').doc(cred.user.uid).get().then(function(doc) {
-        if (!doc.exists) { return auth.signOut().then(function() { throw { friendly: 'Access denied.' }; }); }
-        var role = (doc.data().role || '').toUpperCase();
-        if (role !== 'SUPER_ADMIN') { return auth.signOut().then(function() { throw { friendly: 'Access denied.' }; }); }
-        return requestAdminPass(cred.user).then(function() { window.location.href = 'index.html'; });
-      });
-    }).catch(function(err) {
-      var msg = err.friendly || 'Invalid credentials.';
-      if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Wait and try again.';
-      if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
-      adminErr.textContent = msg; adminErr.className = 'admin-error show';
-      loginBtn.disabled = false; loginBtn.textContent = 'Sign In';
-    });
-  }
+  bindSignup('inline-email', 'inline-btn', 'inline-msg');
+  bindSignup('wl-email', 'wl-btn', 'wl-msg');
+  loadWaitlistCount();
 
   // Hero video: paste your hosted .mp4 URL here (H.264, 720p, under ~8MB, 10 to 20 second loop).
   // Leave empty to keep the animated background.
@@ -645,6 +428,5 @@
     targets.forEach(function (t) { t.classList.add('rv'); io.observe(t); });
   }
 </script>
-
 </body>
 </html>
