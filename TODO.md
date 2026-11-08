@@ -1,6 +1,6 @@
 # Janedore — to do next
 
-## CURRENT PRIORITY — remaining address map-pin support
+## CURRENT PRIORITY — address data consistency and diagnostics
 
 The previous Bob Go checkout investigation is complete. The customer confirmed the suburb/address capture issue was fixed, the THATO sender-address issue was corrected, and the raw-rate investigation and per-shipment checkout handling were resolved. The current checkout code also shows a clear no-service message per brand and refuses to calculate a complete shipping total when any required shipment has no selected rate.
 
@@ -8,8 +8,8 @@ The previous Bob Go checkout investigation is complete. The customer confirmed t
 - [x] Correct THATO's saved pickup/warehouse address and confirm the intended sender address/grouping.
 - [x] Investigate the Bob Go rate response and resolve the address-related cause of the zero-rate result.
 - [x] Complete per-brand no-rate presentation and checkout safeguards so a missing shipment rate cannot be silently charged as zero.
-- [ ] **Remaining map-pin work:** the first pass has an optional device-location button and a rate-limited, attributed OpenStreetMap reverse-geocoding endpoint that suggests address fields. Add a draggable/exact map pin and persist confirmed coordinates if needed for hard-to-find addresses and sender-side Bob Go location search. Do not treat the reverse-geocoded street as guaranteed; the customer must confirm it. Review provider terms, caching and production suitability before launch.
-- [ ] Ensure suburb and coordinates are consistently saved/loaded for customer profile, checkout order, order details, admin views and email address formatting. Keep backwards compatibility for older records that have no suburb/coordinates.
+- [x] **Map pin — not required for V1:** keep the existing optional device-location address suggestion; do not add a draggable map or coordinate storage. Customers can review/correct the suggested address and use delivery instructions when needed.
+- [ ] Ensure suburb and address fields are consistently saved/loaded for customer profile, checkout order, order details, admin views and email address formatting. Keep backwards compatibility for older records that have incomplete address fields.
 - [ ] Add privacy-safe, useful diagnostics: per shipment key/brand, HTTP status, raw rate count/types and eligible door-option count. Do not log full customer addresses, names, phone numbers, email addresses, auth tokens or API keys.
 - [ ] Test with at least two brands and different sender addresses, including THATO/Naboomspruit and JANEDORE; test an address that text search cannot find but can be pinned manually; test a missing suburb; test iOS autofill; test zero raw rates, non-door-only rates, one brand with no rates and all brands with rates. Verify that checkout cannot proceed unless every shipment has a valid selected service and the combined amount is correct.
 - [ ] Report the root cause, exact files changed, tests actually run and anything still blocked by Bob Go account configuration or deployment. Do not claim a live fix or successful production quote until verified against the production API.
@@ -94,7 +94,7 @@ The previous Bob Go checkout investigation is complete. The customer confirmed t
 - [x] **Frontend and backend checks:** checkout validates before continuing; account profile saves use a server endpoint with validation; Bob Go rate requests and the order-creation code validate destination details too. The order endpoint remains deliberately blocked while Bob Go is in Sandbox, so its live order path has not yet been exercised.
 - [x] **Current-location suggestion:** checkout and account profile can request device location and reverse-geocode it into street/suburb/city/province/postal-code suggestions. Location is optional, permission-based, and the customer must review the result. Address lookup uses OpenStreetMap data with attribution and request throttling.
 - [ ] **Email ownership verification:** syntax validation does not prove that the mailbox exists or belongs to the customer; add a verification email/code if we decide it is required at checkout.
-- [ ] **Exact property pin and coordinate storage:** current location lookup suggests an address but does not let customers move a map pin or store confirmed latitude/longitude with the address.
+- [x] **Draggable map pin and coordinate storage — not required for V1:** the optional current-location suggestion is sufficient; customers can correct the address fields manually.
 - [ ] **Authoritative address/postcode matching:** manual suburb, city and postal-code entries are format-checked, not independently confirmed against an official South African address/postcode register.
 - [ ] **Runtime regression test:** test the account profile and checkout on the deployed site, especially iPhone Safari, with valid/invalid phone formats, `.co.za` email, leading-zero postal codes, all nine provinces, location permission granted/denied and an incomplete reverse-geocoded address. Record actual results before marking the validation work fully verified.
 
