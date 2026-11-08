@@ -486,7 +486,8 @@
       var v = cleanPlainText(input.value, 254).toLowerCase();
       if (nameInput && !cleanPlainText(nameInput.value, 100)) { msg.textContent = 'Please enter your full name.'; msg.className = 'signup-msg error'; return; }
       if (nameInput) nameInput.value = cleanPlainText(nameInput.value, 100);
-      input.value = v;\n      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
+      input.value = v;
+      if (!v) { msg.textContent = 'Please enter your email address.'; msg.className = 'signup-msg error'; return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.className = 'signup-msg error'; return; }
       msg.className = 'signup-msg';
       msg.textContent = 'Thank you. You\\u2019re on the list, and we\\u2019ll be in touch before we open.';
