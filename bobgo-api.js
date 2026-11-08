@@ -140,6 +140,7 @@ module.exports = function registerBobGo(app, deps) {
     const patch = {};
     const path = 'vendorTracking.' + pkg.vendorId + (pkg.preorder ? '.preorder' : '');
     patch[path + '.bobgoSubmissionStatus'] = status;
+    patch[path + '.bobgoStatus'] = String(s.status || '').toLowerCase();
     if (s.provider_tracking_reference) patch[path + '.bobgoProviderTrackingReference'] = String(s.provider_tracking_reference).slice(0, 100);
     if (s.tracking_url) patch[path + '.bobgoTrackingUrl'] = String(s.tracking_url).slice(0, 500);
     patch[path + '.bobgoFailedReason'] = s.failed_reason ? String(s.failed_reason).slice(0, 300) : null;
