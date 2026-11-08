@@ -3446,6 +3446,20 @@ app.post('/api/brand-interest', async (req, res) => {
   }
 });
 
+// Public aggregate only — never expose newsletter email addresses.
+app.get('/api/newsletter-count', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!adminDb) return res.status(503).json({ error: 'Newsletter count unavailable' });
+  try {
+    // This is the same collection used by Admin > Newsletter.
+    const snapshot = await adminDb.collection('newsletter').get();
+    return res.json({ count: snapshot.size });
+  } catch (e) {
+    console.error('[NEWSLETTER_COUNT] Could not count subscribers:', e.message);
+    return res.status(500).json({ error: 'Newsletter count unavailable' });
+  }
+});
+
 // Serve the Coming soon page through the same live brand-asset injectors
 // as the homepage, so Admin > Content controls its real logo and logo font.
 app.get('/janedore-coming-soon.html', async (req, res, next) => {
