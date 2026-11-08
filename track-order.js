@@ -246,11 +246,15 @@ function trackResultHtml(o, opts) {
       : p.shipped
       ? `<div class="track-ship">
           ${p.courier ? `<div class="track-ship-row"><span>Courier</span><strong>${escapeHTML(p.courier)}</strong></div>` : ''}
-          <div class="track-ship-row"><span>Tracking number</span><strong>${escapeHTML(p.trackingNumber)}</strong>
-            ${courierUrl
-              ? `<a class="track-copy" href="${escapeHTML(courierUrl)}" target="_blank" rel="noopener" onclick="copyTrackingNumber(null,'${escapeJSString(p.trackingNumber)}')">Track <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>`
-              : `<button type="button" class="track-copy" onclick="copyTrackingNumber(this,'${escapeJSString(p.trackingNumber)}')">Copy</button>`}</div>
-          ${p.shippedAt ? `<div class="track-ship-row"><span>Dispatched</span><strong>${escapeHTML(trackDate(p.shippedAt))}</strong></div>` : ''}
+          <div class="track-ship-row"><span>Bob Go tracking reference</span><strong>${escapeHTML(p.trackingNumber)}</strong>
+            ${p.trackingUrl
+              ? `<a class="track-copy" href="${escapeHTML(p.trackingUrl)}" target="_blank" rel="noopener" onclick="copyTrackingNumber(null,'${escapeJSString(p.trackingNumber)}')">Track <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>`
+              : courierUrl
+                ? `<a class="track-copy" href="${escapeHTML(courierUrl)}" target="_blank" rel="noopener" onclick="copyTrackingNumber(null,'${escapeJSString(p.trackingNumber)}')">Track <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>`
+                : `<button type="button" class="track-copy" onclick="copyTrackingNumber(this,'${escapeJSString(p.trackingNumber)}')">Copy</button>`}</div>
+          ${p.providerTrackingReference ? `<div class="track-ship-row"><span>Courier waybill</span><strong>${escapeHTML(p.providerTrackingReference)}</strong></div>` : ''}
+          ${p.checkpoints && p.checkpoints.length ? `<div class="track-ship-row"><span>Latest updates</span><strong>${p.checkpoints.slice(0,5).map(cp => [cp.statusFriendly || cp.message, cp.location, cp.time].filter(Boolean).map(x => escapeHTML(x)).join(' · ')).join('<br>')}</strong></div>` : ''}
+          ${p.shippedAt ? `<div class="track-ship-row"><span>Booked</span><strong>${escapeHTML(trackDate(p.shippedAt))}</strong></div>` : ''}
         </div>`
       : p.preorder
         ? `<p class="track-wait">${shipBy ? `<strong>Estimated dispatch: ${escapeHTML(shipBy)}.</strong> ` : ''}This item is in production with ${escapeHTML(trackPlainText(p.brand))}. We will notify you of any change to the estimated dispatch date, and send tracking details once it has shipped.</p>`
