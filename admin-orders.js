@@ -1224,9 +1224,7 @@
                       '<input class="order-tracking-input order-group-tracking" data-vendor="' + esc(pkgKey) + '" value="' + esc((tracking && tracking.trackingNumber) || '') + '" placeholder="Tracking number" style="flex:1;">' +
                       '<button class="btn btn-sm" onclick="window._saveVendorTracking(\'' + esc(orderId) + '\',\'' + esc(group.vendorId || '') + '\',' + (group.preorder ? 'true' : 'false') + ')">Save</button>' +
                     '</div></div>')
-              : '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
-                  (shipped ? esc(tracking.trackingNumber) + (tracking.courier ? ' via ' + esc(tracking.courier) : '') : 'Not shipped yet') +
-                '</div>'
+
               : '<div class="order-vendor-group-readonly" style="margin-bottom:18px;">' +
                   (shipped
                     ? esc(tracking.trackingNumber) + (tracking.courier ? ' via ' + esc(tracking.courier) : '')
