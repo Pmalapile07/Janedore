@@ -160,7 +160,7 @@
 <style>
   /* Reference look: floating pale blue header, rounded image hero, pill buttons */
   .cs-header { background:transparent; padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0; }
-  .cs-header-pill { background:rgba(224,235,255,.55); -webkit-backdrop-filter:blur(18px) saturate(170%); backdrop-filter:blur(18px) saturate(170%); border:1px solid rgba(255,255,255,.65); box-shadow:0 8px 32px rgba(17,17,17,.08), inset 0 1px 0 rgba(255,255,255,.7); border-radius:20px; height:64px; padding:0 12px 0 24px; }
+  .cs-header-pill { background:#E0EBFF; border:0; box-shadow:none; border-radius:28px; height:64px; padding:0 12px 0 24px; }
   .cs-logo { color:#111; font-weight:800; letter-spacing:0; }
   .cs-btn { border-radius:999px; font-size:14px; font-weight:400; letter-spacing:0; text-transform:none; }
   .cs-header .cs-btn-accent { background:#111; color:#fff; min-height:40px; padding:0 22px; }
@@ -187,19 +187,24 @@
   /* Fixed clear-glass header */
   body { padding-top:calc(76px + env(safe-area-inset-top,0px)); }
   .cs-header { position:fixed; top:0; left:0; right:0; z-index:30; }
-  .cs-header-pill { background:rgba(224,235,255,.35); -webkit-backdrop-filter:blur(28px) saturate(200%); backdrop-filter:blur(28px) saturate(200%); border:1px solid rgba(255,255,255,.6); box-shadow:0 8px 32px rgba(17,17,17,.10), inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px rgba(224,235,255,.4); }
+  .cs-header-pill { background:#E0EBFF; -webkit-backdrop-filter:none; backdrop-filter:none; border:0; box-shadow:none; border-radius:28px; transition:background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease; }
+  .cs-header-pill.is-scrolled { background:rgba(224,235,255,.58); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); box-shadow:0 8px 28px rgba(17,17,17,.08); }
+  .cs-logo.cs-site-logo-image { display:block; width:auto; height:25px; max-width:190px; object-fit:contain; }
 
   /* Waitlist card */
-  .waitlist { scroll-margin-top:90px; }
-  .waitlist .brandcta-inner { gap:24px; }
+  .waitlist { scroll-margin-top:90px; background:#fff; color:#111; }
+  .waitlist .brandcta-inner { gap:24px; align-items:center; text-align:center; }
+  .waitlist .brandcta-inner > div:first-child { width:100%; }
+  .waitlist .brandcta .cs-title, .waitlist .brandcta-inner .cs-title { color:#111; margin:0 auto; }
+  .waitlist .brandcta-inner p { color:#555; margin:12px auto 0; max-width:520px; }
   .wl-form { width:100%; max-width:520px; }
-  .waitlist .join-form { margin-top:0; max-width:none; }
-  .waitlist .signup-input { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:0 22px; }
-  .waitlist .signup-input::placeholder { color:rgba(255,255,255,.6); }
-  .waitlist .signup-input:focus { border-color:#fff; }
-  .waitlist .cs-btn { background:#fff; color:#111; }
-  .waitlist .signup-msg, .wl-count { color:rgba(255,255,255,.75); font-size:13px; font-weight:300; line-height:1.5; }
-  .waitlist .signup-msg.error { color:#ff8a80; }
+  .waitlist .join-form { margin:0 auto; max-width:none; flex-direction:column; }
+  .waitlist .signup-input { background:#fff; border:1px solid #d4d4d4; color:#111; border-radius:999px; padding:0 22px; }
+  .waitlist .signup-input::placeholder { color:#777; }
+  .waitlist .signup-input:focus { border-color:#111; }
+  .waitlist .cs-btn { background:var(--accent); color:#111; align-self:stretch; }
+  .waitlist .signup-msg, .wl-count { color:#555; font-size:13px; font-weight:300; line-height:1.5; }
+  .waitlist .signup-msg.error { color:#c0392b; }
   .wl-count { margin-top:12px; }
 
   /* Footer in the same blue */
@@ -236,11 +241,13 @@
     <div class="brandcta-inner">
       <div>
         <h2 class="cs-title">Join the waitlist</h2>
-        <p>Get early access before Janedore opens to everyone.</p>
+        <p>Join 300+ people already on the JANEDORE waitlist and get early access before everyone else.</p>
         <p class="wl-count" id="wl-count" hidden></p>
       </div>
       <div class="wl-form">
         <div class="join-form">
+          <label for="wl-name" class="sr-only">Full name</label>
+          <input type="text" class="signup-input" id="wl-name" placeholder="Full name" autocomplete="name">
           <label for="wl-email" class="sr-only">Email address</label>
           <input type="email" class="signup-input" id="wl-email" placeholder="Email address" autocomplete="email">
           <button type="button" class="cs-btn" id="wl-btn">Get early access</button>
@@ -400,6 +407,14 @@
   bindSignup('inline-email', 'inline-btn', 'inline-msg');
   bindSignup('wl-email', 'wl-btn', 'wl-msg');
   loadWaitlistCount();
+
+  // Keep the header solid blue at the top; switch to glass only after scrolling.
+  var headerPill = document.querySelector('.cs-header-pill');
+  function updateHeaderGlass() {
+    if (headerPill) headerPill.classList.toggle('is-scrolled', window.scrollY > 12);
+  }
+  window.addEventListener('scroll', updateHeaderGlass, { passive:true });
+  updateHeaderGlass();
 
   // Hero video: paste your hosted .mp4 URL here (H.264, 720p, under ~8MB, 10 to 20 second loop).
   // Leave empty to keep the animated background.
