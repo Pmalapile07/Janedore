@@ -1204,6 +1204,7 @@
                       '<div style="font-weight:600;">Bob Go · ' + esc(tracking.trackingNumber || 'Booking created') + '</div>' +
                       '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(tracking.bobgoStatusFriendly || tracking.bobgoSubmissionStatus || 'Booking pending') +
                       (tracking.bobgoProviderTrackingReference ? ' · Courier waybill ' + esc(tracking.bobgoProviderTrackingReference) : '') + '</div>' +
+                      (tracking.bobgoSubmissionStatus === 'success' ? '<button class="btn btn-sm btn-ghost" style="margin-top:8px;" onclick="window._getBobGoWaybill(\\'' + esc(orderId) + '\\',\\'' + esc(group.vendorId) + '\\',' + (group.preorder ? 'true' : 'false') + ')">Print waybill</button>' : '') +
                     '</div>'
                   : '<div style="margin-bottom:18px;">' +
                       '<label class="card-title" style="display:block;margin-bottom:6px;">Packed parcel measurements</label>' +
@@ -1771,6 +1772,24 @@
   // preorder: the brand's pre-order package, saved at
   // vendorTracking[vid].preorder. Both are written as dot paths so saving
   // one package never wipes the other.
+  window._getBobGoWaybill = function (orderId, vendorId, preorder) {
+    if (!window._currentUser || !window._currentUser.getIdToken) { showToast('Please sign in again.', 'error'); return; }
+    var tab = window.open('about:blank', '_blank');
+    window._currentUser.getIdToken().then(function (token) {
+      var url = '/api/orders/' + encodeURIComponent(orderId) + '/bobgo-waybill?vendorId=' + encodeURIComponent(vendorId) + '&preorder=' + (preorder ? 'true' : 'false');
+      return fetch(url, { headers: { 'Authorization': 'Bearer ' + token } }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok || !data.downloadUrl) throw new Error(data.error || 'Waybill is not ready yet.');
+          if (tab) tab.location.href = data.downloadUrl;
+          else window.location.href = data.downloadUrl;
+        });
+      });
+    }).catch(function (e) {
+      if (tab) tab.close();
+      showToast(e.message || 'Could not retrieve the waybill.', 'error');
+    });
+  };
+
   // Books a packed vendor parcel through the server; no brand-entered tracking number.
   window._bookBobGoShipment = function (orderId, vendorId, preorder) {
     if (!vendorId || !window._currentUser || !window._currentUser.getIdToken) {
