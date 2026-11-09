@@ -1884,7 +1884,7 @@ function openBrandReport() {
       <button type="button" class="brand-report-close" onclick="closeBrandReport()" aria-label="Close"><i class="ph ph-x"></i></button>
     </div>
     <form id="brand-report-form" onsubmit="submitBrandReport(event)">
-      <p class="brand-report-intro">Help us uphold the standards of the JANEDORE marketplace. Reports about ${escapeHTML(brandName)} are reviewed by our team and handled in strict confidence.</p>
+      <p class="brand-report-intro">Help us uphold the standards of Janedore. Reports about ${escapeHTML(brandName)} are reviewed by our team and handled in strict confidence.</p>
       <div class="brand-report-reasons">${BRAND_REPORT_REASONS.map((r, i) => `<label class="brand-report-reason"><input type="radio" name="reason" value="${escapeHTML(r)}"${i === 0 ? ' required' : ''}><span>${escapeHTML(r)}</span></label>`).join('')}</div>
       <label class="brand-report-label" for="brand-report-details">Details <span>(optional)</span></label>
       <textarea id="brand-report-details" name="details" rows="4" maxlength="2000" placeholder="Describe the issue, including your order number where applicable."></textarea>
@@ -1948,7 +1948,7 @@ async function submitBrandReport(e) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Could not send your report. Please try again.');
     const sentTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.value.trim()) ? form.email.value.trim() : '';
-    form.innerHTML = `<div class="brand-report-done"><i class="ph ph-check-circle"></i><p><strong>Thank you. Your report has been submitted.</strong></p><p>Our marketplace team will review it and take appropriate action. All reports are handled in strict confidence.${sentTo ? ' A confirmation has been sent to ' + escapeHTML(sentTo) + '.' : ''}</p><button type="button" class="brand-report-submit" onclick="closeBrandReport()">Done</button></div>`;
+    form.innerHTML = `<div class="brand-report-done"><i class="ph ph-check-circle"></i><p><strong>Thank you. Your report has been submitted.</strong></p><p>Our team will review it and take appropriate action. All reports are handled in strict confidence.${sentTo ? ' A confirmation has been sent to ' + escapeHTML(sentTo) + '.' : ''}</p><button type="button" class="brand-report-submit" onclick="closeBrandReport()">Done</button></div>`;
   } catch (err) {
     msg.textContent = err.message;
     btn.disabled = false; btn.textContent = 'Submit report';
