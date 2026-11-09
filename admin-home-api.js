@@ -72,7 +72,7 @@ module.exports = function registerAdminHome(app, deps) {
     reports.forEach((r) => notes.push({ type: 'report', at: toMs(r.createdAt), text: 'Concern reported about ' + (r.brand || 'a brand') + ': ' + (r.reason || ''), tab: 'reports' }));
     contacts.forEach((c) => notes.push({ type: 'message', at: toMs(c.createdAt), text: 'Customer care message from ' + (c.name || 'a customer') + (c.topic ? ' about ' + String(c.topic).toLowerCase() : ''), tab: 'messages' }));
     reviews.forEach((r) => notes.push({ type: 'review', at: toMs(r.createdAt), text: (Number(r.rating) || 0) + '-star review from ' + (r.name || 'a customer'), tab: 'reviews' }));
-    interest.forEach((i) => notes.push({ type: 'interest', at: toMs(i.createdAt), text: 'Brand interest from ' + (i.brandName || 'a brand') + ' (' + (i.email || '') + ')', tab: 'applications' }));
+    interest.forEach((i) => notes.push({ type: 'interest', at: toMs(i.createdAt), text: 'Brand interest from ' + (i.brandName || 'a brand') + ' (' + (i.email || '') + ')', tab: 'vendorRequests' }));
     return { activity, notifications: notes.filter((n) => n.at >= since).sort((a, b) => b.at - a.at).slice(0, 30) };
   }
 
