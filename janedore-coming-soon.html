@@ -155,6 +155,10 @@
   .cs-sheet .signup-input::placeholder { color:rgba(255,255,255,.5); }
   .cs-sheet .cs-btn-block { background:#fff; color:#111; }
   .cs-sheet .signup-msg { color:var(--accent); }
+  #preview-submit.is-loading { opacity:.82; cursor:wait; }
+  #preview-submit.is-loading::before { content:""; width:15px; height:15px; flex:0 0 15px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:preview-access-spin .7s linear infinite; }
+  @keyframes preview-access-spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion:reduce) { #preview-submit.is-loading::before { animation:none; border-right-color:currentColor; } }
 
   @media (min-width:768px) {
     :root { --head:27px; --gutter:32px; }
@@ -505,9 +509,14 @@
         return;
       }
       if (submitButton.disabled) return;
+
+      var accessGranted = false;
       submitButton.disabled = true;
+      submitButton.classList.add('is-loading');
+      submitButton.setAttribute('aria-busy', 'true');
+      submitButton.textContent = 'Checking...';
       message.className = 'signup-msg';
-      message.textContent = 'Checking password...';
+      message.textContent = 'Verifying your password. Please wait...';
 
       try {
         var response = await fetch('/api/verify-visitor-password', {
@@ -519,6 +528,8 @@
         var result = await response.json().catch(function () { return {}; });
 
         if (response.ok && result.ok === true) {
+          accessGranted = true;
+          submitButton.textContent = 'Opening...';
           message.className = 'signup-msg';
           message.textContent = 'Access granted. Opening JANEDORE...';
           window.location.assign('/');
@@ -539,7 +550,12 @@
         message.className = 'signup-msg error';
         message.textContent = 'Could not connect. Please check your connection and try again.';
       } finally {
-        submitButton.disabled = false;
+        if (!accessGranted) {
+          submitButton.disabled = false;
+          submitButton.classList.remove('is-loading');
+          submitButton.removeAttribute('aria-busy');
+          submitButton.textContent = 'Enter';
+        }
       }
     }
 
