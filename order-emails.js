@@ -917,7 +917,7 @@ function reportReceived(report, ctx) {
     bannerHtml: '<strong>Report received</strong>',
     cards: [
       '<div style="font-size:14px;line-height:1.6;color:#555555;">Thank you for your report about <strong style="color:#111111;">' + esc(brand) +
-        '</strong>. Our marketplace team will review it and take appropriate action, and will contact you at this email address if further details are required. All reports are handled in strict confidence.</div>',
+        '</strong>. Our team will review it and take appropriate action, and will contact you at this email address if further details are required. All reports are handled in strict confidence.</div>',
       title('Your report') + rows(
         row('Brand', esc(brand), { semi: true }) +
         row('Reason', esc(report.reason), { semi: true })) +
@@ -930,7 +930,7 @@ function reportReceived(report, ctx) {
     footerHtml: 'Anything to add? Reply to this email or write to <a href="mailto:support@janedore.co.za" style="color:#888888;">support@janedore.co.za</a>.<br>Janedore · janedore.co.za'
   });
   const text = 'Report received\n\nThank you for your report about ' + brand +
-    '. Our marketplace team will review it and take appropriate action, and will contact you if further details are required. All reports are handled in strict confidence.\n\nBrand: ' + brand +
+    '. Our team will review it and take appropriate action, and will contact you if further details are required. All reports are handled in strict confidence.\n\nBrand: ' + brand +
     '\nReason: ' + report.reason + (report.details ? '\n\n' + report.details : '') +
     '\n\nLog a return: ' + ctx.siteUrl + '/pages/log-a-return\nFrequently asked questions: ' + ctx.siteUrl + '/pages/faq\n\nQuestions? support@janedore.co.za';
   return { subject: 'Your report about ' + brand + ' has been received', html, text };
