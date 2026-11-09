@@ -2948,6 +2948,18 @@ async function verifyPlatformStaff(req) {
   }
 }
 
+async function verifySuperAdmin(req) {
+  const match = (req.headers.authorization || '').match(/^Bearer (.+)$/);
+  if (!match) return false;
+  try {
+    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const doc = await adminDb.collection('admins').doc(decoded.uid).get();
+    return doc.exists && doc.data().role === 'SUPER_ADMIN';
+  } catch (e) {
+    return false;
+  }
+}
+
 app.get('/api/admin/brand-reports', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
   if (!(await verifyPlatformStaff(req))) return res.status(403).json({ error: 'Not authorized' });
@@ -3418,7 +3430,7 @@ app.get(['/admin', '/admin.html'], (req, res) => {
 // Admin > Vendor Requests: lightweight brand-interest leads from the coming-soon popup.
 app.get('/api/admin/vendor-requests', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-  if (!(await verifyPlatformStaff(req))) return res.status(403).json({ error: 'Not authorized' });
+  if (!(await verifySuperAdmin(req))) return res.status(403).json({ error: 'Not authorized' });
   try {
     const snap = await adminDb.collection('brandInterest').orderBy('createdAt', 'desc').limit(300).get();
     res.json({ requests: snap.docs.map((d) => {
@@ -3435,7 +3447,7 @@ app.get('/api/admin/vendor-requests', async (req, res) => {
 
 app.post('/api/admin/vendor-requests/:id', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'Not configured' });
-  if (!(await verifyPlatformStaff(req))) return res.status(403).json({ error: 'Not authorized' });
+  if (!(await verifySuperAdmin(req))) return res.status(403).json({ error: 'Not authorized' });
   const status = String((req.body || {}).status || '');
   if (['new', 'contacted', 'converted', 'not_interested'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid request status.' });
   try {
@@ -3484,8 +3496,8 @@ app.post('/api/brand-interest', async (req, res) => {
   }
 });
 
-// Coming-soon signups are saved in the same collection used by Admin > Newsletter.
-// Deterministic IDs prevent repeat submissions from creating duplicate subscribers.
+// Customer coming-soon signups are saved in Admin > Newsletter. Brand-interest
+// signups are kept separately in Admin > Vendor Requests.
 app.post('/api/coming-soon-signup', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'We couldn’t complete your request. Please try again.' });
   if (rateLimited(req, 'coming-soon-signup', 8, 60 * 60 * 1000)) {
