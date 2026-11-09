@@ -436,9 +436,9 @@
     <h2>Preview access</h2>
     <p>Enter the preview password you were given.</p>
     <div class="cs-form">
-      <input type="password" class="signup-input" placeholder="Password" maxlength="128" autocomplete="current-password">
-      <button type="button" class="cs-btn cs-btn-block" data-fake>Enter</button>
-      <div class="signup-msg"></div>
+      <input type="password" class="signup-input" id="preview-password" placeholder="Password" maxlength="128" autocomplete="current-password" required>
+      <button type="button" class="cs-btn cs-btn-block" id="preview-submit">Enter</button>
+      <div class="signup-msg" id="preview-msg" role="status" aria-live="polite"></div>
     </div>
   </div>
 </div>
@@ -451,10 +451,69 @@
   document.querySelectorAll('.cs-sheet-back').forEach(function (s) {
     s.addEventListener('click', function (e) { if (e.target === s || e.target.hasAttribute('data-close')) s.hidden = true; });
   });
-  // Preview access is a separate password flow; newsletter pop-ups use real submit handlers below.
-  document.querySelectorAll('#preview-sheet [data-fake]').forEach(function (b) {
-    b.addEventListener('click', function () { b.parentNode.querySelector('.signup-msg').textContent = 'Enter your preview password to continue.'; });
-  });
+  // Verify preview access on the server. The server sets the signed HttpOnly
+  // visitor cookie; only then do we send the visitor to the storefront.
+  (function bindPreviewAccess() {
+    var passwordInput = document.getElementById('preview-password');
+    var submitButton = document.getElementById('preview-submit');
+    var message = document.getElementById('preview-msg');
+    if (!passwordInput || !submitButton || !message) return;
+
+    async function verifyPreviewPassword() {
+      var password = passwordInput.value;
+      if (!password) {
+        message.className = 'signup-msg error';
+        message.textContent = 'Please enter your preview password.';
+        passwordInput.focus();
+        return;
+      }
+      if (submitButton.disabled) return;
+      submitButton.disabled = true;
+      message.className = 'signup-msg';
+      message.textContent = 'Checking password...';
+
+      try {
+        var response = await fetch('/api/verify-visitor-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ password: password })
+        });
+        var result = await response.json().catch(function () { return {}; });
+
+        if (response.ok && result.ok === true) {
+          message.className = 'signup-msg';
+          message.textContent = 'Access granted. Opening JANEDORE...';
+          window.location.assign('/');
+          return;
+        }
+
+        message.className = 'signup-msg error';
+        if (response.status === 429) {
+          message.textContent = result.error || 'Too many attempts. Please wait a few minutes and try again.';
+        } else if (response.status === 503) {
+          message.textContent = 'Preview access is temporarily unavailable. Please try again shortly.';
+        } else if (response.status >= 500) {
+          message.textContent = 'We couldn’t verify your password right now. Please try again.';
+        } else {
+          message.textContent = result.error || 'That password isn’t correct. Please try again.';
+        }
+      } catch (error) {
+        message.className = 'signup-msg error';
+        message.textContent = 'Could not connect. Please check your connection and try again.';
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    submitButton.addEventListener('click', verifyPreviewPassword);
+    passwordInput.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        verifyPreviewPassword();
+      }
+    });
+  })();
 
   // Public total only: read the same newsletter collection shown in Admin > Newsletter.
   function loadWaitlistCount() {
