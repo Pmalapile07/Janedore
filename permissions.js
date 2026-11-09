@@ -218,6 +218,7 @@
     returns:    'orders',
     exchanges:  'orders',
     applications: 'vendors',
+    vendorRequests: 'vendors',
     onlineStore: 'settings',
     analytics:  'analytics',
     devtools:   'devtools'
@@ -270,6 +271,8 @@
       'reports-tab-btn',   // sidebar brand reports
       'reports-more-item', // more menu brand reports
       'applications-tab-btn',  // sidebar partner applications
+      'vendor-requests-tab-btn', // sidebar vendor requests
+      'vendor-requests-more-item', // more menu vendor requests
       'applications-more-item',// more menu partner applications
       // more menu homepage/pages items are folded into the
       // online-store-more-item accordion wrapper (see admin.html),
