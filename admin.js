@@ -376,7 +376,7 @@
     dashboard: '', products: 'Products', categories: 'Categories', collections: 'Collections', orders: 'Orders',
     messages: 'Inbox', reviews: 'Reviews', newsletter: 'Newsletter',
     vendors: 'Vendors', customers: 'Customers', settings: 'Settings',
-    admins: 'Admins', pages: 'Pages', discounts: 'Discounts',
+    admins: 'Admins', pages: 'Pages', discounts: 'Discounts', vendorRequests: 'Vendor Requests',
     homepage: 'Homepage', onlineStore: 'Online Store', content: 'Content', reports: 'Reports', returns: 'Returns', exchanges: 'Exchanges', applications: 'Applications',
     analytics: 'Analytics', seo: 'SEO', devtools: 'Developer Tools'
   };
@@ -432,7 +432,7 @@
       messages: 'inbox', reviews: 'reviews', newsletter: 'newsletter',
       vendors: 'vendors', customers: 'customers', settings: 'settings',
       admins: 'admins', pages: 'pages', discounts: 'discounts',
-      onlineStore: 'settings', homepage: 'homepage', content: 'homepage', reports: 'vendors', returns: 'orders', exchanges: 'orders', applications: 'vendors',
+      onlineStore: 'settings', homepage: 'homepage', content: 'homepage', reports: 'vendors', returns: 'orders', exchanges: 'orders', applications: 'vendors', vendorRequests: 'vendors',
       analytics: 'analytics', seo: 'seo', devtools: 'devtools'
     };
 
@@ -502,6 +502,7 @@
       case 'returns':     if (window._renderReturnsTab)     window._renderReturnsTab();     break;
       case 'exchanges':   if (window._renderExchangesTab)   window._renderExchangesTab();   break;
       case 'applications': if (window._renderApplicationsTab) window._renderApplicationsTab(); break;
+      case 'vendorRequests': if (window._renderVendorRequestsTab) window._renderVendorRequestsTab(); break;
       case 'discounts':   if (window._renderDiscountsTab)   window._renderDiscountsTab();   break;
       case 'analytics':   if (window._renderAnalyticsTab)   window._renderAnalyticsTab();   break;
       case 'devtools':    if (window._renderDevtoolsTab)    window._renderDevtoolsTab();    break;
