@@ -3415,6 +3415,44 @@ app.get(['/admin', '/admin.html'], (req, res) => {
 // Coming soon: brands registering interest before launch. Saved to
 // brandInterest (server only; shown in Admin > Home) and emailed to the
 // team.
+// Admin > Vendor Requests: lightweight brand-interest leads from the coming-soon popup.
+app.get('/api/admin/vendor-requests', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (!(await verifyPlatformStaff(req))) return res.status(403).json({ error: 'Not authorized' });
+  try {
+    const snap = await adminDb.collection('brandInterest').orderBy('createdAt', 'desc').limit(300).get();
+    res.json({ requests: snap.docs.map((d) => {
+      const r = d.data();
+      return { id: d.id, brandName: r.brandName || '', email: r.email || '', social: r.social || '',
+        source: r.source || 'coming soon', status: r.status || 'new',
+        createdAt: r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toISOString() : null };
+    }) });
+  } catch (e) {
+    console.error('[VENDOR_REQUESTS] List failed:', e.message);
+    res.status(500).json({ error: 'Could not load vendor requests.' });
+  }
+});
+
+app.post('/api/admin/vendor-requests/:id', async (req, res) => {
+  if (!adminDb) return res.status(503).json({ error: 'Not configured' });
+  if (!(await verifyPlatformStaff(req))) return res.status(403).json({ error: 'Not authorized' });
+  const status = String((req.body || {}).status || '');
+  if (['new', 'contacted', 'converted', 'not_interested'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid request status.' });
+  try {
+    const ref = adminDb.collection('brandInterest').doc(String(req.params.id || '').slice(0, 220));
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Vendor request not found.' });
+    const decoded = await admin.auth().verifyIdToken((req.headers.authorization || '').replace(/^Bearer /, ''));
+    const staffDoc = await adminDb.collection('admins').doc(decoded.uid).get();
+    await ref.update({ status, statusUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      statusUpdatedBy: staffDoc.exists ? (staffDoc.data().email || staffDoc.data().name || decoded.email || '') : '' });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[VENDOR_REQUESTS] Update failed:', e.message);
+    res.status(500).json({ error: 'Could not update vendor request.' });
+  }
+});
+
 app.post('/api/brand-interest', async (req, res) => {
   if (!adminDb) return res.status(503).json({ error: 'We couldn’t complete your request. Please try again.' });
   if (rateLimited(req, 'brand-interest', 5, 60 * 60 * 1000)) return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
@@ -3462,20 +3500,20 @@ app.post('/api/coming-soon-signup', async (req, res) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
   if (signupType === 'brand' && !brandName) return res.status(400).json({ error: 'Please enter your brand name.' });
   try {
-    const subscriberId = crypto.createHash('sha256').update(email).digest('hex');
-    const tags = signupType === 'brand' ? ['coming soon', 'brand interest'] : ['coming soon'];
-    const subscriber = {
-      email,
-      subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
-      source: 'coming soon',
-      tags: admin.firestore.FieldValue.arrayUnion(...tags)
-    };
-    if (name) subscriber.name = name;
-    if (signupType === 'brand') subscriber.brandName = brandName;
-    const newsletterRef = adminDb.collection('newsletter');
-    const existingSubscriber = await newsletterRef.where('email', '==', email).limit(1).get();
-    const subscriberRef = existingSubscriber.empty ? newsletterRef.doc(subscriberId) : existingSubscriber.docs[0].ref;
-    await subscriberRef.set(subscriber, { merge: true });
+    if (signupType === 'customer') {
+      const subscriberId = crypto.createHash('sha256').update(email).digest('hex');
+      const subscriber = {
+        email,
+        subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
+        source: 'coming soon',
+        tags: admin.firestore.FieldValue.arrayUnion('coming soon')
+      };
+      if (name) subscriber.name = name;
+      const newsletterRef = adminDb.collection('newsletter');
+      const existingSubscriber = await newsletterRef.where('email', '==', email).limit(1).get();
+      const subscriberRef = existingSubscriber.empty ? newsletterRef.doc(subscriberId) : existingSubscriber.docs[0].ref;
+      await subscriberRef.set(subscriber, { merge: true });
+    }
 
     if (signupType === 'brand') {
       const brandId = email.replace(/[^a-z0-9]/g, '_');
