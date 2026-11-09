@@ -270,6 +270,43 @@
   .cs-faq details[open] summary::after { transform:rotate(180deg); }
 </style>
 </head>
+<style id="waitlist-width-override">
+  /* Match the waitlist fields to the floating header's outer width. */
+  .waitlist .brandcta-inner {
+    width:100% !important;
+    max-width:none !important;
+    box-sizing:border-box !important;
+    padding-left:2px !important;
+    padding-right:2px !important;
+  }
+  .waitlist .brandcta-inner > .wl-form,
+  .waitlist .wl-form,
+  .waitlist .join-form {
+    display:flex !important;
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+  }
+  .waitlist .signup-input,
+  .waitlist .join-form > .cs-btn {
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    box-sizing:border-box !important;
+    flex:0 0 auto !important;
+  }
+  @media (min-width:768px) {
+    .waitlist .brandcta-inner {
+      padding-left:2px !important;
+      padding-right:2px !important;
+    }
+  }
+</style>
+
 <body>
 
 <header class="cs-header">
