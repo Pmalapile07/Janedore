@@ -235,7 +235,27 @@
   .waitlist .signup-msg { color:#555; font-size:13px; font-weight:400; line-height:1.5; }
   .waitlist .signup-msg.error { color:#c0392b; }
   .wl-copy { margin-top:12px; }
-  .wl-count-number { display:inline-block; color:#809ADD; font-weight:700; text-shadow:0 0 5px rgba(128,154,221,.55),0 0 12px rgba(128,154,221,.42),0 0 22px rgba(224,235,255,.95); }
+  .wl-count-number { display:inline-flex; align-items:baseline; gap:0; color:#1d3f38; font-weight:700; }
+  .wl-count-digit {
+    display:inline-block;
+    color:transparent;
+    background-image:linear-gradient(105deg,#1d3f38 0%,#1d3f38 34%,#69c99c 45%,#c9ffe1 50%,#69c99c 55%,#1d3f38 67%,#1d3f38 100%);
+    background-size:260% 100%;
+    background-position:150% 0;
+    background-clip:text;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:wl-digit-shimmer 2.8s ease-in-out infinite;
+    animation-delay:var(--shimmer-delay,0s);
+  }
+  .wl-count-separator, .wl-count-plus { color:#1d3f38; }
+  @keyframes wl-digit-shimmer {
+    0%, 18% { background-position:150% 0; }
+    78%, 100% { background-position:-60% 0; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    .wl-count-digit { animation:none; background-position:50% 0; }
+  }
 
   /* Founding community section — shared site gutter and a fixed, even image rhythm */
   .community { width:100%; max-width:1200px; margin:0 auto; padding:64px var(--gutter); background:#fff; color:#111; }
@@ -576,7 +596,26 @@
     if (!copy || !number) return;
     fetch('/api/newsletter-count', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       if (d && Number.isInteger(d.count) && d.count >= 0) {
-        number.textContent = d.count.toLocaleString('en-ZA') + '+';
+        var formattedCount = d.count.toLocaleString('en-ZA');
+        number.replaceChildren();
+        Array.from(formattedCount).forEach(function (character, index) {
+          if (/\\d/.test(character)) {
+            var digit = document.createElement('span');
+            digit.className = 'wl-count-digit';
+            digit.style.setProperty('--shimmer-delay', (index * 0.13) + 's');
+            digit.textContent = character;
+            number.appendChild(digit);
+          } else {
+            var separator = document.createElement('span');
+            separator.className = 'wl-count-separator';
+            separator.textContent = character;
+            number.appendChild(separator);
+          }
+        });
+        var plus = document.createElement('span');
+        plus.className = 'wl-count-plus';
+        plus.textContent = '+';
+        number.appendChild(plus);
         copy.hidden = false;
       }
     }).catch(function () {});
