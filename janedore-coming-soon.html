@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/picturepan2/devices.css@master/dist/devices.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root { --bg:#FFFFFF; --ink:#111111; --text:#111111; --muted:#6B6B6B; --border:#E5E5E5; --accent:#E0EBFF; --head:21px; --gutter:20px; }
@@ -123,11 +124,11 @@
   /* Header button radius */
   .cs-header .cs-btn-accent { border-radius:25px; }
 
-  /* CSS-only phone mockup in the app-preview space */
+  /* Devices.css phone mockup */
   .cs-app-preview-placeholder {
     width:100%;
     aspect-ratio:16 / 7;
-    min-height:360px;
+    min-height:390px;
     margin:32px 0 0;
     display:flex;
     align-items:center;
@@ -136,57 +137,24 @@
     border:1px solid #e5e5e5;
     border-radius:16px;
     background:#f7f8fa;
-    position:relative;
   }
-  .cs-phone-frame {
-    position:relative;
-    width:170px;
-    height:340px;
+  .cs-phone-mockup {
+    width:171px;
+    height:347px;
     flex:0 0 auto;
-    padding:7px;
-    border:2px solid #555;
-    border-radius:38px;
-    background:linear-gradient(145deg,#333 0%,#090909 24%,#171717 72%,#050505 100%);
-    box-shadow:0 22px 45px rgba(0,0,0,.22),0 5px 12px rgba(0,0,0,.14),inset 0 0 0 1px rgba(255,255,255,.22);
     transform:rotate(-5deg);
   }
-  .cs-phone-frame::before,
-  .cs-phone-frame::after {
-    content:"";
-    position:absolute;
-    width:3px;
-    background:#333;
-    border-radius:3px;
+  .cs-phone-mockup .device {
+    transform:scale(.4);
+    transform-origin:top left;
   }
-  .cs-phone-frame::before {
-    left:-5px;
-    top:78px;
-    height:48px;
-    box-shadow:0 61px 0 #333;
+  .cs-phone-mockup .device-screen {
+    display:block;
+    background:#f7f8fa;
   }
-  .cs-phone-frame::after {
-    right:-5px;
-    top:100px;
-    height:68px;
-  }
-  .cs-phone-screen {
-    position:relative;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    border-radius:29px;
-    background:linear-gradient(155deg,#fafafa 0%,#eef0f3 100%);
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
-  }
-  .cs-phone-island {
-    position:absolute;
-    top:10px;
-    left:50%;
-    width:62px;
-    height:18px;
-    transform:translateX(-50%);
-    border-radius:20px;
-    background:#050505;
+  @media (min-width:768px) {
+    .cs-app-preview-placeholder { min-height:390px; }
+    .cs-phone-mockup { transform:rotate(-5deg) scale(1.08); }
   }
 
   /* Category cards */
@@ -440,9 +408,16 @@
         <p class="sec-sub">We look beyond the label. Every brand is considered for the quality of its products and the experience it offers, so discovering something independent doesn’t mean compromising on quality or service.</p>
       </div>
       <div class="cs-app-preview-placeholder" aria-label="Phone mockup preview">
-        <div class="cs-phone-frame" aria-hidden="true">
-          <div class="cs-phone-screen">
-            <div class="cs-phone-island"></div>
+        <div class="cs-phone-mockup" aria-hidden="true">
+          <div class="device device-iphone-14-pro device-black">
+            <div class="device-frame">
+              <div class="device-screen"></div>
+            </div>
+            <div class="device-stripe"></div>
+            <div class="device-header"></div>
+            <div class="device-sensors"></div>
+            <div class="device-btns"></div>
+            <div class="device-power"></div>
           </div>
         </div>
       </div>
