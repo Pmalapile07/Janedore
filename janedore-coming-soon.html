@@ -456,7 +456,7 @@
 <style id="hero-phone-foreground">
   .cs-hero {
     position:relative !important;
-    min-height:680px !important;
+    min-height:460px !important;
     overflow:hidden !important;
     isolation:isolate !important;
   }
@@ -464,10 +464,10 @@
     content:"";
     position:absolute;
     z-index:0;
-    width:min(150vw,1100px);
+    width:min(145vw,900px);
     aspect-ratio:1;
     left:50%;
-    top:55%;
+    top:78%;
     transform:translate(-50%,-50%);
     border-radius:50%;
     background:radial-gradient(ellipse at center,
@@ -487,33 +487,38 @@
     position:absolute !important;
     z-index:5 !important;
     left:50% !important;
-    top:54% !important;
-    transform:translate(-50%,-50%) scale(1.22) !important;
-    width:171px !important;
-    height:347px !important;
+    bottom:0 !important;
+    top:auto !important;
+    transform:translateX(-50%) !important;
+    width:210px !important;
+    height:145px !important;
     min-height:0 !important;
     aspect-ratio:auto !important;
     margin:0 !important;
     padding:0 !important;
-    overflow:visible !important;
+    overflow:hidden !important;
     display:flex !important;
-    align-items:center !important;
+    align-items:flex-start !important;
     justify-content:center !important;
     background:transparent !important;
     pointer-events:none;
+    -webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.96) 62%,rgba(0,0,0,.45) 88%,transparent 100%);
+    mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.96) 62%,rgba(0,0,0,.45) 88%,transparent 100%);
   }
   .cs-hero .cs-hero-phone::before { display:none !important; }
   .cs-hero .cs-phone-mockup {
     position:relative !important;
     z-index:2 !important;
-    transform:none !important;
+    transform:scale(1.22) !important;
+    transform-origin:top center !important;
   }
   @media (min-width:768px) {
-    .cs-hero { min-height:760px !important; }
+    .cs-hero { min-height:640px !important; }
     .cs-hero .cs-hero-phone {
-      top:55% !important;
-      transform:translate(-50%,-50%) scale(1.55) !important;
+      width:260px !important;
+      height:190px !important;
     }
+    .cs-hero .cs-phone-mockup { transform:scale(1.55) !important; }
   }
 </style>
 
