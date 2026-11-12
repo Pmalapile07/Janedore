@@ -492,7 +492,9 @@
     top:auto !important;
     transform:translateX(-50%) !important;
     width:210px !important;
-    height:145px !important;
+    height:calc(145px + (235px * var(--hero-phone-reveal, 0))) !important;
+    transition:height .62s cubic-bezier(.22,1,.36,1) !important;
+    will-change:height;
     min-height:0 !important;
     aspect-ratio:auto !important;
     margin:0 !important;
@@ -517,7 +519,7 @@
     .cs-hero { min-height:640px !important; }
     .cs-hero .cs-hero-phone {
       width:260px !important;
-      height:190px !important;
+      height:calc(190px + (310px * var(--hero-phone-reveal, 0))) !important;
     }
     .cs-hero .cs-phone-mockup { transform:scale(1.55) !important; }
   }
@@ -980,6 +982,16 @@
   }
   window.addEventListener('scroll', updateHeaderGlass, { passive:true });
   updateHeaderGlass();
+
+  // Reveal the phone as the visitor scrolls into the page; reset it at the top.
+  var heroSection = document.querySelector('.cs-hero');
+  function updateHeroPhoneReveal() {
+    if (!heroSection) return;
+    var progress = Math.max(0, Math.min(1, window.scrollY / 180));
+    heroSection.style.setProperty('--hero-phone-reveal', progress.toFixed(3));
+  }
+  window.addEventListener('scroll', updateHeroPhoneReveal, { passive:true });
+  updateHeroPhoneReveal();
 
   // Hero video: paste your hosted .mp4 URL here (H.264, 720p, under ~8MB, 10 to 20 second loop).
   // Leave empty to keep the animated background.
