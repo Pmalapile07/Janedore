@@ -126,6 +126,8 @@
 
   /* Devices.css phone mockup */
   .cs-app-preview-placeholder {
+    position:relative;
+    isolation:isolate;
     width:100%;
     aspect-ratio:16 / 7;
     min-height:390px;
@@ -136,6 +138,26 @@
     overflow:hidden;
     background:#E0EBFF;
   }
+  /* Soft ambient blue haze behind the phone, like a diffused light source. */
+  .cs-app-preview-placeholder::before {
+    content:"";
+    position:absolute;
+    z-index:-1;
+    width:min(82vw,620px);
+    aspect-ratio:1;
+    left:50%;
+    top:48%;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse at center,
+      rgba(128,154,221,.72) 0%,
+      rgba(128,154,221,.42) 28%,
+      rgba(128,154,221,.16) 52%,
+      rgba(128,154,221,0) 72%);
+    filter:blur(22px);
+    pointer-events:none;
+  }
+  .cs-phone-mockup { position:relative; z-index:1; }
   .cs-phone-mockup {
     width:171px;
     height:347px;
