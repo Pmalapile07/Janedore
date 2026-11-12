@@ -147,7 +147,52 @@
   }
   .cs-phone-mockup .device-screen {
     display:block;
-    background:transparent;
+    position:relative;
+    overflow:hidden;
+    background:#E0EBFF;
+    color:#111;
+    font-family:'Inter',Helvetica,Arial,sans-serif;
+  }
+  .cs-phone-screen-content {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#E0EBFF;
+  }
+  .cs-phone-status {
+    position:absolute;
+    top:25px;
+    left:34px;
+    right:34px;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    color:#111;
+    font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;
+    font-size:16px;
+    line-height:1;
+    font-weight:600;
+    letter-spacing:-.02em;
+  }
+  .cs-phone-status-right {
+    display:flex;
+    align-items:center;
+    gap:7px;
+    height:16px;
+  }
+  .cs-phone-status-right svg { display:block; width:auto; height:14px; }
+  .cs-phone-status-right .battery { width:25px; height:13px; }
+  .cs-phone-monogram {
+    color:#111;
+    font-family:'Inter',Helvetica,Arial,sans-serif;
+    font-size:190px;
+    line-height:1;
+    font-weight:600;
+    letter-spacing:-.075em;
+    transform:translate(-5px,-2px);
   }
   @media (min-width:768px) {
     .cs-app-preview-placeholder { min-height:390px; }
@@ -408,7 +453,19 @@
         <div class="cs-phone-mockup" aria-hidden="true">
           <div class="device device-iphone-14-pro device-black">
             <div class="device-frame">
-              <div class="device-screen"></div>
+              <div class="device-screen">
+                <div class="cs-phone-screen-content">
+                  <div class="cs-phone-status" aria-hidden="true">
+                    <span>9:41</span>
+                    <span class="cs-phone-status-right">
+                      <svg viewBox="0 0 18 14" aria-hidden="true"><path d="M1 12V10.5M5 12V8M9 12V5.5M13 12V3M17 12V1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                      <span style="font-size:13px;font-weight:600;letter-spacing:-.04em;">5G</span>
+                      <svg class="battery" viewBox="0 0 27 14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="3.2" y="3.2" width="15" height="7.6" rx="1.4" fill="currentColor"/><path d="M25 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </span>
+                  </div>
+                  <span class="cs-phone-monogram" aria-label="J">J</span>
+                </div>
+              </div>
             </div>
             <div class="device-stripe"></div>
             <div class="device-header"></div>
