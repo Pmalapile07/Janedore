@@ -985,15 +985,38 @@
 
   // Reveal the phone as the visitor scrolls into the page; reset it at the top.
   var heroSection = document.querySelector('.cs-hero');
+  var heroPhoneTarget = 0;
+  var heroPhoneCurrent = 0;
   var heroPhoneFrame = 0;
-  function updateHeroPhoneReveal() {
-    if (!heroSection || heroPhoneFrame) return;
-    heroPhoneFrame = requestAnimationFrame(function () {
+  var heroPhoneLastTime = 0;
+
+  function animateHeroPhone(time) {
+    if (!heroSection) return;
+    var delta = heroPhoneLastTime ? Math.min(time - heroPhoneLastTime, 40) : 16;
+    heroPhoneLastTime = time;
+
+    // A frame-rate-independent glide gives the phone a soft, continuous iOS-like follow.
+    var smoothing = 1 - Math.exp(-delta / 145);
+    heroPhoneCurrent += (heroPhoneTarget - heroPhoneCurrent) * smoothing;
+
+    if (Math.abs(heroPhoneTarget - heroPhoneCurrent) < 0.001) {
+      heroPhoneCurrent = heroPhoneTarget;
+    }
+    heroSection.style.setProperty('--hero-phone-reveal', heroPhoneCurrent.toFixed(4));
+
+    if (heroPhoneCurrent !== heroPhoneTarget) {
+      heroPhoneFrame = requestAnimationFrame(animateHeroPhone);
+    } else {
       heroPhoneFrame = 0;
-      var progress = Math.max(0, Math.min(1, window.scrollY / 180));
-      heroSection.style.setProperty('--hero-phone-reveal', progress.toFixed(4));
-    });
+      heroPhoneLastTime = 0;
+    }
   }
+
+  function updateHeroPhoneReveal() {
+    heroPhoneTarget = Math.max(0, Math.min(1, window.scrollY / 180));
+    if (!heroPhoneFrame) heroPhoneFrame = requestAnimationFrame(animateHeroPhone);
+  }
+
   window.addEventListener('scroll', updateHeroPhoneReveal, { passive:true });
   updateHeroPhoneReveal();
 
