@@ -123,15 +123,70 @@
   /* Header button radius */
   .cs-header .cs-btn-accent { border-radius:25px; }
 
-  /* Empty app-preview image card — image will be added later. */
+  /* CSS-only phone mockup in the app-preview space */
   .cs-app-preview-placeholder {
     width:100%;
     aspect-ratio:16 / 7;
-    min-height:150px;
+    min-height:360px;
     margin:32px 0 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
     border:1px solid #e5e5e5;
     border-radius:16px;
     background:#f7f8fa;
+    position:relative;
+  }
+  .cs-phone-frame {
+    position:relative;
+    width:170px;
+    height:340px;
+    flex:0 0 auto;
+    padding:7px;
+    border:2px solid #555;
+    border-radius:38px;
+    background:linear-gradient(145deg,#333 0%,#090909 24%,#171717 72%,#050505 100%);
+    box-shadow:0 22px 45px rgba(0,0,0,.22),0 5px 12px rgba(0,0,0,.14),inset 0 0 0 1px rgba(255,255,255,.22);
+    transform:rotate(-5deg);
+  }
+  .cs-phone-frame::before,
+  .cs-phone-frame::after {
+    content:"";
+    position:absolute;
+    width:3px;
+    background:#333;
+    border-radius:3px;
+  }
+  .cs-phone-frame::before {
+    left:-5px;
+    top:78px;
+    height:48px;
+    box-shadow:0 61px 0 #333;
+  }
+  .cs-phone-frame::after {
+    right:-5px;
+    top:100px;
+    height:68px;
+  }
+  .cs-phone-screen {
+    position:relative;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    border-radius:29px;
+    background:linear-gradient(155deg,#fafafa 0%,#eef0f3 100%);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+  .cs-phone-island {
+    position:absolute;
+    top:10px;
+    left:50%;
+    width:62px;
+    height:18px;
+    transform:translateX(-50%);
+    border-radius:20px;
+    background:#050505;
   }
 
   /* Category cards */
@@ -384,7 +439,13 @@
         <h2 class="cs-title">Look beyond<br>the usual names.</h2>
         <p class="sec-sub">We look beyond the label. Every brand is considered for the quality of its products and the experience it offers, so discovering something independent doesn’t mean compromising on quality or service.</p>
       </div>
-      <div class="cs-app-preview-placeholder" aria-label="App preview image placeholder"></div>
+      <div class="cs-app-preview-placeholder" aria-label="Phone mockup preview">
+        <div class="cs-phone-frame" aria-hidden="true">
+          <div class="cs-phone-screen">
+            <div class="cs-phone-island"></div>
+          </div>
+        </div>
+      </div>
       <div class="disc-grid">
         <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5M8 10.8h5.6M10.8 8v5.6"/></svg><strong>Discover outside your usual.</strong><span>Find independent South African labels and products you might not come across on your usual shopping sites.</span></div>
         <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 12H4z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></svg><strong>More than what you wear.</strong><span>Clothing, accessories, homeware, beauty, scent, kids’ products and the unexpected things in between.</span></div>
