@@ -452,6 +452,71 @@
   }
 </style>
 
+
+<style id="hero-phone-foreground">
+  .cs-hero {
+    position:relative !important;
+    min-height:680px !important;
+    overflow:hidden !important;
+    isolation:isolate !important;
+  }
+  .cs-hero::before {
+    content:"";
+    position:absolute;
+    z-index:0;
+    width:min(150vw,1100px);
+    aspect-ratio:1;
+    left:50%;
+    top:55%;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse at center,
+      rgba(128,154,221,.82) 0%,
+      rgba(128,154,221,.48) 30%,
+      rgba(128,154,221,.2) 52%,
+      rgba(128,154,221,0) 72%);
+    filter:blur(42px);
+    pointer-events:none;
+  }
+  .cs-hero .cs-hero-content {
+    position:relative !important;
+    z-index:1 !important;
+    align-self:center;
+  }
+  .cs-hero .cs-hero-phone {
+    position:absolute !important;
+    z-index:5 !important;
+    left:50% !important;
+    top:54% !important;
+    transform:translate(-50%,-50%) scale(1.22) !important;
+    width:171px !important;
+    height:347px !important;
+    min-height:0 !important;
+    aspect-ratio:auto !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:visible !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    background:transparent !important;
+    pointer-events:none;
+  }
+  .cs-hero .cs-hero-phone::before { display:none !important; }
+  .cs-hero .cs-phone-mockup {
+    position:relative !important;
+    z-index:2 !important;
+    transform:none !important;
+  }
+  @media (min-width:768px) {
+    .cs-hero { min-height:760px !important; }
+    .cs-hero .cs-hero-phone {
+      top:55% !important;
+      transform:translate(-50%,-50%) scale(1.55) !important;
+    }
+  }
+</style>
+
 </head>
 <style id="waitlist-width-override">
   /* Match the waitlist fields to the floating header's outer width. */
@@ -508,6 +573,32 @@
     <div class="cs-hero-content">
       <h1>Not everything<br>worth discovering<br>is mainstream.</h1>
     </div>
+    <div class="cs-app-preview-placeholder cs-hero-phone" aria-label="Phone mockup preview">
+        <div class="cs-phone-mockup" aria-hidden="true">
+          <div class="device device-iphone-14-pro device-black">
+            <div class="device-frame">
+              <div class="device-screen">
+                <div class="cs-phone-screen-content">
+                  <div class="cs-phone-status" aria-hidden="true">
+                    <span>9:41</span>
+                    <span class="cs-phone-status-right">
+                      <svg viewBox="0 0 18 14" aria-hidden="true"><path d="M1 12V10.5M5 12V8M9 12V5.5M13 12V3M17 12V1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                      <span style="font-size:13px;font-weight:600;letter-spacing:-.04em;">5G</span>
+                      <svg class="battery" viewBox="0 0 27 14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="3.2" y="3.2" width="15" height="7.6" rx="1.4" fill="currentColor"/><path d="M25 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </span>
+                  </div>
+                  <span class="cs-phone-monogram" aria-label="J">J</span>
+                </div>
+              </div>
+            </div>
+            <div class="device-stripe"></div>
+            <div class="device-header"></div>
+            <div class="device-sensors"></div>
+            <div class="device-btns"></div>
+            <div class="device-power"></div>
+          </div>
+        </div>
+      </div>
   </section>
 
   <section class="brandcta waitlist" id="waitlist">
@@ -534,32 +625,6 @@
       <div class="sec-head">
         <h2 class="cs-title">Look beyond<br>the usual names.</h2>
         <p class="sec-sub">We look beyond the label. Every brand is considered for the quality of its products and the experience it offers, so discovering something independent doesn’t mean compromising on quality or service.</p>
-      </div>
-      <div class="cs-app-preview-placeholder" aria-label="Phone mockup preview">
-        <div class="cs-phone-mockup" aria-hidden="true">
-          <div class="device device-iphone-14-pro device-black">
-            <div class="device-frame">
-              <div class="device-screen">
-                <div class="cs-phone-screen-content">
-                  <div class="cs-phone-status" aria-hidden="true">
-                    <span>9:41</span>
-                    <span class="cs-phone-status-right">
-                      <svg viewBox="0 0 18 14" aria-hidden="true"><path d="M1 12V10.5M5 12V8M9 12V5.5M13 12V3M17 12V1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                      <span style="font-size:13px;font-weight:600;letter-spacing:-.04em;">5G</span>
-                      <svg class="battery" viewBox="0 0 27 14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="3.2" y="3.2" width="15" height="7.6" rx="1.4" fill="currentColor"/><path d="M25 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </span>
-                  </div>
-                  <span class="cs-phone-monogram" aria-label="J">J</span>
-                </div>
-              </div>
-            </div>
-            <div class="device-stripe"></div>
-            <div class="device-header"></div>
-            <div class="device-sensors"></div>
-            <div class="device-btns"></div>
-            <div class="device-power"></div>
-          </div>
-        </div>
       </div>
       <div class="disc-grid">
         <div class="disc-item"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5M8 10.8h5.6M10.8 8v5.6"/></svg><strong>Discover outside your usual.</strong><span>Find independent South African labels and products you might not come across on your usual shopping sites.</span></div>
