@@ -490,11 +490,10 @@
     left:50% !important;
     bottom:10px !important;
     top:auto !important;
-    transform:translateX(-50%) !important;
+    transform:translate3d(-50%,calc(235px * (1 - var(--hero-phone-reveal, 0))),0) !important;
     width:210px !important;
-    height:calc(145px + (235px * var(--hero-phone-reveal, 0))) !important;
-    transition:height .62s cubic-bezier(.22,1,.36,1) !important;
-    will-change:height;
+    height:380px !important;
+    will-change:transform;
     min-height:0 !important;
     aspect-ratio:auto !important;
     margin:0 !important;
@@ -519,7 +518,8 @@
     .cs-hero { min-height:640px !important; }
     .cs-hero .cs-hero-phone {
       width:260px !important;
-      height:calc(190px + (310px * var(--hero-phone-reveal, 0))) !important;
+      height:500px !important;
+      transform:translate3d(-50%,calc(310px * (1 - var(--hero-phone-reveal, 0))),0) !important;
     }
     .cs-hero .cs-phone-mockup { transform:scale(1.55) !important; }
   }
@@ -985,10 +985,14 @@
 
   // Reveal the phone as the visitor scrolls into the page; reset it at the top.
   var heroSection = document.querySelector('.cs-hero');
+  var heroPhoneFrame = 0;
   function updateHeroPhoneReveal() {
-    if (!heroSection) return;
-    var progress = Math.max(0, Math.min(1, window.scrollY / 180));
-    heroSection.style.setProperty('--hero-phone-reveal', progress.toFixed(3));
+    if (!heroSection || heroPhoneFrame) return;
+    heroPhoneFrame = requestAnimationFrame(function () {
+      heroPhoneFrame = 0;
+      var progress = Math.max(0, Math.min(1, window.scrollY / 180));
+      heroSection.style.setProperty('--hero-phone-reveal', progress.toFixed(4));
+    });
   }
   window.addEventListener('scroll', updateHeroPhoneReveal, { passive:true });
   updateHeroPhoneReveal();
