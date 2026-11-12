@@ -366,6 +366,70 @@
   .cs-faq summary::after { width:28px; height:28px; border:0; border-radius:50%; margin:0; transform:none; background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' fill='none' stroke='%23111' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
   .cs-faq details[open] summary::after { transform:rotate(180deg); }
 </style>
+
+<style id="coming-soon-header-hero-refresh">
+  /* Black header with the existing Janedore blue waitlist button */
+  .cs-header {
+    background:#111 !important;
+    padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0 !important;
+  }
+  .cs-header-pill,
+  .cs-header-pill.is-scrolled {
+    background:#111 !important;
+    -webkit-backdrop-filter:none !important;
+    backdrop-filter:none !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+  }
+  .cs-logo { color:#fff !important; }
+  .cs-logo.cs-site-logo-image {
+    filter:brightness(0) invert(1) !important;
+  }
+  .cs-header .cs-btn-accent {
+    background:#E0EBFF !important;
+    color:#111 !important;
+  }
+
+  /* Solid blue hero with a centered, three-line headline */
+  .cs-hero {
+    background:#E0EBFF !important;
+    color:#111 !important;
+    align-items:center !important;
+    justify-content:center !important;
+    text-align:center !important;
+  }
+  .cs-hero .hero-media,
+  .cs-hero .hero-fallback,
+  .cs-hero .hero-shade,
+  .cs-hero .hero-video {
+    display:none !important;
+  }
+  .cs-hero-content {
+    width:100% !important;
+    max-width:760px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    margin:0 auto !important;
+  }
+  .cs-hero h1 {
+    width:100% !important;
+    max-width:760px !important;
+    margin:0 auto !important;
+    color:#111 !important;
+    text-align:center !important;
+    text-wrap:balance;
+  }
+  .waitlist .brandcta .cs-title,
+  .waitlist .brandcta-inner .cs-title {
+    color:#111 !important;
+  }
+  .waitlist .cs-btn {
+    background:#E0EBFF !important;
+    color:#111 !important;
+  }
+</style>
+
 </head>
 <style id="waitlist-width-override">
   /* Match the waitlist fields to the floating header's outer width. */
@@ -420,7 +484,7 @@
       <div class="hero-shade"></div>
     </div>
     <div class="cs-hero-content">
-      <h1>Not everything worth discovering is mainstream.</h1>
+      <h1>Not everything<br>worth discovering<br>is mainstream.</h1>
     </div>
   </section>
 
