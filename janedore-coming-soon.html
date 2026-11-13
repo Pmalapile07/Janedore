@@ -578,77 +578,6 @@
     }
     .cs-hero .cs-phone-mockup { transform:scale(1.55) !important; }
   }
-  @media (min-width:1024px) {
-    /* Desktop hero: two text columns with the phone bridging the centre. */
-    .cs-hero {
-      min-height:640px !important;
-      height:640px !important;
-      overflow:visible !important;
-      z-index:2 !important;
-    }
-    .cs-hero::before,
-    .cs-hero::after {
-      content:none !important;
-      display:none !important;
-    }
-    .cs-hero-intro {
-      position:absolute;
-      left:5%;
-      top:50%;
-      transform:translateY(-50%);
-      width:31%;
-      max-width:390px;
-      text-align:left;
-      z-index:3;
-    }
-    .cs-hero-intro h2 {
-      max-width:390px;
-      font-size:clamp(27px,2.7vw,40px);
-      line-height:1.12;
-      letter-spacing:-.035em;
-      font-weight:600;
-      color:#111;
-    }
-    .cs-hero-intro p {
-      max-width:330px;
-      margin-top:16px;
-      font-size:14px;
-      line-height:1.55;
-      color:#333;
-    }
-    .cs-hero .cs-hero-content {
-      position:absolute !important;
-      right:5% !important;
-      top:50% !important;
-      left:auto !important;
-      width:31% !important;
-      max-width:390px !important;
-      margin:0 !important;
-      transform:translateY(-50%) !important;
-      align-items:center !important;
-      z-index:3 !important;
-    }
-    .cs-hero .cs-hero-content h1 {
-      max-width:390px !important;
-      font-size:clamp(38px,4vw,56px) !important;
-      line-height:1.08 !important;
-      text-align:center !important;
-    }
-    .cs-hero .cs-hero-phone {
-      left:50% !important;
-      bottom:-10% !important;
-      top:auto !important;
-      width:260px !important;
-      height:500px !important;
-      overflow:visible !important;
-      transform:translate3d(-50%,0,0) !important;
-      z-index:5 !important;
-    }
-    .cs-hero .cs-phone-mockup {
-      transform:scale(1.55) !important;
-      transform-origin:top center !important;
-    }
-  }
 </style>
 
 </head>
@@ -703,10 +632,6 @@
     <div class="hero-media" aria-hidden="true">
       <div class="hero-fallback"></div>
       <div class="hero-shade"></div>
-    </div>
-    <div class="cs-hero-intro">
-      <h2>The home of independent South African brands, designers and makers.</h2>
-      <p>Discover original labels, fresh design and pieces made by hand.</p>
     </div>
     <div class="cs-hero-content">
       <h1>Not everything<br>worth discovering<br>is mainstream.</h1>
@@ -1131,7 +1056,7 @@
 
   function applyHeroPhone(progress) {
     if (!heroPhone) return;
-    var travel = phoneMedia.matches ? 0 : 235;
+    var travel = phoneMedia.matches ? 310 : 235;
     var y = travel * (1 - progress);
     heroPhone.style.setProperty('transform', 'translate3d(-50%,' + y.toFixed(2) + 'px,0)', 'important');
     var heroCard = heroPhone.closest('.cs-hero');
