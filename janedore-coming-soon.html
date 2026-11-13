@@ -445,6 +445,14 @@
   .waitlist .brandcta .cs-title,
   .waitlist .brandcta-inner .cs-title {
     color:#111 !important;
+    font-size:30px !important;
+    line-height:1.1 !important;
+  }
+  @media (min-width:768px) {
+    .waitlist .brandcta .cs-title,
+    .waitlist .brandcta-inner .cs-title {
+      font-size:51px !important;
+    }
   }
   .waitlist .cs-btn {
     background:#E0EBFF !important;
@@ -460,22 +468,22 @@
     overflow:hidden !important;
     isolation:isolate !important;
   }
+  /* Keep the blue atmosphere as a soft mist at the bottom only. */
   .cs-hero::before {
     content:"";
     position:absolute;
     z-index:0;
-    width:min(145vw,900px);
-    aspect-ratio:1;
     left:50%;
-    top:78%;
-    transform:translate(-50%,-50%);
+    bottom:-76px;
+    transform:translateX(-50%);
+    width:min(100%,760px);
+    height:170px;
     border-radius:50%;
     background:radial-gradient(ellipse at center,
-      rgba(128,154,221,.82) 0%,
-      rgba(128,154,221,.48) 30%,
-      rgba(128,154,221,.2) 52%,
-      rgba(128,154,221,0) 72%);
-    filter:blur(42px);
+      rgba(128,154,221,.42) 0%,
+      rgba(128,154,221,.18) 42%,
+      rgba(128,154,221,0) 76%);
+    filter:blur(28px);
     pointer-events:none;
   }
   .cs-hero .cs-hero-content {
@@ -504,8 +512,8 @@
     justify-content:center !important;
     background:transparent !important;
     pointer-events:none;
-    -webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.96) 62%,rgba(0,0,0,.45) 88%,transparent 100%);
-    mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.96) 62%,rgba(0,0,0,.45) 88%,transparent 100%);
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
   }
   .cs-hero .cs-hero-phone::before { display:none !important; }
   .cs-hero .cs-phone-mockup {
@@ -513,6 +521,12 @@
     z-index:2 !important;
     transform:scale(1.22) !important;
     transform-origin:top center !important;
+  }
+  /* The phone display stays fully opaque as it passes over the hero heading. */
+  .cs-hero .cs-phone-mockup .device-screen,
+  .cs-hero .cs-phone-screen-content {
+    background:#E0EBFF !important;
+    opacity:1 !important;
   }
   @media (min-width:768px) {
     .cs-hero { min-height:640px !important; }
