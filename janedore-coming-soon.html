@@ -468,23 +468,35 @@
     overflow:hidden !important;
     isolation:isolate !important;
   }
-  /* Keep the blue atmosphere as a soft mist at the bottom only. */
-  .cs-hero::before {
+  /* Full-width fog sits at the hero card's bottom edge and appears with the scroll reveal. */
+  .cs-hero::before,
+  .cs-hero::after {
     content:"";
     position:absolute;
-    z-index:0;
-    left:50%;
-    bottom:-76px;
-    transform:translateX(-50%);
-    width:min(100%,760px);
-    height:170px;
-    border-radius:50%;
-    background:radial-gradient(ellipse at center,
-      rgba(128,154,221,.42) 0%,
-      rgba(128,154,221,.18) 42%,
-      rgba(128,154,221,0) 76%);
-    filter:blur(28px);
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:12%;
+    min-height:58px;
     pointer-events:none;
+    background:#E0EBFF;
+    opacity:0;
+    filter:url(#janedore-phone-fog);
+    z-index:6;
+  }
+  .cs-hero::before {
+    -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.9) 42%, transparent 100%);
+    mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.9) 42%, transparent 100%);
+    opacity:calc(var(--hero-fog-progress, 0) * .92);
+  }
+  .cs-hero::after {
+    height:9%;
+    min-height:44px;
+    filter:url(#janedore-phone-fog) blur(7px);
+    -webkit-mask-image:linear-gradient(to top, #000 0%, transparent 100%);
+    mask-image:linear-gradient(to top, #000 0%, transparent 100%);
+    opacity:calc(var(--hero-fog-progress, 0) * .58);
   }
   .cs-hero .cs-hero-content {
     position:relative !important;
@@ -515,37 +527,9 @@
     -webkit-mask-image:none !important;
     mask-image:none !important;
   }
-  /* Turbulence-distorted blue mist: irregular cloud edge, not a smooth fade. */
+  /* Fog belongs to the full hero card, never to the phone element. */
   .cs-hero .cs-hero-phone::before,
-  .cs-hero .cs-hero-phone::after {
-    content:"";
-    display:block !important;
-    position:absolute;
-    left:-38px;
-    right:-38px;
-    bottom:-20px;
-    height:128px;
-    pointer-events:none;
-    background:#E0EBFF;
-    filter:url(#janedore-phone-fog) blur(8px);
-  }
-  .cs-hero .cs-hero-phone::before {
-    z-index:4;
-    opacity:.82;
-    -webkit-mask-image:linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.2) 18%, #000 66%, #000 100%);
-    mask-image:linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.2) 18%, #000 66%, #000 100%);
-  }
-  .cs-hero .cs-hero-phone::after {
-    z-index:5;
-    left:-24px;
-    right:-24px;
-    bottom:-34px;
-    height:92px;
-    opacity:.56;
-    filter:url(#janedore-phone-fog) blur(13px);
-    -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 48%, #000 100%);
-    mask-image:linear-gradient(to bottom, transparent 0%, #000 48%, #000 100%);
-  }
+  .cs-hero .cs-hero-phone::after { content:none !important; }
   .cs-hero .cs-phone-mockup {
     position:relative !important;
     z-index:2 !important;
@@ -1048,6 +1032,8 @@
     var travel = phoneMedia.matches ? 310 : 235;
     var y = travel * (1 - progress);
     heroPhone.style.setProperty('transform', 'translate3d(-50%,' + y.toFixed(2) + 'px,0)', 'important');
+    var heroCard = heroPhone.closest('.cs-hero');
+    if (heroCard) heroCard.style.setProperty('--hero-fog-progress', progress.toFixed(3));
   }
   function heroPhoneTick(now) {
     var dt = Math.min(64, now - phoneLastTime);
