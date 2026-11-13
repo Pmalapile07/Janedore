@@ -413,6 +413,34 @@
     color:#111 !important;
   }
 
+  /* Scroll state: smoky, dirty frosted glass. At the top, retain the
+     existing black header, white logo and blue waitlist button. */
+  .cs-header-pill {
+    transition:
+      background .32s ease,
+      box-shadow .32s ease,
+      -webkit-backdrop-filter .32s ease,
+      backdrop-filter .32s ease;
+  }
+  .cs-header-pill.is-scrolled {
+    background:rgba(226,226,226,.68) !important;
+    -webkit-backdrop-filter:blur(26px) saturate(115%) brightness(1.04) !important;
+    backdrop-filter:blur(26px) saturate(115%) brightness(1.04) !important;
+    box-shadow:0 8px 30px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.42) !important;
+  }
+  .cs-header-pill.is-scrolled .cs-logo {
+    color:#111 !important;
+    transition:color .3s ease, filter .3s ease;
+  }
+  .cs-header-pill.is-scrolled .cs-logo.cs-site-logo-image {
+    filter:brightness(0) saturate(100%) !important;
+  }
+  .cs-header-pill.is-scrolled .cs-btn-accent {
+    background:#111 !important;
+    color:#fff !important;
+    transition:background .3s ease, color .3s ease;
+  }
+
   /* Solid blue hero with a centered, three-line headline */
   .cs-hero {
     background:#E0EBFF !important;
