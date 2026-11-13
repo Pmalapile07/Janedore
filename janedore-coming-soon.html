@@ -478,25 +478,6 @@
     filter:blur(42px);
     pointer-events:none;
   }
-  .cs-hero::after {
-    content:"";
-    position:absolute;
-    z-index:0;
-    width:min(145vw,900px);
-    aspect-ratio:1;
-    left:50%;
-    top:78%;
-    transform:translate(-50%,-50%);
-    border-radius:50%;
-    background:radial-gradient(ellipse at center,
-      rgba(128,154,221,.82) 0%,
-      rgba(128,154,221,.48) 30%,
-      rgba(128,154,221,.2) 52%,
-      rgba(128,154,221,0) 72%);
-    filter:blur(42px);
-    opacity:var(--hero-mist-boost,0);
-    pointer-events:none;
-  }
   .cs-hero .cs-hero-content {
     position:relative !important;
     transform:translateY(-10px) !important;
@@ -1003,18 +984,50 @@
   updateHeaderGlass();
 
   // Reveal the phone as the visitor scrolls into the page; reset it at the top.
-  var heroSection = document.querySelector('.cs-hero');
+  // Smooth version: the scroll position only sets a target. A single rAF loop
+  // eases the phone toward that target (frame-rate independent, iOS-style
+  // inertia) and writes one GPU-composited transform directly on the phone,
+  // so no CSS variable changes force the hero to restyle on every scroll tick.
+  var heroPhone = document.querySelector('.cs-hero .cs-hero-phone');
+  var phoneMedia = window.matchMedia('(min-width:768px)');
+  var phoneTarget = 0, phoneCurrent = 0, phoneRunning = false, phoneLastTime = 0;
+  var PHONE_SCROLL_RANGE = 180;
+  var PHONE_EASE_MS = 110;
 
-  function updateHeroPhoneReveal() {
-    if (!heroSection) return;
-    // Follow the scroll position directly, with twice the previous reveal speed.
-    var progress = Math.max(0, Math.min(1, window.scrollY / 90));
-    heroSection.style.setProperty('--hero-phone-reveal', progress.toFixed(4));
-    heroSection.style.setProperty('--hero-mist-boost', (progress * 0.1).toFixed(4));
+  function applyHeroPhone(progress) {
+    if (!heroPhone) return;
+    var travel = phoneMedia.matches ? 310 : 235;
+    var y = travel * (1 - progress);
+    heroPhone.style.setProperty('transform', 'translate3d(-50%,' + y.toFixed(2) + 'px,0)', 'important');
   }
-
+  function heroPhoneTick(now) {
+    var dt = Math.min(64, now - phoneLastTime);
+    phoneLastTime = now;
+    var k = 1 - Math.exp(-dt / PHONE_EASE_MS);
+    phoneCurrent += (phoneTarget - phoneCurrent) * k;
+    if (Math.abs(phoneTarget - phoneCurrent) < 0.0004) {
+      phoneCurrent = phoneTarget;
+      applyHeroPhone(phoneCurrent);
+      phoneRunning = false;
+      return;
+    }
+    applyHeroPhone(phoneCurrent);
+    requestAnimationFrame(heroPhoneTick);
+  }
+  function updateHeroPhoneReveal() {
+    if (!heroPhone) return;
+    phoneTarget = Math.max(0, Math.min(1, window.scrollY / PHONE_SCROLL_RANGE));
+    if (!phoneRunning) {
+      phoneRunning = true;
+      phoneLastTime = performance.now();
+      requestAnimationFrame(heroPhoneTick);
+    }
+  }
   window.addEventListener('scroll', updateHeroPhoneReveal, { passive:true });
-  updateHeroPhoneReveal();
+  window.addEventListener('resize', function () { applyHeroPhone(phoneCurrent); }, { passive:true });
+  phoneTarget = Math.max(0, Math.min(1, window.scrollY / PHONE_SCROLL_RANGE));
+  phoneCurrent = phoneTarget;
+  applyHeroPhone(phoneCurrent);
 
   // Hero video: paste your hosted .mp4 URL here (H.264, 720p, under ~8MB, 10 to 20 second loop).
   // Leave empty to keep the animated background.
