@@ -515,35 +515,36 @@
     -webkit-mask-image:none !important;
     mask-image:none !important;
   }
-  /* Same-colour blue fog at the phone's lower cut-off: layered haze, not a glow. */
+  /* Turbulence-distorted blue mist: irregular cloud edge, not a smooth fade. */
   .cs-hero .cs-hero-phone::before,
   .cs-hero .cs-hero-phone::after {
     content:"";
     display:block !important;
     position:absolute;
-    z-index:4;
-    left:-34px;
-    right:-34px;
-    bottom:-18px;
-    height:112px;
+    left:-38px;
+    right:-38px;
+    bottom:-20px;
+    height:128px;
     pointer-events:none;
+    background:#E0EBFF;
+    filter:url(#janedore-phone-fog) blur(8px);
   }
   .cs-hero .cs-hero-phone::before {
-    background:
-      radial-gradient(ellipse 42% 58% at 18% 76%, rgba(224,235,255,.78) 0%, rgba(224,235,255,.34) 48%, transparent 78%),
-      radial-gradient(ellipse 46% 62% at 52% 82%, rgba(224,235,255,.82) 0%, rgba(224,235,255,.3) 52%, transparent 80%),
-      radial-gradient(ellipse 40% 58% at 86% 72%, rgba(224,235,255,.72) 0%, rgba(224,235,255,.28) 48%, transparent 78%);
-    filter:blur(17px);
-    opacity:.95;
+    z-index:4;
+    opacity:.82;
+    -webkit-mask-image:linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.2) 18%, #000 66%, #000 100%);
+    mask-image:linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.2) 18%, #000 66%, #000 100%);
   }
   .cs-hero .cs-hero-phone::after {
     z-index:5;
-    left:-20px;
-    right:-20px;
-    bottom:-28px;
-    height:88px;
-    background:linear-gradient(to bottom, rgba(224,235,255,0) 0%, rgba(224,235,255,.22) 38%, rgba(224,235,255,.58) 100%);
-    filter:blur(13px);
+    left:-24px;
+    right:-24px;
+    bottom:-34px;
+    height:92px;
+    opacity:.56;
+    filter:url(#janedore-phone-fog) blur(13px);
+    -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 48%, #000 100%);
+    mask-image:linear-gradient(to bottom, transparent 0%, #000 48%, #000 100%);
   }
   .cs-hero .cs-phone-mockup {
     position:relative !important;
@@ -624,6 +625,12 @@
     <div class="cs-hero-content">
       <h1>Not everything<br>worth discovering<br>is mainstream.</h1>
     </div>
+    <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+      <filter id="janedore-phone-fog" x="-35%" y="-45%" width="170%" height="210%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018 0.055" numOctaves="3" seed="8" result="fogNoise"/>
+        <feDisplacementMap in="SourceGraphic" in2="fogNoise" scale="25" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </svg>
     <div class="cs-app-preview-placeholder cs-hero-phone" aria-label="Phone mockup preview">
         <div class="cs-phone-mockup" aria-hidden="true">
           <div class="device device-iphone-14-pro device-black">
