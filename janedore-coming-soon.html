@@ -485,14 +485,14 @@
     z-index:6;
   }
   .cs-hero::before {
-    opacity:.96;
+    opacity:calc(var(--hero-fog-progress, 0) * .96);
     -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.94) 42%, transparent 100%);
     mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.94) 42%, transparent 100%);
   }
   .cs-hero::after {
     height:19%;
     min-height:86px;
-    opacity:.78;
+    opacity:calc(var(--hero-fog-progress, 0) * .78);
     filter:url(#janedore-phone-fog) blur(9px);
     -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 38%, transparent 100%);
     mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 38%, transparent 100%);
@@ -1031,6 +1031,8 @@
     var travel = phoneMedia.matches ? 310 : 235;
     var y = travel * (1 - progress);
     heroPhone.style.setProperty('transform', 'translate3d(-50%,' + y.toFixed(2) + 'px,0)', 'important');
+    var heroCard = heroPhone.closest('.cs-hero');
+    if (heroCard) heroCard.style.setProperty('--hero-fog-progress', progress.toFixed(3));
   }
   function heroPhoneTick(now) {
     var dt = Math.min(64, now - phoneLastTime);
