@@ -485,14 +485,14 @@
     z-index:6;
   }
   .cs-hero::before {
-    opacity:calc(var(--hero-fog-progress, 0) * .96);
+    opacity:calc(var(--hero-fog-progress, 0) * 1);
     -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.94) 42%, transparent 100%);
     mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.94) 42%, transparent 100%);
   }
   .cs-hero::after {
     height:19%;
     min-height:86px;
-    opacity:calc(var(--hero-fog-progress, 0) * .78);
+    opacity:calc(var(--hero-fog-progress, 0) * .88);
     filter:url(#janedore-phone-fog) blur(9px);
     -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 38%, transparent 100%);
     mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 38%, transparent 100%);
