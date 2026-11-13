@@ -515,7 +515,36 @@
     -webkit-mask-image:none !important;
     mask-image:none !important;
   }
-  .cs-hero .cs-hero-phone::before { display:none !important; }
+  /* Same-colour blue fog at the phone's lower cut-off: layered haze, not a glow. */
+  .cs-hero .cs-hero-phone::before,
+  .cs-hero .cs-hero-phone::after {
+    content:"";
+    display:block !important;
+    position:absolute;
+    z-index:4;
+    left:-34px;
+    right:-34px;
+    bottom:-18px;
+    height:112px;
+    pointer-events:none;
+  }
+  .cs-hero .cs-hero-phone::before {
+    background:
+      radial-gradient(ellipse 42% 58% at 18% 76%, rgba(224,235,255,.78) 0%, rgba(224,235,255,.34) 48%, transparent 78%),
+      radial-gradient(ellipse 46% 62% at 52% 82%, rgba(224,235,255,.82) 0%, rgba(224,235,255,.3) 52%, transparent 80%),
+      radial-gradient(ellipse 40% 58% at 86% 72%, rgba(224,235,255,.72) 0%, rgba(224,235,255,.28) 48%, transparent 78%);
+    filter:blur(17px);
+    opacity:.95;
+  }
+  .cs-hero .cs-hero-phone::after {
+    z-index:5;
+    left:-20px;
+    right:-20px;
+    bottom:-28px;
+    height:88px;
+    background:linear-gradient(to bottom, rgba(224,235,255,0) 0%, rgba(224,235,255,.22) 38%, rgba(224,235,255,.58) 100%);
+    filter:blur(13px);
+  }
   .cs-hero .cs-phone-mockup {
     position:relative !important;
     z-index:2 !important;
