@@ -983,16 +983,15 @@
   window.addEventListener('scroll', updateHeaderGlass, { passive:true });
   updateHeaderGlass();
 
-  // Reveal the phone as the visitor scrolls into the page; reset it at the top.
-  // Smooth version: the scroll position only sets a target. A single rAF loop
-  // eases the phone toward that target (frame-rate independent, iOS-style
-  // inertia) and writes one GPU-composited transform directly on the phone,
-  // so no CSS variable changes force the hero to restyle on every scroll tick.
+  // Scroll-linked phone reveal with a light, responsive glide.
+  // The phone follows the scroll target continuously; a short frame-rate-
+  // independent ease removes the mechanical edge without making it lag behind.
+  // Only the phone's transform is updated, keeping the movement GPU-composited.
   var heroPhone = document.querySelector('.cs-hero .cs-hero-phone');
   var phoneMedia = window.matchMedia('(min-width:768px)');
   var phoneTarget = 0, phoneCurrent = 0, phoneRunning = false, phoneLastTime = 0;
   var PHONE_SCROLL_RANGE = 180;
-  var PHONE_EASE_MS = 110;
+  var PHONE_EASE_MS = 55;
 
   function applyHeroPhone(progress) {
     if (!heroPhone) return;
