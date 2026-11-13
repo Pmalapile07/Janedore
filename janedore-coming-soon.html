@@ -468,7 +468,7 @@
     overflow:hidden !important;
     isolation:isolate !important;
   }
-  /* Full-width fog sits at the hero card's bottom edge and appears with the scroll reveal. */
+  /* Persistent, full-width fog anchored to the hero card's bottom edge. */
   .cs-hero::before,
   .cs-hero::after {
     content:"";
@@ -477,26 +477,25 @@
     right:0;
     bottom:0;
     width:100%;
-    height:12%;
-    min-height:58px;
+    height:22%;
+    min-height:100px;
     pointer-events:none;
     background:#E0EBFF;
-    opacity:0;
     filter:url(#janedore-phone-fog);
     z-index:6;
   }
   .cs-hero::before {
-    -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.9) 42%, transparent 100%);
-    mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.9) 42%, transparent 100%);
-    opacity:calc(var(--hero-fog-progress, 0) * .92);
+    opacity:.96;
+    -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.94) 42%, transparent 100%);
+    mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.94) 42%, transparent 100%);
   }
   .cs-hero::after {
-    height:9%;
-    min-height:44px;
-    filter:url(#janedore-phone-fog) blur(7px);
-    -webkit-mask-image:linear-gradient(to top, #000 0%, transparent 100%);
-    mask-image:linear-gradient(to top, #000 0%, transparent 100%);
-    opacity:calc(var(--hero-fog-progress, 0) * .58);
+    height:19%;
+    min-height:86px;
+    opacity:.78;
+    filter:url(#janedore-phone-fog) blur(9px);
+    -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 38%, transparent 100%);
+    mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 38%, transparent 100%);
   }
   .cs-hero .cs-hero-content {
     position:relative !important;
@@ -1032,8 +1031,6 @@
     var travel = phoneMedia.matches ? 310 : 235;
     var y = travel * (1 - progress);
     heroPhone.style.setProperty('transform', 'translate3d(-50%,' + y.toFixed(2) + 'px,0)', 'important');
-    var heroCard = heroPhone.closest('.cs-hero');
-    if (heroCard) heroCard.style.setProperty('--hero-fog-progress', progress.toFixed(3));
   }
   function heroPhoneTick(now) {
     var dt = Math.min(64, now - phoneLastTime);
