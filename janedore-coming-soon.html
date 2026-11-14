@@ -1377,3 +1377,42 @@
 
 </body>
 </html>
+
+
+<style id="janedore-sticky-glass-header">
+  /* Sticky header: clean white at rest, translucent glass while scrolling. */
+  body { padding-top:0 !important; }
+  .cs-header {
+    position:sticky !important;
+    top:0 !important;
+    left:auto !important;
+    right:auto !important;
+    z-index:30 !important;
+    background:transparent !important;
+    padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0 !important;
+  }
+  .cs-header-pill {
+    background:#fff !important;
+    -webkit-backdrop-filter:none !important;
+    backdrop-filter:none !important;
+    border:0 !important;
+    box-shadow:none !important;
+    transition:background .3s ease, -webkit-backdrop-filter .3s ease, backdrop-filter .3s ease !important;
+  }
+  .cs-header-pill.is-scrolled {
+    background:rgba(255,255,255,.58) !important;
+    -webkit-backdrop-filter:blur(24px) saturate(165%) !important;
+    backdrop-filter:blur(24px) saturate(165%) !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+  .cs-header-pill .cs-logo,
+  .cs-header-pill.is-scrolled .cs-logo {
+    color:#111 !important;
+  }
+  .cs-header .cs-btn-accent,
+  .cs-header-pill.is-scrolled .cs-btn-accent {
+    background:#fff !important;
+    color:#111 !important;
+  }
+</style>
