@@ -634,6 +634,61 @@
     display: none !important;
   }
 </style>
+<style id="janedore-liquid-glass-header">
+  /* iOS-inspired Liquid Glass: keep the header black at the top;
+     reveal translucent, lightly refractive glass once the page scrolls. */
+  .cs-header-pill {
+    position:relative !important;
+    isolation:isolate;
+    overflow:hidden;
+  }
+  .cs-header-pill.is-scrolled {
+    background:rgba(224,235,255,.58) !important;
+    -webkit-backdrop-filter:blur(18px) saturate(175%) brightness(1.06) !important;
+    backdrop-filter:blur(18px) saturate(175%) brightness(1.06) !important;
+    /* SVG displacement adds the subtle optical bend; blur remains the fallback. */
+    -webkit-backdrop-filter:url("#janedore-liquid-glass") blur(18px) saturate(175%) brightness(1.06) !important;
+    backdrop-filter:url("#janedore-liquid-glass") blur(18px) saturate(175%) brightness(1.06) !important;
+    border:1px solid rgba(255,255,255,.58) !important;
+    box-shadow:
+      0 8px 28px rgba(17,17,17,.10),
+      inset 0 1px 0 rgba(255,255,255,.82),
+      inset 0 -1px 0 rgba(255,255,255,.22) !important;
+  }
+  .cs-header-pill.is-scrolled::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:
+      linear-gradient(115deg,rgba(255,255,255,.48),rgba(255,255,255,.08) 34%,transparent 62%),
+      linear-gradient(180deg,rgba(255,255,255,.22),transparent 48%);
+  }
+  .cs-header-pill.is-scrolled::after {
+    content:"";
+    position:absolute;
+    top:1px;
+    left:8%;
+    right:8%;
+    height:1px;
+    z-index:0;
+    pointer-events:none;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+  }
+  .cs-header-pill.is-scrolled > * {
+    position:relative;
+    z-index:1;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .cs-header-pill.is-scrolled {
+      background:rgba(224,235,255,.94) !important;
+      -webkit-backdrop-filter:none !important;
+      backdrop-filter:none !important;
+    }
+  }
+</style>
 </head>
 <style id="waitlist-width-override">
   /* Match the waitlist fields to the floating header's outer width. */
@@ -697,6 +752,10 @@
       <filter id="janedore-phone-fog" x="-35%" y="-45%" width="170%" height="210%" color-interpolation-filters="sRGB">
         <feTurbulence type="fractalNoise" baseFrequency="0.018 0.055" numOctaves="3" seed="8" result="fogNoise"/>
         <feDisplacementMap in="SourceGraphic" in2="fogNoise" scale="25" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="janedore-liquid-glass" x="-20%" y="-30%" width="140%" height="160%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.028" numOctaves="2" seed="13" result="glassNoise"/>
+        <feDisplacementMap in="SourceGraphic" in2="glassNoise" scale="8" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
     </svg>
     <div class="cs-app-preview-placeholder cs-hero-phone" aria-label="Phone mockup preview">
