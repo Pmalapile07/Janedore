@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/picturepan2/devices.css@master/dist/devices.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root { --bg:#FFFFFF; --ink:#111111; --text:#111111; --muted:#6B6B6B; --border:#E5E5E5; --accent:#DFDDF4; --head:21px; --gutter:20px; }
+  :root { --bg:#FFFFFF; --ink:#111111; --text:#111111; --muted:#6B6B6B; --border:#E5E5E5; --accent:#CFECFF; --head:21px; --gutter:20px; }
   html { font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; font-size:16px; }
   body { min-height:100dvh; display:flex; flex-direction:column; background:#fff; color:var(--text); }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
@@ -99,7 +99,7 @@
   /* Hero video background */
   .cs-hero { background:#111; color:#fff; align-items:flex-end; min-height:560px; overflow:hidden; isolation:isolate; }
   .hero-media { position:absolute; inset:0; z-index:-1; }
-  .hero-fallback { position:absolute; inset:-10%; background:radial-gradient(60% 60% at 25% 30%, #DFDDF4 0%, transparent 60%), radial-gradient(50% 50% at 80% 70%, #514B70 0%, transparent 65%), #111; animation:drift 18s ease-in-out infinite alternate; }
+  .hero-fallback { position:absolute; inset:-10%; background:radial-gradient(60% 60% at 25% 30%, #CFECFF 0%, transparent 60%), radial-gradient(50% 50% at 80% 70%, #456477 0%, transparent 65%), #111; animation:drift 18s ease-in-out infinite alternate; }
   @keyframes drift { to { transform:translate3d(4%,-3%,0) scale(1.12); } }
   .hero-video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
   .hero-shade { position:absolute; inset:0; background:linear-gradient(to top, rgba(17,17,17,.78), rgba(17,17,17,.25) 60%, rgba(17,17,17,.35)); }
@@ -136,7 +136,7 @@
     align-items:center;
     justify-content:center;
     overflow:hidden;
-    background:#DFDDF4;
+    background:#CFECFF;
   }
   /* Soft ambient blue haze behind the phone, like a diffused light source. */
   .cs-app-preview-placeholder::before {
@@ -150,10 +150,10 @@
     transform:translate(-50%,-50%);
     border-radius:50%;
     background:radial-gradient(ellipse at center,
-      rgba(166,160,211,.72) 0%,
-      rgba(166,160,211,.42) 28%,
-      rgba(166,160,211,.16) 52%,
-      rgba(166,160,211,0) 72%);
+      rgba(120,190,230,.72) 0%,
+      rgba(120,190,230,.42) 28%,
+      rgba(120,190,230,.16) 52%,
+      rgba(120,190,230,0) 72%);
     filter:blur(22px);
     pointer-events:none;
   }
@@ -171,7 +171,7 @@
     display:block;
     position:relative;
     overflow:hidden;
-    background:#DFDDF4;
+    background:#CFECFF;
     color:#111;
     font-family:'Inter',Helvetica,Arial,sans-serif;
   }
@@ -181,7 +181,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    background:#DFDDF4;
+    background:#CFECFF;
   }
   .cs-phone-status {
     position:absolute;
@@ -271,7 +271,7 @@
 <style>
   /* Reference look: floating pale blue header, rounded image hero, pill buttons */
   .cs-header { background:transparent; padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0; }
-  .cs-header-pill { background:#DFDDF4; border:0; box-shadow:none; border-radius:28px; height:64px; padding:0 12px 0 24px; }
+  .cs-header-pill { background:#CFECFF; border:0; box-shadow:none; border-radius:28px; height:64px; padding:0 12px 0 24px; }
   .cs-logo { color:#fff; font-family:'Inter',Helvetica,Arial,sans-serif; font-size:22px; line-height:1; font-weight:600; letter-spacing:.02em; text-transform:uppercase; white-space:nowrap; }
   .cs-logo.cs-site-logo-image { display:block; height:15px; width:auto; max-width:200px; object-fit:contain; }
   .cs-btn { border-radius:999px; font-size:14px; font-weight:400; letter-spacing:0; text-transform:none; }
@@ -300,8 +300,8 @@
   /* Fixed clear-glass header */
   body { padding-top:calc(76px + env(safe-area-inset-top,0px)); }
   .cs-header { position:fixed; top:0; left:0; right:0; z-index:30; }
-  .cs-header-pill { background:rgba(223,221,244,.72); -webkit-backdrop-filter:blur(18px) saturate(170%); backdrop-filter:blur(18px) saturate(170%); border:0; box-shadow:0 6px 24px rgba(17,17,17,.06); border-radius:28px; transition:background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease; }
-  .cs-header-pill.is-scrolled { background:rgba(223,221,244,.58); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); box-shadow:0 8px 28px rgba(17,17,17,.08); }
+  .cs-header-pill { background:rgba(207,236,255,.72); -webkit-backdrop-filter:blur(18px) saturate(170%); backdrop-filter:blur(18px) saturate(170%); border:0; box-shadow:0 6px 24px rgba(17,17,17,.06); border-radius:28px; transition:background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease; }
+  .cs-header-pill.is-scrolled { background:rgba(207,236,255,.58); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); box-shadow:0 8px 28px rgba(17,17,17,.08); }
   .cs-logo { color:#111 !important; }
   .cs-sheet .signup-input { font-size:13px; }
   .cs-logo.cs-site-logo-image { display:block; width:auto; height:25px; max-width:190px; object-fit:contain; filter:brightness(0) saturate(100%); }
@@ -332,7 +332,7 @@
     font-size:20px;
     line-height:1.2;
     font-weight:700;
-    background-image:linear-gradient(90deg,#A6A0D3 0%,#A6A0D3 38%,#DFDDF4 46%,#FFFFFF 50%,#DFDDF4 54%,#A6A0D3 62%,#A6A0D3 100%);
+    background-image:linear-gradient(90deg,#A6A0D3 0%,#A6A0D3 38%,#CFECFF 46%,#FFFFFF 50%,#CFECFF 54%,#A6A0D3 62%,#A6A0D3 100%);
     background-size:250% 100%;
     background-position:100% 0;
     background-repeat:no-repeat;
@@ -409,7 +409,7 @@
     filter:brightness(0) invert(1) !important;
   }
   .cs-header .cs-btn-accent {
-    background:#DFDDF4 !important;
+    background:#CFECFF !important;
     color:#111 !important;
   }
 
@@ -443,7 +443,7 @@
 
   /* Solid blue hero with a centered, three-line headline */
   .cs-hero {
-    background:#DFDDF4 !important;
+    background:#CFECFF !important;
     color:#111 !important;
     align-items:center !important;
     justify-content:center !important;
@@ -483,7 +483,7 @@
     }
   }
   .waitlist .cs-btn {
-    background:#DFDDF4 !important;
+    background:#CFECFF !important;
     color:#111 !important;
   }
 </style>
@@ -508,7 +508,7 @@
     height:22%;
     min-height:100px;
     pointer-events:none;
-    background:#DFDDF4;
+    background:#CFECFF;
     filter:url(#janedore-phone-fog);
     z-index:6;
   }
@@ -566,7 +566,7 @@
   /* The phone display stays fully opaque as it passes over the hero heading. */
   .cs-hero .cs-phone-mockup .device-screen,
   .cs-hero .cs-phone-screen-content {
-    background:#DFDDF4 !important;
+    background:#CFECFF !important;
     opacity:1 !important;
   }
   @media (min-width:768px) {
@@ -643,7 +643,7 @@
     overflow:hidden;
   }
   .cs-header-pill.is-scrolled {
-    background:rgba(223,221,244,.58) !important;
+    background:rgba(207,236,255,.58) !important;
     -webkit-backdrop-filter:blur(18px) saturate(175%) brightness(1.06) !important;
     backdrop-filter:blur(18px) saturate(175%) brightness(1.06) !important;
     /* SVG displacement adds the subtle optical bend; blur remains the fallback. */
@@ -664,7 +664,7 @@
   }
   @media (prefers-reduced-transparency: reduce) {
     .cs-header-pill.is-scrolled {
-      background:rgba(223,221,244,.94) !important;
+      background:rgba(207,236,255,.94) !important;
       -webkit-backdrop-filter:none !important;
       backdrop-filter:none !important;
     }
