@@ -209,9 +209,9 @@
   .cs-phone-status-right .battery { width:25px; height:13px; }
   .cs-phone-monogram {
     display:block;
-    width:140px;
-    height:140px;
-    flex:0 0 140px;
+    width:142px;
+    height:142px;
+    flex:0 0 142px;
     color:#111;
     transform:translate(-5px,-2px);
   }
@@ -219,6 +219,24 @@
     display:block;
     width:100%;
     height:100%;
+  }
+
+  .logo-mark-j {
+    stroke-dasharray:1;
+    stroke-dashoffset:1;
+    animation:logo-mark-draw 1.2s ease-in-out forwards;
+  }
+  .logo-mark-dot {
+    transform-box:fill-box;
+    transform-origin:center;
+    animation:logo-mark-drop .5s ease-out 1.1s both;
+  }
+  @keyframes logo-mark-draw {
+    to { stroke-dashoffset:0; }
+  }
+  @keyframes logo-mark-drop {
+    from { opacity:0; transform:translateY(-120px); }
+    to { opacity:1; transform:translateY(0); }
   }
   @media (min-width:768px) {
     .cs-app-preview-placeholder { min-height:390px; }
@@ -758,8 +776,8 @@
                   </div>
                   <span class="cs-phone-monogram" aria-label="Janedore">
                     <svg class="logo-mark" viewBox="0 0 2000 2000" role="img" aria-label="Janedore">
-                      <path fill="currentColor" d="M1101 539 L1278 637 L990 1180 C920 1300 830 1358 720 1358 C620 1358 520 1300 484 1266 L562 1098 C600 1130 660 1158 700 1158 C760 1158 810 1110 860 1030 Z"/>
-                      <circle fill="currentColor" cx="1156" cy="1230" r="140"/>
+                      <path class="logo-mark-j" pathLength="1" fill="none" stroke="currentColor" stroke-width="200" stroke-linecap="butt" stroke-linejoin="round" d="M1190 588 L930 1060 C860 1190 790 1258 710 1258 C640 1258 570 1220 523 1182"/>
+                      <circle class="logo-mark-dot" fill="currentColor" cx="1156" cy="1230" r="140"/>
                     </svg>
                   </span>
                   <div class="cs-phone-auth" aria-label="Sign-in options">
@@ -939,6 +957,26 @@
 </div>
 
 <script>
+  (function animatePhoneLogo() {
+    var logo = document.querySelector('.cs-phone-monogram svg');
+    if (!logo) return;
+
+    function replayLogo() {
+      var freshLogo = logo.cloneNode(true);
+      logo.parentNode.replaceChild(freshLogo, logo);
+      logo = freshLogo;
+    }
+
+    var lastScrollY = window.scrollY || 0;
+    window.addEventListener('scroll', function () {
+      var currentScrollY = window.scrollY || 0;
+      if (currentScrollY < lastScrollY) replayLogo();
+      lastScrollY = currentScrollY;
+    }, { passive:true });
+
+    window.setInterval(replayLogo, 30000);
+  })();
+
   document.getElementById('copyright').textContent = '\u00a9 ' + new Date().getFullYear() + ' Janedore';
   document.querySelectorAll('[data-open]').forEach(function (b) {
     b.addEventListener('click', function () { document.getElementById(b.dataset.open).hidden = false; });
