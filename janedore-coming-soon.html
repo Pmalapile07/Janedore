@@ -409,12 +409,11 @@
     filter:brightness(0) invert(1) !important;
   }
   .cs-header .cs-btn-accent {
-    background:#E0EBFF !important;
+    background:#fff !important;
     color:#111 !important;
   }
 
-  /* Scroll state: smoky, dirty frosted glass. At the top, retain the
-     existing black header, white logo and blue waitlist button. */
+  /* Scroll state: smoky, dirty frosted glass. Keep the waitlist button white. */
   .cs-header-pill {
     transition:
       background .32s ease,
@@ -436,8 +435,8 @@
     filter:brightness(0) saturate(100%) !important;
   }
   .cs-header-pill.is-scrolled .cs-btn-accent {
-    background:#111 !important;
-    color:#fff !important;
+    background:#fff !important;
+    color:#111 !important;
     transition:background .3s ease, color .3s ease;
   }
 
