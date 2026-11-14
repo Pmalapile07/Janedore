@@ -228,7 +228,34 @@
 
   /* Footer (unchanged) */
   .cs-footer { background:#111; color:#fff; padding:40px var(--gutter) calc(28px + env(safe-area-inset-bottom,0px)); margin-top:8px; }
-  .cs-footer-logo { display:block; width:64px; height:64px; object-fit:cover; margin:0 0 8px; }
+  .cs-footer-logo {
+    display:flex;
+    align-items:flex-end;
+    gap:4px;
+    width:max-content;
+    height:78px;
+    margin:0 0 8px;
+  }
+  .cs-footer-monogram {
+    display:block;
+    color:#111;
+    font-family:"Janedore Logo",'Inter',Helvetica,Arial,sans-serif !important;
+    font-size:88px;
+    font-weight:400 !important;
+    line-height:.82;
+    letter-spacing:0;
+    transform:rotate(-29deg);
+    transform-origin:center center;
+  }
+  .cs-footer-mark-circle {
+    display:block;
+    width:23px;
+    height:23px;
+    margin:0 0 2px 1px;
+    border-radius:50%;
+    background:#111;
+    flex:0 0 23px;
+  }
   .cs-footer-tag { font-size:13px; color:rgba(255,255,255,.65); margin-top:8px; }
   .cs-footer-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:28px; font-size:12px; color:rgba(255,255,255,.55); }
   .cs-link { border:none; background:none; padding:0; font:inherit; color:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
@@ -880,7 +907,10 @@
 </main>
 
 <footer class="cs-footer">
-  <img class="cs-footer-logo" src="/assets/janedore-app-icon.svg" alt="JANEDORE app icon">
+  <div class="cs-footer-logo" role="img" aria-label="JANEDORE app mark">
+    <span class="cs-footer-monogram">J</span>
+    <span class="cs-footer-mark-circle" aria-hidden="true"></span>
+  </div>
   <p class="cs-footer-tag">The home of independent brands.</p>
   <div class="cs-footer-meta">
     <span id="copyright"></span>
