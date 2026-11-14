@@ -974,7 +974,7 @@
       lastScrollY = currentScrollY;
     }, { passive:true });
 
-    window.setInterval(replayLogo, 30000);
+    window.setInterval(replayLogo, 5000);
   })();
 
   document.getElementById('copyright').textContent = '\u00a9 ' + new Date().getFullYear() + ' Janedore';
@@ -1357,6 +1357,22 @@
     color:#111 !important;
   }
   .cs-footer .cs-logo { color:inherit !important; }
+</style>
+
+
+<style id="janedore-white-hero-mist-fix">
+  /* Keep the bottom edge of the scroll-revealed mist clean white. */
+  .cs-hero::before,
+  .cs-hero::after {
+    background:#fff !important;
+    filter:none !important;
+    -webkit-mask-image:linear-gradient(to top, #000 0%, #000 38%, rgba(0,0,0,.82) 58%, transparent 100%) !important;
+    mask-image:linear-gradient(to top, #000 0%, #000 38%, rgba(0,0,0,.82) 58%, transparent 100%) !important;
+  }
+  .cs-hero::after {
+    background:linear-gradient(to top, #fff 0%, #fff 32%, rgba(255,255,255,.7) 62%, transparent 100%) !important;
+    filter:blur(9px) !important;
+  }
 </style>
 
 </body>
