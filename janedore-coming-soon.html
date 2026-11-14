@@ -232,17 +232,7 @@
 
   /* Footer (unchanged) */
   .cs-footer { background:#111; color:#fff; padding:40px var(--gutter) calc(28px + env(safe-area-inset-bottom,0px)); margin-top:8px; }
-  .cs-footer-wordmark {
-    display:block;
-    width:max-content;
-    margin:0 0 8px;
-    color:inherit;
-    font-family:inherit;
-    font-size:22px;
-    font-weight:600;
-    letter-spacing:.02em;
-    line-height:1.2;
-  }
+  .cs-footer-wordmark { color:inherit !important; }
   .cs-footer-tag { font-size:13px; color:rgba(255,255,255,.65); margin-top:8px; }
   .cs-footer-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:28px; font-size:12px; color:rgba(255,255,255,.55); }
   .cs-link { border:none; background:none; padding:0; font:inherit; color:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
@@ -899,7 +889,7 @@
 </main>
 
 <footer class="cs-footer">
-  <span class="cs-footer-wordmark">JANEDORE</span>
+  <span class="cs-logo cs-footer-wordmark">JANEDORE</span>
   <p class="cs-footer-tag">The home of independent brands.</p>
   <div class="cs-footer-meta">
     <span id="copyright"></span>
@@ -1328,6 +1318,7 @@
   .cs-footer .cs-link {
     color:#111 !important;
   }
+  .cs-footer .cs-logo { color:inherit !important; }
 </style>
 
 </body>
