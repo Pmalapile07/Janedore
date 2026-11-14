@@ -1143,7 +1143,7 @@
   bindPopupSignup();
   loadWaitlistCount();
 
-  // Keep the header solid blue at the top; switch to glass only after scrolling.
+  // Keep the header white at the top; the final colour overrides keep it white while scrolling.
   var headerPill = document.querySelector('.cs-header-pill');
   function updateHeaderGlass() {
     if (headerPill) headerPill.classList.toggle('is-scrolled', window.scrollY > 12);
@@ -1225,5 +1225,40 @@
     targets.forEach(function (t) { t.classList.add('rv'); io.observe(t); });
   }
 </script>
+
+<style id="janedore-header-footer-colour-update">
+  /* White floating header with the green waitlist action. */
+  .cs-header-pill,
+  .cs-header-pill.is-scrolled {
+    background:#fff !important;
+    -webkit-backdrop-filter:none !important;
+    backdrop-filter:none !important;
+    box-shadow:0 6px 24px rgba(17,17,17,.06) !important;
+  }
+  .cs-header-pill .cs-logo,
+  .cs-header-pill.is-scrolled .cs-logo { color:#111 !important; }
+  .cs-header-pill .cs-logo.cs-site-logo-image,
+  .cs-header-pill.is-scrolled .cs-logo.cs-site-logo-image {
+    filter:brightness(0) saturate(100%) !important;
+  }
+  .cs-header .cs-btn-accent,
+  .cs-header-pill.is-scrolled .cs-btn-accent {
+    background:#E2FFC0 !important;
+    color:#111 !important;
+  }
+
+  /* Black footer with white typography. */
+  .cs-footer {
+    background:#111 !important;
+    color:#fff !important;
+  }
+  .cs-footer-logo,
+  .cs-footer-tag,
+  .cs-footer-meta,
+  .cs-footer .cs-link {
+    color:#fff !important;
+  }
+</style>
+
 </body>
 </html>
