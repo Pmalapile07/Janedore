@@ -229,32 +229,11 @@
   /* Footer (unchanged) */
   .cs-footer { background:#111; color:#fff; padding:40px var(--gutter) calc(28px + env(safe-area-inset-bottom,0px)); margin-top:8px; }
   .cs-footer-logo {
-    display:flex;
-    align-items:flex-end;
-    gap:4px;
-    width:max-content;
+    display:block;
+    width:78px;
     height:78px;
     margin:0 0 8px;
-  }
-  .cs-footer-monogram {
-    display:block;
-    color:#111;
-    font-family:"Janedore Logo",'Inter',Helvetica,Arial,sans-serif !important;
-    font-size:88px;
-    font-weight:400 !important;
-    line-height:.82;
-    letter-spacing:0;
-    transform:rotate(29deg);
-    transform-origin:center center;
-  }
-  .cs-footer-mark-circle {
-    display:block;
-    width:23px;
-    height:23px;
-    margin:0 0 2px 1px;
-    border-radius:50%;
-    background:#111;
-    flex:0 0 23px;
+    color:#fff;
   }
   .cs-footer-tag { font-size:13px; color:rgba(255,255,255,.65); margin-top:8px; }
   .cs-footer-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:28px; font-size:12px; color:rgba(255,255,255,.55); }
@@ -907,10 +886,10 @@
 </main>
 
 <footer class="cs-footer">
-  <div class="cs-footer-logo" role="img" aria-label="JANEDORE app mark">
-    <span class="cs-footer-monogram">J</span>
-    <span class="cs-footer-mark-circle" aria-hidden="true"></span>
-  </div>
+  <svg class="cs-footer-logo" viewBox="0 0 2000 2000" role="img" aria-label="Janedore">
+    <path fill="currentColor" d="M1101 539 L1278 637 L990 1180 C920 1300 830 1358 720 1358 C620 1358 520 1300 484 1266 L562 1098 C600 1130 660 1158 700 1158 C760 1158 810 1110 860 1030 Z"/>
+    <circle fill="currentColor" cx="1144" cy="1224" r="118"/>
+  </svg>
   <p class="cs-footer-tag">The home of independent brands.</p>
   <div class="cs-footer-meta">
     <span id="copyright"></span>
