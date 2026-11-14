@@ -649,33 +649,14 @@
     /* SVG displacement adds the subtle optical bend; blur remains the fallback. */
     -webkit-backdrop-filter:url("#janedore-liquid-glass") blur(18px) saturate(175%) brightness(1.06) !important;
     backdrop-filter:url("#janedore-liquid-glass") blur(18px) saturate(175%) brightness(1.06) !important;
-    border:1px solid rgba(255,255,255,.58) !important;
-    box-shadow:
-      0 8px 28px rgba(17,17,17,.10),
-      inset 0 1px 0 rgba(255,255,255,.82),
-      inset 0 -1px 0 rgba(255,255,255,.22) !important;
+    border:0 !important;
+    outline:0 !important;
+    box-shadow:none !important;
   }
-  .cs-header-pill.is-scrolled::before {
-    content:"";
-    position:absolute;
-    inset:0;
-    z-index:0;
-    border-radius:inherit;
-    pointer-events:none;
-    background:
-      linear-gradient(115deg,rgba(255,255,255,.48),rgba(255,255,255,.08) 34%,transparent 62%),
-      linear-gradient(180deg,rgba(255,255,255,.22),transparent 48%);
-  }
+  .cs-header-pill.is-scrolled::before,
   .cs-header-pill.is-scrolled::after {
-    content:"";
-    position:absolute;
-    top:1px;
-    left:8%;
-    right:8%;
-    height:1px;
-    z-index:0;
-    pointer-events:none;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+    content:none !important;
+    display:none !important;
   }
   .cs-header-pill.is-scrolled > * {
     position:relative;
