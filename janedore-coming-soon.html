@@ -228,12 +228,36 @@
 
   /* Footer (unchanged) */
   .cs-footer { background:#111; color:#fff; padding:40px var(--gutter) calc(28px + env(safe-area-inset-bottom,0px)); margin-top:8px; }
+  .cs-footer-original-mark {
+    display:flex;
+    align-items:center;
+    gap:7px;
+    height:78px;
+    margin:0 0 8px;
+    color:inherit;
+  }
+  .cs-footer-original-j {
+    display:inline-block;
+    font-family:"Janedore Logo",'Inter',Helvetica,Arial,sans-serif;
+    font-size:78px;
+    font-weight:400;
+    line-height:1;
+    transform:rotate(29deg);
+  }
+  .cs-footer-original-dot {
+    display:block;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:currentColor;
+    margin:20px 0 0 1px;
+  }
   .cs-footer-logo {
     display:block;
     width:78px;
     height:78px;
     margin:0 0 8px;
-    color:#fff;
+    color:inherit;
   }
   .cs-footer-tag { font-size:13px; color:rgba(255,255,255,.65); margin-top:8px; }
   .cs-footer-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:28px; font-size:12px; color:rgba(255,255,255,.55); }
@@ -886,6 +910,10 @@
 </main>
 
 <footer class="cs-footer">
+  <div class="cs-footer-original-mark" aria-label="Janedore J and dot">
+    <span class="cs-footer-original-j">J</span>
+    <span class="cs-footer-original-dot" aria-hidden="true"></span>
+  </div>
   <svg class="cs-footer-logo" viewBox="0 0 2000 2000" role="img" aria-label="Janedore">
     <path fill="currentColor" d="M1101 539 L1278 637 L990 1180 C920 1300 830 1358 720 1358 C620 1358 520 1300 484 1266 L562 1098 C600 1130 660 1158 700 1158 C760 1158 810 1110 860 1030 Z"/>
     <circle fill="currentColor" cx="1144" cy="1224" r="118"/>
