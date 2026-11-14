@@ -670,44 +670,6 @@
     }
   }
 </style>
-<style id="janedore-header-over-hero">
-  /* Keep the hero at the top of the page, with the header layered over it. */
-  body { padding-top:0 !important; }
-  .cs-header {
-    position:fixed !important;
-    top:0 !important;
-    left:0 !important;
-    right:0 !important;
-    z-index:30 !important;
-  }
-  .cs-hero { margin-top:0 !important; }
-  /* Use the existing scrolled-state glass treatment from the first frame. */
-  .cs-header-pill,
-  .cs-header-pill.is-scrolled {
-    background:rgba(224,235,255,.58) !important;
-    -webkit-backdrop-filter:blur(18px) saturate(175%) brightness(1.06) !important;
-    backdrop-filter:blur(18px) saturate(175%) brightness(1.06) !important;
-    border:0 !important;
-    box-shadow:none !important;
-  }
-  .cs-header-pill .cs-logo { color:#111 !important; }
-  .cs-header-pill .cs-logo.cs-site-logo-image {
-    filter:brightness(0) saturate(100%) !important;
-  }
-  .cs-header-pill .cs-btn-accent {
-    background:#111 !important;
-    color:#fff !important;
-  }
-  @media (prefers-reduced-transparency:reduce) {
-    .cs-header-pill,
-    .cs-header-pill.is-scrolled {
-      background:rgba(224,235,255,.94) !important;
-      -webkit-backdrop-filter:none !important;
-      backdrop-filter:none !important;
-    }
-  }
-</style>
-
 </head>
 <style id="waitlist-width-override">
   /* Match the waitlist fields to the floating header's outer width. */
@@ -1182,10 +1144,13 @@
   bindPopupSignup();
   loadWaitlistCount();
 
-  // The header always uses its frosted-glass (scrolled) appearance.
-  // It is intentionally static on both desktop and mobile.
+  // Keep the header solid blue at the top; switch to glass only after scrolling.
   var headerPill = document.querySelector('.cs-header-pill');
-  if (headerPill) headerPill.classList.add('is-scrolled');
+  function updateHeaderGlass() {
+    if (headerPill) headerPill.classList.toggle('is-scrolled', window.scrollY > 12);
+  }
+  window.addEventListener('scroll', updateHeaderGlass, { passive:true });
+  updateHeaderGlass();
 
   // Scroll-linked phone reveal with a light, responsive glide.
   // The phone follows the scroll target continuously; a short frame-rate-
