@@ -420,6 +420,9 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
 const appProductView = document.getElementById('app-product-view');
 const appProductDb = firebase.firestore();
 const appProductCache = new Map();
+const appProductLoads = new Map();
+const appProductReviewsCache = new Map();
+let appRenderedProductId = '';
 let appCurrentProduct = null;
 let appProductQuantity = 1;
 let appSelectedSize = '';
@@ -457,22 +460,29 @@ function appUpdateCartCount() {
   const badge = document.getElementById('app-product-cart-count');
   if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
 }
+function appShowProductView() {
+  appProductView.hidden = false;
+  document.body.classList.add('app-product-open');
+  document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
+  const header = document.querySelector('.app-header');
+  const bottomNav = document.querySelector('.bottom-nav');
+  if (header) header.hidden = true;
+  if (bottomNav) bottomNav.hidden = true;
+}
 function appProductClose() {
   if (!appProductView || appProductView.hidden) return;
   appProductView.hidden = true;
   document.body.classList.remove('app-product-open');
   document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = view.dataset.view !== 'Home'; });
-  document.querySelector('.app-header').hidden = false;
-  document.querySelector('.bottom-nav').hidden = false;
+  const header = document.querySelector('.app-header');
+  const bottomNav = document.querySelector('.bottom-nav');
+  if (header) header.hidden = false;
+  if (bottomNav) bottomNav.hidden = false;
   if (location.hash.startsWith('#product/')) history.replaceState(null, '', location.pathname + location.search);
   window.scrollTo({top:0,behavior:'instant'});
 }
 function appProductShowLoading() {
-  appProductView.hidden = false;
-  document.body.classList.add('app-product-open');
-  document.querySelectorAll('.app-tab-content').forEach(view => view.hidden = true);
-  document.querySelector('.app-header').hidden = true;
-  document.querySelector('.bottom-nav').hidden = true;
+  appShowProductView();
   document.getElementById('app-product-gallery-track').innerHTML = '<div class="app-product-gallery-loading"></div>';
   document.getElementById('app-product-brand').textContent = '';
   document.getElementById('app-product-name').textContent = 'Loading product…';
@@ -483,26 +493,28 @@ async function appOpenProduct(productId, pushHistory = true) {
   const id = String(productId || '').trim();
   if (!id) return;
   let product = appProductCache.get(id) || null;
-  if (!product) {
-    appProductShowLoading();
-  } else {
-    appProductView.hidden = false;
-    document.body.classList.add('app-product-open');
-    document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
-    document.querySelector('.app-header').hidden = true;
-    document.querySelector('.bottom-nav').hidden = true;
-  }
+  appShowProductView();
   if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
   window.scrollTo({top:0,behavior:'instant'});
+  // Reopening the same product restores its rendered page immediately.
+  if (product && appRenderedProductId === id) return;
   if (!product) {
+    appProductShowLoading();
     try {
-      const snap = await appProductDb.collection('products').doc(id).get();
+      let load = appProductLoads.get(id);
+      if (!load) {
+        load = appProductDb.collection('products').doc(id).get();
+        appProductLoads.set(id, load);
+      }
+      const snap = await load;
       if (snap.exists) {
         product = {...snap.data(), id:snap.id};
         appProductCache.set(id, product);
       }
     } catch (error) {
       console.warn('[APP PRODUCT] Firestore detail lookup failed:', error.message);
+    } finally {
+      appProductLoads.delete(id);
     }
   }
   if (!product) {
@@ -511,6 +523,7 @@ async function appOpenProduct(productId, pushHistory = true) {
     return;
   }
   appCurrentProduct = product;
+  appRenderedProductId = id;
   appProductQuantity = 1;
   appSelectedSize = '';
   appSelectedVariant = 0;
@@ -566,13 +579,19 @@ async function appOpenProduct(productId, pushHistory = true) {
     relatedTrack.innerHTML = '';
   }
   appUpdateCartCount();
-  try {
-    const reviewSnap = await appProductDb.collection('reviews').where('productId','==',id).limit(20).get();
-    const reviews = reviewSnap.docs.map(doc => doc.data());
-    const reviewBox = document.getElementById('app-product-reviews');
-    reviewBox.innerHTML = reviews.length ? reviews.map(review => '<div class="app-product-review"><strong>' + appProductEscape(review.name || 'Customer') + '</strong><p>' + appProductEscape(review.text || '') + '</p></div>').join('') : 'There are no reviews for this product yet.';
-  } catch (_) {
-    document.getElementById('app-product-reviews').textContent = 'Customer reviews are unavailable right now.';
+  const reviewBox = document.getElementById('app-product-reviews');
+  if (appProductReviewsCache.has(id)) {
+    reviewBox.innerHTML = appProductReviewsCache.get(id);
+  } else {
+    try {
+      const reviewSnap = await appProductDb.collection('reviews').where('productId','==',id).limit(20).get();
+      const reviews = reviewSnap.docs.map(doc => doc.data());
+      const reviewHtml = reviews.length ? reviews.map(review => '<div class="app-product-review"><strong>' + appProductEscape(review.name || 'Customer') + '</strong><p>' + appProductEscape(review.text || '') + '</p></div>').join('') : 'There are no reviews for this product yet.';
+      appProductReviewsCache.set(id, reviewHtml);
+      if (appCurrentProduct && appCurrentProduct.id === id) reviewBox.innerHTML = reviewHtml;
+    } catch (_) {
+      if (appCurrentProduct && appCurrentProduct.id === id) reviewBox.textContent = 'Customer reviews are unavailable right now.';
+    }
   }
 }
 document.addEventListener('click', event => {
