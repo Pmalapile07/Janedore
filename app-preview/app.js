@@ -547,7 +547,14 @@ async function appOpenProduct(productId, pushHistory = true) {
   if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
   window.scrollTo({top:0,behavior:'instant'});
   // Reopening the same product restores its rendered page immediately.
-  if (product && appRenderedProductId === id) return;
+  // appShowProductView hides the sticky bar while switching views, so restore
+  // it before returning to the already-rendered product.
+  if (product && appRenderedProductId === id) {
+    const stickyBar = document.getElementById('app-product-sticky-bar');
+    if (stickyBar) stickyBar.hidden = false;
+    appUpdateProductStickyState();
+    return;
+  }
   if (!product) {
     appProductShowLoading();
     try {
