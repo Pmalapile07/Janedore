@@ -3721,6 +3721,36 @@ app.get('/api/app-new-in', async (req, res) => {
   }
 });
 
+
+ // Public app Shop by brand grid: mirrors the website's first four active
+ // independent brands, using each brand's hero image (or logo as fallback).
+app.get('/api/app-brands', async (req, res) => {
+  res.set('Cache-Control', 'public, max-age=30');
+  if (!adminDb) return res.status(503).json({ error: 'Brands are temporarily unavailable.' });
+  try {
+    const snapshot = await adminDb.collection('vendors').get();
+    const brands = snapshot.docs
+      .map(doc => ({ id: doc.id, ...(doc.data() || {}) }))
+      .filter(brand => {
+        const status = String(brand.status || 'active').toLowerCase();
+        const name = String(brand.name || brand.brandName || brand.brand || '').trim().toLowerCase();
+        return status !== 'suspended' && status !== 'inactive' && name && name !== 'janedore';
+      })
+      .slice(0, 4)
+      .map(brand => ({
+        id: String(brand.id),
+        name: String(brand.name || brand.brandName || brand.brand || ''),
+        slug: String(brand.slug || brand.id),
+        heroImageUrl: adminImageURL(brand.heroImageUrl, 700),
+        logoUrl: adminImageURL(brand.logoUrl, 400)
+      }));
+    res.json({ brands });
+  } catch (error) {
+    console.error('[APP BRANDS] Could not load brands:', error.message);
+    res.status(503).json({ error: 'Brands are temporarily unavailable.' });
+  }
+});
+
 // App-only fallback: clean routes must never render the main storefront.
 app.get('*', (req, res, next) => {
   if (req.path.includes('.')) return res.status(404).send('Not found');
