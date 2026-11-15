@@ -119,9 +119,9 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 
 
 /* JANEDORE opening screen */
-.app-welcome{position:fixed;inset:0;z-index:900;min-height:100dvh;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);display:flex;align-items:center;justify-content:center;background:#080808;color:#fff}
+.app-welcome{position:fixed;inset:0;z-index:900;min-height:100dvh;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);display:flex;align-items:flex-end;justify-content:center;background:#080808;color:#fff}
 .app-welcome[hidden]{display:none!important}
-.app-welcome-content{width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center;text-align:center;transform:translateY(24px)}
+.app-welcome-content{width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:10vh}
 .app-welcome-mark{display:block;width:142px;height:142px;overflow:visible;fill:none;stroke:#fff;stroke-width:200;stroke-linecap:butt;stroke-linejoin:round}
 .app-welcome-mark-j{stroke-dasharray:1;stroke-dashoffset:1;animation:app-welcome-mark-draw .85s ease-in-out forwards}
 .app-welcome-mark-dot{fill:#fff;stroke:none;transform-box:fill-box;transform-origin:center;animation:app-welcome-mark-drop .35s ease-out .72s both}
