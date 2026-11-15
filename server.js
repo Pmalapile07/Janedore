@@ -3683,6 +3683,53 @@ app.get('/api/app-homepage', async (req, res) => {
   }
 });
 
+// Public app New In row: the same active products shown in the website's
+// homepage arrivals slider, sourced from the shared Firestore products/vendors.
+app.get('/api/app-new-in', async (req, res) => {
+  res.set('Cache-Control', 'public, max-age=30');
+  if (!adminDb) return res.status(503).json({ error: 'Products are temporarily unavailable.' });
+  try {
+    const [productSnap, vendorSnap] = await Promise.all([
+      adminDb.collection('products').where('status', '==', 'active').get(),
+      adminDb.collection('vendors').get()
+    ]);
+    const activeVendorIds = new Set(vendorSnap.docs.filter(doc => {
+      const status = String((doc.data() || {}).status || 'active').toLowerCase();
+      return status !== 'suspended' && status !== 'inactive';
+    }).map(doc => doc.id));
+    const products = productSnap.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) })).filter(product => {
+      if (!product.vendorId) return true;
+      return activeVendorIds.has(String(product.vendorId));
+    });
+    const stamp = value => {
+      if (!value) return 0;
+      if (typeof value.toMillis === 'function') return value.toMillis();
+      if (typeof value.toDate === 'function') return value.toDate().getTime();
+      const parsed = new Date(value).getTime();
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    products.sort((a, b) => stamp(b.createdAt) - stamp(a.createdAt) || stamp(b.updatedAt) - stamp(a.updatedAt));
+    res.json({ products: products.slice(0, 8).map(product => {
+      const images = product.variants && product.variants[0] && product.variants[0].images || {};
+      const image = (images.ghost && images.ghost[0]) || (images.model && images.model[0]) || '';
+      return {
+        id: String(product.id),
+        slug: String(product.slug || product.id),
+        name: String(product.name || ''),
+        brand: String(product.brand || ''),
+        price: Number(product.price) || 0,
+        salePrice: product.salePrice == null || product.salePrice === '' ? null : Number(product.salePrice),
+        stock: Number(product.stock) || 0,
+        badge: String(product.badge || ''),
+        imageUrl: adminImageURL(image, 700)
+      };
+    }).filter(product => product.name) });
+  } catch (error) {
+    console.error('[APP NEW IN] Could not load shared products:', error.message);
+    res.status(503).json({ error: 'Products are temporarily unavailable.' });
+  }
+});
+
 // Catch-all for HTML routing — only sends index.html for clean URLs
 app.get('*', async (req, res) => {
   // If it looks like a file request (.css, .js, .png etc), let it 404
