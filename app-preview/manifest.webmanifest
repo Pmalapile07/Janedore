@@ -1,14 +1,14 @@
 {
   "name": "JANEDORE",
   "short_name": "JANEDORE",
-  "start_url": "/app-preview/",
-  "scope": "/app-preview/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#FFFFFF",
   "icons": [
     {
-      "src": "/app-preview/janedore-app-icon.svg",
+      "src": "janedore-app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
