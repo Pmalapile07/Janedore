@@ -120,7 +120,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 
 /* JANEDORE launch screen */
 .app-splash{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:#E0EBFF;color:#111;opacity:1;visibility:visible;transition:opacity .38s ease,visibility .38s ease}
-.app-splash.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.app-splash.is-hidden{display:none!important;opacity:0;visibility:hidden;pointer-events:none}
 .app-splash-mark{display:block;width:142px;height:142px;overflow:visible;transform:translate(-5px,-2px)}
 .app-splash-mark-j{stroke-dasharray:1;stroke-dashoffset:1;animation:app-splash-mark-draw 1.2s ease-in-out forwards}
 .app-splash-mark-dot{transform-box:fill-box;transform-origin:center;animation:app-splash-mark-drop .5s ease-out 1.1s both}
