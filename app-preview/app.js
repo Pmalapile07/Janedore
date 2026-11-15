@@ -27,3 +27,15 @@ navItems.forEach(button => {
     moveNavIndicator(button);
   });
 });
+
+// The app uses the same homepage hero image managed in Admin > Homepage.
+fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
+  .then(response => {
+    if (!response.ok) throw new Error('Homepage content unavailable');
+    return response.json();
+  })
+  .then(content => {
+    const image = document.getElementById('app-home-hero-image');
+    if (image && content.heroImageUrl) image.src = content.heroImageUrl;
+  })
+  .catch(error => console.warn('[APP HOME] Could not load homepage image:', error.message));
