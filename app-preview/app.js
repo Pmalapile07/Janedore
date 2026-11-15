@@ -441,7 +441,11 @@ function appProductImages(product) {
   if (product.image) candidates.push(product.image);
   (Array.isArray(product.variants) ? product.variants : []).forEach(variant => {
     if (variant.imageUrl) candidates.push(variant.imageUrl);
-    if (Array.isArray(variant.images)) candidates.push(...variant.images);
+    const variantImages = variant.images || {};
+    if (Array.isArray(variantImages)) candidates.push(...variantImages);
+    else ['model','ghost','detail'].forEach(type => {
+      if (Array.isArray(variantImages[type])) candidates.push(...variantImages[type]);
+    });
   });
   return [...new Set(candidates.filter(value => typeof value === 'string' && /^https:\/\//i.test(value)))];
 }
@@ -525,7 +529,7 @@ async function appOpenProduct(productId, pushHistory = true) {
   document.getElementById('app-product-sizes').innerHTML = sizes.map(size => '<button class="app-product-option" type="button" data-size="' + appProductEscape(size) + '">' + appProductEscape(size) + '</button>').join('');
   const variants = Array.isArray(product.variants) ? product.variants : [];
   document.getElementById('app-product-variant-group').hidden = !variants.length;
-  document.getElementById('app-product-variants').innerHTML = variants.map((variant,index) => '<button class="app-product-option" type="button" data-variant="' + index + '">' + appProductEscape(variant.name || variant.color || variant.colour || ('Option ' + (index+1))) + '</button>').join('');
+  document.getElementById('app-product-variants').innerHTML = variants.map((variant,index) => '<button class="app-product-option' + (index===0?' selected':'') + '" type="button" data-variant="' + index + '">' + appProductEscape(variant.color || variant.colour || variant.name || ('Option ' + (index+1))) + '</button>').join('');
   document.getElementById('app-product-qty').textContent = '1';
   document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\n/g,'<br>') +
     (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductEscape(product.compositionCare).replace(/\n/g,'<br>') + '</p>' : '') +
@@ -533,7 +537,23 @@ async function appOpenProduct(productId, pushHistory = true) {
   document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
   document.getElementById('app-product-add').disabled = Number.isFinite(stock) && stock <= 0;
   document.getElementById('app-product-add').textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : 'Add to bag';
+  const related = [...appProductCache.values()].filter(item => item.id !== id && item.category && item.category === product.category).slice(0,6);
+  const relatedSection = document.getElementById('app-product-related');
+  const relatedTrack = document.getElementById('app-product-related-track');
+  if (related.length) {
+    relatedTrack.innerHTML = related.map(item => {
+      const image = appProductImages(item)[0] || '';
+      return '<a href="#product/' + encodeURIComponent(item.id) + '" class="app-product-related-card" data-product-id="' + appProductEscape(item.id) + '">' +
+        (image ? '<img src="' + appProductEscape(image) + '" alt="' + appProductEscape(item.name || '') + '" loading="lazy">' : '<div class="app-product-related-image"></div>') +
+        '<strong>' + appProductEscape(item.brand || '') + '</strong>' + appProductEscape(item.name || '') + '<span>' + appProductMoney(item.price) + '</span></a>';
+    }).join('');
+    relatedSection.hidden = false;
+  } else {
+    relatedSection.hidden = true;
+    relatedTrack.innerHTML = '';
+  }
   appUpdateCartCount();
+if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
   try {
     const reviewSnap = await appProductDb.collection('reviews').where('productId','==',id).limit(20).get();
     const reviews = reviewSnap.docs.map(doc => doc.data());
@@ -544,8 +564,9 @@ async function appOpenProduct(productId, pushHistory = true) {
   }
 }
 document.addEventListener('click', event => {
-  const card = event.target.closest('.app-new-in-card[data-product-id]');
+  const card = event.target.closest('.app-new-in-card[data-product-id], .app-product-related-card[data-product-id]');
   if (card && !event.target.closest('.app-new-in-wishlist')) {
+    event.preventDefault();
     appOpenProduct(card.dataset.productId);
     return;
   }
@@ -561,7 +582,7 @@ document.addEventListener('click', event => {
   }
 });
 document.addEventListener('keydown', event => {
-  const card = event.target.closest && event.target.closest('.app-new-in-card[data-product-id]');
+  const card = event.target.closest && event.target.closest('.app-new-in-card[data-product-id], .app-product-related-card[data-product-id]');
   if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); appOpenProduct(card.dataset.productId); }
 });
 document.getElementById('app-product-back').addEventListener('click', () => {
