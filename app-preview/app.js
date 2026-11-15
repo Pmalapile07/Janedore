@@ -105,6 +105,8 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
   .then(content => {
     const image = document.getElementById('app-home-hero-image');
     if (image && content.heroImageUrl) image.src = content.heroImageUrl;
+    const welcomeImage = document.getElementById('app-welcome-image');
+    if (welcomeImage && content.heroImageUrl) welcomeImage.src = content.heroImageUrl;
 
     // Use the exact heading and CTA configured for the main website hero.
     const heroHeading = document.getElementById('app-home-hero-heading');
