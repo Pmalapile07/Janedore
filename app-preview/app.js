@@ -450,10 +450,10 @@ function appProductImages(product) {
   return [...new Set(candidates.filter(value => typeof value === 'string' && /^https:\/\//i.test(value)))];
 }
 function appProductCartItems() {
-  try { return JSON.parse(localStorage.getItem('janedore-app-cart') || '[]'); } catch (_) { return []; }
+  try { return JSON.parse(localStorage.getItem('janedore_cart') || '[]'); } catch (_) { return []; }
 }
 function appUpdateCartCount() {
-  const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   const badge = document.getElementById('app-product-cart-count');
   if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
 }
@@ -610,11 +610,25 @@ document.getElementById('app-product-add').addEventListener('click', () => {
   const sizes = Array.isArray(appCurrentProduct.sizes) ? appCurrentProduct.sizes.filter(size => String(size).toUpperCase() !== 'OS') : [];
   if (sizes.length && !appSelectedSize) { alert('Please select a size first.'); return; }
   const items = appProductCartItems();
-  const key = [appCurrentProduct.id,appSelectedSize,appSelectedVariant].join(':');
-  const existing = items.find(item => item.key === key);
-  if (existing) existing.quantity += appProductQuantity;
-  else items.push({key,productId:appCurrentProduct.id,name:appCurrentProduct.name || appCurrentProduct.title,brand:appCurrentProduct.brand || '',price:Number(appCurrentProduct.salePrice) > 0 && Number(appCurrentProduct.salePrice) < Number(appCurrentProduct.price) ? Number(appCurrentProduct.salePrice) : Number(appCurrentProduct.price) || 0,imageUrl:appGalleryImages[0] || '',size:appSelectedSize,variant:appSelectedVariant,quantity:appProductQuantity});
-  localStorage.setItem('janedore-app-cart',JSON.stringify(items));
+  const resolvedSize = appSelectedSize || (Array.isArray(appCurrentProduct.sizes) && appCurrentProduct.sizes[0]) || 'OS';
+  const existing = items.find(item => item.productId === appCurrentProduct.id && item.size === resolvedSize && Number(item.variantIndex || 0) === appSelectedVariant);
+  if (existing) existing.qty = (Number(existing.qty) || 0) + appProductQuantity;
+  else {
+    const variant = (appCurrentProduct.variants || [])[appSelectedVariant] || {};
+    items.push({
+      productId:appCurrentProduct.id,
+      variantIndex:appSelectedVariant,
+      size:resolvedSize,
+      qty:appProductQuantity,
+      name:appCurrentProduct.name || appCurrentProduct.title || '',
+      brand:appCurrentProduct.brand || '',
+      price:appCurrentProduct.price,
+      salePrice:appCurrentProduct.salePrice,
+      color:variant.color || variant.colour || 'Default',
+      thumbnail:appGalleryImages[0] || appCurrentProduct.imageUrl || ''
+    });
+  }
+  localStorage.setItem('janedore_cart',JSON.stringify(items));
   appUpdateCartCount();
   const button = document.getElementById('app-product-add');
   button.textContent = 'Added to bag';
