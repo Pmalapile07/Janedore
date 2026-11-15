@@ -482,15 +482,28 @@ function appProductShowLoading() {
 async function appOpenProduct(productId, pushHistory = true) {
   const id = String(productId || '').trim();
   if (!id) return;
-  appProductShowLoading();
+  let product = appProductCache.get(id) || null;
+  if (!product) {
+    appProductShowLoading();
+  } else {
+    appProductView.hidden = false;
+    document.body.classList.add('app-product-open');
+    document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
+    document.querySelector('.app-header').hidden = true;
+    document.querySelector('.bottom-nav').hidden = true;
+  }
   if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
   window.scrollTo({top:0,behavior:'instant'});
-  let product = appProductCache.get(id) || null;
-  try {
-    const snap = await appProductDb.collection('products').doc(id).get();
-    if (snap.exists) product = {...(product || {}), ...snap.data(), id:snap.id};
-  } catch (error) {
-    console.warn('[APP PRODUCT] Firestore detail lookup failed:', error.message);
+  if (!product) {
+    try {
+      const snap = await appProductDb.collection('products').doc(id).get();
+      if (snap.exists) {
+        product = {...snap.data(), id:snap.id};
+        appProductCache.set(id, product);
+      }
+    } catch (error) {
+      console.warn('[APP PRODUCT] Firestore detail lookup failed:', error.message);
+    }
   }
   if (!product) {
     document.getElementById('app-product-name').textContent = 'This product is currently unavailable.';
@@ -595,7 +608,6 @@ document.getElementById('app-product-share').addEventListener('click', async () 
   if (navigator.share) { try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') console.warn(error); } }
   else { try { await navigator.clipboard.writeText(url); alert('Product link copied.'); } catch (_) { window.prompt('Copy this product link:',url); } }
 });
-document.getElementById('app-product-cart').addEventListener('click', () => { location.href = '/cart'; });
 document.getElementById('app-product-qty-minus').addEventListener('click', () => {
   appProductQuantity = Math.max(1,appProductQuantity-1);
   document.getElementById('app-product-qty').textContent = String(appProductQuantity);
