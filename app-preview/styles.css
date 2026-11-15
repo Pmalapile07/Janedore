@@ -3,7 +3,7 @@
 html,body{min-height:100%;margin:0}
 body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 .app-shell{width:100%;max-width:430px;min-height:100dvh;margin:0 auto;background:var(--paper);position:relative}
-.app-header{position:sticky;top:-56px;z-index:15;background:transparent;display:flex;flex-direction:column}
+.app-header{position:sticky;top:-56px;z-index:15;background:#fff;display:flex;flex-direction:column}
 .app-header-top{height:64px;padding:0 16px;display:flex;align-items:center;justify-content:space-between}
 .app-logo{font-family:Inter,Helvetica,Arial,sans-serif;font-size:22px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#111;white-space:nowrap}
 .app-logo.cs-site-logo-image{display:block;height:15px;width:auto;max-width:200px;object-fit:contain}
