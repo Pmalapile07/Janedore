@@ -35,7 +35,13 @@ function setPath(path, replaceUrl) {
 function navigateToLogin(replaceUrl) {
   if (realUser()) { navigateToAccount(replaceUrl); return; }
   showPage('page-login', 'login');
-  setPath('/login', replaceUrl);
+  const params = new URLSearchParams(window.location.search);
+  const loginParams = new URLSearchParams();
+  ['mode', 'returnTo'].forEach(key => {
+    if (params.has(key)) loginParams.set(key, params.get(key));
+  });
+  const query = loginParams.toString();
+  setPath('/login' + (query ? '?' + query : ''), replaceUrl);
   showLoginView();
 }
 
