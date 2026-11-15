@@ -1,3 +1,62 @@
+// Restore the customer's Firebase session before deciding which opening screen to show.
+const appFirebaseConfig = {
+  apiKey: "AIzaSyBjtD9j-jKHtjMVmI2ENxy0T3ts9uf2JNI",
+  authDomain: "janedore-9f035.firebaseapp.com",
+  projectId: "janedore-9f035",
+  storageBucket: "janedore-9f035.firebasestorage.app",
+  messagingSenderId: "571299748651",
+  appId: "1:571299748651:web:01463a772d47b39cc4036e"
+};
+if (!firebase.apps.length) firebase.initializeApp(appFirebaseConfig);
+const appAuth = firebase.auth();
+const welcomeScreen = document.getElementById('app-welcome');
+const splashScreen = document.getElementById('app-splash');
+const guestButton = document.getElementById('app-continue-guest');
+const welcomeSeenKey = 'janedore_app_welcome_seen';
+
+function showAppHome() {
+  if (welcomeScreen) welcomeScreen.hidden = true;
+  if (splashScreen) splashScreen.remove();
+}
+
+function showAppWelcome() {
+  if (welcomeScreen) welcomeScreen.hidden = false;
+  if (splashScreen) splashScreen.remove();
+}
+
+if (guestButton) {
+  guestButton.addEventListener('click', () => {
+    try { localStorage.setItem(welcomeSeenKey, '1'); } catch (error) {}
+    showAppHome();
+  });
+}
+
+let authResolved = false;
+const launchFallback = window.setTimeout(() => {
+  if (!authResolved) {
+    authResolved = true;
+    showAppWelcome();
+  }
+}, 5000);
+
+appAuth.onAuthStateChanged(user => {
+  if (authResolved && !user) return;
+  authResolved = true;
+  window.clearTimeout(launchFallback);
+  if (user && !user.isAnonymous) {
+    showAppHome();
+  } else {
+    let hasVisited = false;
+    try { hasVisited = localStorage.getItem(welcomeSeenKey) === '1'; } catch (error) {}
+    if (hasVisited) showAppHome();
+    else showAppWelcome();
+  }
+});
+
+window.addEventListener('storage', event => {
+  if (event.key === welcomeSeenKey && event.newValue === null) showAppWelcome();
+});
+
 const nav = document.querySelector('.bottom-nav');
 const navItems = [...document.querySelectorAll('.nav-item')];
 const navIndicator = document.querySelector('.nav-indicator');
