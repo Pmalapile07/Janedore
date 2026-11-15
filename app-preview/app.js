@@ -265,4 +265,25 @@ if (bestsellersTrack) {
   requestAnimationFrame(updateBestsellersProgress);
 }
 
+// Keep the Shop Clothing placeholder slider indicator in sync.
+const shopClothingTrack = document.getElementById('app-shop-clothing-track');
+const shopClothingProgress = document.querySelector('.app-shop-clothing-progress');
+const shopClothingProgressFill = shopClothingProgress && shopClothingProgress.querySelector('.app-new-in-progress-fill');
+function updateShopClothingProgress() {
+  if (!shopClothingTrack || !shopClothingProgress || !shopClothingProgressFill) return;
+  const maxScroll = Math.max(0, shopClothingTrack.scrollWidth - shopClothingTrack.clientWidth);
+  const visibleRatio = shopClothingTrack.scrollWidth > 0 ? shopClothingTrack.clientWidth / shopClothingTrack.scrollWidth : 1;
+  const thumbRatio = Math.min(1, visibleRatio);
+  const travel = Math.max(0, shopClothingProgress.clientWidth * (1 - thumbRatio));
+  const progress = maxScroll > 0 ? shopClothingTrack.scrollLeft / maxScroll : 0;
+  shopClothingProgressFill.style.width = (thumbRatio * 100) + '%';
+  shopClothingProgressFill.style.transform = 'translateX(' + (travel * progress) + 'px)';
+  shopClothingProgress.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+}
+if (shopClothingTrack) {
+  shopClothingTrack.addEventListener('scroll', updateShopClothingProgress, { passive: true });
+  window.addEventListener('resize', updateShopClothingProgress);
+  requestAnimationFrame(updateShopClothingProgress);
+}
+
 
