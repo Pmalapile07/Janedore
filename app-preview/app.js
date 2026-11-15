@@ -215,6 +215,7 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
     const track = document.getElementById('app-new-in-track');
     if (!track) return;
     const products = Array.isArray(data.products) ? data.products : [];
+    products.forEach(product => { if (product && product.id) appProductCache.set(String(product.id), product); });
     if (!products.length) {
       track.innerHTML = '<p class="app-new-in-empty">New pieces will appear here soon.</p>';
       return;
@@ -239,7 +240,7 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
       const image = product.imageUrl && /^https:\/\//i.test(product.imageUrl)
         ? '<img src="' + escapeText(product.imageUrl) + '" alt="' + escapeText(product.name) + '" loading="lazy">'
         : '';
-      return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '">' +
+      return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '" data-product-id="' + escapeText(product.id || '') + '" role="button" tabindex="0" aria-label="View ' + escapeText(product.name) + '">' +
         '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
         '<div class="app-new-in-brand">' + escapeText(product.brand) + '</div>' +
         '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
@@ -413,3 +414,194 @@ fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
   });
 
 
+
+
+// APP PRODUCT PAGE: live product cards open a focused in-app detail view.
+const appProductView = document.getElementById('app-product-view');
+const appProductDb = firebase.firestore();
+const appProductCache = new Map();
+let appCurrentProduct = null;
+let appProductQuantity = 1;
+let appSelectedSize = '';
+let appSelectedVariant = 0;
+let appGalleryImages = [];
+
+function appProductEscape(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+function appProductMoney(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? 'R' + amount.toFixed(2) : '';
+}
+function appProductImages(product) {
+  const candidates = [];
+  if (Array.isArray(product.images)) candidates.push(...product.images);
+  if (Array.isArray(product.gallery)) candidates.push(...product.gallery);
+  if (product.imageUrl) candidates.unshift(product.imageUrl);
+  if (product.image) candidates.push(product.image);
+  (Array.isArray(product.variants) ? product.variants : []).forEach(variant => {
+    if (variant.imageUrl) candidates.push(variant.imageUrl);
+    if (Array.isArray(variant.images)) candidates.push(...variant.images);
+  });
+  return [...new Set(candidates.filter(value => typeof value === 'string' && /^https:\/\//i.test(value)))];
+}
+function appProductCartItems() {
+  try { return JSON.parse(localStorage.getItem('janedore-app-cart') || '[]'); } catch (_) { return []; }
+}
+function appUpdateCartCount() {
+  const count = appProductCartItems().reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const badge = document.getElementById('app-product-cart-count');
+  if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
+}
+function appProductClose() {
+  if (!appProductView || appProductView.hidden) return;
+  appProductView.hidden = true;
+  document.body.classList.remove('app-product-open');
+  document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = view.dataset.view !== 'Home'; });
+  document.querySelector('.app-header').hidden = false;
+  document.querySelector('.bottom-nav').hidden = false;
+  if (location.hash.startsWith('#product/')) history.replaceState(null, '', location.pathname + location.search);
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function appProductShowLoading() {
+  appProductView.hidden = false;
+  document.body.classList.add('app-product-open');
+  document.querySelectorAll('.app-tab-content').forEach(view => view.hidden = true);
+  document.querySelector('.app-header').hidden = true;
+  document.querySelector('.bottom-nav').hidden = true;
+  document.getElementById('app-product-gallery-track').innerHTML = '<div class="app-product-gallery-loading"></div>';
+  document.getElementById('app-product-brand').textContent = '';
+  document.getElementById('app-product-name').textContent = 'Loading product…';
+  document.getElementById('app-product-price').textContent = '';
+  document.getElementById('app-product-description').textContent = '';
+}
+async function appOpenProduct(productId, pushHistory = true) {
+  const id = String(productId || '').trim();
+  if (!id) return;
+  appProductShowLoading();
+  if (pushHistory) history.pushState({appProductId:id}, '', '#product/' + encodeURIComponent(id));
+  window.scrollTo({top:0,behavior:'instant'});
+  let product = appProductCache.get(id) || null;
+  try {
+    const snap = await appProductDb.collection('products').doc(id).get();
+    if (snap.exists) product = {...(product || {}), ...snap.data(), id:snap.id};
+  } catch (error) {
+    console.warn('[APP PRODUCT] Firestore detail lookup failed:', error.message);
+  }
+  if (!product) {
+    document.getElementById('app-product-name').textContent = 'This product is currently unavailable.';
+    document.getElementById('app-product-description').textContent = 'Please go back and try another product.';
+    return;
+  }
+  appCurrentProduct = product;
+  appProductQuantity = 1;
+  appSelectedSize = '';
+  appSelectedVariant = 0;
+  const images = appProductImages(product);
+  appGalleryImages = images.length ? images : [];
+  const gallery = document.getElementById('app-product-gallery-track');
+  gallery.innerHTML = appGalleryImages.length
+    ? appGalleryImages.map((url,index) => '<div class="app-product-gallery-slide"><img src="' + appProductEscape(url) + '" alt="' + appProductEscape(product.name || 'Product image') + '" loading="' + (index ? 'lazy' : 'eager') + '"></div>').join('')
+    : '<div class="app-product-gallery-slide app-product-gallery-empty"></div>';
+  const dots = document.getElementById('app-product-gallery-dots');
+  dots.innerHTML = appGalleryImages.length > 1 ? appGalleryImages.map((_,i) => '<span class="app-product-gallery-dot' + (!i?' active':'') + '"></span>').join('') : '';
+  gallery.onscroll = () => {
+    const index = Math.round(gallery.scrollLeft / Math.max(1,gallery.clientWidth));
+    [...dots.children].forEach((dot,i)=>dot.classList.toggle('active',i===index));
+  };
+  document.getElementById('app-product-brand').textContent = product.brand || product.vendorName || '';
+  document.getElementById('app-product-name').textContent = product.name || product.title || '';
+  const regular = Number(product.price) || 0;
+  const sale = Number(product.salePrice);
+  document.getElementById('app-product-price').innerHTML = Number.isFinite(sale) && sale > 0 && sale < regular
+    ? '<span class="app-product-sale-price">' + appProductMoney(sale) + '</span><s>' + appProductMoney(regular) + '</s>'
+    : appProductMoney(regular);
+  const stock = Number(product.stock);
+  const stockEl = document.getElementById('app-product-stock');
+  stockEl.textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : (String(product.badge || '').toLowerCase() === 'pre-order' ? 'Available for pre-order' : '');
+  const sizes = (Array.isArray(product.sizes) ? product.sizes : []).filter(size => String(size).toUpperCase() !== 'OS');
+  const sizeGroup = document.getElementById('app-product-size-group');
+  sizeGroup.hidden = !sizes.length;
+  document.getElementById('app-product-sizes').innerHTML = sizes.map(size => '<button class="app-product-option" type="button" data-size="' + appProductEscape(size) + '">' + appProductEscape(size) + '</button>').join('');
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  document.getElementById('app-product-variant-group').hidden = !variants.length;
+  document.getElementById('app-product-variants').innerHTML = variants.map((variant,index) => '<button class="app-product-option" type="button" data-variant="' + index + '">' + appProductEscape(variant.name || variant.color || variant.colour || ('Option ' + (index+1))) + '</button>').join('');
+  document.getElementById('app-product-qty').textContent = '1';
+  document.getElementById('app-product-description').innerHTML = appProductEscape(product.description || 'No description available.').replace(/\n/g,'<br>') +
+    (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductEscape(product.compositionCare).replace(/\n/g,'<br>') + '</p>' : '') +
+    (product.measurements ? '<p><strong>Measurements</strong><br>' + appProductEscape(product.measurements).replace(/\n/g,'<br>') + '</p>' : '');
+  document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
+  document.getElementById('app-product-add').disabled = Number.isFinite(stock) && stock <= 0;
+  document.getElementById('app-product-add').textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : 'Add to bag';
+  appUpdateCartCount();
+  try {
+    const reviewSnap = await appProductDb.collection('reviews').where('productId','==',id).limit(20).get();
+    const reviews = reviewSnap.docs.map(doc => doc.data());
+    const reviewBox = document.getElementById('app-product-reviews');
+    reviewBox.innerHTML = reviews.length ? reviews.map(review => '<div class="app-product-review"><strong>' + appProductEscape(review.name || 'Customer') + '</strong><p>' + appProductEscape(review.text || '') + '</p></div>').join('') : 'There are no reviews for this product yet.';
+  } catch (_) {
+    document.getElementById('app-product-reviews').textContent = 'Customer reviews are unavailable right now.';
+  }
+}
+document.addEventListener('click', event => {
+  const card = event.target.closest('.app-new-in-card[data-product-id]');
+  if (card && !event.target.closest('.app-new-in-wishlist')) {
+    appOpenProduct(card.dataset.productId);
+    return;
+  }
+  const sizeButton = event.target.closest('[data-size]');
+  if (sizeButton && appProductView && !appProductView.hidden) {
+    appSelectedSize = sizeButton.dataset.size;
+    document.querySelectorAll('#app-product-sizes [data-size]').forEach(button => button.classList.toggle('selected',button===sizeButton));
+  }
+  const variantButton = event.target.closest('[data-variant]');
+  if (variantButton && appProductView && !appProductView.hidden) {
+    appSelectedVariant = Number(variantButton.dataset.variant);
+    document.querySelectorAll('#app-product-variants [data-variant]').forEach(button => button.classList.toggle('selected',button===variantButton));
+  }
+});
+document.addEventListener('keydown', event => {
+  const card = event.target.closest && event.target.closest('.app-new-in-card[data-product-id]');
+  if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); appOpenProduct(card.dataset.productId); }
+});
+document.getElementById('app-product-back').addEventListener('click', () => {
+  if (history.state && history.state.appProductId) history.back();
+  else appProductClose();
+});
+document.getElementById('app-product-share').addEventListener('click', async () => {
+  if (!appCurrentProduct) return;
+  const url = location.href;
+  const data = {title:appCurrentProduct.name || appCurrentProduct.title || 'Product',text:appCurrentProduct.name || '',url};
+  if (navigator.share) { try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') console.warn(error); } }
+  else { try { await navigator.clipboard.writeText(url); alert('Product link copied.'); } catch (_) { window.prompt('Copy this product link:',url); } }
+});
+document.getElementById('app-product-cart').addEventListener('click', () => { location.href = '/cart'; });
+document.getElementById('app-product-qty-minus').addEventListener('click', () => {
+  appProductQuantity = Math.max(1,appProductQuantity-1);
+  document.getElementById('app-product-qty').textContent = String(appProductQuantity);
+});
+document.getElementById('app-product-qty-plus').addEventListener('click', () => {
+  const stock = Number(appCurrentProduct && appCurrentProduct.stock);
+  appProductQuantity = Math.min(Number.isFinite(stock) && stock > 0 ? stock : 99,appProductQuantity+1);
+  document.getElementById('app-product-qty').textContent = String(appProductQuantity);
+});
+document.getElementById('app-product-add').addEventListener('click', () => {
+  if (!appCurrentProduct) return;
+  const sizes = Array.isArray(appCurrentProduct.sizes) ? appCurrentProduct.sizes.filter(size => String(size).toUpperCase() !== 'OS') : [];
+  if (sizes.length && !appSelectedSize) { alert('Please select a size first.'); return; }
+  const items = appProductCartItems();
+  const key = [appCurrentProduct.id,appSelectedSize,appSelectedVariant].join(':');
+  const existing = items.find(item => item.key === key);
+  if (existing) existing.quantity += appProductQuantity;
+  else items.push({key,productId:appCurrentProduct.id,name:appCurrentProduct.name || appCurrentProduct.title,brand:appCurrentProduct.brand || '',price:Number(appCurrentProduct.salePrice) > 0 && Number(appCurrentProduct.salePrice) < Number(appCurrentProduct.price) ? Number(appCurrentProduct.salePrice) : Number(appCurrentProduct.price) || 0,imageUrl:appGalleryImages[0] || '',size:appSelectedSize,variant:appSelectedVariant,quantity:appProductQuantity});
+  localStorage.setItem('janedore-app-cart',JSON.stringify(items));
+  appUpdateCartCount();
+  const button = document.getElementById('app-product-add');
+  button.textContent = 'Added to bag';
+  setTimeout(() => { if (button && !button.disabled) button.textContent = 'Add to bag'; },1400);
+});
+window.addEventListener('popstate', () => {
+  if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
+  else if (appProductView && !appProductView.hidden) appProductClose();
+});
+appUpdateCartCount();
