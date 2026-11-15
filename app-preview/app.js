@@ -361,6 +361,29 @@ if (shopKidsTrack) {
   requestAnimationFrame(updateShopKidsProgress);
 }
 
+// Keep the skincare and makeup placeholder slider indicators in sync.
+["skincare", "makeup"].forEach(section => {
+  const track = document.getElementById("app-shop-" + section + "-track");
+  const progress = document.querySelector(".app-shop-" + section + "-progress");
+  const fill = progress && progress.querySelector(".app-new-in-progress-fill");
+  function updateProgress() {
+    if (!track || !progress || !fill) return;
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    const visibleRatio = track.scrollWidth > 0 ? track.clientWidth / track.scrollWidth : 1;
+    const thumbRatio = Math.min(1, visibleRatio);
+    const travel = Math.max(0, progress.clientWidth * (1 - thumbRatio));
+    const position = maxScroll > 0 ? track.scrollLeft / maxScroll : 0;
+    fill.style.width = (thumbRatio * 100) + "%";
+    fill.style.transform = "translateX(" + (travel * position) + "px)";
+    progress.setAttribute("aria-valuenow", String(Math.round(position * 100)));
+  }
+  if (track) {
+    track.addEventListener("scroll", updateProgress, { passive: true });
+    window.addEventListener("resize", updateProgress);
+    requestAnimationFrame(updateProgress);
+  }
+});
+
 // Load the same active brand imagery used by the website's Shop by brand grid.
 fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
   .then(response => {
