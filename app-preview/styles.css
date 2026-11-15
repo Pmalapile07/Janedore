@@ -107,3 +107,12 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 
 /* Only the selected bottom-navigation tab is visible. */
 .app-tab-content[hidden]{display:none!important}
+
+
+/* Empty bestseller cards use the same horizontal product-card sizing as New In. */
+.app-bestsellers{padding:8px 0 34px;overflow:hidden}
+.app-bestsellers-track{scroll-snap-type:x mandatory}
+.app-bestsellers-card .app-new-in-image{background:#f4f4f4}
+.app-bestsellers-placeholder-line{width:62%;height:7px;margin-top:10px;background:#f0f0f0}
+.app-bestsellers-placeholder-line.short{width:34%;margin-top:7px}
+.app-bestsellers-progress{margin-bottom:0}
