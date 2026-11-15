@@ -16,15 +16,25 @@ window.addEventListener('resize', () => {
   moveNavIndicator(navItems.find(item => item.classList.contains('selected')));
 });
 
+const tabViews = [...document.querySelectorAll('.app-tab-content[data-view]')];
+
+function activateTab(tabName, activeButton) {
+  tabViews.forEach(view => {
+    view.hidden = view.dataset.view !== tabName;
+  });
+  navItems.forEach(item => {
+    const active = item === activeButton;
+    item.classList.toggle('selected', active);
+    if (active) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
+  moveNavIndicator(activeButton);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
 navItems.forEach(button => {
   button.addEventListener('click', () => {
-    navItems.forEach(item => {
-      const active = item === button;
-      item.classList.toggle('selected', active);
-      if (active) item.setAttribute('aria-current', 'page');
-      else item.removeAttribute('aria-current');
-    });
-    moveNavIndicator(button);
+    activateTab(button.dataset.tab, button);
   });
 });
 
