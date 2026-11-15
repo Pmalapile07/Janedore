@@ -452,6 +452,51 @@ function appProductImages(product) {
   });
   return [...new Set(candidates.filter(value => typeof value === 'string' && /^https:\/\//i.test(value)))];
 }
+function appRenderProductStickyBar(product, regular, sale) {
+  let bar = document.getElementById('app-product-sticky-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'app-product-sticky-bar';
+    bar.className = 'app-product-sticky-bar';
+    document.body.appendChild(bar);
+  }
+  const isSale = Number.isFinite(sale) && sale > 0 && sale < regular;
+  const current = isSale ? sale : regular;
+  bar.innerHTML = '<div class="app-product-sticky-price">' +
+    (isSale ? '<span class="sale">' + appProductMoney(current) + '</span><s>' + appProductMoney(regular) + '</s>' : appProductMoney(current)) +
+    '</div><button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
+    ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? ' disabled' : '') +
+    '><span class="app-product-sticky-label">' + ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? 'Sold out' : 'Add to bag') +
+    '</span><span class="app-product-sticky-button-price">' + appProductMoney(current) + '</span></button>';
+  bar.hidden = false;
+  document.getElementById('app-product-sticky-add').onclick = () => {
+    const mainButton = document.getElementById('app-product-add');
+    if (mainButton) mainButton.click();
+    const label = bar.querySelector('.app-product-sticky-label');
+    if (label && !document.getElementById('app-product-sticky-add').disabled) {
+      label.textContent = 'Added';
+      setTimeout(() => {
+        if (label.isConnected && appCurrentProduct && appCurrentProduct.id === product.id) {
+          label.textContent = bar.classList.contains('minimized') ? 'Add' : 'Add to bag';
+        }
+      }, 1400);
+    }
+  };
+  appUpdateProductStickyState();
+}
+function appUpdateProductStickyState() {
+  const bar = document.getElementById('app-product-sticky-bar');
+  if (!bar || !appProductView || appProductView.hidden) return;
+  const content = document.querySelector('.app-product-content');
+  if (!content) return;
+  const minimized = content.getBoundingClientRect().top < window.innerHeight * 0.3;
+  bar.classList.toggle('minimized', minimized);
+  const label = bar.querySelector('.app-product-sticky-label');
+  const button = bar.querySelector('.app-product-sticky-add');
+  if (label && button && !button.disabled && label.textContent !== 'Added') label.textContent = minimized ? 'Add' : 'Add to bag';
+}
+window.addEventListener('scroll', appUpdateProductStickyState, {passive:true});
+window.addEventListener('resize', appUpdateProductStickyState);
 function appProductCartItems() {
   try { return JSON.parse(localStorage.getItem('janedore_cart') || '[]'); } catch (_) { return []; }
 }
@@ -563,6 +608,8 @@ async function appOpenProduct(productId, pushHistory = true) {
   document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
   document.getElementById('app-product-add').disabled = Number.isFinite(stock) && stock <= 0;
   document.getElementById('app-product-add').textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : 'Add to bag';
+  appRenderProductStickyBar(product, regular, sale);
+
   const related = [...appProductCache.values()].filter(item => item.id !== id && item.category && item.category === product.category).slice(0,6);
   const relatedSection = document.getElementById('app-product-related');
   const relatedTrack = document.getElementById('app-product-related-track');
@@ -579,6 +626,7 @@ async function appOpenProduct(productId, pushHistory = true) {
     relatedTrack.innerHTML = '';
   }
   appUpdateCartCount();
+  appUpdateProductStickyState();
   const reviewBox = document.getElementById('app-product-reviews');
   if (appProductReviewsCache.has(id)) {
     reviewBox.innerHTML = appProductReviewsCache.get(id);
@@ -620,6 +668,7 @@ document.getElementById('app-product-back').addEventListener('click', () => {
   if (history.state && history.state.appProductId) history.back();
   else appProductClose();
 });
+document.getElementById('app-product-cart').addEventListener('click', () => { window.location.href = '/cart'; });
 document.getElementById('app-product-share').addEventListener('click', async () => {
   if (!appCurrentProduct) return;
   const url = location.href;
