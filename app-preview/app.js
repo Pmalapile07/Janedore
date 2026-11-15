@@ -10,18 +10,15 @@ const appFirebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(appFirebaseConfig);
 const appAuth = firebase.auth();
 const welcomeScreen = document.getElementById('app-welcome');
-const splashScreen = document.getElementById('app-splash');
 const guestButton = document.getElementById('app-continue-guest');
 let guestContinuedThisLaunch = false;
 
 function showAppHome() {
   if (welcomeScreen) welcomeScreen.hidden = true;
-  if (splashScreen) splashScreen.remove();
 }
 
 function showAppWelcome() {
   if (welcomeScreen) welcomeScreen.hidden = false;
-  if (splashScreen) splashScreen.remove();
 }
 
 if (guestButton) {
@@ -32,19 +29,14 @@ if (guestButton) {
 }
 
 let authResolved = false;
-const launchStartedAt = Date.now();
 function completeAppLaunch(user) {
-  const showDestination = () => {
-    if (user && !user.isAnonymous) {
-      showAppHome();
-    } else if (guestContinuedThisLaunch) {
-      showAppHome();
-    } else {
-      showAppWelcome();
-    }
-  };
-  const remainingSplashTime = Math.max(0, 850 - (Date.now() - launchStartedAt));
-  window.setTimeout(showDestination, remainingSplashTime);
+  if (user && !user.isAnonymous) {
+    showAppHome();
+  } else if (guestContinuedThisLaunch) {
+    showAppHome();
+  } else {
+    showAppWelcome();
+  }
 }
 
 const launchFallback = window.setTimeout(() => {
