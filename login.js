@@ -49,7 +49,19 @@ function navigateToAccount(replaceUrl) {
 }
 
 function showLoginView() {
-  setLoginMode('signin');
+  const requestedMode = new URLSearchParams(window.location.search).get('mode');
+  setLoginMode(requestedMode === 'signup' ? 'signup' : 'signin');
+}
+
+function redirectToRequestedReturnPath() {
+  const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+  if (!returnTo || !returnTo.startsWith('/') || returnTo.startsWith('//')) return false;
+  window.location.assign(returnTo);
+  return true;
+}
+
+function navigateAfterLogin() {
+  if (!redirectToRequestedReturnPath()) navigateToAccount();
 }
 
 function toggleLoginMode() {
@@ -208,7 +220,7 @@ async function handleLoginSubmit(e) {
       await firebase.auth().signInWithEmailAndPassword(email, password);
     }
 
-    navigateToAccount();
+    navigateAfterLogin();
 
   } catch (error) {
     if (loginMode === 'reset' && error && error.code === 'auth/user-not-found') {
@@ -258,6 +270,7 @@ async function handleLogout() {
   try {
     // The chat module re-establishes anonymous auth on its next Firestore access.
     await firebase.auth().signOut();
+    try { localStorage.removeItem('janedore_app_welcome_seen'); } catch (e) {}
     if (typeof clearAccountCache === 'function') clearAccountCache();
     navigateToLogin();
   } catch (e) {
@@ -277,7 +290,9 @@ firebase.auth().onAuthStateChanged(user => {
     // Real signed-in user
     if (typeof syncWishlistOnLogin === 'function') syncWishlistOnLogin(user.uid);
     if (typeof syncRecentSearchesOnLogin === 'function') syncRecentSearchesOnLogin(user.uid);
-    if (S.currentPage === 'login') navigateToAccount(true);
+    if (S.currentPage === 'login') {
+      if (!redirectToRequestedReturnPath()) navigateToAccount(true);
+    }
     else if (S.currentPage === 'account' && typeof renderAccountPage === 'function') renderAccountPage();
   } else {
     // Signed out (real user)
