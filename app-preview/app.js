@@ -340,6 +340,27 @@ if (habitsTrack) {
 }
 
 
+// Keep the Shop for Kids placeholder slider indicator in sync.
+const shopKidsTrack = document.getElementById("app-shop-kids-track");
+const shopKidsProgress = document.querySelector(".app-shop-kids-progress");
+const shopKidsProgressFill = shopKidsProgress && shopKidsProgress.querySelector(".app-new-in-progress-fill");
+function updateShopKidsProgress() {
+  if (!shopKidsTrack || !shopKidsProgress || !shopKidsProgressFill) return;
+  const maxScroll = Math.max(0, shopKidsTrack.scrollWidth - shopKidsTrack.clientWidth);
+  const visibleRatio = shopKidsTrack.scrollWidth > 0 ? shopKidsTrack.clientWidth / shopKidsTrack.scrollWidth : 1;
+  const thumbRatio = Math.min(1, visibleRatio);
+  const travel = Math.max(0, shopKidsProgress.clientWidth * (1 - thumbRatio));
+  const progress = maxScroll > 0 ? shopKidsTrack.scrollLeft / maxScroll : 0;
+  shopKidsProgressFill.style.width = (thumbRatio * 100) + "%";
+  shopKidsProgressFill.style.transform = "translateX(" + (travel * progress) + "px)";
+  shopKidsProgress.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+}
+if (shopKidsTrack) {
+  shopKidsTrack.addEventListener('scroll', updateShopKidsProgress, { passive: true });
+  window.addEventListener('resize', updateShopKidsProgress);
+  requestAnimationFrame(updateShopKidsProgress);
+}
+
 // Load the same active brand imagery used by the website's Shop by brand grid.
 fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
   .then(response => {
