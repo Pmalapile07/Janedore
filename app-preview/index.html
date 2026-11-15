@@ -229,6 +229,51 @@
     <main class="app-tab-content" data-view="Discover" aria-label="Discover" hidden></main>
     <main class="app-tab-content" data-view="Wishlist" aria-label="Wishlist" hidden></main>
     <main class="app-tab-content" data-view="Account" aria-label="Account" hidden></main>
+    <section class="app-product-view" id="app-product-view" aria-label="Product details" hidden>
+      <div class="app-product-gallery" id="app-product-gallery">
+        <div class="app-product-gallery-track" id="app-product-gallery-track"></div>
+        <div class="app-product-image-actions">
+          <button class="app-product-icon-button app-product-back" id="app-product-back" type="button" aria-label="Go back"><i class="ph ph-arrow-left" aria-hidden="true"></i></button>
+          <div class="app-product-right-actions">
+            <button class="app-product-icon-button" id="app-product-cart" type="button" aria-label="Open bag"><i class="ph ph-tote-simple" aria-hidden="true"></i><span class="app-product-cart-count" id="app-product-cart-count" hidden></span></button>
+            <button class="app-product-icon-button" id="app-product-share" type="button" aria-label="Share product"><i class="ph ph-share-network" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div class="app-product-gallery-dots" id="app-product-gallery-dots"></div>
+      </div>
+      <div class="app-product-content">
+        <p class="app-product-brand" id="app-product-brand"></p>
+        <h1 class="app-product-name" id="app-product-name"></h1>
+        <div class="app-product-price" id="app-product-price"></div>
+        <p class="app-product-stock" id="app-product-stock"></p>
+        <div class="app-product-option-group" id="app-product-size-group" hidden>
+          <p class="app-product-option-label">Select a size</p>
+          <div class="app-product-options" id="app-product-sizes"></div>
+        </div>
+        <div class="app-product-option-group" id="app-product-variant-group" hidden>
+          <p class="app-product-option-label">Select a colour</p>
+          <div class="app-product-options app-product-variant-options" id="app-product-variants"></div>
+        </div>
+        <div class="app-product-quantity">
+          <span>Quantity</span>
+          <div class="app-product-quantity-control">
+            <button type="button" id="app-product-qty-minus" aria-label="Decrease quantity">−</button>
+            <span id="app-product-qty">1</span>
+            <button type="button" id="app-product-qty-plus" aria-label="Increase quantity">+</button>
+          </div>
+        </div>
+        <button class="app-product-add" id="app-product-add" type="button">Add to bag</button>
+        <div class="app-product-accordions">
+          <details open><summary>Product information</summary><div class="app-product-description" id="app-product-description"></div></details>
+          <details><summary>Shipping &amp; returns</summary><div id="app-product-shipping"></div></details>
+          <details><summary>Customer reviews</summary><div id="app-product-reviews">There are no reviews for this product yet.</div></details>
+        </div>
+        <section class="app-product-related" id="app-product-related" hidden>
+          <h2>You may also like</h2>
+          <div class="app-product-related-track" id="app-product-related-track"></div>
+        </section>
+      </div>
+    </section>
     <nav class="bottom-nav" aria-label="Main navigation">
       <span class="nav-indicator" aria-hidden="true"></span>
       <button class="nav-item selected" data-tab="Home" aria-current="page" aria-label="Home">
@@ -253,6 +298,7 @@
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
