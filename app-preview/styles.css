@@ -98,7 +98,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 
 /* Homepage editorial image with its copy layered over the image */
 .app-home-editorial{padding:8px 12px 30px}
-.app-home-editorial-image{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.52) 100%),#d8d8d8}
+.app-home-editorial-image{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.52) 100%),#d8d8d8}
 .app-home-editorial-copy{position:absolute;inset:auto 20px 22px;padding:0;color:#fff}
 .app-home-editorial-copy h2{margin:0;color:#fff;font:600 23px/1.12 Inter,Arial,sans-serif;letter-spacing:-.035em}
 .app-home-editorial-description{max-width:330px;margin:9px 0 14px;color:rgba(255,255,255,.92);font:400 12px/1.55 Inter,Arial,sans-serif}
