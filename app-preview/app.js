@@ -50,6 +50,32 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
     const image = document.getElementById('app-home-hero-image');
     if (image && content.heroImageUrl) image.src = content.heroImageUrl;
 
+    // Use the exact heading and CTA configured for the main website hero.
+    const heroHeading = document.getElementById('app-home-hero-heading');
+    const heroButton = document.getElementById('app-home-hero-button');
+    if (heroHeading) heroHeading.textContent = content.heroHeading || '';
+    if (heroButton) {
+      heroButton.textContent = content.heroButtonText || '';
+      const link = content.heroButtonLink || { type: 'products' };
+      const value = String(link.value || '').trim();
+      const destinations = {
+        home: '/',
+        products: '/shop',
+        sale: '/sale',
+        category: value ? '/collections/' + encodeURIComponent(value) : '/shop',
+        collection: value ? '/collections/' + encodeURIComponent(value) : '/shop',
+        vendor: value ? '/brands/' + encodeURIComponent(value) : '/brands',
+        product: value ? '/products/' + encodeURIComponent(value) : '/shop',
+        page: value ? '/pages/' + encodeURIComponent(value) : '/',
+        url: /^https:\/\//i.test(value) ? value : '/shop'
+      };
+      heroButton.href = destinations[link.type] || '/shop';
+      if (link.type === 'url' && /^https:\/\//i.test(value)) {
+        heroButton.target = '_blank';
+        heroButton.rel = 'noopener';
+      }
+    }
+
     const strip = document.querySelector('.app-category-list');
     if (!strip) return;
     const placeholders = [
