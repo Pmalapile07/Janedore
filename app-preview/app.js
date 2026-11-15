@@ -506,6 +506,8 @@ function appUpdateCartCount() {
   if (badge) { badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = count < 1; }
 }
 function appShowProductView() {
+  const stickyBar = document.getElementById('app-product-sticky-bar');
+  if (stickyBar) stickyBar.hidden = true;
   appProductView.hidden = false;
   document.body.classList.add('app-product-open');
   document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = true; });
@@ -517,6 +519,8 @@ function appShowProductView() {
 function appProductClose() {
   if (!appProductView || appProductView.hidden) return;
   appProductView.hidden = true;
+  const stickyBar = document.getElementById('app-product-sticky-bar');
+  if (stickyBar) stickyBar.hidden = true;
   document.body.classList.remove('app-product-open');
   document.querySelectorAll('.app-tab-content').forEach(view => { view.hidden = view.dataset.view !== 'Home'; });
   const header = document.querySelector('.app-header');
