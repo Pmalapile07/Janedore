@@ -230,23 +230,8 @@ function setGatePass(req, res, name, kind, visitorPassword) {
     httpOnly: true, secure: req.secure, sameSite: 'lax', path: '/', maxAge: GATE_PASS_MS
   });
 }
-// Full storefront pages only; files, the API, admin, Coming soon itself
-// and the bag reminder and review request unsubscribe links are always served.
-const GATED_HTML = new Set(['/index.html', '/store.html', '/products.html', '/category.html']);
-app.use(async (req, res, next) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-  const p = req.path;
-  const page = p !== '/' && (GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && !p.startsWith('/app-preview') && p !== '/admin' && !p.startsWith('/bag-reminders/') && !p.startsWith('/review-requests/')));
-  if (!page) return next();
-  try {
-    const state = await getGateState();
-    if (!state.comingSoon || hasGatePass(req, state)) return next();
-  } catch (e) {
-    console.error('[GATE] Status check failed:', e.message);
-  }
-  res.set('Cache-Control', 'no-store');
-  res.redirect(302, '/janedore-coming-soon.html');
-});
+// This branch powers the standalone Janedore-2 app prototype service.
+// Do not apply the main storefront Coming soon/password gate here.
 
 const SITE_URL = 'https://janedore.co.za';
 
@@ -3565,36 +3550,23 @@ app.get('/api/newsletter-count', async (req, res) => {
   }
 });
 
-// Janedore-2 is the standalone app-prototype service on this branch.
-// Its root URL must open the prototype directly, never the storefront or Coming soon gate.
-app.get('/', async (req, res, next) => {
+// Every clean URL on Janedore-2 stays inside the app prototype.
+// Assets and /api endpoints are handled by their own routes; never fall through to storefront index.html.
+async function sendAppPrototype(req, res, next) {
   try {
     let html = fs.readFileSync(path.join(__dirname, 'app-preview', 'index.html'), 'utf8');
-    html = html.replace('<head>', '<head>\n  <base href="/app-preview/">');
+    html = html.replace('<head>', '<head>\\n  <base href="/app-preview/">');
     html = await injectCustomLogoFont(html);
     html = await injectSiteLogo(html);
     res.set('Cache-Control', 'no-store');
     res.type('html').send(injectCacheBust(html));
   } catch (e) {
-    console.error('[APP_PREVIEW_ROOT] Could not render app prototype:', e.message);
+    console.error('[APP_PREVIEW] Could not render app prototype:', e.message);
     next(e);
   }
-});
-
-// Serve the app preview through the same live brand-asset injectors as the website
-// and Coming soon page, so its header always uses the exact Admin > Content logo.
-app.get(['/app-preview', '/app-preview/', '/app-preview/index.html'], async (req, res, next) => {
-  try {
-    let html = fs.readFileSync(path.join(__dirname, 'app-preview', 'index.html'), 'utf8');
-    html = await injectCustomLogoFont(html);
-    html = await injectSiteLogo(html);
-    res.set('Cache-Control', 'no-store');
-    res.type('html').send(injectCacheBust(html));
-  } catch (e) {
-    console.error('[APP_PREVIEW] Could not render branded app preview:', e.message);
-    next(e);
-  }
-});
+}
+app.get('/', sendAppPrototype);
+app.get(['/app-preview', '/app-preview/', '/app-preview/index.html'], sendAppPrototype);
 
 // Serve the Coming soon page through the same live brand-asset injectors
 // as the homepage, so Admin > Content controls its real logo and logo font.
@@ -3749,23 +3721,10 @@ app.get('/api/app-new-in', async (req, res) => {
   }
 });
 
-// Catch-all for HTML routing — only sends index.html for clean URLs
-app.get('*', async (req, res) => {
-  // If it looks like a file request (.css, .js, .png etc), let it 404
-  if (req.path.includes('.')) {
-    return res.status(404).send('Not found');
-  }
-  // Otherwise send index.html for client-side routing, with the current
-  // homepage content already spliced in — see renderIndexHtml() above.
-  try {
-    const seo = await getSeoSettings();
-    const transform = req.path === '/' ? (html) => injectHomepageSeo(html, seo) : null;
-    res.send(await renderIndexHtml(transform));
-  } catch (e) {
-    console.error('[CATCH-ALL] Error:', e.message);
-    const rawHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-    res.send(injectCacheBust(rawHtml));
-  }
+// App-only fallback: clean routes must never render the main storefront.
+app.get('*', (req, res, next) => {
+  if (req.path.includes('.')) return res.status(404).send('Not found');
+  return sendAppPrototype(req, res, next);
 });
 
 const PORT = process.env.PORT || 3000;
