@@ -3653,9 +3653,32 @@ app.get('/api/app-homepage', async (req, res) => {
   try {
     const homepage = await getCachedHomepage();
     const hero = homepage && homepage.hero ? homepage.hero : {};
-    res.json({ heroImageUrl: adminImageURL(hero.imageUrl, 1600) });
+    let categories = [];
+    try {
+      const snapshot = await adminDb.collection('categories').get();
+      const allCategories = snapshot.docs
+        .map(doc => Object.assign({ id: doc.id }, doc.data() || {}))
+        .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
+      const featuredCategories = allCategories.filter(category => category.featuredOnHomepage === true);
+      // Match the main website: featured categories take priority; if none
+      // are featured, show the available categories. The app can display six.
+      categories = (featuredCategories.length ? featuredCategories : allCategories)
+        .slice(0, 6)
+        .map(category => ({
+          name: String(category.name || ''),
+          slug: String(category.slug || category.id || ''),
+          imageUrl: adminImageURL(category.imageUrl, 240)
+        }))
+        .filter(category => category.name && category.slug);
+    } catch (categoryError) {
+      console.error('[APP HOMEPAGE] Could not load categories:', categoryError.message);
+    }
+    res.json({
+      heroImageUrl: adminImageURL(hero.imageUrl, 1600),
+      categories
+    });
   } catch (error) {
-    console.error('[APP HOMEPAGE] Could not load homepage image:', error.message);
+    console.error('[APP HOMEPAGE] Could not load homepage content:', error.message);
     res.status(503).json({ error: 'Homepage content is temporarily unavailable.' });
   }
 });
