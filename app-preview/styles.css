@@ -118,26 +118,20 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-bestsellers-progress{margin-bottom:0}
 
 
-/* JANEDORE launch screen */
-.app-splash{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:#080808;color:#fff;opacity:1;visibility:visible;transition:opacity .3s ease,visibility .3s ease}
-.app-splash.is-hidden{display:none!important;opacity:0;visibility:hidden;pointer-events:none}
-.app-splash-mark{display:block;width:142px;height:142px;overflow:visible;transform:translate(-5px,-2px)}
-.app-splash-mark-j{stroke-dasharray:1;stroke-dashoffset:1;animation:app-splash-mark-draw .72s ease-in-out forwards}
-.app-splash-mark-dot{transform-box:fill-box;transform-origin:center;animation:app-splash-mark-drop .35s ease-out .65s both}
-@keyframes app-splash-mark-draw{to{stroke-dashoffset:0}}
-@keyframes app-splash-mark-drop{from{opacity:0;transform:translateY(-120px)}to{opacity:1;transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.app-splash-mark-j{animation:none;stroke-dashoffset:0}.app-splash-mark-dot{animation:none;opacity:1}.app-splash{transition:none}}
-
-
-/* First-visit welcome screen */
+/* JANEDORE opening screen */
 .app-welcome{position:fixed;inset:0;z-index:900;min-height:100dvh;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);display:flex;align-items:center;justify-content:center;background:#080808;color:#fff}
 .app-welcome[hidden]{display:none!important}
-.app-welcome-content{width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.app-welcome-content{width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center;text-align:center;transform:translateY(24px)}
 .app-welcome-mark{display:block;width:142px;height:142px;overflow:visible;fill:none;stroke:#fff;stroke-width:200;stroke-linecap:butt;stroke-linejoin:round}
-.app-welcome-mark circle{fill:#fff;stroke:none}
-.app-welcome-tagline{margin:8px 0 42px;color:#fff;font:400 14px/1.4 Inter,Arial,sans-serif;letter-spacing:0}
+.app-welcome-mark-j{stroke-dasharray:1;stroke-dashoffset:1;animation:app-welcome-mark-draw .85s ease-in-out forwards}
+.app-welcome-mark-dot{fill:#fff;stroke:none;transform-box:fill-box;transform-origin:center;animation:app-welcome-mark-drop .35s ease-out .72s both}
+@keyframes app-welcome-mark-draw{to{stroke-dashoffset:0}}
+@keyframes app-welcome-mark-drop{from{opacity:0;transform:translateY(-120px)}to{opacity:1;transform:translateY(0)}}
+.app-welcome-tagline{margin:0 0 42px;color:#fff;font:400 14px/1.4 Inter,Arial,sans-serif;letter-spacing:0}
 .app-welcome-actions{width:100%;display:flex;flex-direction:column;gap:12px}
 .app-welcome-signin,.app-welcome-create{min-height:50px;width:100%;display:flex;align-items:center;justify-content:center;border:1px solid #fff;border-radius:5px;text-decoration:none;font:500 14px/1 Inter,Arial,sans-serif}
 .app-welcome-signin{background:#fff;color:#080808}
 .app-welcome-create{background:transparent;color:#fff}
 .app-welcome-guest{margin-top:28px;padding:4px 0;border:0;background:transparent;color:#fff;font:400 13px/1.4 Inter,Arial,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+@media(prefers-reduced-motion:reduce){.app-welcome-mark-j{animation:none;stroke-dashoffset:0}.app-welcome-mark-dot{animation:none;opacity:1}}
