@@ -8,7 +8,6 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .nav-item i{font-size:22px;line-height:1}
 .nav-item .home-mark{width:29px;height:29px;overflow:visible;fill:none;stroke:currentColor;stroke-width:200;stroke-linecap:butt;stroke-linejoin:round}
 .nav-item .home-mark circle{fill:currentColor;stroke:none}
-.nav-item .wish-icon{font-size:23px;line-height:1;font-variation-settings:'FILL' 0,'wght' 300}
 .nav-item.selected{background:#111;color:#fff}
 
 .view{padding:calc(16px + env(safe-area-inset-top)) 16px 120px}
