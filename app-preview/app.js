@@ -221,16 +221,26 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
     }
     const escapeText = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     track.innerHTML = products.map(product => {
-      const sale = Number.isFinite(product.salePrice) && product.salePrice > 0 && product.salePrice < product.price;
-      const badge = product.stock <= 0 ? 'SOLD OUT' : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(product.badge.toLowerCase()) ? product.badge.toUpperCase() : 'NEW');
+      const regularPrice = Number(product.price) || 0;
+      const salePrice = product.salePrice == null || product.salePrice === '' ? NaN : Number(product.salePrice);
+      const sale = Number.isFinite(salePrice) && salePrice > 0 && salePrice < regularPrice;
+      const badge = Number(product.stock) <= 0
+        ? 'SOLD OUT'
+        : (String(product.badge || '').trim().toLowerCase() === 'pre-order'
+          ? 'PRE-ORDER'
+          : sale
+            ? 'SALE'
+            : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(String(product.badge).toLowerCase())
+              ? String(product.badge).toUpperCase()
+              : 'NEW'));
       const price = sale
-        ? '<span class="app-new-in-old-price">R' + escapeText(Number(product.price).toFixed(2)) + '</span><span class="app-new-in-sale-price">R' + escapeText(Number(product.salePrice).toFixed(2)) + '</span>'
-        : '<span>R' + escapeText(Number(product.price).toFixed(2)) + '</span>';
+        ? '<span class="app-new-in-old-price">R' + escapeText(regularPrice.toFixed(2)) + '</span><span class="app-new-in-sale-price">R' + escapeText(salePrice.toFixed(2)) + '</span>'
+        : '<span>R' + escapeText(regularPrice.toFixed(2)) + '</span>';
       const image = product.imageUrl && /^https:\/\//i.test(product.imageUrl)
         ? '<img src="' + escapeText(product.imageUrl) + '" alt="' + escapeText(product.name) + '" loading="lazy">'
         : '';
       return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '">' +
-        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge' + (badge === 'SALE' ? ' is-sale' : '') + '">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
         '<div class="app-new-in-brand">' + escapeText(product.brand) + '</div>' +
         '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
