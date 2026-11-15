@@ -236,7 +236,7 @@ const GATED_HTML = new Set(['/index.html', '/store.html', '/products.html', '/ca
 app.use(async (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   const p = req.path;
-  const page = GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && !p.startsWith('/app-preview') && p !== '/admin' && !p.startsWith('/bag-reminders/') && !p.startsWith('/review-requests/'));
+  const page = p !== '/' && (GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && !p.startsWith('/app-preview') && p !== '/admin' && !p.startsWith('/bag-reminders/') && !p.startsWith('/review-requests/')));
   if (!page) return next();
   try {
     const state = await getGateState();
@@ -3562,6 +3562,22 @@ app.get('/api/newsletter-count', async (req, res) => {
   } catch (e) {
     console.error('[NEWSLETTER_COUNT] Could not count subscribers:', e.message);
     return res.status(500).json({ error: 'Newsletter count unavailable' });
+  }
+});
+
+// Janedore-2 is the standalone app-prototype service on this branch.
+// Its root URL must open the prototype directly, never the storefront or Coming soon gate.
+app.get('/', async (req, res, next) => {
+  try {
+    let html = fs.readFileSync(path.join(__dirname, 'app-preview', 'index.html'), 'utf8');
+    html = html.replace('<head>', '<head>\\n  <base href="/app-preview/">');
+    html = await injectCustomLogoFont(html);
+    html = await injectSiteLogo(html);
+    res.set('Cache-Control', 'no-store');
+    res.type('html').send(injectCacheBust(html));
+  } catch (e) {
+    console.error('[APP_PREVIEW_ROOT] Could not render app prototype:', e.message);
+    next(e);
   }
 });
 
