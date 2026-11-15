@@ -220,7 +220,7 @@ body.app-product-open{overflow-x:hidden}
 .app-product-sticky-price .sale{color:#c0392b;font-weight:700}
 .app-product-sticky-wish{flex-shrink:0;position:relative;width:20px;height:20px;margin:0;padding:0;border:0;background:none;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .app-product-sticky-wish:before{content:'';position:absolute;inset:-12px}
-.app-product-sticky-wish .ms-icon{font-size:20px;line-height:1}
+.app-product-sticky-wish .ms-icon{display:inline-block;width:1em;height:1em;overflow:hidden;flex-shrink:0;font-size:20px;line-height:1;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24}.app-product-sticky-wish .ms-icon.ms-filled{font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24}
 .app-product-sticky-add{width:100%;height:46px;border:0;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 24px;font:500 13px Inter,Arial,sans-serif;letter-spacing:var(--ui-letter-spacing,0);text-transform:uppercase}
 .app-product-sticky-add:disabled{background:#ccc;color:#fff}
 .app-product-sticky-bar.minimized{flex-direction:row;align-items:center;gap:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid #111}
