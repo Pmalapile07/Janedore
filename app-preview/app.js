@@ -340,3 +340,32 @@ if (habitsTrack) {
 }
 
 
+// Load the same active brand imagery used by the website's Shop by brand grid.
+fetch('/api/app-brands', { headers: { Accept: 'application/json' } })
+  .then(response => {
+    if (!response.ok) throw new Error('Brands unavailable');
+    return response.json();
+  })
+  .then(data => {
+    const grid = document.getElementById('app-shop-brand-grid');
+    if (!grid) return;
+    const brands = Array.isArray(data.brands) ? data.brands : [];
+    if (!brands.length) {
+      grid.innerHTML = '<p class="app-new-in-empty">Brands will appear here soon.</p>';
+      return;
+    }
+    const escapeBrand = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    grid.innerHTML = brands.map(brand => {
+      const image = brand.heroImageUrl || brand.logoUrl || '';
+      const style = image ? ' style="background-image:url(&quot;' + escapeBrand(image) + '&quot;)"' : '';
+      const logo = brand.logoUrl ? '<img src="' + escapeBrand(brand.logoUrl) + '" alt="" loading="lazy">' : '';
+      return '<div class="app-shop-brand-card"><div class="app-shop-brand-image"' + style + '>' + logo + '</div></div>';
+    }).join('');
+  })
+  .catch(error => {
+    const grid = document.getElementById('app-shop-brand-grid');
+    if (grid) grid.innerHTML = '<p class="app-new-in-empty">Brands are temporarily unavailable.</p>';
+    console.warn('[APP BRANDS] Could not load brands:', error.message);
+  });
+
+
