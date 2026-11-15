@@ -1,13 +1,138 @@
-:root{color-scheme:light;--ink:#111;--muted:#888;--line:#e8e8e8;--paper:#fff}
-*{box-sizing:border-box}
-html,body{min-height:100%;margin:0}
-body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-.app-shell{width:100%;max-width:430px;min-height:100dvh;margin:0 auto;background:var(--paper);position:relative}
-.bottom-nav{position:fixed;z-index:20;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 32px),398px);height:66px;padding:6px 7px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:999px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.nav-item{width:44px;height:44px;min-width:0;justify-self:center;align-self:center;border:0;border-radius:50%;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0;transition:background-color .18s ease,color .18s ease}
-.nav-item i{font-size:22px;line-height:1}
-.nav-item .home-mark{width:29px;height:29px;overflow:visible;fill:none;stroke:currentColor;stroke-width:200;stroke-linecap:butt;stroke-linejoin:round}
-.nav-item .home-mark circle{fill:currentColor;stroke:none}
-.nav-item .wish-icon{font-size:23px;line-height:1;font-variation-settings:'FILL' 0,'wght' 300}
-.nav-item.selected{background:#111;color:#fff}
-@media(min-width:600px){.app-shell{margin:28px auto;min-height:850px}.bottom-nav{bottom:42px}}
+:root {
+  color-scheme: light;
+  --ink: #111;
+  --muted: #888;
+  --line: #e8e8e8;
+  --paper: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #fff;
+  color: var(--ink);
+  font-family: Inter, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--paper);
+}
+
+.bottom-nav {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: min(calc(100% - 32px), 398px);
+  height: 68px;
+  padding: 7px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(17, 17, 17, 0.09);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  align-self: center;
+  width: 48px;
+  height: 48px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 140ms ease;
+}
+
+.nav-item i {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.nav-item .home-mark {
+  width: 29px;
+  height: 29px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 200;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+}
+
+.nav-item .home-mark circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.nav-item .wish-icon {
+  font-size: 23px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 300;
+}
+
+.nav-item.selected {
+  background: var(--ink);
+  color: #fff;
+}
+
+.nav-item:active {
+  transform: scale(0.94);
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:not(.selected):hover {
+    background: #f4f4f4;
+    color: var(--ink);
+  }
+}
+
+@media (min-width: 600px) {
+  .app-shell {
+    min-height: 850px;
+    margin: 28px auto;
+  }
+
+  .bottom-nav {
+    bottom: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-item {
+    transition: none;
+  }
+}
