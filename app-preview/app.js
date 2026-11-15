@@ -90,6 +90,27 @@ document.addEventListener('click', event => {
   button.classList.toggle('is-wishlisted', !active);
 });
 
+// Keep the New In progress indicator in sync with horizontal scrolling.
+const newInTrack = document.getElementById('app-new-in-track');
+const newInProgress = document.querySelector('.app-new-in-progress');
+const newInProgressFill = document.querySelector('.app-new-in-progress-fill');
+function updateNewInProgress() {
+  if (!newInTrack || !newInProgress || !newInProgressFill) return;
+  const maxScroll = Math.max(0, newInTrack.scrollWidth - newInTrack.clientWidth);
+  const visibleRatio = newInTrack.scrollWidth > 0 ? newInTrack.clientWidth / newInTrack.scrollWidth : 1;
+  const thumbRatio = Math.min(1, visibleRatio);
+  const travel = Math.max(0, newInProgress.clientWidth * (1 - thumbRatio));
+  const progress = maxScroll > 0 ? newInTrack.scrollLeft / maxScroll : 0;
+  newInProgressFill.style.width = (thumbRatio * 100) + '%';
+  newInProgressFill.style.transform = 'translateX(' + (travel * progress) + 'px)';
+  newInProgress.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+}
+if (newInTrack) {
+  newInTrack.addEventListener('scroll', updateNewInProgress, { passive: true });
+  window.addEventListener('resize', updateNewInProgress);
+  requestAnimationFrame(updateNewInProgress);
+}
+
 // New In uses the same live Firestore products as the website homepage.
 fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
   .then(response => {
