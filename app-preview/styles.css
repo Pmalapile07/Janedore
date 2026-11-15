@@ -60,3 +60,26 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .size.selected{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .primary{width:100%;height:52px;border:0;border-radius:999px;background:var(--ink);color:var(--paper);font:600 15px Inter,Arial,sans-serif;cursor:pointer}
 @media(min-width:600px){.app-shell{margin:28px auto;min-height:850px}.bottom-nav{bottom:42px}}
+
+.app-new-in{padding:22px 0 30px;overflow:hidden}
+.app-new-in-heading{padding:0 12px 12px}
+.app-new-in-heading h2{margin:0;color:#111;font:600 17px/1.25 Inter,Arial,sans-serif;letter-spacing:0}
+.app-new-in-track{display:flex;gap:10px;padding:0 12px 4px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.app-new-in-track::-webkit-scrollbar{display:none}
+.app-new-in-card{flex:0 0 42vw;max-width:180px;min-width:0;scroll-snap-align:start;color:#111}
+.app-new-in-image{position:relative;width:100%;aspect-ratio:25/33;overflow:hidden;background:#f4f4f4}
+.app-new-in-image img{display:block;width:100%;height:100%;object-fit:cover}
+.app-new-in-badge{position:absolute;z-index:1;top:7px;left:0;padding:4px 7px;background:#111;color:#fff;font:600 8px/1 Inter,Arial,sans-serif;letter-spacing:.12em}
+.app-new-in-brand{margin-top:8px;margin-bottom:3px;color:#111;font:400 9px/1.3 Inter,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.app-new-in-name{color:#111;font:400 11px/1.35 Inter,Arial,sans-serif;min-height:29px}
+.app-new-in-price{display:flex;gap:6px;align-items:baseline;margin-top:4px;margin-bottom:8px;color:#000;font:600 10px/1.3 Inter,Arial,sans-serif}
+.app-new-in-old-price{text-decoration:line-through;color:#999;font-weight:300}
+.app-new-in-sale-price{color:#c0392b}
+.app-new-in-card.is-sold-out .app-new-in-image img{opacity:.82}
+.app-new-in-loading .app-new-in-image{background:linear-gradient(90deg,#f4f4f4 25%,#eaeaea 37%,#f4f4f4 50%);background-size:400% 100%;animation:app-new-in-shimmer 1.5s ease-in-out infinite}
+.app-new-in-skeleton{height:8px;margin-top:8px;background:#eee;border-radius:2px}
+.app-new-in-skeleton.app-new-in-brand{width:34%}
+.app-new-in-skeleton.app-new-in-name{width:76%;height:10px;margin-top:7px}
+.app-new-in-skeleton.app-new-in-price{width:28%;margin-top:7px}
+.app-new-in-empty{padding:12px;color:#777;font:400 12px Inter,Arial,sans-serif}
+@keyframes app-new-in-shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
