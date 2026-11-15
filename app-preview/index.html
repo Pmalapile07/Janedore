@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="theme-color" content="#080808">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="JANEDORE">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
@@ -27,9 +27,20 @@
       <circle class="app-splash-mark-dot" fill="currentColor" cx="1156" cy="1230" r="140"/>
     </svg>
   </div>
-  <script>
-    window.setTimeout(() => document.getElementById('app-splash')?.remove(), 1900);
-  </script>
+  <section class="app-welcome" id="app-welcome" aria-label="Welcome to JANEDORE" hidden>
+    <div class="app-welcome-content">
+      <svg class="app-welcome-mark" viewBox="0 0 2000 2000" role="img" aria-label="JANEDORE">
+        <path d="M1190 588 L930 1060 C860 1190 790 1258 710 1258 C640 1258 570 1220 523 1182"/>
+        <circle cx="1156" cy="1230" r="140"/>
+      </svg>
+      <p class="app-welcome-tagline">The home of independent brands.</p>
+      <div class="app-welcome-actions">
+        <a class="app-welcome-signin" href="/login?returnTo=%2Fapp-preview%2F">Sign in</a>
+        <a class="app-welcome-create" href="/login?mode=signup&amp;returnTo=%2Fapp-preview%2F">Create an account</a>
+      </div>
+      <button class="app-welcome-guest" id="app-continue-guest" type="button">Continue as guest</button>
+    </div>
+  </section>
   <div class="app-shell">
     <header class="app-header" aria-label="JANEDORE">
       <div class="app-header-top">
@@ -129,6 +140,8 @@
       </button>
     </nav>
   </div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="/app-preview/app.js"></script>
 </body>
 </html>
