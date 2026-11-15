@@ -5,7 +5,7 @@
   "scope": "/app-preview/",
   "display": "standalone",
   "background_color": "#E0EBFF",
-  "theme_color": "#E0EBFF",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
       "src": "/app-preview/janedore-app-icon.svg",
