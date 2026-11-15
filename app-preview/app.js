@@ -12,7 +12,7 @@ const appAuth = firebase.auth();
 const welcomeScreen = document.getElementById('app-welcome');
 const splashScreen = document.getElementById('app-splash');
 const guestButton = document.getElementById('app-continue-guest');
-const welcomeSeenKey = 'janedore_app_welcome_seen';
+let guestContinuedThisLaunch = false;
 
 function showAppHome() {
   if (welcomeScreen) welcomeScreen.hidden = true;
@@ -26,7 +26,7 @@ function showAppWelcome() {
 
 if (guestButton) {
   guestButton.addEventListener('click', () => {
-    try { localStorage.setItem(welcomeSeenKey, '1'); } catch (error) {}
+    guestContinuedThisLaunch = true;
     showAppHome();
   });
 }
@@ -37,11 +37,10 @@ function completeAppLaunch(user) {
   const showDestination = () => {
     if (user && !user.isAnonymous) {
       showAppHome();
+    } else if (guestContinuedThisLaunch) {
+      showAppHome();
     } else {
-      let hasVisited = false;
-      try { hasVisited = localStorage.getItem(welcomeSeenKey) === '1'; } catch (error) {}
-      if (hasVisited) showAppHome();
-      else showAppWelcome();
+      showAppWelcome();
     }
   };
   const remainingSplashTime = Math.max(0, 850 - (Date.now() - launchStartedAt));
@@ -62,9 +61,6 @@ appAuth.onAuthStateChanged(user => {
   completeAppLaunch(user);
 });
 
-window.addEventListener('storage', event => {
-  if (event.key === welcomeSeenKey && event.newValue === null) showAppWelcome();
-});
 
 const nav = document.querySelector('.bottom-nav');
 const navItems = [...document.querySelectorAll('.nav-item')];
