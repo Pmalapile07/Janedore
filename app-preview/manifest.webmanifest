@@ -4,7 +4,7 @@
   "start_url": "/app-preview/",
   "scope": "/app-preview/",
   "display": "standalone",
-  "background_color": "#E0EBFF",
+  "background_color": "#FFFFFF",
   "theme_color": "#FFFFFF",
   "icons": [
     {
