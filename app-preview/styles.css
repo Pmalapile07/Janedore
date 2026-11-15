@@ -101,3 +101,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-home-editorial-description{max-width:330px;margin:9px 0 14px;color:#555;font:400 12px/1.55 Inter,Arial,sans-serif}
 .app-home-editorial-link{display:inline-flex;align-items:center;gap:8px;color:#111;text-decoration:none;font:600 11px/1.2 Inter,Arial,sans-serif}
 .app-home-editorial-link span{font-size:15px;line-height:1}
+
+
+/* Only the selected bottom-navigation tab is visible. */
+.app-tab-content[hidden]{display:none!important}
