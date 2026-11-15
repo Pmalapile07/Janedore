@@ -1,0 +1,16 @@
+{
+  "name": "JANEDORE",
+  "short_name": "JANEDORE",
+  "start_url": "/app-preview/",
+  "scope": "/app-preview/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
