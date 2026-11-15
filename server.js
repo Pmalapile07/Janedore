@@ -236,7 +236,7 @@ const GATED_HTML = new Set(['/index.html', '/store.html', '/products.html', '/ca
 app.use(async (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   const p = req.path;
-  const page = GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && p !== '/admin' && !p.startsWith('/bag-reminders/') && !p.startsWith('/review-requests/'));
+  const page = GATED_HTML.has(p) || (!p.includes('.') && !p.startsWith('/api/') && !p.startsWith('/app-preview') && p !== '/admin' && !p.startsWith('/bag-reminders/') && !p.startsWith('/review-requests/'));
   if (!page) return next();
   try {
     const state = await getGateState();
@@ -3295,7 +3295,7 @@ async function injectCustomLogoFont(html) {
     /<link id="logo-font-css"[^>]*>/,
     () => '<link rel="preload" as="font" type="' + mime + '" href="' + url + '" crossorigin>\n' +
       '  <style id="logo-font-css">@font-face{font-family:"Janedore Logo";src:url("' + url + '") format("' + cssFormat + '");font-weight:400;font-style:normal;font-display:block;}' +
-      '.nav-logo-text,.footer-logo-fallback,.cs-logo,.cs-footer-logo,.admin-logo,.ph-logo-text{font-family:"Janedore Logo","Inter",Helvetica,Arial,sans-serif !important;font-weight:400 !important;}</style>'
+      '.nav-logo-text,.footer-logo-fallback,.cs-logo,.cs-footer-logo,.admin-logo,.ph-logo-text,.app-logo{font-family:"Janedore Logo","Inter",Helvetica,Arial,sans-serif !important;font-weight:400 !important;}</style>'
   );
 }
 
@@ -3310,7 +3310,7 @@ async function injectSiteLogo(html) {
   // Apply the same Admin > Content site-logo asset to the Coming soon
   // page's header, footer, admin overlay and miniature app previews too.
   return html.replace(
-    /<span class="(cs-logo|ph-logo-text|cs-footer-logo|admin-logo)">JANEDORE<\/span>/g,
+    /<span class="(cs-logo|ph-logo-text|cs-footer-logo|admin-logo|app-logo)">JANEDORE<\/span>/g,
     (_, logoClass) => '<img class="' + logoClass + ' cs-site-logo-image" src="' + src + '" alt="JANEDORE">'
   ).replace(
     '<span class="nav-logo-text">JANEDORE</span>',
@@ -3562,6 +3562,21 @@ app.get('/api/newsletter-count', async (req, res) => {
   } catch (e) {
     console.error('[NEWSLETTER_COUNT] Could not count subscribers:', e.message);
     return res.status(500).json({ error: 'Newsletter count unavailable' });
+  }
+});
+
+// Serve the app preview through the same live brand-asset injectors as the website
+// and Coming soon page, so its header always uses the exact Admin > Content logo.
+app.get(['/app-preview', '/app-preview/', '/app-preview/index.html'], async (req, res, next) => {
+  try {
+    let html = fs.readFileSync(path.join(__dirname, 'app-preview', 'index.html'), 'utf8');
+    html = await injectCustomLogoFont(html);
+    html = await injectSiteLogo(html);
+    res.set('Cache-Control', 'no-store');
+    res.type('html').send(injectCacheBust(html));
+  } catch (e) {
+    console.error('[APP_PREVIEW] Could not render branded app preview:', e.message);
+    next(e);
   }
 });
 
