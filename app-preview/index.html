@@ -25,9 +25,14 @@
     <header class="app-header" aria-label="JANEDORE">
       <div class="app-header-top">
         <span class="app-logo">JANEDORE</span>
-        <button class="notification-button" type="button" aria-label="Notifications">
-          <i class="ph ph-bell" aria-hidden="true"></i>
-        </button>
+        <div class="header-actions">
+          <button class="header-action-button" type="button" aria-label="Cart">
+            <i class="ph ph-tote-simple" aria-hidden="true"></i>
+          </button>
+          <button class="header-action-button notification-button" type="button" aria-label="Notifications">
+            <i class="ph ph-bell" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
       <div class="app-search-row">
         <div class="app-search-field">
@@ -45,17 +50,17 @@
         </svg>
         <span class="nav-label">Home</span>
       </button>
+      <button class="nav-item" data-tab="Shop" aria-label="Shop">
+        <i class="ph ph-squares-four" aria-hidden="true"></i>
+        <span class="nav-label">Shop</span>
+      </button>
       <button class="nav-item" data-tab="Discover" aria-label="Discover">
-        <i class="ph ph-list" aria-hidden="true"></i>
+        <i class="ph ph-compass" aria-hidden="true"></i>
         <span class="nav-label">Discover</span>
       </button>
       <button class="nav-item" data-tab="Wishlist" aria-label="Wishlist">
         <i class="ph ph-heart-straight" aria-hidden="true"></i>
         <span class="nav-label">Wishlist</span>
-      </button>
-      <button class="nav-item" data-tab="Cart" aria-label="Cart">
-        <i class="ph ph-tote-simple" aria-hidden="true"></i>
-        <span class="nav-label">Cart</span>
       </button>
       <button class="nav-item" data-tab="Account" aria-label="Account">
         <i class="ph ph-user" aria-hidden="true"></i>
