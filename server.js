@@ -3646,6 +3646,20 @@ require('./analytics-api')(app, { adminDb, admin, rateLimited, verifyPlatformSta
 require('./admin-home-api')(app, { adminDb, admin });
 require('./partner-applications-api')(app, { adminDb, admin, sendResendEmail, orderEmails, ORDER_ALERT_EMAIL, SITE_URL, getBrandAssets, logoImageUrl });
 
+// Public app homepage media: use the same hero image configured in Admin > Homepage.
+app.get('/api/app-homepage', async (req, res) => {
+  res.set('Cache-Control', 'public, max-age=30');
+  if (!adminDb) return res.status(503).json({ error: 'Homepage content is temporarily unavailable.' });
+  try {
+    const homepage = await getCachedHomepage();
+    const hero = homepage && homepage.hero ? homepage.hero : {};
+    res.json({ heroImageUrl: adminImageURL(hero.imageUrl, 1600) });
+  } catch (error) {
+    console.error('[APP HOMEPAGE] Could not load homepage image:', error.message);
+    res.status(503).json({ error: 'Homepage content is temporarily unavailable.' });
+  }
+});
+
 // Catch-all for HTML routing — only sends index.html for clean URLs
 app.get('*', async (req, res) => {
   // If it looks like a file request (.css, .js, .png etc), let it 404
