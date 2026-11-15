@@ -32,10 +32,26 @@ if (guestButton) {
 }
 
 let authResolved = false;
+const launchStartedAt = Date.now();
+function completeAppLaunch(user) {
+  const showDestination = () => {
+    if (user && !user.isAnonymous) {
+      showAppHome();
+    } else {
+      let hasVisited = false;
+      try { hasVisited = localStorage.getItem(welcomeSeenKey) === '1'; } catch (error) {}
+      if (hasVisited) showAppHome();
+      else showAppWelcome();
+    }
+  };
+  const remainingSplashTime = Math.max(0, 850 - (Date.now() - launchStartedAt));
+  window.setTimeout(showDestination, remainingSplashTime);
+}
+
 const launchFallback = window.setTimeout(() => {
   if (!authResolved) {
     authResolved = true;
-    showAppWelcome();
+    completeAppLaunch(null);
   }
 }, 5000);
 
@@ -43,14 +59,7 @@ appAuth.onAuthStateChanged(user => {
   if (authResolved && !user) return;
   authResolved = true;
   window.clearTimeout(launchFallback);
-  if (user && !user.isAnonymous) {
-    showAppHome();
-  } else {
-    let hasVisited = false;
-    try { hasVisited = localStorage.getItem(welcomeSeenKey) === '1'; } catch (error) {}
-    if (hasVisited) showAppHome();
-    else showAppWelcome();
-  }
+  completeAppLaunch(user);
 });
 
 window.addEventListener('storage', event => {
