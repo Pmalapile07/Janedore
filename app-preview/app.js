@@ -462,25 +462,29 @@ function appRenderProductStickyBar(product, regular, sale) {
   }
   const isSale = Number.isFinite(sale) && sale > 0 && sale < regular;
   const current = isSale ? sale : regular;
-  bar.innerHTML = '<div class="app-product-sticky-price">' +
+  const wished = bar.dataset.wishProductId === String(product.id) && bar.dataset.wished === 'true';
+  bar.dataset.wishProductId = String(product.id);
+  bar.dataset.wished = String(wished);
+  bar.innerHTML = '<div class="app-product-sticky-top-row">' +
+    '<div class="app-product-sticky-price">' +
     (isSale ? '<span class="sale">' + appProductMoney(current) + '</span><s>' + appProductMoney(regular) + '</s>' : appProductMoney(current)) +
-    '</div><button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
+    '</div><button class="app-product-sticky-wish' + (wished ? ' wished' : '') + '" id="app-product-sticky-wish" type="button" aria-label="' + (wished ? 'Remove from wishlist' : 'Add to wishlist') + '" aria-pressed="' + wished + '"><span class="material-symbols-outlined ms-icon wish-icon' + (wished ? ' ms-filled' : '') + '" aria-hidden="true">favorite</span></button></div>' +
+    '<button class="app-product-sticky-add" id="app-product-sticky-add" type="button"' +
     ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? ' disabled' : '') +
     '><span class="app-product-sticky-label">' + ((Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0) ? 'Sold out' : 'Add to bag') +
     '</span><span class="app-product-sticky-button-price">' + appProductMoney(current) + '</span></button>';
   bar.hidden = false;
-  document.getElementById('app-product-sticky-add').onclick = () => {
-    const mainButton = document.getElementById('app-product-add');
-    if (mainButton) mainButton.click();
-    const label = bar.querySelector('.app-product-sticky-label');
-    if (label && !document.getElementById('app-product-sticky-add').disabled) {
-      label.textContent = 'Added';
-      setTimeout(() => {
-        if (label.isConnected && appCurrentProduct && appCurrentProduct.id === product.id) {
-          label.textContent = bar.classList.contains('minimized') ? 'Add' : 'Add to bag';
-        }
-      }, 1400);
-    }
+  document.getElementById('app-product-sticky-add').onclick = appAddCurrentProductToBag;
+  document.getElementById('app-product-sticky-wish').onclick = event => {
+    const button = event.currentTarget;
+    const active = button.getAttribute('aria-pressed') === 'true';
+    const next = !active;
+    button.setAttribute('aria-pressed', String(next));
+    button.setAttribute('aria-label', next ? 'Remove from wishlist' : 'Add to wishlist');
+    button.classList.toggle('wished', next);
+    const icon = button.querySelector('.wish-icon');
+    if (icon) icon.classList.toggle('ms-filled', next);
+    bar.dataset.wished = String(next);
   };
   appUpdateProductStickyState();
 }
@@ -610,8 +614,6 @@ async function appOpenProduct(productId, pushHistory = true) {
     (product.compositionCare ? '<p><strong>Composition &amp; care</strong><br>' + appProductEscape(product.compositionCare).replace(/\n/g,'<br>') + '</p>' : '') +
     (product.measurements ? '<p><strong>Measurements</strong><br>' + appProductEscape(product.measurements).replace(/\n/g,'<br>') + '</p>' : '');
   document.getElementById('app-product-shipping').textContent = product.shippingReturns || 'Please see the delivery and returns information at checkout.';
-  document.getElementById('app-product-add').disabled = Number.isFinite(stock) && stock <= 0;
-  document.getElementById('app-product-add').textContent = Number.isFinite(stock) && stock <= 0 ? 'Sold out' : 'Add to bag';
   appRenderProductStickyBar(product, regular, sale);
 
   const related = [...appProductCache.values()].filter(item => item.id !== id && item.category && item.category === product.category).slice(0,6);
@@ -689,7 +691,8 @@ document.getElementById('app-product-qty-plus').addEventListener('click', () => 
   appProductQuantity = Math.min(Number.isFinite(stock) && stock > 0 ? stock : 99,appProductQuantity+1);
   document.getElementById('app-product-qty').textContent = String(appProductQuantity);
 });
-document.getElementById('app-product-add').addEventListener('click', () => {
+function appAddCurrentProductToBag() {
+
   if (!appCurrentProduct) return;
   const sizes = Array.isArray(appCurrentProduct.sizes) ? appCurrentProduct.sizes.filter(size => String(size).toUpperCase() !== 'OS') : [];
   if (sizes.length && !appSelectedSize) { alert('Please select a size first.'); return; }
@@ -714,10 +717,16 @@ document.getElementById('app-product-add').addEventListener('click', () => {
   }
   localStorage.setItem('janedore_cart',JSON.stringify(items));
   appUpdateCartCount();
-  const button = document.getElementById('app-product-add');
-  button.textContent = 'Added to bag';
-  setTimeout(() => { if (button && !button.disabled) button.textContent = 'Add to bag'; },1400);
-});
+  
+  const button = document.getElementById('app-product-sticky-add');
+  const label = button && button.querySelector('.app-product-sticky-label');
+  if (label && button && !button.disabled) {
+    label.textContent = 'Added';
+    setTimeout(() => {
+      if (label.isConnected && appCurrentProduct) label.textContent = button.closest('.app-product-sticky-bar').classList.contains('minimized') ? 'Add' : 'Add to bag';
+    }, 1400);
+  }
+}
 window.addEventListener('popstate', () => {
   if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
   else if (appProductView && !appProductView.hidden) appProductClose();
