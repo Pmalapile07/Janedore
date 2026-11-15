@@ -74,3 +74,42 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
     });
   })
   .catch(error => console.warn('[APP HOME] Could not load shared homepage content:', error.message));
+
+
+// New In uses the same live Firestore products as the website homepage.
+fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
+  .then(response => {
+    if (!response.ok) throw new Error('New In products unavailable');
+    return response.json();
+  })
+  .then(data => {
+    const track = document.getElementById('app-new-in-track');
+    if (!track) return;
+    const products = Array.isArray(data.products) ? data.products : [];
+    if (!products.length) {
+      track.innerHTML = '<p class="app-new-in-empty">New pieces will appear here soon.</p>';
+      return;
+    }
+    const escapeText = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    track.innerHTML = products.map(product => {
+      const sale = Number.isFinite(product.salePrice) && product.salePrice > 0 && product.salePrice < product.price;
+      const badge = product.stock <= 0 ? 'SOLD OUT' : (product.badge && !['new','sale','sold out','sold','free delivery'].includes(product.badge.toLowerCase()) ? product.badge.toUpperCase() : 'NEW');
+      const price = sale
+        ? '<span class="app-new-in-old-price">R' + escapeText(Number(product.price).toFixed(2)) + '</span><span class="app-new-in-sale-price">R' + escapeText(Number(product.salePrice).toFixed(2)) + '</span>'
+        : '<span>R' + escapeText(Number(product.price).toFixed(2)) + '</span>';
+      const image = product.imageUrl && /^https:\/\//i.test(product.imageUrl)
+        ? '<img src="' + escapeText(product.imageUrl) + '" alt="' + escapeText(product.name) + '" loading="lazy">'
+        : '';
+      return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '">' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge">' + escapeText(badge) + '</span>' : '') + image + '</div>' +
+        '<div class="app-new-in-brand">' + escapeText(product.brand) + '</div>' +
+        '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
+        '<div class="app-new-in-price">' + price + '</div>' +
+      '</article>';
+    }).join('');
+  })
+  .catch(error => {
+    const track = document.getElementById('app-new-in-track');
+    if (track) track.innerHTML = '<p class="app-new-in-empty">New In is temporarily unavailable.</p>';
+    console.warn('[APP NEW IN] Could not load shared products:', error.message);
+  });
