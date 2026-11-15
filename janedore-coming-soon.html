@@ -1024,7 +1024,9 @@
           submitButton.textContent = 'Opening...';
           message.className = 'signup-msg';
           message.textContent = 'Access granted. Opening JANEDORE...';
-          window.location.assign('/');
+          var returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/';
+          if (returnTo !== '/app-preview/' && returnTo !== '/app-preview') returnTo = '/';
+          window.location.assign(returnTo);
           return;
         }
 
