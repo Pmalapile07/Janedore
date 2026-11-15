@@ -491,16 +491,13 @@ function appRenderProductStickyBar(product, regular, sale) {
 function appUpdateProductStickyState() {
   const bar = document.getElementById('app-product-sticky-bar');
   if (!bar || !appProductView || appProductView.hidden) return;
-  const content = document.querySelector('.app-product-content');
-  if (!content) return;
-  const minimized = content.getBoundingClientRect().top < window.innerHeight * 0.3;
-  bar.classList.toggle('minimized', minimized);
+  // Keep the website-matched price, wishlist and full Add to bag layout
+  // unchanged while the customer scrolls the product page.
+  bar.classList.remove('minimized');
   const label = bar.querySelector('.app-product-sticky-label');
   const button = bar.querySelector('.app-product-sticky-add');
-  if (label && button && !button.disabled && label.textContent !== 'Added') label.textContent = minimized ? 'Add' : 'Add to bag';
+  if (label && button && !button.disabled && label.textContent !== 'Added') label.textContent = 'Add to bag';
 }
-window.addEventListener('scroll', appUpdateProductStickyState, {passive:true});
-window.addEventListener('resize', appUpdateProductStickyState);
 function appProductCartItems() {
   try { return JSON.parse(localStorage.getItem('janedore_cart') || '[]'); } catch (_) { return []; }
 }
