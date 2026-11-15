@@ -24,6 +24,7 @@ body:has(#page-content.active .care-page) .search-bar-row {
 }
 
 .search-bar-trigger {
+  min-height: 41px;
   display: flex;
   align-items: center;
   gap: 10px;
