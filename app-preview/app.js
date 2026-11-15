@@ -318,3 +318,25 @@ if (shopAccessoriesTrack) {
 }
 
 
+// Keep the Based on Your Habits placeholder slider indicator in sync.
+const habitsTrack = document.getElementById('app-based-on-habits-track');
+const habitsProgress = document.querySelector('.app-based-on-habits-progress');
+const habitsProgressFill = habitsProgress && habitsProgress.querySelector('.app-new-in-progress-fill');
+function updateHabitsProgress() {
+  if (!habitsTrack || !habitsProgress || !habitsProgressFill) return;
+  const maxScroll = Math.max(0, habitsTrack.scrollWidth - habitsTrack.clientWidth);
+  const visibleRatio = habitsTrack.scrollWidth > 0 ? habitsTrack.clientWidth / habitsTrack.scrollWidth : 1;
+  const thumbRatio = Math.min(1, visibleRatio);
+  const travel = Math.max(0, habitsProgress.clientWidth * (1 - thumbRatio));
+  const progress = maxScroll > 0 ? habitsTrack.scrollLeft / maxScroll : 0;
+  habitsProgressFill.style.width = (thumbRatio * 100) + '%';
+  habitsProgressFill.style.transform = 'translateX(' + (travel * progress) + 'px)';
+  habitsProgress.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+}
+if (habitsTrack) {
+  habitsTrack.addEventListener('scroll', updateHabitsProgress, { passive: true });
+  window.addEventListener('resize', updateHabitsProgress);
+  requestAnimationFrame(updateHabitsProgress);
+}
+
+
