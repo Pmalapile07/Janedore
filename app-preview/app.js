@@ -296,4 +296,25 @@ if (shopClothingTrack) {
   requestAnimationFrame(updateShopClothingProgress);
 }
 
+// Keep the Shop Accessories placeholder slider indicator in sync.
+const shopAccessoriesTrack = document.getElementById('app-shop-accessories-track');
+const shopAccessoriesProgress = document.querySelector('.app-shop-accessories-progress');
+const shopAccessoriesProgressFill = shopAccessoriesProgress && shopAccessoriesProgress.querySelector('.app-new-in-progress-fill');
+function updateShopAccessoriesProgress() {
+  if (!shopAccessoriesTrack || !shopAccessoriesProgress || !shopAccessoriesProgressFill) return;
+  const maxScroll = Math.max(0, shopAccessoriesTrack.scrollWidth - shopAccessoriesTrack.clientWidth);
+  const visibleRatio = shopAccessoriesTrack.scrollWidth > 0 ? shopAccessoriesTrack.clientWidth / shopAccessoriesTrack.scrollWidth : 1;
+  const thumbRatio = Math.min(1, visibleRatio);
+  const travel = Math.max(0, shopAccessoriesProgress.clientWidth * (1 - thumbRatio));
+  const progress = maxScroll > 0 ? shopAccessoriesTrack.scrollLeft / maxScroll : 0;
+  shopAccessoriesProgressFill.style.width = (thumbRatio * 100) + '%';
+  shopAccessoriesProgressFill.style.transform = 'translateX(' + (travel * progress) + 'px)';
+  shopAccessoriesProgress.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+}
+if (shopAccessoriesTrack) {
+  shopAccessoriesTrack.addEventListener('scroll', updateShopAccessoriesProgress, { passive: true });
+  window.addEventListener('resize', updateShopAccessoriesProgress);
+  requestAnimationFrame(updateShopAccessoriesProgress);
+}
+
 
