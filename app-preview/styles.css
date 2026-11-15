@@ -154,3 +154,12 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 /* Square editorial image placeholder beneath Shop Clothing. */
 .app-home-image-placeholder{width:calc(100% - 24px);aspect-ratio:1/1;margin:0 12px 38px;background:#d8d8d8;display:flex;align-items:center;justify-content:center}
 .app-home-image-placeholder-copy{padding:20px;color:#fff;text-align:center;font:600 20px/1.2 Inter,Arial,sans-serif;letter-spacing:-.02em}
+
+
+/* Shop by brand mirrors the website's two-column featured brand grid. */
+.app-shop-by-brand{padding:8px 0 38px}
+.app-shop-brand-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 8px}
+.app-shop-brand-card{min-width:0;overflow:hidden}
+.app-shop-brand-image{position:relative;width:100%;aspect-ratio:.87;background:#f4f4f4 center/cover no-repeat;display:flex;align-items:center;justify-content:center}
+.app-shop-brand-image img{display:block;max-width:70%;max-height:58%;object-fit:contain}
+.app-shop-brand-view-all{display:inline-flex;margin:14px 12px 0;color:#111;text-decoration:none;font:500 12px/1.2 Inter,Arial,sans-serif}
