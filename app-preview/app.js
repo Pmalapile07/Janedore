@@ -62,8 +62,8 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
       const circle = document.createElement('span');
       circle.className = 'app-category-circle';
       circle.setAttribute('aria-hidden', 'true');
-      if (category.imageUrl && /^https:\\/\\//i.test(category.imageUrl)) {
-        circle.style.backgroundImage = 'url("' + category.imageUrl.replace(/["\\\\]/g, '') + '")';
+      if (category.imageUrl && /^https:\/\//i.test(category.imageUrl)) {
+        circle.style.backgroundImage = 'url("' + category.imageUrl.replace(/"/g, '') + '")';
         circle.classList.add('has-image');
       }
 
