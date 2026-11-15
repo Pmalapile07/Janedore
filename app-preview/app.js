@@ -1,1 +1,29 @@
-document.querySelectorAll('.nav-item').forEach(button=>{button.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(item=>{item.classList.toggle('selected',item===button);if(item===button)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current')})})});
+const nav = document.querySelector('.bottom-nav');
+const navItems = [...document.querySelectorAll('.nav-item')];
+const navIndicator = document.querySelector('.nav-indicator');
+
+function moveNavIndicator(item) {
+  if (!nav || !item || !navIndicator) return;
+  const navRect = nav.getBoundingClientRect();
+  const itemRect = item.getBoundingClientRect();
+  const x = itemRect.left - navRect.left + (itemRect.width - navIndicator.offsetWidth) / 2;
+  nav.style.setProperty('--indicator-x', `${x}px`);
+}
+
+const initialNavItem = navItems.find(item => item.classList.contains('selected')) || navItems[0];
+moveNavIndicator(initialNavItem);
+window.addEventListener('resize', () => {
+  moveNavIndicator(navItems.find(item => item.classList.contains('selected')));
+});
+
+navItems.forEach(button => {
+  button.addEventListener('click', () => {
+    navItems.forEach(item => {
+      const active = item === button;
+      item.classList.toggle('selected', active);
+      if (active) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
+    });
+    moveNavIndicator(button);
+  });
+});
