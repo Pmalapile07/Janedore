@@ -142,5 +142,5 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 /* Four editorial shopping destinations beneath Bestsellers */
 .app-home-shopping-grid{padding:8px 12px 38px}
 .app-home-shopping-grid-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.app-home-shopping-tile{display:flex;align-items:flex-end;min-width:0;aspect-ratio:1/1.08;overflow:hidden;padding:14px;border-radius:5px;color:#222;text-decoration:none;background:#d8d8d8}
+.app-home-shopping-tile{display:flex;align-items:flex-end;min-width:0;aspect-ratio:1/1.08;overflow:hidden;padding:14px;border-radius:5px;color:#fff;text-decoration:none;background:#d8d8d8}
 .app-home-shopping-tile span{font:600 16px/1.15 Inter,Arial,sans-serif;letter-spacing:-.02em}
