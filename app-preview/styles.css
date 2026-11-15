@@ -163,3 +163,7 @@ body{background:#fff;color:var(--ink);font-family:Inter,Arial,sans-serif;-webkit
 .app-shop-brand-image{position:relative;width:100%;aspect-ratio:.87;background:#f4f4f4 center/cover no-repeat;display:flex;align-items:center;justify-content:center}
 .app-shop-brand-image img{display:block;max-width:70%;max-height:58%;object-fit:contain}
 .app-shop-brand-view-all{display:inline-flex;margin:14px 12px 0;color:#111;text-decoration:none;font:500 12px/1.2 Inter,Arial,sans-serif}
+
+
+/* Shop for Kids uses the same placeholder product slider spacing. */
+.app-shop-kids{padding:8px 0 34px}
