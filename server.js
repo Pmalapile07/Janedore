@@ -3555,7 +3555,7 @@ app.get('/api/newsletter-count', async (req, res) => {
 async function sendAppPrototype(req, res, next) {
   try {
     let html = fs.readFileSync(path.join(__dirname, 'app-preview', 'index.html'), 'utf8');
-    html = html.replace('<head>', '<head>\\n  <base href="/app-preview/">');
+    html = html.replace('<head>', '<head><base href="/app-preview/">');
     html = await injectCustomLogoFont(html);
     html = await injectSiteLogo(html);
     res.set('Cache-Control', 'no-store');
