@@ -553,7 +553,6 @@ async function appOpenProduct(productId, pushHistory = true) {
     relatedTrack.innerHTML = '';
   }
   appUpdateCartCount();
-if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
   try {
     const reviewSnap = await appProductDb.collection('reviews').where('productId','==',id).limit(20).get();
     const reviews = reviewSnap.docs.map(doc => doc.data());
@@ -626,3 +625,4 @@ window.addEventListener('popstate', () => {
   else if (appProductView && !appProductView.hidden) appProductClose();
 });
 appUpdateCartCount();
+if (location.hash.startsWith('#product/')) appOpenProduct(decodeURIComponent(location.hash.slice(9)),false);
