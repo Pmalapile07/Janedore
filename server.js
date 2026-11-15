@@ -3675,6 +3675,9 @@ app.get('/api/app-homepage', async (req, res) => {
     }
     res.json({
       heroImageUrl: adminImageURL(hero.imageUrl, 1600),
+      heroHeading: String(hero.heading || ''),
+      heroButtonText: String(hero.buttonText || ''),
+      heroButtonLink: hero.buttonLink || { type: 'products' },
       categories
     });
   } catch (error) {
