@@ -184,3 +184,25 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
     if (track) track.innerHTML = '<p class="app-new-in-empty">New In is temporarily unavailable.</p>';
     console.warn('[APP NEW IN] Could not load shared products:', error.message);
   });
+
+
+// Keep the empty Bestsellers slider indicator in sync with horizontal scrolling.
+const bestsellersTrack = document.getElementById('app-bestsellers-track');
+const bestsellersProgress = document.querySelector('.app-bestsellers-progress');
+const bestsellersProgressFill = bestsellersProgress && bestsellersProgress.querySelector('.app-new-in-progress-fill');
+function updateBestsellersProgress() {
+  if (!bestsellersTrack || !bestsellersProgress || !bestsellersProgressFill) return;
+  const maxScroll = Math.max(0, bestsellersTrack.scrollWidth - bestsellersTrack.clientWidth);
+  const visibleRatio = bestsellersTrack.scrollWidth > 0 ? bestsellersTrack.clientWidth / bestsellersTrack.scrollWidth : 1;
+  const thumbRatio = Math.min(1, visibleRatio);
+  const travel = Math.max(0, bestsellersProgress.clientWidth * (1 - thumbRatio));
+  const progress = maxScroll > 0 ? bestsellersTrack.scrollLeft / maxScroll : 0;
+  bestsellersProgressFill.style.width = (thumbRatio * 100) + '%';
+  bestsellersProgressFill.style.transform = 'translateX(' + (travel * progress) + 'px)';
+  bestsellersProgress.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+}
+if (bestsellersTrack) {
+  bestsellersTrack.addEventListener('scroll', updateBestsellersProgress, { passive: true });
+  window.addEventListener('resize', updateBestsellersProgress);
+  requestAnimationFrame(updateBestsellersProgress);
+}
