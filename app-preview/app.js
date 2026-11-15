@@ -76,6 +76,20 @@ fetch('/api/app-homepage', { headers: { Accept: 'application/json' } })
   .catch(error => console.warn('[APP HOME] Could not load shared homepage content:', error.message));
 
 
+// App card wishlist affordance: keep taps on the heart separate from product-card taps.
+document.addEventListener('click', event => {
+  const button = event.target.closest('.app-new-in-wishlist');
+  if (!button) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const active = button.getAttribute('aria-pressed') === 'true';
+  button.setAttribute('aria-pressed', String(!active));
+  button.setAttribute('aria-label', active ? 'Add to wishlist' : 'Remove from wishlist');
+  const icon = button.querySelector('i');
+  if (icon) icon.className = active ? 'ph ph-heart-straight' : 'ph-fill ph-heart-straight';
+  button.classList.toggle('is-wishlisted', !active);
+});
+
 // New In uses the same live Firestore products as the website homepage.
 fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
   .then(response => {
@@ -101,7 +115,7 @@ fetch('/api/app-new-in', { headers: { Accept: 'application/json' } })
         ? '<img src="' + escapeText(product.imageUrl) + '" alt="' + escapeText(product.name) + '" loading="lazy">'
         : '';
       return '<article class="app-new-in-card' + (product.stock <= 0 ? ' is-sold-out' : '') + '">' +
-        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge">' + escapeText(badge) + '</span>' : '') + image + '</div>' +
+        '<div class="app-new-in-image">' + (badge ? '<span class="app-new-in-badge">' + escapeText(badge) + '</span>' : '') + image + '<button class="app-new-in-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false"><i class="ph ph-heart-straight" aria-hidden="true"></i></button></div>' +
         '<div class="app-new-in-brand">' + escapeText(product.brand) + '</div>' +
         '<div class="app-new-in-name">' + escapeText(product.name) + '</div>' +
         '<div class="app-new-in-price">' + price + '</div>' +
