@@ -208,11 +208,3 @@ if (bestsellersTrack) {
 }
 
 
-// Keep the launch mark visible while the app's initial screen is painted.
-const appSplash = document.getElementById('app-splash');
-if (appSplash) {
-  window.setTimeout(() => {
-    appSplash.classList.add('is-hidden');
-    window.setTimeout(() => appSplash.remove(), 450);
-  }, 1850);
-}
